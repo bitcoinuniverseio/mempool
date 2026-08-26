@@ -113,6 +113,11 @@ const routes: Routes = [
         data: { preload: browserWindowEnv && browserWindowEnv.LIGHTNING === true, networks: ['bitcoin'] },
       },
       {
+        path: 'protocols',
+        loadChildren: () => import('@app/universe/universe.module').then(m => m.UniverseModule),
+        data: { networks: ['bitcoin'] },
+      },
+      {
         path: 'tools/calculator',
         component: CalculatorComponent
       }
