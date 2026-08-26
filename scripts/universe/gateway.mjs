@@ -25,7 +25,6 @@ import http from 'node:http';
 import net from 'node:net';
 import { createReadStream, existsSync, statSync } from 'node:fs';
 import { extname, join, normalize, resolve, sep } from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 const HOST = process.env.UNIVERSE_GATEWAY_HOST || '127.0.0.1';
 const PORT = Number(process.env.UNIVERSE_GATEWAY_PORT || 8099);
@@ -247,13 +246,15 @@ server.requestTimeout = 0;
 server.keepAliveTimeout = 65_000;
 
 /**
- * Only listen when this file is the program being run. Importing it for a test
- * must not open a socket.
+ * Listening is the default. A test that imports this file for its routing
+ * table sets UNIVERSE_GATEWAY_NO_LISTEN so no socket is opened.
+ *
+ * The flag is explicit rather than a comparison against process.argv, because
+ * the release directory is reached through a symlink and the two paths never
+ * match there. That mistake takes the gateway down silently, with a clean exit
+ * code and no error to read.
  */
-const startedDirectly =
-  process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1]);
-
-if (startedDirectly) {
+if (process.env.UNIVERSE_GATEWAY_NO_LISTEN !== '1') {
   server.listen(PORT, HOST, () => {
     process.stdout.write(
       `Universe Explorer gateway listening on ${HOST}:${PORT}
