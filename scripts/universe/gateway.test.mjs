@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { routeFor } from './gateway.mjs';
+
+// Importing the gateway must not open a socket.
+process.env.UNIVERSE_GATEWAY_NO_LISTEN = '1';
+const { routeFor } = await import('./gateway.mjs');
 
 /**
  * The path rewrite is load bearing. The explorer backend registers every route
