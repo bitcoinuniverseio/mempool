@@ -45,10 +45,6 @@ const routes: Routes = [
         component: TestTransactionsComponent,
       },
       {
-        path: 'about',
-        loadChildren: () => import('@components/about/about.module').then(m => m.AboutModule),
-      },
-      {
         path: 'blocks/stale',
         component: StaleList,
       },
@@ -81,10 +77,6 @@ const routes: Routes = [
       {
         path: 'privacy-policy',
         loadChildren: () => import('@components/privacy-policy/privacy-policy.module').then(m => m.PrivacyPolicyModule),
-      },
-      {
-        path: 'trademark-policy',
-        loadChildren: () => import('@components/trademark-policy/trademark-policy.module').then(m => m.TrademarkModule),
       },
       {
         path: 'tx',
