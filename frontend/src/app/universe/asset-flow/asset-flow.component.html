@@ -41,9 +41,7 @@
     <div *ngIf="!isEmpty(state.flow)" class="flow-columns">
       <div class="flow-column">
         <h3 i18n="universe.flow.inputs">Inputs</h3>
-        <p *ngIf="!state.flow.inputs.length" class="column-note" i18n="universe.flow.coinbase">
-          Coinbase transaction
-        </p>
+        <p *ngIf="!state.flow.inputs.length" class="column-note">{{ inputsNote(state.flow) }}</p>
         <ul class="position-list">
           <li
             *ngFor="let position of state.flow.inputs; trackBy: trackPosition"

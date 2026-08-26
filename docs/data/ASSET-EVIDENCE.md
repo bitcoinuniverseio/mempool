@@ -61,6 +61,25 @@ Protocols are not forced into a uniform transfer model:
 - Burn: shown only with exact authority-proven destruction
 - Unknown: unclassified or incomplete evidence, surfaced as such
 
+## Known coverage limits
+
+**Spent input outpoints.** The deployed Ord authority prunes its outpoint
+inventory when an output is spent: `/output/:outpoint` answers `indexed:
+false` for a spent outpoint even when that outpoint carried inscriptions or
+rune balances while it was live. The explorer therefore cannot prove the
+protocol contents of a spent input from this authority alone.
+
+Behaviour: such inputs produce no fabricated positions. They are counted in
+`unknownAttachmentCount`, the flow is marked `complete: false`, and the
+interface says evidence is incomplete. A transaction whose outputs are fully
+proven and whose inputs are unprovable reads as partially proven, never as
+"no assets on the inputs".
+
+Closing this gap requires an authority that retains historical output
+inventory: either an Ord deployment configured to keep spent-output data, or
+a bounded read endpoint over an indexer that already stores per-outpoint
+positions historically. Until then the limit is stated rather than hidden.
+
 ## Checkpoint bracketing
 
 Confirmed evidence reads follow the bracket procedure: read source checkpoint,
