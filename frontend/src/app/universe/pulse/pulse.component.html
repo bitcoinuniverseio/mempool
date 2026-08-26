@@ -73,7 +73,8 @@
   <section class="panel authorities" *ngIf="vm.sources as sources" aria-labelledby="pulse-authorities-heading">
     <h2 id="pulse-authorities-heading" i18n="universe.pulse.authorities-title">Authorities behind this page</h2>
     <p i18n="universe.pulse.authorities-body">
-      {{ readySourceCount(sources) }} of {{ sources.length }} configured asset authorities are ready.
+      {{ readySourceCount(sources) }} of {{ sources.length }} configured authorities are answering.
+      Which protocols each one covers is on the protocols page.
     </p>
     <a [routerLink]="['/protocols']" i18n="universe.pulse.see-protocols">See every protocol and its authority</a>
   </section>
