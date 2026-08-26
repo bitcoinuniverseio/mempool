@@ -1,0 +1,17 @@
+// Universe Explorer, dark.
+//
+// Full parity with light: the same token names, the same contrast floor, the
+// same components. Nothing is dropped or simplified here, because a visitor who
+// prefers dark is not choosing a lesser version of the product.
+//
+// This file only restates variables. Every component rule and the Bootstrap
+// bridge live in the main stylesheet and read these names, so the swap is a
+// variable swap rather than a second set of styles to keep in step.
+
+@use "styles/universe-tokens" as universe;
+
+:root {
+  @include universe.universe-invariant-tokens;
+  @include universe.universe-dark-tokens;
+  @include universe.universe-legacy-bridge;
+}

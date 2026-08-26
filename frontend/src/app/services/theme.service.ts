@@ -8,6 +8,9 @@ import { StateService } from '@app/services/state.service';
   providedIn: 'root'
 })
 export class ThemeService {
+  /** Themes offered in the interface. 'default' is the light theme. */
+  static readonly PUBLIC_THEMES = ['default', 'dark', 'contrast'];
+
   style: HTMLLinkElement | null = null;
   theme: string = 'default';
   themeState$: BehaviorSubject<{ theme: string; loading: boolean; }>;
@@ -19,8 +22,9 @@ export class ThemeService {
     private stateService: StateService,
   ) {
     let theme = this.stateService.env.customize?.theme || this.storageService.getValue('theme-preference') || 'default';
-    // theme preference must be a valid known public theme
-    if (!this.stateService.env.customize?.theme && !['default', 'contrast', 'softsimon'].includes(theme)) {
+    // theme preference must be a valid known public theme. 'default' is light,
+    // which lives on :root so it needs no stylesheet and cannot flash.
+    if (!this.stateService.env.customize?.theme && !ThemeService.PUBLIC_THEMES.includes(theme)) {
       theme = 'default';
       this.storageService.setValue('theme-preference', 'default');
     }
@@ -64,7 +68,7 @@ export class ThemeService {
           this.style.media = 'all';
           this.initialLoad = false;
         }
-        this.mempoolFeeColors = theme === 'contrast' || theme === 'bukele' ? contrastMempoolFeeColors : defaultMempoolFeeColors;
+        this.mempoolFeeColors = theme === 'contrast' ? contrastMempoolFeeColors : defaultMempoolFeeColors;
         this.themeState$.next({ theme, loading: false });
       };
       this.style.onerror = () => this.apply('default');
