@@ -43,6 +43,8 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   transactions$: Observable<TransactionStripped[]>;
   blocks$: Observable<BlockExtended[]>;
   replacements$: Observable<ReplacementInfo[]>;
+  /** True when this deployment cannot serve historical mempool statistics. */
+  mempoolStatsUnavailable = false;
   latestBlockHeight: number;
   mempoolTransactionsWeightPerSecondData: any;
   mempoolStats$: Observable<MempoolStatsData>;
@@ -223,7 +225,12 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
       .pipe(
         filter((state) => state === 2),
         switchMap(() => this.apiService.list2HStatistics$().pipe(
-          catchError((e) => {
+          tap(() => this.mempoolStatsUnavailable = false),
+          catchError(() => {
+            // Historical mempool statistics come from the explorer database.
+            // A deployment that runs without one has none, and an unexplained
+            // empty panel is worse than saying so.
+            this.mempoolStatsUnavailable = true;
             return of(null);
           })
         )),

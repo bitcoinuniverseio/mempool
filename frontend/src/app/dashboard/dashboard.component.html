@@ -55,6 +55,10 @@
                 [windowPreferenceOverride]="'2h'"
                 ></app-incoming-transactions-graph>
             </div>
+            <p class="graph-unavailable" *ngIf="mempoolStatsUnavailable" i18n="dashboard.statistics-unavailable">
+              This deployment keeps no historical mempool statistics, so there is
+              nothing to chart here. Live figures above are unaffected.
+            </p>
         </div>
       </div>
     </div>
