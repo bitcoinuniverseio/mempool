@@ -283,7 +283,9 @@ class FailoverRouter {
           path: '/en-US/resources/config.js',
           method: 'GET',
           headers: {
-            'Host': Common.isLiquid() ? 'liquid.network' : 'mempool.space'
+            // The failover host answers for its own domain; upstream hardcoded
+            // its hosted domain here, which is not this deployment's.
+            'Host': host.publicDomain.replace('https://', '').replace('http://', '')
           },
           timeout: config.ESPLORA.FALLBACK_TIMEOUT,
         }, (res) => {

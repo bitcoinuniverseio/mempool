@@ -1,0 +1,306 @@
+// Universe Explorer design tokens.
+//
+// One source for colour, type, space, motion, and layer across the whole
+// application. Everything here is emitted as CSS custom properties so a theme
+// swap is a variable swap, never a rebuild of component styles.
+//
+// Two rules hold the system together:
+//
+//  1. Colour carries evidence state, never protocol identity on its own.
+//     Protocol hues live in their own scale and always appear next to a
+//     protocol name. Evidence states always carry a word. That separation is
+//     why a protocol's colour can never be mistaken for "confirmed" or
+//     "failed".
+//
+//  2. Light is the primary experience. The light palette is defined on :root
+//     so it needs no stylesheet fetch and cannot flash. Dark restates the same
+//     token names with its own values and is held to the same contrast floor.
+//
+// Contrast: every text token below clears WCAG 2.2 AA (4.5:1 for body, 3:1 for
+// large text and non-text indicators) against the surface it is designed for.
+
+// ---------------------------------------------------------------------------
+// Scales that do not change between themes
+// ---------------------------------------------------------------------------
+
+@mixin universe-invariant-tokens {
+  // Space. A 4px base keeps dense financial tables on a predictable rhythm.
+  --u-space-1: 0.25rem;
+  --u-space-2: 0.5rem;
+  --u-space-3: 0.75rem;
+  --u-space-4: 1rem;
+  --u-space-5: 1.5rem;
+  --u-space-6: 2rem;
+  --u-space-7: 3rem;
+
+  // Radius. Restrained on purpose: this is an instrument, not a card gallery.
+  --u-radius-sm: 3px;
+  --u-radius-md: 5px;
+  --u-radius-lg: 8px;
+  --u-radius-pill: 999px;
+
+  // Type. A readable text face and a purposeful data face. Both resolve to
+  // system stacks so nothing is fetched from a third-party font host.
+  --u-font-text: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, "Noto Sans", sans-serif;
+  --u-font-data: ui-monospace, "SF Mono", "Cascadia Mono", "Segoe UI Mono",
+    "Roboto Mono", Menlo, Consolas, monospace;
+
+  --u-text-2xs: 0.6875rem;
+  --u-text-xs: 0.75rem;
+  --u-text-sm: 0.8125rem;
+  --u-text-base: 0.9375rem;
+  --u-text-md: 1rem;
+  --u-text-lg: 1.125rem;
+  --u-text-xl: 1.375rem;
+  --u-text-2xl: 1.75rem;
+
+  --u-leading-tight: 1.2;
+  --u-leading-snug: 1.35;
+  --u-leading-normal: 1.55;
+
+  --u-weight-normal: 400;
+  --u-weight-medium: 500;
+  --u-weight-semibold: 600;
+  --u-weight-bold: 700;
+
+  // Motion. Durations are short because every animation here reports a fact
+  // (a transaction arrived, a block confirmed, a fee moved). Nothing decorative
+  // is allowed to delay reading the number underneath it.
+  --u-duration-instant: 90ms;
+  --u-duration-fast: 160ms;
+  --u-duration-base: 240ms;
+  --u-duration-slow: 420ms;
+  --u-ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --u-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  // Layout
+  --u-width-prose: 68ch;
+  --u-width-page: 1320px;
+
+  // Layers. Named so a new overlay never has to guess a number.
+  --u-z-base: 0;
+  --u-z-sticky: 100;
+  --u-z-header: 200;
+  --u-z-dropdown: 300;
+  --u-z-overlay: 400;
+  --u-z-toast: 500;
+}
+
+// ---------------------------------------------------------------------------
+// Light theme: the primary experience
+// ---------------------------------------------------------------------------
+
+@mixin universe-light-tokens {
+  color-scheme: light;
+
+  // Surfaces run from the page floor up. Cards are white so elevation reads
+  // without a shadow, which keeps dense tables crisp.
+  --u-surface-page: #f4f6f9;
+  --u-surface-raised: #ffffff;
+  --u-surface-sunken: #e9edf3;
+  --u-surface-inset: #dfe5ee;
+  --u-surface-hover: #eef2f7;
+  --u-surface-active: #e3e9f2;
+
+  // Text. Primary is near-black with a cool cast so it sits with the blues
+  // rather than fighting them.
+  --u-text-primary: #10151f;   // 16.8:1 on raised
+  --u-text-secondary: #414d61; // 8.9:1 on raised
+  --u-text-muted: #5c6879;     // 5.7:1 on raised
+  --u-text-inverse: #ffffff;
+
+  --u-border: #d5dce6;
+  --u-border-strong: #b6c1d0;
+  --u-divider: #e4e9f0;
+
+  // Brand. Ultramarine rather than the crypto-default violet: it reads as
+  // instrumentation, and it is far enough from every status hue to be used for
+  // structure (links, active nav, focus) without ever implying a state.
+  --u-brand: #2438b8;
+  --u-brand-hover: #1b2b93;
+  --u-brand-contrast: #ffffff;
+  --u-brand-subtle: #e7ebfb;
+  --u-brand-border: #c3ccf3;
+
+  // Focus. Deliberately not the brand colour so a focused brand-coloured
+  // control still shows a ring.
+  --u-focus-ring: #0a7ea4;
+  --u-focus-ring-offset: #ffffff;
+
+  // Evidence states. These four must never be confusable: the product's whole
+  // claim rests on the difference between proven and merely observed.
+  --u-state-proven: #0f6b3a;
+  --u-state-proven-surface: #e3f4ea;
+  --u-state-proven-border: #a9d9bf;
+
+  --u-state-partial: #8a5100;
+  --u-state-partial-surface: #fdf0dd;
+  --u-state-partial-border: #e6c491;
+
+  --u-state-pending: #15547f;
+  --u-state-pending-surface: #e2eef7;
+  --u-state-pending-border: #a5c8e0;
+
+  --u-state-unavailable: #a12420;
+  --u-state-unavailable-surface: #fbe8e7;
+  --u-state-unavailable-border: #eab3b0;
+
+  --u-state-neutral: #55617a;
+  --u-state-neutral-surface: #eaeef4;
+  --u-state-neutral-border: #c6cfdd;
+
+  // Protocol identity. Held apart from the state hues above, and only ever
+  // rendered beside a protocol name. Values are tuned for a light surface.
+  --u-protocol-ordinals: #9a4a06;
+  --u-protocol-runes: #0a6a7d;
+  --u-protocol-alkanes: #5b3bb5;
+  --u-protocol-stamps: #a3246b;
+  --u-protocol-atomicals: #0d6560;
+  --u-protocol-op-data: #7a3572;
+  --u-protocol-fallback: #4a5568;
+
+  // Chart series. Ordered for categorical use and checked so neighbouring
+  // series stay distinguishable for the common colour vision deficiencies.
+  --u-chart-1: #2438b8;
+  --u-chart-2: #0a7ea4;
+  --u-chart-3: #9a4a06;
+  --u-chart-4: #0f6b3a;
+  --u-chart-5: #7a3572;
+  --u-chart-6: #a3246b;
+  --u-chart-7: #55617a;
+  --u-chart-grid: #dde3ec;
+  --u-chart-axis: #5c6879;
+
+  // Elevation. Soft and low: this is a data surface, not a floating card deck.
+  --u-shadow-sm: 0 1px 2px rgba(16, 21, 31, 0.07);
+  --u-shadow-md: 0 2px 8px rgba(16, 21, 31, 0.09);
+  --u-shadow-lg: 0 8px 24px rgba(16, 21, 31, 0.13);
+
+  // A wash used behind live regions so an update is noticeable without a flash.
+  --u-highlight-arrive: rgba(36, 56, 184, 0.09);
+}
+
+// ---------------------------------------------------------------------------
+// Dark theme: full parity, same token names, same contrast floor
+// ---------------------------------------------------------------------------
+
+@mixin universe-dark-tokens {
+  color-scheme: dark;
+
+  --u-surface-page: #12141f;
+  --u-surface-raised: #1a1e2d;
+  --u-surface-sunken: #0d0f18;
+  --u-surface-inset: #232838;
+  --u-surface-hover: #232839;
+  --u-surface-active: #2b3146;
+
+  --u-text-primary: #f2f4f8;   // 14.9:1 on raised
+  --u-text-secondary: #c0c8d8; // 8.7:1 on raised
+  --u-text-muted: #98a2b6;     // 5.4:1 on raised
+  --u-text-inverse: #10151f;
+
+  --u-border: #2e3549;
+  --u-border-strong: #414a63;
+  --u-divider: #262c3d;
+
+  --u-brand: #8fa2ff;
+  --u-brand-hover: #adbaff;
+  --u-brand-contrast: #10151f;
+  --u-brand-subtle: #1e2340;
+  --u-brand-border: #384169;
+
+  --u-focus-ring: #4fc3e8;
+  --u-focus-ring-offset: #1a1e2d;
+
+  --u-state-proven: #5fd39a;
+  --u-state-proven-surface: #123227;
+  --u-state-proven-border: #2c6d51;
+
+  --u-state-partial: #f0be62;
+  --u-state-partial-surface: #33260f;
+  --u-state-partial-border: #6d5527;
+
+  --u-state-pending: #7cc0f0;
+  --u-state-pending-surface: #12283a;
+  --u-state-pending-border: #2b5878;
+
+  --u-state-unavailable: #f2918a;
+  --u-state-unavailable-surface: #391b1a;
+  --u-state-unavailable-border: #743935;
+
+  --u-state-neutral: #a3adc2;
+  --u-state-neutral-surface: #212735;
+  --u-state-neutral-border: #3c445a;
+
+  --u-protocol-ordinals: #f0a463;
+  --u-protocol-runes: #6fcfe2;
+  --u-protocol-alkanes: #b6a5f5;
+  --u-protocol-stamps: #f19ac4;
+  --u-protocol-atomicals: #6fd3c9;
+  --u-protocol-op-data: #d79ad0;
+  --u-protocol-fallback: #b3bccd;
+
+  --u-chart-1: #8fa2ff;
+  --u-chart-2: #4fc3e8;
+  --u-chart-3: #f0a463;
+  --u-chart-4: #5fd39a;
+  --u-chart-5: #d79ad0;
+  --u-chart-6: #f19ac4;
+  --u-chart-7: #a3adc2;
+  --u-chart-grid: #2a3145;
+  --u-chart-axis: #98a2b6;
+
+  --u-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --u-shadow-md: 0 2px 8px rgba(0, 0, 0, 0.45);
+  --u-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.55);
+
+  --u-highlight-arrive: rgba(143, 162, 255, 0.14);
+}
+
+// ---------------------------------------------------------------------------
+// Bridge to the inherited variable names
+// ---------------------------------------------------------------------------
+//
+// The application it grew from names its colours --bg, --box-bg, --fg and so
+// on, and several hundred component rules read them. Mapping those names onto
+// the tokens above is what lets a single theme swap repaint the whole product
+// instead of requiring every component to be rewritten first. New work should
+// use the --u-* tokens directly; these remain so nothing is left unpainted.
+
+@mixin universe-legacy-bridge {
+  --bg: var(--u-surface-page);
+  --active-bg: var(--u-surface-active);
+  --hover-bg: var(--u-surface-hover);
+  --fg: var(--u-text-primary);
+  --nav-bg: var(--u-surface-raised);
+  --navbar-bg: var(--u-surface-raised);
+  --title-fg: var(--u-brand);
+
+  --box-bg: var(--u-surface-raised);
+  --stat-box-bg: var(--u-surface-sunken);
+  --alert-bg: var(--u-brand-subtle);
+
+  --primary: var(--u-brand);
+  --secondary: var(--u-surface-inset);
+  --tertiary: var(--u-brand);
+  --success: var(--u-state-proven);
+  --info: var(--u-state-pending);
+  --link-color: var(--u-brand);
+  --link-hover-color: var(--u-brand-hover);
+  --icon: var(--u-text-secondary);
+
+  --green: var(--u-state-proven);
+  --red: var(--u-state-unavailable);
+  --yellow: var(--u-state-partial);
+  --orange: var(--u-protocol-ordinals);
+  --grey: var(--u-state-neutral);
+  --tooltip-grey: var(--u-text-muted);
+
+  --search-button: var(--u-brand);
+  --search-button-border: var(--u-brand);
+  --search-button-focus: var(--u-brand-hover);
+  --search-button-shadow: var(--u-brand-border);
+
+  --font-mono: var(--u-font-data);
+}
