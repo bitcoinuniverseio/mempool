@@ -327,3 +327,15 @@ main {
   top: 65px;
   padding-bottom: 20px;
 }
+
+/**
+ * Hold the footer at the bottom of the viewport until the page has content.
+ *
+ * Without a floor on this column the spacer below the router outlet has
+ * nothing to expand into, so the footer starts just under a nearly empty page
+ * and then jumps down the moment data arrives. That single movement was the
+ * largest layout shift on the site, worse on the pages that load fastest.
+ */
+.page-column {
+  min-height: 100vh;
+}

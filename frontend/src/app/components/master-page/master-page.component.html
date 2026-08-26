@@ -148,7 +148,7 @@
 <div class="d-flex" style="overflow: clip">
   <div class="empty-sidenav"><!-- empty sidenav needed to push footer down the screen --></div>
 
-  <div class="flex-grow-1 d-flex flex-column">
+  <div class="flex-grow-1 d-flex flex-column page-column">
     <app-testnet-alert *ngIf="network.val === 'testnet' || network.val === 'testnet4' || network.val === 'signet'"></app-testnet-alert>
     <app-universe-chain-sync-notice></app-universe-chain-sync-notice>
 
