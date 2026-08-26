@@ -8,8 +8,6 @@ import { TxBowtieModule } from '@components/tx-bowtie-graph/tx-bowtie.module';
 import { TransactionExtrasModule } from '@components/transaction/transaction-extras.module';
 import { GraphsModule } from '@app/graphs/graphs.module';
 import { UniverseSharedModule } from '@app/universe/universe-shared.module';
-import { AccelerateCheckout } from '@components/accelerate-checkout/accelerate-checkout.component';
-import { AccelerateFeeGraphComponent } from '@components/accelerate-checkout/accelerate-fee-graph.component';
 import { TransactionRawComponent } from '@components/transaction/transaction-raw.component';
 import { CpfpInfoComponent } from '@components/transaction/cpfp-info.component';
 
@@ -55,16 +53,12 @@ export class TransactionRoutingModule { }
   declarations: [
     TransactionComponent,
     TransactionDetailsComponent,
-    AccelerateCheckout,
-    AccelerateFeeGraphComponent,
     TransactionRawComponent,
     CpfpInfoComponent,
   ],
   exports: [
     TransactionComponent,
     TransactionDetailsComponent,
-    AccelerateCheckout,
-    AccelerateFeeGraphComponent,
     CpfpInfoComponent,
   ]
 })

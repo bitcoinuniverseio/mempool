@@ -397,7 +397,7 @@
   }
 }
 
-.goggle-badge {
+.lens-badge {
   margin: 6px 5px 8px;
   background: none;
   border: solid 2px var(--primary);
@@ -458,4 +458,12 @@
   text-align: center;
   padding-bottom: 3px;
   font-weight: 500;
+}
+
+.graph-unavailable {
+  margin: 0.75rem 0 0;
+  max-width: 60ch;
+  color: var(--transparent-fg);
+  font-size: 0.85rem;
+  line-height: 1.5;
 }

@@ -1,0 +1,344 @@
+// Repaint the inherited Bootstrap 4 layer from Universe tokens.
+//
+// Bootstrap is compiled once, so its component rules carry literal colours that
+// no theme file can reach. Every surface it paints is restated here in terms of
+// --u-* tokens and loaded after it, which is what makes a theme swap repaint
+// cards, tables, dropdowns, and form controls instead of leaving dark rectangles
+// on a light page.
+//
+// Scope is deliberately narrow: only the components this product actually
+// renders, and only the properties that carry colour. Layout, spacing, and
+// behaviour are left to Bootstrap.
+
+@mixin universe-bootstrap-bridge {
+  // --- Page ------------------------------------------------------------------
+
+  body {
+    background-color: var(--u-surface-page);
+    color: var(--u-text-primary);
+    font-family: var(--u-font-text);
+  }
+
+  hr {
+    border-top-color: var(--u-divider);
+  }
+
+  a {
+    color: var(--u-brand);
+
+    &:hover,
+    &:focus {
+      color: var(--u-brand-hover);
+    }
+  }
+
+  // --- Cards -----------------------------------------------------------------
+
+  .card {
+    background-color: var(--u-surface-raised);
+    border: 1px solid var(--u-border);
+    color: var(--u-text-primary);
+  }
+
+  .card-header,
+  .card-footer {
+    background-color: var(--u-surface-sunken);
+    border-color: var(--u-border);
+  }
+
+  // --- Tables ----------------------------------------------------------------
+
+  .table {
+    color: var(--u-text-primary);
+
+    th,
+    td {
+      border-top-color: var(--u-divider);
+    }
+
+    thead th {
+      border-bottom-color: var(--u-border);
+      color: var(--u-text-muted);
+    }
+  }
+
+  .table-striped tbody tr:nth-of-type(odd) {
+    background-color: var(--u-surface-hover);
+  }
+
+  .table-hover tbody tr:hover {
+    background-color: var(--u-surface-hover);
+    color: var(--u-text-primary);
+  }
+
+  // --- Forms -----------------------------------------------------------------
+
+  .form-control {
+    background-color: var(--u-surface-raised);
+    border-color: var(--u-border-strong);
+    color: var(--u-text-primary);
+
+    &::placeholder {
+      color: var(--u-text-muted);
+      opacity: 1;
+    }
+
+    &:focus {
+      background-color: var(--u-surface-raised);
+      border-color: var(--u-brand);
+      color: var(--u-text-primary);
+      box-shadow: 0 0 0 3px var(--u-brand-border);
+    }
+
+    &:disabled,
+    &[readonly] {
+      background-color: var(--u-surface-inset);
+      color: var(--u-text-muted);
+    }
+  }
+
+  .custom-select {
+    background-color: var(--u-surface-raised);
+    border-color: var(--u-border-strong);
+    color: var(--u-text-primary);
+  }
+
+  .input-group-text {
+    background-color: var(--u-surface-sunken) !important;
+    border: 1px solid var(--u-border-strong) !important;
+    color: var(--u-text-secondary);
+  }
+
+  // --- Dropdowns -------------------------------------------------------------
+
+  .dropdown-menu {
+    background-color: var(--u-surface-raised);
+    border: 1px solid var(--u-border);
+    box-shadow: var(--u-shadow-lg);
+    color: var(--u-text-primary);
+  }
+
+  .dropdown-item {
+    color: var(--u-text-primary);
+
+    &:hover,
+    &:focus {
+      background-color: var(--u-surface-hover);
+      color: var(--u-text-primary);
+    }
+
+    &.active,
+    &:active {
+      background-color: var(--u-brand-subtle);
+      color: var(--u-brand);
+    }
+  }
+
+  .dropdown-divider {
+    border-top-color: var(--u-divider);
+  }
+
+  // --- Buttons ---------------------------------------------------------------
+
+  .btn-primary {
+    background-color: var(--u-brand);
+    border-color: var(--u-brand);
+    color: var(--u-brand-contrast);
+
+    &:hover,
+    &:focus,
+    &:not(:disabled):not(.disabled):active {
+      background-color: var(--u-brand-hover);
+      border-color: var(--u-brand-hover);
+      color: var(--u-brand-contrast);
+    }
+  }
+
+  .btn-secondary {
+    background-color: var(--u-surface-inset);
+    border-color: var(--u-border-strong);
+    color: var(--u-text-primary);
+
+    &:hover,
+    &:focus,
+    &:not(:disabled):not(.disabled):active {
+      background-color: var(--u-surface-active);
+      border-color: var(--u-border-strong);
+      color: var(--u-text-primary);
+    }
+  }
+
+  .btn-link {
+    color: var(--u-brand);
+
+    &:hover {
+      color: var(--u-brand-hover);
+    }
+  }
+
+  // --- Badges ----------------------------------------------------------------
+  //
+  // Bootstrap badges arrive as flat colour blocks with no words of their own.
+  // Every status treatment in this product pairs a tint with a border so it stays
+  // legible where colour alone would not carry, including in print.
+
+  .badge-primary {
+    border: 1px solid;
+    font-weight: var(--u-weight-semibold);
+    background-color: var(--u-brand-subtle);
+    border-color: var(--u-brand-border);
+    color: var(--u-brand);
+  }
+
+  .badge-secondary {
+    border: 1px solid;
+    font-weight: var(--u-weight-semibold);
+    background-color: var(--u-state-neutral-surface);
+    border-color: var(--u-state-neutral-border);
+    color: var(--u-state-neutral);
+  }
+
+  .badge-success {
+    border: 1px solid;
+    font-weight: var(--u-weight-semibold);
+    background-color: var(--u-state-proven-surface);
+    border-color: var(--u-state-proven-border);
+    color: var(--u-state-proven);
+  }
+
+  .badge-info {
+    border: 1px solid;
+    font-weight: var(--u-weight-semibold);
+    background-color: var(--u-state-pending-surface);
+    border-color: var(--u-state-pending-border);
+    color: var(--u-state-pending);
+  }
+
+  .badge-warning {
+    border: 1px solid;
+    font-weight: var(--u-weight-semibold);
+    background-color: var(--u-state-partial-surface);
+    border-color: var(--u-state-partial-border);
+    color: var(--u-state-partial);
+  }
+
+  .badge-danger {
+    border: 1px solid;
+    font-weight: var(--u-weight-semibold);
+    background-color: var(--u-state-unavailable-surface);
+    border-color: var(--u-state-unavailable-border);
+    color: var(--u-state-unavailable);
+  }
+
+  // --- Overlays --------------------------------------------------------------
+
+  .modal-content {
+    background-color: var(--u-surface-raised);
+    border: 1px solid var(--u-border);
+    color: var(--u-text-primary);
+  }
+
+  .modal-header,
+  .modal-footer {
+    border-color: var(--u-border);
+  }
+
+  .close {
+    color: var(--u-text-secondary);
+    text-shadow: none;
+
+    &:hover {
+      color: var(--u-text-primary);
+    }
+  }
+
+  .tooltip-inner,
+  .popover {
+    background-color: var(--u-surface-raised);
+    border: 1px solid var(--u-border);
+    box-shadow: var(--u-shadow-md);
+    color: var(--u-text-primary);
+  }
+
+  .popover-body {
+    color: var(--u-text-primary);
+  }
+
+  // --- Navigation ------------------------------------------------------------
+
+  .nav-tabs {
+    border-bottom-color: var(--u-border);
+
+    .nav-link {
+      color: var(--u-text-secondary);
+
+      &:hover {
+        border-color: transparent transparent var(--u-border-strong);
+        color: var(--u-text-primary);
+      }
+
+      &.active {
+        background-color: var(--u-surface-raised);
+        border-color: var(--u-border) var(--u-border) var(--u-surface-raised);
+        color: var(--u-text-primary);
+      }
+    }
+  }
+
+  .pagination {
+    .page-link {
+      background-color: var(--u-surface-raised);
+      border-color: var(--u-border);
+      color: var(--u-brand);
+
+      &:hover {
+        background-color: var(--u-surface-hover);
+        border-color: var(--u-border-strong);
+      }
+    }
+
+    .page-item.active .page-link {
+      background-color: var(--u-brand);
+      border-color: var(--u-brand);
+      color: var(--u-brand-contrast);
+    }
+
+    .page-item.disabled .page-link {
+      background-color: var(--u-surface-inset);
+      border-color: var(--u-border);
+      color: var(--u-text-muted);
+    }
+  }
+
+  .list-group-item {
+    background-color: var(--u-surface-raised);
+    border-color: var(--u-border);
+    color: var(--u-text-primary);
+  }
+
+  // --- Progress --------------------------------------------------------------
+
+  .progress {
+    background-color: var(--u-surface-inset);
+  }
+
+  // --- Focus -----------------------------------------------------------------
+  //
+  // One visible focus treatment for every interactive element. Bootstrap 4 hides
+  // focus on several controls; keyboard users need it back, and it must be
+  // visible against both themes, which is why the ring is not the brand colour.
+
+  :focus-visible {
+    outline: 2px solid var(--u-focus-ring);
+    outline-offset: 2px;
+  }
+
+  .btn:focus-visible,
+  .form-control:focus-visible,
+  .dropdown-item:focus-visible,
+  .page-link:focus-visible,
+  .nav-link:focus-visible {
+    outline: 2px solid var(--u-focus-ring);
+    outline-offset: 2px;
+  }
+}

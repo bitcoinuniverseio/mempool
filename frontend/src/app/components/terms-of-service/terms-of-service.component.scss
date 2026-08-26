@@ -1,0 +1,25 @@
+.legal-page {
+  padding: 1.5rem 0 3rem;
+  max-width: 72ch;
+
+  h1 {
+    font-size: 1.6rem;
+    margin: 0 0 0.25rem;
+  }
+
+  h2 {
+    font-size: 1.05rem;
+    margin: 1.5rem 0 0.4rem;
+  }
+
+  p {
+    margin: 0 0 0.6rem;
+    line-height: 1.6;
+  }
+
+  .updated {
+    color: var(--transparent-fg, #a8b0c4);
+    font-size: 0.85rem;
+    margin-bottom: 1.5rem;
+  }
+}

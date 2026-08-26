@@ -1,0 +1,131 @@
+<div class="container-xl universe-outpoint" *ngIf="vm$ | async as vm">
+
+  <header class="page-head">
+    <div>
+      <h1 i18n="universe.outpoint.title">Transaction output</h1>
+      <p class="lede" i18n="universe.outpoint.lede">
+        What this single output carries right now, and the evidence behind it.
+      </p>
+    </div>
+    <app-universe-bookmark-button
+      *ngIf="vm.txid && vm.vout"
+      kind="outpoint"
+      [value]="vm.txid + ':' + vm.vout"
+      [path]="'/outpoint/' + vm.txid + '/' + vm.vout"
+      [label]="shorten(vm.txid) + ':' + vm.vout"
+    ></app-universe-bookmark-button>
+  </header>
+
+  <ng-container [ngSwitch]="vm.kind">
+
+    <div *ngSwitchCase="'invalid'" class="panel state-panel">
+      <h2 i18n="universe.outpoint.invalid-title">That is not an output reference</h2>
+      <p i18n="universe.outpoint.invalid-body">
+        An output is written as a 64 character transaction id, a colon, and the
+        output number. For example
+        <code>e0a1…4f2b:0</code>.
+      </p>
+    </div>
+
+    <div *ngSwitchCase="'error'" class="panel state-panel">
+      <h2 i18n="universe.outpoint.error-title">This output could not be read</h2>
+      <p i18n="universe.outpoint.error-body">
+        The request was rejected. Check the output reference, then try again.
+      </p>
+      <a class="action" [routerLink]="['/tx', vm.txid]" *ngIf="vm.txid" i18n="universe.outpoint.open-tx">
+        Open the transaction instead
+      </a>
+    </div>
+
+    <div *ngSwitchCase="'loading'" class="panel" aria-busy="true">
+      <p class="skeleton-line"></p>
+      <p class="skeleton-line short"></p>
+      <span class="visually-hidden" i18n="universe.outpoint.loading">Reading the asset authority</span>
+    </div>
+
+    <ng-container *ngSwitchCase="'ready'">
+
+      <section class="panel identity">
+        <dl>
+          <dt i18n="universe.outpoint.field-outpoint">Output</dt>
+          <dd class="identifier">{{ vm.result.outpoint }}</dd>
+
+          <dt i18n="universe.outpoint.field-transaction">Transaction</dt>
+          <dd><a class="identifier" [routerLink]="['/tx', vm.txid]">{{ vm.txid }}</a></dd>
+
+          <ng-container *ngIf="vm.result.checkpoint as checkpoint">
+            <dt i18n="universe.outpoint.field-asof">Proven as of</dt>
+            <dd>
+              <a [routerLink]="['/block', checkpoint.blockHash]">
+                <ng-container i18n="universe.outpoint.block-height">Block {{ checkpoint.heightAtomic }}</ng-container>
+              </a>
+            </dd>
+          </ng-container>
+        </dl>
+      </section>
+
+      <section class="panel evidence" [ngClass]="'state-' + vm.evidence.tone">
+        <div class="evidence-head">
+          <span class="universe-chip" [ngClass]="'state-' + vm.evidence.tone">{{ vm.evidence.label }}</span>
+          <span class="authority" *ngIf="vm.result.coveredProtocolIds?.length"
+                i18n="universe.outpoint.covered">Covering {{ vm.result.coveredProtocolIds.join(', ') }}</span>
+        </div>
+        <p class="evidence-detail">{{ vm.evidence.detail }}</p>
+      </section>
+
+      <section class="panel assets" *ngIf="vm.groups?.length; else noAssets">
+        <h2 i18n="universe.outpoint.assets-title">Attached assets</h2>
+
+        <div class="protocol-group" *ngFor="let group of vm.groups; trackBy: trackByGroup">
+          <h3 class="protocol-name">
+            <a [routerLink]="['/protocols', group.protocolId]">{{ group.protocolId }}</a>
+          </h3>
+
+          <ul class="position-list">
+            <li *ngFor="let position of group.positions; trackBy: trackByPosition">
+              <div class="asset-line">
+                <span class="asset-name">{{ position.asset?.displayName || position.asset?.ticker || position.asset?.canonicalAssetId }}</span>
+                <span class="asset-amount" *ngIf="quantityLabel(position) as amount">{{ amount }}</span>
+              </div>
+              <div class="asset-meta">
+                <span class="asset-kind">{{ position.asset?.assetKind }}</span>
+                <span class="asset-state">{{ position.state }}</span>
+              </div>
+              <ul class="notable-sats" *ngIf="position.notableSats?.length">
+                <li *ngFor="let sat of position.notableSats">
+                  <span class="rarity" [ngClass]="'rarity-' + sat.rarity">{{ rarityLabel(sat) }}</span>
+                  <span class="identifier">{{ sat.satAtomic }}</span>
+                </li>
+              </ul>
+              <p class="notable-truncated" *ngIf="position.notableSatsTruncated"
+                 i18n="universe.outpoint.sats-truncated">
+                More notable satoshis exist on this output than are listed here.
+              </p>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <ng-template #noAssets>
+        <section class="panel assets empty">
+          <h2 i18n="universe.outpoint.assets-title">Attached assets</h2>
+          <p *ngIf="vm.evidence.tone === 'proven'" i18n="universe.outpoint.none-proven">
+            None. This output carries bitcoin only.
+          </p>
+          <p *ngIf="vm.evidence.tone !== 'proven'" i18n="universe.outpoint.none-unproven">
+            Not shown. Nothing is claimed about this output while the evidence above stands.
+          </p>
+        </section>
+      </ng-template>
+
+      <section class="panel value" *ngIf="vm.result.positions?.length">
+        <h2 i18n="universe.outpoint.value-title">Bitcoin value</h2>
+        <p class="sats">{{ satsLabel(vm.result.positions[0].valueSatsAtomic) }} <span i18n="universe.outpoint.sats-unit">sats</span></p>
+        <p class="owner identifier" *ngIf="vm.result.positions[0].ownerAddress as owner">
+          <a [routerLink]="['/address', owner]">{{ owner }}</a>
+        </p>
+      </section>
+
+    </ng-container>
+  </ng-container>
+</div>

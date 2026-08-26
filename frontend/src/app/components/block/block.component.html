@@ -402,6 +402,8 @@
 
     @defer (on viewport) {
       @if (!block?.stale) {
+      <app-universe-block-protocols [height]="block?.height"></app-universe-block-protocols>
+
       <app-block-transactions [paginationMaxSize]="paginationMaxSize" [block$]="block$" [txCount]="block.tx_count" [timestamp]="block.timestamp" [blockHash]="blockHash" [previousBlockHash]="block.previousblockhash" (blockReward)="updateBlockReward($event)"></app-block-transactions>
       }
     } @placeholder {

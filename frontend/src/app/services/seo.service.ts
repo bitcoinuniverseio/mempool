@@ -11,7 +11,8 @@ export class SeoService {
   network = '';
   baseTitle = 'Universe Explorer';
   baseDescription = 'Universe Explorer is the live protocol-aware Bitcoin explorer for the Bitcoin Universe ecosystem.';
-  baseDomain = 'mempool.space';
+  // Overwritten below from the canonical link in index.html; this is only the fallback.
+  baseDomain = 'explorer.bitcoinuniverse.io';
 
   canonicalLink: HTMLLinkElement = document.getElementById('canonical') as HTMLLinkElement;
 

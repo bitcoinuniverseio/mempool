@@ -1,6 +1,6 @@
 # Competitive Landscape: Bitcoin Protocol-Aware Explorers
 
-**Draft — August 2026.** Research for "Universe Explorer": a self-hosted, protocol-aware
+**Draft, August 2026.** Research for "Universe Explorer": a self-hosted, protocol-aware
 fork of mempool.space that shows exact asset flows across transaction inputs/outputs,
 backed by authoritative indexer evidence (never heuristics).
 
@@ -15,7 +15,7 @@ Verdict legend: **ADOPT** = adopt the principle · **IMPROVE** = do it, but bett
 
 **What it is.** The de-facto reference Bitcoin explorer, centered on the mempool rather
 than the chain: live fee market, projected (audited) blocks, mining dashboards, and a
-Lightning explorer. Actively developed — v3.0 (Accelerator/Goggles integration,
+Lightning explorer. Actively developed, v3.0 (Accelerator/Goggles integration,
 full-RBF timelines), v3.2 (April 2025: UTXO bubble chart, Stratum job visualizations,
 address-poisoning warnings, runestone tags, package broadcast, PSBT previews), v3.3
 (Taproot script-tree visualization, sighash icons/highlighting, stale-block
@@ -25,7 +25,7 @@ merkle proofs on non-Esplora backends).
 **Protocol support.** Deliberately minimal. It tags transactions that contain
 inscription envelopes or runestones (Mempool Goggles filters, runestone tags) but the
 maintainers have publicly stated they will not integrate `ord` or any metaprotocol
-indexer — it displays what is in the mempool/blockchain, nothing interpreted. No
+indexer, it displays what is in the mempool/blockchain, nothing interpreted. No
 BRC-20 balances, no Runes decoding beyond tagging, no Ordinals content rendering.
 
 **Signature features.**
@@ -33,7 +33,7 @@ BRC-20 balances, no Runes decoding beyond tagging, no Ordinals content rendering
 - Projected blocks + block audit (expected vs. actual block composition; detects prioritized/excluded txs).
 - Full-RBF replacement timelines (tree of replacements with timestamps and fee deltas).
 - CPFP/effective-fee computation and package relationships.
-- Accelerator (paid out-of-band acceleration via partner pools) — off-chain commercial service.
+- Accelerator (paid out-of-band acceleration via partner pools), off-chain commercial service.
 - Mining dashboards: pool dominance, hashrate, difficulty adjustment, Stratum job monitoring, DATUM/coinbase tags.
 - Address pages with UTXO endpoint, taproot script tree rendering, PSBT/raw-tx preview tool, address-poisoning detection.
 - Self-hostable (Umbrel/Start9/Docker); first-class REST + WebSocket APIs; Liquid + Testnet4 + regtest support.
@@ -41,7 +41,7 @@ BRC-20 balances, no Runes decoding beyond tagging, no Ordinals content rendering
 **Strengths.** Best-in-class mempool UX and visual language; strong self-hosting story;
 excellent mobile/responsive design; healthy release cadence; trusted brand.
 
-**Weaknesses.** Protocol-blind by ideology — a Runes/Ordinals/Alkanes user cannot see
+**Weaknesses.** Protocol-blind by ideology, a Runes/Ordinals/Alkanes user cannot see
 what assets a transaction actually moves; asset "tags" are recognition, not accounting;
 Accelerator/enterprise services are centralized; Angular frontend is heavy to fork and
 track upstream.
@@ -50,13 +50,13 @@ track upstream.
 |---|---|---|
 | Mempool goggles / live block-grid viz | **ADOPT** | The core visual metaphor is proven; extend filters to protocol-aware categories (inscription reveal, rune mint, alkane call) driven by indexer evidence. |
 | Projected blocks + block audit | **ADOPT** | Audit-style "expected vs. actual" thinking matches the evidence-first ethos; keep as-is from the fork base. |
-| Full-RBF replacement timelines | **IMPROVE** | Keep the timeline, but add what replacement means for pending asset transfers (e.g. a replaced rune mint) — no one shows that today. |
+| Full-RBF replacement timelines | **IMPROVE** | Keep the timeline, but add what replacement means for pending asset transfers (e.g. a replaced rune mint), no one shows that today. |
 | Runestone/inscription *tagging without decoding* | **IMPROVE** | Tagging is heuristic recognition; Universe must resolve tags to authoritative indexer state (asset IDs, amounts, edicts) per input/output. |
 | Accelerator (paid out-of-band) | **REJECT** | Commercial, centralized, irrelevant to a self-hosted evidence-focused explorer. |
 | Mining/Stratum dashboards | **OOS** | Valuable but orthogonal to asset-flow goals; inherit from fork base without investment. |
 | Lightning explorer | **OOS** | Different domain; keep disabled to reduce operational surface. |
 | REST/WebSocket API + self-host packaging | **ADOPT** | Table stakes; extend the same API style with asset-flow endpoints. |
-| UTXO bubble chart / address UTXO endpoint | **IMPROVE** | Extend UTXO views to show attached assets (inscriptions, rune balances, stamps) per outpoint — the natural home for outpoint-level evidence. |
+| UTXO bubble chart / address UTXO endpoint | **IMPROVE** | Extend UTXO views to show attached assets (inscriptions, rune balances, stamps) per outpoint, the natural home for outpoint-level evidence. |
 | Address-poisoning warnings, PSBT preview | **ADOPT** | Cheap safety wins already in the fork base; keep. |
 
 ---
@@ -67,7 +67,7 @@ track upstream.
 
 **What it is.** An "all-in-one" explorer for Bitcoin and Fractal Bitcoin covering
 addresses, transactions, blocks, and assets across UniSat's indexer stack. In 2025–26
-it expanded to Alkanes and "brc2.0" alongside Ordinals, BRC-20, and Runes — currently
+it expanded to Alkanes and "brc2.0" alongside Ordinals, BRC-20, and Runes, currently
 the broadest protocol coverage of any mainstream explorer, reflecting UniSat's
 position as an Alkanes ecosystem partner.
 
@@ -114,7 +114,7 @@ server integration for AI agents.
 - Per-address views split by asset class (inscriptions / runes / BRC-20 / rare sats).
 - API: BRC-20 balances, address activity checks, tx-level info, rare-sat lookup, inscription transfer history per address.
 - Collections browsing with metadata.
-- MCP server exposing the API to LLM tooling — an early "explorer as agent data source" move.
+- MCP server exposing the API to LLM tooling, an early "explorer as agent data source" move.
 
 **Strengths.** Simple, fast, readable UX; API-first mindset; inscription *transfer
 history* (not just current location) is closer to flow-tracking than most.
@@ -133,7 +133,7 @@ accounting; depends on third-party indexer infrastructure.
 
 ---
 
-## 4. Ord.io — DEFUNCT
+## 4. Ord.io, DEFUNCT
 
 **URL:** was https://ord.io · **Shut down June 1, 2026** (with its trading app Zap), citing financial unsustainability after ~3 years and 1M+ users.
 
@@ -146,8 +146,7 @@ real-time Runes mint tracking.
 **Strengths (historical).** Best content-first browsing UX; made inscriptions legible
 to non-technical users; real-time mint feeds.
 
-**Weaknesses / lesson.** Venture-funded consumer explorer with no durable revenue —
-the shutdown is the cautionary tale for explorer sustainability. Social features
+**Weaknesses / lesson.** Venture-funded consumer explorer with no durable revenue, the shutdown is the cautionary tale for explorer sustainability. Social features
 (votes, profiles) did not save it.
 
 | Feature | Verdict | Reasoning |
@@ -169,7 +168,7 @@ its REST API surface became a de-facto standard (mempool.space implements a
 compatible API).
 
 **Protocol support.** None beyond base Bitcoin/Liquid. Liquid side: confidential
-transactions, peg-in/out, multi-asset (issued assets) — notable because Liquid asset
+transactions, peg-in/out, multi-asset (issued assets), notable because Liquid asset
 display is *consensus-level* asset accounting, shown per output.
 
 **Signature features.**
@@ -181,14 +180,14 @@ display is *consensus-level* asset accounting, shown per output.
 **Strengths.** Privacy posture (Tor, no trackers, works without JS); the outpoint-level
 navigation model; battle-tested self-host path; API standardization.
 
-**Weaknesses.** Static feel — no live mempool visualization, no RBF timelines, no
+**Weaknesses.** Static feel, no live mempool visualization, no RBF timelines, no
 projected blocks; zero metaprotocol awareness on Bitcoin; development has slowed
 relative to mempool.space; heavy disk requirements for full index.
 
 | Feature | Verdict | Reasoning |
 |---|---|---|
 | Outpoint-level navigation (prev-out ↔ spend links) | **ADOPT** | The structural skeleton that asset-flow evidence hangs on; make every outpoint a first-class page with asset annotations. |
-| Liquid-style per-output asset display | **ADOPT** | Exactly the right *presentation* for assets on outputs — Universe applies it to metaprotocol assets with indexer evidence instead of consensus data. |
+| Liquid-style per-output asset display | **ADOPT** | Exactly the right *presentation* for assets on outputs, Universe applies it to metaprotocol assets with indexer evidence instead of consensus data. |
 | Tor / no-tracking / noscript operation | **ADOPT** | Privacy-preserving defaults are core to a self-hosted explorer's value. |
 | API-standard compatibility (Esplora API) | **ADOPT** | Keeping Esplora-compatible endpoints (via the mempool fork base) preserves ecosystem tooling. |
 | Multi-language UI (17 locales) | **OOS** | Nice-to-have; inherit whatever the fork base provides, don't invest early. |
@@ -209,7 +208,7 @@ sweeps them up with a satisfying animation. Self-hostable (Umbrel app).
 **Signature features.** Value-scaled live tx squares; block-formation animation;
 block composition view; "screensaver" mode.
 
-**Strengths.** Emotional/legibility win — makes network activity *felt*; tiny,
+**Strengths.** Emotional/legibility win, makes network activity *felt*; tiny,
 self-hostable, elegant; open source.
 
 **Weaknesses.** Not an explorer (no search, addresses, or history); one-trick;
@@ -218,7 +217,7 @@ maintenance is quiet since its author moved to mempool.space.
 | Feature | Verdict | Reasoning |
 |---|---|---|
 | Ambient real-time block-formation animation | **OOS** | Delightful but decorative; Universe's live view already comes from the mempool fork base. |
-| Value/size-scaled visual encoding of txs | **ADOPT** | The principle — visual channels encoding real tx properties — should extend to protocol events (e.g. color = asset action, verified by indexer). |
+| Value/size-scaled visual encoding of txs | **ADOPT** | The principle, visual channels encoding real tx properties, should extend to protocol events (e.g. color = asset action, verified by indexer). |
 | Minimal self-host footprint | **ADOPT** | Keep Universe deployable on modest hardware where possible; heavy indexers should be optional modules. |
 
 ---
@@ -242,7 +241,7 @@ client-side; not practically self-hostable end-to-end (backend pieces incomplete
 |---|---|---|
 | Gamified fee-market metaphor | **REJECT** | Charming but at odds with an evidence-first professional tool; mempool goggles communicate the same facts precisely. |
 | Multi-chain visualization | **OOS** | Universe is Bitcoin-only by design. |
-| Making fee dynamics legible to newcomers | **IMPROVE** | The *goal* is right — serve it with accurate projected-block and fee-band UI, not cartoons. |
+| Making fee dynamics legible to newcomers | **IMPROVE** | The *goal* is right, serve it with accurate projected-block and fee-band UI, not cartoons. |
 
 ---
 
@@ -274,7 +273,7 @@ privacy-o-meter is explicitly heuristic; multi-chain breadth is noise for Bitcoi
 |---|---|---|
 | SQL-like filterable data API | **IMPROVE** | Powerful principle; Universe can expose rich filtered queries over *indexer-evidenced* asset events rather than raw columns only. |
 | Privacy-o-meter (heuristic tx scoring) | **REJECT** | Heuristic scoring is precisely the "never heuristics" anti-pattern; if Universe flags anything, it must be provable properties. |
-| Anonymous portfolio / xPub statements | **IMPROVE** | Portfolio views are wanted, but on a self-hosted instance they become private by construction — add asset-aware balances. |
+| Anonymous portfolio / xPub statements | **IMPROVE** | Portfolio views are wanted, but on a self-hosted instance they become private by construction, add asset-aware balances. |
 | Database dumps for researchers | **ADOPT** | Exportable, reproducible datasets align with evidence-first values; publish indexer snapshots with block-height provenance. |
 | 40+ chain coverage | **REJECT** | Horizontal breadth is the opposite of Universe's vertical protocol depth. |
 
@@ -286,7 +285,7 @@ privacy-o-meter is explicitly heuristic; multi-chain breadth is noise for Bitcoi
 
 **What it is.** The largest exchange-operated protocol-aware Bitcoin explorer:
 inscription lists, BRC-20 token tracker (deploy/mint/transfer states, holders),
-Ordinals transaction lists, Runes market data, Atomicals support — all fused with
+Ordinals transaction lists, Runes market data, Atomicals support, all fused with
 OKX's wallet and inscription marketplace.
 
 **Protocol support.** Ordinals/inscriptions, BRC-20, Runes, Atomicals (via wallet
@@ -314,7 +313,7 @@ strategy (cf. Magic Eden's exit).
 
 ---
 
-## 10. Magic Eden Ordinals Explorer — DEFUNCT (as explorer)
+## 10. Magic Eden Ordinals Explorer, DEFUNCT (as explorer)
 
 **URL:** was magiceden.io / magiceden.us Ordinals + Runes sections · **Feb 27, 2026: announced shutdown** of Bitcoin Ordinals, Runes, and EVM NFT marketplaces (and its multi-chain wallet) to refocus on Solana and a gambling product.
 
@@ -326,8 +325,7 @@ sat listings, wallet portfolio views, Runes swap UI.
 
 **Strengths (historical).** Collection-level metadata, market context (floors, volume) that pure explorers lack.
 
-**Weaknesses / lesson.** Marketplace economics could not sustain the infrastructure —
-80% of costs for 20% of revenue. Its exit (weeks before Ord.io's) leaves a data
+**Weaknesses / lesson.** Marketplace economics could not sustain the infrastructure, 80% of costs for 20% of revenue. Its exit (weeks before Ord.io's) leaves a data
 vacuum: collection metadata and market context lost a canonical home in 2026.
 
 | Feature | Verdict | Reasoning |
@@ -358,7 +356,7 @@ and account funnels; API less loved than Esplora-compatible ones; innovation has
 
 | Feature | Verdict | Reasoning |
 |---|---|---|
-| Beginner-simple search & address pages | **ADOPT** | Progressive disclosure — simple by default, deep on demand — is worth preserving in a power tool. |
+| Beginner-simple search & address pages | **ADOPT** | Progressive disclosure, simple by default, deep on demand, is worth preserving in a power tool. |
 | Price/market data on explorer pages | **OOS** | Fiat context is not evidence; keep optional at most. |
 | Account/wallet funnel around explorer | **REJECT** | Same neutrality argument as OKX/Magic Eden. |
 
@@ -366,14 +364,14 @@ and account funnels; API less loved than Esplora-compatible ones; innovation has
 
 ## 12. Notable emerging / adjacent explorers (2025–2026)
 
-### Ordpool (ordpool.space) — the direct precedent
+### Ordpool (ordpool.space), the direct precedent
 Open-source fork of mempool.space that decodes **Inscriptions, Runes (incl. Alkanes),
-BRC-20, SRC-20 Stamps, CAT-21, Atomicals, Labitbu, and OpenTimestamps** — including
+BRC-20, SRC-20 Stamps, CAT-21, Atomicals, Labitbu, and OpenTimestamps**, including
 *while transactions are still in the mempool*. Built on `ordpool-parser`, a
 zero-dependency TypeScript parser applied to raw transactions.
 
 - **Validation:** proves the "protocol-aware mempool.space fork" concept Universe is pursuing, and that mempool-time metaprotocol decoding is feasible.
-- **Key limitation:** parsing raw envelopes client/edge-side is *recognition*, not authoritative state — a decoded runestone doesn't tell you whether the mint was valid, within cap, or how balances resolve. That gap (parser output vs. indexer truth) is exactly Universe's differentiator.
+- **Key limitation:** parsing raw envelopes client/edge-side is *recognition*, not authoritative state, a decoded runestone doesn't tell you whether the mint was valid, within cap, or how balances resolve. That gap (parser output vs. indexer truth) is exactly Universe's differentiator.
 
 | Feature | Verdict | Reasoning |
 |---|---|---|
@@ -389,9 +387,9 @@ analytics, user-built dashboards, and a developer API. Closed source, hosted.
 ### Stamps ecosystem: Stampchain.io & OpenStamp (openstamp.io)
 Stampchain publishes an open-source Bitcoin Stamps indexer + explorer + API (SRC-20,
 stamp NFTs, SRC-101); OpenStamp adds marketplace/launchpad around the same assets.
-- Stamps data lives in multisig/bare-data outputs — a fundamentally different encoding from ordinals envelopes, so per-output asset attribution is *natural* for stamps. **ADOPT** open-indexer integration if/when Stamps support is prioritized.
+- Stamps data lives in multisig/bare-data outputs, a fundamentally different encoding from ordinals envelopes, so per-output asset attribution is *natural* for stamps. **ADOPT** open-indexer integration if/when Stamps support is prioritized.
 
-### Hiro Ordinals Explorer & API — deprecated
+### Hiro Ordinals Explorer & API, deprecated
 Hiro's Ordinals API and explorer (once ~150M requests/month) were **deprecated March 9,
 2026**, with users pointed to Xverse's Ordinals API and Hiro's Bitcoin Indexer repo.
 Another major hosted-Ordinals-data exit in 2026, reinforcing the self-hosting thesis.
@@ -411,12 +409,12 @@ Sibling to UniScan with Runes "hot map" of recent mints and marketplace integrat
    metaprotocol interpretation; UniScan/OKX/Ordiscan show asset involvement and balances
    but not outpoint-level flow with evidence; Ordpool decodes envelopes without validity
    resolution. The only production precedent for per-output asset display is Esplora's
-   *Liquid* view — consensus assets, not metaprotocols.
+   *Liquid* view, consensus assets, not metaprotocols.
 3. **Fork base is right.** mempool.space contributes the live mempool UX, RBF/CPFP
    machinery, audit mindset, API standards, and self-host packaging; Ordpool proves the
    fork approach; Esplora contributes the outpoint-navigation and privacy-default
    principles.
 4. **Differentiator to protect:** every asset claim traceable to an authoritative
    indexer (ord, runes indexer, alkanes metashrew, stamps indexer) at a stated block
-   height — decoded-but-unvalidated mempool data must be visibly distinguished from
+   height, decoded-but-unvalidated mempool data must be visibly distinguished from
    validated state. Nothing shipped today makes that distinction.

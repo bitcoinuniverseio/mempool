@@ -702,7 +702,7 @@ export const wsApiDocsData = [
     fragment: 'track-addresses',
     title: 'Track Addresses',
     description: {
-      default: 'Subscribe to multiple addresses to receive live updates on new transactions having these addresses in input or output. Limits on the maximum number of tracked addresses apply. For higher tracking limits, consider upgrading to an <a href=\'https://mempool.space/enterprise\'>enterprise sponsorship</a>.'
+      default: 'Subscribe to multiple addresses to receive live updates on new transactions having these addresses in input or output. Limits on the maximum number of tracked addresses apply.'
     },
     payload: `{
   "track-addresses": [
@@ -1296,7 +1296,7 @@ export const wsApiDocsData = [
     fragment: 'track-txs',
     title: 'Track Transactions',
     description: {
-      default: 'Subscribe to multiple transactions to receive live updates on their status and position in the mempool. Limits on the maximum number of tracked addresses apply. For higher tracking limits, consider upgrading to an <a href=\'https://mempool.space/enterprise\'>enterprise sponsorship</a>.'
+      default: 'Subscribe to multiple transactions to receive live updates on their status and position in the mempool. Limits on the maximum number of tracked addresses apply.'
     },
     payload: `{
       "track-txs": [
@@ -1489,7 +1489,7 @@ export const wsApiDocsData = [
     fragment: 'track-mempool',
     title: 'Track Mempool',
     description: {
-      default: 'Subscribe to new mempool events, such as new transactions entering the mempool. Available fields: <code>added</code>, <code>removed</code>, <code>mined</code>, <code>replaced</code>. <br> Because this is potentially a lot of data, consider using the <code>track-mempool-txids</code> endpoint described below instead, or upgrade to an <a href=\'https://mempool.space/enterprise\'>enterprise sponsorship</a>.'
+      default: 'Subscribe to new mempool events, such as new transactions entering the mempool. Available fields: <code>added</code>, <code>removed</code>, <code>mined</code>, <code>replaced</code>. <br> Because this is potentially a lot of data, consider using the <code>track-mempool-txids</code> endpoint described below instead.'
     },
     payload: '{ "track-mempool": true }',
     showConditions: bitcoinNetworks.concat(liquidNetworks),
@@ -5311,7 +5311,7 @@ export const restApiDocsData = [
     fragment: 'get-blocks-bulk',
     title: 'GET Blocks (Bulk)',
     description: {
-      default: '<p>Returns details on the range of blocks between <code>:minHeight</code> and <code>:maxHeight</code>, inclusive, up to 10 blocks. If <code>:maxHeight</code> is not specified, it defaults to the current tip.</p><p>To return data for more than 10 blocks, consider becoming an <a href=\'https://mempool.space/enterprise\'>enterprise sponsor</a>.</p>'
+      default: '<p>Returns details on the range of blocks between <code>:minHeight</code> and <code>:maxHeight</code>, inclusive, up to 10 blocks. If <code>:maxHeight</code> is not specified, it defaults to the current tip.</p>'
     },
     urlString: '/v1/blocks-bulk/:minHeight[/:maxHeight]',
     showConditions: bitcoinNetworks,
@@ -12721,7 +12721,7 @@ export const faqData = [
     category: 'advanced',
     showConditions: bitcoinNetworks,
     fragment: 'how-big-is-mempool-used-by-mempool-space',
-    title: 'How big is the mempool used by mempool.space?',
+    title: 'How big is the mempool used by this explorer?',
     options: { officialOnly: true },
   },
   {
@@ -12772,7 +12772,7 @@ export const faqData = [
     type: 'endpoint',
     category: 'advanced',
     showConditions: bitcoinNetworks,
-    fragment: 'how-do-mempool-goggles-work',
+    fragment: 'how-do-mempool-lens-work',
     title: 'How does Universe Lens work?',
   },
   {

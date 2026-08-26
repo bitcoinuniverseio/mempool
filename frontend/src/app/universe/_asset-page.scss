@@ -1,0 +1,108 @@
+// Shared layout for the single-asset pages (inscription, rune, sat).
+// They present the same kind of thing: an identity block, a location block,
+// and an evidence line, so they should look identical rather than nearly so.
+
+@use 'universe-tokens' as u;
+
+@mixin universe-asset-page {
+  @include u.universe-protocol-tokens;
+  @include u.universe-state-tokens;
+
+  display: block;
+
+  .universe-asset {
+    padding: 1.25rem 0 3rem;
+  }
+
+  .page-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+
+    h1 {
+      font-size: 1.5rem;
+      margin: 0;
+    }
+
+    .reference {
+      margin: 0.3rem 0 0;
+      color: var(--transparent-fg, #a8b0c4);
+    }
+  }
+
+  .panel {
+    @include u.universe-surface;
+
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+
+    h2 {
+      font-size: 1rem;
+      margin: 0 0 0.6rem;
+    }
+
+    p {
+      margin: 0 0 0.5rem;
+      max-width: 70ch;
+    }
+
+    p:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  .state-panel.unavailable {
+    border-left: 3px solid var(--universe-state-unavailable);
+  }
+
+  .identifier {
+    @include u.universe-identifier;
+  }
+
+  dl {
+    display: grid;
+    grid-template-columns: minmax(9rem, max-content) 1fr;
+    gap: 0.4rem 1rem;
+    margin: 0;
+
+    dt {
+      color: var(--transparent-fg, #a8b0c4);
+    }
+
+    dd {
+      margin: 0;
+      min-width: 0;
+    }
+  }
+
+  .asof {
+    color: var(--transparent-fg, #a8b0c4);
+    font-size: 0.85rem;
+    margin: 0;
+  }
+
+  .skeleton-line {
+    height: 1rem;
+    border-radius: 0.2rem;
+    background: rgba(255, 255, 255, 0.06);
+    margin: 0 0 0.6rem;
+
+    &.short {
+      width: 40%;
+    }
+  }
+
+  @media (max-width: 575px) {
+    dl {
+      grid-template-columns: 1fr;
+      gap: 0.1rem;
+
+      dd {
+        margin-bottom: 0.5rem;
+      }
+    }
+  }
+}

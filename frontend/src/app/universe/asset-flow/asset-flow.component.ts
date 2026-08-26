@@ -139,6 +139,65 @@ export class AssetFlowComponent implements OnChanges {
     return this.badgeCache.get(protocolId);
   }
 
+  /**
+   * One or two sentences that a reader with no protocol knowledge can act on.
+   *
+   * The rule the whole product rests on applies here more than anywhere: this
+   * never says "sold", "bought", or "traded", because the authority proves what
+   * moved, not why. It describes actions the authority reported and counts
+   * positions it proved, and nothing else.
+   */
+  plainSummary(flow: ExplorerTransactionAssetFlow): string {
+    if (flow.coinbase) {
+      return $localize`:@@universe.flow.summary-coinbase:This is the coinbase transaction that pays the miner. It has no inputs to spend.`;
+    }
+
+    const actionCounts = new Map<string, number>();
+    for (const action of flow.actions ?? []) {
+      if (!action?.actionType) {continue;}
+      actionCounts.set(action.actionType, (actionCounts.get(action.actionType) ?? 0) + 1);
+    }
+
+    const outputs = flow.outputs?.length ?? 0;
+    const inputs = flow.inputs?.length ?? 0;
+
+    let core: string;
+    if (actionCounts.size > 0) {
+      const phrases = [...actionCounts.entries()].map(
+        ([type, count]) => `${count} ${this.actionLabel({ actionType: type } as ExplorerAssetAction).toLowerCase()}`,
+      );
+      core = $localize`:@@universe.flow.summary-actions:The asset authority reports ${phrases.join(', ')}:actions: in this transaction.`;
+    } else if (outputs > 0) {
+      core = $localize`:@@universe.flow.summary-positions:This transaction places assets on ${outputs}:outputs: of its outputs. The authority reported no named protocol action for them.`;
+    } else if (inputs > 0) {
+      core = $localize`:@@universe.flow.summary-inputs-only:This transaction spends outputs that carried assets. The authority reported nothing attached to its outputs.`;
+    } else if (flow.complete) {
+      core = $localize`:@@universe.flow.summary-none:No supported protocol asset is involved in this transaction.`;
+    } else {
+      core = $localize`:@@universe.flow.summary-unproven:What this transaction does with protocol assets is not proven here.`;
+    }
+
+    if (flow.status === 'mempool-candidate') {
+      return core + ' ' + $localize`:@@universe.flow.summary-pending:It is still waiting in the mempool, so this can change if it is replaced.`;
+    }
+    if (flow.status === 'replaced') {
+      return core + ' ' + $localize`:@@universe.flow.summary-replaced:It was replaced by another transaction and will not confirm as it stands.`;
+    }
+    if (flow.status === 'orphaned') {
+      return core + ' ' + $localize`:@@universe.flow.summary-orphaned:The block that contained it is no longer part of the chain.`;
+    }
+    return core;
+  }
+
+  /** Route to the dedicated page for the output a position sits on. */
+  outpointRoute(position: ExplorerOutpointPosition): string[] | null {
+    const outpoint = position?.outpoint;
+    if (typeof outpoint !== 'string') {return null;}
+    const separator = outpoint.lastIndexOf(':');
+    if (separator !== 64) {return null;}
+    return ['/outpoint', outpoint.slice(0, 64), outpoint.slice(65)];
+  }
+
   /** Notable sats are the substance of a rare_sats position, not decoration. */
   notableSats(position: ExplorerOutpointPosition): ExplorerNotableSat[] {
     return position.notableSats ?? [];

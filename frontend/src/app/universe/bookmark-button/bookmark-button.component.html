@@ -1,0 +1,12 @@
+<button
+  type="button"
+  class="universe-bookmark"
+  [class.saved]="saved"
+  [attr.aria-pressed]="saved"
+  [attr.title]="actionLabel"
+  [attr.aria-label]="actionLabel"
+  (click)="toggle()"
+>
+  <span class="mark" aria-hidden="true">{{ saved ? '★' : '☆' }}</span>
+  <span class="text">{{ saved ? savedLabel : saveLabel }}</span>
+</button>

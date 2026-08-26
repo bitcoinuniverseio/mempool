@@ -173,3 +173,119 @@ export interface UniverseApiError {
   error: string;
   [key: string]: unknown;
 }
+
+// --- Outpoint enrichment ---
+
+export type OutpointEnrichmentStatus =
+  'ok' | 'unconfigured' | 'unavailable' | 'stale' | 'malformed' | 'not-indexed';
+
+export interface OutpointEnrichment {
+  outpoint: string;
+  status: OutpointEnrichmentStatus;
+  positions: ExplorerOutpointPosition[];
+  coveredProtocolIds: string[];
+  unknownAttachments: boolean;
+  checkpoint: ExplorerEvidenceCheckpoint | null;
+}
+
+export interface OutpointBatchResponse {
+  results: OutpointEnrichment[];
+}
+
+// --- Transaction flow batch ---
+
+export type TransactionBatchStatus =
+  'ok' | 'invalid' | 'not-found' | 'unconfigured' | 'unavailable';
+
+export interface TransactionBatchItem {
+  txid: string;
+  status: TransactionBatchStatus;
+  flow: ExplorerTransactionAssetFlow | null;
+}
+
+export interface TransactionBatchResponse {
+  results: TransactionBatchItem[];
+}
+
+// --- Asset lookups ---
+
+export type AssetLookupStatus =
+  'ok' | 'not-found' | 'unconfigured' | 'unavailable' | 'malformed';
+
+export interface AssetLookupResult<T> {
+  schemaVersion: string;
+  status: AssetLookupStatus;
+  authorityId: string;
+  checkpoint: ExplorerEvidenceCheckpoint | null;
+  value: T | null;
+}
+
+export interface OrdInscriptionView {
+  id: string;
+  numberAtomic: string;
+  address: string | null;
+  contentType: string | null;
+  contentLengthAtomic: string | null;
+  heightAtomic: string | null;
+  feeAtomic: string | null;
+  valueAtomic: string | null;
+  satAtomic: string | null;
+  satpoint: string | null;
+  timestampAtomic: string | null;
+  charms: string[];
+  parents: string[];
+  childCountAtomic: string | null;
+  rune: string | null;
+  metaprotocol: string | null;
+}
+
+export interface OrdRuneTermsView {
+  amountAtomic: string | null;
+  capAtomic: string | null;
+  heightStartAtomic: string | null;
+  heightEndAtomic: string | null;
+  offsetStartAtomic: string | null;
+  offsetEndAtomic: string | null;
+}
+
+export interface OrdRuneView {
+  id: string;
+  spacedRune: string;
+  rune: string;
+  symbol: string | null;
+  divisibilityAtomic: string;
+  blockAtomic: string | null;
+  numberAtomic: string | null;
+  mintsAtomic: string;
+  burnedAtomic: string;
+  premineAtomic: string;
+  etchingTxid: string | null;
+  timestampAtomic: string | null;
+  turbo: boolean;
+  mintable: boolean;
+  terms: OrdRuneTermsView | null;
+  parentInscriptionId: string | null;
+}
+
+export interface OrdSatView {
+  numberAtomic: string;
+  rarity: string;
+  name: string | null;
+  decimal: string | null;
+  degree: string | null;
+  percentile: string | null;
+  blockAtomic: string | null;
+  cycleAtomic: string | null;
+  epochAtomic: string | null;
+  periodAtomic: string | null;
+  offsetAtomic: string | null;
+  timestampAtomic: string | null;
+  satpoint: string | null;
+  address: string | null;
+  inscriptions: string[];
+}
+
+export interface OrdBlockInscriptionsView {
+  ids: string[];
+  more: boolean;
+}

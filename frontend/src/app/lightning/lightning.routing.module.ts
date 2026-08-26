@@ -8,7 +8,6 @@ import { NodesPerCountry } from '@app/lightning/nodes-per-country/nodes-per-coun
 import { NodesPerISP } from '@app/lightning/nodes-per-isp/nodes-per-isp.component';
 import { NodesRanking } from '@app/lightning/nodes-ranking/nodes-ranking.component';
 import { NodesRankingsDashboard } from '@app/lightning/nodes-rankings-dashboard/nodes-rankings-dashboard.component';
-import { GroupComponent } from '@app/lightning/group/group.component';
 import { JusticeList } from '@app/lightning/justice-list/justice-list.component';
 
 const routes: Routes = [
@@ -37,10 +36,6 @@ const routes: Routes = [
         {
           path: 'nodes/isp/:isp',
           component: NodesPerISP,
-        },
-        {
-          path: 'group/the-mempool-open-source-project',
-          component: GroupComponent,
         },
         {
           path: 'nodes/rankings',

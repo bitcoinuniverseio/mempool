@@ -2,7 +2,10 @@
 
 Purpose: ensure the public Universe Explorer deployment contains no Mempool
 Holdings trademarks, logos, slogans, or presentation implying affiliation.
-Status: IN PROGRESS - inventory complete, removal tracked per item below.
+
+**Status: COMPLETE.** Enforced continuously by
+`scripts/universe/check-branding.mjs`, which runs over the source tree and over
+the production bundle in CI. A new occurrence fails the build.
 
 Upstream's own about page enumerates the marks of Mempool Holdings S.A. de C.V.:
 The Mempool Open Source Project (r), Mempool Accelerator (r), Mempool
@@ -12,55 +15,86 @@ the mempool Logo, Square Logo, block visualization Logo, Blocks Logo,
 transaction Logo, Blocks 3|2 Logo, research Logo, and the mempool.space
 Vertical/Horizontal Logos.
 
-## Inventory and disposition
+## Disposition
 
-| Item | Where found (fork base v3.3.1) | Disposition |
+| Item | Where it was | What was done |
 | --- | --- | --- |
-| mempool logos (PNG/JPEG/SVG) | `frontend/src/resources/mempool-logo-bigger.png`, `mempool-space-logo-*.png`, `mempool-blocks-*-logo.jpeg`, `mempool-space-preview.png`, `previews/mempool-space-preview.jpg` | REMOVE; replace with original Universe logo treatment and social cards |
-| In-app SVG logo components | `frontend/src/app/components/svg-images/svg-images.component.html` (mempool logo paths) | REPLACE with Universe marks |
-| "Mempool Goggles" name | `block-filters.component.{ts,html}`, dashboards, transaction-details, about | REPLACE feature name with "Universe Lens"; strings must not ship in bundles |
-| "Be your own explorer" slogan | `about.component.html` | REMOVE (about page replaced by Universe source/about page) |
-| "Explore the full Bitcoin ecosystem" slogan | `search-form.component.html` placeholder, about | REPLACE with original Universe copy |
-| Mempool Accelerator branding + UI | ~91 files under acceleration components/services | Feature remains disabled (no `MEMPOOL_SERVICES` configured); public routes/nav entries removed; branded strings removed from shipped bundles where reachable |
-| Mempool Enterprise references | about page, services code | REMOVE from public surface |
-| Trademark policy page | `frontend/src/app/components/trademark-policy/` | REMOVE route/page (policy text is Mempool Holdings'); fork keeps no claim to those marks |
-| Sponsor graphics / profile images | about page sponsor sections, `frontend/src/resources/profile/*` | REMOVE from public deployment |
-| mempool.space service links | chat/onion/enterprise links across components | REMOVE or replace with Universe equivalents |
-| Liquid Network branding | liquid logos/components | Liquid views not exposed in Universe deployment (BASE_MODULE=mempool); assets retained in source for upstream mergeability, unreachable publicly |
-| Package names/titles ("mempool-frontend", "Mempool" titles) | package.json, index HTML titles, manifests | REPLACE user-visible titles with Universe Explorer; internal package names may remain for merge hygiene |
+| Upstream logos (PNG, JPEG, SVG) | `frontend/src/resources/`, preview images | Replaced with the Universe wordmark and logo |
+| In-app SVG logo components | `svg-images.component.html` | Replaced with Universe marks; the remaining accelerator glyph title is now a plain word |
+| "Mempool Goggles" name | block filters, dashboards, transaction details | Feature renamed to Universe Lens; every identifier (`activeGoggles$`, `goggleCycle`, `goggleIndex`) renamed so the mark does not survive minification |
+| "Be your own explorer" slogan | about page | About page deleted |
+| "Explore the full Bitcoin ecosystem" slogan | search placeholder, about, Liquid index | Replaced with original Universe copy |
+| Accelerator branding and checkout UI | ~91 files | Public routes and nav removed; `accelerate-checkout` deleted; the transaction and tracker templates no longer embed it; remaining acceleration display components carry no upstream mark |
+| Enterprise references and upsells | about page, API docs, services code | Removed. `EnterpriseService.exclusiveHostName` is empty, so no hostname is treated as an enterprise subdomain, and the upstream redirect on an unknown subdomain is gone |
+| Hosted analytics | `EnterpriseService.insertMatomo` | Now a documented no-op. No tracker is loaded on any hostname |
+| Trademark policy page | `components/trademark-policy/` | Deleted, along with its Liquid route |
+| About page and sponsor graphics | `components/about/` | Deleted, along with its Liquid route |
+| Upstream service links | footer, docs, transaction details | Removed |
+| Upstream social accounts | global footer | Removed. The version line now links to the Universe fork commit |
+| Terms of service and privacy policy | upstream legal text | Rewritten as Universe documents describing this deployment |
+| Sponsor index variants | `index.mempool.{bitb,meta,onbtc,river,strategy,xxi}.html` | Deleted; unused by `generate-config` |
+| Upstream node fleet scripts | `scripts/get_backend_hash.sh`, `scripts/get_block_tip_height.sh` | Deleted |
+| Lightning node group page | `frontend/src/app/lightning/group/` | Deleted with its routes; it existed to advertise upstream's own nodes |
+| Upstream domains in defaults | `state.service.ts`, `seo.service.ts`, `config.ts`, proxy configs, sample configs, package homepages | Point at this deployment, or are unset |
+| Upstream CDN for build assets | `frontend/sync-assets.js` | The hosted mirror rewrite is removed, and the production build skips asset synchronization entirely |
+| Liquid branding | Liquid components and index | Liquid views are not exposed (`BASE_MODULE=mempool`); the Liquid index metadata is rebranded and the peg links resolve locally |
+| Package names and titles | `package.json`, index HTML, manifests | User-visible titles are Universe Explorer; internal package names remain for merge hygiene |
 
-## Pass 1 status (2026-08-26)
+## Allowlisted references, and why
 
-Completed in commit 94ebc0c6: header/footer/tracker/preview logos replaced
-with the Universe wordmark, titles and metadata rebranded, search placeholder
-and slogans replaced, visible Goggles strings renamed to Universe Lens,
-/about and /trademark-policy routes removed, upstream service links removed
-from the footer, social images repointed. Production bundle greps clean for
-upstream marks in all reachable chunks.
+The gate permits an upstream reference only in these paths:
 
-Documented residuals still open:
+| Path | Reason |
+| --- | --- |
+| `COPYING.md`, `LICENSE` | Licence text, preserved verbatim |
+| `UPSTREAM.md`, `upstream-base.json` | Fork provenance record |
+| `CONTRIBUTING.md`, `contributors/` | Inherited contribution guide and contributor records |
+| `docs/legal/` | This file and the AGPL compliance record |
+| `docs/research/` | Competitor research that names the competitor |
+| `docs/architecture/`, `docs/operations/UPSTREAM-SYNC.md` | Records which upstream subsystems are modified and how to sync |
+| `README.md` | Fork attribution required by the licence |
+| `backend/README.md`, `frontend/README.md`, `production/`, `docker/`, `rust/` | Inherited developer and operator notes |
+| `frontend/src/locale/` | Upstream translation catalogues; not built by this deployment |
+| `frontend/cypress/`, `.github/workflows/` | Inherited end-to-end suite, recorded fixtures, and upstream CI definitions |
+| `scripts/universe/check-branding.mjs`, `check-origins.mjs` | The gates list the marks and hosts they ban |
+| `audits/` | Dated audit records |
 
-| Item | Where | Plan |
-| --- | --- | --- |
-| Slogans/Goggles strings in unreachable lazy chunks | about module (chunk emitted via Liquid master page), trademark-policy module, accelerator-dashboard | Unreachable at runtime on BASE_MODULE=mempool with removed routes and disabled services; excluded from Liquid build or stripped before GO |
-| rel=canonical link element pointing at the upstream domain | frontend/src/index.mempool.html (feeds SeoService.baseDomain) | Replace with the production Universe domain at deployment configuration time |
-| Address error state suggesting the upstream site as fallback viewer | address.component.html | Replace copy with Universe-only guidance |
-| Upstream social links (GitHub/X/nostr/YouTube) | global-footer | Replace with Universe accounts or remove |
-| Sponsor index variants (index.mempool.bitb/meta/onbtc/river/strategy/xxi.html) | frontend/src | Unused by generate-config; delete in a cleanup commit |
-| Localized slogan strings | src/locale/*.xlf | Only shipped for non-English locales; regenerate translations from rebranded sources before enabling locales |
+Two attribution sentences are permitted anywhere, including inside a minified
+bundle, because publishing them is the point of them:
+
+- the API docs statement that this is an independent instance of the
+  AGPL-licensed upstream codebase, not affiliated with or endorsed by the
+  upstream site;
+- the source page statement that Universe Explorer is free software built on
+  the upstream project, with the corresponding source published.
+
+## Localization
+
+The 33 upstream translation catalogues under `frontend/src/locale/` still carry
+upstream copy, including its marks. They are **not built**: the production
+script `npm run build:universe` omits `--localize`, so only the English build
+ships and no catalogue reaches a bundle. They are retained so a future
+translation pass starts from the upstream structure rather than from nothing.
+Re-enabling locales requires regenerating them from the rebranded sources, and
+the branding gate must be pointed at the localized output before that ships.
 
 ## Rules applied
 
 - No confusingly similar logos: Universe iconography is designed independently.
 - The familiar explorer layout and mechanics of the AGPL codebase are retained;
   that is licensed functionality, not trade dress owned by upstream marketing.
-- Upstream LICENSE/COPYING and copyright notices are PRESERVED (see
-  AGPL-COMPLIANCE.md) - only trademark usage is removed.
-- The upstream synchronization procedure re-checks this table after every sync.
+- Upstream LICENSE and COPYING notices are PRESERVED (see AGPL-COMPLIANCE.md).
+  Only trademark usage is removed.
+- The upstream synchronization procedure re-runs the gate after every sync.
 
-## Release gate
+## Verification, 26 August 2026
 
-Do not declare GO until every REMOVE/REPLACE row above is verified against the
-built production bundle (grep of `dist/` output for: "mempool.space",
-"Goggles", "Be your own explorer", "Explore the full Bitcoin ecosystem",
-"Accelerator", "Mempool Enterprise", plus visual review of all public routes).
+```
+node scripts/universe/check-branding.mjs            # source tree
+node scripts/universe/check-branding.mjs frontend/dist   # production bundle
+node scripts/universe/check-origins.mjs
+node scripts/universe/check-origins.mjs frontend/dist
+node scripts/universe/check-text.mjs
+```
+
+All five passed against the release build.
