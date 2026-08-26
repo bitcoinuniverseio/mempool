@@ -112,6 +112,7 @@ export interface ExplorerTransactionAssetFlow {
   txid: string;
   status: ExplorerTransactionFlowStatus;
   checkpoint?: ExplorerEvidenceCheckpoint;
+  coinbase?: boolean;
   inputs: ExplorerOutpointPosition[];
   outputs: ExplorerOutpointPosition[];
   actions: ExplorerAssetAction[];

@@ -79,6 +79,17 @@ export class AssetFlowComponent implements OnChanges {
       : $localize`:@@universe.flow.empty-incomplete:Protocol evidence incomplete`;
   }
 
+  /** Explains an empty inputs column without asserting more than is proven. */
+  inputsNote(flow: ExplorerTransactionAssetFlow): string {
+    if (flow.coinbase) {
+      return $localize`:@@universe.flow.coinbase:Coinbase transaction: no inputs to spend`;
+    }
+    if (flow.complete) {
+      return $localize`:@@universe.flow.inputs-clean:No supported assets on the inputs`;
+    }
+    return $localize`:@@universe.flow.inputs-unproven:Input evidence incomplete: the authority cannot prove what these inputs carried`;
+  }
+
   isEmpty(flow: ExplorerTransactionAssetFlow): boolean {
     return !flow.inputs?.length && !flow.outputs?.length;
   }
