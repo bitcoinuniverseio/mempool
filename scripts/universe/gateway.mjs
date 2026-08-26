@@ -25,6 +25,7 @@ import http from 'node:http';
 import net from 'node:net';
 import { createReadStream, existsSync, statSync } from 'node:fs';
 import { extname, join, normalize, resolve, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const HOST = process.env.UNIVERSE_GATEWAY_HOST || '127.0.0.1';
 const PORT = Number(process.env.UNIVERSE_GATEWAY_PORT || 8099);
@@ -63,23 +64,38 @@ const CONTENT_TYPES = new Map(Object.entries({
 /** Build output is content hashed, so it can be cached hard. Entry points cannot. */
 const HASHED_ASSET = /\.[0-9a-f]{16,}\.(?:js|css|woff2?|ttf|png|jpe?g|svg|webp|avif|wasm)$/i;
 
-function upstreamFor(pathname) {
+/**
+ * Which upstream serves a path, and what path it should see.
+ *
+ * The explorer backend registers every route under its own `/api/v1/` prefix,
+ * while clients and the Esplora-compatible surface address them as `/api/`.
+ * Upstream resolves that in nginx; this does the same rewrite, because getting
+ * it wrong silently 404s the entire chain API while the site still loads.
+ */
+export function routeFor(pathname, originalUrl) {
   if (pathname === '/api/v1/universe' || pathname.startsWith('/api/v1/universe/')) {
-    return OVERLAY;
+    return { upstream: OVERLAY, path: originalUrl };
   }
-  if (pathname === '/api' || pathname.startsWith('/api/')) {
-    return BACKEND;
+  if (pathname === '/api/v1' || pathname.startsWith('/api/v1/')) {
+    return { upstream: BACKEND, path: originalUrl };
+  }
+  if (pathname.startsWith('/api/')) {
+    return { upstream: BACKEND, path: `/api/v1/${originalUrl.slice('/api/'.length)}` };
+  }
+  if (pathname === '/api') {
+    return { upstream: BACKEND, path: '/api/v1/' };
   }
   return null;
 }
 
-function proxy(request, response, upstream) {
+function proxy(request, response, route) {
+  const upstream = route.upstream;
   const options = {
     protocol: upstream.protocol,
     hostname: upstream.hostname,
     port: upstream.port,
     method: request.method,
-    path: request.url,
+    path: route.path,
     headers: { ...request.headers, host: upstream.host },
     timeout: UPSTREAM_TIMEOUT_MS,
   };
@@ -163,9 +179,9 @@ const server = http.createServer((request, response) => {
     return;
   }
 
-  const upstream = upstreamFor(pathname);
-  if (upstream) {
-    proxy(request, response, upstream);
+  const route = routeFor(pathname, request.url);
+  if (route) {
+    proxy(request, response, route);
     return;
   }
 
@@ -197,9 +213,13 @@ const server = http.createServer((request, response) => {
   response.end('Frontend build not present');
 });
 
-/** WebSocket upgrades belong to the explorer backend. */
+/**
+ * WebSocket upgrades belong to the explorer backend, which attaches its socket
+ * server to the whole HTTP server rather than to one path, so the path passes
+ * through unchanged.
+ */
 server.on('upgrade', (request, socket, head) => {
-  const upstream = upstreamFor(new URL(request.url, 'http://gateway.invalid').pathname) || BACKEND;
+  const upstream = BACKEND;
   const proxied = net.connect(Number(upstream.port), upstream.hostname, () => {
     const lines = [`${request.method} ${request.url} HTTP/1.1`];
     for (const [name, value] of Object.entries(request.headers)) {
@@ -226,18 +246,31 @@ server.headersTimeout = 60_000;
 server.requestTimeout = 0;
 server.keepAliveTimeout = 65_000;
 
-server.listen(PORT, HOST, () => {
-  process.stdout.write(
-    `Universe Explorer gateway listening on ${HOST}:${PORT}\n` +
-    `  overlay  ${OVERLAY.origin}\n` +
-    `  backend  ${BACKEND.origin}\n` +
-    `  static   ${ROOT}\n`,
-  );
-});
+/**
+ * Only listen when this file is the program being run. Importing it for a test
+ * must not open a socket.
+ */
+const startedDirectly =
+  process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1]);
 
-for (const signal of ['SIGTERM', 'SIGINT']) {
-  process.on(signal, () => {
-    server.close(() => process.exit(0));
-    setTimeout(() => process.exit(0), 5000).unref();
+if (startedDirectly) {
+  server.listen(PORT, HOST, () => {
+    process.stdout.write(
+      `Universe Explorer gateway listening on ${HOST}:${PORT}
+` +
+      `  overlay  ${OVERLAY.origin}
+` +
+      `  backend  ${BACKEND.origin}
+` +
+      `  static   ${ROOT}
+`,
+    );
   });
+
+  for (const signal of ['SIGTERM', 'SIGINT']) {
+    process.on(signal, () => {
+      server.close(() => process.exit(0));
+      setTimeout(() => process.exit(0), 5000).unref();
+    });
+  }
 }
