@@ -37,8 +37,24 @@ synchronization procedure.
 
 | Subsystem | Nature of modification |
 | --- | --- |
-| (none yet) | Fork base just established |
+| `frontend/src/app/universe/` | Added. Universe protocol UI: protocol directory, asset flow section, protocol badge, source and licenses page. No upstream file is involved. |
+| `frontend/src/app/master-page.module.ts` | Two lazy routes added (`/protocols`, `/source`); upstream routes untouched. |
+| `frontend/src/app/components/transaction/` | The asset flow section is embedded on the transaction page. |
+| Branding | Mempool Holdings trademarks replaced across templates, SEO, and the web manifest. See `docs/legal/TRADEMARK-AUDIT.md`. |
+| `frontend/package.json`, `frontend/vitest.config.ts` | Unit test runner added. Upstream ships no working test target: `angular.json` has no `test` architect entry, so the upstream `ng test` script could never run. |
+| `.github/workflows/universe-ci.yml`, `upstream-sync.yml` | Added. Upstream workflows are unchanged. |
+| `scripts/universe/` | Added. Protocol coverage documentation generator and its CI check. |
+| `.nvmrc` | Pinned to the Universe toolchain version (24.19.0). |
 
 ## Known upstream conflicts
 
-None recorded yet.
+| Area | Risk |
+| --- | --- |
+| `frontend/src/app/master-page.module.ts` | Upstream edits its route table regularly. The two Universe routes sit at the end of the child route array to keep the conflict small and mechanical. |
+| Branding templates | Any upstream change to a rebranded template conflicts by construction. `docs/legal/TRADEMARK-AUDIT.md` lists every touched file so a merge can be resolved deliberately. |
+| `frontend/package.json` | The `test` script diverges from upstream. Upstream's value is inert, so upstream's version can be discarded on conflict. |
+
+The two upstream spec files under `frontend/src/app/lightning/` import from a
+path that does not exist in this tree and reference a missing `src/test.ts`.
+They are left untouched so they keep merging cleanly; the Universe unit suite
+does not include them.

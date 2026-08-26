@@ -1,21 +1,29 @@
 # Protocol coverage
 
 Generated from the explorer protocol registry in backend-apis
-(src/universe-explorer/registry/explorer-protocol-registry.ts). Regenerate with the
-registry build; do not edit rows by hand.
+(src/universe-explorer/registry/explorer-protocol-registry.ts), as served by
+`/api/v1/universe/protocols`. Do not edit rows by hand: regenerate with
+
+```
+node scripts/universe/generate-protocol-coverage.mjs --from <manifest url or file>
+```
+
+and verify with `node scripts/universe/generate-protocol-coverage.mjs --check`.
 
 Release status semantics: every protocol starts BLOCKED and is upgraded only when
 its explorer integration is completed and verified against its Universe authority.
 A protocol never silently disappears from this table.
 
+Registry version 1.0.0. 3 of 36 protocols are readable today; the rest are recorded here but not yet served.
+
 | id | family | chain | authority | release status | coverage |
 |---|---|---|---|---|---|
-| ordinals | ORDINALS | bitcoin | index-ordinals | BLOCKED | unknown |
-| rare_sats | ORDINALS | bitcoin | index-ordinals | BLOCKED | unknown |
+| ordinals | ORDINALS | bitcoin | ord | VERIFIED READ ONLY | complete |
+| rare_sats | ORDINALS | bitcoin | ord | VERIFIED READ ONLY | complete |
 | names | ORDINALS | bitcoin | index-names | BLOCKED | unknown |
 | bitmap | ORDINALS | bitcoin | index-bitmap | BLOCKED | unknown |
 | unat | ORDINALS | bitcoin | index-unat | BLOCKED | unknown |
-| runes | RUNES | bitcoin | index-runes | BLOCKED | unknown |
+| runes | RUNES | bitcoin | ord | VERIFIED READ ONLY | complete |
 | alkanes | ALKANES | bitcoin | index-alkanes | BLOCKED | unknown |
 | mezcal | ALKANES | bitcoin | index-mezcal | BLOCKED | unknown |
 | stamps | STAMPS | bitcoin | index-stamps | BLOCKED | unknown |
