@@ -9,8 +9,8 @@
     </div>
 
     <ng-container *ngIf="!vm.error">
-      <p class="registry-version">
-        <span i18n="universe.protocols.registry-version">Registry version</span>: {{ vm.registryVersion }}
+      <p class="registry-summary" role="status" i18n="universe.protocols.live-count">
+        {{ vm.liveCount }} of {{ vm.totalCount }} Bitcoin protocols are readable in this deployment today.
       </p>
 
       <section *ngFor="let group of vm.groups; trackBy: trackByGroup" class="family-group">
@@ -25,13 +25,20 @@
               <span
                 class="state-chip"
                 [ngClass]="releaseStatusClass(protocol)"
-                [attr.aria-label]="'Release status: ' + releaseStatusLabel(protocol)"
+                [attr.aria-label]="releaseStatusLabel(protocol)"
               >{{ releaseStatusLabel(protocol) }}</span>
               <span
                 class="state-chip"
                 [ngClass]="coverageKnown(protocol) ? 'chip-neutral' : 'chip-unknown'"
                 [attr.aria-label]="coverageLabel(protocol)"
               >{{ coverageLabel(protocol) }}</span>
+              <ng-container *ngIf="sourceFor(protocol, vm.sourcesByAuthority) as source">
+                <span
+                  class="state-chip"
+                  [ngClass]="sourceClass(source)"
+                  [attr.aria-label]="sourceLabel(source)"
+                >{{ sourceLabel(source) }}</span>
+              </ng-container>
             </div>
           </li>
         </ul>
@@ -39,8 +46,16 @@
 
       <p *ngIf="!vm.groups?.length" class="no-protocols" i18n="universe.protocols.none">The registry contains no Bitcoin mainnet protocols.</p>
 
+      <p *ngIf="vm.sourcesByAuthority === null" class="chain-note" i18n="universe.protocols.sources-unavailable">
+        Live authority status is currently unavailable. The registry below still applies.
+      </p>
+
       <p *ngIf="vm.otherChainCount" class="chain-note">
         {{ vm.otherChainCount }} <ng-container i18n="universe.protocols.other-chains">protocol(s) on other chains are not listed here.</ng-container>
+      </p>
+
+      <p class="registry-version">
+        <span i18n="universe.protocols.registry-version">Registry version</span>: {{ vm.registryVersion }}
       </p>
     </ng-container>
   </ng-container>

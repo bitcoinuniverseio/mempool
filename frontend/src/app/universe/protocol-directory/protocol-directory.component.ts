@@ -1,7 +1,13 @@
 import { Component, ChangeDetectionStrategy, OnInit } from '@angular/core';
-import { Observable, catchError, map, of } from 'rxjs';
+import { Observable, catchError, combineLatest, map, of } from 'rxjs';
 import { UniverseApiService } from '@app/universe/universe-api.service';
-import { ExplorerProtocolDefinition, ProtocolCoverage, ProtocolsResponse } from '@app/universe/universe.types';
+import {
+  ExplorerProtocolDefinition,
+  ProtocolCoverage,
+  ProtocolsResponse,
+  SourceEntry,
+  SourcesResponse,
+} from '@app/universe/universe.types';
 import { SeoService } from '@app/services/seo.service';
 
 interface FamilyGroup {
@@ -16,6 +22,10 @@ interface DirectoryViewModel {
   registryVersion?: string;
   groups?: FamilyGroup[];
   otherChainCount?: number;
+  liveCount?: number;
+  totalCount?: number;
+  /** null when the source snapshot could not be read; the page still renders. */
+  sourcesByAuthority?: Map<string, SourceEntry> | null;
 }
 
 // display order of protocol families; unknown families sort after the known
@@ -40,8 +50,13 @@ export class ProtocolDirectoryComponent implements OnInit {
 
   ngOnInit(): void {
     this.seoService.setTitle('Universe Protocols');
-    this.vm$ = this.universeApiService.getProtocols$().pipe(
-      map((response: ProtocolsResponse): DirectoryViewModel => {
+    // The registry is the page; the live source snapshot only annotates it, so
+    // a failing snapshot must not blank out the directory.
+    const sources$ = this.universeApiService.getSources$().pipe(
+      catchError(() => of(null)),
+    );
+    this.vm$ = combineLatest([this.universeApiService.getProtocols$(), sources$]).pipe(
+      map(([response, sources]: [ProtocolsResponse, SourcesResponse | null]): DirectoryViewModel => {
         const bitcoinProtocols = (response.protocols || []).filter(p => p.chain === 'bitcoin');
         const otherChainCount = (response.protocols || []).length - bitcoinProtocols.length;
         return {
@@ -50,10 +65,20 @@ export class ProtocolDirectoryComponent implements OnInit {
           registryVersion: response.registryVersion,
           groups: this.groupByFamily(bitcoinProtocols),
           otherChainCount,
+          liveCount: bitcoinProtocols.filter(p => this.isLive(p)).length,
+          totalCount: bitcoinProtocols.length,
+          sourcesByAuthority: this.indexSources(sources),
         };
       }),
       catchError(() => of({ loading: false, error: true })),
     );
+  }
+
+  private indexSources(sources: SourcesResponse | null): Map<string, SourceEntry> | null {
+    if (!sources || !Array.isArray(sources.sources)) {
+      return null;
+    }
+    return new Map(sources.sources.map(entry => [entry.authorityId, entry]));
   }
 
   private normalizeFamily(family: string): string {
@@ -88,44 +113,89 @@ export class ProtocolDirectoryComponent implements OnInit {
     return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
   }
 
+  private normalizeStatus(protocol: ExplorerProtocolDefinition): string {
+    return (protocol.releaseStatus || '').toLowerCase().replace(/[_-]+/g, ' ').trim();
+  }
+
+  /** True when this protocol is readable in the explorer today. */
+  isLive(protocol: ExplorerProtocolDefinition): boolean {
+    const status = this.normalizeStatus(protocol);
+    return status === 'verified read only' || status === 'production verified';
+  }
+
   releaseStatusLabel(protocol: ExplorerProtocolDefinition): string {
-    const status = (protocol.releaseStatus || '').toLowerCase().replace(/[_-]+/g, ' ').trim();
-    switch (status) {
-      case 'blocked': return 'Blocked';
-      case 'read only': return 'Read only';
-      case 'production': return 'Production';
-      case '': return 'Status unknown';
-      default: return this.humanize(status);
+    switch (this.normalizeStatus(protocol)) {
+      case 'production verified': return $localize`:@@universe.protocols.status-production:Live`;
+      case 'verified read only': return $localize`:@@universe.protocols.status-read-only:Live, read only`;
+      case 'blocked': return $localize`:@@universe.protocols.status-blocked:Not yet available`;
+      case 'intentionally disabled': return $localize`:@@universe.protocols.status-disabled:Disabled`;
+      case '': return $localize`:@@universe.protocols.status-unknown:Status unknown`;
+      default: return this.humanize(this.normalizeStatus(protocol));
     }
   }
 
   releaseStatusClass(protocol: ExplorerProtocolDefinition): string {
-    const status = (protocol.releaseStatus || '').toLowerCase().replace(/[_-]+/g, ' ').trim();
-    switch (status) {
+    switch (this.normalizeStatus(protocol)) {
+      case 'production verified': return 'chip-production';
+      case 'verified read only': return 'chip-live';
       case 'blocked': return 'chip-blocked';
-      case 'read only': return 'chip-read-only';
-      case 'production': return 'chip-production';
-      default: return 'chip-neutral';
+      case 'intentionally disabled': return 'chip-disabled';
+      default: return 'chip-unknown';
     }
   }
 
   coverageLabel(protocol: ExplorerProtocolDefinition): string {
     const coverage = protocol.coverage;
     if (coverage === null || coverage === undefined || coverage === '') {
-      return 'Coverage unknown';
+      return $localize`:@@universe.protocols.coverage-unknown:Coverage unknown`;
     }
     if (typeof coverage === 'string') {
-      return 'Coverage: ' + this.humanize(coverage);
+      return $localize`:@@universe.protocols.coverage:Coverage: ${this.humanize(coverage)}:coverage:`;
     }
     const state = (coverage as ProtocolCoverage).state;
     if (state) {
-      return 'Coverage: ' + this.humanize(state);
+      return $localize`:@@universe.protocols.coverage:Coverage: ${this.humanize(state)}:coverage:`;
     }
-    return 'Coverage unknown';
+    return $localize`:@@universe.protocols.coverage-unknown:Coverage unknown`;
   }
 
   coverageKnown(protocol: ExplorerProtocolDefinition): boolean {
-    return this.coverageLabel(protocol) !== 'Coverage unknown';
+    const coverage = protocol.coverage;
+    if (coverage === null || coverage === undefined || coverage === '') {
+      return false;
+    }
+    return typeof coverage === 'string' || !!(coverage as ProtocolCoverage).state;
+  }
+
+  sourceFor(
+    protocol: ExplorerProtocolDefinition,
+    sources: Map<string, SourceEntry> | null,
+  ): SourceEntry | null {
+    if (!sources || !protocol.indexerAuthority) {
+      return null;
+    }
+    return sources.get(protocol.indexerAuthority) ?? null;
+  }
+
+  /** Live authority state, phrased as what the snapshot actually proves. */
+  sourceLabel(source: SourceEntry): string {
+    if (source.ready && source.checkpoint) {
+      return $localize`:@@universe.protocols.source-ready:Authority ready at block ${source.checkpoint.heightAtomic}:height:`;
+    }
+    switch (source.status) {
+      case 'ready': return $localize`:@@universe.protocols.source-ready-nocheckpoint:Authority ready`;
+      case 'stale': return $localize`:@@universe.protocols.source-stale:Authority behind the chain tip`;
+      case 'unreachable': return $localize`:@@universe.protocols.source-unreachable:Authority unreachable`;
+      case 'unconfigured': return $localize`:@@universe.protocols.source-unconfigured:Authority not configured here`;
+      default: return $localize`:@@universe.protocols.source-degraded:Authority degraded`;
+    }
+  }
+
+  sourceClass(source: SourceEntry): string {
+    if (source.ready) {
+      return 'chip-live';
+    }
+    return source.status === 'unconfigured' ? 'chip-unknown' : 'chip-blocked';
   }
 
   trackByProtocol(index: number, protocol: ExplorerProtocolDefinition): string {

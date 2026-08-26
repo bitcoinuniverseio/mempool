@@ -34,6 +34,7 @@
   white-space: nowrap;
 
   &.complete { color: #3bcc49; }
+  &.partial { color: #4fd1c5; }
   &.incomplete { color: #ffb74a; }
   &.pending { color: #6ea8fe; }
   &.unavailable { color: #9aa0b5; }
@@ -75,10 +76,6 @@
 
 .position-row,
 .action-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
   padding: 0.4rem 0.5rem;
   border-left: 3px solid transparent;
   font-size: 0.85rem;
@@ -90,6 +87,62 @@
   &.transferred {
     border-left-color: #6ea8fe;
   }
+}
+
+.position-main,
+.action-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.notable-sats {
+  list-style: none;
+  margin: 0.35rem 0 0;
+  padding: 0 0 0 0.25rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.notable-sat {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem;
+  padding: 0.15rem 0 0.15rem 0.5rem;
+}
+
+.rarity-chip {
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.05rem 0.4rem;
+  border-radius: 8px;
+  border: 1px solid currentColor;
+  white-space: nowrap;
+
+  &.rarity-mythic { color: #ff6ec7; }
+  &.rarity-legendary { color: #ffd166; }
+  &.rarity-epic { color: #b388ff; }
+  &.rarity-rare { color: #6ea8fe; }
+  &.rarity-uncommon { color: #3bcc49; }
+}
+
+.sat-number {
+  font-family: monospace;
+  font-variant-numeric: tabular-nums;
+  word-break: break-all;
+}
+
+.rarity-reason {
+  font-size: 0.78rem;
+  opacity: 0.6;
+}
+
+.notable-truncated {
+  margin: 0.35rem 0 0 0.75rem;
+  font-size: 0.78rem;
+  opacity: 0.6;
 }
 
 .asset-label {

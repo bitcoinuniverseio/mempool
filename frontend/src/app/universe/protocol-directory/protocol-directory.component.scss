@@ -95,7 +95,7 @@
       color: var(--red);
     }
 
-    &.chip-read-only {
+    &.chip-live {
       border-color: var(--taproot);
       color: var(--taproot);
     }
@@ -105,10 +105,21 @@
       color: var(--green);
     }
 
+    &.chip-disabled {
+      border-style: dashed;
+      border-color: var(--transparent-fg);
+      color: var(--transparent-fg);
+    }
+
     &.chip-unknown {
       border-style: dashed;
       color: var(--transparent-fg);
     }
+  }
+
+  .registry-summary {
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
   }
 
   .no-protocols {

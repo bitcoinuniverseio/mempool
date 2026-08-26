@@ -1,16 +1,9 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
 import { Observable, catchError, of } from 'rxjs';
 import { SeoService } from '@app/services/seo.service';
-
-interface BackendInfo {
-  hostname?: string;
-  version: string;
-  gitCommit: string;
-  backend?: string;
-  coreVersion?: string;
-}
+import { UniverseApiService } from '@app/universe/universe-api.service';
+import { BackendInfo } from '@app/universe/universe.types';
 
 const UPSTREAM_BASE = {
   repository: 'https://github.com/mempool/mempool',
@@ -34,11 +27,11 @@ export class SourcePageComponent implements OnInit {
   backendInfo$: Observable<BackendInfo | null>;
 
   constructor(
-    private http: HttpClient,
+    private universeApiService: UniverseApiService,
     private seo: SeoService,
   ) {
-    this.backendInfo$ = this.http
-      .get<BackendInfo>('/api/v1/backend-info')
+    this.backendInfo$ = this.universeApiService
+      .getBackendInfo$()
       .pipe(catchError(() => of(null)));
   }
 

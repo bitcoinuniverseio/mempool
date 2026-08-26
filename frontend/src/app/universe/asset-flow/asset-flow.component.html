@@ -6,6 +6,7 @@
       *ngIf="state.kind === 'flow'"
       class="evidence-chip"
       [class.complete]="evidenceKind(state.flow) === 'complete'"
+      [class.partial]="evidenceKind(state.flow) === 'partial'"
       [class.incomplete]="evidenceKind(state.flow) === 'incomplete'"
       [class.pending]="evidenceKind(state.flow) === 'pending'"
       [attr.aria-label]="evidenceLabel(state.flow)"
@@ -42,59 +43,26 @@
       <div class="flow-column">
         <h3 i18n="universe.flow.inputs">Inputs</h3>
         <p *ngIf="!state.flow.inputs.length" class="column-note">{{ inputsNote(state.flow) }}</p>
-        <ul class="position-list">
-          <li
+        <ul class="position-list" *ngIf="state.flow.inputs.length">
+          <ng-container
             *ngFor="let position of state.flow.inputs; trackBy: trackPosition"
-            class="position-row"
-            [ngClass]="accentClass(position, state.flow)"
-          >
-            <app-protocol-badge [protocol]="badgeFor(position.asset.protocolId)"></app-protocol-badge>
-            <span class="asset-label" [class.partial-evidence]="isPartialEvidence(position)">
-              {{ assetLabel(position.asset) }}
-            </span>
-            <span class="quantity" *ngIf="position.quantityAtomic">{{ position.quantityAtomic }}</span>
-            <span class="sats">{{ position.valueSatsAtomic }} sats</span>
-            <span class="owner" *ngIf="position.ownerAddress" [title]="position.ownerAddress">
-              {{ shortAddress(position.ownerAddress) }}
-            </span>
-            <span class="state-chip" *ngIf="stateLabel(position)">{{ stateLabel(position) }}</span>
-            <span
-              class="evidence-info"
-              tabindex="0"
-              role="note"
-              [title]="evidenceTitle(position)"
-              [attr.aria-label]="evidenceTitle(position)"
-            >i</span>
-          </li>
+            [ngTemplateOutlet]="positionRow"
+            [ngTemplateOutletContext]="{ position: position, flow: state.flow }"
+          ></ng-container>
         </ul>
       </div>
 
       <div class="flow-column">
         <h3 i18n="universe.flow.outputs">Outputs</h3>
-        <ul class="position-list">
-          <li
+        <p *ngIf="!state.flow.outputs.length" class="column-note" i18n="universe.flow.outputs-clean">
+          No supported assets on the outputs
+        </p>
+        <ul class="position-list" *ngIf="state.flow.outputs.length">
+          <ng-container
             *ngFor="let position of state.flow.outputs; trackBy: trackPosition"
-            class="position-row"
-            [ngClass]="accentClass(position, state.flow)"
-          >
-            <app-protocol-badge [protocol]="badgeFor(position.asset.protocolId)"></app-protocol-badge>
-            <span class="asset-label" [class.partial-evidence]="isPartialEvidence(position)">
-              {{ assetLabel(position.asset) }}
-            </span>
-            <span class="quantity" *ngIf="position.quantityAtomic">{{ position.quantityAtomic }}</span>
-            <span class="sats">{{ position.valueSatsAtomic }} sats</span>
-            <span class="owner" *ngIf="position.ownerAddress" [title]="position.ownerAddress">
-              {{ shortAddress(position.ownerAddress) }}
-            </span>
-            <span class="state-chip" *ngIf="stateLabel(position)">{{ stateLabel(position) }}</span>
-            <span
-              class="evidence-info"
-              tabindex="0"
-              role="note"
-              [title]="evidenceTitle(position)"
-              [attr.aria-label]="evidenceTitle(position)"
-            >i</span>
-          </li>
+            [ngTemplateOutlet]="positionRow"
+            [ngTemplateOutletContext]="{ position: position, flow: state.flow }"
+          ></ng-container>
         </ul>
       </div>
     </div>
@@ -117,3 +85,41 @@
     Protocol evidence is not available for this deployment yet.
   </p>
 </section>
+
+<ng-template #positionRow let-position="position" let-flow="flow">
+  <li class="position-row" [ngClass]="accentClass(position, flow)">
+    <div class="position-main">
+      <app-protocol-badge [protocol]="badgeFor(position.asset.protocolId)"></app-protocol-badge>
+      <span class="asset-label" [class.partial-evidence]="isPartialEvidence(position)">
+        {{ assetLabel(position.asset) }}
+      </span>
+      <span class="quantity" *ngIf="position.quantityAtomic">{{ position.quantityAtomic }}</span>
+      <span class="sats">{{ position.valueSatsAtomic }} sats</span>
+      <span class="owner" *ngIf="position.ownerAddress" [title]="position.ownerAddress">
+        {{ shortAddress(position.ownerAddress) }}
+      </span>
+      <span class="state-chip" *ngIf="stateLabel(position)">{{ stateLabel(position) }}</span>
+      <span
+        class="evidence-info"
+        tabindex="0"
+        role="note"
+        [title]="evidenceTitle(position)"
+        [attr.aria-label]="evidenceTitle(position)"
+      >i</span>
+    </div>
+
+    <ul class="notable-sats" *ngIf="notableSats(position).length">
+      <li
+        *ngFor="let sat of notableSats(position); trackBy: trackNotableSat"
+        class="notable-sat"
+      >
+        <span class="rarity-chip" [ngClass]="'rarity-' + sat.rarity">{{ rarityLabel(sat) }}</span>
+        <span class="sat-number">{{ sat.satAtomic }}</span>
+        <span class="rarity-reason">{{ rarityReason(sat) }}</span>
+      </li>
+    </ul>
+    <p class="notable-truncated" *ngIf="position.notableSatsTruncated" i18n="universe.flow.notable-truncated">
+      More notable satoshis are present than are listed here.
+    </p>
+  </li>
+</ng-template>
