@@ -1,0 +1,72 @@
+// Universe Explorer design tokens.
+//
+// One place for the protocol identity colors and evidence-state colors used
+// across the Universe surfaces. Colors are chosen against the explorer's dark
+// surfaces (--box-bg, --bg) and all of them clear WCAG AA contrast as text.
+// Color is never the only signal: every state also carries a text label.
+
+@mixin universe-protocol-tokens {
+  --universe-protocol-ordinals: #f2a35c;
+  --universe-protocol-runes: #7bdff2;
+  --universe-protocol-alkanes: #b8a3f6;
+  --universe-protocol-stamps: #f6a3c5;
+  --universe-protocol-atomicals: #9df29d;
+  --universe-protocol-op-data: #e8e05c;
+  --universe-protocol-fallback: #c9cddd;
+}
+
+@mixin universe-state-tokens {
+  // Evidence states. Proven, partial, pending, and unavailable must never be
+  // confusable, because the whole product rests on the difference.
+  --universe-state-proven: #6fd39a;
+  --universe-state-partial: #e8c15c;
+  --universe-state-pending: #7bb8f2;
+  --universe-state-unavailable: #f28b82;
+  --universe-state-neutral: #a8b0c4;
+}
+
+@mixin universe-surface {
+  background: var(--box-bg, #171c2a);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 0.4rem;
+}
+
+// A compact status chip. `kind` selects the token.
+@mixin universe-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  padding: 0.15em 0.55em;
+  border-radius: 0.25rem;
+  border: 1px solid currentColor;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+  color: var(--universe-state-neutral);
+
+  &.state-proven { color: var(--universe-state-proven); }
+  &.state-partial { color: var(--universe-state-partial); }
+  &.state-pending { color: var(--universe-state-pending); }
+  &.state-unavailable { color: var(--universe-state-unavailable); }
+}
+
+// Monospace identifier treatment. Long hashes must stay selectable and must
+// never widen a layout, so they wrap on any character rather than overflow.
+@mixin universe-identifier {
+  font-family: var(--font-mono, 'Courier New', monospace);
+  font-size: 0.85em;
+  overflow-wrap: anywhere;
+  word-break: break-all;
+}
+
+// Motion is meaningful here (arrival, confirmation, replacement), so it stays
+// on by default, but a visitor who asked their system for less motion gets it.
+@mixin universe-motion($properties: all, $duration: 220ms) {
+  transition: $properties $duration ease-out;
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+    animation: none !important;
+  }
+}

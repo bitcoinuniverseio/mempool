@@ -2,7 +2,25 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, catchError, shareReplay, throwError } from 'rxjs';
 import { StateService } from '@app/services/state.service';
-import { BackendInfo, ExplorerTransactionAssetFlow, ProtocolsResponse, SourcesResponse, StatusResponse } from '@app/universe/universe.types';
+import {
+  BackendInfo,
+  ExplorerTransactionAssetFlow,
+  OutpointBatchResponse,
+  OutpointEnrichment,
+  ProtocolsResponse,
+  SourcesResponse,
+  StatusResponse,
+  TransactionBatchResponse,
+  AssetLookupResult,
+  OrdBlockInscriptionsView,
+  OrdInscriptionView,
+  OrdRuneView,
+  OrdSatView,
+} from '@app/universe/universe.types';
+
+/** Server-side batch ceilings. Callers must not exceed them. */
+export const UNIVERSE_OUTPOINT_BATCH_LIMIT = 50;
+export const UNIVERSE_TRANSACTION_BATCH_LIMIT = 25;
 
 @Injectable({
   providedIn: 'root'
@@ -59,6 +77,61 @@ export class UniverseApiService {
   getTransactionFlow$(txid: string): Observable<ExplorerTransactionAssetFlow> {
     return this.httpClient.get<ExplorerTransactionAssetFlow>(
       this.apiBaseUrl + '/api/v1/universe/transactions/' + txid
+    );
+  }
+
+  /**
+   * Asset flows for up to {@link UNIVERSE_TRANSACTION_BATCH_LIMIT} transactions
+   * in one request. Batching is what keeps a block or a mempool page from
+   * issuing one request per transaction.
+   */
+  getTransactionFlows$(txids: string[]): Observable<TransactionBatchResponse> {
+    return this.httpClient.post<TransactionBatchResponse>(
+      this.apiBaseUrl + '/api/v1/universe/transactions/batch',
+      { txids: txids.slice(0, UNIVERSE_TRANSACTION_BATCH_LIMIT) }
+    );
+  }
+
+  /** Assets attached to one outpoint, with the evidence behind the answer. */
+  getOutpoint$(txid: string, vout: number | string): Observable<OutpointEnrichment> {
+    return this.httpClient.get<OutpointEnrichment>(
+      this.apiBaseUrl + '/api/v1/universe/outpoints/' + txid + '/' + vout
+    );
+  }
+
+  /** Assets attached to up to {@link UNIVERSE_OUTPOINT_BATCH_LIMIT} outpoints. */
+  getOutpoints$(outpoints: string[]): Observable<OutpointBatchResponse> {
+    return this.httpClient.post<OutpointBatchResponse>(
+      this.apiBaseUrl + '/api/v1/universe/outpoints/batch',
+      { outpoints: outpoints.slice(0, UNIVERSE_OUTPOINT_BATCH_LIMIT) }
+    );
+  }
+
+  /** One inscription, addressed by id or by inscription number. */
+  getInscription$(reference: string): Observable<AssetLookupResult<OrdInscriptionView>> {
+    return this.httpClient.get<AssetLookupResult<OrdInscriptionView>>(
+      this.apiBaseUrl + '/api/v1/universe/inscriptions/' + encodeURIComponent(reference)
+    );
+  }
+
+  /** One rune, addressed by name or by rune id. */
+  getRune$(reference: string): Observable<AssetLookupResult<OrdRuneView>> {
+    return this.httpClient.get<AssetLookupResult<OrdRuneView>>(
+      this.apiBaseUrl + '/api/v1/universe/runes/' + encodeURIComponent(reference)
+    );
+  }
+
+  /** One satoshi, addressed by its ordinal number. */
+  getSat$(reference: string): Observable<AssetLookupResult<OrdSatView>> {
+    return this.httpClient.get<AssetLookupResult<OrdSatView>>(
+      this.apiBaseUrl + '/api/v1/universe/sats/' + encodeURIComponent(reference)
+    );
+  }
+
+  /** Inscriptions revealed in one block. Paginated by the authority. */
+  getBlockInscriptions$(height: number | string, page = 0): Observable<AssetLookupResult<OrdBlockInscriptionsView>> {
+    return this.httpClient.get<AssetLookupResult<OrdBlockInscriptionsView>>(
+      this.apiBaseUrl + '/api/v1/universe/blocks/' + height + '/inscriptions?page=' + page
     );
   }
 }

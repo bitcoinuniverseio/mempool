@@ -9,7 +9,7 @@ Jump to a section in this doc:
 
 ## Quick Setup for Frontend Development
 
-If you want to quickly improve the UI, fix typos, or make other updates that don't require any backend changes, you don't need to set up an entire backend—you can simply run the Mempool frontend locally and proxy to the mempool.space backend.
+If you want to quickly improve the UI, fix typos, or make other updates that don't require any backend changes, you don't need to set up an entire backend: you can simply run the Mempool frontend locally and proxy to the mempool.space backend.
 
 ### 1. Clone Mempool Repository
 

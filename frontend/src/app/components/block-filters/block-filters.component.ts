@@ -32,7 +32,7 @@ export class BlockFiltersComponent implements OnInit, OnChanges, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.filterSubscription = this.stateService.activeGoggles$.subscribe((active: ActiveFilter) => {
+    this.filterSubscription = this.stateService.activeLens$.subscribe((active: ActiveFilter) => {
       this.filterMode = active.mode;
       this.gradientMode = active.gradient;
       for (const key of Object.keys(this.filterFlags)) {
@@ -61,13 +61,13 @@ export class BlockFiltersComponent implements OnInit, OnChanges, OnDestroy {
   setFilterMode(mode): void {
     this.filterMode = mode;
     this.onFilterChanged.emit({ mode: this.filterMode, filters: this.activeFilters, gradient: this.gradientMode });
-    this.stateService.activeGoggles$.next({ mode: this.filterMode, filters: [...this.activeFilters], gradient: this.gradientMode });
+    this.stateService.activeLens$.next({ mode: this.filterMode, filters: [...this.activeFilters], gradient: this.gradientMode });
   }
 
   setGradientMode(mode): void {
     this.gradientMode = mode;
     this.onFilterChanged.emit({ mode: this.filterMode, filters: this.activeFilters, gradient: this.gradientMode });
-    this.stateService.activeGoggles$.next({ mode: this.filterMode, filters: [...this.activeFilters], gradient: this.gradientMode });
+    this.stateService.activeLens$.next({ mode: this.filterMode, filters: [...this.activeFilters], gradient: this.gradientMode });
   }
 
   toggleFilter(key): void {
@@ -91,7 +91,7 @@ export class BlockFiltersComponent implements OnInit, OnChanges, OnDestroy {
     }
     const booleanFlags = this.getBooleanFlags();
     this.onFilterChanged.emit({ mode: this.filterMode, filters: this.activeFilters, gradient: this.gradientMode });
-    this.stateService.activeGoggles$.next({ mode: this.filterMode, filters: [...this.activeFilters], gradient: this.gradientMode });
+    this.stateService.activeLens$.next({ mode: this.filterMode, filters: [...this.activeFilters], gradient: this.gradientMode });
   }
 
   getBooleanFlags(): bigint | null {

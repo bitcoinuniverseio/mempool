@@ -1,0 +1,11 @@
+{
+  "name": "universe-visual-qa",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Visual regression, accessibility, and cross-browser checks for Universe Explorer.",
+  "type": "module",
+  "devDependencies": {
+    "@axe-core/playwright": "^4.10.0",
+    "playwright": "^1.49.0"
+  }
+}

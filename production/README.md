@@ -2,7 +2,7 @@
 
 These instructions are for setting up a serious production Mempool website for Bitcoin (mainnet, testnet, signet), Liquid (mainnet, testnet).
 
-Again, this setup is no joke—home users should use [one of the other installation methods](../#installation-methods). Support is only provided to project sponsors through [Mempool Enterprise®](https://mempool.space/enterprise).
+Again, this setup is no joke: home users should use [one of the other installation methods](../#installation-methods). Support is only provided to project sponsors through [Mempool Enterprise®](https://mempool.space/enterprise).
 
 You can also have the mempool.space team run a highly-performant and highly-available instance of Mempool for you on their own global ISP infrastructure. See <a href="https://mempool.space/enterprise" target="_blank">Mempool Enterprise®</a> for more details.
 
@@ -18,7 +18,7 @@ I recommend a beefy server:
 
 ### HDD vs SSD vs NVMe
 
-If you don't have a fast SSD or NVMe-backed disk, that's fine—go online and buy some fast new NVMe drives. When they arrive, install them, throw away your old HDDs, and then proceed with the rest of this guide.
+If you don't have a fast SSD or NVMe-backed disk, that's fine: go online and buy some fast new NVMe drives. When they arrive, install them, throw away your old HDDs, and then proceed with the rest of this guide.
 
 ## FreeBSD 13
 

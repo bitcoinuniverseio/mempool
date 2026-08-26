@@ -1,4 +1,4 @@
-<div class="dropdown-menu show" *ngIf="results" [hidden]="!results.hashQuickMatch && !results.otherNetworks.length && !results.addresses.length && !results.nodes.length && !results.channels.length && !results.liquidAsset.length && !results.pools.length">
+<div class="dropdown-menu show" *ngIf="results" [hidden]="!results.hashQuickMatch && !results.otherNetworks.length && !results.addresses.length && !results.nodes.length && !results.channels.length && !results.liquidAsset.length && !results.pools.length && !results.universe?.length && !results.universeRecent?.length">
   <ng-template [ngIf]="results.blockHeight">
     <div class="card-title" i18n="search.bitcoin-block-height">{{ networkName }} Block Height</div>
     <button (click)="clickItem(0)" [class.active]="0 === activeIdx" type="button" role="option" class="dropdown-item">
@@ -87,6 +87,22 @@
     <button (click)="clickItem(0)" [class.active]="0 === activeIdx" type="button" role="option" class="dropdown-item">
       <ng-container *ngTemplateOutlet="goTo; context: { $implicit: results.searchText | shortenString : 11 }"></ng-container>&nbsp;<b>({{ results.liquidAsset[1] }})</b>
     </button>
+  </ng-template>
+  <ng-template [ngIf]="results.universe?.length">
+    <div class="card-title" i18n="search.universe-protocol">Universe protocols and assets</div>
+    <ng-template ngFor [ngForOf]="results.universe" let-candidate let-i="index">
+      <button (click)="clickItem(universeOffset + i)" [class.active]="(universeOffset + i) === activeIdx" type="button" role="option" class="dropdown-item">
+        <span class="universe-kind">{{ candidate.kindLabel }}</span>&nbsp;<ngb-highlight [result]="candidate.label" [term]="results.searchText"></ngb-highlight>
+      </button>
+    </ng-template>
+  </ng-template>
+  <ng-template [ngIf]="results.universeRecent?.length">
+    <div class="card-title" i18n="search.universe-recent">Recently viewed in this browser</div>
+    <ng-template ngFor [ngForOf]="results.universeRecent" let-candidate let-i="index">
+      <button (click)="clickItem(universeRecentOffset + i)" [class.active]="(universeRecentOffset + i) === activeIdx" type="button" role="option" class="dropdown-item">
+        <span class="universe-kind">{{ candidate.kindLabel }}</span>&nbsp;{{ candidate.label }}
+      </button>
+    </ng-template>
   </ng-template>
 </div>
 

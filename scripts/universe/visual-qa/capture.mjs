@@ -1,0 +1,302 @@
+#!/usr/bin/env node
+/**
+ * Universe Explorer visual, accessibility, and cross-browser matrix.
+ *
+ * Drives the running application across routes, themes, viewports, and data
+ * states, and records what it finds. Every API call is answered from fixtures,
+ * so a difference between two runs means the interface changed, not that the
+ * chain moved or that a backend went down mid-review.
+ *
+ * What each run asserts, per route and state:
+ *   - no horizontal overflow at the viewport width
+ *   - no console errors
+ *   - no images that failed to load
+ *   - no accessibility violations at WCAG 2.2 A/AA
+ * and writes a screenshot for the visual comparison.
+ *
+ * Usage:
+ *   node capture.mjs                      full matrix, chromium
+ *   node capture.mjs --browser=firefox    another engine
+ *   node capture.mjs --routes=home,tx     a subset while iterating
+ *   node capture.mjs --states=populated   skip the failure states
+ *   node capture.mjs --out=<dir>          where to write
+ */
+
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import AxeBuilder from '@axe-core/playwright';
+import * as playwright from 'playwright';
+import { addressFixtures, fixtures, sampleIds, stateOverrides } from './fixtures.mjs';
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+
+const args = Object.fromEntries(
+  process.argv.slice(2).map((a) => {
+    const [k, v] = a.replace(/^--/, '').split('=');
+    return [k, v ?? true];
+  }),
+);
+
+const BASE = args.base || 'http://localhost:4200';
+const OUT = resolve(args.out || join(HERE, 'artifacts'));
+const BROWSER = args.browser || 'chromium';
+
+/** Routes under review. `wide` marks pages that legitimately scroll a table. */
+const ROUTES = [
+  { id: 'home', path: '/', name: 'Homepage' },
+  { id: 'blocks', path: '/blocks', name: 'Blocks list' },
+  { id: 'block', path: `/block/${sampleIds.BLOCK_HASH}`, name: 'Block detail' },
+  { id: 'mempool-block', path: '/mempool-block/0', name: 'Projected block' },
+  { id: 'tx', path: `/tx/${sampleIds.TXID_A}`, name: 'Transaction detail' },
+  { id: 'address', path: `/address/${sampleIds.ADDRESS}`, name: 'Address' },
+  { id: 'protocols', path: '/protocols', name: 'Protocol directory' },
+  { id: 'pulse', path: '/pulse', name: 'Universe Pulse' },
+  { id: 'rbf', path: '/rbf', name: 'Replacements' },
+  { id: 'graphs', path: '/graphs/mempool', name: 'Graphs' },
+  { id: 'mining', path: '/mining', name: 'Mining dashboard' },
+  { id: 'docs', path: '/docs/api', name: 'API docs' },
+  { id: 'source', path: '/source', name: 'Source and licenses' },
+];
+
+const VIEWPORTS = [
+  { id: '320', width: 320, height: 900 },
+  { id: '375', width: 375, height: 900 },
+  { id: '768', width: 768, height: 1024 },
+  { id: '1024', width: 1024, height: 900 },
+  { id: '1280', width: 1280, height: 900 },
+  { id: '1440', width: 1440, height: 900 },
+  { id: '1920', width: 1920, height: 1080 },
+];
+
+const THEMES = ['default', 'dark', 'contrast'];
+
+const STATES = ['populated', ...Object.keys(stateOverrides)];
+
+function pick(list, key, idKey = 'id') {
+  if (!args[key]) return list;
+  const wanted = String(args[key]).split(',');
+  return list.filter((entry) => wanted.includes(typeof entry === 'string' ? entry : entry[idKey]));
+}
+
+/** Answer every API call from fixtures, applying the state's overrides. */
+async function installFixtures(context, state) {
+  const overrides = stateOverrides[state] || {};
+  const table = { ...fixtures, ...addressFixtures };
+
+  await context.route('**/api/**', async (route) => {
+    const url = new URL(route.request().url());
+    const path = url.pathname;
+
+    if (overrides['**']?.hang) return; // never fulfil: hold the loading state
+
+    const override =
+      overrides[path] ??
+      Object.entries(overrides).find(([k]) => k !== '**' && path.startsWith(k))?.[1];
+
+    if (override) {
+      if (override.hang) return;
+      if (override.status) {
+        return route.fulfill({ status: override.status, contentType: 'text/plain', body: 'fixture error' });
+      }
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(override.body) });
+    }
+
+    const exact = table[path];
+    if (exact !== undefined) {
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(exact) });
+    }
+
+    const prefix = Object.keys(table).find((k) => path.startsWith(k));
+    if (prefix) {
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(table[prefix]) });
+    }
+
+    // Anything not pinned returns an empty list rather than reaching the
+    // network, so a run is never at the mercy of a live backend.
+    if (process.env.LOG_UNMATCHED) console.log('unmatched: ' + path);
+    return route.fulfill({ status: 200, contentType: 'application/json', body: '[]' });
+  });
+
+  // Most live surfaces on this product are fed by the socket, not by REST, so
+  // a screenshot with the socket cut is a screenshot of skeletons. Answer it
+  // from the same fixtures instead: the client sends {action:'want'}, and one
+  // push carries the whole initial state.
+  const down = state === 'chain-down' || overrides['**']?.hang;
+  await context.routeWebSocket('**/api/v1/ws', (ws) => {
+    if (down) return; // connected but silent: the reconnecting and loading states
+    const push = () => ws.send(JSON.stringify(socketState()));
+    ws.onMessage(() => push());
+    push();
+  });
+}
+
+/** One socket push carrying the initial live state, from the same fixtures. */
+function socketState() {
+  return {
+    mempoolInfo: { loaded: true, size: 31_204, bytes: 118_442_881, usage: 118_442_881, maxmempool: 300_000_000, mempoolminfee: 0.00001, minrelaytxfee: 0.00001, fullrbf: true },
+    vBytesPerSecond: 1_884,
+    fees: fixtures['/api/v1/fees/recommended'],
+    da: fixtures['/api/v1/difficulty-adjustment'],
+    blocks: fixtures['/api/v1/blocks'],
+    'mempool-blocks': fixtures['/api/v1/fees/mempool-blocks'],
+    transactions: fixtures['/api/mempool/recent'],
+    rbfLatestSummary: fixtures['rbf-latest-summary'],
+    conversions: { USD: 96_400, EUR: 89_100, time: 1_772_100_000 },
+    loadingIndicators: { mempool: 100, blocks: 100 },
+    backendInfo: { hostname: 'universe-explorer', version: '3.3.1', gitCommit: 'fixture0', lightning: false },
+  };
+}
+
+async function run() {
+  const routes = pick(ROUTES, 'routes');
+  const viewports = pick(VIEWPORTS, 'viewports');
+  const themes = pick(THEMES.map((id) => ({ id })), 'themes').map((t) => t.id);
+  const states = pick(STATES.map((id) => ({ id })), 'states').map((s) => s.id);
+
+  mkdirSync(OUT, { recursive: true });
+  const browser = await playwright[BROWSER].launch();
+  const findings = [];
+  let shots = 0;
+
+  for (const state of states) {
+    for (const theme of themes) {
+      for (const viewport of viewports) {
+        const context = await browser.newContext({
+          viewport: { width: viewport.width, height: viewport.height },
+          deviceScaleFactor: 1,
+          reducedMotion: args.reducedMotion ? 'reduce' : 'no-preference',
+        });
+        await installFixtures(context, state);
+        await context.addInitScript((t) => {
+          try {
+            localStorage.setItem('theme-preference', t);
+          } catch { /* private mode: the default theme is fine */ }
+        }, theme);
+
+        for (const route of routes) {
+          const page = await context.newPage();
+          const consoleErrors = [];
+          page.on('console', (m) => { if (m.type() === 'error') consoleErrors.push(m.text()); });
+          page.on('pageerror', (e) => consoleErrors.push(String(e)));
+
+          const label = `${route.id}__${state}__${theme}__${viewport.id}`;
+          try {
+            await page.goto(BASE + route.path, { waitUntil: 'domcontentloaded', timeout: 45_000 });
+            await page.waitForTimeout(state === 'loading' ? 1_200 : 2_600);
+
+            const overflow = await page.evaluate(() => {
+              const d = document.documentElement;
+              return { scrollWidth: d.scrollWidth, clientWidth: d.clientWidth };
+            });
+            const overflowBy = overflow.scrollWidth - overflow.clientWidth;
+
+            const brokenImages = await page.evaluate(() =>
+              Array.from(document.images)
+                .filter((i) => i.complete && i.naturalWidth === 0 && i.currentSrc)
+                .map((i) => i.currentSrc),
+            );
+
+            let violations = [];
+            if (!args.skipAxe) {
+              try {
+                const axe = await new AxeBuilder({ page })
+                  .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+                  .analyze();
+                violations = axe.violations.map((v) => ({
+                  id: v.id,
+                  impact: v.impact,
+                  count: v.nodes.length,
+                  help: v.help,
+                  sample: v.nodes[0]?.target?.join(' ') ?? '',
+                }));
+              } catch (e) {
+                violations = [{ id: 'axe-failed', impact: 'unknown', count: 0, help: String(e).slice(0, 200), sample: '' }];
+              }
+            }
+
+            await page.screenshot({ path: join(OUT, `${label}.png`), fullPage: Boolean(args.fullPage) });
+            shots++;
+
+            findings.push({
+              route: route.id, routeName: route.name, state, theme, viewport: viewport.id,
+              overflowBy, consoleErrors, brokenImages, violations,
+            });
+          } catch (error) {
+            findings.push({
+              route: route.id, routeName: route.name, state, theme, viewport: viewport.id,
+              error: String(error).slice(0, 400),
+            });
+          } finally {
+            await page.close();
+          }
+        }
+        await context.close();
+      }
+    }
+  }
+
+  await browser.close();
+
+  const report = { browser: BROWSER, base: BASE, screenshots: shots, findings };
+  writeFileSync(join(OUT, `report-${BROWSER}.json`), JSON.stringify(report, null, 2));
+  summarise(report);
+}
+
+function summarise(report) {
+  const overflow = report.findings.filter((f) => f.overflowBy > 0);
+  const errors = report.findings.filter((f) => f.consoleErrors?.length);
+  const images = report.findings.filter((f) => f.brokenImages?.length);
+  const failed = report.findings.filter((f) => f.error);
+  const a11y = report.findings.filter((f) => f.violations?.length);
+
+  const byRule = new Map();
+  for (const f of a11y) {
+    for (const v of f.violations) {
+      const e = byRule.get(v.id) || { id: v.id, impact: v.impact, help: v.help, places: 0, routes: new Set() };
+      e.places += v.count;
+      e.routes.add(f.route);
+      byRule.set(v.id, e);
+    }
+  }
+
+  console.log(`\n=== ${report.browser} : ${report.screenshots} screenshots -> ${OUT}\n`);
+  console.log(`horizontal overflow : ${overflow.length}`);
+  console.log(`console errors      : ${errors.length}`);
+  console.log(`broken images       : ${images.length}`);
+  console.log(`navigation failures : ${failed.length}`);
+  console.log(`a11y rules violated : ${byRule.size}\n`);
+
+  if (overflow.length) {
+    console.log('-- overflow --');
+    for (const f of overflow.slice(0, 20)) {
+      console.log(`  ${f.route} ${f.state} ${f.theme} @${f.viewport}px overflows by ${f.overflowBy}px`);
+    }
+  }
+  if (byRule.size) {
+    console.log('\n-- accessibility --');
+    for (const r of [...byRule.values()].sort((a, b) => b.places - a.places)) {
+      console.log(`  ${String(r.impact).padEnd(8)} ${r.id.padEnd(34)} ${String(r.places).padStart(4)} places  [${[...r.routes].join(', ')}]`);
+      console.log(`           ${r.help}`);
+    }
+  }
+  if (errors.length) {
+    console.log('\n-- console --');
+    const seen = new Set();
+    for (const f of errors) {
+      for (const e of f.consoleErrors) {
+        const key = e.slice(0, 120);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        console.log(`  [${f.route}] ${key}`);
+      }
+    }
+  }
+  if (failed.length) {
+    console.log('\n-- navigation --');
+    for (const f of failed.slice(0, 15)) console.log(`  ${f.route} ${f.state} ${f.theme} @${f.viewport}: ${f.error}`);
+  }
+  console.log('');
+}
+
+run().catch((e) => { console.error(e); process.exit(1); });

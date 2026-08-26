@@ -55,7 +55,6 @@ export class AcceleratorDashboardComponent implements OnInit, OnDestroy {
   ) {
     this.webGlEnabled = this.stateService.isBrowser && detectWebGL();
     this.seoService.setTitle($localize`:@@6b867dc61c6a92f3229f1950f9f2d414790cce95:Accelerator Dashboard`);
-    this.ogService.setManualOgImage('accelerator.jpg');
   }
 
   ngOnInit(): void {
@@ -154,7 +153,7 @@ export class AcceleratorDashboardComponent implements OnInit, OnDestroy {
     } else {
       const rate = tx.fee / tx.vsize; // color by simple single-tx fee rate
       const feeLevelIndex = feeLevels.findIndex((feeLvl) => Math.max(0, rate) < feeLvl) - 1;
-      return this.theme.theme === 'contrast' || this.theme.theme === 'bukele' ? contrastColors[feeLevelIndex] || contrastColors[contrastColors.length - 1] : normalColors[feeLevelIndex] || normalColors[normalColors.length - 1];
+      return this.theme.theme === 'contrast' ? contrastColors[feeLevelIndex] || contrastColors[contrastColors.length - 1] : normalColors[feeLevelIndex] || normalColors[normalColors.length - 1];
     }
   }
 

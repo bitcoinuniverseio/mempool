@@ -124,6 +124,18 @@ export interface IBackendInfo {
   hostname?: string;
   gitCommit: string;
   version: string;
+  backend?: 'esplora' | 'electrum' | 'none';
+  coreVersion?: string;
+  /** How far the node this explorer reads has actually got. Null until read. */
+  chainSync?: IChainSyncState | null;
+}
+
+export interface IChainSyncState {
+  blocks: number;
+  headers: number;
+  initialBlockDownload: boolean;
+  verificationProgress: number;
+  checkedAt: string;
 }
 
 export interface Recommendedfees {

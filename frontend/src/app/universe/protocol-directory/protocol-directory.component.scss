@@ -74,18 +74,35 @@
 
     .protocol-state {
       display: flex;
+      // Three chips do not fit beside a protocol name on a narrow screen, and
+      // without wrapping they simply left the viewport. They wrap now, and the
+      // row grows instead of hiding its own state.
+      flex-wrap: wrap;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.35rem 0.5rem;
+      min-width: 0;
+    }
+  }
+
+  @media (max-width: 575px) {
+    .protocol-row {
+      align-items: flex-start;
+      flex-direction: column;
+
+      .protocol-state {
+        width: 100%;
+      }
     }
   }
 
   .state-chip {
     display: inline-block;
+    max-width: 100%;
+    overflow-wrap: anywhere;
     padding: 0.15em 0.6em;
     border-radius: 0.75rem;
     font-size: 0.75rem;
     font-weight: 600;
-    white-space: nowrap;
     border: 1px solid var(--transparent-fg);
     color: var(--fg);
     background-color: var(--box-bg);

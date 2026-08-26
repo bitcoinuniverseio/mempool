@@ -1,38 +1,162 @@
-# The Mempool Open Source Project® [![mempool](https://img.shields.io/endpoint?url=https://dashboard.cypress.io/badge/simple/ry4br7/master&style=flat-square)](https://dashboard.cypress.io/projects/ry4br7/runs)
+# Universe Explorer
 
-https://user-images.githubusercontent.com/93150691/226236121-375ea64f-b4a1-4cc0-8fad-a6fb33226840.mp4
+The Bitcoin Universe mempool and block explorer. It shows what is happening on
+Bitcoin right now, and what transactions actually do across Bitcoin Universe
+protocols, with the evidence behind every claim.
 
-<br>
+Live at [explorer.bitcoinuniverse.io](https://explorer.bitcoinuniverse.io).
 
-Mempool is the fully-featured mempool visualizer, explorer, and API service running at [mempool.space](https://mempool.space/). 
+## What makes it different
 
-It is an open-source project developed and operated for the benefit of the Bitcoin community, with a focus on the emerging transaction fee market that is evolving Bitcoin into a multi-layer ecosystem.
+Most explorers answer one of two questions. A mempool explorer tells you what
+is pending and what it will cost to confirm. A protocol explorer tells you what
+assets exist. Universe Explorer answers both in one place, and it never guesses.
 
-# Installation Methods
+- **Exact asset flows.** A transaction page names the inputs and outputs that
+  carry protocol assets, the action the authority reported, and the block that
+  proves it. Nothing is inferred from transaction shape.
+- **Outputs are first class.** `/outpoint/:txid/:vout` is a real page. An output
+  is the unit that carries assets on Bitcoin, so it gets its own address.
+- **States that mean something.** Proven, partly proven, outside coverage,
+  pending, and unavailable are five different answers. A missing indexer never
+  becomes a false zero.
+- **Live protocol activity, measured.** The pulse page publishes its own
+  denominator: how many arriving transactions were checked, and how many carried
+  each protocol. Every number on it can be reproduced.
+- **No trackers, no accounts.** Search is matched in your browser. Saved pages
+  and history live in local storage and never leave the device.
+- **First-party data only.** Every figure comes from Bitcoin Universe's own
+  node, Electrum index, and protocol authorities.
 
-Mempool can be self-hosted on a wide variety of your own hardware, ranging from a simple one-click installation on a Raspberry Pi full-node distro all the way to a robust production instance on a powerful FreeBSD server. 
+## Protocol coverage
 
-Most people should use a <a href="#one-click-installation">one-click install method</a>.
+The registry carries every protocol in the Bitcoin Universe ecosystem, and the
+explorer states plainly which ones it can actually read.
 
-Other install methods are meant for developers and others with experience managing servers. If you want support for your own production instance of Mempool, or if you'd like to have your own instance of Mempool run by the mempool.space team on their own global ISP infrastructure—check out <a href="https://mempool.space/enterprise" target="_blank">Mempool Enterprise®</a>.
+| State | Meaning |
+| --- | --- |
+| Live, read only | A first-party authority is running and its evidence is shown. |
+| Not yet available | No first-party authority for it is configured or answering here. The explorer makes no claim about it. |
+| Different chain | The protocol lives on a chain this explorer does not serve. |
 
-<a id="one-click-installation"></a>
-## One-Click Installation
+Live today, backed by the first-party Ord 0.29 authority: **Ordinals**,
+**Rare Sats**, **Runes**.
 
-Mempool can be conveniently installed on the following full-node distros: 
-- [Umbrel](https://github.com/getumbrel/umbrel)
-- [RaspiBlitz](https://github.com/rootzoll/raspiblitz)
-- [RoninDojo](https://code.samourai.io/ronindojo/RoninDojo)
-- [myNode](https://github.com/mynodebtc/mynode)
-- [StartOS](https://github.com/Start9Labs/start-os)
-- [nix-bitcoin](https://github.com/fort-nix/nix-bitcoin/blob/a1eacce6768ca4894f365af8f79be5bbd594e1c3/examples/configuration.nix#L129)
+`docs/protocols/PROTOCOL-COVERAGE.md` is generated from the registry and lists
+every entry with its authority. Run `node scripts/universe/generate-protocol-coverage.mjs --check`
+to verify the table still matches.
 
-**We highly recommend you deploy your own Mempool instance this way.** No matter which option you pick, you'll be able to get your own fully-sovereign instance of Mempool up quickly without needing to fiddle with any settings.
+## Architecture
 
-## Advanced Installation Methods
+Three processes behind one HTTPS origin:
 
-Mempool can be installed in other ways too, but we only recommend doing so if you're a developer, have experience managing servers, or otherwise know what you're doing.
+| Component | What it is |
+| --- | --- |
+| Explorer backend | `backend/` in this repository. Reads Bitcoin Core, Fulcrum, and MariaDB. |
+| Protocol overlay | `backend-apis` standalone service. Serves `/api/v1/universe/*` and holds every indexer credential server side. |
+| Frontend | `frontend/`, an Angular application served as static files with SPA fallback. |
 
-- See the [`docker/`](./docker/) directory for instructions on deploying Mempool with Docker.
-- See the [`backend/`](./backend/) and [`frontend/`](./frontend/) directories for manual install instructions oriented for developers.
-- See the [`production/`](./production/) directory for guidance on setting up a more serious Mempool instance designed for high performance at scale.
+The browser never talks to an indexer, and no indexer origin or credential is
+ever exposed to it. See `docs/architecture/` for the overlay design and
+`docs/data/ASSET-EVIDENCE.md` for the evidence contract.
+
+## First-party data policy
+
+No third-party blockchain API, public explorer, hosted indexer, analytics
+service, or remote font is called at any point, from the server or the browser.
+Collection-level artwork and metadata are the only permitted external sources,
+and they are fetched server side and cached.
+
+`node scripts/universe/check-origins.mjs` fails the build if a forbidden origin
+appears in the source or in a production bundle. The production build also skips
+asset synchronization, so nothing is downloaded from a third party at build time
+either; mining pool logos fall back to the bundled default.
+
+## Local development
+
+Requires Node 24.19.0 and npm 11.17.0, both pinned in `.nvmrc` and
+`package.json`.
+
+```bash
+cd backend && npm ci && npm run build && npm run start
+```
+
+```bash
+cd frontend && npm ci && npm run serve
+```
+
+The frontend proxies `/api` to the backend. To point it at a running deployment
+instead, set `MEMPOOL_BACKEND` in `frontend/proxy.conf.json`.
+
+## Testing
+
+```bash
+cd frontend && npm run build:universe   # production build, no third-party fetches
+cd frontend && npm run test          # Universe unit suite
+cd frontend && npm run lint
+cd backend && npm run test:ci && npm run lint
+node scripts/universe/generate-protocol-coverage.mjs --check
+node scripts/universe/check-text.mjs                 # no em dash anywhere
+node scripts/universe/check-branding.mjs             # no obsolete upstream marks
+node scripts/universe/check-origins.mjs              # no third-party data origins
+```
+
+The same checks run in `.github/workflows/universe-ci.yml` on the self-hosted
+runner fleet. The branding and origin gates also accept a built bundle path, and
+the release workflow runs them against `frontend/dist` before anything ships.
+
+## Configuration
+
+The backend reads `backend/mempool-config.json`. The overlay reads
+`UNIVERSE_EXPLORER_SOURCES_JSON`, a JSON array of authority descriptors whose
+bearer tokens are named, never embedded:
+
+```json
+[{ "authorityId": "ord",
+   "origin": "http://127.0.0.1:8382",
+   "bearerTokenEnv": "UNIVERSE_ORD_TOKEN",
+   "protocols": ["ordinals", "rare_sats", "runes"],
+   "network": "bitcoin:mainnet" }]
+```
+
+Parsing is strict and all or nothing: one invalid descriptor disables the whole
+registry rather than serving partially trusted data.
+
+## Deployment
+
+`docs/operations/DEPLOYMENT.md` documents the release procedure. Releases are
+deployed beside the running one and the gateway upstream is flipped, so a
+rollback is a single flip back. Every deployment publishes its own commit on
+`/api/v1/backend-info` and on the public `/source` page.
+
+## Source and licence
+
+Universe Explorer is free software under the
+[GNU Affero General Public License, version 3](LICENSE) or later. Section 13
+requires that anyone interacting with it over a network can get the
+corresponding source, which is what `/source` provides.
+
+This repository is a fork of the upstream Mempool Open Source Project. Upstream
+copyright notices and the full licence text in [COPYING.md](COPYING.md) are
+preserved. Upstream trademarks are not used: see
+`docs/legal/TRADEMARK-AUDIT.md` and `docs/legal/AGPL-COMPLIANCE.md`.
+
+## Upstream relationship
+
+[UPSTREAM.md](UPSTREAM.md) records the exact upstream base, every subsystem this
+fork modifies, and the known conflict points. `docs/operations/UPSTREAM-SYNC.md`
+is the synchronization procedure. Universe changes are deliberately isolated so
+upstream security fixes stay easy to take.
+
+## Security
+
+Report a suspected vulnerability privately to the Bitcoin Universe security
+contact rather than opening a public issue. `docs/security/THREAT-MODEL.md`
+records the trust boundaries this deployment assumes.
+
+## Contributing
+
+Work happens on `develop`. Open a pull request against it, keep Universe changes
+inside `frontend/src/app/universe/` and the documented integration points where
+possible, and make sure the checks above pass. [CONTRIBUTING.md](CONTRIBUTING.md)
+covers the details inherited from upstream.
