@@ -23,7 +23,8 @@
 
 import http from 'node:http';
 import net from 'node:net';
-import { createReadStream, existsSync, statSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { createReadStream, existsSync, readFileSync, statSync } from 'node:fs';
 import { extname, join, normalize, resolve, sep } from 'node:path';
 
 const HOST = process.env.UNIVERSE_GATEWAY_HOST || '127.0.0.1';
@@ -59,6 +60,92 @@ const CONTENT_TYPES = new Map(Object.entries({
   '.mp4': 'video/mp4',
   '.wasm': 'application/wasm',
 }));
+
+/**
+ * Security headers applied to every response.
+ *
+ * The referrer policy is the one that matters most here: a page URL on this
+ * site contains an address, a transaction, or an output, so leaking it to any
+ * site a visitor clicks through to would undo the rest of the privacy work.
+ */
+const SECURITY_HEADERS = {
+  'x-content-type-options': 'nosniff',
+  'x-frame-options': 'DENY',
+  'referrer-policy': 'no-referrer',
+  'cross-origin-opener-policy': 'same-origin',
+  'permissions-policy':
+    'accelerometer=(), camera=(), display-capture=(), geolocation=(), ' +
+    'gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()',
+  'strict-transport-security': 'max-age=31536000; includeSubDomains',
+};
+
+/**
+ * Content policy for the document itself.
+ *
+ * Everything the page loads is served from this origin. Angular injects
+ * component styles at runtime and writes style attributes for bound values, so
+ * inline styles are permitted; inline script is not, and nothing is fetched
+ * from anywhere else.
+ */
+const CONTENT_SECURITY_POLICY_PARTS = [
+  "default-src 'self'",
+  "script-src 'self'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob:",
+  "font-src 'self' data:",
+  "connect-src 'self'",
+  "media-src 'self'",
+  "worker-src 'self' blob:",
+  "frame-src 'none'",
+  "object-src 'none'",
+  "frame-ancestors 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  'upgrade-insecure-requests',
+];
+
+/**
+ * The build injects one inline script into the document to name the theme
+ * files, and its content changes with every build. Rather than weaken the
+ * policy with 'unsafe-inline', its hash is computed once at start-up and
+ * allowed by name. Anything else inline stays blocked.
+ */
+function inlineScriptHashes() {
+  const index = join(ROOT, 'index.html');
+  if (!existsSync(index)) return [];
+  let html;
+  try {
+    html = readFileSync(index, 'utf8');
+  } catch {
+    return [];
+  }
+  const hashes = [];
+  for (const match of html.matchAll(/<script([^>]*)>([\s\S]*?)<\/script>/g)) {
+    if (/\ssrc\s*=/.test(match[1])) continue;
+    const body = match[2];
+    if (!body) continue;
+    hashes.push(`'sha256-${createHash('sha256').update(body, 'utf8').digest('base64')}'`);
+  }
+  return hashes;
+}
+
+const CONTENT_SECURITY_POLICY = (() => {
+  const hashes = inlineScriptHashes();
+  return CONTENT_SECURITY_POLICY_PARTS.map((part) =>
+    part.startsWith('script-src') && hashes.length
+      ? `${part} ${hashes.join(' ')}`
+      : part,
+  ).join('; ');
+})();
+
+function withSecurityHeaders(headers, isDocument) {
+  const merged = { ...headers, ...SECURITY_HEADERS };
+  if (isDocument) merged['content-security-policy'] = CONTENT_SECURITY_POLICY;
+  return merged;
+}
+
+/** Requests for a mining pool logo the build does not carry. */
+const MINING_POOL_LOGO = /^\/resources\/mining-pools\/[A-Za-z0-9._-]+\.svg$/;
 
 /** Build output is content hashed, so it can be cached hard. Entry points cannot. */
 const HASHED_ASSET = /\.[0-9a-f]{16,}\.(?:js|css|woff2?|ttf|png|jpe?g|svg|webp|avif|wasm)$/i;
@@ -99,7 +186,12 @@ function proxy(request, response, route) {
     timeout: UPSTREAM_TIMEOUT_MS,
   };
   const proxied = http.request(options, (upstreamResponse) => {
-    response.writeHead(upstreamResponse.statusCode || 502, upstreamResponse.headers);
+    // API responses are data, never documents, so they get the headers without
+    // a content policy.
+    response.writeHead(
+      upstreamResponse.statusCode || 502,
+      withSecurityHeaders(upstreamResponse.headers, false),
+    );
     upstreamResponse.pipe(response);
   });
   proxied.on('timeout', () => proxied.destroy(new Error('upstream timeout')));
@@ -153,7 +245,10 @@ function serveFile(response, file, status = 200) {
     response.end('Not found');
     return;
   }
-  response.writeHead(status, headers);
+  response.writeHead(
+    status,
+    withSecurityHeaders(headers, headers['content-type'].startsWith('text/html')),
+  );
   const stream = createReadStream(file);
   stream.on('error', () => response.destroy());
   stream.pipe(response);
@@ -194,6 +289,17 @@ const server = http.createServer((request, response) => {
   if (file) {
     serveFile(response, file);
     return;
+  }
+
+  // A mining pool with no bundled logo is expected, not an error. The page
+  // already falls back to the default mark, so serving it here keeps a dozen
+  // 404s per page load out of the console and off the wire.
+  if (MINING_POOL_LOGO.test(pathname)) {
+    const fallback = join(ROOT, 'resources', 'mining-pools', 'default.svg');
+    if (existsSync(fallback)) {
+      serveFile(response, fallback);
+      return;
+    }
   }
 
   // Single page application: an unknown path is a client route, not a 404,
