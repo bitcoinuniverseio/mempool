@@ -29,6 +29,26 @@ Vertical/Horizontal Logos.
 | Liquid Network branding | liquid logos/components | Liquid views not exposed in Universe deployment (BASE_MODULE=mempool); assets retained in source for upstream mergeability, unreachable publicly |
 | Package names/titles ("mempool-frontend", "Mempool" titles) | package.json, index HTML titles, manifests | REPLACE user-visible titles with Universe Explorer; internal package names may remain for merge hygiene |
 
+## Pass 1 status (2026-08-26)
+
+Completed in commit 94ebc0c6: header/footer/tracker/preview logos replaced
+with the Universe wordmark, titles and metadata rebranded, search placeholder
+and slogans replaced, visible Goggles strings renamed to Universe Lens,
+/about and /trademark-policy routes removed, upstream service links removed
+from the footer, social images repointed. Production bundle greps clean for
+upstream marks in all reachable chunks.
+
+Documented residuals still open:
+
+| Item | Where | Plan |
+| --- | --- | --- |
+| Slogans/Goggles strings in unreachable lazy chunks | about module (chunk emitted via Liquid master page), trademark-policy module, accelerator-dashboard | Unreachable at runtime on BASE_MODULE=mempool with removed routes and disabled services; excluded from Liquid build or stripped before GO |
+| rel=canonical link element pointing at the upstream domain | frontend/src/index.mempool.html (feeds SeoService.baseDomain) | Replace with the production Universe domain at deployment configuration time |
+| Address error state suggesting the upstream site as fallback viewer | address.component.html | Replace copy with Universe-only guidance |
+| Upstream social links (GitHub/X/nostr/YouTube) | global-footer | Replace with Universe accounts or remove |
+| Sponsor index variants (index.mempool.bitb/meta/onbtc/river/strategy/xxi.html) | frontend/src | Unused by generate-config; delete in a cleanup commit |
+| Localized slogan strings | src/locale/*.xlf | Only shipped for non-English locales; regenerate translations from rebranded sources before enabling locales |
+
 ## Rules applied
 
 - No confusingly similar logos: Universe iconography is designed independently.

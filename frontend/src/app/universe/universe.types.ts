@@ -50,3 +50,78 @@ export interface StatusResponse {
   sources?: SourceEntry[];
   generatedAt: string;
 }
+
+// --- Transaction asset flow ---
+
+export interface ExplorerAssetRef {
+  protocolId: string;
+  canonicalAssetId: string;
+  displayName?: string;
+  ticker?: string;
+  assetKind: string;
+}
+
+export interface ExplorerEvidenceCheckpoint {
+  chain?: string;
+  network?: string;
+  heightAtomic: string;
+  blockHash: string;
+  reorgEpoch?: string;
+  observedAt?: string;
+}
+
+export interface ExplorerPositionEvidence {
+  authorityId: string;
+  protocolId?: string;
+  coverage: string;
+  negativeCompleteness?: boolean;
+  checkpoint?: ExplorerEvidenceCheckpoint;
+  [key: string]: unknown;
+}
+
+export interface ExplorerOutpointPosition {
+  outpoint: string;
+  vout: number;
+  valueSatsAtomic: string;
+  asset: ExplorerAssetRef;
+  quantityAtomic?: string;
+  satRanges?: unknown[];
+  ownerAddress?: string;
+  state: string;
+  evidence: ExplorerPositionEvidence;
+}
+
+export interface ExplorerAssetAction {
+  eventId: string;
+  protocolId: string;
+  actionType: string;
+  asset?: ExplorerAssetRef;
+  quantityAtomic?: string;
+  inputOutpoints?: string[];
+  outputOutpoints?: string[];
+  evidence: ExplorerPositionEvidence;
+}
+
+export type ExplorerTransactionFlowStatus =
+  'mempool-candidate' | 'confirmed' | 'replaced' | 'orphaned' | 'enrichment-pending';
+
+export interface ExplorerTransactionAssetFlow {
+  schemaVersion: string;
+  chain: string;
+  network: string;
+  txid: string;
+  status: ExplorerTransactionFlowStatus;
+  checkpoint?: ExplorerEvidenceCheckpoint;
+  inputs: ExplorerOutpointPosition[];
+  outputs: ExplorerOutpointPosition[];
+  actions: ExplorerAssetAction[];
+  sourceEvidence: ExplorerPositionEvidence[];
+  complete: boolean;
+  unknownAttachmentCount: number;
+}
+
+// error-shaped body the overlay can return instead of a flow
+export interface UniverseApiError {
+  error: string;
+  [key: string]: unknown;
+}

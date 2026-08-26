@@ -79,6 +79,9 @@
 
   <ng-template [ngIf]="!isLoadingTx && !error">
 
+    <!-- Universe protocol asset flow -->
+    <app-universe-asset-flow *ngIf="txId" [txid]="txId"></app-universe-asset-flow>
+
     <!-- CPFP Details -->
     <app-cpfp-info *ngIf="showCpfpDetails" [cpfpInfo]="cpfpInfo" [tx]="tx"></app-cpfp-info>
 

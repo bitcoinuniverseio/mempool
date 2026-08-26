@@ -1,0 +1,121 @@
+<section class="universe-asset-flow" *ngIf="state$ | async as state">
+  <header class="flow-header">
+    <h2 i18n="universe.flow.title">Universe Asset Flow</h2>
+
+    <span
+      *ngIf="state.kind === 'flow'"
+      class="evidence-chip"
+      [class.complete]="evidenceKind(state.flow) === 'complete'"
+      [class.incomplete]="evidenceKind(state.flow) === 'incomplete'"
+      [class.pending]="evidenceKind(state.flow) === 'pending'"
+      [attr.aria-label]="evidenceLabel(state.flow)"
+    >{{ evidenceLabel(state.flow) }}</span>
+
+    <span
+      *ngIf="state.kind === 'unconfigured'"
+      class="evidence-chip unavailable"
+      i18n-aria-label="universe.flow.unavailable"
+      aria-label="Protocol enrichment unavailable"
+      i18n="universe.flow.unavailable"
+    >Protocol enrichment unavailable</span>
+
+    <span
+      *ngIf="state.kind === 'error'"
+      class="evidence-chip unavailable"
+      role="alert"
+      i18n="universe.flow.error"
+    >Enrichment error</span>
+  </header>
+
+  <div *ngIf="state.kind === 'loading'" class="flow-loading">
+    <span class="sr-only" i18n="universe.flow.loading">Loading protocol asset flow</span>
+    <div class="skeleton-loader"></div>
+    <div class="skeleton-loader"></div>
+  </div>
+
+  <ng-container *ngIf="state.kind === 'flow'">
+    <p *ngIf="isEmpty(state.flow)" class="flow-empty" role="status">
+      {{ emptyLabel(state.flow) }}
+    </p>
+
+    <div *ngIf="!isEmpty(state.flow)" class="flow-columns">
+      <div class="flow-column">
+        <h3 i18n="universe.flow.inputs">Inputs</h3>
+        <p *ngIf="!state.flow.inputs.length" class="column-note" i18n="universe.flow.coinbase">
+          Coinbase transaction
+        </p>
+        <ul class="position-list">
+          <li
+            *ngFor="let position of state.flow.inputs; trackBy: trackPosition"
+            class="position-row"
+            [ngClass]="accentClass(position, state.flow)"
+          >
+            <app-protocol-badge [protocol]="badgeFor(position.asset.protocolId)"></app-protocol-badge>
+            <span class="asset-label" [class.partial-evidence]="isPartialEvidence(position)">
+              {{ assetLabel(position.asset) }}
+            </span>
+            <span class="quantity" *ngIf="position.quantityAtomic">{{ position.quantityAtomic }}</span>
+            <span class="sats">{{ position.valueSatsAtomic }} sats</span>
+            <span class="owner" *ngIf="position.ownerAddress" [title]="position.ownerAddress">
+              {{ shortAddress(position.ownerAddress) }}
+            </span>
+            <span class="state-chip" *ngIf="stateLabel(position)">{{ stateLabel(position) }}</span>
+            <span
+              class="evidence-info"
+              tabindex="0"
+              role="note"
+              [title]="evidenceTitle(position)"
+              [attr.aria-label]="evidenceTitle(position)"
+            >i</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="flow-column">
+        <h3 i18n="universe.flow.outputs">Outputs</h3>
+        <ul class="position-list">
+          <li
+            *ngFor="let position of state.flow.outputs; trackBy: trackPosition"
+            class="position-row"
+            [ngClass]="accentClass(position, state.flow)"
+          >
+            <app-protocol-badge [protocol]="badgeFor(position.asset.protocolId)"></app-protocol-badge>
+            <span class="asset-label" [class.partial-evidence]="isPartialEvidence(position)">
+              {{ assetLabel(position.asset) }}
+            </span>
+            <span class="quantity" *ngIf="position.quantityAtomic">{{ position.quantityAtomic }}</span>
+            <span class="sats">{{ position.valueSatsAtomic }} sats</span>
+            <span class="owner" *ngIf="position.ownerAddress" [title]="position.ownerAddress">
+              {{ shortAddress(position.ownerAddress) }}
+            </span>
+            <span class="state-chip" *ngIf="stateLabel(position)">{{ stateLabel(position) }}</span>
+            <span
+              class="evidence-info"
+              tabindex="0"
+              role="note"
+              [title]="evidenceTitle(position)"
+              [attr.aria-label]="evidenceTitle(position)"
+            >i</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div *ngIf="state.flow.actions?.length" class="flow-actions">
+      <h3 i18n="universe.flow.actions">Protocol actions</h3>
+      <ul class="action-list">
+        <li *ngFor="let action of state.flow.actions; trackBy: trackAction" class="action-row">
+          <app-protocol-badge [protocol]="badgeFor(action.protocolId)"></app-protocol-badge>
+          <span class="action-type">{{ actionLabel(action) }}</span>
+          <span class="action-arrow" aria-hidden="true">&rarr;</span>
+          <span class="asset-label">{{ assetLabel(action.asset) }}</span>
+          <span class="quantity" *ngIf="action.quantityAtomic">{{ action.quantityAtomic }}</span>
+        </li>
+      </ul>
+    </div>
+  </ng-container>
+
+  <p *ngIf="state.kind === 'unconfigured'" class="flow-empty" i18n="universe.flow.unavailable-body">
+    Protocol evidence is not available for this deployment yet.
+  </p>
+</section>

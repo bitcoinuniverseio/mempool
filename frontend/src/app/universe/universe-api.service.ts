@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, catchError, shareReplay, throwError } from 'rxjs';
 import { StateService } from '@app/services/state.service';
-import { ProtocolsResponse, SourcesResponse, StatusResponse } from '@app/universe/universe.types';
+import { ExplorerTransactionAssetFlow, ProtocolsResponse, SourcesResponse, StatusResponse } from '@app/universe/universe.types';
 
 @Injectable({
   providedIn: 'root'
@@ -44,5 +44,12 @@ export class UniverseApiService {
 
   getSources$(): Observable<SourcesResponse> {
     return this.httpClient.get<SourcesResponse>(this.apiBaseUrl + '/api/v1/universe/sources');
+  }
+
+  /** Protocol asset flow for one transaction. Never cached: state changes as the transaction confirms. */
+  getTransactionFlow$(txid: string): Observable<ExplorerTransactionAssetFlow> {
+    return this.httpClient.get<ExplorerTransactionAssetFlow>(
+      this.apiBaseUrl + '/api/v1/universe/transactions/' + txid
+    );
   }
 }
