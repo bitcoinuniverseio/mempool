@@ -179,6 +179,29 @@
 
   // A wash used behind live regions so an update is noticeable without a flash.
   --u-highlight-arrive: rgba(36, 56, 184, 0.09);
+
+  // Loading placeholders. Low contrast on purpose: a skeleton must read as
+  // absent, never as content.
+  --u-skeleton: #dde3ec;
+  --u-skeleton-sheen: #eef2f7;
+
+  // Network identity. Mainnet takes the brand; the test networks are visibly
+  // different from it and from each other so a testnet page can never be
+  // mistaken for mainnet.
+  --u-network-mainnet: #2438b8;
+  --u-network-testnet: #0a6a7d;
+  --u-network-testnet4: #0d6560;
+  --u-network-signet: #a3246b;
+  --u-network-regtest: #55617a;
+  --u-network-liquid: #0f6b3a;
+  --u-network-liquidtestnet: #5c6879;
+
+  --u-taproot: #8a5100;
+
+  // A translucent foreground for de-emphasised text over unknown backdrops.
+  --u-text-translucent: rgba(16, 21, 31, 0.62);
+  --u-fade-start: rgba(255, 255, 255, 0);
+  --u-fade-end: rgba(255, 255, 255, 1);
 }
 
 // ---------------------------------------------------------------------------
@@ -256,6 +279,23 @@
   --u-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.55);
 
   --u-highlight-arrive: rgba(143, 162, 255, 0.14);
+
+  --u-skeleton: #262c3d;
+  --u-skeleton-sheen: #333b52;
+
+  --u-network-mainnet: #8fa2ff;
+  --u-network-testnet: #6fcfe2;
+  --u-network-testnet4: #6fd3c9;
+  --u-network-signet: #f19ac4;
+  --u-network-regtest: #a3adc2;
+  --u-network-liquid: #5fd39a;
+  --u-network-liquidtestnet: #98a2b6;
+
+  --u-taproot: #f0be62;
+
+  --u-text-translucent: rgba(242, 244, 248, 0.66);
+  --u-fade-start: rgba(26, 30, 45, 0);
+  --u-fade-end: rgba(26, 30, 45, 1);
 }
 
 // ---------------------------------------------------------------------------
@@ -303,4 +343,28 @@
   --search-button-shadow: var(--u-brand-border);
 
   --font-mono: var(--u-font-data);
+
+  --skeleton-bg: var(--u-skeleton);
+  --skeleton-bg-light: var(--u-skeleton-sheen);
+  --transparent-fg: var(--u-text-translucent);
+  --fade-out-box-bg-start: var(--u-fade-start);
+  --fade-out-box-bg-end: var(--u-fade-end);
+  --opacity: 0.57;
+
+  --testnet: var(--u-network-testnet);
+  --testnet4: var(--u-network-testnet4);
+  --signet: var(--u-network-signet);
+  --regtest: var(--u-network-regtest);
+  --liquid: var(--u-network-liquid);
+  --liquidtestnet: var(--u-network-liquidtestnet);
+
+  --mainnet-alt: var(--u-network-mainnet);
+  --testnet-alt: var(--u-network-testnet);
+  --signet-alt: var(--u-network-signet);
+  --regtest-alt: var(--u-network-regtest);
+  --liquidtestnet-alt: var(--u-network-liquidtestnet);
+
+  --taproot: var(--u-taproot);
+  --taproot-light: var(--u-taproot);
+  --taproot-dark: var(--u-taproot);
 }

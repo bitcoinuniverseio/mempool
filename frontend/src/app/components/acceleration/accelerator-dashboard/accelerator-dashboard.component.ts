@@ -55,7 +55,6 @@ export class AcceleratorDashboardComponent implements OnInit, OnDestroy {
   ) {
     this.webGlEnabled = this.stateService.isBrowser && detectWebGL();
     this.seoService.setTitle($localize`:@@6b867dc61c6a92f3229f1950f9f2d414790cce95:Accelerator Dashboard`);
-    this.ogService.setManualOgImage('accelerator.jpg');
   }
 
   ngOnInit(): void {
