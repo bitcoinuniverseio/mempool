@@ -1,0 +1,242 @@
+[
+  {
+    "product": "mempool.space",
+    "url": "https://mempool.space",
+    "status": "active",
+    "open_source": true,
+    "self_hostable": true,
+    "protocols": ["bitcoin-base", "lightning", "liquid", "inscription-tagging", "runestone-tagging"],
+    "features": [
+      {"name": "Mempool goggles / live block-grid visualization", "verdict": "ADOPT", "reason": "Proven visual metaphor; extend filters to indexer-evidenced protocol categories."},
+      {"name": "Projected blocks + block audit", "verdict": "ADOPT", "reason": "Expected-vs-actual audit thinking matches evidence-first ethos; comes free with fork."},
+      {"name": "Full-RBF replacement timelines", "verdict": "IMPROVE", "reason": "Add what replacement means for pending asset transfers; no one shows that."},
+      {"name": "Runestone/inscription tagging without decoding", "verdict": "IMPROVE", "reason": "Recognition only; Universe must resolve to authoritative per-I/O asset state."},
+      {"name": "Accelerator (paid out-of-band acceleration)", "verdict": "REJECT", "reason": "Centralized commercial service, irrelevant to self-hosted evidence tool."},
+      {"name": "Mining/Stratum dashboards", "verdict": "OUT OF SCOPE", "reason": "Orthogonal to asset-flow goals; inherit without investment."},
+      {"name": "Lightning explorer", "verdict": "OUT OF SCOPE", "reason": "Different domain; disable to reduce surface."},
+      {"name": "REST/WebSocket API + self-host packaging", "verdict": "ADOPT", "reason": "Table stakes; extend same API style with asset-flow endpoints."},
+      {"name": "UTXO bubble chart / address UTXO endpoint", "verdict": "IMPROVE", "reason": "Annotate UTXO views with assets attached to each outpoint."},
+      {"name": "Address-poisoning warnings and PSBT preview", "verdict": "ADOPT", "reason": "Cheap safety wins already in fork base."}
+    ],
+    "strengths": ["Best mempool UX and visual language", "Strong self-hosting story (Docker/Umbrel/Start9)", "Active releases (v3.2 2025, v3.3)", "Esplora-compatible API + WebSocket", "Excellent mobile/responsive design"],
+    "weaknesses": ["Deliberately protocol-blind; maintainers refuse ord/metaprotocol indexer integration", "Asset tags are heuristic recognition, not accounting", "Centralized commercial services (Accelerator)", "Heavy Angular frontend to fork and track"]
+  },
+  {
+    "product": "UniScan",
+    "url": "https://uniscan.cc",
+    "status": "active",
+    "open_source": false,
+    "self_hostable": false,
+    "protocols": ["ordinals", "brc-20", "brc2.0", "runes", "alkanes", "fractal-bitcoin"],
+    "features": [
+      {"name": "Multi-protocol asset portfolio per address", "verdict": "ADOPT", "reason": "One address page for all metaprotocol holdings; back with per-outpoint evidence."},
+      {"name": "Alkanes support", "verdict": "ADOPT", "reason": "Emerging smart-contract metaprotocol; early support differentiates."},
+      {"name": "Token pages with holders and mint progress", "verdict": "IMPROVE", "reason": "Add provenance: indexer snapshot, block height, verifiable API."},
+      {"name": "Fractal network support", "verdict": "OUT OF SCOPE", "reason": "Universe targets Bitcoin mainnet and test networks only."},
+      {"name": "Marketplace/wallet integration funnel", "verdict": "REJECT", "reason": "Trading funnels compromise neutrality."},
+      {"name": "Closed-source trusted indexer", "verdict": "REJECT", "reason": "The problem Universe exists to fix; claims must be reproducible."}
+    ],
+    "strengths": ["Broadest live protocol matrix incl. Alkanes", "Mature UniSat indexer backing", "Useful asset-centric pages"],
+    "weaknesses": ["Closed source, not self-hostable", "Unverifiable indexer trust", "Thin mempool-level insight", "Marketplace conflict of interest", "Blocks scraping (403)"]
+  },
+  {
+    "product": "Ordiscan",
+    "url": "https://ordiscan.com",
+    "status": "active",
+    "open_source": false,
+    "self_hostable": false,
+    "protocols": ["ordinals", "brc-20", "runes", "rare-sats", "collections"],
+    "features": [
+      {"name": "Per-address inscription transfer history", "verdict": "IMPROVE", "reason": "Generalize history to outpoint-level flow lineage for every asset type."},
+      {"name": "Asset-class-segmented address tabs", "verdict": "ADOPT", "reason": "Clear IA for multi-protocol portfolios."},
+      {"name": "Public REST API with per-asset endpoints", "verdict": "ADOPT", "reason": "Matches API-first evidence-serving goals."},
+      {"name": "MCP/agent-accessible data interface", "verdict": "ADOPT", "reason": "Agents are real API consumers in 2026; cheap for self-hosted tool."},
+      {"name": "Rare-sat (satributes) tracking", "verdict": "OUT OF SCOPE", "reason": "Niche collectible layer; include only if ord provides it free."}
+    ],
+    "strengths": ["Clean fast UX", "API-first with documented endpoints", "Transfer history closer to flow-tracking than most"],
+    "weaknesses": ["Not self-hostable", "No mempool/pending view", "No Alkanes/Stamps/Atomicals", "Shows involvement, not per-I/O accounting"]
+  },
+  {
+    "product": "Ord.io",
+    "url": "https://ord.io",
+    "status": "defunct (shut down 2026-06-01)",
+    "open_source": false,
+    "self_hostable": false,
+    "protocols": ["ordinals", "runes", "rare-sats"],
+    "features": [
+      {"name": "Content-type browsing/rendering of inscriptions", "verdict": "IMPROVE", "reason": "Render content via sandboxed self-hosted serving, not a curation feed."},
+      {"name": "Social voting/curation layer", "verdict": "REJECT", "reason": "Moderation burden, no evidentiary value; wasn't a moat."},
+      {"name": "Real-time Runes mint tracker", "verdict": "ADOPT", "reason": "Live mint activity is a natural protocol-aware mempool extension."},
+      {"name": "VC-funded free consumer service model", "verdict": "REJECT", "reason": "Sustainability comes from being software, not a hosted service."}
+    ],
+    "strengths": ["Best content-first browsing UX (historical)", "1M+ users over 3 years"],
+    "weaknesses": ["No durable revenue; shut down June 2026 with trading app Zap"]
+  },
+  {
+    "product": "Blockstream Explorer / Esplora",
+    "url": "https://blockstream.info",
+    "status": "active",
+    "open_source": true,
+    "self_hostable": true,
+    "protocols": ["bitcoin-base", "liquid-assets", "confidential-transactions"],
+    "features": [
+      {"name": "Outpoint-level navigation (prev-out/spend links)", "verdict": "ADOPT", "reason": "Structural skeleton for asset-flow evidence; make outpoints first-class pages."},
+      {"name": "Liquid-style per-output asset display", "verdict": "ADOPT", "reason": "Right presentation model, applied to metaprotocol assets with indexer evidence."},
+      {"name": "Tor / no-tracking / noscript operation", "verdict": "ADOPT", "reason": "Privacy defaults are core self-hosted value."},
+      {"name": "Esplora API compatibility", "verdict": "ADOPT", "reason": "Preserves ecosystem tooling via mempool fork base."},
+      {"name": "Multi-language UI", "verdict": "OUT OF SCOPE", "reason": "Inherit from fork base; no early investment."},
+      {"name": "Confidential transaction support", "verdict": "OUT OF SCOPE", "reason": "Liquid-specific."}
+    ],
+    "strengths": ["Privacy posture (Tor, noscript, no trackers)", "Outpoint navigation model", "De-facto API standard", "Proven Docker self-hosting"],
+    "weaknesses": ["No live mempool viz, RBF timelines, or projected blocks", "Zero Bitcoin metaprotocol awareness", "Slower development pace", "Large disk footprint"]
+  },
+  {
+    "product": "Bitfeed",
+    "url": "https://bits.monospace.live",
+    "status": "active (low maintenance)",
+    "open_source": true,
+    "self_hostable": true,
+    "protocols": [],
+    "features": [
+      {"name": "Ambient real-time block-formation animation", "verdict": "OUT OF SCOPE", "reason": "Decorative; live view comes from fork base."},
+      {"name": "Value/size-scaled visual encoding of transactions", "verdict": "ADOPT", "reason": "Extend visual channels to indexer-verified protocol events."},
+      {"name": "Minimal self-host footprint", "verdict": "ADOPT", "reason": "Keep heavy indexers optional; run on modest hardware."}
+    ],
+    "strengths": ["Elegant, legible, emotional", "Tiny and self-hostable (Umbrel app)", "Open source"],
+    "weaknesses": ["Not an explorer (no search/history)", "Single-purpose", "Quiet maintenance since author joined mempool.space"]
+  },
+  {
+    "product": "TxStreet",
+    "url": "https://txstreet.com",
+    "status": "active but dormant development",
+    "open_source": "frontend only",
+    "self_hostable": false,
+    "protocols": [],
+    "features": [
+      {"name": "Gamified fee-market metaphor (people boarding buses)", "verdict": "REJECT", "reason": "At odds with evidence-first tool; goggles communicate the same precisely."},
+      {"name": "Multi-chain visualization", "verdict": "OUT OF SCOPE", "reason": "Universe is Bitcoin-only."},
+      {"name": "Newcomer-legible fee dynamics", "verdict": "IMPROVE", "reason": "Right goal; serve with accurate projected-block and fee-band UI."}
+    ],
+    "strengths": ["Memorable educational metaphor"],
+    "weaknesses": ["Not an explorer", "Stale development", "Backend not practically self-hostable"]
+  },
+  {
+    "product": "Blockchair",
+    "url": "https://blockchair.com",
+    "status": "active",
+    "open_source": false,
+    "self_hostable": false,
+    "protocols": ["bitcoin-base", "40+ other chains"],
+    "features": [
+      {"name": "SQL-like filterable data API", "verdict": "IMPROVE", "reason": "Expose filtered queries over indexer-evidenced asset events."},
+      {"name": "Privacy-o-meter heuristic transaction scoring", "verdict": "REJECT", "reason": "Heuristic scoring is the exact anti-pattern; only provable properties."},
+      {"name": "Anonymous portfolio / xPub wallet statements", "verdict": "IMPROVE", "reason": "Self-hosted makes portfolios private by construction; add asset-aware balances."},
+      {"name": "Database dumps for researchers", "verdict": "ADOPT", "reason": "Reproducible datasets with block-height provenance align with evidence-first values."},
+      {"name": "40+ chain coverage", "verdict": "REJECT", "reason": "Horizontal breadth opposes vertical protocol depth."}
+    ],
+    "strengths": ["Research-grade queryability", "No ads/trackers, Tor mirror", "Stable commercial API, batch and xPub support"],
+    "weaknesses": ["Closed source, not self-hostable", "Shallow Bitcoin protocol depth", "Privacy score is heuristic"]
+  },
+  {
+    "product": "OKX Bitcoin Explorer",
+    "url": "https://web3.okx.com/explorer/bitcoin",
+    "status": "active",
+    "open_source": false,
+    "self_hostable": false,
+    "protocols": ["ordinals", "brc-20", "runes", "atomicals"],
+    "features": [
+      {"name": "Token lifecycle tracking (deploy/mint states, holders)", "verdict": "ADOPT", "reason": "Expected protocol-aware functionality; ground in verifiable indexer snapshots."},
+      {"name": "Per-tx asset annotations in list views", "verdict": "IMPROVE", "reason": "Show exactly which inputs/outputs carried which amounts, not just involvement."},
+      {"name": "Exchange-integrated trading", "verdict": "REJECT", "reason": "Conflicts with neutral evidence infrastructure."},
+      {"name": "Gated platform API keys", "verdict": "REJECT", "reason": "Self-hosted means open local APIs, no accounts."}
+    ],
+    "strengths": ["Scale and data freshness", "Token lifecycle detail with holder rankings", "Deep wallet integration"],
+    "weaknesses": ["Centralized exchange dependency and tracking", "Unverifiable closed indexers", "Trading-funnel bias", "Longevity tied to exchange strategy"]
+  },
+  {
+    "product": "Magic Eden Ordinals Explorer",
+    "url": "https://magiceden.us",
+    "status": "defunct as Ordinals/Runes venue (shutdown announced 2026-02-27)",
+    "open_source": false,
+    "self_hostable": false,
+    "protocols": ["ordinals", "runes", "rare-sats"],
+    "features": [
+      {"name": "Collection-level organization and metadata", "verdict": "IMPROVE", "reason": "Source membership from open citable provenance (parent/child, manifests), not curation."},
+      {"name": "Market data (floor price, volume)", "verdict": "OUT OF SCOPE", "reason": "Perishable third-party data; link out rather than index."},
+      {"name": "Wallet-connected portfolio", "verdict": "OUT OF SCOPE", "reason": "Address pages should require no wallet connection."},
+      {"name": "Marketplace-subsidized infrastructure", "verdict": "REJECT", "reason": "2026 shutdowns prove fragility; self-hosted software survives its operator."}
+    ],
+    "strengths": ["Collection metadata and market context (historical)", "~80% of Ordinals/Runes trading at peak"],
+    "weaknesses": ["80% of costs from 20% of revenue; exited Bitcoin NFTs Feb 2026, leaving a collection-metadata vacuum"]
+  },
+  {
+    "product": "Blockchain.com Explorer",
+    "url": "https://www.blockchain.com/explorer",
+    "status": "active",
+    "open_source": false,
+    "self_hostable": false,
+    "protocols": ["bitcoin-base", "multi-chain"],
+    "features": [
+      {"name": "Beginner-simple search and address pages", "verdict": "ADOPT", "reason": "Progressive disclosure: simple by default, deep on demand."},
+      {"name": "Price/market data on explorer pages", "verdict": "OUT OF SCOPE", "reason": "Fiat context is not evidence; optional at most."},
+      {"name": "Account/wallet funnel around explorer", "verdict": "REJECT", "reason": "Neutrality, as with OKX/Magic Eden."}
+    ],
+    "strengths": ["Brand recognition", "Simple for newcomers"],
+    "weaknesses": ["No mempool depth or RBF/CPFP insight", "No protocol awareness", "Trackers and account funnels"]
+  },
+  {
+    "product": "Ordpool (emerging; direct precedent)",
+    "url": "https://ordpool.space",
+    "status": "active",
+    "open_source": true,
+    "self_hostable": true,
+    "protocols": ["ordinals", "runes", "alkanes", "brc-20", "src-20-stamps", "cat-21", "atomicals", "labitbu", "opentimestamps"],
+    "features": [
+      {"name": "Mempool-time metaprotocol decoding", "verdict": "IMPROVE", "reason": "Pair every parse with authoritative indexer validation status; decoding is not validity."},
+      {"name": "Standalone open-source parser library (ordpool-parser)", "verdict": "ADOPT", "reason": "Reusable testable parsing layer separate from UI is good architecture."},
+      {"name": "Novelty protocol chasing (CAT-21, Labitbu)", "verdict": "OUT OF SCOPE", "reason": "Support protocols with real usage and maintained indexers; stay extensible."}
+    ],
+    "strengths": ["Proves the protocol-aware mempool.space fork concept", "Decodes assets while still unconfirmed", "Fully open source"],
+    "weaknesses": ["Envelope parsing is recognition, not authoritative state (no validity/balance resolution)", "Small team/novelty focus"]
+  },
+  {
+    "product": "GeniiData (emerging/adjacent)",
+    "url": "https://geniidata.com",
+    "status": "active",
+    "open_source": false,
+    "self_hostable": false,
+    "protocols": ["ordinals", "brc-20", "runes", "bitmap", "sns"],
+    "features": [
+      {"name": "Analytics dashboards over asset events", "verdict": "ADOPT", "reason": "Mint trends and holder distribution as a later-phase layer over indexed events."},
+      {"name": "Hosted third-party indexer dependence", "verdict": "REJECT", "reason": "Universe requires reproducible local indexers."}
+    ],
+    "strengths": ["Rich BRC-20/Runes analytics", "User-built dashboards", "Developer API"],
+    "weaknesses": ["Closed source, hosted only"]
+  },
+  {
+    "product": "Stampchain / OpenStamp (Stamps ecosystem)",
+    "url": "https://stampchain.io",
+    "status": "active",
+    "open_source": "stampchain indexer open source",
+    "self_hostable": true,
+    "protocols": ["stamps", "src-20", "src-101"],
+    "features": [
+      {"name": "Open-source Stamps indexer + API integration", "verdict": "ADOPT", "reason": "If Stamps support is prioritized, integrate the open indexer as the authority."}
+    ],
+    "strengths": ["Open indexer with API", "Stamps' output-embedded data makes per-output attribution natural"],
+    "weaknesses": ["Niche ecosystem", "OpenStamp adds marketplace coupling"]
+  },
+  {
+    "product": "Hiro Ordinals Explorer & API",
+    "url": "https://ordinals.hiro.so",
+    "status": "deprecated 2026-03-09 (migrate to Xverse Ordinals API / Hiro Bitcoin Indexer)",
+    "open_source": true,
+    "self_hostable": true,
+    "protocols": ["ordinals", "brc-20"],
+    "features": [
+      {"name": "Hosted Ordinals API at scale (~150M req/month)", "verdict": "REJECT", "reason": "Third major hosted-Ordinals-data exit of 2026; reinforces self-hosting thesis."}
+    ],
+    "strengths": ["Was reliable at scale; open-source repos remain as reference"],
+    "weaknesses": ["Deprecated; repos archived March 2026"]
+  }
+]
