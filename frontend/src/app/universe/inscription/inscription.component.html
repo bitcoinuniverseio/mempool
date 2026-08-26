@@ -1,0 +1,142 @@
+<div class="container-xl universe-asset" *ngIf="state$ | async as state">
+
+  <header class="page-head">
+    <div>
+      <h1 i18n="universe.inscription.title">Inscription</h1>
+      <p class="reference identifier">{{ state.reference }}</p>
+    </div>
+    <app-universe-bookmark-button
+      *ngIf="state.kind === 'ready'"
+      kind="inscription"
+      [value]="state.result.value.id"
+      [path]="'/inscription/' + state.result.value.id"
+      [label]="'Inscription ' + state.result.value.numberAtomic"
+    ></app-universe-bookmark-button>
+  </header>
+
+  <ng-container [ngSwitch]="state.kind">
+
+    <div *ngSwitchCase="'loading'" class="panel" aria-busy="true">
+      <p class="skeleton-line"></p>
+      <p class="skeleton-line short"></p>
+    </div>
+
+    <div *ngSwitchCase="'invalid'" class="panel state-panel">
+      <h2 i18n="universe.inscription.invalid-title">That is not an inscription reference</h2>
+      <p i18n="universe.inscription.invalid-body">
+        Use an inscription id, written as a transaction id followed by
+        <code>i</code> and the index, or an inscription number.
+      </p>
+    </div>
+
+    <div *ngSwitchCase="'missing'" class="panel state-panel">
+      <h2 i18n="universe.inscription.missing-title">No such inscription</h2>
+      <p>{{ statusMessage(state.result?.status) }}</p>
+      <p class="asof" *ngIf="state.result?.checkpoint as checkpoint">
+        <ng-container i18n="universe.inscription.asof">As of block {{ checkpoint.heightAtomic }}</ng-container>
+      </p>
+    </div>
+
+    <div *ngSwitchCase="'unavailable'" class="panel state-panel unavailable">
+      <h2 i18n="universe.inscription.unavailable-title">The asset authority did not answer</h2>
+      <p>{{ statusMessage(state.result?.status) }}</p>
+    </div>
+
+    <ng-container *ngSwitchCase="'ready'">
+      <section class="panel identity">
+        <dl>
+          <dt i18n="universe.inscription.field-number">Inscription number</dt>
+          <dd>{{ state.result.value.numberAtomic }}</dd>
+
+          <dt i18n="universe.inscription.field-id">Inscription id</dt>
+          <dd class="identifier">{{ state.result.value.id }}</dd>
+
+          <ng-container *ngIf="revealTxid(state.result.value.id) as txid">
+            <dt i18n="universe.inscription.field-reveal">Revealed by</dt>
+            <dd><a class="identifier" [routerLink]="['/tx', txid]">{{ txid }}</a></dd>
+          </ng-container>
+
+          <ng-container *ngIf="state.result.value.heightAtomic as height">
+            <dt i18n="universe.inscription.field-height">Inscribed in block</dt>
+            <dd><a [routerLink]="['/block', height]">{{ height }}</a></dd>
+          </ng-container>
+
+          <ng-container *ngIf="state.result.value.timestampAtomic as timestamp">
+            <dt i18n="universe.inscription.field-time">Block time</dt>
+            <dd>{{ utc(timestamp) }}</dd>
+          </ng-container>
+
+          <ng-container *ngIf="state.result.value.contentType as contentType">
+            <dt i18n="universe.inscription.field-type">Content type</dt>
+            <dd>{{ contentType }}</dd>
+          </ng-container>
+
+          <ng-container *ngIf="state.result.value.contentLengthAtomic as length">
+            <dt i18n="universe.inscription.field-size">Content size</dt>
+            <dd><ng-container i18n="universe.inscription.bytes">{{ amount(length) }} bytes</ng-container></dd>
+          </ng-container>
+
+          <ng-container *ngIf="state.result.value.metaprotocol as metaprotocol">
+            <dt i18n="universe.inscription.field-metaprotocol">Metaprotocol tag</dt>
+            <dd>{{ metaprotocol }}</dd>
+          </ng-container>
+        </dl>
+      </section>
+
+      <section class="panel location">
+        <h2 i18n="universe.inscription.location-title">Where it sits now</h2>
+        <dl>
+          <ng-container *ngIf="outpointRoute(state.result.value.satpoint) as route">
+            <dt i18n="universe.inscription.field-output">Output</dt>
+            <dd><a class="identifier" [routerLink]="route">{{ state.result.value.satpoint }}</a></dd>
+          </ng-container>
+
+          <ng-container *ngIf="state.result.value.address as address">
+            <dt i18n="universe.inscription.field-address">Address</dt>
+            <dd><a class="identifier" [routerLink]="['/address', address]">{{ address }}</a></dd>
+          </ng-container>
+
+          <ng-container *ngIf="state.result.value.satAtomic as sat">
+            <dt i18n="universe.inscription.field-sat">Satoshi</dt>
+            <dd><a [routerLink]="['/sat', sat]">{{ amount(sat) }}</a></dd>
+          </ng-container>
+
+          <ng-container *ngIf="state.result.value.valueAtomic as value">
+            <dt i18n="universe.inscription.field-value">Output value</dt>
+            <dd><ng-container i18n="universe.inscription.sats">{{ amount(value) }} sats</ng-container></dd>
+          </ng-container>
+        </dl>
+      </section>
+
+      <section class="panel relations"
+               *ngIf="state.result.value.charms.length || state.result.value.parents.length || state.result.value.rune">
+        <h2 i18n="universe.inscription.relations-title">Notes from the authority</h2>
+
+        <ul class="tag-list" *ngIf="state.result.value.charms.length">
+          <li *ngFor="let charm of state.result.value.charms">{{ charmLabel(charm) }}</li>
+        </ul>
+
+        <dl>
+          <ng-container *ngIf="state.result.value.parents.length">
+            <dt i18n="universe.inscription.field-parents">Parents</dt>
+            <dd>
+              <a class="identifier" *ngFor="let parent of state.result.value.parents"
+                 [routerLink]="['/inscription', parent]">{{ shorten(parent, 10) }}</a>
+            </dd>
+          </ng-container>
+
+          <ng-container *ngIf="state.result.value.rune as rune">
+            <dt i18n="universe.inscription.field-rune">Etches rune</dt>
+            <dd><a [routerLink]="['/rune', rune]">{{ rune }}</a></dd>
+          </ng-container>
+        </dl>
+      </section>
+
+      <p class="asof" *ngIf="state.result.checkpoint as checkpoint">
+        <ng-container i18n="universe.inscription.proven">
+          Proven by {{ state.result.authorityId }} at block {{ checkpoint.heightAtomic }}.
+        </ng-container>
+      </p>
+    </ng-container>
+  </ng-container>
+</div>

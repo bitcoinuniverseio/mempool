@@ -9,6 +9,7 @@ import logger from '../logger';
 class BackendInfo {
   private backendInfo: IBackendInfo;
   private timer;
+  private syncTimer;
 
   constructor() {
     // This file is created by ./fetch-version.ts during building
@@ -31,6 +32,7 @@ class BackendInfo {
       backend: config.MEMPOOL.BACKEND,
       coreVersion: '?',
       osVersion: `${os.type()} ${os.release()}`,
+      chainSync: null,
     };
 
     this.timer = setInterval(async () => {
@@ -41,6 +43,13 @@ class BackendInfo {
       }
     }, 10 * 60 * 1000); // every 10 minutes
     void this.$updateCoreVersion(); // starting immediately
+
+    // Sync state changes far more often than the version does, and a stale
+    // answer here would defeat the point of publishing it at all.
+    this.syncTimer = setInterval(async () => {
+      await this.$updateChainSync();
+    }, 30 * 1000);
+    void this.$updateChainSync();
   }
 
   /** @asyncSafe */
@@ -50,6 +59,28 @@ class BackendInfo {
       this.backendInfo.coreVersion = networkInfo.subversion;
     } catch (e) {
       logger.err(`Exception in $updateCoreVersion. Reason: ${(e instanceof Error ? e.message : e)}`);
+    }
+  }
+
+  /**
+   * Reads how far the node has got. Never throws: a node that cannot answer
+   * leaves the previous reading in place rather than replacing it with a
+   * fabricated one.
+   *
+   * @asyncSafe
+   */
+  private async $updateChainSync(): Promise<void> {
+    try {
+      const info = await bitcoinClient.getBlockchainInfo();
+      this.backendInfo.chainSync = {
+        blocks: info.blocks,
+        headers: info.headers,
+        initialBlockDownload: !!info.initialblockdownload,
+        verificationProgress: info.verificationprogress,
+        checkedAt: new Date().toISOString(),
+      };
+    } catch (e) {
+      logger.debug(`Could not read chain sync state. Reason: ${(e instanceof Error ? e.message : e)}`);
     }
   }
 

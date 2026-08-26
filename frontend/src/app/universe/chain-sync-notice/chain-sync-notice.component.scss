@@ -1,0 +1,28 @@
+@use '../universe-tokens' as u;
+
+:host {
+  @include u.universe-state-tokens;
+
+  display: block;
+}
+
+.chain-sync-notice:not(:empty) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.75rem;
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid rgba(232, 193, 92, 0.35);
+  background: rgba(232, 193, 92, 0.08);
+  color: var(--universe-state-partial);
+  font-size: 0.9rem;
+  line-height: 1.5;
+
+  strong {
+    font-weight: 700;
+  }
+
+  span {
+    color: var(--transparent-fg, #a8b0c4);
+  }
+}

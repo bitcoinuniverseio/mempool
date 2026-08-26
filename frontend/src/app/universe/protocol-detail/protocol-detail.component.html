@@ -1,0 +1,117 @@
+<div class="container-xl protocol-detail" *ngIf="vm$ | async as vm">
+
+  <ng-container [ngSwitch]="vm.kind">
+
+    <div *ngSwitchCase="'missing'" class="panel state-panel">
+      <h1 i18n="universe.detail.missing-title">No protocol by that name</h1>
+      <p i18n="universe.detail.missing-body">
+        The registry has no entry with that id or alias.
+      </p>
+      <a [routerLink]="['/protocols']" i18n="universe.detail.back">Back to all protocols</a>
+    </div>
+
+    <div *ngSwitchCase="'error'" class="panel state-panel">
+      <h1 i18n="universe.detail.error-title">The protocol registry could not be read</h1>
+      <p i18n="universe.detail.error-body">
+        The explorer could not reach its own registry. Everything else on the site
+        still works.
+      </p>
+    </div>
+
+    <ng-container *ngSwitchCase="'ready'">
+
+      <header class="page-head">
+        <div class="title-block">
+          <nav class="crumbs">
+            <a [routerLink]="['/protocols']" i18n="universe.detail.crumb">Protocols</a>
+          </nav>
+          <h1>
+            {{ vm.protocol.displayName }}
+            <span class="universe-chip" [ngClass]="'state-' + statusTone(vm.protocol)">{{ statusLabel(vm.protocol) }}</span>
+          </h1>
+          <p class="summary">{{ vm.copy.summary }}</p>
+        </div>
+
+        <div class="head-actions">
+          <button type="button" class="pin" [class.pinned]="vm.pinned"
+                  [attr.aria-pressed]="vm.pinned"
+                  (click)="togglePin(vm.protocol.id)">
+            <ng-container *ngIf="vm.pinned; else notPinned" i18n="universe.detail.unpin">Unpin</ng-container>
+            <ng-template #notPinned><ng-container i18n="universe.detail.pin">Pin to my filters</ng-container></ng-template>
+          </button>
+        </div>
+      </header>
+
+      <div class="grid">
+
+        <section class="panel actions" aria-labelledby="detail-actions-heading">
+          <h2 id="detail-actions-heading" i18n="universe.detail.actions-title">Actions it creates</h2>
+          <ul class="action-list">
+            <li *ngFor="let action of vm.copy.actions">{{ action }}</li>
+          </ul>
+        </section>
+
+        <section class="panel authority" aria-labelledby="detail-authority-heading">
+          <h2 id="detail-authority-heading" i18n="universe.detail.authority-title">Authority and freshness</h2>
+          <dl>
+            <dt i18n="universe.detail.field-chain">Chain</dt>
+            <dd>{{ vm.protocol.chain }}</dd>
+
+            <dt i18n="universe.detail.field-authority">Authority</dt>
+            <dd>{{ vm.protocol.indexerAuthority || notConfiguredLabel }}</dd>
+
+            <ng-container *ngIf="vm.source?.checkpoint as checkpoint">
+              <dt i18n="universe.detail.field-checkpoint">Proven through</dt>
+              <dd>
+                <ng-container i18n="universe.detail.checkpoint-height">Block {{ checkpoint.heightAtomic }}</ng-container>
+              </dd>
+            </ng-container>
+
+            <ng-container *ngIf="coverageLabel(vm.protocol) as coverage">
+              <dt i18n="universe.detail.field-coverage">Coverage</dt>
+              <dd>{{ coverage }}</dd>
+            </ng-container>
+          </dl>
+        </section>
+
+      </div>
+
+      <section class="panel limitation" *ngIf="limitation(vm) as note" aria-labelledby="detail-limits-heading">
+        <h2 id="detail-limits-heading" i18n="universe.detail.limits-title">What is not shown, and why</h2>
+        <p>{{ note }}</p>
+      </section>
+
+      <section class="panel how-to-read" *ngIf="vm.copy.howToRead" aria-labelledby="detail-read-heading">
+        <h2 id="detail-read-heading" i18n="universe.detail.read-title">How to read its evidence</h2>
+        <p>{{ vm.copy.howToRead }}</p>
+      </section>
+
+      <section class="panel live" *ngIf="vm.live && vm.onThisChain" aria-labelledby="detail-live-heading">
+        <h2 id="detail-live-heading" i18n="universe.detail.live-title">Live activity</h2>
+        <p class="live-count" i18n="universe.detail.live-count">
+          Seen in {{ liveCount(vm) }} of the {{ vm.pulse.checked }} transactions checked since this page opened.
+        </p>
+
+        <ul class="event-list" *ngIf="vm.events?.length; else noEvents">
+          <li *ngFor="let event of vm.events; trackBy: trackByEvent">
+            <a class="identifier" [routerLink]="['/tx', event.txid]">{{ shorten(event.txid, 10) }}</a>
+          </li>
+        </ul>
+        <ng-template #noEvents>
+          <p class="empty" i18n="universe.detail.no-events">
+            No transaction carrying this protocol has arrived since this page opened.
+          </p>
+        </ng-template>
+
+        <a [routerLink]="['/pulse']" i18n="universe.detail.open-pulse">Open the live protocol feed</a>
+      </section>
+
+    </ng-container>
+
+    <div *ngSwitchDefault class="panel" aria-busy="true">
+      <p class="skeleton-line"></p>
+      <p class="skeleton-line short"></p>
+    </div>
+
+  </ng-container>
+</div>

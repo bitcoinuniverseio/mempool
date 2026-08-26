@@ -33,7 +33,6 @@ export class LightningDashboardComponent implements OnInit, AfterViewInit {
 
     this.seoService.setTitle($localize`:@@142e923d3b04186ac6ba23387265d22a2fa404e0:Lightning Explorer`);
     this.seoService.setDescription($localize`:@@meta.description.lightning.dashboard:Get stats on the Lightning network (aggregate capacity, connectivity, etc), Lightning nodes (channels, liquidity, etc) and Lightning channels (status, fees, etc).`);
-    this.ogService.setManualOgImage('lightning.jpg');
 
     this.nodesRanking$ = this.lightningApiService.getNodesRanking$().pipe(share());
     this.statistics$ = this.lightningApiService.getLatestStatistics$().pipe(share());

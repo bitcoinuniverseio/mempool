@@ -1,116 +1,50 @@
-@use "sass:color";
+// Universe Explorer, high contrast.
+//
+// Dark with the contrast pushed well past the AA floor, for reading dense fee
+// and transaction tables in bright rooms or on low-quality panels. It inherits
+// the dark tokens and then raises only what needs raising: text against
+// surface, borders, and the four evidence states, which are the colours a
+// misread would actually cost something.
 
-/* Theme */
-$bg: #11131f;
-$active-bg: #000000;
-$hover-bg: #12131e;
-$fg: #fff;
-$nav-bg: $bg;
-$title-fg: #2055e3;
-
-$taproot: #eba814;
-$taproot-light: #d5a90a;
-$taproot-dark: #9d7c05;
-
-/* Bootstrap */
-$body-bg: $bg;
-$body-color: $fg;
-$gray-800: $bg;
-$gray-700: $fg;
-
-$nav-tabs-link-active-bg: $active-bg;
-
-$primary: #007cfa;
-$secondary: #272f4e;
-$tertiary: #6225b2;
-$success: #0aab2f;
-$info: #00ddff;
-
-$h5-font-size: 1.15rem !default;
-
-$pagination-bg: $body-bg;
-$pagination-border-color: $gray-800;
-$pagination-disabled-bg:           $fg;
-$pagination-disabled-border-color: $bg;
-$pagination-active-color:          $fg;
-$pagination-active-bg:             $tertiary;
-$pagination-hover-bg:              $hover-bg;
-$pagination-hover-border-color:     $bg;
-$pagination-disabled-bg:          $bg;
-
-$custom-select-indicator-color: $fg;
-
-.input-group-text {
-  background-color: #1c2031 !important;
-  border: 1px solid #20263e !important;
-}
-
-$link-color:                $info;
-$link-decoration:           none !default;
-$link-hover-color:          color.adjust($link-color, $lightness: -15%) !default;
-$link-hover-decoration:     underline !default;
-
-$dropdown-bg: $bg;
-$dropdown-link-color: $fg;
-
-$dropdown-link-hover-color: $fg;
-$dropdown-link-hover-bg: $active-bg;
-
-$dropdown-link-active-color: $fg;
-$dropdown-link-active-bg: $active-bg;
+@use "styles/universe-tokens" as universe;
 
 :root {
-  --bg: #{$bg};
-  --active-bg: #{$active-bg};
-  --hover-bg: #{$hover-bg};
-  --fg: #{$fg};
-  --nav-bg: #{$nav-bg};
-  --title-fg: #{$title-fg};
+  @include universe.universe-invariant-tokens;
+  @include universe.universe-dark-tokens;
 
-  --primary: #{$primary};
-  --secondary: #{$secondary};
-  --tertiary: #{$tertiary};
-  --success: #{$success};
-  --info: #{$info};
-  --link-color: #{$link-color};
-  --link-hover-color: #{$link-hover-color};
-  --icon: #f1f1f1;
-  --skeleton-bg: #2e324e;
-  --skeleton-bg-light: #5d6182;
+  // Push the surfaces apart and the text up. Text on raised reaches ~19:1.
+  --u-surface-page: #05070d;
+  --u-surface-raised: #0e1118;
+  --u-surface-sunken: #000000;
+  --u-surface-inset: #1a1f2b;
+  --u-surface-hover: #1c2230;
+  --u-surface-active: #252c3d;
 
-  --box-bg: #171c2a;
-  --stat-box-bg: #0b1018;
-  --alert-bg: #3a1c61;
-  --transparent-fg: #ffffffbb;
-  --fade-out-box-bg-start: rgba(23, 28, 42, 0);
-  --fade-out-box-bg-end: rgba(23, 28, 42, 1);
+  --u-text-primary: #ffffff;
+  --u-text-secondary: #dce3ee;
+  --u-text-muted: #b3bccd;
+
+  --u-border: #48526b;
+  --u-border-strong: #6b7691;
+  --u-divider: #3a4258;
+
+  --u-brand: #a8b8ff;
+  --u-brand-hover: #c8d2ff;
+  --u-brand-subtle: #171d33;
+  --u-brand-border: #4d5885;
+
+  --u-focus-ring: #6fe0ff;
+  --u-focus-ring-offset: #0e1118;
+
+  // Evidence states, raised. These four carry the product's core claim, so they
+  // get the most headroom.
+  --u-state-proven: #7dea9f;
+  --u-state-partial: #ffd27a;
+  --u-state-pending: #9ed4ff;
+  --u-state-unavailable: #ffa8a0;
+  --u-state-neutral: #c2cbdb;
+
+  @include universe.universe-legacy-bridge;
+
   --opacity: 0.9;
-
-  --testnet: #1d486f;
-  --signet: #6f1d5d;
-  --regtest: #7d7d7d;
-  --liquid: #116761;
-  --liquidtestnet: #494a4a;
-
-  --mainnet-alt: #9339f4;
-  --testnet-alt: #183550;
-  --signet-alt: #471850;
-  --regtest-alt: #4a4a4a;
-  --liquidtestnet-alt: #272e46;
-
-  --taproot: #eba814;
-  --taproot-light: #d5a90a;
-  --taproot-dark: #9d7c05;
-
-  --green: #83fd00;
-  --red: #ff3d00;
-  --yellow: #fff000;
-  --grey: #7e7e7e;
-  --tooltip-grey: #b1b1b1;
-  --orange: #ff9f00;
-
-  --search-button: #4d2d77;
-  --search-button-border: #472a6e;
-  --search-button-focus: #533180;
-  --search-button-shadow: #7c58ab80;
 }

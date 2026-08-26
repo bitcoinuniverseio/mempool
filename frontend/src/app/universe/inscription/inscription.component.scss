@@ -1,0 +1,27 @@
+@use '../asset-page' as page;
+
+:host {
+  @include page.universe-asset-page;
+
+  .relations dd a + a {
+    margin-left: 0.6rem;
+  }
+
+  .tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    list-style: none;
+    margin: 0 0 0.75rem;
+    padding: 0;
+
+    li {
+      padding: 0.15em 0.55em;
+      border: 1px solid var(--universe-protocol-ordinals);
+      border-radius: 0.25rem;
+      color: var(--universe-protocol-ordinals);
+      font-size: 0.8rem;
+      text-transform: capitalize;
+    }
+  }
+}

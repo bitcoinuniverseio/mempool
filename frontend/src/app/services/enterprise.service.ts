@@ -10,7 +10,11 @@ import { BehaviorSubject } from 'rxjs';
   providedIn: 'root'
 })
 export class EnterpriseService {
-  exclusiveHostName = '.mempool.space';
+  /**
+   * Universe deployment: enterprise subdomains are an upstream hosted service
+   * and are not offered here, so no hostname is treated as one.
+   */
+  exclusiveHostName = '';
   subdomain: string | null = null;
   statsUrl: string;
   siteId: number;
@@ -23,8 +27,9 @@ export class EnterpriseService {
     private stateService: StateService,
     private activatedRoute: ActivatedRoute,
   ) {
-    const subdomain = this.stateService.env.customize?.enterprise || this.document.location.hostname.indexOf(this.exclusiveHostName) > -1
-      && this.document.location.hostname.split(this.exclusiveHostName)[0] || false;
+    const subdomain = this.stateService.env.customize?.enterprise
+      || (this.exclusiveHostName && this.document.location.hostname.indexOf(this.exclusiveHostName) > -1
+        && this.document.location.hostname.split(this.exclusiveHostName)[0]) || false;
     if (subdomain && subdomain.match(/^[A-z0-9-_]+$/)) {
       this.subdomain = subdomain;
       this.fetchSubdomainInfo();
@@ -60,10 +65,11 @@ export class EnterpriseService {
         this.seoService.setEnterpriseTitle(info.title);
         this.info$.next(this.processEnterpriseInfo(info));
       },
-      (error) => {
-        if (error.status === 404) {
-          window.location.href = 'https://mempool.space' + window.location.pathname;
-        }
+      () => {
+        // Upstream redirects an unknown subdomain to its own hosted site. This
+        // deployment never sends a visitor to a third party, so an unknown
+        // subdomain simply renders the ordinary explorer.
+        this.info$.next(null);
       });
     }
   }
@@ -79,66 +85,16 @@ export class EnterpriseService {
     };
   }
 
+  /**
+   * Universe deployment: no analytics.
+   *
+   * Upstream loads a hosted tracker on its own domains. This explorer ships no
+   * tracker at all, so the whole path is a deliberate no-op rather than a
+   * setting a deployment could switch back on by accident. `getMatomo` below
+   * therefore never resolves a tracker and every call through it is inert.
+   */
   insertMatomo(siteId?: number): void {
-    let statsUrl = '//stats.mempool.space/';
-
-    if (!siteId) {
-      switch (this.document.location.hostname) {
-        case 'mempool.space':
-          statsUrl = '//stats.mempool.space/';
-          siteId = 5;
-          break;
-        case 'mempool.ninja':
-          statsUrl = '//stats.mempool.space/';
-          siteId = 4;
-          break;
-        case 'liquid.network':
-          siteId = 8;
-          statsUrl = '//stats.liquid.network/';
-          break;
-        case 'liquid.place':
-          siteId = 10;
-          statsUrl = '//stats.liquid.network/';
-          break;
-        default:
-          return;
-      }
-    }
-
-    this.statsUrl = statsUrl;
-    this.siteId = siteId;
-
-    // @ts-ignore
-    if (window._paq && window['Matomo']) {
-      window['Matomo'].addTracker(statsUrl+'m.php', siteId.toString());
-      const matomo = this.getMatomo();
-      matomo.setDocumentTitle(this.seoService.getTitle());
-      matomo.setCustomUrl(this.getCustomUrl());
-      matomo.disableCookies();
-      matomo.trackPageView();
-      matomo.enableLinkTracking();
-    } else {
-      // @ts-ignore
-      const alreadyInitialized = !!window._paq;
-      // @ts-ignore
-      const _paq = window._paq = window._paq || [];
-      _paq.push(['setDocumentTitle', this.seoService.getTitle()]);
-      _paq.push(['setCustomUrl', this.getCustomUrl()]);
-      _paq.push(['disableCookies']);
-      _paq.push(['trackPageView']);
-      _paq.push(['enableLinkTracking']);
-      if (alreadyInitialized) {
-        _paq.push(['addTracker', statsUrl+'m.php', siteId.toString()]);
-      } else {
-        (function() {
-          _paq.push(['setTrackerUrl', statsUrl+'m.php']);
-          _paq.push(['setSiteId', siteId.toString()]);
-          const d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
-          // @ts-ignore
-          g.type='text/javascript'; g.async=true; g.src=statsUrl+'m.js'; s.parentNode.insertBefore(g,s);
-        })();
-      }
-    }
+    void siteId;
   }
 
   private getMatomo() {

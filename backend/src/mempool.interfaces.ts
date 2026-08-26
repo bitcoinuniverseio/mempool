@@ -507,6 +507,23 @@ export interface IBackendInfo {
   coreVersion: string;
   osVersion: string;
   backend: 'esplora' | 'electrum' | 'none';
+  /**
+   * How far the node this explorer reads has actually got.
+   *
+   * An explorer that reads a node still in initial block download would
+   * otherwise present a months-old tip as the present, which is the one thing
+   * this product must never do. Null while the state has not been read yet.
+   */
+  chainSync: IChainSyncState | null;
+}
+
+export interface IChainSyncState {
+  blocks: number;
+  headers: number;
+  initialBlockDownload: boolean;
+  /** Fraction of the chain verified, 0 to 1, as the node reports it. */
+  verificationProgress: number;
+  checkedAt: string;
 }
 
 export interface INetworkInfo {

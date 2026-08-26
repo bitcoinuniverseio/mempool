@@ -69,17 +69,17 @@ export class CustomDashboardComponent implements OnInit, OnDestroy, AfterViewIni
   walletSummary$: Observable<AddressTxSummary[]>;
   address: Address;
 
-  goggleResolution = 82;
-  goggleCycle: { index: number, name: string, mode: FilterMode, filters: string[], gradient: GradientMode }[] = [
+  lensResolution = 82;
+  lensCycle: { index: number, name: string, mode: FilterMode, filters: string[], gradient: GradientMode }[] = [
     { index: 0, name: $localize`:@@dfc3c34e182ea73c5d784ff7c8135f087992dac1:All`, mode: 'and', filters: [], gradient: 'age' },
     { index: 1, name: $localize`Consolidation`, mode: 'and', filters: ['consolidation'], gradient: 'fee' },
     { index: 2, name: $localize`Coinjoin`, mode: 'and', filters: ['coinjoin'], gradient: 'fee' },
     { index: 3, name: $localize`Data`, mode: 'or', filters: ['inscription', 'fake_pubkey', 'fake_scripthash', 'op_return'], gradient: 'fee' },
   ];
-  goggleFlags = 0n;
-  goggleMode: FilterMode = 'and';
+  lensFlags = 0n;
+  lensMode: FilterMode = 'and';
   gradientMode: GradientMode = 'age';
-  goggleIndex = 0;
+  lensIndex = 0;
 
   private destroy$ = new Subject();
 
@@ -130,30 +130,30 @@ export class CustomDashboardComponent implements OnInit, OnDestroy, AfterViewIni
         map((indicators) => indicators.mempool !== undefined ? indicators.mempool : 100)
       );
 
-    this.filterSubscription = this.stateService.activeGoggles$.subscribe((active: ActiveFilter) => {
+    this.filterSubscription = this.stateService.activeLens$.subscribe((active: ActiveFilter) => {
       const activeFilters = active.filters.sort().join(',');
-      for (const goggle of this.goggleCycle) {
-        if (goggle.mode === active.mode) {
-          const goggleFilters = goggle.filters.sort().join(',');
-          if (goggleFilters === activeFilters) {
-            this.goggleIndex = goggle.index;
-            this.goggleFlags = toFlags(goggle.filters);
-            this.goggleMode = goggle.mode;
+      for (const lens of this.lensCycle) {
+        if (lens.mode === active.mode) {
+          const lensFilters = lens.filters.sort().join(',');
+          if (lensFilters === activeFilters) {
+            this.lensIndex = lens.index;
+            this.lensFlags = toFlags(lens.filters);
+            this.lensMode = lens.mode;
             this.gradientMode = active.gradient;
             return;
           }
         }
       }
-      this.goggleCycle.push({
-        index: this.goggleCycle.length,
+      this.lensCycle.push({
+        index: this.lensCycle.length,
         name: 'Custom',
         mode: active.mode,
         filters: active.filters,
         gradient: active.gradient,
       });
-      this.goggleIndex = this.goggleCycle.length - 1;
-      this.goggleFlags = toFlags(active.filters);
-      this.goggleMode = active.mode;
+      this.lensIndex = this.lensCycle.length - 1;
+      this.lensFlags = toFlags(active.filters);
+      this.lensMode = active.mode;
     });
 
     this.mempoolInfoData$ = combineLatest([
@@ -288,8 +288,8 @@ export class CustomDashboardComponent implements OnInit, OnDestroy, AfterViewIni
   }
 
   setFilter(index): void {
-    const selected = this.goggleCycle[index];
-    this.stateService.activeGoggles$.next(selected);
+    const selected = this.lensCycle[index];
+    this.stateService.activeLens$.next(selected);
   }
 
   startAddressSubscription(): void {
@@ -438,15 +438,15 @@ export class CustomDashboardComponent implements OnInit, OnDestroy, AfterViewIni
   onResize(): void {
     if (window.innerWidth >= 992) {
       this.incomingGraphHeight = 300;
-      this.goggleResolution = 82;
+      this.lensResolution = 82;
       this.graphHeight = 400;
     } else if (window.innerWidth >= 768) {
       this.incomingGraphHeight = 215;
-      this.goggleResolution = 80;
+      this.lensResolution = 80;
       this.graphHeight = 310;
     } else {
       this.incomingGraphHeight = 180;
-      this.goggleResolution = 86;
+      this.lensResolution = 86;
       this.graphHeight = 310;
     }
     this.isMobile = window.innerWidth <= 767.98;

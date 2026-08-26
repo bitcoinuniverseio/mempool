@@ -1,0 +1,84 @@
+<div class="container-xl universe-saved" *ngIf="vm$ | async as vm">
+
+  <header class="page-head">
+    <h1 i18n="universe.saved.title">Saved in this browser</h1>
+    <p class="lede" i18n="universe.saved.lede">
+      This list lives only on this device. The explorer never sends it anywhere and
+      keeps no account for you.
+    </p>
+  </header>
+
+  <section class="panel" aria-labelledby="saved-bookmarks-heading">
+    <h2 id="saved-bookmarks-heading" i18n="universe.saved.bookmarks-title">Saved pages</h2>
+
+    <p class="empty" *ngIf="!vm.bookmarks.length" i18n="universe.saved.bookmarks-empty">
+      Nothing saved yet. Use the save button on a transaction, output, address, or
+      protocol page and it appears here.
+    </p>
+
+    <ul class="entry-list" *ngIf="vm.bookmarks.length">
+      <li *ngFor="let entry of vm.bookmarks; trackBy: trackByEntry">
+        <span class="entry-kind">{{ kindLabel(entry.kind) }}</span>
+        <a class="entry-label" [routerLink]="[entry.path]">{{ entry.label }}</a>
+        <button type="button" class="remove" (click)="remove(entry)"
+                [attr.aria-label]="'Remove ' + entry.label">
+          <ng-container i18n="universe.saved.remove">Remove</ng-container>
+        </button>
+      </li>
+    </ul>
+  </section>
+
+  <section class="panel" aria-labelledby="saved-recent-heading">
+    <h2 id="saved-recent-heading" i18n="universe.saved.recent-title">Recently viewed</h2>
+
+    <p class="empty" *ngIf="!vm.recent.length" i18n="universe.saved.recent-empty">
+      Nothing viewed yet in this browser.
+    </p>
+
+    <ul class="entry-list" *ngIf="vm.recent.length">
+      <li *ngFor="let entry of vm.recent; trackBy: trackByEntry">
+        <span class="entry-kind">{{ kindLabel(entry.kind) }}</span>
+        <a class="entry-label" [routerLink]="[entry.path]">{{ entry.label }}</a>
+      </li>
+    </ul>
+
+    <button type="button" class="secondary" *ngIf="vm.recent.length" (click)="clearRecent()">
+      <ng-container i18n="universe.saved.clear-recent">Clear recently viewed</ng-container>
+    </button>
+  </section>
+
+  <section class="panel" *ngIf="vm.pinnedProtocols.length" aria-labelledby="saved-pinned-heading">
+    <h2 id="saved-pinned-heading" i18n="universe.saved.pinned-title">Pinned protocols</h2>
+    <ul class="entry-list">
+      <li *ngFor="let protocolId of vm.pinnedProtocols">
+        <a class="entry-label" [routerLink]="['/protocols', protocolId]">{{ protocolId }}</a>
+        <button type="button" class="remove" (click)="unpin(protocolId)">
+          <ng-container i18n="universe.saved.unpin">Unpin</ng-container>
+        </button>
+      </li>
+    </ul>
+  </section>
+
+  <section class="panel reset" aria-labelledby="saved-reset-heading">
+    <h2 id="saved-reset-heading" i18n="universe.saved.reset-title">Forget everything</h2>
+    <p i18n="universe.saved.reset-body">
+      Clears saved pages, recently viewed items, and pinned protocols from this
+      browser. It cannot be undone.
+    </p>
+
+    <button type="button" class="danger" *ngIf="!confirmingReset" (click)="askReset()">
+      <ng-container i18n="universe.saved.reset-action">Forget everything</ng-container>
+    </button>
+
+    <div class="confirm" *ngIf="confirmingReset">
+      <p i18n="universe.saved.reset-confirm">Forget everything stored in this browser?</p>
+      <button type="button" class="danger" (click)="confirmReset()">
+        <ng-container i18n="universe.saved.reset-yes">Yes, forget it</ng-container>
+      </button>
+      <button type="button" class="secondary" (click)="cancelReset()">
+        <ng-container i18n="universe.saved.reset-no">Keep it</ng-container>
+      </button>
+    </div>
+  </section>
+
+</div>

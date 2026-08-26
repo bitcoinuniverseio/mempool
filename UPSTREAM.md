@@ -45,6 +45,16 @@ synchronization procedure.
 | `.github/workflows/universe-ci.yml`, `upstream-sync.yml` | Added. Upstream workflows are unchanged. |
 | `scripts/universe/` | Added. Protocol coverage documentation generator and its CI check. |
 | `.nvmrc` | Pinned to the Universe toolchain version (24.19.0). |
+| `backend/src/index.ts`, `backend/src/config.ts` | `MEMPOOL.HTTP_HOST` added, defaulting to loopback. Upstream binds every interface. |
+| `backend/src/api/backend-info.ts` | Publishes the node's own sync state so the explorer can say when its data is behind the chain. |
+| `frontend/src/app/services/enterprise.service.ts` | Hosted analytics reduced to a no-op; the upstream redirect on an unknown subdomain removed; no hostname treated as an enterprise subdomain. |
+| `frontend/src/app/services/state.service.ts`, `seo.service.ts` | Cross-network links, the services API, and the canonical domain point at this deployment or are unset. |
+| `frontend/sync-assets.js`, `frontend/package.json` | `build:universe` omits localization and asset synchronization; the hosted CDN rewrite is removed. |
+| Deleted upstream surfaces | `components/about/`, `components/trademark-policy/`, `components/accelerate-checkout/`, `lightning/group/`, the sponsor index variants, and the upstream node fleet scripts. |
+| Rewritten upstream surfaces | `components/privacy-policy/`, `components/terms-of-service/`, `docs/api-docs/`. |
+| Renamed identifiers | `activeGoggles$`, `goggleCycle`, `goggleIndex` are now `activeLens$`, `lensCycle`, `lensIndex`, so the trademark does not survive minification. |
+| Accessibility | Accessible names added to the icon-only navigation, the search submit button, and the blockchain toggles. |
+| `scripts/universe/` | Gateway, protocol coverage generator, and the branding, origin, and text gates. |
 
 ## Known upstream conflicts
 
@@ -53,6 +63,8 @@ synchronization procedure.
 | `frontend/src/app/master-page.module.ts` | Upstream edits its route table regularly. The two Universe routes sit at the end of the child route array to keep the conflict small and mechanical. |
 | Branding templates | Any upstream change to a rebranded template conflicts by construction. `docs/legal/TRADEMARK-AUDIT.md` lists every touched file so a merge can be resolved deliberately. |
 | `frontend/package.json` | The `test` script diverges from upstream. Upstream's value is inert, so upstream's version can be discarded on conflict. |
+| Punctuation | Every em dash was removed repository wide, including from inherited READMEs, and `scripts/universe/check-text.mjs` keeps them out. Expect one-character conflicts in those files on sync. |
+| Branding edits across upstream components | The trademark work touches many upstream templates. `docs/legal/TRADEMARK-AUDIT.md` lists every one, and the branding gate fails the build if a sync reintroduces a mark. |
 
 The two upstream spec files under `frontend/src/app/lightning/` import from a
 path that does not exist in this tree and reference a missing `src/test.ts`.
