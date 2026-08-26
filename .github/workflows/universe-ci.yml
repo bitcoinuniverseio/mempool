@@ -40,6 +40,9 @@ jobs:
       - name: No third-party data origins
         run: node scripts/universe/check-origins.mjs
 
+      - name: Gateway routing
+        run: node --test scripts/universe/gateway.test.mjs
+
   backend:
     name: Backend build and test
     runs-on: [self-hosted, linux-ultra]
