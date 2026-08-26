@@ -1,0 +1,74 @@
+name: Upstream sync check
+
+on:
+  schedule:
+    - cron: '0 6 * * 1' # weekly, Monday 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync-check:
+    name: Compare pinned base with upstream
+    runs-on: [self-hosted, universe-ci]
+    timeout-minutes: 30
+    steps:
+      - name: Checkout develop
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: develop
+          fetch-depth: 0
+
+      - name: Fetch upstream
+        run: |
+          git remote add upstream https://github.com/mempool/mempool.git || true
+          git fetch upstream --tags --quiet
+
+      - name: Compare and report
+        id: compare
+        run: |
+          BASE=$(python3 -c "import json;print(json.load(open('upstream-base.json'))['upstreamBaseCommit'])")
+          UPSTREAM_MASTER=$(git rev-parse upstream/master)
+          LATEST_TAG=$(git tag --list 'v[0-9]*' --sort=-creatordate --merged upstream/master | grep -Ev 'alpha|beta|rc|dev' | head -1)
+          NEW_COMMITS=$(git rev-list --count "$BASE..upstream/master")
+          {
+            echo "base=$BASE"
+            echo "upstream_master=$UPSTREAM_MASTER"
+            echo "latest_stable_tag=$LATEST_TAG"
+            echo "new_commits=$NEW_COMMITS"
+          } >> "$GITHUB_OUTPUT"
+          echo "Pinned base: $BASE"
+          echo "Upstream master: $UPSTREAM_MASTER ($NEW_COMMITS new commits)"
+          echo "Latest stable tag: $LATEST_TAG"
+
+      - name: Attempt trial merge (report only)
+        if: steps.compare.outputs.new_commits != '0'
+        run: |
+          git config user.name 'universe-sync-bot'
+          git config user.email 'bitcoinuniversecorp@gmail.com'
+          BRANCH="sync/upstream-$(date -u +%Y%m%d)"
+          git checkout -b "$BRANCH" develop
+          if git merge --no-commit --no-ff upstream/master; then
+            echo 'MERGE_CLEAN=true' >> "$GITHUB_ENV"
+            git merge --abort || true
+          else
+            echo 'MERGE_CLEAN=false' >> "$GITHUB_ENV"
+            echo '## Conflicting paths' >> "$GITHUB_STEP_SUMMARY"
+            git diff --name-only --diff-filter=U >> "$GITHUB_STEP_SUMMARY"
+            git merge --abort || true
+          fi
+          echo "Trial merge clean: $MERGE_CLEAN" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Summary
+        run: |
+          {
+            echo '## Upstream sync status'
+            echo "- Pinned base: ${{ steps.compare.outputs.base }}"
+            echo "- Upstream master: ${{ steps.compare.outputs.upstream_master }}"
+            echo "- New upstream commits: ${{ steps.compare.outputs.new_commits }}"
+            echo "- Latest stable tag: ${{ steps.compare.outputs.latest_stable_tag }}"
+            echo ''
+            echo 'A human opens and reviews the sync PR; this workflow never merges.'
+          } >> "$GITHUB_STEP_SUMMARY"
