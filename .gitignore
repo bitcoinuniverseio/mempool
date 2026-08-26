@@ -9,3 +9,6 @@ target
 docker/backend/start_ci.sh
 # Universe: docs/data holds evidence-model documentation, not runtime data
 !docs/data/
+
+# Dependencies are never committed, at any depth.
+node_modules/
