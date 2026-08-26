@@ -1,0 +1,81 @@
+<div class="container-xl universe-pulse" *ngIf="vm$ | async as vm">
+
+  <header class="page-head">
+    <h1 i18n="universe.pulse.title">Live protocol activity</h1>
+    <p class="lede" i18n="universe.pulse.lede">
+      Transactions arriving in the mempool right now, checked against the asset
+      authority and grouped by what they actually do.
+    </p>
+  </header>
+
+  <section class="panel method" aria-labelledby="pulse-method-heading">
+    <h2 id="pulse-method-heading" i18n="universe.pulse.method-title">How this is counted</h2>
+    <p i18n="universe.pulse.method-body">
+      Since you opened this page, {{ vm.pulse.checked }} transactions were checked and
+      {{ vm.pulse.withAssets }} of them carried a supported asset. A protocol's share
+      below is the number of those transactions it appeared in, divided by the number
+      checked. Nothing is weighted, smoothed, or predicted.
+    </p>
+    <p class="warning" *ngIf="vm.pulse.ceilingReached" i18n="universe.pulse.ceiling">
+      Sampling stopped at this page's limit. Reload to start a new sample.
+    </p>
+    <p class="warning" *ngIf="!vm.pulse.authorityAnswering" i18n="universe.pulse.authority-down">
+      The asset authority stopped answering. The tally below is frozen at the last
+      transaction it confirmed, and nothing new is being claimed.
+    </p>
+  </section>
+
+  <section class="panel shares" aria-labelledby="pulse-shares-heading">
+    <h2 id="pulse-shares-heading" i18n="universe.pulse.shares-title">Protocol mix</h2>
+
+    <p class="empty" *ngIf="!vm.shares.length && vm.pulse.checked === 0" i18n="universe.pulse.waiting">
+      Waiting for the first transactions to arrive.
+    </p>
+    <p class="empty" *ngIf="!vm.shares.length && vm.pulse.checked > 0" i18n="universe.pulse.none-yet">
+      None of the {{ vm.pulse.checked }} transactions checked so far carried a supported asset.
+    </p>
+
+    <ul class="share-list" *ngIf="vm.shares.length">
+      <li *ngFor="let share of vm.shares; trackBy: trackByShare">
+        <a class="share-name" [routerLink]="['/protocols', share.protocolId]">{{ share.displayName }}</a>
+        <div class="share-bar" role="img"
+             [attr.aria-label]="share.displayName + ': ' + share.count + ' of ' + vm.pulse.checked">
+          <span class="fill" [style.width.%]="share.percent"></span>
+        </div>
+        <span class="share-count">
+          <ng-container i18n="universe.pulse.share-count">{{ share.count }} of {{ vm.pulse.checked }}</ng-container>
+        </span>
+      </li>
+    </ul>
+  </section>
+
+  <section class="panel feed" aria-labelledby="pulse-feed-heading">
+    <h2 id="pulse-feed-heading" i18n="universe.pulse.feed-title">Recent protocol transactions</h2>
+
+    <p class="empty" *ngIf="!vm.pulse.recent.length" i18n="universe.pulse.feed-empty">
+      Nothing yet. Transactions appear here the moment the authority confirms what they carry.
+    </p>
+
+    <ul class="event-list" *ngIf="vm.pulse.recent.length">
+      <li *ngFor="let event of vm.pulse.recent; trackBy: trackByEvent" class="event">
+        <a class="event-txid identifier" [routerLink]="['/tx', event.txid]">{{ shorten(event.txid, 10) }}</a>
+        <span class="event-protocols">
+          <a *ngFor="let protocolId of event.protocolIds"
+             class="protocol-tag"
+             [routerLink]="['/protocols', protocolId]">{{ vm.names.get(protocolId) || protocolId }}</a>
+        </span>
+        <span class="event-action">{{ actionSummary(event) }}</span>
+        <span class="universe-chip" [ngClass]="'state-' + statusTone(event)">{{ statusLabel(event) }}</span>
+      </li>
+    </ul>
+  </section>
+
+  <section class="panel authorities" *ngIf="vm.sources as sources" aria-labelledby="pulse-authorities-heading">
+    <h2 id="pulse-authorities-heading" i18n="universe.pulse.authorities-title">Authorities behind this page</h2>
+    <p i18n="universe.pulse.authorities-body">
+      {{ readySourceCount(sources) }} of {{ sources.length }} configured asset authorities are ready.
+    </p>
+    <a [routerLink]="['/protocols']" i18n="universe.pulse.see-protocols">See every protocol and its authority</a>
+  </section>
+
+</div>

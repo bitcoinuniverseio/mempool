@@ -1,0 +1,47 @@
+@use '../universe-tokens' as u;
+
+.universe-bookmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  padding: 0.2em 0.6em;
+  border-radius: 0.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: transparent;
+  color: var(--transparent-fg, #a8b0c4);
+  font-size: 0.8rem;
+  line-height: 1.6;
+  cursor: pointer;
+  min-height: 32px;
+
+  &:hover,
+  &:focus-visible {
+    border-color: rgba(255, 255, 255, 0.4);
+    color: #fff;
+  }
+
+  &.saved {
+    border-color: #e8c15c;
+    color: #e8c15c;
+  }
+
+  .mark {
+    font-size: 1em;
+    line-height: 1;
+  }
+
+  @include u.universe-motion;
+}
+
+@media (max-width: 767px) {
+  .universe-bookmark .text {
+    // The star alone is unambiguous once the label has been read, and the
+    // accessible name stays on the button either way.
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}

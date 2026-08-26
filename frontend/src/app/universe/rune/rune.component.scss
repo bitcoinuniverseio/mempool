@@ -1,0 +1,67 @@
+@use '../asset-page' as page;
+@use '../universe-tokens' as u;
+
+:host {
+  @include page.universe-asset-page;
+
+  .rune-name {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    font-size: 1.25rem;
+    margin: 0 0 0.75rem;
+    overflow-wrap: anywhere;
+
+    .symbol {
+      color: var(--universe-protocol-runes);
+      font-size: 1.4rem;
+      line-height: 1;
+    }
+  }
+
+  .universe-chip {
+    @include u.universe-chip;
+  }
+
+  .mint-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+    margin-bottom: 0.5rem;
+
+    h2 {
+      margin: 0;
+    }
+  }
+
+  .progress {
+    margin: 0.75rem 0;
+  }
+
+  .progress-bar {
+    height: 0.6rem;
+    border-radius: 0.3rem;
+    background: rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+
+    .fill {
+      display: block;
+      height: 100%;
+      background: var(--universe-protocol-runes);
+
+      @include u.universe-motion(width, 400ms);
+    }
+  }
+
+  .progress-label {
+    margin: 0.4rem 0 0;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.9rem;
+  }
+
+  .supply dd,
+  .mint dd {
+    font-variant-numeric: tabular-nums;
+  }
+}

@@ -1,0 +1,59 @@
+<section class="universe-address-assets" *ngIf="state$ | async as state">
+  <ng-container [ngSwitch]="state.kind">
+
+    <ng-container *ngSwitchCase="'skipped'"></ng-container>
+
+    <div *ngSwitchCase="'loading'" class="panel" aria-busy="true">
+      <h2 i18n="universe.address.title">Universe assets</h2>
+      <p class="skeleton-line"></p>
+    </div>
+
+    <div *ngSwitchCase="'unavailable'" class="panel unavailable">
+      <h2 i18n="universe.address.title">Universe assets</h2>
+      <p i18n="universe.address.unavailable">
+        The asset authority could not be reached, so this address's protocol assets
+        are not shown. Its bitcoin balance above is unaffected.
+      </p>
+    </div>
+
+    <div *ngSwitchCase="'ready'" class="panel">
+      <h2 i18n="universe.address.title">Universe assets</h2>
+
+      <p class="coverage">
+        <ng-container i18n="universe.address.coverage">
+          Checked {{ state.resolved }} of this address's unspent outputs.
+        </ng-container>
+        <ng-container *ngIf="state.notResolved" i18n="universe.address.not-covered">
+          {{ state.notResolved }} more were not checked on this page.
+        </ng-container>
+      </p>
+
+      <p class="partial" *ngIf="state.partial" i18n="universe.address.partial">
+        At least one output could not be fully accounted for, so this list may be
+        incomplete.
+      </p>
+
+      <p class="empty" *ngIf="!state.holdings.length" i18n="universe.address.none">
+        No supported protocol asset was found on the outputs checked.
+      </p>
+
+      <ul class="holding-list" *ngIf="state.holdings.length">
+        <li *ngFor="let holding of state.holdings; trackBy: trackByHolding">
+          <a class="protocol" [routerLink]="['/protocols', holding.protocolId]">{{ holding.protocolId }}</a>
+          <span class="asset">{{ holding.displayName }}</span>
+          <span class="quantity" *ngIf="holding.quantityAtomic">{{ amount(holding.quantityAtomic) }}</span>
+          <span class="outputs">
+            <a *ngFor="let outpoint of holding.outpoints"
+               class="identifier"
+               [routerLink]="outpointRoute(outpoint)">{{ shorten(outpoint, 6) }}</a>
+          </span>
+        </li>
+      </ul>
+
+      <p class="asof" *ngIf="state.checkpointHeight">
+        <ng-container i18n="universe.address.proven">Proven at block {{ state.checkpointHeight }}.</ng-container>
+      </p>
+    </div>
+
+  </ng-container>
+</section>

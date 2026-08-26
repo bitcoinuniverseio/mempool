@@ -1,0 +1,38 @@
+<section class="universe-block-protocols" *ngIf="state$ | async as state">
+  <ng-container [ngSwitch]="state.kind">
+
+    <ng-container *ngSwitchCase="'skipped'"></ng-container>
+
+    <div *ngSwitchCase="'loading'" class="panel" aria-busy="true">
+      <h2 i18n="universe.block.title">Universe protocol activity</h2>
+      <p class="skeleton-line"></p>
+    </div>
+
+    <div *ngSwitchCase="'unavailable'" class="panel unavailable">
+      <h2 i18n="universe.block.title">Universe protocol activity</h2>
+      <p>{{ unavailableMessage(state.result) }}</p>
+    </div>
+
+    <div *ngSwitchCase="'ready'" class="panel">
+      <h2 i18n="universe.block.title">Universe protocol activity</h2>
+      <p class="summary">{{ summary(state.result) }}</p>
+
+      <ul class="inscription-list" *ngIf="state.result.value.ids.length">
+        <li *ngFor="let id of visible(state.result.value.ids)">
+          <a class="identifier" [routerLink]="['/inscription', id]">{{ shorten(id, 8) }}</a>
+        </li>
+      </ul>
+
+      <p class="more" *ngIf="hiddenCount(state.result) as hidden">
+        <ng-container i18n="universe.block.hidden">{{ hidden }} more are not listed here.</ng-container>
+      </p>
+
+      <p class="asof" *ngIf="state.result.checkpoint as checkpoint">
+        <ng-container i18n="universe.block.proven">
+          Read from {{ state.result.authorityId }} at block {{ checkpoint.heightAtomic }}.
+        </ng-container>
+      </p>
+    </div>
+
+  </ng-container>
+</section>

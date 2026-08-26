@@ -1,0 +1,82 @@
+@use '../universe-tokens' as u;
+
+:host {
+  @include u.universe-protocol-tokens;
+  @include u.universe-state-tokens;
+
+  display: block;
+}
+
+.universe-strip {
+  padding-top: 0.25rem;
+}
+
+.strip-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.strip-link {
+  font-size: 0.85rem;
+}
+
+.strip-note {
+  margin: 0.35rem 0 0.75rem;
+  font-size: 0.85rem;
+  color: var(--transparent-fg, #a8b0c4);
+
+  &.warning {
+    color: var(--universe-state-partial);
+  }
+}
+
+.strip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0 0 0.75rem;
+  padding: 0;
+
+  a {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.45rem;
+    padding: 0.25em 0.65em;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 0.25rem;
+    min-height: 32px;
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--universe-protocol-runes);
+    }
+
+    @include u.universe-motion;
+  }
+}
+
+.strip-name {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.strip-count {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--universe-protocol-runes);
+
+  // A zero is a real measurement, not a failure, so it stays legible but quiet.
+  &.zero {
+    color: var(--transparent-fg, #a8b0c4);
+    font-weight: 400;
+  }
+}
+
+.strip-all {
+  font-size: 0.85rem;
+}
