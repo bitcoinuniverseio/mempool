@@ -9,8 +9,8 @@ import { StateService } from '@app/services/state.service';
 })
 export class SeoService {
   network = '';
-  baseTitle = 'mempool';
-  baseDescription = 'Explore the full Bitcoin ecosystem&reg; with The Mempool Open Source Project&reg;.';
+  baseTitle = 'Universe Explorer';
+  baseDescription = 'Universe Explorer is the live protocol-aware Bitcoin explorer for the Bitcoin Universe ecosystem.';
   baseDomain = 'mempool.space';
 
   canonicalLink: HTMLLinkElement = document.getElementById('canonical') as HTMLLinkElement;

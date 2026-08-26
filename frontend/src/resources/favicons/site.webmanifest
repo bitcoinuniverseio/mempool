@@ -1,6 +1,6 @@
 {
-    "name": "mempool",
-    "short_name": "mempool",
+    "name": "Universe Explorer",
+    "short_name": "Universe Explorer",
     "icons": [
         {
             "src": "/resources/favicons/android-chrome-192x192.png",
