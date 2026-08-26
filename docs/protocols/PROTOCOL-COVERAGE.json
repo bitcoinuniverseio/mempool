@@ -1,0 +1,774 @@
+{
+  "registryVersion": "1.0.0",
+  "generatedAt": "2026-08-26T04:09:14.600Z",
+  "protocols": [
+    {
+      "schemaVersion": "universe-explorer-protocol-v1",
+      "id": "ordinals",
+      "aliases": [
+        "ordinal",
+        "inscriptions",
+        "inscription"
+      ],
+      "displayName": "Ordinals",
+      "shortName": "Ordinals",
+      "family": "ORDINALS",
+      "chain": "bitcoin",
+      "networks": [
+        "mainnet"
+      ],
+      "icon": "protocol-ordinals",
+      "visualToken": "protocol-ordinals",
+      "implementedReadOperations": [],
+      "authorizedReadOperations": [],
+      "releaseStatus": "BLOCKED",
+      "indexerAuthority": "index-ordinals",
+      "coverage": "unknown"
+    },
+    {
+      "schemaVersion": "universe-explorer-protocol-v1",
+      "id": "rare_sats",
+      "aliases": [
+        "rare-sats",
+        "raresats"
+      ],
+      "displayName": "Rare Sats",
+      "shortName": "Rare Sats",
+      "family": "ORDINALS",
+      "chain": "bitcoin",
+      "networks": [
+        "mainnet"
+      ],
+      "icon": "protocol-rare-sats",
+      "visualToken": "protocol-rare-sats",
+      "implementedReadOperations": [],
+      "authorizedReadOperations": [],
+      "releaseStatus": "BLOCKED",
+      "indexerAuthority": "index-ordinals",
+      "coverage": "unknown"
+    },
+    {
+      "schemaVersion": "universe-explorer-protocol-v1",
+      "id": "names",
+      "aliases": [
+        "bitcoin-names",
+        "domains"
+      ],
+      "displayName": "Bitcoin Names",
+      "shortName": "Names",
+      "family": "ORDINALS",
+      "chain": "bitcoin",
+      "networks": [
+        "mainnet"
+      ],
+      "icon": "protocol-names",
+      "visualToken": "protocol-names",
+      "implementedReadOperations": [],
+      "authorizedReadOperations": [],
+      "releaseStatus": "BLOCKED",
+      "indexerAuthority": "index-names",
+      "coverage": "unknown"
+    },
+    {
+      "schemaVersion": "universe-explorer-protocol-v1",
+      "id": "bitmap",
+      "aliases": [
+        "bitmaps"
+      ],
+      "displayName": "Bitmap",
+      "shortName": "Bitmap",
+      "family": "ORDINALS",
+      "chain": "bitcoin",
+      "networks": [
+        "mainnet"
+      ],
+      "icon": "protocol-bitmap",
+      "visualToken": "protocol-bitmap",
+      "implementedReadOperations": [],
+      "authorizedReadOperations": [],
+      "releaseStatus": "BLOCKED",
+      "indexerAuthority": "index-bitmap",
+      "coverage": "unknown"
+    },
+    {
+      "schemaVersion": "universe-explorer-protocol-v1",
+      "id": "unat",
+      "aliases": [
+        "tap-unat",
+        "tap_unat"
+      ],
+      "displayName": "UNAT",
+      "shortName": "UNAT",
+      "family": "ORDINALS",
+      "chain": "bitcoin",
+      "networks": [
+        "mainnet"
+      ],
+      "icon": "protocol-unat",
+      "visualToken": "protocol-unat",
+      "implementedReadOperations": [],
+      "authorizedReadOperations": [],
+      "releaseStatus": "BLOCKED",
+      "indexerAuthority": "index-unat",
+      "coverage": "unknown"
+    },
+    {
+      "schemaVersion": "universe-explorer-protocol-v1",
+      "id": "runes",
+      "aliases": [
+        "rune",
+        "runes_native",
+        "native-runes"
+      ],
+      "displayName": "Runes",
+      "shortName": "RUNES",
+      "family": "RUNES",
+      "chain": "bitcoin",
+      "networks": [
+        "mainnet"
+      ],
+      "icon": "protocol-runes",
+      "visualToken": "protocol-runes",
+      "implementedReadOperations": [],
+      "authorizedReadOperations": [],
+      "releaseStatus": "BLOCKED",
+      "indexerAuthority": "index-runes",
+      "coverage": "unknown"
+    },
+    {
+      "schemaVersion": "universe-explorer-protocol-v1",
+      "id": "alkanes",
+      "aliases": [
+        "alkane"
+      ],
+      "displayName": "Alkanes",
+      "shortName": "Alkanes",
+      "family": "ALKANES",
+      "chain": "bitcoin",
+      "networks": [
+        "mainnet"
+      ],
+      "icon": "protocol-alkanes",
+      "visualToken": "protocol-alkanes",
+      "implementedReadOperations": [],
+      "authorizedReadOperations": [],
+      "releaseStatus": "BLOCKED",
+      "indexerAuthority": "index-alkanes",
+      "coverage": "unknown"
+    },
+    {
+      "schemaVersion": "universe-explorer-protocol-v1",
+      "id": "mezcal",
+      "aliases": [],
+      "displayName": "Mezcal",
+      "shortName": "Mezcal",
+      "family": "ALKANES",
+      "chain": "bitcoin",
+      "networks": [
+        "mainnet"
+      ],
+      "icon": "protocol-mezcal",
+      "visualToken": "protocol-mezcal",
+      "implementedReadOperations": [],
+      "authorizedReadOperations": [],
+      "releaseStatus": "BLOCKED",
+      "indexerAuthority": "index-mezcal",
+      "coverage": "unknown"
+    },
+    {
+      "schemaVersion": "universe-explorer-protocol-v1",
+      "id": "stamps",
+      "aliases": [
+        "stamp",
+        "btc-stamps"
+      ],
+      "displayName": "Bitcoin Stamps",
+      "shortName": "Stamps",
+      "family": "STAMPS",
+      "chain": "bitcoin",
+      "networks": [
+        "mainnet"
+      ],
+      "icon": "protocol-stamps",
+      "visualToken": "protocol-stamps",
+      "implementedReadOperations": [],
+      "authorizedReadOperations": [],
+      "releaseStatus": "BLOCKED",
+      "indexerAuthority": "index-stamps",
+      "coverage": "unknown"
+    },
+    {
+      "schemaVersion": "universe-explorer-protocol-v1",
+      "id": "src20",
+      "aliases": [
+        "src-20"
+      ],
+      "displayName": "SRC-20",
+      "shortName": "SRC-20",
+      "family": "STAMPS",
+      "chain": "bitcoin",
+      "networks": [
+        "mainnet"
+      ],
+      "icon": "protocol-src20",
+      "visualToken": "protocol-src20",
+      "implementedReadOperations": [],
+      "authorizedReadOperations": [],
+      "releaseStatus": "BLOCKED",
+      "indexerAuthority": "index-stamps",
+      "coverage": "unknown"
+    },
+    {
+      "schemaVersion": "universe-explorer-protocol-v1",
+      "id": "src101",
+      "aliases": [
+        "src-101"
+      ],
+      "displayName": "SRC-101",
+      "shortName": "SRC-101",
+      "family": "STAMPS",
+      "chain": "bitcoin",
+      "networks": [
+        "mainnet"
+      ],
+      "icon": "protocol-src101",
+      "visualToken": "protocol-src101",
+      "implementedReadOperations": [],
+      "authorizedReadOperations": [],
+      "releaseStatus": "BLOCKED",
+      "indexerAuthority": "index-stamps",
+      "coverage": "unknown"
+    },
+    {
+      "schemaVersion": "universe-explorer-protocol-v1",
+      "id": "atomicals_nft",
+      "aliases": [
+        "atomicals-nft",
+        "atomicals_nfts"
+      ],
+      "displayName": "Atomicals NFTs",
+      "shortName": "Atomicals NFTs",
+      "family": "ATOMICALS",
+      "chain": "bitcoin",
+      "networks": [
+        "mainnet"
+      ],
+      "icon": "protocol-atomicals-nft",
+      "visualToken": "protocol-atomicals-nft",
+      "implementedReadOperations": [],
+      "authorizedReadOperations": [],
+      "releaseStatus": "BLOCKED",
+      "indexerAuthority": "index-atomicals-nfts-and-realms",
+      "coverage": "unknown"
+    },
+    {
+      "schemaVersion": "universe-explorer-protocol-v1",
+      "id": "realms",
+      "aliases": [
+        "realm",
+        "atomicals-realms"
+      ],
+      "displayName": "Realms",
+      "shortName": "Realms",
+      "family": "ATOMICALS",
+      "chain": "bitcoin",
+      "networks": [
+        "mainnet"
+      ],
+      "icon": "protocol-realms",
+      "visualToken": "protocol-realms",
+      "implementedReadOperations": [],
+      "authorizedReadOperations": [],
+      "releaseStatus": "BLOCKED",
+      "indexerAuthority": "index-atomicals-nfts-and-realms",
+      "coverage": "unknown"
+    },
+    {
+      "schemaVersion": "universe-explorer-protocol-v1",
+      "id": "subrealms",
+      "aliases": [
+        "subrealm",
+        "atomicals-subrealms"
+      ],
+      "displayName": "Subrealms",
+      "shortName": "Subrealms",
+      "family": "ATOMICALS",
+      "chain": "bitcoin",
+      "networks": [
+        "mainnet"
+      ],
+      "icon": "protocol-subrealms",
+      "visualToken": "protocol-subrealms",
+      "implementedReadOperations": [],
+      "authorizedReadOperations": [],
+      "releaseStatus": "BLOCKED",
+      "indexerAuthority": "index-atomicals-nfts-and-realms",
+      "coverage": "unknown"
+    },
+    {
+      "schemaVersion": "universe-explorer-protocol-v1",
+      "id": "arc20",
+      "aliases": [
+        "arc-20"
+      ],
+      "displayName": "ARC-20",
+      "shortName": "ARC-20",
+      "family": "ATOMICALS",
+      "chain": "bitcoin",
+      "networks": [
+        "mainnet"
+      ],
+      "icon": "protocol-arc20",
+      "visualToken": "protocol-arc20",
+      "implementedReadOperations": [],
+      "authorizedReadOperations": [],
+      "releaseStatus": "BLOCKED",
+      "indexerAuthority": "index-atomicals",
+      "coverage": "unknown"
+    },
+    {
+      "schemaVersion": "universe-explorer-protocol-v1",
+      "id": "op_return",
+      "aliases": [
+        "op-return",
+        "op20",
+        "op-20"
+      ],
+      "displayName": "OP-20",
+      "shortName": "OP_RETURN",
+      "family": "OP DATA",
+      "chain": "bitcoin",
+      "networks": [
+        "mainnet"
+      ],
+      "icon": "protocol-op-return",
+      "visualToken": "protocol-op-return",
+      "implementedReadOperations": [],
+      "authorizedReadOperations": [],
+      "releaseStatus": "BLOCKED",
+      "indexerAuthority": "index-op20",
+      "coverage": "unknown"
+    },
+    {
+      "schemaVersion": "universe-explorer-protocol-v1",
+      "id": "op_names",
+      "aliases": [
+        "op-names",
+        "opnames"
+      ],
+      "displayName": "OP Names",
+      "shortName": "OP_NAMES",
+      "family": "OP DATA",
+      "chain": "bitcoin",
+      "networks": [
+        "mainnet"
+      ],
+      "icon": "protocol-op-names",
+      "visualToken": "protocol-op-names",
+      "implementedReadOperations": [],
+      "authorizedReadOperations": [],
+      "releaseStatus": "BLOCKED",
+      "indexerAuthority": "index-op20",
+      "coverage": "unknown"
+    },
+    {
+      "schemaVersion": "universe-explorer-protocol-v1",
+      "id": "op_inscriptions",
+      "aliases": [
+        "op-inscriptions",
+        "opinscriptions"
+      ],
+      "displayName": "OP Inscriptions",
+      "shortName": "OP_INSCRIPTIONS",
+      "family": "OP DATA",
+      "chain": "bitcoin",
+      "networks": [
+        "mainnet"
+      ],
+      "icon": "protocol-op-inscriptions",
+      "visualToken": "protocol-op-inscriptions",
+      "implementedReadOperations": [],
+      "authorizedReadOperations": [],
+      "releaseStatus": "BLOCKED",
+      "indexerAuthority": "index-opinscriptions",
+      "coverage": "unknown"
+    },
+    {
+      "schemaVersion": "universe-explorer-protocol-v1",
+      "id": "op_drop",
+      "aliases": [
+        "op-drop",
+        "opdrop"
+      ],
+      "displayName": "OP_DROP",
+      "shortName": "OP_DROP",
+      "family": "OP DATA",
+      "chain": "bitcoin",
+      "networks": [
+        "mainnet"
+      ],
+      "icon": "protocol-op-drop",
+      "visualToken": "protocol-op-drop",
+      "implementedReadOperations": [],
+      "authorizedReadOperations": [],
+      "releaseStatus": "BLOCKED",
+      "indexerAuthority": "index-drops-and-opdrop",
+      "coverage": "unknown"
+    },
+    {
+      "schemaVersion": "universe-explorer-protocol-v1",
+      "id": "drops",
+      "aliases": [
+        "drops-protocol"
+      ],
+      "displayName": "DROPS",
+      "shortName": "Drops",
+      "family": "OP DATA",
+      "chain": "bitcoin",
+      "networks": [
+        "mainnet"
+      ],
+      "icon": "protocol-drops",
+      "visualToken": "protocol-drops",
+      "implementedReadOperations": [],
+      "authorizedReadOperations": [],
+      "releaseStatus": "BLOCKED",
+      "indexerAuthority": "index-drops-and-opdrop",
+      "coverage": "unknown"
+    },
+    {
+      "schemaVersion": "universe-explorer-protocol-v1",
+      "id": "brc20",
+      "aliases": [
+        "brc-20"
+      ],
+      "displayName": "BRC-20",
+      "shortName": "BRC-20",
+      "family": "OTHER",
+      "chain": "bitcoin",
+      "networks": [
+        "mainnet"
+      ],
+      "icon": "protocol-brc20",
+      "visualToken": "protocol-brc20",
+      "implementedReadOperations": [],
+      "authorizedReadOperations": [],
+      "releaseStatus": "BLOCKED",
+      "indexerAuthority": "index-brc20",
+      "coverage": "unknown"
+    },
+    {
+      "schemaVersion": "universe-explorer-protocol-v1",
+      "id": "tap",
+      "aliases": [
+        "tap-protocol"
+      ],
+      "displayName": "TAP",
+      "shortName": "TAP",
+      "family": "OTHER",
+      "chain": "bitcoin",
+      "networks": [
+        "mainnet"
+      ],
+      "icon": "protocol-tap",
+      "visualToken": "protocol-tap",
+      "implementedReadOperations": [],
+      "authorizedReadOperations": [],
+      "releaseStatus": "BLOCKED",
+      "indexerAuthority": "index-tap",
+      "coverage": "unknown"
+    },
+    {
+      "schemaVersion": "universe-explorer-protocol-v1",
+      "id": "dmt",
+      "aliases": [
+        "tap-dmt",
+        "tap_dmt"
+      ],
+      "displayName": "DMT",
+      "shortName": "DMT",
+      "family": "OTHER",
+      "chain": "bitcoin",
+      "networks": [
+        "mainnet"
+      ],
+      "icon": "protocol-dmt",
+      "visualToken": "protocol-dmt",
+      "implementedReadOperations": [],
+      "authorizedReadOperations": [],
+      "releaseStatus": "BLOCKED",
+      "indexerAuthority": "index-dmt",
+      "coverage": "unknown"
+    },
+    {
+      "schemaVersion": "universe-explorer-protocol-v1",
+      "id": "dust20",
+      "aliases": [
+        "dust-20"
+      ],
+      "displayName": "DUST-20",
+      "shortName": "DUST-20",
+      "family": "OTHER",
+      "chain": "bitcoin",
+      "networks": [
+        "mainnet"
+      ],
+      "icon": "protocol-dust20",
+      "visualToken": "protocol-dust20",
+      "implementedReadOperations": [],
+      "authorizedReadOperations": [],
+      "releaseStatus": "BLOCKED",
+      "indexerAuthority": "index-dust20",
+      "coverage": "unknown"
+    },
+    {
+      "schemaVersion": "universe-explorer-protocol-v1",
+      "id": "block20",
+      "aliases": [
+        "block-20"
+      ],
+      "displayName": "BLOCK-20",
+      "shortName": "Block-20",
+      "family": "OTHER",
+      "chain": "bitcoin",
+      "networks": [
+        "mainnet"
+      ],
+      "icon": "protocol-block20",
+      "visualToken": "protocol-block20",
+      "implementedReadOperations": [],
+      "authorizedReadOperations": [],
+      "releaseStatus": "BLOCKED",
+      "indexerAuthority": "index-block20",
+      "coverage": "unknown"
+    },
+    {
+      "schemaVersion": "universe-explorer-protocol-v1",
+      "id": "chainbloom",
+      "aliases": [
+        "chain-bloom"
+      ],
+      "displayName": "ChainBloom",
+      "shortName": "ChainBloom",
+      "family": "OTHER",
+      "chain": "bitcoin",
+      "networks": [
+        "mainnet"
+      ],
+      "icon": "protocol-chainbloom",
+      "visualToken": "protocol-chainbloom",
+      "implementedReadOperations": [],
+      "authorizedReadOperations": [],
+      "releaseStatus": "BLOCKED",
+      "indexerAuthority": "index-chainbloom",
+      "coverage": "unknown"
+    },
+    {
+      "schemaVersion": "universe-explorer-protocol-v1",
+      "id": "patina",
+      "aliases": [],
+      "displayName": "Patina",
+      "shortName": "Patina",
+      "family": "OTHER",
+      "chain": "bitcoin",
+      "networks": [
+        "mainnet"
+      ],
+      "icon": "protocol-patina",
+      "visualToken": "protocol-patina",
+      "implementedReadOperations": [],
+      "authorizedReadOperations": [],
+      "releaseStatus": "BLOCKED",
+      "indexerAuthority": "index-patina",
+      "coverage": "unknown"
+    },
+    {
+      "schemaVersion": "universe-explorer-protocol-v1",
+      "id": "witness_circles",
+      "aliases": [
+        "witness-circles"
+      ],
+      "displayName": "Witness Circles",
+      "shortName": "Witness Circles",
+      "family": "OTHER",
+      "chain": "bitcoin",
+      "networks": [
+        "mainnet"
+      ],
+      "icon": "protocol-witness-circles",
+      "visualToken": "protocol-witness-circles",
+      "implementedReadOperations": [],
+      "authorizedReadOperations": [],
+      "releaseStatus": "BLOCKED",
+      "indexerAuthority": "index-witness-circles",
+      "coverage": "unknown"
+    },
+    {
+      "schemaVersion": "universe-explorer-protocol-v1",
+      "id": "tandem",
+      "aliases": [],
+      "displayName": "Tandem",
+      "shortName": "Tandem",
+      "family": "OTHER",
+      "chain": "bitcoin",
+      "networks": [
+        "mainnet"
+      ],
+      "icon": "protocol-tandem",
+      "visualToken": "protocol-tandem",
+      "implementedReadOperations": [],
+      "authorizedReadOperations": [],
+      "releaseStatus": "BLOCKED",
+      "indexerAuthority": "index-tandem",
+      "coverage": "unknown"
+    },
+    {
+      "schemaVersion": "universe-explorer-protocol-v1",
+      "id": "cat20",
+      "aliases": [
+        "cat",
+        "cat-20"
+      ],
+      "displayName": "CAT-20",
+      "shortName": "CAT-20",
+      "family": "OTHER",
+      "chain": "bitcoin",
+      "networks": [
+        "mainnet"
+      ],
+      "icon": "protocol-cat20",
+      "visualToken": "protocol-cat20",
+      "implementedReadOperations": [],
+      "authorizedReadOperations": [],
+      "releaseStatus": "BLOCKED",
+      "indexerAuthority": "index-cat20",
+      "coverage": "unknown"
+    },
+    {
+      "schemaVersion": "universe-explorer-protocol-v1",
+      "id": "ordex",
+      "aliases": [
+        "openordex"
+      ],
+      "displayName": "Ordex",
+      "shortName": "Ordex",
+      "family": "OTHER",
+      "chain": "bitcoin",
+      "networks": [
+        "mainnet"
+      ],
+      "icon": "protocol-ordex",
+      "visualToken": "protocol-ordex",
+      "implementedReadOperations": [],
+      "authorizedReadOperations": [],
+      "releaseStatus": "BLOCKED",
+      "indexerAuthority": "index-ordinals",
+      "coverage": "unknown"
+    },
+    {
+      "schemaVersion": "universe-explorer-protocol-v1",
+      "id": "doginals",
+      "aliases": [
+        "doginal"
+      ],
+      "displayName": "Doginals",
+      "shortName": "Doginals",
+      "family": "OTHER",
+      "chain": "dogecoin",
+      "networks": [
+        "mainnet"
+      ],
+      "icon": "protocol-doginals",
+      "visualToken": "protocol-doginals",
+      "implementedReadOperations": [],
+      "authorizedReadOperations": [],
+      "releaseStatus": "BLOCKED",
+      "indexerAuthority": "ord-dogecoin",
+      "coverage": "unknown"
+    },
+    {
+      "schemaVersion": "universe-explorer-protocol-v1",
+      "id": "drc20",
+      "aliases": [
+        "drc-20"
+      ],
+      "displayName": "DRC-20",
+      "shortName": "DRC-20",
+      "family": "OTHER",
+      "chain": "dogecoin",
+      "networks": [
+        "mainnet"
+      ],
+      "icon": "protocol-drc20",
+      "visualToken": "protocol-drc20",
+      "implementedReadOperations": [],
+      "authorizedReadOperations": [],
+      "releaseStatus": "BLOCKED",
+      "indexerAuthority": "ord-dogecoin",
+      "coverage": "unknown"
+    },
+    {
+      "schemaVersion": "universe-explorer-protocol-v1",
+      "id": "tap_doge",
+      "aliases": [
+        "tap-on-doge",
+        "doge-tap",
+        "tap-doge"
+      ],
+      "displayName": "TAP on Doge",
+      "shortName": "Doge TAP",
+      "family": "OTHER",
+      "chain": "dogecoin",
+      "networks": [
+        "mainnet"
+      ],
+      "icon": "protocol-tap-doge",
+      "visualToken": "protocol-tap-doge",
+      "implementedReadOperations": [],
+      "authorizedReadOperations": [],
+      "releaseStatus": "BLOCKED",
+      "indexerAuthority": "index-doge-tap",
+      "coverage": "unknown"
+    },
+    {
+      "schemaVersion": "universe-explorer-protocol-v1",
+      "id": "zerdinals",
+      "aliases": [
+        "universe-zerdinals"
+      ],
+      "displayName": "Zerdinals",
+      "shortName": "Zerdinals",
+      "family": "OTHER",
+      "chain": "zcash",
+      "networks": [
+        "mainnet"
+      ],
+      "icon": "protocol-zerdinals",
+      "visualToken": "protocol-zerdinals",
+      "implementedReadOperations": [],
+      "authorizedReadOperations": [],
+      "releaseStatus": "BLOCKED",
+      "indexerAuthority": "index-zcash-metaprotocols",
+      "coverage": "unknown"
+    },
+    {
+      "schemaVersion": "universe-explorer-protocol-v1",
+      "id": "zrunes",
+      "aliases": [],
+      "displayName": "ZRunes",
+      "shortName": "zRunes",
+      "family": "OTHER",
+      "chain": "zcash",
+      "networks": [
+        "mainnet"
+      ],
+      "icon": "protocol-zrunes",
+      "visualToken": "protocol-zrunes",
+      "implementedReadOperations": [],
+      "authorizedReadOperations": [],
+      "releaseStatus": "BLOCKED",
+      "indexerAuthority": "index-zcash-metaprotocols",
+      "coverage": "unknown"
+    }
+  ]
+}
