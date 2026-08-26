@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "universe-upstream-base-v1",
+  "upstreamRepository": "https://github.com/mempool/mempool",
+  "upstreamRelease": "v3.3.1",
+  "upstreamTagObject": "ce1f34a221fa0e1fc914947d5c0e0fe5b942ff11",
+  "upstreamBaseCommit": "9332d9db97bcc7beed079acc8f79aa21c9b12a3b",
+  "upstreamMasterAtForkTime": "63b89613b912063332cb0461dabeb209166c283e",
+  "forkDate": "2026-08-26",
+  "forkRepository": "https://github.com/bitcoinuniverseio/mempool",
+  "integrationBranch": "develop",
+  "protectedBranch": "main",
+  "modifiedSubsystems": [],
+  "knownUpstreamConflicts": []
+}
