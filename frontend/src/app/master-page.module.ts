@@ -110,6 +110,11 @@ const routes: Routes = [
         data: { networks: ['bitcoin'] },
       },
       {
+        path: 'source',
+        loadComponent: () => import('@app/universe/source-page/source-page.component').then(m => m.SourcePageComponent),
+        data: { networks: ['bitcoin', 'liquid'] },
+      },
+      {
         path: 'tools/calculator',
         component: CalculatorComponent
       }

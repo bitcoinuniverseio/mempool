@@ -1,0 +1,72 @@
+<div class="container-xl source-page">
+  <h1 i18n="source.title">Source and licenses</h1>
+
+  <p i18n="source.intro">
+    Universe Explorer is free software built on the Mempool Open Source
+    Project. The complete corresponding source for the running deployment is
+    publicly available.
+  </p>
+
+  <h2 i18n="source.release">This deployment</h2>
+  <ng-container *ngIf="backendInfo$ | async as info; else infoUnavailable">
+    <table class="table table-borderless table-sm source-table">
+      <tbody>
+        <tr>
+          <td i18n="source.universe-release">Universe release</td>
+          <td>
+            <a [href]="releaseUrl(info.gitCommit)" target="_blank" rel="noopener">
+              <code>{{ info.gitCommit }}</code>
+            </a>
+            (v{{ info.version }})
+          </td>
+        </tr>
+        <tr>
+          <td i18n="source.backend">Backend</td>
+          <td>{{ info.backend }} / {{ info.coreVersion }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </ng-container>
+  <ng-template #infoUnavailable>
+    <p role="status" i18n="source.info-unavailable">
+      Live release information is currently unavailable. The source links
+      below always apply.
+    </p>
+  </ng-template>
+
+  <table class="table table-borderless table-sm source-table">
+    <tbody>
+      <tr>
+        <td i18n="source.repository">Source repository</td>
+        <td><a [href]="forkRepository" target="_blank" rel="noopener">{{ forkRepository }}</a></td>
+      </tr>
+      <tr>
+        <td i18n="source.upstream">Upstream base</td>
+        <td>
+          <a [href]="upstream.repository" target="_blank" rel="noopener">mempool/mempool</a>
+          {{ upstream.release }}
+          (<code>{{ upstream.commit.slice(0, 10) }}</code>)
+        </td>
+      </tr>
+      <tr>
+        <td i18n="source.license">License</td>
+        <td>
+          GNU Affero General Public License v3.0. The license text ships in
+          the repository root.
+        </td>
+      </tr>
+      <tr>
+        <td i18n="source.notices">Third-party notices</td>
+        <td i18n="source.notices-text">
+          Dependency licenses are preserved unchanged in the repository and
+          its package manifests.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p class="trademark-note" i18n="source.trademark-note">
+    Universe Explorer is an independent product of Bitcoin Universe. It is
+    not affiliated with, endorsed by, or sponsored by Mempool Holdings.
+  </p>
+</div>
