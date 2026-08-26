@@ -675,13 +675,13 @@ export class BlockOverviewGraphComponent implements AfterViewInit, OnDestroy, On
           break;
       }
       if (matches) {
-        if (this.loadedTheme !== 'contrast' && this.loadedTheme !== 'bukele') {
+        if (this.loadedTheme !== 'contrast') {
           return (gradient === 'age') ? ageColorFunction(tx, defaultColors.fee, defaultAuditColors, this.relativeTime || (Date.now() / 1000)) : defaultColorFunction(tx, defaultColors.fee, defaultAuditColors, this.relativeTime || (Date.now() / 1000));
         } else {
           return (gradient === 'age') ? ageColorFunction(tx, contrastColors.fee, contrastAuditColors, this.relativeTime || (Date.now() / 1000)) : contrastColorFunction(tx, contrastColors.fee, contrastAuditColors, this.relativeTime || (Date.now() / 1000));
         }
       } else {
-        if (this.loadedTheme !== 'contrast' && this.loadedTheme !== 'bukele') {
+        if (this.loadedTheme !== 'contrast') {
           return (gradient === 'age') ? { r: 1, g: 1, b: 1, a: 0.05 } : defaultColorFunction(
             tx,
             defaultColors.unmatchedfee,

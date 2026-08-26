@@ -12,3 +12,7 @@ docker/backend/start_ci.sh
 
 # Dependencies are never committed, at any depth.
 node_modules/
+
+# Visual QA working output. Curated review sets are committed under docs/design.
+scripts/universe/visual-qa/artifacts/
+scripts/universe/visual-qa/node_modules/

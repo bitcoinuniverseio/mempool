@@ -20,6 +20,7 @@ describe('Mempool Backend Config', () => {
         BLOCKS_SUMMARIES_INDEXING: false,
         GOGGLES_INDEXING: false,
         HTTP_PORT: 8999,
+        HTTP_HOST: '127.0.0.1',
         UNIX_SOCKET_PATH: '',
         SPAWN_CLUSTER_PROCS: 0,
         API_URL_PREFIX: '/api/v1/',

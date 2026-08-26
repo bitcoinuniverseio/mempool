@@ -9,6 +9,7 @@ interface IConfig {
     NETWORK: 'mainnet' | 'testnet' | 'testnet4' | 'signet' | 'liquid' | 'liquidtestnet' | 'regtest';
     BACKEND: 'esplora' | 'electrum' | 'none';
     HTTP_PORT: number;
+    HTTP_HOST: string;
     UNIX_SOCKET_PATH: string;
     SPAWN_CLUSTER_PROCS: number;
     API_URL_PREFIX: string;
@@ -180,6 +181,10 @@ const defaults: IConfig = {
     'NETWORK': 'mainnet',
     'BACKEND': 'none',
     'HTTP_PORT': 8999,
+    // Loopback by default. Upstream binds every interface, which publishes the
+    // API on whatever address the host happens to have. A deployment that
+    // wants that must ask for it.
+    'HTTP_HOST': '127.0.0.1',
     'UNIX_SOCKET_PATH': '',
     'SPAWN_CLUSTER_PROCS': 0,
     'API_URL_PREFIX': '/api/v1/',
