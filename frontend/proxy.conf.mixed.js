@@ -101,7 +101,7 @@ PROXY_CONFIG.push(...[
   },
   {
     context: ['/api/**'],
-    target: `https://mempool.space`,
+    target: `https://explorer.bitcoinuniverse.io`,
     secure: false,
     changeOrigin: true,
     proxyTimeout: 30000,

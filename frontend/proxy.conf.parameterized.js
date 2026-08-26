@@ -9,13 +9,13 @@ const addApiKeyHeader = (proxyReq) => {
 PROXY_CONFIG.forEach((entry) => {
   const mempoolHostname = process.env.MEMPOOL_HOSTNAME
     ? process.env.MEMPOOL_HOSTNAME
-    : 'mempool.space';
+    : 'explorer.bitcoinuniverse.io';
 
   const liquidHostname = process.env.LIQUID_HOSTNAME
     ? process.env.LIQUID_HOSTNAME
     : 'liquid.network';
 
-  entry.target = entry.target.replace('mempool.space', mempoolHostname);
+  entry.target = entry.target.replace('explorer.bitcoinuniverse.io', mempoolHostname);
   entry.target = entry.target.replace('liquid.network', liquidHostname);
 
   if (entry.onProxyReq) {

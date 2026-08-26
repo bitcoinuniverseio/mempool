@@ -121,7 +121,7 @@ describe('Mempool Backend Config', () => {
       });
 
       expect(config.EXTERNAL_DATA_SERVER).toStrictEqual({
-        MEMPOOL_API: 'https://mempool.space/api/v1',
+        MEMPOOL_API: '',
         MEMPOOL_ONION: 'http://mempoolhqx4isw62xs7abwphsq7ldayuidyx2v2oethdhhj6mlo2r6ad.onion/api/v1',
         LIQUID_API: 'https://liquid.network/api/v1',
         LIQUID_ONION: 'http://liquidmom47f6s3m53ebfxn47p76a6tlnxib3wp6deux7wuzotdr6cyd.onion/api/v1'

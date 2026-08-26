@@ -283,7 +283,7 @@ class AccelerationRepository {
 
     logger.debug(`Fetching accelerations between block ${lastSyncedHeight} and ${currentHeight}`);
 
-    // Fetch accelerations from mempool.space since the last synced block;
+    // Fetch accelerations from the configured services API since the last synced block;
     const accelerationsByBlock: {[height: number]: AccelerationHistory[]} = {};
     const blockHashes = {};
     let done = false;

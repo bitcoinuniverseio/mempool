@@ -292,7 +292,7 @@ module.exports = {
           if (!sym || !Array.isArray(sym.declarations)) return false;
 
           for (const decl of sym.declarations) {
-            // method, function, property with function type — accept any with @asyncSafe
+            // method, function, property with function type, accept any with @asyncSafe
             if (tsNodeHasJsDocTag(decl, opt.safeTag)) return true;
             // for class methods, also check the parent (sometimes the tag is on the signature)
             if (decl.parent && tsNodeHasJsDocTag(decl.parent, opt.safeTag)) return true;
@@ -379,7 +379,7 @@ module.exports = {
           context.report({ node, messageId: 'unhandled' });
         },
 
-        // void someAsyncCall() — only allowed if callee is @asyncSafe
+        // void someAsyncCall(), only allowed if callee is @asyncSafe
         UnaryExpression(node) {
           if (node.operator !== 'void') return;
 

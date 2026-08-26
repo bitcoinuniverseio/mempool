@@ -117,23 +117,6 @@
         </div>
         <span class="explainer">&nbsp;</span>
       } @else {
-        @if (tx && !tx.status?.confirmed && showAccelerationSummary) {
-          <ng-container *ngIf="(ETA$ | async) as eta;">
-            <app-accelerate-checkout
-              *ngIf="(da$ | async) as da;"
-              [advancedEnabled]="false"
-              [forceMobile]="true"
-              [tx]="tx"
-              [accelerating]="isAcceleration"
-              [miningStats]="miningStats"
-              [eta]="eta"
-              [referralCode]="referralCode"
-              (unavailable)="eligibleForAcceleration = false"
-              (paymentReceipt)="paymentReceipt($event)"
-              class="w-100"
-            ></app-accelerate-checkout>
-          </ng-container>
-        }
         <div class="status-panel d-flex flex-column h-100 w-100 justify-content-center align-items-center" [class.small-status]="tx && !tx.status?.confirmed && showAccelerationSummary">
           @if (tx?.acceleration && !tx.status?.confirmed) {
             <div class="progress-icon">

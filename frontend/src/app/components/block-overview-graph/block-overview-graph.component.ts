@@ -161,10 +161,10 @@ export class BlockOverviewGraphComponent implements AfterViewInit, OnDestroy, On
     }
   }
 
-  setFilterFlags(goggle?: ActiveFilter): void {
-    this.filterMode = goggle?.mode || this.filterMode;
-    this.gradientMode = goggle?.gradient || this.gradientMode;
-    this.activeFilterFlags = goggle?.filters ? toFlags(goggle.filters) : this.filterFlags;
+  setFilterFlags(lens?: ActiveFilter): void {
+    this.filterMode = lens?.mode || this.filterMode;
+    this.gradientMode = lens?.gradient || this.gradientMode;
+    this.activeFilterFlags = lens?.filters ? toFlags(lens.filters) : this.filterFlags;
     if (this.scene) {
       if (this.activeFilterFlags != null && this.filtersAvailable) {
         this.scene.setColorFunction(this.getFilterColorFunction(this.activeFilterFlags, this.gradientMode));

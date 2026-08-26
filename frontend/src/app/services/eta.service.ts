@@ -5,8 +5,26 @@ import { MempoolBlock } from '@interfaces/websocket.interface';
 import { Transaction } from '@interfaces/electrs.interface';
 import { MiningService, MiningStats } from '@app/services/mining.service';
 import { getUnacceleratedFeeRate } from '@app/shared/transaction.utils';
-import { AccelerationEstimate } from '@components/accelerate-checkout/accelerate-checkout.component';
 import { Observable, combineLatest, map, of, share, shareReplay, tap } from 'rxjs';
+
+/**
+ * The projection input this service needs. Upstream declares it on its hosted
+ * acceleration checkout component, which this deployment does not ship, so the
+ * shape lives here with the code that consumes it.
+ */
+export interface AccelerationEstimate {
+  txSummary: { txid: string, effectiveVsize: number, effectiveFee: number, ancestorCount: number };
+  cost: number;
+  targetFeeRate: number;
+  nextBlockFee: number;
+  userBalance: number;
+  mempoolBaseFee: number;
+  vsizeFee: number;
+  pools: number[];
+  availablePaymentMethods: Record<string, { min: number, max: number }>;
+  unavailable?: boolean;
+  options: { fee: number }[];
+}
 
 export interface ETA {
   now: number, // time at which calculation performed
