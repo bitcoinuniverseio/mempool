@@ -35,7 +35,9 @@
   </div>
 
   <ng-container *ngIf="state.kind === 'flow'">
-    <p *ngIf="isEmpty(state.flow)" class="flow-empty" role="status">
+    <p class="flow-summary" role="status">{{ plainSummary(state.flow) }}</p>
+
+    <p *ngIf="isEmpty(state.flow)" class="flow-empty">
       {{ emptyLabel(state.flow) }}
     </p>
 
@@ -67,6 +69,19 @@
       </div>
     </div>
 
+    <details class="flow-evidence" *ngIf="state.flow.sourceEvidence?.length">
+      <summary i18n="universe.flow.evidence-summary">How this was proven</summary>
+      <ul class="evidence-list">
+        <li *ngFor="let evidence of state.flow.sourceEvidence">
+          <span class="evidence-authority">{{ evidence.authorityId }}</span>
+          <span class="evidence-coverage">{{ evidence.coverage }}</span>
+          <span class="evidence-checkpoint" *ngIf="evidence.checkpoint as checkpoint">
+            <ng-container i18n="universe.flow.evidence-block">block {{ checkpoint.heightAtomic }}</ng-container>
+          </span>
+        </li>
+      </ul>
+    </details>
+
     <div *ngIf="state.flow.actions?.length" class="flow-actions">
       <h3 i18n="universe.flow.actions">Protocol actions</h3>
       <ul class="action-list">
@@ -90,6 +105,13 @@
   <li class="position-row" [ngClass]="accentClass(position, flow)">
     <div class="position-main">
       <app-protocol-badge [protocol]="badgeFor(position.asset.protocolId)"></app-protocol-badge>
+      <a
+        class="outpoint-link"
+        *ngIf="outpointRoute(position) as route"
+        [routerLink]="route"
+        i18n-title="universe.flow.open-outpoint"
+        title="Open this output"
+      >:{{ position.vout }}</a>
       <span class="asset-label" [class.partial-evidence]="isPartialEvidence(position)">
         {{ assetLabel(position.asset) }}
       </span>

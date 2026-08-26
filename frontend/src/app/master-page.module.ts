@@ -115,6 +115,36 @@ const routes: Routes = [
         data: { networks: ['bitcoin', 'liquid'] },
       },
       {
+        path: 'outpoint/:txid/:vout',
+        loadComponent: () => import('@app/universe/outpoint/outpoint.component').then(m => m.OutpointComponent),
+        data: { networkSpecific: true, networks: ['bitcoin'] },
+      },
+      {
+        path: 'pulse',
+        loadComponent: () => import('@app/universe/pulse/pulse.component').then(m => m.PulseComponent),
+        data: { networkSpecific: true, networks: ['bitcoin'] },
+      },
+      {
+        path: 'saved',
+        loadComponent: () => import('@app/universe/saved/saved.component').then(m => m.SavedComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'inscription/:reference',
+        loadComponent: () => import('@app/universe/inscription/inscription.component').then(m => m.InscriptionComponent),
+        data: { networkSpecific: true, networks: ['bitcoin'] },
+      },
+      {
+        path: 'rune/:reference',
+        loadComponent: () => import('@app/universe/rune/rune.component').then(m => m.RuneComponent),
+        data: { networkSpecific: true, networks: ['bitcoin'] },
+      },
+      {
+        path: 'sat/:reference',
+        loadComponent: () => import('@app/universe/sat/sat.component').then(m => m.SatComponent),
+        data: { networkSpecific: true, networks: ['bitcoin'] },
+      },
+      {
         path: 'tools/calculator',
         component: CalculatorComponent
       }

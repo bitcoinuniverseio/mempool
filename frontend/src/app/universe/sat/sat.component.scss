@@ -1,0 +1,44 @@
+@use '../asset-page' as page;
+
+:host {
+  @include page.universe-asset-page;
+
+  .rarity {
+    border-left: 3px solid var(--universe-state-neutral);
+
+    h2 {
+      font-size: 1.15rem;
+      text-transform: none;
+      margin-bottom: 0.4rem;
+    }
+
+    // Rarity earns a color only when it is above common, so the page never
+    // dresses an ordinary satoshi up as a find.
+    &.rarity-uncommon,
+    &.rarity-rare,
+    &.rarity-epic,
+    &.rarity-legendary,
+    &.rarity-mythic {
+      border-left-color: var(--universe-protocol-ordinals);
+
+      h2 { color: var(--universe-protocol-ordinals); }
+    }
+  }
+
+  .identity dd,
+  .inscriptions li {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .inscriptions ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    li { padding: 0.15rem 0; }
+  }
+
+  .empty {
+    color: var(--transparent-fg, #a8b0c4);
+  }
+}

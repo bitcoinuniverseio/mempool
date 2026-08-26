@@ -25,10 +25,30 @@ export class SearchResultsComponent implements OnChanges {
     this.networkName = this.stateService.network.charAt(0).toUpperCase() + this.stateService.network.slice(1);
   }
 
+  /**
+   * Index of the first Universe candidate. They are appended last so the
+   * upstream index arithmetic above them stays exactly as it was.
+   */
+  get universeOffset(): number {
+    if (!this.results) {
+      return 0;
+    }
+    return (this.results.hashQuickMatch ? 1 : 0)
+      + (this.results.addresses?.length || 0)
+      + (this.results.pools?.length || 0)
+      + (this.results.nodes?.length || 0)
+      + (this.results.channels?.length || 0)
+      + (this.results.otherNetworks?.length || 0);
+  }
+
+  get universeRecentOffset(): number {
+    return this.universeOffset + (this.results?.universe?.length || 0);
+  }
+
   ngOnChanges() {
     this.activeIdx = 0;
     if (this.results) {
-      this.resultsFlattened = [...(this.results.hashQuickMatch ? [this.results.searchText] : []), ...this.results.addresses, ...this.results.pools, ...this.results.nodes, ...this.results.channels, ...this.results.otherNetworks];
+      this.resultsFlattened = [...(this.results.hashQuickMatch ? [this.results.searchText] : []), ...this.results.addresses, ...this.results.pools, ...this.results.nodes, ...this.results.channels, ...this.results.otherNetworks, ...(this.results.universe || []), ...(this.results.universeRecent || [])];
       // If searchText is a public key corresponding to a node, select it by default
       if (this.results.publicKey && this.results.nodes.length > 0) {
         this.activeIdx = 1;

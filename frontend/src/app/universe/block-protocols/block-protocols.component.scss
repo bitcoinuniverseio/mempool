@@ -1,0 +1,59 @@
+@use '../universe-tokens' as u;
+
+:host {
+  @include u.universe-protocol-tokens;
+  @include u.universe-state-tokens;
+
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.panel {
+  @include u.universe-surface;
+
+  padding: 1rem;
+
+  h2 {
+    font-size: 1rem;
+    margin: 0 0 0.6rem;
+  }
+
+  p {
+    margin: 0 0 0.5rem;
+    max-width: 72ch;
+  }
+
+  p:last-child {
+    margin-bottom: 0;
+  }
+
+  &.unavailable {
+    border-left: 3px solid var(--universe-state-unavailable);
+  }
+}
+
+.identifier {
+  @include u.universe-identifier;
+}
+
+.inscription-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+  list-style: none;
+  margin: 0 0 0.5rem;
+  padding: 0;
+}
+
+.more,
+.asof {
+  color: var(--transparent-fg, #a8b0c4);
+  font-size: 0.85rem;
+}
+
+.skeleton-line {
+  height: 1rem;
+  width: 60%;
+  border-radius: 0.2rem;
+  background: rgba(255, 255, 255, 0.06);
+}

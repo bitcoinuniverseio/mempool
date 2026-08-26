@@ -34,3 +34,12 @@
   top: -1px;
   margin-right: 10px;
 }
+
+.universe-kind {
+  display: inline-block;
+  min-width: 5.5rem;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--transparent-fg, #a8b0c4);
+}
