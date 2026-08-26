@@ -1,6 +1,6 @@
 {
   "registryVersion": "1.0.0",
-  "generatedAt": "2026-08-26T04:09:14.600Z",
+  "generatedAt": "2026-08-26T06:40:08.985Z",
   "protocols": [
     {
       "schemaVersion": "universe-explorer-protocol-v1",
@@ -21,9 +21,9 @@
       "visualToken": "protocol-ordinals",
       "implementedReadOperations": [],
       "authorizedReadOperations": [],
-      "releaseStatus": "BLOCKED",
-      "indexerAuthority": "index-ordinals",
-      "coverage": "unknown"
+      "releaseStatus": "VERIFIED READ ONLY",
+      "indexerAuthority": "ord",
+      "coverage": "complete"
     },
     {
       "schemaVersion": "universe-explorer-protocol-v1",
@@ -43,9 +43,9 @@
       "visualToken": "protocol-rare-sats",
       "implementedReadOperations": [],
       "authorizedReadOperations": [],
-      "releaseStatus": "BLOCKED",
-      "indexerAuthority": "index-ordinals",
-      "coverage": "unknown"
+      "releaseStatus": "VERIFIED READ ONLY",
+      "indexerAuthority": "ord",
+      "coverage": "complete"
     },
     {
       "schemaVersion": "universe-explorer-protocol-v1",
@@ -131,9 +131,9 @@
       "visualToken": "protocol-runes",
       "implementedReadOperations": [],
       "authorizedReadOperations": [],
-      "releaseStatus": "BLOCKED",
-      "indexerAuthority": "index-runes",
-      "coverage": "unknown"
+      "releaseStatus": "VERIFIED READ ONLY",
+      "indexerAuthority": "ord",
+      "coverage": "complete"
     },
     {
       "schemaVersion": "universe-explorer-protocol-v1",

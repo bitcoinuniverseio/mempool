@@ -15,6 +15,22 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  docs:
+    name: Documentation gates
+    runs-on: [self-hosted, linux-ultra]
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24.19.0'
+
+      - name: Protocol coverage table matches the recorded manifest
+        run: node scripts/universe/generate-protocol-coverage.mjs --check
+
   backend:
     name: Backend build and test
     runs-on: [self-hosted, linux-ultra]
@@ -68,6 +84,10 @@ jobs:
       - name: Lint
         working-directory: frontend
         run: npm run lint
+
+      - name: Unit tests
+        working-directory: frontend
+        run: npm run test:ci
 
       - name: Production build
         working-directory: frontend
