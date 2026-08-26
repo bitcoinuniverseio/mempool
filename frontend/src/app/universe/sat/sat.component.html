@@ -1,0 +1,136 @@
+<div class="container-xl universe-asset" *ngIf="state$ | async as state">
+
+  <header class="page-head">
+    <div>
+      <h1 i18n="universe.sat.title">Satoshi</h1>
+      <p class="reference identifier">{{ state.reference }}</p>
+    </div>
+    <app-universe-bookmark-button
+      *ngIf="state.kind === 'ready'"
+      kind="sat"
+      [value]="state.result.value.numberAtomic"
+      [path]="'/sat/' + state.result.value.numberAtomic"
+      [label]="'Sat ' + state.result.value.numberAtomic"
+    ></app-universe-bookmark-button>
+  </header>
+
+  <ng-container [ngSwitch]="state.kind">
+
+    <div *ngSwitchCase="'loading'" class="panel" aria-busy="true">
+      <p class="skeleton-line"></p>
+      <p class="skeleton-line short"></p>
+    </div>
+
+    <div *ngSwitchCase="'invalid'" class="panel state-panel">
+      <h2 i18n="universe.sat.invalid-title">That is not a satoshi number</h2>
+      <p i18n="universe.sat.invalid-body">
+        A satoshi is addressed by its ordinal number, counted from the first
+        satoshi ever mined.
+      </p>
+    </div>
+
+    <div *ngSwitchCase="'missing'" class="panel state-panel">
+      <h2 i18n="universe.sat.missing-title">No such satoshi</h2>
+      <p>{{ statusMessage(state.result?.status) }}</p>
+    </div>
+
+    <div *ngSwitchCase="'unavailable'" class="panel state-panel unavailable">
+      <h2 i18n="universe.sat.unavailable-title">The asset authority did not answer</h2>
+      <p>{{ statusMessage(state.result?.status) }}</p>
+    </div>
+
+    <ng-container *ngSwitchCase="'ready'">
+
+      <section class="panel rarity" [ngClass]="'rarity-' + state.result.value.rarity">
+        <h2>{{ rarityLabel(state.result.value.rarity) }}</h2>
+        <p>{{ rarityReason(state.result.value) }}</p>
+      </section>
+
+      <section class="panel identity">
+        <dl>
+          <dt i18n="universe.sat.field-number">Ordinal number</dt>
+          <dd>{{ amount(state.result.value.numberAtomic) }}</dd>
+
+          <ng-container *ngIf="state.result.value.name as name">
+            <dt i18n="universe.sat.field-name">Name</dt>
+            <dd>{{ name }}</dd>
+          </ng-container>
+
+          <ng-container *ngIf="state.result.value.decimal as decimal">
+            <dt i18n="universe.sat.field-decimal">Decimal position</dt>
+            <dd>{{ decimal }}</dd>
+          </ng-container>
+
+          <ng-container *ngIf="state.result.value.degree as degree">
+            <dt i18n="universe.sat.field-degree">Degree</dt>
+            <dd>{{ degree }}</dd>
+          </ng-container>
+
+          <ng-container *ngIf="state.result.value.percentile as percentile">
+            <dt i18n="universe.sat.field-percentile">Percentile of supply</dt>
+            <dd>{{ percentile }}</dd>
+          </ng-container>
+
+          <ng-container *ngIf="state.result.value.blockAtomic as block">
+            <dt i18n="universe.sat.field-block">Mined in block</dt>
+            <dd><a [routerLink]="['/block', block]">{{ block }}</a></dd>
+          </ng-container>
+
+          <ng-container *ngIf="state.result.value.timestampAtomic as timestamp">
+            <dt i18n="universe.sat.field-time">Mined at</dt>
+            <dd>{{ utc(timestamp) }}</dd>
+          </ng-container>
+
+          <ng-container *ngIf="state.result.value.cycleAtomic as cycle">
+            <dt i18n="universe.sat.field-cycle">Cycle</dt>
+            <dd>{{ cycle }}</dd>
+          </ng-container>
+
+          <ng-container *ngIf="state.result.value.epochAtomic as epoch">
+            <dt i18n="universe.sat.field-epoch">Epoch</dt>
+            <dd>{{ epoch }}</dd>
+          </ng-container>
+
+          <ng-container *ngIf="state.result.value.periodAtomic as period">
+            <dt i18n="universe.sat.field-period">Difficulty period</dt>
+            <dd>{{ period }}</dd>
+          </ng-container>
+        </dl>
+      </section>
+
+      <section class="panel location">
+        <h2 i18n="universe.sat.location-title">Where it sits now</h2>
+        <dl>
+          <ng-container *ngIf="outpointRoute(state.result.value.satpoint) as route">
+            <dt i18n="universe.sat.field-output">Output</dt>
+            <dd><a class="identifier" [routerLink]="route">{{ state.result.value.satpoint }}</a></dd>
+          </ng-container>
+
+          <ng-container *ngIf="state.result.value.address as address">
+            <dt i18n="universe.sat.field-address">Address</dt>
+            <dd><a class="identifier" [routerLink]="['/address', address]">{{ address }}</a></dd>
+          </ng-container>
+        </dl>
+        <p class="empty" *ngIf="!state.result.value.satpoint" i18n="universe.sat.no-location">
+          The authority did not report a current location for this satoshi.
+        </p>
+      </section>
+
+      <section class="panel inscriptions" *ngIf="state.result.value.inscriptions.length">
+        <h2 i18n="universe.sat.inscriptions-title">Inscriptions on this satoshi</h2>
+        <ul>
+          <li *ngFor="let inscription of state.result.value.inscriptions">
+            <a class="identifier" [routerLink]="['/inscription', inscription]">{{ shorten(inscription, 12) }}</a>
+          </li>
+        </ul>
+      </section>
+
+      <p class="asof" *ngIf="state.result.checkpoint as checkpoint">
+        <ng-container i18n="universe.sat.proven">
+          Proven by {{ state.result.authorityId }} at block {{ checkpoint.heightAtomic }}.
+        </ng-container>
+      </p>
+
+    </ng-container>
+  </ng-container>
+</div>

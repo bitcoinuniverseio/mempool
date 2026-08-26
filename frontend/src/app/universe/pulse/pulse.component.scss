@@ -1,0 +1,170 @@
+@use '../universe-tokens' as u;
+
+:host {
+  @include u.universe-protocol-tokens;
+  @include u.universe-state-tokens;
+
+  display: block;
+}
+
+.universe-pulse {
+  padding: 1.25rem 0 3rem;
+}
+
+.page-head {
+  margin-bottom: 1rem;
+
+  h1 {
+    font-size: 1.5rem;
+    margin: 0;
+  }
+
+  .lede {
+    margin: 0.35rem 0 0;
+    color: var(--transparent-fg, #a8b0c4);
+    max-width: 60ch;
+  }
+}
+
+.panel {
+  @include u.universe-surface;
+
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+
+  h2 {
+    font-size: 1rem;
+    margin: 0 0 0.6rem;
+  }
+
+  p {
+    margin: 0 0 0.5rem;
+    max-width: 72ch;
+
+    &:last-child { margin-bottom: 0; }
+  }
+}
+
+.method .warning {
+  color: var(--universe-state-partial);
+}
+
+.identifier {
+  @include u.universe-identifier;
+}
+
+.universe-chip {
+  @include u.universe-chip;
+}
+
+.empty {
+  color: var(--transparent-fg, #a8b0c4);
+}
+
+.share-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li {
+    display: grid;
+    grid-template-columns: minmax(6rem, 10rem) 1fr minmax(6rem, max-content);
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.35rem 0;
+  }
+}
+
+.share-bar {
+  height: 0.5rem;
+  border-radius: 0.25rem;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+
+  .fill {
+    display: block;
+    height: 100%;
+    min-width: 2px;
+    background: var(--universe-protocol-runes);
+
+    @include u.universe-motion(width, 400ms);
+  }
+}
+
+.share-count {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.85rem;
+  color: var(--transparent-fg, #a8b0c4);
+  text-align: right;
+}
+
+.event-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.event {
+  display: grid;
+  grid-template-columns: minmax(9rem, max-content) minmax(6rem, 1fr) minmax(6rem, 1fr) max-content;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  padding: 0.4rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+
+  &:first-child {
+    border-top: 0;
+    // A new row is a real event, so it earns a brief entrance. Nothing moves
+    // afterwards, so reading a row is never a moving target.
+    animation: universe-pulse-in 260ms ease-out;
+  }
+}
+
+@keyframes universe-pulse-in {
+  from { opacity: 0; transform: translateY(-3px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .event:first-child { animation: none; }
+}
+
+.protocol-tag {
+  display: inline-block;
+  margin-right: 0.35rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.event-action {
+  font-size: 0.85rem;
+  color: var(--transparent-fg, #a8b0c4);
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 767px) {
+  .share-list li {
+    grid-template-columns: 1fr max-content;
+    grid-template-areas:
+      'name count'
+      'bar bar';
+
+    .share-name { grid-area: name; }
+    .share-count { grid-area: count; }
+    .share-bar { grid-area: bar; }
+  }
+
+  .event {
+    grid-template-columns: 1fr max-content;
+    grid-template-areas:
+      'txid status'
+      'protocols protocols'
+      'action action';
+
+    .event-txid { grid-area: txid; }
+    .universe-chip { grid-area: status; }
+    .event-protocols { grid-area: protocols; }
+    .event-action { grid-area: action; }
+  }
+}

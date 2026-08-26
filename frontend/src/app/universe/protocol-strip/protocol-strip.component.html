@@ -1,0 +1,36 @@
+<div class="universe-strip" *ngIf="vm$ | async as vm">
+  <div class="strip-head">
+    <h5 class="card-title d-inline" i18n="universe.strip.title">Universe protocol activity</h5>
+    <a class="strip-link" [routerLink]="['/pulse']" i18n="universe.strip.open">Open live feed</a>
+  </div>
+
+  <p class="strip-note" *ngIf="vm.authorityAnswering; else authorityDown">
+    <ng-container *ngIf="vm.checked; else warming" i18n="universe.strip.note">
+      Seen in the last {{ vm.checked }} mempool transactions checked.
+    </ng-container>
+    <ng-template #warming>
+      <ng-container i18n="universe.strip.warming">
+        Reading arriving transactions against {{ vm.supportedCount }} supported protocols.
+      </ng-container>
+    </ng-template>
+  </p>
+
+  <ng-template #authorityDown>
+    <p class="strip-note warning" i18n="universe.strip.authority-down">
+      The asset authority is not answering, so protocol activity is not shown.
+    </p>
+  </ng-template>
+
+  <ul class="strip-list">
+    <li *ngFor="let entry of vm.entries; trackBy: trackByEntry">
+      <a [routerLink]="['/protocols', entry.protocolId]">
+        <span class="strip-name">{{ entry.displayName }}</span>
+        <span class="strip-count" [class.zero]="!entry.count">{{ entry.count }}</span>
+      </a>
+    </li>
+  </ul>
+
+  <a class="strip-all" [routerLink]="['/protocols']" i18n="universe.strip.all">
+    All protocols and their authorities
+  </a>
+</div>

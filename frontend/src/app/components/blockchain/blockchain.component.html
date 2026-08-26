@@ -10,8 +10,12 @@
         </ng-container>
       </div>
       <div id="divider" [hidden]="pageIndex > 0">
-        <button class="block-display-toggle" (click)="toggleBlockDisplayMode()"><fa-icon [icon]="['fas', 'exchange-alt']" [fixedWidth]="true"></fa-icon></button>
-        <button class="time-toggle" (click)="toggleTimeDirection()"><fa-icon [icon]="['fas', 'exchange-alt']" [fixedWidth]="true"></fa-icon></button>
+        <button class="block-display-toggle" (click)="toggleBlockDisplayMode()"
+                i18n-title="blockchain.toggle-block-display" title="Switch what the blocks show"
+                i18n-aria-label="blockchain.toggle-block-display" aria-label="Switch what the blocks show"><fa-icon [icon]="['fas', 'exchange-alt']" [fixedWidth]="true"></fa-icon></button>
+        <button class="time-toggle" (click)="toggleTimeDirection()"
+                i18n-title="blockchain.toggle-time-direction" title="Switch the direction time runs in"
+                i18n-aria-label="blockchain.toggle-time-direction" aria-label="Switch the direction time runs in"><fa-icon [icon]="['fas', 'exchange-alt']" [fixedWidth]="true"></fa-icon></button>
       </div>
     </span>
   </div>

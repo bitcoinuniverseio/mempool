@@ -9,7 +9,6 @@ const CONFIG_FILE_NAME = 'mempool-frontend-config.json';
 
 const config = {
   verbose: parseInt(process.env.VERBOSE) === 1,
-  mempoolCDN: parseInt(process.env.MEMPOOL_CDN) === 1,
   dryRun: parseInt(process.env.DRY_RUN) === 1,
   githubToken: process.env.GITHUB_TOKEN,
 };
@@ -22,7 +21,6 @@ if (parseInt(process.env.SKIP_SYNC) === 1) {
 
 // Log configuration
 if (config.verbose) console.log(`${LOG_TAG} VERBOSE is set, logs will be more verbose`);
-if (config.mempoolCDN) console.log(`${LOG_TAG} MEMPOOL_CDN is set, assets will be downloaded from mempool.space`);
 if (config.dryRun) console.log(`${LOG_TAG} DRY_RUN is set, not downloading any assets`);
 
 // Setup assets path
@@ -139,7 +137,10 @@ const createGitHubOptions = (repoPath) => {
 
 // Utility: Replace URL for CDN
 const getCDNUrl = (url, replacePattern) => {
-  return config.mempoolCDN ? url.replace(replacePattern.from, replacePattern.to) : url;
+  // Upstream can rewrite asset downloads to its hosted CDN. This fork always
+  // uses the original source, so no third-party mirror is involved.
+  void replacePattern;
+  return url;
 };
 
 // Utility: Ensure directory exists
@@ -241,10 +242,6 @@ const downloadMiningPoolLogos = async () => {
         filePath: `${ASSETS_PATH}/mining-pools/${poolLogo.name}`,
         remoteHash: poolLogo.sha,
         downloadUrl: poolLogo.download_url,
-        cdnPattern: {
-          from: "raw.githubusercontent.com/mempool/mining-pool-logos/master",
-          to: "mempool.space/resources/mining-pools"
-        },
         itemName: poolLogo.name,
         downloadDir: `${ASSETS_PATH}/mining-pools/`
       });
@@ -277,10 +274,6 @@ const downloadPromoVideoSubtitles = async () => {
         filePath: `${ASSETS_PATH}/promo-video/${subtitle.name}`,
         remoteHash: subtitle.sha,
         downloadUrl: subtitle.download_url,
-        cdnPattern: {
-          from: "raw.githubusercontent.com/mempool/mempool-promo/master/subtitles",
-          to: "mempool.space/resources/promo-video"
-        },
         itemName: subtitle.name,
         downloadDir: `${ASSETS_PATH}/promo-video/`
       });
@@ -311,10 +304,6 @@ const downloadPromoVideo = async () => {
       filePath: `${ASSETS_PATH}/promo-video/mempool-promo.mp4`,
       remoteHash: videoItem.sha,
       downloadUrl: videoItem.download_url,
-      cdnPattern: {
-        from: "raw.githubusercontent.com/mempool/mempool-promo/master/promo.mp4",
-        to: "mempool.space/resources/promo-video/mempool-promo.mp4"
-      },
       itemName: 'mempool-promo.mp4',
       downloadDir: `${ASSETS_PATH}/promo-video/`
     });

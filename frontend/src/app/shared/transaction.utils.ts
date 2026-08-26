@@ -86,7 +86,7 @@ export function setSchnorrSighashFlags(flags: bigint, witness: string[]): bigint
 export function isDERSig(w: string): boolean {
   // heuristic to detect probable DER signatures
   return (w.length >= 18
-    && w.startsWith('30') // minimum DER signature length is 8 bytes + sighash flag (see https://mempool.space/testnet/tx/c6c232a36395fa338da458b86ff1327395a9afc28c5d2daa4273e410089fd433)
+    && w.startsWith('30') // minimum DER signature length is 8 bytes + sighash flag (see testnet transaction c6c232a36395fa338da458b86ff1327395a9afc28c5d2daa4273e410089fd433)
     && ['01', '02', '03', '81', '82', '83'].includes(w.slice(-2)) // signature must end with a valid sighash flag
     && (w.length === (2 * parseInt(w.slice(2, 4), 16)) + 6) // second byte encodes the combined length of the R and S components
   );
@@ -96,7 +96,7 @@ export function isDERSig(w: string): boolean {
 // <0x30> <total len> <0x02> <len R> <R> <0x02> <len S> <S> <hashtype>
 // see https://github.com/bitcoin/bitcoin/blob/9a05b45da60d214cb1e5a50c3d2293b1defc9bb0/src/script/interpreter.cpp#L97-L106
 export function isCanonicalDERSig(w: string): boolean {
-  // minimum DER signature length is 8 bytes + sighash flag (see https://mempool.space/testnet/tx/c6c232a36395fa338da458b86ff1327395a9afc28c5d2daa4273e410089fd433)
+  // minimum DER signature length is 8 bytes + sighash flag (see testnet transaction c6c232a36395fa338da458b86ff1327395a9afc28c5d2daa4273e410089fd433)
   if (w.length < 18) {
     return false;
   }
@@ -845,7 +845,7 @@ export function getTransactionFlags(tx: Transaction, cpfpInfo?: CpfpInfo, replac
         flags |= TransactionFlags.p2tr;
         // every valid taproot input has at least one witness item, however transactions
         // created before taproot activation don't need to have any witness data
-        // (see https://mempool.space/tx/b10c007c60e14f9d087e0291d4d0c7869697c6681d979c6639dbd960792b4d41)
+        // (see transaction b10c007c60e14f9d087e0291d4d0c7869697c6681d979c6639dbd960792b4d41)
         if (vin.witness?.length) {
           const taprootInfo = parseTaproot(vin.witness);
           if (taprootInfo.scriptPath) {

@@ -31,6 +31,18 @@ jobs:
       - name: Protocol coverage table matches the recorded manifest
         run: node scripts/universe/generate-protocol-coverage.mjs --check
 
+      - name: No em dash anywhere
+        run: node scripts/universe/check-text.mjs
+
+      - name: No obsolete upstream product marks
+        run: node scripts/universe/check-branding.mjs
+
+      - name: No third-party data origins
+        run: node scripts/universe/check-origins.mjs
+
+      - name: Gateway routing
+        run: node --test scripts/universe/gateway.test.mjs
+
   backend:
     name: Backend build and test
     runs-on: [self-hosted, linux-ultra]
@@ -91,4 +103,10 @@ jobs:
 
       - name: Production build
         working-directory: frontend
-        run: npm run build
+        run: npm run build:universe
+
+      - name: Built bundle carries no upstream marks
+        run: node scripts/universe/check-branding.mjs frontend/dist
+
+      - name: Built bundle calls no third-party origin
+        run: node scripts/universe/check-origins.mjs frontend/dist

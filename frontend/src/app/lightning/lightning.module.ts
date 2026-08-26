@@ -33,7 +33,6 @@ import { JusticeList } from '@app/lightning/justice-list/justice-list.component'
 import { OldestNodes } from '@app/lightning/nodes-ranking/oldest-nodes/oldest-nodes.component';
 import { NodesRankingsDashboard } from '@app/lightning/nodes-rankings-dashboard/nodes-rankings-dashboard.component';
 import { NodeChannels } from '@app/lightning/nodes-channels/node-channels.component';
-import { GroupComponent } from '@app/lightning/group/group.component';
 
 @NgModule({
   declarations: [
@@ -65,7 +64,6 @@ import { GroupComponent } from '@app/lightning/group/group.component';
     OldestNodes,
     NodesRankingsDashboard,
     NodeChannels,
-    GroupComponent,
   ],
   imports: [
     CommonModule,

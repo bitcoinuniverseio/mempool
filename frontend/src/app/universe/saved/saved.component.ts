@@ -1,0 +1,97 @@
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { Observable, combineLatest, map } from 'rxjs';
+import { SeoService } from '@app/services/seo.service';
+import {
+  UniverseEntry,
+  UniverseEntryKind,
+  UniverseLocalService,
+} from '@app/universe/universe-local.service';
+
+interface SavedViewModel {
+  readonly bookmarks: readonly UniverseEntry[];
+  readonly recent: readonly UniverseEntry[];
+  readonly pinnedProtocols: readonly string[];
+}
+
+/**
+ * Everything this browser remembers, in one place, with one button that
+ * forgets all of it. Nothing here was ever sent to a server, so this page is
+ * also the complete answer to "what does the explorer know about me".
+ */
+@Component({
+  selector: 'app-universe-saved',
+  standalone: true,
+  imports: [CommonModule, RouterModule],
+  templateUrl: './saved.component.html',
+  styleUrls: ['./saved.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class SavedComponent implements OnInit {
+  vm$: Observable<SavedViewModel>;
+  confirmingReset = false;
+
+  constructor(
+    private local: UniverseLocalService,
+    private seo: SeoService,
+  ) {}
+
+  ngOnInit(): void {
+    this.seo.setTitle('Saved in this browser');
+    this.vm$ = combineLatest([
+      this.local.bookmarks$,
+      this.local.recent$,
+      this.local.preferences$,
+    ]).pipe(
+      map(([bookmarks, recent, preferences]): SavedViewModel => ({
+        bookmarks,
+        recent,
+        pinnedProtocols: preferences.pinnedProtocols,
+      })),
+    );
+  }
+
+  remove(entry: UniverseEntry): void {
+    this.local.removeBookmark(entry.kind as UniverseEntryKind, entry.value);
+  }
+
+  clearRecent(): void {
+    this.local.clearRecent();
+  }
+
+  unpin(protocolId: string): void {
+    this.local.togglePinnedProtocol(protocolId);
+  }
+
+  askReset(): void {
+    this.confirmingReset = true;
+  }
+
+  cancelReset(): void {
+    this.confirmingReset = false;
+  }
+
+  confirmReset(): void {
+    this.local.resetAll();
+    this.confirmingReset = false;
+  }
+
+  kindLabel(kind: string): string {
+    switch (kind) {
+      case 'transaction': return $localize`:@@universe.saved.kind-transaction:Transaction`;
+      case 'block': return $localize`:@@universe.saved.kind-block:Block`;
+      case 'address': return $localize`:@@universe.saved.kind-address:Address`;
+      case 'outpoint': return $localize`:@@universe.saved.kind-outpoint:Output`;
+      case 'inscription': return $localize`:@@universe.saved.kind-inscription:Inscription`;
+      case 'rune': return $localize`:@@universe.saved.kind-rune:Rune`;
+      case 'sat': return $localize`:@@universe.saved.kind-sat:Sat`;
+      case 'protocol': return $localize`:@@universe.saved.kind-protocol:Protocol`;
+      default: return kind;
+    }
+  }
+
+  trackByEntry(index: number, entry: UniverseEntry): string {
+    return `${entry.kind}:${entry.value}`;
+  }
+}

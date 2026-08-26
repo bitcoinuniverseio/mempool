@@ -22,6 +22,8 @@ export class GlobalFooterComponent implements OnInit, OnDestroy, OnChanges {
 
   private destroy$: Subject<any> = new Subject<any>();
   env: Env;
+  /** The public source of the running build, published on the source page too. */
+  readonly sourceRepository = 'https://github.com/bitcoinuniverseio/mempool';
   officialMempoolSpace = this.stateService.env.OFFICIAL_MEMPOOL_SPACE;
   mempoolSpaceBuild = window['isMempoolSpaceBuild'];
   backendInfo$: Observable<IBackendInfo>;

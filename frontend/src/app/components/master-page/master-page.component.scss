@@ -327,3 +327,24 @@ main {
   top: 65px;
   padding-bottom: 20px;
 }
+
+/**
+ * Keep the footer below the fold from the first paint.
+ *
+ * The footer sits after the router outlet, so it moved every time a page grew
+ * as its data arrived. That single movement was the largest layout shift on
+ * the site. A floor on the column alone was not enough: it parked the footer
+ * exactly on the viewport edge, which is the worst possible starting point,
+ * because the region it then swept through is almost the whole screen.
+ *
+ * Giving the outlet itself a viewport-height floor starts the footer below the
+ * fold instead, so later growth moves it entirely outside the viewport and
+ * counts for nothing.
+ */
+.page-column {
+  min-height: 100vh;
+
+  > main {
+    min-height: 100vh;
+  }
+}

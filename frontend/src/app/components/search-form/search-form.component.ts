@@ -10,6 +10,10 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
 import { ApiService } from '@app/services/api.service';
 import { SearchResultsComponent } from '@components/search-form/search-results/search-results.component';
 import { Network, findOtherNetworks, getRegex, getTargetUrl, needBaseModuleChange } from '@app/shared/regex.utils';
+import { UniverseApiService } from '@app/universe/universe-api.service';
+import { UniverseLocalService } from '@app/universe/universe-local.service';
+import { UniverseIdentifier, classifyUniverseQuery, identifierKindLabel } from '@app/universe/universe-identifier';
+import { ExplorerProtocolDefinition } from '@app/universe/universe.types';
 
 @Component({
   selector: 'app-search-form',
@@ -49,6 +53,14 @@ export class SearchFormComponent implements OnInit {
   focus$ = new Subject<string>();
   click$ = new Subject<string>();
 
+  /**
+   * The protocol registry, used to offer protocol names as search results.
+   * It is fetched once and cached; a failure just means protocol-name matching
+   * stays off, and every other kind of search keeps working.
+   */
+  private universeProtocols: ExplorerProtocolDefinition[] = [];
+  readonly universeKindLabel = identifierKindLabel;
+
   @Output() searchTriggered = new EventEmitter();
   @ViewChild('searchResults') searchResults: SearchResultsComponent;
   @HostListener('keydown', ['$event']) keydown($event): void {
@@ -65,7 +77,9 @@ export class SearchFormComponent implements OnInit {
     private electrsApiService: ElectrsApiService,
     private apiService: ApiService,
     private relativeUrlPipe: RelativeUrlPipe,
-    private elementRef: ElementRef
+    private elementRef: ElementRef,
+    private universeApiService: UniverseApiService,
+    private universeLocalService: UniverseLocalService,
   ) {
   }
 
@@ -95,6 +109,14 @@ export class SearchFormComponent implements OnInit {
     this.searchForm = this.formBuilder.group({
       searchText: ['', Validators.required],
     });
+
+    if (this.stateService.isBrowser) {
+      this.universeApiService.getProtocols$()
+        .pipe(catchError(() => of({ protocols: [] as ExplorerProtocolDefinition[] } as any)))
+        .subscribe((response) => {
+          this.universeProtocols = response?.protocols || [];
+        });
+    }
 
     if (this.network === 'liquid' || this.network === 'liquidtestnet') {
       this.assetsService.getAssetsMinimalJson$
@@ -179,7 +201,9 @@ export class SearchFormComponent implements OnInit {
               nodes: [],
               channels: [],
               liquidAsset: [],
-              pools: []
+              pools: [],
+              universe: [],
+              universeRecent: this.recentEntries(),
             };
           }
 
@@ -224,7 +248,9 @@ export class SearchFormComponent implements OnInit {
             nodes: lightningResults.nodes,
             channels: lightningResults.channels,
             liquidAsset: liquidAsset,
-            pools: pools
+            pools: pools,
+            universe: this.universeMatches(searchText),
+            universeRecent: [],
           };
         })
       );
@@ -234,11 +260,62 @@ export class SearchFormComponent implements OnInit {
     this.searchResults.handleKeyDown($event);
   }
 
+  /**
+   * Universe identifier candidates for the current query.
+   *
+   * Classification is local: the query is never sent anywhere to work out what
+   * it is. Only identifier classes whose pages exist are offered, so a result
+   * in the list always leads somewhere real.
+   */
+  private universeMatches(searchText: string): any[] {
+    if (this.env.BASE_MODULE !== 'mempool' || this.network) {
+      // The protocol overlay serves Bitcoin mainnet only.
+      return [];
+    }
+    return classifyUniverseQuery(searchText, this.universeProtocols)
+      .slice(0, 6)
+      .map((identifier: UniverseIdentifier) => ({
+        universeRoute: identifier.route,
+        kind: identifier.kind,
+        kindLabel: identifierKindLabel(identifier.kind),
+        label: this.universeLabel(identifier),
+      }));
+  }
+
+  private universeLabel(identifier: UniverseIdentifier): string {
+    if (identifier.kind !== 'protocol') {
+      return identifier.value;
+    }
+    const protocol = this.universeProtocols.find((entry) => entry.id === identifier.value);
+    return protocol?.displayName || identifier.value;
+  }
+
+  /** Recently viewed items, offered when the box is empty. Read from this browser only. */
+  private recentEntries(): any[] {
+    return this.universeLocalService.recentSnapshot().slice(0, 5).map((entry) => ({
+      universeRoute: [entry.path],
+      kind: entry.kind,
+      kindLabel: entry.kind,
+      label: entry.label,
+    }));
+  }
+
+  private navigateUniverse(route: string[]): void {
+    this.router.navigate(route);
+    this.searchTriggered.emit();
+    this.searchForm.setValue({ searchText: '' });
+    this.isSearching = false;
+  }
+
   itemSelected(): void {
     setTimeout(() => this.search());
   }
 
   selectedResult(result: any): void {
+    if (result && typeof result === 'object' && result.universeRoute) {
+      this.navigateUniverse(result.universeRoute);
+      return;
+    }
     if (typeof result === 'string') {
       this.search(result);
     } else if (typeof result === 'number' && result <= this.stateService.latestBlockHeight) {
@@ -265,6 +342,16 @@ export class SearchFormComponent implements OnInit {
     const searchText = result || this.searchForm.value.searchText.trim();
     if (searchText) {
       this.isSearching = true;
+
+      // Universe identifiers that no base Bitcoin pattern can match are
+      // resolved first, so submitting an outpoint or a rune name from the
+      // keyboard lands on the right page without a round trip.
+      const universe = this.universeMatches(searchText);
+      const exact = universe.find((candidate) => candidate.kind !== 'protocol');
+      if (exact) {
+        this.navigateUniverse(exact.universeRoute);
+        return;
+      }
 
       if (!this.regexTransaction.test(searchText) && this.regexAddress.test(searchText)) {
         this.navigate('/address/', searchText);

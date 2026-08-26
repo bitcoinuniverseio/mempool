@@ -113,8 +113,11 @@ const defaultEnv: Env = {
   'MEMPOOL_BLOCKS_AMOUNT': 8,
   'GIT_COMMIT_HASH': '',
   'PACKAGE_JSON_VERSION': '',
-  'MEMPOOL_WEBSITE_URL': 'https://mempool.space',
-  'LIQUID_WEBSITE_URL': 'https://liquid.network',
+  // Cross-network links default to this deployment's own origin. Upstream
+  // points these at its hosted sites; sending a visitor to a third party is
+  // never the default here.
+  'MEMPOOL_WEBSITE_URL': 'https://explorer.bitcoinuniverse.io',
+  'LIQUID_WEBSITE_URL': 'https://explorer.bitcoinuniverse.io',
   'MINING_DASHBOARD': true,
   'LIGHTNING': false,
   'AUDIT': false,
@@ -134,7 +137,9 @@ const defaultEnv: Env = {
   'PUBLIC_ACCELERATIONS': false,
   'ADDITIONAL_CURRENCIES': false,
   'STRATUM_ENABLED': false,
-  'SERVICES_API': 'https://mempool.space/api/v1/services',
+  // The hosted services API is an upstream product. It is unset here, so the
+  // account and acceleration calls that use it never leave this origin.
+  'SERVICES_API': '',
   'PROD_DOMAINS': [],
 };
 
@@ -221,7 +226,7 @@ export class StateService {
   searchFocus$: Subject<boolean> = new Subject<boolean>();
   menuOpen$: BehaviorSubject<boolean> = new BehaviorSubject(false);
 
-  activeGoggles$: BehaviorSubject<ActiveFilter> = new BehaviorSubject({ mode: 'and', filters: [], gradient: 'age' });
+  activeLens$: BehaviorSubject<ActiveFilter> = new BehaviorSubject({ mode: 'and', filters: [], gradient: 'age' });
 
   constructor(
     @Inject(PLATFORM_ID) private platformId: any,

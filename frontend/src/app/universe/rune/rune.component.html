@@ -1,0 +1,150 @@
+<div class="container-xl universe-asset" *ngIf="state$ | async as state">
+
+  <header class="page-head">
+    <div>
+      <h1 i18n="universe.rune.title">Rune</h1>
+      <p class="reference identifier">{{ state.reference }}</p>
+    </div>
+    <app-universe-bookmark-button
+      *ngIf="state.kind === 'ready'"
+      kind="rune"
+      [value]="state.result.value.rune"
+      [path]="'/rune/' + state.result.value.rune"
+      [label]="state.result.value.spacedRune"
+    ></app-universe-bookmark-button>
+  </header>
+
+  <ng-container [ngSwitch]="state.kind">
+
+    <div *ngSwitchCase="'loading'" class="panel" aria-busy="true">
+      <p class="skeleton-line"></p>
+      <p class="skeleton-line short"></p>
+    </div>
+
+    <div *ngSwitchCase="'invalid'" class="panel state-panel">
+      <h2 i18n="universe.rune.invalid-title">That is not a rune reference</h2>
+      <p i18n="universe.rune.invalid-body">
+        Use a rune name in capital letters, with or without spacers, or a rune id
+        written as the etching block and index.
+      </p>
+    </div>
+
+    <div *ngSwitchCase="'missing'" class="panel state-panel">
+      <h2 i18n="universe.rune.missing-title">No such rune</h2>
+      <p>{{ statusMessage(state.result?.status) }}</p>
+      <p class="asof" *ngIf="state.result?.checkpoint as checkpoint">
+        <ng-container i18n="universe.rune.asof">As of block {{ checkpoint.heightAtomic }}</ng-container>
+      </p>
+    </div>
+
+    <div *ngSwitchCase="'unavailable'" class="panel state-panel unavailable">
+      <h2 i18n="universe.rune.unavailable-title">The asset authority did not answer</h2>
+      <p>{{ statusMessage(state.result?.status) }}</p>
+    </div>
+
+    <ng-container *ngSwitchCase="'ready'">
+
+      <section class="panel identity">
+        <h2 class="rune-name">
+          <span class="symbol" *ngIf="state.result.value.symbol">{{ state.result.value.symbol }}</span>
+          {{ state.result.value.spacedRune }}
+        </h2>
+        <dl>
+          <dt i18n="universe.rune.field-id">Rune id</dt>
+          <dd>{{ state.result.value.id }}</dd>
+
+          <ng-container *ngIf="state.result.value.numberAtomic as number">
+            <dt i18n="universe.rune.field-number">Rune number</dt>
+            <dd>{{ number }}</dd>
+          </ng-container>
+
+          <ng-container *ngIf="state.result.value.blockAtomic as block">
+            <dt i18n="universe.rune.field-etched">Etched in block</dt>
+            <dd><a [routerLink]="['/block', block]">{{ block }}</a></dd>
+          </ng-container>
+
+          <ng-container *ngIf="state.result.value.etchingTxid as txid">
+            <dt i18n="universe.rune.field-etching">Etching transaction</dt>
+            <dd><a class="identifier" [routerLink]="['/tx', txid]">{{ txid }}</a></dd>
+          </ng-container>
+
+          <ng-container *ngIf="state.result.value.timestampAtomic as timestamp">
+            <dt i18n="universe.rune.field-time">Etched at</dt>
+            <dd>{{ utc(timestamp) }}</dd>
+          </ng-container>
+
+          <dt i18n="universe.rune.field-divisibility">Divisibility</dt>
+          <dd>{{ state.result.value.divisibilityAtomic }}</dd>
+        </dl>
+      </section>
+
+      <section class="panel supply">
+        <h2 i18n="universe.rune.supply-title">Supply</h2>
+        <dl>
+          <dt i18n="universe.rune.field-mints">Mints so far</dt>
+          <dd>{{ amount(state.result.value.mintsAtomic) }}</dd>
+
+          <dt i18n="universe.rune.field-premine">Premine</dt>
+          <dd>{{ scaled(state.result.value.premineAtomic, state.result.value) }}</dd>
+
+          <dt i18n="universe.rune.field-burned">Burned</dt>
+          <dd>{{ scaled(state.result.value.burnedAtomic, state.result.value) }}</dd>
+        </dl>
+      </section>
+
+      <section class="panel mint">
+        <div class="mint-head">
+          <h2 i18n="universe.rune.mint-title">Minting</h2>
+          <span class="universe-chip" [ngClass]="'state-' + mintStateTone(state.result.value)">
+            {{ mintStateLabel(state.result.value) }}
+          </span>
+        </div>
+
+        <p>{{ mintExplanation(state.result.value) }}</p>
+
+        <ng-container *ngIf="state.result.value.terms as terms">
+          <div class="progress" *ngIf="progress(state.result.value) !== null">
+            <div class="progress-bar" role="img"
+                 [attr.aria-label]="'Minted ' + state.result.value.mintsAtomic + ' of ' + terms.capAtomic">
+              <span class="fill" [style.width.%]="progress(state.result.value)"></span>
+            </div>
+            <p class="progress-label">
+              <ng-container i18n="universe.rune.progress">
+                {{ amount(state.result.value.mintsAtomic) }} of {{ amount(terms.capAtomic) }} mints, {{ progress(state.result.value) }} percent
+              </ng-container>
+            </p>
+          </div>
+
+          <dl>
+            <ng-container *ngIf="terms.amountAtomic as amountPerMint">
+              <dt i18n="universe.rune.field-per-mint">Amount per mint</dt>
+              <dd>{{ scaled(amountPerMint, state.result.value) }}</dd>
+            </ng-container>
+
+            <ng-container *ngIf="hasHeightWindow(state.result.value)">
+              <dt i18n="universe.rune.field-height-window">Mint height window</dt>
+              <dd>{{ terms.heightStartAtomic || '-' }} to {{ terms.heightEndAtomic || '-' }}</dd>
+            </ng-container>
+
+            <ng-container *ngIf="hasOffsetWindow(state.result.value)">
+              <dt i18n="universe.rune.field-offset-window">Mint offset window</dt>
+              <dd>{{ terms.offsetStartAtomic || '-' }} to {{ terms.offsetEndAtomic || '-' }}</dd>
+            </ng-container>
+          </dl>
+        </ng-container>
+      </section>
+
+      <section class="panel parent" *ngIf="state.result.value.parentInscriptionId as parent">
+        <h2 i18n="universe.rune.parent-title">Parent inscription</h2>
+        <a class="identifier" [routerLink]="['/inscription', parent]">{{ parent }}</a>
+      </section>
+
+      <p class="asof" *ngIf="state.result.checkpoint as checkpoint">
+        <ng-container i18n="universe.rune.proven">
+          Proven by {{ state.result.authorityId }} at block {{ checkpoint.heightAtomic }}.
+        </ng-container>
+      </p>
+
+    </ng-container>
+  </ng-container>
+</div>

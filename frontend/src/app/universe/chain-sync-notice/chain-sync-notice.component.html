@@ -1,0 +1,10 @@
+<div class="chain-sync-notice" role="status" *ngIf="(notice$ | async) as notice">
+  <ng-container *ngIf="notice.show">
+    <strong i18n="universe.sync.title">This node is still catching up</strong>
+    <span i18n="universe.sync.detail">
+      It has verified {{ notice.blocks }} of {{ notice.headers }} blocks, {{ notice.percent }} percent.
+      Everything below is accurate as of block {{ notice.blocks }}, and is {{ notice.behind }} blocks
+      behind the chain tip.
+    </span>
+  </ng-container>
+</div>
