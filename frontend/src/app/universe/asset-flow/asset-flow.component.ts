@@ -5,6 +5,7 @@ import { UniverseApiService } from '@app/universe/universe-api.service';
 import {
   ExplorerAssetAction,
   ExplorerAssetRef,
+  ExplorerNotableSat,
   ExplorerOutpointPosition,
   ExplorerProtocolDefinition,
   ExplorerTransactionAssetFlow,
@@ -56,27 +57,52 @@ export class AssetFlowComponent implements OnChanges {
     if (flow.status === 'mempool-candidate') {
       return $localize`:@@universe.flow.pending:Awaiting confirmation for complete protocol analysis`;
     }
-    if (flow.complete) {
-      return $localize`:@@universe.flow.complete:Complete evidence`;
+    if (!flow.complete) {
+      if (flow.unknownAttachmentCount > 0) {
+        return $localize`:@@universe.flow.incomplete-count:Evidence incomplete: ${flow.unknownAttachmentCount}:count: outpoints unresolved`;
+      }
+      // Say which side is proven when the only gap is discarded inventory.
+      if (this.limitedByCoverage(flow)) {
+        return $localize`:@@universe.flow.outputs-proven:Outputs proven, inputs no longer retained by the authority`;
+      }
+      return $localize`:@@universe.flow.incomplete:Protocol evidence incomplete`;
     }
-    if (flow.unknownAttachmentCount > 0) {
-      return $localize`:@@universe.flow.incomplete-count:Evidence incomplete: ${flow.unknownAttachmentCount}:count: outpoints unresolved`;
-    }
-    return $localize`:@@universe.flow.incomplete:Protocol evidence incomplete`;
+    return $localize`:@@universe.flow.complete:Complete evidence`;
   }
 
   evidenceKind(flow: ExplorerTransactionAssetFlow): string {
     if (flow.status === 'mempool-candidate') {
       return 'pending';
     }
-    return flow.complete ? 'complete' : 'incomplete';
+    if (!flow.complete) {
+      return this.limitedByCoverage(flow) ? 'partial' : 'incomplete';
+    }
+    return 'complete';
+  }
+
+  /** True when the authority answered but keeps no inventory for some outpoint. */
+  hasCoverageBoundary(flow: ExplorerTransactionAssetFlow): boolean {
+    return (flow.outOfCoverageCount ?? 0) > 0;
+  }
+
+  /**
+   * True when discarded inventory is the *only* thing left unproven. A real
+   * lookup failure alongside it is the more serious fact and must win, so the
+   * section never explains an outage as a coverage boundary.
+   */
+  limitedByCoverage(flow: ExplorerTransactionAssetFlow): boolean {
+    return this.hasCoverageBoundary(flow) && flow.unknownAttachmentCount === 0;
   }
 
   /** Empty state copy: a proven negative reads differently from missing evidence. */
   emptyLabel(flow: ExplorerTransactionAssetFlow): string {
-    return flow.complete
-      ? $localize`:@@universe.flow.empty-proven:No supported assets detected on this transaction`
-      : $localize`:@@universe.flow.empty-incomplete:Protocol evidence incomplete`;
+    if (!flow.complete) {
+      if (this.limitedByCoverage(flow)) {
+        return $localize`:@@universe.flow.empty-outputs-proven:No supported assets on the outputs of this transaction`;
+      }
+      return $localize`:@@universe.flow.empty-incomplete:Protocol evidence incomplete`;
+    }
+    return $localize`:@@universe.flow.empty-proven:No supported assets detected on this transaction`;
   }
 
   /** Explains an empty inputs column without asserting more than is proven. */
@@ -84,10 +110,13 @@ export class AssetFlowComponent implements OnChanges {
     if (flow.coinbase) {
       return $localize`:@@universe.flow.coinbase:Coinbase transaction: no inputs to spend`;
     }
+    if (this.limitedByCoverage(flow)) {
+      return $localize`:@@universe.flow.inputs-out-of-coverage:The asset authority keeps no inventory for outputs that have already been spent, so what these inputs carried is not proven here`;
+    }
     if (flow.complete) {
       return $localize`:@@universe.flow.inputs-clean:No supported assets on the inputs`;
     }
-    return $localize`:@@universe.flow.inputs-unproven:Input evidence incomplete: the authority cannot prove what these inputs carried`;
+    return $localize`:@@universe.flow.inputs-unproven:Input evidence incomplete: the authority no longer retains what these inputs carried`;
   }
 
   isEmpty(flow: ExplorerTransactionAssetFlow): boolean {
@@ -110,9 +139,50 @@ export class AssetFlowComponent implements OnChanges {
     return this.badgeCache.get(protocolId);
   }
 
+  /** Notable sats are the substance of a rare_sats position, not decoration. */
+  notableSats(position: ExplorerOutpointPosition): ExplorerNotableSat[] {
+    return position.notableSats ?? [];
+  }
+
+  rarityLabel(sat: ExplorerNotableSat): string {
+    switch (sat.rarity) {
+      case 'mythic': return $localize`:@@universe.rarity.mythic:Mythic`;
+      case 'legendary': return $localize`:@@universe.rarity.legendary:Legendary`;
+      case 'epic': return $localize`:@@universe.rarity.epic:Epic`;
+      case 'rare': return $localize`:@@universe.rarity.rare:Rare`;
+      case 'uncommon': return $localize`:@@universe.rarity.uncommon:Uncommon`;
+      default: return sat.rarity;
+    }
+  }
+
+  /** Why this sat is notable, stated as the rule that makes it so. */
+  rarityReason(sat: ExplorerNotableSat): string {
+    switch (sat.rarity) {
+      case 'mythic':
+        return $localize`:@@universe.rarity.reason-mythic:The first satoshi of the genesis block`;
+      case 'legendary':
+        return $localize`:@@universe.rarity.reason-legendary:The first satoshi of a cycle, at block ${sat.heightAtomic}:height:`;
+      case 'epic':
+        return $localize`:@@universe.rarity.reason-epic:The first satoshi of a halving epoch, at block ${sat.heightAtomic}:height:`;
+      case 'rare':
+        return $localize`:@@universe.rarity.reason-rare:The first satoshi of a difficulty period, at block ${sat.heightAtomic}:height:`;
+      case 'uncommon':
+        return $localize`:@@universe.rarity.reason-uncommon:The first satoshi of block ${sat.heightAtomic}:height:`;
+      default:
+        return '';
+    }
+  }
+
+  trackNotableSat(index: number, sat: ExplorerNotableSat): string {
+    return sat.satAtomic;
+  }
+
   assetLabel(asset: ExplorerAssetRef | undefined): string {
     if (!asset) {
       return '';
+    }
+    if (asset.protocolId === 'rare_sats') {
+      return $localize`:@@universe.flow.rare-sats:Rare sats`;
     }
     if (asset.displayName) {
       return asset.displayName;

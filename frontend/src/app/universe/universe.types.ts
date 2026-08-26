@@ -33,22 +33,50 @@ export interface ProtocolsResponse {
   protocols: ExplorerProtocolDefinition[];
 }
 
+export type SourceStatus =
+  'ready' | 'stale' | 'unreachable' | 'unconfigured' | 'degraded';
+
+export interface SourceCheckpoint {
+  heightAtomic: string;
+  blockHash: string;
+  observedAt: string;
+}
+
 export interface SourceEntry {
   authorityId: string;
   protocols: string[];
   ready: boolean;
-  status: string;
-  checkpoint?: string;
+  status: SourceStatus | string;
+  checkpoint: SourceCheckpoint | null;
   checkedAt: string;
 }
 
-export type SourcesResponse = SourceEntry[];
+export interface SourcesResponse {
+  generatedAt: string;
+  sources: SourceEntry[];
+}
+
+export interface SourceCounts {
+  configured: number;
+  ready: number;
+  degraded: number;
+  unreachable: number;
+}
 
 export interface StatusResponse {
   registryVersion: string;
   protocolCount: number;
-  sources?: SourceEntry[];
+  sources: SourceCounts;
   generatedAt: string;
+}
+
+/** Release identity reported by the explorer backend. */
+export interface BackendInfo {
+  hostname?: string;
+  version: string;
+  gitCommit: string;
+  backend?: string;
+  coreVersion?: string;
 }
 
 // --- Transaction asset flow ---
@@ -79,6 +107,16 @@ export interface ExplorerPositionEvidence {
   [key: string]: unknown;
 }
 
+export type ExplorerSatRarity =
+  'uncommon' | 'rare' | 'epic' | 'legendary' | 'mythic';
+
+/** One satoshi whose Rodarmor rarity is above common. */
+export interface ExplorerNotableSat {
+  satAtomic: string;
+  rarity: ExplorerSatRarity;
+  heightAtomic: string;
+}
+
 export interface ExplorerOutpointPosition {
   outpoint: string;
   vout: number;
@@ -86,6 +124,8 @@ export interface ExplorerOutpointPosition {
   asset: ExplorerAssetRef;
   quantityAtomic?: string;
   satRanges?: unknown[];
+  notableSats?: ExplorerNotableSat[];
+  notableSatsTruncated?: boolean;
   ownerAddress?: string;
   state: string;
   evidence: ExplorerPositionEvidence;
@@ -117,8 +157,15 @@ export interface ExplorerTransactionAssetFlow {
   outputs: ExplorerOutpointPosition[];
   actions: ExplorerAssetAction[];
   sourceEvidence: ExplorerPositionEvidence[];
+  /** True when every outpoint the authority covers was resolved. */
   complete: boolean;
+  /** Outpoints the authority was asked about and could not answer. */
   unknownAttachmentCount: number;
+  /**
+   * Outpoints the authority answered for but keeps no inventory on. Already
+   * spent outputs land here, so this is a coverage boundary, not a failure.
+   */
+  outOfCoverageCount: number;
 }
 
 // error-shaped body the overlay can return instead of a flow
