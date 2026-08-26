@@ -1,0 +1,57 @@
+<div class="container-xl protocol-directory">
+  <h1 i18n="universe.protocols.title">Protocols</h1>
+  <p class="chain-note" i18n="universe.protocols.chain-note">Showing Bitcoin mainnet protocols. Protocols on other chains appear on their own network views.</p>
+
+  <ng-container *ngIf="vm$ | async as vm; else loadingSkeleton">
+    <div *ngIf="vm.error" class="registry-unavailable" role="alert">
+      <h2 i18n="universe.protocols.unavailable">Protocol registry unavailable</h2>
+      <p i18n="universe.protocols.unavailable-detail">The protocol registry could not be loaded. Try again later.</p>
+    </div>
+
+    <ng-container *ngIf="!vm.error">
+      <p class="registry-version">
+        <span i18n="universe.protocols.registry-version">Registry version</span>: {{ vm.registryVersion }}
+      </p>
+
+      <section *ngFor="let group of vm.groups; trackBy: trackByGroup" class="family-group">
+        <h2>{{ group.label }}</h2>
+        <ul class="protocol-list">
+          <li *ngFor="let protocol of group.protocols; trackBy: trackByProtocol" class="protocol-row">
+            <div class="protocol-name">
+              <app-protocol-badge [protocol]="protocol"></app-protocol-badge>
+              <span class="display-name">{{ protocol.displayName }}</span>
+            </div>
+            <div class="protocol-state">
+              <span
+                class="state-chip"
+                [ngClass]="releaseStatusClass(protocol)"
+                [attr.aria-label]="'Release status: ' + releaseStatusLabel(protocol)"
+              >{{ releaseStatusLabel(protocol) }}</span>
+              <span
+                class="state-chip"
+                [ngClass]="coverageKnown(protocol) ? 'chip-neutral' : 'chip-unknown'"
+                [attr.aria-label]="coverageLabel(protocol)"
+              >{{ coverageLabel(protocol) }}</span>
+            </div>
+          </li>
+        </ul>
+      </section>
+
+      <p *ngIf="!vm.groups?.length" class="no-protocols" i18n="universe.protocols.none">The registry contains no Bitcoin mainnet protocols.</p>
+
+      <p *ngIf="vm.otherChainCount" class="chain-note">
+        {{ vm.otherChainCount }} <ng-container i18n="universe.protocols.other-chains">protocol(s) on other chains are not listed here.</ng-container>
+      </p>
+    </ng-container>
+  </ng-container>
+
+  <ng-template #loadingSkeleton>
+    <div class="loading-skeleton" aria-hidden="true">
+      <div *ngFor="let i of skeletonRows" class="skeleton-row">
+        <div class="skeleton-loader"></div>
+        <div class="skeleton-loader"></div>
+      </div>
+    </div>
+    <span class="sr-only" i18n="universe.protocols.loading">Loading protocol registry</span>
+  </ng-template>
+</div>

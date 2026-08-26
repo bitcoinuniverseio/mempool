@@ -1,0 +1,60 @@
+// Per-family color tokens for Universe protocol badges.
+// Hues are light tints chosen to pass WCAG AA contrast (>= 4.5:1) as text
+// against the dark theme surfaces (--box-bg #171c2a, --bg).
+// Badges never rely on color alone: the shortName text label is always shown.
+
+.universe-badge {
+  // family color tokens
+  --universe-protocol-ordinals: #f2a35c;
+  --universe-protocol-runes: #7bdff2;
+  --universe-protocol-alkanes: #b8a3f6;
+  --universe-protocol-stamps: #f6a3c5;
+  --universe-protocol-atomicals: #9df29d;
+  --universe-protocol-op-data: #e8e05c;
+  // pattern- and icon-agnostic fallback for unknown protocols
+  --universe-protocol-fallback: #c9cddd;
+
+  --universe-badge-color: var(--universe-protocol-fallback);
+
+  display: inline-block;
+  padding: 0.15em 0.5em;
+  border-radius: 0.25rem;
+  border: 1px solid var(--universe-badge-color);
+  color: var(--universe-badge-color);
+  background-color: rgba(255, 255, 255, 0.04);
+  font-size: 0.75em;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  vertical-align: middle;
+
+  &.protocol-ordinals,
+  &.protocol-inscriptions {
+    --universe-badge-color: var(--universe-protocol-ordinals);
+  }
+
+  &.protocol-runes {
+    --universe-badge-color: var(--universe-protocol-runes);
+  }
+
+  &.protocol-alkanes {
+    --universe-badge-color: var(--universe-protocol-alkanes);
+  }
+
+  &.protocol-stamps,
+  &.protocol-src20 {
+    --universe-badge-color: var(--universe-protocol-stamps);
+  }
+
+  &.protocol-atomicals,
+  &.protocol-arc20 {
+    --universe-badge-color: var(--universe-protocol-atomicals);
+  }
+
+  &.protocol-op-data,
+  &.protocol-opdata,
+  &.protocol-op-return {
+    --universe-badge-color: var(--universe-protocol-op-data);
+  }
+}

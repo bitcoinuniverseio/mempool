@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Universe Explorer">
+  <defs>
+    <linearGradient id="ue-orbit" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7b5cff"/>
+      <stop offset="1" stop-color="#2ad4c8"/>
+    </linearGradient>
+    <linearGradient id="ue-core" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffb74a"/>
+      <stop offset="1" stop-color="#ff8a3d"/>
+    </linearGradient>
+  </defs>
+  <!-- Orbital ring, tilted -->
+  <g transform="rotate(-24 256 256)">
+    <ellipse cx="256" cy="256" rx="216" ry="88" fill="none" stroke="url(#ue-orbit)" stroke-width="22"/>
+    <!-- Orbiting satellites -->
+    <circle cx="472" cy="256" r="22" fill="#2ad4c8"/>
+    <circle cx="60" cy="238" r="14" fill="#7b5cff"/>
+  </g>
+  <!-- Central block: hexagon representing a confirmed block -->
+  <path d="M256 122 L364 184 L364 308 L256 370 L148 308 L148 184 Z"
+        fill="url(#ue-core)" stroke="#1a1330" stroke-width="14" stroke-linejoin="round"/>
+  <!-- Inner facet lines suggesting a 3D block -->
+  <path d="M256 122 L256 246 M256 246 L364 184 M256 246 L148 184 M256 246 L256 370"
+        fill="none" stroke="#1a1330" stroke-width="10" stroke-linecap="round" opacity="0.55"/>
+</svg>
