@@ -125,8 +125,18 @@
   pointer-events: none;
 }
 
+// The height sits on the block's top face, not on the page, so it takes
+// block ink. As a page link it inherited the brand colour, which lands at
+// 4.12:1 against that face on the dark theme.
 .block-height-link {
+  color: var(--u-block-ink);
   pointer-events: all;
+
+  &:hover,
+  &:focus {
+    color: var(--u-block-ink);
+    text-decoration: underline;
+  }
 }
 
 .bitcoin-block::after {
@@ -291,16 +301,22 @@
   border-radius: 2px;
   z-index: -1;
 }
-// Mining pool credit. Below the block and on the page surface, so it takes page
-// ink rather than block ink.
+// Mining pool credit.
+//
+// It reads as though it sits under the block, but it is painted over the
+// block's own face, so page ink lands at 1.15:1 on it. Block ink is what
+// actually reads here. A pixel sample of the rendered page caught this; the
+// declared colours looked correct in isolation.
 .badge {
   background-color: transparent;
-  color: var(--u-text-secondary);
+  color: var(--u-block-ink);
   font-size: var(--u-text-xs);
   font-weight: var(--u-weight-medium);
 
-  &:hover {
-    color: var(--u-brand);
+  &:hover,
+  &:focus {
+    color: var(--u-block-ink);
+    text-decoration: underline;
   }
 }
 

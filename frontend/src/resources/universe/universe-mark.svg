@@ -1,0 +1,22 @@
+<!--
+  Universe Explorer mark.
+
+  Two squares on a diagonal: one still forming, one settled. That is the axis
+  the whole product turns on, and it is the only idea the mark carries.
+
+  Deliberately not a hexagon, an orbit, a globe, or a gradient. Those are the
+  defaults of the category and none of them says anything about this product.
+
+  Constraints it is built to:
+    - legible at 16px, where anything with more than two elements turns to mud
+    - correct in one colour, so it survives a monochrome favicon and a fax
+    - no baked-in light or dark value, so it works on either theme
+    - no <text>, so it never depends on a font being present
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Universe Explorer">
+  <!-- Forming: open, lighter, up and to the left. -->
+  <rect x="7.5" y="7.5" width="31" height="31" rx="3.5"
+        fill="none" stroke="currentColor" stroke-width="5" opacity="0.45"/>
+  <!-- Settled: closed, solid, at rest. -->
+  <rect x="25.5" y="25.5" width="31" height="31" rx="3.5" fill="currentColor"/>
+</svg>

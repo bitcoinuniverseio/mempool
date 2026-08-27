@@ -97,7 +97,17 @@
   --u-block-confirmed-to: #1a2142;
   --u-block-confirmed-top: #3a477f;
   --u-block-confirmed-side: #141930;
+  // The part of a block its transactions did not fill. It belongs to the block,
+  // not to the page: it used to take a page surface token, which meant the top
+  // of every confirmed block was pale and the figures printed on it vanished.
+  --u-block-confirmed-empty: #3a4166;
   --u-block-projected-empty: #4a5169;
+
+  // A block whose contents have not arrived. Deliberately desaturated so it
+  // reads as absent rather than as a block that happens to be empty; the
+  // figures on it are skeletons, which is the signal that does not depend on
+  // anyone noticing a hue.
+  --u-block-loading: #565a63;
   --u-block-projected-top: #5c6480;
   --u-block-projected-side: #343a4d;
 

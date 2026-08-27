@@ -24,19 +24,16 @@
             <div class="protocol-state">
               <span
                 class="state-chip"
-                [ngClass]="releaseStatusClass(protocol)"
-                [attr.aria-label]="releaseStatusLabel(protocol)"
+                [ngClass]="releaseStatusClass(protocol)"
               >{{ releaseStatusLabel(protocol) }}</span>
               <span
                 class="state-chip"
-                [ngClass]="coverageKnown(protocol) ? 'chip-neutral' : 'chip-unknown'"
-                [attr.aria-label]="coverageLabel(protocol)"
+                [ngClass]="coverageKnown(protocol) ? 'chip-neutral' : 'chip-unknown'"
               >{{ coverageLabel(protocol) }}</span>
               <ng-container *ngIf="sourceFor(protocol, vm.sourcesByAuthority) as source">
                 <span
                   class="state-chip"
-                  [ngClass]="sourceClass(source)"
-                  [attr.aria-label]="sourceLabel(source)"
+                  [ngClass]="sourceClass(source)"
                 >{{ sourceLabel(source) }}</span>
               </ng-container>
             </div>
