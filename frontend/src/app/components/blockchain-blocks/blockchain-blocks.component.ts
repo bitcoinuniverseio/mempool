@@ -67,7 +67,7 @@ export class BlockchainBlocksComponent implements OnInit, OnChanges, OnDestroy {
   blockPadding: number = 30;
 
   gradientColors = {
-    '': ['var(--mainnet-alt)', 'var(--primary)'],
+    '': ['var(--u-block-confirmed-from)', 'var(--u-block-confirmed-to)'],
     liquid: ['var(--liquid)', 'var(--testnet-alt)'],
     'liquidtestnet': ['var(--liquidtestnet)', 'var(--liquidtestnet-alt)'],
     testnet: ['var(--testnet)', 'var(--testnet-alt)'],

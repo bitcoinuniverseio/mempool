@@ -26,7 +26,7 @@
 }
 
 .timestamp-info {
-  color: #fff;
+  color: var(--u-block-ink);
   position: relative;
   z-index: 11;
   font-size: 14px;
@@ -39,7 +39,7 @@
 
 .on-pool {
   align-items: center;
-  background-color: var(--bg);
+  background-color: var(--u-surface-sunken);
   display: inline-block;
   margin-top: 4px;
   padding: .25em .4em;
@@ -106,7 +106,7 @@
 .fee-span {
   font-size: 11px;
   margin-bottom: 5px;
-  color: var(--yellow);
+  color: var(--u-block-ink-muted);
 }
 
 .transaction-count {
@@ -136,7 +136,7 @@
   position:absolute;
   top: calc(-0.192 * var(--block-size));
   left: calc(-0.16 * var(--block-size));
-  background-color: #232838;
+  background-color: var(--u-block-confirmed-top);
   transform:skew(40deg);
   transform-origin:top;
 }
@@ -148,7 +148,7 @@
   position: absolute;
   top: calc(-0.096 * var(--block-size));
   left: calc(-0.16 * var(--block-size));
-  background-color: #191c27;
+  background-color: var(--u-block-confirmed-side);
 
   transform: skewY(50deg);
   transform-origin: top;
@@ -173,7 +173,7 @@
   position:absolute;
   top: calc(-0.096 * var(--block-size));
   left: calc(-0.08 * var(--block-size));
-  background-color: #232838;
+  background-color: var(--u-block-confirmed-top);
   transform:skew(40deg);
   transform-origin:top;
 }
@@ -185,7 +185,7 @@
   position: absolute;
   top: calc(-0.048 * var(--block-size));
   left: calc(-0.08 * var(--block-size));
-  background-color: #191c27;
+  background-color: var(--u-block-confirmed-side);
 
   transform: skewY(50deg);
   transform-origin: top;
@@ -290,4 +290,35 @@
   transform: translate(calc(0.2 * var(--block-size)), calc(1.1 * var(--block-size)));
   border-radius: 2px;
   z-index: -1;
+}
+// Mining pool credit. Below the block and on the page surface, so it takes page
+// ink rather than block ink.
+.badge {
+  background-color: transparent;
+  color: var(--u-text-secondary);
+  font-size: var(--u-text-xs);
+  font-weight: var(--u-weight-medium);
+
+  &:hover {
+    color: var(--u-brand);
+  }
+}
+
+// Everything printed on the face of a block takes block ink.
+//
+// These rules inherited the page foreground, which is near-black on the
+// primary theme. On a dark block face that is unreadable, and it was the
+// reason transaction counts and timings vanished in light mode.
+.bitcoin-block {
+  color: var(--u-block-ink);
+
+  .fees,
+  .block-size {
+    color: var(--u-block-ink);
+  }
+
+  .transaction-count,
+  .time-difference {
+    color: var(--u-block-ink-muted);
+  }
 }

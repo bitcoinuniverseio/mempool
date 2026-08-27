@@ -1,362 +1,133 @@
+// The global footer.
+//
+// Small, useful, and honest about what this build is. It carries only real
+// destinations, and its most important line is the last one: which version is
+// running and which commit it came from.
+//
+// Every link here previously sat at 40% white, which is invisible on the
+// primary theme and failed contrast on the dark one too. Footer text is quiet
+// but it is still text, so it takes a token that clears AA.
+
 footer {
-  background-color: var(--bg);
-  margin-top: 30px;
-  &.services {
-    @media (min-width: 768px) {
-      padding-left: 240px;
-    }
+  background-color: var(--u-surface-sunken);
+  border-top: 1px solid var(--u-border);
+  margin-top: var(--u-space-7);
+  width: 100%;
+}
+
+.footer-inner {
+  display: grid;
+  gap: var(--u-space-5);
+  margin: 0 auto;
+  max-width: var(--u-width-page);
+  padding: var(--u-space-6) var(--u-space-3) var(--u-space-5);
+
+  @media (min-width: 768px) {
+    padding: var(--u-space-6) var(--u-space-5) var(--u-space-5);
+  }
+
+  @media (min-width: 992px) {
+    align-items: start;
+    gap: var(--u-space-6);
+    grid-template-columns: minmax(240px, 1fr) 2.4fr;
   }
 }
 
-footer a {
-  color: rgba(255, 255, 255, 0.4);
-}
+// --- Brand -----------------------------------------------------------------
 
-footer p {
-  margin-bottom: 0.25rem;
-}
-
-footer .row.main {
-  padding: 40px 0 24px 0;
-  max-width: 1140px;
-  margin: 0 auto;
-  &.services {
-    @media (min-width: 1201px) {
-      padding-left: 50px;
-      padding-right: 50px;
-    }
-  }
-}
-
-footer .row.main .branding > p {
-  margin-top: 10px;
-}
-
-footer .row.main .branding .btn {
-  display: inline-block;
-  color: var(--fg) !important;
-}
-
-footer .row.main .branding button.account {
-  background-color: var(--secondary);
-}
-
-footer .row.main .branding .cta {
-  margin: 25px auto 25px auto;
-}
-
-footer .link-tree .links:nth-child(1), footer .link-tree .links:nth-child(4) {
-  padding-left: 0;
-  padding-right: 0;
-}
-
-footer .link-tree .links p {
-  padding-right: 5px;
-}
-
-footer .row.main .links > div:first-child {
-  margin-bottom: 20px;
-}
-
-footer .links .category {
-  color: var(--title-fg);
-  font-weight: 700;
-}
-
-footer .row.main .links .category:not(:first-child) {
-  margin-top: 1rem;
-}
-
-footer .site-options {
-  margin-top: -20px;
-}
-
-footer .selector {
-  margin: 20px 5px;
-  display: inline-block;
-}
-
-footer .add-margin {
-  margin-left: 5px;
-  margin-right: 5px;
-}
-
-footer .row.link-tree {
-  max-width: 1140px;
-  margin: 0 auto;
+.brand-row {
+  align-items: center;
   display: flex;
-  justify-content: space-between;
-  flex-wrap: nowrap;
-  &.services {
-    @media (min-width: 1201px) {
-      padding-left: 65px;
-      padding-right: 65px;
-    }
-  }
 }
 
-footer .row.social-links {
-  text-align: center;
+.footer-logo {
+  height: 38px;
+  width: 152px;
+}
+
+.enterprise-logo {
+  max-height: 52px;
+  max-width: 100%;
+}
+
+.footer-tagline {
+  color: var(--u-text-muted);
+  font-size: var(--u-text-sm);
+  line-height: var(--u-leading-snug);
+  margin: var(--u-space-3) 0 0;
+  max-width: 34ch;
+}
+
+// --- Settings --------------------------------------------------------------
+
+.footer-settings {
   display: flex;
   flex-wrap: wrap;
-  width: fit-content;
-  margin: 0 auto; 
-
-  @media (max-width: 450px){
-    width: 250px;
-  }
+  gap: var(--u-space-2);
+  margin-top: var(--u-space-4);
 }
 
-footer .row.social-links a {
-  margin: 0 14px;
+// --- Link tree -------------------------------------------------------------
+
+.footer-links {
+  display: grid;
+  gap: var(--u-space-4) var(--u-space-5);
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
 }
 
-footer .row.social-links svg {
-  width: 20px;
-  margin: 10px 0 10px 0;
-}
+.links {
+  min-width: 0;
 
-footer .row.version {
-  padding-top: 20px !important;
-  padding-bottom: 20px !important;
-  background-color: var(--bg);
-}
-
-footer .row.version p {
-  margin-bottom: 0;
-  text-align: center;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.4);
-}
-
-footer .row.version p a {
-  color: #09a3ba;
-}
-
-.main-logo {
-  width: 220px;
-  margin: 0;
-  display: inline-block;
-}
-
-footer .sponsor {
-  height: 31px;
-  align-items: center;
-  margin-right: 5px;
-  margin-left: 5px;
-  max-width: 160px;
-}
-
-footer .nowrap {
-  white-space: nowrap;
-}
-
-.explore-tagline-desktop {
-  display: none;
-}
-
-.explore-tagline-mobile {
-  display: block;
-}
-
-@media (min-width: 1020px) {
-  :host-context(.ltr-layout) .language-selector {
-    float: right !important;
-  }
-  :host-context(.rtl-layout) .language-selector {
-    float: left !important;
+  p {
+    margin: 0 0 var(--u-space-2);
   }
 
-  .explore-tagline-desktop {
-    display: block;
-  }
+  a {
+    color: var(--u-text-secondary);
+    font-size: var(--u-text-sm);
+    line-height: var(--u-leading-snug);
 
-  .explore-tagline-mobile {
-    display: none;
-  }
-}
-
-.services {
-  @media (min-width: 1300px) {
-    :host-context(.ltr-layout) .language-selector {
-      float: right !important;
-    }
-    :host-context(.rtl-layout) .language-selector {
-      float: left !important;
-    }
-  
-    .explore-tagline-desktop {
-      display: block;
-    }
-  
-    .explore-tagline-mobile {
-      display: none;
-    }
-  }
-
-  @media (max-width: 1300px) {
-    :host-context(.ltr-layout) .services .language-selector {
-      float: none !important;
-    }
-    :host-context(.rtl-layout) .services .language-selector {
-      float: none !important;
+    &:hover {
+      color: var(--u-brand);
+      text-decoration: underline;
     }
 
-    .explore-tagline-desktop {
-      display: none;
-    }
-
-    .explore-tagline-mobile {
-      display: block;
-    }
-
-    .main-logo {
-      width: 220px;
-    }
-
-    footer .row.link-tree {
-      font-size: 16px;
-    }
-
-    footer .row.social-links svg {
-      width: 20px;
-    }
-
-    footer .row.link-tree {
-      display: block;
-      text-align: center;
-    }
-
-    footer .link-tree .links {
-      margin-bottom: 20px;
-    }
-
-    footer .row.main .branding {
-      text-align: center;
-      padding: 0px;
-    }
-
-    .main-logo {
-      display: block;
-      margin: 0 auto;
-    }
-
-    footer .site-options {
-      float: none;
-      margin-top: 15px;
+    &:focus-visible {
+      border-radius: var(--u-radius-sm);
+      outline: 2px solid var(--u-focus-ring);
+      outline-offset: 2px;
     }
   }
 }
 
-@media (max-width: 1200px) {
-
-  .main-logo {
-    width: 200px;
-  }
-
-  footer .row.main {
-    max-width: 90%;
-  }
-
-  footer .row.link-tree {
-    max-width: 90%;
-    font-size: 13px;
-    gap: 20px;
-  }
-
-  footer .row.social-links svg {
-    width: 18px;
-  }
-
+.category {
+  color: var(--u-text-primary);
+  font-size: var(--u-text-xs);
+  font-weight: var(--u-weight-semibold);
+  letter-spacing: 0.06em;
+  margin: 0 0 var(--u-space-3);
+  text-transform: uppercase;
 }
 
-@media (max-width: 1019px) {
+// --- Build line ------------------------------------------------------------
 
-  .main-logo {
-    width: 220px;
+.footer-build {
+  border-top: 1px solid var(--u-divider);
+  grid-column: 1 / -1;
+  padding-top: var(--u-space-4);
+
+  p {
+    color: var(--u-text-muted);
+    font-size: var(--u-text-xs);
+    margin: 0;
   }
 
-  footer .row.link-tree {
-    font-size: 16px;
+  a {
+    color: var(--u-text-secondary);
+    font-family: var(--u-font-data);
+
+    &:hover {
+      color: var(--u-brand);
+    }
   }
-
-  footer .row.social-links svg {
-    width: 20px;
-  }
-
-  footer .row.link-tree {
-    display: block;
-    text-align: center;
-  }
-
-  footer .link-tree .links {
-    margin-bottom: 20px;
-  }
-
-  footer .row.main .branding {
-    text-align: center;
-    padding: 0px;
-  }
-
-  .main-logo {
-    display: block;
-    margin: 0 auto;
-  }
-
-  .enterprise-logo {
-    max-width: 100%;
-  }
-
-  footer .site-options {
-    float: none;
-    margin-top: 15px;
-  }
-}
-
-@media (max-width: 1300px) {
-
-  .services.main-logo {
-    width: 220px;
-  }
-
-  footer .services.row.link-tree {
-    font-size: 16px;
-  }
-
-  footer .services.row.social-links svg {
-    width: 20px;
-  }
-
-  footer .services.row.link-tree {
-    display: block;
-    text-align: center;
-  }
-
-  footer .services.link-tree .links {
-    margin-bottom: 20px;
-  }
-
-  footer .services.row.main .branding {
-    text-align: center;
-    padding: 0px;
-  }
-
-  .services.main-logo {
-    display: block;
-    margin: 0 auto;
-  }
-
-  footer .services.site-options {
-    float: none;
-    margin-top: 15px;
-  }
-
-  footer .services.selector:not(:last-child) {
-    margin-right: 10px;
-  }
-}
-
-.beta-network {
-  font-size: 8px;
-  margin-left: 1em;
 }
