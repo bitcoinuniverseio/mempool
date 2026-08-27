@@ -249,7 +249,7 @@ export class AssetFlowComponent implements OnChanges {
     if (asset.ticker) {
       return asset.ticker;
     }
-    const id = asset.canonicalAssetId ?? '';
+    const id = asset.assetId ?? '';
     if (asset.assetKind === 'inscription' && id.length > 20) {
       return id.slice(0, 8) + '…' + id.slice(-3);
     }
@@ -281,7 +281,7 @@ export class AssetFlowComponent implements OnChanges {
     return (flow.actions ?? []).some(
       (action) =>
         action.actionType === 'transfer' &&
-        action.asset?.canonicalAssetId === position.asset?.canonicalAssetId,
+        action.asset?.assetId === position.asset?.assetId,
     );
   }
 
@@ -315,7 +315,7 @@ export class AssetFlowComponent implements OnChanges {
   }
 
   trackPosition(index: number, position: ExplorerOutpointPosition): string {
-    return position.outpoint + ':' + (position.asset?.canonicalAssetId ?? index);
+    return position.outpoint + ':' + (position.asset?.assetId ?? index);
   }
 
   trackAction(index: number, action: ExplorerAssetAction): string {
