@@ -19,7 +19,7 @@ function position(protocolId: string, assetId: string, quantityAtomic?: string):
     outpoint: `${'a'.repeat(64)}:0`,
     vout: 0,
     valueSatsAtomic: '546',
-    asset: { protocolId, canonicalAssetId: assetId, assetKind: 'fungible', displayName: assetId },
+    asset: { protocolId, assetId: assetId, assetKind: 'fungible', displayName: assetId },
     quantityAtomic,
     state: 'unspent',
     evidence: { authorityId: 'ord', coverage: 'complete' },

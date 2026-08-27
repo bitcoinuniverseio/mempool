@@ -168,11 +168,11 @@ function addPosition(
 ): void {
   const asset = position?.asset;
   if (!asset?.protocolId) {return;}
-  const assetKey = `${asset.protocolId}:${asset.canonicalAssetId ?? ''}`;
+  const assetKey = `${asset.protocolId}:${asset.assetId ?? ''}`;
   if (!holdings.has(assetKey)) {
     holdings.set(assetKey, {
       protocolId: asset.protocolId,
-      displayName: asset.displayName || asset.ticker || asset.canonicalAssetId || asset.protocolId,
+      displayName: asset.displayName || asset.ticker || asset.assetId || asset.protocolId,
       quantity: null,
       outpoints: [],
     });
