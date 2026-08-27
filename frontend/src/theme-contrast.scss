@@ -44,6 +44,10 @@
   --u-state-unavailable: #ffa8a0;
   --u-state-neutral: #c2cbdb;
 
+  // This theme uses the brighter fee scale, on which white text falls under
+  // the contrast floor. Near-black reads on every band of it.
+  --u-fee-label-ink: #05070d;
+
   @include universe.universe-legacy-bridge;
 
   --opacity: 0.9;

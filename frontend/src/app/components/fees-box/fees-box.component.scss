@@ -112,6 +112,8 @@
 }
 
 .fee-label {
+  color: var(--u-fee-label-ink);
+  font-weight: var(--u-weight-semibold);
   padding-top: 2px;
   font-size: 12px;
   width: 100%;

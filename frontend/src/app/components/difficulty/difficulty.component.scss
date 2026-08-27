@@ -178,31 +178,34 @@
 .epoch-blocks {
   display: block;
   width: 100%;
-  background: var(--secondary);
+  background: var(--u-surface-inset);
 
+  // Running early or late in an epoch is a neutral fact about timing, not a
+  // failure, so it is not painted in the colour this product uses for errors.
+  // Green and red stay reserved for whether something is proven or broken.
   .rect {
-    fill: var(--secondary);
+    fill: var(--u-surface-inset);
 
     &.behind {
-      fill: var(--red);
+      fill: var(--u-state-partial);
     }
     &.mined {
       fill: url(#diff-gradient);
     }
     &.ahead {
-      fill: var(--success);
+      fill: var(--u-chart-2);
     }
 
     &.hover {
-      fill: #535e84;
+      fill: var(--u-border-strong);
       &.behind {
-        fill: #e94d86;
+        fill: var(--u-state-partial-border);
       }
       &.mined {
         fill: url(#diff-hover-gradient);
       }
       &.ahead {
-        fill: #29d951;
+        fill: var(--u-state-pending);
       }
     }
   }
@@ -224,12 +227,12 @@
     height: 100%;
   }
   .background {
-    background: linear-gradient(to right, var(--primary), var(--mainnet-alt));
+    background: linear-gradient(to right, var(--u-chart-1), var(--u-chart-2));
     left: 0;
     right: 0;
   }
   .remaining {
-    background: var(--secondary);
+    background: var(--u-surface-inset);
     right: 0;
   }
   .label {

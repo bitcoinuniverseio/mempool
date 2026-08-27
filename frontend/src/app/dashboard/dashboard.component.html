@@ -1,169 +1,193 @@
 
-<div class="container-xl dashboard-container" *ngIf="(network$ | async) !== 'liquid'; else liquidDashboard">
-  <div class="row row-cols-1 row-cols-md-2" *ngIf="{ value: (mempoolInfoData$ | async) } as mempoolInfoData">
-    <ng-container>
-      <div class="col card-wrapper">
-        <div class="main-title" i18n="fees-box.transaction-fees">Transaction Fees</div>
-        <div class="card">
-          <div class="card-body less-padding">
-            <app-fees-box class="d-block"></app-fees-box>
-          </div>
-        </div>
+<div class="dashboard" *ngIf="(network$ | async) !== 'liquid'; else liquidDashboard">
+  <div class="dashboard-grid" *ngIf="{ value: (mempoolInfoData$ | async) } as mempoolInfoData">
+
+    <!-- What it costs to move right now. The first question almost every
+         visitor arrives with, so it leads. -->
+    <section class="panel panel-fees" aria-labelledby="panel-fees-title">
+      <div class="panel-head">
+        <h2 class="panel-title" id="panel-fees-title" i18n="fees-box.transaction-fees">Transaction fees</h2>
+        <p class="panel-note" i18n="dashboard.fees-note">What it costs to get into the next few blocks.</p>
       </div>
-      <div class="col">
-        <app-difficulty></app-difficulty>
+      <app-fees-box class="d-block"></app-fees-box>
+    </section>
+
+    <!-- The signature view: the next block as it is actually being built. -->
+    <section class="panel panel-lens" aria-labelledby="panel-lens-title">
+      <div class="panel-head">
+        <h2 class="panel-title" id="panel-lens-title" i18n="dashboard.universe-lens">Universe Lens</h2>
+        <a class="panel-link" [routerLink]="['/mempool-block/0' | relativeUrl]" i18n="dashboard.open-projected-block">Open this block</a>
+        <p class="panel-note" i18n="dashboard.lens-note">
+          Every square is one transaction waiting to be mined, sized by the block
+          space it takes. Choose a lens to pick out a kind of activity.
+        </p>
       </div>
-    </ng-container>
-    <div class="col">
-      <div class="card graph-card">
-        <div class="card-body pl-lg-3 pr-lg-3 pl-2 pr-2">
-          <a class="title-link mb-0" style="margin-top: -2px" href="" [routerLink]="['/mempool-block/0' | relativeUrl]">
-            <h5 class="card-title d-inline"><span>Universe Lens</span> : {{ lensCycle[lensIndex].name }}</h5>
-            <span>&nbsp;</span>
-            <fa-icon [icon]="['fas', 'external-link-alt']" [fixedWidth]="true" style="vertical-align: text-top; font-size: 13px; color: var(--title-fg)"></fa-icon>
-          </a>
-          <div class="quick-filter">
-            <div class="btn-group btn-group-toggle">
-              <label class="btn btn-primary btn-xs" [class.active]="filter.index === lensIndex"  *ngFor="let filter of lensCycle">
-                <input type="radio" [value]="'3m'" fragment="3m" (click)="setFilter(filter.index)" [attr.data-cy]="'3m'"> {{ filter.name }}
-              </label>
-            </div>
-          </div>
-          <div class="mempool-block-wrapper" *ngIf="webGlEnabled">
-            <app-mempool-block-overview
-              [index]="0"
-              [resolution]="lensResolution"
-              [filterFlags]="lensFlags"
-              [filterMode]="lensMode"
-              [gradientMode]="gradientMode"
-            ></app-mempool-block-overview>
-          </div>
-        </div>
+
+      <div class="lens-filters" role="radiogroup" i18n-aria-label="dashboard.lens-choose" aria-label="Choose a lens">
+        <button type="button" role="radio" class="lens-option"
+          *ngFor="let filter of lensCycle"
+          [class.selected]="filter.index === lensIndex"
+          [attr.aria-checked]="filter.index === lensIndex"
+          (click)="setFilter(filter.index)"
+          [attr.data-cy]="'lens-' + filter.index">{{ filter.name }}</button>
       </div>
-    </div>
-    <div class="col">
-      <div class="card graph-card">
-        <div class="card-body">
-          <ng-container *ngTemplateOutlet="mempoolTable; context: { $implicit: mempoolInfoData }"></ng-container>
-            <h5 class="card-title mt-3" i18n="dashboard.incoming-transactions">Incoming Transactions</h5>
-            <div class="mempool-graph" *ngIf="(mempoolStats$ | async) as mempoolStats">
-              <app-incoming-transactions-graph
-                [height]="incomingGraphHeight"
-                [left]="50"
-                [right]="20"
-                [data]="mempoolStats?.weightPerSecond"
-                [windowPreferenceOverride]="'2h'"
-                ></app-incoming-transactions-graph>
-            </div>
-            <p class="graph-unavailable" *ngIf="mempoolStatsUnavailable" i18n="dashboard.statistics-unavailable">
-              This deployment keeps no historical mempool statistics, so there is
-              nothing to chart here. Live figures above are unaffected.
-            </p>
-        </div>
+
+      <div class="mempool-block-wrapper" *ngIf="webGlEnabled; else lensUnavailable">
+        <app-mempool-block-overview
+          [index]="0"
+          [resolution]="lensResolution"
+          [filterFlags]="lensFlags"
+          [filterMode]="lensMode"
+          [gradientMode]="gradientMode"
+        ></app-mempool-block-overview>
       </div>
-    </div>
-    <div class="col" style="max-height: 410px">
-      <div class="card" *ngIf="(network$ | async) !== 'liquidtestnet'; else latestBlocks">
-        <div class="card-body">
-          <a class="title-link" href="" [routerLink]="['/rbf' | relativeUrl]">
-            <h5 class="card-title d-inline" i18n="dashboard.recent-rbf-replacements">Recent Replacements</h5>
-            <span>&nbsp;</span>
-            <fa-icon [icon]="['fas', 'external-link-alt']" [fixedWidth]="true" style="vertical-align: text-top; font-size: 13px; color: var(--title-fg)"></fa-icon>
-          </a>
-          <table class="table lastest-replacements-table">
-            <thead>
+      <ng-template #lensUnavailable>
+        <p class="panel-empty" i18n="dashboard.lens-unavailable">
+          This view is drawn with WebGL, which this browser has turned off. Every
+          transaction it would show is still listed on the projected block page.
+        </p>
+      </ng-template>
+    </section>
+
+    <!-- Difficulty brings its own heading and its own difficulty and halving
+         toggle, so the panel gives it a frame and stays out of its way. -->
+    <section class="panel panel-difficulty">
+      <app-difficulty></app-difficulty>
+    </section>
+
+    <!-- How much is waiting, and how fast more is arriving. -->
+    <section class="panel panel-flow" aria-labelledby="panel-flow-title">
+      <div class="panel-head">
+        <h2 class="panel-title" id="panel-flow-title" i18n="dashboard.mempool-now">Waiting to confirm</h2>
+        <p class="panel-note" i18n="dashboard.mempool-now-note">How much is queued, and how quickly more is arriving.</p>
+      </div>
+      <ng-container *ngTemplateOutlet="mempoolTable; context: { $implicit: mempoolInfoData }"></ng-container>
+      <h3 class="panel-subtitle" i18n="dashboard.incoming-transactions">Incoming transactions</h3>
+      <div class="mempool-graph" *ngIf="(mempoolStats$ | async) as mempoolStats">
+        <app-incoming-transactions-graph
+          [height]="incomingGraphHeight"
+          [left]="50"
+          [right]="20"
+          [data]="mempoolStats?.weightPerSecond"
+          [windowPreferenceOverride]="'2h'"
+          ></app-incoming-transactions-graph>
+      </div>
+      <p class="panel-empty" *ngIf="mempoolStatsUnavailable" i18n="dashboard.statistics-unavailable">
+        This deployment keeps no historical mempool statistics, so there is
+        nothing to chart here. Live figures above are unaffected.
+      </p>
+    </section>
+
+    <!-- Replacements: the clearest sign that someone is competing for space. -->
+    <section class="panel panel-replacements" *ngIf="(network$ | async) !== 'liquidtestnet'; else latestBlocks" aria-labelledby="panel-rbf-title">
+      <div class="panel-head">
+        <h2 class="panel-title" id="panel-rbf-title" i18n="dashboard.recent-rbf-replacements">Recent replacements</h2>
+        <a class="panel-link" [routerLink]="['/rbf' | relativeUrl]" i18n="dashboard.see-all-replacements">See all</a>
+        <p class="panel-note" i18n="dashboard.rbf-note">Transactions resent at a higher fee to move ahead of the queue.</p>
+      </div>
+      <div class="table-scroll">
+        <table class="table lastest-replacements-table">
+          <thead>
+            <tr>
               <th class="table-cell-txid" i18n="dashboard.latest-transactions.txid">TXID</th>
               <th class="table-cell-old-fee" i18n="dashboard.previous-transaction-fee">Previous fee</th>
               <th class="table-cell-new-fee" i18n="dashboard.new-transaction-fee">New fee</th>
               <th class="table-cell-badges" i18n="transaction.status|Transaction Status">Status</th>
-            </thead>
-            <tbody *ngIf="replacements$ | async as replacements; else replacementsSkeleton">
-              <tr *ngFor="let replacement of replacements">
-                <td class="table-cell-txid">
-                  <a [routerLink]="['/tx' | relativeUrl, replacement.txid]">
-                    <app-truncate [text]="replacement.txid" [lastChars]="5"></app-truncate>
-                  </a>
-                </td>
-                <td class="table-cell-old-fee"><app-fee-rate [fee]="replacement.oldFee" [weight]="replacement.oldVsize * 4"></app-fee-rate></td>
-                <td class="table-cell-new-fee"><app-fee-rate [fee]="replacement.newFee" [weight]="replacement.newVsize * 4"></app-fee-rate></td>
-                <td class="table-cell-badges">
-                  <span *ngIf="replacement.mined" class="badge badge-success" i18n="transaction.rbf.mined">Mined</span>
-                  <span *ngIf="replacement.fullRbf" class="badge badge-info" i18n="transaction.full-rbf">Full RBF</span>
-                  <span *ngIf="!replacement.fullRbf" class="badge badge-success" i18n="tx-features.tag.rbf|RBF">RBF</span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+            </tr>
+          </thead>
+          <tbody *ngIf="replacements$ | async as replacements; else replacementsSkeleton">
+            <tr *ngFor="let replacement of replacements">
+              <td class="table-cell-txid">
+                <a [routerLink]="['/tx' | relativeUrl, replacement.txid]">
+                  <app-truncate [text]="replacement.txid" [lastChars]="5"></app-truncate>
+                </a>
+              </td>
+              <td class="table-cell-old-fee"><app-fee-rate [fee]="replacement.oldFee" [weight]="replacement.oldVsize * 4"></app-fee-rate></td>
+              <td class="table-cell-new-fee"><app-fee-rate [fee]="replacement.newFee" [weight]="replacement.newVsize * 4"></app-fee-rate></td>
+              <td class="table-cell-badges">
+                <span *ngIf="replacement.mined" class="badge badge-success" i18n="transaction.rbf.mined">Mined</span>
+                <span *ngIf="replacement.fullRbf" class="badge badge-info" i18n="transaction.full-rbf">Full RBF</span>
+                <span *ngIf="!replacement.fullRbf" class="badge badge-secondary" i18n="tx-features.tag.rbf|RBF">RBF</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-      <ng-template #latestBlocks>
-        <div class="card">
-          <div class="card-body">
-            <a class="title-link" href="" [routerLink]="['/blocks' | relativeUrl]">
-              <h5 class="card-title d-inline" i18n="dashboard.recent-blocks">Recent Blocks</h5>
-              <span>&nbsp;</span>
-              <fa-icon [icon]="['fas', 'external-link-alt']" [fixedWidth]="true" style="vertical-align: text-top; font-size: 13px; color: var(--title-fg)"></fa-icon>
-            </a>
-            <table class="table lastest-blocks-table">
-              <thead>
+    </section>
+    <ng-template #latestBlocks>
+      <section class="panel panel-replacements" aria-labelledby="panel-blocks-title">
+        <div class="panel-head">
+          <h2 class="panel-title" id="panel-blocks-title" i18n="dashboard.recent-blocks">Recent blocks</h2>
+          <a class="panel-link" [routerLink]="['/blocks' | relativeUrl]" i18n="dashboard.see-all-blocks">See all</a>
+        </div>
+        <div class="table-scroll">
+          <table class="table lastest-blocks-table">
+            <thead>
+              <tr>
                 <th class="table-cell-height" i18n="dashboard.latest-blocks.height">Height</th>
                 <th class="table-cell-mined" i18n="dashboard.latest-blocks.mined">Mined</th>
                 <th class="table-cell-transaction-count" i18n="dashboard.latest-blocks.transaction-count">TXs</th>
                 <th class="table-cell-size" i18n="dashboard.latest-blocks.size">Size</th>
-              </thead>
-              <tbody *ngIf="blocks$ | async as blocks; else blocksSkeleton">
-                <tr *ngFor="let block of blocks; let i = index; trackBy: trackByBlock">
-                  <td class="table-cell-height" ><a [routerLink]="['/block' | relativeUrl, block.id]" [state]="{ data: { block: block } }">{{ block.height }}</a></td>
-                  <td class="table-cell-mined" ><app-time kind="since" [time]="block.timestamp" [fastRender]="true" [showTooltip]="true"></app-time></td>
-                  <td class="table-cell-transaction-count">{{ block.tx_count | number }}</td>
-                  <td class="table-cell-size">
-                    <div class="progress">
-                      <div class="progress-bar progress-mempool {{ network$ | async }}" role="progressbar" [ngStyle]="{'width': (block.weight / stateService.env.BLOCK_WEIGHT_UNITS)*100 + '%' }">&nbsp;</div>
-                      <div class="progress-text" [innerHTML]="block.size | bytes: 2"></div>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+              </tr>
+            </thead>
+            <tbody *ngIf="blocks$ | async as blocks; else blocksSkeleton">
+              <tr *ngFor="let block of blocks; let i = index; trackBy: trackByBlock">
+                <td class="table-cell-height" ><a [routerLink]="['/block' | relativeUrl, block.id]" [state]="{ data: { block: block } }">{{ block.height }}</a></td>
+                <td class="table-cell-mined" ><app-time kind="since" [time]="block.timestamp" [fastRender]="true" [showTooltip]="true"></app-time></td>
+                <td class="table-cell-transaction-count">{{ block.tx_count | number }}</td>
+                <td class="table-cell-size">
+                  <div class="progress" role="progressbar"
+                    [attr.aria-label]="'Block ' + block.height + ' size'"
+                    [attr.aria-valuenow]="(block.weight / stateService.env.BLOCK_WEIGHT_UNITS) * 100"
+                    aria-valuemin="0" aria-valuemax="100">
+                    <div class="progress-bar progress-mempool {{ network$ | async }}" [ngStyle]="{'width': (block.weight / stateService.env.BLOCK_WEIGHT_UNITS)*100 + '%' }">&nbsp;</div>
+                    <div class="progress-text" [innerHTML]="block.size | bytes: 2"></div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-      </ng-template>
-    </div>
-    <div class="col">
-      <div class="card">
-        <div class="card-body">
-          <app-universe-protocol-strip></app-universe-protocol-strip>
-        </div>
+      </section>
+    </ng-template>
+
+    <!-- What else this explorer reads beyond payments. -->
+    <section class="panel panel-protocols">
+      <app-universe-protocol-strip></app-universe-protocol-strip>
+    </section>
+
+    <!-- Arriving now. -->
+    <section class="panel panel-recent" aria-labelledby="panel-recent-title">
+      <div class="panel-head">
+        <h2 class="panel-title" id="panel-recent-title" i18n="dashboard.recent-transactions">Arriving now</h2>
+        <p class="panel-note" i18n="dashboard.recent-note">The most recent transactions to reach this node.</p>
       </div>
-    </div>
-    <div class="col" style="max-height: 410px">
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title" i18n="dashboard.recent-transactions">Recent Transactions</h5>
-          <table class="table latest-transactions">
-            <thead>
+      <div class="table-scroll">
+        <table class="table latest-transactions">
+          <thead>
+            <tr>
               <th class="table-cell-txid" i18n="dashboard.latest-transactions.txid">TXID</th>
               <th class="table-cell-satoshis" i18n="dashboard.latest-transactions.amount">Amount</th>
               <th class="table-cell-fiat" *ngIf="(network$ | async) === ''">{{ currency }}</th>
               <th class="table-cell-fees" i18n="transaction.fee|Transaction fee">Fee</th>
-            </thead>
-            <tbody *ngIf="transactions$ | async as transactions else recentTransactionsSkeleton">
-              <tr *ngFor="let transaction of transactions; let i = index;">
-                <td class="table-cell-txid">
-                  <a [routerLink]="['/tx' | relativeUrl, transaction.txid]">
-                    <app-truncate [text]="transaction.txid" [lastChars]="5"></app-truncate>
-                  </a>
-                </td>
-                <td class="table-cell-satoshis"><app-amount *ngIf="(network$ | async) !== 'liquidtestnet'; else liquidAmount" [satoshis]="transaction.value" digitsInfo="1.2-4" [noFiat]="true"></app-amount><ng-template #liquidAmount i18n="shared.confidential">Confidential</ng-template></td>
-                <td class="table-cell-fiat" *ngIf="(network$ | async) === ''" ><app-fiat [value]="transaction.value" digitsInfo="1.0-0"></app-fiat></td>
-                <td class="table-cell-fees"><app-fee-rate [fee]="transaction.fee" [weight]="transaction.vsize * 4"></app-fee-rate></td>
-              </tr>
-            </tbody>
-          </table>
-          <div class="">&nbsp;</div>
-        </div>
+            </tr>
+          </thead>
+          <tbody *ngIf="transactions$ | async as transactions else recentTransactionsSkeleton">
+            <tr *ngFor="let transaction of transactions; let i = index;">
+              <td class="table-cell-txid">
+                <a [routerLink]="['/tx' | relativeUrl, transaction.txid]">
+                  <app-truncate [text]="transaction.txid" [lastChars]="5"></app-truncate>
+                </a>
+              </td>
+              <td class="table-cell-satoshis"><app-amount *ngIf="(network$ | async) !== 'liquidtestnet'; else liquidAmount" [satoshis]="transaction.value" digitsInfo="1.2-4" [noFiat]="true"></app-amount><ng-template #liquidAmount i18n="shared.confidential">Confidential</ng-template></td>
+              <td class="table-cell-fiat" *ngIf="(network$ | async) === ''" ><app-fiat [value]="transaction.value" digitsInfo="1.0-0"></app-fiat></td>
+              <td class="table-cell-fees"><app-fee-rate [fee]="transaction.fee" [weight]="transaction.vsize * 4"></app-fee-rate></td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-    </div>
+    </section>
+
   </div>
 </div>
 
@@ -296,10 +320,13 @@
       </p>
     </div>
     <div class="item bar">
-      <h5 class="card-title" i18n="dashboard.memory-usage|Memory usage">Memory Usage</h5>
+      <h5 class="card-title" i18n="dashboard.memory-usage|Memory usage">Memory usage</h5>
       <div class="card-text" *ngIf="(isLoadingWebSocket$ | async) === false && mempoolInfoData.value; else loadingbig">
-        <div class="progress">
-          <div class="progress-bar {{ mempoolInfoData.value.mempoolSizeProgress }}" role="progressbar" [ngStyle]="{'width': (mempoolInfoData.value.memPoolInfo.usage / mempoolInfoData.value.memPoolInfo.maxmempool * 100) + '%' }">&nbsp;</div>
+        <div class="progress" role="progressbar"
+          i18n-aria-label="dashboard.memory-usage|Memory usage" aria-label="Memory usage"
+          [attr.aria-valuenow]="mempoolInfoData.value.memPoolInfo.usage / mempoolInfoData.value.memPoolInfo.maxmempool * 100"
+          aria-valuemin="0" aria-valuemax="100">
+          <div class="progress-bar {{ mempoolInfoData.value.mempoolSizeProgress }}" [ngStyle]="{'width': (mempoolInfoData.value.memPoolInfo.usage / mempoolInfoData.value.memPoolInfo.maxmempool * 100) + '%' }">&nbsp;</div>
           <div class="progress-text">&lrm;<span [innerHTML]="mempoolInfoData.value.memPoolInfo.usage | bytes : 2 : 'B' : null : false : 3"></span> / <span [innerHTML]="mempoolInfoData.value.memPoolInfo.maxmempool | bytes"></span></div>
         </div>
       </div>
