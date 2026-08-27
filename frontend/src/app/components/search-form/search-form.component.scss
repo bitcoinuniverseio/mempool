@@ -1,62 +1,107 @@
+// Universal search.
+//
+// The single most useful control in the product, so it is sized and weighted
+// like one. It grows into whatever room the header has rather than sitting in
+// a fixed slot, and it never forces the header wider than the screen.
+
+:host {
+  display: block;
+  min-width: 0;
+  width: 100%;
+}
+
 :host ::ng-deep {
   .dropdown-item {
     white-space: nowrap;
   }
-  .dropdown-menu {
-    width: calc(100% - 34px);
-  }
-  @media (min-width: 768px) {
-    .dropdown-menu {
-      width: 410px;
-    }
-  }
-}
 
-form {
-  margin-top: 5px;
-  @media (min-width: 564px) {
-    margin-right: -5px;
-  }
-  @media (min-width: 992px) {
+  // The result list tracks the field it belongs to instead of a fixed width,
+  // which is what kept it from lining up on narrow screens.
+  .dropdown-menu {
+    max-width: 100vw;
     width: 100%;
   }
-
-  &.hamburgerOpen {
-    @media (max-width: 613px) {
-      margin-left: 0px;
-      margin-right: 0px;
-    }
-  }
 }
 
-.btn-block {
-  width: 62px;
+.search-form {
+  min-width: 0;
+  width: 100%;
+}
+
+.search-row {
+  display: flex;
+  gap: var(--u-space-2);
+  min-width: 0;
 }
 
 .search-box-container {
+  flex: 1 1 auto;
+  min-width: 0;
   position: relative;
+}
+
+.search-input {
+  background-color: var(--u-surface-page);
+  border: 1px solid var(--u-border-strong);
+  border-radius: var(--u-radius-md);
+  color: var(--u-text-primary);
+  font-size: var(--u-text-base);
+  height: 40px;
+  padding: 0 var(--u-space-3);
   width: 100%;
-  @media (min-width: 768px) {
-    min-width: 300px;
+
+  &::placeholder {
+    color: var(--u-text-muted);
+    opacity: 1;
   }
-  @media (min-width: 992px) {
-    min-width: 142px;
+
+  &:focus {
+    background-color: var(--u-surface-raised);
+    border-color: var(--u-brand);
+    box-shadow: 0 0 0 3px var(--u-brand-border);
+    color: var(--u-text-primary);
+    outline: none;
   }
-  @media (min-width: 1200px) {
-    min-width: 300px;
+
+  // The placeholder names four things that can be searched. On a narrow screen
+  // that string is truncated to uselessness, so the field says less and the
+  // result list does the explaining.
+  @media (max-width: 575.98px) {
+    font-size: var(--u-text-sm);
   }
-  .btn {
-    width: 100px;
+}
+
+.search-submit {
+  align-items: center;
+  background: var(--u-brand);
+  border: 1px solid var(--u-brand);
+  border-radius: var(--u-radius-md);
+  color: var(--u-brand-contrast);
+  cursor: pointer;
+  display: flex;
+  flex: 0 0 auto;
+  height: 40px;
+  justify-content: center;
+  transition: background-color var(--u-duration-fast) var(--u-ease-out);
+  width: 46px;
+
+  &:hover:not(:disabled) {
+    background: var(--u-brand-hover);
+    border-color: var(--u-brand-hover);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--u-focus-ring);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.6;
   }
 }
 
 .spinner-border {
-  vertical-align: text-top;
-  margin-top: 1px;
-  margin-right: 2px;
-}
-
-input:focus {
-  box-shadow: none;
-  border-color: #1b1f2c;
+  height: 1rem;
+  width: 1rem;
 }

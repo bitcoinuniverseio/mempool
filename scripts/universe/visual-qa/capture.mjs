@@ -126,9 +126,53 @@ async function installFixtures(context, state) {
   await context.routeWebSocket('**/api/v1/ws', (ws) => {
     if (down) return; // connected but silent: the reconnecting and loading states
     const push = () => ws.send(JSON.stringify(socketState()));
-    ws.onMessage(() => push());
+    ws.onMessage((raw) => {
+      push();
+      // The Lens only draws once it is handed the contents of the block it is
+      // tracking. Without this the product's signature view is a grey square in
+      // every screenshot, which is the one thing a design review cannot skip.
+      let message;
+      try { message = JSON.parse(String(raw)); } catch { return; }
+      const index = message?.['track-mempool-block'];
+      if (typeof index === 'number' && index >= 0) {
+        ws.send(JSON.stringify({
+          'projected-block-transactions': {
+            index,
+            sequence: 1,
+            blockTransactions: projectedBlockTransactions(),
+          },
+        }));
+      }
+    });
     push();
   });
+}
+
+/**
+ * A projected block's contents, in the compressed tuple form the socket uses:
+ * [txid, fee, vsize, value, rate, flags, time, acc].
+ *
+ * Sized and spread so the Lens has something honest to draw: a long tail of
+ * small transactions, a few large ones, and a spread of fee rates.
+ */
+function projectedBlockTransactions() {
+  const txs = [];
+  for (let i = 0; i < 1400; i++) {
+    const big = i % 97 === 0;
+    const vsize = big ? 2200 + (i % 11) * 400 : 140 + (i % 17) * 24;
+    const rate = 2 + ((i * 7) % 46) + (big ? 12 : 0);
+    txs.push([
+      (i.toString(16).padStart(8, '0')).repeat(8).slice(0, 64),
+      Math.round(rate * vsize),
+      vsize,
+      50_000 + (i % 53) * 90_000,
+      rate,
+      i % 13 === 0 ? 2 : 0,
+      1_772_100_000 - (i % 900),
+      0,
+    ]);
+  }
+  return txs;
 }
 
 /** One socket push carrying the initial live state, from the same fixtures. */
@@ -155,7 +199,14 @@ async function run() {
   const states = pick(STATES.map((id) => ({ id })), 'states').map((s) => s.id);
 
   mkdirSync(OUT, { recursive: true });
-  const browser = await playwright[BROWSER].launch();
+  // The Lens is drawn with WebGL. Headless Chromium has no GPU, so without a
+  // software rasteriser the product's signature view is a grey rectangle in
+  // every screenshot and the one thing worth reviewing goes unreviewed.
+  const browser = await playwright[BROWSER].launch({
+    args: BROWSER === 'chromium'
+      ? ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader']
+      : [],
+  });
   const findings = [];
   let shots = 0;
 
@@ -209,6 +260,12 @@ async function run() {
                   count: v.nodes.length,
                   help: v.help,
                   sample: v.nodes[0]?.target?.join(' ') ?? '',
+                  // Every failing node, not just the first. A rule that reports
+                  // "25 places" cannot be acted on without knowing which 25.
+                  nodes: v.nodes.slice(0, 40).map((n) => ({
+                    target: (n.target ?? []).join(' '),
+                    detail: (n.any?.[0]?.message ?? n.failureSummary ?? '').slice(0, 200),
+                  })),
                 }));
               } catch (e) {
                 violations = [{ id: 'axe-failed', impact: 'unknown', count: 0, help: String(e).slice(0, 200), sample: '' }];
