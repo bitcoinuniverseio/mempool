@@ -14,6 +14,7 @@ import { StateService } from '@app/services/state.service';
 import { MiningService } from '@app/services/mining.service';
 import { StorageService } from '@app/services/storage.service';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
+import { chartChrome } from '@app/shared/chart-theme';
 
 @Component({
   selector: 'app-block-fees-subsidy-graph',
@@ -155,9 +156,7 @@ export class BlockFeesSubsidyGraphComponent implements OnInit {
     this.chartOptions = {
       title: title,
       color: [
-        '#ff9f00',
-        '#0aab2f',
-      ],
+        chartChrome().series[0], chartChrome().series[1]],
       animation: false,
       grid: {
         top: 80,
@@ -171,9 +170,9 @@ export class BlockFeesSubsidyGraphComponent implements OnInit {
         axisPointer: {
           type: 'line'
         },
-        backgroundColor: 'rgba(17, 19, 31, 1)',
+        backgroundColor: chartChrome().surface,
         borderRadius: 4,
-        shadowColor: 'rgba(0, 0, 0, 0.5)',
+        shadowColor: chartChrome().markBorder,
         textStyle: {
           color: 'var(--tooltip-grey)',
           align: 'left',
@@ -238,7 +237,7 @@ export class BlockFeesSubsidyGraphComponent implements OnInit {
             name: 'Subsidy',
             inactiveColor: 'var(--grey)',
             textStyle: {
-              color: 'white',
+              color: chartChrome().label,
             },
             icon: 'roundRect',
           },
@@ -246,7 +245,7 @@ export class BlockFeesSubsidyGraphComponent implements OnInit {
             name: 'Fees',
             inactiveColor: 'var(--grey)',
             textStyle: {
-              color: 'white',
+              color: chartChrome().label,
             },
             icon: 'roundRect',
           },
@@ -254,7 +253,7 @@ export class BlockFeesSubsidyGraphComponent implements OnInit {
             name: 'Subsidy (USD)',
             inactiveColor: 'var(--grey)',
             textStyle: {
-              color: 'white',
+              color: chartChrome().label,
             },
             icon: 'roundRect',
           },
@@ -262,7 +261,7 @@ export class BlockFeesSubsidyGraphComponent implements OnInit {
             name: 'Fees (USD)',
             inactiveColor: 'var(--grey)',
             textStyle: {
-              color: 'white',
+              color: chartChrome().label,
             },
             icon: 'roundRect',
           },
@@ -270,7 +269,7 @@ export class BlockFeesSubsidyGraphComponent implements OnInit {
             name: 'Subsidy (%)',
             inactiveColor: 'var(--grey)',
             textStyle: {
-              color: 'white',
+              color: chartChrome().label,
             },
             icon: 'roundRect',
           },
@@ -278,7 +277,7 @@ export class BlockFeesSubsidyGraphComponent implements OnInit {
             name: 'Fees (%)',
             inactiveColor: 'var(--grey)',
             textStyle: {
-              color: 'white',
+              color: chartChrome().label,
             },
             icon: 'roundRect',
           },
@@ -396,7 +395,7 @@ export class BlockFeesSubsidyGraphComponent implements OnInit {
         right: 15,
         selectedDataBackground: {
           lineStyle: {
-            color: '#fff',
+            color: chartChrome().markBorder,
             opacity: 0.45,
           },
         },

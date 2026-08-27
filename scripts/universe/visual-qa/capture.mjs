@@ -27,7 +27,8 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import AxeBuilder from '@axe-core/playwright';
 import * as playwright from 'playwright';
-import { addressFixtures, fixtures, sampleIds, stateOverrides } from './fixtures.mjs';
+import { addressFixtures, detailFixtures, fixtures, sampleIds, stateOverrides } from './fixtures.mjs';
+import { contrastProbe } from './contrast-probe.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
@@ -82,7 +83,7 @@ function pick(list, key, idKey = 'id') {
 /** Answer every API call from fixtures, applying the state's overrides. */
 async function installFixtures(context, state) {
   const overrides = stateOverrides[state] || {};
-  const table = { ...fixtures, ...addressFixtures };
+  const table = { ...fixtures, ...detailFixtures, ...addressFixtures };
 
   await context.route('**/api/**', async (route) => {
     const url = new URL(route.request().url());
@@ -272,12 +273,22 @@ async function run() {
               }
             }
 
+            // Measured contrast against whatever is actually painted. This is
+            // the check an accessibility engine cannot make: text on a fee
+            // gradient, on a block face, or over the Lens canvas.
+            let contrast;
+            try {
+              contrast = await page.evaluate(contrastProbe);
+            } catch (e) {
+              contrast = { text: [], painted: [], canvas: [], sampled: 0, error: String(e).slice(0, 200) };
+            }
+
             await page.screenshot({ path: join(OUT, `${label}.png`), fullPage: Boolean(args.fullPage) });
             shots++;
 
             findings.push({
               route: route.id, routeName: route.name, state, theme, viewport: viewport.id,
-              overflowBy, consoleErrors, brokenImages, violations,
+              overflowBy, consoleErrors, brokenImages, violations, contrast,
             });
           } catch (error) {
             findings.push({
@@ -307,6 +318,18 @@ function summarise(report) {
   const failed = report.findings.filter((f) => f.error);
   const a11y = report.findings.filter((f) => f.violations?.length);
 
+  const contrastFailures = [];
+  const blankCanvases = [];
+  for (const f of report.findings) {
+    for (const row of f.contrast?.text ?? []) {
+      contrastFailures.push({ ...row, route: f.route, state: f.state, theme: f.theme, viewport: f.viewport });
+    }
+    for (const c of f.contrast?.canvas ?? []) {
+      if (c.blank) blankCanvases.push({ ...c, route: f.route, state: f.state, theme: f.theme, viewport: f.viewport });
+    }
+  }
+  contrastFailures.sort((a, b) => a.ratio - b.ratio);
+
   const byRule = new Map();
   for (const f of a11y) {
     for (const v of f.violations) {
@@ -324,6 +347,33 @@ function summarise(report) {
   console.log(`navigation failures : ${failed.length}`);
   console.log(`a11y rules violated : ${byRule.size}\n`);
 
+  console.log(`contrast failures   : ${contrastFailures.length}`);
+  console.log(`blank canvases      : ${blankCanvases.length}`);
+
+  if (contrastFailures.length) {
+    console.log();
+    console.log('-- measured contrast failures, worst first --');
+    for (const f of contrastFailures.slice(0, 40)) {
+      console.log(
+        `  ${String(f.ratio).padStart(6)}:1 (needs ${f.required}:1)  ` +
+          `${f.route}/${f.state}/${f.theme}@${f.viewport}` +
+          `${f.overPaintedSurface ? '  [over a painted surface]' : ''}`,
+      );
+      console.log(`         "${f.text}"`);
+      console.log(`         ${f.foreground} on ${f.background}   ${f.selector}`);
+    }
+    if (contrastFailures.length > 40) {
+      console.log(`  ... and ${contrastFailures.length - 40} more, see the report`);
+    }
+  }
+
+  if (blankCanvases.length) {
+    console.log();
+    console.log('-- canvases that drew nothing --');
+    for (const c of blankCanvases.slice(0, 10)) {
+      console.log(`  ${c.route}/${c.state}/${c.theme}@${c.viewport}  ${c.selector}  ${c.w}x${c.h}`);
+    }
+  }
   if (overflow.length) {
     console.log('-- overflow --');
     for (const f of overflow.slice(0, 20)) {

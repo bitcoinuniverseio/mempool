@@ -10,6 +10,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
 import { StateService } from '@app/services/state.service';
 import { PriceService } from '@app/services/price.service';
 import { FiatCurrencyPipe } from '@app/shared/pipes/fiat-currency.pipe';
+import { chartChrome, rampStops } from '@app/shared/chart-theme';
 
 const periodSeconds = {
   '1d': (60 * 60 * 24),
@@ -193,14 +194,8 @@ export class AddressGraphComponent implements OnChanges, OnDestroy {
 
     this.chartOptions = {
       color: [
-        new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-          { offset: 0, color: '#FDD835' },
-          { offset: 1, color: '#FB8C00' },
-        ]),
-        new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-          { offset: 0, color: '#4CAF50' },
-          { offset: 1, color: '#1B5E20' },
-        ]),
+        new echarts.graphic.LinearGradient(0, 0, 0, 1, rampStops('a')),
+        new echarts.graphic.LinearGradient(0, 0, 0, 1, rampStops('b')),
       ],
       animation: false,
       grid: {
@@ -216,7 +211,7 @@ export class AddressGraphComponent implements OnChanges, OnDestroy {
             name: $localize`:@@7e69426bd97a606d8ae6026762858e6e7c86a1fd:Balance`,
             inactiveColor: 'var(--grey)',
             textStyle: {
-              color: 'white',
+              color: chartChrome().label,
             },
             icon: 'roundRect',
           },
@@ -224,7 +219,7 @@ export class AddressGraphComponent implements OnChanges, OnDestroy {
             name: 'Fiat',
             inactiveColor: 'var(--grey)',
             textStyle: {
-              color: 'white',
+              color: chartChrome().label,
             },
             icon: 'roundRect',
           }
@@ -240,14 +235,14 @@ export class AddressGraphComponent implements OnChanges, OnDestroy {
         axisPointer: {
           type: 'line'
         },
-        backgroundColor: 'rgba(17, 19, 31, 1)',
+        backgroundColor: chartChrome().surface,
         borderRadius: 4,
-        shadowColor: 'rgba(0, 0, 0, 0.5)',
+        shadowColor: chartChrome().markBorder,
         textStyle: {
-          color: '#b1b1b1',
+          color: chartChrome().label,
           align: 'left',
         },
-        borderColor: '#000',
+        borderColor: chartChrome().markBorder,
         formatter: function (data) {
           const btcData = data.filter(d => d.seriesName !== 'Fiat');
           const fiatData = data.filter(d => d.seriesName === 'Fiat');
@@ -322,7 +317,7 @@ export class AddressGraphComponent implements OnChanges, OnDestroy {
           position: 'left',
           axisLabel: {
             show: this.showYAxis,
-            color: 'rgb(110, 112, 121)',
+            color: chartChrome().label,
             formatter: (val): string => {
               const valSpan = maxValue - (this.period === 'all' ? 0 : minValue);
               if (valSpan > 100_000_000_000) {
@@ -353,7 +348,7 @@ export class AddressGraphComponent implements OnChanges, OnDestroy {
           type: 'value',
           axisLabel: {
             show: this.showYAxis,
-            color: 'rgb(110, 112, 121)',
+            color: chartChrome().label,
             formatter: function(val) {
               return `$${this.amountShortenerPipe.transform(val, 3, undefined, true, true)}`;
             }.bind(this)
@@ -413,7 +408,7 @@ export class AddressGraphComponent implements OnChanges, OnDestroy {
         right: this.adjustedRight,
         selectedDataBackground: {
           lineStyle: {
-            color: '#fff',
+            color: chartChrome().markBorder,
             opacity: 0.45,
           },
         },

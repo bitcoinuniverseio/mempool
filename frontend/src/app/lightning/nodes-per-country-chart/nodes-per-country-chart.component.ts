@@ -10,6 +10,7 @@ import { download } from '@app/shared/graphs.utils';
 import { AmountShortenerPipe } from '@app/shared/pipes/amount-shortener.pipe';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 import { getFlagEmoji } from '@app/shared/common.utils';
+import { chartChrome } from '@app/shared/chart-theme';
 
 @Component({
   selector: 'app-nodes-per-country-chart',
@@ -92,13 +93,13 @@ export class NodesPerCountryChartComponent implements OnInit {
         },
         tooltip: {
           show: !this.isMobile(),
-          backgroundColor: 'rgba(17, 19, 31, 1)',
+          backgroundColor: chartChrome().surface,
           borderRadius: 4,
-          shadowColor: 'rgba(0, 0, 0, 0.5)',
+          shadowColor: chartChrome().markBorder,
           textStyle: {
             color: 'var(--tooltip-grey)',
           },
-          borderColor: '#000',
+          borderColor: chartChrome().markBorder,
           formatter: () => {
             const nodeCount = country.count.toString();
             return `<b style="color: white">${country.name.en} (${country.share}%)</b><br>` +
@@ -125,13 +126,13 @@ export class NodesPerCountryChartComponent implements OnInit {
         edgeDistance: edgeDistance
       },
       tooltip: {
-        backgroundColor: 'rgba(17, 19, 31, 1)',
+        backgroundColor: chartChrome().surface,
         borderRadius: 4,
-        shadowColor: 'rgba(0, 0, 0, 0.5)',
+        shadowColor: chartChrome().markBorder,
         textStyle: {
           color: 'var(--tooltip-grey)',
         },
-        borderColor: '#000',
+        borderColor: chartChrome().markBorder,
         formatter: () => {
           const nodeCount = totalNodeOther.toString();
           return `<b style="color: white">` + $localize`Other (${totalShareOther.toFixed(2) + '%'})` + `</b><br>` +
@@ -180,12 +181,12 @@ export class NodesPerCountryChartComponent implements OnInit {
           itemStyle: {
             borderRadius: 1,
             borderWidth: 1,
-            borderColor: '#000',
+            borderColor: chartChrome().markBorder,
           },
           emphasis: {
             itemStyle: {
               shadowBlur: 40,
-              shadowColor: 'rgba(0, 0, 0, 0.75)',
+              shadowColor: chartChrome().markBorder,
             },
             labelLine: {
               lineStyle: {

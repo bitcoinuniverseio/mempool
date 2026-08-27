@@ -21,7 +21,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #ccc;
+  background-color: var(--u-text-muted);
 }
 
 .slider:before {
@@ -31,7 +31,7 @@
   width: 13px;
   left: 2px;
   bottom: 2px;
-  background-color: white;
+  background-color: var(--u-surface-raised);
 }
 
 .slider.animate, .slider.animate:before {
@@ -40,11 +40,11 @@
 }
 
 input:checked+.slider {
-  background-color: #2196F3;
+  background-color: var(--u-brand);
 }
 
 input:focus+.slider {
-  box-shadow: 0 0 1px #2196F3;
+  box-shadow: 0 0 1px var(--u-brand);
 }
 
 input:checked+.slider:before {

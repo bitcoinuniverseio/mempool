@@ -3,6 +3,7 @@ import { Transaction } from '@interfaces/electrs.interface';
 import { Acceleration, SinglePoolStats } from '@interfaces/node-api.interface';
 import { EChartsOption, PieSeriesOption } from '@app/graphs/echarts';
 import { MiningStats } from '@app/services/mining.service';
+import { chartChrome } from '@app/shared/chart-theme';
 
 function lighten(color, p): { r, g, b } {
   return {
@@ -77,7 +78,7 @@ export class ActiveAccelerationBox implements OnChanges {
     acceleratingPools.forEach((poolId, index) => {
       const pool = pools[poolId];
       const poolShare = ((pool.lastEstimatedHashrate / this.miningStats.lastEstimatedHashrate) * 100).toFixed(1);
-      let color = 'white';
+      let color = chartChrome().label;
       if (index >= firstSignificantPool) {
         if (numSignificantPools > 1) {
           color = toRGB(lighten({ r: 147, g: 57, b: 244 }, 1 - (index - firstSignificantPool) / Math.max((numSignificantPools - 1), 1)));
@@ -116,13 +117,13 @@ export class ActiveAccelerationBox implements OnChanges {
       tooltip: {
         show: true,
         trigger: 'item',
-        backgroundColor: 'rgba(17, 19, 31, 1)',
+        backgroundColor: chartChrome().surface,
         borderRadius: 4,
-        shadowColor: 'rgba(0, 0, 0, 0.5)',
+        shadowColor: chartChrome().markBorder,
         textStyle: {
           color: 'var(--tooltip-grey)',
         },
-        borderColor: '#000',
+        borderColor: chartChrome().markBorder,
         formatter: (item) => {
           return item.name;
         }

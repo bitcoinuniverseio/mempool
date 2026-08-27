@@ -3,7 +3,7 @@
   z-index: 3;
   background: color-mix(in srgb, var(--active-bg) 95%, transparent);
   border-radius: 4px;
-  box-shadow: 1px 1px 10px rgba(0,0,0,0.5);
+  box-shadow: 1px 1px 10px var(--u-shadow-color);
   color: var(--tooltip-grey);
   display: flex;
   flex-direction: column;
@@ -14,7 +14,7 @@
 
   .badge.badge-accelerated {
     background-color: var(--tertiary);
-    color: white;
+    color: var(--u-brand-contrast);
   }
 
   .value {
@@ -36,6 +36,6 @@
   }
 
   .oobFees {
-    color: #905cf4;
+    color: var(--u-brand-hover);
   }
 }

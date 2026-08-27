@@ -8,6 +8,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
 import { StateService } from '@app/services/state.service';
 import { Address } from '@interfaces/electrs.interface';
 import { formatNumber } from '@angular/common';
+import { chartChrome } from '@app/shared/chart-theme';
 
 @Component({
   selector: 'app-addresses-treemap',
@@ -75,13 +76,13 @@ export class AddressesTreemap implements OnChanges {
           progressive: 100,
           tooltip: {
             show: true,
-            backgroundColor: 'rgba(17, 19, 31, 1)',
+            backgroundColor: chartChrome().surface,
             borderRadius: 4,
-            shadowColor: 'rgba(0, 0, 0, 0.5)',
+            shadowColor: chartChrome().markBorder,
             textStyle: {
-              color: '#b1b1b1',
+              color: chartChrome().label,
             },
-            borderColor: '#000',
+            borderColor: chartChrome().markBorder,
             formatter: (value): string => {
               if (!value.data.address) {
                 return '';
@@ -114,7 +115,7 @@ export class AddressesTreemap implements OnChanges {
             }
           },
           itemStyle: {
-            borderColor: 'black',
+            borderColor: chartChrome().markBorder,
             borderWidth: 1,
           },
           breadcrumb: {

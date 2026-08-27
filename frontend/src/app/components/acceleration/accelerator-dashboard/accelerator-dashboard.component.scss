@@ -60,8 +60,10 @@
 
 .main-title {
   position: relative;
-  color: var(--fg);
-  opacity: var(--opacity);
+  // Was the page foreground at 57% opacity, which is under the contrast
+  // floor on every surface it appears on. A muted token says the same
+  // thing about hierarchy and stays readable.
+  color: var(--u-text-secondary);
   margin-top: -13px;
   font-size: 10px;
   text-transform: uppercase;
@@ -188,5 +190,5 @@
 }
 
 .inactive {
-  color: #ffffff66;
+  color: var(--u-text-muted);
 }

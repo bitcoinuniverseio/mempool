@@ -1,60 +1,110 @@
-// Universe Explorer design tokens.
+// Universe surface mixins.
 //
-// One place for the protocol identity colors and evidence-state colors used
-// across the Universe surfaces. Colors are chosen against the explorer's dark
-// surfaces (--box-bg, --bg) and all of them clear WCAG AA contrast as text.
-// Color is never the only signal: every state also carries a text label.
+// The protocol and evidence colours themselves live in the one place that
+// knows about themes, `src/styles/_universe-tokens.scss`, and arrive here as
+// --u-* custom properties. This file used to carry its own literals, chosen
+// against a dark page; on the light theme they printed pale yellow on white
+// and the sync notice fell to 1.5:1. Delegating instead means a theme swap
+// repaints every Universe surface with no second palette to keep in step.
+//
+// Two rules hold across all of them:
+//
+//  1. Colour never carries protocol identity or evidence state on its own.
+//     A protocol hue always appears beside the protocol's name; an evidence
+//     state always carries its word.
+//  2. A foreground is only ever named together with the background it sits
+//     on, which is why the chip mixin below sets both.
 
 @mixin universe-protocol-tokens {
-  --universe-protocol-ordinals: #f2a35c;
-  --universe-protocol-runes: #7bdff2;
-  --universe-protocol-alkanes: #b8a3f6;
-  --universe-protocol-stamps: #f6a3c5;
-  --universe-protocol-atomicals: #9df29d;
-  --universe-protocol-op-data: #e8e05c;
-  --universe-protocol-fallback: #c9cddd;
+  --universe-protocol-ordinals: var(--u-protocol-ordinals);
+  --universe-protocol-runes: var(--u-protocol-runes);
+  --universe-protocol-alkanes: var(--u-protocol-alkanes);
+  --universe-protocol-stamps: var(--u-protocol-stamps);
+  --universe-protocol-atomicals: var(--u-protocol-atomicals);
+  --universe-protocol-op-data: var(--u-protocol-op-data);
+  --universe-protocol-fallback: var(--u-protocol-fallback);
 }
 
 @mixin universe-state-tokens {
   // Evidence states. Proven, partial, pending, and unavailable must never be
-  // confusable, because the whole product rests on the difference.
-  --universe-state-proven: #6fd39a;
-  --universe-state-partial: #e8c15c;
-  --universe-state-pending: #7bb8f2;
-  --universe-state-unavailable: #f28b82;
-  --universe-state-neutral: #a8b0c4;
+  // confusable, because the whole product rests on the difference. Each one
+  // brings its own tint and border so it stays legible where colour alone
+  // would not carry, including in print and under forced colours.
+  --universe-state-proven: var(--u-state-proven);
+  --universe-state-partial: var(--u-state-partial);
+  --universe-state-pending: var(--u-state-pending);
+  --universe-state-unavailable: var(--u-state-unavailable);
+  --universe-state-neutral: var(--u-state-neutral);
+
+  --universe-state-proven-surface: var(--u-state-proven-surface);
+  --universe-state-partial-surface: var(--u-state-partial-surface);
+  --universe-state-pending-surface: var(--u-state-pending-surface);
+  --universe-state-unavailable-surface: var(--u-state-unavailable-surface);
+  --universe-state-neutral-surface: var(--u-state-neutral-surface);
+
+  --universe-state-proven-border: var(--u-state-proven-border);
+  --universe-state-partial-border: var(--u-state-partial-border);
+  --universe-state-pending-border: var(--u-state-pending-border);
+  --universe-state-unavailable-border: var(--u-state-unavailable-border);
+  --universe-state-neutral-border: var(--u-state-neutral-border);
 }
 
+// A raised panel. The border is a real border rather than a white wash, so it
+// is visible on a white card instead of disappearing into it.
 @mixin universe-surface {
-  background: var(--box-bg, #171c2a);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 0.4rem;
+  background: var(--u-surface-raised);
+  border: 1px solid var(--u-border);
+  border-radius: var(--u-radius-md);
 }
 
-// A compact status chip. `kind` selects the token.
+// A compact status chip. `kind` selects the token trio.
+//
+// Tint, border, and text move together. Setting the text colour alone would
+// leave the chip depending on whatever surface it happened to land on, which
+// is exactly how the evidence states became unreadable in the first place.
 @mixin universe-chip {
   display: inline-flex;
   align-items: center;
   gap: 0.35em;
   padding: 0.15em 0.55em;
-  border-radius: 0.25rem;
-  border: 1px solid currentColor;
-  font-size: 0.75rem;
-  font-weight: 600;
+  border-radius: var(--u-radius-sm);
+  border: 1px solid var(--universe-state-neutral-border);
+  background: var(--universe-state-neutral-surface);
+  font-size: var(--u-text-xs);
+  font-weight: var(--u-weight-semibold);
   line-height: 1.5;
   white-space: nowrap;
   color: var(--universe-state-neutral);
 
-  &.state-proven { color: var(--universe-state-proven); }
-  &.state-partial { color: var(--universe-state-partial); }
-  &.state-pending { color: var(--universe-state-pending); }
-  &.state-unavailable { color: var(--universe-state-unavailable); }
+  &.state-proven {
+    background: var(--universe-state-proven-surface);
+    border-color: var(--universe-state-proven-border);
+    color: var(--universe-state-proven);
+  }
+
+  &.state-partial {
+    background: var(--universe-state-partial-surface);
+    border-color: var(--universe-state-partial-border);
+    color: var(--universe-state-partial);
+  }
+
+  &.state-pending {
+    background: var(--universe-state-pending-surface);
+    border-color: var(--universe-state-pending-border);
+    color: var(--universe-state-pending);
+  }
+
+  &.state-unavailable {
+    background: var(--universe-state-unavailable-surface);
+    border-color: var(--universe-state-unavailable-border);
+    color: var(--universe-state-unavailable);
+  }
 }
 
 // Monospace identifier treatment. Long hashes must stay selectable and must
 // never widen a layout, so they wrap on any character rather than overflow.
 @mixin universe-identifier {
-  font-family: var(--font-mono, 'Courier New', monospace);
+  font-family: var(--u-font-data);
   font-size: 0.85em;
   overflow-wrap: anywhere;
   word-break: break-all;

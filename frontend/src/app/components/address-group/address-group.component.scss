@@ -51,7 +51,7 @@
     border-collapse: collapse;
 
     &:first-child {
-      border-bottom: solid 1px white;
+      border-bottom: solid 1px var(--u-border-strong);
       td, th {
         padding-bottom: 0.3rem;
       }

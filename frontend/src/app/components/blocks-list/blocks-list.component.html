@@ -80,8 +80,8 @@
             {{ block.tx_count | number }}
           </td>
           <td class="size" *ngIf="!widget" [class]="isMempoolModule ? '' : 'legacy'">
-            <div class="progress">
-              <div class="progress-bar progress-mempool" role="progressbar"
+            <div class="progress" role="progressbar" i18n-aria-label="blocks.block-size|Block size" aria-label="Block size">
+              <div class="progress-bar progress-mempool"
                 [ngStyle]="{'width': (block.weight / stateService.env.BLOCK_WEIGHT_UNITS)*100 + '%' }"></div>
               <div class="progress-text" [innerHTML]="block.size | bytes: 2"></div>
             </div>

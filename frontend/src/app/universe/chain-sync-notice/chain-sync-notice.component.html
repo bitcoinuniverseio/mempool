@@ -1,10 +1,48 @@
 <div class="chain-sync-notice" role="status" *ngIf="(notice$ | async) as notice">
   <ng-container *ngIf="notice.show">
-    <strong i18n="universe.sync.title">This node is still catching up</strong>
-    <span i18n="universe.sync.detail">
-      It has verified {{ notice.blocks }} of {{ notice.headers }} blocks, {{ notice.percent }} percent.
-      Everything below is accurate as of block {{ notice.blocks }}, and is {{ notice.behind }} blocks
-      behind the chain tip.
-    </span>
+    <!-- A shape as well as a colour, so the warning survives a monochrome
+         screen, forced colours, and every colour vision difference. -->
+    <svg class="mark" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+      <path
+        d="M10 1.6 19 18H1L10 1.6Z"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linejoin="round" />
+      <path d="M10 7.4v4.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+      <circle cx="10" cy="14.9" r="1.05" fill="currentColor" />
+    </svg>
+
+    <div class="body">
+      <strong class="title" i18n="universe.sync.title">This node is still catching up</strong>
+
+      <p class="detail">
+        <ng-container i18n="universe.sync.detail">
+          Everything here is accurate as of block
+          <b class="figure">{{ notice.blocks | number }}</b>. The chain tip is
+          <b class="figure">{{ notice.headers | number }}</b>, so this node is
+          <b class="figure">{{ notice.behind | number }}</b> blocks behind. Blocks and transactions
+          after that point are not available yet.
+        </ng-container>
+      </p>
+
+      <div class="meter">
+        <div
+          class="track"
+          role="progressbar"
+          [attr.aria-valuenow]="notice.percent"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          i18n-aria-label="universe.sync.progress-label"
+          aria-label="Chain verification progress">
+          <div class="fill" [style.width.%]="notice.percent"></div>
+        </div>
+        <span class="reading"
+          ><b>{{ notice.percent }}%</b> <ng-container i18n="universe.sync.verified">verified</ng-container></span
+        >
+      </div>
+    </div>
+
+    <a class="status-link" [routerLink]="['/status']" i18n="universe.sync.status-link">Node status</a>
   </ng-container>
 </div>

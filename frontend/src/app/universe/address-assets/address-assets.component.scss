@@ -38,7 +38,7 @@
 
 .coverage,
 .asof {
-  color: var(--transparent-fg, #a8b0c4);
+  color: var(--u-text-muted);
   font-size: 0.85rem;
 }
 
@@ -48,7 +48,7 @@
 }
 
 .empty {
-  color: var(--transparent-fg, #a8b0c4);
+  color: var(--u-text-muted);
 }
 
 .holding-list {
@@ -65,7 +65,7 @@
     align-items: baseline;
     gap: 0.25rem 0.75rem;
     padding: 0.45rem 0;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-top: 1px solid var(--u-divider);
   }
 
   li:first-child {
@@ -102,7 +102,7 @@
   height: 1rem;
   width: 60%;
   border-radius: 0.2rem;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--u-divider);
 }
 
 @media (max-width: 575px) {

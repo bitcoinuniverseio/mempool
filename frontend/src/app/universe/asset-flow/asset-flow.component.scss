@@ -1,7 +1,7 @@
 .universe-asset-flow {
   margin: 1.5rem 0;
   padding: 1rem 1.25rem 1.25rem;
-  background: var(--bg, #24273e);
+  background: var(--bg, var(--u-surface-raised));
   border-radius: 4px;
 
   h2 {
@@ -26,18 +26,43 @@
   margin-bottom: 1rem;
 }
 
+// How much of this flow is proven.
+//
+// The single most important statement on the page, so it carries a tint, a
+// border, and its own words rather than a hue alone. The literals it used
+// before were picked against a dark page and printed pale amber on white.
 .evidence-chip {
-  font-size: 0.75rem;
-  padding: 0.15rem 0.55rem;
-  border-radius: 10px;
-  border: 1px solid currentColor;
-  white-space: nowrap;
+  border: 1px solid;
+  border-radius: var(--u-radius-sm);
+  font-size: var(--u-text-xs);
+  font-weight: var(--u-weight-semibold);
+  padding: 0.15rem 0.5rem;
+  white-space: normal;
 
-  &.complete { color: #3bcc49; }
-  &.partial { color: #4fd1c5; }
-  &.incomplete { color: #ffb74a; }
-  &.pending { color: #6ea8fe; }
-  &.unavailable { color: #9aa0b5; }
+  &.complete {
+    background: var(--u-state-proven-surface);
+    border-color: var(--u-state-proven-border);
+    color: var(--u-state-proven);
+  }
+
+  &.partial,
+  &.incomplete {
+    background: var(--u-state-partial-surface);
+    border-color: var(--u-state-partial-border);
+    color: var(--u-state-partial);
+  }
+
+  &.pending {
+    background: var(--u-state-pending-surface);
+    border-color: var(--u-state-pending-border);
+    color: var(--u-state-pending);
+  }
+
+  &.unavailable {
+    background: var(--u-state-unavailable-surface);
+    border-color: var(--u-state-unavailable-border);
+    color: var(--u-state-unavailable);
+  }
 }
 
 .flow-loading .skeleton-loader {
@@ -51,14 +76,59 @@
   font-size: 0.9rem;
 }
 
+// Inputs on the left, outputs on the right, and a marker between them that
+// says which way value moved. Two equal columns with a heading each left
+// the direction to be inferred, which is the one thing a flow must state.
 .flow-columns {
+  align-items: start;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
+  gap: var(--u-space-4);
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
 
   @media (max-width: 767px) {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
+}
+
+.flow-direction {
+  align-self: center;
+  color: var(--u-text-muted);
+  font-size: var(--u-text-lg);
+  line-height: 1;
+  padding: 0 var(--u-space-1);
+
+  // Turns to point down when the columns stack, so the direction stays
+  // true rather than pointing off the side of a phone.
+  @media (max-width: 767px) {
+    justify-self: center;
+    transform: rotate(90deg);
+  }
+}
+
+// The per-position evidence disclosure that replaced the bare letter i.
+.position-evidence {
+  font-size: var(--u-text-xs);
+
+  summary {
+    color: var(--u-text-muted);
+    cursor: pointer;
+
+    &:hover { color: var(--u-brand); }
+
+    &:focus-visible {
+      outline: 2px solid var(--u-focus-ring);
+      outline-offset: 2px;
+    }
+  }
+}
+
+.position-evidence-body {
+  color: var(--u-text-secondary);
+  margin: var(--u-space-1) 0 0;
+}
+
+.unit {
+  color: var(--u-text-muted);
 }
 
 .column-note {
@@ -81,11 +151,11 @@
   font-size: 0.85rem;
 
   &:nth-child(odd) {
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--u-divider);
   }
 
   &.transferred {
-    border-left-color: #6ea8fe;
+    border-left-color: var(--u-brand);
   }
 }
 
@@ -101,7 +171,7 @@
   list-style: none;
   margin: 0.35rem 0 0;
   padding: 0 0 0 0.25rem;
-  border-left: 1px solid rgba(255, 255, 255, 0.12);
+  border-left: 1px solid var(--u-divider);
 }
 
 .notable-sat {
@@ -121,11 +191,11 @@
   border: 1px solid currentColor;
   white-space: nowrap;
 
-  &.rarity-mythic { color: #ff6ec7; }
-  &.rarity-legendary { color: #ffd166; }
-  &.rarity-epic { color: #b388ff; }
-  &.rarity-rare { color: #6ea8fe; }
-  &.rarity-uncommon { color: #3bcc49; }
+  &.rarity-mythic { color: var(--u-chart-2); }
+  &.rarity-legendary { color: var(--u-state-partial); }
+  &.rarity-epic { color: var(--u-chart-3); }
+  &.rarity-rare { color: var(--u-brand); }
+  &.rarity-uncommon { color: var(--u-chart-6); }
 }
 
 .sat-number {
@@ -187,7 +257,7 @@
   cursor: help;
 
   &:focus-visible {
-    outline: 2px solid #6ea8fe;
+    outline: 2px solid var(--u-brand);
     outline-offset: 2px;
     opacity: 1;
   }
@@ -235,7 +305,7 @@
 
   summary {
     cursor: pointer;
-    color: var(--transparent-fg, #a8b0c4);
+    color: var(--u-text-muted);
     min-height: 32px;
     display: flex;
     align-items: center;
@@ -251,7 +321,7 @@
       flex-wrap: wrap;
       gap: 0.75rem;
       padding: 0.15rem 0;
-      color: var(--transparent-fg, #a8b0c4);
+      color: var(--u-text-muted);
     }
   }
 

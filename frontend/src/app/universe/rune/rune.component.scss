@@ -42,7 +42,7 @@
   .progress-bar {
     height: 0.6rem;
     border-radius: 0.3rem;
-    background: rgba(255, 255, 255, 0.08);
+    background: var(--u-divider);
     overflow: hidden;
 
     .fill {

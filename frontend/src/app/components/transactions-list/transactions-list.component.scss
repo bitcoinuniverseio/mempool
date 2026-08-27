@@ -121,7 +121,7 @@
 	}
 
 	&:hover, &.hovered {
-		color: color-mix(in srgb, var(--sigColor) 80%, white);
+		color: color-mix(in srgb, var(--sigColor) 80%, var(--u-text-primary));
 	}
 
 	::ng-deep svg path {
@@ -145,7 +145,7 @@
 
 .sig-overflow {
 	// background-color: var(--tertiary);
-	color: white;
+	color: var(--u-text-primary);
 	border-radius: 50%;
 	font-size: 10px;
 	font-weight: bold;
@@ -268,7 +268,7 @@ td.amount.large {
 .error-unblinded {
 	display: block;
 	width: 100%;
-	color: #d43131;
+	color: var(--u-state-unavailable);
 	text-align: right;
   margin-top: 0px;
   margin-bottom: 10px;
@@ -283,7 +283,7 @@ h2 {
 }
 
 .sigged {
-	background-color: #ffffff22;
+	background-color: var(--u-surface-hover);
 }
 
 .summary {
@@ -365,21 +365,21 @@ h2 {
 }
 
 .merkle-branch:nth-child(2n + 1), .internal-key	{
-	color: #cccccc;
+	color: var(--u-text-muted);
 	font-weight: 500;
 }
 
 .merkle-branch, .internal-key, .leaf-version {
 	&:hover {
-		color: white;
+		color: var(--u-text-primary);
 		font-weight: 600;
 	}
 }
 
 .internal-key.nums {
-	color: #ffdddd;
+	color: var(--u-state-unavailable-surface);
 	&:hover {
-		color: #ffdddd;
+		color: var(--u-state-unavailable-surface);
 	}
 }
 
@@ -391,7 +391,7 @@ h2 {
 		white-space: nowrap;
 
 		&:first-child {
-			color: white;
+			color: var(--u-text-primary);
 			width: 50%;
 			white-space: nowrap;
 		}
@@ -413,7 +413,7 @@ h2 {
 }
 
 @keyframes acceleratePulse {
-  0% { background-color: #653b9c; box-shadow: #ad7de57f 0px 0px 12px -2px; }
-  50% { background-color: #8457bb; box-shadow: #ad7de5 0px 0px 18px -2px;}
-  100% { background-color: #653b9c; box-shadow: #ad7de57f 0px 0px 12px -2px; }
+  0% { background-color: var(--u-brand); box-shadow: var(--u-brand-hover) 0px 0px 12px -2px; }
+  50% { background-color: var(--u-brand); box-shadow: var(--u-brand-hover) 0px 0px 18px -2px;}
+  100% { background-color: var(--u-brand); box-shadow: var(--u-brand-hover) 0px 0px 12px -2px; }
 }

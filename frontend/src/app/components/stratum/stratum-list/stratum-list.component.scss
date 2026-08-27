@@ -26,7 +26,7 @@ td {
     width: 100px;
     .pipe-segment {
       position: absolute;
-      border-color: white;
+      border-color: var(--u-border-strong);
       box-sizing: content-box;
 
       &.vertical {
@@ -126,7 +126,7 @@ td {
 
 .badge {
   position: relative;
-  color: #FFF;
+  color: var(--u-text-primary);
 }
 
 .pool-logo {
