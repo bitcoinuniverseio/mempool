@@ -83,7 +83,7 @@ export interface BackendInfo {
 
 export interface ExplorerAssetRef {
   protocolId: string;
-  canonicalAssetId: string;
+  assetId: string;
   displayName?: string;
   ticker?: string;
   assetKind: string;

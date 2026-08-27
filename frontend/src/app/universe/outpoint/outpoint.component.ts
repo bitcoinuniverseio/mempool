@@ -144,6 +144,6 @@ export class OutpointComponent implements OnInit, OnDestroy {
   }
 
   trackByPosition(index: number, position: ExplorerOutpointPosition): string {
-    return `${position.outpoint}:${position.asset?.canonicalAssetId ?? index}`;
+    return `${position.outpoint}:${position.asset?.assetId ?? index}`;
   }
 }
