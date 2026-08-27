@@ -128,8 +128,10 @@
 
 .main-title {
   position: relative;
-  color: var(--fg);
-  opacity: var(--opacity);
+  // Was the page foreground at 57% opacity, which is under the contrast
+  // floor on every surface it appears on. A muted token says the same
+  // thing about hierarchy and stays readable.
+  color: var(--u-text-secondary);
   margin-top: -13px;
   font-size: 10px;
   text-transform: uppercase;
@@ -190,12 +192,12 @@
     }
 
     &.hover {
-      fill: #535e84;
+      fill: var(--u-chart-6);
       &.public {
         fill: url(#verify-hover-gradient);
       }
       &.verified {
-        fill: #29d951;
+        fill: var(--u-chart-6);
       }
     }
   }
@@ -217,7 +219,7 @@
   position: fixed;
   background: color-mix(in srgb, var(--active-bg) 95%, transparent);
   border-radius: 4px;
-  box-shadow: 1px 1px 10px rgba(0,0,0,0.5);
+  box-shadow: 1px 1px 10px var(--u-shadow-color);
   color: var(--tooltip-grey);
   padding: 10px 15px;
   text-align: left;

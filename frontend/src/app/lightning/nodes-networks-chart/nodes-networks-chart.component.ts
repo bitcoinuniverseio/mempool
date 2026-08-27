@@ -12,6 +12,7 @@ import { LightningApiService } from '@app/lightning/lightning-api.service';
 import { AmountShortenerPipe } from '@app/shared/pipes/amount-shortener.pipe';
 import { isMobile } from '@app/shared/common.utils';
 import { StateService } from '@app/services/state.service';
+import { chartChrome, rampStops } from '@app/shared/chart-theme';
 
 @Component({
   selector: 'app-nodes-networks-chart',
@@ -164,10 +165,7 @@ export class NodesNetworksChartComponent implements OnInit, OnChanges {
           opacity: 0.5,
         },
         stack: 'Total',
-        color: new echarts.graphic.LinearGradient(0, 0.75, 0, 1, [
-          { offset: 0, color: '#D81B60' },
-          { offset: 1, color: '#D81B60AA' },
-        ]),
+        color: new echarts.graphic.LinearGradient(0, 0.75, 0, 1, rampStops('a', 'AA')),
 
         smooth: false,
       },
@@ -186,10 +184,7 @@ export class NodesNetworksChartComponent implements OnInit, OnChanges {
           opacity: 0.5,
         },
         stack: 'Total',
-        color: new echarts.graphic.LinearGradient(0, 0.75, 0, 1, [
-          { offset: 0, color: '#be7d4c' },
-          { offset: 1, color: '#be7d4cAA' },
-        ]),
+        color: new echarts.graphic.LinearGradient(0, 0.75, 0, 1, rampStops('b', 'AA')),
         smooth: false,
       },
       {
@@ -207,10 +202,7 @@ export class NodesNetworksChartComponent implements OnInit, OnChanges {
           opacity: 0.5,
         },
         stack: 'Total',
-        color: new echarts.graphic.LinearGradient(0, 0.75, 0, 1, [
-          { offset: 0, color: '#FFB300' },
-          { offset: 1, color: '#FFB300AA' },
-        ]),
+        color: new echarts.graphic.LinearGradient(0, 0.75, 0, 1, rampStops('c', 'AA')),
         smooth: false,
       },
       {
@@ -228,10 +220,7 @@ export class NodesNetworksChartComponent implements OnInit, OnChanges {
           opacity: 0.5,
         },
         stack: 'Total',
-        color: new echarts.graphic.LinearGradient(0, 0.75, 0, 1, [
-          { offset: 0, color: '#7D4698' },
-          { offset: 1, color: '#7D4698AA' },
-        ]),
+        color: new echarts.graphic.LinearGradient(0, 0.75, 0, 1, rampStops('a', 'AA')),
         smooth: false,
       },
     ];
@@ -252,14 +241,14 @@ export class NodesNetworksChartComponent implements OnInit, OnChanges {
         axisPointer: {
           type: 'line'
         },
-        backgroundColor: 'rgba(17, 19, 31, 1)',
+        backgroundColor: chartChrome().surface,
         borderRadius: 4,
-        shadowColor: 'rgba(0, 0, 0, 0.5)',
+        shadowColor: chartChrome().markBorder,
         textStyle: {
           color: 'var(--tooltip-grey)',
           align: 'left',
         },
-        borderColor: '#000',
+        borderColor: chartChrome().markBorder,
         formatter: (ticks): string => {
           let total = 0;
           const date = new Date(ticks[0].data[0]).toLocaleDateString(this.locale, { year: 'numeric', month: 'short', day: 'numeric' });
@@ -298,33 +287,33 @@ export class NodesNetworksChartComponent implements OnInit, OnChanges {
         data: [
           {
             name: $localize`Darknet Only (Tor, I2P, cjdns)`,
-            inactiveColor: 'rgb(110, 112, 121)',
+            inactiveColor: chartChrome().label,
             textStyle: {
-              color: 'white',
+              color: chartChrome().label,
             },
             icon: 'roundRect',
           },
           {
             name: $localize`Clearnet Only (IPv4, IPv6)`,
-            inactiveColor: 'rgb(110, 112, 121)',
+            inactiveColor: chartChrome().label,
             textStyle: {
-              color: 'white',
+              color: chartChrome().label,
             },
             icon: 'roundRect',
           },
           {
             name: $localize`Clearnet and Darknet`,
-            inactiveColor: 'rgb(110, 112, 121)',
+            inactiveColor: chartChrome().label,
             textStyle: {
-              color: 'white',
+              color: chartChrome().label,
             },
             icon: 'roundRect',
           },
           {
             name: $localize`:@@e5d8bb389c702588877f039d72178f219453a72d:Unknown`,
-            inactiveColor: 'rgb(110, 112, 121)',
+            inactiveColor: chartChrome().label,
             textStyle: {
-              color: 'white',
+              color: chartChrome().label,
             },
             icon: 'roundRect',
           },
@@ -341,7 +330,7 @@ export class NodesNetworksChartComponent implements OnInit, OnChanges {
           type: 'value',
           position: 'left',
           axisLabel: {
-            color: 'rgb(110, 112, 121)',
+            color: chartChrome().label,
             formatter: (val: number): string => {
               if (this.widget) {
                 return `${this.amountShortenerPipe.transform(val, 0)}`;
@@ -364,7 +353,7 @@ export class NodesNetworksChartComponent implements OnInit, OnChanges {
           type: 'value',
           position: 'right',
           axisLabel: {
-            color: 'rgb(110, 112, 121)',
+            color: chartChrome().label,
             formatter: (val: number): string => {
               if (this.widget) {
                 return `${this.amountShortenerPipe.transform(val, 0)}`;
@@ -416,7 +405,7 @@ export class NodesNetworksChartComponent implements OnInit, OnChanges {
         right: 15,
         selectedDataBackground: {
           lineStyle: {
-            color: '#fff',
+            color: chartChrome().markBorder,
             opacity: 0.45,
           },
           areaStyle: {

@@ -43,11 +43,11 @@
     }
     &.done {
       --stage-color: var(--primary);
-      color: white;
+      color: var(--u-brand-contrast);
     }
     &.current {
       --stage-color: var(--tertiary);
-      color: white;
+      color: var(--u-brand-contrast);
     }
     &.next {
       animation: 1s linear alternate infinite pulse-next;

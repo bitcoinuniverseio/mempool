@@ -8,6 +8,7 @@ import { AmountShortenerPipe } from '@app/shared/pipes/amount-shortener.pipe';
 import { LightningApiService } from '@app/lightning/lightning-api.service';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 import { StateService } from '@app/services/state.service';
+import { chartChrome } from '@app/shared/chart-theme';
 
 @Component({
   selector: 'app-node-channels',
@@ -93,13 +94,13 @@ export class NodeChannels implements OnChanges {
           progressive: 100,
           tooltip: {
             show: true,
-            backgroundColor: 'rgba(17, 19, 31, 1)',
+            backgroundColor: chartChrome().surface,
             borderRadius: 4,
-            shadowColor: 'rgba(0, 0, 0, 0.5)',
+            shadowColor: chartChrome().markBorder,
             textStyle: {
               color: 'var(--tooltip-grey)',
             },
-            borderColor: '#000',
+            borderColor: chartChrome().markBorder,
             formatter: (value): string => {
               if (value.data.name === undefined) {
                 return ``;
@@ -119,7 +120,7 @@ export class NodeChannels implements OnChanges {
             }
           },
           itemStyle: {
-            borderColor: 'black',
+            borderColor: chartChrome().markBorder,
             borderWidth: 1,
           },
           breadcrumb: {

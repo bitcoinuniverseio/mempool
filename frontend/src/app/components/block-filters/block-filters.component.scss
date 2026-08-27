@@ -37,7 +37,7 @@
     padding: 0px 1px;
     opacity: 0;
     cursor: pointer;
-    color: white;
+    color: var(--u-block-ink);
     background: none;
     border: none;
     border-radius: 0.35em;
@@ -55,7 +55,7 @@
 
     h5 {
       font-size: 0.8rem;
-      color: white;
+      color: var(--u-block-ink);
       margin: 0;
       margin-top: 0.5em;
     }
@@ -71,9 +71,9 @@
 
   .filter-tag {
     font-size: 0.9em;
-    background: #181b2daf;
+    background: var(--u-surface-inset);
     border: solid 1px var(--primary);
-    color: white;
+    color: var(--u-block-ink);
     border-radius: 0.2rem;
     padding: 0.2em 0.5em;
     transition: background-color 300ms;
@@ -112,7 +112,7 @@
     padding: 0.2em 0.5em;
     pointer-events: all;
     line-height: 1.5;
-    background: #181b2daf;
+    background: var(--u-surface-inset);
 
     &:first-child {
       border-top-left-radius: 0.2rem;
@@ -142,9 +142,9 @@
       }
     }
     &.yellow {
-      border: solid 1px #bf7815;
+      border: solid 1px var(--u-state-partial);
       &.active {
-        background: #bf7815;
+        background: var(--u-state-partial);
       }
     }
   }
@@ -156,7 +156,7 @@
 
       &:hover {
         opacity: 1;
-        background: #181b2d7f;
+        background: var(--u-surface-inset);
       }
     }
 
@@ -166,7 +166,7 @@
         background: none;
 
         &:hover {
-          background: #181b2d7f;
+          background: var(--u-surface-inset);
         }
       }
     }
@@ -178,14 +178,14 @@
       background: none;
 
       &:hover {
-        background: #181b2d7f;
+        background: var(--u-surface-inset);
       }
     }
   }
 
   &.menu-open {
     pointer-events: all;
-    background: #181b2d7f;
+    background: var(--u-surface-inset);
   }
 
   &.small {

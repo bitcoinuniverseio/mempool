@@ -3,7 +3,7 @@
   left: -0.5px;
   top: 0;
   .divider-line {
-    stroke: white;
+    stroke: var(--u-text-primary);
     stroke-width: 4px;
     stroke-linecap: butt;
     stroke-dasharray: 25px 25px;
@@ -26,7 +26,7 @@
 }
 
 .black-background {
-  background-color: #11131f;
+  background-color: var(--u-surface-page);
   z-index: 100;
   position: relative;
 }
@@ -50,7 +50,7 @@
 }
 
 .time-toggle {
-  color: white;
+  color: var(--u-block-ink);
   font-size: 0.8rem;
   position: absolute;
   bottom: -1.8em;

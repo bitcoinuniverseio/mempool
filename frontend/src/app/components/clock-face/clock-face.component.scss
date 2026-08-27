@@ -23,8 +23,8 @@
     stroke-linejoin: round;
 
     &.minute {
-      fill:#80C2E1;
-      stroke:#80C2E1;
+      fill:var(--u-chart-6);
+      stroke:var(--u-chart-6);
       stroke-width: 2px;
     }
 
@@ -38,7 +38,7 @@
   .tick {
     transform-origin: center;
     fill: none;
-    stroke: white;
+    stroke: var(--u-text-primary);
     stroke-width: 2px;
     stroke-linecap: butt;
 
@@ -59,7 +59,7 @@
 
   .dial-segment {
     fill: none;
-    stroke: white;
+    stroke: var(--u-text-primary);
     stroke-width: 2px;
   }
 

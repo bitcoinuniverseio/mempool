@@ -126,10 +126,10 @@
 td {
   .difference {
     &.positive {
-      color: rgb(66, 183, 71);
+      color: var(--u-state-proven);
     }
     &.negative {
-      color: rgb(183, 66, 66);
+      color: var(--u-state-unavailable);
     }
   }
 }

@@ -30,16 +30,16 @@ tr, td, th {
     margin-left: 0.5em;
 
     &.positive {
-      color: rgb(66, 183, 71);
+      color: var(--u-state-proven);
     }
     &.negative {
-      color: rgb(183, 66, 66);
+      color: var(--u-state-unavailable);
     }
   }
 }
 
 .clear-link {
-  color: white;
+  color: var(--u-brand);
 }
 
 .disabled {

@@ -31,7 +31,7 @@
   .summary {
     margin: 0.5rem 0 0;
     max-width: 68ch;
-    color: var(--transparent-fg, #a8b0c4);
+    color: var(--u-text-muted);
   }
 }
 
@@ -80,7 +80,7 @@
 
   li {
     padding: 0.15em 0.55em;
-    border: 1px solid rgba(255, 255, 255, 0.16);
+    border: 1px solid var(--u-border);
     border-radius: 0.25rem;
     font-size: 0.85rem;
     text-transform: lowercase;
@@ -93,7 +93,7 @@
   gap: 0.35rem 1rem;
   margin: 0;
 
-  dt { color: var(--transparent-fg, #a8b0c4); }
+  dt { color: var(--u-text-muted); }
   dd { margin: 0; overflow-wrap: anywhere; }
 }
 
@@ -110,15 +110,15 @@
 }
 
 .empty {
-  color: var(--transparent-fg, #a8b0c4);
+  color: var(--u-text-muted);
 }
 
 .pin {
   padding: 0.3em 0.75em;
   border-radius: 0.25rem;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid var(--u-border);
   background: transparent;
-  color: var(--transparent-fg, #a8b0c4);
+  color: var(--u-text-muted);
   font-size: 0.85rem;
   min-height: 34px;
   cursor: pointer;
@@ -132,7 +132,7 @@
 .skeleton-line {
   height: 1rem;
   border-radius: 0.2rem;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--u-divider);
   margin: 0 0 0.6rem;
 
   &.short { width: 40%; }

@@ -6,6 +6,7 @@ import { LightningApiService } from '@app/lightning/lightning-api.service';
 import { ActivatedRoute, ParamMap } from '@angular/router';
 import { AmountShortenerPipe } from '@app/shared/pipes/amount-shortener.pipe';
 import { StateService } from '@app/services/state.service';
+import { chartChrome } from '@app/shared/chart-theme';
 
 @Component({
   selector: 'app-node-fee-chart',
@@ -139,14 +140,14 @@ export class NodeFeeChartComponent implements OnInit {
         axisPointer: {
           type: 'line'
         },
-        backgroundColor: 'rgba(17, 19, 31, 1)',
+        backgroundColor: chartChrome().surface,
         borderRadius: 4,
-        shadowColor: 'rgba(0, 0, 0, 0.5)',
+        shadowColor: chartChrome().markBorder,
         textStyle: {
           color: 'var(--tooltip-grey)',
           align: 'left',
         },
-        borderColor: '#000',
+        borderColor: chartChrome().markBorder,
         formatter: (ticks): string => {
           return `
             <b style="color: white; margin-left: 2px">${ticks[0].data.label}</b><br>
@@ -178,17 +179,17 @@ export class NodeFeeChartComponent implements OnInit {
         data: [
           {
             name: $localize`Outgoing Fees`,
-            inactiveColor: 'rgb(110, 112, 121)',
+            inactiveColor: chartChrome().label,
             textStyle: {
-              color: 'white',
+              color: chartChrome().label,
             },
             icon: 'roundRect',
           },
           {
             name: $localize`Incoming Fees`,
-            inactiveColor: 'rgb(110, 112, 121)',
+            inactiveColor: chartChrome().label,
             textStyle: {
-              color: 'white',
+              color: chartChrome().label,
             },
             icon: 'roundRect',
           },
@@ -198,7 +199,7 @@ export class NodeFeeChartComponent implements OnInit {
         {
           type: 'value',
           axisLabel: {
-            color: 'rgb(110, 112, 121)',
+            color: chartChrome().label,
             formatter: (val) => {
               return `${this.amountShortenerPipe.transform(Math.abs(val), 2, undefined, true)} sats`;
             }

@@ -31,10 +31,10 @@
 
     <ng-container *ngFor="let segment of segments; trackBy: trackBySegment">
       <path class="block-segment" [attr.d]="segment.path" />
-      <!-- <circle class="segment-mark start" [attr.cx]="segment.start.x" [attr.cy]="segment.start.y" r="2" style="fill:green;stroke:white;stroke-width:1px;" />
-      <circle class="segment-mark end" [attr.cx]="segment.end.x" [attr.cy]="segment.end.y" r="2" style="fill:red;stroke:white;stroke-width:1px;" /> -->
+      <!-- <circle class="segment-mark start" [attr.cx]="segment.start.x" [attr.cy]="segment.start.y" r="2" style="fill:green;stroke:var(--u-text-primary);stroke-width:1px;" />
+      <circle class="segment-mark end" [attr.cx]="segment.end.x" [attr.cy]="segment.end.y" r="2" style="fill:red;stroke:var(--u-text-primary);stroke-width:1px;" /> -->
     </ng-container>
-    <!-- <polyline points="468.750,82.031 468.750,35 " id="polyline322" style="fill:none;stroke:#ffffff;stroke-width:4.84839;stroke-dasharray:none;stroke-opacity:1" transform="matrix(0.41250847,0,0,0.93092534,-1.3627708,-32.692008)" /> -->
+    <!-- <polyline points="468.750,82.031 468.750,35 " id="polyline322" style="fill:none;stroke:var(--u-text-primary);stroke-width:4.84839;stroke-dasharray:none;stroke-opacity:1" transform="matrix(0.41250847,0,0,0.93092534,-1.3627708,-32.692008)" /> -->
     <path class="tick very major" d="M 192,0 v 45" />
     <path id="hour" class="gnomon hour" d="M 178,3 206,3 192,40 Z" [style.transform]="'rotate(' + (hours * 30) + 'deg)'" />
     <path id="minute" class="gnomon minute" d="M 180,4 204,4 192,38 Z" [style.transform]="'rotate(' + (minutes * 6) + 'deg)'" />

@@ -43,13 +43,13 @@
                         <fa-icon [icon]="['fas', 'arrow-alt-circle-right']" [fixedWidth]="true"></fa-icon>
                       </a>
                       <ng-template #localPegInLink>
-                        <a [routerLink]="['/tx/', vin.txid]" class="red">
+                        <a [routerLink]="['/tx/', vin.txid]" class="red" i18n-aria-label="transactions-list.open-previous|Open previous output" aria-label="Open the transaction this input came from">
                           <fa-icon [icon]="['fas', 'arrow-alt-circle-right']" [fixedWidth]="true"></fa-icon>
                         </a>
                       </ng-template>
                     </ng-template>
                     <ng-template #defaultPrevout>
-                      <a [routerLink]="['/tx/' | relativeUrl, vin.txid]" [fragment]="'vout=' + vin.vout" class="red">
+                      <a [routerLink]="['/tx/' | relativeUrl, vin.txid]" [fragment]="'vout=' + vin.vout" class="red" i18n-aria-label="transactions-list.open-previous|Open previous output" aria-label="Open the transaction this input came from">
                         <fa-icon [icon]="['fas', 'arrow-alt-circle-right']" [fixedWidth]="true"></fa-icon>
                       </a>
                     </ng-template>

@@ -25,7 +25,7 @@
     height: 15.625%;
     z-index: 2;
     // overflow: hidden;
-    // background: #1d1f31;
+    // background: var(--u-surface-raised);
     // box-shadow: 0 0 15px #000;
   }
 
@@ -56,7 +56,7 @@
 
       ::ng-deep .symbol {
         font-size: inherit;
-        color: white;
+        color: var(--u-block-ink);
       }
     }
 
@@ -100,7 +100,7 @@
     font-size: calc(0.2 * var(--clock-width));
     padding: 0;
     margin: 0;
-    background: radial-gradient(rgba(0,0,0,0.5), transparent 67%);
+    background: radial-gradient(var(--u-overlay-scrim), transparent 67%);
     padding: calc(0.05 * var(--clock-width)) calc(0.15 * var(--clock-width));
   }
 }
@@ -128,7 +128,7 @@
     right: 0;
     top: 0;
     bottom: 0;
-    background: radial-gradient(transparent 0%, transparent 44%, #11131f 58%, #11131f 100%);
+    background: radial-gradient(transparent 0%, transparent 44%, var(--u-surface-page) 58%, var(--u-surface-page) 100%);
   }
 
   .block-cube {
@@ -150,7 +150,7 @@
       height: var(--side-width);
       line-height: 100px;
       text-align: center;
-      background: #232838;
+      background: var(--u-surface-inset);
       display: block;
       position: absolute;
     }

@@ -6,6 +6,7 @@ import { download, formatterXAxis, formatterXAxisLabel } from '@app/shared/graph
 import { formatNumber } from '@angular/common';
 import { StateService } from '@app/services/state.service';
 import { Subscription } from 'rxjs';
+import { chartChrome } from '@app/shared/chart-theme';
 
 const OUTLIERS_MEDIAN_MULTIPLIER = 4;
 
@@ -137,7 +138,7 @@ export class IncomingTransactionsGraphComponent implements OnInit, OnChanges, On
         silent: true,
         symbol: 'none',
         lineStyle: {
-          color: '#fff',
+          color: chartChrome().markBorder,
           opacity: 1,
           width: 2,
         },
@@ -145,7 +146,7 @@ export class IncomingTransactionsGraphComponent implements OnInit, OnChanges, On
           yAxis: 1667,
           label: {
             show: false,
-            color: '#ffffff',
+            color: chartChrome().label,
           }
         }],
       }
@@ -161,7 +162,7 @@ export class IncomingTransactionsGraphComponent implements OnInit, OnChanges, On
         symbol: 'none',
         lineStyle: {
           width: 2,
-          color: 'white',
+          color: chartChrome().markBorder,
         }
       });
     }
@@ -191,7 +192,7 @@ export class IncomingTransactionsGraphComponent implements OnInit, OnChanges, On
         bottom: 0,
         selectedDataBackground: {
           lineStyle: {
-            color: '#fff',
+            color: chartChrome().markBorder,
             opacity: 0.45,
           },
           areaStyle: {
@@ -281,34 +282,34 @@ export class IncomingTransactionsGraphComponent implements OnInit, OnChanges, On
         pieces: [{
           gt: 0,
           lte: 1667,
-          color: '#7CB342'
+          color: chartChrome().series[5]
         },
         {
           gt: 1667,
           lte: 2000,
-          color: '#FDD835'
+          color: chartChrome().series[4]
         },
         {
           gt: 2000,
           lte: 2500,
-          color: '#FFB300'
+          color: chartChrome().series[3]
         },
         {
           gt: 2500,
           lte: 3000,
-          color: '#FB8C00'
+          color: chartChrome().series[2]
         },
         {
           gt: 3000,
           lte: 3500,
-          color: '#F4511E'
+          color: chartChrome().series[1]
         },
         {
           gt: 3500,
-          color: '#D81B60'
+          color: chartChrome().series[0]
         }],
         outOfRange: {
-          color: '#999'
+          color: chartChrome().label
         }
       },
     };

@@ -9,6 +9,7 @@ import { StateService } from '@app/services/state.service';
 import { formatNumber } from '@angular/common';
 import { SeoService } from '@app/services/seo.service';
 import { OpenGraphService } from '@app/services/opengraph.service';
+import { rampStops } from '@app/shared/chart-theme';
 
 @Component({
   selector: 'app-pool-preview',
@@ -130,13 +131,7 @@ export class PoolPreviewComponent implements OnInit {
       title: title,
       animation: false,
       color: [
-        new echarts.graphic.LinearGradient(0, 0, 0, 0.65, [
-          { offset: 0, color: '#F4511E' },
-          { offset: 0.25, color: '#FB8C00' },
-          { offset: 0.5, color: '#FFB300' },
-          { offset: 0.75, color: '#FDD835' },
-          { offset: 1, color: '#7CB342' }
-        ]),
+        new echarts.graphic.LinearGradient(0, 0, 0, 0.65, rampStops('scale')),
         '#D81B60',
       ],
       grid: {
