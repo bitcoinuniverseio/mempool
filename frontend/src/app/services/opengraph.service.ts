@@ -26,7 +26,7 @@ export class OpenGraphService {
   ) {
     // save og:image tag from original template
     const initialOgImageTag = metaService.getTag('property=\'og:image\'');
-    this.defaultImageUrl = initialOgImageTag?.content || '/resources/universe/universe-explorer-logo.svg';
+    this.defaultImageUrl = initialOgImageTag?.content || '/resources/universe/universe-explorer-card.png';
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd),
       map(() => this.activatedRoute),
