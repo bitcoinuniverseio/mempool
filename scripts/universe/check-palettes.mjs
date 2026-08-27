@@ -133,7 +133,9 @@ for (const theme of [LIGHT, DARK]) {
     token(tokensSource, 'u-block-confirmed-to'),
     token(tokensSource, 'u-block-confirmed-top'),
     token(tokensSource, 'u-block-confirmed-side'),
+    token(tokensSource, 'u-block-confirmed-empty'),
     token(tokensSource, 'u-block-projected-empty'),
+    token(tokensSource, 'u-block-loading'),
     token(tokensSource, 'u-block-projected-top'),
     token(tokensSource, 'u-block-projected-side'),
   ];

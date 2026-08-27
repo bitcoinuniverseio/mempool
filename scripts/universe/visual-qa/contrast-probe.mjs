@@ -145,25 +145,74 @@ export function contrastProbe() {
     return out;
   };
 
-  // Every colour painted behind the element, including gradient stops and canvas
-  // pixels, so the worst case can be measured rather than guessed.
-  const backdropColours = (el, rect) => {
-    const out = []; let unknown = false; let n = el;
+  // Keep only the extremes of a set of candidate colours. Compositing is
+  // monotone per channel, so the worst contrast for any ink is produced by one
+  // of these two, which keeps the search bounded instead of combinatorial.
+  const extremes = (colours) => {
+    if (colours.length < 3) return colours;
+    let lo = colours[0], hi = colours[0], loL = lum(lo), hiL = loL;
+    for (const c of colours) {
+      const l = lum(c);
+      if (l < loL) { loL = l; lo = c; }
+      if (l > hiL) { hiL = l; hi = c; }
+    }
+    return [lo, hi];
+  };
+
+  // The set of colours that can actually end up behind the element.
+  //
+  // Layers are collected outward from the element and stop at the first one
+  // that is fully opaque, because nothing below an opaque layer is visible.
+  // Each layer contributes every colour it can paint: a flat background is one
+  // colour, a gradient is all of its stops, a canvas is the lightest and
+  // darkest pixel it draws under this rectangle. They are then composited
+  // bottom-up, keeping only the extremes at each step.
+  const paintedBackdrops = (el, rect) => {
+    const layers = [];
+    let unknown = false;
+    let n = el;
     while (n && n.nodeType === 1) {
       const cs = getComputedStyle(n);
-      const bg = parse(cs.backgroundColor);
+      const op = parseFloat(cs.opacity);
+      const alpha = Number.isFinite(op) ? op : 1;
+      const layer = [];
+      let opaque = false;
+
+      if (n.tagName === 'CANVAS') {
+        for (const c of canvasColoursUnder(rect)) layer.push(c);
+        if (layer.length) opaque = true;
+      }
+
       if (cs.backgroundImage && cs.backgroundImage !== 'none') {
         if (/url\(/.test(cs.backgroundImage)) unknown = true;
-        for (const c of gradientStops(cs.backgroundImage)) out.push(c);
+        const stops = gradientStops(cs.backgroundImage);
+        for (const c of stops) layer.push({ r: c.r, g: c.g, b: c.b, a: c.a * alpha });
+        // A gradient with no transparent stop covers whatever is beneath it.
+        if (stops.length && stops.every((c) => c.a >= 1) && alpha >= 1 && !/url\(/.test(cs.backgroundImage)) {
+          opaque = true;
+        }
       }
-      if (bg && bg.a > 0) out.push(bg);
-      if (n.tagName === 'CANVAS' || n.querySelector?.('canvas')) {
-        for (const c of canvasColoursUnder(rect)) out.push(c);
+
+      const bg = parse(cs.backgroundColor);
+      if (bg && bg.a > 0) {
+        layer.push({ r: bg.r, g: bg.g, b: bg.b, a: bg.a * alpha });
+        if (bg.a >= 1 && alpha >= 1) opaque = true;
       }
+
+      if (layer.length) layers.push(layer);
+      if (opaque) break;
       n = n.parentElement;
     }
-    for (const c of canvasColoursUnder(rect)) out.push(c);
-    return { colours: out, unknown };
+
+    // The browser paints onto the canvas of the page itself, which is white
+    // where nothing else has covered it.
+    let set = [{ r: 255, g: 255, b: 255, a: 1 }];
+    for (let i = layers.length - 1; i >= 0; i--) {
+      const next = [];
+      for (const beneath of set) for (const c of layers[i]) next.push(over(c, beneath));
+      set = extremes(next);
+    }
+    return { colours: set, unknown };
   };
 
   const results = { text: [], painted: [], canvas: [], sampled: 0 };
@@ -181,6 +230,9 @@ export function contrastProbe() {
     if (rect.width < 1 || rect.height < 1) continue;
     const cs = getComputedStyle(el);
     if (cs.visibility === 'hidden' || cs.display === 'none') continue;
+    // Text hidden from assistive technology is a copy affordance or a visual
+    // duplicate of something already on screen, not content anyone reads.
+    if (el.closest('[aria-hidden="true"]')) continue;
 
     const declared = parse(cs.color) || parse(cs.fill);
     if (!declared) continue;
@@ -188,8 +240,6 @@ export function contrastProbe() {
     if (opacity < 0.02) continue;
 
     const { color: bg, painted } = backdrop(el);
-    const fg = over({ r: declared.r, g: declared.g, b: declared.b, a: declared.a * opacity }, bg);
-    const value = floor2(ratio(fg, bg));
 
     const size = parseFloat(cs.fontSize);
     const weight = parseInt(cs.fontWeight, 10) || 400;
@@ -200,24 +250,20 @@ export function contrastProbe() {
 
     results.sampled++;
 
-    // Over a gradient, an image, or a canvas the declared background is not
-    // what the reader sees, so measure against everything that can be painted
-    // there and keep the worst.
-    let worst = value;
+    // Measure against every colour that can actually end up behind this text
+    // and keep the worst. Over a flat surface that is one answer; over a
+    // gradient, a canvas, or the fee scale it is the one that matters.
+    const { colours, unknown } = paintedBackdrops(el, rect);
+    let worst = Infinity;
     let worstBackground = bg;
-    let unresolved = false;
-    if (painted) {
-      const { colours, unknown } = backdropColours(el, rect);
-      unresolved = unknown;
-      for (const candidate of colours) {
-        const surface = over(candidate, bg);
-        const ink = over({ r: declared.r, g: declared.g, b: declared.b, a: declared.a * opacity }, surface);
-        const r = floor2(ratio(ink, surface));
-        if (r < worst) { worst = r; worstBackground = surface; }
-      }
+    for (const surface of colours) {
+      const ink = over({ r: declared.r, g: declared.g, b: declared.b, a: declared.a * opacity }, surface);
+      const r = floor2(ratio(ink, surface));
+      if (r < worst) { worst = r; worstBackground = surface; }
     }
+    if (!Number.isFinite(worst)) continue;
 
-    if (worst >= required && !unresolved) continue;
+    if (worst >= required && !unknown) continue;
 
     const key = path(el) + '|' + cs.color + '|' + Math.round(worst * 10);
     if (seen.has(key)) continue;

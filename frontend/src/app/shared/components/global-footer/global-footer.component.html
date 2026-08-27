@@ -76,7 +76,15 @@
       <p>
         <ng-container i18n="footer.running-version">Running</ng-container>
         v{{ packetJsonVersion }}
-        <a target="_blank" rel="noopener" [href]="sourceRepository + '/commit/' + frontendGitCommitHash">{{ frontendGitCommitHash }}</a>
+        <a
+          *ngIf="frontendGitCommitHash"
+          target="_blank"
+          rel="noopener"
+          [href]="sourceRepository + '/commit/' + frontendGitCommitHash"
+          i18n-aria-label="footer.commit-link"
+          [attr.aria-label]="'View the source commit this build was made from, ' + frontendGitCommitHash"
+          >{{ frontendGitCommitHash }}</a
+        >
       </p>
     </div>
   </div>

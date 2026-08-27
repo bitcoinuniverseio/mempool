@@ -224,6 +224,19 @@ async function run() {
           try {
             localStorage.setItem('theme-preference', t);
           } catch { /* private mode: the default theme is fine */ }
+
+          // A WebGL drawing buffer is cleared once the frame is presented, so
+          // reading the Lens back afterwards returns nothing at all. Asking for
+          // it to be preserved is what makes the product's signature view
+          // measurable rather than a rectangle nobody checks. This only ever
+          // runs in the harness; the application asks for the default.
+          const getContext = HTMLCanvasElement.prototype.getContext;
+          HTMLCanvasElement.prototype.getContext = function (type, attributes) {
+            if (type === 'webgl' || type === 'webgl2' || type === 'experimental-webgl') {
+              return getContext.call(this, type, { ...(attributes || {}), preserveDrawingBuffer: true });
+            }
+            return getContext.call(this, type, attributes);
+          };
         }, theme);
 
         for (const route of routes) {
