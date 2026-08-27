@@ -270,8 +270,6 @@ check('high contrast borders', token(contrastSource, 'u-border'), hcSurfaces, { 
 for (const state of ['proven', 'partial', 'pending', 'unavailable', 'neutral']) {
   check(`high contrast ${state} text`, token(contrastSource, `u-state-${state}`), hcSurfaces, { floor: 7 });
 }
-// This theme brightens the fee scale far enough that near-black is the ink.
-check('high contrast fee scale ink', token(contrastSource, 'u-fee-label-ink'), contrastFees);
 
 // --- Report ----------------------------------------------------------------
 

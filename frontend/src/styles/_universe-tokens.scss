@@ -111,11 +111,6 @@
   --u-block-projected-top: #5c6480;
   --u-block-projected-side: #343a4d;
 
-  // Text printed on the fee scale. The scale is its own object with its own
-  // colours, so the ink that reads on it is a separate decision from page text.
-  // The high-contrast theme brightens the scale far enough to flip this.
-  --u-fee-label-ink: #ffffff;
-
   // Layout
   --u-width-prose: 68ch;
   --u-width-page: 1320px;
