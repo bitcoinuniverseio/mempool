@@ -26,7 +26,7 @@
 
   .lede {
     margin: 0.35rem 0 0;
-    color: var(--transparent-fg, #a8b0c4);
+    color: var(--u-text-muted);
     max-width: 46ch;
   }
 }
@@ -51,7 +51,7 @@
   margin: 0;
 
   dt {
-    color: var(--transparent-fg, #a8b0c4);
+    color: var(--u-text-muted);
     font-weight: 500;
   }
 
@@ -85,7 +85,7 @@
   }
 
   .authority {
-    color: var(--transparent-fg, #a8b0c4);
+    color: var(--u-text-muted);
     font-size: 0.85rem;
   }
 
@@ -98,7 +98,7 @@
 .protocol-group + .protocol-group {
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid var(--u-divider);
 }
 
 .protocol-name {
@@ -106,7 +106,7 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
   margin: 0 0 0.5rem;
-  color: var(--transparent-fg, #a8b0c4);
+  color: var(--u-text-muted);
 }
 
 .position-list,
@@ -140,7 +140,7 @@
   display: flex;
   gap: 0.75rem;
   font-size: 0.8rem;
-  color: var(--transparent-fg, #a8b0c4);
+  color: var(--u-text-muted);
 }
 
 .notable-sats {
@@ -163,7 +163,7 @@
 .notable-truncated {
   margin: 0.35rem 0 0;
   font-size: 0.8rem;
-  color: var(--transparent-fg, #a8b0c4);
+  color: var(--u-text-muted);
 }
 
 .value .sats {
@@ -180,7 +180,7 @@
 .skeleton-line {
   height: 1rem;
   border-radius: 0.2rem;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--u-divider);
   margin: 0 0 0.6rem;
 
   &.short { width: 40%; }

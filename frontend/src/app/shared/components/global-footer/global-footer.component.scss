@@ -86,6 +86,9 @@ footer {
     color: var(--u-text-secondary);
     font-size: var(--u-text-sm);
     line-height: var(--u-leading-snug);
+    // A list of destinations is not running text, so these stay clean and
+    // underline on hover rather than carrying a rule each.
+    text-decoration: none;
 
     &:hover {
       color: var(--u-brand);

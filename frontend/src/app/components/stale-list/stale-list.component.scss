@@ -92,8 +92,8 @@
 .block-column.stale {
   .bitcoin-block {
     opacity: 0.6;
-    box-shadow: 0 0 10px rgba(255, 0, 0, 0.25), 0 0 10px rgba(255, 0, 0, 0.25);
-    filter: drop-shadow(0 0 10px rgba(255, 0, 0, 0.25));
+    box-shadow: 0 0 10px var(--u-state-unavailable), 0 0 10px var(--u-state-unavailable);
+    filter: drop-shadow(0 0 10px var(--u-state-unavailable));
   }
 
   .block-body {
@@ -109,7 +109,7 @@
 
 .block-column.canonical {
   .bitcoin-block {
-    box-shadow: 0 0 10px rgba(0, 255, 0, 0.25), 0 0 10px rgba(0, 255, 0, 0.25);
+    box-shadow: 0 0 10px var(--u-state-proven), 0 0 10px var(--u-state-proven);
     filter: drop-shadow(0 0 10px rgba(0, 255, 0, 0.25));
   }
 }
@@ -121,7 +121,7 @@
   position: absolute;
   top: calc(-0.192 * var(--block-size));
   left: calc(-0.16 * var(--block-size));
-  background-color: #232838;
+  background-color: var(--u-surface-inset);
   transform: skew(40deg);
   transform-origin: top;
 }
@@ -133,7 +133,7 @@
   position: absolute;
   top: calc(-0.096 * var(--block-size));
   left: calc(-0.16 * var(--block-size));
-  background-color: #191c27;
+  background-color: var(--u-surface-raised);
   transform: skewY(50deg);
   transform-origin: top;
 }
@@ -177,7 +177,7 @@
 
   .badge {
     position: relative;
-    color: #FFF;
+    color: var(--u-text-primary);
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 145px;

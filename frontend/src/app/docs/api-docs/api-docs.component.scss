@@ -17,7 +17,7 @@
 }
 
 code {
-  background-color: var(--bg);
+  background-color: var(--u-surface-sunken);
   font-family: Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New;
 }
 
@@ -55,19 +55,19 @@ ul.no-bull.block-audit li span {
 }
 
 ul.no-bull.block-audit li span.block-audit-highlight-color.added {
-  color: #0099ff;
+  color: var(--u-code-control);
 }
 
 ul.no-bull.block-audit li span.block-audit-highlight-color.removed {
-  color: #f344df;
+  color: var(--u-code-stack);
 }
 
 ul.no-bull.block-audit li span.block-audit-highlight-color.recent {
-  color: #8a3480;
+  color: var(--u-code-crypto);
 }
 
 ul.no-bull.block-audit li span.block-audit-highlight-color.marginal {
-  color: #414127;
+  color: var(--u-code-reserved);
 }
 
 ul.no-bull.block-audit li p {
@@ -93,7 +93,7 @@ ul.no-bull.block-audit code{
 }
 
 .nav-tabs .nav-link.active {
-  border-bottom: 1px solid #fff;
+  border-bottom: 1px solid var(--u-border-strong);
   @media (min-width: 676px){
     border-bottom: 1px solid var(--active-bg);
   }
@@ -125,7 +125,7 @@ ul.no-bull.block-audit code{
 }
 .title {
   font-weight: bold;
-  color: #ffffff;
+  color: var(--u-text-primary);
   font-size: 1.25rem;
 }
 .subtitle {
@@ -135,7 +135,7 @@ ul.no-bull.block-audit code{
   width: 100%;
   margin: 30px auto;
   height: 1px;
-  background: #333;
+  background: var(--u-divider);
 }
 
 .difficulty {
@@ -211,8 +211,10 @@ h3 {
 }
 
 .endpoint-container .section-header span {
-  color: var(--fg);
-  background-color: var(--tertiary);
+  // A filled brand chip needs the ink that reads on brand, not the page
+  // foreground, which became near-black when light became the default.
+  color: var(--u-brand-contrast);
+  background-color: var(--u-brand);
   font-size: 12px;
   text-transform: uppercase;
   font-weight: 400;
@@ -253,9 +255,9 @@ h3 {
 
 #doc-nav-mobile button {
   width: 100%;
-  background-color: var(--primary);
-  color: var(--fg);
-  border-color: var(--primary);
+  background-color: var(--u-brand);
+  color: var(--u-brand-contrast);
+  border-color: var(--u-brand);
   border-radius: 0.5rem 0.5rem 0 0;
 }
 
@@ -303,7 +305,7 @@ h3 {
 }
 
 #disclaimer {
-  background-color: var(--bg);
+  background-color: var(--u-surface-sunken);
   padding: 24px;
   margin: 24px 0;
 }
@@ -318,7 +320,7 @@ h3 {
 
 #enterprise-cta-mobile {
   padding: 20px;
-  background-color: var(--bg);
+  background-color: var(--u-surface-sunken);
   border-radius: 0.25rem;
   text-align: center;
   position: fixed;
@@ -327,7 +329,7 @@ h3 {
   width: calc(100% - 60px);
   bottom: 70px;
   display: none;
-  border: 3px solid #533180;
+  border: 3px solid var(--u-brand-hover);
 }
 
 #enterprise-cta-mobile p {
@@ -455,7 +457,7 @@ dd {
   & > dl > dt {
     display: inline;
     font-weight: normal;
-    color: #e83e8c;
+    color: var(--u-chart-6);
     font-family: Consolas, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New;
     text-transform: uppercase;
 
@@ -472,15 +474,15 @@ dd {
 }
 
 code {
-  background-color: var(--bg);
+  background-color: var(--u-surface-sunken);
   font-family: Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New;
 }
 
 pre {
   display: block;
   font-size: 87.5%;
-  color: #f18920;
-  background-color: var(--bg);
+  color: var(--u-protocol-ordinals);
+  background-color: var(--u-surface-sunken);
   padding: 30px;
   code{
     background-color: transparent;

@@ -115,8 +115,11 @@ describe('AssetFlowComponent empty and input notes', () => {
     expect(subject.emptyLabel(flow())).toBe(
       'No supported assets detected on this transaction',
     );
+    // The chip beside the heading already says the evidence is incomplete.
+    // This line has to say what that means for the transaction in front of
+    // the reader, not repeat the chip back to them.
     expect(subject.emptyLabel(flow({ complete: false }))).toBe(
-      'Protocol evidence incomplete',
+      'No supported assets were found, but the authority cannot prove there are none',
     );
   });
 

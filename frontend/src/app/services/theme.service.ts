@@ -3,6 +3,7 @@ import { BehaviorSubject } from 'rxjs';
 import { defaultMempoolFeeColors, contrastMempoolFeeColors } from '@app/app.constants';
 import { StorageService } from '@app/services/storage.service';
 import { StateService } from '@app/services/state.service';
+import { invalidateChartChrome } from '@app/shared/chart-theme';
 
 @Injectable({
   providedIn: 'root'
@@ -47,6 +48,7 @@ export class ThemeService {
         this.storageService.setValue('theme-preference', theme);
       }
       this.mempoolFeeColors = defaultMempoolFeeColors;
+      invalidateChartChrome();
       this.themeState$.next({ theme, loading: false });
       return;
     }
@@ -69,6 +71,7 @@ export class ThemeService {
           this.initialLoad = false;
         }
         this.mempoolFeeColors = theme === 'contrast' ? contrastMempoolFeeColors : defaultMempoolFeeColors;
+        invalidateChartChrome();
         this.themeState$.next({ theme, loading: false });
       };
       this.style.onerror = () => this.apply('default');

@@ -9,6 +9,7 @@ import { AddressTxSummary } from '@interfaces/electrs.interface';
 import { originalChartColors as chartColors } from '@app/app.constants';
 import { formatNumber } from '@angular/common';
 import { Treasury } from '@interfaces/node-api.interface';
+import { chartChrome } from '@app/shared/chart-theme';
 
 @Component({
   selector: 'app-treasuries-pie',
@@ -156,13 +157,13 @@ export class TreasuriesPieComponent implements OnChanges {
         },
         tooltip: {
           show: !isMobile(),
-          backgroundColor: 'rgba(17, 19, 31, 1)',
+          backgroundColor: chartChrome().surface,
           borderRadius: 4,
-          shadowColor: 'rgba(0, 0, 0, 0.5)',
+          shadowColor: chartChrome().markBorder,
           textStyle: {
             color: 'var(--tooltip-grey)',
           },
-          borderColor: '#000',
+          borderColor: chartChrome().markBorder,
           formatter: () => {
             return `<b style="color: white">${entry.label} (${entry.share.toFixed(2)}%)</b><br>
             ${formatNumber(entry.balance / 100_000_000, this.locale, '1.3-3')} BTC<br>`;
@@ -177,7 +178,7 @@ export class TreasuriesPieComponent implements OnChanges {
     if (otherEntry.share > 0) {
       data.push({
         itemStyle: {
-          color: '#6b6b6b',
+          color: chartChrome().axis,
         },
         value: otherEntry.share,
         name:  $localize`Other (${percentage})`,
@@ -188,13 +189,13 @@ export class TreasuriesPieComponent implements OnChanges {
           edgeDistance: edgeDistance
         },
         tooltip: {
-          backgroundColor: 'rgba(17, 19, 31, 1)',
+          backgroundColor: chartChrome().surface,
           borderRadius: 4,
-          shadowColor: 'rgba(0, 0, 0, 0.5)',
+          shadowColor: chartChrome().markBorder,
           textStyle: {
             color: 'var(--tooltip-grey)',
           },
-          borderColor: '#000',
+          borderColor: chartChrome().markBorder,
           formatter: () => {
             return `<b style="color: white">${otherEntry.label} (${otherEntry.share.toFixed(2)}%)</b><br>
             ${formatNumber(otherEntry.balance / 100_000_000, this.locale, '1.3-3')} BTC<br>`;
@@ -237,12 +238,12 @@ export class TreasuriesPieComponent implements OnChanges {
           itemStyle: {
             borderRadius: 1,
             borderWidth: 1,
-            borderColor: '#000',
+            borderColor: chartChrome().markBorder,
           },
           emphasis: {
             itemStyle: {
               shadowBlur: 40,
-              shadowColor: 'rgba(0, 0, 0, 0.75)',
+              shadowColor: chartChrome().markBorder,
             },
             labelLine: {
               lineStyle: {

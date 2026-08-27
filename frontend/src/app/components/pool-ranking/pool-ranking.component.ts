@@ -12,6 +12,7 @@ import { originalChartColors as chartColors, poolsColor } from '@app/app.constan
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 import { download } from '@app/shared/graphs.utils';
 import { isMobile } from '@app/shared/common.utils';
+import { chartChrome } from '@app/shared/chart-theme';
 
 @Component({
   selector: 'app-pool-ranking',
@@ -153,13 +154,13 @@ export class PoolRankingComponent implements OnInit {
         },
         tooltip: {
           show: !isMobile() || !this.widget,
-          backgroundColor: 'rgba(17, 19, 31, 1)',
+          backgroundColor: chartChrome().surface,
           borderRadius: 4,
-          shadowColor: 'rgba(0, 0, 0, 0.5)',
+          shadowColor: chartChrome().markBorder,
           textStyle: {
             color: 'var(--tooltip-grey)',
           },
-          borderColor: '#000',
+          borderColor: chartChrome().markBorder,
           formatter: () => {
             const i = pool.blockCount.toString();
             if (['24h', '3d', '1w'].includes(this.miningWindowPreference)) {
@@ -184,7 +185,7 @@ export class PoolRankingComponent implements OnInit {
     // 'Other'
     data.push({
       itemStyle: {
-        color: '#6b6b6b',
+        color: chartChrome().axis,
       },
       value: totalShareOther,
       name:  $localize`Other (${percentage})`,
@@ -195,13 +196,13 @@ export class PoolRankingComponent implements OnInit {
         edgeDistance: edgeDistance
       },
       tooltip: {
-        backgroundColor: 'rgba(17, 19, 31, 1)',
+        backgroundColor: chartChrome().surface,
         borderRadius: 4,
-        shadowColor: 'rgba(0, 0, 0, 0.5)',
+        shadowColor: chartChrome().markBorder,
         textStyle: {
           color: 'var(--tooltip-grey)',
         },
-        borderColor: '#000',
+        borderColor: chartChrome().markBorder,
         formatter: () => {
           const i = totalBlockOther.toString();
           if (['24h', '3d', '1w'].includes(this.miningWindowPreference)) {
@@ -252,12 +253,12 @@ export class PoolRankingComponent implements OnInit {
           itemStyle: {
             borderRadius: 1,
             borderWidth: 1,
-            borderColor: '#000',
+            borderColor: chartChrome().markBorder,
           },
           emphasis: {
             itemStyle: {
               shadowBlur: 40,
-              shadowColor: 'rgba(0, 0, 0, 0.75)',
+              shadowColor: chartChrome().markBorder,
             },
             labelLine: {
               lineStyle: {

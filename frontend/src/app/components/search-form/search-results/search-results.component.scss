@@ -15,7 +15,7 @@
   position: absolute;
   top: 42px;
   left: 0px;
-  box-shadow: 0.125rem 0.125rem 0.25rem rgba(0,0,0,0.075);
+  box-shadow: 0.125rem 0.125rem 0.25rem var(--u-shadow-color);
   width: 100%;
 }
 
@@ -41,5 +41,5 @@
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--transparent-fg, #a8b0c4);
+  color: var(--u-text-muted);
 }

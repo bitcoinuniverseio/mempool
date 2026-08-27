@@ -11,6 +11,7 @@ import { StorageService } from '@app/services/storage.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 import { StateService } from '@app/services/state.service';
+import { chartChrome } from '@app/shared/chart-theme';
 
 @Component({
   selector: 'app-block-health-graph',
@@ -128,14 +129,14 @@ export class BlockHealthGraphComponent implements OnInit {
         axisPointer: {
           type: 'line'
         },
-        backgroundColor: 'rgba(17, 19, 31, 1)',
+        backgroundColor: chartChrome().surface,
         borderRadius: 4,
-        shadowColor: 'rgba(0, 0, 0, 0.5)',
+        shadowColor: chartChrome().markBorder,
         textStyle: {
           color: 'var(--tooltip-grey)',
           align: 'left',
         },
-        borderColor: '#000',
+        borderColor: chartChrome().markBorder,
         formatter: (ticks) => {
           let tooltip = `<b style="color: white; margin-left: 2px">${formatterXAxis(this.locale, this.timespan, parseInt(ticks[0].axisValue, 10) * 1000)}</b><br>`;
           tooltip += `${ticks[0].marker} ${ticks[0].seriesName}: ${formatNumber(ticks[0].data.value, this.locale, '1.2-2')}%<br>`;
@@ -171,7 +172,7 @@ export class BlockHealthGraphComponent implements OnInit {
         {
           type: 'value',
           axisLabel: {
-            color: 'rgb(110, 112, 121)',
+            color: chartChrome().label,
             formatter: (val) => {
               return `${val}%`;
             }
@@ -218,7 +219,7 @@ export class BlockHealthGraphComponent implements OnInit {
         right: 15,
         selectedDataBackground: {
           lineStyle: {
-            color: '#fff',
+            color: chartChrome().markBorder,
             opacity: 0.45,
           },
           areaStyle: {

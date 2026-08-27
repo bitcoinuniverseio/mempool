@@ -42,10 +42,10 @@
       margin-left: 0.5em;
   
       &.positive {
-        color: rgb(66, 183, 71);
+        color: var(--u-state-proven);
       }
       &.negative {
-        color: rgb(183, 66, 66);
+        color: var(--u-state-unavailable);
       }
     }
   }
@@ -65,7 +65,7 @@
 }
 
 .block-subtitle.actual fa-icon {
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--u-border-strong);
   font-size: 18px;
   margin-left: 8px;
 }
@@ -164,7 +164,7 @@ h1 {
 
 .disable {
   font-size: 28px;
-  color: #393e5c73;
+  color: var(--u-text-muted);
   @media (min-width: 768px) {
     font-size: 36px;
   }
@@ -188,7 +188,7 @@ h1 {
 }
 
 .nav-tabs {
-  border-color: white;
+  border-color: var(--u-border-strong);
   border-width: 1px;
   margin-bottom: 1em;
 }
@@ -206,7 +206,7 @@ h1 {
   }
 
   &.active, &:hover {
-    border-color: white;
+    border-color: var(--u-border-strong);
   }
 }
 
@@ -246,7 +246,7 @@ h1 {
   }
 
   .oobFees {
-    color: #905cf4;
+    color: var(--u-brand-hover);
   }
 }
 

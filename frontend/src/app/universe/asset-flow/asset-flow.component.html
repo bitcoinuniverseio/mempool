@@ -54,6 +54,10 @@
         </ul>
       </div>
 
+      <!-- Says which way value moved. Hidden from assistive technology
+           because the two column headings already carry the order. -->
+      <div class="flow-direction" aria-hidden="true">&rarr;</div>
+
       <div class="flow-column">
         <h3 i18n="universe.flow.outputs">Outputs</h3>
         <p *ngIf="!state.flow.outputs.length" class="column-note" i18n="universe.flow.outputs-clean">
@@ -90,7 +94,7 @@
           <span class="action-type">{{ actionLabel(action) }}</span>
           <span class="action-arrow" aria-hidden="true">&rarr;</span>
           <span class="asset-label">{{ assetLabel(action.asset) }}</span>
-          <span class="quantity" *ngIf="action.quantityAtomic">{{ action.quantityAtomic }}</span>
+          <span class="quantity" *ngIf="action.quantityAtomic">{{ groupDigits(action.quantityAtomic) }}</span>
         </li>
       </ul>
     </div>
@@ -115,19 +119,19 @@
       <span class="asset-label" [class.partial-evidence]="isPartialEvidence(position)">
         {{ assetLabel(position.asset) }}
       </span>
-      <span class="quantity" *ngIf="position.quantityAtomic">{{ position.quantityAtomic }}</span>
-      <span class="sats">{{ position.valueSatsAtomic }} sats</span>
+      <span class="quantity" *ngIf="position.quantityAtomic">{{ groupDigits(position.quantityAtomic) }}</span>
+      <span class="sats">{{ groupDigits(position.valueSatsAtomic) }} <span class="unit" i18n="shared.sats">sats</span></span>
       <span class="owner" *ngIf="position.ownerAddress" [title]="position.ownerAddress">
         {{ shortAddress(position.ownerAddress) }}
       </span>
       <span class="state-chip" *ngIf="stateLabel(position)">{{ stateLabel(position) }}</span>
-      <span
-        class="evidence-info"
-        tabindex="0"
-        role="note"
-        [title]="evidenceTitle(position)"
-        [attr.aria-label]="evidenceTitle(position)"
-      >i</span>
+      <!-- Was a bare letter i in a circle: a control with no name, no
+           affordance, and content only a mouse could reach. It is now a
+           disclosure that says what it will show and opens in place. -->
+      <details class="position-evidence">
+        <summary i18n="universe.flow.evidence-for-position">Evidence</summary>
+        <p class="position-evidence-body">{{ evidenceTitle(position) }}</p>
+      </details>
     </div>
 
     <ul class="notable-sats" *ngIf="notableSats(position).length">
@@ -136,7 +140,7 @@
         class="notable-sat"
       >
         <span class="rarity-chip" [ngClass]="'rarity-' + sat.rarity">{{ rarityLabel(sat) }}</span>
-        <span class="sat-number">{{ sat.satAtomic }}</span>
+        <span class="sat-number">{{ groupDigits(sat.satAtomic) }}</span>
         <span class="rarity-reason">{{ rarityReason(sat) }}</span>
       </li>
     </ul>

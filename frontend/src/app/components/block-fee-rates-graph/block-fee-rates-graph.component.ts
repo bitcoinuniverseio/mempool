@@ -13,6 +13,7 @@ import { selectPowerOfTen } from '@app/bitcoin.utils';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 import { StateService } from '@app/services/state.service';
 import { ActivatedRoute, Router } from '@angular/router';
+import { chartChrome, rampStops } from '@app/shared/chart-theme';
 
 @Component({
   selector: 'app-block-fee-rates-graph',
@@ -154,9 +155,9 @@ export class BlockFeeRatesGraphComponent implements OnInit {
 
                   legends.push({
                     name: percentile,
-                    inactiveColor: 'rgb(110, 112, 121)',
+                    inactiveColor: chartChrome().label,
                     textStyle: {
-                      color: 'white',
+                      color: chartChrome().label,
                     },
                     icon: 'roundRect',
                     enabled: false,
@@ -210,13 +211,7 @@ export class BlockFeeRatesGraphComponent implements OnInit {
 
   prepareChartOptions(data, weightMode) {
     this.chartOptions = {
-      color: this.widget ? ['#6b6b6b', new echarts.graphic.LinearGradient(0, 0, 0, 0.65, [
-        { offset: 0, color: '#F4511E' },
-        { offset: 0.25, color: '#FB8C00' },
-        { offset: 0.5, color: '#FFB300' },
-        { offset: 0.75, color: '#FDD835' },
-        { offset: 1, color: '#7CB342' }
-      ])] : ['#D81B60', '#8E24AA', '#1E88E5', '#7CB342', '#FDD835', '#6D4C41', '#546E7A'],
+      color: this.widget ? ['#6b6b6b', new echarts.graphic.LinearGradient(0, 0, 0, 0.65, rampStops('scale'))] : ['#D81B60', '#8E24AA', '#1E88E5', '#7CB342', '#FDD835', '#6D4C41', '#546E7A'],
       animation: false,
       grid: {
         right: this.right,
@@ -230,14 +225,14 @@ export class BlockFeeRatesGraphComponent implements OnInit {
         axisPointer: {
           type: 'line'
         },
-        backgroundColor: 'rgba(17, 19, 31, 1)',
+        backgroundColor: chartChrome().surface,
         borderRadius: 4,
-        shadowColor: 'rgba(0, 0, 0, 0.5)',
+        shadowColor: chartChrome().markBorder,
         textStyle: {
           color: 'var(--tooltip-grey)',
           align: 'left',
         },
-        borderColor: '#000',
+        borderColor: chartChrome().markBorder,
         formatter: function(data) {
           if (data.length <= 0) {
             return '';
@@ -297,7 +292,7 @@ export class BlockFeeRatesGraphComponent implements OnInit {
       yAxis: data.series.length === 0 ? undefined : {
         position: 'left',
         axisLabel: {
-          color: 'rgb(110, 112, 121)',
+          color: chartChrome().label,
           formatter: (val) => {
             if (weightMode) {
               val /= 4;
@@ -335,7 +330,7 @@ export class BlockFeeRatesGraphComponent implements OnInit {
         right: 15,
         selectedDataBackground: {
           lineStyle: {
-            color: '#fff',
+            color: chartChrome().markBorder,
             opacity: 0.45,
           },
           areaStyle: {

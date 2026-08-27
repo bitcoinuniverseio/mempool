@@ -19,6 +19,23 @@
     font-family: var(--u-font-text);
   }
 
+  // Inline code and keyboard keys. Bootstrap ships a pink that lands at
+  // 3.5:1 on this page ground, which is under the floor for body text.
+  // Inline code reads as text, so it takes text ink on a sunken chip rather
+  // than a hue from the chart scale. Chart colours are chosen to separate
+  // large filled areas from each other, which is a different job and a
+  // different contrast floor.
+  code {
+    background-color: var(--u-surface-sunken);
+    border-radius: var(--u-radius-sm);
+    color: var(--u-text-primary);
+    padding: 0.1em 0.35em;
+  }
+
+  pre code {
+    color: inherit;
+  }
+
   hr {
     border-top-color: var(--u-divider);
   }
@@ -30,6 +47,15 @@
     &:focus {
       color: var(--u-brand-hover);
     }
+  }
+
+  // A link inside a block of running text has to be findable without
+  // colour, so it is underlined. Links that stand alone as navigation or
+  // as a cell's whole content are already unambiguous and stay clean.
+  p > a,
+  li > a,
+  .description a {
+    text-decoration: underline;
   }
 
   // --- Cards -----------------------------------------------------------------
@@ -166,6 +192,30 @@
       border-color: var(--u-border-strong);
       color: var(--u-text-primary);
     }
+  }
+
+  // Outline buttons. Bootstrap compiled these from the inherited palette,
+  // where 'info' was a cyan that lands near 1.5:1 on a light page.
+  .btn-outline-info,
+  .btn-outline-primary,
+  .btn-outline-secondary {
+    background-color: transparent;
+    border-color: var(--u-border-strong);
+    color: var(--u-text-primary);
+
+    &:hover,
+    &:focus,
+    &:not(:disabled):not(.disabled):active {
+      background-color: var(--u-surface-hover);
+      border-color: var(--u-brand);
+      color: var(--u-brand);
+    }
+  }
+
+  .btn-success {
+    background-color: var(--u-state-proven);
+    border-color: var(--u-state-proven);
+    color: var(--u-text-inverse);
   }
 
   .btn-link {

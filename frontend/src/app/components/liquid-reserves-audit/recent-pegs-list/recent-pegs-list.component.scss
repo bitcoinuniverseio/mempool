@@ -18,7 +18,7 @@ tr, td, th {
 }
 
 .clear-link {
-  color: white;
+  color: var(--u-text-primary);
 }
 
 .disabled {
@@ -115,7 +115,7 @@ tr, td, th {
 
 @keyframes color-oscillation {
   0% {
-      color: #777983;
+      color: var(--u-text-muted);
   }
   100% {
       color: var(--red);

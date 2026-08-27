@@ -7,7 +7,7 @@
 
 .sparkle {
   position: absolute;
-  color: rgba(152, 88, 255, 0.75);
+  color: var(--u-brand-hover);
   opacity: 0;
   transform: scale(0.8) rotate(0deg);
   animation: pop ease 2000ms forwards, sparkle ease 500ms infinite;
@@ -34,12 +34,12 @@
 
 @keyframes sparkle {
   0% {
-    color: rgba(152, 88, 255, 0.75);
+    color: var(--u-brand-hover);
   }
   50% {
-    color: rgba(198, 162, 255, 0.75);
+    color: var(--u-brand-hover);
   }
   100% {
-    color: rgba(152, 88, 255, 0.75);
+    color: var(--u-brand-hover);
   }
 }

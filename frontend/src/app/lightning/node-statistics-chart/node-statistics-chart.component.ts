@@ -9,6 +9,7 @@ import { download } from '@app/shared/graphs.utils';
 import { LightningApiService } from '@app/lightning/lightning-api.service';
 import { ActivatedRoute, ParamMap } from '@angular/router';
 import { StateService } from '@app/services/state.service';
+import { chartChrome } from '@app/shared/chart-theme';
 
 @Component({
   selector: 'app-node-statistics-chart',
@@ -94,9 +95,7 @@ export class NodeStatisticsChartComponent implements OnInit {
       title: title,
       animation: false,
       color: [
-        '#FDD835',
-        '#D81B60',
-      ],
+        chartChrome().series[0], chartChrome().series[1]],
       grid: {
         top: 30,
         bottom: 20,
@@ -109,14 +108,14 @@ export class NodeStatisticsChartComponent implements OnInit {
         axisPointer: {
           type: 'line'
         },
-        backgroundColor: 'rgba(17, 19, 31, 1)',
+        backgroundColor: chartChrome().surface,
         borderRadius: 4,
-        shadowColor: 'rgba(0, 0, 0, 0.5)',
+        shadowColor: chartChrome().markBorder,
         textStyle: {
           color: 'var(--tooltip-grey)',
           align: 'left',
         },
-        borderColor: '#000',
+        borderColor: chartChrome().markBorder,
         formatter: (ticks) => {
           let sizeString = '';
           let weightString = '';
@@ -150,17 +149,17 @@ export class NodeStatisticsChartComponent implements OnInit {
         data: [
           {
             name: $localize`:@@807cf11e6ac1cde912496f764c176bdfdd6b7e19:Channels`,
-            inactiveColor: 'rgb(110, 112, 121)',
+            inactiveColor: chartChrome().label,
             textStyle: {
-              color: 'white',
+              color: chartChrome().label,
             },
             icon: 'roundRect',
           },
           {
             name: $localize`:@@ce9dfdc6dccb28dc75a78c704e09dc18fb02dcfa:Capacity`,
-            inactiveColor: 'rgb(110, 112, 121)',
+            inactiveColor: chartChrome().label,
             textStyle: {
-              color: 'white',
+              color: chartChrome().label,
             },
             icon: 'roundRect',
           },
@@ -174,7 +173,7 @@ export class NodeStatisticsChartComponent implements OnInit {
         {
           type: 'value',
           axisLabel: {
-            color: 'rgb(110, 112, 121)',
+            color: chartChrome().label,
             formatter: (val) => {
               return `${Math.round(val)}`;
             }
@@ -191,7 +190,7 @@ export class NodeStatisticsChartComponent implements OnInit {
           type: 'value',
           position: 'right',
           axisLabel: {
-            color: 'rgb(110, 112, 121)',
+            color: chartChrome().label,
             formatter: (val) => {
               return `${val / 100000000} BTC`;
             }

@@ -11,6 +11,7 @@ import { TimeService } from '@app/services/time.service';
 import { WebsocketService } from '@app/services/websocket.service';
 import { Acceleration } from '@interfaces/node-api.interface';
 import { defaultAuditColors } from '@components/block-overview-graph/utils';
+import { chartChrome } from '@app/shared/chart-theme';
 
 const newColorHex = '1BF4AF';
 const oldColorHex = '3C39F4';
@@ -324,14 +325,14 @@ export class UtxoGraphComponent implements OnChanges, OnDestroy {
         },
       }],
       tooltip: {
-        backgroundColor: 'rgba(17, 19, 31, 1)',
+        backgroundColor: chartChrome().surface,
         borderRadius: 4,
-        shadowColor: 'rgba(0, 0, 0, 0.5)',
+        shadowColor: chartChrome().markBorder,
         textStyle: {
           color: 'var(--tooltip-grey)',
           align: 'left',
         },
-        borderColor: '#000',
+        borderColor: chartChrome().markBorder,
         formatter: (params: any): string => {
           const utxo = params.data[1] as Utxo;
           const valueStr = renderSats(utxo.value, this.stateService.network);
