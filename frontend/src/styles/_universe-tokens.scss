@@ -74,6 +74,31 @@
   --u-ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
   --u-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
 
+  // The chain visualisation.
+  //
+  // Blocks are objects, not page furniture, so they keep the same ink in every
+  // theme the way a photograph does. That is deliberate: it gives the light
+  // page a solid focal anchor instead of a washed-out outline, and it means a
+  // fee colour reads identically no matter which theme a person is using.
+  //
+  // The axis the whole product turns on is visible here. A projected block is
+  // lighter and unfinished; a confirmed block is deep and settled. Nothing has
+  // to be read to feel which is which.
+  --u-block-ink: #f7f9fc;
+  --u-block-ink-muted: #c3cbdb;
+  --u-block-confirmed-from: #2a3566;
+  --u-block-confirmed-to: #1a2142;
+  --u-block-confirmed-top: #3a477f;
+  --u-block-confirmed-side: #141930;
+  --u-block-projected-empty: #4a5169;
+  --u-block-projected-top: #5c6480;
+  --u-block-projected-side: #343a4d;
+
+  // Text printed on the fee scale. The scale is its own object with its own
+  // colours, so the ink that reads on it is a separate decision from page text.
+  // The high-contrast theme brightens the scale far enough to flip this.
+  --u-fee-label-ink: #ffffff;
+
   // Layout
   --u-width-prose: 68ch;
   --u-width-page: 1320px;

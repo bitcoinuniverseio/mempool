@@ -274,9 +274,17 @@ main {
 	font-size: 12px;
 }
 
+// The size label that accompanies a progress bar.
+//
+// It used to be printed in white on top of the bar, which meant it crossed
+// both the filled and unfilled halves. No single colour can clear contrast
+// against both, and on the light theme it landed at 1.26:1. It now sits
+// under the bar, where it is simply text on a surface.
 .progress-text {
+  color: var(--u-text-secondary);
+
   span {
-    color: #fff !important;
+    color: inherit;
   }
 }
 
@@ -730,14 +738,26 @@ h1, h2, h3 {
 }
 
 .progress {
+  // Visible so the label below the track is not clipped. The fill keeps
+  // its own rounding, so nothing about the bar itself changes.
+  overflow: visible;
   position: relative;
+
+  .progress-bar {
+    border-radius: inherit;
+  }
 }
 
+// The label is a child of the track, so it is placed just under it rather
+// than made static, which the track's own overflow would clip.
 .progress-text {
+  font-size: var(--u-text-xs);
+  left: 0;
   position: absolute;
-  top: 8.5px;
-  width: 100%;
   text-align: center;
+  top: calc(100% + 3px);
+  white-space: nowrap;
+  width: 100%;
 }
 
 .progress-mempool {
@@ -1409,3 +1429,9 @@ button {
 
 // Repaint the inherited Bootstrap layer from the tokens above. Must stay last.
 @include universe-bridge.universe-bootstrap-bridge;
+
+// Converted fiat figures. Quieter than the satoshi amount they follow,
+// because the on-chain number is the fact and this is an estimate of it.
+.fiat-amount {
+  color: var(--u-text-muted);
+}

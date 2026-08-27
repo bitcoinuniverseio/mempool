@@ -18,7 +18,14 @@ export class FiatComponent implements OnInit, OnDestroy {
   @Input() value: number;
   @Input() digitsInfo = '1.2-2';
   @Input() blockConversion: Price;
-  @Input() colorClass = 'green-color';
+  /**
+   * Fiat amounts are converted figures, not judgements.
+   *
+   * They defaulted to green, which in this product means proven. A dollar
+   * estimate beside every fee is neither proven nor good news, and painting
+   * it in the evidence colour spent that signal on decoration.
+   */
+  @Input() colorClass = 'fiat-amount';
 
   constructor(
     private stateService: StateService,

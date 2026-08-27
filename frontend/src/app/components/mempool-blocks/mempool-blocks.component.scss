@@ -56,7 +56,7 @@
 .fee-span {
   font-size: 11px;
   margin-bottom: 5px;
-  color: var(--yellow);
+  color: var(--u-block-ink-muted);
 }
 
 .transaction-count {
@@ -72,7 +72,7 @@
   position:absolute;
   top: calc(-0.192 * var(--block-size));
   left: calc(-0.16 * var(--block-size));
-  background-color: #232838;
+  background-color: var(--u-block-confirmed-top);
   transform:skew(40deg);
   transform-origin:top;
   transition: transform 1s, left 1s;
@@ -85,7 +85,7 @@
   position: absolute;
   top: calc(-0.096 * var(--block-size));
   left: calc(-0.16 * var(--block-size));
-  background-color: #191c27;
+  background-color: var(--u-block-confirmed-side);
   z-index: -1;
 
   transform: skewY(50deg);
@@ -94,11 +94,11 @@
 }
 
 .mempool-block.bitcoin-block::after {
-  background-color: #403834;
+  background-color: var(--u-block-projected-top);
 }
 
 .mempool-block.bitcoin-block::before {
-  background-color: #2d2825;
+  background-color: var(--u-block-projected-side);
 }
 
 .mempool-block.hide-block {
@@ -198,5 +198,26 @@
   }
   100% {
     border-bottom: solid calc(0.3 * var(--block-size)) orange;
+  }
+}
+
+// Everything printed on the face of a block takes block ink.
+//
+// These rules inherited the page foreground, which is near-black on the
+// primary theme. On a dark block face that is unreadable, and it was the
+// reason transaction counts and timings vanished in light mode.
+.bitcoin-block {
+  color: var(--u-block-ink);
+
+  .fees,
+  .block-size,
+  .transaction-count,
+  .time-difference {
+    color: var(--u-block-ink);
+  }
+
+  .transaction-count,
+  .time-difference {
+    color: var(--u-block-ink-muted);
   }
 }

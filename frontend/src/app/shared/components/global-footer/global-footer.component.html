@@ -1,113 +1,83 @@
 <footer [class]="{'services': isServicesPage}">
-  <div class="container-fluid">
+  <div class="footer-inner">
 
-    <div class="row main" [class]="{'services': isServicesPage}">
-      <div class="col-md-12 branding mt-2">
-        <div class="main-logo" [class]="{'services': isServicesPage}">
-          @if (enterpriseInfo?.footer_img) {
-            <img [src]="enterpriseInfo?.footer_img" [alt]="enterpriseInfo.title" height="60px" class="enterprise-logo">
-          } @else {
-            <app-svg-images name="universe-logo" viewBox="0 0 500 126"></app-svg-images>
-          }
-        </div>
-        @if (!enterpriseInfo?.footer_img) {
-          <p class="explore-tagline-mobile">
-            <ng-container i18n="shared.universe-tagline">The live protocol-aware Bitcoin explorer</ng-container>
-          </p>
+    <div class="footer-brand">
+      <div class="brand-row">
+        @if (enterpriseInfo?.footer_img) {
+          <img [src]="enterpriseInfo?.footer_img" [alt]="enterpriseInfo.title" height="52" class="enterprise-logo">
+        } @else {
+          <app-svg-images name="universe-logo" viewBox="0 0 500 126" class="footer-logo"></app-svg-images>
         }
-        <div class="site-options language-selector d-flex justify-content-center align-items-center" [class]="{'services': isServicesPage}">
-          <div class="selector">
-            <app-language-selector></app-language-selector>
-          </div>
-          <div class="selector">
-            <app-fiat-selector></app-fiat-selector>
-          </div>
-          <div class="selector">
-            <app-timezone-selector></app-timezone-selector>
-          </div>
-          <div class="selector d-none" [ngClass]="isServicesPage ? 'd-lg-flex' : 'd-md-flex'">
-            <app-amount-selector></app-amount-selector>
-          </div>
-          @if (!env.customize?.theme) {
-            <div class="selector d-none" [ngClass]="isServicesPage ? 'd-lg-flex' : 'd-md-flex'">
-              <app-theme-selector></app-theme-selector>
-            </div>
-          }
-          <a *ngIf="stateService.isMempoolSpaceBuild" class="btn btn-purple sponsor d-none justify-content-center" [ngClass]="isServicesPage ? 'd-lg-flex' : 'd-md-flex'" [routerLink]="['/login']">
-            <span *ngIf="user" i18n="shared.my-account" class="nowrap">My Account</span>
-            <span *ngIf="!user" i18n="shared.sign-in" class="nowrap">Sign In</span>
-          </a>
-        </div>
+      </div>
+      @if (!enterpriseInfo?.footer_img) {
+        <p class="footer-tagline">
+          <ng-container i18n="shared.universe-tagline">Bitcoin activity while it is still forming, and what it proves.</ng-container>
+        </p>
+      }
+
+      <div class="footer-settings" [class]="{'services': isServicesPage}">
+        <app-language-selector></app-language-selector>
+        <app-fiat-selector></app-fiat-selector>
+        <app-timezone-selector></app-timezone-selector>
+        <app-amount-selector></app-amount-selector>
         @if (!env.customize?.theme) {
-          <div class="selector d-flex justify-content-center ml-auto mr-auto mt-0" [ngClass]="isServicesPage ? 'd-lg-none' : 'd-md-none'">
-            <app-amount-selector class="add-margin"></app-amount-selector>
-            <app-theme-selector class="add-margin"></app-theme-selector>
-          </div>
-        }
-        @if (!enterpriseInfo?.footer_img) {
-          <a *ngIf="stateService.isMempoolSpaceBuild" class="btn btn-purple sponsor d-flex justify-content-center ml-auto mr-auto mt-0 mb-2" [ngClass]="isServicesPage ? 'd-lg-none' : 'd-md-none'" [routerLink]="['/login']">
-            <span *ngIf="user" i18n="shared.my-account" class="nowrap">My Account</span>
-            <span *ngIf="!user" i18n="shared.sign-in" class="nowrap">Sign In</span>
-          </a>
-          <p class="explore-tagline-desktop">
-            <ng-container i18n="shared.universe-tagline">The live protocol-aware Bitcoin explorer</ng-container>
-          </p>
+          <app-theme-selector></app-theme-selector>
         }
       </div>
     </div>
-    <div class="row col-md-12 link-tree" [class]="{'services': isServicesPage}">
-        <div class="links">
-          <p class="category" i18n="footer.explore">Explore</p>
-          <p><a *ngIf="env.MINING_DASHBOARD" [routerLink]="['/mining' | relativeUrl]" i18n="mining.mining-dashboard">Mining Dashboard</a></p>
-          <p><a *ngIf="stateService.networkSupportsLightning()" [routerLink]="['/lightning' | relativeUrl]" i18n="master-page.lightning">Lightning Explorer</a></p>
-          <p><a [routerLink]="['/blocks' | relativeUrl]" i18n="dashboard.recent-blocks">Recent Blocks</a></p>
-          <p><a [routerLink]="['/tx/push' | relativeUrl]" i18n="shared.broadcast-transaction|Broadcast Transaction">Broadcast Transaction</a></p>
-          <p><a [routerLink]="['/tx/test' | relativeUrl]" i18n="shared.test-transaction|Test Transaction">Test Transaction</a></p>
-          <p><a [routerLink]="['/tx/preview' | relativeUrl]" i18n="shared.preview-transaction|Preview Transaction">Preview Transaction</a></p>
-          <p><a [routerLink]="['/docs/api' | relativeUrl]" i18n="footer.api-documentation">API Documentation</a></p>
-        </div>
-        <div class="links">
-          <p class="category" i18n="footer.learn">Learn</p>
-          <p><a [routerLink]="['/docs/faq']" fragment="what-is-a-mempool" i18n="faq.what-is-a-mempool">What is a mempool?</a></p>
-          <p><a [routerLink]="['/docs/faq']" fragment="what-is-a-block-explorer" i18n="faq.what-is-a-block-exlorer">What is a block explorer?</a></p>
-          <p><a [routerLink]="['/docs/faq']" fragment="what-is-a-mempool-explorer" i18n="faq.what-is-a-mempool-exlorer">What is a mempool explorer?</a></p>
-          <p><a [routerLink]="['/docs/faq']" fragment="why-is-transaction-stuck-in-mempool" i18n="faq.why-isnt-my-transaction-confirming">Why isn't my transaction confirming?</a></p>
-          <p><a [routerLink]="['/docs/faq']" fragment="host-my-own-instance-raspberry-pi"><ng-container i18n="shared.be-your-own-explorer">Run your own instance</ng-container></a></p>
-          <p><a [routerLink]="['/docs/faq' | relativeUrl]" i18n="faq.more-faq">More FAQs &raquo;</a></p>
-          <p *ngIf="mempoolSpaceBuild"><a [routerLink]="['/research' | relativeUrl]" i18n="mempool-research">Research</a></p>
-        </div>
 
-        <div class="links" *ngIf="officialMempoolSpace || env.TESTNET_ENABLED || env.TESTNET4_ENABLED || env.SIGNET_ENABLED || env.REGTEST_ENABLED || env.LIQUID_ENABLED || env.LIQUID_TESTNET_ENABLED else toolBox" >
-          <p class="category" i18n="footer.networks">Networks</p>
-          <p *ngIf="(officialMempoolSpace || (env.BASE_MODULE === 'mempool')) && (currentNetwork !== '') && (currentNetwork !== 'mainnet')"><a [href]="networkLink('mainnet')" i18n="footer.mainnet-explorer">Mainnet Explorer</a></p>
-          <p *ngIf="(officialMempoolSpace || (env.BASE_MODULE === 'mempool')) && (currentNetwork !== 'testnet') && env.TESTNET_ENABLED"><a [href]="networkLink('testnet')" i18n="footer.testnet3-explorer">Testnet3 Explorer</a></p>
-          <p *ngIf="(officialMempoolSpace || (env.BASE_MODULE === 'mempool')) && (currentNetwork !== 'testnet4') && env.TESTNET4_ENABLED"><a [href]="networkLink('testnet4')" i18n="footer.testnet4-explorer">Testnet4 Explorer</a></p>
-          <p *ngIf="(officialMempoolSpace || (env.BASE_MODULE === 'mempool')) && (currentNetwork !== 'signet') && env.SIGNET_ENABLED"><a [href]="networkLink('signet')" i18n="footer.signet-explorer">Signet Explorer</a></p>
-          <p *ngIf="(officialMempoolSpace || (env.BASE_MODULE === 'mempool')) && (currentNetwork !== 'regtest') && env.REGTEST_ENABLED"><a [href]="networkLink('regtest')" i18n="footer.regtest-explorer">Regtest Explorer</a></p>
-          <p *ngIf="(officialMempoolSpace || env.LIQUID_ENABLED) && (currentNetwork !== 'liquidtestnet')"><a [href]="networkLink('liquidtestnet')" i18n="footer.liquid-testnet-explorer">Liquid Testnet Explorer</a></p>
-          <p *ngIf="(officialMempoolSpace || env.LIQUID_ENABLED) && (currentNetwork !== 'liquid')"><a [href]="networkLink('liquid')" i18n="footer.liquid-explorer">Liquid Explorer</a></p>
-        </div>
-        <ng-template #toolBox>
-        <div class="links">
-          <p class="category" i18n="footer.tools">Tools</p>
-          <p><a [routerLink]="['/clock/mempool/0']" i18n="footer.clock-mempool">Clock (Mempool)</a></p>
-          <p><a [routerLink]="['/clock/mined/0']" i18n="footer.clock-mined">Clock (Mined)</a></p>
-          <p><a [routerLink]="['/tools/calculator']" i18n="shared.calculator">Calculator</a></p>
-        </div>
-        </ng-template>
-        <div class="links">
-          <p class="category" i18n="footer.legal">Legal</p>
-          <p><a [routerLink]="['/source']" i18n="shared.source-and-licenses|Source and licenses">Source and licenses</a></p>
-          <p><a [routerLink]="['/terms-of-service']" i18n="shared.terms-of-service|Terms of Service">Terms of Service</a></p>
-          <p><a [routerLink]="['/privacy-policy']" i18n="shared.privacy-policy|Privacy Policy">Privacy Policy</a></p>
-          <p><a href="/3rdpartylicenses.txt" i18n="shared.trademark-policy|Third-party Licenses">Third-party Licenses</a></p>
-        </div>
-    </div>
-    <div class="row version" [style]="{'background-color': isServicesPage ? 'var(--bg)' : ''}">
-      <div class="col-sm-12">
-        <p>v{{ packetJsonVersion }} [<a target="_blank" rel="noopener" [href]="sourceRepository + '/commit/' + frontendGitCommitHash">{{ frontendGitCommitHash }}</a>]</p>
+    <nav class="footer-links" i18n-aria-label="footer.links|Footer links" aria-label="Site links">
+      <div class="links">
+        <h2 class="category" i18n="footer.explore">Explore</h2>
+        <p><a [routerLink]="['/blocks' | relativeUrl]" i18n="dashboard.recent-blocks">Recent blocks</a></p>
+        <p><a *ngIf="env.MINING_DASHBOARD" [routerLink]="['/mining' | relativeUrl]" i18n="mining.mining-dashboard">Mining</a></p>
+        <p><a [routerLink]="['/graphs' | relativeUrl]" i18n="footer.charts">Charts</a></p>
+        <p><a [routerLink]="['/rbf' | relativeUrl]" i18n="footer.replacements">Replacements</a></p>
+        <p><a *ngIf="stateService.networkSupportsLightning()" [routerLink]="['/lightning' | relativeUrl]" i18n="master-page.lightning">Lightning</a></p>
       </div>
+
+      <div class="links">
+        <h2 class="category" i18n="footer.universe">Universe</h2>
+        <p><a [routerLink]="['/protocols' | relativeUrl]" i18n="master-page.nav-protocols">Protocols</a></p>
+        <p><a [routerLink]="['/pulse' | relativeUrl]" i18n="master-page.nav-pulse">Live protocol activity</a></p>
+        <p><a [routerLink]="['/docs/faq' | relativeUrl]" i18n="footer.how-it-reads">How this explorer reads assets</a></p>
+      </div>
+
+      <div class="links">
+        <h2 class="category" i18n="footer.tools">Tools</h2>
+        <p><a [routerLink]="['/docs/api' | relativeUrl]" i18n="footer.api-documentation">API documentation</a></p>
+        <p><a [routerLink]="['/tx/push' | relativeUrl]" i18n="shared.broadcast-transaction|Broadcast Transaction">Broadcast a transaction</a></p>
+        <p><a [routerLink]="['/tx/test' | relativeUrl]" i18n="shared.test-transaction|Test Transaction">Test a transaction</a></p>
+        <p><a [routerLink]="['/tools/calculator']" i18n="shared.calculator">Fee calculator</a></p>
+      </div>
+
+      <div class="links" *ngIf="env.TESTNET_ENABLED || env.TESTNET4_ENABLED || env.SIGNET_ENABLED || env.REGTEST_ENABLED">
+        <h2 class="category" i18n="footer.networks">Networks</h2>
+        <p *ngIf="currentNetwork !== '' && currentNetwork !== 'mainnet'"><a [href]="networkLink('mainnet')" i18n="footer.mainnet-explorer">Mainnet</a></p>
+        <p *ngIf="currentNetwork !== 'testnet' && env.TESTNET_ENABLED"><a [href]="networkLink('testnet')" i18n="footer.testnet3-explorer">Testnet3</a></p>
+        <p *ngIf="currentNetwork !== 'testnet4' && env.TESTNET4_ENABLED"><a [href]="networkLink('testnet4')" i18n="footer.testnet4-explorer">Testnet4</a></p>
+        <p *ngIf="currentNetwork !== 'signet' && env.SIGNET_ENABLED"><a [href]="networkLink('signet')" i18n="footer.signet-explorer">Signet</a></p>
+        <p *ngIf="currentNetwork !== 'regtest' && env.REGTEST_ENABLED"><a [href]="networkLink('regtest')" i18n="footer.regtest-explorer">Regtest</a></p>
+      </div>
+
+      <div class="links">
+        <h2 class="category" i18n="footer.legal">Legal</h2>
+        <p><a [routerLink]="['/source']" i18n="shared.source-and-licenses|Source and licenses">Source and licenses</a></p>
+        <p><a [routerLink]="['/terms-of-service']" i18n="shared.terms-of-service|Terms of Service">Terms of service</a></p>
+        <p><a [routerLink]="['/privacy-policy']" i18n="shared.privacy-policy|Privacy Policy">Privacy policy</a></p>
+        <p><a href="/3rdpartylicenses.txt" i18n="shared.third-party-licenses|Third-party Licenses">Third-party licenses</a></p>
+      </div>
+    </nav>
+
+    <!-- The build actually being served. This is the line that ties what a
+         visitor is looking at to the source it was built from, so it names the
+         version and links the exact commit rather than saying "open source". -->
+    <div class="footer-build">
+      <p>
+        <ng-container i18n="footer.running-version">Running</ng-container>
+        v{{ packetJsonVersion }}
+        <a target="_blank" rel="noopener" [href]="sourceRepository + '/commit/' + frontendGitCommitHash">{{ frontendGitCommitHash }}</a>
+      </p>
     </div>
   </div>
-
 </footer>
