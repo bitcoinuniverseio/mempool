@@ -34,6 +34,15 @@ jobs:
       - name: No em dash anywhere
         run: node scripts/universe/check-text.mjs
 
+      - name: No raw interface colour outside the allowlist
+        run: node scripts/universe/check-colors.mjs
+
+      - name: Every dynamic palette carries a readable foreground
+        run: node scripts/universe/check-palettes.mjs
+
+      - name: Contrast arithmetic is correct
+        run: node --test scripts/universe/contrast.test.mjs
+
       - name: No obsolete upstream product marks
         run: node scripts/universe/check-branding.mjs
 
@@ -110,3 +119,27 @@ jobs:
 
       - name: Built bundle calls no third-party origin
         run: node scripts/universe/check-origins.mjs frontend/dist
+
+      - name: Install the visual QA harness
+        working-directory: scripts/universe/visual-qa
+        run: npm ci
+
+      - name: Serve the built frontend
+        run: |
+          UNIVERSE_GATEWAY_PORT=8123           UNIVERSE_GATEWAY_ROOT=frontend/dist/mempool/browser           node scripts/universe/gateway.mjs &
+          for i in $(seq 1 30); do
+            curl -fsS -o /dev/null http://127.0.0.1:8123/ && break
+            sleep 1
+          done
+
+      - name: Measured contrast, accessibility, overflow, and screenshots
+        working-directory: scripts/universe/visual-qa
+        run: node capture.mjs --base=http://127.0.0.1:8123 --out=./artifacts
+
+      - name: Keep the contrast report and the route screenshots
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: universe-visual-qa
+          path: scripts/universe/visual-qa/artifacts
+          retention-days: 30
