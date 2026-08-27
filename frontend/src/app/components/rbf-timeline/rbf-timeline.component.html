@@ -27,6 +27,7 @@
               <a class="shape-border"
                 [class.rbf]="cell.replacement.tx.rbf"
                 [routerLink]="['/tx/' | relativeUrl, cell.replacement.tx.txid]"
+                [attr.aria-label]="'Replacement transaction ' + cell.replacement.tx.txid"
                 (pointerover)="onHover($event, cell.replacement);"
                 (pointerout)="onBlur($event);"
               >

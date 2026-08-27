@@ -41,7 +41,7 @@
       top: 0px;
     }
     .fee-text{
-      border-bottom: 1px solid #ffffff1c;
+      border-bottom: 1px solid var(--u-divider);
       width: fit-content;
       margin: auto;
       font-size: 20px;
@@ -72,19 +72,46 @@
   }
 }
 
-.fee-progress-bar {
-  width: 25%;
-  height: 22px;
+// The fee scale.
+//
+// The bar is a continuous gradient of live fee colours, and no single ink
+// clears the contrast floor across all of it: white bottoms out at 3.4:1 on
+// the pale amber bands and near-black at 2.8:1 on the deep magenta ones. So
+// the band names no longer sit on the bar. They sit under it, aligned to the
+// band they name, where they are ordinary text on the card surface and read at
+// full strength in every theme, including while the bar is still a skeleton.
+.fee-scale {
   margin-bottom: 12px;
+}
+
+.fee-scale-track {
   display: flex;
   flex-direction: row;
-  transition: background-color 1s;
-  color: #fff;
+  height: 10px;
+}
+
+.fee-scale-labels {
+  display: flex;
+  flex-direction: row;
+  margin-top: var(--u-space-1);
+}
+
+.fee-progress-bar {
+  width: 25%;
+  height: 100%;
+  border-radius: 10px 0 0 10px;
+  transition: background 1s;
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+
   &.priority {
     width: 75%;
     border-radius: 0px 10px 10px 0px;
     @media (767px < width < 992px), (width < 576px) {
       width: 100%;
+      border-radius: 10px;
     }
   }
   &:first-child {
@@ -99,33 +126,42 @@
   @media (767px < width < 992px), (width < 576px) {
     display: none
   }
+  // The gap between the two halves of the scale. A hatch rather than a solid
+  // block, so it reads as "no band here" instead of as another fee level.
   &.fill {
-    height: 22px;
+    height: 100%;
     background: repeating-linear-gradient(
       90deg,
-      rgb(45, 51, 72),
-      rgb(45, 51, 72) 2px,
-      rgb(29, 31, 49) 2px,
-      rgb(29, 31, 49) 4px
-    );  
+      var(--u-border-strong),
+      var(--u-border-strong) 2px,
+      var(--u-surface-inset) 2px,
+      var(--u-surface-inset) 4px
+    );
   }
 }
 
 .fee-label {
-  color: var(--u-fee-label-ink);
-  font-weight: var(--u-weight-semibold);
-  padding-top: 2px;
-  font-size: 12px;
-  width: 100%;
+  color: var(--u-text-secondary);
+  font-size: var(--u-text-xs);
+  font-weight: var(--u-weight-medium);
   overflow: hidden;
+  padding-left: 4px;
+  padding-right: 4px;
+  text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
-  padding-left: 5px;
-  padding-right: 5px;
+  width: 25%;
+
   @media (767px < width < 992px), (width < 576px) {
     width: 33%;
+
+    &:first-child {
+      display: none;
+    }
   }
+
+  // The three priority bands share the 75% half of the scale.
   &.prority {
-    width: 33%;
+    width: 25%;
   }
 }

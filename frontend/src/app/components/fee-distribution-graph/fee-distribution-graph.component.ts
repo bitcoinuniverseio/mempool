@@ -5,6 +5,7 @@ import { StateService } from '@app/services/state.service';
 import { VbytesPipe } from '@app/shared/pipes/bytes-pipe/vbytes.pipe';
 import { selectPowerOfTen } from '@app/bitcoin.utils';
 import { Subscription } from 'rxjs';
+import { chartChrome } from '@app/shared/chart-theme';
 
 @Component({
   selector: 'app-fee-distribution-graph',
@@ -167,7 +168,7 @@ export class FeeDistributionGraphComponent implements OnInit, OnChanges, OnDestr
         label: {
           show: true,
           position: 'top',
-          color: '#ffffff',
+          color: chartChrome().label,
           textShadowBlur: 0,
           fontSize: this.smallScreen ? 10 : 12,
           formatter: (label: { data: number[] }): string => {
@@ -182,17 +183,17 @@ export class FeeDistributionGraphComponent implements OnInit, OnChanges, OnDestr
         showAllSymbol: false,
         smooth: true,
         lineStyle: {
-          color: '#D81B60',
+          color: chartChrome().series[0],
           width: 1,
         },
         itemStyle: {
-          color: '#b71c1c',
+          color: chartChrome().series[4],
           borderWidth: 10,
           borderMiterLimit: 10,
           opacity: 1,
         },
         areaStyle: {
-          color: '#D81B60',
+          color: chartChrome().series[0],
           opacity: 1,
         }
       }]

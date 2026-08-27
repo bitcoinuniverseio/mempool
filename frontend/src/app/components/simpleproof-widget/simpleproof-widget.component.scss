@@ -40,7 +40,7 @@ tr, td, th {
 }
 
 .clear-link {
-  color: white;
+  color: var(--u-brand-contrast);
 }
 
 .disabled {
@@ -120,7 +120,7 @@ td.verified {
   transition: background-color 0.2s ease;
   
   &:hover {
-    background-color: rgba(0, 0, 0, 0.05);
+    background-color: var(--u-shadow-color);
   }
 }
 
@@ -149,7 +149,7 @@ td.verified {
   font-size: 1.05em;
   font-weight: normal;
   background: var(--nav-bg);
-  color: white;
+  color: var(--u-brand-contrast);
 
   display: flex;
   flex-direction: row;

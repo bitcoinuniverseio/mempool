@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { Observable, map } from 'rxjs';
 import { StateService } from '@app/services/state.service';
 import { IBackendInfo } from '@interfaces/websocket.interface';
@@ -25,7 +26,7 @@ export interface ChainSyncNotice {
 @Component({
   selector: 'app-universe-chain-sync-notice',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './chain-sync-notice.component.html',
   styleUrls: ['./chain-sync-notice.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

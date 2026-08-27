@@ -11,6 +11,7 @@ import { MiningService } from '@app/services/mining.service';
 import { ActivatedRoute } from '@angular/router';
 import { download, formatterXAxis } from '@app/shared/graphs.utils';
 import { StateService } from '@app/services/state.service';
+import { chartChrome } from '@app/shared/chart-theme';
 
 @Component({
   selector: 'app-block-sizes-weights-graph',
@@ -127,10 +128,7 @@ export class BlockSizesWeightsGraphComponent implements OnInit {
       title: title,
       animation: false,
       color: [
-        '#FDD835',
-        '#D81B60',
-        '#039BE5',
-      ],
+        chartChrome().series[0], chartChrome().series[1], chartChrome().series[2]],
       grid: {
         top: 30,
         bottom: 70,
@@ -143,14 +141,14 @@ export class BlockSizesWeightsGraphComponent implements OnInit {
         axisPointer: {
           type: 'line'
         },
-        backgroundColor: 'rgba(17, 19, 31, 1)',
+        backgroundColor: chartChrome().surface,
         borderRadius: 4,
-        shadowColor: 'rgba(0, 0, 0, 0.5)',
+        shadowColor: chartChrome().markBorder,
         textStyle: {
           color: 'var(--tooltip-grey)',
           align: 'left',
         },
-        borderColor: '#000',
+        borderColor: chartChrome().markBorder,
         formatter: (ticks) => {
           let tooltip = `<b style="color: white; margin-left: 2px">${formatterXAxis(this.locale, this.timespan, parseInt(ticks[0].axisValue, 10))}</b><br>`;
 
@@ -186,25 +184,25 @@ export class BlockSizesWeightsGraphComponent implements OnInit {
         data: [
           {
             name: $localize`:@@7faaaa08f56427999f3be41df1093ce4089bbd75:Size`,
-            inactiveColor: 'rgb(110, 112, 121)',
+            inactiveColor: chartChrome().label,
             textStyle: {
-              color: 'white',
+              color: chartChrome().label,
             },
             icon: 'roundRect',
           },
           {
             name: $localize`:@@919f2fd60a898850c24b1584362bbf18a4628bcb:Weight`,
-            inactiveColor: 'rgb(110, 112, 121)',
+            inactiveColor: chartChrome().label,
             textStyle: {
-              color: 'white',
+              color: chartChrome().label,
             },
             icon: 'roundRect',
           },
           {
             name: $localize`Size per weight`,
-            inactiveColor: 'rgb(110, 112, 121)',
+            inactiveColor: chartChrome().label,
             textStyle: {
-              color: 'white',
+              color: chartChrome().label,
             },
             icon: 'roundRect',
           },
@@ -223,7 +221,7 @@ export class BlockSizesWeightsGraphComponent implements OnInit {
             return value.min * 0.9;
           },
           axisLabel: {
-            color: 'rgb(110, 112, 121)',
+            color: chartChrome().label,
             formatter: (val) => {
               return `${Math.round(val * 100) / 100} MWU`;
             }
@@ -262,7 +260,7 @@ export class BlockSizesWeightsGraphComponent implements OnInit {
               label: {
                 position: 'end',
                 show: true,
-                color: '#ffffff',
+                color: chartChrome().label,
                 formatter: `1 MB`
               }
             }],
@@ -310,7 +308,7 @@ export class BlockSizesWeightsGraphComponent implements OnInit {
         right: 15,
         selectedDataBackground: {
           lineStyle: {
-            color: '#fff',
+            color: chartChrome().markBorder,
             opacity: 0.45,
           },
           areaStyle: {

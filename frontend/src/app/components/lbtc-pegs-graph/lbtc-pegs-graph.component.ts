@@ -5,6 +5,7 @@ import { StateService } from '@app/services/state.service';
 import { map, Subscription, switchMap } from 'rxjs';
 import { PriceService } from '@app/services/price.service';
 import { AmountShortenerPipe } from '@app/shared/pipes/amount-shortener.pipe';
+import { chartChrome } from '@app/shared/chart-theme';
 
 @Component({
   selector: 'app-lbtc-pegs-graph',
@@ -118,7 +119,7 @@ export class LbtcPegsGraphComponent implements OnInit, OnChanges {
         realtime: true,
         selectedDataBackground: {
           lineStyle: {
-            color: '#fff',
+            color: chartChrome().markBorder,
             opacity: 0.45,
           },
           areaStyle: {
@@ -132,7 +133,7 @@ export class LbtcPegsGraphComponent implements OnInit, OnChanges {
             name: 'LBTC',
             inactiveColor: 'var(--grey)',
             textStyle: {
-              color: 'white',
+              color: chartChrome().label,
             },
             icon: 'roundRect',
           },
@@ -140,7 +141,7 @@ export class LbtcPegsGraphComponent implements OnInit, OnChanges {
             name: 'BTC',
             inactiveColor: 'var(--grey)',
             textStyle: {
-              color: 'white',
+              color: chartChrome().label,
             },
             icon: 'roundRect',
           },
@@ -148,7 +149,7 @@ export class LbtcPegsGraphComponent implements OnInit, OnChanges {
             name: 'USD',
             inactiveColor: 'var(--grey)',
             textStyle: {
-              color: 'white',
+              color: chartChrome().label,
             },
             icon: 'roundRect',
           }
@@ -216,7 +217,7 @@ export class LbtcPegsGraphComponent implements OnInit, OnChanges {
       {
         type: 'value',
         axisLabel: {
-          color: 'rgb(110, 112, 121)',
+          color: chartChrome().label,
           formatter: function(val) {
             return `$${this.amountShortenerPipe.transform(val, 3, undefined, true, true)}`;
           }.bind(this)
@@ -230,44 +231,44 @@ export class LbtcPegsGraphComponent implements OnInit, OnChanges {
           data: pegSeries,
           name: 'LBTC',
           yAxisIndex: 0,
-          color: '#116761',
+          color: chartChrome().series[5],
           type: 'line',
           stack: 'total',
           smooth: true,
           showSymbol: false,
           areaStyle: {
             opacity: 0.2,
-            color: '#116761',
+            color: chartChrome().series[5],
           },
           lineStyle: {
             width: 2,
-            color: '#116761',
+            color: chartChrome().series[5],
           },
         },
         {
           data: reservesSeries,
           name: 'BTC',
           yAxisIndex: 0,
-          color: '#EA983B',
+          color: chartChrome().series[2],
           type: 'line',
           smooth: true,
           showSymbol: false,
           lineStyle: {
             width: 2,
-            color: '#EA983B',
+            color: chartChrome().series[2],
           },
         },
         {
           data: usdBalance,
           name: 'USD',
           yAxisIndex: 1,
-          color: '#4CAF50',
+          color: chartChrome().series[5],
           type: 'line',
           smooth: true,
           showSymbol: false,
           lineStyle: {
             width: 2,
-            color: '#3BCC49',
+            color: chartChrome().series[5],
           },
         },
       ],

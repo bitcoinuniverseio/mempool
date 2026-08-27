@@ -14,7 +14,8 @@
         <tr>
           <td i18n="source.universe-release">Universe release</td>
           <td>
-            <a [href]="releaseUrl(info.gitCommit)" target="_blank" rel="noopener">
+            <a [href]="releaseUrl(info.gitCommit)" target="_blank" rel="noopener"
+              i18n-aria-label="source.open-release|Open this release" aria-label="Open this release on the source host">
               <code>{{ info.gitCommit }}</code>
             </a>
             (v{{ info.version }})

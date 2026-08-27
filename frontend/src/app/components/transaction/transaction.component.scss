@@ -62,8 +62,8 @@
 }
 
 .badge.badge-accelerated {
-  background-color: var(--tertiary);
-  color: white;
+  background-color: var(--u-brand);
+  color: var(--u-brand-contrast);
 }
 
 .arrow-green {
@@ -234,28 +234,28 @@
 }
 
 .alert-purple {
-  background-color: #5c3a88;
+  background-color: var(--u-brand-hover);
   width: 100%;
 }
 
 // Blinking block
 @keyframes shadowyBackground {
   0% {
-    box-shadow: 0px 0px 20px rgba(#eba814, 1);
+    box-shadow: 0px 0px 20px rgba(var(--u-state-partial), 1);
   }
   50% {
-    box-shadow: 0px 0px 20px rgba(#eba814, .3);
+    box-shadow: 0px 0px 20px rgba(var(--u-state-partial), .3);
   }
   100% {
-    box-shadow: 0px 0px 20px rgba(#ffae00, 1);
+    box-shadow: 0px 0px 20px var(--u-state-partial);
   }
 }
 
 .blink-bg {
   color: var(--fg);
-  background: repeating-linear-gradient(#daad0a 0%, #daad0a 5%, #987805 100%) !important;
+  background: repeating-linear-gradient(var(--u-state-partial) 0%, var(--u-state-partial) 5%, var(--u-state-partial) 100%) !important;
   animation: shadowyBackground 1s infinite;
-  box-shadow: 0px 0px 20px rgba(#eba814, 1);
+  box-shadow: 0px 0px 20px rgba(var(--u-state-partial), 1);
   transition: 100ms all ease-in;
   margin-right: 8px;
   font-size: 16px;
@@ -285,7 +285,7 @@
 }
 
 .accelerateDeepMempool {
-  background-color: var(--tertiary);
+  background-color: var(--u-brand);
   margin-left: 5px;
 }
 
@@ -303,7 +303,7 @@
 }
 
 .oobFees {
-  color: #905cf4;
+  color: var(--u-brand-hover);
 }
 
 .disabled {

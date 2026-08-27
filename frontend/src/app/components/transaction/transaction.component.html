@@ -179,7 +179,7 @@
               </tr>
               <tr *ngIf="adjustedVsize != null">
                 <td><ng-container i18n="transaction.adjusted-vsize|Transaction Adjusted VSize">Adjusted vsize</ng-container>
-                  <a class="info-link" [routerLink]="['/docs/faq/' | relativeUrl]" fragment="what-is-adjusted-vsize">
+                  <a class="info-link" [routerLink]="['/docs/faq/' | relativeUrl]" fragment="what-is-adjusted-vsize" i18n-aria-label="shared.what-is-this|What is this" aria-label="What is this">
                     <fa-icon [icon]="['fas', 'info-circle']" [fixedWidth]="true"></fa-icon>
                   </a>
                 </td>
@@ -205,7 +205,7 @@
               </tr>
               <tr *ngIf="sigops != null">
                 <td><ng-container i18n="transaction.sigops|Transaction Sigops">Sigops</ng-container>
-                  <a class="info-link" [routerLink]="['/docs/faq/' | relativeUrl]" fragment="what-are-sigops">
+                  <a class="info-link" [routerLink]="['/docs/faq/' | relativeUrl]" fragment="what-are-sigops" i18n-aria-label="shared.what-is-this|What is this" aria-label="What is this">
                     <fa-icon [icon]="['fas', 'info-circle']" [fixedWidth]="true"></fa-icon>
                   </a>
                 </td>

@@ -39,7 +39,7 @@
 
 .badge.badge-accelerated {
   background-color: var(--tertiary);
-  color: white;
+  color: var(--u-text-primary);
 }
 
 .btn-small-height {
@@ -174,10 +174,26 @@
 }
 
 .oobFees {
-  color: #905cf4;
+  color: var(--u-brand-hover);
 }
 
 .disabled {
   opacity: 0.5;
   pointer-events: none;
+}
+
+// The mining pool credit.
+//
+// A bare Bootstrap badge with an inline colour, which lost to the badge
+// rules the bundle already carried and printed near-white on a light row.
+.badge.pool-credit {
+  background-color: transparent;
+  color: var(--u-text-primary);
+  font-size: var(--u-text-sm);
+  font-weight: var(--u-weight-medium);
+  padding: 0;
+
+  &:hover {
+    color: var(--u-brand);
+  }
 }

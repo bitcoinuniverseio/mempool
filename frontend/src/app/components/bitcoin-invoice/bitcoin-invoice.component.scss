@@ -1,5 +1,5 @@
 .form-panel {
-  background-color: #292b45;
+  background-color: var(--u-surface-inset);
   padding: 20px;
 }
 
@@ -9,7 +9,7 @@
 }
 
 .qr-wrapper {
-    background-color: #FFF;
+    background-color: var(--u-surface-raised);
     padding: 10px;
     display: inline-block;
     padding-bottom: 5px;
@@ -50,13 +50,13 @@
   }
 
   &:hover {
-    background-color: #5058926b;
-    border: 2px solid #505892;
+    background-color: var(--u-surface-inset);
+    border: 2px solid var(--u-surface-inset);
     transform: scale(1.1) translateY(-10px);
     margin-top: 70px;
 
     .card-header {
-      background-color: #505892;
+      background-color: var(--u-surface-inset);
     }
   }
 }
@@ -70,7 +70,7 @@
 }
 
 .card-header {
-  background-color: #171929;
+  background-color: var(--u-surface-raised);
 }
 
 .flex-container {
@@ -90,13 +90,13 @@
 }
 
 .shiny-border {
-  background-color: #5058926b;
-  border: 2px solid #505892;
+  background-color: var(--u-surface-inset);
+  border: 2px solid var(--u-surface-inset);
   transform: scale(1.1) translateY(-10px);
   margin-top: 70px;
-  box-shadow: 0px 0px 100px #9858ff52;
+  box-shadow: 0px 0px 100px var(--u-shadow-color);
   .card-header {
-    background-color: #505892;
+    background-color: var(--u-surface-inset);
   }
 
   &.middle-card {
@@ -114,7 +114,7 @@
     span {
       display: block;
       &:last-child {
-        color: #9858ff;
+        color: var(--u-brand);
         font-weight: bold;
         font-size: 2rem;
       }
@@ -124,7 +124,7 @@
   .order-details {
     margin-top: 50px;
     span {
-      color: #d81b60;
+      color: var(--u-state-unavailable);
       margin-left: 10px;
     }
   }
@@ -146,5 +146,5 @@
 .input-dark {
   background-color: var(--bg);
   border-color: var(--active-bg);
-  color: white;
+  color: var(--u-brand-contrast);
 }

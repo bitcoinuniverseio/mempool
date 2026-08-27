@@ -9,6 +9,7 @@ import { SeriesOption } from 'echarts/types/dist/echarts';
 import { WalletStats } from '@app/shared/wallet-stats';
 import { originalChartColors as chartColors } from '@app/app.constants';
 import { Treasury } from '@interfaces/node-api.interface';
+import { chartChrome } from '@app/shared/chart-theme';
 
 
 // export const treasuriesPalette = [
@@ -178,7 +179,7 @@ export class TreasuriesGraphComponent implements OnInit, OnChanges, OnDestroy {
       name: treasury.wallet,
       inactiveColor: 'var(--grey)',
       textStyle: {
-        color: 'white',
+        color: chartChrome().label,
       },
       icon: 'roundRect',
     }));
@@ -250,14 +251,14 @@ export class TreasuriesGraphComponent implements OnInit, OnChanges, OnDestroy {
         axisPointer: {
           type: 'line'
         },
-        backgroundColor: 'rgba(17, 19, 31, 1)',
+        backgroundColor: chartChrome().surface,
         borderRadius: 4,
-        shadowColor: 'rgba(0, 0, 0, 0.5)',
+        shadowColor: chartChrome().markBorder,
         textStyle: {
-          color: '#b1b1b1',
+          color: chartChrome().label,
           align: 'left',
         },
-        borderColor: '#000',
+        borderColor: chartChrome().markBorder,
         formatter: function (data) {
           if (!data.length) {
             return '';
@@ -337,7 +338,7 @@ export class TreasuriesGraphComponent implements OnInit, OnChanges, OnDestroy {
           position: 'left',
           axisLabel: {
             show: this.showYAxis,
-            color: 'rgb(110, 112, 121)',
+            color: chartChrome().label,
             formatter: (val): string => {
               const valSpan = maxValue - (this.period === 'all' ? 0 : minValue);
               if (valSpan > 100_000_000_000) {
@@ -380,7 +381,7 @@ export class TreasuriesGraphComponent implements OnInit, OnChanges, OnDestroy {
         right: this.adjustedRight,
         selectedDataBackground: {
           lineStyle: {
-            color: '#fff',
+            color: chartChrome().markBorder,
             opacity: 0.45,
           },
         },

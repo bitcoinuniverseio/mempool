@@ -13,6 +13,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { StratumJob } from '@interfaces/websocket.interface';
 import { WebsocketService } from '@app/services/websocket.service';
 import { MiningService } from '@app/services/mining.service';
+import { chartChrome, rampStops } from '@app/shared/chart-theme';
 
 interface AccelerationTotal {
   cost: number,
@@ -185,13 +186,7 @@ export class PoolComponent implements OnInit {
       title: title,
       animation: false,
       color: [
-        new echarts.graphic.LinearGradient(0, 0, 0, 0.65, [
-          { offset: 0, color: '#F4511E' },
-          { offset: 0.25, color: '#FB8C00' },
-          { offset: 0.5, color: '#FFB300' },
-          { offset: 0.75, color: '#FDD835' },
-          { offset: 1, color: '#7CB342' }
-        ]),
+        new echarts.graphic.LinearGradient(0, 0, 0, 0.65, rampStops('scale')),
         '#D81B60',
       ],
       grid: {
@@ -205,14 +200,14 @@ export class PoolComponent implements OnInit {
         axisPointer: {
           type: 'line'
         },
-        backgroundColor: 'rgba(17, 19, 31, 1)',
+        backgroundColor: chartChrome().surface,
         borderRadius: 4,
-        shadowColor: 'rgba(0, 0, 0, 0.5)',
+        shadowColor: chartChrome().markBorder,
         textStyle: {
           color: 'var(--tooltip-grey)',
           align: 'left',
         },
-        borderColor: '#000',
+        borderColor: chartChrome().markBorder,
         formatter: function (ticks: any[]) {
           let hashrateString = '';
           let dominanceString = '';
@@ -243,20 +238,20 @@ export class PoolComponent implements OnInit {
         data: [
           {
             name: $localize`:@@79a9dc5b1caca3cbeb1733a19515edacc5fc7920:Hashrate`,
-            inactiveColor: 'rgb(110, 112, 121)',
+            inactiveColor: chartChrome().label,
             textStyle: {
-              color: 'white',
+              color: chartChrome().label,
             },
             icon: 'roundRect',
             itemStyle: {
-              color: '#FFB300',
+              color: chartChrome().series[3],
             },
           },
           {
             name: $localize`:mining.pool-dominance:Pool Dominance`,
-            inactiveColor: 'rgb(110, 112, 121)',
+            inactiveColor: chartChrome().label,
             textStyle: {
-              color: 'white',
+              color: chartChrome().label,
             },
             icon: 'roundRect',
           },
@@ -269,7 +264,7 @@ export class PoolComponent implements OnInit {
           },
           type: 'value',
           axisLabel: {
-            color: 'rgb(110, 112, 121)',
+            color: chartChrome().label,
             formatter: (val) => {
               return this.amountShortenerPipe.transform(val, 3, 'H/s', false, true).toString();
             }
@@ -281,7 +276,7 @@ export class PoolComponent implements OnInit {
         {
           type: 'value',
           axisLabel: {
-            color: 'rgb(110, 112, 121)',
+            color: chartChrome().label,
             formatter: (val) => {
               return `${val}%`;
             }
@@ -325,7 +320,7 @@ export class PoolComponent implements OnInit {
         moveOnMouseMove: false,
       }, {
         fillerColor: '#aaaaff15',
-        borderColor: '#ffffff88',
+        borderColor: chartChrome().markBorder,
         showDetail: false,
         show: true,
         type: 'slider',
@@ -336,7 +331,7 @@ export class PoolComponent implements OnInit {
         right: 15,
         selectedDataBackground: {
           lineStyle: {
-            color: '#fff',
+            color: chartChrome().markBorder,
             opacity: 0.45,
           },
           areaStyle: {
