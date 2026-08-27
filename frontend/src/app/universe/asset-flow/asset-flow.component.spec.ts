@@ -46,7 +46,7 @@ function position(overrides: Partial<ExplorerOutpointPosition> = {}): ExplorerOu
     outpoint: 'c'.repeat(64) + ':0',
     vout: 0,
     valueSatsAtomic: '10000',
-    asset: { protocolId: 'ordinals', canonicalAssetId: 'i0', assetKind: 'inscription' },
+    asset: { protocolId: 'ordinals', assetId: 'i0', assetKind: 'inscription' },
     state: 'active',
     evidence: evidence(),
     ...overrides,
@@ -197,7 +197,7 @@ describe('AssetFlowComponent rare sats', () => {
     expect(
       subject.assetLabel({
         protocolId: 'rare_sats',
-        canonicalAssetId: '1050000000000000',
+        assetId: '1050000000000000',
         displayName: 'epic',
         assetKind: 'sat',
       }),
@@ -216,7 +216,7 @@ describe('AssetFlowComponent labels', () => {
     const inscriptionId = 'd'.repeat(64) + 'i0';
     const shortened = subject.assetLabel({
       protocolId: 'ordinals',
-      canonicalAssetId: inscriptionId,
+      assetId: inscriptionId,
       assetKind: 'inscription',
     });
     expect(shortened).toContain('…');
@@ -224,7 +224,7 @@ describe('AssetFlowComponent labels', () => {
     expect(
       subject.assetLabel({
         protocolId: 'runes',
-        canonicalAssetId: 'UNCOMMON.GOODS',
+        assetId: 'UNCOMMON.GOODS',
         ticker: 'UNCOMMON.GOODS',
         assetKind: 'fungible',
       }),
@@ -243,7 +243,7 @@ describe('AssetFlowComponent labels', () => {
 
   it('accents an asset present on both sides of the transaction', () => {
     const subject = component();
-    const asset = { protocolId: 'runes', canonicalAssetId: 'RUNE', assetKind: 'fungible' };
+    const asset = { protocolId: 'runes', assetId: 'RUNE', assetKind: 'fungible' };
     const transferred = flow({
       actions: [
         {

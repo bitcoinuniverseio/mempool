@@ -1,10 +1,14 @@
 #!/usr/bin/env node
 /**
- * Text gate: no em dash anywhere.
+ * Text gate: no em dash anywhere, and no "canonical" in our own vocabulary.
  *
  * U+2014 is banned in this repository's source, copy, documentation, tests,
  * fixtures, and metadata. The rule is easy to break by accident, so it is
  * enforced rather than remembered.
+ *
+ * The word "canonical" is banned inside the Universe-authored source, where we
+ * choose the vocabulary. It is not policed across the inherited upstream tree,
+ * which uses the term for the HTML rel=canonical link standard and elsewhere.
  *
  * Usage:
  *   node scripts/universe/check-text.mjs [path ...]
@@ -46,6 +50,11 @@ const TEXT_EXTENSIONS = new Set([
 // Built from its code point so this file does not contain the character it bans.
 const EM_DASH = String.fromCharCode(0x2014);
 
+// The word is only policed where we author the vocabulary. Built from a pattern
+// so this gate file, which must name the word to ban it, is not itself a hit.
+const UNIVERSE_SOURCE_PREFIX = 'frontend/src/app/universe/';
+const CANONICAL_WORD = new RegExp(['can', 'onical'].join(''), 'i');
+
 function isSkipped(name) {
   return SKIPPED_DIRECTORIES.has(name);
 }
@@ -81,11 +90,18 @@ function findings(file) {
   } catch {
     return [];
   }
-  if (!contents.includes(EM_DASH)) return [];
+  const posix = relativePath.split(sep).join('/');
+  const policeCanonical = posix.startsWith(UNIVERSE_SOURCE_PREFIX);
+  if (!contents.includes(EM_DASH) && !(policeCanonical && CANONICAL_WORD.test(contents))) {
+    return [];
+  }
   const hits = [];
   contents.split(/\r?\n/).forEach((line, index) => {
     if (line.includes(EM_DASH)) {
-      hits.push({ file: relativePath, line: index + 1, text: line.trim().slice(0, 120) });
+      hits.push({ kind: 'em dash', file: relativePath, line: index + 1, text: line.trim().slice(0, 120) });
+    }
+    if (policeCanonical && CANONICAL_WORD.test(line)) {
+      hits.push({ kind: 'canonical', file: relativePath, line: index + 1, text: line.trim().slice(0, 120) });
     }
   });
   return hits;
@@ -107,14 +123,15 @@ for (const target of targets(process.argv.slice(2))) {
 }
 
 if (problems.length > 0) {
-  console.error(`Em dash found in ${problems.length} place(s). Use a colon, a comma, or two sentences.`);
+  console.error(`Text gate found ${problems.length} banned item(s):`);
   for (const problem of problems.slice(0, 50)) {
-    console.error(`  ${problem.file}:${problem.line}: ${problem.text}`);
+    console.error(`  ${problem.kind} ${problem.file}:${problem.line}: ${problem.text}`);
   }
   if (problems.length > 50) {
     console.error(`  ... and ${problems.length - 50} more`);
   }
+  console.error('Replace an em dash with a colon, a comma, or two sentences. Rename anything using "canonical".');
   process.exit(1);
 }
 
-console.log('Text gate passed: no em dash found.');
+console.log('Text gate passed: no em dash, no "canonical" in Universe source.');

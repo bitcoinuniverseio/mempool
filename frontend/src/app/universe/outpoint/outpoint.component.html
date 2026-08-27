@@ -84,7 +84,7 @@
           <ul class="position-list">
             <li *ngFor="let position of group.positions; trackBy: trackByPosition">
               <div class="asset-line">
-                <span class="asset-name">{{ position.asset?.displayName || position.asset?.ticker || position.asset?.canonicalAssetId }}</span>
+                <span class="asset-name">{{ position.asset?.displayName || position.asset?.ticker || position.asset?.assetId }}</span>
                 <span class="asset-amount" *ngIf="quantityLabel(position) as amount">{{ amount }}</span>
               </div>
               <div class="asset-meta">
