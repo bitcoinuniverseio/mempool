@@ -13,7 +13,7 @@
     font-size: 0.85rem;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    opacity: 0.65;
+    color: var(--u-text-secondary);
     margin: 0 0 0.5rem;
   }
 }
@@ -72,7 +72,7 @@
 
 .flow-empty {
   margin: 0;
-  opacity: 0.75;
+  color: var(--u-text-secondary);
   font-size: 0.9rem;
 }
 
@@ -127,13 +127,16 @@
   margin: var(--u-space-1) 0 0;
 }
 
+// The unit beside an exact quantity. Quieter than the figure, but these rows
+// carry a tinted stripe, and a muted token measured against that stripe
+// rather than the panel fell under the floor.
 .unit {
-  color: var(--u-text-muted);
+  color: var(--u-text-secondary);
 }
 
 .column-note {
   font-size: 0.85rem;
-  opacity: 0.6;
+  color: var(--u-text-secondary);
   margin: 0;
 }
 
@@ -206,13 +209,13 @@
 
 .rarity-reason {
   font-size: 0.78rem;
-  opacity: 0.6;
+  color: var(--u-text-secondary);
 }
 
 .notable-truncated {
   margin: 0.35rem 0 0 0.75rem;
   font-size: 0.78rem;
-  opacity: 0.6;
+  color: var(--u-text-secondary);
 }
 
 .asset-label {
@@ -229,38 +232,21 @@
   font-weight: 600;
 }
 
+// A translucent ink blends with the row stripe behind it, so these are given
+// a token instead. The figure stays quieter than the asset name without its
+// contrast depending on which row it landed on.
 .sats,
 .owner {
-  opacity: 0.65;
+  color: var(--u-text-secondary);
   font-family: monospace;
 }
 
 .state-chip {
-  font-size: 0.7rem;
+  border: 1px solid currentColor;
+  border-radius: var(--u-radius-sm);
+  font-size: var(--u-text-2xs);
+  font-weight: var(--u-weight-medium);
   padding: 0.05rem 0.4rem;
-  border-radius: 8px;
-  border: 1px solid currentColor;
-  opacity: 0.8;
-}
-
-.evidence-info {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.1rem;
-  height: 1.1rem;
-  border-radius: 50%;
-  border: 1px solid currentColor;
-  font-size: 0.65rem;
-  font-style: italic;
-  opacity: 0.55;
-  cursor: help;
-
-  &:focus-visible {
-    outline: 2px solid var(--u-brand);
-    outline-offset: 2px;
-    opacity: 1;
-  }
 }
 
 .flow-actions {
@@ -268,7 +254,7 @@
 }
 
 .action-arrow {
-  opacity: 0.5;
+  color: var(--u-text-muted);
 }
 
 .sr-only {
@@ -293,7 +279,6 @@
 .outpoint-link {
   font-family: var(--font-mono, 'Courier New', monospace);
   font-size: 0.8em;
-  opacity: 0.75;
 
   &:hover,
   &:focus-visible { opacity: 1; }

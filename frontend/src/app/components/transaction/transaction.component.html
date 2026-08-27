@@ -213,7 +213,7 @@
               </tr>
               <tr>
                 <td i18n="transaction.hex">Transaction hex</td>
-                <td><a target="_blank" href="{{ network === '' ? '' : '/' + network }}/api/tx/{{ txId }}/hex"><fa-icon [icon]="['fas', 'external-link-alt']" [fixedWidth]="true"></fa-icon></a></td>
+                <td><a target="_blank" i18n-aria-label="transaction.open-raw-hex|Open the raw transaction" aria-label="Open the raw transaction hex" href="{{ network === '' ? '' : '/' + network }}/api/tx/{{ txId }}/hex"><fa-icon [icon]="['fas', 'external-link-alt']" [fixedWidth]="true"></fa-icon></a></td>
               </tr>
             </tbody>
           </table>

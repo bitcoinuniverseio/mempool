@@ -1,0 +1,251 @@
+{
+  "browser": "chromium",
+  "base": "http://localhost:4300",
+  "screenshots": 12,
+  "findings": [
+    {
+      "route": "home",
+      "routeName": "Homepage",
+      "state": "populated",
+      "theme": "default",
+      "viewport": "320",
+      "overflowBy": 0,
+      "consoleErrors": [],
+      "brokenImages": [],
+      "violations": [],
+      "contrast": {
+        "text": [],
+        "painted": [],
+        "canvas": [
+          {
+            "selector": "div.mempool-block-wrapper > app-mempool-block-overview > app-block-overview-graph > div.graph-alignment.grid-align > div.block-overview-graph > canvas.block-overview-canvas",
+            "w": 258,
+            "h": 258,
+            "opaquePixels": 28549,
+            "distinctColours": 27,
+            "range": 1.94,
+            "blank": false
+          }
+        ],
+        "sampled": 200
+      }
+    },
+    {
+      "route": "tx",
+      "routeName": "Transaction detail",
+      "state": "populated",
+      "theme": "default",
+      "viewport": "320",
+      "overflowBy": 0,
+      "consoleErrors": [],
+      "brokenImages": [],
+      "violations": [],
+      "contrast": {
+        "text": [],
+        "painted": [],
+        "canvas": [],
+        "sampled": 20
+      }
+    },
+    {
+      "route": "protocols",
+      "routeName": "Protocol directory",
+      "state": "populated",
+      "theme": "default",
+      "viewport": "320",
+      "overflowBy": 0,
+      "consoleErrors": [],
+      "brokenImages": [],
+      "violations": [],
+      "contrast": {
+        "text": [],
+        "painted": [],
+        "canvas": [],
+        "sampled": 60
+      }
+    },
+    {
+      "route": "home",
+      "routeName": "Homepage",
+      "state": "populated",
+      "theme": "default",
+      "viewport": "1280",
+      "overflowBy": 0,
+      "consoleErrors": [],
+      "brokenImages": [],
+      "violations": [],
+      "contrast": {
+        "text": [],
+        "painted": [],
+        "canvas": [
+          {
+            "selector": "div.mempool-block-wrapper > app-mempool-block-overview > app-block-overview-graph > div.graph-alignment.grid-align > div.block-overview-graph > canvas.block-overview-canvas",
+            "w": 410,
+            "h": 410,
+            "opaquePixels": 33863,
+            "distinctColours": 21,
+            "range": 1.67,
+            "blank": false
+          }
+        ],
+        "sampled": 232
+      }
+    },
+    {
+      "route": "tx",
+      "routeName": "Transaction detail",
+      "state": "populated",
+      "theme": "default",
+      "viewport": "1280",
+      "overflowBy": 0,
+      "consoleErrors": [],
+      "brokenImages": [],
+      "violations": [],
+      "contrast": {
+        "text": [],
+        "painted": [],
+        "canvas": [],
+        "sampled": 198
+      }
+    },
+    {
+      "route": "protocols",
+      "routeName": "Protocol directory",
+      "state": "populated",
+      "theme": "default",
+      "viewport": "1280",
+      "overflowBy": 0,
+      "consoleErrors": [],
+      "brokenImages": [],
+      "violations": [],
+      "contrast": {
+        "text": [],
+        "painted": [],
+        "canvas": [],
+        "sampled": 62
+      }
+    },
+    {
+      "route": "home",
+      "routeName": "Homepage",
+      "state": "populated",
+      "theme": "dark",
+      "viewport": "320",
+      "overflowBy": 0,
+      "consoleErrors": [],
+      "brokenImages": [],
+      "violations": [],
+      "contrast": {
+        "text": [],
+        "painted": [],
+        "canvas": [
+          {
+            "selector": "div.mempool-block-wrapper > app-mempool-block-overview > app-block-overview-graph > div.graph-alignment.grid-align > div.block-overview-graph > canvas.block-overview-canvas",
+            "w": 258,
+            "h": 258,
+            "opaquePixels": 32353,
+            "distinctColours": 28,
+            "range": 1.79,
+            "blank": false
+          }
+        ],
+        "sampled": 200
+      }
+    },
+    {
+      "route": "tx",
+      "routeName": "Transaction detail",
+      "state": "populated",
+      "theme": "dark",
+      "viewport": "320",
+      "overflowBy": 0,
+      "consoleErrors": [],
+      "brokenImages": [],
+      "violations": [],
+      "contrast": {
+        "text": [],
+        "painted": [],
+        "canvas": [],
+        "sampled": 20
+      }
+    },
+    {
+      "route": "protocols",
+      "routeName": "Protocol directory",
+      "state": "populated",
+      "theme": "dark",
+      "viewport": "320",
+      "overflowBy": 0,
+      "consoleErrors": [],
+      "brokenImages": [],
+      "violations": [],
+      "contrast": {
+        "text": [],
+        "painted": [],
+        "canvas": [],
+        "sampled": 60
+      }
+    },
+    {
+      "route": "home",
+      "routeName": "Homepage",
+      "state": "populated",
+      "theme": "dark",
+      "viewport": "1280",
+      "overflowBy": 0,
+      "consoleErrors": [],
+      "brokenImages": [],
+      "violations": [],
+      "contrast": {
+        "text": [],
+        "painted": [],
+        "canvas": [
+          {
+            "selector": "div.mempool-block-wrapper > app-mempool-block-overview > app-block-overview-graph > div.graph-alignment.grid-align > div.block-overview-graph > canvas.block-overview-canvas",
+            "w": 410,
+            "h": 410,
+            "opaquePixels": 14058,
+            "distinctColours": 29,
+            "range": 1.79,
+            "blank": false
+          }
+        ],
+        "sampled": 232
+      }
+    },
+    {
+      "route": "tx",
+      "routeName": "Transaction detail",
+      "state": "populated",
+      "theme": "dark",
+      "viewport": "1280",
+      "overflowBy": 0,
+      "consoleErrors": [],
+      "brokenImages": [],
+      "violations": [],
+      "contrast": {
+        "text": [],
+        "painted": [],
+        "canvas": [],
+        "sampled": 198
+      }
+    },
+    {
+      "route": "protocols",
+      "routeName": "Protocol directory",
+      "state": "populated",
+      "theme": "dark",
+      "viewport": "1280",
+      "overflowBy": 0,
+      "consoleErrors": [],
+      "brokenImages": [],
+      "violations": [],
+      "contrast": {
+        "text": [],
+        "painted": [],
+        "canvas": [],
+        "sampled": 62
+      }
+    }
+  ]
+}

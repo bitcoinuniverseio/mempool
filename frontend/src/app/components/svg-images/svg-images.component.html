@@ -149,28 +149,26 @@
     </svg>
   </ng-container>
   <ng-container *ngSwitchCase="'universe-logo'">
+    <!--
+      The mark: one square still forming, one settled. Drawn in currentColor and
+      the brand token, so it is correct on either theme and in one colour.
+
+      What it replaced used a gradient orbit and a hexagon with a hard-coded dark
+      stroke, which meant it could only ever be right on a dark page.
+
+      The wordmark is live text on purpose. Inline in the document it inherits
+      the interface's own font stack, so it always matches the product around
+      it. Exported assets that cannot rely on a font, the social card and every
+      icon, are rendered to raster by scripts/universe/brand instead.
+    -->
     <svg [class]="class" [style]="style" [attr.width]="width" [attr.height]="height" [attr.viewBox]="viewBox" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Universe Explorer">
-      <defs>
-        <linearGradient [id]="'universeOrbit' + randomId" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="#7b5cff"/>
-          <stop offset="1" stop-color="#2ad4c8"/>
-        </linearGradient>
-        <linearGradient [id]="'universeCore' + randomId" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#ffb74a"/>
-          <stop offset="1" stop-color="#ff8a3d"/>
-        </linearGradient>
-      </defs>
-      <g transform="translate(2 2) scale(0.238)">
-        <g transform="rotate(-24 256 256)">
-          <ellipse cx="256" cy="256" rx="216" ry="88" fill="none" [attr.stroke]="'url(#universeOrbit' + randomId + ')'" stroke-width="22"/>
-          <circle cx="472" cy="256" r="22" fill="#2ad4c8"/>
-          <circle cx="60" cy="238" r="14" fill="#7b5cff"/>
-        </g>
-        <path d="M256 122 L364 184 L364 308 L256 370 L148 308 L148 184 Z" [attr.fill]="'url(#universeCore' + randomId + ')'" stroke="#1a1330" stroke-width="14" stroke-linejoin="round"/>
-        <path d="M256 122 L256 246 M256 246 L364 184 M256 246 L148 184 M256 246 L256 370" fill="none" stroke="#1a1330" stroke-width="10" stroke-linecap="round" opacity="0.55"/>
+      <g transform="translate(2 15) scale(1.5)">
+        <rect x="7.5" y="7.5" width="31" height="31" rx="3.5"
+              fill="none" stroke="currentColor" stroke-width="5" opacity="0.45"/>
+        <rect x="25.5" y="25.5" width="31" height="31" rx="3.5" fill="var(--u-brand, currentColor)"/>
       </g>
-      <text x="138" y="60" font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="50" font-weight="700" fill="currentColor" letter-spacing="1">UNIVERSE</text>
-      <text x="138" y="110" font-family="'Segoe UI', 'Inter', system-ui, sans-serif" font-size="42" font-weight="300" fill="currentColor" letter-spacing="8">EXPLORER</text>
+      <text x="122" y="60" font-family="var(--u-font-text)" font-size="46" font-weight="700" fill="currentColor" letter-spacing="0.5">UNIVERSE</text>
+      <text x="122" y="103" font-family="var(--u-font-text)" font-size="34" font-weight="400" fill="currentColor" letter-spacing="9" opacity="0.72">EXPLORER</text>
     </svg>
   </ng-container>
   <ng-container *ngSwitchCase="'mempoolSquare'">

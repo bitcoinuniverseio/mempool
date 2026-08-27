@@ -2,7 +2,7 @@
 
   <div class="title-block">
     <h1>{{ ordinal$ | async }}</h1>
-    <button [routerLink]="['/' | relativeUrl]" class="btn btn-sm float-right">&#10005;</button>
+    <button [routerLink]="['/' | relativeUrl]" class="btn btn-sm btn-close-page float-right" i18n-aria-label="shared.close|Close" aria-label="Close this projected block and return to the dashboard">&#10005;</button>
   </div>
 
   <div class="clearfix"></div>

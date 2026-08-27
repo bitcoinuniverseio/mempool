@@ -115,6 +115,31 @@ export const detailFixtures = {
   [`/api/block/${BLOCK_HASH}/txids`]: [TXID_A, TXID_B, TXID_C],
   [`/api/v1/block/${BLOCK_HASH}/summary`]: [],
   [`/api/block/${BLOCK_HASH}/txs/0`]: [buildTransaction()],
+  [`/api/v1/block/${BLOCK_HASH}`]: fixtures['/api/v1/blocks'][0],
+  '/api/txs/outspends': [[{ spent: false }, { spent: false }]],
+  [`/api/v1/cpfp/${TXID_A}`]: { ancestors: [], descendants: [], bestDescendant: null, effectiveFeePerVsize: 19.7, sigops: 2, adjustedVsize: 209 },
+  '/api/v1/historical-price': { prices: [{ time: 1_772_100_000, USD: 96_400 }], exchangeRates: { USDEUR: 0.92, USDGBP: 0.79, USDCAD: 1.36, USDCHF: 0.88, USDAUD: 1.5, USDJPY: 155 } },
+  '/api/v1/mining/pools/1m': fixtures['/api/v1/mining/pools/1w'],
+  // The Universe authority answers for this transaction: one proven output
+  // position, so the flow has something real to lay out rather than only
+  // ever being reviewed in its empty state.
+  [`/api/v1/universe/transactions/${TXID_A}`]: {
+    txid: TXID_A,
+    status: 'confirmed',
+    complete: true,
+    coinbase: false,
+    unknownAttachmentCount: 0,
+    outOfCoverageCount: 0,
+    inputs: [
+      { vout: 0, asset: { protocolId: 'runes', assetId: 'UNIVERSE.RUNE', name: 'UNIVERSE' }, quantityAtomic: '125000000000', valueSatsAtomic: '1200000', ownerAddress: ADDRESS, evidence: { authorityId: 'ord 0.29', coverage: 'complete' } },
+    ],
+    outputs: [
+      { vout: 0, asset: { protocolId: 'runes', assetId: 'UNIVERSE.RUNE', name: 'UNIVERSE' }, quantityAtomic: '100000000000', valueSatsAtomic: '1500000', ownerAddress: 'bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4', evidence: { authorityId: 'ord 0.29', coverage: 'complete' } },
+      { vout: 1, asset: { protocolId: 'runes', assetId: 'UNIVERSE.RUNE', name: 'UNIVERSE' }, quantityAtomic: '25000000000', valueSatsAtomic: '395884', ownerAddress: ADDRESS, evidence: { authorityId: 'ord 0.29', coverage: 'complete' } },
+    ],
+    actions: [{ protocolId: 'runes', actionType: 'transfer', asset: { protocolId: 'runes', assetId: 'UNIVERSE.RUNE', name: 'UNIVERSE' }, quantityAtomic: '100000000000' }],
+    sourceEvidence: [{ authorityId: 'ord 0.29', coverage: 'complete', checkpoint: { heightAtomic: '887412' } }],
+  },
   '/api/v1/mining/hashrate/3d': { hashrates: [{ timestamp: 1_772_000_000, avgHashrate: 8.1e20 }], difficulty: [{ timestamp: 1_772_000_000, difficulty: 1.1e14, height: 887_000 }], currentHashrate: 8.12e20, currentDifficulty: 1.105e14 },
   '/api/v1/mining/reward-stats/144': { startBlock: 887_268, endBlock: 887_412, totalReward: '46_800_000_000'.replace(/_/g, ''), totalFee: '1_400_000_000'.replace(/_/g, ''), totalTx: '412_004'.replace(/_/g, '') },
   '/api/v1/mining/blocks/fees/1w': [{ avgHeight: 887_000, timestamp: 1_772_000_000, avgFees: 12_884_901 }],

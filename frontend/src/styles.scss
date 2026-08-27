@@ -1486,3 +1486,41 @@ h2.anchor {
   letter-spacing: -0.01em;
   margin-bottom: var(--u-space-3);
 }
+
+// The control that leaves a detail page.
+//
+// A bare Bootstrap button, which inherited white text from the theme this
+// product used to have and landed at 1.08:1 once the page became light.
+.btn-close-page {
+  background: transparent;
+  border: 1px solid var(--u-border);
+  color: var(--u-text-secondary);
+  line-height: 1;
+
+  &:hover,
+  &:focus {
+    background: var(--u-surface-hover);
+    border-color: var(--u-border-strong);
+    color: var(--u-text-primary);
+  }
+}
+
+// Reduced motion.
+//
+// The chain strip pulses continuously and slides its blocks over two
+// seconds. Both are meaningful when you want them and are exactly what a
+// visitor who asked their system for less motion is asking not to see.
+//
+// Nothing is hidden and no information is lost: state changes still happen,
+// they simply arrive rather than travel. Individual components may still
+// opt back in for a transition that carries meaning nothing else carries.
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
