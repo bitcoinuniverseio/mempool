@@ -406,6 +406,19 @@ export function progressFailures(report) {
           failures.push(`${where}: chart ${chart.selector} (${chart.width}x${chart.height}) drew nothing`);
         }
       }
+    } else if (f.state === 'loading') {
+      // This fixture holds every request open on purpose, to photograph the
+      // waiting state. Asking it to have finished would be asking the wrong
+      // question; what matters is that the wait is announced rather than being
+      // a blank rectangle. The deadline itself is covered by the unit tests
+      // around the request lifecycle, which run far longer than this harness
+      // waits.
+      const announced = progress.spinners?.length
+        || progress.statusPanels?.length
+        || progress.loadingAnnouncements?.length;
+      if (!announced) {
+        failures.push(`${where}: waiting with nothing on screen that says so`);
+      }
     } else {
       // Every failure fixture must reach a state that says something. A page
       // that is still spinning has not answered the user at all.

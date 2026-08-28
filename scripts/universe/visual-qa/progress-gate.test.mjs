@@ -14,14 +14,14 @@ const at = (overrides) => ({
   findings: [{
     route: 'graphs', routeName: 'Graphs', state: 'populated',
     theme: 'default', viewport: '1440',
-    progress: { spinners: [], skeletons: 0, charts: [], statusPanels: [], textLength: 900, skeletonOnly: false },
+    progress: { spinners: [], skeletons: 0, charts: [], statusPanels: [], loadingAnnouncements: [], textLength: 900, skeletonOnly: false },
     ...overrides,
   }],
 });
 
 const withProgress = (state, progress) => at({
   state,
-  progress: { spinners: [], skeletons: 0, charts: [], statusPanels: [], textLength: 900, skeletonOnly: false, ...progress },
+  progress: { spinners: [], skeletons: 0, charts: [], statusPanels: [], loadingAnnouncements: [], textLength: 900, skeletonOnly: false, ...progress },
 });
 
 test('a populated page that finished raises nothing', () => {
@@ -75,4 +75,23 @@ test('an empty range on a failure state is not treated as unfinished', () => {
 
 test('a finding with no probe at all is skipped rather than guessed at', () => {
   assert.deepEqual(progressFailures({ findings: [{ route: 'graphs', state: 'populated' }] }), []);
+});
+
+test('the loading fixture is judged on whether the wait is announced, not on having finished', () => {
+  // This fixture holds every request open on purpose. Asking it to have
+  // finished would be asking the wrong question.
+  assert.deepEqual(
+    progressFailures(withProgress('loading', { skeletons: 6, loadingAnnouncements: ['Loading protocol registry'] })),
+    [],
+  );
+  assert.deepEqual(
+    progressFailures(withProgress('loading', { spinners: ['div.load-status-spinner'] })),
+    [],
+  );
+});
+
+test('a page that waits with nothing on screen saying so fails the run', () => {
+  const failures = progressFailures(withProgress('loading', { skeletons: 6, loadingAnnouncements: [] }));
+  assert.equal(failures.length, 1);
+  assert.match(failures[0], /nothing on screen that says so/);
 });

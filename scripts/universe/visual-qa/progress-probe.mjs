@@ -63,8 +63,16 @@ export function progressProbe() {
     .filter(visible)
     .map((panel) => panel.innerText.replace(/\s+/g, ' ').trim().slice(0, 160));
 
+  // What a page says while it is still working. A skeleton on its own says
+  // nothing to a screen reader, so the announcement counts separately from the
+  // placeholders themselves.
+  const loadingAnnouncements = [...document.querySelectorAll('.sr-only, [role="status"], [aria-live]')]
+    .map((element) => (element.textContent || '').replace(/\s+/g, ' ').trim())
+    .filter((text) => /load|wait|fetch/i.test(text));
+
   return {
     spinners: spinners.map(selectorFor),
+    loadingAnnouncements,
     skeletons: skeletons.length,
     charts,
     statusPanels,

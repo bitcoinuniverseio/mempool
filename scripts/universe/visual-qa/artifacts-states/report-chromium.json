@@ -1,0 +1,800 @@
+{
+  "browser": "chromium",
+  "base": "http://127.0.0.1:8123",
+  "screenshots": 21,
+  "findings": [
+    {
+      "route": "protocols",
+      "routeName": "Protocol directory",
+      "state": "populated",
+      "theme": "default",
+      "viewport": "1440",
+      "overflowBy": 0,
+      "consoleErrors": [],
+      "brokenImages": [],
+      "violations": [],
+      "contrast": {
+        "text": [],
+        "painted": [],
+        "canvas": [],
+        "sampled": 68
+      },
+      "progress": {
+        "spinners": [],
+        "loadingAnnouncements": [],
+        "skeletons": 0,
+        "charts": [],
+        "statusPanels": [],
+        "textLength": 639,
+        "skeletonOnly": false
+      }
+    },
+    {
+      "route": "graphs",
+      "routeName": "Graphs",
+      "state": "populated",
+      "theme": "default",
+      "viewport": "1440",
+      "overflowBy": 0,
+      "consoleErrors": [],
+      "brokenImages": [],
+      "violations": [],
+      "contrast": {
+        "text": [],
+        "painted": [],
+        "canvas": [],
+        "sampled": 86
+      },
+      "progress": {
+        "spinners": [],
+        "loadingAnnouncements": [],
+        "skeletons": 0,
+        "charts": [
+          {
+            "selector": "div.echarts",
+            "width": 1370,
+            "height": 600,
+            "svgMarks": 42,
+            "canvasCount": 0,
+            "canvasPixels": 0,
+            "hasTitleOnly": false,
+            "drewNothing": false
+          },
+          {
+            "selector": "div.echarts",
+            "width": 1370,
+            "height": 600,
+            "svgMarks": 46,
+            "canvasCount": 0,
+            "canvasPixels": 0,
+            "hasTitleOnly": false,
+            "drewNothing": false
+          }
+        ],
+        "statusPanels": [],
+        "textLength": 328,
+        "skeletonOnly": false
+      }
+    },
+    {
+      "route": "mining",
+      "routeName": "Mining dashboard",
+      "state": "populated",
+      "theme": "default",
+      "viewport": "1440",
+      "overflowBy": 0,
+      "consoleErrors": [],
+      "brokenImages": [],
+      "violations": [],
+      "contrast": {
+        "text": [],
+        "painted": [],
+        "canvas": [],
+        "sampled": 165
+      },
+      "progress": {
+        "spinners": [],
+        "loadingAnnouncements": [],
+        "skeletons": 0,
+        "charts": [
+          {
+            "selector": "div.chart-widget.ng-star-inserted",
+            "width": 492,
+            "height": 375,
+            "svgMarks": 6,
+            "canvasCount": 0,
+            "canvasPixels": 0,
+            "hasTitleOnly": false,
+            "drewNothing": false
+          }
+        ],
+        "statusPanels": [
+          "hashrate and difficulty The answer could not be read. Retry System status",
+          "hashrate and difficulty The answer could not be read. Retry System status"
+        ],
+        "textLength": 1091,
+        "skeletonOnly": false
+      }
+    },
+    {
+      "route": "protocols",
+      "routeName": "Protocol directory",
+      "state": "authority-down",
+      "theme": "default",
+      "viewport": "1440",
+      "overflowBy": 0,
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 502 (Bad Gateway)"
+      ],
+      "brokenImages": [],
+      "violations": [],
+      "contrast": {
+        "text": [],
+        "painted": [],
+        "canvas": [],
+        "sampled": 43
+      },
+      "progress": {
+        "spinners": [],
+        "loadingAnnouncements": [],
+        "skeletons": 0,
+        "charts": [],
+        "statusPanels": [],
+        "textLength": 216,
+        "skeletonOnly": false
+      }
+    },
+    {
+      "route": "graphs",
+      "routeName": "Graphs",
+      "state": "authority-down",
+      "theme": "default",
+      "viewport": "1440",
+      "overflowBy": 0,
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 502 (Bad Gateway)"
+      ],
+      "brokenImages": [],
+      "violations": [],
+      "contrast": {
+        "text": [],
+        "painted": [],
+        "canvas": [],
+        "sampled": 86
+      },
+      "progress": {
+        "spinners": [],
+        "loadingAnnouncements": [],
+        "skeletons": 0,
+        "charts": [
+          {
+            "selector": "div.echarts",
+            "width": 1370,
+            "height": 600,
+            "svgMarks": 42,
+            "canvasCount": 0,
+            "canvasPixels": 0,
+            "hasTitleOnly": false,
+            "drewNothing": false
+          },
+          {
+            "selector": "div.echarts",
+            "width": 1370,
+            "height": 600,
+            "svgMarks": 46,
+            "canvasCount": 0,
+            "canvasPixels": 0,
+            "hasTitleOnly": false,
+            "drewNothing": false
+          }
+        ],
+        "statusPanels": [],
+        "textLength": 328,
+        "skeletonOnly": false
+      }
+    },
+    {
+      "route": "mining",
+      "routeName": "Mining dashboard",
+      "state": "authority-down",
+      "theme": "default",
+      "viewport": "1440",
+      "overflowBy": 0,
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 502 (Bad Gateway)"
+      ],
+      "brokenImages": [],
+      "violations": [],
+      "contrast": {
+        "text": [],
+        "painted": [],
+        "canvas": [],
+        "sampled": 165
+      },
+      "progress": {
+        "spinners": [],
+        "loadingAnnouncements": [],
+        "skeletons": 0,
+        "charts": [
+          {
+            "selector": "div.chart-widget.ng-star-inserted",
+            "width": 492,
+            "height": 375,
+            "svgMarks": 6,
+            "canvasCount": 0,
+            "canvasPixels": 0,
+            "hasTitleOnly": false,
+            "drewNothing": false
+          }
+        ],
+        "statusPanels": [
+          "hashrate and difficulty The answer could not be read. Retry System status",
+          "hashrate and difficulty The answer could not be read. Retry System status"
+        ],
+        "textLength": 1091,
+        "skeletonOnly": false
+      }
+    },
+    {
+      "route": "protocols",
+      "routeName": "Protocol directory",
+      "state": "authority-empty",
+      "theme": "default",
+      "viewport": "1440",
+      "overflowBy": 0,
+      "consoleErrors": [],
+      "brokenImages": [],
+      "violations": [],
+      "contrast": {
+        "text": [],
+        "painted": [],
+        "canvas": [],
+        "sampled": 46
+      },
+      "progress": {
+        "spinners": [],
+        "loadingAnnouncements": [],
+        "skeletons": 0,
+        "charts": [],
+        "statusPanels": [],
+        "textLength": 385,
+        "skeletonOnly": false
+      }
+    },
+    {
+      "route": "graphs",
+      "routeName": "Graphs",
+      "state": "authority-empty",
+      "theme": "default",
+      "viewport": "1440",
+      "overflowBy": 0,
+      "consoleErrors": [],
+      "brokenImages": [],
+      "violations": [],
+      "contrast": {
+        "text": [],
+        "painted": [],
+        "canvas": [],
+        "sampled": 86
+      },
+      "progress": {
+        "spinners": [],
+        "loadingAnnouncements": [],
+        "skeletons": 0,
+        "charts": [
+          {
+            "selector": "div.echarts",
+            "width": 1370,
+            "height": 600,
+            "svgMarks": 42,
+            "canvasCount": 0,
+            "canvasPixels": 0,
+            "hasTitleOnly": false,
+            "drewNothing": false
+          },
+          {
+            "selector": "div.echarts",
+            "width": 1370,
+            "height": 600,
+            "svgMarks": 46,
+            "canvasCount": 0,
+            "canvasPixels": 0,
+            "hasTitleOnly": false,
+            "drewNothing": false
+          }
+        ],
+        "statusPanels": [],
+        "textLength": 328,
+        "skeletonOnly": false
+      }
+    },
+    {
+      "route": "mining",
+      "routeName": "Mining dashboard",
+      "state": "authority-empty",
+      "theme": "default",
+      "viewport": "1440",
+      "overflowBy": 0,
+      "consoleErrors": [],
+      "brokenImages": [],
+      "violations": [],
+      "contrast": {
+        "text": [],
+        "painted": [],
+        "canvas": [],
+        "sampled": 165
+      },
+      "progress": {
+        "spinners": [],
+        "loadingAnnouncements": [],
+        "skeletons": 0,
+        "charts": [
+          {
+            "selector": "div.chart-widget.ng-star-inserted",
+            "width": 492,
+            "height": 375,
+            "svgMarks": 6,
+            "canvasCount": 0,
+            "canvasPixels": 0,
+            "hasTitleOnly": false,
+            "drewNothing": false
+          }
+        ],
+        "statusPanels": [
+          "hashrate and difficulty The answer could not be read. Retry System status",
+          "hashrate and difficulty The answer could not be read. Retry System status"
+        ],
+        "textLength": 1091,
+        "skeletonOnly": false
+      }
+    },
+    {
+      "route": "protocols",
+      "routeName": "Protocol directory",
+      "state": "chain-down",
+      "theme": "default",
+      "viewport": "1440",
+      "overflowBy": 0,
+      "consoleErrors": [],
+      "brokenImages": [],
+      "violations": [],
+      "contrast": {
+        "text": [],
+        "painted": [],
+        "canvas": [],
+        "sampled": 68
+      },
+      "progress": {
+        "spinners": [],
+        "loadingAnnouncements": [],
+        "skeletons": 0,
+        "charts": [],
+        "statusPanels": [],
+        "textLength": 639,
+        "skeletonOnly": false
+      }
+    },
+    {
+      "route": "graphs",
+      "routeName": "Graphs",
+      "state": "chain-down",
+      "theme": "default",
+      "viewport": "1440",
+      "overflowBy": 0,
+      "consoleErrors": [],
+      "brokenImages": [],
+      "violations": [],
+      "contrast": {
+        "text": [],
+        "painted": [],
+        "canvas": [],
+        "sampled": 86
+      },
+      "progress": {
+        "spinners": [],
+        "loadingAnnouncements": [],
+        "skeletons": 0,
+        "charts": [
+          {
+            "selector": "div.echarts",
+            "width": 1370,
+            "height": 600,
+            "svgMarks": 42,
+            "canvasCount": 0,
+            "canvasPixels": 0,
+            "hasTitleOnly": false,
+            "drewNothing": false
+          },
+          {
+            "selector": "div.echarts",
+            "width": 1370,
+            "height": 600,
+            "svgMarks": 46,
+            "canvasCount": 0,
+            "canvasPixels": 0,
+            "hasTitleOnly": false,
+            "drewNothing": false
+          }
+        ],
+        "statusPanels": [],
+        "textLength": 328,
+        "skeletonOnly": false
+      }
+    },
+    {
+      "route": "mining",
+      "routeName": "Mining dashboard",
+      "state": "chain-down",
+      "theme": "default",
+      "viewport": "1440",
+      "overflowBy": 0,
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 502 (Bad Gateway)"
+      ],
+      "brokenImages": [],
+      "violations": [],
+      "contrast": {
+        "text": [],
+        "painted": [],
+        "canvas": [],
+        "sampled": 81
+      },
+      "progress": {
+        "spinners": [],
+        "loadingAnnouncements": [],
+        "skeletons": 30,
+        "charts": [
+          {
+            "selector": "div.chart-widget.ng-star-inserted",
+            "width": 492,
+            "height": 375,
+            "svgMarks": 6,
+            "canvasCount": 0,
+            "canvasPixels": 0,
+            "hasTitleOnly": false,
+            "drewNothing": false
+          }
+        ],
+        "statusPanels": [
+          "hashrate and difficulty The answer could not be read. Retry System status",
+          "hashrate and difficulty The answer could not be read. Retry System status"
+        ],
+        "textLength": 492,
+        "skeletonOnly": false
+      }
+    },
+    {
+      "route": "protocols",
+      "routeName": "Protocol directory",
+      "state": "catching-up",
+      "theme": "default",
+      "viewport": "1440",
+      "overflowBy": 0,
+      "consoleErrors": [],
+      "brokenImages": [],
+      "violations": [],
+      "contrast": {
+        "text": [],
+        "painted": [],
+        "canvas": [],
+        "sampled": 76
+      },
+      "progress": {
+        "spinners": [],
+        "loadingAnnouncements": [],
+        "skeletons": 0,
+        "charts": [],
+        "statusPanels": [],
+        "textLength": 639,
+        "skeletonOnly": false
+      }
+    },
+    {
+      "route": "graphs",
+      "routeName": "Graphs",
+      "state": "catching-up",
+      "theme": "default",
+      "viewport": "1440",
+      "overflowBy": 0,
+      "consoleErrors": [],
+      "brokenImages": [],
+      "violations": [],
+      "contrast": {
+        "text": [],
+        "painted": [],
+        "canvas": [],
+        "sampled": 94
+      },
+      "progress": {
+        "spinners": [],
+        "loadingAnnouncements": [],
+        "skeletons": 0,
+        "charts": [
+          {
+            "selector": "div.echarts",
+            "width": 1370,
+            "height": 600,
+            "svgMarks": 42,
+            "canvasCount": 0,
+            "canvasPixels": 0,
+            "hasTitleOnly": false,
+            "drewNothing": false
+          },
+          {
+            "selector": "div.echarts",
+            "width": 1370,
+            "height": 600,
+            "svgMarks": 46,
+            "canvasCount": 0,
+            "canvasPixels": 0,
+            "hasTitleOnly": false,
+            "drewNothing": false
+          }
+        ],
+        "statusPanels": [],
+        "textLength": 328,
+        "skeletonOnly": false
+      }
+    },
+    {
+      "route": "mining",
+      "routeName": "Mining dashboard",
+      "state": "catching-up",
+      "theme": "default",
+      "viewport": "1440",
+      "overflowBy": 0,
+      "consoleErrors": [],
+      "brokenImages": [],
+      "violations": [],
+      "contrast": {
+        "text": [],
+        "painted": [],
+        "canvas": [],
+        "sampled": 173
+      },
+      "progress": {
+        "spinners": [],
+        "loadingAnnouncements": [],
+        "skeletons": 0,
+        "charts": [
+          {
+            "selector": "div.chart-widget.ng-star-inserted",
+            "width": 492,
+            "height": 375,
+            "svgMarks": 6,
+            "canvasCount": 0,
+            "canvasPixels": 0,
+            "hasTitleOnly": false,
+            "drewNothing": false
+          }
+        ],
+        "statusPanels": [
+          "hashrate and difficulty The answer could not be read. Retry System status",
+          "hashrate and difficulty The answer could not be read. Retry System status"
+        ],
+        "textLength": 1091,
+        "skeletonOnly": false
+      }
+    },
+    {
+      "route": "protocols",
+      "routeName": "Protocol directory",
+      "state": "loading",
+      "theme": "default",
+      "viewport": "1440",
+      "overflowBy": 0,
+      "consoleErrors": [],
+      "brokenImages": [],
+      "violations": [],
+      "contrast": {
+        "text": [],
+        "painted": [],
+        "canvas": [],
+        "sampled": 41
+      },
+      "progress": {
+        "spinners": [],
+        "loadingAnnouncements": [
+          "Loading protocol registry"
+        ],
+        "skeletons": 18,
+        "charts": [],
+        "statusPanels": [],
+        "textLength": 131,
+        "skeletonOnly": true
+      }
+    },
+    {
+      "route": "graphs",
+      "routeName": "Graphs",
+      "state": "loading",
+      "theme": "default",
+      "viewport": "1440",
+      "overflowBy": 0,
+      "consoleErrors": [],
+      "brokenImages": [],
+      "violations": [],
+      "contrast": {
+        "text": [],
+        "painted": [],
+        "canvas": [],
+        "sampled": 56
+      },
+      "progress": {
+        "spinners": [
+          "div.load-status-spinner",
+          "div.load-status-spinner"
+        ],
+        "loadingAnnouncements": [
+          "Loading mempool history",
+          "Loading transaction throughput"
+        ],
+        "skeletons": 0,
+        "charts": [],
+        "statusPanels": [
+          "Loading mempool history",
+          "Loading transaction throughput"
+        ],
+        "textLength": 191,
+        "skeletonOnly": false
+      }
+    },
+    {
+      "route": "mining",
+      "routeName": "Mining dashboard",
+      "state": "loading",
+      "theme": "default",
+      "viewport": "1440",
+      "overflowBy": 0,
+      "consoleErrors": [],
+      "brokenImages": [],
+      "violations": [],
+      "contrast": {
+        "text": [],
+        "painted": [],
+        "canvas": [],
+        "sampled": 61
+      },
+      "progress": {
+        "spinners": [
+          "div.load-status-spinner.ng-star-inserted",
+          "div.load-status-spinner.ng-star-inserted",
+          "div.load-status-spinner.ng-star-inserted",
+          "div.load-status-spinner.ng-star-inserted",
+          "div.load-status-spinner.ng-star-inserted"
+        ],
+        "loadingAnnouncements": [
+          "Loading reward stats",
+          "Loading pool ranking",
+          "Loading pool ranking",
+          "Loading hashrate and difficulty",
+          "Loading hashrate and difficulty"
+        ],
+        "skeletons": 54,
+        "charts": [],
+        "statusPanels": [
+          "Loading reward stats",
+          "Loading pool ranking",
+          "Loading pool ranking",
+          "Loading hashrate and difficulty",
+          "Loading hashrate and difficulty"
+        ],
+        "textLength": 314,
+        "skeletonOnly": true
+      }
+    },
+    {
+      "route": "protocols",
+      "routeName": "Protocol directory",
+      "state": "address-empty",
+      "theme": "default",
+      "viewport": "1440",
+      "overflowBy": 0,
+      "consoleErrors": [],
+      "brokenImages": [],
+      "violations": [],
+      "contrast": {
+        "text": [],
+        "painted": [],
+        "canvas": [],
+        "sampled": 68
+      },
+      "progress": {
+        "spinners": [],
+        "loadingAnnouncements": [],
+        "skeletons": 0,
+        "charts": [],
+        "statusPanels": [],
+        "textLength": 639,
+        "skeletonOnly": false
+      }
+    },
+    {
+      "route": "graphs",
+      "routeName": "Graphs",
+      "state": "address-empty",
+      "theme": "default",
+      "viewport": "1440",
+      "overflowBy": 0,
+      "consoleErrors": [],
+      "brokenImages": [],
+      "violations": [],
+      "contrast": {
+        "text": [],
+        "painted": [],
+        "canvas": [],
+        "sampled": 86
+      },
+      "progress": {
+        "spinners": [],
+        "loadingAnnouncements": [],
+        "skeletons": 0,
+        "charts": [
+          {
+            "selector": "div.echarts",
+            "width": 1370,
+            "height": 600,
+            "svgMarks": 42,
+            "canvasCount": 0,
+            "canvasPixels": 0,
+            "hasTitleOnly": false,
+            "drewNothing": false
+          },
+          {
+            "selector": "div.echarts",
+            "width": 1370,
+            "height": 600,
+            "svgMarks": 46,
+            "canvasCount": 0,
+            "canvasPixels": 0,
+            "hasTitleOnly": false,
+            "drewNothing": false
+          }
+        ],
+        "statusPanels": [],
+        "textLength": 328,
+        "skeletonOnly": false
+      }
+    },
+    {
+      "route": "mining",
+      "routeName": "Mining dashboard",
+      "state": "address-empty",
+      "theme": "default",
+      "viewport": "1440",
+      "overflowBy": 0,
+      "consoleErrors": [],
+      "brokenImages": [],
+      "violations": [],
+      "contrast": {
+        "text": [],
+        "painted": [],
+        "canvas": [],
+        "sampled": 165
+      },
+      "progress": {
+        "spinners": [],
+        "loadingAnnouncements": [],
+        "skeletons": 0,
+        "charts": [
+          {
+            "selector": "div.chart-widget.ng-star-inserted",
+            "width": 492,
+            "height": 375,
+            "svgMarks": 6,
+            "canvasCount": 0,
+            "canvasPixels": 0,
+            "hasTitleOnly": false,
+            "drewNothing": false
+          }
+        ],
+        "statusPanels": [
+          "hashrate and difficulty The answer could not be read. Retry System status",
+          "hashrate and difficulty The answer could not be read. Retry System status"
+        ],
+        "textLength": 1091,
+        "skeletonOnly": false
+      }
+    }
+  ]
+}

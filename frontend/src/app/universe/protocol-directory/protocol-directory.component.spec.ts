@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
-import { firstValueFrom, of, throwError } from 'rxjs';
-import { ProtocolDirectoryComponent } from '@app/universe/protocol-directory/protocol-directory.component';
+import { describe, expect, it, vi } from 'vitest';
+import { NEVER, firstValueFrom, of, throwError } from 'rxjs';
+import { ProtocolDirectoryComponent, type DirectoryViewModel } from '@app/universe/protocol-directory/protocol-directory.component';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { SeoService } from '@app/services/seo.service';
 import {
@@ -207,6 +207,27 @@ describe('ProtocolDirectoryComponent view model', () => {
     expect(vm.error).toBe(false);
     expect(vm.groups).toHaveLength(1);
     expect(vm.sourcesByAuthority).toBeNull();
+  });
+
+  it('reaches the error state when the registry never answers, rather than waiting', async () => {
+    // The visual gate caught this: the loading fixture hangs every request, and
+    // the page sat on its skeleton with nothing left to clear it.
+    vi.useFakeTimers();
+    try {
+      const api = {
+        getProtocols$: () => NEVER,
+        getSources$: () => NEVER,
+      } as unknown as UniverseApiService;
+      const subject = new ProtocolDirectoryComponent(api, seo);
+      subject.ngOnInit();
+      const seen: DirectoryViewModel[] = [];
+      const subscription = subject.vm$.subscribe((vm) => seen.push(vm));
+      await vi.advanceTimersByTimeAsync(25_000);
+      subscription.unsubscribe();
+      expect(seen.at(-1)?.error).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('reports an error when the registry itself fails', async () => {

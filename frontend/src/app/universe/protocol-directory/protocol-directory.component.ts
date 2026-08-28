@@ -1,5 +1,5 @@
 import { Component, ChangeDetectionStrategy, OnInit } from '@angular/core';
-import { BehaviorSubject, Observable, catchError, combineLatest, map, of, switchMap } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, combineLatest, map, of, switchMap, timeout } from 'rxjs';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import {
   ExplorerProtocolDefinition,
@@ -27,7 +27,7 @@ interface FamilyGroup {
   protocols: ExplorerProtocolDefinition[];
 }
 
-interface DirectoryViewModel {
+export interface DirectoryViewModel {
   loading: boolean;
   error: boolean;
   registryVersion?: string;
@@ -38,6 +38,9 @@ interface DirectoryViewModel {
   /** null when the source snapshot could not be read; the page still renders. */
   sourcesByAuthority?: Map<string, SourceEntry> | null;
 }
+
+/** How long the page waits for the registry before saying it could not load. */
+const REQUEST_TIMEOUT_MS = 20_000;
 
 // display order of protocol families; unknown families sort after the known
 // ones and before OTHER
@@ -66,8 +69,15 @@ export class ProtocolDirectoryComponent implements OnInit {
     // a failing snapshot must not blank out the directory.
     this.vm$ = this.retry$.pipe(
       switchMap(() => combineLatest([
-        this.universeApiService.getProtocols$(),
-        this.universeApiService.getSources$().pipe(catchError(() => of(null))),
+        // A request that hangs is the failure this page had left: the registry
+        // never arrived, nothing errored, and the skeleton stayed on screen
+        // with nothing subscribed to clear it. The budget turns that into the
+        // error state below, which says so and offers a retry.
+        this.universeApiService.getProtocols$().pipe(timeout({ first: REQUEST_TIMEOUT_MS })),
+        this.universeApiService.getSources$().pipe(
+          timeout({ first: REQUEST_TIMEOUT_MS }),
+          catchError(() => of(null)),
+        ),
       ])),
     ).pipe(
       map(([response, sources]: [ProtocolsResponse, SourcesResponse | null]): DirectoryViewModel => {

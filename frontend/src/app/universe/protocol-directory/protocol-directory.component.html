@@ -5,7 +5,8 @@
   <ng-container *ngIf="vm$ | async as vm; else loadingSkeleton">
     <div *ngIf="vm.error" class="registry-unavailable" role="alert">
       <h2 i18n="universe.protocols.unavailable">Protocol registry unavailable</h2>
-      <p i18n="universe.protocols.unavailable-detail">The protocol registry could not be loaded. Try again later.</p>
+      <p i18n="universe.protocols.unavailable-detail">The protocol registry could not be loaded, so nothing below can be listed.</p>
+      <button type="button" class="btn btn-sm btn-primary" (click)="onRetry()" i18n="universe.protocols.retry">Retry</button>
     </div>
 
     <ng-container *ngIf="!vm.error">
