@@ -1,7 +1,7 @@
 import { Component, OnInit, ChangeDetectionStrategy, Input, ChangeDetectorRef, Inject, LOCALE_ID } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { BehaviorSubject, combineLatest, Observable, timer, of, Subscription } from 'rxjs';
-import { debounceTime, delayWhen, filter, map, retryWhen, scan, skip, switchMap, tap, throttleTime } from 'rxjs/operators';
+import { BehaviorSubject, combineLatest, EMPTY, Observable, throwError, timer, of, Subscription } from 'rxjs';
+import { catchError, debounceTime, filter, map, retry, scan, skip, switchMap, tap, throttleTime } from 'rxjs/operators';
 import { BlockExtended } from '@interfaces/node-api.interface';
 import { ApiService } from '@app/services/api.service';
 import { StateService } from '@app/services/state.service';
@@ -10,6 +10,7 @@ import { SeoService } from '@app/services/seo.service';
 import { OpenGraphService } from '@app/services/opengraph.service';
 import { seoDescriptionNetwork } from '@app/shared/common.utils';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
+import { LoadState, classifyLoadFailure, isRetryableFailure } from '@app/shared/load-state';
 
 @Component({
   selector: 'app-blocks-list',
@@ -27,6 +28,8 @@ export class BlocksList implements OnInit {
   indexingAvailable = false;
   auditAvailable = false;
   isLoading = true;
+  /** Set when the list request has failed for good, so the page says so instead of holding a skeleton. */
+  failureState: LoadState<never> | null = null;
   fromBlockHeight = undefined;
   lastBlockHeightFetched = -1;
   paginationMaxSize: number;
@@ -115,6 +118,7 @@ export class BlocksList implements OnInit {
         filter(fromBlockHeight => fromBlockHeight !== this.lastBlockHeightFetched),
         switchMap((fromBlockHeight) => {
           this.isLoading = true;
+          this.failureState = null;
           this.lastBlockHeightFetched = fromBlockHeight;
           return this.apiService.getBlocks$(this.page === 1 ? undefined : fromBlockHeight)
             .pipe(
@@ -139,7 +143,23 @@ export class BlocksList implements OnInit {
                 }
                 return blocks;
               }),
-              retryWhen(errors => errors.pipe(delayWhen(() => timer(10000))))
+              // Bounded, so a chain backend that is down produces an answer
+              // instead of a skeleton that retries forever with nothing said.
+              retry({
+                count: 2,
+                delay: (error, attempt) => {
+                  if (!isRetryableFailure(classifyLoadFailure(error))) {
+                    return throwError(() => error);
+                  }
+                  return timer(2000 * attempt);
+                },
+              }),
+              catchError((error) => {
+                this.failureState = { status: 'error', reason: classifyLoadFailure(error), at: Date.now() };
+                this.isLoading = false;
+                this.cd.markForCheck();
+                return EMPTY;
+              })
             );
         })
       ),
@@ -185,6 +205,14 @@ export class BlocksList implements OnInit {
 
   pageChange(page: number): void {
     this.router.navigate([this.relativeUrlPipe.transform('/blocks/'), page]);
+  }
+
+  retryLoad(): void {
+    this.failureState = null;
+    this.isLoading = true;
+    this.lastBlockHeightFetched = -1;
+    this.fromHeightSubject.next(this.fromBlockHeight);
+    this.cd.markForCheck();
   }
 
   trackByBlock(index: number, block: BlockExtended): number {

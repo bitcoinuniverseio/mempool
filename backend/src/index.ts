@@ -46,6 +46,8 @@ import bitcoinCoreRoutes from './api/bitcoin/bitcoin-core.routes';
 import bitcoinSecondClient from './api/bitcoin/bitcoin-second-client';
 import accelerationRoutes from './api/acceleration/acceleration.routes';
 import aboutRoutes from './api/about.routes';
+import capabilities from './api/capabilities';
+import capabilitiesRoutes from './api/capabilities.routes';
 import mempoolBlocks from './api/mempool-blocks';
 import walletApi from './api/services/wallets';
 import stratumApi from './api/services/stratum';
@@ -119,6 +121,17 @@ class Server {
 
     if (config.MEMPOOL.BACKEND === 'esplora') {
       bitcoinApi.startHealthChecks();
+    }
+
+    // Refuse to start on a configuration that would advertise a public feature
+    // this deployment cannot serve. Failing here is loud and recoverable; a
+    // half-configured backend is neither.
+    const preflightFailures = capabilities.preflight();
+    if (preflightFailures.length > 0) {
+      for (const failure of preflightFailures) {
+        logger.err(`Configuration preflight failed for ${failure.feature}: ${failure.reason}`);
+      }
+      throw new Error('The backend configuration is incoherent; see the preflight errors above.');
     }
 
     if (config.DATABASE.ENABLED) {
@@ -350,15 +363,18 @@ class Server {
 
   setUpHttpApiRoutes(): void {
     bitcoinRoutes.initRoutes(this.app);
+    capabilitiesRoutes.initRoutes(this.app);
     if (config.MEMPOOL.OFFICIAL) {
       bitcoinCoreRoutes.initRoutes(this.app);
     }
     pricesRoutes.initRoutes(this.app);
-    if (config.STATISTICS.ENABLED && config.DATABASE.ENABLED && config.MEMPOOL.ENABLED) {
+    if (capabilities.statisticsEnabled()) {
       statisticsRoutes.initRoutes(this.app);
+      capabilities.markRoutesRegistered('statistics');
     }
-    if (Common.indexingEnabled() && config.MEMPOOL.ENABLED) {
+    if (capabilities.miningEnabled()) {
       miningRoutes.initRoutes(this.app);
+      capabilities.markRoutesRegistered('mining');
     }
     if (Common.isLiquid()) {
       liquidRoutes.initRoutes(this.app);

@@ -3,7 +3,8 @@
 <div [class]="widget === false ? 'full-container' : ''">
 
   <div *ngIf="widget">
-    <div class="pool-distribution" *ngIf="(hashrateObservable$ | async) as hashrates; else loadingStats">
+    <app-load-status *ngIf="state.status === 'stale'" [state]="state" (retry)="onRetry()"></app-load-status>
+    <div class="pool-distribution" *ngIf="hashrates as hashrates; else hashrateStatus">
       <div class="item">
         <h5 class="card-title" i18n="mining.hashrate">Hashrate (1w)</h5>
         <p class="card-text">
@@ -30,7 +31,7 @@
       </button>
     </div>  
 
-    <form [formGroup]="radioGroupForm" class="formRadioGroup" *ngIf="(hashrateObservable$ | async) as stats">
+    <form [formGroup]="radioGroupForm" class="formRadioGroup" *ngIf="hashrates as stats">
       <div class="btn-group btn-group-toggle" name="radioBasic">
         <label class="btn btn-primary btn-sm" *ngIf="stats.blockCount >= 12960" [class.active]="radioGroupForm.get('dateSpan').value === '3m'">
           <input type="radio" [value]="'3m'" fragment="3m" [routerLink]="['/graphs/mining/hashrate-difficulty' | relativeUrl]" [attr.data-cy]="'3m'" formControlName="dateSpan"> 3M
@@ -54,28 +55,15 @@
     </form>
   </div>
 
-  <div [class]="!widget ? 'chart' : 'chart-widget'" *browserOnly [style]="{ height: widget ? ((height + 20) + 'px') : null, opacity: isLoading ? 0.5 : 1 }" echarts [initOpts]="chartInitOptions" [options]="chartOptions"
+  <div [class]="!widget ? 'chart' : 'chart-widget'" *browserOnly [hidden]="!hashrates" [style]="{ height: widget ? ((height + 20) + 'px') : null }" echarts [initOpts]="chartInitOptions" [options]="chartOptions"
     (chartInit)="onChartInit($event)">
   </div>
-  <div class="text-center loadingGraphs" *ngIf="!stateService.isBrowser || isLoading">
-    <div class="spinner-border text-light"></div>
-  </div>
+  <app-load-status *ngIf="!stateService.isBrowser || !hashrates" [state]="state" label="hashrate and difficulty"
+    i18n-label="mining.label.hashrate-difficulty" [minHeight]="height + 'px'" (retry)="onRetry()"></app-load-status>
 
 </div>
 
-<ng-template #loadingStats>
-  <div class="pool-distribution">
-    <div class="item">
-      <h5 class="card-title" i18n="mining.hashrate">Hashrate</h5>
-      <p class="card-text">
-        <span class="skeleton-loader skeleton-loader-big"></span>
-      </p>
-    </div>
-    <div class="item">
-      <h5 class="card-title" i18n="block.difficulty">Difficulty</h5>
-      <p class="card-text">
-        <span class="skeleton-loader skeleton-loader-big"></span>
-      </p>
-    </div>
-  </div>
+<ng-template #hashrateStatus>
+  <app-load-status [state]="state" label="hashrate and difficulty" i18n-label="mining.label.hashrate-difficulty"
+    minHeight="96px" (retry)="onRetry()"></app-load-status>
 </ng-template>

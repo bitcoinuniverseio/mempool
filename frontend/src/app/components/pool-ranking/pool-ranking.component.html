@@ -3,7 +3,8 @@
 <div [class]="widget === false ? 'full-container' : ''">
 
   <div *ngIf="widget">
-    <div class="pool-distribution" *ngIf="(miningStatsObservable$ | async) as miningStats; else loadingReward">
+    <app-load-status *ngIf="state.status === 'stale'" [state]="state" (retry)="onRetry()"></app-load-status>
+    <div class="pool-distribution" *ngIf="miningStats as miningStats; else poolStatus">
       <div class="item">
         <h5 class="card-title d-inline-block" i18n="mining.miners-luck" i18n-ngbTooltip="mining.miners-luck-1w"
         ngbTooltip="Pools luck (1 week)" placement="bottom" #minersluck [disableTooltip]="!isEllipsisActive(minersluck)">Pools Luck</h5>
@@ -39,7 +40,7 @@
       </button>
     </div>  
     <form [formGroup]="radioGroupForm" class="formRadioGroup"
-      *ngIf="!widget && (miningStatsObservable$ | async) as stats">
+      *ngIf="!widget && miningStats as stats">
       <div class="btn-group btn-group-toggle" name="radioBasic">
         <label class="btn btn-primary btn-sm" *ngIf="stats.totalBlockCount >= 144" [class.active]="radioGroupForm.get('dateSpan').value === '24h'">
           <input type="radio" [value]="'24h'" fragment="24h" [routerLink]="['/graphs/mining/pools' | relativeUrl]" [attr.data-cy]="'24h'" formControlName="dateSpan"> 24h
@@ -76,15 +77,14 @@
   </div>
 
   <div [class]="!widget ? '' : 'pb-0'" class="container pb-lg-0">
-    <div [class]="widget ? 'chart-widget' : 'chart'" *browserOnly [style]="{ height: widget ? (height + 'px') : null, opacity: isLoading ? 0.5 : 1 }" echarts [initOpts]="chartInitOptions" [options]="chartOptions"
+    <div [class]="widget ? 'chart-widget' : 'chart'" *browserOnly [hidden]="!miningStats" [style]="{ height: widget ? (height + 'px') : null }" echarts [initOpts]="chartInitOptions" [options]="chartOptions"
       (chartInit)="onChartInit($event)">
     </div>
 
-    <div class="text-center loadingGraphs" *ngIf="!stateService.isBrowser || isLoading">
-      <div class="spinner-border text-light"></div>
-    </div>
+    <app-load-status *ngIf="!stateService.isBrowser || !miningStats" [state]="state" label="pool ranking"
+      i18n-label="mining.label.pool-ranking" [minHeight]="height + 'px'" (retry)="onRetry()"></app-load-status>
 
-    <table *ngIf="widget === false" class="table table-borderless text-center pools-table" [style]="{opacity: isLoading ? 0.5 : 1}">
+    <table *ngIf="widget === false && miningStats" class="table table-borderless text-center pools-table">
       <thead>
         <tr>
           <th class="d-none d-md-table-cell" i18n="mining.rank">Rank</th>
@@ -98,7 +98,7 @@
           <th class="d-none d-lg-table-cell" i18n="mining.empty-blocks">Empty Blocks</th>
         </tr>
       </thead>
-      <tbody [attr.data-cy]="'pools-table'" *ngIf="(miningStatsObservable$ | async) as miningStats">
+      <tbody [attr.data-cy]="'pools-table'" *ngIf="miningStats as miningStats">
         <tr *ngFor="let pool of miningStats.pools">
           <td class="d-none d-md-table-cell">{{ pool.rank }}</td>
           <td class="text-right">
@@ -152,25 +152,7 @@
 </div>
 
 
-<ng-template #loadingReward>
-  <div class="pool-distribution">
-    <div class="item">
-      <h5 class="card-title" i18n="mining.miners-luck">Pools Luck</h5>
-      <p class="card-text">
-        <span class="skeleton-loader skeleton-loader-big"></span>
-      </p>
-    </div>
-    <div class="item">
-      <h5 class="card-title" i18n="mining.miners-count" >Pools Count</h5>
-      <p class="card-text">
-        <span class="skeleton-loader skeleton-loader-big"></span>
-      </p>
-    </div>
-    <div class="item">
-      <h5 class="card-title" i18n="shared.blocks-1w">Blocks (1w)</h5>
-      <p class="card-text">
-        <span class="skeleton-loader skeleton-loader-big"></span>
-      </p>
-    </div>
-  </div>
+<ng-template #poolStatus>
+  <app-load-status [state]="state" label="pool ranking" i18n-label="mining.label.pool-ranking"
+    minHeight="96px" (retry)="onRetry()"></app-load-status>
 </ng-template>

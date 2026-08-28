@@ -1,0 +1,73 @@
+.load-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--u-space-3);
+  padding: var(--u-space-6) var(--u-space-4);
+  text-align: center;
+}
+
+// The spinner this replaces was drawn in white, which on the light shell was
+// invisible: a page that had failed looked identical to a page that was blank.
+// Both the track and the head come from theme tokens, so it stays visible in
+// every theme.
+.load-status-spinner {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  border: 3px solid var(--u-border-strong);
+  border-top-color: var(--u-brand);
+  animation: load-status-spin 900ms linear infinite;
+}
+
+@keyframes load-status-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .load-status-spinner {
+    animation-duration: 3s;
+  }
+}
+
+.load-status-title {
+  margin: 0;
+  font-weight: var(--u-weight-semibold);
+  color: var(--u-text-primary);
+}
+
+.load-status-text {
+  margin: 0;
+  font-size: var(--u-text-sm);
+  color: var(--u-text-secondary);
+}
+
+.load-status-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--u-space-2);
+  justify-content: center;
+}
+
+// A stale panel keeps its numbers on screen, so this is a band above them
+// rather than a replacement for them.
+.load-status-stale {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--u-space-2);
+  padding: var(--u-space-2) var(--u-space-3);
+  margin-bottom: var(--u-space-3);
+  border: 1px solid var(--u-state-partial-border);
+  border-radius: var(--u-radius-md);
+  background: var(--u-state-partial-surface);
+  color: var(--u-state-partial);
+  font-size: var(--u-text-sm);
+
+  .load-status-text {
+    color: var(--u-state-partial);
+  }
+}
