@@ -70,18 +70,49 @@ const browser = await playwright.chromium.launch({
 
 const findings = [];
 
+/**
+ * Read the page, tolerating one navigation.
+ *
+ * This is a single page application: the router can redirect after the network
+ * has gone quiet, which destroys the execution context underneath an evaluate
+ * that is already in flight. It is a race, so it passed locally and failed on
+ * the runner. One retry after the document settles is enough, and a second
+ * failure is a real one worth reporting.
+ */
+async function readStable(page, fn) {
+  try {
+    return await page.evaluate(fn);
+  } catch (error) {
+    if (!/Execution context was destroyed|Target closed/.test(String(error))) throw error;
+    await page.waitForLoadState('domcontentloaded').catch(() => {});
+    await page.waitForTimeout(800);
+    return page.evaluate(fn);
+  }
+}
+
 async function sweep(label, contextOptions, zoom) {
   const context = await browser.newContext(contextOptions);
   await installFixtures(context);
+  // Applied to every document as it is created, so a redirect cannot land on a
+  // page that was never zoomed, and nothing has to be evaluated after a
+  // navigation that may still be in progress.
+  if (zoom) {
+    await context.addInitScript((z) => {
+      const apply = () => {
+        if (document.documentElement) document.documentElement.style.zoom = String(z);
+      };
+      apply();
+      document.addEventListener('DOMContentLoaded', apply);
+    }, zoom);
+  }
   for (const [id, path] of ROUTES) {
     const page = await context.newPage();
     await page.goto(BASE + path, { waitUntil: 'networkidle', timeout: 45000 }).catch(() => {});
-    if (zoom) {
-      await page.evaluate((z) => { document.documentElement.style.zoom = String(z); }, zoom);
-    }
-    await page.waitForTimeout(1200);
+    // Let the router finish before anything is measured.
+    await page.waitForSelector('app-root', { timeout: 20000 }).catch(() => {});
+    await page.waitForTimeout(1500);
 
-    const report = await page.evaluate(() => {
+    const report = await readStable(page, () => {
       const doc = document.documentElement;
       // A page whose own content scrolls sideways has failed reflow. A rounding
       // pixel is not a failure, so the tolerance is one.
@@ -96,6 +127,7 @@ async function sweep(label, contextOptions, zoom) {
       }
       return { overflow, painted, chars: (document.body.innerText || '').trim().length };
     });
+
 
     findings.push({ label, id, ...report });
     await page.screenshot({ path: join(OUT, `${id}__${label}.png`) });
