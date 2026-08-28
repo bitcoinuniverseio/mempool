@@ -164,6 +164,26 @@ suite can see that.
    different builds.
 7. Keep the previous release directory until the stability window closes.
 
+## Database growth and retention
+
+Measured on the running deployment, with one year of blocks indexed and the
+statistics writer taking a sample a minute:
+
+| Table | Rows | Size | Growth |
+| --- | --- | --- | --- |
+| `blocks` | 52,580 | 130 MB | about 0.4 MB a day, from new blocks only |
+| `statistics` | 1 a minute | small | about 0.4 MB a day |
+| `hashrates` | 1,437 | 0.2 MB | a few rows a day |
+
+That is roughly 300 MB a year against 1.5 TB free on `/data/indexers-c`, so
+nothing is pruned. Statistics are kept indefinitely on purpose: the `all` range
+is the whole series, and deleting old samples would silently shorten it.
+
+The indexed block window is bounded by `INDEXING_BLOCKS_AMOUNT`, so `blocks`
+grows only with the chain rather than with the backlog. Raising that value
+re-indexes further back and costs Bitcoin Core RPC time while it runs; do it
+when the host is not also rebuilding an index.
+
 ## Monitoring
 
 `universe-explorer-synthetic-check.timer` runs the synthetic check against the
