@@ -95,7 +95,10 @@ class Capabilities {
     });
   }
 
-  /** Full report, cached briefly so health polling cannot load the database. */
+  /**
+   * Full report, cached briefly so health polling cannot load the database.
+   * @asyncSafe
+   */
   public async $report(): Promise<CapabilitiesResponse> {
     const now = Date.now();
     if (this.cached && now - this.cached.at < CACHE_TTL_MS) {
@@ -124,7 +127,10 @@ class Capabilities {
     };
   }
 
-  /** Confirms the database answers, without reporting host, user, or password. */
+  /**
+   * Confirms the database answers, without reporting host, user, or password.
+   * @asyncSafe
+   */
   private async $databaseReachable(): Promise<{ reachable: boolean; detail: string | null }> {
     if (config.DATABASE.ENABLED !== true) {
       return { reachable: false, detail: 'The database is disabled in configuration.' };
@@ -138,6 +144,7 @@ class Capabilities {
     }
   }
 
+  /** @asyncSafe */
   private async $statisticsReport(): Promise<CapabilityReport> {
     const enabled = this.statisticsEnabled();
     const routesRegistered = this.routesRegistered('statistics');
@@ -205,6 +212,7 @@ class Capabilities {
     }
   }
 
+  /** @asyncSafe */
   private async $miningReport(): Promise<CapabilityReport> {
     const enabled = this.miningEnabled();
     const routesRegistered = this.routesRegistered('mining');
