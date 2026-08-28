@@ -1,0 +1,11 @@
+[Unit]
+Description=Universe Explorer database backup
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+# Reads the credentials from the file that already holds them, so no secret
+# reaches a command line or the journal. Keeps two weeks of daily dumps; the
+# database is a few hundred megabytes and the disk has terabytes free.
+ExecStart=/usr/local/bin/universe-explorer-backup

@@ -1,0 +1,11 @@
+[Unit]
+Description=Back up the Universe Explorer database daily
+
+[Timer]
+OnCalendar=daily
+RandomizedDelaySec=30min
+Persistent=true
+Unit=universe-explorer-backup.service
+
+[Install]
+WantedBy=timers.target
