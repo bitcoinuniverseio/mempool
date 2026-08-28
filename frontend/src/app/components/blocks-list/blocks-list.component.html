@@ -3,7 +3,6 @@
 <div class="container-xl" style="min-height: 335px" [ngClass]="{'widget': widget, 'full-height': !widget, 'legacy': !isMempoolModule}">
   <div *ngIf="!widget" class="float-left" style="display: flex; width: 100%; align-items: center;">
     <h1 i18n="master-page.blocks">Blocks</h1>
-    <app-svg-images name="blocks-2-3" style="width: 275px; max-width: 90%; margin-top: -10px"></app-svg-images>
     <div *ngIf="!widget && isLoading" class="spinner-border" role="status"></div>
   </div>
 
@@ -89,7 +88,7 @@
         </tr>
       </tbody>
       <ng-template #skeleton>
-        <tbody>
+        <tbody *ngIf="!failureState">
           <tr *ngFor="let item of skeletonLines">
             <td class="height text-left" [ngClass]="{'widget': widget, 'legacy': !isMempoolModule}">
               <span class="skeleton-loader" style="max-width: 75px"></span>
@@ -122,6 +121,9 @@
         </tbody>
       </ng-template>
     </table>
+
+    <app-load-status *ngIf="failureState" [state]="failureState" label="blocks" i18n-label="load.label.blocks"
+      (retry)="retryLoad()"></app-load-status>
 
     <ngb-pagination *ngIf="!widget" class="pagination-container float-right mt-2" [class]="isLoading ? 'disabled' : ''"
       [collectionSize]="blocksCount" [rotate]="true" [maxSize]="maxSize" [pageSize]="15" [(page)]="page"

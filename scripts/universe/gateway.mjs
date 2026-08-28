@@ -174,38 +174,118 @@ export function routeFor(pathname, originalUrl) {
   return null;
 }
 
+/**
+ * How long a request waits for an upstream that is refusing connections.
+ *
+ * A release restarts the backend and the overlay, and they take a few seconds
+ * to listen again. Answering 502 the instant the connection is refused turns
+ * every request in that window into a visible failure, which is the difference
+ * between a deploy nobody notices and one that shows up as an outage. These
+ * delays bridge a restart and give up well inside the page's own budget, so a
+ * genuinely dead upstream is still reported promptly rather than hidden.
+ */
+const RESTART_RETRY_DELAYS_MS = [250, 500, 1000, 1500, 2000];
+
+/** True for a failure that a moment's wait could plausibly resolve. */
+function upstreamIsRestarting(error) {
+  return error?.code === 'ECONNREFUSED' || error?.code === 'ECONNRESET';
+}
+
 function proxy(request, response, route) {
   const upstream = route.upstream;
-  const options = {
-    protocol: upstream.protocol,
-    hostname: upstream.hostname,
-    port: upstream.port,
-    method: request.method,
-    path: route.path,
-    headers: { ...request.headers, host: upstream.host },
-    timeout: UPSTREAM_TIMEOUT_MS,
-  };
-  const proxied = http.request(options, (upstreamResponse) => {
-    // API responses are data, never documents, so they get the headers without
-    // a content policy.
-    response.writeHead(
-      upstreamResponse.statusCode || 502,
-      withSecurityHeaders(upstreamResponse.headers, false),
-    );
-    upstreamResponse.pipe(response);
-  });
-  proxied.on('timeout', () => proxied.destroy(new Error('upstream timeout')));
-  proxied.on('error', () => {
-    if (response.headersSent) {
-      response.destroy();
-      return;
+  // Only a request with no body can be replayed. Everything this gateway
+  // proxies that changes state carries one, so this never retries a write.
+  const replayable = request.method === 'GET' || request.method === 'HEAD';
+  let attempt = 0;
+  let pendingRetry = null;
+  let clientGone = false;
+
+  // A reader who navigates away mid-retry leaves a response nothing can be
+  // written to. Writing to it anyway throws from a timer callback, where there
+  // is no request to fail: it takes the whole gateway down. Track the client
+  // and stop the moment it leaves.
+  const abandon = () => {
+    clientGone = true;
+    if (pendingRetry) {
+      clearTimeout(pendingRetry);
+      pendingRetry = null;
     }
-    // A dead upstream is reported as a gateway failure, never as an empty
-    // success: a caller must be able to tell the two apart.
-    response.writeHead(502, { 'content-type': 'application/json; charset=utf-8' });
-    response.end(JSON.stringify({ error: 'upstream-unavailable' }));
-  });
-  request.pipe(proxied);
+  };
+  response.on('close', abandon);
+  request.on('aborted', abandon);
+
+  const failClosed = () => {
+    if (clientGone || response.headersSent || response.writableEnded) return;
+    try {
+      // A dead upstream is reported as a gateway failure, never as an empty
+      // success: a caller must be able to tell the two apart.
+      response.writeHead(502, { 'content-type': 'application/json; charset=utf-8' });
+      response.end(JSON.stringify({ error: 'upstream-unavailable' }));
+    } catch {
+      // The client went away between the check and the write.
+      response.destroy();
+    }
+  };
+
+  const send = () => {
+    if (clientGone) return;
+    const options = {
+      protocol: upstream.protocol,
+      hostname: upstream.hostname,
+      port: upstream.port,
+      method: request.method,
+      path: route.path,
+      headers: { ...request.headers, host: upstream.host },
+      timeout: UPSTREAM_TIMEOUT_MS,
+    };
+    const proxied = http.request(options, (upstreamResponse) => {
+      if (clientGone) {
+        upstreamResponse.destroy();
+        return;
+      }
+      try {
+        // API responses are data, never documents, so they get the headers
+        // without a content policy.
+        response.writeHead(
+          upstreamResponse.statusCode || 502,
+          withSecurityHeaders(upstreamResponse.headers, false),
+        );
+      } catch {
+        upstreamResponse.destroy();
+        response.destroy();
+        return;
+      }
+      upstreamResponse.pipe(response);
+    });
+    proxied.on('timeout', () => proxied.destroy(new Error('upstream timeout')));
+    proxied.on('error', (error) => {
+      if (clientGone) return;
+      if (response.headersSent) {
+        response.destroy();
+        return;
+      }
+      if (replayable && upstreamIsRestarting(error) && attempt < RESTART_RETRY_DELAYS_MS.length) {
+        const delay = RESTART_RETRY_DELAYS_MS[attempt];
+        attempt += 1;
+        pendingRetry = setTimeout(() => {
+          pendingRetry = null;
+          send();
+        }, delay);
+        return;
+      }
+      failClosed();
+    });
+    if (replayable) {
+      proxied.end();
+    } else {
+      request.pipe(proxied);
+      // A request body that stops arriving must not leave the upstream socket
+      // open forever.
+      request.on('error', () => proxied.destroy());
+    }
+  };
+
+  send();
 }
 
 /** Resolves a request path to a file inside the root, or null. */
@@ -352,6 +432,33 @@ server.requestTimeout = 0;
 server.keepAliveTimeout = 65_000;
 
 /**
+ * The first descriptor systemd passes to a socket-activated service.
+ */
+const SD_LISTEN_FDS_START = 3;
+
+/**
+ * Returns the descriptor of a listening socket handed over by systemd, or null
+ * when this process has to open its own.
+ *
+ * This is what makes a deploy invisible. The backend and the overlay can be
+ * restarted behind the gateway, which bridges the gap, but nothing could
+ * bridge a restart of the gateway itself: the port went away with the process
+ * and the edge answered 502 until it came back. With the socket held by
+ * systemd instead, the port stays bound across the restart and arriving
+ * connections wait in the kernel backlog rather than being refused.
+ *
+ * The pid check is not decoration. LISTEN_FDS and LISTEN_PID are inherited by
+ * child processes, so a child that trusted them would try to listen on a
+ * descriptor belonging to its parent.
+ */
+export function inheritedListenerFd(env = process.env, pid = process.pid) {
+  if (env.LISTEN_PID !== String(pid)) return null;
+  const count = Number(env.LISTEN_FDS);
+  if (!Number.isInteger(count) || count < 1) return null;
+  return SD_LISTEN_FDS_START;
+}
+
+/**
  * Listening is the default. A test that imports this file for its routing
  * table sets UNIVERSE_GATEWAY_NO_LISTEN so no socket is opened.
  *
@@ -361,9 +468,12 @@ server.keepAliveTimeout = 65_000;
  * code and no error to read.
  */
 if (process.env.UNIVERSE_GATEWAY_NO_LISTEN !== '1') {
-  server.listen(PORT, HOST, () => {
+  const inherited = inheritedListenerFd();
+  const announce = () => {
     process.stdout.write(
-      `Universe Explorer gateway listening on ${HOST}:${PORT}
+      `Universe Explorer gateway listening on ${
+        inherited === null ? `${HOST}:${PORT}` : `the socket systemd passed on fd ${inherited}`
+      }
 ` +
       `  overlay  ${OVERLAY.origin}
 ` +
@@ -372,7 +482,12 @@ if (process.env.UNIVERSE_GATEWAY_NO_LISTEN !== '1') {
       `  static   ${ROOT}
 `,
     );
-  });
+  };
+  if (inherited === null) {
+    server.listen(PORT, HOST, announce);
+  } else {
+    server.listen({ fd: inherited }, announce);
+  }
 
   for (const signal of ['SIGTERM', 'SIGINT']) {
     process.on(signal, () => {

@@ -1,5 +1,16 @@
 
 <div class="dashboard" *ngIf="(network$ | async) !== 'liquid'; else liquidDashboard">
+  <!-- Rendered only when live data never arrived: the panel explains the
+       skeletons below it instead of leaving them unexplained. -->
+  @if (liveFeed$ | async; as liveFeed) {
+    @if (liveFeed.status === 'loading') {
+      <p class="sr-only" role="status" i18n="dashboard.loading-announcement">Loading live chain data</p>
+    }
+    @if (liveFeed.status === 'error') {
+      <app-load-status [state]="liveFeed" label="live chain data" i18n-label="load.label.live-chain-data"
+        (retry)="retryLiveFeed()"></app-load-status>
+    }
+  }
   <div class="dashboard-grid" *ngIf="{ value: (mempoolInfoData$ | async) } as mempoolInfoData">
 
     <!-- What it costs to move right now. The first question almost every
@@ -85,7 +96,7 @@
         <a class="panel-link" [routerLink]="['/rbf' | relativeUrl]" i18n="dashboard.see-all-replacements">See all</a>
         <p class="panel-note" i18n="dashboard.rbf-note">Transactions resent at a higher fee to move ahead of the queue.</p>
       </div>
-      <div class="table-scroll">
+      <div class="table-scroll" tabindex="0" role="region" aria-labelledby="panel-rbf-title">
         <table class="table lastest-replacements-table">
           <thead>
             <tr>
@@ -120,7 +131,7 @@
           <h2 class="panel-title" id="panel-blocks-title" i18n="dashboard.recent-blocks">Recent blocks</h2>
           <a class="panel-link" [routerLink]="['/blocks' | relativeUrl]" i18n="dashboard.see-all-blocks">See all</a>
         </div>
-        <div class="table-scroll">
+        <div class="table-scroll" tabindex="0" role="region" aria-labelledby="panel-blocks-title">
           <table class="table lastest-blocks-table">
             <thead>
               <tr>
@@ -162,7 +173,7 @@
         <h2 class="panel-title" id="panel-recent-title" i18n="dashboard.recent-transactions">Arriving now</h2>
         <p class="panel-note" i18n="dashboard.recent-note">The most recent transactions to reach this node.</p>
       </div>
-      <div class="table-scroll">
+      <div class="table-scroll" tabindex="0" role="region" aria-labelledby="panel-recent-title">
         <table class="table latest-transactions">
           <thead>
             <tr>

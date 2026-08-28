@@ -3,8 +3,13 @@
 // Dark with the contrast pushed well past the AA floor, for reading dense fee
 // and transaction tables in bright rooms or on low-quality panels. It inherits
 // the dark tokens and then raises only what needs raising: text against
-// surface, borders, and the four evidence states, which are the colours a
-// misread would actually cost something.
+// surface, borders, the brand pink, and the five evidence states, which are the
+// colours a misread would actually cost something.
+//
+// The brand does not leave when the contrast goes up. It lightens: the same
+// hot pink family, taken to a tint that clears 7:1 on a near-black plum shell,
+// so a person who needs this theme still gets the product's identity rather
+// than a monochrome fallback.
 
 @use "styles/universe-tokens" as universe;
 
@@ -12,41 +17,54 @@
   @include universe.universe-invariant-tokens;
   @include universe.universe-dark-tokens;
 
-  // Push the surfaces apart and the text up. Text on raised reaches ~19:1.
-  --u-surface-page: #05070d;
-  --u-surface-raised: #0e1118;
+  // Push the surfaces apart and the text up. Text on raised reaches ~18:1.
+  --u-surface-page: #06040a;
+  --u-surface-raised: #120c18;
   --u-surface-sunken: #000000;
-  --u-surface-inset: #1a1f2b;
-  --u-surface-hover: #1c2230;
-  --u-surface-active: #252c3d;
+  --u-surface-inset: #1e1628;
+  --u-surface-hover: #221a2d;
+  --u-surface-active: #2c2239;
+  --u-surface-selected: #3a1f42;
+  --u-surface-overlay: #120c18;
 
   --u-text-primary: #ffffff;
-  --u-text-secondary: #dce3ee;
-  --u-text-muted: #b3bccd;
+  --u-text-secondary: #ece4f0;
+  --u-text-muted: #c6bcd0;
+  --u-text-faint: #c6bcd0;
 
-  --u-border: #707c98;
-  --u-border-strong: #6b7691;
-  --u-divider: #3a4258;
+  --u-border: #7d7291;
+  --u-border-strong: #9b8fae;
+  --u-divider: #3f3550;
 
-  --u-brand: #a8b8ff;
-  --u-brand-hover: #c8d2ff;
-  --u-brand-subtle: #171d33;
-  --u-brand-border: #4d5885;
+  --u-brand: #ffb3d1;
+  --u-brand-hover: #ffd4e5;
+  --u-brand-active: #ffe8f1;
+  --u-brand-contrast: #2a0a18;
+  --u-brand-accent: #ff8ab8;
+  --u-brand-subtle: #2e1226;
+  --u-brand-border: #a8496e;
 
-  --u-focus-ring: #6fe0ff;
-  --u-focus-ring-offset: #0e1118;
+  --u-magenta: #ff9ade;
+  --u-fuchsia: #e6aef7;
+  --u-lavender: #d9c4ff;
+  --u-lavender-border: #6f5c9e;
+  --u-chrome: #d4d8ea;
+  --u-chrome-rim: #6f6a86;
 
-  // Evidence states, raised. These four carry the product's core claim, so they
+  --u-focus-ring: #d9c4ff;
+  --u-focus-ring-offset: #120c18;
+
+  // Evidence states, raised. These five carry the product's core claim, so they
   // get the most headroom.
   --u-state-proven: #7dea9f;
   --u-state-partial: #ffd27a;
   --u-state-pending: #9ed4ff;
   --u-state-unavailable: #ffa8a0;
-  --u-state-neutral: #c2cbdb;
+  --u-state-neutral: #cfc4d8;
 
   // This theme uses the brighter fee scale, on which white text falls under
   // the contrast floor. Near-black reads on every band of it.
-  --u-fee-label-ink: #05070d;
+  --u-fee-label-ink: #06040a;
 
   @include universe.universe-legacy-bridge;
 

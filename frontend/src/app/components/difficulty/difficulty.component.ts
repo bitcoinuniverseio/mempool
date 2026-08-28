@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, HostListener, El
 import { combineLatest, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { StateService } from '@app/services/state.service';
+import { LoadState } from '@app/shared/load-state';
 
 interface EpochProgress {
   base: string;
@@ -50,6 +51,12 @@ export class DifficultyComponent implements OnInit {
   @ViewChild('epochSvg') epochSvgElement: ElementRef<SVGElement>;
 
   isLoadingWebSocket$: Observable<boolean>;
+  /**
+   * Whether the socket that carries the epoch has given up. Both sources here
+   * are socket fed and neither can error, so without this the placeholders
+   * would go on claiming an answer was coming for as long as the tab was open.
+   */
+  liveFeed$: Observable<LoadState<boolean>>;
   difficultyEpoch$: Observable<EpochProgress>;
 
   mode: 'difficulty' | 'halving' = 'difficulty';
@@ -76,6 +83,7 @@ export class DifficultyComponent implements OnInit {
 
   ngOnInit(): void {
     this.isLoadingWebSocket$ = this.stateService.isLoadingWebSocket$;
+    this.liveFeed$ = this.stateService.liveFeed$;
     this.difficultyEpoch$ = combineLatest([
       this.stateService.blocks$,
       this.stateService.difficultyAdjustment$,

@@ -9,6 +9,7 @@ import { WebsocketService } from '@app/services/websocket.service';
 import { SeoService } from '@app/services/seo.service';
 import { ActiveFilter, FilterMode, GradientMode, toFlags } from '@app/shared/filters.utils';
 import { detectWebGL } from '@app/shared/graphs.utils';
+import { LoadState } from '@app/shared/load-state';
 
 interface MempoolBlocksData {
   blocks: number;
@@ -50,6 +51,11 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   mempoolStats$: Observable<MempoolStatsData>;
   transactionsWeightPerSecondOptions: any;
   isLoadingWebSocket$: Observable<boolean>;
+  /**
+   * Whether live chain data ever arrived. Owned by the state service, because
+   * the panels on this page have to reach the same verdict as the banner.
+   */
+  liveFeed$: Observable<LoadState<boolean>>;
   liquidPegsMonth$: Observable<any>;
   currentPeg$: Observable<CurrentPegs>;
   auditStatus$: Observable<AuditStatus>;
@@ -104,6 +110,11 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
     this.stateService.focusSearchInputDesktop();
   }
 
+  retryLiveFeed(): void {
+    this.websocketService.reconnectWebsocket();
+    this.stateService.retryLiveFeed();
+  }
+
   ngOnDestroy(): void {
     this.filterSubscription.unsubscribe();
     this.mempoolInfoSubscription.unsubscribe();
@@ -121,6 +132,8 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
     this.websocketService.want(['blocks', 'stats', 'mempool-blocks', 'live-2h-chart']);
     this.websocketService.startTrackRbfSummary();
     this.network$ = merge(of(''), this.stateService.networkChanged$);
+
+    this.liveFeed$ = this.stateService.liveFeed$;
     this.mempoolLoadingStatus$ = this.stateService.loadingIndicators$
       .pipe(
         map((indicators) => indicators.mempool !== undefined ? indicators.mempool : 100)

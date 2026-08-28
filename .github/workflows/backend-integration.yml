@@ -2,6 +2,7 @@ name: Backend Integration Tests with MariaDB
 
 on:
   pull_request:
+    branches: [master]
     types: [opened, review_requested, synchronize]
   push:
     branches:
@@ -15,6 +16,10 @@ jobs:
         node: ["24.13.0"]
       fail-fast: false
     runs-on: mempool-ci
+    env:
+      COMPOSE_PROJECT_NAME: mempool-integration-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}
+      MEMPOOL_TEST_BASE_CONFIG_FILE: ${{ github.workspace }}/${{ matrix.node }}/integration/backend/mempool-config.test.json
+      MEMPOOL_TEST_RUNTIME_CONFIG_FILE: ${{ github.workspace }}/${{ matrix.node }}/integration/backend/.mempool-config.integration.json
 
     name: Backend Integration Tests - node ${{ matrix.node }}
     
@@ -87,7 +92,8 @@ jobs:
           npm run test:integration
         working-directory: ${{ matrix.node }}/integration/backend
         env:
-          MEMPOOL_CONFIG_FILE: ${{ github.workspace }}/${{ matrix.node }}/integration/backend/mempool-config.test.json
+          MEMPOOL_CONFIG_FILE: ${{ env.MEMPOOL_TEST_RUNTIME_CONFIG_FILE }}
+          SKIP_DB_TEARDOWN: '1'
 
       - name: Start MariaDB for server test
         run: docker compose -f docker-compose.test.yml up -d
@@ -129,7 +135,7 @@ jobs:
           fi
         working-directory: ${{ matrix.node }}/integration/backend
         env:
-          MEMPOOL_CONFIG_FILE: ${{ github.workspace }}/${{ matrix.node }}/integration/backend/mempool-config.test.json
+          MEMPOOL_CONFIG_FILE: ${{ env.MEMPOOL_TEST_RUNTIME_CONFIG_FILE }}
 
       - name: Cleanup containers
         if: always()

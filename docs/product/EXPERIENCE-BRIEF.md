@@ -48,6 +48,29 @@ proves, it does not ship.
 4. **Outputs as first-class pages.** Everyone else treats an output as a table
    row inside a transaction.
 5. **Self-hostable and readable.** Full source, AGPL, no tracker, no account.
+6. **An appearance nothing else in the category has.** Measured on 28 August
+   2026, every explorer whose shell colour can be read from its own markup
+   declares a dark, cool one. Universe Explorer is light, warm, and hot pink.
+   That is copyable in principle and expensive in practice, because it means
+   adopting another company's brand rather than adjusting a hue. The products,
+   the values, and the method are in
+   `docs/research/visual-language-benchmark.md`.
+
+## What makes it unmistakably Universe
+
+The same anchor, secondary, and shell material as Core, Wallet and Inscribe,
+applied to a denser product: `#ff0066` for identity, lavender for the secondary
+and for focus, pearl on light and plum-black on dark.
+
+One rule makes it work at this density. **Pink is identity and intent, never a
+fact about Bitcoin.** It marks the mark, the primary action, active navigation,
+selection, and live surfaces. It is never a status, a protocol, a fee band, or a
+quantity, and CI fails the build if a brand role drifts within 25 dE of a state
+or protocol colour.
+
+That is why the pink can be loud without costing anything. A reader learns in
+one screen that pink means "this is Universe, and this is where you act", so it
+never competes with the green that means proven or the amber that means a fee.
 
 ## Why people come back
 
