@@ -48,9 +48,13 @@ export type SignaturesMode = 'all' | 'interesting' | 'none' | null;
 
 /**
  * How long the socket has to say anything before the live feed is treated as
- * having given up. The first payload normally lands within a second or two.
+ * having given up. The first payload normally lands within a second or two,
+ * so five seconds is already generous, and a late arrival still clears the
+ * verdict. It is also deliberately inside the visual gate's failure budget:
+ * at ten seconds, whether the gate saw the panel depended on how slowly the
+ * probes ran, which made the check a machine-speed race.
  */
-const LIVE_FEED_DEADLINE_MS = 10_000;
+const LIVE_FEED_DEADLINE_MS = 5_000;
 
 export interface Env {
   MAINNET_ENABLED: boolean;
