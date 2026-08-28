@@ -296,6 +296,26 @@ changed rather than the chain moving.
 | `frontend/src/styles/_universe-bootstrap-bridge.scss` | the inherited Bootstrap layer, repainted |
 | `frontend/src/theme-dark.scss`, `theme-contrast.scss` | the alternate themes |
 | `frontend/src/app/universe/_universe-tokens.scss` | Universe surface mixins, delegating to the tokens above |
-| `scripts/universe/check-text.mjs` | the em dash gate |
+| `scripts/universe/check-text.mjs` | the em dash gate, over source and over the built output |
+| `scripts/universe/check-colors.mjs` | no raw interface colour, including in style and attribute bindings |
+| `scripts/universe/check-palettes.mjs` | every dynamic palette, role separation, theme parity, retired values |
+| `scripts/universe/check-fills.mjs` | every filled surface that carries text declares its ink |
 | `scripts/universe/check-branding.mjs` | the upstream mark gate |
-| `scripts/universe/visual-qa/` | the visual, accessibility, and cross-browser matrix |
+| `scripts/universe/visual-qa/capture.mjs` | the route matrix: themes, widths, and data states |
+| `scripts/universe/visual-qa/modes-check.mjs` | forced colours and 200 percent zoom |
+| `scripts/universe/visual-qa/fixtures.mjs` | the data every reviewed route renders from |
+
+## A note on the fixtures
+
+They are part of the design system, not a test detail. Five defects on this
+product were invisible for as long as they existed because the surface that
+showed them had no fixture and rendered as a skeleton, an error, or a flat
+shape in every screenshot ever taken: a green at 2.37:1 on the mining
+dashboard, a red button at 3.21:1 on the address page, the address page itself
+throwing on a response of the wrong shape, the release identity page rendering
+blank, and a depth chart whose entire palette collapsed into one band because
+the numbers were four orders of magnitude too small.
+
+A route that renders nothing passes every automated check. When a fixture is
+missing or wrong, the review it feeds is not weaker; it is absent, and it
+reports success.
