@@ -41,8 +41,19 @@ nothing else.
 The backend reads only Universe-owned infrastructure:
 
 - Bitcoin Core on 127.0.0.1:8332, authenticated by cookie
-- Fulcrum on 127.0.0.1:50001 for address and UTXO queries
 - no third-party API, at runtime or at build time
+
+`MEMPOOL.BACKEND` is `none`, meaning Core answers everything. It was
+`electrum`, pointing at a Fulcrum on 127.0.0.1:50001 that is no longer on this
+host: no process, no data directory, no unit file. A dead address backend does
+not fail loudly, it retries, and it was producing roughly two connection errors
+a second and burying every real error in the journal. Core serves blocks,
+transactions and the mempool either way; with `none` an address lookup fails
+immediately and clearly instead of hanging.
+
+Set this back to `electrum` when Fulcrum is running again. The release
+preflight refuses `electrum` when nothing is listening on the configured port,
+so the retry storm cannot come back silently.
 
 The explorer database is `universe-explorer-mariadb`, a dedicated container on
 loopback port 3307 with its own data directory under
