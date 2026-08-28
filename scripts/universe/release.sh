@@ -255,12 +255,32 @@ cmd_cutover() {
   local previous; previous=$(readlink -f "$CURRENT" 2>/dev/null || true)
   log "previous release: ${previous:-none}"
 
+  # Whether the gateway itself has to come down decides whether this deploy is
+  # visible at all. The backend and the overlay run from a path baked into
+  # their unit at exec time, so they must restart; the gateway resolves its
+  # static root per request, so a frontend change reaches it through the
+  # symlink with no restart. Restarting it anyway is the only part of a deploy
+  # that nothing can bridge, so it happens only when its own code changed.
+  local gateway_changed=no
+  if [ -n "$previous" ] && [ -f "$previous/scripts/universe/gateway.mjs" ]; then
+    if ! cmp -s "$previous/scripts/universe/gateway.mjs" "$dir/scripts/universe/gateway.mjs"; then
+      gateway_changed=yes
+    fi
+  else
+    gateway_changed=yes
+  fi
+
   ln -sfn "$dir" "$CURRENT.new"
   mv -Tf "$CURRENT.new" "$CURRENT"
   log "current now points at $dir"
 
-  # shellcheck disable=SC2086
-  systemctl restart $UNITS
+  systemctl restart universe-explorer-backend universe-explorer-overlay
+  if [ "$gateway_changed" = yes ]; then
+    log "the gateway changed, restarting it too; the origin sees a brief gap"
+    systemctl restart universe-explorer-gateway
+  else
+    log "the gateway is unchanged, leaving it up so the origin sees no gap"
+  fi
   if ! verify_live; then
     log "verification failed, rolling back"
     [ -n "$previous" ] && cmd_rollback "$(basename "$previous" | sed 's/^mempool-//')"
