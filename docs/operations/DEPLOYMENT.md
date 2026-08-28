@@ -173,6 +173,12 @@ suite can see that.
    systemctl enable --now universe-explorer-gateway.socket
    ```
 
+   Measured on this host before adopting it, on a spare port with a throwaway
+   unit pair that was removed afterwards: the service logged that it was
+   listening on the socket systemd passed, and a full `systemctl restart`
+   under a probe every 20 milliseconds returned 200 on all 400 requests while
+   the process id changed underneath. The handover is not an assumption.
+
    Adopting it on a gateway that is already running costs one brief
    interruption, since the running process holds the port without
    `SO_REUSEPORT` and the socket unit cannot bind underneath it. Every deploy
@@ -197,6 +203,13 @@ suite can see that.
    configured authority with no checkpoint, or a frontend and backend on
    different builds.
 7. Keep the previous release directory until the stability window closes.
+
+Rolling back to a release from before the socket handover needs the port back,
+because such a gateway opens 8099 itself and dies on bind while systemd holds
+it. `release.sh rollback` detects that case by looking for `inheritedListenerFd`
+in the target release and disables the socket first. That is worth knowing by
+hand too, since the rollback path is reached exactly when something has already
+gone wrong.
 
 ## Database growth and retention
 
