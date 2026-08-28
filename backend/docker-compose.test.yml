@@ -13,7 +13,9 @@ services:
       MYSQL_ROOT_PASSWORD: "admin"
       MARIADB_AUTO_UPGRADE: "1"
     ports:
-      - "33306:3306"
+      # Jest requests port zero so Docker reserves an unused port atomically.
+      # The shell-managed local test path keeps its established 33306 default.
+      - "127.0.0.1:${MEMPOOL_TEST_DB_PORT:-33306}:3306"
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "mempool_test", "-pmempool_test"]
       interval: 5s
