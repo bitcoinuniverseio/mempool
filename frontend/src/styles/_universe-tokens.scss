@@ -4,20 +4,34 @@
 // application. Everything here is emitted as CSS custom properties so a theme
 // swap is a variable swap, never a rebuild of component styles.
 //
-// Two rules hold the system together:
+// Four rules hold the system together:
 //
-//  1. Colour carries evidence state, never protocol identity on its own.
+//  1. Pink is the brand, and only the brand. Hot pink, magenta, fuchsia,
+//     lavender, blush, pearl and chrome carry Bitcoin Universe identity:
+//     the mark, primary actions, active navigation, focus, selection, and the
+//     live surfaces the product leads with. They never carry a status.
+//
+//  2. Colour carries evidence state, never protocol identity on its own.
 //     Protocol hues live in their own scale and always appear next to a
-//     protocol name. Evidence states always carry a word. That separation is
-//     why a protocol's colour can never be mistaken for "confirmed" or
-//     "failed".
+//     protocol name. Evidence states always carry a word, and they keep the
+//     conventional green, amber, blue and red a reader already knows. That
+//     separation is why a protocol's colour can never be mistaken for
+//     "confirmed" or "failed", and why nothing pink ever means "it worked".
 //
-//  2. Light is the primary experience. The light palette is defined on :root
+//  3. A fill and a label are two different roles. The identity anchor is
+//     #ff0066, but white text on that exact fill measures 3.85:1 and misses
+//     AA. So the anchor paints borders, rings, glows and large display type,
+//     where it carries no small text, and filled controls take a measured
+//     darker pink that a white label clears. Every strong fill in this file
+//     declares the foreground that goes on it.
+//
+//  4. Light is the primary experience. The light palette is defined on :root
 //     so it needs no stylesheet fetch and cannot flash. Dark restates the same
 //     token names with its own values and is held to the same contrast floor.
 //
 // Contrast: every text token below clears WCAG 2.2 AA (4.5:1 for body, 3:1 for
 // large text and non-text indicators) against the surface it is designed for.
+// `scripts/universe/check-palettes.mjs` measures it rather than trusting it.
 
 // ---------------------------------------------------------------------------
 // Scales that do not change between themes
@@ -40,7 +54,9 @@
   --u-radius-pill: 999px;
 
   // Type. A readable text face and a purposeful data face. Both resolve to
-  // system stacks so nothing is fetched from a third-party font host.
+  // system stacks so nothing is fetched from a third-party font host, and the
+  // first paint carries no webfont round trip. The editorial voice comes from
+  // weight, tracking and case in --u-display-*, not from a downloaded family.
   --u-font-text: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
     Arial, "Noto Sans", sans-serif;
   --u-font-data: ui-monospace, "SF Mono", "Cascadia Mono", "Segoe UI Mono",
@@ -64,6 +80,12 @@
   --u-weight-semibold: 600;
   --u-weight-bold: 700;
 
+  // The editorial register. An eyebrow is the only place small caps and wide
+  // tracking are allowed, and it never drops below 11px.
+  --u-display-tracking: -0.02em;
+  --u-eyebrow-tracking: 0.14em;
+  --u-eyebrow-size: 0.6875rem;
+
   // Motion. Durations are short because every animation here reports a fact
   // (a transaction arrived, a block confirmed, a fee moved). Nothing decorative
   // is allowed to delay reading the number underneath it.
@@ -83,33 +105,35 @@
   //
   // The axis the whole product turns on is visible here. A projected block is
   // lighter and unfinished; a confirmed block is deep and settled. Nothing has
-  // to be read to feel which is which.
-  --u-block-ink: #f7f9fc;
-  --u-block-ink-muted: #dfe4ee;
+  // to be read to feel which is which. The settled end of that axis is the
+  // plum-black the rest of the Universe products are built on, so a confirmed
+  // block reads as the house material rather than as a neutral grey brick.
+  --u-block-ink: #fff4fa;
+  --u-block-ink-muted: #e8d6e4;
 
   // A projected block's face IS the live fee gradient, and its figures are
   // printed on top of it. No ink clears the contrast floor across that whole
   // scale, so the figures get a plate: the gradient still reads as colour
   // around and through it, and the text sits on a surface whose worst case is
   // measured rather than assumed. `check-palettes.mjs` holds it to that.
-  --u-block-plate: rgba(9, 12, 24, 0.62);
-  --u-block-confirmed-from: #2a3566;
-  --u-block-confirmed-to: #1a2142;
-  --u-block-confirmed-top: #3a477f;
-  --u-block-confirmed-side: #141930;
+  --u-block-plate: rgba(16, 7, 22, 0.66);
+  --u-block-confirmed-from: #3f1f4a;
+  --u-block-confirmed-to: #26122c;
+  --u-block-confirmed-top: #582a5f;
+  --u-block-confirmed-side: #190b1e;
   // The part of a block its transactions did not fill. It belongs to the block,
   // not to the page: it used to take a page surface token, which meant the top
   // of every confirmed block was pale and the figures printed on it vanished.
-  --u-block-confirmed-empty: #3a4166;
-  --u-block-projected-empty: #4a5169;
+  --u-block-confirmed-empty: #4d2a56;
+  --u-block-projected-empty: #574a63;
 
   // A block whose contents have not arrived. Deliberately desaturated so it
   // reads as absent rather than as a block that happens to be empty; the
   // figures on it are skeletons, which is the signal that does not depend on
   // anyone noticing a hue.
-  --u-block-loading: #565a63;
-  --u-block-projected-top: #5c6480;
-  --u-block-projected-side: #343a4d;
+  --u-block-loading: #5a5260;
+  --u-block-projected-top: #6b5a75;
+  --u-block-projected-side: #3a3142;
 
   // Layout
   --u-width-prose: 68ch;
@@ -132,106 +156,187 @@
   color-scheme: light;
 
   // Surfaces run from the page floor up. Cards are white so elevation reads
-  // without a shadow, which keeps dense tables crisp.
-  --u-surface-page: #f4f6f9;
+  // without a shadow, which keeps dense tables crisp. The floor carries a
+  // pearl cast rather than a cool grey, so the page belongs to the same
+  // material as the pink on it instead of sitting under it.
+  --u-surface-page: #f7f4f8;
   --u-surface-raised: #ffffff;
-  --u-surface-sunken: #e9edf3;
-  --u-surface-inset: #dfe5ee;
-  --u-surface-hover: #eef2f7;
-  --u-surface-active: #e3e9f2;
+  --u-surface-sunken: #f0ebf4;
+  --u-surface-inset: #e6dfec;
+  --u-surface-hover: #faf3f7;
+  --u-surface-active: #f4e8f0;
+  --u-surface-selected: #fdeaf2;
+  --u-surface-disabled: #f0ecf2;
+  --u-surface-overlay: #ffffff;
 
-  // Text. Primary is near-black with a cool cast so it sits with the blues
+  // Text. Primary is near-black with a plum cast so it sits with the pinks
   // rather than fighting them.
-  --u-text-primary: #10151f;   // 16.8:1 on raised
-  --u-text-secondary: #414d61; // 8.9:1 on raised
-  --u-text-muted: #586475;     // 6.0:1 on raised, 4.7:1 on inset
+  --u-text-primary: #241a2b;   // 16.6:1 on raised
+  --u-text-secondary: #4a3f55; // 9.8:1 on raised
+  --u-text-muted: #645a6e;     // 6.5:1 on raised, 4.9:1 on inset
+  --u-text-faint: #6f6579;     // decorative only, never meaningful text
   --u-text-inverse: #ffffff;
+  --u-text-on-media: #ffffff;
 
-  --u-border: #d5dce6;
-  --u-border-strong: #b6c1d0;
-  --u-divider: #e4e9f0;
+  --u-border: #ded5e5;
+  --u-border-strong: #b7a9c6;
+  --u-divider: #ebe4f0;
 
-  // Brand. Ultramarine rather than the crypto-default violet: it reads as
-  // instrumentation, and it is far enough from every status hue to be used for
-  // structure (links, active nav, focus) without ever implying a state.
-  --u-brand: #2438b8;
-  --u-brand-hover: #1b2b93;
+  // Brand.
+  //
+  // --u-brand is the working pink: it is read as text on a page surface and it
+  // is painted as a fill under --u-brand-contrast, so it has to clear the body
+  // floor in both directions. #c40059 measures 6.01:1 either way.
+  //
+  // --u-brand-accent is the identity anchor, #ff0066 exactly. It is 3.85:1 on
+  // white, which is a border, a ring, a rule and a display-size headline, and
+  // is never a small label.
+  --u-brand: #c40059;
+  --u-brand-hover: #a80049;
+  --u-brand-active: #8c003c;
   --u-brand-contrast: #ffffff;
-  --u-brand-subtle: #e7ebfb;
-  --u-brand-border: #c3ccf3;
+  --u-brand-accent: #ff0066;
+  --u-brand-subtle: #fde9f1;
+  --u-brand-border: #f0bcd4;
 
-  // Focus. Deliberately not the brand colour so a focused brand-coloured
-  // control still shows a ring.
-  --u-focus-ring: #0a7ea4;
+  // The rest of the Universe palette. Magenta and fuchsia are the sweep the
+  // house gradient runs through; lavender is the secondary accent that carries
+  // everything the brand pink should not.
+  --u-magenta: #a3006b;
+  --u-fuchsia: #8b2fb5;
+  --u-lavender: #5b2fa6;
+  --u-lavender-subtle: #ece5fb;
+  --u-lavender-border: #cdbaf0;
+
+  // Metal. --u-chrome is readable ink; --u-chrome-rim is the hairline that
+  // gives a control its polished edge and carries no text.
+  --u-chrome: #6b6280;
+  --u-chrome-rim: #c9cddf;
+  --u-pearl: #fff6fa;
+  --u-blush: #ffd8e7;
+
+  // Focus. Deliberately not the brand colour, so a focused brand-coloured
+  // control still shows a ring. Lavender is the one Universe accent far enough
+  // from hot pink to never be mistaken for it, at 8.0:1 on the page.
+  --u-focus-ring: #5b2fa6;
   --u-focus-ring-offset: #ffffff;
 
-  // Evidence states. These four must never be confusable: the product's whole
-  // claim rests on the difference between proven and merely observed.
+  // Evidence states. These five must never be confusable with each other or
+  // with the brand: the product's whole claim rests on the difference between
+  // proven and merely observed, and none of it is pink.
   --u-state-proven: #0f6b3a;
-  --u-state-proven-surface: #e3f4ea;
-  --u-state-proven-border: #a9d9bf;
+  --u-state-proven-surface: #e2f4e9;
+  --u-state-proven-border: #a5d8bb;
 
   --u-state-partial: #8a5100;
-  --u-state-partial-surface: #fdf0dd;
-  --u-state-partial-border: #e6c491;
+  --u-state-partial-surface: #fbf0dc;
+  --u-state-partial-border: #e3c390;
 
   --u-state-pending: #15547f;
   --u-state-pending-surface: #e2eef7;
-  --u-state-pending-border: #a5c8e0;
+  --u-state-pending-border: #a2c7e0;
 
   --u-state-unavailable: #a12420;
-  --u-state-unavailable-surface: #fbe8e7;
-  --u-state-unavailable-border: #eab3b0;
+  --u-state-unavailable-surface: #fae8e7;
+  --u-state-unavailable-border: #e8b2af;
 
-  --u-state-neutral: #55617a;
-  --u-state-neutral-surface: #eaeef4;
-  --u-state-neutral-border: #c6cfdd;
+  --u-state-neutral: #5e5769;
+  --u-state-neutral-surface: #edeaf1;
+  --u-state-neutral-border: #c8c1d2;
 
-  // Protocol identity. Held apart from the state hues above, and only ever
-  // rendered beside a protocol name. Values are tuned for a light surface.
-  --u-protocol-ordinals: #9a4a06;
+  // Protocol identity. Held apart from the state hues above, from each other,
+  // and from the brand pink, and only ever rendered beside a protocol name.
+  // Every distance here is measured by check-palettes.mjs rather than judged.
+  //
+  // Three of these moved when that measurement was added. Stamps sat at
+  // #a3246b, close enough to the brand pink that a swatch could read as a
+  // product accent. Ordinals sat at #9a4a06, 11.1 dE from the amber that means
+  // partial evidence, so a protocol chip and a verdict chip were nearly the
+  // same colour; it moved to a redder rust and stays recognisably the orange
+  // the protocol is known by. Op data sat in the plum that the dark theme
+  // renders as a pink, which put it 23.1 dE from the brand.
+  --u-protocol-ordinals: #a34209;
   --u-protocol-runes: #0a6a7d;
   --u-protocol-alkanes: #5b3bb5;
-  --u-protocol-stamps: #a3246b;
-  --u-protocol-atomicals: #0d6560;
-  --u-protocol-op-data: #7a3572;
-  --u-protocol-fallback: #4a5568;
+  --u-protocol-stamps: #721d72;
+  --u-protocol-atomicals: #1d7256;
+  --u-protocol-op-data: #2962a3;
+  --u-protocol-fallback: #5e5769;
 
-  // Chart series. Ordered for categorical use and checked so neighbouring
-  // series stay distinguishable for the common colour vision deficiencies.
-  --u-chart-1: #434ba3;
-  --u-chart-2: #a3436b;
-  --u-chart-3: #241763;
-  --u-chart-4: #a38343;
-  --u-chart-5: #63172a;
-  --u-chart-6: #4393a3;
-  --u-chart-7: #634417;
-  --u-chart-grid: #dde3ec;
-  --u-chart-axis: #586475;
+  // Chart series. Ordered for categorical use, brand first because most charts
+  // here draw one series. Neighbours are held further apart than distant pairs
+  // because they are the ones read side by side, and the separation is measured
+  // through the three common colour vision deficiencies as well as normal
+  // vision by `check-palettes.mjs`.
+  --u-chart-1: #c40059;
+  --u-chart-2: #5b2fa6;
+  --u-chart-3: #8a5100;
+  --u-chart-4: #4393a3;
+  --u-chart-5: #3d0a2a;
+  --u-chart-6: #7f9b5a;
+  --u-chart-7: #a3006b;
+  --u-chart-grid: #e8e0ee;
+  --u-chart-axis: #645a6e;
 
   // Elevation. Soft and low: this is a data surface, not a floating card deck.
-  --u-shadow-color: rgba(16, 21, 31, 0.28);
-  --u-overlay-scrim: rgba(16, 21, 31, 0.55);
-  --u-shadow-sm: 0 1px 2px rgba(16, 21, 31, 0.07);
-  --u-shadow-md: 0 2px 8px rgba(16, 21, 31, 0.09);
-  --u-shadow-lg: 0 8px 24px rgba(16, 21, 31, 0.13);
+  // The shadow carries the plum cast of the page so a lifted card does not
+  // drop a grey shadow onto a pink ground.
+  --u-shadow-color: rgba(36, 26, 43, 0.28);
+  --u-overlay-scrim: rgba(26, 16, 32, 0.55);
+  --u-media-scrim: rgba(16, 7, 22, 0.62);
+  --u-shadow-sm: 0 1px 2px rgba(36, 26, 43, 0.07);
+  --u-shadow-md: 0 2px 8px rgba(36, 26, 43, 0.09);
+  --u-shadow-lg: 0 8px 24px rgba(36, 26, 43, 0.13);
+
+  // Gloss and glow. The house finish, kept to primary controls and singleton
+  // surfaces. Neither ever sits behind text that has to be read.
+  --u-gloss: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.24) 0%,
+    rgba(255, 255, 255, 0.06) 46%,
+    rgba(255, 255, 255, 0) 54%
+  );
+  --u-glow-brand: 0 6px 20px rgba(255, 0, 102, 0.22);
+  --u-glow-lavender: 0 6px 18px rgba(91, 47, 166, 0.18);
+
+  // The house sweep. Used for the mark, the primary control, and the live
+  // surfaces, never as a page wallpaper.
+  --u-gradient-brand: linear-gradient(135deg, #c40059 0%, #a3006b 48%, #8b2fb5 100%);
+  --u-gradient-chrome: linear-gradient(
+    150deg,
+    #ffffff 0%,
+    #e7eaf4 28%,
+    #c9cddf 52%,
+    #f2f4fa 76%,
+    #b6bbd0 100%
+  );
+  // Selective only. At most one per screen, always as a rule and never a fill.
+  --u-gradient-pride: linear-gradient(
+    90deg,
+    #c40059 0%,
+    #b8531a 20%,
+    #8a6b00 40%,
+    #0f6b3a 60%,
+    #15547f 80%,
+    #5b2fa6 100%
+  );
 
   // A wash used behind live regions so an update is noticeable without a flash.
-  --u-highlight-arrive: rgba(36, 56, 184, 0.09);
+  --u-highlight-arrive: rgba(255, 0, 102, 0.09);
 
   // Loading placeholders. Low contrast on purpose: a skeleton must read as
   // absent, never as content.
-  --u-skeleton: #dde3ec;
-  --u-skeleton-sheen: #eef2f7;
+  --u-skeleton: #e9e1ee;
+  --u-skeleton-sheen: #f5eff8;
 
   // Network identity. Mainnet takes the brand; the test networks are visibly
   // different from it and from each other so a testnet page can never be
   // mistaken for mainnet.
-  --u-network-mainnet: #2438b8;
+  --u-network-mainnet: #c40059;
   --u-network-testnet: #0a6a7d;
   --u-network-testnet4: #0d6560;
-  --u-network-signet: #a3246b;
-  --u-network-regtest: #55617a;
+  --u-network-signet: #7a3572;
+  --u-network-regtest: #5e5769;
   --u-network-liquid: #0f6b3a;
   --u-network-liquidtestnet: #5c6879;
 
@@ -240,20 +345,18 @@
   // Data ramps.
   //
   // Charts fill areas with a gradient that means a quantity, not a category.
-  // The stops the product inherited were the Material palette, chosen against a
-  // dark page: pale amber and light green, which land near 1.3:1 on a white
-  // card and read as nothing at all. Every stop below clears the graphical
-  // floor on both light surfaces, and the sequential scale still darkens
-  // monotonically so "more" still looks like more.
-  --u-ramp-scale-1: #4393a3;
-  --u-ramp-scale-2: #2f7f9e;
-  --u-ramp-scale-3: #2f5a9e;
-  --u-ramp-scale-4: #43349e;
-  --u-ramp-scale-5: #5b1f7a;
+  // The sequential scale darkens monotonically so "more" still looks like more,
+  // and it runs through the house sweep rather than an arbitrary spectrum.
+  // Every stop clears the graphical floor on both light surfaces.
+  --u-ramp-scale-1: #e0568f;
+  --u-ramp-scale-2: #c40059;
+  --u-ramp-scale-3: #a3006b;
+  --u-ramp-scale-4: #7a2f8f;
+  --u-ramp-scale-5: #5b2fa6;
 
-  --u-ramp-a-from: #434ba3;
-  --u-ramp-a-to: #241763;
-  --u-ramp-b-from: #a3436b;
+  --u-ramp-a-from: #c40059;
+  --u-ramp-a-to: #5b2fa6;
+  --u-ramp-b-from: #8a5100;
   --u-ramp-b-to: #63172a;
   --u-ramp-c-from: #4393a3;
   --u-ramp-c-to: #1c4f5c;
@@ -272,7 +375,7 @@
   --u-code-arithmetic: #0f6b3a;
   --u-code-crypto: #a12420;
   --u-code-locktime: #8a5100;
-  --u-code-reserved: #55617a;
+  --u-code-reserved: #5e5769;
 
   // The one moment the product celebrates: a block whose height reads as a
   // round number. The plate is bright, so its ink is near-black in every theme.
@@ -280,7 +383,7 @@
   --u-special-ink: #241a00;
 
   // A translucent foreground for de-emphasised text over unknown backdrops.
-  --u-text-translucent: rgba(16, 21, 31, 0.62);
+  --u-text-translucent: rgba(36, 26, 43, 0.62);
   --u-fade-start: rgba(255, 255, 255, 0);
   --u-fade-end: rgba(255, 255, 255, 1);
 }
@@ -292,101 +395,154 @@
 @mixin universe-dark-tokens {
   color-scheme: dark;
 
-  --u-surface-page: #12141f;
-  --u-surface-raised: #1a1e2d;
-  --u-surface-sunken: #0d0f18;
-  --u-surface-inset: #232838;
-  --u-surface-hover: #232839;
-  --u-surface-active: #2b3146;
+  // Plum-black rather than neutral black. It is the same shell the other
+  // Universe products are built on, and it is what makes hot pink read as
+  // lacquer instead of as neon on grey.
+  --u-surface-page: #0e0a13;
+  --u-surface-raised: #1c1526;
+  --u-surface-sunken: #0b0810;
+  --u-surface-inset: #241a30;
+  --u-surface-hover: #241a30;
+  --u-surface-active: #2e2140;
+  --u-surface-selected: #33193a;
+  --u-surface-disabled: #201a28;
+  --u-surface-overlay: #1c1526;
 
-  --u-text-primary: #f2f4f8;   // 14.9:1 on raised
-  --u-text-secondary: #c0c8d8; // 8.7:1 on raised
-  --u-text-muted: #98a2b6;     // 5.4:1 on raised
-  --u-text-inverse: #10151f;
+  --u-text-primary: #f6f2f8;   // 16.0:1 on raised
+  --u-text-secondary: #cfc4d8; // 10.5:1 on raised
+  --u-text-muted: #a99cb5;     // 6.8:1 on raised
+  --u-text-faint: #8d8199;
+  --u-text-inverse: #1c1526;
+  --u-text-on-media: #ffffff;
 
-  --u-border: #2e3549;
-  --u-border-strong: #414a63;
-  --u-divider: #262c3d;
+  --u-border: #372b47;
+  --u-border-strong: #4d3d61;
+  --u-divider: #2a2038;
 
-  --u-brand: #8fa2ff;
-  --u-brand-hover: #adbaff;
-  --u-brand-contrast: #10151f;
-  --u-brand-subtle: #1e2340;
-  --u-brand-border: #384169;
+  // On a plum shell the anchor pink is a fill, not a label: #ff0066 is 4.59:1
+  // here, fine for a rule or a ring but not for the small text the product is
+  // made of. So the working pink lightens and the anchor keeps the borders.
+  --u-brand: #ff8ab8;
+  --u-brand-hover: #ffb3d1;
+  --u-brand-active: #ffd4e5;
+  --u-brand-contrast: #2a0a18;
+  --u-brand-accent: #ff2a85;
+  --u-brand-subtle: #2e1226;
+  --u-brand-border: #5c2340;
 
-  --u-focus-ring: #4fc3e8;
-  --u-focus-ring-offset: #1a1e2d;
+  --u-magenta: #ff6fd0;
+  --u-fuchsia: #d98cf5;
+  --u-lavender: #c4a7ff;
+  --u-lavender-subtle: #241a3a;
+  --u-lavender-border: #4a3a75;
+
+  --u-chrome: #b9bed6;
+  --u-chrome-rim: #4a4560;
+  --u-pearl: #fff6fa;
+  --u-blush: #ffd8e7;
+
+  --u-focus-ring: #c4a7ff;
+  --u-focus-ring-offset: #1c1526;
 
   --u-state-proven: #5fd39a;
-  --u-state-proven-surface: #123227;
+  --u-state-proven-surface: #0f2a1f;
   --u-state-proven-border: #2c6d51;
 
   --u-state-partial: #f0be62;
-  --u-state-partial-surface: #33260f;
+  --u-state-partial-surface: #2e2210;
   --u-state-partial-border: #6d5527;
 
   --u-state-pending: #7cc0f0;
-  --u-state-pending-surface: #12283a;
+  --u-state-pending-surface: #122435;
   --u-state-pending-border: #2b5878;
 
   --u-state-unavailable: #f2918a;
-  --u-state-unavailable-surface: #391b1a;
+  --u-state-unavailable-surface: #331a1c;
   --u-state-unavailable-border: #743935;
 
-  --u-state-neutral: #a3adc2;
-  --u-state-neutral-surface: #212735;
-  --u-state-neutral-border: #3c445a;
+  --u-state-neutral: #b3a8bf;
+  --u-state-neutral-surface: #251c30;
+  --u-state-neutral-border: #453a54;
 
   --u-protocol-ordinals: #f0a463;
   --u-protocol-runes: #6fcfe2;
   --u-protocol-alkanes: #b6a5f5;
-  --u-protocol-stamps: #f19ac4;
-  --u-protocol-atomicals: #6fd3c9;
-  --u-protocol-op-data: #d79ad0;
-  --u-protocol-fallback: #b3bccd;
+  --u-protocol-stamps: #d97fd9;
+  --u-protocol-atomicals: #5fd9c4;
+  --u-protocol-op-data: #5795db;
+  --u-protocol-fallback: #b3a8bf;
 
-  --u-chart-1: #7575f0;
-  --u-chart-2: #c0ba7c;
-  --u-chart-3: #7cc0c0;
-  --u-chart-4: #f0f075;
-  --u-chart-5: #c07c7c;
-  --u-chart-6: #987cc0;
-  --u-chart-7: #bddbbf;
-  --u-chart-grid: #2a3145;
-  --u-chart-axis: #98a2b6;
+  --u-chart-1: #ff8ab8;
+  --u-chart-2: #c4a7ff;
+  --u-chart-3: #f0be62;
+  --u-chart-4: #6f5fa8;
+  --u-chart-5: #c96a8a;
+  --u-chart-6: #6fcfe2;
+  --u-chart-7: #9e8a5f;
+  --u-chart-grid: #2e2440;
+  --u-chart-axis: #a99cb5;
 
   --u-shadow-color: rgba(0, 0, 0, 0.55);
   --u-overlay-scrim: rgba(0, 0, 0, 0.66);
+  --u-media-scrim: rgba(8, 4, 12, 0.7);
   --u-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
   --u-shadow-md: 0 2px 8px rgba(0, 0, 0, 0.45);
   --u-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.55);
 
-  --u-highlight-arrive: rgba(143, 162, 255, 0.14);
+  --u-gloss: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.22) 0%,
+    rgba(255, 255, 255, 0.05) 46%,
+    rgba(255, 255, 255, 0) 54%
+  );
+  --u-glow-brand: 0 8px 24px rgba(255, 0, 102, 0.34);
+  --u-glow-lavender: 0 8px 22px rgba(196, 167, 255, 0.26);
 
-  --u-skeleton: #262c3d;
-  --u-skeleton-sheen: #333b52;
+  --u-gradient-brand: linear-gradient(135deg, #ff0066 0%, #ff2a85 42%, #d946ef 100%);
+  --u-gradient-chrome: linear-gradient(
+    150deg,
+    #f8f9ff 0%,
+    #dfe2ef 28%,
+    #9aa0bd 52%,
+    #eceef8 76%,
+    #b9bed6 100%
+  );
+  --u-gradient-pride: linear-gradient(
+    90deg,
+    #ff5c9e 0%,
+    #ffb46a 20%,
+    #ffe27a 40%,
+    #7ce8b5 60%,
+    #7dc8ff 80%,
+    #c4a5f9 100%
+  );
 
-  --u-network-mainnet: #8fa2ff;
+  --u-highlight-arrive: rgba(255, 138, 184, 0.14);
+
+  --u-skeleton: #2a2038;
+  --u-skeleton-sheen: #382b4a;
+
+  --u-network-mainnet: #ff8ab8;
   --u-network-testnet: #6fcfe2;
   --u-network-testnet4: #6fd3c9;
-  --u-network-signet: #f19ac4;
-  --u-network-regtest: #a3adc2;
+  --u-network-signet: #d79ad0;
+  --u-network-regtest: #b3a8bf;
   --u-network-liquid: #5fd39a;
   --u-network-liquidtestnet: #98a2b6;
 
   --u-taproot: #f0be62;
 
-  --u-ramp-scale-1: #7cc0c0;
-  --u-ramp-scale-2: #7aa8d8;
-  --u-ramp-scale-3: #8f9ae8;
-  --u-ramp-scale-4: #b394ec;
-  --u-ramp-scale-5: #d68fd0;
+  --u-ramp-scale-1: #8a5a9e;
+  --u-ramp-scale-2: #b5479e;
+  --u-ramp-scale-3: #e0348f;
+  --u-ramp-scale-4: #ff6fa8;
+  --u-ramp-scale-5: #ffb3d1;
 
-  --u-ramp-a-from: #7575f0;
-  --u-ramp-a-to: #b394ec;
-  --u-ramp-b-from: #c07c7c;
-  --u-ramp-b-to: #f0a4a4;
-  --u-ramp-c-from: #7cc0c0;
+  --u-ramp-a-from: #ff8ab8;
+  --u-ramp-a-to: #c4a7ff;
+  --u-ramp-b-from: #f0be62;
+  --u-ramp-b-to: #f0a463;
+  --u-ramp-c-from: #6fcfe2;
   --u-ramp-c-to: #a8dede;
 
   --u-code-constant: #f0a463;
@@ -397,14 +553,14 @@
   --u-code-arithmetic: #5fd39a;
   --u-code-crypto: #f2918a;
   --u-code-locktime: #f0be62;
-  --u-code-reserved: #a3adc2;
+  --u-code-reserved: #b3a8bf;
 
   --u-special-plate: #e8b30d;
   --u-special-ink: #241a00;
 
-  --u-text-translucent: rgba(242, 244, 248, 0.66);
-  --u-fade-start: rgba(26, 30, 45, 0);
-  --u-fade-end: rgba(26, 30, 45, 1);
+  --u-text-translucent: rgba(246, 242, 248, 0.66);
+  --u-fade-start: rgba(28, 21, 38, 0);
+  --u-fade-end: rgba(28, 21, 38, 1);
 }
 
 // ---------------------------------------------------------------------------
@@ -432,7 +588,7 @@
 
   --primary: var(--u-brand);
   --secondary: var(--u-surface-inset);
-  --tertiary: var(--u-brand);
+  --tertiary: var(--u-lavender);
   --success: var(--u-state-proven);
   --info: var(--u-state-pending);
   --link-color: var(--u-brand);

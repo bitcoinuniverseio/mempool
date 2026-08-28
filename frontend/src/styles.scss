@@ -3,12 +3,12 @@
 @use "styles/universe-bootstrap-bridge" as universe-bridge;
 
 /* Theme */
-$bg: #11131f;
+$bg: #0e0a13;
 $active-bg: #000000;
-$hover-bg: #12131e;
+$hover-bg: #241a30;
 $fg: #fff;
 $nav-bg: $bg;
-$title-fg: #2055e3;
+$title-fg: #c40059;
 
 $taproot: #eba814;
 $taproot-light: #d5a90a;
@@ -22,11 +22,11 @@ $gray-700: $fg;
 
 $nav-tabs-link-active-bg: $active-bg;
 
-$primary: #007cfa;
-$secondary: #272f4e;
-$tertiary: #6225b2;
+$primary: #c40059;
+$secondary: #2e2140;
+$tertiary: #5b2fa6;
 $success: #0aab2f;
-$info: #00ddff;
+$info: #15547f;
 
 $h5-font-size: 1.15rem !default;
 
@@ -42,7 +42,7 @@ $pagination-disabled-bg:          $bg;
 
 $custom-select-indicator-color: $fg;
 
-$link-color:                $info;
+$link-color:                $primary;
 $link-decoration:           none !default;
 $link-hover-color:          color.adjust($link-color, $lightness: -15%) !default;
 $link-hover-decoration:     underline !default;

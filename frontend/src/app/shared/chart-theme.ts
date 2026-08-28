@@ -71,20 +71,20 @@ export const CHART_LINE_TYPES: ('solid' | 'dashed' | 'dotted')[] = [
 ];
 
 const FALLBACK: ChartChrome = {
-  axis: '#586475',
-  label: '#586475',
-  strongLabel: '#10151f',
-  grid: '#dde3ec',
+  axis: '#645a6e',
+  label: '#645a6e',
+  strongLabel: '#241a2b',
+  grid: '#e8e0ee',
   tooltipBackground: '#ffffff',
-  tooltipBorder: '#d5dce6',
-  tooltipText: '#10151f',
+  tooltipBorder: '#ded5e5',
+  tooltipText: '#241a2b',
   surface: '#ffffff',
   markBorder: '#ffffff',
-  series: ['#434ba3', '#a3436b', '#241763', '#a38343', '#63172a', '#4393a3', '#634417'],
+  series: ['#c40059', '#5b2fa6', '#8a5100', '#4393a3', '#3d0a2a', '#7f9b5a', '#a3006b'],
   ramps: {
-    scale: ['#4393a3', '#2f7f9e', '#2f5a9e', '#43349e', '#5b1f7a'],
-    a: ['#434ba3', '#241763'],
-    b: ['#a3436b', '#63172a'],
+    scale: ['#e0568f', '#c40059', '#a3006b', '#7a2f8f', '#5b2fa6'],
+    a: ['#c40059', '#5b2fa6'],
+    b: ['#8a5100', '#63172a'],
     c: ['#4393a3', '#1c4f5c'],
   },
 };
