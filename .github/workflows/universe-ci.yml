@@ -120,6 +120,9 @@ jobs:
       - name: Built bundle calls no third-party origin
         run: node scripts/universe/check-origins.mjs frontend/dist
 
+      - name: Every asset the build references is in the output
+        run: node scripts/universe/check-build-assets.mjs
+
       - name: Install the visual QA harness
         working-directory: scripts/universe/visual-qa
         run: npm ci
