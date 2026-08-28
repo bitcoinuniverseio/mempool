@@ -246,7 +246,21 @@ function buildMempoolStats() {
       vbytes_per_second: Math.round(1_600 + drift * 6),
       total_fee: Math.round(88_000_000 + drift * 200_000),
       mempool_byte_weight: Math.round(112_000_000 + drift * 400_000),
-      vsizes: Array.from({ length: 38 }, (_, band) => Math.round(Math.max(0, 900 - band * 22 + drift))),
+      // One band per fee level, in vBytes, summing to roughly the
+      // mempool_byte_weight above.
+      //
+      // These used to be single-digit thousands of vBytes in total, which is
+      // four orders of magnitude below a real mempool. Two things followed from
+      // that, and both of them defeated the point of the fixture: every y axis
+      // label rounded to "0 MvB", and the bands were too small to resolve, so
+      // the most colour-dense surface in the product rendered as one flat area
+      // and its palette was never actually reviewed.
+      //
+      // The shape is unchanged. Only the scale is real now: a fat low-fee tail
+      // thinning out towards the high-fee bands, which is what a mempool
+      // between blocks actually looks like.
+      vsizes: Array.from({ length: 38 }, (_, band) =>
+        Math.round(Math.max(0, 900 - band * 22 + drift) * 6_000)),
     });
   }
   return points;

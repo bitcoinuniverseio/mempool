@@ -11,9 +11,10 @@ import { ApiService } from '@app/services/api.service';
 import { StateService } from '@app/services/state.service';
 import { SeoService } from '@app/services/seo.service';
 import { StorageService } from '@app/services/storage.service';
-import { feeLevels, chartColors } from '@app/app.constants';
+import { feeLevels } from '@app/app.constants';
 import { MempoolGraphComponent } from '@components/mempool-graph/mempool-graph.component';
 import { IncomingTransactionsGraphComponent } from '@components/incoming-transactions-graph/incoming-transactions-graph.component';
+import { feeScale } from '@app/shared/chart-theme';
 
 @Component({
   selector: 'app-statistics',
@@ -29,7 +30,7 @@ export class StatisticsComponent implements OnInit {
 
   isLoading = true;
   feeLevels = feeLevels;
-  chartColors = chartColors;
+  chartColors = feeScale();
   filterSize = 100000;
   filterFeeIndex = 0;
   showCount = false;
@@ -173,10 +174,11 @@ export class StatisticsComponent implements OnInit {
 
   setFeeLevelDropdownData() {
     let _feeLevels = feeLevels;
-    let _chartColors = chartColors;
+    const scale = feeScale();
+    let _chartColors = scale;
     if (!this.inverted) {
       _feeLevels = [...feeLevels].reverse();
-      _chartColors = [...chartColors].reverse();
+      _chartColors = [...scale].reverse();
     }
     _feeLevels.forEach((fee, i) => {
       let range;
