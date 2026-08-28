@@ -1,0 +1,111 @@
+name: Universe release artifact
+
+# Builds the one artifact a release installs, on the runner fleet.
+#
+# It exists because the artifact used to be built on a workstation, and that
+# machine has two ways of handing you a stale build without saying so: a
+# leftover server process keeps serving an old output directory, and a failed
+# build step can leave the previous output in place. Both have already produced
+# a measurement that described a build nobody was running. A runner starts from
+# a clean checkout every time, so the artifact matches the commit it names.
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Commit, tag, or branch to build
+        required: true
+        default: main
+
+permissions:
+  contents: read
+
+jobs:
+  artifact:
+    name: Build and pack
+    runs-on: [self-hosted, linux-ultra]
+    timeout-minutes: 90
+    steps:
+      - name: Checkout the requested ref
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Record what is being built
+        id: sha
+        run: |
+          sha=$(git rev-parse HEAD)
+          printf 'sha=%s\n' "$sha" >> "$GITHUB_OUTPUT"
+          printf 'short=%s\n' "${sha:0:9}" >> "$GITHUB_OUTPUT"
+          printf 'Building %s (%s)\n' "$sha" "$(git log -1 --format=%s)"
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24.19.0'
+
+      - name: Install backend
+        working-directory: backend
+        run: npm ci
+
+      - name: Build backend
+        working-directory: backend
+        run: npm run build
+
+      - name: Install frontend
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build:universe
+
+      # The same gates the CI run applies to a build, applied to the build that
+      # is about to be shipped. A green CI run on the same commit does not prove
+      # this output is sound, because this is a different build.
+      - name: Built bundle carries no upstream marks
+        run: node scripts/universe/check-branding.mjs frontend/dist
+
+      - name: Built bundle calls no third-party origin
+        run: node scripts/universe/check-origins.mjs frontend/dist
+
+      - name: Every asset the build references is in the output
+        run: node scripts/universe/check-build-assets.mjs
+
+      - name: No em dash in what the build actually ships
+        run: node scripts/universe/check-text.mjs frontend/dist
+
+      # release.sh reads the frontend from frontend/build, the backend from
+      # backend/dist, and the gateway from scripts/universe. node_modules and
+      # the compiled gbt module are not packed: install hard-links them from the
+      # running release, which is correct only while the dependency tree is
+      # unchanged, so the check below refuses to pack when it has changed.
+      - name: Pack
+        id: pack
+        run: |
+          set -euo pipefail
+          sha='${{ steps.sha.outputs.short }}'
+          stage=$(mktemp -d)
+          mkdir -p "$stage/backend" "$stage/frontend" "$stage/scripts"
+          cp -a backend/dist "$stage/backend/dist"
+          cp -a backend/package.json "$stage/backend/package.json"
+          cp -a backend/package-lock.json "$stage/backend/package-lock.json"
+          cp -a frontend/dist/mempool/browser "$stage/frontend/build"
+          cp -a scripts/universe "$stage/scripts/universe"
+          test -f "$stage/backend/dist/index.js"
+          test -f "$stage/frontend/build/index.html"
+          test -f "$stage/scripts/universe/gateway.mjs"
+          out="$PWD/mempool-$sha.tar.gz"
+          tar -czf "$out" -C "$stage" backend frontend scripts
+          sha256sum "$out" | tee "$out.sha256"
+          printf 'name=mempool-%s\n' "$sha" >> "$GITHUB_OUTPUT"
+
+      - name: Upload
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: ${{ steps.pack.outputs.name }}
+          path: |
+            mempool-*.tar.gz
+            mempool-*.tar.gz.sha256
+          retention-days: 14
+          if-no-files-found: error
