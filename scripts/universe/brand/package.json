@@ -1,0 +1,7 @@
+{
+  "name": "universe-brand",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Renders the Universe Explorer raster brand assets from their source SVGs.",
+  "type": "module"
+}

@@ -24,3 +24,9 @@
     opacity: 0.7;
   }
 }
+
+// This page states facts in running prose inside its cells, so a link in
+// one is inside a block of text and cannot be marked by colour alone.
+.source-table a {
+  text-decoration: underline;
+}

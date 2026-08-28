@@ -45,22 +45,39 @@
   }
 }
 
+// The brand lockup.
+//
+// Below 480px only the mark is shown. The wordmark would take the width the
+// search field needs, and finding something matters more than reading the
+// product's name a second time. Cropping is done by the viewBox rather than
+// object-fit, which has no effect on an inline SVG.
 .brand-mark {
   align-self: center;
-  height: 30px;
-  // The mark alone below 480px: the wordmark would take the width the search
-  // field needs, and search matters more than a second reading of the name.
-  width: 34px;
-  object-fit: none;
-  object-position: left center;
+  color: var(--u-text-primary);
+  display: block;
+  height: 34px;
+  // Narrow screens see the mark only. The wordmark is hidden rather than
+  // scaled, because shrinking it to fit leaves letters too small to read,
+  // and clipping alone leaves fragments of them showing.
   overflow: hidden;
   transition: opacity var(--u-duration-fast) var(--u-ease-out);
+  width: 28px;
+
+  ::ng-deep svg {
+    display: block;
+    height: 34px;
+    max-width: none;
+    width: 135px;
+  }
+
+  @media (max-width: 479.98px) {
+    ::ng-deep text {
+      display: none;
+    }
+  }
 
   @media (min-width: 480px) {
-    height: 34px;
-    width: 136px;
-    object-fit: contain;
-    object-position: left center;
+    width: 135px;
   }
 }
 
