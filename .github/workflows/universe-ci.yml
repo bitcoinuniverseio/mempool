@@ -159,17 +159,40 @@ jobs:
           kill -0 "$GATEWAY_PID"
           curl -fsS "http://127.0.0.1:$GATEWAY_PORT/__gateway/health"
 
-      # The harness now fails the run when a page never finishes loading, when a
+      # The harness fails the run when a page never finishes loading, when a
       # chart panel draws nothing, or when a failure state says nothing about
       # why. Those three states passed every other gate here and shipped.
-      - name: Measured contrast, accessibility, overflow, unfinished pages, and screenshots
+      #
+      # Split into two passes that finish, rather than one sweep that does not.
+      # Every combination of thirteen routes, seven data states, three themes
+      # and seven widths is nineteen hundred page loads, which does not fit the
+      # job timeout, and a gate that cannot finish protects nothing.
+      #
+      # The broad pass walks every route at a phone and a desktop width with
+      # real data, which is where overflow, broken images and a page that never
+      # finishes show up. The deep pass takes the routes this suite holds to a
+      # terminal state through every failure state, every theme and the widths
+      # that change the layout, which is where a page that lies about why it is
+      # empty shows up. Measured at about two and a half minutes and sixteen
+      # minutes respectively.
+      - name: Every route renders and finishes, at a phone and a desktop width
         working-directory: scripts/universe/visual-qa
-        run: node capture.mjs --base=http://127.0.0.1:$GATEWAY_PORT --out=./artifacts
+        run: >-
+          node capture.mjs --base=http://127.0.0.1:$GATEWAY_PORT --out=./artifacts-broad
+          --states=populated --themes=default --viewports=375,1440
+
+      - name: The gated routes hold up across themes, widths and every failure state
+        working-directory: scripts/universe/visual-qa
+        run: >-
+          node capture.mjs --base=http://127.0.0.1:$GATEWAY_PORT --out=./artifacts
+          --routes=graphs,mining,protocols,home,blocks,tx,address --viewports=320,768,1440
 
       - name: Keep the contrast report and the route screenshots
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: universe-visual-qa
-          path: scripts/universe/visual-qa/artifacts
+          path: |
+            scripts/universe/visual-qa/artifacts
+            scripts/universe/visual-qa/artifacts-broad
           retention-days: 30
