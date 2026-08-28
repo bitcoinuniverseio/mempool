@@ -9,6 +9,7 @@ import { StorageService } from '@app/services/storage.service';
 import { EChartsOption } from '@app/graphs/echarts';
 import { feeLevels, chartColors } from '@app/app.constants';
 import { download, formatterXAxis, formatterXAxisLabel } from '@app/shared/graphs.utils';
+import { chartChrome } from '@app/shared/chart-theme';
 
 @Component({
   selector: 'app-mempool-graph',
@@ -172,7 +173,7 @@ export class MempoolGraphComponent implements OnInit, OnChanges {
             silent: true,
             symbol: 'none',
             lineStyle: {
-              color: '#fff',
+              color: chartChrome().markBorder,
               opacity: 1,
               width: this.inverted ? 2 : 0,
             },
@@ -180,7 +181,7 @@ export class MempoolGraphComponent implements OnInit, OnChanges {
               yAxis: '1000000',
               label: {
                 show: false,
-                color: '#ffffff',
+                color: chartChrome().label,
               }
             }],
           },
@@ -393,7 +394,7 @@ export class MempoolGraphComponent implements OnInit, OnChanges {
         bottom: 0,
         selectedDataBackground: {
           lineStyle: {
-            color: '#fff',
+            color: chartChrome().markBorder,
             opacity: 0.45,
           },
           areaStyle: {

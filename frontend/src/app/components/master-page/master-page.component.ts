@@ -1,11 +1,10 @@
-import { Component, OnInit, OnDestroy, Input, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input } from '@angular/core';
 import { Router } from '@angular/router';
 import { Env, StateService } from '@app/services/state.service';
 import { Observable, merge, of, Subscription } from 'rxjs';
 import { LanguageService } from '@app/services/language.service';
 import { EnterpriseService } from '@app/services/enterprise.service';
 import { NavigationService } from '@app/services/navigation.service';
-import { MenuComponent } from '@components/menu/menu.component';
 import { StorageService } from '@app/services/storage.service';
 
 @Component({
@@ -31,15 +30,10 @@ export class MasterPageComponent implements OnInit, OnDestroy {
   networkPaths$: Observable<Record<string, string>>;
   footerVisible = true;
   user: any = undefined;
-  servicesEnabled = false;
-  menuOpen = false;
   isDropdownVisible: boolean;
 
   enterpriseInfo: any;
   enterpriseInfo$: Subscription;
-
-  @ViewChild(MenuComponent)
-  public menuComponent!: MenuComponent;
 
   constructor(
     public stateService: StateService,
@@ -72,11 +66,7 @@ export class MasterPageComponent implements OnInit, OnDestroy {
       this.enterpriseInfo = info;
     });
 
-    this.servicesEnabled = this.officialMempoolSpace && this.stateService.env.ACCELERATOR === true && this.stateService.network === '';
     this.refreshAuth();
-
-    const isServicesPage = this.router.url.includes('/services/');
-    this.menuOpen = isServicesPage && !this.isSmallScreen();
     this.setDropdownVisibility();
   }
 
@@ -92,6 +82,26 @@ export class MasterPageComponent implements OnInit, OnDestroy {
     ];
     const enabledNetworksCount = networks.filter((networkEnabled) => networkEnabled).length;
     this.isDropdownVisible = enabledNetworksCount > 1;
+  }
+
+  /**
+   * The chain currently being explored, in words.
+   *
+   * The picker used to show only a symbol. Reading a testnet page believing it
+   * is mainnet is the most expensive mistake this interface can invite, so the
+   * chain is always named next to its mark.
+   */
+  networkLabel(network: string): string {
+    switch (network) {
+      case '': return $localize`:@@master-page.network-mainnet:Mainnet`;
+      case 'testnet': return $localize`:@@master-page.network-testnet3:Testnet3`;
+      case 'testnet4': return $localize`:@@master-page.network-testnet4:Testnet4`;
+      case 'signet': return $localize`:@@master-page.network-signet:Signet`;
+      case 'regtest': return $localize`:@@master-page.network-regtest:Regtest`;
+      case 'liquid': return $localize`:@@master-page.network-liquid:Liquid`;
+      case 'liquidtestnet': return $localize`:@@master-page.network-liquidtestnet:Liquid Testnet`;
+      default: return network;
+    }
   }
 
   collapse(): void {
@@ -110,24 +120,8 @@ export class MasterPageComponent implements OnInit, OnDestroy {
     this.stateService.resetScroll$.next(true);
   }
 
-  onLoggedOut(): void {
-    this.refreshAuth();
-  }
-
   refreshAuth(): void {
     this.user = this.storageService.getAuth()?.user ?? null;
-  }
-
-  hamburgerClick(event): void {
-    if (this.menuComponent) {
-      this.menuComponent.hamburgerClick();
-      this.menuOpen = this.menuComponent.navOpen;
-      event.stopPropagation();
-    }
-  }
-
-  menuToggled(isOpen: boolean): void {
-    this.menuOpen = isOpen;
   }
 
   ngOnDestroy(): void {

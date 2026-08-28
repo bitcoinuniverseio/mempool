@@ -27,7 +27,8 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import AxeBuilder from '@axe-core/playwright';
 import * as playwright from 'playwright';
-import { addressFixtures, fixtures, sampleIds, stateOverrides } from './fixtures.mjs';
+import { addressFixtures, detailFixtures, fixtures, sampleIds, stateOverrides } from './fixtures.mjs';
+import { contrastProbe } from './contrast-probe.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
@@ -82,7 +83,7 @@ function pick(list, key, idKey = 'id') {
 /** Answer every API call from fixtures, applying the state's overrides. */
 async function installFixtures(context, state) {
   const overrides = stateOverrides[state] || {};
-  const table = { ...fixtures, ...addressFixtures };
+  const table = { ...fixtures, ...detailFixtures, ...addressFixtures };
 
   await context.route('**/api/**', async (route) => {
     const url = new URL(route.request().url());
@@ -125,14 +126,65 @@ async function installFixtures(context, state) {
   const down = state === 'chain-down' || overrides['**']?.hang;
   await context.routeWebSocket('**/api/v1/ws', (ws) => {
     if (down) return; // connected but silent: the reconnecting and loading states
-    const push = () => ws.send(JSON.stringify(socketState()));
-    ws.onMessage(() => push());
+    const push = () => ws.send(JSON.stringify(socketState(state)));
+    ws.onMessage((raw) => {
+      push();
+      // The Lens only draws once it is handed the contents of the block it is
+      // tracking. Without this the product's signature view is a grey square in
+      // every screenshot, which is the one thing a design review cannot skip.
+      let message;
+      try { message = JSON.parse(String(raw)); } catch { return; }
+      const index = message?.['track-mempool-block'];
+      if (typeof index === 'number' && index >= 0) {
+        ws.send(JSON.stringify({
+          'projected-block-transactions': {
+            index,
+            sequence: 1,
+            blockTransactions: projectedBlockTransactions(),
+          },
+        }));
+      }
+    });
     push();
   });
 }
 
+/**
+ * A projected block's contents, in the compressed tuple form the socket uses:
+ * [txid, fee, vsize, value, rate, flags, time, acc].
+ *
+ * Sized and spread so the Lens has something honest to draw: a long tail of
+ * small transactions, a few large ones, and a spread of fee rates.
+ */
+function projectedBlockTransactions() {
+  const txs = [];
+  for (let i = 0; i < 1400; i++) {
+    const big = i % 97 === 0;
+    const vsize = big ? 2200 + (i % 11) * 400 : 140 + (i % 17) * 24;
+    const rate = 2 + ((i * 7) % 46) + (big ? 12 : 0);
+    txs.push([
+      (i.toString(16).padStart(8, '0')).repeat(8).slice(0, 64),
+      Math.round(rate * vsize),
+      vsize,
+      50_000 + (i % 53) * 90_000,
+      rate,
+      i % 13 === 0 ? 2 : 0,
+      1_772_100_000 - (i % 900),
+      0,
+    ]);
+  }
+  return txs;
+}
+
 /** One socket push carrying the initial live state, from the same fixtures. */
-function socketState() {
+function socketState(state) {
+  // A node that is still verifying the chain. The explorer qualifies every
+  // number on the page against this, so it has to be exercised: without it the
+  // synchronisation notice never renders and never gets reviewed.
+  const chainSync =
+    state === 'catching-up'
+      ? { blocks: 819_435, headers: 887_412, initialBlockDownload: true, verificationProgress: 0.663316, checkedAt: '2026-08-27T00:00:00.000Z' }
+      : { blocks: 887_412, headers: 887_412, initialBlockDownload: false, verificationProgress: 1, checkedAt: '2026-08-27T00:00:00.000Z' };
   return {
     mempoolInfo: { loaded: true, size: 31_204, bytes: 118_442_881, usage: 118_442_881, maxmempool: 300_000_000, mempoolminfee: 0.00001, minrelaytxfee: 0.00001, fullrbf: true },
     vBytesPerSecond: 1_884,
@@ -144,7 +196,7 @@ function socketState() {
     rbfLatestSummary: fixtures['rbf-latest-summary'],
     conversions: { USD: 96_400, EUR: 89_100, time: 1_772_100_000 },
     loadingIndicators: { mempool: 100, blocks: 100 },
-    backendInfo: { hostname: 'universe-explorer', version: '3.3.1', gitCommit: 'fixture0', lightning: false },
+    backendInfo: { hostname: 'universe-explorer', version: '3.3.1', gitCommit: 'fixture0', lightning: false, chainSync },
   };
 }
 
@@ -155,7 +207,14 @@ async function run() {
   const states = pick(STATES.map((id) => ({ id })), 'states').map((s) => s.id);
 
   mkdirSync(OUT, { recursive: true });
-  const browser = await playwright[BROWSER].launch();
+  // The Lens is drawn with WebGL. Headless Chromium has no GPU, so without a
+  // software rasteriser the product's signature view is a grey rectangle in
+  // every screenshot and the one thing worth reviewing goes unreviewed.
+  const browser = await playwright[BROWSER].launch({
+    args: BROWSER === 'chromium'
+      ? ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader']
+      : [],
+  });
   const findings = [];
   let shots = 0;
 
@@ -172,6 +231,19 @@ async function run() {
           try {
             localStorage.setItem('theme-preference', t);
           } catch { /* private mode: the default theme is fine */ }
+
+          // A WebGL drawing buffer is cleared once the frame is presented, so
+          // reading the Lens back afterwards returns nothing at all. Asking for
+          // it to be preserved is what makes the product's signature view
+          // measurable rather than a rectangle nobody checks. This only ever
+          // runs in the harness; the application asks for the default.
+          const getContext = HTMLCanvasElement.prototype.getContext;
+          HTMLCanvasElement.prototype.getContext = function (type, attributes) {
+            if (type === 'webgl' || type === 'webgl2' || type === 'experimental-webgl') {
+              return getContext.call(this, type, { ...(attributes || {}), preserveDrawingBuffer: true });
+            }
+            return getContext.call(this, type, attributes);
+          };
         }, theme);
 
         for (const route of routes) {
@@ -209,10 +281,26 @@ async function run() {
                   count: v.nodes.length,
                   help: v.help,
                   sample: v.nodes[0]?.target?.join(' ') ?? '',
+                  // Every failing node, not just the first. A rule that reports
+                  // "25 places" cannot be acted on without knowing which 25.
+                  nodes: v.nodes.slice(0, 40).map((n) => ({
+                    target: (n.target ?? []).join(' '),
+                    detail: (n.any?.[0]?.message ?? n.failureSummary ?? '').slice(0, 200),
+                  })),
                 }));
               } catch (e) {
                 violations = [{ id: 'axe-failed', impact: 'unknown', count: 0, help: String(e).slice(0, 200), sample: '' }];
               }
+            }
+
+            // Measured contrast against whatever is actually painted. This is
+            // the check an accessibility engine cannot make: text on a fee
+            // gradient, on a block face, or over the Lens canvas.
+            let contrast;
+            try {
+              contrast = await page.evaluate(contrastProbe);
+            } catch (e) {
+              contrast = { text: [], painted: [], canvas: [], sampled: 0, error: String(e).slice(0, 200) };
             }
 
             await page.screenshot({ path: join(OUT, `${label}.png`), fullPage: Boolean(args.fullPage) });
@@ -220,7 +308,7 @@ async function run() {
 
             findings.push({
               route: route.id, routeName: route.name, state, theme, viewport: viewport.id,
-              overflowBy, consoleErrors, brokenImages, violations,
+              overflowBy, consoleErrors, brokenImages, violations, contrast,
             });
           } catch (error) {
             findings.push({
@@ -250,6 +338,18 @@ function summarise(report) {
   const failed = report.findings.filter((f) => f.error);
   const a11y = report.findings.filter((f) => f.violations?.length);
 
+  const contrastFailures = [];
+  const blankCanvases = [];
+  for (const f of report.findings) {
+    for (const row of f.contrast?.text ?? []) {
+      contrastFailures.push({ ...row, route: f.route, state: f.state, theme: f.theme, viewport: f.viewport });
+    }
+    for (const c of f.contrast?.canvas ?? []) {
+      if (c.blank) blankCanvases.push({ ...c, route: f.route, state: f.state, theme: f.theme, viewport: f.viewport });
+    }
+  }
+  contrastFailures.sort((a, b) => a.ratio - b.ratio);
+
   const byRule = new Map();
   for (const f of a11y) {
     for (const v of f.violations) {
@@ -267,6 +367,33 @@ function summarise(report) {
   console.log(`navigation failures : ${failed.length}`);
   console.log(`a11y rules violated : ${byRule.size}\n`);
 
+  console.log(`contrast failures   : ${contrastFailures.length}`);
+  console.log(`blank canvases      : ${blankCanvases.length}`);
+
+  if (contrastFailures.length) {
+    console.log();
+    console.log('-- measured contrast failures, worst first --');
+    for (const f of contrastFailures.slice(0, 40)) {
+      console.log(
+        `  ${String(f.ratio).padStart(6)}:1 (needs ${f.required}:1)  ` +
+          `${f.route}/${f.state}/${f.theme}@${f.viewport}` +
+          `${f.overPaintedSurface ? '  [over a painted surface]' : ''}`,
+      );
+      console.log(`         "${f.text}"`);
+      console.log(`         ${f.foreground} on ${f.background}   ${f.selector}`);
+    }
+    if (contrastFailures.length > 40) {
+      console.log(`  ... and ${contrastFailures.length - 40} more, see the report`);
+    }
+  }
+
+  if (blankCanvases.length) {
+    console.log();
+    console.log('-- canvases that drew nothing --');
+    for (const c of blankCanvases.slice(0, 10)) {
+      console.log(`  ${c.route}/${c.state}/${c.theme}@${c.viewport}  ${c.selector}  ${c.w}x${c.h}`);
+    }
+  }
   if (overflow.length) {
     console.log('-- overflow --');
     for (const f of overflow.slice(0, 20)) {

@@ -52,7 +52,7 @@
           <tr *ngIf="network !== 'liquid' && network !== 'liquidtestnet' && block?.extras?.pool">
             <td i18n="block.miner">Miner</td>
             <td *ngIf="stateService.env.MINING_DASHBOARD">
-              <a placement="bottom" [routerLink]="['/mining/pool' | relativeUrl, block.extras.pool.slug]" class="badge" style="color: #FFF;padding:0;">
+              <a placement="bottom" [routerLink]="['/mining/pool' | relativeUrl, block.extras.pool.slug]" class="badge" style="color: var(--u-text-primary);padding:0;">
                 <span class="miner-name" *ngIf="block.extras.pool.minerNames?.length > 1 && block.extras.pool.minerNames[1] != ''">
                   @if (block.extras.pool.minerNames[1].length > 16) {
                     {{ block.extras.pool.minerNames[1].slice(0, 15) }}…
@@ -60,7 +60,7 @@
                     {{ block.extras.pool.minerNames[1] }}
                   }
                 </span>
-                <img class="pool-logo" [src]="'/resources/mining-pools/' + block.extras.pool.slug + '.svg'" onError="this.src = '/resources/mining-pools/default.svg'" [alt]="'Logo of ' + block.extras.pool.name + ' mining pool'">
+                <img class="pool-logo" [src]="'/resources/mining-pools/' + block.extras.pool.slug + '.svg'" appImageFallback [alt]="'Logo of ' + block.extras.pool.name + ' mining pool'">
                 {{ block.extras.pool.name }}
               </a>
             </td>

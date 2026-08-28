@@ -99,6 +99,28 @@ export const fixtures = {
   },
 };
 
+/**
+ * A confirmed transaction, its status, and the block it landed in.
+ *
+ * Shaped so the detail page has something real to lay out: several inputs, a
+ * payment output and a change output, and a fee that matches the difference.
+ */
+export const detailFixtures = {
+  [`/api/tx/${TXID_A}`]: buildTransaction(),
+  [`/api/tx/${TXID_A}/status`]: { confirmed: true, block_height: 887_412, block_hash: BLOCK_HASH, block_time: 1_772_100_000 },
+  [`/api/tx/${TXID_A}/outspends`]: [{ spent: false }, { spent: false }],
+  [`/api/v1/tx/${TXID_A}/rbf`]: { replacements: null, replaces: [] },
+  [`/api/v1/tx/${TXID_A}/cached`]: null,
+  [`/api/block/${BLOCK_HASH}`]: fixtures['/api/v1/blocks'][0],
+  [`/api/block/${BLOCK_HASH}/txids`]: [TXID_A, TXID_B, TXID_C],
+  [`/api/v1/block/${BLOCK_HASH}/summary`]: [],
+  [`/api/block/${BLOCK_HASH}/txs/0`]: [buildTransaction()],
+  '/api/v1/mining/hashrate/3d': { hashrates: [{ timestamp: 1_772_000_000, avgHashrate: 8.1e20 }], difficulty: [{ timestamp: 1_772_000_000, difficulty: 1.1e14, height: 887_000 }], currentHashrate: 8.12e20, currentDifficulty: 1.105e14 },
+  '/api/v1/mining/reward-stats/144': { startBlock: 887_268, endBlock: 887_412, totalReward: '46_800_000_000'.replace(/_/g, ''), totalFee: '1_400_000_000'.replace(/_/g, ''), totalTx: '412_004'.replace(/_/g, '') },
+  '/api/v1/mining/blocks/fees/1w': [{ avgHeight: 887_000, timestamp: 1_772_000_000, avgFees: 12_884_901 }],
+  '/api/v1/difficulty-adjustments/1m': [[1_772_000_000, 887_000, 1.1e14, 3.18]],
+};
+
 /** Address with history, and its transactions. */
 export const addressFixtures = {
   [`/api/address/${ADDRESS}`]: {
@@ -135,6 +157,13 @@ export const stateOverrides = {
     '/api/v1/difficulty-adjustment': { status: 502 },
   },
 
+  // The node this explorer reads is still catching up. Nothing here is wrong,
+  // but a large part of the chain is not available yet and the interface has to
+  // say so rather than presenting a months-old tip as the present. This state
+  // carries no REST override: it is expressed through the socket, in
+  // socketState() in capture.mjs, because that is where backendInfo arrives.
+  'catching-up': {},
+
   // Requests never resolve, so every surface stays in its loading state.
   loading: { '**': { hang: true } },
 
@@ -168,4 +197,33 @@ function buildMempoolStats() {
     });
   }
   return points;
+}
+
+/**
+ * One transaction, in the shape the detail page expects.
+ *
+ * Two inputs and two outputs so the flow has a real payment and a real change
+ * output rather than a single-line stub, and a fee that is genuinely the
+ * difference between the two sides.
+ */
+function buildTransaction() {
+  const vin = [
+    { txid: TXID_B, vout: 0, is_coinbase: false, scriptsig: '', scriptsig_asm: '', sequence: 4_294_967_293,
+      prevout: { scriptpubkey: '0014a1b2', scriptpubkey_asm: 'OP_0 OP_PUSHBYTES_20 a1b2', scriptpubkey_type: 'v0_p2wpkh', scriptpubkey_address: ADDRESS, value: 1_200_000 },
+      witness: ['3045', '02a1'], inner_redeemscript_asm: '', inner_witnessscript_asm: '', is_pegin: false },
+    { txid: TXID_C, vout: 1, is_coinbase: false, scriptsig: '', scriptsig_asm: '', sequence: 4_294_967_293,
+      prevout: { scriptpubkey: '0014c3d4', scriptpubkey_asm: 'OP_0 OP_PUSHBYTES_20 c3d4', scriptpubkey_type: 'v0_p2wpkh', scriptpubkey_address: 'bc1q9d4ywgfnd8h43da5tpcxcn6ajv590cg6d3tg6axemvljvt2k76zs50tv4q', value: 700_004 },
+      witness: ['3044', '02b2'], inner_redeemscript_asm: '', inner_witnessscript_asm: '', is_pegin: false },
+  ];
+  const vout = [
+    { scriptpubkey: '0014e5f6', scriptpubkey_asm: 'OP_0 OP_PUSHBYTES_20 e5f6', scriptpubkey_type: 'v0_p2wpkh', scriptpubkey_address: 'bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4', value: 1_500_000 },
+    { scriptpubkey: '0014a1b2', scriptpubkey_asm: 'OP_0 OP_PUSHBYTES_20 a1b2', scriptpubkey_type: 'v0_p2wpkh', scriptpubkey_address: ADDRESS, value: 395_884 },
+  ];
+  const inSum = vin.reduce((t, i) => t + i.prevout.value, 0);
+  const outSum = vout.reduce((t, o) => t + o.value, 0);
+  return {
+    txid: TXID_A, version: 2, locktime: 0, vin, vout,
+    size: 372, weight: 837, sigops: 2, fee: inSum - outSum,
+    status: { confirmed: true, block_height: 887_412, block_hash: BLOCK_HASH, block_time: 1_772_100_000 },
+  };
 }

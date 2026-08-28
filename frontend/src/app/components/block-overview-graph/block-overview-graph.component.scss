@@ -2,7 +2,10 @@
   position: relative;
   width: 100%;
   padding-bottom: 100%;
-  background: var(--stat-box-bg);
+  // The block being drawn is a data object with its own ink, like the chain
+  // strip. On the light theme this was a pale surface and the fee scale
+  // washed out on it, which cost the product its most distinctive view.
+  background: var(--u-block-confirmed-to);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -50,7 +53,7 @@
 
 .loader-wrapper {
   position: absolute;
-  background: #181b2d7f;
+  background: var(--u-surface-inset);
   left: 0;
   right: 0;
   top: 0;

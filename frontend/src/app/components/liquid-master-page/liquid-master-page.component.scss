@@ -70,7 +70,7 @@ li.nav-item {
 .navbar-nav {
   background: var(--nav-bg);
   bottom: 0;
-  box-shadow: 0px 0px 15px 0px #000;
+  box-shadow: 0px 0px 15px 0px var(--u-text-primary);
   flex-direction: row;
   left: 0;
   justify-content: space-between;
@@ -122,7 +122,7 @@ li.nav-item {
 }
 
 nav {
-  box-shadow: 0px 0px 15px 0px #000;
+  box-shadow: 0px 0px 15px 0px var(--u-text-primary);
 }
 
 .connection-badge {
@@ -162,7 +162,7 @@ nav {
 }
 
 .dropdown-divider {
-  border-top: 1px solid #121420;
+  border-top: 1px solid var(--u-surface-sunken);
 }
 
 .dropdown-toggle::after {
@@ -220,7 +220,7 @@ nav {
 }
 
 .vertical-line {
-  border-left: 1px solid #444;
+  border-left: 1px solid var(--u-border);
   height: 30px;
   margin-left: 20px;
   margin-right: 20px;

@@ -5,6 +5,7 @@ import { specialBlocks } from '@app/app.constants';
 import { BlockExtended } from '@interfaces/node-api.interface';
 import { Router, ActivatedRoute } from '@angular/router';
 import { handleDemoRedirect } from '@app/shared/common.utils';
+import { chartChrome } from '@app/shared/chart-theme';
 
 @Component({
   selector: 'app-start',
@@ -17,7 +18,7 @@ export class StartComponent implements OnInit, AfterViewChecked, OnDestroy {
   @Input() showLoadingIndicator = false;
 
   interval = 60;
-  colors = ['#5E35B1', '#ffffff'];
+  colors = [chartChrome().series[0], chartChrome().surface];
 
   countdown = 0;
   specialEvent = false;

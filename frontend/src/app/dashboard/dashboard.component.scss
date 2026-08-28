@@ -31,7 +31,7 @@
 }
 
 .bg-warning {
-  background-color: #b58800 !important;
+  background-color: var(--u-state-partial) !important;
 }
 
 .skeleton-loader {
@@ -301,8 +301,10 @@
 
 .main-title {
   position: relative;
-  color: var(--fg);
-  opacity: var(--opacity);
+  // Was the page foreground at 57% opacity, which is under the contrast
+  // floor on every surface it appears on. A muted token says the same
+  // thing about hierarchy and stays readable.
+  color: var(--u-text-secondary);
   margin-top: -13px;
   font-size: 10px;
   text-transform: uppercase;
@@ -366,7 +368,7 @@
 }
 
 .clear-link {
-  color: white;
+  color: var(--u-text-primary);
 }
 
 .pool-name {
@@ -452,8 +454,10 @@
 
 .in-progress-message {
   position: relative;
-  color: var(--fg);
-  opacity: var(--opacity);
+  // Was the page foreground at 57% opacity, which is under the contrast
+  // floor on every surface it appears on. A muted token says the same
+  // thing about hierarchy and stays readable.
+  color: var(--u-text-secondary);
   margin-top: 20px;
   text-align: center;
   padding-bottom: 3px;
@@ -466,4 +470,278 @@
   color: var(--transparent-fg);
   font-size: 0.85rem;
   line-height: 1.5;
+}
+
+// ---------------------------------------------------------------------------
+// The homepage as one composition
+// ---------------------------------------------------------------------------
+//
+// This page used to be a grid of Bootstrap cards, each with its own centred
+// title, its own border, and no stated relationship to any other. It read as
+// seven widgets that happened to share a page.
+//
+// It is now one surface with a deliberate reading order: what it costs to move
+// right now, then the block being built, then the slower background numbers,
+// then the activity worth noticing. Panels sit on a shared page ground and are
+// separated by space and a single hairline rather than by stacked boxes.
+
+.dashboard {
+  margin: 0 auto;
+  max-width: var(--u-width-page);
+  padding: var(--u-space-4) var(--u-space-3) var(--u-space-6);
+  text-align: left;
+
+  @media (min-width: 768px) {
+    padding: var(--u-space-5) var(--u-space-4) var(--u-space-7);
+  }
+}
+
+.dashboard-grid {
+  display: grid;
+  gap: var(--u-space-4);
+  grid-template-columns: minmax(0, 1fr);
+
+  @media (min-width: 992px) {
+    gap: var(--u-space-5);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+
+    // The Lens is the tallest thing here and the reason to come back, so it
+    // holds a column rather than being cropped into a row.
+    .panel-lens { grid-row: span 2; }
+  }
+}
+
+.panel {
+  background: var(--u-surface-raised);
+  border: 1px solid var(--u-border);
+  border-radius: var(--u-radius-lg);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: var(--u-space-4);
+
+  @media (min-width: 768px) {
+    padding: var(--u-space-5);
+  }
+}
+
+// --- Panel heading ---------------------------------------------------------
+//
+// One shape for every panel: what this is, where it leads, and one line on why
+// it matters. The note is what turns a number into something a newcomer can
+// act on, and it is the piece the old card titles had no room for.
+
+.panel-head {
+  align-items: baseline;
+  column-gap: var(--u-space-3);
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: var(--u-space-3);
+}
+
+.panel-title {
+  color: var(--u-text-primary);
+  font-size: var(--u-text-lg);
+  font-weight: var(--u-weight-semibold);
+  letter-spacing: -0.01em;
+  line-height: var(--u-leading-tight);
+  margin: 0;
+}
+
+.panel-subtitle {
+  color: var(--u-text-primary);
+  font-size: var(--u-text-base);
+  font-weight: var(--u-weight-semibold);
+  margin: var(--u-space-5) 0 var(--u-space-2);
+}
+
+.panel-link {
+  color: var(--u-brand);
+  font-size: var(--u-text-sm);
+  font-weight: var(--u-weight-medium);
+  margin-left: auto;
+  white-space: nowrap;
+
+  &:hover { color: var(--u-brand-hover); }
+}
+
+.panel-note {
+  color: var(--u-text-muted);
+  flex-basis: 100%;
+  font-size: var(--u-text-sm);
+  line-height: var(--u-leading-snug);
+  margin: var(--u-space-1) 0 0;
+  max-width: var(--u-width-prose);
+}
+
+// Said when there is nothing to show. It always explains which of the two
+// reasons applies: nothing happened, or the answer could not be fetched.
+.panel-empty {
+  color: var(--u-text-muted);
+  font-size: var(--u-text-sm);
+  line-height: var(--u-leading-normal);
+  margin: var(--u-space-3) 0 0;
+}
+
+// --- Universe Lens ---------------------------------------------------------
+//
+// Was a row of tiny Bootstrap toggle buttons. It is the product's signature
+// control, so it gets a real segmented control: full-size targets, a selected
+// state that does not rely on colour alone, and radio semantics so a keyboard
+// moves through the options with arrow keys.
+
+.lens-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--u-space-2);
+  margin-bottom: var(--u-space-4);
+}
+
+.lens-option {
+  background: var(--u-surface-sunken);
+  border: 1px solid var(--u-border);
+  border-radius: var(--u-radius-pill);
+  color: var(--u-text-secondary);
+  cursor: pointer;
+  font-size: var(--u-text-sm);
+  font-weight: var(--u-weight-medium);
+  min-height: 34px;
+  padding: 0 var(--u-space-3);
+  transition: background-color var(--u-duration-fast) var(--u-ease-out),
+              border-color var(--u-duration-fast) var(--u-ease-out),
+              color var(--u-duration-fast) var(--u-ease-out);
+
+  &:hover {
+    background: var(--u-surface-hover);
+    border-color: var(--u-border-strong);
+    color: var(--u-text-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--u-focus-ring);
+    outline-offset: 2px;
+  }
+
+  // Selected carries weight and a filled ground, not just a hue, so it survives
+  // greyscale and low vision.
+  &.selected {
+    background: var(--u-brand);
+    border-color: var(--u-brand);
+    color: var(--u-brand-contrast);
+    font-weight: var(--u-weight-semibold);
+  }
+}
+
+// --- Tables ----------------------------------------------------------------
+//
+// Four columns of hashes and fees cannot be made to fit 320px without either
+// truncating a value or shrinking it out of legibility. Scrolling the table
+// inside its own panel keeps every figure at full size and keeps the page
+// itself from scrolling sideways.
+
+.table-scroll {
+  margin: 0 calc(-1 * var(--u-space-4));
+  overflow-x: auto;
+  padding: 0 var(--u-space-4);
+  -webkit-overflow-scrolling: touch;
+
+  @media (min-width: 768px) {
+    margin: 0 calc(-1 * var(--u-space-5));
+    padding: 0 var(--u-space-5);
+  }
+
+  > .table {
+    margin-bottom: 0;
+    min-width: 340px;
+  }
+}
+
+// --- Components that arrive with their own box ------------------------------
+//
+// Difficulty and the protocol strip were written to sit inside a Bootstrap
+// card. Dropped into a panel they produced a box inside a box with two borders
+// and two paddings. The panel is the box now, so their inner card is flattened
+// rather than each component being rewritten.
+
+.panel {
+  ::ng-deep .card {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    height: auto;
+  }
+
+  ::ng-deep .card-body {
+    padding: 0;
+  }
+
+  ::ng-deep .card-wrapper {
+    margin: 0;
+  }
+
+  // The heading these components render themselves. It was 10px uppercase at
+  // 57% opacity, which failed contrast and read as a caption rather than a
+  // title. It now matches every other panel heading on the page.
+  ::ng-deep .main-title {
+    color: var(--u-text-primary);
+    font-size: var(--u-text-lg);
+    font-weight: var(--u-weight-semibold);
+    letter-spacing: -0.01em;
+    line-height: var(--u-leading-tight);
+    margin: 0 0 var(--u-space-3);
+    opacity: 1;
+    position: static;
+    text-align: left;
+    text-transform: none;
+  }
+
+  ::ng-deep .card-title {
+    color: var(--u-text-primary);
+    font-size: var(--u-text-base);
+    font-weight: var(--u-weight-semibold);
+  }
+}
+
+// The Lens visualisation keeps its square, but stops being centred inside a
+// fixed-height card that cropped it at some widths.
+.panel-lens {
+  // The Lens draws the same kind of object as the chain strip, so it sits on
+  // the same dark ground. On a white page the fee scale washed out to pale
+  // khaki and the densest, most interesting part of the block disappeared.
+  .mempool-block-wrapper {
+    aspect-ratio: 1;
+    background: var(--u-block-confirmed-to);
+    border-radius: var(--u-radius-md);
+    margin: 0 auto;
+    max-height: none;
+    max-width: 440px;
+    overflow: hidden;
+    width: 100%;
+  }
+}
+
+// Difficulty's difficulty and halving switch. Two links separated by a pipe at
+// 8px is not a control; this makes the choice visible and reachable.
+.panel-difficulty {
+  ::ng-deep .widget-toggler {
+    display: flex;
+    gap: var(--u-space-2);
+    justify-content: flex-end;
+    position: static;
+
+    .toggler-option {
+      border-radius: var(--u-radius-sm);
+      color: var(--u-text-muted);
+      font-size: var(--u-text-xs);
+      font-weight: var(--u-weight-medium);
+      padding: 2px var(--u-space-2);
+
+      &:hover { color: var(--u-text-primary); }
+
+      &.inactive {
+        background: var(--u-surface-inset);
+        color: var(--u-text-primary);
+      }
+    }
+  }
 }

@@ -10,6 +10,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
 import { StateService } from '@app/services/state.service';
 import { AmountShortenerPipe } from '@app/shared/pipes/amount-shortener.pipe';
 import { getFlagEmoji } from '@app/shared/common.utils';
+import { chartChrome } from '@app/shared/chart-theme';
 
 @Component({
   selector: 'app-nodes-map',
@@ -165,8 +166,8 @@ export class NodesMap implements OnInit, OnChanges {
         map: 'world',
         roam: true,
         itemStyle: {
-          borderColor: 'black',
-          color: '#272b3f'
+          borderColor: chartChrome().markBorder,
+          color: chartChrome().axis
         },
         scaleLimit: {
           min: 1.3,
@@ -193,14 +194,14 @@ export class NodesMap implements OnInit, OnChanges {
             },
             trigger: 'item',
             show: true,
-            backgroundColor: 'rgba(17, 19, 31, 1)',
+            backgroundColor: chartChrome().surface,
             borderRadius: 0,
-            shadowColor: 'rgba(0, 0, 0, 0.5)',
+            shadowColor: chartChrome().markBorder,
             textStyle: {
               color: 'var(--tooltip-grey)',
               align: 'left',
             },
-            borderColor: '#000',
+            borderColor: chartChrome().markBorder,
             formatter: (value) => {
               const data = value.data;
               const alias = data[3].length > 0 ? data[3] : data[4].slice(0, 20);
@@ -221,7 +222,7 @@ export class NodesMap implements OnInit, OnChanges {
               return `${lerpColor('#1E88E5', '#D81B60', Math.pow(params.data[2] / maxLiquidity, 0.2))}`;
             },
             opacity: 1,
-            borderColor: 'black',
+            borderColor: chartChrome().markBorder,
             borderWidth: 0,
           },
           zlevel: 2,

@@ -6,9 +6,9 @@
   gap: 0.35em;
   padding: 0.2em 0.6em;
   border-radius: 0.25rem;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid var(--u-border);
   background: transparent;
-  color: var(--transparent-fg, #a8b0c4);
+  color: var(--u-text-muted);
   font-size: 0.8rem;
   line-height: 1.6;
   cursor: pointer;
@@ -16,13 +16,13 @@
 
   &:hover,
   &:focus-visible {
-    border-color: rgba(255, 255, 255, 0.4);
-    color: #fff;
+    border-color: var(--u-border-strong);
+    color: var(--u-text-primary);
   }
 
   &.saved {
-    border-color: #e8c15c;
-    color: #e8c15c;
+    border-color: var(--u-state-partial);
+    color: var(--u-state-partial);
   }
 
   .mark {

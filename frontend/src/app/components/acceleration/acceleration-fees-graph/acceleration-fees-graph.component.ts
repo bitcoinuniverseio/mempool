@@ -12,6 +12,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Acceleration } from '@interfaces/node-api.interface';
 import { ServicesApiServices } from '@app/services/services-api.service';
 import { StateService } from '@app/services/state.service';
+import { chartChrome, rampStops } from '@app/shared/chart-theme';
 
 @Component({
   selector: 'app-acceleration-fees-graph',
@@ -144,13 +145,7 @@ export class AccelerationFeesGraphComponent implements OnInit, OnChanges, OnDest
     this.chartOptions = {
       title: title,
       color: [
-        new echarts.graphic.LinearGradient(0, 0, 0, 0.65, [
-          { offset: 0, color: '#F4511E' },
-          { offset: 0.25, color: '#FB8C00' },
-          { offset: 0.5, color: '#FFB300' },
-          { offset: 0.75, color: '#FDD835' },
-          { offset: 1, color: '#7CB342' }
-        ]),
+        new echarts.graphic.LinearGradient(0, 0, 0, 0.65, rampStops('scale')),
         '#ab2dce',
       ],
       animation: false,
@@ -167,14 +162,14 @@ export class AccelerationFeesGraphComponent implements OnInit, OnChanges, OnDest
         axisPointer: {
           type: 'line'
         },
-        backgroundColor: 'rgba(17, 19, 31, 1)',
+        backgroundColor: chartChrome().surface,
         borderRadius: 4,
-        shadowColor: 'rgba(0, 0, 0, 0.5)',
+        shadowColor: chartChrome().markBorder,
         textStyle: {
-          color: '#b1b1b1',
+          color: chartChrome().label,
           align: 'left',
         },
-        borderColor: '#000',
+        borderColor: chartChrome().markBorder,
         formatter: (ticks) => {
           let tooltip = `<b style="color: white; margin-left: 2px">${formatterXAxis(this.locale, this.timespan, parseInt(ticks[0].axisValue, 10))}</b><br>`;
 
@@ -217,20 +212,20 @@ export class AccelerationFeesGraphComponent implements OnInit, OnChanges, OnDest
         data: [
           {
             name: 'Total bid boost',
-            inactiveColor: 'rgb(110, 112, 121)',
+            inactiveColor: chartChrome().label,
             textStyle: {
-              color: 'white',
+              color: chartChrome().label,
             },
             itemStyle: {
-              color: '#FFB300',
+              color: chartChrome().series[3],
             },
             icon: 'roundRect',
           },
           {
             name: 'Accelerated',
-            inactiveColor: 'rgb(110, 112, 121)',
+            inactiveColor: chartChrome().label,
             textStyle: {
-              color: 'white',
+              color: chartChrome().label,
             },
             icon: 'roundRect',
           },
@@ -251,7 +246,7 @@ export class AccelerationFeesGraphComponent implements OnInit, OnChanges, OnDest
             fontStyle: 'italic',
           },
           axisLabel: {
-            color: 'rgb(110, 112, 121)',
+            color: chartChrome().label,
             formatter: (val) => {
               if (val >= 100_000) {
                 return `${(val / 100_000_000).toFixed(3)} BTC`;
@@ -267,7 +262,7 @@ export class AccelerationFeesGraphComponent implements OnInit, OnChanges, OnDest
           name: 'Accelerated',
           position: 'left',
           axisLabel: {
-            color: 'rgb(110, 112, 121)',
+            color: chartChrome().label,
           },
           nameTextStyle: {
             align: 'right',
@@ -323,7 +318,7 @@ export class AccelerationFeesGraphComponent implements OnInit, OnChanges, OnDest
         right: 15,
         selectedDataBackground: {
           lineStyle: {
-            color: '#fff',
+            color: chartChrome().markBorder,
             opacity: 0.45,
           },
           areaStyle: {
@@ -348,7 +343,7 @@ export class AccelerationFeesGraphComponent implements OnInit, OnChanges, OnDest
     const now = new Date();
     // @ts-ignore
     this.chartOptions.grid.bottom = 40;
-    this.chartOptions.backgroundColor = '#11131f';
+    this.chartOptions.backgroundColor = chartChrome().surface;
     this.chartInstance.setOption(this.chartOptions);
     download(this.chartInstance.getDataURL({
       pixelRatio: 2,

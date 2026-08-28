@@ -130,7 +130,7 @@ $height: 500;
 body {
   margin:0;
   padding:0;
-  background: #000;
+  background: var(--u-surface-sunken);
   overflow: hidden;
 }
 

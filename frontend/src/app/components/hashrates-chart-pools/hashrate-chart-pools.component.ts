@@ -11,6 +11,7 @@ import { MiningService } from '@app/services/mining.service';
 import { download } from '@app/shared/graphs.utils';
 import { ActivatedRoute } from '@angular/router';
 import { StateService } from '@app/services/state.service';
+import { chartChrome } from '@app/shared/chart-theme';
 
 interface Hashrate {
   timestamp: number;
@@ -172,9 +173,9 @@ export class HashrateChartPoolsComponent implements OnInit {
 
       legends.push({
         name: name,
-        inactiveColor: 'rgb(110, 112, 121)',
+        inactiveColor: chartChrome().label,
         textStyle: {
-          color: 'white',
+          color: chartChrome().label,
         },
         icon: 'roundRect',
         itemStyle: {
@@ -222,14 +223,14 @@ export class HashrateChartPoolsComponent implements OnInit {
         axisPointer: {
           type: 'line'
         },
-        backgroundColor: 'rgba(17, 19, 31, 1)',
+        backgroundColor: chartChrome().surface,
         borderRadius: 4,
-        shadowColor: 'rgba(0, 0, 0, 0.5)',
+        shadowColor: chartChrome().markBorder,
         textStyle: {
           color: 'var(--tooltip-grey)',
           align: 'left',
         },
-        borderColor: '#000',
+        borderColor: chartChrome().markBorder,
         formatter: function (data) {
           const date = new Date(data[0].data[0]).toLocaleDateString(this.locale, { year: 'numeric', month: 'short', day: 'numeric' });
           let tooltip = `<b style="color: white; margin-left: 2px">${date}</b><br>`;
@@ -255,7 +256,7 @@ export class HashrateChartPoolsComponent implements OnInit {
       yAxis: data.series.length === 0 ? undefined : {
         position: 'right',
         axisLabel: {
-          color: 'rgb(110, 112, 121)',
+          color: chartChrome().label,
           formatter: (val) => `${val}%`,
         },
         splitLine: {
@@ -283,7 +284,7 @@ export class HashrateChartPoolsComponent implements OnInit {
         right: 15,
         selectedDataBackground: {
           lineStyle: {
-            color: '#fff',
+            color: chartChrome().markBorder,
             opacity: 0.45,
           },
           areaStyle: {

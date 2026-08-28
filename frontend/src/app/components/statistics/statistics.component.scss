@@ -101,7 +101,7 @@
     padding-left: 20px;
     transition: 200ms all ease-in-out;
     &:hover {
-      background-color: #10121e;
+      background-color: var(--u-surface-sunken);
       cursor: pointer;
     }
   }
@@ -121,7 +121,7 @@
     }
     .fee-text {
       text-decoration: line-through;
-      color: #777;
+      color: var(--u-text-muted);
     }
   }
 }

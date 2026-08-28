@@ -1,5 +1,5 @@
-<div *ngIf="showTitle && mode === 'difficulty'" class="main-title" i18n="dashboard.difficulty-adjustment">Difficulty Adjustment</div>
-<div *ngIf="showTitle && mode === 'halving'" class="main-title" i18n="dashboard.halving-countdown">Halving Countdown</div>
+<div *ngIf="showTitle && mode === 'difficulty'" class="main-title" i18n="dashboard.difficulty-adjustment">Difficulty adjustment</div>
+<div *ngIf="showTitle && mode === 'halving'" class="main-title" i18n="dashboard.halving-countdown">Halving countdown</div>
 <div class="card-wrapper">
   <div class="card">
     <div class="widget-toggler">
@@ -19,8 +19,8 @@
                 <stop offset="100%" stop-color="var(--mainnet-alt)" />
               </linearGradient>
               <linearGradient id="diff-hover-gradient" x1="0%" y1="0%" x2="100%" y2="0%" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stop-color="#2486eb" />
-                <stop offset="100%" stop-color="#ae6af7" />
+                <stop offset="0%" stop-color="var(--u-chart-1)" />
+                <stop offset="100%" stop-color="var(--u-chart-3)" />
               </linearGradient>
             </defs>
             <rect
@@ -36,7 +36,7 @@
                 *ngIf="rect.status === 'next'"
                 attributeType="XML"
                 attributeName="fill"
-                [attr.values]="'#fff;' + (rect.expected ? '#D81B60' : '#2d3348') + ';#fff'"
+                [attr.values]="nextBlockPulse(rect.expected)"
                 dur="2s"
                 repeatCount="indefinite"/>
             </rect>

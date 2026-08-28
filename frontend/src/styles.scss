@@ -89,8 +89,8 @@ $dropdown-link-active-bg: $active-bg;
 );
 
 .input-group-text {
-  background-color: #1c2031 !important;
-  border: 1px solid #20263e !important;
+  background-color: var(--u-surface-sunken) !important;
+  border: 1px solid var(--u-border-strong) !important;
 }
 
 // Light is the default experience, so it is defined here on :root rather than
@@ -108,7 +108,7 @@ html, body {
 }
 
 body {
-  background-color: var(--active-bg);
+  background-color: var(--u-surface-page);
   padding-bottom: 60px;
 }
 
@@ -126,10 +126,6 @@ main {
   }
 }
 
-:focus {
-  outline: none !important;
-}
-
 .box {
   min-height: 1px;
   padding: 1.25rem;
@@ -138,8 +134,8 @@ main {
   word-wrap: break-word;
   background-color: var(--box-bg);
   background-clip: border-box;
-  border: 1px solid rgba(0,0,0,.125);
-  box-shadow: 0.125rem 0.125rem 0.25rem rgba(0,0,0,0.075);
+  border: 1px solid var(--u-border);
+  box-shadow: var(--u-shadow-sm);
 }
 
 .preview-box {
@@ -170,14 +166,14 @@ main {
 }
 
 .form-control {
-  color: var(--fg);
-  background-color: var(--secondary);
-  border: 1px solid rgba(17, 19, 31, 0.2);
+  color: var(--u-text-primary);
+  background-color: var(--u-surface-raised);
+  border: 1px solid var(--u-border-strong);
 }
 
 .form-control:focus {
-  color: var(--fg);
-  background-color: var(--secondary);
+  color: var(--u-text-primary);
+  background-color: var(--u-surface-raised);
 }
 
 .btn-purple {
@@ -186,31 +182,31 @@ main {
 }
 
 .btn-purple:not(:disabled):not(.disabled):active, .btn-purple:not(:disabled):not(.disabled).active, .show > .btn-purple.dropdown-toggle {
-  color: #fff;
+  color: var(--u-brand-contrast);
   background-color: var(--search-button);
   border-color: var(--search-button-border);
 }
 
 .btn-purple:focus, .btn-purple.focus {
-  color: #fff;
+  color: var(--u-brand-contrast);
   background-color: var(--search-button-focus);
   border-color: var(--search-button);
   box-shadow: 0 0 0 0.2rem var(--search-button-shadow);
 }
 
 .btn-purple:hover {
-  color: #fff;
+  color: var(--u-brand-contrast);
   background-color: var(--search-button-focus);
   border-color: var(--search-button);
 }
 
 .form-control.form-control-secondary {
-  color: #fff;
-  background-color: var(--secondary);
-  border: 1px solid var(--secondary);
+  color: var(--u-text-primary);
+  background-color: var(--u-surface-raised);
+  border: 1px solid var(--u-border-strong);
 }
 .form-control.form-control-secondary:focus {
-  color: var(--fg);
+  color: var(--u-text-primary);
 }
 
 .h2-match-table {
@@ -231,9 +227,9 @@ main {
   background: var(--skeleton-bg) no-repeat;
   background-image: linear-gradient(
     90deg,
-    rgba(255, 255, 255, 0),
+    transparent,
     var(--skeleton-bg-light),
-    rgba(255, 255, 255, 0)
+    transparent
   );
   background-size: 200px 100%;
   border-radius: 4px;
@@ -269,21 +265,41 @@ main {
   }
 }
 
+// The unit that follows a figure.
+//
+// It used a translucent ink, which blends with whatever is behind it. On a
+// brand-filled button that landed at 1.65:1. An opaque muted token keeps
+// the unit quieter than the number without depending on the backdrop, and
+// inside a filled control it simply follows the control's own ink.
 .symbol {
-	color: var(--transparent-fg);
-	font-size: 12px;
+  color: var(--u-text-muted);
+  font-size: var(--u-text-xs);
 }
 
+.btn .symbol,
+.badge .symbol {
+  color: inherit;
+  opacity: 0.85;
+}
+
+// The size label that accompanies a progress bar.
+//
+// It used to be printed in white on top of the bar, which meant it crossed
+// both the filled and unfilled halves. No single colour can clear contrast
+// against both, and on the light theme it landed at 1.26:1. It now sits
+// under the bar, where it is simply text on a surface.
 .progress-text {
+  color: var(--u-text-secondary);
+
   span {
-    color: #fff !important;
+    color: inherit;
   }
 }
 
 .block-size, .blocks-container {
   .symbol {
     font-size: 16px;
-    color: #fff !important;
+    color: var(--u-block-ink);
   }
 }
 
@@ -292,14 +308,40 @@ main {
   word-break: break-all;
 }
 
+// The heading of a detail page.
+//
+// The identifier is what the page is about; the word above it is only the
+// category. That was inverted: a 2.5rem "Transaction" over a small blue
+// hash, under a three-pixel black rule that read as a divider between two
+// unrelated pages. The category is now a label and the identifier carries
+// the weight.
 .title-block {
-  color: var(--fg);
-  padding-top: 20px;
-  padding-bottom: 10px;
-  border-top: 3px solid var(--fg);
+  align-items: baseline;
+  border-top: 1px solid var(--u-border);
+  color: var(--u-text-primary);
+  column-gap: var(--u-space-3);
   display: flex;
-  flex-direction: row;
-  justify-content: space-between;
+  flex-wrap: wrap;
+  padding: var(--u-space-5) 0 var(--u-space-3);
+
+  h1 {
+    color: var(--u-text-muted);
+    font-size: var(--u-text-sm);
+    font-weight: var(--u-weight-semibold);
+    letter-spacing: 0.08em;
+    margin: 0;
+    text-transform: uppercase;
+  }
+
+  .txid {
+    font-family: var(--u-font-data);
+    font-size: var(--u-text-md);
+    overflow-wrap: anywhere;
+  }
+
+  .container-buttons {
+    margin-left: auto;
+  }
 }
 
 .title-address, .title-asset {
@@ -349,8 +391,10 @@ main {
   color: var(--fg);
 }
 
+// Kept for the markup that still names it. It means "the ordinary foreground",
+// which is what it always did on a page that was only ever dark.
 .white-color {
-  color: white;
+  color: var(--u-text-primary);
 }
 
 .green-color {
@@ -378,7 +422,7 @@ main {
 }
 
 .bordertop {
-  border-top: 1px solid #4c4c4c;
+  border-top: 1px solid var(--u-border);
 }
 
 .smaller-text {
@@ -402,10 +446,11 @@ html:lang(ru) .card-title {
 
 .tx-wrapper-tooltip-chart,
 .fees-wrapper-tooltip-chart {
-  background: rgba($active-bg, 0.95);
-  border-radius: 4px;
-  box-shadow: 1px 1px 10px rgba(0,0,0,0.5);
-  color: var(--tooltip-grey);
+  background: var(--u-surface-raised);
+  border: 1px solid var(--u-border);
+  border-radius: var(--u-radius-md);
+  box-shadow: var(--u-shadow-lg);
+  color: var(--u-text-secondary);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -431,7 +476,7 @@ html:lang(ru) .card-title {
     font-size: 12px;
     font-weight: 700;
     margin-bottom: 2px;
-    color: #fff;
+    color: var(--u-text-primary);
     .total-value {
       float: right;
     }
@@ -461,7 +506,7 @@ html:lang(ru) .card-title {
     .value {
       text-align: right;
       .symbol {
-        color: #7e7e7e;
+        color: var(--u-text-muted);
         font-size: 9px !important;
       }
     }
@@ -490,7 +535,7 @@ html:lang(ru) .card-title {
   .total-label {
     width: 100%;
     text-align: left;
-    color: #fff;
+    color: var(--u-text-primary);
     margin-top: 5px;
     font-size: 14px;
     span {
@@ -527,7 +572,7 @@ html:lang(ru) .card-title {
     position: relative;
     span {
       display: block;
-      background: #282d47;
+      background: var(--u-surface-inset);
       height: 5px;
       border-radius: 2px;
     }
@@ -638,7 +683,7 @@ html:lang(ru) .card-title {
         width: 100%;
         border-radius: 4px;
         display: block;
-        background: #29324c94;
+        background: var(--u-surface-inset);
       }
       span {
         height: 4px;
@@ -669,7 +714,7 @@ html:lang(ru) .card-title {
     }
   }
   .total-percentage-bar-background {
-    background-color: #282d47;
+    background-color: var(--u-surface-inset);
   }
 }
 
@@ -693,7 +738,7 @@ html:lang(ru) .card-title {
 }
 
 hr {
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--u-divider);
 }
 
 tr {
@@ -730,14 +775,26 @@ h1, h2, h3 {
 }
 
 .progress {
+  // Visible so the label below the track is not clipped. The fill keeps
+  // its own rounding, so nothing about the bar itself changes.
+  overflow: visible;
   position: relative;
+
+  .progress-bar {
+    border-radius: inherit;
+  }
 }
 
+// The label is a child of the track, so it is placed just under it rather
+// than made static, which the track's own overflow would clip.
 .progress-text {
+  font-size: var(--u-text-xs);
+  left: 0;
   position: absolute;
-  top: 8.5px;
-  width: 100%;
   text-align: center;
+  top: calc(100% + 3px);
+  white-space: nowrap;
+  width: 100%;
 }
 
 .progress-mempool {
@@ -782,9 +839,9 @@ h1, h2, h3 {
 }
 
 .alert-mempool {
-  color: #fff;
-  background-color: var(--tertiary);
-  border-color: var(--alert-bg);
+  color: var(--u-brand);
+  background-color: var(--u-brand-subtle);
+  border-color: var(--u-brand-border);
   width: 100%;
   display: inline-flex;
   flex-direction: column;
@@ -804,15 +861,15 @@ th {
 
 // ASM opcode colors
 
-.constants { color: #ff8c00 }
-.control { color: #87ceeb }
-.stack { color: #ffa500 }
-.splice { color: #46b5e2 }
-.logic { color: #46b5e2 }
-.arithmetic { color: #cae8d0 }
-.crypto { color: #fa3d3d }
-.locktime { color: #ff8c00 }
-.reserved { color: #ff8c00 }
+.constants { color: var(--u-code-constant) }
+.control { color: var(--u-code-control) }
+.stack { color: var(--u-code-stack) }
+.splice { color: var(--u-code-splice) }
+.logic { color: var(--u-code-logic) }
+.arithmetic { color: var(--u-code-arithmetic) }
+.crypto { color: var(--u-code-crypto) }
+.locktime { color: var(--u-code-locktime) }
+.reserved { color: var(--u-code-reserved) }
 
 .shortable-address {
   font-family: monospace;
@@ -1234,11 +1291,10 @@ th {
       display: block;
       width: 100%;
       padding: 1rem 2rem;
-      color: #fff;
+      color: var(--u-text-primary);
       font-weight: bold;
-      &:focus, &:hover, &:active {
+      &:hover, &:active {
         text-decoration: none;
-        outline: none;
         box-shadow: none;
       }
     }
@@ -1318,8 +1374,8 @@ th {
 }
 
 .blink-bg {
-  color: #fff;
-  background: repeating-linear-gradient($taproot-dark, $taproot-dark 0.163525%, $taproot-light 100%) !important;
+  color: var(--u-special-ink);
+  background: var(--u-special-plate) !important;
   animation: shadowyBackground 1s infinite;
   box-shadow: -10px -15px 75px rgba($taproot, 1);
   transition: 100ms all ease-in;
@@ -1359,7 +1415,7 @@ app-global-footer {
 }
 
 .info-link fa-icon {
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--u-text-muted);
   margin-left: 5px;
 }
 
@@ -1409,3 +1465,24 @@ button {
 
 // Repaint the inherited Bootstrap layer from the tokens above. Must stay last.
 @include universe-bridge.universe-bootstrap-bridge;
+
+// Converted fiat figures. Quieter than the satoshi amount they follow,
+// because the on-chain number is the fact and this is an estimate of it.
+.fiat-amount {
+  color: var(--u-text-muted);
+}
+
+// Section headings on a detail page.
+//
+// These are h2 elements taking the default Bootstrap scale, which put
+// "Flow" and "Inputs & Outputs" at the same weight as a page title and
+// larger than the transaction hash the page is about. They are section
+// markers, so they are sized like section markers.
+.container-xl > h2,
+.container-xl > .title-buttons + h2,
+h2.anchor {
+  font-size: var(--u-text-xl);
+  font-weight: var(--u-weight-semibold);
+  letter-spacing: -0.01em;
+  margin-bottom: var(--u-space-3);
+}

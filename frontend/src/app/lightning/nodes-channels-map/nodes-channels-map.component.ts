@@ -11,6 +11,7 @@ import { isMobile } from '@app/shared/common.utils';
 import { AmountShortenerPipe } from '@app/shared/pipes/amount-shortener.pipe';
 import { getFlagEmoji } from '@app/shared/common.utils';
 import { lerpColor } from '@app/shared/graphs.utils';
+import { chartChrome } from '@app/shared/chart-theme';
 
 @Component({
   selector: 'app-nodes-channels-map',
@@ -228,7 +229,7 @@ export class NodesChannelsMap implements OnInit {
         this.isLoading = false;
         title = {
           textStyle: {
-            color: 'white',
+            color: chartChrome().label,
             fontSize: 18
           },
           text: $localize`No data to display yet. Try again later.`,
@@ -240,7 +241,7 @@ export class NodesChannelsMap implements OnInit {
       } else { // used for Node and Channel preview components
         title = {
           textStyle: {
-            color: 'white',
+            color: chartChrome().label,
             fontSize: 18
           },
           text: $localize`No geolocation data available`,
@@ -267,8 +268,8 @@ export class NodesChannelsMap implements OnInit {
         map: 'world',
         roam: this.style === 'widget' ? false : true,
         itemStyle: {
-          borderColor: 'black',
-          color: '#272b3f'
+          borderColor: chartChrome().markBorder,
+          color: chartChrome().axis
         },
         scaleLimit: {
           min: 1.3,
@@ -293,14 +294,14 @@ export class NodesChannelsMap implements OnInit {
           },
           tooltip: {
             show: true,
-            backgroundColor: 'rgba(17, 19, 31, 1)',
+            backgroundColor: chartChrome().surface,
             borderRadius: 4,
-            shadowColor: 'rgba(0, 0, 0, 0.5)',
+            shadowColor: chartChrome().markBorder,
             textStyle: {
               color: 'var(--tooltip-grey)',
               align: 'left',
             },
-            borderColor: '#000',
+            borderColor: chartChrome().markBorder,
             formatter: (value) => {
               const data = value.data;
               const alias = data[4].length > 0 ? data[4] : data[3].slice(0, 20);
@@ -324,7 +325,7 @@ export class NodesChannelsMap implements OnInit {
               return `${lerpColor('#1E88E5', '#D81B60', Math.pow(params.data[5] / maxLiquidity, 0.2))}`;
             },
             opacity: 1,
-            borderColor: 'black',
+            borderColor: chartChrome().markBorder,
             borderWidth: 0,
           },
           blendMode: 'lighter',

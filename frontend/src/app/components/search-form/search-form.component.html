@@ -1,17 +1,24 @@
-<form [class]="{hamburgerOpen: hamburgerOpen}" [formGroup]="searchForm" (submit)="searchForm.valid && search()" novalidate>
-  <div class="d-flex">
-    <div class="search-box-container mr-2">
-      <input #searchInput (focus)="focus$.next($any($event).target.value)" (click)="click$.next($any($event).target.value)" formControlName="searchText" type="text" class="form-control" i18n-placeholder="search-form.searchbar-placeholder" placeholder="Search blocks, transactions, addresses, assets">
+<form class="search-form" [formGroup]="searchForm" (submit)="searchForm.valid && search()" novalidate
+  role="search" i18n-aria-label="search-form.landmark|Search landmark" aria-label="Search the chain">
+  <label class="sr-only" for="universal-search" i18n="search-form.label|Search field label">Search the chain</label>
+  <div class="search-row">
+    <div class="search-box-container">
+      <input #searchInput id="universal-search"
+        (focus)="focus$.next($any($event).target.value)"
+        (click)="click$.next($any($event).target.value)"
+        formControlName="searchText" type="text" class="form-control search-input"
+        autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
+        i18n-placeholder="search-form.searchbar-placeholder"
+        placeholder="Search a transaction, block, address, or asset">
       <app-search-results #searchResults [hidden]="dropdownHidden" [results]="typeAhead$ | async" (selectedResult)="selectedResult($event)"></app-search-results>
     </div>
-    <div>
-      <button [disabled]="isSearching" type="submit" class="btn btn-block btn-purple" i18n-aria-label="search-form.search-title" aria-label="Search">
-        <fa-icon *ngIf="!(isTypeaheading$ | async) else searchLoading" [icon]="['fas', 'search']" [fixedWidth]="true" i18n-title="search-form.search-title" title="Search"></fa-icon>
-      </button>
-    </div>
+    <button [disabled]="isSearching" type="submit" class="search-submit"
+      i18n-aria-label="search-form.search-title" aria-label="Search">
+      <fa-icon *ngIf="!(isTypeaheading$ | async) else searchLoading" [icon]="['fas', 'search']" [fixedWidth]="true"></fa-icon>
+    </button>
   </div>
 </form>
 
 <ng-template #searchLoading>
-  <div class="spinner-border spinner-border-sm text-light" role="status" aria-hidden="true" (click)="searchForm.valid && search()"></div>
+  <div class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></div>
 </ng-template>

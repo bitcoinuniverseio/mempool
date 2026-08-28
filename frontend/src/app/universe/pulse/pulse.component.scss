@@ -21,7 +21,7 @@
 
   .lede {
     margin: 0.35rem 0 0;
-    color: var(--transparent-fg, #a8b0c4);
+    color: var(--u-text-muted);
     max-width: 60ch;
   }
 }
@@ -58,7 +58,7 @@
 }
 
 .empty {
-  color: var(--transparent-fg, #a8b0c4);
+  color: var(--u-text-muted);
 }
 
 .share-list {
@@ -78,7 +78,7 @@
 .share-bar {
   height: 0.5rem;
   border-radius: 0.25rem;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--u-divider);
   overflow: hidden;
 
   .fill {
@@ -94,7 +94,7 @@
 .share-count {
   font-variant-numeric: tabular-nums;
   font-size: 0.85rem;
-  color: var(--transparent-fg, #a8b0c4);
+  color: var(--u-text-muted);
   text-align: right;
 }
 
@@ -110,7 +110,7 @@
   align-items: center;
   gap: 0.5rem 0.75rem;
   padding: 0.4rem 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid var(--u-divider);
 
   &:first-child {
     border-top: 0;
@@ -139,7 +139,7 @@
 
 .event-action {
   font-size: 0.85rem;
-  color: var(--transparent-fg, #a8b0c4);
+  color: var(--u-text-muted);
   overflow-wrap: anywhere;
 }
 
