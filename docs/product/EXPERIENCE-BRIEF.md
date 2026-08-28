@@ -50,10 +50,11 @@ proves, it does not ship.
 5. **Self-hostable and readable.** Full source, AGPL, no tracker, no account.
 6. **An appearance nothing else in the category has.** Measured on 28 August
    2026, every explorer whose shell colour can be read from its own markup
-   declares a dark, cool one: mempool.space `#1d1f31`, Blockchain.com black,
-   Blockstream dark. Universe Explorer is light, warm, and hot pink. That is
-   copyable in principle and expensive in practice, because it means adopting
-   another company's brand rather than adjusting a hue.
+   declares a dark, cool one. Universe Explorer is light, warm, and hot pink.
+   That is copyable in principle and expensive in practice, because it means
+   adopting another company's brand rather than adjusting a hue. The products,
+   the values, and the method are in
+   `docs/research/visual-language-benchmark.md`.
 
 ## What makes it unmistakably Universe
 
