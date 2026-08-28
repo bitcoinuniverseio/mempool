@@ -94,6 +94,7 @@ import { LoadingIndicatorComponent } from '@components/loading-indicator/loading
 import { IndexingProgressComponent } from '@components/indexing-progress/indexing-progress.component';
 import { SvgImagesComponent } from '@components/svg-images/svg-images.component';
 import { ChangeComponent } from '@components/change/change.component';
+import { LoadStatusComponent } from '@app/shared/components/load-status/load-status.component';
 import { SatsComponent } from '@app/shared/components/sats/sats.component';
 import { BtcComponent } from '@app/shared/components/btc/btc.component';
 import { FeeRateComponent } from '@app/shared/components/fee-rate/fee-rate.component';
@@ -217,6 +218,7 @@ import { GithubLogin } from '@components/github-login.component/github-login.com
     DataCyDirective,
     RewardStatsComponent,
     LoadingIndicatorComponent,
+    LoadStatusComponent,
     IndexingProgressComponent,
     SvgImagesComponent,
     ChangeComponent,
@@ -370,6 +372,7 @@ import { GithubLogin } from '@components/github-login.component/github-login.com
     DataCyDirective,
     RewardStatsComponent,
     LoadingIndicatorComponent,
+    LoadStatusComponent,
     IndexingProgressComponent,
     SvgImagesComponent,
     ChangeComponent,

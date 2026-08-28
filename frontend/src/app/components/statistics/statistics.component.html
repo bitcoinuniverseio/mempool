@@ -93,10 +93,12 @@
           </form>
         </div>
         <div class="card-body">
-          <div class="incoming-transactions-graph">
+          <app-load-status [state]="state" label="mempool history" i18n-label="statistics.label.mempool-history"
+            minHeight="500px" (retry)="onRetry()"></app-load-status>
+          <div class="incoming-transactions-graph" *ngIf="hasData">
             <app-mempool-graph #mempoolgraph dir="ltr" [template]="'advanced'" [hideCount]="!showCount"
               [limitFilterFee]="filterFeeIndex" [height]="500" [left]="65" [right]="showCount ? 50 : 10"
-              [data]="mempoolStats && mempoolStats.length ? mempoolStats : null" [isLoading]="isLoading"></app-mempool-graph>
+              [data]="mempoolStats" [isLoading]="false"></app-mempool-graph>
           </div>
         </div>
       </div>
@@ -122,9 +124,11 @@
         </div>
 
         <div class="card-body">
-          <div class="incoming-transactions-graph">
+          <app-load-status [state]="state" label="transaction throughput" i18n-label="statistics.label.throughput"
+            minHeight="500px" (retry)="onRetry()"></app-load-status>
+          <div class="incoming-transactions-graph" *ngIf="hasData">
             <app-incoming-transactions-graph #incominggraph [height]="500" [left]="65" [template]="'advanced'"
-              [data]="mempoolTransactionsWeightPerSecondData" [outlierCappingEnabled]="outlierCappingEnabled" [isLoading]="isLoading"></app-incoming-transactions-graph>
+              [data]="mempoolTransactionsWeightPerSecondData" [outlierCappingEnabled]="outlierCappingEnabled" [isLoading]="false"></app-incoming-transactions-graph>
           </div>
         </div>
       </div>

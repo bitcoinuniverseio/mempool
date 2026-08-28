@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, Component, Inject, Input, LOCALE_ID, OnInit, HostBinding } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Inject, Input, LOCALE_ID, OnDestroy, OnInit, HostBinding } from '@angular/core';
 import { echarts, EChartsOption } from '@app/graphs/echarts';
-import { combineLatest, fromEvent, merge, Observable, of } from 'rxjs';
-import { map, mergeMap, share, startWith, switchMap, tap } from 'rxjs/operators';
+import { BehaviorSubject, Subscription, combineLatest, fromEvent } from 'rxjs';
+import { debounceTime, distinctUntilChanged, map, startWith } from 'rxjs/operators';
 import { ApiService } from '@app/services/api.service';
 import { SeoService } from '@app/services/seo.service';
 import { formatNumber } from '@angular/common';
@@ -15,6 +15,15 @@ import { StateService } from '@app/services/state.service';
 import { seoDescriptionNetwork } from '@app/shared/common.utils';
 import { AmountShortenerPipe } from '@app/shared/pipes/amount-shortener.pipe';
 import { chartChrome, rampStops } from '@app/shared/chart-theme';
+import { LoadState, trackedLoadState } from '@app/shared/load-state';
+
+interface HashrateSummary {
+  blockCount: number;
+  currentDifficulty: number;
+  currentHashrate: number;
+  /** Number of hashrate samples, so an empty range is not read as a failure. */
+  hashrateCount: number;
+}
 
 @Component({
   selector: 'app-hashrate-chart',
@@ -31,7 +40,7 @@ import { chartChrome, rampStops } from '@app/shared/chart-theme';
   standalone: false,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class HashrateChartComponent implements OnInit {
+export class HashrateChartComponent implements OnInit, OnDestroy {
   @Input() tableOnly = false;
   @Input() widget = false;
   @Input() height: number = 300;
@@ -48,15 +57,20 @@ export class HashrateChartComponent implements OnInit {
 
   @HostBinding('attr.dir') dir = 'ltr';
 
-  hashrateObservable$: Observable<any>;
-  isLoading = true;
+  state: LoadState<HashrateSummary> = { status: 'loading' };
   formatNumber = formatNumber;
   timespan = '';
   chartInstance: any = undefined;
   network = '';
 
+  private retry$ = new BehaviorSubject<number>(0);
+  private subscriptions: Subscription[] = [];
+  /** The last body rendered, so a resize can redraw without a refetch. */
+  private lastBody: any = null;
+
   constructor(
     @Inject(LOCALE_ID) public locale: string,
+    private cd: ChangeDetectorRef,
     private seoService: SeoService,
     private apiService: ApiService,
     private formBuilder: UntypedFormBuilder,
@@ -83,116 +97,157 @@ export class HashrateChartComponent implements OnInit {
     this.radioGroupForm = this.formBuilder.group({ dateSpan: this.miningWindowPreference });
     this.radioGroupForm.controls.dateSpan.setValue(this.miningWindowPreference);
 
-    this.route
-      .fragment
-      .subscribe((fragment) => {
+    this.subscriptions.push(
+      this.route.fragment.subscribe((fragment) => {
         if (['1m', '3m', '6m', '1y', '2y', '3y', 'all'].indexOf(fragment) > -1) {
           this.radioGroupForm.controls.dateSpan.setValue(fragment, { emitEvent: false });
         }
-      });
+      }),
+    );
 
-    this.hashrateObservable$ = combineLatest(
-        merge(
-        this.radioGroupForm.get('dateSpan').valueChanges
-          .pipe(
-            startWith(this.radioGroupForm.controls.dateSpan.value),
-            switchMap((timespan) => {
-              if (!this.widget && !firstRun) {
-                this.storageService.setValue('miningWindowPreference', timespan);
-              }
-              this.timespan = timespan;
-              firstRun = false;
-              this.miningWindowPreference = timespan;
-              this.isLoading = true;
-              return this.apiService.getHistoricalHashrate$(this.timespan);
-            })
-          ),
-          this.stateService.chainTip$
-            .pipe(
-              switchMap(() => {
-                return this.apiService.getHistoricalHashrate$(this.timespan);
-              })
-            )
+    const dateSpan$ = this.radioGroupForm.get('dateSpan').valueChanges.pipe(
+      startWith(this.radioGroupForm.controls.dateSpan.value),
+      distinctUntilChanged(),
+      map((timespan: string) => {
+        if (!this.widget && !firstRun) {
+          this.storageService.setValue('miningWindowPreference', timespan);
+        }
+        this.timespan = timespan;
+        firstRun = false;
+        this.miningWindowPreference = timespan;
+        return timespan;
+      }),
+    );
+
+    // The tip and the range each used to start their own request, so a page
+    // load fired two. One combined trigger fires one, and the debounce
+    // coalesces the burst of tips around a new block.
+    const chainTip$ = this.stateService.chainTip$.pipe(
+      distinctUntilChanged(),
+      debounceTime(1000),
+      startWith(0),
+    );
+
+    const trigger$ = combineLatest([dateSpan$, chainTip$, this.retry$]).pipe(
+      map(([timespan, tip, attempt]) => timespan + ':' + tip + ':' + attempt),
+    );
+
+    this.subscriptions.push(
+      trackedLoadState(
+        trigger$,
+        (key) => this.apiService.getHistoricalHashrate$(key.split(':')[0]).pipe(
+          map((response: any) => this.summarise(response)),
         ),
-        fromEvent(window, 'resize').pipe(startWith(null)),
-      ).pipe(
-        map(([response, _]) => response),
-        tap((response: any) => {
-          const data = response.body;
+        { isEmpty: (summary) => summary.hashrateCount === 0 },
+      ).subscribe((state) => {
+        this.state = state;
+        this.cd.markForCheck();
+      }),
+    );
 
-          // always include the latest difficulty
-          if (data.difficulty.length && data.difficulty[data.difficulty.length - 1].difficulty !== data.currentDifficulty) {
-            data.difficulty.push({
-              timestamp: Date.now() / 1000,
-              difficulty: data.currentDifficulty
-            });
-          }
+    // A resize only changes how the same numbers are drawn, so it redraws from
+    // the last body instead of asking the backend again.
+    this.subscriptions.push(
+      fromEvent(window, 'resize').pipe(debounceTime(200)).subscribe(() => {
+        if (this.lastBody) {
+          this.renderChart(this.lastBody);
+          this.cd.markForCheck();
+        }
+      }),
+    );
+  }
 
-          // We generate duplicated data point so the tooltip works nicely
-          const diffFixed = [];
-          let diffIndex = 1;
-          let hashIndex = 0;
-          while (hashIndex < data.hashrates.length) {
-            if (diffIndex >= data.difficulty.length) {
-              while (hashIndex < data.hashrates.length) {
-                diffFixed.push({
-                  timestamp: data.hashrates[hashIndex].timestamp,
-                  difficulty: data.difficulty.length > 0 ?  data.difficulty[data.difficulty.length - 1].difficulty : null
-                });
-                ++hashIndex;
-              }
-              diffIndex++;
-              break;
-            }
+  ngOnDestroy(): void {
+    for (const subscription of this.subscriptions) {
+      subscription.unsubscribe();
+    }
+    this.subscriptions = [];
+  }
 
-            while (hashIndex < data.hashrates.length && diffIndex < data.difficulty.length &&
-              data.hashrates[hashIndex].timestamp <= data.difficulty[diffIndex].time
-            ) {
-              diffFixed.push({
-                timestamp: data.hashrates[hashIndex].timestamp,
-                difficulty: data.difficulty[diffIndex - 1].difficulty
-              });
-              ++hashIndex;
-            }
-            ++diffIndex;
-          }
+  /** The summary currently on screen, fresh or stale, or null when there is none. */
+  get hashrates(): HashrateSummary | null {
+    return this.state.status === 'data' || this.state.status === 'stale' ? this.state.value : null;
+  }
 
-          while (diffIndex <= data.difficulty.length) {
-            diffFixed.push({
-              timestamp: data.difficulty[diffIndex - 1].time,
-              difficulty: data.difficulty[diffIndex - 1].difficulty
-            });
-            diffIndex++;
-          }
+  onRetry(): void {
+    this.retry$.next(this.retry$.value + 1);
+  }
 
-          const maResolution = 15;
-          const hashrateMa = [];
-          for (let i = maResolution - 1; i < data.hashrates.length; ++i) {
-            let avg = 0;
-            for (let y = maResolution - 1; y >= 0; --y) {
-              avg += data.hashrates[i - y].avgHashrate;
-            }
-            avg /= maResolution;
-            hashrateMa.push([data.hashrates[i].timestamp * 1000, avg]);
-          }
+  /** Draws the response and reduces it to the numbers the header shows. */
+  private summarise(response: any): HashrateSummary {
+    const data = response.body;
+    this.lastBody = data;
+    this.renderChart(data);
+    return {
+      blockCount: parseInt(response.headers.get('x-total-count'), 10),
+      currentDifficulty: data.currentDifficulty,
+      currentHashrate: data.currentHashrate,
+      hashrateCount: Array.isArray(data.hashrates) ? data.hashrates.length : 0,
+    };
+  }
 
-          this.prepareChartOptions({
-            hashrates: data.hashrates.map(val => [val.timestamp * 1000, val.avgHashrate]),
-            difficulty: diffFixed.map(val => [val.timestamp * 1000, val.difficulty]),
-            hashrateMa: hashrateMa,
+  private renderChart(data: any): void {
+    // always include the latest difficulty
+    if (data.difficulty.length && data.difficulty[data.difficulty.length - 1].difficulty !== data.currentDifficulty) {
+      data.difficulty.push({
+        timestamp: Date.now() / 1000,
+        difficulty: data.currentDifficulty
+      });
+    }
+
+    // We generate duplicated data point so the tooltip works nicely
+    const diffFixed = [];
+    let diffIndex = 1;
+    let hashIndex = 0;
+    while (hashIndex < data.hashrates.length) {
+      if (diffIndex >= data.difficulty.length) {
+        while (hashIndex < data.hashrates.length) {
+          diffFixed.push({
+            timestamp: data.hashrates[hashIndex].timestamp,
+            difficulty: data.difficulty.length > 0 ?  data.difficulty[data.difficulty.length - 1].difficulty : null
           });
-          this.isLoading = false;
-        }),
-        map((response) => {
-          const data = response.body;
-          return {
-            blockCount: parseInt(response.headers.get('x-total-count'), 10),
-            currentDifficulty: data.currentDifficulty,
-            currentHashrate: data.currentHashrate,
-          };
-        }),
-        share()
-      );
+          ++hashIndex;
+        }
+        diffIndex++;
+        break;
+      }
+
+      while (hashIndex < data.hashrates.length && diffIndex < data.difficulty.length &&
+        data.hashrates[hashIndex].timestamp <= data.difficulty[diffIndex].time
+      ) {
+        diffFixed.push({
+          timestamp: data.hashrates[hashIndex].timestamp,
+          difficulty: data.difficulty[diffIndex - 1].difficulty
+        });
+        ++hashIndex;
+      }
+      ++diffIndex;
+    }
+
+    while (diffIndex <= data.difficulty.length) {
+      diffFixed.push({
+        timestamp: data.difficulty[diffIndex - 1].time,
+        difficulty: data.difficulty[diffIndex - 1].difficulty
+      });
+      diffIndex++;
+    }
+
+    const maResolution = 15;
+    const hashrateMa = [];
+    for (let i = maResolution - 1; i < data.hashrates.length; ++i) {
+      let avg = 0;
+      for (let y = maResolution - 1; y >= 0; --y) {
+        avg += data.hashrates[i - y].avgHashrate;
+      }
+      avg /= maResolution;
+      hashrateMa.push([data.hashrates[i].timestamp * 1000, avg]);
+    }
+
+    this.prepareChartOptions({
+      hashrates: data.hashrates.map(val => [val.timestamp * 1000, val.avgHashrate]),
+      difficulty: diffFixed.map(val => [val.timestamp * 1000, val.difficulty]),
+      hashrateMa: hashrateMa,
+    });
   }
 
   prepareChartOptions(data) {

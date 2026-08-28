@@ -1,4 +1,6 @@
-<div class="fee-estimation-wrapper" *ngIf="$rewardStats | async as rewardStats; else loadingReward">
+<app-load-status *ngIf="state.status === 'stale'" [state]="state" (retry)="onRetry()"></app-load-status>
+
+<div class="fee-estimation-wrapper" *ngIf="rewardStats as rewardStats; else rewardStatus">
   <div class="fee-estimation-container">
     <div class="item">
       <h5 class="card-title" i18n="mining.rewards" i18n-ngbTooltip="mining.rewards"
@@ -40,28 +42,7 @@
   </div>
 </div>
 
-<ng-template #loadingReward>
-  <div class="fee-estimation-container loading-container">
-    <div class="item">
-      <h5 class="card-title" i18n="mining.rewards">Miners Reward</h5>
-      <div class="card-text">
-        <div class="skeleton-loader"></div>
-        <div class="skeleton-loader"></div>
-      </div>
-    </div>
-    <div class="item">
-      <h5 class="card-title" i18n="mining.fees-per-block">Avg Block Fees</h5>
-      <div class="card-text">
-        <div class="skeleton-loader"></div>
-        <div class="skeleton-loader"></div>
-      </div>
-    </div>
-    <div class="item">
-      <h5 class="card-title" i18n="mining.average-fee">Avg Tx Fee</h5>
-      <div class="card-text">
-        <div class="skeleton-loader"></div>
-        <div class="skeleton-loader"></div>
-      </div>
-    </div>
-  </div>
+<ng-template #rewardStatus>
+  <app-load-status [state]="state" label="reward stats" i18n-label="mining.label.reward-stats"
+    minHeight="96px" (retry)="onRetry()"></app-load-status>
 </ng-template>

@@ -1,9 +1,9 @@
-import { ChangeDetectionStrategy, Component, Input, NgZone, OnInit, HostBinding } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, NgZone, OnDestroy, OnInit, HostBinding } from '@angular/core';
 import { UntypedFormBuilder, UntypedFormGroup } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { EChartsOption, PieSeriesOption } from '@app/graphs/echarts';
-import { merge, Observable } from 'rxjs';
-import { map, shareReplay, startWith, switchMap, tap } from 'rxjs/operators';
+import { BehaviorSubject, Subscription, combineLatest } from 'rxjs';
+import { debounceTime, distinctUntilChanged, map, startWith } from 'rxjs/operators';
 import { SeoService } from '@app/services/seo.service';
 import { StorageService } from '@app//services/storage.service';
 import { MiningService, MiningStats } from '@app/services/mining.service';
@@ -13,6 +13,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
 import { download } from '@app/shared/graphs.utils';
 import { isMobile } from '@app/shared/common.utils';
 import { chartChrome } from '@app/shared/chart-theme';
+import { LoadState, trackedLoadState } from '@app/shared/load-state';
 
 @Component({
   selector: 'app-pool-ranking',
@@ -21,7 +22,7 @@ import { chartChrome } from '@app/shared/chart-theme';
   standalone: false,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PoolRankingComponent implements OnInit {
+export class PoolRankingComponent implements OnInit, OnDestroy {
   @Input() height: number = 300;
   @Input() widget = false;
 
@@ -30,7 +31,6 @@ export class PoolRankingComponent implements OnInit {
 
   auditAvailable = false;
   indexingAvailable = false;
-  isLoading = true;
   chartOptions: EChartsOption = {};
   chartInitOptions = {
     renderer: 'svg',
@@ -40,10 +40,14 @@ export class PoolRankingComponent implements OnInit {
 
   @HostBinding('attr.dir') dir = 'ltr';
 
-  miningStatsObservable$: Observable<MiningStats>;
+  state: LoadState<MiningStats> = { status: 'loading' };
+
+  private retry$ = new BehaviorSubject<number>(0);
+  private subscriptions: Subscription[] = [];
 
   constructor(
     public stateService: StateService,
+    private cd: ChangeDetectorRef,
     private storageService: StorageService,
     private formBuilder: UntypedFormBuilder,
     private miningService: MiningService,
@@ -69,48 +73,74 @@ export class PoolRankingComponent implements OnInit {
       this.stateService.env.MINING_DASHBOARD === true);
     this.auditAvailable = this.indexingAvailable && this.stateService.env.AUDIT;
 
-    this.route
-      .fragment
-      .subscribe((fragment) => {
+    this.subscriptions.push(
+      this.route.fragment.subscribe((fragment) => {
         if (['24h', '3d', '1w', '1m', '3m', '6m', '1y', '2y', '3y', 'all'].indexOf(fragment) > -1) {
           this.radioGroupForm.controls.dateSpan.setValue(fragment, { emitEvent: false });
         }
-      });
+      }),
+    );
 
-    this.miningStatsObservable$ = merge(
-      this.radioGroupForm.get('dateSpan').valueChanges
-        .pipe(
-          startWith(this.radioGroupForm.controls.dateSpan.value), // (trigger when the page loads)
-          tap((value) => {
-            this.isLoading = true;
-            this.timespan = value;
-            if (!this.widget) {
-              this.storageService.setValue('miningWindowPreference', value);
-            }
-            this.miningWindowPreference = value;
+    const dateSpan$ = this.radioGroupForm.get('dateSpan').valueChanges.pipe(
+      startWith(this.radioGroupForm.controls.dateSpan.value),
+      distinctUntilChanged(),
+      map((value: string) => {
+        this.timespan = value;
+        if (!this.widget) {
+          this.storageService.setValue('miningWindowPreference', value);
+        }
+        this.miningWindowPreference = value;
+        return value;
+      }),
+    );
+
+    // Route setup and the chain tip both used to start their own request, so a
+    // page load fired two. One combined trigger fires one, and the debounce
+    // coalesces the burst of tips around a new block.
+    const chainTip$ = this.stateService.chainTip$.pipe(
+      distinctUntilChanged(),
+      debounceTime(1000),
+      startWith(0),
+    );
+
+    const trigger$ = combineLatest([dateSpan$, chainTip$, this.retry$]).pipe(
+      map(([dateSpan, tip, attempt]) => `${dateSpan}:${tip}:${attempt}`),
+    );
+
+    this.subscriptions.push(
+      trackedLoadState(
+        trigger$,
+        (key) => this.miningService.getMiningStats(key.split(':')[0]).pipe(
+          map((data) => {
+            data['minersLuck'] = (100 * (data.blockCount / 1008)).toFixed(2); // luck 1w
+            return data;
           }),
-          switchMap(() => {
-            return this.miningService.getMiningStats(this.miningWindowPreference);
-          })
         ),
-        this.stateService.chainTip$
-          .pipe(
-            switchMap(() => {
-              return this.miningService.getMiningStats(this.miningWindowPreference);
-            })
-          )
-      )
-      .pipe(
-        map(data => {
-          data['minersLuck'] = (100 * (data.blockCount / 1008)).toFixed(2); // luck 1w
-          return data;
-        }),
-        tap(data => {
-          this.isLoading = false;
-          this.prepareChartOptions(data);
-        }),
-        shareReplay(1)
-      );
+        { isEmpty: (data) => !data || !Array.isArray(data.pools) || data.pools.length === 0 },
+      ).subscribe((state) => {
+        this.state = state;
+        if (state.status === 'data' || state.status === 'stale') {
+          this.prepareChartOptions(state.value);
+        }
+        this.cd.markForCheck();
+      }),
+    );
+  }
+
+  ngOnDestroy(): void {
+    for (const subscription of this.subscriptions) {
+      subscription.unsubscribe();
+    }
+    this.subscriptions = [];
+  }
+
+  /** The stats currently on screen, fresh or stale, or null when there are none. */
+  get miningStats(): MiningStats | null {
+    return this.state.status === 'data' || this.state.status === 'stale' ? this.state.value : null;
+  }
+
+  onRetry(): void {
+    this.retry$.next(this.retry$.value + 1);
   }
 
   generatePoolsChartSerieData(miningStats) {
