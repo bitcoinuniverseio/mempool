@@ -206,6 +206,30 @@ async function run() {
   const themes = pick(THEMES.map((id) => ({ id })), 'themes').map((t) => t.id);
   const states = pick(STATES.map((id) => ({ id })), 'states').map((s) => s.id);
 
+  // Confirm the base URL is actually serving this application before measuring
+  // anything. A run against a blank page, a stale build, or something else that
+  // happens to be on the port reports zero failures everywhere, which is
+  // indistinguishable from success and considerably more dangerous. This has
+  // happened: a port collision put a different product on the address and the
+  // matrix cheerfully passed 39 blank screenshots.
+  {
+    const probe = await fetch(BASE, { redirect: 'follow' }).catch((e) => {
+      throw new Error(`cannot reach ${BASE}: ${e.message}`);
+    });
+    if (!probe.ok) throw new Error(`${BASE} answered ${probe.status}`);
+    const html = await probe.text();
+    if (!/<title>[^<]*Universe Explorer/i.test(html)) {
+      const title = (html.match(/<title>([^<]*)/i) || [, '(none)'])[1].trim();
+      throw new Error(
+        `${BASE} is not serving Universe Explorer (title: "${title}").` +
+          ' Check the port, and that the build under test is the one being served.',
+      );
+    }
+    if (!/(runtime|main)\.[a-f0-9]{8,}\.js/.test(html)) {
+      throw new Error(`${BASE} served no hashed application bundle; the build output looks incomplete.`);
+    }
+  }
+
   mkdirSync(OUT, { recursive: true });
   // The Lens is drawn with WebGL. Headless Chromium has no GPU, so without a
   // software rasteriser the product's signature view is a grey rectangle in

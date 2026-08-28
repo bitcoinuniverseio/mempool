@@ -166,6 +166,20 @@
 
   // --- Buttons ---------------------------------------------------------------
 
+  // A button with no variant. Bootstrap gives it no colour of its own, so it
+  // inherits the body foreground the framework was compiled with, which is the
+  // white of the original dark build. On the light page that is an invisible
+  // control, and the close button on the block and projected block pages is
+  // exactly that.
+  .btn {
+    color: var(--u-text-primary);
+
+    &:hover,
+    &:focus {
+      color: var(--u-text-primary);
+    }
+  }
+
   .btn-primary {
     background-color: var(--u-brand);
     border-color: var(--u-brand);
