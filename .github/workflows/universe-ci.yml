@@ -99,7 +99,12 @@ jobs:
   frontend:
     name: Frontend build
     runs-on: [self-hosted, linux-ultra]
-    timeout-minutes: 60
+    # The deep visual pass measured 48 minutes once the gated route list grew
+    # from three routes to seven, which put the job over the hour it had and
+    # killed it three minutes from the end. A gate that cannot finish protects
+    # nothing, which is the same reason the matrix was split in two to begin
+    # with. Budget is for the pass that actually runs, with room to grow.
+    timeout-minutes: 100
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
