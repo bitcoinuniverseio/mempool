@@ -15,6 +15,11 @@
  *
  * With no arguments it scans the whole repository, skipping directories that
  * are not ours to police (dependencies, build output, git internals).
+ *
+ * Pass `frontend/dist` to scan the built output instead. Source being clean
+ * does not prove the output is: copy reaches the bundle from templates, from
+ * generated configuration, and from metadata, and the rule is about what a
+ * reader actually sees. CI runs both.
  */
 
 import { readdirSync, readFileSync, statSync } from 'node:fs';
@@ -37,9 +42,15 @@ const SKIPPED_DIRECTORIES = new Set([
  * Files we do not author. Upstream translation catalogues carry the upstream
  * copy verbatim, including its punctuation; they are not shipped by this
  * deployment's build and are regenerated when locales are re-enabled.
+ *
+ * The third-party licence notice in the build output is the licence text of
+ * every dependency, reproduced exactly as its authors wrote it. Editing
+ * somebody's licence to satisfy our punctuation rule is not an option, and it
+ * is the only file in the output that carries the character.
  */
 const ALLOWED_PATHS = [
   'frontend/src/locale/',
+  'frontend/dist/mempool/browser/3rdpartylicenses.txt',
 ];
 
 const TEXT_EXTENSIONS = new Set([

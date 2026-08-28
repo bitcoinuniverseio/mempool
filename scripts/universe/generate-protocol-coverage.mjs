@@ -153,8 +153,13 @@ async function main() {
   if (check) {
     const manifest = JSON.parse(await readFile(JSON_PATH, 'utf8'));
     validateManifest(manifest);
-    const expected = renderMarkdown(manifest);
-    const actual = await readFile(MARKDOWN_PATH, 'utf8');
+    // Compare content, not line endings. This repository is developed on a
+    // Windows host where the working copy is checked out with CRLF, while the
+    // renderer emits LF, so a byte comparison reported every clean tree as
+    // stale and only ever passed on the Linux runner.
+    const normalise = (text) => text.split('\r\n').join('\n');
+    const expected = normalise(renderMarkdown(manifest));
+    const actual = normalise(await readFile(MARKDOWN_PATH, 'utf8'));
     if (expected !== actual) {
       process.stderr.write(
         'PROTOCOL-COVERAGE.md does not match PROTOCOL-COVERAGE.json.\n' +

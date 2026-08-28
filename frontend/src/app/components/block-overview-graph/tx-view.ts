@@ -7,8 +7,16 @@ import { TransactionStripped } from '@interfaces/node-api.interface';
 import { TransactionFlags } from '@app/shared/filters.utils';
 
 const hoverTransitionTime = 300;
-const defaultHoverColor = hexToColor('1bd8f4');
-const defaultHighlightColor = hexToColor('800080');
+// Pointer and search feedback, not data.
+//
+// These two are the only colours in the scene that answer the reader rather
+// than the chain, so they take the brand pink and the Universe lavender. Both
+// sit outside the fee scale, which runs green through amber to orange on the
+// default palette and blue through amber on the high-contrast one, so neither
+// can be mistaken for a fee band. The cyan and the plain purple they replaced
+// belonged to no palette in this product.
+const defaultHoverColor = hexToColor('ff0066');
+const defaultHighlightColor = hexToColor('8b5cf6');
 
 // convert from this class's update format to TxSprite's update format
 function toSpriteUpdate(params: ViewUpdateParams): SpriteUpdateParams {

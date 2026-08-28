@@ -13,7 +13,7 @@ import { ActivatedRoute } from '@angular/router';
 import { FiatShortenerPipe } from '@app/shared/pipes/fiat-shortener.pipe';
 import { FiatCurrencyPipe } from '@app/shared/pipes/fiat-currency.pipe';
 import { StateService } from '@app/services/state.service';
-import { chartChrome, rampStops } from '@app/shared/chart-theme';
+import { chartChrome, chartDataZoomStyle, rampStops } from '@app/shared/chart-theme';
 
 @Component({
   selector: 'app-block-fees-graph',
@@ -270,6 +270,7 @@ export class BlockFeesGraphComponent implements OnInit {
         showDetail: false,
         show: true,
         type: 'slider',
+        ...chartDataZoomStyle(),
         brushSelect: false,
         realtime: true,
         left: 20,

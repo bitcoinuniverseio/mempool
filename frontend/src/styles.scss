@@ -3,12 +3,12 @@
 @use "styles/universe-bootstrap-bridge" as universe-bridge;
 
 /* Theme */
-$bg: #11131f;
+$bg: #0e0a13;
 $active-bg: #000000;
-$hover-bg: #12131e;
+$hover-bg: #241a30;
 $fg: #fff;
 $nav-bg: $bg;
-$title-fg: #2055e3;
+$title-fg: #c40059;
 
 $taproot: #eba814;
 $taproot-light: #d5a90a;
@@ -22,11 +22,11 @@ $gray-700: $fg;
 
 $nav-tabs-link-active-bg: $active-bg;
 
-$primary: #007cfa;
-$secondary: #272f4e;
-$tertiary: #6225b2;
+$primary: #c40059;
+$secondary: #2e2140;
+$tertiary: #5b2fa6;
 $success: #0aab2f;
-$info: #00ddff;
+$info: #15547f;
 
 $h5-font-size: 1.15rem !default;
 
@@ -42,7 +42,7 @@ $pagination-disabled-bg:          $bg;
 
 $custom-select-indicator-color: $fg;
 
-$link-color:                $info;
+$link-color:                $primary;
 $link-decoration:           none !default;
 $link-hover-color:          color.adjust($link-color, $lightness: -15%) !default;
 $link-hover-decoration:     underline !default;
@@ -774,11 +774,37 @@ h1, h2, h3 {
   font-size: 14px;
 }
 
+// Positive and negative movement.
+//
+// Two components set these with an inline style binding carrying #42B747 and
+// #B74242, which no theme could reach and which the colour gate's markup
+// pattern did not match because an Angular property binding is not a style
+// attribute. On the light page the green measured 2.37:1 against 4.5:1
+// required, and it went unseen because the panel that shows it had no fixture
+// and rendered as a skeleton in every screenshot.
+//
+// Green still means up and red still means down. They are the evidence state
+// tokens now, which are the versions that clear the floor on every surface.
+.movement-up {
+  color: var(--u-state-proven);
+}
+
+.movement-down {
+  color: var(--u-state-unavailable);
+}
+
 .progress {
   // Visible so the label below the track is not clipped. The fill keeps
   // its own rounding, so nothing about the bar itself changes.
   overflow: visible;
   position: relative;
+
+  // The label is positioned out of flow, so without this it lands on whatever
+  // follows: in the blocks table that is the next row, and the figure was cut
+  // in half by it. The reserve is only made where a label actually exists.
+  &:has(.progress-text) {
+    margin-bottom: 1.1em;
+  }
 
   .progress-bar {
     border-radius: inherit;
@@ -1305,7 +1331,7 @@ th {
 
     .collapsed {
       background-color: var(--secondary);
-      color: var(--info);
+      color: var(--u-brand);
     }
   }
 
