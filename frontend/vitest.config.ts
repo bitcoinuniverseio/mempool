@@ -34,7 +34,7 @@ export default defineConfig({
     environment: 'node',
     globals: true,
     setupFiles: ['./src/universe-test-setup.ts'],
-    include: ['src/app/universe/**/*.spec.ts'],
+    include: ['src/app/universe/**/*.spec.ts', 'src/app/shared/**/*.spec.ts'],
     reporters: ['default'],
   },
 });

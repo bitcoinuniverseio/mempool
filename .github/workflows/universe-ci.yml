@@ -52,6 +52,9 @@ jobs:
       - name: Gateway routing
         run: node --test scripts/universe/gateway.test.mjs
 
+      - name: The gateway bridges an upstream restart rather than failing
+        run: node --test scripts/universe/gateway-restart.test.mjs
+
   backend:
     name: Backend build and test
     runs-on: [self-hosted, linux-ultra]
@@ -82,6 +85,13 @@ jobs:
       - name: Unit tests
         working-directory: backend
         run: npm run test:ci
+
+      # The failure that shipped was a configuration one: the migrations never
+      # ran against the engine production uses, so nothing caught the syntax it
+      # rejects. These run the real backend against a real database.
+      - name: Migrations and repositories against a real database
+        working-directory: backend
+        run: npm run test:integration
 
   frontend:
     name: Frontend build
@@ -127,17 +137,34 @@ jobs:
         working-directory: scripts/universe/visual-qa
         run: npm ci
 
+      - name: The unfinished-page gate fires on the states that shipped
+        working-directory: scripts/universe/visual-qa
+        run: node --test progress-gate.test.mjs
+
+      # A fixed port here once measured another job's build: two runners share
+      # a host, the second gateway crashed on the taken port behind "&", the
+      # probe happily reached the first job's server, and the run died halfway
+      # when that other job ended. Each run now serves on its own free port and
+      # refuses to continue unless the process answering is the one it started.
       - name: Serve the built frontend
         run: |
-          UNIVERSE_GATEWAY_PORT=8123           UNIVERSE_GATEWAY_ROOT=frontend/dist/mempool/browser           node scripts/universe/gateway.mjs &
+          GATEWAY_PORT=$(node -e "const s=require('net').createServer();s.listen(0,'127.0.0.1',()=>{console.log(s.address().port);s.close()})")
+          echo "GATEWAY_PORT=$GATEWAY_PORT" >> "$GITHUB_ENV"
+          UNIVERSE_GATEWAY_PORT=$GATEWAY_PORT           UNIVERSE_GATEWAY_ROOT=frontend/dist/mempool/browser           node scripts/universe/gateway.mjs &
+          GATEWAY_PID=$!
           for i in $(seq 1 30); do
-            curl -fsS -o /dev/null http://127.0.0.1:8123/ && break
+            curl -fsS -o /dev/null "http://127.0.0.1:$GATEWAY_PORT/" && break
             sleep 1
           done
+          kill -0 "$GATEWAY_PID"
+          curl -fsS "http://127.0.0.1:$GATEWAY_PORT/__gateway/health"
 
-      - name: Measured contrast, accessibility, overflow, and screenshots
+      # The harness now fails the run when a page never finishes loading, when a
+      # chart panel draws nothing, or when a failure state says nothing about
+      # why. Those three states passed every other gate here and shipped.
+      - name: Measured contrast, accessibility, overflow, unfinished pages, and screenshots
         working-directory: scripts/universe/visual-qa
-        run: node capture.mjs --base=http://127.0.0.1:8123 --out=./artifacts
+        run: node capture.mjs --base=http://127.0.0.1:$GATEWAY_PORT --out=./artifacts
 
       - name: Keep the contrast report and the route screenshots
         if: always()

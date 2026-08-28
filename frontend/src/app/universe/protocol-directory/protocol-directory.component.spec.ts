@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
-import { firstValueFrom, of, throwError } from 'rxjs';
-import { ProtocolDirectoryComponent } from '@app/universe/protocol-directory/protocol-directory.component';
+import { describe, expect, it, vi } from 'vitest';
+import { NEVER, firstValueFrom, of, throwError } from 'rxjs';
+import { ProtocolDirectoryComponent, type DirectoryViewModel } from '@app/universe/protocol-directory/protocol-directory.component';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { SeoService } from '@app/services/seo.service';
 import {
@@ -63,41 +63,71 @@ function registry(protocols: ExplorerProtocolDefinition[]): ProtocolsResponse {
   return { registryVersion: '1.0.0', primaryStrip: [], protocols };
 }
 
-describe('ProtocolDirectoryComponent release status', () => {
+describe('ProtocolDirectoryComponent availability', () => {
   const subject = component(registry([]));
+  const readable = protocol({ releaseStatus: 'VERIFIED READ ONLY' });
+  const sourcesWith = (entry: SourceEntry) => new Map([['index-ordinals', entry]]);
 
-  it('names the statuses the registry actually emits', () => {
-    expect(subject.releaseStatusLabel(protocol({ releaseStatus: 'VERIFIED READ ONLY' })))
-      .toBe('Live, read only');
-    expect(subject.releaseStatusLabel(protocol({ releaseStatus: 'PRODUCTION VERIFIED' })))
-      .toBe('Live');
-    expect(subject.releaseStatusLabel(protocol({ releaseStatus: 'BLOCKED' })))
-      .toBe('Not yet available');
-    expect(subject.releaseStatusLabel(protocol({ releaseStatus: 'INTENTIONALLY DISABLED' })))
-      .toBe('Disabled');
+  /**
+   * The Protocols page shipped "Live, read only" beside "Authority
+   * unreachable" for the same protocol, with equal weight, and counted it
+   * among the protocols readable that day. The registry says what a protocol
+   * implements; only the authority says what it can answer for now.
+   */
+  it('does not call a protocol readable when its authority cannot be reached', () => {
+    const unreachable = source({ ready: false, status: 'unreachable', checkpoint: null });
+    expect(subject.availability(readable, sourcesWith(unreachable))).toBe('unreachable');
+    expect(subject.availabilityLabel('unreachable')).toBe('Unavailable');
+    expect(subject.isLive(readable, sourcesWith(unreachable))).toBe(false);
   });
 
-  it('gives a verified protocol its own chip rather than the neutral one', () => {
-    expect(subject.releaseStatusClass(protocol({ releaseStatus: 'VERIFIED READ ONLY' })))
-      .toBe('chip-live');
-    expect(subject.releaseStatusClass(protocol({ releaseStatus: 'PRODUCTION VERIFIED' })))
-      .toBe('chip-production');
-    expect(subject.releaseStatusClass(protocol({ releaseStatus: 'BLOCKED' })))
-      .toBe('chip-blocked');
+  it('does not call a protocol readable when its authority is still catching up', () => {
+    const stale = source({ status: 'stale', lagBlocks: '653560' });
+    expect(subject.availability(readable, sourcesWith(stale))).toBe('catching-up');
+    expect(subject.availabilityLabel('catching-up')).toBe('Catching up');
+    expect(subject.isLive(readable, sourcesWith(stale))).toBe(false);
   });
 
-  it('falls back readably for a status it has not seen', () => {
-    const unseen = protocol({ releaseStatus: 'PENDING_REVIEW' as never });
-    expect(subject.releaseStatusLabel(unseen)).toBe('Pending review');
-    expect(subject.releaseStatusClass(unseen)).toBe('chip-unknown');
-    expect(subject.releaseStatusLabel(protocol({ releaseStatus: '' as never })))
-      .toBe('Status unknown');
+  it('calls a protocol readable only when its authority is ready with a checkpoint', () => {
+    expect(subject.availability(readable, sourcesWith(source()))).toBe('available');
+    expect(subject.availabilityLabel('available')).toBe('Readable now');
+    expect(subject.isLive(readable, sourcesWith(source()))).toBe(true);
   });
 
-  it('counts a protocol as live only when it is verified', () => {
-    expect(subject.isLive(protocol({ releaseStatus: 'VERIFIED READ ONLY' }))).toBe(true);
-    expect(subject.isLive(protocol({ releaseStatus: 'PRODUCTION VERIFIED' }))).toBe(true);
-    expect(subject.isLive(protocol({ releaseStatus: 'BLOCKED' }))).toBe(false);
+  it('treats a ready authority with no checkpoint as degraded, not as readable', () => {
+    const noCheckpoint = source({ checkpoint: null });
+    expect(subject.availability(readable, sourcesWith(noCheckpoint))).toBe('degraded');
+    expect(subject.isLive(readable, sourcesWith(noCheckpoint))).toBe(false);
+  });
+
+  it('separates an authority nobody configured from one that is broken', () => {
+    expect(subject.availability(readable, new Map())).toBe('unconfigured');
+    expect(subject.availabilityLabel('unconfigured')).toBe('Not served here');
+    expect(subject.availabilityClass('unconfigured')).toBe('chip-unknown');
+    expect(subject.availabilityClass('unreachable')).toBe('chip-blocked');
+  });
+
+  it('lets the registry decide for a protocol that is not implemented at all', () => {
+    expect(subject.availability(protocol({ releaseStatus: 'BLOCKED' }), sourcesWith(source())))
+      .toBe('not-implemented');
+    expect(subject.availability(protocol({ releaseStatus: 'INTENTIONALLY DISABLED' }), null))
+      .toBe('disabled');
+  });
+
+  it('claims nothing when the authority snapshot could not be read', () => {
+    expect(subject.availability(readable, null)).toBe('unknown');
+    expect(subject.isLive(readable, null)).toBe(false);
+  });
+
+  it('keeps the registry capability as a qualifier rather than a headline', () => {
+    expect(subject.capabilityLabel(protocol({ releaseStatus: 'VERIFIED READ ONLY' })))
+      .toBe('Read only');
+    expect(subject.capabilityLabel(protocol({ releaseStatus: 'PRODUCTION VERIFIED' })))
+      .toBe('Read and verify');
+    expect(subject.capabilityLabel(protocol({ releaseStatus: 'BLOCKED' })))
+      .toBe('Not implemented');
+    expect(subject.capabilityLabel(protocol({ releaseStatus: 'PENDING_REVIEW' as never })))
+      .toBe('Pending review');
   });
 });
 
@@ -150,16 +180,24 @@ describe('ProtocolDirectoryComponent view model', () => {
     expect(vm.otherChainCount).toBe(2);
   });
 
-  it('counts how many protocols are readable today', async () => {
+  it('counts only the protocols whose authority can actually answer', async () => {
     const subject = component(
       registry([
-        protocol({ id: 'ordinals', releaseStatus: 'VERIFIED READ ONLY' }),
-        protocol({ id: 'runes', family: 'RUNES', releaseStatus: 'VERIFIED READ ONLY' }),
-        protocol({ id: 'brc20', family: 'OTHER', releaseStatus: 'BLOCKED' }),
+        protocol({ id: 'ordinals', releaseStatus: 'VERIFIED READ ONLY', indexerAuthority: 'ord' }),
+        protocol({ id: 'runes', family: 'RUNES', releaseStatus: 'VERIFIED READ ONLY', indexerAuthority: 'index-runes' }),
+        protocol({ id: 'brc20', family: 'OTHER', releaseStatus: 'BLOCKED', indexerAuthority: 'index-brc20' }),
       ]),
+      {
+        generatedAt: 'now',
+        sources: [
+          source({ authorityId: 'ord' }),
+          // Implemented and configured, but rebuilding its index.
+          source({ authorityId: 'index-runes', status: 'stale', lagBlocks: '653560' }),
+        ],
+      },
     );
     const vm = await firstValueFrom(subject.vm$);
-    expect(vm.liveCount).toBe(2);
+    expect(vm.liveCount).toBe(1);
     expect(vm.totalCount).toBe(3);
   });
 
@@ -169,6 +207,27 @@ describe('ProtocolDirectoryComponent view model', () => {
     expect(vm.error).toBe(false);
     expect(vm.groups).toHaveLength(1);
     expect(vm.sourcesByAuthority).toBeNull();
+  });
+
+  it('reaches the error state when the registry never answers, rather than waiting', async () => {
+    // The visual gate caught this: the loading fixture hangs every request, and
+    // the page sat on its skeleton with nothing left to clear it.
+    vi.useFakeTimers();
+    try {
+      const api = {
+        getProtocols$: () => NEVER,
+        getSources$: () => NEVER,
+      } as unknown as UniverseApiService;
+      const subject = new ProtocolDirectoryComponent(api, seo);
+      subject.ngOnInit();
+      const seen: DirectoryViewModel[] = [];
+      const subscription = subject.vm$.subscribe((vm) => seen.push(vm));
+      await vi.advanceTimersByTimeAsync(25_000);
+      subscription.unsubscribe();
+      expect(seen.at(-1)?.error).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('reports an error when the registry itself fails', async () => {
@@ -183,7 +242,7 @@ describe('ProtocolDirectoryComponent view model', () => {
   });
 });
 
-describe('ProtocolDirectoryComponent authority status', () => {
+describe('ProtocolDirectoryComponent authority evidence', () => {
   const subject = component(registry([]));
 
   it('matches a protocol to its authority snapshot', () => {
@@ -194,22 +253,27 @@ describe('ProtocolDirectoryComponent authority status', () => {
     expect(subject.sourceFor(protocol(), null)).toBeNull();
   });
 
-  it('states the checkpoint a ready authority is at', () => {
-    expect(subject.sourceLabel(source())).toBe('Authority ready at block 964103');
-    expect(subject.sourceLabel(source({ checkpoint: null }))).toBe('Authority ready');
-    expect(subject.sourceClass(source())).toBe('chip-live');
+  it('shows where the authority reached, so the label is not taken on trust', () => {
+    expect(subject.sourceDetail(source())).toContain('Indexed to block 964103');
   });
 
-  it('distinguishes a missing configuration from a broken authority', () => {
-    const unconfigured = source({ ready: false, status: 'unconfigured', checkpoint: null });
-    expect(subject.sourceLabel(unconfigured)).toBe('Authority not configured here');
-    expect(subject.sourceClass(unconfigured)).toBe('chip-unknown');
+  it('says how far behind an authority is when it is behind', () => {
+    const detail = subject.sourceDetail(source({ status: 'stale', lagBlocks: '653560' }));
+    expect(detail).toContain('653560');
+  });
 
-    const unreachable = source({ ready: false, status: 'unreachable', checkpoint: null });
-    expect(subject.sourceLabel(unreachable)).toBe('Authority unreachable');
-    expect(subject.sourceClass(unreachable)).toBe('chip-blocked');
+  it('does not report a lag of zero as though it were news', () => {
+    expect(subject.sourceDetail(source({ lagBlocks: '0' }))).not.toContain('behind');
+  });
 
-    const stale = source({ ready: false, status: 'stale', checkpoint: null });
-    expect(subject.sourceLabel(stale)).toBe('Authority behind the chain tip');
+  it('surfaces a flapping authority through its failure count', () => {
+    expect(subject.sourceDetail(source({ consecutiveFailures: 4 }))).toContain('4');
+  });
+
+  it('reads the last check time as epoch seconds, or nothing at all', () => {
+    expect(subject.checkedAtSeconds(source({ checkedAt: '2026-08-28T10:00:00.000Z' })))
+      .toBe(1787911200);
+    expect(subject.checkedAtSeconds(source({ checkedAt: 'not a date' }))).toBeNull();
+    expect(subject.checkedAtSeconds(null)).toBeNull();
   });
 });

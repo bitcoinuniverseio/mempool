@@ -12,7 +12,14 @@
  *   - no console errors
  *   - no images that failed to load
  *   - no accessibility violations at WCAG 2.2 A/AA
+ *   - no loader or skeleton still on screen once the page has settled
+ *   - no chart panel that drew nothing while its fixture has data
+ *   - an explicit status panel in every failure state, rather than a wait
  * and writes a screenshot for the visual comparison.
+ *
+ * The last three exist because a Charts page that never resolved and a Mining
+ * dashboard full of skeletons passed every other check in this list and
+ * shipped.
  *
  * Usage:
  *   node capture.mjs                      full matrix, chromium
@@ -29,6 +36,7 @@ import AxeBuilder from '@axe-core/playwright';
 import * as playwright from 'playwright';
 import { addressFixtures, detailFixtures, fixtures, sampleIds, stateOverrides } from './fixtures.mjs';
 import { contrastProbe } from './contrast-probe.mjs';
+import { progressProbe } from './progress-probe.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
@@ -71,6 +79,14 @@ const VIEWPORTS = [
 ];
 
 const THEMES = ['default', 'dark', 'contrast'];
+
+/**
+ * How long a page may take to stop showing loaders before the run calls it
+ * unfinished. Generous, because a loaded CI machine is slower than a laptop
+ * and the thing being measured is whether the page ever finishes, not how
+ * fast the machine is.
+ */
+const SETTLE_DEADLINE_MS = 15_000;
 
 const STATES = ['populated', ...Object.keys(stateOverrides)];
 
@@ -327,12 +343,34 @@ async function run() {
               contrast = { text: [], painted: [], canvas: [], sampled: 0, error: String(e).slice(0, 200) };
             }
 
+            // A fixed pause is a race, not a deadline: on a loaded machine a
+            // page that finishes perfectly well can still be mid-render when
+            // the probe fires. Wait for it to settle, up to a real deadline,
+            // and record how long it took. What fails the run is a page that
+            // never settles, which is the actual requirement.
+            let progress;
+            let settledAfterMs = null;
+            try {
+              const deadline = Date.now() + SETTLE_DEADLINE_MS;
+              for (;;) {
+                progress = await page.evaluate(progressProbe);
+                const busy = (progress.spinners?.length ?? 0) > 0 || (progress.skeletons ?? 0) > 0;
+                if (!busy || Date.now() >= deadline) {
+                  settledAfterMs = busy ? null : Date.now() - (deadline - SETTLE_DEADLINE_MS);
+                  break;
+                }
+                await page.waitForTimeout(250);
+              }
+            } catch (e) {
+              progress = { spinners: [], skeletons: 0, charts: [], statusPanels: [], loadingAnnouncements: [], textLength: 0, error: String(e).slice(0, 200) };
+            }
+
             await page.screenshot({ path: join(OUT, `${label}.png`), fullPage: Boolean(args.fullPage) });
             shots++;
 
             findings.push({
               route: route.id, routeName: route.name, state, theme, viewport: viewport.id,
-              overflowBy, consoleErrors, brokenImages, violations, contrast,
+              overflowBy, consoleErrors, brokenImages, violations, contrast, progress, settledAfterMs,
             });
           } catch (error) {
             findings.push({
@@ -352,7 +390,84 @@ async function run() {
 
   const report = { browser: BROWSER, base: BASE, screenshots: shots, findings };
   writeFileSync(join(OUT, `report-${BROWSER}.json`), JSON.stringify(report, null, 2));
-  summarise(report);
+  const stuck = summarise(report);
+  if (stuck.length > 0) {
+    console.error(`${stuck.length} page(s) never finished loading. This is the failure that shipped last time, so it fails the run.`);
+    process.exitCode = 1;
+  }
+}
+
+/**
+ * Turns the progress probe into failures.
+ *
+ * A populated fixture leaves no excuse: the data is there, so a loader still
+ * on screen or a chart that drew nothing is the interface failing to finish.
+ * A failure fixture has the opposite obligation: the page must say what
+ * happened rather than wait.
+ */
+
+/**
+ * Routes whose request lifecycle has been reviewed and is expected to reach a
+ * terminal state. A finding on one of these fails the run.
+ *
+ * The gate reports findings on every route, but only blocks on these. Adding a
+ * route here is how a finding on an uncovered route gets finished: fix the
+ * page, add the route, and the gate holds it forever after. Home, blocks,
+ * transaction and address joined once their waiting and failure states said
+ * something instead of holding a bare placeholder.
+ */
+export const GATED_ROUTES = new Set(['graphs', 'mining', 'protocols', 'home', 'blocks', 'tx', 'address']);
+
+export function progressFailures(report) {
+  const failures = [];
+  for (const f of report.findings) {
+    const progress = f.progress;
+    if (!progress) continue;
+    const where = `${f.route}/${f.state}/${f.theme}@${f.viewport}`;
+
+    if (f.state === 'populated') {
+      if (progress.spinners?.length) {
+        failures.push(`${where}: never stopped loading (${progress.spinners.join(', ')})`);
+      }
+      if (progress.skeletons > 0) {
+        failures.push(`${where}: ${progress.skeletons} skeleton(s) never resolved`);
+      }
+      if (progress.skeletonOnly) {
+        failures.push(`${where}: the page is placeholders and almost no text`);
+      }
+      for (const chart of progress.charts ?? []) {
+        if (chart.drewNothing) {
+          failures.push(`${where}: chart ${chart.selector} (${chart.width}x${chart.height}) drew nothing`);
+        }
+      }
+    } else if (f.state === 'loading') {
+      // This fixture holds every request open on purpose, to photograph the
+      // waiting state. Asking it to have finished would be asking the wrong
+      // question; what matters is that the wait is announced rather than being
+      // a blank rectangle. The deadline itself is covered by the unit tests
+      // around the request lifecycle, which run far longer than this harness
+      // waits.
+      // Only a page that is actually holding placeholders is waiting. A page
+      // with nothing to fetch renders normally under this fixture and owes the
+      // reader no loader at all.
+      const waiting = (progress.skeletons ?? 0) > 0;
+      const announced = progress.spinners?.length
+        || progress.statusPanels?.length
+        || progress.loadingAnnouncements?.length;
+      if (waiting && !announced) {
+        failures.push(`${where}: waiting with nothing on screen that says so`);
+      }
+    } else {
+      // Every failure fixture must reach a state that says something. A page
+      // that is still spinning has not answered the user at all.
+      if (progress.spinners?.length || progress.skeletons > 0) {
+        if (!progress.statusPanels?.length) {
+          failures.push(`${where}: still waiting with nothing said about why`);
+        }
+      }
+    }
+  }
+  return failures;
 }
 
 function summarise(report) {
@@ -447,7 +562,31 @@ function summarise(report) {
     console.log('\n-- navigation --');
     for (const f of failed.slice(0, 15)) console.log(`  ${f.route} ${f.state} ${f.theme} @${f.viewport}: ${f.error}`);
   }
+
+  const stuck = progressFailures(report);
+  const blocking = stuck.filter((line) => GATED_ROUTES.has(line.split('/')[0]));
+  const known = stuck.filter((line) => !GATED_ROUTES.has(line.split('/')[0]));
+
+  console.log(`\nunfinished pages    : ${stuck.length}  (blocking ${blocking.length})`);
+  if (blocking.length) {
+    console.log('-- pages that never finished, on routes this gate holds --');
+    for (const line of blocking.slice(0, 40)) console.log(`  ${line}`);
+    if (blocking.length > 40) console.log(`  ... and ${blocking.length - 40} more, see the report`);
+  }
+  if (known.length) {
+    // Printed every run, never suppressed. These are real, they were found by
+    // this gate, and they are waiting for the same treatment the gated routes
+    // have had.
+    console.log('-- the same fault on routes not yet covered, known work --');
+    for (const line of known.slice(0, 40)) console.log(`  ${line}`);
+    if (known.length > 40) console.log(`  ... and ${known.length - 40} more, see the report`);
+  }
   console.log('');
+  return blocking;
 }
 
-run().catch((e) => { console.error(e); process.exit(1); });
+// Only drive browsers when this file is the program. Importing it, as the
+// gate's own test does, must not launch the matrix.
+if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))) {
+  run().catch((e) => { console.error(e); process.exit(1); });
+}

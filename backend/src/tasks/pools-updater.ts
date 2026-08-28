@@ -6,6 +6,9 @@ import backendInfo from '../api/backend-info';
 import logger from '../logger';
 import { SocksProxyAgent } from 'socks-proxy-agent';
 import * as https from 'https';
+import * as crypto from 'crypto';
+import * as fs from 'fs';
+import * as path from 'path';
 import { Common } from '../api/common';
 
 /**
@@ -18,6 +21,7 @@ class PoolsUpdater {
   currentSha: string | null = null;
   poolsUrl: string = config.MEMPOOL.POOLS_JSON_URL;
   treeUrl: string = config.MEMPOOL.POOLS_JSON_TREE_URL;
+  poolsFile: string = config.MEMPOOL.POOLS_JSON_FILE;
 
   /** @asyncSafe */
   public async $startService(): Promise<void> {
@@ -29,6 +33,87 @@ class PoolsUpdater {
       }
       await Common.sleep$(10000);
     }
+  }
+
+  /**
+   * Resolves the bundled pools file against the compiled backend directory, so
+   * the same relative path works from `src` under ts-node and from `dist` in
+   * production. An absolute path is used as given.
+   */
+  private resolvePoolsFile(): string {
+    return path.isAbsolute(this.poolsFile)
+      ? this.poolsFile
+      : path.resolve(__dirname, '..', this.poolsFile);
+  }
+
+  /**
+   * Imports mining pool metadata from the bundled first-party file instead of
+   * fetching it from a third party at runtime. The identifier is the git blob
+   * hash of the file contents, so it is deterministic, offline, and directly
+   * comparable with the sha the database already stores.
+   * @asyncSafe
+   */
+  private async $updatePoolsFromFile(): Promise<void> {
+    const file = this.resolvePoolsFile();
+    let raw: Buffer;
+    try {
+      raw = fs.readFileSync(file);
+    } catch (e) {
+      logger.err(`Cannot read the bundled mining pools file ${file}. Reason: ` + (e instanceof Error ? e.message : e), this.tag);
+      return;
+    }
+
+    let poolsJson: any;
+    try {
+      poolsJson = JSON.parse(raw.toString('utf8'));
+    } catch (e) {
+      logger.err(`The bundled mining pools file ${file} is not valid JSON.`, this.tag);
+      return;
+    }
+    if (!Array.isArray(poolsJson) || poolsJson.length === 0) {
+      logger.err(`The bundled mining pools file ${file} must hold a non-empty array of pools.`, this.tag);
+      return;
+    }
+
+    const fileSha = crypto.createHash('sha1')
+      .update(Buffer.from(`blob ${raw.length}`, 'utf8'))
+      .update(Buffer.alloc(1))
+      .update(raw)
+      .digest('hex');
+
+    if (config.DATABASE.ENABLED === true) {
+      this.currentSha = await this.getShaFromDb();
+    }
+    if (this.currentSha === fileSha) {
+      return;
+    }
+
+    poolsParser.setMiningPools(poolsJson);
+
+    if (config.DATABASE.ENABLED === false) {
+      this.currentSha = fileSha;
+      logger.info(`Mining pools imported from ${file} (${fileSha}), no database`, this.tag);
+      return;
+    }
+
+    try {
+      await DB.query('START TRANSACTION;');
+      await this.updateDBSha(fileSha);
+      await poolsParser.migratePoolsJson();
+      await DB.query('COMMIT;');
+    } catch (e) {
+      logger.err(`Could not migrate mining pools, rolling back. Exception: ${JSON.stringify(e)}`, this.tag);
+      try {
+        await DB.query('ROLLBACK;');
+      } catch (rollbackError) {
+        logger.err('Could not roll back the mining pool import. Reason: ' + (rollbackError instanceof Error ? rollbackError.message : rollbackError), this.tag);
+      }
+      // The sha was optimistically set before the write; the rollback undid it,
+      // so clear it again rather than let startup believe pools are loaded.
+      this.currentSha = null;
+      return;
+    }
+    logger.info(`Mining pools imported from ${file} (${fileSha})`, this.tag);
   }
 
   /** @asyncSafe */
@@ -45,6 +130,15 @@ class PoolsUpdater {
     }
 
     this.lastRun = now;
+
+    if (this.poolsFile) {
+      try {
+        await this.$updatePoolsFromFile();
+      } catch (e) {
+        logger.err(`PoolsUpdater failed to import the bundled pools file. Exception: ${JSON.stringify(e)}`, this.tag);
+      }
+      return;
+    }
 
     try {
       if (config.DATABASE.ENABLED === true) {
@@ -123,6 +217,7 @@ class PoolsUpdater {
 
   /**
    * Fetch our latest pools-v2.json sha from the db
+   * @asyncSafe
    */
   public async getShaFromDb(): Promise<string | null> {
     try {

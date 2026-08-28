@@ -132,6 +132,32 @@
       border-style: dashed;
       color: var(--transparent-fg);
     }
+
+    // Reachable and answering, but too far back to describe the present. It
+    // must not read as either working or broken.
+    &.chip-partial {
+      border-color: var(--u-state-partial-border);
+      background-color: var(--u-state-partial-surface);
+      color: var(--u-state-partial);
+    }
+
+    // Availability is the fact a reader needs first, so it carries more weight
+    // than the capability and coverage chips beside it.
+    &.state-chip-primary {
+      font-weight: 700;
+      border-width: 2px;
+    }
+  }
+
+  // The evidence behind the primary label: where the authority reached, how
+  // far behind that is, and when it was last asked.
+  .protocol-evidence {
+    margin: 0.25rem 0 0;
+    font-size: 0.75rem;
+    color: var(--u-text-muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.75rem;
   }
 
   .registry-summary {

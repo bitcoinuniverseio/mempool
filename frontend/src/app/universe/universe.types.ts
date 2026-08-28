@@ -49,6 +49,12 @@ export interface SourceEntry {
   status: SourceStatus | string;
   checkpoint: SourceCheckpoint | null;
   checkedAt: string;
+  /** Blocks behind the chain reference, as a decimal string. */
+  lagBlocks?: string | null;
+  /** When this authority last answered ready with a usable checkpoint. */
+  lastSuccessAt?: string | null;
+  /** Consecutive failed checks, so a flapping authority is visible as one. */
+  consecutiveFailures?: number;
 }
 
 export interface SourcesResponse {
@@ -59,6 +65,8 @@ export interface SourcesResponse {
 export interface SourceCounts {
   configured: number;
   ready: number;
+  /** Reachable and answering, but too far behind to describe the present. */
+  stale: number;
   degraded: number;
   unreachable: number;
 }
