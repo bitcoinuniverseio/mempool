@@ -195,7 +195,7 @@ jobs:
 
       - name: Forced colours and 200 percent zoom
         working-directory: scripts/universe/visual-qa
-        run: node modes-check.mjs --base=http://127.0.0.1:8123
+        run: node modes-check.mjs --base=http://127.0.0.1:$GATEWAY_PORT
 
       - name: Keep the contrast report and the route screenshots
         if: always()

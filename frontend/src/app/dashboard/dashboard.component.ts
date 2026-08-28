@@ -144,7 +144,7 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
         const firstChainData$ = merge(this.stateService.blocks$, this.stateService.mempoolInfo$).pipe(take(1));
         return merge(
           firstChainData$.pipe(map((): LoadState<boolean> => ({ status: 'data', value: true, at: Date.now() }))),
-          timer(10_000).pipe(
+          timer(5_000).pipe(
             takeUntil(firstChainData$),
             map((): LoadState<boolean> => ({ status: 'error', reason: 'timeout', at: Date.now() })),
           ),
