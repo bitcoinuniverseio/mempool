@@ -71,23 +71,46 @@
   }
 }
 
+// Search is the product's primary action, so it is the one control that gets
+// the full house finish: the brand sweep, a top gloss, and a soft brand glow.
+// Nothing else on the page is allowed to look like this, which is what makes it
+// obvious where to start.
+//
+// The label rides over both the sweep and the gloss. Both layers are held to
+// the body contrast floor by check-palettes.mjs, which is why the gloss stops
+// at 0.16 rather than wherever it looked best.
 .search-submit {
   align-items: center;
-  background: var(--u-brand);
+  background-color: var(--u-brand);
+  background-image: var(--u-gloss), var(--u-gradient-brand);
   border: 1px solid var(--u-brand);
   border-radius: var(--u-radius-md);
+  box-shadow: var(--u-glow-brand);
   color: var(--u-brand-contrast);
   cursor: pointer;
   display: flex;
   flex: 0 0 auto;
   height: 40px;
   justify-content: center;
-  transition: background-color var(--u-duration-fast) var(--u-ease-out);
+  transition:
+    filter var(--u-duration-fast) var(--u-ease-out),
+    box-shadow var(--u-duration-fast) var(--u-ease-out);
   width: 46px;
 
+  // Brightness rather than a second gradient: the measured relationship
+  // between the fill and its label survives a uniform lift, and a swapped
+  // gradient would have to be measured again.
   &:hover:not(:disabled) {
-    background: var(--u-brand-hover);
-    border-color: var(--u-brand-hover);
+    box-shadow: var(--u-glow-brand), var(--u-shadow-sm);
+    filter: brightness(1.06);
+  }
+
+  &:active:not(:disabled) {
+    filter: brightness(0.94);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
   }
 
   &:focus-visible {

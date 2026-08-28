@@ -12,7 +12,7 @@ import { LightningApiService } from '@app/lightning/lightning-api.service';
 import { AmountShortenerPipe } from '@app/shared/pipes/amount-shortener.pipe';
 import { isMobile } from '@app/shared/common.utils';
 import { StateService } from '@app/services/state.service';
-import { chartChrome, rampStops } from '@app/shared/chart-theme';
+import { chartChrome, chartDataZoomStyle, rampStops } from '@app/shared/chart-theme';
 
 @Component({
   selector: 'app-lightning-statistics-chart',
@@ -312,6 +312,7 @@ export class LightningStatisticsChartComponent implements OnInit, OnChanges {
         showDetail: false,
         show: true,
         type: 'slider',
+        ...chartDataZoomStyle(),
         brushSelect: false,
         realtime: true,
         left: 20,

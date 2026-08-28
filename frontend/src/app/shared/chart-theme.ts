@@ -12,6 +12,8 @@
  * chart reads a computed style while drawing, and nothing reads one per frame.
  */
 
+import { contrastMempoolFeeColors, defaultMempoolFeeColors } from '@app/app.constants';
+
 /** Chart chrome: the parts of a chart that are structure rather than data. */
 export interface ChartChrome {
   /** Axis lines and ticks. */
@@ -30,6 +32,10 @@ export interface ChartChrome {
   surface: string;
   /** Outline drawn around a mark so it stays separable from its neighbour. */
   markBorder: string;
+  /** The selected window of a zoom slider. */
+  zoomFill: string;
+  /** The unselected track of a zoom slider. */
+  zoomTrack: string;
   /** Categorical series, in order. Verified separable under colour vision
    *  deficiency by `scripts/universe/check-palettes.mjs`. */
   series: string[];
@@ -71,20 +77,22 @@ export const CHART_LINE_TYPES: ('solid' | 'dashed' | 'dotted')[] = [
 ];
 
 const FALLBACK: ChartChrome = {
-  axis: '#586475',
-  label: '#586475',
-  strongLabel: '#10151f',
-  grid: '#dde3ec',
+  axis: '#645a6e',
+  label: '#645a6e',
+  strongLabel: '#241a2b',
+  grid: '#e8e0ee',
   tooltipBackground: '#ffffff',
-  tooltipBorder: '#d5dce6',
-  tooltipText: '#10151f',
+  tooltipBorder: '#ded5e5',
+  tooltipText: '#241a2b',
   surface: '#ffffff',
   markBorder: '#ffffff',
-  series: ['#434ba3', '#a3436b', '#241763', '#a38343', '#63172a', '#4393a3', '#634417'],
+  zoomFill: 'rgba(196, 0, 89, 0.14)',
+  zoomTrack: '#ece5f0',
+  series: ['#c40059', '#5b2fa6', '#8a5100', '#4393a3', '#3d0a2a', '#7f9b5a', '#a3006b'],
   ramps: {
-    scale: ['#4393a3', '#2f7f9e', '#2f5a9e', '#43349e', '#5b1f7a'],
-    a: ['#434ba3', '#241763'],
-    b: ['#a3436b', '#63172a'],
+    scale: ['#e0568f', '#c40059', '#a3006b', '#7a2f8f', '#5b2fa6'],
+    a: ['#c40059', '#5b2fa6'],
+    b: ['#8a5100', '#63172a'],
     c: ['#4393a3', '#1c4f5c'],
   },
 };
@@ -119,6 +127,8 @@ export function chartChrome(): ChartChrome {
     tooltipText: read(styles, '--u-text-primary', FALLBACK.tooltipText),
     surface: read(styles, '--u-surface-raised', FALLBACK.surface),
     markBorder: read(styles, '--u-surface-raised', FALLBACK.markBorder),
+    zoomFill: read(styles, '--u-chart-zoom-fill', FALLBACK.zoomFill),
+    zoomTrack: read(styles, '--u-chart-zoom-track', FALLBACK.zoomTrack),
     series: FALLBACK.series.map((fallback, i) => read(styles, `--u-chart-${i + 1}`, fallback)),
     ramps: {
       scale: FALLBACK.ramps.scale.map((fallback, i) =>
@@ -173,4 +183,56 @@ export function rampStops(
   const stops = chartChrome().ramps[name];
   const last = stops.length - 1;
   return stops.map((color, i) => ({ offset: last === 0 ? 0 : i / last, color: color + alpha }));
+}
+
+/**
+ * The zoom slider every chart shares.
+ *
+ * The charting library draws this control from its own defaults: a pale blue
+ * track and handle that belong to no palette in this product and measure about
+ * 1.15:1 against the light page, well under the 3:1 a control boundary owes.
+ * Eighteen charts carried it. They now spread this instead, so the control is
+ * themed once and moves with the rest of the system.
+ */
+export function chartDataZoomStyle(): Record<string, unknown> {
+  const chrome = chartChrome();
+  return {
+    backgroundColor: chrome.zoomTrack,
+    borderColor: chrome.tooltipBorder,
+    fillerColor: chrome.zoomFill,
+    dataBackground: {
+      lineStyle: { color: chrome.axis, opacity: 0.35 },
+      areaStyle: { color: chrome.grid, opacity: 0.8 },
+    },
+    handleStyle: { color: chrome.surface, borderColor: chrome.axis, borderWidth: 1 },
+    moveHandleStyle: { color: chrome.axis, opacity: 0.4 },
+    emphasis: { handleStyle: { borderColor: chrome.series[0], borderWidth: 2 } },
+    textStyle: { color: chrome.label },
+  };
+}
+
+/**
+ * The fee scale this theme draws with.
+ *
+ * A fee rate should be one colour everywhere in this product. Blocks and the
+ * Lens already read the scale below; the mempool depth chart did not. It used
+ * the inherited categorical ramp, which is a rainbow, and applying a
+ * categorical palette to an ordered quantity means the reader cannot tell from
+ * the colour whether a band is cheap or expensive. It also put a band at
+ * #D81B60, 6.7 dE from the brand pink, so a fee level wore the product's own
+ * colour.
+ *
+ * The scale is a TypeScript array rather than a custom property, so the theme
+ * is detected from a variable only the high contrast theme declares. The result
+ * is cached with the rest of the chrome and dropped on a theme change.
+ */
+export function feeScale(): string[] {
+  if (typeof window === 'undefined' || typeof getComputedStyle !== 'function') {
+    return defaultMempoolFeeColors.map((hex) => '#' + hex);
+  }
+  const contrast = getComputedStyle(document.documentElement)
+    .getPropertyValue('--u-fee-label-ink')
+    .trim();
+  const scale = contrast ? contrastMempoolFeeColors : defaultMempoolFeeColors;
+  return scale.map((hex) => '#' + hex);
 }

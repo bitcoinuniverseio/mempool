@@ -9,7 +9,7 @@ import { SeriesOption } from 'echarts/types/dist/echarts';
 import { WalletStats } from '@app/shared/wallet-stats';
 import { originalChartColors as chartColors } from '@app/app.constants';
 import { Treasury } from '@interfaces/node-api.interface';
-import { chartChrome } from '@app/shared/chart-theme';
+import { chartChrome, chartDataZoomStyle } from '@app/shared/chart-theme';
 
 
 // export const treasuriesPalette = [
@@ -375,6 +375,7 @@ export class TreasuriesGraphComponent implements OnInit, OnChanges, OnDestroy {
         showDetail: false,
         show: true,
         type: 'slider',
+        ...chartDataZoomStyle(),
         brushSelect: false,
         realtime: true,
         left: this.adjustedLeft,

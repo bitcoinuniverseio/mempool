@@ -163,6 +163,9 @@
   height: 100%;
   padding: 0.5rem 0.25rem;
   background-color: var(--u-brand);
+  // A filled brand surface carrying a label, so it declares the ink that reads
+  // on it rather than inheriting the page ink.
+  color: var(--u-brand-contrast);
 }
 
 .bottom-panel {

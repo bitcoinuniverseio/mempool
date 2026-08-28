@@ -11,7 +11,7 @@ import { StorageService } from '@app/services/storage.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 import { StateService } from '@app/services/state.service';
-import { chartChrome } from '@app/shared/chart-theme';
+import { chartChrome, chartDataZoomStyle } from '@app/shared/chart-theme';
 
 @Component({
   selector: 'app-block-health-graph',
@@ -213,6 +213,7 @@ export class BlockHealthGraphComponent implements OnInit {
         showDetail: false,
         show: true,
         type: 'slider',
+        ...chartDataZoomStyle(),
         brushSelect: false,
         realtime: true,
         left: 20,

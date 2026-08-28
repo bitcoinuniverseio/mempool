@@ -13,7 +13,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { StratumJob } from '@interfaces/websocket.interface';
 import { WebsocketService } from '@app/services/websocket.service';
 import { MiningService } from '@app/services/mining.service';
-import { chartChrome, rampStops } from '@app/shared/chart-theme';
+import { chartChrome, chartDataZoomStyle, rampStops } from '@app/shared/chart-theme';
 
 interface AccelerationTotal {
   cost: number,
@@ -324,6 +324,7 @@ export class PoolComponent implements OnInit {
         showDetail: false,
         show: true,
         type: 'slider',
+        ...chartDataZoomStyle(),
         brushSelect: false,
         realtime: true,
         bottom: 0,

@@ -79,18 +79,22 @@
 
 .badge-og {
   background-color: var(--title-fg);
+  color: var(--u-text-inverse);
 }
 
 .badge-pleb {
   background-color: var(--u-brand);
+  color: var(--u-brand-contrast);
 }
 
 .badge-chad {
   background-color: var(--u-state-partial);
+  color: var(--u-text-inverse);
 }
 
 .badge-whale {
   background-color: var(--tertiary);
+  color: var(--u-text-inverse);
 }
 
 .badge-silver {

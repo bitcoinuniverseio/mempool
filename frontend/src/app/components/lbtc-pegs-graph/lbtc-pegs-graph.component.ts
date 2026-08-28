@@ -5,7 +5,7 @@ import { StateService } from '@app/services/state.service';
 import { map, Subscription, switchMap } from 'rxjs';
 import { PriceService } from '@app/services/price.service';
 import { AmountShortenerPipe } from '@app/shared/pipes/amount-shortener.pipe';
-import { chartChrome } from '@app/shared/chart-theme';
+import { chartChrome, chartDataZoomStyle } from '@app/shared/chart-theme';
 
 @Component({
   selector: 'app-lbtc-pegs-graph',
@@ -115,6 +115,7 @@ export class LbtcPegsGraphComponent implements OnInit, OnChanges {
       }, {
         show: (this.template === 'advanced') ? true : false,
         type: 'slider',
+        ...chartDataZoomStyle(),
         brushSelect: false,
         realtime: true,
         selectedDataBackground: {

@@ -40,6 +40,9 @@ jobs:
       - name: Every dynamic palette carries a readable foreground
         run: node scripts/universe/check-palettes.mjs
 
+      - name: Every filled surface declares the ink on it
+        run: node scripts/universe/check-fills.mjs
+
       - name: Contrast arithmetic is correct
         run: node --test scripts/universe/contrast.test.mjs
 
@@ -133,6 +136,9 @@ jobs:
       - name: Every asset the build references is in the output
         run: node scripts/universe/check-build-assets.mjs
 
+      - name: No em dash in what the build actually ships
+        run: node scripts/universe/check-text.mjs frontend/dist
+
       - name: Install the visual QA harness
         working-directory: scripts/universe/visual-qa
         run: npm ci
@@ -186,6 +192,10 @@ jobs:
         run: >-
           node capture.mjs --base=http://127.0.0.1:$GATEWAY_PORT --out=./artifacts
           --routes=graphs,mining,protocols,home,blocks,tx,address --viewports=320,768,1440
+
+      - name: Forced colours and 200 percent zoom
+        working-directory: scripts/universe/visual-qa
+        run: node modes-check.mjs --base=http://127.0.0.1:8123
 
       - name: Keep the contrast report and the route screenshots
         if: always()
