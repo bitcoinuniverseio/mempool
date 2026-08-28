@@ -11,6 +11,20 @@
  * 200% zoom is WCAG 1.4.4 and 1.4.10. At a 1280 viewport that leaves 640 CSS
  * pixels, and nothing may scroll horizontally at that width.
  *
+ * That second one is emulated with a 640 viewport at device scale factor 2,
+ * which is what a browser actually does when a reader zooms to 200%: the CSS
+ * viewport halves and the responsive rules answer to the smaller width.
+ *
+ * It is not emulated by setting `zoom: 2` on the root element, which is the
+ * obvious approach and is wrong. `zoom` scales the layout box without changing
+ * what media queries see, so the desktop breakpoints stay active and the
+ * desktop layout gets rendered into half the width. Measured on a page with a
+ * single `min-width: 992px` rule holding a 900px element: under `zoom: 2` the
+ * media query still matched, the element was still displayed, and the document
+ * overflowed by 260 pixels; at a real 640 viewport the query did not match, the
+ * element was hidden as designed, and overflow was zero. Every failure that
+ * method reports is a layout no reader can reach.
+ *
  * Both run against the same REST fixtures as the matrix, so a page under review
  * has real content rather than an empty shell. The socket is not mocked here,
  * so the chain strip renders its placeholder blocks and the header reports
@@ -90,21 +104,9 @@ async function readStable(page, fn) {
   }
 }
 
-async function sweep(label, contextOptions, zoom) {
+async function sweep(label, contextOptions) {
   const context = await browser.newContext(contextOptions);
   await installFixtures(context);
-  // Applied to every document as it is created, so a redirect cannot land on a
-  // page that was never zoomed, and nothing has to be evaluated after a
-  // navigation that may still be in progress.
-  if (zoom) {
-    await context.addInitScript((z) => {
-      const apply = () => {
-        if (document.documentElement) document.documentElement.style.zoom = String(z);
-      };
-      apply();
-      document.addEventListener('DOMContentLoaded', apply);
-    }, zoom);
-  }
   for (const [id, path] of ROUTES) {
     const page = await context.newPage();
     await page.goto(BASE + path, { waitUntil: 'networkidle', timeout: 45000 }).catch(() => {});
@@ -140,9 +142,13 @@ await sweep('forced-colors', {
   viewport: { width: 1280, height: 900 },
   forcedColors: 'active',
   colorScheme: 'light',
-}, null);
+});
 
-await sweep('zoom-200', { viewport: { width: 1280, height: 900 } }, 2);
+// Half of 1280 by 900, at twice the pixel density. This is 200% zoom.
+await sweep('zoom-200', {
+  viewport: { width: 640, height: 450 },
+  deviceScaleFactor: 2,
+});
 
 await browser.close();
 
