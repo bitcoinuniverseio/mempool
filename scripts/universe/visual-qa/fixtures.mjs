@@ -81,6 +81,18 @@ export const fixtures = {
     lastEstimatedHashrate: 812_004_881_002_991_000_000,
   },
 
+  // The mining dashboard's hashrate and difficulty panels.
+  //
+  // Without these the right half of the Mining route rendered as skeletons and
+  // a spinner in every screenshot, so half of one of the thirteen reviewed
+  // routes was never reviewed at all.
+  '/api/v1/mining/hashrate/3d': buildHashrateSeries(),
+  '/api/v1/mining/hashrate/1w': buildHashrateSeries(),
+  '/api/v1/mining/hashrate/1m': buildHashrateSeries(),
+  '/api/v1/mining/hashrate': buildHashrateSeries(),
+  '/api/v1/mining/difficulty-adjustments/1y': buildDifficultyAdjustments(),
+  '/api/v1/mining/difficulty-adjustments': buildDifficultyAdjustments(),
+
   '/api/v1/universe/protocols': {
     registryVersion: '2026.08.1',
     protocols: [
@@ -250,6 +262,52 @@ export const stateOverrides = {
 };
 
 export const sampleIds = { TXID_A, TXID_B, TXID_C, ADDRESS, BLOCK_HASH };
+
+/**
+ * Network hashrate and difficulty over time, in the shape the mining charts
+ * expect: a hashrate point per day and a difficulty point per retarget.
+ *
+ * The numbers are the right order of magnitude for the network, so the axis
+ * formats into EH/s rather than collapsing to zero the way the mempool series
+ * used to.
+ */
+function buildHashrateSeries() {
+  const now = Math.floor(Date.now() / 1000);
+  const hashrates = [];
+  const difficulty = [];
+  for (let day = 90; day >= 0; day--) {
+    const drift = Math.sin(day / 11) * 0.06 + Math.cos(day / 5) * 0.02;
+    hashrates.push({
+      timestamp: now - day * 86_400,
+      avgHashrate: Math.round(812_004_881_002_991_000_000 * (1 + drift)),
+    });
+    if (day % 14 === 0) {
+      difficulty.push({
+        timestamp: now - day * 86_400,
+        difficulty: Math.round(110_568_428_300_952 * (1 + drift / 3)),
+        height: 964_000 - day * 144,
+        adjustment: Number((drift * 12).toFixed(2)),
+      });
+    }
+  }
+  return {
+    hashrates,
+    difficulty,
+    currentHashrate: hashrates[hashrates.length - 1].avgHashrate,
+    currentDifficulty: difficulty[difficulty.length - 1].difficulty,
+  };
+}
+
+/** Retarget history, newest first, as the difficulty chart reads it. */
+function buildDifficultyAdjustments() {
+  const now = Math.floor(Date.now() / 1000);
+  return Array.from({ length: 26 }, (_, i) => [
+    now - i * 14 * 86_400,
+    964_000 - i * 2016,
+    110_568_428_300_952 * (1 - i * 0.004),
+    Number((Math.sin(i / 3) * 3).toFixed(2)),
+  ]);
+}
 
 function buildMempoolStats() {
   const now = Math.floor(Date.now() / 1000);

@@ -774,6 +774,25 @@ h1, h2, h3 {
   font-size: 14px;
 }
 
+// Positive and negative movement.
+//
+// Two components set these with an inline style binding carrying #42B747 and
+// #B74242, which no theme could reach and which the colour gate's markup
+// pattern did not match because an Angular property binding is not a style
+// attribute. On the light page the green measured 2.37:1 against 4.5:1
+// required, and it went unseen because the panel that shows it had no fixture
+// and rendered as a skeleton in every screenshot.
+//
+// Green still means up and red still means down. They are the evidence state
+// tokens now, which are the versions that clear the floor on every surface.
+.movement-up {
+  color: var(--u-state-proven);
+}
+
+.movement-down {
+  color: var(--u-state-unavailable);
+}
+
 .progress {
   // Visible so the label below the track is not clipped. The fill keeps
   // its own rounding, so nothing about the bar itself changes.
