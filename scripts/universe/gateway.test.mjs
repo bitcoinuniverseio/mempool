@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 
 // Importing the gateway must not open a socket.
 process.env.UNIVERSE_GATEWAY_NO_LISTEN = '1';
-const { routeFor } = await import('./gateway.mjs');
+const { routeFor, inheritedListenerFd } = await import('./gateway.mjs');
 
 /**
  * The path rewrite is load bearing. The explorer backend registers every route
@@ -81,4 +81,31 @@ test('everything outside the api tree is left for the static handler', () => {
     const pathname = new URL(url, 'http://x.invalid').pathname;
     assert.equal(routeFor(pathname, url), null, url);
   }
+});
+
+/**
+ * A gateway restart used to be the one part of a deploy nothing could bridge.
+ * Reading the handover wrong does not fail loudly: the process either binds its
+ * own port and quietly reintroduces the gap, or listens on a descriptor it does
+ * not own.
+ */
+
+test('the socket systemd passes is used when it is addressed to this process', () => {
+  assert.equal(inheritedListenerFd({ LISTEN_PID: '42', LISTEN_FDS: '1' }, 42), 3);
+});
+
+test('a plain start opens its own port', () => {
+  assert.equal(inheritedListenerFd({}, 42), null);
+});
+
+test('a descriptor addressed to another process is ignored', () => {
+  // LISTEN_PID and LISTEN_FDS are inherited by children. A child that trusted
+  // them would listen on its parent's socket.
+  assert.equal(inheritedListenerFd({ LISTEN_PID: '41', LISTEN_FDS: '1' }, 42), null);
+});
+
+test('a handover of no sockets is not a handover', () => {
+  assert.equal(inheritedListenerFd({ LISTEN_PID: '42', LISTEN_FDS: '0' }, 42), null);
+  assert.equal(inheritedListenerFd({ LISTEN_PID: '42' }, 42), null);
+  assert.equal(inheritedListenerFd({ LISTEN_PID: '42', LISTEN_FDS: 'two' }, 42), null);
 });

@@ -432,6 +432,33 @@ server.requestTimeout = 0;
 server.keepAliveTimeout = 65_000;
 
 /**
+ * The first descriptor systemd passes to a socket-activated service.
+ */
+const SD_LISTEN_FDS_START = 3;
+
+/**
+ * Returns the descriptor of a listening socket handed over by systemd, or null
+ * when this process has to open its own.
+ *
+ * This is what makes a deploy invisible. The backend and the overlay can be
+ * restarted behind the gateway, which bridges the gap, but nothing could
+ * bridge a restart of the gateway itself: the port went away with the process
+ * and the edge answered 502 until it came back. With the socket held by
+ * systemd instead, the port stays bound across the restart and arriving
+ * connections wait in the kernel backlog rather than being refused.
+ *
+ * The pid check is not decoration. LISTEN_FDS and LISTEN_PID are inherited by
+ * child processes, so a child that trusted them would try to listen on a
+ * descriptor belonging to its parent.
+ */
+export function inheritedListenerFd(env = process.env, pid = process.pid) {
+  if (env.LISTEN_PID !== String(pid)) return null;
+  const count = Number(env.LISTEN_FDS);
+  if (!Number.isInteger(count) || count < 1) return null;
+  return SD_LISTEN_FDS_START;
+}
+
+/**
  * Listening is the default. A test that imports this file for its routing
  * table sets UNIVERSE_GATEWAY_NO_LISTEN so no socket is opened.
  *
@@ -441,9 +468,12 @@ server.keepAliveTimeout = 65_000;
  * code and no error to read.
  */
 if (process.env.UNIVERSE_GATEWAY_NO_LISTEN !== '1') {
-  server.listen(PORT, HOST, () => {
+  const inherited = inheritedListenerFd();
+  const announce = () => {
     process.stdout.write(
-      `Universe Explorer gateway listening on ${HOST}:${PORT}
+      `Universe Explorer gateway listening on ${
+        inherited === null ? `${HOST}:${PORT}` : `the socket systemd passed on fd ${inherited}`
+      }
 ` +
       `  overlay  ${OVERLAY.origin}
 ` +
@@ -452,7 +482,12 @@ if (process.env.UNIVERSE_GATEWAY_NO_LISTEN !== '1') {
       `  static   ${ROOT}
 `,
     );
-  });
+  };
+  if (inherited === null) {
+    server.listen(PORT, HOST, announce);
+  } else {
+    server.listen({ fd: inherited }, announce);
+  }
 
   for (const signal of ['SIGTERM', 'SIGINT']) {
     process.on(signal, () => {
