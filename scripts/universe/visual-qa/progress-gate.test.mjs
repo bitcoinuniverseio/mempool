@@ -31,7 +31,7 @@ test('a populated page that finished raises nothing', () => {
 test('a spinner still turning on a populated page fails the run', () => {
   const failures = progressFailures(withProgress('populated', { spinners: ['div.spinner-border'] }));
   assert.equal(failures.length, 1);
-  assert.match(failures[0], /still loading/);
+  assert.match(failures[0], /never stopped loading/);
 });
 
 test('skeletons that never resolved fail the run', () => {

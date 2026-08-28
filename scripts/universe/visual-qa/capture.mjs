@@ -80,6 +80,14 @@ const VIEWPORTS = [
 
 const THEMES = ['default', 'dark', 'contrast'];
 
+/**
+ * How long a page may take to stop showing loaders before the run calls it
+ * unfinished. Generous, because a loaded CI machine is slower than a laptop
+ * and the thing being measured is whether the page ever finishes, not how
+ * fast the machine is.
+ */
+const SETTLE_DEADLINE_MS = 15_000;
+
 const STATES = ['populated', ...Object.keys(stateOverrides)];
 
 function pick(list, key, idKey = 'id') {
@@ -335,13 +343,26 @@ async function run() {
               contrast = { text: [], painted: [], canvas: [], sampled: 0, error: String(e).slice(0, 200) };
             }
 
-            // Judged after the settle wait, so anything still spinning here had
-            // longer than a user would wait and is not going to resolve.
+            // A fixed pause is a race, not a deadline: on a loaded machine a
+            // page that finishes perfectly well can still be mid-render when
+            // the probe fires. Wait for it to settle, up to a real deadline,
+            // and record how long it took. What fails the run is a page that
+            // never settles, which is the actual requirement.
             let progress;
+            let settledAfterMs = null;
             try {
-              progress = await page.evaluate(progressProbe);
+              const deadline = Date.now() + SETTLE_DEADLINE_MS;
+              for (;;) {
+                progress = await page.evaluate(progressProbe);
+                const busy = (progress.spinners?.length ?? 0) > 0 || (progress.skeletons ?? 0) > 0;
+                if (!busy || Date.now() >= deadline) {
+                  settledAfterMs = busy ? null : Date.now() - (deadline - SETTLE_DEADLINE_MS);
+                  break;
+                }
+                await page.waitForTimeout(250);
+              }
             } catch (e) {
-              progress = { spinners: [], skeletons: 0, charts: [], statusPanels: [], textLength: 0, error: String(e).slice(0, 200) };
+              progress = { spinners: [], skeletons: 0, charts: [], statusPanels: [], loadingAnnouncements: [], textLength: 0, error: String(e).slice(0, 200) };
             }
 
             await page.screenshot({ path: join(OUT, `${label}.png`), fullPage: Boolean(args.fullPage) });
@@ -349,7 +370,7 @@ async function run() {
 
             findings.push({
               route: route.id, routeName: route.name, state, theme, viewport: viewport.id,
-              overflowBy, consoleErrors, brokenImages, violations, contrast, progress,
+              overflowBy, consoleErrors, brokenImages, violations, contrast, progress, settledAfterMs,
             });
           } catch (error) {
             findings.push({
@@ -393,7 +414,7 @@ export function progressFailures(report) {
 
     if (f.state === 'populated') {
       if (progress.spinners?.length) {
-        failures.push(`${where}: still loading after the settle wait (${progress.spinners.join(', ')})`);
+        failures.push(`${where}: never stopped loading (${progress.spinners.join(', ')})`);
       }
       if (progress.skeletons > 0) {
         failures.push(`${where}: ${progress.skeletons} skeleton(s) never resolved`);
