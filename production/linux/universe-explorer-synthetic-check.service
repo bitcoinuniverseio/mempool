@@ -1,0 +1,17 @@
+[Unit]
+Description=Universe Explorer synthetic check against the public origin
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+# The public origin, not loopback: this has to exercise the same path a reader
+# takes, including the gateway, the tunnel, and TLS.
+ExecStart=/usr/local/bin/node /usr/local/lib/universe-explorer-synthetic-check.mjs https://explorer.bitcoinuniverse.io
+DynamicUser=yes
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+RestrictAddressFamilies=AF_INET AF_INET6
+LockPersonality=true
