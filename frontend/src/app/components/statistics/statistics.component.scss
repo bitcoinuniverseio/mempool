@@ -232,3 +232,12 @@
     display: block;
   }
 }
+
+// Says how far back the data actually goes when that is less than the range
+// asked for. Informational, not a failure, so it sits above the chart rather
+// than replacing it.
+.bounded-history {
+  margin: 0 0 var(--u-space-3);
+  font-size: var(--u-text-sm);
+  color: var(--u-text-muted);
+}

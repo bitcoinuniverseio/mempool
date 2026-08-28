@@ -1,0 +1,44 @@
+name: Universe production smoke
+
+# Checks the live origin with nothing mocked.
+#
+# The rest of the suite answers every request from fixtures, which is what let
+# a release ship with a Charts page and a Mining dashboard in front of routes
+# that answered 404. Fixtures prove how a page renders given data; only this
+# proves the deployment can produce any.
+
+on:
+  # After a release, and on a schedule so a dependency that fails later is
+  # noticed without anyone deploying.
+  workflow_dispatch:
+    inputs:
+      origin:
+        description: Origin to check
+        required: false
+        default: https://explorer.bitcoinuniverse.io
+  schedule:
+    - cron: '17 * * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: universe-production-smoke
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    name: Live origin answers with real content
+    runs-on: [self-hosted, linux-ultra]
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24.19.0'
+
+      - name: Every advertised feature has routes, data, and a matching release
+        run: node scripts/universe/synthetic-check.mjs "${{ github.event.inputs.origin || 'https://explorer.bitcoinuniverse.io' }}"

@@ -1,0 +1,33 @@
+<div class="load-status" *ngIf="isLoading || isEmpty || isError" [style.min-height]="minHeight" role="status" aria-live="polite">
+
+  <ng-container *ngIf="isLoading">
+    <div class="load-status-spinner" aria-hidden="true"></div>
+    <p class="load-status-text" *ngIf="label" i18n="load.status.loading">Loading {{ label }}</p>
+    <p class="load-status-text" *ngIf="!label" i18n="load.status.loading-generic">Loading</p>
+  </ng-container>
+
+  <ng-container *ngIf="isEmpty">
+    <p class="load-status-title" i18n="load.status.empty">Nothing to show yet</p>
+    <p class="load-status-text" i18n="load.status.empty-detail">This range has no recorded data. Collection continues.</p>
+  </ng-container>
+
+  <ng-container *ngIf="isError">
+    <p class="load-status-title" *ngIf="label">{{ label }}</p>
+    <p class="load-status-text">{{ message }}</p>
+    <div class="load-status-actions">
+      <button type="button" class="btn btn-sm btn-primary" *ngIf="canRetry" (click)="onRetry()" i18n="load.status.retry">Retry</button>
+      <a class="btn btn-sm btn-secondary" routerLink="/status" i18n="load.status.system">System status</a>
+    </div>
+  </ng-container>
+
+</div>
+
+<div class="load-status-stale" *ngIf="isStale" role="status" aria-live="polite">
+  <span i18n="load.status.stale">Showing the last known values.</span>
+  <span class="load-status-text">{{ message }}</span>
+  <span class="load-status-text" *ngIf="observedAt">
+    <ng-container i18n="load.status.stale-observed">Observed</ng-container>
+    <app-time kind="since" [time]="observedAt / 1000"></app-time>
+  </span>
+  <button type="button" class="btn btn-sm btn-primary" *ngIf="canRetry" (click)="onRetry()" i18n="load.status.retry">Retry</button>
+</div>

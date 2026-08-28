@@ -1,0 +1,44 @@
+#!/bin/bash
+#
+# Dumps the Universe Explorer database and prunes old dumps.
+#
+# A restore was verified by hand once; a backup nobody takes is not a backup,
+# so this runs daily and keeps two weeks. Verify a restore into a scratch
+# schema after any change to the schema or the engine:
+#
+#   gunzip -c <dump> | docker exec -i universe-explorer-mariadb \
+#     mariadb -u root -p"$MYSQL_ROOT_PASSWORD" restore_probe
+#
+set -euo pipefail
+
+CONTAINER=universe-explorer-mariadb
+DEST=/data/indexers-c/universe-explorer/backups
+KEEP_DAYS=14
+
+set -a
+. /etc/universe-explorer/mysql.env
+set +a
+
+mkdir -p "$DEST"
+STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+OUT="$DEST/universe_explorer-$STAMP.sql.gz"
+
+docker exec "$CONTAINER" mariadb-dump \
+  -u root -p"$MYSQL_ROOT_PASSWORD" \
+  --single-transaction --routines --events \
+  "$MYSQL_DATABASE" 2>/dev/null | gzip > "$OUT"
+
+# A dump that is suspiciously small did not work, and keeping it would hide
+# that the good one is missing.
+SIZE=$(stat -c %s "$OUT")
+if [ "$SIZE" -lt 1000000 ]; then
+  echo "backup is only $SIZE bytes, refusing to keep it" >&2
+  rm -f "$OUT"
+  exit 1
+fi
+
+# Prove the dump can be read back before trusting it.
+gunzip -t "$OUT"
+
+find "$DEST" -name 'universe_explorer-*.sql.gz' -mtime "+$KEEP_DAYS" -delete
+echo "wrote $OUT ($SIZE bytes), keeping $KEEP_DAYS days"
