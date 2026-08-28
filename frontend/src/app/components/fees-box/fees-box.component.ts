@@ -5,6 +5,7 @@ import { Recommendedfees } from '@interfaces/websocket.interface';
 import { feeLevels } from '@app/app.constants';
 import { map, startWith, tap } from 'rxjs/operators';
 import { ThemeService } from '@app/services/theme.service';
+import { LoadState } from '@app/shared/load-state';
 
 @Component({
   selector: 'app-fees-box',
@@ -15,6 +16,12 @@ import { ThemeService } from '@app/services/theme.service';
 })
 export class FeesBoxComponent implements OnInit, OnDestroy {
   isLoading$: Observable<boolean>;
+  /**
+   * Whether the socket that carries these numbers has given up. It is the only
+   * source for them and it never errors, so without this the placeholders here
+   * would go on claiming an answer was coming for as long as the tab was open.
+   */
+  liveFeed$: Observable<LoadState<boolean>>;
   recommendedFees$: Observable<Recommendedfees>;
   themeStateSubscription: Subscription;
   gradient = 'linear-gradient(to right, var(--skeleton-bg), var(--skeleton-bg))';
@@ -28,6 +35,7 @@ export class FeesBoxComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
+    this.liveFeed$ = this.stateService.liveFeed$;
     this.isLoading$ = combineLatest(
       this.stateService.isLoadingWebSocket$.pipe(startWith(false)),
       this.stateService.loadingIndicators$.pipe(startWith({ mempool: 0 })),

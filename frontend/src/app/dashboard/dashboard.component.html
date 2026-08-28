@@ -2,13 +2,13 @@
 <div class="dashboard" *ngIf="(network$ | async) !== 'liquid'; else liquidDashboard">
   <!-- Rendered only when live data never arrived: the panel explains the
        skeletons below it instead of leaving them unexplained. -->
-  @if (chainStatus$ | async; as chainStatus) {
-    @if (chainStatus.status === 'loading') {
+  @if (liveFeed$ | async; as liveFeed) {
+    @if (liveFeed.status === 'loading') {
       <p class="sr-only" role="status" i18n="dashboard.loading-announcement">Loading live chain data</p>
     }
-    @if (chainStatus.status === 'error') {
-      <app-load-status [state]="chainStatus" label="live chain data" i18n-label="load.label.live-chain-data"
-        (retry)="retryChain()"></app-load-status>
+    @if (liveFeed.status === 'error') {
+      <app-load-status [state]="liveFeed" label="live chain data" i18n-label="load.label.live-chain-data"
+        (retry)="retryLiveFeed()"></app-load-status>
     }
   }
   <div class="dashboard-grid" *ngIf="{ value: (mempoolInfoData$ | async) } as mempoolInfoData">

@@ -803,7 +803,7 @@ h1, h2, h3 {
   // follows: in the blocks table that is the next row, and the figure was cut
   // in half by it. The reserve is only made where a label actually exists.
   &:has(.progress-text) {
-    margin-bottom: 1.1em;
+    margin-bottom: calc(1.1em + 4px);
   }
 
   .progress-bar {
@@ -818,7 +818,7 @@ h1, h2, h3 {
   left: 0;
   position: absolute;
   text-align: center;
-  top: calc(100% + 3px);
+  top: calc(100% + 7px);
   white-space: nowrap;
   width: 100%;
 }

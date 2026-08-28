@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Inject, Input, LOCALE_ID, NgZone, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
 import { echarts, EChartsOption } from '@app/graphs/echarts';
 import { BehaviorSubject, Observable, Subscription, combineLatest, of } from 'rxjs';
-import { catchError, map, switchMap, tap } from 'rxjs/operators';
+import { catchError, map, startWith, switchMap, tap } from 'rxjs/operators';
 import { AddressTxSummary, ChainStats } from '@interfaces/electrs.interface';
 import { ElectrsApiService } from '@app/services/electrs-api.service';
 import { AmountShortenerPipe } from '@app/shared/pipes/amount-shortener.pipe';
@@ -109,7 +109,7 @@ export class AddressGraphComponent implements OnChanges, OnDestroy {
             return of(null);
           }),
         )),
-        this.stateService.conversions$
+        this.stateService.conversions$.pipe(startWith(null))
       ]).pipe(
         switchMap(([redraw, addressSummary, conversions]) => {
           this.conversions = conversions;
