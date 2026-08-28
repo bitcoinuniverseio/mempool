@@ -63,6 +63,19 @@ That is the whole reason the pink can be loud. A reader learns in one screen
 that pink means "this is Universe, and this is where you act", so it never has
 to compete with the colours that mean something about Bitcoin.
 
+**Filling a bar is not carrying a quantity.** A progress bar, a block fullness
+bar, or a single-series area chart may be brand pink, because the value is
+carried by the length or the height and the fill is just the mark. What is
+forbidden is colour that *encodes* the value: a fee band, a status, a protocol,
+a heat scale. If changing the number would change the colour, the colour is not
+allowed to be the brand.
+
+One consequence worth stating, because it is the only place the system bends:
+the fee scale runs to a deep magenta at its expensive end, and that band sits
+about 10.7 dE from the light brand fill. Both values are load bearing. It is
+recorded in `check-palettes.mjs` at the distance it actually has, so nudging
+either one closer fails the build.
+
 ### Colour roles
 
 | Token | Value, light | Value, dark | Role |
