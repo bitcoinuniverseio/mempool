@@ -134,9 +134,16 @@ const PATTERNS = [
     extensions: ['.scss', '.css'],
   },
   // Inline styles and SVG presentation attributes in templates.
+  //
+  // The binding forms are here for a reason. This pattern originally required a
+  // literal `style="` attribute, so two components carrying
+  // `[style]="up ? 'color: #42B747' : 'color: #B74242'"` passed the gate for as
+  // long as it has existed. One of those greens measured 2.37:1 on the light
+  // page. A property binding paints exactly like an attribute, so it is matched
+  // exactly like one.
   {
     id: 'markup-literal',
-    regex: /(?:style\s*=\s*"|(?:fill|stroke|stop-color|flood-color)\s*=\s*")[^"]{0,160}?(#[0-9a-fA-F]{3,8}\b|\brgba?\(\s*\d)/g,
+    regex: /(?:style\s*=\s*"|\[(?:style|ngStyle|attr\.[a-zA-Z-]+)(?:\.[a-zA-Z-]+)?\]\s*=\s*"|(?:fill|stroke|stop-color|flood-color)\s*=\s*")[^"]{0,220}?(#[0-9a-fA-F]{3,8}\b|\brgba?\(\s*\d)/g,
     extensions: ['.html', '.svg'],
   },
   // Colour-valued properties in component code.

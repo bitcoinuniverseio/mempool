@@ -1,0 +1,39 @@
+# Holds the gateway's listening port so that restarting the gateway does not
+# refuse connections.
+#
+# The backend and the overlay restart behind the gateway, which bridges the gap
+# for them. Nothing could bridge a restart of the gateway itself: the port went
+# away with the process, and the edge answered 502 until it came back. That was
+# the last remaining gap in a deploy, and it opened whenever gateway.mjs
+# changed.
+#
+# With the socket owned by systemd, the port stays bound across the restart and
+# arriving connections wait in the kernel backlog instead. Install with:
+#
+#   systemctl enable --now universe-explorer-gateway.socket
+#
+# Adopting it on a gateway that is already running costs one brief interruption,
+# because the old process holds the port without SO_REUSEPORT and the socket
+# unit cannot bind underneath it. Every deploy after that is seamless.
+
+# It deliberately does not declare PartOf=universe-explorer-gateway.service.
+# PartOf propagates stop and restart from the named unit to this one, so a
+# restart of the service would take the socket down with it, drop whatever was
+# queued in the backlog, and rebind. That is a shorter gap than before but it
+# is still a gap, and it would make the claim above false.
+#
+# Because the socket outlives the service, stopping the service alone does not
+# take the port down: the next connection activates the service again. To stop
+# the gateway for real, stop both units.
+
+[Unit]
+Description=Universe Explorer gateway socket
+
+[Socket]
+ListenStream=127.0.0.1:8099
+# Matches the backlog the gateway asked for when it opened the port itself, so
+# a burst arriving mid-restart is queued rather than dropped.
+Backlog=511
+
+[Install]
+WantedBy=sockets.target

@@ -13,6 +13,10 @@ explorer.bitcoinuniverse.io          public origin, TLS terminated at the gatewa
        /api/v1/universe/*  ->  universe-explorer-overlay   127.0.0.1:3400
        /api/*              ->  universe-explorer-backend   127.0.0.1:8996
        everything else     ->  the built frontend, SPA fallback
+
+  universe-explorer-backend  ->  Bitcoin Core RPC   127.0.0.1:8332
+                             ->  explorer database  127.0.0.1:3307
+  universe-explorer-overlay  ->  protocol authorities, all on loopback
 ```
 
 No indexer port, RPC port, or database port is exposed publicly, and the
@@ -25,6 +29,7 @@ restricted to port forwarding and to that single destination port.
 | --- | --- | --- |
 | `universe-explorer-backend.service` | the forked explorer backend, `backend/dist/index.js` | 127.0.0.1:8996 |
 | `universe-explorer-overlay.service` | the `backend-apis` read-only protocol overlay, `dist/universe-explorer-main.js` | 127.0.0.1:3400 |
+| `universe-explorer-mariadb` | the explorer database, a Docker container | 127.0.0.1:3307 |
 | `universe-explorer-gateway.service` | `scripts/universe/gateway.mjs`, static files plus routing | 127.0.0.1:8099 |
 
 All three run as the `universe-explorer` system user. The backend additionally
@@ -36,15 +41,55 @@ nothing else.
 The backend reads only Universe-owned infrastructure:
 
 - Bitcoin Core on 127.0.0.1:8332, authenticated by cookie
-- Fulcrum on 127.0.0.1:50001 for address and UTXO queries
 - no third-party API, at runtime or at build time
 
-`DATABASE.ENABLED` is `false`. The database only powers historical indexing,
-mining statistics, and audit features; the live explorer, the protocol overlay,
-and every route this product leads with work without it. Running without it
-keeps the explorer off the memory budget of a host that is also indexing.
-`AUTOMATIC_POOLS_UPDATE` is `false` so no pool metadata is fetched from a third
-party; mining pool logos fall back to the bundled default.
+`MEMPOOL.BACKEND` is `none`, meaning Core answers everything. It was
+`electrum`, pointing at a Fulcrum on 127.0.0.1:50001 that is no longer on this
+host: no process, no data directory, no unit file. A dead address backend does
+not fail loudly, it retries, and it was producing roughly two connection errors
+a second and burying every real error in the journal. Core serves blocks,
+transactions and the mempool either way; with `none` an address lookup fails
+immediately and clearly instead of hanging.
+
+Set this back to `electrum` when Fulcrum is running again. The release
+preflight refuses `electrum` when nothing is listening on the configured port,
+so the retry storm cannot come back silently.
+
+The explorer database is `universe-explorer-mariadb`, a dedicated container on
+loopback port 3307 with its own data directory under
+`/data/indexers-c/universe-explorer/mariadb`. Credentials live in
+`/etc/universe-explorer/mysql.env`, root-owned and group-readable by
+`universe-explorer` only, and the database user is scoped to the one schema.
+
+It is MariaDB rather than the MySQL 8.4 pinned elsewhere in the workspace,
+because the upstream migrations are written in MariaDB syntax that MySQL
+rejects outright. `ALTER TABLE ... DROP FOREIGN KEY IF EXISTS` and a literal
+`DEFAULT` on a `JSON` column both abort the whole migration run on MySQL, and
+there are twenty of the latter. Carrying a patch for each one would put a
+permanent divergence in the middle of upstream migration code and break again
+on every upstream sync. The integration test database is pinned to the same
+engine and major version for the same reason: a test database on a different
+engine proves nothing about the release.
+
+`DATABASE.ENABLED` and `STATISTICS.ENABLED` are `true`, and
+`INDEXING_BLOCKS_AMOUNT` is `52560`, one year of blocks. Statistics and every
+mining route are registered only when those are on, so with them off the public
+Charts and Mining pages sat in front of routes that answered 404. The indexing
+bound is deliberate: it covers every range the mining pages offer up to 1Y and
+keeps the initial index from competing with the protocol indexers for Bitcoin
+Core for longer than it has to. The frontend only offers a range it has the
+block count to cover, so ranges beyond the indexed history stay hidden rather
+than empty.
+
+`AUTOMATIC_POOLS_UPDATE` is `false` and `POOLS_JSON_FILE` names the pool list
+bundled in the repository. Pool metadata is identified by the git blob hash of
+that file's own bytes, so the import is deterministic, needs no network, and
+does no work on a redeploy that did not change it. Nothing fetches pool data
+from a third party at runtime.
+
+`FIAT_PRICE.ENABLED` is `false`. The price updater reads public exchange APIs,
+which is not allowed here, and no Universe-owned price source exists yet. Fiat
+amounts render blank rather than as a confident zero.
 
 The overlay reads only Universe protocol authorities, configured through
 `UNIVERSE_EXPLORER_SOURCES_JSON` in `/etc/universe-explorer/overlay.env`, with
@@ -60,6 +105,7 @@ the JSON, in responses, or in logs.
 | `backend.json` | explorer backend configuration |
 | `overlay.env` | overlay port and the protocol source registry |
 | `gateway.env` | gateway ports and the static root |
+| `mysql.env` | explorer database name, user, and passwords |
 | `fulcrum.conf` | the Electrum index this deployment reads |
 
 ## Build
@@ -83,34 +129,161 @@ without anything noticing.
 
 ## Release procedure
 
+`scripts/universe/release.sh` performs the release and is installed on the host
+as `/usr/local/bin/universe-explorer-release`. It exists because the previous
+release passed every check in CI and still shipped two broken pages: the thing
+that was wrong was the configuration of the machine, and nothing in a fixture
+suite can see that.
+
 1. Run the full check set on the runner fleet
    (`.github/workflows/universe-ci.yml`), including the branding, origin, and
-   text gates against both the source tree and `frontend/dist`.
-2. Install the new release beside the running one under
-   `/opt/universe-explorer/releases/mempool-<sha>/`. Never overwrite a live
-   release directory in place.
-3. Point `/opt/universe-explorer/current` at the new release with an atomic
-   symlink swap.
-4. Restart the three explorer units. The gateway comes back within a second,
-   so the public origin sees at most a brief connection reset rather than a
-   sustained outage.
-5. Verify: `/__gateway/health` on the gateway, tip height against Core,
-   a known block and transaction render, `/api/v1/universe/status` reports its
-   sources, and the `/source` page shows the deployed commit.
-6. Keep the previous release directory until the stability window closes.
+   text gates against both the source tree and `frontend/dist`, the backend
+   integration tests against a real database, and the visual matrix.
+2. Build on the runner fleet and pack `backend/dist`, `frontend/dist`, and
+   `scripts/universe` into one artifact.
+3. `universe-explorer-release install <sha> <artifact>` unpacks it beside the
+   running release under `/opt/universe-explorer/releases/mempool-<sha>/` and
+   hard-links the dependency tree from the release in use. A release directory
+   is never overwritten in place.
+4. `universe-explorer-release preflight <sha>` runs the gates and changes
+   nothing. It refuses a release whose build is incomplete, whose
+   configuration would advertise a feature it cannot serve, whose database does
+   not answer, whose source registry does not parse or names a token variable
+   that is missing, or where a protocol the registry calls readable has no
+   authority configured.
+5. `universe-explorer-release cutover <sha>` runs the gates again, swaps the
+   `current` symlink atomically, restarts what has to restart, and verifies.
+
+   The backend and the overlay run from a path baked into their unit at exec
+   time, so they always restart; they take a few seconds to listen again, and
+   the gateway waits for them rather than answering 502. The gateway resolves
+   its static root per request, so a new frontend reaches it through the
+   symlink with no restart, and it is restarted only when its own file
+   changed. A cutover was probed once a second through the restart window and
+   every request returned 200.
+
+   A release that changes the gateway itself used to be the one case that
+   still showed a gap, because the port went away with the process and nothing
+   could bridge it. `universe-explorer-gateway.socket` closes that: systemd
+   owns the listening port, so a restart of the service leaves it bound and
+   arriving connections wait in the kernel backlog. The unit and the service
+   drop-in that requires it are in `production/linux/`. Enable it with
+
+   ```bash
+   systemctl enable --now universe-explorer-gateway.socket
+   ```
+
+   Measured on this host before adopting it, on a spare port with a throwaway
+   unit pair that was removed afterwards: the service logged that it was
+   listening on the socket systemd passed, and a full `systemctl restart`
+   under a probe every 20 milliseconds returned 200 on all 400 requests while
+   the process id changed underneath. The handover is not an assumption.
+
+   Adopting it on a gateway that is already running costs one brief
+   interruption, since the running process holds the port without
+   `SO_REUSEPORT` and the socket unit cannot bind underneath it. Every deploy
+   after that is seamless. The cutover log states which of the two cases
+   applies rather than leaving a reader to assume.
+
+   Once the socket owns the port it outlives the service, so stopping the
+   service alone does not take the gateway down: the next connection starts it
+   again. To stop it for real, stop both units.
+
+   ```bash
+   systemctl stop universe-explorer-gateway.socket universe-explorer-gateway.service
+   ```
+
+   An upstream that is genuinely gone is still reported as a gateway failure
+   within a few seconds, so a real outage is never hidden behind a long wait. After the swap it reads `/api/v1/capabilities` and
+   fails the release if any feature is enabled with no routes registered, which
+   is exactly the state that shipped. A failed verification rolls back.
+6. Run `node scripts/universe/synthetic-check.mjs` against the public origin.
+   It asks the live endpoints with nothing mocked and fails on an empty range,
+   a protocol advertised as readable whose authority cannot answer, a
+   configured authority with no checkpoint, or a frontend and backend on
+   different builds.
+7. Keep the previous release directory until the stability window closes.
+
+Rolling back to a release from before the socket handover needs the port back,
+because such a gateway opens 8099 itself and dies on bind while systemd holds
+it. `release.sh rollback` detects that case by looking for `inheritedListenerFd`
+in the target release and disables the socket first. That is worth knowing by
+hand too, since the rollback path is reached exactly when something has already
+gone wrong.
+
+## Database growth and retention
+
+Measured on the running deployment, with one year of blocks indexed and the
+statistics writer taking a sample a minute:
+
+| Table | Rows | Size | Growth |
+| --- | --- | --- | --- |
+| `blocks` | 52,580 | 130 MB | about 0.4 MB a day, from new blocks only |
+| `statistics` | 1 a minute | small | about 0.4 MB a day |
+| `hashrates` | 1,437 | 0.2 MB | a few rows a day |
+
+That is roughly 300 MB a year against 1.5 TB free on `/data/indexers-c`, so
+nothing is pruned. Statistics are kept indefinitely on purpose: the `all` range
+is the whole series, and deleting old samples would silently shorten it.
+
+The indexed block window is bounded by `INDEXING_BLOCKS_AMOUNT`, so `blocks`
+grows only with the chain rather than with the backlog. Raising that value
+re-indexes further back and costs Bitcoin Core RPC time while it runs; do it
+when the host is not also rebuilding an index.
+
+## Monitoring
+
+`universe-explorer-synthetic-check.timer` runs the synthetic check against the
+public origin every five minutes. The unit files are in `production/linux/`.
+It exercises the same path a reader takes, including the gateway, the tunnel,
+and TLS, and marks the service failed when a check fails, so an outage between
+releases shows up where every other service failure already does:
+
+```bash
+systemctl list-timers universe-explorer-synthetic-check.timer
+journalctl -u universe-explorer-synthetic-check.service -n 30
+```
+
+It fails on a feature advertised with no routes behind it, a statistics range
+that answers with nothing, a protocol marked readable whose authority cannot
+answer, a configured authority that published no checkpoint, and a frontend and
+backend reporting different builds. The same script runs hourly in CI through
+`universe-production-smoke.yml`.
 
 ## Rollback
 
-Point the symlink back and restart:
-
 ```bash
-ln -sfn /opt/universe-explorer/releases/mempool-<previous-sha> /opt/universe-explorer/current.new
-mv -Tf /opt/universe-explorer/current.new /opt/universe-explorer/current
-systemctl restart universe-explorer-backend universe-explorer-overlay universe-explorer-gateway
+universe-explorer-release rollback <previous-sha>
 ```
 
-Nothing else changes: configuration lives outside the release directory, and no
-migration runs, so a rollback is exactly the same operation in reverse.
+It points the symlink back, restarts the three units, and verifies the result,
+failing loudly if the rollback target does not come back either.
+
+Configuration lives outside the release directory, so a rollback carries the
+configuration forward. Database migrations do not roll back: they are additive,
+and an older backend reads a newer schema. A rollback across a migration should
+therefore be paired with a database restore only if the newer schema is known
+to be incompatible, which has not happened yet.
+
+`universe-explorer-backup.timer` dumps the database daily into
+`/data/indexers-c/universe-explorer/backups` and keeps two weeks. The script
+refuses to keep a dump that is suspiciously small and checks the archive reads
+back, because a backup nobody verifies is not a backup. Take one by hand before
+a release that migrates:
+
+```bash
+systemctl start universe-explorer-backup.service
+```
+
+Verify a restore into a scratch schema after any change to the schema or the
+engine, rather than trusting that the dump exists:
+
+```bash
+docker exec universe-explorer-mariadb mariadb -u root -p"$MYSQL_ROOT_PASSWORD" \
+  -e 'DROP DATABASE IF EXISTS restore_probe; CREATE DATABASE restore_probe;'
+gunzip -c <dump> | docker exec -i universe-explorer-mariadb \
+  mariadb -u root -p"$MYSQL_ROOT_PASSWORD" restore_probe
+```
 
 ## Rules
 

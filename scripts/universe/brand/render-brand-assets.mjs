@@ -28,10 +28,19 @@ const UNIVERSE = join(RESOURCES, 'universe');
 // Taken from the light palette in styles/_universe-tokens.scss. Icons are
 // rendered once and served to every theme, so they carry the brand colour on an
 // opaque ground rather than trying to adapt.
-const BRAND = '#2438b8';
-const INK = '#10151f';
-const PAPER = '#ffffff';
-const MUTED = '#5c6879';
+//
+// The icon is inverted on purpose: a pearl mark on a hot-pink tile, rather than
+// a pink glyph on white. Every explorer in this market ships a dark or white
+// favicon, so a solid pink tile is the one that can be found in a strip of
+// twenty tabs. Pearl on #c40059 measures 5.7:1, so the mark stays legible at
+// 16px rather than relying on the tile colour alone.
+const BRAND = '#c40059';
+const BRAND_ACCENT = '#ff0066';
+const MAGENTA = '#a3006b';
+const FUCHSIA = '#8b2fb5';
+const INK = '#241a2b';
+const PEARL = '#fff6fa';
+const MUTED = '#645a6e';
 
 const mark = readFileSync(join(UNIVERSE, 'universe-mark.svg'), 'utf8')
   .replace(/<!--[\s\S]*?-->/g, '')
@@ -61,11 +70,12 @@ function socialCard() {
   return `<!doctype html><meta charset="utf-8">
 <style>
   html,body{margin:0;padding:0}
-  body{width:1200px;height:630px;background:${PAPER};
+  body{width:1200px;height:630px;background:${PEARL};
        font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
        display:flex;flex-direction:column;justify-content:center;
        padding:0 96px;box-sizing:border-box}
-  .rule{height:6px;width:96px;background:${BRAND};margin-bottom:44px}
+  .rule{height:6px;width:180px;margin-bottom:44px;
+        background:linear-gradient(90deg,${BRAND_ACCENT} 0%,${MAGENTA} 52%,${FUCHSIA} 100%)}
   .mark{width:76px;height:76px;color:${BRAND};margin-bottom:34px}
   .mark svg{width:100%;height:100%;display:block}
   h1{font-size:76px;line-height:1.03;letter-spacing:-0.025em;
@@ -99,7 +109,7 @@ async function main() {
       viewport: { width: icon.size, height: icon.size },
       deviceScaleFactor: 1,
     });
-    await page.setContent(iconPage(icon.size, BRAND, PAPER, icon.pad));
+    await page.setContent(iconPage(icon.size, PEARL, BRAND, icon.pad));
     await page.screenshot({ path: icon.file, omitBackground: false });
     await page.close();
     console.log(`icon  ${icon.size.toString().padStart(3)}px  ${icon.file}`);

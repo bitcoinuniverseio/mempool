@@ -258,3 +258,17 @@
 .inactive {
   color: var(--transparent-fg);
 }
+
+// What stands in for the epoch when the live feed has given up. It holds the
+// height the progress bar and the stats occupy, so the card does not collapse
+// when the placeholders are replaced by a sentence.
+.feed-unavailable {
+  align-items: center;
+  color: var(--u-text-secondary);
+  display: flex;
+  font-size: var(--u-text-sm);
+  justify-content: center;
+  margin: 0;
+  min-height: 84px;
+  text-align: center;
+}

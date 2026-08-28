@@ -105,6 +105,68 @@ implies a trade.
 | An MCP or agent endpoint | Bitquery, Blockscout | Genuinely emerging, but out of scope for this release. The versioned public API is the prerequisite and it exists. |
 | Multi-chain expansion | Blockchair, OKLink | The registry lists other chains for completeness and the UI separates them. Serving them is a different product. |
 
+## Lessons from the visual language pass, 28 August 2026
+
+The August 26 pass answered what the product should do. It did not ask what the
+product should look like, and a fork inherits an appearance the way it inherits
+code. `visual-language-benchmark.md` holds the method, the measurements, and the
+closure evidence for this pass.
+
+### 6. The whole category ships a dark, cool shell
+
+Read from each product's own declared `theme-color`: mempool.space `#1d1f31`,
+Blockchain.com black, Blockstream dark, and the palette convention in this
+category described in secondary sources as low chroma and cool.
+
+**Built:** a light-first pearl shell with a hot-pink brand, which is a position
+no measurable competitor occupies. The favicon inverts to a pearl mark on a pink
+tile for the same reason: every other explorer's is dark or white, and the tab
+strip is where a return visit is actually won or lost.
+
+### 7. A saturated brand colour is a real risk to data colour
+
+This is the reason the position is empty, and it had to be answered rather than
+waved away. Pink applied to a status or a fee band would destroy the product's
+ability to say "proven" or "expensive" in colour.
+
+**Built:** pink is confined to identity and intent, and the confinement is
+mechanical. `check-palettes.mjs` measures every brand role against every state
+and protocol colour and fails the build under 25 dE. Adding that gate found
+three collisions that predated it, including ordinals orange sitting 11.1 dE
+from the amber that means partial evidence.
+
+### 8. Users in this category want clarity, not features
+
+A usability survey reported in CoinLedger's 2026 explorer guide puts 72% of
+block explorer users ahead of clear data presentation over additional features.
+
+**Built:** nothing. That is the point. This pass added no feature. The effort
+went into the colour system, the foreground contracts, and the checks, and the
+information density of every route is unchanged.
+
+### 9. Accessibility is an open differentiator here, not a compliance cost
+
+CHI 2023 research on crypto technologies found every audited exchange site had
+critical issues limiting keyboard-only or screen reader use, with poor contrast
+throughout navigation.
+
+**Built:** the AA floor is measured rather than asserted, on the built bundle,
+across three themes, seven widths, and six data states. The gate that does it
+is the reason the gloss on the primary control is 0.16 and not the 0.24 that
+looked better: at 0.24 a white label fell to 4.06:1 on the violet end of the
+brand sweep.
+
+### 10. The incumbent is funded and has ruled out our axis
+
+mempool.space incorporated in El Salvador in November 2025 and raised roughly
+$17M in January 2026, and its stated policy is still not to decode
+metaprotocols.
+
+**Built:** no change of direction, which is the useful conclusion. The
+protocol-aware evidence work stays the differentiator, and this pass spent its
+effort on the appearance of it rather than on chasing features the incumbent is
+now better funded to ship.
+
 ## Closure evidence
 
 Discovery ran in four passes with different strategies: category search,

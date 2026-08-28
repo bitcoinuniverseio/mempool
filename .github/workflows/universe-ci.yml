@@ -2,7 +2,7 @@ name: Universe CI
 
 on:
   push:
-    branches: [develop, main]
+    branches: [main]
   pull_request:
     branches: [develop, main]
   workflow_dispatch:
@@ -12,7 +12,7 @@ permissions:
 
 concurrency:
   group: universe-ci-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  cancel-in-progress: false
 
 jobs:
   docs:
@@ -40,6 +40,9 @@ jobs:
       - name: Every dynamic palette carries a readable foreground
         run: node scripts/universe/check-palettes.mjs
 
+      - name: Every filled surface declares the ink on it
+        run: node scripts/universe/check-fills.mjs
+
       - name: Contrast arithmetic is correct
         run: node --test scripts/universe/contrast.test.mjs
 
@@ -52,10 +55,17 @@ jobs:
       - name: Gateway routing
         run: node --test scripts/universe/gateway.test.mjs
 
+      - name: The gateway bridges an upstream restart rather than failing
+        run: node --test scripts/universe/gateway-restart.test.mjs
+
   backend:
     name: Backend build and test
     runs-on: [self-hosted, linux-ultra]
     timeout-minutes: 45
+    env:
+      COMPOSE_PROJECT_NAME: mempool-integration-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}
+      MEMPOOL_TEST_BASE_CONFIG_FILE: ${{ github.workspace }}/backend/mempool-config.test.json
+      MEMPOOL_TEST_RUNTIME_CONFIG_FILE: ${{ github.workspace }}/backend/.mempool-config.integration.json
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -83,10 +93,24 @@ jobs:
         working-directory: backend
         run: npm run test:ci
 
+      # The failure that shipped was a configuration one: the migrations never
+      # ran against the engine production uses, so nothing caught the syntax it
+      # rejects. These run the real backend against a real database.
+      - name: Migrations and repositories against a real database
+        working-directory: backend
+        run: npm run test:integration
+        env:
+          MEMPOOL_CONFIG_FILE: ${{ env.MEMPOOL_TEST_RUNTIME_CONFIG_FILE }}
+
   frontend:
     name: Frontend build
     runs-on: [self-hosted, linux-ultra]
-    timeout-minutes: 60
+    # The deep visual pass measured 48 minutes once the gated route list grew
+    # from three routes to seven, which put the job over the hour it had and
+    # killed it three minutes from the end. A gate that cannot finish protects
+    # nothing, which is the same reason the matrix was split in two to begin
+    # with. Budget is for the pass that actually runs, with room to grow.
+    timeout-minutes: 100
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -123,26 +147,73 @@ jobs:
       - name: Every asset the build references is in the output
         run: node scripts/universe/check-build-assets.mjs
 
+      - name: No em dash in what the build actually ships
+        run: node scripts/universe/check-text.mjs frontend/dist
+
       - name: Install the visual QA harness
         working-directory: scripts/universe/visual-qa
         run: npm ci
 
+      - name: The unfinished-page gate fires on the states that shipped
+        working-directory: scripts/universe/visual-qa
+        run: node --test progress-gate.test.mjs
+
+      # A fixed port here once measured another job's build: two runners share
+      # a host, the second gateway crashed on the taken port behind "&", the
+      # probe happily reached the first job's server, and the run died halfway
+      # when that other job ended. Each run now serves on its own free port and
+      # refuses to continue unless the process answering is the one it started.
       - name: Serve the built frontend
         run: |
-          UNIVERSE_GATEWAY_PORT=8123           UNIVERSE_GATEWAY_ROOT=frontend/dist/mempool/browser           node scripts/universe/gateway.mjs &
+          GATEWAY_PORT=$(node -e "const s=require('net').createServer();s.listen(0,'127.0.0.1',()=>{console.log(s.address().port);s.close()})")
+          echo "GATEWAY_PORT=$GATEWAY_PORT" >> "$GITHUB_ENV"
+          UNIVERSE_GATEWAY_PORT=$GATEWAY_PORT           UNIVERSE_GATEWAY_ROOT=frontend/dist/mempool/browser           node scripts/universe/gateway.mjs &
+          GATEWAY_PID=$!
           for i in $(seq 1 30); do
-            curl -fsS -o /dev/null http://127.0.0.1:8123/ && break
+            curl -fsS -o /dev/null "http://127.0.0.1:$GATEWAY_PORT/" && break
             sleep 1
           done
+          kill -0 "$GATEWAY_PID"
+          curl -fsS "http://127.0.0.1:$GATEWAY_PORT/__gateway/health"
 
-      - name: Measured contrast, accessibility, overflow, and screenshots
+      # The harness fails the run when a page never finishes loading, when a
+      # chart panel draws nothing, or when a failure state says nothing about
+      # why. Those three states passed every other gate here and shipped.
+      #
+      # Split into two passes that finish, rather than one sweep that does not.
+      # Every combination of thirteen routes, seven data states, three themes
+      # and seven widths is nineteen hundred page loads, which does not fit the
+      # job timeout, and a gate that cannot finish protects nothing.
+      #
+      # The broad pass walks every route at a phone and a desktop width with
+      # real data, which is where overflow, broken images and a page that never
+      # finishes show up. The deep pass takes the routes this suite holds to a
+      # terminal state through every failure state, every theme and the widths
+      # that change the layout, which is where a page that lies about why it is
+      # empty shows up. Measured at about two and a half minutes and sixteen
+      # minutes respectively.
+      - name: Every route renders and finishes, at a phone and a desktop width
         working-directory: scripts/universe/visual-qa
-        run: node capture.mjs --base=http://127.0.0.1:8123 --out=./artifacts
+        run: >-
+          node capture.mjs --base=http://127.0.0.1:$GATEWAY_PORT --out=./artifacts-broad
+          --states=populated --themes=default --viewports=375,1440
+
+      - name: The gated routes hold up across themes, widths and every failure state
+        working-directory: scripts/universe/visual-qa
+        run: >-
+          node capture.mjs --base=http://127.0.0.1:$GATEWAY_PORT --out=./artifacts
+          --routes=graphs,mining,protocols,home,blocks,tx,address --viewports=320,768,1440
+
+      - name: Forced colours and 200 percent zoom
+        working-directory: scripts/universe/visual-qa
+        run: node modes-check.mjs --base=http://127.0.0.1:$GATEWAY_PORT
 
       - name: Keep the contrast report and the route screenshots
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: universe-visual-qa
-          path: scripts/universe/visual-qa/artifacts
+          path: |
+            scripts/universe/visual-qa/artifacts
+            scripts/universe/visual-qa/artifacts-broad
           retention-days: 30

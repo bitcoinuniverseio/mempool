@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Inject, Input, LOCALE_ID, NgZone, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
 import { echarts, EChartsOption } from '@app/graphs/echarts';
 import { BehaviorSubject, Observable, Subscription, combineLatest, of } from 'rxjs';
-import { catchError, map, switchMap, tap } from 'rxjs/operators';
+import { catchError, map, startWith, switchMap, tap } from 'rxjs/operators';
 import { AddressTxSummary, ChainStats } from '@interfaces/electrs.interface';
 import { ElectrsApiService } from '@app/services/electrs-api.service';
 import { AmountShortenerPipe } from '@app/shared/pipes/amount-shortener.pipe';
@@ -10,7 +10,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
 import { StateService } from '@app/services/state.service';
 import { PriceService } from '@app/services/price.service';
 import { FiatCurrencyPipe } from '@app/shared/pipes/fiat-currency.pipe';
-import { chartChrome, rampStops } from '@app/shared/chart-theme';
+import { chartChrome, chartDataZoomStyle, rampStops } from '@app/shared/chart-theme';
 
 const periodSeconds = {
   '1d': (60 * 60 * 24),
@@ -109,7 +109,7 @@ export class AddressGraphComponent implements OnChanges, OnDestroy {
             return of(null);
           }),
         )),
-        this.stateService.conversions$
+        this.stateService.conversions$.pipe(startWith(null))
       ]).pipe(
         switchMap(([redraw, addressSummary, conversions]) => {
           this.conversions = conversions;
@@ -402,6 +402,7 @@ export class AddressGraphComponent implements OnChanges, OnDestroy {
         showDetail: false,
         show: true,
         type: 'slider',
+        ...chartDataZoomStyle(),
         brushSelect: false,
         realtime: true,
         left: this.adjustedLeft,
