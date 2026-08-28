@@ -92,6 +92,22 @@ export const fixtures = {
     ],
   },
 
+  // The release identity the /source page publishes.
+  //
+  // It arrives over the socket for the header, but the source page asks for it
+  // over REST, and that route had no fixture. So the one page whose entire job
+  // is to say which commit is running rendered with an empty release and an
+  // empty backend in every screenshot, and nobody reviewing the matrix could
+  // have seen that it works.
+  '/api/v1/backend-info': {
+    hostname: 'universe-explorer',
+    version: '3.3.1',
+    gitCommit: 'fixture0',
+    lightning: false,
+    backend: 'electrum',
+    coreVersion: '/Satoshi:31.0.0/',
+  },
+
   '/api/v1/universe/pulse': {
     checked: 512,
     authorityAnswering: true,
