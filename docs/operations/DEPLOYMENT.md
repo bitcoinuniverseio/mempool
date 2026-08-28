@@ -152,11 +152,19 @@ suite can see that.
    that is missing, or where a protocol the registry calls readable has no
    authority configured.
 5. `universe-explorer-release cutover <sha>` runs the gates again, swaps the
-   `current` symlink atomically, restarts the three units, and verifies. The
-   backend and the overlay take a few seconds to listen again; the gateway
-   waits for them rather than answering 502, so a request that arrives during
-   the restart is served late rather than failed. An upstream that is genuinely
-   gone is still reported as a gateway failure within a few seconds. After the swap it reads `/api/v1/capabilities` and
+   `current` symlink atomically, restarts what has to restart, and verifies.
+
+   The backend and the overlay run from a path baked into their unit at exec
+   time, so they always restart; they take a few seconds to listen again, and
+   the gateway waits for them rather than answering 502. The gateway resolves
+   its static root per request, so a new frontend reaches it through the
+   symlink with no restart, and it is restarted only when its own file
+   changed. A cutover was probed once a second through the restart window and
+   every request returned 200. A release that changes the gateway itself is
+   the one case that still shows a brief gap, and the cutover log says so.
+
+   An upstream that is genuinely gone is still reported as a gateway failure
+   within a few seconds, so a real outage is never hidden behind a long wait. After the swap it reads `/api/v1/capabilities` and
    fails the release if any feature is enabled with no routes registered, which
    is exactly the state that shipped. A failed verification rolls back.
 6. Run `node scripts/universe/synthetic-check.mjs` against the public origin.
