@@ -20,6 +20,20 @@ type DateSpan = '2h' | '24h' | '1w' | '1m' | '3m' | '6m' | '1y' | '2y' | '3y' | 
 
 const DATE_SPANS: DateSpan[] = ['2h', '24h', '1w', '1m', '3m', '6m', '1y', '2y', '3y', '4y', 'all'];
 
+/** Seconds each range asks for. `all` asks for whatever exists, so it is absent. */
+const RANGE_SECONDS: Partial<Record<DateSpan, number>> = {
+  '2h': 2 * 3600,
+  '24h': 24 * 3600,
+  '1w': 7 * 24 * 3600,
+  '1m': 30 * 24 * 3600,
+  '3m': 90 * 24 * 3600,
+  '6m': 180 * 24 * 3600,
+  '1y': 365 * 24 * 3600,
+  '2y': 2 * 365 * 24 * 3600,
+  '3y': 3 * 365 * 24 * 3600,
+  '4y': 4 * 365 * 24 * 3600,
+};
+
 @Component({
   selector: 'app-statistics',
   templateUrl: './statistics.component.html',
@@ -183,6 +197,40 @@ export class StatisticsComponent implements OnInit, OnDestroy {
   /** True while the chart has real numbers to draw, fresh or stale. */
   get hasData(): boolean {
     return (this.state.status === 'data' || this.state.status === 'stale') && this.mempoolStats.length > 0;
+  }
+
+  /**
+   * How far back this deployment can actually answer for, when that is
+   * noticeably less than the range asked for.
+   *
+   * Statistics are collected from the moment the writer starts; nothing
+   * backfills them, because there is no first-party source to backfill from and
+   * inventing rows would be worse than having none. Drawing two hours of
+   * samples under a heading that says 1W is not a lie the chart tells on
+   * purpose, but it is one a reader would take away, so the shortfall is
+   * stated.
+   */
+  get boundedHistoryNote(): string | null {
+    if (!this.hasData) return null;
+    const requested = RANGE_SECONDS[this.timespan];
+    if (!requested) return null;
+    const oldest = this.mempoolStats.reduce(
+      (min, stats) => Math.min(min, stats.added),
+      Number.POSITIVE_INFINITY,
+    );
+    if (!Number.isFinite(oldest)) return null;
+    const covered = Math.max(0, Math.floor(Date.now() / 1000) - oldest);
+    // A tenth short of the range is ordinary sampling slack, not a shortfall.
+    if (covered >= requested * 0.9) return null;
+    return $localize`:@@statistics.bounded-history:Collection began ${this.describeSpan(covered)}:covered: ago, so this is all the history there is for this range.`;
+  }
+
+  /** A short, human span for the note above. */
+  private describeSpan(seconds: number): string {
+    const hours = Math.floor(seconds / 3600);
+    if (hours < 1) return $localize`:@@statistics.span-minutes:${Math.max(1, Math.floor(seconds / 60))}:minutes: minutes`;
+    if (hours < 48) return $localize`:@@statistics.span-hours:${hours}:hours: hours`;
+    return $localize`:@@statistics.span-days:${Math.floor(hours / 24)}:days: days`;
   }
 
   handleNewMempoolData(mempoolStats: OptimizedMempoolStats[]): void {
