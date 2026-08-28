@@ -34,7 +34,7 @@
   <div class="card-header" *ngIf="!widget">
     <div class="d-flex d-md-table-cell align-items-baseline">
       <span i18n="mining.pools">Pools Ranking</span>
-      <button class="btn p-0 pl-2" style="margin: 0 0 4px 0px" (click)="onSaveChart()">
+      <button class="btn p-0 pl-2" i18n-aria-label="shared.download-chart|Download chart" aria-label="Download chart" style="margin: 0 0 4px 0px" (click)="onSaveChart()">
         <fa-icon [icon]="['fas', 'download']" [fixedWidth]="true"></fa-icon>
       </button>
     </div>  
@@ -102,7 +102,7 @@
         <tr *ngFor="let pool of miningStats.pools">
           <td class="d-none d-md-table-cell">{{ pool.rank }}</td>
           <td class="text-right">
-            <img width="25" height="25" src="{{ pool.logo }}" [alt]="pool.name + ' mining pool logo'" onError="this.onerror=null; this.src = '/resources/mining-pools/default.svg'">
+            <img width="25" height="25" src="{{ pool.logo }}" [alt]="pool.name + ' mining pool logo'" appImageFallback>
           </td>
           <td class="pool-name"><a [routerLink]="[('/mining/pool/' + pool.slug) | relativeUrl]">{{ pool.name }}</a></td>
           <td class="" *ngIf="'24h' === this.miningWindowPreference">{{ pool.lastEstimatedHashrate | number: '1.2-2' }} {{ miningStats.miningUnits.hashrateUnit }}</td>

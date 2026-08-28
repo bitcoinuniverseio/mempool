@@ -1,18 +1,18 @@
-// Per-family color tokens for Universe protocol badges.
-// Hues are light tints chosen to pass WCAG AA contrast (>= 4.5:1) as text
-// against the dark theme surfaces (--box-bg #171c2a, --bg).
-// Badges never rely on color alone: the shortName text label is always shown.
+@use '../universe-tokens' as u;
+
+// Protocol badges.
+//
+// The family hues come from the theme layer, which holds a light and a dark
+// value for each and is measured against both surfaces by
+// `scripts/universe/check-palettes.mjs`. They used to be restated here as
+// literals chosen against a dark page, which is why every badge washed out on
+// the primary theme.
+//
+// A badge never relies on colour alone: the protocol's short name is always
+// printed inside it, and the tint always carries a border.
 
 .universe-badge {
-  // family color tokens
-  --universe-protocol-ordinals: #f2a35c;
-  --universe-protocol-runes: #7bdff2;
-  --universe-protocol-alkanes: #b8a3f6;
-  --universe-protocol-stamps: #f6a3c5;
-  --universe-protocol-atomicals: #9df29d;
-  --universe-protocol-op-data: #e8e05c;
-  // pattern- and icon-agnostic fallback for unknown protocols
-  --universe-protocol-fallback: #c9cddd;
+  @include u.universe-protocol-tokens;
 
   --universe-badge-color: var(--universe-protocol-fallback);
 
@@ -21,7 +21,7 @@
   border-radius: 0.25rem;
   border: 1px solid var(--universe-badge-color);
   color: var(--universe-badge-color);
-  background-color: rgba(255, 255, 255, 0.04);
+  background-color: var(--u-divider);
   font-size: 0.75em;
   font-weight: 700;
   letter-spacing: 0.03em;

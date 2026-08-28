@@ -7,6 +7,7 @@ import { computeLeafHash, taggedHash, addressToScriptPubKey } from '@app/shared/
 import { StateService } from '@app/services/state.service';
 import { AsmStylerPipe } from '@app/shared/pipes/asm-styler/asm-styler.pipe';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
+import { chartChrome } from '@app/shared/chart-theme';
 
 interface TaprootTree {
   name: string; // the TapBranch hash or TapLeaf script hash
@@ -220,7 +221,7 @@ export class TaprootAddressScriptsComponent implements OnChanges {
           pill: {
             ...basePillStyle,
             backgroundColor: 'var(--primary)',
-            color: '#fff',
+            color: chartChrome().label,
           },
         },
       };
@@ -248,7 +249,7 @@ export class TaprootAddressScriptsComponent implements OnChanges {
               pill: {
                 ...basePillStyle,
                 backgroundColor: 'var(--tertiary)',
-                color: '#fff',
+                color: chartChrome().label,
               },
             },
           };
@@ -271,8 +272,8 @@ export class TaprootAddressScriptsComponent implements OnChanges {
           rich: {
             pill: {
               ...basePillStyle,
-              backgroundColor: '#ffc107',
-              color: '#212529'
+              backgroundColor: chartChrome().series[3],
+              color: chartChrome().tooltipText
             }
           }
         };
@@ -292,7 +293,7 @@ export class TaprootAddressScriptsComponent implements OnChanges {
             pill: {
               ...basePillStyle,
               backgroundColor: this.isNUMS ? 'var(--grey)' : 'var(--tertiary)',
-              color: '#fff',
+              color: chartChrome().label,
             },
           },
         };
@@ -321,14 +322,14 @@ export class TaprootAddressScriptsComponent implements OnChanges {
     this.chartOptions = {
       tooltip: {
         show: true,
-        backgroundColor: 'rgba(17, 19, 31, 1)',
+        backgroundColor: chartChrome().surface,
         borderRadius: 4,
-        shadowColor: 'rgba(0, 0, 0, 0.5)',
+        shadowColor: chartChrome().markBorder,
         confine: true,
         textStyle: {
-          color: '#b1b1b1',
+          color: chartChrome().label,
         },
-        borderColor: '#000',
+        borderColor: chartChrome().markBorder,
         formatter: (params: any) => {
           const node: TaprootTree = params.data;
           if (!node.tooltip) {
@@ -411,10 +412,10 @@ export class TaprootAddressScriptsComponent implements OnChanges {
         emphasis: {
           focus: 'ancestor',
           itemStyle: {
-            color: '#ccc',
+            color: chartChrome().markBorder,
           },
           lineStyle: {
-            color: '#ccc',
+            color: chartChrome().markBorder,
           }
         },
         orient: 'TB',

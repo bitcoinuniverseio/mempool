@@ -29,7 +29,7 @@
 
     .reference {
       margin: 0.3rem 0 0;
-      color: var(--transparent-fg, #a8b0c4);
+      color: var(--u-text-muted);
     }
   }
 
@@ -69,7 +69,7 @@
     margin: 0;
 
     dt {
-      color: var(--transparent-fg, #a8b0c4);
+      color: var(--u-text-muted);
     }
 
     dd {
@@ -79,7 +79,7 @@
   }
 
   .asof {
-    color: var(--transparent-fg, #a8b0c4);
+    color: var(--u-text-muted);
     font-size: 0.85rem;
     margin: 0;
   }
@@ -87,7 +87,7 @@
   .skeleton-line {
     height: 1rem;
     border-radius: 0.2rem;
-    background: rgba(255, 255, 255, 0.06);
+    background: var(--u-divider);
     margin: 0 0 0.6rem;
 
     &.short {

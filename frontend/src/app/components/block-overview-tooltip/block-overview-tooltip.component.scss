@@ -2,7 +2,7 @@
   position: absolute;
 	background: color-mix(in srgb, var(--active-bg) 95%, transparent);
   border-radius: 4px;
-  box-shadow: 1px 1px 10px rgba(0,0,0,0.5);
+  box-shadow: 1px 1px 10px var(--u-shadow-color);
   color: var(--tooltip-grey);
   display: flex;
   flex-direction: column;
@@ -28,14 +28,14 @@ th, td {
     text-align: end;
   }
   &.oobFees {
-    color: #905cf4;
+    color: var(--u-brand-hover);
   }
 }
 
 .badge.badge-accelerated {
-  background-color: #653b9c;
-  box-shadow: #ad7de57f 0px 0px 12px -2px;
-  color: white;
+  background-color: var(--u-brand);
+  box-shadow: var(--u-brand-hover) 0px 0px 12px -2px;
+  color: var(--u-block-ink);
   animation: acceleratePulse 1s infinite;
 }
 
@@ -53,9 +53,9 @@ th, td {
   }
 
   .filter-tag {
-    background: #181b2daf;
+    background: var(--u-surface-inset);
     border: solid 1px var(--primary);
-    color: white;
+    color: var(--u-block-ink);
     transition: background-color 300ms;
 
     &.matching {
@@ -74,7 +74,7 @@ th, td {
 }
 
 @keyframes acceleratePulse {
-  0% { background-color: #653b9c; box-shadow: #ad7de57f 0px 0px 12px -2px; }
-  50% { background-color: #8457bb; box-shadow: #ad7de5 0px 0px 18px -2px;}
-  100% { background-color: #653b9c; box-shadow: #ad7de57f 0px 0px 12px -2px; }
+  0% { background-color: var(--u-brand); box-shadow: var(--u-brand-hover) 0px 0px 12px -2px; }
+  50% { background-color: var(--u-brand); box-shadow: var(--u-brand-hover) 0px 0px 18px -2px;}
+  100% { background-color: var(--u-brand); box-shadow: var(--u-brand-hover) 0px 0px 12px -2px; }
 }

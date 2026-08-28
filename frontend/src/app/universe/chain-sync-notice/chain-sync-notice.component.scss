@@ -6,23 +6,109 @@
   display: block;
 }
 
+// The one notice on this product that qualifies every other number on the
+// page. It used to print the partial-evidence hue as text directly on the page
+// surface, which on the light theme was pale yellow on white at 1.5:1. It now
+// sits on its own tinted surface with a border and a shape, so the warning is
+// carried by three signals rather than by a colour.
 .chain-sync-notice:not(:empty) {
+  align-items: flex-start;
+  background: var(--universe-state-partial-surface);
+  border: 1px solid var(--universe-state-partial-border);
+  border-radius: var(--u-radius-md);
+  color: var(--u-text-primary);
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.35rem 0.75rem;
-  padding: 0.6rem 1rem;
-  border-bottom: 1px solid rgba(232, 193, 92, 0.35);
-  background: rgba(232, 193, 92, 0.08);
+  gap: var(--u-space-2) var(--u-space-4);
+  line-height: var(--u-leading-snug);
+  padding: var(--u-space-3) var(--u-space-4);
+}
+
+.mark {
   color: var(--universe-state-partial);
-  font-size: 0.9rem;
-  line-height: 1.5;
+  flex: none;
+  height: 1.25rem;
+  position: relative;
+  top: 1px;
+  width: 1.25rem;
+}
 
-  strong {
-    font-weight: 700;
+.body {
+  flex: 1 1 18rem;
+  min-width: 0;
+}
+
+.title {
+  display: block;
+  font-size: var(--u-text-base);
+  font-weight: var(--u-weight-semibold);
+}
+
+.detail {
+  color: var(--u-text-secondary);
+  font-size: var(--u-text-sm);
+  margin: var(--u-space-1) 0 0;
+}
+
+// Heights and gaps are the numbers a reader came for, so they take the primary
+// ink and the data face rather than being folded into the sentence around them.
+.figure {
+  color: var(--u-text-primary);
+  font-family: var(--u-font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--u-weight-semibold);
+}
+
+.meter {
+  align-items: center;
+  display: flex;
+  gap: var(--u-space-2);
+  margin-top: var(--u-space-2);
+}
+
+.track {
+  background: var(--u-surface-inset);
+  border: 1px solid var(--universe-state-partial-border);
+  border-radius: var(--u-radius-pill);
+  flex: 1 1 10rem;
+  height: 8px;
+  max-width: 22rem;
+  overflow: hidden;
+}
+
+.fill {
+  background: var(--universe-state-partial);
+  height: 100%;
+  transition: width var(--u-duration-slow) var(--u-ease-out);
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
   }
+}
 
-  span {
-    color: var(--transparent-fg, #a8b0c4);
+// The reading stays beside the track rather than on top of it: no single ink
+// clears contrast against both the filled and the empty half of a bar.
+.reading {
+  color: var(--u-text-secondary);
+  flex: none;
+  font-size: var(--u-text-xs);
+
+  b {
+    color: var(--u-text-primary);
+    font-family: var(--u-font-data);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.status-link {
+  color: var(--u-brand);
+  flex: none;
+  font-size: var(--u-text-sm);
+  font-weight: var(--u-weight-medium);
+  white-space: nowrap;
+
+  &:hover {
+    color: var(--u-brand-hover);
+    text-decoration: underline;
   }
 }

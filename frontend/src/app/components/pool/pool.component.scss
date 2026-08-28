@@ -229,7 +229,7 @@ div.scrollable {
   }
 
   .empty-branch {
-    outline: solid 1px white;
+    outline: solid 1px var(--u-text-primary);
     outline-offset: -1px;
 
     &::after {

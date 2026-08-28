@@ -74,6 +74,48 @@
   --u-ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
   --u-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
 
+  // The chain visualisation.
+  //
+  // Blocks are objects, not page furniture, so they keep the same ink in every
+  // theme the way a photograph does. That is deliberate: it gives the light
+  // page a solid focal anchor instead of a washed-out outline, and it means a
+  // fee colour reads identically no matter which theme a person is using.
+  //
+  // The axis the whole product turns on is visible here. A projected block is
+  // lighter and unfinished; a confirmed block is deep and settled. Nothing has
+  // to be read to feel which is which.
+  --u-block-ink: #f7f9fc;
+  --u-block-ink-muted: #dfe4ee;
+
+  // A projected block's face IS the live fee gradient, and its figures are
+  // printed on top of it. No ink clears the contrast floor across that whole
+  // scale, so the figures get a plate: the gradient still reads as colour
+  // around and through it, and the text sits on a surface whose worst case is
+  // measured rather than assumed. `check-palettes.mjs` holds it to that.
+  --u-block-plate: rgba(9, 12, 24, 0.62);
+  --u-block-confirmed-from: #2a3566;
+  --u-block-confirmed-to: #1a2142;
+  --u-block-confirmed-top: #3a477f;
+  --u-block-confirmed-side: #141930;
+  // The part of a block its transactions did not fill. It belongs to the block,
+  // not to the page: it used to take a page surface token, which meant the top
+  // of every confirmed block was pale and the figures printed on it vanished.
+  --u-block-confirmed-empty: #3a4166;
+  --u-block-projected-empty: #4a5169;
+
+  // A block whose contents have not arrived. Deliberately desaturated so it
+  // reads as absent rather than as a block that happens to be empty; the
+  // figures on it are skeletons, which is the signal that does not depend on
+  // anyone noticing a hue.
+  --u-block-loading: #565a63;
+  --u-block-projected-top: #5c6480;
+  --u-block-projected-side: #343a4d;
+
+  // Text printed on the fee scale. The scale is its own object with its own
+  // colours, so the ink that reads on it is a separate decision from page text.
+  // The high-contrast theme brightens the scale far enough to flip this.
+  --u-fee-label-ink: #ffffff;
+
   // Layout
   --u-width-prose: 68ch;
   --u-width-page: 1320px;
@@ -107,7 +149,7 @@
   // rather than fighting them.
   --u-text-primary: #10151f;   // 16.8:1 on raised
   --u-text-secondary: #414d61; // 8.9:1 on raised
-  --u-text-muted: #5c6879;     // 5.7:1 on raised
+  --u-text-muted: #586475;     // 6.0:1 on raised, 4.7:1 on inset
   --u-text-inverse: #ffffff;
 
   --u-border: #d5dce6;
@@ -162,17 +204,19 @@
 
   // Chart series. Ordered for categorical use and checked so neighbouring
   // series stay distinguishable for the common colour vision deficiencies.
-  --u-chart-1: #2438b8;
-  --u-chart-2: #0a7ea4;
-  --u-chart-3: #9a4a06;
-  --u-chart-4: #0f6b3a;
-  --u-chart-5: #7a3572;
-  --u-chart-6: #a3246b;
-  --u-chart-7: #55617a;
+  --u-chart-1: #434ba3;
+  --u-chart-2: #a3436b;
+  --u-chart-3: #241763;
+  --u-chart-4: #a38343;
+  --u-chart-5: #63172a;
+  --u-chart-6: #4393a3;
+  --u-chart-7: #634417;
   --u-chart-grid: #dde3ec;
-  --u-chart-axis: #5c6879;
+  --u-chart-axis: #586475;
 
   // Elevation. Soft and low: this is a data surface, not a floating card deck.
+  --u-shadow-color: rgba(16, 21, 31, 0.28);
+  --u-overlay-scrim: rgba(16, 21, 31, 0.55);
   --u-shadow-sm: 0 1px 2px rgba(16, 21, 31, 0.07);
   --u-shadow-md: 0 2px 8px rgba(16, 21, 31, 0.09);
   --u-shadow-lg: 0 8px 24px rgba(16, 21, 31, 0.13);
@@ -197,6 +241,48 @@
   --u-network-liquidtestnet: #5c6879;
 
   --u-taproot: #8a5100;
+
+  // Data ramps.
+  //
+  // Charts fill areas with a gradient that means a quantity, not a category.
+  // The stops the product inherited were the Material palette, chosen against a
+  // dark page: pale amber and light green, which land near 1.3:1 on a white
+  // card and read as nothing at all. Every stop below clears the graphical
+  // floor on both light surfaces, and the sequential scale still darkens
+  // monotonically so "more" still looks like more.
+  --u-ramp-scale-1: #4393a3;
+  --u-ramp-scale-2: #2f7f9e;
+  --u-ramp-scale-3: #2f5a9e;
+  --u-ramp-scale-4: #43349e;
+  --u-ramp-scale-5: #5b1f7a;
+
+  --u-ramp-a-from: #434ba3;
+  --u-ramp-a-to: #241763;
+  --u-ramp-b-from: #a3436b;
+  --u-ramp-b-to: #63172a;
+  --u-ramp-c-from: #4393a3;
+  --u-ramp-c-to: #1c4f5c;
+
+  // Script opcode categories.
+  //
+  // Raw script is read character by character, so the categories have to be
+  // separable at small sizes and every one of them has to clear body contrast
+  // against the surface it is printed on. These are the light values; the dark
+  // theme restates the same names.
+  --u-code-constant: #9a4a06;
+  --u-code-control: #15547f;
+  --u-code-stack: #7a3572;
+  --u-code-splice: #0a6a7d;
+  --u-code-logic: #0a6a7d;
+  --u-code-arithmetic: #0f6b3a;
+  --u-code-crypto: #a12420;
+  --u-code-locktime: #8a5100;
+  --u-code-reserved: #55617a;
+
+  // The one moment the product celebrates: a block whose height reads as a
+  // round number. The plate is bright, so its ink is near-black in every theme.
+  --u-special-plate: #e8b30d;
+  --u-special-ink: #241a00;
 
   // A translucent foreground for de-emphasised text over unknown backdrops.
   --u-text-translucent: rgba(16, 21, 31, 0.62);
@@ -264,16 +350,18 @@
   --u-protocol-op-data: #d79ad0;
   --u-protocol-fallback: #b3bccd;
 
-  --u-chart-1: #8fa2ff;
-  --u-chart-2: #4fc3e8;
-  --u-chart-3: #f0a463;
-  --u-chart-4: #5fd39a;
-  --u-chart-5: #d79ad0;
-  --u-chart-6: #f19ac4;
-  --u-chart-7: #a3adc2;
+  --u-chart-1: #7575f0;
+  --u-chart-2: #c0ba7c;
+  --u-chart-3: #7cc0c0;
+  --u-chart-4: #f0f075;
+  --u-chart-5: #c07c7c;
+  --u-chart-6: #987cc0;
+  --u-chart-7: #bddbbf;
   --u-chart-grid: #2a3145;
   --u-chart-axis: #98a2b6;
 
+  --u-shadow-color: rgba(0, 0, 0, 0.55);
+  --u-overlay-scrim: rgba(0, 0, 0, 0.66);
   --u-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
   --u-shadow-md: 0 2px 8px rgba(0, 0, 0, 0.45);
   --u-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.55);
@@ -292,6 +380,32 @@
   --u-network-liquidtestnet: #98a2b6;
 
   --u-taproot: #f0be62;
+
+  --u-ramp-scale-1: #7cc0c0;
+  --u-ramp-scale-2: #7aa8d8;
+  --u-ramp-scale-3: #8f9ae8;
+  --u-ramp-scale-4: #b394ec;
+  --u-ramp-scale-5: #d68fd0;
+
+  --u-ramp-a-from: #7575f0;
+  --u-ramp-a-to: #b394ec;
+  --u-ramp-b-from: #c07c7c;
+  --u-ramp-b-to: #f0a4a4;
+  --u-ramp-c-from: #7cc0c0;
+  --u-ramp-c-to: #a8dede;
+
+  --u-code-constant: #f0a463;
+  --u-code-control: #7cc0f0;
+  --u-code-stack: #d79ad0;
+  --u-code-splice: #6fcfe2;
+  --u-code-logic: #6fcfe2;
+  --u-code-arithmetic: #5fd39a;
+  --u-code-crypto: #f2918a;
+  --u-code-locktime: #f0be62;
+  --u-code-reserved: #a3adc2;
+
+  --u-special-plate: #e8b30d;
+  --u-special-ink: #241a00;
 
   --u-text-translucent: rgba(242, 244, 248, 0.66);
   --u-fade-start: rgba(26, 30, 45, 0);
@@ -349,7 +463,6 @@
   --transparent-fg: var(--u-text-translucent);
   --fade-out-box-bg-start: var(--u-fade-start);
   --fade-out-box-bg-end: var(--u-fade-end);
-  --opacity: 0.57;
 
   --testnet: var(--u-network-testnet);
   --testnet4: var(--u-network-testnet4);

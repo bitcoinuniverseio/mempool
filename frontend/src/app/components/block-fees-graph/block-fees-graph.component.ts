@@ -13,6 +13,7 @@ import { ActivatedRoute } from '@angular/router';
 import { FiatShortenerPipe } from '@app/shared/pipes/fiat-shortener.pipe';
 import { FiatCurrencyPipe } from '@app/shared/pipes/fiat-currency.pipe';
 import { StateService } from '@app/services/state.service';
+import { chartChrome, rampStops } from '@app/shared/chart-theme';
 
 @Component({
   selector: 'app-block-fees-graph',
@@ -126,14 +127,8 @@ export class BlockFeesGraphComponent implements OnInit {
     this.chartOptions = {
       title: title,
       color: [
-        new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-          { offset: 0, color: '#FDD835' },
-          { offset: 1, color: '#FB8C00' },
-        ]),
-        new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-          { offset: 0, color: '#C0CA33' },
-          { offset: 1, color: '#1B5E20' },
-        ]),
+        new echarts.graphic.LinearGradient(0, 0, 0, 1, rampStops('a')),
+        new echarts.graphic.LinearGradient(0, 0, 0, 1, rampStops('b')),
       ],
       animation: false,
       grid: {
@@ -148,14 +143,14 @@ export class BlockFeesGraphComponent implements OnInit {
         axisPointer: {
           type: 'line'
         },
-        backgroundColor: 'rgba(17, 19, 31, 1)',
+        backgroundColor: chartChrome().surface,
         borderRadius: 4,
-        shadowColor: 'rgba(0, 0, 0, 0.5)',
+        shadowColor: chartChrome().markBorder,
         textStyle: {
           color: 'var(--tooltip-grey)',
           align: 'left',
         },
-        borderColor: '#000',
+        borderColor: chartChrome().markBorder,
         formatter: function (data) {
           if (data.length <= 0) {
             return '';
@@ -187,17 +182,17 @@ export class BlockFeesGraphComponent implements OnInit {
         data: [
           {
             name: 'Fees BTC',
-            inactiveColor: 'rgb(110, 112, 121)',
+            inactiveColor: chartChrome().label,
             textStyle: {
-              color: 'white',
+              color: chartChrome().label,
             },
             icon: 'roundRect',
           },
           {
             name: 'Fees ' + this.currency,
-            inactiveColor: 'rgb(110, 112, 121)',
+            inactiveColor: chartChrome().label,
             textStyle: {
-              color: 'white',
+              color: chartChrome().label,
             },
             icon: 'roundRect',
           },
@@ -207,7 +202,7 @@ export class BlockFeesGraphComponent implements OnInit {
         {
           type: 'value',
           axisLabel: {
-            color: 'rgb(110, 112, 121)',
+            color: chartChrome().label,
             formatter: (val) => {
               return `${val} BTC`;
             }
@@ -224,7 +219,7 @@ export class BlockFeesGraphComponent implements OnInit {
           type: 'value',
           position: 'right',
           axisLabel: {
-            color: 'rgb(110, 112, 121)',
+            color: chartChrome().label,
             formatter: function(val) {
               return this.fiatShortenerPipe.transform(val, null, this.currency);
             }.bind(this)
@@ -281,7 +276,7 @@ export class BlockFeesGraphComponent implements OnInit {
         right: 15,
         selectedDataBackground: {
           lineStyle: {
-            color: '#fff',
+            color: chartChrome().markBorder,
             opacity: 0.45,
           },
           areaStyle: {

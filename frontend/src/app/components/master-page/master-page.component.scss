@@ -1,331 +1,396 @@
-.sticky-header {
+// The global shell.
+//
+// Two rows on a narrow screen and one on a wide one, with the primary
+// navigation moving to a thumb-reachable bar at the bottom rather than being
+// compressed into a strip nobody can hit. Search keeps the space the navigation
+// does not need, because it is the fastest route to any answer here.
+
+.site-header {
+  background-color: var(--u-surface-raised);
+  border-bottom: 1px solid var(--u-border);
   position: sticky;
-  position: -webkit-sticky;
   top: 0;
   width: 100%;
-  background-color: var(--bg);
-  z-index: 100;
+  z-index: var(--u-z-header);
 }
 
-li.nav-item.active {
-  background-color: var(--tertiary);
-}
-
-fa-icon {
-  font-size: 1.66em;
-}
-
-.navbar {
-  z-index: 100;
-  min-height: 64px;
-  width: 100%;
-  background-color: var(--nav-bg);
-}
-
-li.nav-item {
-  margin: auto 10px;
-  padding-left: 10px;
-  padding-right: 10px;
-  align-content: center;
-  .svg-wrapper {
-    height: 19.2px;
-    width: auto;
-    margin-bottom: 8px;
-  }
-  @media (max-width: 991px) {
-    margin: 0;
-    padding-left: 8px;
-    padding-right: 8px;
-    .svg-wrapper {
-      height: 25.6px;
-      width: auto;
-      margin-bottom: 0;
-    }
-    .nav-link {
-      padding: 12px 0;
-    }
-
-  }
-  @media (max-width: 429px) {
-    margin: 0;
-    padding-left: 6px;
-    padding-right: 6px;
-  }
-  @media (max-width: 369px) {
-    margin: 0;
-    padding-left: 4px;
-    padding-right: 4px;
-  }
-}
-
-@media (min-width: 992px) {
-  .navbar {
-    padding: 0rem 2rem;
-  }
-  fa-icon {
-    font-size: 1.2em;
-  }
-  .dropdown-container {
-    margin-right: 16px;
-  }
-  li.nav-item {
-    margin: auto 0px;
-    padding: 10px;
-  }
-}
-
-.navbar-nav {
-  background: var(--nav-bg);
-  bottom: 0;
-  box-shadow: 0px 0px 15px 0px #000;
-  flex-direction: row;
-  left: 0;
-  justify-content: space-between;
-  position: fixed;
-  width: 100%;
-  @media (min-width: 992px) {
-    background: transparent;
-    box-shadow: none;
-    position: relative;
-    width: auto;
-  }
-  a {
-    font-size: 0.8em;
-    @media (min-width: 370px) {
-      font-size: 0.9em;
-    }
-    @media (min-width: 430px) {
-      font-size: 1em;
-    }
-  }
-
-  li {
-    flex-grow: 1; /* Allows items to grow */
-    text-align: center; /* For text alignment */
-  }
-}
-
-
-.navbar-collapse {
-  justify-content: flex-end;
-  @media (min-width: 564px) {
-    flex-basis: auto;
-  }
-}
-
-@media (min-width: 992px) {
-  .navbar-collapse {
-    justify-content: space-between;
-  }
-}
-
-.navbar {
-  .dropdown {
-    .dropdown-toggle {
-      width: 62px;
-      height: 36px;
-      margin-top: 5px;
-    }
-  }
-}
-
-.navbar-brand {
-  position: relative;
-}
-
-.navbar-brand.dual-logos {
-  justify-content: space-between;
-  @media (max-width: 767.98px) {
-    width: 100%;
-  }
-}
-
-nav {
-  box-shadow: 0px 0px 15px 0px #000;
-}
-
-.connection-badge {
-  position: absolute;
-  top: 12px;
-  width: 100%;
-}
-
-.badge {
-  margin: 0 auto;
-  display: table;
-}
-
-.mainnet.active {
-  background-color: var(--tertiary);
-}
-
-.liquid.active {
-  background-color: var(--liquid);
-}
-
-.liquidtestnet.active {
-  background-color: var(--liquidtestnet);
-}
-
-.testnet.active {
-  background-color: var(--testnet);
-}
-
-.signet.active {
-  background-color: var(--signet);
-}
-
-.regtest.active {
-  background-color: var(--regtest);
-}
-
-.dropdown-divider {
-  border-top: 1px solid #121420;
-}
-
-.dropdown-toggle::after {
-  vertical-align: 0.1em;
-}
-
-.dropdown-item {
-  display: flex;
+.header-bar {
   align-items: center;
-}
+  display: flex;
+  gap: var(--u-space-3);
+  margin: 0 auto;
+  max-width: var(--u-width-page);
+  min-height: 60px;
+  padding: var(--u-space-2) var(--u-space-3);
+  width: 100%;
 
-@media (min-width: 991px) {
-  .search-form-container {
-    width: 100%;
-    max-width: 500px;
-    padding-left: 15px;
+  @media (min-width: 992px) {
+    gap: var(--u-space-4);
+    padding: var(--u-space-2) var(--u-space-5);
   }
 }
-.navbar-dark .navbar-nav .nav-link {
-  color: var(--icon);
+
+// --- Brand -----------------------------------------------------------------
+
+.site-brand {
+  align-items: center;
+  display: flex;
+  flex-shrink: 0;
+  text-decoration: none;
+
+  &:focus-visible {
+    outline: 2px solid var(--u-focus-ring);
+    outline-offset: 3px;
+    border-radius: var(--u-radius-sm);
+  }
+}
+
+.brand-mark {
+  align-self: center;
+  height: 30px;
+  // The mark alone below 480px: the wordmark would take the width the search
+  // field needs, and search matters more than a second reading of the name.
+  width: 34px;
+  object-fit: none;
+  object-position: left center;
+  overflow: hidden;
+  transition: opacity var(--u-duration-fast) var(--u-ease-out);
+
+  @media (min-width: 480px) {
+    height: 34px;
+    width: 136px;
+    object-fit: contain;
+    object-position: left center;
+  }
+}
+
+// Dim the mark while the socket is down. Paired with the worded status beside
+// it, never as the only signal.
+.brand-dimmed {
+  opacity: 0.45;
 }
 
 .subdomain_logo {
-  max-height: 35px;
-  overflow: clip;
-  max-width: 100%;
-  margin: auto;
   align-self: center;
-  .rounded {
-    border-radius: 5px;
-  }
+  margin: auto;
+  max-height: 34px;
+  max-width: 100%;
+  overflow: clip;
 
-  &.custom_logo {
-    max-height: 48px;
-    margin-right: 1em;
-  }
- 
-  &.mobile_logo {
-    margin-right: 0;
-  }
-
-  &.custom_logo.mobile_logo {
-    max-height: 42px;
-  }
+  &.rounded { border-radius: var(--u-radius-md); }
+  &.custom_logo { max-height: 44px; margin-right: 1em; }
 }
 
 .subdomain_container {
+  align-self: center;
   max-width: 140px;
   text-align: center;
-  align-self: center;
 }
 
 .vertical-line {
-  border-left: 1px solid #444;
-  height: 30px;
-  margin-left: 20px;
-  margin-right: 20px;
-  margin-top: 3px;
+  border-left: 1px solid var(--u-border);
+  height: 28px;
+  margin: 3px var(--u-space-4) 0;
 }
 
-.logo-holder {
+// --- Network picker --------------------------------------------------------
+
+.network-picker {
+  flex-shrink: 0;
+}
+
+.network-toggle {
+  align-items: center;
+  background: var(--u-surface-sunken);
+  border: 1px solid var(--u-border);
+  border-radius: var(--u-radius-md);
+  color: var(--u-text-secondary);
+  cursor: pointer;
   display: flex;
-  flex-direction: row;
-}
+  font-size: var(--u-text-sm);
+  font-weight: var(--u-weight-medium);
+  gap: var(--u-space-2);
+  min-height: 38px;
+  padding: 0 var(--u-space-2);
+  transition: background-color var(--u-duration-fast) var(--u-ease-out),
+              border-color var(--u-duration-fast) var(--u-ease-out);
 
-.navbar-brand {
-  flex-direction: row;
-  display: flex;
-}
-
-.mempool-logo, app-svg-images {
-  align-self: center;
-  width: 140px;
-  height: 35px;
-}
-
-.beta {
-  display: inline;
-  position: absolute;
-  margin: 24px 0px 0px -15px;
-  font-size: 8px;
-  @media (max-width: 767.98px) {
-    margin: 30px 0px 0px -19px;
-    font-size: 7px;
+  &:hover {
+    background: var(--u-surface-hover);
+    border-color: var(--u-border-strong);
+    color: var(--u-text-primary);
   }
-  @media (max-width: 3429px) {
-    margin: 25px 0px 0px -19px;
-    font-size: 7px;
+
+  &:focus-visible {
+    outline: 2px solid var(--u-focus-ring);
+    outline-offset: 2px;
   }
-  @media (max-width: 369px) {
-    margin: 20px 0px 0px -19px;
-    font-size: 7px;
+
+  &::after {
+    border-top-color: currentColor;
+    margin-left: 0;
+    vertical-align: 0.1em;
   }
 }
 
-.beta-network {
-  font-size: 8px;
+// The chain name is the point of the control, but it is the first thing to go
+// when the row runs out of room. The icon and the dropdown still carry it.
+.network-name {
+  display: none;
+
+  @media (min-width: 560px) {
+    display: inline;
+  }
 }
 
 .current-network-svg {
-  width: 20px;
   height: 20px;
-  margin-right: 5px;
+  width: 20px;
 }
 
-:host-context(.rtl-layout) {
-  .current-network-svg {
-    width: 20px;
-    height: 20px;
-    margin-left: 5px;
-    margin-right: 0px;
+.network-item-icon {
+  height: 22px;
+  margin-right: var(--u-space-2);
+  width: 22px;
+}
+
+.dropdown-item {
+  align-items: center;
+  display: flex;
+}
+
+// --- Search ----------------------------------------------------------------
+
+.site-search {
+  flex: 1 1 auto;
+  min-width: 0;
+
+  @media (min-width: 992px) {
+    max-width: 620px;
   }
 }
 
-.profile_image_container {
-  width: 35px;
-  margin-right: 15px;
+// --- Connection status -----------------------------------------------------
+//
+// Silent while healthy. When it does speak it carries a word, not a coloured
+// pill on its own, so the meaning survives without colour.
+
+.connection-status {
+  align-items: center;
+  display: flex;
+  flex-shrink: 0;
+  gap: var(--u-space-2);
+
+  &:empty { display: none; }
+}
+
+.status-dot {
+  border-radius: 50%;
+  display: inline-block;
+  height: 8px;
+  width: 8px;
+
+  &.state-unavailable { background: var(--u-state-unavailable); }
+  &.state-partial { background: var(--u-state-partial); }
+}
+
+.status-text {
+  font-size: var(--u-text-xs);
+  font-weight: var(--u-weight-semibold);
+  white-space: nowrap;
+
+  .state-unavailable + & { color: var(--u-state-unavailable); }
+  .state-partial + & { color: var(--u-state-partial); }
+}
+
+// --- Primary navigation ----------------------------------------------------
+
+.primary-nav {
+  // Below the breakpoint this is a fixed bar at the bottom of the screen, where
+  // a thumb actually reaches, rather than a row of small targets at the top.
+  background: var(--u-surface-raised);
+  border-top: 1px solid var(--u-border);
+  bottom: 0;
+  box-shadow: 0 -2px 12px var(--u-shadow-color);
+  left: 0;
+  position: fixed;
+  width: 100%;
+  z-index: var(--u-z-sticky);
+
+  @media (min-width: 992px) {
+    background: transparent;
+    border-top: 0;
+    box-shadow: none;
+    margin: 0 auto;
+    max-width: var(--u-width-page);
+    padding: 0 var(--u-space-5);
+    position: static;
+  }
+}
+
+.nav-list {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  @media (max-width: 991.98px) {
+    // Six or more destinations will not fit at 320px without either shrinking
+    // targets below a usable size or hiding some. Scrolling keeps every target
+    // at full size and keeps all of them reachable.
+    overflow-x: auto;
+    scrollbar-width: none;
+    &::-webkit-scrollbar { display: none; }
+  }
+
+  @media (min-width: 992px) {
+    gap: var(--u-space-1);
+  }
+}
+
+.nav-item {
+  flex: 1 0 auto;
   text-align: center;
-  align-self: center;
-  cursor: pointer;
-  .anon {
-    border: 1.5px solid lightgrey;
-    color: lightgrey;
-    border-radius: 5px;
+
+  @media (min-width: 992px) {
+    flex: 0 0 auto;
   }
 }
-.profile_image {
-  height: 35px;
-  border-radius: 5px;
+
+.nav-link {
+  align-items: center;
+  border-radius: var(--u-radius-md);
+  color: var(--u-text-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  // 48px clears the touch target floor without the label being cramped.
+  min-height: 52px;
+  min-width: 60px;
+  justify-content: center;
+  padding: var(--u-space-1) var(--u-space-2);
+  position: relative;
+  text-decoration: none;
+  transition: color var(--u-duration-fast) var(--u-ease-out),
+              background-color var(--u-duration-fast) var(--u-ease-out);
+
+  &:hover {
+    background: var(--u-surface-hover);
+    color: var(--u-text-primary);
+    text-decoration: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--u-focus-ring);
+    outline-offset: -2px;
+  }
+
+  @media (min-width: 992px) {
+    flex-direction: row;
+    gap: var(--u-space-2);
+    min-height: 40px;
+    padding: var(--u-space-2) var(--u-space-3);
+  }
+}
+
+.nav-icon {
+  align-items: center;
+  display: flex;
+  height: 20px;
+  justify-content: center;
+  width: 22px;
+
+  ::ng-deep app-svg-images,
+  ::ng-deep svg {
+    display: block;
+    height: 20px;
+    width: auto;
+  }
+
+  // These icons ship with a literal white fill, which was invisible the
+  // moment the header stopped being dark. Taking the link's own colour
+  // also means the active and hover states carry the icon with them.
+  ::ng-deep path,
+  ::ng-deep circle,
+  ::ng-deep rect,
+  ::ng-deep polygon {
+    fill: currentColor;
+  }
+}
+
+.nav-label {
+  font-size: var(--u-text-2xs);
+  font-weight: var(--u-weight-medium);
+  letter-spacing: 0.01em;
+  line-height: 1;
+  white-space: nowrap;
+
+  @media (min-width: 992px) {
+    font-size: var(--u-text-sm);
+  }
+}
+
+// The active destination is marked with a rule and weight, not a filled block.
+// A solid brand-coloured tile behind an icon reads as a button to press rather
+// than as a statement of where you already are.
+.nav-item.active > .nav-link {
+  color: var(--u-brand);
+  font-weight: var(--u-weight-semibold);
+
+  &::after {
+    background: var(--u-brand);
+    border-radius: 0 0 2px 2px;
+    content: '';
+    height: 3px;
+    left: 50%;
+    position: absolute;
+    top: 0;
+    transform: translateX(-50%);
+    width: 62%;
+
+    @media (min-width: 992px) {
+      border-radius: 2px 2px 0 0;
+      bottom: 0;
+      top: auto;
+      width: 100%;
+    }
+  }
+}
+
+.nav-item.active > .nav-link .nav-label {
+  font-weight: var(--u-weight-semibold);
+}
+
+// --- Page shell ------------------------------------------------------------
+
+.page-shell {
+  display: flex;
+  overflow: clip;
 }
 
 main {
-  transition: 0.2s;
-  transition-property: max-width;
+  // No minimum width. A floor here forced every route to overflow sideways on
+  // a 320px screen, which is the narrowest phone still in common use.
+  max-width: 100vw;
+  min-width: 0;
+  transition: max-width var(--u-duration-base) var(--u-ease-out);
+  width: 100%;
+
+  // Clear the fixed bottom navigation so the last row of any page stays
+  // reachable rather than sitting underneath it.
+  @media (max-width: 991.98px) {
+    padding-bottom: 68px;
+  }
 }
 
-// empty sidenav
 .empty-sidenav {
-  z-index: 1;
   background-color: transparent;
-  width: 0px;
   height: calc(100vh - 65px);
+  padding-bottom: 20px;
   position: sticky;
   top: 65px;
-  padding-bottom: 20px;
+  width: 0;
+  z-index: 1;
 }
 
 /**
@@ -343,6 +408,7 @@ main {
  */
 .page-column {
   min-height: 100vh;
+  min-width: 0;
 
   > main {
     min-height: 100vh;

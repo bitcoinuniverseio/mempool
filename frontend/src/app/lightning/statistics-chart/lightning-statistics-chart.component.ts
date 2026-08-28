@@ -12,6 +12,7 @@ import { LightningApiService } from '@app/lightning/lightning-api.service';
 import { AmountShortenerPipe } from '@app/shared/pipes/amount-shortener.pipe';
 import { isMobile } from '@app/shared/common.utils';
 import { StateService } from '@app/services/state.service';
+import { chartChrome, rampStops } from '@app/shared/chart-theme';
 
 @Component({
   selector: 'app-lightning-statistics-chart',
@@ -142,11 +143,8 @@ export class LightningStatisticsChartComponent implements OnInit, OnChanges {
       title: title,
       animation: false,
       color: [
-        '#FFB300',
-        new echarts.graphic.LinearGradient(0, 0.75, 0, 1, [
-          { offset: 0, color: '#D81B60' },
-          { offset: 1, color: '#D81B60AA' },
-        ]),
+        chartChrome().series[3],
+        new echarts.graphic.LinearGradient(0, 0.75, 0, 1, rampStops('a', 'AA')),
       ],
       grid: {
         height: this.widget ? ((this.height || 120) - 60) : undefined,
@@ -161,14 +159,14 @@ export class LightningStatisticsChartComponent implements OnInit, OnChanges {
         axisPointer: {
           type: 'line'
         },
-        backgroundColor: 'rgba(17, 19, 31, 1)',
+        backgroundColor: chartChrome().surface,
         borderRadius: 4,
-        shadowColor: 'rgba(0, 0, 0, 0.5)',
+        shadowColor: chartChrome().markBorder,
         textStyle: {
           color: 'var(--tooltip-grey)',
           align: 'left',
         },
-        borderColor: '#000',
+        borderColor: chartChrome().markBorder,
         formatter: (ticks): string => {
           let sizeString = '';
           let weightString = '';
@@ -204,17 +202,17 @@ export class LightningStatisticsChartComponent implements OnInit, OnChanges {
         data: [
           {
             name: $localize`:@@807cf11e6ac1cde912496f764c176bdfdd6b7e19:Channels`,
-            inactiveColor: 'rgb(110, 112, 121)',
+            inactiveColor: chartChrome().label,
             textStyle: {
-              color: 'white',
+              color: chartChrome().label,
             },
             icon: 'roundRect',
           },
           {
             name: $localize`:@@ce9dfdc6dccb28dc75a78c704e09dc18fb02dcfa:Capacity`,
-            inactiveColor: 'rgb(110, 112, 121)',
+            inactiveColor: chartChrome().label,
             textStyle: {
-              color: 'white',
+              color: chartChrome().label,
             },
             icon: 'roundRect',
           },
@@ -228,7 +226,7 @@ export class LightningStatisticsChartComponent implements OnInit, OnChanges {
         {
           type: 'value',
           axisLabel: {
-            color: 'rgb(110, 112, 121)',
+            color: chartChrome().label,
             formatter: (val: number): string => {
               if (this.widget) {
                 return `${this.amountShortenerPipe.transform(val, 0)}`;
@@ -251,7 +249,7 @@ export class LightningStatisticsChartComponent implements OnInit, OnChanges {
           type: 'value',
           position: 'right',
           axisLabel: {
-            color: 'rgb(110, 112, 121)',
+            color: chartChrome().label,
             formatter: (val: number): string => {
               if (this.widget) {
                 return `${this.amountShortenerPipe.transform(Math.round(val / 100000000), 0)}`;
@@ -320,7 +318,7 @@ export class LightningStatisticsChartComponent implements OnInit, OnChanges {
         right: 15,
         selectedDataBackground: {
           lineStyle: {
-            color: '#fff',
+            color: chartChrome().markBorder,
             opacity: 0.45,
           },
           areaStyle: {

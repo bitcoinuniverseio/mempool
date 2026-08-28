@@ -1,7 +1,7 @@
 .alert-danger {
-  color: #fff;
-  background-color: #b71c1c;
-  border-color: #b71c1c;
+  color: var(--u-brand-contrast);
+  background-color: var(--u-state-unavailable);
+  border-color: var(--u-state-unavailable);
   padding: 0.5rem 1.25rem;
   margin: 0px 10px 0px 10px;
 
@@ -18,7 +18,7 @@
 
 .close {
   display: flex;
-  color: #fff;
+  color: var(--u-brand-contrast);
   align-items: center;
 }
 

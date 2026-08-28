@@ -100,7 +100,10 @@ export class AssetFlowComponent implements OnChanges {
       if (this.limitedByCoverage(flow)) {
         return $localize`:@@universe.flow.empty-outputs-proven:No supported assets on the outputs of this transaction`;
       }
-      return $localize`:@@universe.flow.empty-incomplete:Protocol evidence incomplete`;
+      // The chip above already says the evidence is incomplete. Repeating it
+      // here told the reader nothing new; what they need is what that means
+      // for this transaction, which is that absence has not been proven.
+      return $localize`:@@universe.flow.empty-incomplete:No supported assets were found, but the authority cannot prove there are none`;
     }
     return $localize`:@@universe.flow.empty-proven:No supported assets detected on this transaction`;
   }
@@ -263,6 +266,21 @@ export class AssetFlowComponent implements OnChanges {
     return address.length > 20
       ? address.slice(0, 8) + '…' + address.slice(-6)
       : address;
+  }
+
+  /**
+   * Group the digits of an exact protocol quantity.
+   *
+   * These arrive as atomic integers and were printed raw, which at rune or
+   * satoshi scale is an unreadable run of digits. Grouping is presentation
+   * only: the value is never rounded, scaled, or reinterpreted, because the
+   * exact figure is the whole point of showing it.
+   */
+  groupDigits(value: string | number | null | undefined): string {
+    if (value === null || value === undefined) { return ''; }
+    const text = String(value);
+    if (!/^\d+$/.test(text)) { return text; }
+    return text.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   }
 
   evidenceTitle(position: ExplorerOutpointPosition): string {

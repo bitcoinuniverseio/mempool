@@ -48,7 +48,7 @@
       stroke: url(#fee-hover-gradient);
     }
     &.zerovalue {
-      stroke: white;
+      stroke: var(--u-text-primary);
     }
   }
 

@@ -14,6 +14,7 @@ import { ActivatedRoute } from '@angular/router';
 import { StateService } from '@app/services/state.service';
 import { seoDescriptionNetwork } from '@app/shared/common.utils';
 import { AmountShortenerPipe } from '@app/shared/pipes/amount-shortener.pipe';
+import { chartChrome, rampStops } from '@app/shared/chart-theme';
 
 @Component({
   selector: 'app-hashrate-chart',
@@ -212,21 +213,9 @@ export class HashrateChartComponent implements OnInit {
       title: title,
       animation: false,
       color: [
-        new echarts.graphic.LinearGradient(0, 0, 0, 0.65, [
-          { offset: 0, color: '#F4511E99' },
-          { offset: 0.25, color: '#FB8C0099' },
-          { offset: 0.5, color: '#FFB30099' },
-          { offset: 0.75, color: '#FDD83599' },
-          { offset: 1, color: '#7CB34299' }
-        ]),
+        new echarts.graphic.LinearGradient(0, 0, 0, 0.65, rampStops('scale', '99')),
         '#D81B60',
-        new echarts.graphic.LinearGradient(0, 0, 0, 0.65, [
-          { offset: 0, color: '#F4511E' },
-          { offset: 0.25, color: '#FB8C00' },
-          { offset: 0.5, color: '#FFB300' },
-          { offset: 0.75, color: '#FDD835' },
-          { offset: 1, color: '#7CB342' }
-        ]),
+        new echarts.graphic.LinearGradient(0, 0, 0, 0.65, rampStops('scale')),
       ],
       grid: {
         height: (this.widget && this.height) ? this.height - 30 : undefined,
@@ -241,14 +230,14 @@ export class HashrateChartComponent implements OnInit {
         axisPointer: {
           type: 'line'
         },
-        backgroundColor: 'rgba(17, 19, 31, 1)',
+        backgroundColor: chartChrome().surface,
         borderRadius: 4,
-        shadowColor: 'rgba(0, 0, 0, 0.5)',
+        shadowColor: chartChrome().markBorder,
         textStyle: {
           color: 'var(--tooltip-grey)',
           align: 'left',
         },
-        borderColor: '#000',
+        borderColor: chartChrome().markBorder,
         formatter: (ticks) => {
           let hashrateString = '';
           let difficultyString = '';
@@ -290,32 +279,32 @@ export class HashrateChartComponent implements OnInit {
         data: [
           {
             name: $localize`:@@79a9dc5b1caca3cbeb1733a19515edacc5fc7920:Hashrate`,
-            inactiveColor: 'rgb(110, 112, 121)',
+            inactiveColor: chartChrome().label,
             textStyle: {
-              color: 'white',
+              color: chartChrome().label,
             },
             icon: 'roundRect',
             itemStyle: {
-              color: '#FFB300',
+              color: chartChrome().series[3],
             },
           },
           {
             name: $localize`:@@25148835d92465353fc5fe8897c27d5369978e5a:Difficulty`,
-            inactiveColor: 'rgb(110, 112, 121)',
+            inactiveColor: chartChrome().label,
             textStyle: {
-              color: 'white',
+              color: chartChrome().label,
             },
             icon: 'roundRect',
           },
           {
             name: $localize`Hashrate (MA)`,
-            inactiveColor: 'rgb(110, 112, 121)',
+            inactiveColor: chartChrome().label,
             textStyle: {
-              color: 'white',
+              color: chartChrome().label,
             },
             icon: 'roundRect',
             itemStyle: {
-              color: '#FFB300',
+              color: chartChrome().series[3],
             },
           },
         ],
@@ -337,7 +326,7 @@ export class HashrateChartComponent implements OnInit {
           },
           type: 'value',
           axisLabel: {
-            color: 'rgb(110, 112, 121)',
+            color: chartChrome().label,
             formatter: (val): string => {
               return this.amountShortenerPipe.transform(val, 3, 'H/s', false, true).toString();
             },
@@ -370,7 +359,7 @@ export class HashrateChartComponent implements OnInit {
             return Math.max(scaledMax, value.max);
           },
           axisLabel: {
-            color: 'rgb(110, 112, 121)',
+            color: chartChrome().label,
             formatter: (val): string => {
               if (this.stateService.network === 'signet') {
                 return `${val}`;
@@ -440,7 +429,7 @@ export class HashrateChartComponent implements OnInit {
         right: 15,
         selectedDataBackground: {
           lineStyle: {
-            color: '#fff',
+            color: chartChrome().markBorder,
             opacity: 0.45,
           },
           areaStyle: {

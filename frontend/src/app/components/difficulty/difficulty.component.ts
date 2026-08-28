@@ -173,6 +173,24 @@ export class DifficultyComponent implements OnInit {
     );
   }
 
+  /**
+   * The pulse on the block the chain is about to find.
+   *
+   * SVG animate needs literal colours, so these cannot be tokens. They are
+   * read from the live theme instead of being hard-coded, which is what kept
+   * a pink that exists nowhere else in the product blinking on this chart.
+   */
+  nextBlockPulse(expected: boolean): string {
+    const styles = getComputedStyle(document.documentElement);
+    const read = (name: string, fallback: string): string =>
+      styles.getPropertyValue(name).trim() || fallback;
+    const base = read('--u-surface-raised', '#ffffff');
+    const peak = expected
+      ? read('--u-state-partial', '#8a5100')
+      : read('--u-border-strong', '#b6c1d0');
+    return `${base};${peak};${base}`;
+  }
+
   blocksToShapes(start: number, end: number, status: BlockStatus, expected: boolean = false): DiffShape[] {
     const startY = start % 9;
     const startX = Math.floor(start / 9);
