@@ -8,12 +8,12 @@
   }
 
   .chain-note {
-    color: var(--transparent-fg);
+    color: var(--u-text-muted);
     font-size: 0.9rem;
   }
 
   .registry-version {
-    color: var(--transparent-fg);
+    color: var(--u-text-muted);
     font-size: 0.85rem;
   }
 
@@ -31,7 +31,7 @@
 
     p {
       margin: 0;
-      color: var(--transparent-fg);
+      color: var(--u-text-muted);
     }
   }
 
@@ -125,12 +125,12 @@
     &.chip-disabled {
       border-style: dashed;
       border-color: var(--transparent-fg);
-      color: var(--transparent-fg);
+      color: var(--u-text-muted);
     }
 
     &.chip-unknown {
       border-style: dashed;
-      color: var(--transparent-fg);
+      color: var(--u-text-muted);
     }
 
     // Reachable and answering, but too far back to describe the present. It
@@ -168,7 +168,7 @@
   .no-protocols {
     margin: 2rem 0;
     text-align: center;
-    color: var(--transparent-fg);
+    color: var(--u-text-muted);
   }
 
   .loading-skeleton {

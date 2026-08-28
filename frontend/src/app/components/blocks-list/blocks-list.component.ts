@@ -151,7 +151,7 @@ export class BlocksList implements OnInit {
                   if (!isRetryableFailure(classifyLoadFailure(error))) {
                     return throwError(() => error);
                   }
-                  return timer(1000 * attempt);
+                  return timer(2000 * attempt);
                 },
               }),
               catchError((error) => {
