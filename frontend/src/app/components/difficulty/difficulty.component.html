@@ -131,29 +131,37 @@
 </ng-template>
 
 <ng-template #loadingDifficulty>
-  <div class="epoch-progress">
-    <div class="skeleton-loader"></div>
-  </div>
-  <div class="difficulty-skeleton loading-container">
-    <div class="item">
-      <div class="card-text">
-        <div class="skeleton-loader"></div>
-        <div class="skeleton-loader"></div>
+  <!-- Both sources here are socket fed, and the socket does not fail: when the
+       backend is down it connects and then says nothing. Once the feed has
+       given up, placeholders that keep pulsing are promising an answer that is
+       not coming. -->
+  @if ((liveFeed$ | async)?.status === 'error') {
+    <p class="feed-unavailable" i18n="difficulty-box.feed-unavailable">No live epoch data: the chain feed is not answering.</p>
+  } @else {
+    <div class="epoch-progress">
+      <div class="skeleton-loader"></div>
+    </div>
+    <div class="difficulty-skeleton loading-container">
+      <div class="item">
+        <div class="card-text">
+          <div class="skeleton-loader"></div>
+          <div class="skeleton-loader"></div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="card-text">
+          <div class="skeleton-loader"></div>
+          <div class="skeleton-loader"></div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="card-text">
+          <div class="skeleton-loader"></div>
+          <div class="skeleton-loader"></div>
+        </div>
       </div>
     </div>
-    <div class="item">
-      <div class="card-text">
-        <div class="skeleton-loader"></div>
-        <div class="skeleton-loader"></div>
-      </div>
-    </div>
-    <div class="item">
-      <div class="card-text">
-        <div class="skeleton-loader"></div>
-        <div class="skeleton-loader"></div>
-      </div>
-    </div>
-  </div>
+  }
 </ng-template>
 
 <app-difficulty-tooltip

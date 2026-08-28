@@ -1,11 +1,12 @@
 import { Inject, Injectable, PLATFORM_ID, LOCALE_ID } from '@angular/core';
-import { ReplaySubject, BehaviorSubject, Subject, fromEvent, Observable } from 'rxjs';
+import { ReplaySubject, BehaviorSubject, Subject, fromEvent, merge, Observable, timer } from 'rxjs';
 import { Transaction } from '@interfaces/electrs.interface';
 import { AccelerationDelta, HealthCheckHost, IBackendInfo, MempoolBlock, MempoolBlockUpdate, MempoolInfo, Recommendedfees, ReplacedTransaction, ReplacementInfo, StratumJob, isMempoolState } from '@interfaces/websocket.interface';
 import { Acceleration, AccelerationPosition, BlockExtended, CpfpInfo, DifficultyAdjustment, MempoolPosition, OptimizedMempoolStats, RbfTree, TransactionStripped } from '@interfaces/node-api.interface';
 import { Router, NavigationStart } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
-import { filter, map, scan, share, shareReplay } from 'rxjs/operators';
+import { filter, map, scan, share, shareReplay, startWith, switchMap, take, takeUntil } from 'rxjs/operators';
+import { LoadState } from '@app/shared/load-state';
 import { StorageService } from '@app/services/storage.service';
 import { hasTouchScreen } from '@app/shared/pipes/bytes-pipe/utils';
 import { ActiveFilter } from '@app/shared/filters.utils';
@@ -44,6 +45,12 @@ export interface Customization {
 }
 
 export type SignaturesMode = 'all' | 'interesting' | 'none' | null;
+
+/**
+ * How long the socket has to say anything before the live feed is treated as
+ * having given up. The first payload normally lands within a second or two.
+ */
+const LIVE_FEED_DEADLINE_MS = 10_000;
 
 export interface Env {
   MAINNET_ENABLED: boolean;
@@ -193,6 +200,19 @@ export class StateService {
   blockTransactions$ = new Subject<Transaction>();
   walletTransactions$ = new Subject<Transaction[]>();
   isLoadingWebSocket$ = new ReplaySubject<boolean>(1);
+  /**
+   * Whether live chain data ever arrived.
+   *
+   * The panels on the dashboards are fed by the socket and none of them can
+   * fail: when the chain backend is down the socket connects and then says
+   * nothing at all, so a component waiting on `blocks$` waits forever and holds
+   * its placeholder forever with it. This is the one place that decides the
+   * feed has given up, so the banner that says so and the panels that stop
+   * pulsing are reading the same answer instead of racing a copy of the same
+   * timer each.
+   */
+  liveFeed$: Observable<LoadState<boolean>>;
+  private liveFeedRetry$ = new Subject<void>();
   isLoadingMempool$ = new BehaviorSubject<boolean>(true);
   vbytesPerSecond$ = new ReplaySubject<number>(1);
   previousRetarget$ = new ReplaySubject<number>(1);
@@ -356,6 +376,25 @@ export class StateService {
 
     this.blocks$ = this.blocksSubject$.pipe(filter(blocks => blocks != null && blocks.length > 0));
 
+    // A late arrival still clears this, so the deadline costs nothing when the
+    // feed is merely slow. Shared and reference counted: one timer runs however
+    // many panels are watching, and it starts again when a dashboard is next
+    // opened rather than holding a verdict from an earlier visit.
+    this.liveFeed$ = this.liveFeedRetry$.pipe(
+      startWith(undefined),
+      switchMap(() => {
+        const firstChainData$ = merge(this.blocks$, this.mempoolInfo$).pipe(take(1));
+        return merge(
+          firstChainData$.pipe(map((): LoadState<boolean> => ({ status: 'data', value: true, at: Date.now() }))),
+          timer(LIVE_FEED_DEADLINE_MS).pipe(
+            takeUntil(firstChainData$),
+            map((): LoadState<boolean> => ({ status: 'error', reason: 'timeout', at: Date.now() })),
+          ),
+        ).pipe(startWith<LoadState<boolean>>({ status: 'loading' }));
+      }),
+      shareReplay({ bufferSize: 1, refCount: true }),
+    );
+
     const savedTimePreference = this.storageService.getValue('time-preference-ltr');
     const rtlLanguage = (this.locale.startsWith('ar') || this.locale.startsWith('fa') || this.locale.startsWith('he'));
     // default time direction is right-to-left, unless locale is a RTL language
@@ -491,6 +530,14 @@ export class StateService {
 
   setBlockScrollingInProgress(value: boolean) {
     this.blockScrolling$.next(value);
+  }
+
+  /**
+   * Gives the live feed a fresh deadline. Reconnecting the socket is the
+   * caller's job: this service does not own the connection.
+   */
+  retryLiveFeed(): void {
+    this.liveFeedRetry$.next();
   }
 
   isLiquid() {
