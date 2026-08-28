@@ -126,6 +126,9 @@ jobs:
       - name: Every asset the build references is in the output
         run: node scripts/universe/check-build-assets.mjs
 
+      - name: No em dash in what the build actually ships
+        run: node scripts/universe/check-text.mjs frontend/dist
+
       - name: Install the visual QA harness
         working-directory: scripts/universe/visual-qa
         run: npm ci
