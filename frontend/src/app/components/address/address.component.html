@@ -181,6 +181,7 @@
   </ng-template>
 
   <ng-template [ngIf]="isLoadingAddress && !error">
+    <p class="sr-only" role="status" i18n="address.loading-announcement">Loading address</p>
 
     <div class="box">
       <div class="row">
