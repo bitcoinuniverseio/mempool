@@ -13,7 +13,8 @@
           <form [formGroup]="radioGroupForm" class="formRadioGroup"
             [class]="(stateService.env.MINING_DASHBOARD || stateService.env.LIGHTNING) ? 'mining' : 'no-menu'" (click)="saveGraphPreference()">
             <div class="small-buttons">
-              <a class="btn btn-primary btn-sm mb-0" [routerLink]="['/clock/mempool/0' | relativeUrl]" style="color: white" id="btn-clock">
+              <a class="btn btn-primary btn-sm mb-0" [routerLink]="['/clock/mempool/0' | relativeUrl]" style="color: white" id="btn-clock"
+                i18n-aria-label="statistics.clock-link|Mempool clock" aria-label="Mempool clock">
                 <fa-icon [icon]="['fas', 'clock']" [fixedWidth]="true" i18n-title="master-page.clockview" i18n-title="footer.clock-mempool" title="Clock (Mempool)"></fa-icon>
               </a>
             </div>
@@ -60,7 +61,8 @@
             </div>
             <div class="small-buttons">
               <div ngbDropdown #myDrop="ngbDropdown">
-                <button class="btn btn btn-primary btn-sm" id="dropdownFees" ngbDropdownAnchor (click)="myDrop.toggle()">
+                <button class="btn btn btn-primary btn-sm" id="dropdownFees" ngbDropdownAnchor (click)="myDrop.toggle()"
+                  i18n-aria-label="statistics.filter-fee-levels|Filter fee levels" aria-label="Filter fee levels">
                   <fa-icon [icon]="['fas', 'filter']" [fixedWidth]="true" i18n-title="statistics.component-filter.title"
                     title="Filter"></fa-icon>
                 </button>
@@ -85,7 +87,8 @@
                 </div>
               </div>
 
-              <button (click)="invertGraph()" class="btn btn btn-primary btn-sm">
+              <button (click)="invertGraph()" class="btn btn btn-primary btn-sm"
+                i18n-aria-label="statistics.invert-graph|Invert the graph" aria-label="Invert the graph">
                 <fa-icon [icon]="['fas', 'exchange-alt']" [rotate]="90" [fixedWidth]="true"
                   i18n-title="statistics.component-invert.title" title="Invert"></fa-icon>
               </button>
