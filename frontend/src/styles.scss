@@ -780,6 +780,13 @@ h1, h2, h3 {
   overflow: visible;
   position: relative;
 
+  // The label is positioned out of flow, so without this it lands on whatever
+  // follows: in the blocks table that is the next row, and the figure was cut
+  // in half by it. The reserve is only made where a label actually exists.
+  &:has(.progress-text) {
+    margin-bottom: 1.1em;
+  }
+
   .progress-bar {
     border-radius: inherit;
   }
