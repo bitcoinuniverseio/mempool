@@ -12,6 +12,8 @@
  * chart reads a computed style while drawing, and nothing reads one per frame.
  */
 
+import { contrastMempoolFeeColors, defaultMempoolFeeColors } from '@app/app.constants';
+
 /** Chart chrome: the parts of a chart that are structure rather than data. */
 export interface ChartChrome {
   /** Axis lines and ticks. */
@@ -207,4 +209,30 @@ export function chartDataZoomStyle(): Record<string, unknown> {
     emphasis: { handleStyle: { borderColor: chrome.series[0], borderWidth: 2 } },
     textStyle: { color: chrome.label },
   };
+}
+
+/**
+ * The fee scale this theme draws with.
+ *
+ * A fee rate should be one colour everywhere in this product. Blocks and the
+ * Lens already read the scale below; the mempool depth chart did not. It used
+ * the inherited categorical ramp, which is a rainbow, and applying a
+ * categorical palette to an ordered quantity means the reader cannot tell from
+ * the colour whether a band is cheap or expensive. It also put a band at
+ * #D81B60, 6.7 dE from the brand pink, so a fee level wore the product's own
+ * colour.
+ *
+ * The scale is a TypeScript array rather than a custom property, so the theme
+ * is detected from a variable only the high contrast theme declares. The result
+ * is cached with the rest of the chrome and dropped on a theme change.
+ */
+export function feeScale(): string[] {
+  if (typeof window === 'undefined' || typeof getComputedStyle !== 'function') {
+    return defaultMempoolFeeColors.map((hex) => '#' + hex);
+  }
+  const contrast = getComputedStyle(document.documentElement)
+    .getPropertyValue('--u-fee-label-ink')
+    .trim();
+  const scale = contrast ? contrastMempoolFeeColors : defaultMempoolFeeColors;
+  return scale.map((hex) => '#' + hex);
 }

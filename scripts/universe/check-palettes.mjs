@@ -390,6 +390,48 @@ for (const [theme, marker] of [['light', LIGHT], ['dark', DARK]]) {
   }
 }
 
+// --- The one acknowledged proximity ----------------------------------------
+//
+// Everything above holds the brand at 25 dE or more from every other meaning in
+// the product. There is exactly one pairing that does not clear it, and it is
+// recorded here rather than left to be discovered.
+//
+// The fee scale runs green for cheap through amber to a deep magenta for the
+// most expensive band, and that top band sits about 10.7 dE from the light
+// brand fill. Both values are load bearing and neither can move. The fee scale
+// is what a block face, the Lens, and the mempool depth chart all mean by a fee
+// rate, and a Bitcoin user already reads hot as expensive. The brand fill is
+// the measured pink a white label clears.
+//
+// It is tolerable because the two never do the same job: the fee colour is
+// always a large filled area with a sat/vB figure attached, and the brand is
+// always a control or a mark. It is checked at the distance it actually has, so
+// that nudging either value closer fails the build and forces the decision to
+// be made again rather than drifting.
+
+{
+  const feeScaleTop = '#' + (constants.match(/export const defaultMempoolFeeColors = \[([\s\S]*?)\]/)[1]
+    .match(/'([0-9a-fA-F]{6})'/g) || []).slice(-1)[0].replace(/'/g, '');
+  separation(
+    'fee scale top band against the brand fill (light), the one acknowledged proximity',
+    feeScaleTop,
+    token(tokensSource, 'u-brand', { after: LIGHT }),
+    10,
+  );
+  separation(
+    'fee scale top band against the brand anchor (light)',
+    feeScaleTop,
+    token(tokensSource, 'u-brand-accent', { after: LIGHT }),
+    25,
+  );
+  separation(
+    'fee scale top band against the brand (dark)',
+    feeScaleTop,
+    token(tokensSource, 'u-brand', { after: DARK }),
+    25,
+  );
+}
+
 // --- Theme parity ----------------------------------------------------------
 //
 // Dark and high contrast are not reduced versions of the product. Any token the

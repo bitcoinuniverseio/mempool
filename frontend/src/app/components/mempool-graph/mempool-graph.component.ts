@@ -7,9 +7,9 @@ import { OptimizedMempoolStats } from '@interfaces/node-api.interface';
 import { StateService } from '@app/services/state.service';
 import { StorageService } from '@app/services/storage.service';
 import { EChartsOption } from '@app/graphs/echarts';
-import { feeLevels, chartColors } from '@app/app.constants';
+import { feeLevels } from '@app/app.constants';
 import { download, formatterXAxis, formatterXAxisLabel } from '@app/shared/graphs.utils';
-import { chartChrome, chartDataZoomStyle } from '@app/shared/chart-theme';
+import { chartChrome, chartDataZoomStyle, feeScale } from '@app/shared/chart-theme';
 
 @Component({
   selector: 'app-mempool-graph',
@@ -50,7 +50,7 @@ export class MempoolGraphComponent implements OnInit, OnChanges {
   feeLimitIndex: number;
   maxFeeIndex: number;
   feeLevelsOrdered = [];
-  chartColorsOrdered = chartColors;
+  chartColorsOrdered = feeScale();
   inverted: boolean;
   chartInstance: any = undefined;
   weightMode: boolean = false;
@@ -494,7 +494,7 @@ export class MempoolGraphComponent implements OnInit, OnChanges {
         }
       }
     }
-    this.chartColorsOrdered =  chartColors.slice(0, this.feeLevelsOrdered.length);
+    this.chartColorsOrdered = feeScale().slice(0, this.feeLevelsOrdered.length);
   }
 
   isMobile() {
