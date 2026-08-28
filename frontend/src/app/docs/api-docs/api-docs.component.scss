@@ -197,7 +197,10 @@ h3 {
 .endpoint-container .section-header {
   display: block;
   background-color: var(--secondary);
-  color: var(--info);
+  // A control you click, so it takes the brand. It used to take --info, which
+  // is the colour that means "informational status" everywhere else in this
+  // product, spent here on an accent because the theme it grew from was blue.
+  color: var(--u-brand);
   padding: 1rem 1.3rem 1rem 1.3rem;
   font-weight: bold;
   border-radius: 0.25rem;
@@ -519,7 +522,7 @@ fa-icon {
 
       .subtitle {
         margin-bottom: 5px;
-        color: var(--info);
+        color: var(--u-text-secondary);
       }
 
       p:last-child {
@@ -549,7 +552,7 @@ fa-icon {
 
       .code-label {
         font-size: 12px;
-        color: var(--info);
+        color: var(--u-text-secondary);
         margin-bottom: 5px;
       }
 
