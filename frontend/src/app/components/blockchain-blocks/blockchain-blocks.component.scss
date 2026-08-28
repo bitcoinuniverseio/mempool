@@ -115,6 +115,13 @@
   margin-bottom: 4px;
 }
 
+// The height label.
+//
+// On the dashboard it sits on the page above the strip. On a block or
+// transaction page the strip is offset and the same label lands over a
+// block's top face instead. No single ink clears both a light page and a
+// dark facet, so the label brings its own ground and stops depending on
+// what happens to be behind it.
 .block-height {
   position: absolute;
   font-size: 16px;
@@ -126,7 +133,17 @@
 }
 
 .block-height-link {
+  background: var(--u-surface-page);
+  border-radius: var(--u-radius-sm);
+  color: var(--u-brand);
+  padding: 0 var(--u-space-2);
   pointer-events: all;
+
+  &:hover,
+  &:focus {
+    color: var(--u-brand-hover);
+    text-decoration: underline;
+  }
 }
 
 .bitcoin-block::after {
@@ -291,16 +308,24 @@
   border-radius: 2px;
   z-index: -1;
 }
-// Mining pool credit. Below the block and on the page surface, so it takes page
-// ink rather than block ink.
+// Mining pool credit.
+//
+// Same problem as the height label above the strip: on the dashboard it
+// sits on the page, and on a block or transaction page the offset strip
+// puts it over a block's face. It brings its own ground for the same
+// reason, so it reads the same wherever the strip happens to be.
 .badge {
-  background-color: transparent;
+  background-color: var(--u-surface-page);
+  border-radius: var(--u-radius-sm);
   color: var(--u-text-secondary);
   font-size: var(--u-text-xs);
   font-weight: var(--u-weight-medium);
+  padding: 0 var(--u-space-2);
 
-  &:hover {
+  &:hover,
+  &:focus {
     color: var(--u-brand);
+    text-decoration: underline;
   }
 }
 

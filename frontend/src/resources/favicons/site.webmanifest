@@ -1,6 +1,7 @@
 {
     "name": "Universe Explorer",
-    "short_name": "Universe Explorer",
+    "short_name": "Universe",
+    "description": "Bitcoin activity while it is still forming, and what it proves.",
     "icons": [
         {
             "src": "/resources/favicons/android-chrome-192x192.png",
@@ -13,7 +14,8 @@
             "type": "image/png"
         }
     ],
-    "theme_color": "#000000",
-    "background_color": "#000000",
-    "display": "standalone"
+    "theme_color": "#ffffff",
+    "background_color": "#f4f6f9",
+    "display": "standalone",
+    "start_url": "/"
 }

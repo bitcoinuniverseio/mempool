@@ -13,14 +13,14 @@
         <ng-container i18n="shared.stale-block-title">Stale Block</ng-container>
       }
       <span class="next-previous-blocks">
-        <a *ngIf="showNextBlocklink" class="nav-arrow next" [routerLink]="['/block/' | relativeUrl, nextBlockHeight]" (click)="navigateToNextBlock()" i18n-ngbTooltip="Next Block" ngbTooltip="Next Block" placement="bottom">
+        <a *ngIf="showNextBlocklink" class="nav-arrow next" [routerLink]="['/block/' | relativeUrl, nextBlockHeight]" (click)="navigateToNextBlock()" i18n-ngbTooltip="Next Block" ngbTooltip="Next Block" placement="bottom" i18n-aria-label="block.next-block|Next block" aria-label="Next block">
           <fa-icon [icon]="['fas', 'angle-left']" [fixedWidth]="true"></fa-icon>
         </a>
         <span *ngIf="!showNextBlocklink" placement="bottom" class="disable nav-arrow next">
           <fa-icon [icon]="['fas', 'angle-left']" [fixedWidth]="true"></fa-icon>
         </span>
         <a [routerLink]="['/block/' | relativeUrl, blockHash]" class="block-link">{{ blockHeight }}</a>
-        <a *ngIf="showPreviousBlocklink && block" class="nav-arrow prev"  [routerLink]="['/block/' | relativeUrl, block.previousblockhash]" (click)="navigateToPreviousBlock()" i18n-ngbTooltip="Previous Block" ngbTooltip="Previous Block" placement="bottom">
+        <a *ngIf="showPreviousBlocklink && block" class="nav-arrow prev"  [routerLink]="['/block/' | relativeUrl, block.previousblockhash]" (click)="navigateToPreviousBlock()" i18n-ngbTooltip="Previous Block" ngbTooltip="Previous Block" placement="bottom" i18n-aria-label="block.previous-block|Previous block" aria-label="Previous block">
           <fa-icon [icon]="['fas', 'angle-right']" [fixedWidth]="true"></fa-icon>
         </a>
         <span *ngIf="!showPreviousBlocklink || !block" placement="bottom" class="disable nav-arrow prev">
@@ -33,7 +33,7 @@
 
     <button *ngIf="block?.stale" type="button" class="btn btn-sm btn-danger container-button" i18n="block.stale|Stale block state">Stale</button>
 
-    <button [routerLink]="['/' | relativeUrl]" class="btn btn-sm">&#10005;</button>
+    <button [routerLink]="['/' | relativeUrl]" class="btn btn-sm btn-close-page" i18n-aria-label="shared.close|Close" aria-label="Close this block and return to the dashboard">&#10005;</button>
   </div>
 
   <div class="clearfix"></div>
