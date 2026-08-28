@@ -96,6 +96,7 @@
           </form>
         </div>
         <div class="card-body">
+          <p class="bounded-history" role="status" *ngIf="boundedHistoryNote as note">{{ note }}</p>
           <app-load-status [state]="state" label="mempool history" i18n-label="statistics.label.mempool-history"
             minHeight="500px" (retry)="onRetry()"></app-load-status>
           <div class="incoming-transactions-graph" *ngIf="hasData">
