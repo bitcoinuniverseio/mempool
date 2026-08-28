@@ -174,38 +174,74 @@ export function routeFor(pathname, originalUrl) {
   return null;
 }
 
+/**
+ * How long a request waits for an upstream that is refusing connections.
+ *
+ * A release restarts the backend and the overlay, and they take a few seconds
+ * to listen again. Answering 502 the instant the connection is refused turns
+ * every request in that window into a visible failure, which is the difference
+ * between a deploy nobody notices and one that shows up as an outage. These
+ * delays bridge a restart and give up well inside the page's own budget, so a
+ * genuinely dead upstream is still reported promptly rather than hidden.
+ */
+const RESTART_RETRY_DELAYS_MS = [250, 500, 1000, 1500, 2000];
+
+/** True for a failure that a moment's wait could plausibly resolve. */
+function upstreamIsRestarting(error) {
+  return error?.code === 'ECONNREFUSED' || error?.code === 'ECONNRESET';
+}
+
 function proxy(request, response, route) {
   const upstream = route.upstream;
-  const options = {
-    protocol: upstream.protocol,
-    hostname: upstream.hostname,
-    port: upstream.port,
-    method: request.method,
-    path: route.path,
-    headers: { ...request.headers, host: upstream.host },
-    timeout: UPSTREAM_TIMEOUT_MS,
-  };
-  const proxied = http.request(options, (upstreamResponse) => {
-    // API responses are data, never documents, so they get the headers without
-    // a content policy.
-    response.writeHead(
-      upstreamResponse.statusCode || 502,
-      withSecurityHeaders(upstreamResponse.headers, false),
-    );
-    upstreamResponse.pipe(response);
-  });
-  proxied.on('timeout', () => proxied.destroy(new Error('upstream timeout')));
-  proxied.on('error', () => {
-    if (response.headersSent) {
-      response.destroy();
-      return;
+  // Only a request with no body can be replayed. Everything this gateway
+  // proxies that changes state carries one, so this never retries a write.
+  const replayable = request.method === 'GET' || request.method === 'HEAD';
+  let attempt = 0;
+
+  const send = () => {
+    const options = {
+      protocol: upstream.protocol,
+      hostname: upstream.hostname,
+      port: upstream.port,
+      method: request.method,
+      path: route.path,
+      headers: { ...request.headers, host: upstream.host },
+      timeout: UPSTREAM_TIMEOUT_MS,
+    };
+    const proxied = http.request(options, (upstreamResponse) => {
+      // API responses are data, never documents, so they get the headers
+      // without a content policy.
+      response.writeHead(
+        upstreamResponse.statusCode || 502,
+        withSecurityHeaders(upstreamResponse.headers, false),
+      );
+      upstreamResponse.pipe(response);
+    });
+    proxied.on('timeout', () => proxied.destroy(new Error('upstream timeout')));
+    proxied.on('error', (error) => {
+      if (response.headersSent) {
+        response.destroy();
+        return;
+      }
+      if (replayable && upstreamIsRestarting(error) && attempt < RESTART_RETRY_DELAYS_MS.length) {
+        const delay = RESTART_RETRY_DELAYS_MS[attempt];
+        attempt += 1;
+        setTimeout(send, delay);
+        return;
+      }
+      // A dead upstream is reported as a gateway failure, never as an empty
+      // success: a caller must be able to tell the two apart.
+      response.writeHead(502, { 'content-type': 'application/json; charset=utf-8' });
+      response.end(JSON.stringify({ error: 'upstream-unavailable' }));
+    });
+    if (replayable) {
+      proxied.end();
+    } else {
+      request.pipe(proxied);
     }
-    // A dead upstream is reported as a gateway failure, never as an empty
-    // success: a caller must be able to tell the two apart.
-    response.writeHead(502, { 'content-type': 'application/json; charset=utf-8' });
-    response.end(JSON.stringify({ error: 'upstream-unavailable' }));
-  });
-  request.pipe(proxied);
+  };
+
+  send();
 }
 
 /** Resolves a request path to a file inside the root, or null. */

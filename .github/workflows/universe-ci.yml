@@ -52,6 +52,9 @@ jobs:
       - name: Gateway routing
         run: node --test scripts/universe/gateway.test.mjs
 
+      - name: The gateway bridges an upstream restart rather than failing
+        run: node --test scripts/universe/gateway-restart.test.mjs
+
   backend:
     name: Backend build and test
     runs-on: [self-hosted, linux-ultra]

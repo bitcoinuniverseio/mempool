@@ -153,8 +153,10 @@ suite can see that.
    authority configured.
 5. `universe-explorer-release cutover <sha>` runs the gates again, swaps the
    `current` symlink atomically, restarts the three units, and verifies. The
-   gateway comes back within a second, so the public origin sees at most a
-   brief connection reset. After the swap it reads `/api/v1/capabilities` and
+   backend and the overlay take a few seconds to listen again; the gateway
+   waits for them rather than answering 502, so a request that arrives during
+   the restart is served late rather than failed. An upstream that is genuinely
+   gone is still reported as a gateway failure within a few seconds. After the swap it reads `/api/v1/capabilities` and
    fails the release if any feature is enabled with no routes registered, which
    is exactly the state that shipped. A failed verification rolls back.
 6. Run `node scripts/universe/synthetic-check.mjs` against the public origin.
