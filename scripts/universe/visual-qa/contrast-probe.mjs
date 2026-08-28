@@ -146,7 +146,15 @@ export function contrastProbe() {
   };
 
   // Does this element's painted box actually sit behind that rectangle?
+  //
+  // The root and the body are always behind everything: CSS propagates their
+  // background to the viewport canvas, so it paints the whole page regardless
+  // of the box either element reports. This product sets html and body to
+  // height 100%, which makes the body box one viewport tall while the document
+  // runs far past it, so a geometry test alone would decide that nothing below
+  // the fold has a background at all.
   const covers = (element, rect) => {
+    if (element === document.body || element === document.documentElement) return true;
     const box = element.getBoundingClientRect();
     if (box.width < 1 || box.height < 1) return false;
     // The text has to be inside the box, not merely touching it: a one pixel
