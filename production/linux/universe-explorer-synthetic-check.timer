@@ -1,0 +1,11 @@
+[Unit]
+Description=Run the Universe Explorer synthetic check every five minutes
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=5min
+AccuracySec=30s
+Unit=universe-explorer-synthetic-check.service
+
+[Install]
+WantedBy=timers.target

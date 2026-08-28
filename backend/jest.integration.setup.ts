@@ -36,8 +36,29 @@ module.exports = async () => {
     const composeFile = path.join(__dirname, 'docker-compose.test.yml');
     const dockerComposeCmd = getDockerComposeCmd();
 
-    // Start the container
-    execSync(`${dockerComposeCmd} -f "${composeFile}" up -d`, {
+    // A container left running by an earlier run is not the container this run
+    // asked for: compose reports it as already up and never recreates it, so a
+    // change of image or of engine is silently ignored and the tests measure
+    // whatever was there before. Tear it down, volumes included, first.
+    try {
+      execSync(`${dockerComposeCmd} -f "${composeFile}" down -v --remove-orphans`, {
+        stdio: 'inherit',
+        cwd: __dirname
+      });
+    } catch {
+      // Nothing to remove on a clean machine, which is the normal case.
+    }
+
+    // `down` only removes what compose owns. A container left behind under the
+    // same name by anything else still holds the name, and `up` fails on the
+    // conflict rather than starting the database.
+    try {
+      execSync('docker rm -f backend-db-test-1', { stdio: 'pipe' });
+    } catch {
+      // No such container, which is the normal case.
+    }
+
+    execSync(`${dockerComposeCmd} -f "${composeFile}" up -d --force-recreate`, {
       stdio: 'inherit',
       cwd: __dirname
     });
@@ -45,14 +66,19 @@ module.exports = async () => {
     // Wait for database to be ready
     console.log('Waiting for database to be ready...');
     let attempts = 0;
-    const maxAttempts = 30;
+    const maxAttempts = 60;
 
     while (attempts < maxAttempts) {
       try {
-        execSync(`${dockerComposeCmd} -f "${composeFile}" exec -T db-test mysqladmin ping -h localhost -u mempool_test -pmempool_test --silent`, {
-          cwd: __dirname,
-          stdio: 'pipe'
-        });
+        // MariaDB renamed its client binaries; either name may be the one this
+        // image ships, so a probe that only knows one of them reports a
+        // healthy server as a database that never started.
+        execSync(
+          `${dockerComposeCmd} -f "${composeFile}" exec -T db-test sh -c ` +
+            `"mariadb-admin ping -h localhost -u mempool_test -pmempool_test --silent ` +
+            `|| mysqladmin ping -h localhost -u mempool_test -pmempool_test --silent"`,
+          { cwd: __dirname, stdio: 'pipe' },
+        );
         console.log('Database is ready!');
         break;
       } catch (e) {

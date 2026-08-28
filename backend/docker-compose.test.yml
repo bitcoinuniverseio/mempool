@@ -2,7 +2,10 @@ version: "3.7"
 
 services:
   db-test:
-    image: mariadb:10.5.21
+    # Must stay the same engine and major version the Universe deployment runs.
+    # The migrations use MariaDB syntax that MySQL rejects outright, so a test
+    # database on a different engine proves nothing about the release.
+    image: mariadb:11.4
     environment:
       MYSQL_DATABASE: "mempool_test"
       MYSQL_USER: "mempool_test"
