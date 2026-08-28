@@ -74,3 +74,47 @@ The overlay:
   docs updated in each repo's four-repo documentation set.
 - The explorer frontend has exactly one aggregate enrichment call per view
   (no browser-to-indexer traffic, no N+1).
+
+## Authority status contract
+
+A source has two independent facts, and the explorer must never let one stand
+in for the other.
+
+**Capability** comes from the registry: what a protocol is implemented to do,
+`VERIFIED READ ONLY` or `BLOCKED`. It changes when code ships.
+
+**Availability** comes from the runtime snapshot: whether the authority behind
+that protocol can answer right now. It changes on its own.
+
+The overlay reports five availability states per source:
+
+| Status | Meaning |
+| --- | --- |
+| `ready` | reachable, ready, and close enough to the chain tip to describe the present |
+| `stale` | reachable and answering, but too far behind to describe the present |
+| `degraded` | reachable, but not ready or unable to produce a usable checkpoint |
+| `unreachable` | the request did not complete at the transport layer |
+| `unconfigured` | the registry names this authority and nothing configured it |
+
+`stale` sits between `ready` and `degraded` deliberately. An indexer rebuilding
+its index answers every request correctly while sitting hundreds of thousands
+of blocks back; folding that into `ready` is what let a rebuilding ord index be
+presented as live, and folding it into `degraded` would call a healthy indexer
+broken.
+
+Freshness is measured against the highest tip observed for the same chain and
+network across every configured source, which in this deployment is the mempool
+backend reading Bitcoin Core. Each source carries `lagBlocks`, `lastSuccessAt`,
+and `consecutiveFailures` so a reader can judge the label rather than take it.
+
+`/api/v1/universe/availability` resolves capability against availability once,
+next to the snapshot it comes from, so no client has to decide the precedence
+for itself. Availability governs: a protocol whose authority is unreachable,
+unconfigured, or catching up is not readable, whatever the registry says it
+implements.
+
+A source is only configured when the whole read contract is usable, which means
+a readiness route that answers 200 and a checkpoint carrying both a height and
+a 64-hex tip hash. An authority that publishes a height with no hash is left
+unconfigured rather than admitted without evidence: the explorer must not
+assert a checkpoint the authority never committed to.
