@@ -134,6 +134,10 @@ jobs:
         working-directory: scripts/universe/visual-qa
         run: npm ci
 
+      - name: The unfinished-page gate fires on the states that shipped
+        working-directory: scripts/universe/visual-qa
+        run: node --test progress-gate.test.mjs
+
       - name: Serve the built frontend
         run: |
           UNIVERSE_GATEWAY_PORT=8123           UNIVERSE_GATEWAY_ROOT=frontend/dist/mempool/browser           node scripts/universe/gateway.mjs &

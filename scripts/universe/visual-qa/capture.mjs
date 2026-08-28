@@ -384,7 +384,7 @@ async function run() {
  * A failure fixture has the opposite obligation: the page must say what
  * happened rather than wait.
  */
-function progressFailures(report) {
+export function progressFailures(report) {
   const failures = [];
   for (const f of report.findings) {
     const progress = f.progress;
@@ -523,4 +523,8 @@ function summarise(report) {
   return stuck;
 }
 
-run().catch((e) => { console.error(e); process.exit(1); });
+// Only drive browsers when this file is the program. Importing it, as the
+// gate's own test does, must not launch the matrix.
+if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))) {
+  run().catch((e) => { console.error(e); process.exit(1); });
+}
