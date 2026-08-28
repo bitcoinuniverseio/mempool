@@ -18,7 +18,7 @@
 
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { contrastRatio, effectiveRatio, floorTo, parseColor, worstColorSeparation } from './contrast.mjs';
+import { colorDifference, contrastRatio, effectiveRatio, floorTo, parseColor, worstColorSeparation } from './contrast.mjs';
 
 const ROOT = resolve(import.meta.dirname, '..', '..');
 const constantsPath = resolve(ROOT, 'frontend/src/app/app.constants.ts');
@@ -269,6 +269,162 @@ check('high contrast focus ring', token(contrastSource, 'u-focus-ring'), hcSurfa
 check('high contrast borders', token(contrastSource, 'u-border'), hcSurfaces, { floor: 3 });
 for (const state of ['proven', 'partial', 'pending', 'unavailable', 'neutral']) {
   check(`high contrast ${state} text`, token(contrastSource, `u-state-${state}`), hcSurfaces, { floor: 7 });
+}
+
+// --- Role separation -------------------------------------------------------
+//
+// Three families of colour share this product: the brand, the evidence states,
+// and protocol identity. The whole system rests on a reader never confusing
+// them, so the distances are measured rather than asserted in a comment.
+//
+// The measurement is perceptual distance under normal vision, not contrast
+// ratio: two colours can differ obviously and still share a luminance, and it
+// is sameness of hue that would make a pink chip read as "confirmed". Colour
+// vision deficiency is covered a different way, by the rule that a state always
+// carries a word and a protocol colour always appears beside a protocol name.
+
+function separation(label, a, b, floor = 25) {
+  const value = floorTo(colorDifference(a, b), 1);
+  const row = { label, fg: a, worstBackground: b, ratio: value, floor, pass: value >= floor, unit: 'dE' };
+  checks.push(row);
+  if (!row.pass) failures.push(row);
+}
+
+const STATES = ['proven', 'partial', 'pending', 'unavailable', 'neutral'];
+// `fallback` is deliberately the neutral state colour: it is what a protocol
+// with no identity of its own is drawn in, so it is the one pair that is meant
+// to match.
+const PROTOCOLS = ['ordinals', 'runes', 'alkanes', 'stamps', 'atomicals', 'op-data'];
+const BRAND_ROLES = ['u-brand', 'u-brand-hover', 'u-brand-accent', 'u-magenta', 'u-fuchsia', 'u-lavender'];
+
+for (const [theme, marker] of [['light', LIGHT], ['dark', DARK]]) {
+  for (const role of BRAND_ROLES) {
+    const brand = token(tokensSource, role, { after: marker });
+    for (const state of STATES) {
+      separation(
+        `--${role} is not the ${state} state (${theme})`,
+        brand,
+        token(tokensSource, `u-state-${state}`, { after: marker }),
+      );
+    }
+  }
+
+  for (const protocol of PROTOCOLS) {
+    const hue = token(tokensSource, `u-protocol-${protocol}`, { after: marker });
+    for (const state of STATES) {
+      // A protocol chip and a verdict chip are different components in
+      // different places, and both always carry a word, so the floor between
+      // them is "visibly a different colour" rather than the wider distance
+      // the brand is held to. Ordinals orange and the amber that means partial
+      // evidence are the closest legitimate pair in the product, and this is
+      // the number that keeps them from converging any further.
+      separation(
+        `${protocol} is not the ${state} state (${theme})`,
+        hue,
+        token(tokensSource, `u-state-${state}`, { after: marker }),
+        12,
+      );
+    }
+    // The brand may never be read as a protocol, so it keeps the wide floor.
+    separation(
+      `${protocol} is not the brand (${theme})`,
+      hue,
+      token(tokensSource, 'u-brand', { after: marker }),
+    );
+    // Two protocols that look alike are two protocols a reader will mix up.
+    for (const other of PROTOCOLS) {
+      if (other <= protocol) continue;
+      separation(
+        `${protocol} and ${other} are different colours (${theme})`,
+        hue,
+        token(tokensSource, `u-protocol-${other}`, { after: marker }),
+        20,
+      );
+    }
+  }
+}
+
+// --- Theme parity ----------------------------------------------------------
+//
+// Dark and high contrast are not reduced versions of the product. Any token the
+// light theme declares has to exist in the other two, or a component styled
+// from it renders unpainted on a theme nobody reviewed.
+
+function declaredTokens(source, after) {
+  const from = after ? source.indexOf(after) : 0;
+  const rest = source.slice(from);
+  // The mixin's own closing brace is the only one at column zero.
+  const end = after ? rest.search(/^\}/m) : -1;
+  const body = end > 0 ? rest.slice(0, end) : rest;
+  return new Set((body.match(/--u-[a-z0-9-]+(?=\s*:)/g) || []).map((n) => n.slice(2)));
+}
+
+const lightTokens = declaredTokens(tokensSource, LIGHT);
+const darkTokens = declaredTokens(tokensSource, DARK);
+const contrastTokens = new Set([...darkTokens, ...declaredTokens(contrastSource)]);
+
+for (const [themeName, present] of [['dark', darkTokens], ['high contrast', contrastTokens]]) {
+  const missing = [...lightTokens].filter((name) => !present.has(name)).sort();
+  const row = {
+    label: `every light token has a ${themeName} counterpart`,
+    fg: `${lightTokens.size} tokens`,
+    worstBackground: missing.length ? missing.join(', ').slice(0, 70) : 'complete',
+    ratio: lightTokens.size - missing.length,
+    floor: lightTokens.size,
+    pass: missing.length === 0,
+    unit: 'tokens',
+  };
+  checks.push(row);
+  if (!row.pass) failures.push(row);
+}
+
+// --- Retired brand values --------------------------------------------------
+//
+// The ultramarine identity this product shipped with was centralised, which is
+// what made replacing it a small change. The same property makes it easy to
+// reintroduce by accident: one component rule with a literal, or one metadata
+// file nobody re-reads. So the retired values are named here and refused
+// everywhere.
+
+const RETIRED = {
+  '#2438b8': 'ultramarine brand fill',
+  '#1b2b93': 'ultramarine brand hover',
+  '#8fa2ff': 'ultramarine brand, dark',
+  '#a8b8ff': 'ultramarine brand, high contrast',
+  '#2055e3': 'ultramarine title colour',
+  '#007cfa': 'inherited Bootstrap primary',
+  '#e7ebfb': 'ultramarine subtle surface',
+  '#c3ccf3': 'ultramarine border',
+};
+
+const RETIRED_SCOPE = [
+  'frontend/src/styles/_universe-tokens.scss',
+  'frontend/src/theme-dark.scss',
+  'frontend/src/theme-contrast.scss',
+  'frontend/src/styles.scss',
+  'frontend/src/index.mempool.html',
+  'frontend/src/resources/favicons/browserconfig.xml',
+  'frontend/src/resources/favicons/site.webmanifest',
+  'frontend/src/app/shared/chart-theme.ts',
+  'scripts/universe/brand/render-brand-assets.mjs',
+];
+
+for (const [value, what] of Object.entries(RETIRED)) {
+  const found = RETIRED_SCOPE.filter((file) => {
+    const body = readFileSync(resolve(ROOT, file), 'utf8');
+    return body.toLowerCase().includes(value);
+  });
+  const row = {
+    label: `retired ${what} stays retired`,
+    fg: value,
+    worstBackground: found.length ? found.join(', ') : 'absent',
+    ratio: found.length,
+    floor: 0,
+    pass: found.length === 0,
+    unit: 'uses',
+  };
+  checks.push(row);
+  if (!row.pass) failures.push(row);
 }
 
 // --- Report ----------------------------------------------------------------
