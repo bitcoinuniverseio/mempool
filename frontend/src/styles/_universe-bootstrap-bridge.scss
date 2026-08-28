@@ -263,6 +263,31 @@
     color: var(--u-text-inverse);
   }
 
+  // The other filled state buttons. Only .btn-success was restated here, so
+  // .btn-danger kept Bootstrap's own #dc3545 and inherited the page ink, which
+  // on the light theme is near black on red at 3.21:1. It renders on three
+  // surfaces: a stale block, an unconfirmed count, and a negative balance on
+  // the address page. The last of those went unmeasured for as long as the
+  // address fixture was answering the wrong shape and the page showed an error
+  // instead of a balance.
+  .btn-danger {
+    background-color: var(--u-state-unavailable);
+    border-color: var(--u-state-unavailable);
+    color: var(--u-text-inverse);
+  }
+
+  .btn-warning {
+    background-color: var(--u-state-partial);
+    border-color: var(--u-state-partial);
+    color: var(--u-text-inverse);
+  }
+
+  .btn-info {
+    background-color: var(--u-state-pending);
+    border-color: var(--u-state-pending);
+    color: var(--u-text-inverse);
+  }
+
   .btn-link {
     color: var(--u-brand);
 

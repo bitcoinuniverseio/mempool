@@ -175,12 +175,33 @@ export const detailFixtures = {
 };
 
 /** Address with history, and its transactions. */
+/**
+ * The address page, and every sub-route it asks for.
+ *
+ * Only the summary used to be pinned. The harness falls back to a prefix match,
+ * so `/api/address/<addr>/txs` matched the summary's key and was answered with
+ * the summary object. The page called forEach on it, threw, and rendered its
+ * error state in every screenshot the matrix has ever taken, which is how one
+ * of the thirteen reviewed routes was never actually reviewed. Each sub-route
+ * is pinned explicitly now, and each returns the shape its caller expects.
+ */
 export const addressFixtures = {
   [`/api/address/${ADDRESS}`]: {
     address: ADDRESS,
     chain_stats: { funded_txo_count: 42, funded_txo_sum: 184_002_881, spent_txo_count: 38, spent_txo_sum: 171_004_002, tx_count: 51 },
     mempool_stats: { funded_txo_count: 1, funded_txo_sum: 220_000, spent_txo_count: 0, spent_txo_sum: 0, tx_count: 1 },
   },
+  [`/api/address/${ADDRESS}/txs`]: [buildTransaction()],
+  [`/api/address/${ADDRESS}/txs/chain`]: [buildTransaction()],
+  [`/api/address/${ADDRESS}/txs/mempool`]: [],
+  [`/api/address/${ADDRESS}/txs/summary`]: [
+    { txid: TXID_A, height: 887_412, time: 1_772_100_000, value: 1_500_000 },
+    { txid: TXID_B, height: 887_411, time: 1_772_099_400, value: -220_000 },
+  ],
+  [`/api/address/${ADDRESS}/utxo`]: [
+    { txid: TXID_A, vout: 0, value: 1_500_000, status: { confirmed: true, block_height: 887_412, block_hash: BLOCK_HASH, block_time: 1_772_100_000 } },
+    { txid: TXID_B, vout: 1, value: 220_000, status: { confirmed: false } },
+  ],
 };
 
 /**
