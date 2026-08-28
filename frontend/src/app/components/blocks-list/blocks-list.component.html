@@ -89,7 +89,7 @@
         </tr>
       </tbody>
       <ng-template #skeleton>
-        <tbody>
+        <tbody *ngIf="!failureState">
           <tr *ngFor="let item of skeletonLines">
             <td class="height text-left" [ngClass]="{'widget': widget, 'legacy': !isMempoolModule}">
               <span class="skeleton-loader" style="max-width: 75px"></span>
@@ -122,6 +122,9 @@
         </tbody>
       </ng-template>
     </table>
+
+    <app-load-status *ngIf="failureState" [state]="failureState" label="blocks" i18n-label="load.label.blocks"
+      (retry)="retryLoad()"></app-load-status>
 
     <ngb-pagination *ngIf="!widget" class="pagination-container float-right mt-2" [class]="isLoading ? 'disabled' : ''"
       [collectionSize]="blocksCount" [rotate]="true" [maxSize]="maxSize" [pageSize]="15" [(page)]="page"

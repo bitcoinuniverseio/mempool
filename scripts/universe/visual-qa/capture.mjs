@@ -410,13 +410,13 @@ async function run() {
  * Routes whose request lifecycle has been reviewed and is expected to reach a
  * terminal state. A finding on one of these fails the run.
  *
- * The gate reports findings on every route, but only blocks on these. The rest
- * of the application still has pages that hold a loader with nothing said about
- * why, which this gate found and which are recorded as known work rather than
- * quietly dropped. Adding a route here is how that work gets finished: fix the
- * page, add the route, and the gate holds it forever after.
+ * The gate reports findings on every route, but only blocks on these. Adding a
+ * route here is how a finding on an uncovered route gets finished: fix the
+ * page, add the route, and the gate holds it forever after. Home, blocks,
+ * transaction and address joined once their waiting and failure states said
+ * something instead of holding a bare placeholder.
  */
-export const GATED_ROUTES = new Set(['graphs', 'mining', 'protocols']);
+export const GATED_ROUTES = new Set(['graphs', 'mining', 'protocols', 'home', 'blocks', 'tx', 'address']);
 
 export function progressFailures(report) {
   const failures = [];

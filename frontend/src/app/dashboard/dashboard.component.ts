@@ -1,6 +1,6 @@
 import { AfterViewInit, ChangeDetectionStrategy, Component, HostListener, Inject, OnDestroy, OnInit, PLATFORM_ID } from '@angular/core';
 import { combineLatest, EMPTY, fromEvent, interval, merge, Observable, of, Subject, Subscription, timer } from 'rxjs';
-import { catchError, delayWhen, distinctUntilChanged, filter, map, scan, share, shareReplay, startWith, switchMap, takeUntil, tap, throttleTime } from 'rxjs/operators';
+import { catchError, delayWhen, distinctUntilChanged, filter, map, scan, share, shareReplay, startWith, switchMap, take, takeUntil, tap, throttleTime } from 'rxjs/operators';
 import { AuditStatus, BlockExtended, CurrentPegs, FederationAddress, FederationUtxo, OptimizedMempoolStats, PegsVolume, RecentPeg, TransactionStripped } from '@interfaces/node-api.interface';
 import { MempoolInfo, ReplacementInfo } from '@interfaces/websocket.interface';
 import { ApiService } from '@app/services/api.service';
@@ -9,6 +9,7 @@ import { WebsocketService } from '@app/services/websocket.service';
 import { SeoService } from '@app/services/seo.service';
 import { ActiveFilter, FilterMode, GradientMode, toFlags } from '@app/shared/filters.utils';
 import { detectWebGL } from '@app/shared/graphs.utils';
+import { LoadState } from '@app/shared/load-state';
 
 interface MempoolBlocksData {
   blocks: number;
@@ -50,6 +51,13 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   mempoolStats$: Observable<MempoolStatsData>;
   transactionsWeightPerSecondOptions: any;
   isLoadingWebSocket$: Observable<boolean>;
+  /**
+   * Whether live chain data ever arrived. The dashboard is fed by the socket,
+   * so when the chain backend is down every panel would otherwise hold its
+   * skeleton forever with nothing said about why.
+   */
+  chainStatus$: Observable<LoadState<boolean>>;
+  private chainRetry$ = new Subject<void>();
   liquidPegsMonth$: Observable<any>;
   currentPeg$: Observable<CurrentPegs>;
   auditStatus$: Observable<AuditStatus>;
@@ -104,6 +112,11 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
     this.stateService.focusSearchInputDesktop();
   }
 
+  retryChain(): void {
+    this.websocketService.reconnectWebsocket();
+    this.chainRetry$.next();
+  }
+
   ngOnDestroy(): void {
     this.filterSubscription.unsubscribe();
     this.mempoolInfoSubscription.unsubscribe();
@@ -121,6 +134,23 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
     this.websocketService.want(['blocks', 'stats', 'mempool-blocks', 'live-2h-chart']);
     this.websocketService.startTrackRbfSummary();
     this.network$ = merge(of(''), this.stateService.networkChanged$);
+
+    // The first socket payload normally lands within a second or two. When
+    // nothing has arrived well past that, the page says so instead of leaving
+    // the reader to stare at skeletons. A late arrival still clears the panel.
+    this.chainStatus$ = this.chainRetry$.pipe(
+      startWith(undefined),
+      switchMap(() => {
+        const firstChainData$ = merge(this.stateService.blocks$, this.stateService.mempoolInfo$).pipe(take(1));
+        return merge(
+          firstChainData$.pipe(map((): LoadState<boolean> => ({ status: 'data', value: true, at: Date.now() }))),
+          timer(10_000).pipe(
+            takeUntil(firstChainData$),
+            map((): LoadState<boolean> => ({ status: 'error', reason: 'timeout', at: Date.now() })),
+          ),
+        ).pipe(startWith<LoadState<boolean>>({ status: 'loading' }));
+      }),
+    );
     this.mempoolLoadingStatus$ = this.stateService.loadingIndicators$
       .pipe(
         map((indicators) => indicators.mempool !== undefined ? indicators.mempool : 100)
