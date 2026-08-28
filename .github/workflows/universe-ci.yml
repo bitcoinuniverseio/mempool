@@ -2,7 +2,7 @@ name: Universe CI
 
 on:
   push:
-    branches: [develop, main]
+    branches: [main]
   pull_request:
     branches: [develop, main]
   workflow_dispatch:
@@ -12,7 +12,7 @@ permissions:
 
 concurrency:
   group: universe-ci-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  cancel-in-progress: false
 
 jobs:
   docs:
@@ -62,6 +62,10 @@ jobs:
     name: Backend build and test
     runs-on: [self-hosted, linux-ultra]
     timeout-minutes: 45
+    env:
+      COMPOSE_PROJECT_NAME: mempool-integration-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}
+      MEMPOOL_TEST_BASE_CONFIG_FILE: ${{ github.workspace }}/backend/mempool-config.test.json
+      MEMPOOL_TEST_RUNTIME_CONFIG_FILE: ${{ github.workspace }}/backend/.mempool-config.integration.json
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -95,6 +99,8 @@ jobs:
       - name: Migrations and repositories against a real database
         working-directory: backend
         run: npm run test:integration
+        env:
+          MEMPOOL_CONFIG_FILE: ${{ env.MEMPOOL_TEST_RUNTIME_CONFIG_FILE }}
 
   frontend:
     name: Frontend build
