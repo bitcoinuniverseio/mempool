@@ -40,6 +40,9 @@
     }
     &:nth-child(4n + 3) {
       --stage-color: var(--secondary);
+      // The translucent default composites to about 4.3:1 on this inset
+      // surface at this small size; solid secondary text stays above 4.5:1.
+      color: var(--u-text-secondary);
     }
     &.done {
       --stage-color: var(--primary);
