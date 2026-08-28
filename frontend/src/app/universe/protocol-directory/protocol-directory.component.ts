@@ -1,5 +1,5 @@
 import { Component, ChangeDetectionStrategy, OnInit } from '@angular/core';
-import { Observable, catchError, combineLatest, map, of } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, combineLatest, map, of, switchMap } from 'rxjs';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import {
   ExplorerProtocolDefinition,
@@ -9,6 +9,17 @@ import {
   SourcesResponse,
 } from '@app/universe/universe.types';
 import { SeoService } from '@app/services/seo.service';
+
+/** What a protocol can answer for right now, as opposed to what it implements. */
+export type ProtocolAvailability =
+  | 'available'
+  | 'catching-up'
+  | 'degraded'
+  | 'unreachable'
+  | 'unconfigured'
+  | 'not-implemented'
+  | 'disabled'
+  | 'unknown';
 
 interface FamilyGroup {
   family: string;
@@ -42,6 +53,7 @@ const FAMILY_ORDER = ['ORDINALS', 'RUNES', 'ALKANES', 'STAMPS', 'ATOMICALS', 'OP
 export class ProtocolDirectoryComponent implements OnInit {
   vm$: Observable<DirectoryViewModel>;
   skeletonRows = new Array(6);
+  private retry$ = new BehaviorSubject<number>(0);
 
   constructor(
     private universeApiService: UniverseApiService,
@@ -52,22 +64,25 @@ export class ProtocolDirectoryComponent implements OnInit {
     this.seoService.setTitle('Universe Protocols');
     // The registry is the page; the live source snapshot only annotates it, so
     // a failing snapshot must not blank out the directory.
-    const sources$ = this.universeApiService.getSources$().pipe(
-      catchError(() => of(null)),
-    );
-    this.vm$ = combineLatest([this.universeApiService.getProtocols$(), sources$]).pipe(
+    this.vm$ = this.retry$.pipe(
+      switchMap(() => combineLatest([
+        this.universeApiService.getProtocols$(),
+        this.universeApiService.getSources$().pipe(catchError(() => of(null))),
+      ])),
+    ).pipe(
       map(([response, sources]: [ProtocolsResponse, SourcesResponse | null]): DirectoryViewModel => {
         const bitcoinProtocols = (response.protocols || []).filter(p => p.chain === 'bitcoin');
         const otherChainCount = (response.protocols || []).length - bitcoinProtocols.length;
+        const sourcesByAuthority = this.indexSources(sources);
         return {
           loading: false,
           error: false,
           registryVersion: response.registryVersion,
           groups: this.groupByFamily(bitcoinProtocols),
           otherChainCount,
-          liveCount: bitcoinProtocols.filter(p => this.isLive(p)).length,
+          liveCount: bitcoinProtocols.filter(p => this.isLive(p, sourcesByAuthority)).length,
           totalCount: bitcoinProtocols.length,
-          sourcesByAuthority: this.indexSources(sources),
+          sourcesByAuthority,
         };
       }),
       catchError(() => of({ loading: false, error: true })),
@@ -117,30 +132,85 @@ export class ProtocolDirectoryComponent implements OnInit {
     return (protocol.releaseStatus || '').toLowerCase().replace(/[_-]+/g, ' ').trim();
   }
 
-  /** True when this protocol is readable in the explorer today. */
-  isLive(protocol: ExplorerProtocolDefinition): boolean {
+  /**
+   * What this protocol can answer for right now.
+   *
+   * The registry says what a protocol is implemented to do; the source
+   * snapshot says whether the authority behind it can answer at all. Those
+   * were rendered as two chips of equal weight, so a protocol whose authority
+   * was unreachable still led with "Live, read only" and read as working.
+   * Availability decides the primary label, and the registry capability is
+   * carried underneath it.
+   */
+  availability(
+    protocol: ExplorerProtocolDefinition,
+    sources: Map<string, SourceEntry> | null,
+  ): ProtocolAvailability {
     const status = this.normalizeStatus(protocol);
-    return status === 'verified read only' || status === 'production verified';
-  }
-
-  releaseStatusLabel(protocol: ExplorerProtocolDefinition): string {
-    switch (this.normalizeStatus(protocol)) {
-      case 'production verified': return $localize`:@@universe.protocols.status-production:Live`;
-      case 'verified read only': return $localize`:@@universe.protocols.status-read-only:Live, read only`;
-      case 'blocked': return $localize`:@@universe.protocols.status-blocked:Not yet available`;
-      case 'intentionally disabled': return $localize`:@@universe.protocols.status-disabled:Disabled`;
-      case '': return $localize`:@@universe.protocols.status-unknown:Status unknown`;
-      default: return this.humanize(this.normalizeStatus(protocol));
+    if (status === 'blocked') return 'not-implemented';
+    if (status === 'intentionally disabled') return 'disabled';
+    if (status !== 'verified read only' && status !== 'production verified') {
+      return 'unknown';
+    }
+    // The registry says this protocol is readable, so the authority decides.
+    if (!sources) return 'unknown';
+    const source = this.sourceFor(protocol, sources);
+    if (!source) return 'unconfigured';
+    switch (source.status) {
+      case 'ready': return source.checkpoint ? 'available' : 'degraded';
+      case 'stale': return 'catching-up';
+      case 'unreachable': return 'unreachable';
+      case 'unconfigured': return 'unconfigured';
+      default: return 'degraded';
     }
   }
 
-  releaseStatusClass(protocol: ExplorerProtocolDefinition): string {
-    switch (this.normalizeStatus(protocol)) {
-      case 'production verified': return 'chip-production';
-      case 'verified read only': return 'chip-live';
-      case 'blocked': return 'chip-blocked';
-      case 'intentionally disabled': return 'chip-disabled';
+  /** True only when the authority behind this protocol can answer right now. */
+  isLive(
+    protocol: ExplorerProtocolDefinition,
+    sources: Map<string, SourceEntry> | null,
+  ): boolean {
+    return this.availability(protocol, sources) === 'available';
+  }
+
+  availabilityLabel(availability: ProtocolAvailability): string {
+    switch (availability) {
+      case 'available': return $localize`:@@universe.protocols.availability-available:Readable now`;
+      case 'catching-up': return $localize`:@@universe.protocols.availability-catching-up:Catching up`;
+      case 'degraded': return $localize`:@@universe.protocols.availability-degraded:Unavailable`;
+      case 'unreachable': return $localize`:@@universe.protocols.availability-unreachable:Unavailable`;
+      case 'unconfigured': return $localize`:@@universe.protocols.availability-unconfigured:Not served here`;
+      case 'not-implemented': return $localize`:@@universe.protocols.availability-not-implemented:Not yet available`;
+      case 'disabled': return $localize`:@@universe.protocols.availability-disabled:Disabled`;
+      default: return $localize`:@@universe.protocols.availability-unknown:Status unknown`;
+    }
+  }
+
+  availabilityClass(availability: ProtocolAvailability): string {
+    switch (availability) {
+      case 'available': return 'chip-live';
+      case 'catching-up': return 'chip-partial';
+      case 'degraded':
+      case 'unreachable': return 'chip-blocked';
+      case 'not-implemented':
+      case 'unconfigured': return 'chip-unknown';
+      case 'disabled': return 'chip-disabled';
       default: return 'chip-unknown';
+    }
+  }
+
+  /**
+   * The registry capability, phrased as what the protocol would do once its
+   * authority can answer. It is never the primary label.
+   */
+  capabilityLabel(protocol: ExplorerProtocolDefinition): string {
+    switch (this.normalizeStatus(protocol)) {
+      case 'production verified': return $localize`:@@universe.protocols.capability-production:Read and verify`;
+      case 'verified read only': return $localize`:@@universe.protocols.capability-read-only:Read only`;
+      case 'blocked': return $localize`:@@universe.protocols.capability-blocked:Not implemented`;
+      case 'intentionally disabled': return $localize`:@@universe.protocols.capability-disabled:Disabled`;
+      case '': return $localize`:@@universe.protocols.capability-unknown:Capability unknown`;
+      default: return this.humanize(this.normalizeStatus(protocol));
     }
   }
 
@@ -177,25 +247,37 @@ export class ProtocolDirectoryComponent implements OnInit {
     return sources.get(protocol.indexerAuthority) ?? null;
   }
 
-  /** Live authority state, phrased as what the snapshot actually proves. */
-  sourceLabel(source: SourceEntry): string {
-    if (source.ready && source.checkpoint) {
-      return $localize`:@@universe.protocols.source-ready:Authority ready at block ${source.checkpoint.heightAtomic}:height:`;
+  /**
+   * The evidence behind the primary label: where the authority has reached,
+   * how far behind that is, and when it was last checked. Without this a
+   * reader has to take the label on trust.
+   */
+  sourceDetail(source: SourceEntry | null): string | null {
+    if (!source) return null;
+    const parts: string[] = [];
+    if (source.checkpoint) {
+      parts.push($localize`:@@universe.protocols.detail-height:Indexed to block ${source.checkpoint.heightAtomic}:height:`);
     }
-    switch (source.status) {
-      case 'ready': return $localize`:@@universe.protocols.source-ready-nocheckpoint:Authority ready`;
-      case 'stale': return $localize`:@@universe.protocols.source-stale:Authority behind the chain tip`;
-      case 'unreachable': return $localize`:@@universe.protocols.source-unreachable:Authority unreachable`;
-      case 'unconfigured': return $localize`:@@universe.protocols.source-unconfigured:Authority not configured here`;
-      default: return $localize`:@@universe.protocols.source-degraded:Authority degraded`;
+    const lag = source.lagBlocks;
+    if (lag && lag !== '0') {
+      parts.push($localize`:@@universe.protocols.detail-lag:${lag}:lag: blocks behind the chain tip`);
     }
+    if (source.consecutiveFailures) {
+      parts.push($localize`:@@universe.protocols.detail-failures:${source.consecutiveFailures}:failures: checks failed in a row`);
+    }
+    return parts.length ? parts.join(' \u00b7 ') : null;
   }
 
-  sourceClass(source: SourceEntry): string {
-    if (source.ready) {
-      return 'chip-live';
-    }
-    return source.status === 'unconfigured' ? 'chip-unknown' : 'chip-blocked';
+  /** When this authority was last asked, as epoch seconds, or null. */
+  checkedAtSeconds(source: SourceEntry | null): number | null {
+    if (!source?.checkedAt) return null;
+    const at = Date.parse(source.checkedAt);
+    return Number.isFinite(at) ? Math.floor(at / 1000) : null;
+  }
+
+  /** Re-reads the registry and the authority snapshot. */
+  onRetry(): void {
+    this.retry$.next(this.retry$.value + 1);
   }
 
   trackByProtocol(index: number, protocol: ExplorerProtocolDefinition): string {

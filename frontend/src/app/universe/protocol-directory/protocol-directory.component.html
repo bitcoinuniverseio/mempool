@@ -10,7 +10,7 @@
 
     <ng-container *ngIf="!vm.error">
       <p class="registry-summary" role="status" i18n="universe.protocols.live-count">
-        {{ vm.liveCount }} of {{ vm.totalCount }} Bitcoin protocols are readable in this deployment today.
+        {{ vm.liveCount }} of {{ vm.totalCount }} Bitcoin protocols can be read right now.
       </p>
 
       <section *ngFor="let group of vm.groups; trackBy: trackByGroup" class="family-group">
@@ -22,29 +22,37 @@
               <span class="display-name">{{ protocol.displayName }}</span>
             </div>
             <div class="protocol-state">
+              <!--
+                Availability first and on its own line: what this protocol can
+                answer for now. The registry capability follows as a qualifier,
+                never as the headline.
+              -->
               <span
-                class="state-chip"
-                [ngClass]="releaseStatusClass(protocol)"
-              >{{ releaseStatusLabel(protocol) }}</span>
+                class="state-chip state-chip-primary"
+                [ngClass]="availabilityClass(availability(protocol, vm.sourcesByAuthority))"
+              >{{ availabilityLabel(availability(protocol, vm.sourcesByAuthority)) }}</span>
+              <span class="state-chip chip-neutral">{{ capabilityLabel(protocol) }}</span>
               <span
                 class="state-chip"
                 [ngClass]="coverageKnown(protocol) ? 'chip-neutral' : 'chip-unknown'"
               >{{ coverageLabel(protocol) }}</span>
-              <ng-container *ngIf="sourceFor(protocol, vm.sourcesByAuthority) as source">
-                <span
-                  class="state-chip"
-                  [ngClass]="sourceClass(source)"
-                >{{ sourceLabel(source) }}</span>
-              </ng-container>
             </div>
+            <p class="protocol-evidence" *ngIf="sourceFor(protocol, vm.sourcesByAuthority) as source">
+              <span *ngIf="sourceDetail(source) as detail">{{ detail }}</span>
+              <span class="checked-at" *ngIf="checkedAtSeconds(source) as checked">
+                <ng-container i18n="universe.protocols.checked">Checked</ng-container>
+                <app-time kind="since" [time]="checked"></app-time>
+              </span>
+            </p>
           </li>
         </ul>
       </section>
 
       <p *ngIf="!vm.groups?.length" class="no-protocols" i18n="universe.protocols.none">The registry contains no Bitcoin mainnet protocols.</p>
 
-      <p *ngIf="vm.sourcesByAuthority === null" class="chain-note" i18n="universe.protocols.sources-unavailable">
-        Live authority status is currently unavailable. The registry below still applies.
+      <p *ngIf="vm.sourcesByAuthority === null" class="chain-note" role="status">
+        <ng-container i18n="universe.protocols.sources-unavailable">Authority status could not be read, so nothing below can be called readable right now. The registry still describes what each protocol implements.</ng-container>
+        <button type="button" class="btn btn-sm btn-primary ml-2" (click)="onRetry()" i18n="universe.protocols.retry">Retry</button>
       </p>
 
       <p *ngIf="vm.otherChainCount" class="chain-note">
