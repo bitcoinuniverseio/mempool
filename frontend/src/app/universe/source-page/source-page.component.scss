@@ -24,3 +24,11 @@
     opacity: 0.7;
   }
 }
+
+// Several of these cells put a link in the middle of a sentence: the upstream
+// repository beside its release and commit, for instance. A link inside a run
+// of text has to be identifiable without colour, so it carries a rule as well.
+.source-table td a {
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
