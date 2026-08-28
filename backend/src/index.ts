@@ -390,7 +390,10 @@ class Server {
     if (config.WALLETS.ENABLED) {
       servicesRoutes.initRoutes(this.app);
     }
-    if (!config.MEMPOOL.OFFICIAL) {
+    // These routes only proxy a hosted mempool API. With no such API
+    // configured they could answer nothing but 500; leaving them unmounted
+    // makes them 404 like any other route this deployment does not serve.
+    if (!config.MEMPOOL.OFFICIAL && config.EXTERNAL_DATA_SERVER.MEMPOOL_API) {
       aboutRoutes.initRoutes(this.app);
     }
   }

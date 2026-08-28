@@ -197,8 +197,38 @@ function proxy(request, response, route) {
   // proxies that changes state carries one, so this never retries a write.
   const replayable = request.method === 'GET' || request.method === 'HEAD';
   let attempt = 0;
+  let pendingRetry = null;
+  let clientGone = false;
+
+  // A reader who navigates away mid-retry leaves a response nothing can be
+  // written to. Writing to it anyway throws from a timer callback, where there
+  // is no request to fail: it takes the whole gateway down. Track the client
+  // and stop the moment it leaves.
+  const abandon = () => {
+    clientGone = true;
+    if (pendingRetry) {
+      clearTimeout(pendingRetry);
+      pendingRetry = null;
+    }
+  };
+  response.on('close', abandon);
+  request.on('aborted', abandon);
+
+  const failClosed = () => {
+    if (clientGone || response.headersSent || response.writableEnded) return;
+    try {
+      // A dead upstream is reported as a gateway failure, never as an empty
+      // success: a caller must be able to tell the two apart.
+      response.writeHead(502, { 'content-type': 'application/json; charset=utf-8' });
+      response.end(JSON.stringify({ error: 'upstream-unavailable' }));
+    } catch {
+      // The client went away between the check and the write.
+      response.destroy();
+    }
+  };
 
   const send = () => {
+    if (clientGone) return;
     const options = {
       protocol: upstream.protocol,
       hostname: upstream.hostname,
@@ -209,16 +239,27 @@ function proxy(request, response, route) {
       timeout: UPSTREAM_TIMEOUT_MS,
     };
     const proxied = http.request(options, (upstreamResponse) => {
-      // API responses are data, never documents, so they get the headers
-      // without a content policy.
-      response.writeHead(
-        upstreamResponse.statusCode || 502,
-        withSecurityHeaders(upstreamResponse.headers, false),
-      );
+      if (clientGone) {
+        upstreamResponse.destroy();
+        return;
+      }
+      try {
+        // API responses are data, never documents, so they get the headers
+        // without a content policy.
+        response.writeHead(
+          upstreamResponse.statusCode || 502,
+          withSecurityHeaders(upstreamResponse.headers, false),
+        );
+      } catch {
+        upstreamResponse.destroy();
+        response.destroy();
+        return;
+      }
       upstreamResponse.pipe(response);
     });
     proxied.on('timeout', () => proxied.destroy(new Error('upstream timeout')));
     proxied.on('error', (error) => {
+      if (clientGone) return;
       if (response.headersSent) {
         response.destroy();
         return;
@@ -226,18 +267,21 @@ function proxy(request, response, route) {
       if (replayable && upstreamIsRestarting(error) && attempt < RESTART_RETRY_DELAYS_MS.length) {
         const delay = RESTART_RETRY_DELAYS_MS[attempt];
         attempt += 1;
-        setTimeout(send, delay);
+        pendingRetry = setTimeout(() => {
+          pendingRetry = null;
+          send();
+        }, delay);
         return;
       }
-      // A dead upstream is reported as a gateway failure, never as an empty
-      // success: a caller must be able to tell the two apart.
-      response.writeHead(502, { 'content-type': 'application/json; charset=utf-8' });
-      response.end(JSON.stringify({ error: 'upstream-unavailable' }));
+      failClosed();
     });
     if (replayable) {
       proxied.end();
     } else {
       request.pipe(proxied);
+      // A request body that stops arriving must not leave the upstream socket
+      // open forever.
+      request.on('error', () => proxied.destroy());
     }
   };
 
