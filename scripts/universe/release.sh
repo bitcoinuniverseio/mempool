@@ -111,6 +111,21 @@ PY
   log "database accepts connections"
 }
 
+# An address backend configured at a port nothing listens on does not fail
+# loudly: it retries. That produced roughly two connection errors a second,
+# forever, which buried every real error in the journal.
+gate_address_backend() {
+  local backend; backend=$(conf_value MEMPOOL.BACKEND | tr -d '"')
+  [ "$backend" = electrum ] || { log "address backend is $backend, nothing to reach"; return; }
+  python3 - <<'PYGATE' || fail "MEMPOOL.BACKEND is electrum but nothing is listening on the configured Electrum port"
+import json, socket
+conf = json.load(open('/etc/universe-explorer/backend.json'))['ELECTRUM']
+with socket.create_connection((conf['HOST'], conf['PORT']), timeout=5):
+    pass
+PYGATE
+  log "the configured Electrum server accepts connections"
+}
+
 gate_sources_parse() {
   python3 - <<'PY' || fail "the overlay source registry is not valid"
 import json, os, re
@@ -177,6 +192,7 @@ cmd_preflight() {
   gate_release_present "$dir"
   gate_configuration
   gate_database
+  gate_address_backend
   gate_sources_parse
   gate_readable_protocols_have_authorities "$dir"
   log "preflight passed for $sha"
