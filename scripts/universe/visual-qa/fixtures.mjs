@@ -301,6 +301,23 @@ export const stateOverrides = {
   // Requests never resolve, so every surface stays in its loading state.
   loading: { '**': { hang: true } },
 
+  // The address resolves, its transactions do not.
+  //
+  // The address page has two independent waits, and the blanket `loading`
+  // fixture above can only ever photograph the first: with every request held
+  // open the page never gets past `isLoadingAddress`, so the branch that waits
+  // for the transaction list, the one a reader actually meets on a slow page
+  // or when they ask for more, was never on screen for any check to see. This
+  // fixture answers the summary and holds only the transaction request, which
+  // is the state pagination and "load more" leave behind.
+  //
+  // The harness falls back to a prefix match, so this reaches the whole
+  // `/txs` subtree. That is the intent: every route that feeds the transaction
+  // list waits, and nothing else does.
+  'address-txs-loading': {
+    [`/api/address/${ADDRESS}/txs`]: { hang: true },
+  },
+
   // An address that has never been used.
   'address-empty': {
     [`/api/address/${ADDRESS}`]: {

@@ -136,6 +136,23 @@ test('the routes already covered stay held', () => {
   }
 });
 
+test('the address transaction wait is judged as a wait, not as a failure', () => {
+  // Only the transaction list is held open, so the page is not in a failure
+  // state and owes no status panel. What it owes is a word about what it is
+  // waiting for, which is the announcement on the transaction-list branch.
+  assert.deepEqual(
+    progressFailures(withProgress('address-txs-loading', {
+      skeletons: 2, loadingAnnouncements: ['Loading transactions'],
+    })),
+    [],
+  );
+  const failures = progressFailures(withProgress('address-txs-loading', {
+    skeletons: 2,
+  }));
+  assert.equal(failures.length, 1);
+  assert.match(failures[0], /nothing on screen that says so/);
+});
+
 test('a page with nothing to fetch owes the reader no loader', () => {
   // The docs and source pages render from what is already in the bundle. Under
   // the loading fixture they simply appear, and demanding a spinner from them
