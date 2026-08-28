@@ -145,6 +145,27 @@ export function contrastProbe() {
     return out;
   };
 
+  // Does this element's painted box actually sit behind that rectangle?
+  //
+  // The root and the body are always behind everything: CSS propagates their
+  // background to the viewport canvas, so it paints the whole page regardless
+  // of the box either element reports. This product sets html and body to
+  // height 100%, which makes the body box one viewport tall while the document
+  // runs far past it, so a geometry test alone would decide that nothing below
+  // the fold has a background at all.
+  const covers = (element, rect) => {
+    if (element === document.body || element === document.documentElement) return true;
+    const box = element.getBoundingClientRect();
+    if (box.width < 1 || box.height < 1) return false;
+    // The text has to be inside the box, not merely touching it: a one pixel
+    // overlap does not put the box behind the glyphs.
+    const overlapX = Math.min(box.right, rect.right) - Math.max(box.left, rect.left);
+    const overlapY = Math.min(box.bottom, rect.bottom) - Math.max(box.top, rect.top);
+    if (overlapX <= 0 || overlapY <= 0) return false;
+    const covered = (overlapX * overlapY) / Math.max(1, rect.width * rect.height);
+    return covered > 0.6;
+  };
+
   // Keep only the extremes of a set of candidate colours. Compositing is
   // monotone per channel, so the worst contrast for any ink is produced by one
   // of these two, which keeps the search bounded instead of combinatorial.
@@ -177,6 +198,16 @@ export function contrastProbe() {
       const alpha = Number.isFinite(op) ? op : 1;
       const layer = [];
       let opaque = false;
+
+      // An ancestor only paints behind this text if its box actually covers
+      // it. Absolutely positioned children routinely sit outside the parent
+      // they belong to: a block height label is drawn above the block, on the
+      // page, and measuring it against the block face would report a failure
+      // that nobody can see.
+      if (n !== el && !covers(n, rect)) {
+        n = n.parentElement;
+        continue;
+      }
 
       if (n.tagName === 'CANVAS') {
         for (const c of canvasColoursUnder(rect)) layer.push(c);

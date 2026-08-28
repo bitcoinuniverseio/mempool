@@ -13,14 +13,14 @@
         <ng-container i18n="shared.stale-block-title">Stale Block</ng-container>
       }
       <span class="next-previous-blocks">
-        <a *ngIf="showNextBlocklink" class="nav-arrow next" [routerLink]="['/block/' | relativeUrl, nextBlockHeight]" (click)="navigateToNextBlock()" i18n-ngbTooltip="Next Block" ngbTooltip="Next Block" placement="bottom" i18n-aria-label="block.next-block|Next block" aria-label="Next block">
+        <a *ngIf="showNextBlocklink" class="nav-arrow next" [routerLink]="['/block/' | relativeUrl, nextBlockHeight]" (click)="navigateToNextBlock()" i18n-aria-label="block.next-block" aria-label="Next block" i18n-ngbTooltip="Next Block" ngbTooltip="Next Block" placement="bottom">
           <fa-icon [icon]="['fas', 'angle-left']" [fixedWidth]="true"></fa-icon>
         </a>
         <span *ngIf="!showNextBlocklink" placement="bottom" class="disable nav-arrow next">
           <fa-icon [icon]="['fas', 'angle-left']" [fixedWidth]="true"></fa-icon>
         </span>
-        <a [routerLink]="['/block/' | relativeUrl, blockHash]" class="block-link">{{ blockHeight }}</a>
-        <a *ngIf="showPreviousBlocklink && block" class="nav-arrow prev"  [routerLink]="['/block/' | relativeUrl, block.previousblockhash]" (click)="navigateToPreviousBlock()" i18n-ngbTooltip="Previous Block" ngbTooltip="Previous Block" placement="bottom" i18n-aria-label="block.previous-block|Previous block" aria-label="Previous block">
+        <a [routerLink]="['/block/' | relativeUrl, blockHash]" class="block-link" i18n-aria-label="block.this-block" [attr.aria-label]="'Block ' + blockHeight">{{ blockHeight }}</a>
+        <a *ngIf="showPreviousBlocklink && block" class="nav-arrow prev"  [routerLink]="['/block/' | relativeUrl, block.previousblockhash]" (click)="navigateToPreviousBlock()" i18n-aria-label="block.previous-block" aria-label="Previous block" i18n-ngbTooltip="Previous Block" ngbTooltip="Previous Block" placement="bottom">
           <fa-icon [icon]="['fas', 'angle-right']" [fixedWidth]="true"></fa-icon>
         </a>
         <span *ngIf="!showPreviousBlocklink || !block" placement="bottom" class="disable nav-arrow prev">
@@ -33,7 +33,7 @@
 
     <button *ngIf="block?.stale" type="button" class="btn btn-sm btn-danger container-button" i18n="block.stale|Stale block state">Stale</button>
 
-    <button [routerLink]="['/' | relativeUrl]" class="btn btn-sm btn-close-page" i18n-aria-label="shared.close|Close" aria-label="Close this block and return to the dashboard">&#10005;</button>
+    <button [routerLink]="['/' | relativeUrl]" class="btn btn-sm btn-close-page" i18n-aria-label="shared.close-and-return" aria-label="Close and return to the dashboard" i18n-title="shared.close-and-return" title="Close and return to the dashboard"><span aria-hidden="true">&#10005;</span></button>
   </div>
 
   <div class="clearfix"></div>
