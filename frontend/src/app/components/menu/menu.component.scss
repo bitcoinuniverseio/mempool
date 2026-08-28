@@ -45,13 +45,16 @@
   right: 0;
 }
 
-.sidenav a, button{
+.sidenav a,
+.sidenav button {
   text-decoration: none;
-  color: lightgray;
+  color: var(--u-text-primary);
   margin-left: 20px;
 }
-.sidenav a:hover {
-  color: var(--u-brand-contrast);
+
+.sidenav a:hover,
+.sidenav button:hover {
+  color: var(--u-brand);
 }
 .sidenav nav {
   width: 100%;
