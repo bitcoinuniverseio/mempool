@@ -10,11 +10,47 @@
  *
  * Usage:
  *   node scripts/universe/synthetic-check.mjs [origin]
+ *   node scripts/universe/synthetic-check.mjs --base=<origin>
  *
  * Exit code 0 when every check passes, 1 otherwise.
  */
 
-const ORIGIN = (process.argv[2] || process.env.UNIVERSE_ORIGIN || 'https://explorer.bitcoinuniverse.io').replace(/\/+$/, '');
+/**
+ * Both spellings are accepted because the rest of this directory takes
+ * --base and this one took a positional, and the mismatch is only ever
+ * discovered while running it. Passing --base used to be read as the origin
+ * itself, which failed several requests later with a URL parse error naming a
+ * string nobody typed. Anything else is rejected now rather than quietly
+ * treated as a hostname.
+ */
+function originFromArguments(argv) {
+  const args = argv.slice(2);
+  const positional = [];
+  for (const arg of args) {
+    if (arg.startsWith('--base=')) {
+      positional.push(arg.slice('--base='.length));
+    } else if (arg.startsWith('-')) {
+      throw new Error(`unknown option ${arg}; usage: synthetic-check.mjs [origin] or --base=<origin>`);
+    } else {
+      positional.push(arg);
+    }
+  }
+  if (positional.length > 1) {
+    throw new Error(`expected one origin, got ${positional.length}`);
+  }
+  return positional[0];
+}
+
+let requestedOrigin;
+try {
+  requestedOrigin = originFromArguments(process.argv);
+} catch (error) {
+  process.stderr.write(`${error.message}
+`);
+  process.exit(2);
+}
+
+const ORIGIN = (requestedOrigin || process.env.UNIVERSE_ORIGIN || 'https://explorer.bitcoinuniverse.io').replace(/\/+$/, '');
 const REQUEST_TIMEOUT_MS = 20_000;
 
 const failures = [];
