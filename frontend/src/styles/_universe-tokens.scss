@@ -277,6 +277,11 @@
   --u-chart-7: #a3006b;
   --u-chart-grid: #e8e0ee;
   --u-chart-axis: #645a6e;
+  // The zoom slider under a chart. Its track and handles were the charting
+  // library's own defaults, a pale blue that measured about 1.15:1 on this page
+  // and belonged to no palette here.
+  --u-chart-zoom-fill: rgba(196, 0, 89, 0.14);
+  --u-chart-zoom-track: #ece5f0;
 
   // Elevation. Soft and low: this is a data surface, not a floating card deck.
   // The shadow carries the plum cast of the page so a lifted card does not
@@ -488,6 +493,8 @@
   --u-chart-7: #9e8a5f;
   --u-chart-grid: #2e2440;
   --u-chart-axis: #a99cb5;
+  --u-chart-zoom-fill: rgba(255, 138, 184, 0.18);
+  --u-chart-zoom-track: #241a30;
 
   --u-shadow-color: rgba(0, 0, 0, 0.55);
   --u-overlay-scrim: rgba(0, 0, 0, 0.66);
@@ -587,7 +594,11 @@
   --fg: var(--u-text-primary);
   --nav-bg: var(--u-surface-raised);
   --navbar-bg: var(--u-surface-raised);
-  --title-fg: var(--u-brand);
+  // The label above a number on a stat card, on 45 of them. It was the brand
+  // colour, which made a mining dashboard nine pink labels competing with the
+  // figures they introduce. Brand marks identity and intent; a label is
+  // neither, so the number leads and the label sits behind it.
+  --title-fg: var(--u-text-secondary);
 
   --box-bg: var(--u-surface-raised);
   --stat-box-bg: var(--u-surface-sunken);

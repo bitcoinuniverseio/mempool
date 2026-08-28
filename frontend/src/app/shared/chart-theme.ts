@@ -30,6 +30,10 @@ export interface ChartChrome {
   surface: string;
   /** Outline drawn around a mark so it stays separable from its neighbour. */
   markBorder: string;
+  /** The selected window of a zoom slider. */
+  zoomFill: string;
+  /** The unselected track of a zoom slider. */
+  zoomTrack: string;
   /** Categorical series, in order. Verified separable under colour vision
    *  deficiency by `scripts/universe/check-palettes.mjs`. */
   series: string[];
@@ -80,6 +84,8 @@ const FALLBACK: ChartChrome = {
   tooltipText: '#241a2b',
   surface: '#ffffff',
   markBorder: '#ffffff',
+  zoomFill: 'rgba(196, 0, 89, 0.14)',
+  zoomTrack: '#ece5f0',
   series: ['#c40059', '#5b2fa6', '#8a5100', '#4393a3', '#3d0a2a', '#7f9b5a', '#a3006b'],
   ramps: {
     scale: ['#e0568f', '#c40059', '#a3006b', '#7a2f8f', '#5b2fa6'],
@@ -119,6 +125,8 @@ export function chartChrome(): ChartChrome {
     tooltipText: read(styles, '--u-text-primary', FALLBACK.tooltipText),
     surface: read(styles, '--u-surface-raised', FALLBACK.surface),
     markBorder: read(styles, '--u-surface-raised', FALLBACK.markBorder),
+    zoomFill: read(styles, '--u-chart-zoom-fill', FALLBACK.zoomFill),
+    zoomTrack: read(styles, '--u-chart-zoom-track', FALLBACK.zoomTrack),
     series: FALLBACK.series.map((fallback, i) => read(styles, `--u-chart-${i + 1}`, fallback)),
     ramps: {
       scale: FALLBACK.ramps.scale.map((fallback, i) =>
@@ -173,4 +181,30 @@ export function rampStops(
   const stops = chartChrome().ramps[name];
   const last = stops.length - 1;
   return stops.map((color, i) => ({ offset: last === 0 ? 0 : i / last, color: color + alpha }));
+}
+
+/**
+ * The zoom slider every chart shares.
+ *
+ * The charting library draws this control from its own defaults: a pale blue
+ * track and handle that belong to no palette in this product and measure about
+ * 1.15:1 against the light page, well under the 3:1 a control boundary owes.
+ * Eighteen charts carried it. They now spread this instead, so the control is
+ * themed once and moves with the rest of the system.
+ */
+export function chartDataZoomStyle(): Record<string, unknown> {
+  const chrome = chartChrome();
+  return {
+    backgroundColor: chrome.zoomTrack,
+    borderColor: chrome.tooltipBorder,
+    fillerColor: chrome.zoomFill,
+    dataBackground: {
+      lineStyle: { color: chrome.axis, opacity: 0.35 },
+      areaStyle: { color: chrome.grid, opacity: 0.8 },
+    },
+    handleStyle: { color: chrome.surface, borderColor: chrome.axis, borderWidth: 1 },
+    moveHandleStyle: { color: chrome.axis, opacity: 0.4 },
+    emphasis: { handleStyle: { borderColor: chrome.series[0], borderWidth: 2 } },
+    textStyle: { color: chrome.label },
+  };
 }
