@@ -1463,6 +1463,19 @@ button {
   touch-action: manipulation;
 }
 
+// A link sitting inside a run of prose has to be identifiable without colour.
+// Underlining it is the plainest way to do that, and it is only applied where
+// a link is genuinely inside text: navigation, tables, and lists of
+// destinations read better clean and underline on hover instead.
+p a,
+li a,
+dd a,
+.prose a,
+figcaption a {
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
 // Repaint the inherited Bootstrap layer from the tokens above. Must stay last.
 @include universe-bridge.universe-bootstrap-bridge;
 

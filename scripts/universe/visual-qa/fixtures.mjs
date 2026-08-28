@@ -113,7 +113,7 @@ export const detailFixtures = {
   [`/api/v1/tx/${TXID_A}/cached`]: null,
   [`/api/block/${BLOCK_HASH}`]: fixtures['/api/v1/blocks'][0],
   [`/api/block/${BLOCK_HASH}/txids`]: [TXID_A, TXID_B, TXID_C],
-  [`/api/v1/block/${BLOCK_HASH}/summary`]: [],
+  [`/api/v1/block/${BLOCK_HASH}/summary`]: buildBlockSummary(),
   [`/api/block/${BLOCK_HASH}/txs/0`]: [buildTransaction()],
   '/api/v1/mining/hashrate/3d': { hashrates: [{ timestamp: 1_772_000_000, avgHashrate: 8.1e20 }], difficulty: [{ timestamp: 1_772_000_000, difficulty: 1.1e14, height: 887_000 }], currentHashrate: 8.12e20, currentDifficulty: 1.105e14 },
   '/api/v1/mining/reward-stats/144': { startBlock: 887_268, endBlock: 887_412, totalReward: '46_800_000_000'.replace(/_/g, ''), totalFee: '1_400_000_000'.replace(/_/g, ''), totalTx: '412_004'.replace(/_/g, '') },
@@ -136,6 +136,34 @@ export const addressFixtures = {
  * something true when the answer is missing rather than showing a confident
  * zero.
  */
+/**
+ * The contents of the sample block, in the shape the Lens draws from.
+ *
+ * This was an empty array, so the block detail page rendered the product's
+ * signature view as a blank rectangle in every screenshot and the one thing
+ * worth reviewing there went unreviewed. Sized and spread like a real block:
+ * a long tail of small transactions, a few large ones, and a spread of fee
+ * rates so the colour scale is actually exercised.
+ */
+function buildBlockSummary() {
+  const txs = [];
+  for (let i = 0; i < 1800; i++) {
+    const big = i % 89 === 0;
+    const vsize = big ? 2400 + (i % 13) * 380 : 141 + (i % 19) * 22;
+    const rate = 1 + ((i * 11) % 58) + (big ? 9 : 0);
+    txs.push({
+      txid: i.toString(16).padStart(8, '0').repeat(8).slice(0, 64),
+      fee: Math.round(rate * vsize),
+      vsize,
+      value: 40_000 + (i % 61) * 85_000,
+      rate,
+      flags: i % 11 === 0 ? 2 : 0,
+      time: 1_772_099_000 - (i % 800),
+    });
+  }
+  return txs;
+}
+
 export const stateOverrides = {
   // Every Universe authority call fails. The interface must say it could not
   // reach the authority, and must not report "0 protocols" as if that were an
