@@ -289,11 +289,18 @@
   --u-shadow-lg: 0 8px 24px rgba(36, 26, 43, 0.13);
 
   // Gloss and glow. The house finish, kept to primary controls and singleton
-  // surfaces. Neither ever sits behind text that has to be read.
+  // surfaces.
+  //
+  // The gloss does sit over text: it is what makes the primary control read as
+  // lacquer rather than as a flat rectangle, and the label is under it. So its
+  // opacity is a measured value, not a taste one. At 0.24 it lifts the violet
+  // end of the brand gradient far enough that a white label falls to 4.06:1;
+  // 0.16 holds the worst stop at 4.8:1. check-palettes.mjs measures the label
+  // through this layer rather than against the fill alone.
   --u-gloss: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.24) 0%,
-    rgba(255, 255, 255, 0.06) 46%,
+    rgba(255, 255, 255, 0.16) 0%,
+    rgba(255, 255, 255, 0.05) 46%,
     rgba(255, 255, 255, 0) 54%
   );
   --u-glow-brand: 0 6px 20px rgba(255, 0, 102, 0.22);

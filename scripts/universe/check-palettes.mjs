@@ -271,6 +271,52 @@ for (const state of ['proven', 'partial', 'pending', 'unavailable', 'neutral']) 
   check(`high contrast ${state} text`, token(contrastSource, `u-state-${state}`), hcSurfaces, { floor: 7 });
 }
 
+// --- Filled brand surfaces -------------------------------------------------
+//
+// A filled control is not one colour. It is a gradient with a gloss layer over
+// it, and the label sits on top of both. Measuring the label against
+// --u-brand alone would have passed a button whose violet end, lifted by the
+// gloss, put white text at 4.06:1. So every stop is measured, through the
+// gloss, against the foreground the fill declares.
+
+function gradientStops(source, name, after) {
+  const value = token(source, name, { after });
+  return (value.match(/#[0-9a-fA-F]{3,8}/g) || []);
+}
+
+/** The strongest layer of the gloss, which is the worst case for a label. */
+function glossPlate(source, after) {
+  const value = token(source, 'u-gloss', { after });
+  const first = value.match(/rgba?\([^)]*\)/);
+  return first ? first[0] : 'rgba(255,255,255,0)';
+}
+
+for (const [theme, source, marker] of [
+  ['light', tokensSource, LIGHT],
+  ['dark', tokensSource, DARK],
+  ['high contrast', contrastSource, ''],
+]) {
+  const fromDark = source === contrastSource ? DARK : marker;
+  const ink = token(source, 'u-brand-contrast', { after: marker }) ||
+    token(tokensSource, 'u-brand-contrast', { after: DARK });
+  const stops = source === contrastSource
+    ? gradientStops(tokensSource, 'u-gradient-brand', DARK)
+    : gradientStops(source, 'u-gradient-brand', fromDark);
+  const plate = source === contrastSource
+    ? glossPlate(tokensSource, DARK)
+    : glossPlate(source, fromDark);
+
+  for (const [i, stop] of stops.entries()) {
+    check(`brand gradient stop ${i + 1} carries its label, through the gloss (${theme})`, ink, [stop], {
+      plates: [plate],
+    });
+  }
+  check(`brand fill carries its label, through the gloss (${theme})`, ink, [
+    token(source, 'u-brand', { after: marker }),
+    token(source, 'u-brand-hover', { after: marker }),
+  ], { plates: [plate] });
+}
+
 // --- Role separation -------------------------------------------------------
 //
 // Three families of colour share this product: the brand, the evidence states,
