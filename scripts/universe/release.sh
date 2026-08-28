@@ -197,10 +197,12 @@ wait_for() {
   return 1
 }
 
+# Returns non-zero rather than exiting, so a failed check can be rolled back
+# instead of leaving the new release in place with nothing serving.
 verify_live() {
-  wait_for "$GATEWAY/__gateway/health" gateway     || fail "gateway did not come back"
-  wait_for "$BACKEND/api/v1/backend-info" backend  || fail "backend did not come back"
-  wait_for "$OVERLAY/api/v1/universe/status" overlay || fail "overlay did not come back"
+  wait_for "$GATEWAY/__gateway/health" gateway       || { log "gateway did not come back"; return 1; }
+  wait_for "$BACKEND/api/v1/backend-info" backend    || { log "backend did not come back"; return 1; }
+  wait_for "$OVERLAY/api/v1/universe/status" overlay || { log "overlay did not come back"; return 1; }
 
   local served
   served=$(curl -sS -m 10 "$BACKEND/api/v1/backend-info" | python3 -c 'import json,sys; print(json.load(sys.stdin)["gitCommit"])')
@@ -208,9 +210,15 @@ verify_live() {
 
   # A public feature must not be advertised by a backend that did not mount its
   # routes. This is the exact failure that shipped last time.
-  curl -sS -m 10 "$BACKEND/api/v1/capabilities" | python3 - <<'PY' || fail "a public feature has no routes behind it"
-import json, sys
-report = json.load(sys.stdin)
+  python3 - "$BACKEND" <<'PY' || return 1
+import json, subprocess, sys
+answer = subprocess.run(
+    ['curl', '-sS', '-m', '10', sys.argv[1] + '/api/v1/capabilities'],
+    capture_output=True, text=True)
+if answer.returncode != 0 or not answer.stdout.strip():
+    print('the capability report could not be read')
+    sys.exit(1)
+report = json.loads(answer.stdout)
 bad = [
     name for name, feature in report['features'].items()
     if feature['enabled'] and not feature['routesRegistered']

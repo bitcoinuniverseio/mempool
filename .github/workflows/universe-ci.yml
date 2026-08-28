@@ -83,6 +83,13 @@ jobs:
         working-directory: backend
         run: npm run test:ci
 
+      # The failure that shipped was a configuration one: the migrations never
+      # ran against the engine production uses, so nothing caught the syntax it
+      # rejects. These run the real backend against a real database.
+      - name: Migrations and repositories against a real database
+        working-directory: backend
+        run: npm run test:integration
+
   frontend:
     name: Frontend build
     runs-on: [self-hosted, linux-ultra]
@@ -135,7 +142,10 @@ jobs:
             sleep 1
           done
 
-      - name: Measured contrast, accessibility, overflow, and screenshots
+      # The harness now fails the run when a page never finishes loading, when a
+      # chart panel draws nothing, or when a failure state says nothing about
+      # why. Those three states passed every other gate here and shipped.
+      - name: Measured contrast, accessibility, overflow, unfinished pages, and screenshots
         working-directory: scripts/universe/visual-qa
         run: node capture.mjs --base=http://127.0.0.1:8123 --out=./artifacts
 

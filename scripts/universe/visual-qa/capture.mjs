@@ -12,7 +12,14 @@
  *   - no console errors
  *   - no images that failed to load
  *   - no accessibility violations at WCAG 2.2 A/AA
+ *   - no loader or skeleton still on screen once the page has settled
+ *   - no chart panel that drew nothing while its fixture has data
+ *   - an explicit status panel in every failure state, rather than a wait
  * and writes a screenshot for the visual comparison.
+ *
+ * The last three exist because a Charts page that never resolved and a Mining
+ * dashboard full of skeletons passed every other check in this list and
+ * shipped.
  *
  * Usage:
  *   node capture.mjs                      full matrix, chromium
@@ -29,6 +36,7 @@ import AxeBuilder from '@axe-core/playwright';
 import * as playwright from 'playwright';
 import { addressFixtures, detailFixtures, fixtures, sampleIds, stateOverrides } from './fixtures.mjs';
 import { contrastProbe } from './contrast-probe.mjs';
+import { progressProbe } from './progress-probe.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
@@ -327,12 +335,21 @@ async function run() {
               contrast = { text: [], painted: [], canvas: [], sampled: 0, error: String(e).slice(0, 200) };
             }
 
+            // Judged after the settle wait, so anything still spinning here had
+            // longer than a user would wait and is not going to resolve.
+            let progress;
+            try {
+              progress = await page.evaluate(progressProbe);
+            } catch (e) {
+              progress = { spinners: [], skeletons: 0, charts: [], statusPanels: [], textLength: 0, error: String(e).slice(0, 200) };
+            }
+
             await page.screenshot({ path: join(OUT, `${label}.png`), fullPage: Boolean(args.fullPage) });
             shots++;
 
             findings.push({
               route: route.id, routeName: route.name, state, theme, viewport: viewport.id,
-              overflowBy, consoleErrors, brokenImages, violations, contrast,
+              overflowBy, consoleErrors, brokenImages, violations, contrast, progress,
             });
           } catch (error) {
             findings.push({
@@ -352,7 +369,54 @@ async function run() {
 
   const report = { browser: BROWSER, base: BASE, screenshots: shots, findings };
   writeFileSync(join(OUT, `report-${BROWSER}.json`), JSON.stringify(report, null, 2));
-  summarise(report);
+  const stuck = summarise(report);
+  if (stuck.length > 0) {
+    console.error(`${stuck.length} page(s) never finished loading. This is the failure that shipped last time, so it fails the run.`);
+    process.exitCode = 1;
+  }
+}
+
+/**
+ * Turns the progress probe into failures.
+ *
+ * A populated fixture leaves no excuse: the data is there, so a loader still
+ * on screen or a chart that drew nothing is the interface failing to finish.
+ * A failure fixture has the opposite obligation: the page must say what
+ * happened rather than wait.
+ */
+function progressFailures(report) {
+  const failures = [];
+  for (const f of report.findings) {
+    const progress = f.progress;
+    if (!progress) continue;
+    const where = `${f.route}/${f.state}/${f.theme}@${f.viewport}`;
+
+    if (f.state === 'populated') {
+      if (progress.spinners?.length) {
+        failures.push(`${where}: still loading after the settle wait (${progress.spinners.join(', ')})`);
+      }
+      if (progress.skeletons > 0) {
+        failures.push(`${where}: ${progress.skeletons} skeleton(s) never resolved`);
+      }
+      if (progress.skeletonOnly) {
+        failures.push(`${where}: the page is placeholders and almost no text`);
+      }
+      for (const chart of progress.charts ?? []) {
+        if (chart.drewNothing) {
+          failures.push(`${where}: chart ${chart.selector} (${chart.width}x${chart.height}) drew nothing`);
+        }
+      }
+    } else {
+      // Every failure fixture must reach a state that says something. A page
+      // that is still spinning has not answered the user at all.
+      if (progress.spinners?.length || progress.skeletons > 0) {
+        if (!progress.statusPanels?.length) {
+          failures.push(`${where}: still waiting with nothing said about why`);
+        }
+      }
+    }
+  }
+  return failures;
 }
 
 function summarise(report) {
@@ -447,7 +511,16 @@ function summarise(report) {
     console.log('\n-- navigation --');
     for (const f of failed.slice(0, 15)) console.log(`  ${f.route} ${f.state} ${f.theme} @${f.viewport}: ${f.error}`);
   }
+
+  const stuck = progressFailures(report);
+  console.log(`\nunfinished pages    : ${stuck.length}`);
+  if (stuck.length) {
+    console.log('-- pages that never finished --');
+    for (const line of stuck.slice(0, 40)) console.log(`  ${line}`);
+    if (stuck.length > 40) console.log(`  ... and ${stuck.length - 40} more, see the report`);
+  }
   console.log('');
+  return stuck;
 }
 
 run().catch((e) => { console.error(e); process.exit(1); });
