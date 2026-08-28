@@ -150,11 +150,18 @@
 
     <div class="text-center">
       <ng-template [ngIf]="isLoadingTransactions">
+        <p class="sr-only" role="status" i18n="address.transactions-loading-announcement">Loading transactions</p>
 
-        <ng-container *ngIf="addressLoadingStatus$ as addressLoadingStatus">
+        <ng-container *ngIf="(addressLoadingStatus$ | async) as addressLoadingStatus">
           <div class="header-bg box" style="padding: 12px; margin-bottom: 10px;">
             <div class="progress progress-dark">
-              <div class="progress-bar progress-light" role="progressbar" [ngStyle]="{'width': addressLoadingStatus + '%' }"></div>
+              <div class="progress-bar progress-light" role="progressbar"
+                [attr.aria-valuenow]="addressLoadingStatus"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                i18n-aria-label="address.transactions-loading-progress"
+                aria-label="Transaction history loading progress"
+                [ngStyle]="{'width': addressLoadingStatus + '%' }"></div>
             </div>
           </div>
         </ng-container>
