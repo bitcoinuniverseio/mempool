@@ -74,6 +74,8 @@ export class StatisticsComponent implements OnInit, OnDestroy {
   feeLevelDropdownData = [];
   timespan = '';
   titleCount = $localize`Count`;
+  /** Set when the collected history is shorter than the range asked for. */
+  boundedHistoryNote: string | null = null;
 
   private retry$ = new BehaviorSubject<number>(0);
   private subscriptions: Subscription[] = [];
@@ -147,6 +149,7 @@ export class StatisticsComponent implements OnInit, OnDestroy {
           this.mempoolStats = [];
           this.mempoolTransactionsWeightPerSecondData = null;
         }
+        this.updateBoundedHistoryNote();
       }),
     );
 
@@ -160,6 +163,7 @@ export class StatisticsComponent implements OnInit, OnDestroy {
         this.mempoolStats.unshift(mempoolStats);
         this.mempoolStats = this.mempoolStats.slice(0, this.mempoolStats.length - 1);
         this.handleNewMempoolData(this.mempoolStats.concat([]));
+        this.updateBoundedHistoryNote();
       }),
     );
   }
@@ -200,8 +204,8 @@ export class StatisticsComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * How far back this deployment can actually answer for, when that is
-   * noticeably less than the range asked for.
+   * Recomputes how far back this deployment can actually answer for, when that
+   * is noticeably less than the range asked for.
    *
    * Statistics are collected from the moment the writer starts; nothing
    * backfills them, because there is no first-party source to backfill from and
@@ -209,28 +213,46 @@ export class StatisticsComponent implements OnInit, OnDestroy {
    * samples under a heading that says 1W is not a lie the chart tells on
    * purpose, but it is one a reader would take away, so the shortfall is
    * stated.
+   *
+   * Computed when the series changes rather than read from a getter: as a
+   * getter it walked the whole series on every change detection pass, on a page
+   * that takes a live sample every minute.
    */
-  get boundedHistoryNote(): string | null {
-    if (!this.hasData) return null;
+  private updateBoundedHistoryNote(): void {
+    this.boundedHistoryNote = null;
+    if (!this.hasData) return;
     const requested = RANGE_SECONDS[this.timespan];
-    if (!requested) return null;
-    const oldest = this.mempoolStats.reduce(
-      (min, stats) => Math.min(min, stats.added),
-      Number.POSITIVE_INFINITY,
-    );
-    if (!Number.isFinite(oldest)) return null;
+    if (!requested) return;
+    let oldest = Number.POSITIVE_INFINITY;
+    for (const stats of this.mempoolStats) {
+      if (stats.added < oldest) oldest = stats.added;
+    }
+    if (!Number.isFinite(oldest)) return;
     const covered = Math.max(0, Math.floor(Date.now() / 1000) - oldest);
     // A tenth short of the range is ordinary sampling slack, not a shortfall.
-    if (covered >= requested * 0.9) return null;
-    return $localize`:@@statistics.bounded-history:Collection began ${this.describeSpan(covered)}:covered: ago, so this is all the history there is for this range.`;
+    if (covered >= requested * 0.9) return;
+    this.boundedHistoryNote =
+      $localize`:@@statistics.bounded-history:Collection began ${this.describeSpan(covered)}:covered: ago, so this is all the history there is for this range.`;
   }
 
   /** A short, human span for the note above. */
   private describeSpan(seconds: number): string {
     const hours = Math.floor(seconds / 3600);
-    if (hours < 1) return $localize`:@@statistics.span-minutes:${Math.max(1, Math.floor(seconds / 60))}:minutes: minutes`;
-    if (hours < 48) return $localize`:@@statistics.span-hours:${hours}:hours: hours`;
-    return $localize`:@@statistics.span-days:${Math.floor(hours / 24)}:days: days`;
+    if (hours < 1) {
+      const minutes = Math.max(1, Math.floor(seconds / 60));
+      return minutes === 1
+        ? $localize`:@@statistics.span-minute:1 minute`
+        : $localize`:@@statistics.span-minutes:${minutes}:minutes: minutes`;
+    }
+    if (hours < 48) {
+      return hours === 1
+        ? $localize`:@@statistics.span-hour:1 hour`
+        : $localize`:@@statistics.span-hours:${hours}:hours: hours`;
+    }
+    const days = Math.floor(hours / 24);
+    return days === 1
+      ? $localize`:@@statistics.span-day:1 day`
+      : $localize`:@@statistics.span-days:${days}:days: days`;
   }
 
   handleNewMempoolData(mempoolStats: OptimizedMempoolStats[]): void {
