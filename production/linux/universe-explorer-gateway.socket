@@ -16,9 +16,18 @@
 # because the old process holds the port without SO_REUSEPORT and the socket
 # unit cannot bind underneath it. Every deploy after that is seamless.
 
+# It deliberately does not declare PartOf=universe-explorer-gateway.service.
+# PartOf propagates stop and restart from the named unit to this one, so a
+# restart of the service would take the socket down with it, drop whatever was
+# queued in the backlog, and rebind. That is a shorter gap than before but it
+# is still a gap, and it would make the claim above false.
+#
+# Because the socket outlives the service, stopping the service alone does not
+# take the port down: the next connection activates the service again. To stop
+# the gateway for real, stop both units.
+
 [Unit]
 Description=Universe Explorer gateway socket
-PartOf=universe-explorer-gateway.service
 
 [Socket]
 ListenStream=127.0.0.1:8099

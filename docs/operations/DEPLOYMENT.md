@@ -179,6 +179,14 @@ suite can see that.
    after that is seamless. The cutover log states which of the two cases
    applies rather than leaving a reader to assume.
 
+   Once the socket owns the port it outlives the service, so stopping the
+   service alone does not take the gateway down: the next connection starts it
+   again. To stop it for real, stop both units.
+
+   ```bash
+   systemctl stop universe-explorer-gateway.socket universe-explorer-gateway.service
+   ```
+
    An upstream that is genuinely gone is still reported as a gateway failure
    within a few seconds, so a real outage is never hidden behind a long wait. After the swap it reads `/api/v1/capabilities` and
    fails the release if any feature is enabled with no routes registered, which
