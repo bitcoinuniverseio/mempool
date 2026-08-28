@@ -74,6 +74,13 @@ cd backend  && npm ci && npm run build
 `build:universe` deliberately omits `--localize` and asset synchronization. Only
 the English build ships, and nothing is downloaded from a third party.
 
+`src/resources` and the alternative theme stylesheets reach the output through
+the production asset list in `frontend/angular.json`, not through the upstream
+`sync-assets` step, which also fetches from third parties.
+`check-build-assets.mjs` fails the build when anything the built index
+references is missing from the output, because both of those went missing once
+without anything noticing.
+
 ## Release procedure
 
 1. Run the full check set on the runner fleet
