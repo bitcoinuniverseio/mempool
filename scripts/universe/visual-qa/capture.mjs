@@ -88,6 +88,13 @@ const THEMES = ['default', 'dark', 'contrast'];
  */
 const SETTLE_DEADLINE_MS = 15_000;
 
+/**
+ * A failure fixture has nothing to fetch, so it should reach its terminal
+ * state almost at once. Waiting the full budget on every one of those turned
+ * a matrix that used to take minutes into one that could not finish.
+ */
+const FAILURE_SETTLE_DEADLINE_MS = 4_000;
+
 const STATES = ['populated', ...Object.keys(stateOverrides)];
 
 function pick(list, key, idKey = 'id') {
@@ -377,12 +384,13 @@ async function run() {
             let progress;
             let settledAfterMs = null;
             try {
-              const deadline = Date.now() + SETTLE_DEADLINE_MS;
+              const budget = state === 'populated' ? SETTLE_DEADLINE_MS : FAILURE_SETTLE_DEADLINE_MS;
+              const deadline = Date.now() + budget;
               for (;;) {
                 progress = await page.evaluate(progressProbe);
                 const busy = (progress.spinners?.length ?? 0) > 0 || (progress.skeletons ?? 0) > 0;
                 if (!busy || Date.now() >= deadline) {
-                  settledAfterMs = busy ? null : Date.now() - (deadline - SETTLE_DEADLINE_MS);
+                  settledAfterMs = busy ? null : Date.now() - (deadline - budget);
                   break;
                 }
                 await page.waitForTimeout(250);
@@ -399,6 +407,20 @@ async function run() {
               overflowBy, consoleErrors, brokenImages, violations, contrast, progress, settledAfterMs,
             });
           } catch (error) {
+            // A server that has gone away is not a page that failed. Reporting
+            // it as one buries the actual event under a hundred identical
+            // lines and sends the reader looking at the application.
+            if (/ERR_CONNECTION_REFUSED|ECONNREFUSED/.test(String(error))) {
+              await page.close().catch(() => undefined);
+              await context.close().catch(() => undefined);
+              await browser.close().catch(() => undefined);
+              console.error(
+                `\nThe server at ${BASE} stopped answering partway through the run ` +
+                  `(at ${route.id}/${state}/${theme}@${viewport.id}). ` +
+                  `Nothing was measured after that point, so this run proves nothing.`,
+              );
+              process.exit(2);
+            }
             findings.push({
               route: route.id, routeName: route.name, state, theme, viewport: viewport.id,
               error: String(error).slice(0, 400),
