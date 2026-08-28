@@ -40,6 +40,9 @@ jobs:
       - name: Every dynamic palette carries a readable foreground
         run: node scripts/universe/check-palettes.mjs
 
+      - name: Every filled surface declares the ink on it
+        run: node scripts/universe/check-fills.mjs
+
       - name: Contrast arithmetic is correct
         run: node --test scripts/universe/contrast.test.mjs
 
