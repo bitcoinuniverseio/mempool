@@ -160,8 +160,24 @@ suite can see that.
    its static root per request, so a new frontend reaches it through the
    symlink with no restart, and it is restarted only when its own file
    changed. A cutover was probed once a second through the restart window and
-   every request returned 200. A release that changes the gateway itself is
-   the one case that still shows a brief gap, and the cutover log says so.
+   every request returned 200.
+
+   A release that changes the gateway itself used to be the one case that
+   still showed a gap, because the port went away with the process and nothing
+   could bridge it. `universe-explorer-gateway.socket` closes that: systemd
+   owns the listening port, so a restart of the service leaves it bound and
+   arriving connections wait in the kernel backlog. The unit and the service
+   drop-in that requires it are in `production/linux/`. Enable it with
+
+   ```bash
+   systemctl enable --now universe-explorer-gateway.socket
+   ```
+
+   Adopting it on a gateway that is already running costs one brief
+   interruption, since the running process holds the port without
+   `SO_REUSEPORT` and the socket unit cannot bind underneath it. Every deploy
+   after that is seamless. The cutover log states which of the two cases
+   applies rather than leaving a reader to assume.
 
    An upstream that is genuinely gone is still reported as a gateway failure
    within a few seconds, so a real outage is never hidden behind a long wait. After the swap it reads `/api/v1/capabilities` and

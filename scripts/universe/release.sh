@@ -265,12 +265,17 @@ cmd_cutover() {
   local previous; previous=$(readlink -f "$CURRENT" 2>/dev/null || true)
   log "previous release: ${previous:-none}"
 
-  # Whether the gateway itself has to come down decides whether this deploy is
-  # visible at all. The backend and the overlay run from a path baked into
-  # their unit at exec time, so they must restart; the gateway resolves its
-  # static root per request, so a frontend change reaches it through the
-  # symlink with no restart. Restarting it anyway is the only part of a deploy
-  # that nothing can bridge, so it happens only when its own code changed.
+  # The backend and the overlay run from a path baked into their unit at exec
+  # time, so they must restart; the gateway bridges that. The gateway resolves
+  # its static root per request, so a frontend change reaches it through the
+  # symlink with no restart at all, and it is restarted only when its own code
+  # changed.
+  #
+  # That restart used to be the one part of a deploy nothing could bridge. It
+  # is seamless when universe-explorer-gateway.socket owns the port, because
+  # systemd keeps it bound and arriving connections queue rather than being
+  # refused. Without the socket unit the port goes away with the process, so
+  # say so plainly rather than let a reader assume otherwise.
   local gateway_changed=no
   if [ -n "$previous" ] && [ -f "$previous/scripts/universe/gateway.mjs" ]; then
     if ! cmp -s "$previous/scripts/universe/gateway.mjs" "$dir/scripts/universe/gateway.mjs"; then
@@ -286,7 +291,12 @@ cmd_cutover() {
 
   systemctl restart universe-explorer-backend universe-explorer-overlay
   if [ "$gateway_changed" = yes ]; then
-    log "the gateway changed, restarting it too; the origin sees a brief gap"
+    if systemctl is-active --quiet universe-explorer-gateway.socket; then
+      log "the gateway changed, restarting it; systemd holds the port, so the origin sees no refused connection"
+    else
+      log "the gateway changed, restarting it; nothing holds the port, so the origin sees a brief gap"
+      log "enable universe-explorer-gateway.socket to close it"
+    fi
     systemctl restart universe-explorer-gateway
   else
     log "the gateway is unchanged, leaving it up so the origin sees no gap"
