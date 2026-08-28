@@ -21,28 +21,36 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const GATEWAY = join(HERE, 'gateway.mjs');
 const ROOT = join(HERE, '..', '..', 'frontend', 'dist', 'mempool', 'browser');
 
-const GATEWAY_PORT = 8794;
-const UPSTREAM_PORT = 8795;
+// Each test takes its own pair of ports. Sharing them let a gateway from a
+// finished test still be listening when the next one started, and the next
+// test then measured the wrong process.
+let nextPort = 8794;
+function reservePorts() {
+  const gatewayPort = nextPort;
+  const upstreamPort = nextPort + 1;
+  nextPort += 2;
+  return { gatewayPort, upstreamPort };
+}
 
-function startGateway() {
+function startGateway({ gatewayPort, upstreamPort }) {
   return spawn(process.execPath, [GATEWAY], {
     env: {
       ...process.env,
       UNIVERSE_GATEWAY_HOST: '127.0.0.1',
-      UNIVERSE_GATEWAY_PORT: String(GATEWAY_PORT),
-      UNIVERSE_GATEWAY_BACKEND: `http://127.0.0.1:${UPSTREAM_PORT}`,
-      UNIVERSE_GATEWAY_OVERLAY: `http://127.0.0.1:${UPSTREAM_PORT}`,
+      UNIVERSE_GATEWAY_PORT: String(gatewayPort),
+      UNIVERSE_GATEWAY_BACKEND: `http://127.0.0.1:${upstreamPort}`,
+      UNIVERSE_GATEWAY_OVERLAY: `http://127.0.0.1:${upstreamPort}`,
       UNIVERSE_GATEWAY_ROOT: ROOT,
     },
     stdio: 'ignore',
   });
 }
 
-function ask(path = '/api/v1/backend-info') {
+function ask(gatewayPort, path = '/api/v1/backend-info') {
   return new Promise((resolve) => {
     const started = Date.now();
     http
-      .get({ host: '127.0.0.1', port: GATEWAY_PORT, path }, (response) => {
+      .get({ host: '127.0.0.1', port: gatewayPort, path }, (response) => {
         response.resume();
         response.on('end', () => resolve({ status: response.statusCode, ms: Date.now() - started }));
       })
@@ -51,19 +59,20 @@ function ask(path = '/api/v1/backend-info') {
 }
 
 test('a request waits for an upstream that is restarting, rather than failing', async (t) => {
-  const gateway = startGateway();
+  const ports = reservePorts();
+  const gateway = startGateway(ports);
   t.after(() => gateway.kill());
   await sleep(1200);
 
   // Nothing is listening yet, exactly as during a restart.
-  const inFlight = ask();
+  const inFlight = ask(ports.gatewayPort);
   await sleep(1000);
 
   const upstream = http.createServer((_, response) => {
     response.writeHead(200, { 'content-type': 'application/json' });
     response.end('{"ok":true}');
   });
-  await new Promise((resolve) => upstream.listen(UPSTREAM_PORT, '127.0.0.1', resolve));
+  await new Promise((resolve) => upstream.listen(ports.upstreamPort, '127.0.0.1', resolve));
   t.after(() => upstream.close());
 
   const bridged = await inFlight;
@@ -71,13 +80,38 @@ test('a request waits for an upstream that is restarting, rather than failing', 
 });
 
 test('an upstream that is genuinely gone is still reported, and promptly', async (t) => {
-  const gateway = startGateway();
+  const ports = reservePorts();
+  const gateway = startGateway(ports);
   t.after(() => gateway.kill());
   await sleep(1200);
 
-  const dead = await ask();
+  const dead = await ask(ports.gatewayPort);
   assert.equal(dead.status, 502, 'a dead upstream must be a gateway failure, never an empty success');
   // Bounded well inside the page's own request budget, so the interface still
   // reaches a terminal state quickly.
   assert.ok(dead.ms < 12_000, `gave up after ${dead.ms}ms, which is too long to hold a reader`);
+});
+
+test('a reader who leaves mid-retry does not take the gateway down', async (t) => {
+  // This crashed the gateway in CI. With no upstream listening, a request
+  // enters the retry loop; the client then goes away, and the write that
+  // follows throws from a timer callback where there is no request to fail.
+  const ports = reservePorts();
+  const gateway = startGateway(ports);
+  t.after(() => gateway.kill());
+  await sleep(1200);
+
+  for (let i = 0; i < 6; i++) {
+    const request = http.get({ host: '127.0.0.1', port: ports.gatewayPort, path: '/api/v1/backend-info' });
+    request.on('error', () => undefined);
+    // Abandon the request while it is still waiting on a refused upstream.
+    await sleep(300);
+    request.destroy();
+  }
+
+  // Long enough for every abandoned retry to have fired.
+  await sleep(6000);
+
+  const stillServing = await ask(ports.gatewayPort, '/');
+  assert.notEqual(stillServing.status, 0, 'the gateway died while serving abandoned requests');
 });

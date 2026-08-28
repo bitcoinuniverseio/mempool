@@ -8,12 +8,12 @@
   }
 
   .chain-note {
-    color: var(--transparent-fg);
+    color: var(--u-text-muted);
     font-size: 0.9rem;
   }
 
   .registry-version {
-    color: var(--transparent-fg);
+    color: var(--u-text-muted);
     font-size: 0.85rem;
   }
 
@@ -31,7 +31,7 @@
 
     p {
       margin: 0;
-      color: var(--transparent-fg);
+      color: var(--u-text-muted);
     }
   }
 
@@ -54,10 +54,9 @@
   }
 
   .protocol-row {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: 23rem minmax(0, 1fr) max-content;
     align-items: center;
-    justify-content: space-between;
     gap: 0.5rem;
     padding: 0.5rem 0.25rem;
     border-bottom: 1px solid var(--box-bg);
@@ -81,16 +80,37 @@
       align-items: center;
       gap: 0.35rem 0.5rem;
       min-width: 0;
+      justify-self: start;
+    }
+  }
+
+  @media (max-width: 899px) {
+    .protocol-row {
+      grid-template-columns: minmax(0, 1fr) max-content;
+
+      .protocol-state {
+        grid-column: 1 / -1;
+        grid-row: 2;
+      }
+
+      .protocol-evidence {
+        grid-column: 2;
+        grid-row: 1;
+        margin: 0;
+        justify-self: end;
+      }
     }
   }
 
   @media (max-width: 575px) {
     .protocol-row {
-      align-items: flex-start;
-      flex-direction: column;
+      grid-template-columns: minmax(0, 1fr);
 
-      .protocol-state {
-        width: 100%;
+      .protocol-evidence {
+        grid-column: 1;
+        grid-row: 3;
+        margin-top: 0.25rem;
+        justify-self: start;
       }
     }
   }
@@ -125,12 +145,12 @@
     &.chip-disabled {
       border-style: dashed;
       border-color: var(--transparent-fg);
-      color: var(--transparent-fg);
+      color: var(--u-text-muted);
     }
 
     &.chip-unknown {
       border-style: dashed;
-      color: var(--transparent-fg);
+      color: var(--u-text-muted);
     }
 
     // Reachable and answering, but too far back to describe the present. It
@@ -158,6 +178,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 0.25rem 0.75rem;
+    justify-self: end;
   }
 
   .registry-summary {
@@ -168,7 +189,7 @@
   .no-protocols {
     margin: 2rem 0;
     text-align: center;
-    color: var(--transparent-fg);
+    color: var(--u-text-muted);
   }
 
   .loading-skeleton {
