@@ -165,3 +165,17 @@
     width: 25%;
   }
 }
+
+// What stands in for the numbers when the live feed has given up. It holds the
+// height the estimates occupy, so the panels below it do not jump when the
+// placeholders are replaced by a sentence.
+.feed-unavailable {
+  align-items: center;
+  color: var(--u-text-secondary);
+  display: flex;
+  font-size: var(--u-text-sm);
+  justify-content: center;
+  margin: 0;
+  min-height: 50px;
+  text-align: center;
+}

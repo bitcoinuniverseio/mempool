@@ -54,31 +54,39 @@
       <span class="fee-label prority" i18n="fees-box.high-priority">High Priority</span>
     </div>
   </div>
-  <div class="fee-estimation-container loading-container">
-    <div class="item">
-      <div class="card-text">
-        <div class="skeleton-loader"></div>
-        <div class="skeleton-loader"></div>
+  <!-- These numbers only ever arrive over the socket, and the socket does not
+       fail: when the backend is down it connects and then says nothing. Once
+       the feed has given up, placeholders that keep pulsing are promising an
+       answer that is not coming. -->
+  @if ((liveFeed$ | async)?.status === 'error') {
+    <p class="feed-unavailable" i18n="fees-box.feed-unavailable">No live fee estimates: the chain feed is not answering.</p>
+  } @else {
+    <div class="fee-estimation-container loading-container">
+      <div class="item">
+        <div class="card-text">
+          <div class="skeleton-loader"></div>
+          <div class="skeleton-loader"></div>
+        </div>
+      </div>
+      <div class="band-separator"></div>
+      <div class="item">
+        <div class="card-text">
+          <div class="skeleton-loader"></div>
+          <div class="skeleton-loader"></div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="card-text">
+          <div class="skeleton-loader"></div>
+          <div class="skeleton-loader"></div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="card-text">
+          <div class="skeleton-loader"></div>
+          <div class="skeleton-loader"></div>
+        </div>
       </div>
     </div>
-    <div class="band-separator"></div>
-    <div class="item">
-      <div class="card-text">
-        <div class="skeleton-loader"></div>
-        <div class="skeleton-loader"></div>
-      </div>
-    </div>
-    <div class="item">
-      <div class="card-text">
-        <div class="skeleton-loader"></div>
-        <div class="skeleton-loader"></div>
-      </div>
-    </div>
-    <div class="item">
-      <div class="card-text">
-        <div class="skeleton-loader"></div>
-        <div class="skeleton-loader"></div>
-      </div>
-    </div>
-  </div>
+  }
 </ng-template>
