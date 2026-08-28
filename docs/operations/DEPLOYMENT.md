@@ -218,12 +218,24 @@ and an older backend reads a newer schema. A rollback across a migration should
 therefore be paired with a database restore only if the newer schema is known
 to be incompatible, which has not happened yet.
 
-Back up the database before a release that migrates:
+`universe-explorer-backup.timer` dumps the database daily into
+`/data/indexers-c/universe-explorer/backups` and keeps two weeks. The script
+refuses to keep a dump that is suspiciously small and checks the archive reads
+back, because a backup nobody verifies is not a backup. Take one by hand before
+a release that migrates:
 
 ```bash
-docker exec universe-explorer-mariadb mariadb-dump \
-  -u root -p"$MYSQL_ROOT_PASSWORD" --single-transaction universe_explorer \
-  | gzip > /data/indexers-c/universe-explorer/backups/universe_explorer-$(date -u +%Y%m%dT%H%M%SZ).sql.gz
+systemctl start universe-explorer-backup.service
+```
+
+Verify a restore into a scratch schema after any change to the schema or the
+engine, rather than trusting that the dump exists:
+
+```bash
+docker exec universe-explorer-mariadb mariadb -u root -p"$MYSQL_ROOT_PASSWORD" \
+  -e 'DROP DATABASE IF EXISTS restore_probe; CREATE DATABASE restore_probe;'
+gunzip -c <dump> | docker exec -i universe-explorer-mariadb \
+  mariadb -u root -p"$MYSQL_ROOT_PASSWORD" restore_probe
 ```
 
 ## Rules
