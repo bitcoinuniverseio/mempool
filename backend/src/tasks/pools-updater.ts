@@ -103,7 +103,11 @@ class PoolsUpdater {
       await DB.query('COMMIT;');
     } catch (e) {
       logger.err(`Could not migrate mining pools, rolling back. Exception: ${JSON.stringify(e)}`, this.tag);
-      await DB.query('ROLLBACK;');
+      try {
+        await DB.query('ROLLBACK;');
+      } catch (rollbackError) {
+        logger.err('Could not roll back the mining pool import. Reason: ' + (rollbackError instanceof Error ? rollbackError.message : rollbackError), this.tag);
+      }
       // The sha was optimistically set before the write; the rollback undid it,
       // so clear it again rather than let startup believe pools are loaded.
       this.currentSha = null;
@@ -213,6 +217,7 @@ class PoolsUpdater {
 
   /**
    * Fetch our latest pools-v2.json sha from the db
+   * @asyncSafe
    */
   public async getShaFromDb(): Promise<string | null> {
     try {
