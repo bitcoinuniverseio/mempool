@@ -95,3 +95,13 @@ test('a page that waits with nothing on screen saying so fails the run', () => {
   assert.equal(failures.length, 1);
   assert.match(failures[0], /nothing on screen that says so/);
 });
+
+test('a page with nothing to fetch owes the reader no loader', () => {
+  // The docs and source pages render from what is already in the bundle. Under
+  // the loading fixture they simply appear, and demanding a spinner from them
+  // was the rule failing a page for having nothing to wait for.
+  assert.deepEqual(
+    progressFailures(withProgress('loading', { skeletons: 0, spinners: [], loadingAnnouncements: [] })),
+    [],
+  );
+});

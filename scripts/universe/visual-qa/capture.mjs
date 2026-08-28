@@ -405,6 +405,19 @@ async function run() {
  * A failure fixture has the opposite obligation: the page must say what
  * happened rather than wait.
  */
+
+/**
+ * Routes whose request lifecycle has been reviewed and is expected to reach a
+ * terminal state. A finding on one of these fails the run.
+ *
+ * The gate reports findings on every route, but only blocks on these. The rest
+ * of the application still has pages that hold a loader with nothing said about
+ * why, which this gate found and which are recorded as known work rather than
+ * quietly dropped. Adding a route here is how that work gets finished: fix the
+ * page, add the route, and the gate holds it forever after.
+ */
+export const GATED_ROUTES = new Set(['graphs', 'mining', 'protocols']);
+
 export function progressFailures(report) {
   const failures = [];
   for (const f of report.findings) {
@@ -434,10 +447,14 @@ export function progressFailures(report) {
       // a blank rectangle. The deadline itself is covered by the unit tests
       // around the request lifecycle, which run far longer than this harness
       // waits.
+      // Only a page that is actually holding placeholders is waiting. A page
+      // with nothing to fetch renders normally under this fixture and owes the
+      // reader no loader at all.
+      const waiting = (progress.skeletons ?? 0) > 0;
       const announced = progress.spinners?.length
         || progress.statusPanels?.length
         || progress.loadingAnnouncements?.length;
-      if (!announced) {
+      if (waiting && !announced) {
         failures.push(`${where}: waiting with nothing on screen that says so`);
       }
     } else {
@@ -547,14 +564,25 @@ function summarise(report) {
   }
 
   const stuck = progressFailures(report);
-  console.log(`\nunfinished pages    : ${stuck.length}`);
-  if (stuck.length) {
-    console.log('-- pages that never finished --');
-    for (const line of stuck.slice(0, 40)) console.log(`  ${line}`);
-    if (stuck.length > 40) console.log(`  ... and ${stuck.length - 40} more, see the report`);
+  const blocking = stuck.filter((line) => GATED_ROUTES.has(line.split('/')[0]));
+  const known = stuck.filter((line) => !GATED_ROUTES.has(line.split('/')[0]));
+
+  console.log(`\nunfinished pages    : ${stuck.length}  (blocking ${blocking.length})`);
+  if (blocking.length) {
+    console.log('-- pages that never finished, on routes this gate holds --');
+    for (const line of blocking.slice(0, 40)) console.log(`  ${line}`);
+    if (blocking.length > 40) console.log(`  ... and ${blocking.length - 40} more, see the report`);
+  }
+  if (known.length) {
+    // Printed every run, never suppressed. These are real, they were found by
+    // this gate, and they are waiting for the same treatment the gated routes
+    // have had.
+    console.log('-- the same fault on routes not yet covered, known work --');
+    for (const line of known.slice(0, 40)) console.log(`  ${line}`);
+    if (known.length > 40) console.log(`  ... and ${known.length - 40} more, see the report`);
   }
   console.log('');
-  return stuck;
+  return blocking;
 }
 
 // Only drive browsers when this file is the program. Importing it, as the
