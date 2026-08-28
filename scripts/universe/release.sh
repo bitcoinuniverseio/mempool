@@ -46,6 +46,16 @@ cmd_install() {
   # Dependencies and the compiled gbt module do not change between most
   # releases, so they are hard-linked from the running one. That keeps the
   # install quick and the disk flat, and the files stay immutable either way.
+  #
+  # It is only correct while the dependency tree is actually unchanged. Hard
+  # linking a stale node_modules into a release that asked for different
+  # packages produces a backend that runs, imports the wrong versions, and
+  # fails somewhere unrelated later. The artifact carries its lock file so
+  # that this can be checked here, where both trees are visible, rather than
+  # trusted at build time where only one of them is.
+  if [ -n "$previous" ] && [ -f "$previous/backend/package-lock.json" ]      && [ -f "$dir/backend/package-lock.json" ]      && ! cmp -s "$previous/backend/package-lock.json" "$dir/backend/package-lock.json"; then
+    fail "backend dependencies changed since $(basename "$previous"); this release needs its own node_modules installed rather than the hard link, so install it explicitly and re-run"
+  fi
   if [ -n "$previous" ] && [ -d "$previous/backend/node_modules" ]; then
     [ -d "$dir/backend/node_modules" ] || cp -al "$previous/backend/node_modules" "$dir/backend/node_modules"
     [ -d "$dir/backend/rust-gbt" ]     || cp -al "$previous/backend/rust-gbt" "$dir/backend/rust-gbt"

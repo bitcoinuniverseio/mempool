@@ -9,13 +9,14 @@ name: Universe release artifact
 # a measurement that described a build nobody was running. A runner starts from
 # a clean checkout every time, so the artifact matches the commit it names.
 
+# It builds the ref it is dispatched on, and takes no ref input. An input
+# would be more convenient and is not safe: dispatched from the default
+# branch, the job holds that branch's Actions cache scope, so building an
+# arbitrary ref would run that ref's install and build scripts with write
+# access to the cache every other workflow here restores from. Dispatch it
+# against the branch or tag you want built instead.
 on:
   workflow_dispatch:
-    inputs:
-      ref:
-        description: Commit, tag, or branch to build
-        required: true
-        default: main
 
 permissions:
   contents: read
@@ -26,10 +27,8 @@ jobs:
     runs-on: [self-hosted, linux-ultra]
     timeout-minutes: 90
     steps:
-      - name: Checkout the requested ref
+      - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        with:
-          ref: ${{ inputs.ref }}
 
       - name: Record what is being built
         id: sha
@@ -79,7 +78,10 @@ jobs:
       # backend/dist, and the gateway from scripts/universe. node_modules and
       # the compiled gbt module are not packed: install hard-links them from the
       # running release, which is correct only while the dependency tree is
-      # unchanged, so the check below refuses to pack when it has changed.
+      # unchanged. The lock file is packed so that release.sh install can
+      # compare it against the running release and refuse the hard link when it
+      # differs. That check belongs there, where both trees are visible; here
+      # only one of them is.
       - name: Pack
         id: pack
         run: |
