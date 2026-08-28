@@ -5,13 +5,13 @@ import { delay, map, retryWhen, share, startWith, switchMap, tap } from 'rxjs/op
 import { ApiService } from '@app/services/api.service';
 import { SeoService } from '@app/services/seo.service';
 import { UntypedFormBuilder, UntypedFormGroup } from '@angular/forms';
-import { originalChartColors as chartColors, poolsColor } from '@app/app.constants';
+import { poolChartColors, poolsColor } from '@app/app.constants';
 import { StorageService } from '@app/services/storage.service';
 import { MiningService } from '@app/services/mining.service';
 import { download } from '@app/shared/graphs.utils';
 import { ActivatedRoute } from '@angular/router';
 import { StateService } from '@app/services/state.service';
-import { chartChrome } from '@app/shared/chart-theme';
+import { chartChrome, chartDataZoomStyle } from '@app/shared/chart-theme';
 
 interface Hashrate {
   timestamp: number;
@@ -210,7 +210,7 @@ export class HashrateChartPoolsComponent implements OnInit {
     this.chartOptions = {
       title: title,
       animation: false,
-      color: chartColors.filter(color => color !== '#FDD835'),
+      color: poolChartColors,
       grid: {
         right: this.right,
         left: this.left,
@@ -278,6 +278,7 @@ export class HashrateChartPoolsComponent implements OnInit {
         showDetail: false,
         show: true,
         type: 'slider',
+        ...chartDataZoomStyle(),
         brushSelect: false,
         realtime: true,
         left: 20,

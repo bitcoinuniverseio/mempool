@@ -6,7 +6,7 @@ import { download, formatterXAxis, formatterXAxisLabel } from '@app/shared/graph
 import { formatNumber } from '@angular/common';
 import { StateService } from '@app/services/state.service';
 import { Subscription } from 'rxjs';
-import { chartChrome } from '@app/shared/chart-theme';
+import { chartChrome, chartDataZoomStyle } from '@app/shared/chart-theme';
 
 const OUTLIERS_MEDIAN_MULTIPLIER = 4;
 
@@ -187,6 +187,7 @@ export class IncomingTransactionsGraphComponent implements OnInit, OnChanges, On
         showDetail: false,
         show: (this.template === 'advanced') ? true : false,
         type: 'slider',
+        ...chartDataZoomStyle(),
         brushSelect: false,
         realtime: true,
         bottom: 0,

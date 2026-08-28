@@ -36,20 +36,153 @@ A visitor should feel which side of that line something is on before reading a
 word. That is why confirmed and projected blocks differ in weight and depth, not
 only in a label.
 
+## The brand
+
+Universe Explorer is part of Bitcoin Universe, and it looks like it. Core,
+Wallet and Inscribe are all built on the same pink-forward system, so an
+explorer in ultramarine read as a different company's product wearing our name.
+
+### Personality
+
+A precision instrument finished to a high standard. Editorial, confident,
+technical, and adult. The reference is a control room designed by people who
+also design magazines, not a fashion site with charts bolted on.
+
+What that rules out, explicitly: bubblegum, cyberpunk neon, glass everywhere,
+galaxy wallpaper, floating shapes, decorative gradients, rainbow fills, and
+anything that would make a person hesitate to open this on a work screen.
+
+### The pink rule
+
+**Pink is the brand, and only the brand.** It marks identity and intent: the
+mark, the primary action, active navigation, selection, focus offset, live
+surfaces, and display type. It never carries a status, a protocol, a fee band,
+or a quantity.
+
+That is the whole reason the pink can be loud. A reader learns in one screen
+that pink means "this is Universe, and this is where you act", so it never has
+to compete with the colours that mean something about Bitcoin.
+
+**Filling a bar is not carrying a quantity.** A progress bar, a block fullness
+bar, or a single-series area chart may be brand pink, because the value is
+carried by the length or the height and the fill is just the mark. What is
+forbidden is colour that *encodes* the value: a fee band, a status, a protocol,
+a heat scale. If changing the number would change the colour, the colour is not
+allowed to be the brand.
+
+One consequence worth stating, because it is the only place the system bends:
+the fee scale runs to a deep magenta at its expensive end, and that band sits
+about 10.7 dE from the light brand fill. Both values are load bearing. It is
+recorded in `check-palettes.mjs` at the distance it actually has, so nudging
+either one closer fails the build.
+
+### Colour roles
+
+| Token | Value, light | Value, dark | Role |
+|---|---|---|---|
+| `--u-brand` | `#c40059` | `#ff8ab8` | The working pink. Readable as text and as a fill. |
+| `--u-brand-hover` | `#a80049` | `#ffb3d1` | Hover of the above. |
+| `--u-brand-contrast` | `#ffffff` | `#2a0a18` | The foreground every brand fill declares. |
+| `--u-brand-accent` | `#ff0066` | `#ff2a85` | The identity anchor. Borders, rings, rules, display type. |
+| `--u-brand-subtle` | `#fde9f1` | `#2e1226` | Brand-tinted surface. |
+| `--u-magenta` | `#a3006b` | `#ff6fd0` | Second stop of the house sweep. |
+| `--u-fuchsia` | `#8b2fb5` | `#d98cf5` | Third stop of the house sweep. |
+| `--u-lavender` | `#5b2fa6` | `#c4a7ff` | The secondary accent, and the focus ring. |
+| `--u-chrome` | `#6b6280` | `#b9bed6` | Metal, as readable ink. |
+| `--u-chrome-rim` | `#c9cddf` | `#4a4560` | Metal, as a hairline. Carries no text. |
+| `--u-pearl` | `#fff6fa` | `#fff6fa` | The light ground, and ink on brand tiles. |
+| `--u-blush` | `#ffd8e7` | `#ffd8e7` | The softest brand tint. |
+
+`#ff0066` is the value the rest of Bitcoin Universe is built on, and it is the
+value this product uses for identity. It is not a button fill: white on it
+measures 3.85:1 and misses AA. That is the entire reason `--u-brand` and
+`--u-brand-accent` are two tokens rather than one.
+
+### The foreground contract
+
+Every strong fill declares what goes on it. A component never guesses.
+
+```scss
+background-image: var(--u-gloss), var(--u-gradient-brand);
+color: var(--u-brand-contrast);
+```
+
+`check-palettes.mjs` measures that foreground against **every stop** of the
+gradient, **through** the gloss layer. That check is not decorative: a 0.24
+gloss put a white label at 4.06:1 on the violet end of the sweep, which is why
+the gloss is 0.16.
+
+### Gloss, glow, and the sweep
+
+Three finishes, and a rule for each.
+
+| Token | What it is | Where it is allowed |
+|---|---|---|
+| `--u-gradient-brand` | hot pink to magenta to fuchsia | The mark, the primary action, live surfaces |
+| `--u-gloss` | a top specular highlight | Filled brand controls only |
+| `--u-glow-brand` | a soft brand shadow | The primary action, and singleton surfaces |
+| `--u-gradient-chrome` | pearl to chrome to steel | Metallic frames, never behind body text |
+| `--u-gradient-pride` | a refined spectrum | At most one rule per screen, never a fill |
+
+The pride rule is a rule, not a wash. It appears as a hairline under a single
+divider and nowhere else. Applied broadly it stops meaning anything.
+
+### Surfaces
+
+Light runs pearl to white: the page floor carries a violet cast so it belongs to
+the same material as the pink on it, and a raised card is pure white, so
+elevation reads without a shadow and dense tables stay crisp.
+
+Dark runs plum-black, the same shell the rest of Bitcoin Universe uses. That is
+what makes hot pink read as lacquer rather than as neon on grey.
+
+### The mark
+
+Two squares on a diagonal: one still forming, one settled. That is the product's
+own axis, and it is the only idea the mark carries. It is deliberately not a
+hexagon, an orbit, a globe, or a planet, because those are the defaults of this
+category and none of them says anything about this product.
+
+It is drawn in `currentColor` plus one brand token, so it is correct on either
+theme, survives a monochrome favicon, and never depends on a font.
+
+The wordmark is live text in the interface's own font stack, so it always
+matches the product around it. Exported assets that cannot rely on a font are
+rendered to raster by `scripts/universe/brand/render-brand-assets.mjs`.
+
+### Icons and the tab strip
+
+The favicon is inverted on purpose: a pearl mark on a hot-pink tile, rather than
+a pink glyph on white. Every explorer in this market ships a dark or a white
+favicon, so a solid pink tile is the one that can be found in a strip of twenty
+tabs. Pearl on `#c40059` measures 5.7:1, so the mark is still legible at 16px
+rather than relying on the tile colour alone.
+
+### Relationship to the rest of Bitcoin Universe
+
+Same anchor, same secondary, same shell material, same discipline about status
+colour. Not the same product: this one is denser, quieter, and light by default,
+because it is read for minutes at a time rather than glanced at.
+
 ## Colour
 
 Defined in `frontend/src/styles/_universe-tokens.scss` and emitted as CSS custom
 properties. A theme swap is a variable swap.
 
-### The two rules
+### The three rules
 
-1. **Colour carries evidence state, never protocol identity on its own.**
+1. **Pink is the brand, and only the brand.** It is never a status, a protocol,
+   a fee band, or a quantity. `check-palettes.mjs` measures that every brand
+   role sits at least 25 dE from every state colour and every protocol colour,
+   under normal vision.
+
+2. **Colour carries evidence state, never protocol identity on its own.**
    Protocol hues live in their own scale and only ever appear beside a protocol
    name. Evidence states always carry a word as well as a colour. That
    separation is why a protocol's colour can never be mistaken for "confirmed"
    or "failed", even where the hues are close.
 
-2. **Green and red are reserved.** Green means proven. Red means unavailable or
+3. **Green and red are reserved.** Green means proven. Red means unavailable or
    broken. Neither is spent on anything else. A block epoch running behind
    schedule is amber, because being late is a fact about timing rather than a
    failure. Not using an optional upgrade is neutral, because it is not an
@@ -163,6 +296,26 @@ changed rather than the chain moving.
 | `frontend/src/styles/_universe-bootstrap-bridge.scss` | the inherited Bootstrap layer, repainted |
 | `frontend/src/theme-dark.scss`, `theme-contrast.scss` | the alternate themes |
 | `frontend/src/app/universe/_universe-tokens.scss` | Universe surface mixins, delegating to the tokens above |
-| `scripts/universe/check-text.mjs` | the em dash gate |
+| `scripts/universe/check-text.mjs` | the em dash gate, over source and over the built output |
+| `scripts/universe/check-colors.mjs` | no raw interface colour, including in style and attribute bindings |
+| `scripts/universe/check-palettes.mjs` | every dynamic palette, role separation, theme parity, retired values |
+| `scripts/universe/check-fills.mjs` | every filled surface that carries text declares its ink |
 | `scripts/universe/check-branding.mjs` | the upstream mark gate |
-| `scripts/universe/visual-qa/` | the visual, accessibility, and cross-browser matrix |
+| `scripts/universe/visual-qa/capture.mjs` | the route matrix: themes, widths, and data states |
+| `scripts/universe/visual-qa/modes-check.mjs` | forced colours and 200 percent zoom |
+| `scripts/universe/visual-qa/fixtures.mjs` | the data every reviewed route renders from |
+
+## A note on the fixtures
+
+They are part of the design system, not a test detail. Five defects on this
+product were invisible for as long as they existed because the surface that
+showed them had no fixture and rendered as a skeleton, an error, or a flat
+shape in every screenshot ever taken: a green at 2.37:1 on the mining
+dashboard, a red button at 3.21:1 on the address page, the address page itself
+throwing on a response of the wrong shape, the release identity page rendering
+blank, and a depth chart whose entire palette collapsed into one band because
+the numbers were four orders of magnitude too small.
+
+A route that renders nothing passes every automated check. When a fixture is
+missing or wrong, the review it feeds is not weaker; it is absent, and it
+reports success.

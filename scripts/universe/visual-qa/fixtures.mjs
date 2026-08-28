@@ -81,6 +81,18 @@ export const fixtures = {
     lastEstimatedHashrate: 812_004_881_002_991_000_000,
   },
 
+  // The mining dashboard's hashrate and difficulty panels.
+  //
+  // Without these the right half of the Mining route rendered as skeletons and
+  // a spinner in every screenshot, so half of one of the thirteen reviewed
+  // routes was never reviewed at all.
+  '/api/v1/mining/hashrate/3d': buildHashrateSeries(),
+  '/api/v1/mining/hashrate/1w': buildHashrateSeries(),
+  '/api/v1/mining/hashrate/1m': buildHashrateSeries(),
+  '/api/v1/mining/hashrate': buildHashrateSeries(),
+  '/api/v1/mining/difficulty-adjustments/1y': buildDifficultyAdjustments(),
+  '/api/v1/mining/difficulty-adjustments': buildDifficultyAdjustments(),
+
   '/api/v1/universe/protocols': {
     registryVersion: '2026.08.1',
     protocols: [
@@ -90,6 +102,22 @@ export const fixtures = {
       { protocolId: 'stamps', displayName: 'Stamps', chain: 'bitcoin', family: 'inscriptions', releaseStatus: 'experimental', authority: 'stampchain', coverage: { fromHeight: 779_652, toHeight: 886_900 } },
       { protocolId: 'atomicals', displayName: 'Atomicals', chain: 'bitcoin', family: 'fungible', releaseStatus: 'blocked', authority: null, coverage: null },
     ],
+  },
+
+  // The release identity the /source page publishes.
+  //
+  // It arrives over the socket for the header, but the source page asks for it
+  // over REST, and that route had no fixture. So the one page whose entire job
+  // is to say which commit is running rendered with an empty release and an
+  // empty backend in every screenshot, and nobody reviewing the matrix could
+  // have seen that it works.
+  '/api/v1/backend-info': {
+    hostname: 'universe-explorer',
+    version: '3.3.1',
+    gitCommit: 'fixture0',
+    lightning: false,
+    backend: 'electrum',
+    coreVersion: '/Satoshi:31.0.0/',
   },
 
   '/api/v1/universe/pulse': {
@@ -114,8 +142,22 @@ export const detailFixtures = {
   [`/api/block/${BLOCK_HASH}`]: fixtures['/api/v1/blocks'][0],
   [`/api/block/${BLOCK_HASH}/txids`]: [TXID_A, TXID_B, TXID_C],
   [`/api/v1/block/${BLOCK_HASH}/summary`]: buildBlockSummary(),
-  [`/api/block/${BLOCK_HASH}/txs/0`]: [buildTransaction()],
+  [`/api/block/${BLOCK_HASH}/txs/0`]: buildBlockPage(),
   [`/api/v1/block/${BLOCK_HASH}`]: fixtures['/api/v1/blocks'][0],
+
+  // The second block on the chain strip, answered as fully as the first.
+  //
+  // The block page asks for the neighbouring block's transactions, and only
+  // the first block was pinned, so that request fell through to the empty-list
+  // fallback and one skeleton on the page waited for it forever. It is the
+  // same class of gap as the address sub-routes: a prefix match that answers
+  // with the wrong thing, or nothing, keeps a page in a loading state that no
+  // screenshot can distinguish from a slow one.
+  [`/api/block/${TXID_B}`]: fixtures['/api/v1/blocks'][1],
+  [`/api/v1/block/${TXID_B}`]: fixtures['/api/v1/blocks'][1],
+  [`/api/block/${TXID_B}/txids`]: [TXID_C, TXID_A],
+  [`/api/block/${TXID_B}/txs/0`]: buildBlockPage(),
+  [`/api/v1/block/${TXID_B}/summary`]: buildBlockSummary(),
   '/api/txs/outspends': [[{ spent: false }, { spent: false }]],
   [`/api/v1/cpfp/${TXID_A}`]: { ancestors: [], descendants: [], bestDescendant: null, effectiveFeePerVsize: 19.7, sigops: 2, adjustedVsize: 209 },
   '/api/v1/historical-price': { prices: [{ time: 1_772_100_000, USD: 96_400 }], exchangeRates: { USDEUR: 0.92, USDGBP: 0.79, USDCAD: 1.36, USDCHF: 0.88, USDAUD: 1.5, USDJPY: 155 } },
@@ -147,12 +189,33 @@ export const detailFixtures = {
 };
 
 /** Address with history, and its transactions. */
+/**
+ * The address page, and every sub-route it asks for.
+ *
+ * Only the summary used to be pinned. The harness falls back to a prefix match,
+ * so `/api/address/<addr>/txs` matched the summary's key and was answered with
+ * the summary object. The page called forEach on it, threw, and rendered its
+ * error state in every screenshot the matrix has ever taken, which is how one
+ * of the thirteen reviewed routes was never actually reviewed. Each sub-route
+ * is pinned explicitly now, and each returns the shape its caller expects.
+ */
 export const addressFixtures = {
   [`/api/address/${ADDRESS}`]: {
     address: ADDRESS,
     chain_stats: { funded_txo_count: 42, funded_txo_sum: 184_002_881, spent_txo_count: 38, spent_txo_sum: 171_004_002, tx_count: 51 },
     mempool_stats: { funded_txo_count: 1, funded_txo_sum: 220_000, spent_txo_count: 0, spent_txo_sum: 0, tx_count: 1 },
   },
+  [`/api/address/${ADDRESS}/txs`]: [buildTransaction()],
+  [`/api/address/${ADDRESS}/txs/chain`]: [buildTransaction()],
+  [`/api/address/${ADDRESS}/txs/mempool`]: [],
+  [`/api/address/${ADDRESS}/txs/summary`]: [
+    { txid: TXID_A, height: 887_412, time: 1_772_100_000, value: 1_500_000 },
+    { txid: TXID_B, height: 887_411, time: 1_772_099_400, value: -220_000 },
+  ],
+  [`/api/address/${ADDRESS}/utxo`]: [
+    { txid: TXID_A, vout: 0, value: 1_500_000, status: { confirmed: true, block_height: 887_412, block_hash: BLOCK_HASH, block_time: 1_772_100_000 } },
+    { txid: TXID_B, vout: 1, value: 220_000, status: { confirmed: false } },
+  ],
 };
 
 /**
@@ -170,6 +233,24 @@ export const addressFixtures = {
  * a long tail of small transactions, a few large ones, and a spread of fee
  * rates so the colour scale is actually exercised.
  */
+/**
+ * One page of a block's transactions.
+ *
+ * This returned a single transaction for a block that declares three thousand
+ * of them, so the list component asked for the page, got less than a page
+ * back, and sat in its skeleton waiting for the rest. A screenshot cannot tell
+ * that apart from a slow request, which is why it survived every review.
+ *
+ * A full page, with distinct ids so the rows are not all the same transaction.
+ */
+function buildBlockPage() {
+  const base = buildTransaction();
+  return Array.from({ length: 25 }, (_, i) => ({
+    ...base,
+    txid: (i + 1).toString(16).padStart(4, '0').repeat(16).slice(0, 64),
+  }));
+}
+
 function buildBlockSummary() {
   const txs = [];
   for (let i = 0; i < 1800; i++) {
@@ -235,6 +316,52 @@ export const stateOverrides = {
 
 export const sampleIds = { TXID_A, TXID_B, TXID_C, ADDRESS, BLOCK_HASH };
 
+/**
+ * Network hashrate and difficulty over time, in the shape the mining charts
+ * expect: a hashrate point per day and a difficulty point per retarget.
+ *
+ * The numbers are the right order of magnitude for the network, so the axis
+ * formats into EH/s rather than collapsing to zero the way the mempool series
+ * used to.
+ */
+function buildHashrateSeries() {
+  const now = Math.floor(Date.now() / 1000);
+  const hashrates = [];
+  const difficulty = [];
+  for (let day = 90; day >= 0; day--) {
+    const drift = Math.sin(day / 11) * 0.06 + Math.cos(day / 5) * 0.02;
+    hashrates.push({
+      timestamp: now - day * 86_400,
+      avgHashrate: Math.round(812_004_881_002_991_000_000 * (1 + drift)),
+    });
+    if (day % 14 === 0) {
+      difficulty.push({
+        timestamp: now - day * 86_400,
+        difficulty: Math.round(110_568_428_300_952 * (1 + drift / 3)),
+        height: 964_000 - day * 144,
+        adjustment: Number((drift * 12).toFixed(2)),
+      });
+    }
+  }
+  return {
+    hashrates,
+    difficulty,
+    currentHashrate: hashrates[hashrates.length - 1].avgHashrate,
+    currentDifficulty: difficulty[difficulty.length - 1].difficulty,
+  };
+}
+
+/** Retarget history, newest first, as the difficulty chart reads it. */
+function buildDifficultyAdjustments() {
+  const now = Math.floor(Date.now() / 1000);
+  return Array.from({ length: 26 }, (_, i) => [
+    now - i * 14 * 86_400,
+    964_000 - i * 2016,
+    110_568_428_300_952 * (1 - i * 0.004),
+    Number((Math.sin(i / 3) * 3).toFixed(2)),
+  ]);
+}
+
 function buildMempoolStats() {
   const now = Math.floor(Date.now() / 1000);
   const points = [];
@@ -246,7 +373,21 @@ function buildMempoolStats() {
       vbytes_per_second: Math.round(1_600 + drift * 6),
       total_fee: Math.round(88_000_000 + drift * 200_000),
       mempool_byte_weight: Math.round(112_000_000 + drift * 400_000),
-      vsizes: Array.from({ length: 38 }, (_, band) => Math.round(Math.max(0, 900 - band * 22 + drift))),
+      // One band per fee level, in vBytes, summing to roughly the
+      // mempool_byte_weight above.
+      //
+      // These used to be single-digit thousands of vBytes in total, which is
+      // four orders of magnitude below a real mempool. Two things followed from
+      // that, and both of them defeated the point of the fixture: every y axis
+      // label rounded to "0 MvB", and the bands were too small to resolve, so
+      // the most colour-dense surface in the product rendered as one flat area
+      // and its palette was never actually reviewed.
+      //
+      // The shape is unchanged. Only the scale is real now: a fat low-fee tail
+      // thinning out towards the high-fee bands, which is what a mempool
+      // between blocks actually looks like.
+      vsizes: Array.from({ length: 38 }, (_, band) =>
+        Math.round(Math.max(0, 900 - band * 22 + drift) * 6_000)),
     });
   }
   return points;

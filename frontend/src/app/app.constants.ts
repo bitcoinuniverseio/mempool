@@ -129,6 +129,20 @@ export const poolsColor = {
   'unknown': '#FDD835',
 };
 
+/**
+ * The colours a named mining pool's slice can take.
+ *
+ * Three values are held back from the inherited ramp. #FDD835 is reserved for
+ * the unknown pool, so a named pool can never be drawn in the colour that means
+ * "we could not tell". #D81B60 and #880E4F sit 6.7 and 15.2 dE from the Universe
+ * brand pink, close enough that the largest pool on the dashboard was drawn in
+ * the product's own colour. Brand marks identity and intent, never data, so
+ * those two are excluded here rather than at each call site.
+ */
+export const poolChartColors = originalChartColors.filter(
+  (color) => !['#FDD835', '#D81B60', '#880E4F'].includes(color),
+);
+
 export const feeLevels = [0, 1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 20, 30, 40, 50, 60, 70, 80, 90, 100, 125, 150, 175, 200,
   250, 300, 350, 400, 500, 600, 700, 800, 900, 1000, 1200, 1400, 1600, 1800, 2000];
 

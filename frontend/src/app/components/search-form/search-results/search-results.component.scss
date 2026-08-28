@@ -1,10 +1,18 @@
+// A group label above its results, not a peer of them.
+//
+// This rule declared font-size twice and the second won, so the label rendered
+// at 1rem, the same size as the result underneath it, and the grouping did no
+// work: "Transaction" and the transaction it introduced looked like two
+// results. It takes the eyebrow register now, which is the one place in this
+// design system where small caps and wide tracking are allowed.
 .card-title {
-  color: var(--title-fg);
-  font-size: 10px;
-  margin-bottom: 4px;
-  font-size: 1rem;
-
+  color: var(--u-text-muted);
+  font-size: var(--u-eyebrow-size);
+  font-weight: var(--u-weight-semibold);
+  letter-spacing: var(--u-eyebrow-tracking);
+  margin-bottom: var(--u-space-1);
   margin-left: 10px;
+  text-transform: uppercase;
 }
 
 .danger {

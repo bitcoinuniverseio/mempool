@@ -2,13 +2,18 @@ import { defineConfig } from 'vitest/config';
 import { fileURLToPath } from 'node:url';
 
 /**
- * Unit tests for the Universe module.
+ * Unit tests for the code this product owns.
  *
- * The suite exercises component and service logic directly rather than through
- * the Angular TestBed: the pieces that carry risk here are the evidence
- * derivations, label vocabulary, and API contract handling, none of which need
- * a DOM. Template correctness is covered by the AOT production build, which
- * fails on any template error.
+ * The suite exercises component, service, and pipe logic directly rather than
+ * through the Angular TestBed: the pieces that carry risk here are the evidence
+ * derivations, label vocabulary, API contract handling, and the small pure
+ * helpers the templates lean on, none of which need a DOM. Template correctness
+ * is covered by the AOT production build, which fails on any template error.
+ *
+ * The two inherited Lightning specs are deliberately outside the include. They
+ * are TestBed specs that need a browser environment and an Angular testing
+ * module this configuration does not set up, and they cover a feature this
+ * deployment does not enable.
  */
 export default defineConfig({
   // The root tsconfig.json is solution-style and carries no compiler options,
