@@ -196,7 +196,13 @@
             "production": {
               "assets": [
                 "src/favicon.ico",
-                "src/robots.txt"
+                "src/robots.txt",
+                "src/resources",
+                {
+                  "glob": "*.css",
+                  "input": ".theme-build",
+                  "output": "/"
+                }
               ],
               "fileReplacements": [
                 {
