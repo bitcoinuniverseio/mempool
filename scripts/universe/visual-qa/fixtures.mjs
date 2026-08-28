@@ -157,6 +157,13 @@ export const stateOverrides = {
     '/api/v1/difficulty-adjustment': { status: 502 },
   },
 
+  // The node this explorer reads is still catching up. Nothing here is wrong,
+  // but a large part of the chain is not available yet and the interface has to
+  // say so rather than presenting a months-old tip as the present. This state
+  // carries no REST override: it is expressed through the socket, in
+  // socketState() in capture.mjs, because that is where backendInfo arrives.
+  'catching-up': {},
+
   // Requests never resolve, so every surface stays in its loading state.
   loading: { '**': { hang: true } },
 

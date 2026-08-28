@@ -126,7 +126,7 @@ async function installFixtures(context, state) {
   const down = state === 'chain-down' || overrides['**']?.hang;
   await context.routeWebSocket('**/api/v1/ws', (ws) => {
     if (down) return; // connected but silent: the reconnecting and loading states
-    const push = () => ws.send(JSON.stringify(socketState()));
+    const push = () => ws.send(JSON.stringify(socketState(state)));
     ws.onMessage((raw) => {
       push();
       // The Lens only draws once it is handed the contents of the block it is
@@ -177,7 +177,14 @@ function projectedBlockTransactions() {
 }
 
 /** One socket push carrying the initial live state, from the same fixtures. */
-function socketState() {
+function socketState(state) {
+  // A node that is still verifying the chain. The explorer qualifies every
+  // number on the page against this, so it has to be exercised: without it the
+  // synchronisation notice never renders and never gets reviewed.
+  const chainSync =
+    state === 'catching-up'
+      ? { blocks: 819_435, headers: 887_412, initialBlockDownload: true, verificationProgress: 0.663316, checkedAt: '2026-08-27T00:00:00.000Z' }
+      : { blocks: 887_412, headers: 887_412, initialBlockDownload: false, verificationProgress: 1, checkedAt: '2026-08-27T00:00:00.000Z' };
   return {
     mempoolInfo: { loaded: true, size: 31_204, bytes: 118_442_881, usage: 118_442_881, maxmempool: 300_000_000, mempoolminfee: 0.00001, minrelaytxfee: 0.00001, fullrbf: true },
     vBytesPerSecond: 1_884,
@@ -189,7 +196,7 @@ function socketState() {
     rbfLatestSummary: fixtures['rbf-latest-summary'],
     conversions: { USD: 96_400, EUR: 89_100, time: 1_772_100_000 },
     loadingIndicators: { mempool: 100, blocks: 100 },
-    backendInfo: { hostname: 'universe-explorer', version: '3.3.1', gitCommit: 'fixture0', lightning: false },
+    backendInfo: { hostname: 'universe-explorer', version: '3.3.1', gitCommit: 'fixture0', lightning: false, chainSync },
   };
 }
 
