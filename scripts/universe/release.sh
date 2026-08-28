@@ -53,8 +53,14 @@ cmd_install() {
   # fails somewhere unrelated later. The artifact carries its lock file so
   # that this can be checked here, where both trees are visible, rather than
   # trusted at build time where only one of them is.
-  if [ -n "$previous" ] && [ -f "$previous/backend/package-lock.json" ]      && [ -f "$dir/backend/package-lock.json" ]      && ! cmp -s "$previous/backend/package-lock.json" "$dir/backend/package-lock.json"; then
-    fail "backend dependencies changed since $(basename "$previous"); this release needs its own node_modules installed rather than the hard link, so install it explicitly and re-run"
+  if [ -n "$previous" ]; then
+    previous_lock="$previous/backend/package-lock.json"
+    release_lock="$dir/backend/package-lock.json"
+    if [ -f "$previous_lock" ] && [ -f "$release_lock" ]; then
+      if ! cmp -s "$previous_lock" "$release_lock"; then
+        fail "backend dependencies changed since $(basename "$previous"); install this release its own node_modules rather than hard linking, then re-run"
+      fi
+    fi
   fi
   if [ -n "$previous" ] && [ -d "$previous/backend/node_modules" ]; then
     [ -d "$dir/backend/node_modules" ] || cp -al "$previous/backend/node_modules" "$dir/backend/node_modules"
@@ -313,6 +319,18 @@ cmd_rollback() {
   local sha=$1
   local dir; dir=$(release_dir "$sha")
   [ -d "$dir" ] || fail "no release at $dir to roll back to"
+
+  # A release from before the socket handover opens port 8099 itself. If
+  # systemd is holding that port, such a gateway dies on bind with the address
+  # already in use, and the rollback that was supposed to save the site is what
+  # takes it down. Give the port back before rolling back to one.
+  if systemctl is-active --quiet universe-explorer-gateway.socket; then
+    if ! grep -q inheritedListenerFd "$dir/scripts/universe/gateway.mjs" 2>/dev/null; then
+      log "$sha predates the socket handover and would fail to bind; releasing the port"
+      systemctl disable --now universe-explorer-gateway.socket || true
+    fi
+  fi
+
   ln -sfn "$dir" "$CURRENT.new"
   mv -Tf "$CURRENT.new" "$CURRENT"
   # shellcheck disable=SC2086
