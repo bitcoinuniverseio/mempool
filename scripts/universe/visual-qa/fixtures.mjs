@@ -142,8 +142,22 @@ export const detailFixtures = {
   [`/api/block/${BLOCK_HASH}`]: fixtures['/api/v1/blocks'][0],
   [`/api/block/${BLOCK_HASH}/txids`]: [TXID_A, TXID_B, TXID_C],
   [`/api/v1/block/${BLOCK_HASH}/summary`]: buildBlockSummary(),
-  [`/api/block/${BLOCK_HASH}/txs/0`]: [buildTransaction()],
+  [`/api/block/${BLOCK_HASH}/txs/0`]: buildBlockPage(),
   [`/api/v1/block/${BLOCK_HASH}`]: fixtures['/api/v1/blocks'][0],
+
+  // The second block on the chain strip, answered as fully as the first.
+  //
+  // The block page asks for the neighbouring block's transactions, and only
+  // the first block was pinned, so that request fell through to the empty-list
+  // fallback and one skeleton on the page waited for it forever. It is the
+  // same class of gap as the address sub-routes: a prefix match that answers
+  // with the wrong thing, or nothing, keeps a page in a loading state that no
+  // screenshot can distinguish from a slow one.
+  [`/api/block/${TXID_B}`]: fixtures['/api/v1/blocks'][1],
+  [`/api/v1/block/${TXID_B}`]: fixtures['/api/v1/blocks'][1],
+  [`/api/block/${TXID_B}/txids`]: [TXID_C, TXID_A],
+  [`/api/block/${TXID_B}/txs/0`]: buildBlockPage(),
+  [`/api/v1/block/${TXID_B}/summary`]: buildBlockSummary(),
   '/api/txs/outspends': [[{ spent: false }, { spent: false }]],
   [`/api/v1/cpfp/${TXID_A}`]: { ancestors: [], descendants: [], bestDescendant: null, effectiveFeePerVsize: 19.7, sigops: 2, adjustedVsize: 209 },
   '/api/v1/historical-price': { prices: [{ time: 1_772_100_000, USD: 96_400 }], exchangeRates: { USDEUR: 0.92, USDGBP: 0.79, USDCAD: 1.36, USDCHF: 0.88, USDAUD: 1.5, USDJPY: 155 } },
@@ -219,6 +233,24 @@ export const addressFixtures = {
  * a long tail of small transactions, a few large ones, and a spread of fee
  * rates so the colour scale is actually exercised.
  */
+/**
+ * One page of a block's transactions.
+ *
+ * This returned a single transaction for a block that declares three thousand
+ * of them, so the list component asked for the page, got less than a page
+ * back, and sat in its skeleton waiting for the rest. A screenshot cannot tell
+ * that apart from a slow request, which is why it survived every review.
+ *
+ * A full page, with distinct ids so the rows are not all the same transaction.
+ */
+function buildBlockPage() {
+  const base = buildTransaction();
+  return Array.from({ length: 25 }, (_, i) => ({
+    ...base,
+    txid: (i + 1).toString(16).padStart(4, '0').repeat(16).slice(0, 64),
+  }));
+}
+
 function buildBlockSummary() {
   const txs = [];
   for (let i = 0; i < 1800; i++) {

@@ -15,7 +15,7 @@ node_modules/
 
 # Visual QA working output. Curated review sets are committed under docs/design.
 scripts/universe/visual-qa/artifacts/
-scripts/universe/visual-qa/verify/
+scripts/universe/visual-qa/verify*/
 # Any output directory the harness is pointed at, not just the default one.
 scripts/universe/visual-qa/artifacts-*/
 scripts/universe/visual-qa/node_modules/

@@ -343,6 +343,32 @@ async function run() {
               contrast = { text: [], painted: [], canvas: [], sampled: 0, error: String(e).slice(0, 200) };
             }
 
+            // Trigger anything the page defers until it is scrolled to.
+            //
+            // Angular's `@defer (on viewport)` loads a section when it
+            // intersects the viewport, and the block page defers its
+            // transaction list that way. A harness that never scrolls sees the
+            // placeholder forever and reports a page that never finished, which
+            // is the opposite of the truth: the page is deferring correctly.
+            // The probe's own viewport margin is more generous than the zero
+            // margin an IntersectionObserver uses, so at some widths it counted
+            // a placeholder Angular had rightly not replaced yet.
+            //
+            // Scrolling to the bottom and back resolves both. Deferred content
+            // loads, the view returns to the top so the screenshot is unchanged,
+            // and a skeleton still showing afterwards is genuinely stuck.
+            try {
+              await page.evaluate(async () => {
+                const step = Math.max(200, Math.floor(window.innerHeight * 0.8));
+                for (let y = 0; y < document.body.scrollHeight; y += step) {
+                  window.scrollTo(0, y);
+                  await new Promise((done) => setTimeout(done, 90));
+                }
+                window.scrollTo(0, 0);
+                await new Promise((done) => setTimeout(done, 250));
+              });
+            } catch { /* a page that navigated mid-scroll is judged as it lands */ }
+
             // A fixed pause is a race, not a deadline: on a loaded machine a
             // page that finishes perfectly well can still be mid-render when
             // the probe fires. Wait for it to settle, up to a real deadline,
