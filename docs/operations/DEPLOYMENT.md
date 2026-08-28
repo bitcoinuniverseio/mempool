@@ -153,6 +153,25 @@ suite can see that.
    different builds.
 7. Keep the previous release directory until the stability window closes.
 
+## Monitoring
+
+`universe-explorer-synthetic-check.timer` runs the synthetic check against the
+public origin every five minutes. The unit files are in `production/linux/`.
+It exercises the same path a reader takes, including the gateway, the tunnel,
+and TLS, and marks the service failed when a check fails, so an outage between
+releases shows up where every other service failure already does:
+
+```bash
+systemctl list-timers universe-explorer-synthetic-check.timer
+journalctl -u universe-explorer-synthetic-check.service -n 30
+```
+
+It fails on a feature advertised with no routes behind it, a statistics range
+that answers with nothing, a protocol marked readable whose authority cannot
+answer, a configured authority that published no checkpoint, and a frontend and
+backend reporting different builds. The same script runs hourly in CI through
+`universe-production-smoke.yml`.
+
 ## Rollback
 
 ```bash
