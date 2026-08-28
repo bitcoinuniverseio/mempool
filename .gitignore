@@ -16,4 +16,5 @@ node_modules/
 # Visual QA working output. Curated review sets are committed under docs/design.
 scripts/universe/visual-qa/artifacts/
 scripts/universe/visual-qa/verify/
+scripts/universe/visual-qa/artifacts-modes/
 scripts/universe/visual-qa/node_modules/

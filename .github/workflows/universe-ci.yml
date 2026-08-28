@@ -139,6 +139,10 @@ jobs:
         working-directory: scripts/universe/visual-qa
         run: node capture.mjs --base=http://127.0.0.1:8123 --out=./artifacts
 
+      - name: Forced colours and 200 percent zoom
+        working-directory: scripts/universe/visual-qa
+        run: node modes-check.mjs --base=http://127.0.0.1:8123
+
       - name: Keep the contrast report and the route screenshots
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
