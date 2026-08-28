@@ -10,12 +10,48 @@
  * Runs in the page. Returns plain data for the harness to judge.
  */
 export function progressProbe() {
+  /**
+   * Whether a reader can actually see this element.
+   *
+   * Checking only display and visibility on the element itself is not enough:
+   * the block overview keeps its loader in the tree and hides the wrapper with
+   * opacity, so a spinner nobody can see was being counted as a page that
+   * never finished. checkVisibility walks the ancestors and understands
+   * opacity; the manual checks stay as a fallback where it is missing.
+   */
   const visible = (element) => {
+    if (typeof element.checkVisibility === 'function') {
+      return element.checkVisibility({
+        opacityProperty: true,
+        visibilityProperty: true,
+        contentVisibilityAuto: true,
+      });
+    }
     const rect = element.getBoundingClientRect();
     if (rect.width === 0 && rect.height === 0) return false;
     const style = getComputedStyle(element);
     return style.display !== 'none' && style.visibility !== 'hidden';
   };
+
+  /**
+   * Whether the element is somewhere the reader is actually looking.
+   *
+   * Angular defers work until it scrolls into view, so a block page keeps a
+   * transaction placeholder below the fold on purpose until the reader gets
+   * there. Counting that as a page that never finished would fail a release
+   * for lazy loading correctly. The harness judges a viewport, so this does
+   * too, with a margin for content just under the edge.
+   */
+  const inViewport = (element) => {
+    const rect = element.getBoundingClientRect();
+    const margin = 200;
+    return rect.bottom > -margin
+      && rect.top < window.innerHeight + margin
+      && rect.right > -margin
+      && rect.left < window.innerWidth + margin;
+  };
+
+  const onScreen = (element) => visible(element) && inViewport(element);
 
   const selectorFor = (element) => {
     const id = element.id ? `#${element.id}` : '';
@@ -25,15 +61,20 @@ export function progressProbe() {
     return `${element.tagName.toLowerCase()}${id}${cls}`;
   };
 
+  // Placeholders only. app-loading-indicator is deliberately excluded: it is a
+  // labelled progress banner, "Indexing blocks" and the like, which is supposed
+  // to stay on screen for as long as the work runs. Treating it as a page that
+  // never finished would fail a deployment for telling the truth about a long
+  // job, which is the opposite of what this gate is for.
   const spinners = [...document.querySelectorAll(
-    '.spinner-border, .load-status-spinner, .loadingGraphs, app-loading-indicator',
-  )].filter(visible);
-  const skeletons = [...document.querySelectorAll('.skeleton-loader, .skeleton-row')].filter(visible);
+    '.spinner-border, .load-status-spinner, .loadingGraphs',
+  )].filter(onScreen);
+  const skeletons = [...document.querySelectorAll('.skeleton-loader, .skeleton-row')].filter(onScreen);
 
   // An ECharts host that drew no series is a blank panel. It is not detectable
   // from the outside: the container has a size and a background like any other.
   const charts = [...document.querySelectorAll('div[_echarts_instance_]')]
-    .filter(visible)
+    .filter(onScreen)
     .map((host) => {
       const svgMarks = host.querySelectorAll('svg path, svg rect, svg circle, svg polyline').length;
       const canvases = [...host.querySelectorAll('canvas')];
