@@ -14,7 +14,7 @@ import { ActivatedRoute } from '@angular/router';
 import { StateService } from '@app/services/state.service';
 import { seoDescriptionNetwork } from '@app/shared/common.utils';
 import { AmountShortenerPipe } from '@app/shared/pipes/amount-shortener.pipe';
-import { chartChrome, rampStops } from '@app/shared/chart-theme';
+import { chartChrome, chartDataZoomStyle, rampStops } from '@app/shared/chart-theme';
 
 @Component({
   selector: 'app-hashrate-chart',
@@ -423,6 +423,7 @@ export class HashrateChartComponent implements OnInit {
         showDetail: false,
         show: true,
         type: 'slider',
+        ...chartDataZoomStyle(),
         brushSelect: false,
         realtime: true,
         left: 20,

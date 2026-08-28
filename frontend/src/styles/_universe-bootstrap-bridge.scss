@@ -194,6 +194,37 @@
     }
   }
 
+  // In a set of alternatives, exactly one may look chosen.
+  //
+  // Bootstrap paints every `.btn-primary` in a group as a filled control and
+  // marks the selection with `.active` alone. On the range selector that is
+  // eleven identically filled buttons and no visible answer to "which period
+  // am I looking at". It was wrong in ultramarine and it is unmissable in
+  // brand pink, which is the useful thing about a loud colour: it shows you
+  // where the hierarchy was already broken.
+  //
+  // Inside a group, the options nobody picked go quiet. The fill goes back to
+  // meaning "this is the one". Standalone primary buttons are untouched,
+  // because those are actions rather than answers.
+  .btn-group,
+  .btn-group-toggle,
+  .btn-toggle-rows,
+  .menu {
+    > .btn-primary:not(.active),
+    > * > .btn-primary:not(.active) {
+      background-color: var(--u-surface-raised);
+      border-color: var(--u-border-strong);
+      color: var(--u-text-secondary);
+
+      &:hover,
+      &:focus {
+        background-color: var(--u-surface-hover);
+        border-color: var(--u-brand-border);
+        color: var(--u-brand);
+      }
+    }
+  }
+
   .btn-secondary {
     background-color: var(--u-surface-inset);
     border-color: var(--u-border-strong);

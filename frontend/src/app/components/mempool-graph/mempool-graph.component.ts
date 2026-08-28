@@ -9,7 +9,7 @@ import { StorageService } from '@app/services/storage.service';
 import { EChartsOption } from '@app/graphs/echarts';
 import { feeLevels, chartColors } from '@app/app.constants';
 import { download, formatterXAxis, formatterXAxisLabel } from '@app/shared/graphs.utils';
-import { chartChrome } from '@app/shared/chart-theme';
+import { chartChrome, chartDataZoomStyle } from '@app/shared/chart-theme';
 
 @Component({
   selector: 'app-mempool-graph',
@@ -389,6 +389,7 @@ export class MempoolGraphComponent implements OnInit, OnChanges {
         showDetail: false,
         show: (this.template === 'advanced' && this.showZoom) ? true : false,
         type: 'slider',
+        ...chartDataZoomStyle(),
         brushSelect: false,
         realtime: true,
         bottom: 0,

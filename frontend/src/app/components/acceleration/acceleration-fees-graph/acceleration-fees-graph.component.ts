@@ -12,7 +12,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Acceleration } from '@interfaces/node-api.interface';
 import { ServicesApiServices } from '@app/services/services-api.service';
 import { StateService } from '@app/services/state.service';
-import { chartChrome, rampStops } from '@app/shared/chart-theme';
+import { chartChrome, chartDataZoomStyle, rampStops } from '@app/shared/chart-theme';
 
 @Component({
   selector: 'app-acceleration-fees-graph',
@@ -312,6 +312,7 @@ export class AccelerationFeesGraphComponent implements OnInit, OnChanges, OnDest
         showDetail: false,
         show: true,
         type: 'slider',
+        ...chartDataZoomStyle(),
         brushSelect: false,
         realtime: true,
         left: 20,
