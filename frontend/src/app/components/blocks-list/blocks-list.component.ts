@@ -1,7 +1,7 @@
 import { Component, OnInit, ChangeDetectionStrategy, Input, ChangeDetectorRef, Inject, LOCALE_ID } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { BehaviorSubject, combineLatest, EMPTY, Observable, throwError, timer, of, Subscription } from 'rxjs';
-import { catchError, debounceTime, filter, map, retry, scan, skip, switchMap, tap, throttleTime } from 'rxjs/operators';
+import { catchError, debounceTime, filter, map, retry, scan, skip, startWith, switchMap, tap, throttleTime, timeout } from 'rxjs/operators';
 import { BlockExtended } from '@interfaces/node-api.interface';
 import { ApiService } from '@app/services/api.service';
 import { StateService } from '@app/services/state.service';
@@ -11,6 +11,13 @@ import { OpenGraphService } from '@app/services/opengraph.service';
 import { seoDescriptionNetwork } from '@app/shared/common.utils';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 import { LoadState, classifyLoadFailure, isRetryableFailure } from '@app/shared/load-state';
+
+/**
+ * Overall budget for one page of blocks, retries included. The same figure
+ * toLoadState uses, so a request that hangs here is bounded the way every
+ * other remote read on the product is.
+ */
+const BLOCKS_REQUEST_DEADLINE_MS = 20_000;
 
 @Component({
   selector: 'app-blocks-list',
@@ -154,6 +161,11 @@ export class BlocksList implements OnInit {
                   return timer(1000 * attempt);
                 },
               }),
+              // Retrying bounds a request that fails. It does nothing for one
+              // that never answers at all, which is the shape a hung backend
+              // has: no error to catch, so the skeletons stayed forever. The
+              // budget covers the retries above, matching toLoadState.
+              timeout({ first: BLOCKS_REQUEST_DEADLINE_MS }),
               catchError((error) => {
                 this.failureState = { status: 'error', reason: classifyLoadFailure(error), at: Date.now() };
                 this.isLoading = false;
@@ -171,7 +183,12 @@ export class BlocksList implements OnInit {
             }
             this.lastBlockHeight = blocks[0].height;
             return of(blocks);
-          })
+          }),
+          // The socket carries live tip updates, not the page itself. Without a
+          // seed, combineLatest holds the whole table until the socket speaks,
+          // so a deployment whose REST answers but whose socket is quiet showed
+          // skeletons indefinitely with no failure to report.
+          startWith([] as BlockExtended[]),
         )
     ])
       .pipe(
