@@ -1,17 +1,15 @@
 <span [class]="colorClass" *ngIf="blockConversion; else noblockconversion">
-  {{
-    (
-      (blockConversion.price[currency] > -1 ? blockConversion.price[currency] : null) ??
-      (blockConversion.price['USD']    > -1 ? blockConversion.price['USD'] * blockConversion.exchangeRates['USD' + currency] : null) ?? 0
-    ) * value / 100000000 | fiatCurrency : digitsInfo : currency
-  }}
+  <ng-container *ngIf="blockRate() as rate; else norate">{{ converted(rate) | fiatCurrency : digitsInfo : currency }}</ng-container>
 </span>
 
 <ng-template #noblockconversion>
-  <span [class]="colorClass" *ngIf="(conversions$ | async) as conversions; else noconversion">
-    {{ (conversions[currency] > -1 ? conversions[currency] : 0) * value / 100000000 | fiatCurrency : digitsInfo : currency }}
+  <span [class]="colorClass">
+    <ng-container *ngIf="rateFrom(conversions$ | async) as rate; else norate">{{ converted(rate) | fiatCurrency : digitsInfo : currency }}</ng-container>
   </span>
-  <ng-template #noconversion>
-    <span>&nbsp;</span>
-  </ng-template>
 </ng-template>
+
+<!--
+  No price is not a price of zero. With no rate to convert with, the amount is
+  left blank rather than rendered as a confident nothing.
+-->
+<ng-template #norate><span class="fiat-unavailable" title="No price is available in this deployment" i18n-title="fiat.unavailable">&nbsp;</span></ng-template>
