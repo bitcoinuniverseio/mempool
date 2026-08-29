@@ -261,6 +261,47 @@ if bad:
 for name, feature in report['features'].items():
     print(f"{name}: enabled={feature['enabled']} routes={feature['routesRegistered']} state={feature['state']}")
 PY
+
+  gate_live_socket || return 1
+}
+
+# The live socket, asked for the way a browser asks for it.
+#
+# The overlay refuses an upgrade whose Origin is not on its allowlist, and an
+# unset allowlist refuses every origin. A handshake sent without an Origin
+# header is allowed, so curl said the socket worked while every browser was
+# refused and fell back to polling: the page still updated, and nothing on the
+# server said no. Send the header a browser sends.
+gate_live_socket() {
+  python3 - "$GATEWAY" <<'PY' || return 1
+import socket, sys
+from urllib.parse import urlsplit
+
+target = urlsplit(sys.argv[1])
+host, port = target.hostname, target.port or 80
+request = (
+    'GET /api/v1/universe/ws HTTP/1.1\r\n'
+    f'Host: {host}:{port}\r\n'
+    'Connection: Upgrade\r\n'
+    'Upgrade: websocket\r\n'
+    'Sec-WebSocket-Version: 13\r\n'
+    'Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n'
+    'Origin: https://explorer.bitcoinuniverse.io\r\n'
+    '\r\n'
+)
+try:
+    with socket.create_connection((host, port), timeout=10) as connection:
+        connection.sendall(request.encode())
+        status = connection.recv(4096).split(b'\r\n', 1)[0].decode(errors='replace')
+except OSError as error:
+    print(f'the live socket could not be reached: {error}')
+    sys.exit(1)
+if '101' not in status:
+    print(f'the live socket refused a browser handshake: {status}')
+    print('set CORS_ORIGINS in the overlay environment to the public origin')
+    sys.exit(1)
+print('the live socket accepts a browser handshake')
+PY
 }
 
 cmd_cutover() {
