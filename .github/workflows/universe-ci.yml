@@ -71,6 +71,9 @@ jobs:
       - name: Gateway routing
         run: node --test scripts/universe/gateway.test.mjs
 
+      - name: The component identity check can still fail
+        run: node --test scripts/universe/release-manifest.test.mjs
+
       - name: The gateway bridges an upstream restart rather than failing
         run: node --test scripts/universe/gateway-restart.test.mjs
 
