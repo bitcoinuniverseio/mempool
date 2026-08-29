@@ -143,7 +143,16 @@ const PRESENTED_FIELDS: Partial<Record<ChainShape, readonly string[]>> = {
     'confirmationsAtomic', 'sizeBytesAtomic', 'virtualSizeBytesAtomic',
     'firstSeenAt', 'completeness',
   ],
-  block: ['chain', 'network', 'block', 'pagination'],
+  block: [
+    'chain', 'network', 'block', 'pagination',
+    // The Zcash spellings, read by the block reading rather than dumped.
+    'schemaVersion', 'hash', 'height', 'prev_hash', 'time', 'tx_count',
+    'transactions',
+    // What the source says about its own coverage of the chain. The status
+    // rail already states every one of these from the capability document,
+    // and a second copy as a nested field table is not a second fact.
+    'checkpoint', 'coverage',
+  ],
   address: [
     'chain', 'network', 'address', 'balanceAtomic', 'totalReceivedAtomic',
     'totalSentAtomic', 'unconfirmedBalanceAtomic', 'transactionCountAtomic',
@@ -382,6 +391,16 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
 
   trackByIndex(index: number): number {
     return index;
+  }
+
+  /** "3 inscriptions and 2 ZRune events", in the reader's language. */
+  unlistedSummary(entries: readonly { label: string; count: number }[]): string {
+    const parts = entries.map((entry) => `${entry.count} ${entry.label.toLowerCase()}`);
+    if (parts.length < 2) {
+      return parts.join('');
+    }
+    const last = parts[parts.length - 1];
+    return $localize`:@@universe.chain.list-join:${parts.slice(0, -1).join(', ')}:ITEMS: and ${last}:LAST:`;
   }
 
   trackById(_index: number, item: { id: string }): string {

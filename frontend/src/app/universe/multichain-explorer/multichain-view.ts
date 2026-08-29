@@ -250,6 +250,31 @@ export function formatTimestamp(
   return { display, exact: isoTimestamp };
 }
 
+/**
+ * A time stated as whole seconds since the epoch, which is how the Zcash
+ * source states a block time. Rendered in the same words and the same zone as
+ * every other time here, with the number it came from kept exactly.
+ *
+ * Seconds, never milliseconds: a value read in the wrong unit lands in 1970 or
+ * in the year 58000 and still renders, so the range is checked rather than
+ * assumed.
+ */
+export function formatUnixTimestamp(
+  seconds: string | null | undefined
+): ExactNumber | null {
+  const digits = integerText(seconds);
+  if (digits === null) {
+    return null;
+  }
+  const value = Number(digits);
+  if (!Number.isSafeInteger(value) || value <= 0 || value > 4_102_444_800) {
+    return null;
+  }
+  const iso = new Date(value * 1000).toISOString();
+  const formatted = formatTimestamp(iso);
+  return formatted ? { display: formatted.display, exact: digits } : null;
+}
+
 // ---------------------------------------------------------------------------
 // Field naming
 // ---------------------------------------------------------------------------
@@ -891,6 +916,16 @@ export function classifyPayload(payload: ChainExplorerPayload | null): ChainShap
   if (isRecord(payload.block) && text(payload.block.hash)) {
     return 'block';
   }
+  // Zcash answers a block with its fields at the top level rather than under a
+  // `block` key, and with `prev_hash` and `tx_count` rather than the Dogecoin
+  // spellings. Nothing recognised it, so a real Zcash block page fell through
+  // to the generic field table and printed `schemaVersion`, a snake_case field
+  // list and a unix timestamp to a visitor, with none of its four
+  // transactions. `txid` is checked first so a transaction, which also carries
+  // a hash of its own, is never read as the block it is in.
+  if (!text(payload.txid) && text(payload.hash) && text(payload.height)) {
+    return 'block';
+  }
   if (isRecord(payload.outpoint) && text(payload.outpoint.txid)) {
     return 'outpoint';
   }
@@ -1156,6 +1191,14 @@ export interface BlockReading {
   readonly difficulty: string | null;
   readonly txids: readonly string[];
   readonly paging: Paging | null;
+  /**
+   * Lists this payload carries that this page has no reading for yet, with
+   * how many entries each holds. The generic fact reader drops every array
+   * without a word, so a Zcash block carrying Zerdinals inscriptions or ZRune
+   * events showed nothing about them, which is the false zero this product
+   * exists to avoid.
+   */
+  readonly unlisted: readonly { label: string; count: number }[];
 }
 
 /**
@@ -1199,8 +1242,11 @@ export function readPaging(value: unknown): Paging | null {
 }
 
 export function readBlock(payload: ChainExplorerPayload): BlockReading | null {
-  if (classifyPayload(payload) !== 'block' || !isRecord(payload.block)) {
+  if (classifyPayload(payload) !== 'block') {
     return null;
+  }
+  if (!isRecord(payload.block)) {
+    return readFlatBlock(payload);
   }
   const block = payload.block;
   const pagination = isRecord(payload.pagination) ? payload.pagination : {};
@@ -1217,6 +1263,99 @@ export function readBlock(payload: ChainExplorerPayload): BlockReading | null {
     difficulty: text(block.difficulty),
     txids: Array.isArray(payload.txids) ? payload.txids.filter((id): id is string => typeof id === 'string') : [],
     paging: readPaging(pagination),
+    unlisted: unlistedArrays(payload, ['txids']),
+  };
+}
+
+/**
+ * Arrays the payload carries that nothing on this page reads. Named and
+ * counted rather than dropped, because an array silently skipped and an array
+ * that was empty look identical to a reader, and on a protocol payload those
+ * are opposite answers.
+ */
+function unlistedArrays(
+  payload: ChainExplorerPayload,
+  read: readonly string[]
+): readonly { label: string; count: number }[] {
+  const known = new Set(read);
+  const found: { label: string; count: number }[] = [];
+  for (const [key, value] of Object.entries(payload)) {
+    if (known.has(key) || !Array.isArray(value) || value.length === 0) {
+      continue;
+    }
+    found.push({ label: humanizeFieldName(key), count: value.length });
+  }
+  return found;
+}
+
+/**
+ * The Zcash shape: block fields at the top level, snake_case, with the
+ * transaction ids inside a `transactions` envelope that counts from an offset
+ * rather than a page number.
+ *
+ * Only the facts this payload actually carries are read. Size, difficulty,
+ * merkle root, confirmations and the next block are not in it, and they stay
+ * null rather than being invented or borrowed from elsewhere.
+ */
+function readFlatBlock(payload: ChainExplorerPayload): BlockReading | null {
+  const hash = text(payload.hash);
+  if (!hash) {
+    return null;
+  }
+  const list = isRecord(payload.transactions) ? payload.transactions : {};
+  return {
+    hash,
+    height: formatExactInteger(text(payload.height)),
+    time: formatUnixTimestamp(text(payload.time)),
+    transactionCount: formatExactInteger(text(payload.tx_count)),
+    sizeBytes: null,
+    confirmations: null,
+    previousBlockHash: text(payload.prev_hash),
+    nextBlockHash: null,
+    merkleRoot: null,
+    difficulty: null,
+    txids: Array.isArray(list.items)
+      ? list.items.filter((id): id is string => typeof id === 'string')
+      : [],
+    paging: readOffsetPaging(list),
+    unlisted: unlistedArrays(payload, []),
+  };
+}
+
+/**
+ * Paging stated as an offset and a limit rather than as a page number. The
+ * arithmetic is done on safe integers only, and anything that does not divide
+ * into whole pages is reported as no paging rather than as a page number that
+ * would be wrong.
+ */
+export function readOffsetPaging(value: unknown): Paging | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+  const total = Number(integerText(value.total));
+  const offset = Number(integerText(value.offset));
+  const limit = Number(integerText(value.limit));
+  if (
+    !Number.isSafeInteger(total) ||
+    !Number.isSafeInteger(offset) ||
+    !Number.isSafeInteger(limit) ||
+    total < 0 ||
+    offset < 0 ||
+    limit < 1 ||
+    offset % limit !== 0
+  ) {
+    return null;
+  }
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+  const page = offset / limit + 1;
+  if (page > totalPages || totalPages > MAX_PAGE) {
+    return null;
+  }
+  return {
+    page,
+    totalPages,
+    previousPage: page > 1 ? page - 1 : null,
+    nextPage: page < totalPages ? page + 1 : null,
   };
 }
 
