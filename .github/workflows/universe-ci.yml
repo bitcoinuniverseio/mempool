@@ -28,7 +28,12 @@ concurrency:
 jobs:
   docs:
     name: Documentation gates
-    runs-on: [self-hosted, linux-ultra]
+    # Any runner in the fleet. This job is a checkout, a Node install and a set
+    # of Node scripts: no browser, no Rust, no Docker. Pinned to `linux-ultra`
+    # it competed for the six runners that are the only ones able to run the
+    # visual matrix, while eight runners carrying `universe-ci` sat idle, and a
+    # three minute job held a slot the fifty minute one was queued for.
+    runs-on: [self-hosted, universe-ci]
     timeout-minutes: 10
     steps:
       - name: Checkout
