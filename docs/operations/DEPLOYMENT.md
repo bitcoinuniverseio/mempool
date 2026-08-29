@@ -220,9 +220,19 @@ suite can see that.
 6. Run `node scripts/universe/synthetic-check.mjs` against the public origin.
    It asks the live endpoints with nothing mocked and fails on an empty range,
    a protocol advertised as readable whose authority cannot answer, a
-   configured authority with no checkpoint, or a frontend and backend on
-   different builds.
-7. Keep the previous release directory until the stability window closes.
+   configured authority with no checkpoint, a frontend and backend on different
+   builds, or a chain document that cannot name the overlay release behind it.
+7. Run `node scripts/universe/visual-qa/chain-page-smoke.mjs --release=<sha>`
+   against the public origin. Step 6 reads the API and cannot see what the
+   origin renders, which is how a release that was never promoted went on
+   serving an obsolete chain dashboard while every check passed. This one opens
+   `/dogecoin` and `/zcash` in a browser and holds each page to its own
+   capability document: a labelled status rail, a readable explanation whenever
+   the chain says it is not ready and none when it says it is, the three history
+   coverage dimensions, no whole snapshot identifier in the primary interface
+   and the whole one filed under the technical details, next actions that
+   resolve, and the frontend commit this release expected.
+8. Keep the previous release directory until the stability window closes.
 
 Rolling back to a release from before the socket handover needs the port back,
 because such a gateway opens 8099 itself and dies on bind while systemd holds
@@ -313,10 +323,45 @@ on the same host is a different product and is not part of this stack.
 
 ## Release identity
 
-Every deployment publishes what it is running: the backend reports `gitCommit`
-on `/api/v1/backend-info`, and the public `/source` page renders the release
-SHA, the pinned upstream base, the licence, and the source repository link. A
-build whose SHA is not published must not ship.
+Three components run here and each publishes its own commit. They are allowed
+to differ, and reading one as another is how the last identity defect went
+unnoticed for as long as it did.
+
+| Component | Where it publishes | Release directory |
+| --- | --- | --- |
+| frontend | `GIT_COMMIT_HASH` in `/resources/config.js`, and the `/source` page | `releases/mempool-<sha>` |
+| explorer backend | `gitCommit` on `/api/v1/backend-info` | the same directory |
+| protocol overlay | `release.sha` on every `/api/v1/<chain>/status` | `releases/backend-apis-<sha>` |
+
+A build whose SHA is not published must not ship.
+
+The overlay's identifier shipped as the literal string `development` and served
+that to the public. Two faults produced it, and both are worth knowing because
+neither was visible from anything that was being checked:
+
+- Nothing supplied the value. `universe-explorer-overlay.service` reads
+  `/etc/universe-explorer/overlay.env`, no example file mentioned
+  `UNIVERSE_EXPLORER_RELEASE_SHA`, and no install step wrote it. Meanwhile every
+  release directory already carried a `RELEASE-SHA` file naming its commit.
+- The absence was survivable. A missing identity fell back to a placeholder and
+  the service started, so the only signal was a word on a public page.
+
+The overlay now reads its own release directory's `RELEASE-SHA` when the
+variable is absent, which is an identity that cannot drift from the artifact,
+and with `NODE_ENV=production` it refuses to start when neither is a commit.
+Installing an overlay release therefore has one requirement beyond unpacking it:
+
+```bash
+printf '%s
+' "<sha>" > /opt/universe-explorer/releases/backend-apis-<sha>/RELEASE-SHA
+ln -sfn /opt/universe-explorer/releases/backend-apis-<sha> /opt/universe-explorer/current-overlay.new
+mv -Tf /opt/universe-explorer/current-overlay.new /opt/universe-explorer/current-overlay
+systemctl restart universe-explorer-overlay
+```
+
+`synthetic-check.mjs` fails the release when any chain document reports
+`development`, reports something that is not a commit, or when the three chains
+disagree about which overlay answered.
 
 ## The edge
 
