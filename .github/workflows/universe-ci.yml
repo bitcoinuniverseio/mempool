@@ -206,8 +206,30 @@ jobs:
       # finishes show up. The deep pass takes the routes this suite holds to a
       # terminal state through every failure state, every theme and the widths
       # that change the layout, which is where a page that lies about why it is
-      # empty shows up. Measured at about two and a half minutes and sixteen
-      # minutes respectively.
+      # empty shows up.
+      #
+      # Measured on run 33254326169, 2026-08-29, on universe-linux-ultra-02:
+      #
+      #   broad pass          64 screenshots     5m50s
+      #   deep pass          504 screenshots    47m10s
+      #   chain failures      48 screenshots     3m27s
+      #   forced colours and zoom                  30s
+      #   whole job                            59m57s of a 100 minute cap
+      #
+      # This comment said two and a half minutes and sixteen. The deep pass has
+      # since grown to roughly three times that, it is now 78 percent of the
+      # job, and the job sits at 60 of its 100 minutes. Nothing is failing. The
+      # point of writing the real numbers down is that the next person to add a
+      # route, a state or a theme to the deep pass is the one who meets the
+      # cap, and without this they meet it as a timeout forty-seven minutes
+      # into a run rather than as a number they could have added up first.
+      #
+      # The deep pass is routes multiplied by states multiplied by themes
+      # multiplied by widths. Adding one route to it currently costs about
+      # seven minutes. If it needs to grow again, split it the way it was split
+      # from the broad pass in the first place, rather than raising the cap:
+      # a gate that cannot finish protects nothing, which is the reason the
+      # split exists.
       - name: Every route renders and finishes, at a phone and a desktop width
         working-directory: scripts/universe/visual-qa
         run: >-
