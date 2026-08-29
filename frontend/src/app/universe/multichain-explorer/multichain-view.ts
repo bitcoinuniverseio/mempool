@@ -35,6 +35,10 @@ import {
 } from '@app/universe/universe.types';
 import { explorerChainName } from '@app/universe/universe-chain-routing';
 import {
+  ChainReasonReading,
+  describeChainReasons,
+} from '@app/universe/multichain-explorer/chain-reasons';
+import {
   EvidenceTone,
   formatAtomicAmount as formatAtomicDigits,
   shortenIdentifier as shortenSymmetric,
@@ -618,10 +622,24 @@ export function readStatusRail(
     {
       id: 'state',
       label: $localize`:@@universe.chain.rail-state:Chain`,
+      // `sync` is the node's own view of its blocks. `ready` is the chain's
+      // verdict on everything the explorer needs, and it is the stricter of
+      // the two: a chain whose node is caught up while a protocol indexer is
+      // not answering publishes sync.state ready and ready false. Reading the
+      // sync state alone therefore printed Ready, in the proven tone, on the
+      // one reading a visitor trusts most, for a chain that had just said it
+      // was not. When the two disagree the verdict wins, and the reasons
+      // beneath the rail say which part is missing.
       value: capability.ready
         ? availabilityLabel('ready')
-        : availabilityLabel(capability.sync.state),
-      tone: capability.ready ? 'proven' : availabilityTone(capability.sync.state),
+        : capability.sync.state === 'ready'
+          ? availabilityLabel('degraded')
+          : availabilityLabel(capability.sync.state),
+      tone: capability.ready
+        ? 'proven'
+        : capability.sync.state === 'ready'
+          ? availabilityTone('degraded')
+          : availabilityTone(capability.sync.state),
       exact: null,
     },
     {
@@ -661,6 +679,34 @@ export function readStatusRail(
         ? completenessTone(capability.mempool.completeness)
         : 'neutral',
       exact: null,
+    },
+  ];
+}
+
+/**
+ * Why a chain says it is not ready, in words, or null when it says it is.
+ *
+ * The capability document is the record of this and the reasons were never
+ * rendered anywhere, so the rail published a verdict and dropped every word of
+ * the evidence behind it. A chain that withholds readiness without stating a
+ * reason is itself worth saying out loud rather than showing an empty space
+ * where the explanation should be.
+ */
+export function readNotReadyReasons(
+  capability: ChainCapabilityEnvelope | null
+): readonly ChainReasonReading[] | null {
+  if (!capability || capability.ready) {
+    return null;
+  }
+  const reasons = describeChainReasons(capability.degradedReasons ?? []);
+  if (reasons.length) {
+    return reasons;
+  }
+  return [
+    {
+      code: '',
+      text: $localize`:@@universe.chain.not-ready-no-reason:This chain reports that it is not ready and states no reason for it.`,
+      kind: 'unstated',
     },
   ];
 }
@@ -735,7 +781,12 @@ export interface ProtocolReading {
   readonly coverageLabel: string;
   readonly historyLabel: string;
   readonly lag: ExactNumber | null;
-  readonly reasons: readonly string[];
+  /**
+   * Why this reading is what it is, in words. On a ready authority these are
+   * the stated edges of its coverage rather than faults, which is why each one
+   * carries its own kind.
+   */
+  readonly reasons: readonly ChainReasonReading[];
 }
 
 export function readProtocolCoverage(
@@ -765,7 +816,7 @@ export function readProtocolCoverage(
       coverageLabel: completenessLabel(entry?.coverage),
       historyLabel: historyLabel(entry?.coverage),
       lag: formatExactInteger(entry?.lagBlocksAtomic ?? null),
-      reasons: entry?.degradedReasons ?? [],
+      reasons: describeChainReasons(entry?.degradedReasons ?? []),
     };
   });
 
@@ -785,7 +836,7 @@ export function readProtocolCoverage(
       coverageLabel: completenessLabel(entry.coverage),
       historyLabel: historyLabel(entry.coverage),
       lag: formatExactInteger(entry.lagBlocksAtomic ?? null),
-      reasons: entry.degradedReasons ?? [],
+      reasons: describeChainReasons(entry.degradedReasons ?? []),
     });
   }
   return readings;

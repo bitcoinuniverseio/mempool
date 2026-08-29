@@ -45,6 +45,7 @@ import {
   readCollection,
   readEmptyList,
   readIdentifierList,
+  readNotReadyReasons,
   readOutpoint,
   readProtocolCoverage,
   readRecordFacts,
@@ -53,6 +54,7 @@ import {
   readTransactionList,
   shortenIdentifier,
 } from '@app/universe/multichain-explorer/multichain-view';
+import { ChainReasonReading } from '@app/universe/multichain-explorer/chain-reasons';
 import {
   Observable,
   Subject,
@@ -86,6 +88,8 @@ interface ExplorerViewModel {
   readonly payload: ChainExplorerPayload | null;
   readonly payloadError: string | null;
   readonly rail: readonly StatusReading[];
+  /** Why the chain withholds readiness. Null when it does not. */
+  readonly notReady: readonly ChainReasonReading[] | null;
   readonly reads: readonly ReadCapability[];
   readonly protocols: readonly ProtocolReading[];
   readonly shape: ChainShape;
@@ -276,6 +280,7 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
       payload,
       payloadError,
       rail: readStatusRail(capability, this.profile, Date.now()),
+      notReady: readNotReadyReasons(capability),
       reads: readCapabilities(capability),
       protocols: readProtocolCoverage(capability, this.profile),
       shape,

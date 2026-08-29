@@ -179,6 +179,44 @@
   color: var(--u-text-muted);
 }
 
+// ---------------------------------------------------------------------------
+// Why a chain is not ready
+// ---------------------------------------------------------------------------
+
+// Sits directly beneath the rail, because it is the evidence for the verdict
+// the rail just gave. Bordered like a notice rather than raised like a panel:
+// it is a qualification of what is above it, not a section of its own.
+.not-ready {
+  @include u.universe-surface;
+
+  border-left: 3px solid var(--universe-state-partial);
+  padding: var(--u-space-3) var(--u-space-4);
+  margin-bottom: var(--u-space-3);
+  max-width: var(--u-width-prose);
+
+  h2 {
+    font-size: var(--u-text-base);
+    font-weight: var(--u-weight-semibold);
+    margin: 0 0 var(--u-space-2);
+  }
+
+  ul {
+    display: grid;
+    gap: var(--u-space-2);
+    font-size: var(--u-text-sm);
+    line-height: var(--u-leading-normal);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+.reason-raw {
+  color: var(--u-text-muted);
+  display: block;
+  font-size: var(--u-text-xs);
+}
+
 .identifier {
   @include u.universe-identifier;
 }
@@ -292,10 +330,30 @@
   font-size: var(--u-text-sm);
 }
 
+.coverage-reasons-label {
+  flex-basis: 100%;
+  color: var(--u-text-muted);
+  font-size: var(--u-text-2xs);
+  font-weight: var(--u-weight-semibold);
+  letter-spacing: var(--u-eyebrow-tracking);
+  text-transform: uppercase;
+}
+
 .coverage-reasons {
   flex-basis: 100%;
   color: var(--universe-state-partial);
   font-size: var(--u-text-sm);
+  line-height: var(--u-leading-normal);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+// An authority that is working still states the edges of its coverage. Those
+// sentences sit under their own label and must not wear the partial colour,
+// which on this page means something is wrong.
+.coverage-reasons-label + .coverage-reasons {
+  color: var(--u-text-secondary);
 }
 
 .entry-actions {

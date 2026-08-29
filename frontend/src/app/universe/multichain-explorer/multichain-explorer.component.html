@@ -35,6 +35,20 @@
     </div>
   </section>
 
+  <!-- The rail states the verdict. This states the evidence for it, which the
+       capability document carries and nothing rendered until now. -->
+  <section class="not-ready" *ngIf="vm.notReady as notReady"
+           aria-labelledby="chain-not-ready-heading">
+    <h2 id="chain-not-ready-heading" i18n="universe.chain.not-ready-title">Why {{ chainName }} is not ready</h2>
+    <ul>
+      <li *ngFor="let reason of notReady">
+        {{ reason.text }}
+        <span class="reason-raw" *ngIf="reason.kind === 'unstated' && reason.code"
+              i18n="universe.chain.reason-raw">Reported as this code, which this build has no description for.</span>
+      </li>
+    </ul>
+  </section>
+
   <p class="notice failure" role="alert" *ngIf="vm.capabilityError">
     {{ vm.capabilityError }}
   </p>
@@ -87,9 +101,15 @@
               <span [attr.title]="protocol.lag.exact" i18n="universe.chain.coverage-lag">{{ protocol.lag.display }} blocks behind</span>
             </ng-container>
           </span>
-          <span class="coverage-reasons" *ngIf="protocol.reasons.length">
-            {{ protocol.reasons.join(', ') }}
-          </span>
+          <ng-container *ngIf="protocol.reasons.length">
+            <!-- A working authority still reports the edges of what it covers.
+                 Those are not faults, and under a bare list they read as one. -->
+            <span class="coverage-reasons-label" *ngIf="protocol.tone === 'proven'"
+                  i18n="universe.chain.coverage-limits">What it does not cover</span>
+            <ul class="coverage-reasons">
+              <li *ngFor="let reason of protocol.reasons">{{ reason.text }}</li>
+            </ul>
+          </ng-container>
           <span class="coverage-reasons" *ngIf="!protocol.routeId"
                 i18n="universe.chain.coverage-no-page">
             This chain reports it. This explorer has no page for it yet, so there is nothing to open.

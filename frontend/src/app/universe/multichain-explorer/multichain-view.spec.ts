@@ -17,6 +17,7 @@ import {
   readCapabilities,
   readCollection,
   readEmptyList,
+  readNotReadyReasons,
   readOutpoint,
   readPaging,
   readProtocolCoverage,
@@ -309,7 +310,7 @@ describe('readProtocolCoverage', () => {
     const readings = readProtocolCoverage(
       capability({
         protocols: [
-          { protocolId: 'drc20', state: 'degraded', coverage: 'partial', updatedAt: null, lagBlocksAtomic: '17', degradedReasons: ['authority behind tip'] },
+          { protocolId: 'drc20', state: 'degraded', coverage: 'partial', updatedAt: null, lagBlocksAtomic: '17', degradedReasons: ['protocol-authority-stale'] },
         ],
       }),
       DOGE
@@ -317,7 +318,7 @@ describe('readProtocolCoverage', () => {
     const drc20 = readings.find((r) => r.protocolId === 'drc20');
     expect(drc20?.tone).toBe('partial');
     expect(drc20?.lag?.display).toBe('17');
-    expect(drc20?.reasons).toEqual(['authority behind tip']);
+    expect(drc20?.reasons.map((reason) => reason.code)).toEqual(['protocol-authority-stale']);
     expect(drc20?.historyLabel).toBe(historyLabel('partial'));
   });
 
@@ -726,5 +727,75 @@ describe('readRecordFacts', () => {
     const [fact] = readRecordFacts({ balanceAtomic: '0' }, DOGE);
     expect(fact.kind).toBe('amount');
     expect(fact.display).toBe('0');
+  });
+});
+
+describe('the chain reading on the status rail', () => {
+  it('does not report a chain as ready when the chain says it is not', () => {
+    // The node can be caught up while a protocol indexer this chain needs is
+    // not answering. That publishes sync.state ready and ready false, and the
+    // rail used to read the sync state alone: Ready, in the proven tone, on
+    // the reading a visitor trusts most, for a chain that had just said no.
+    const rail = readStatusRail(
+      capability({ ready: false, degradedReasons: ['protocol-history-unavailable'] }),
+      DOGE,
+      Date.parse('2026-08-29T05:00:10.000Z')
+    );
+    const state = rail.find((reading) => reading.id === 'state');
+    expect(state?.value).toBe('Degraded');
+    expect(state?.tone).toBe('partial');
+  });
+
+  it('keeps the worse reading when the node itself is the problem', () => {
+    const rail = readStatusRail(
+      capability({ ready: false, sync: { state: 'unavailable', initialBlockDownload: false, progressDecimal: null, updatedAt: null } }),
+      DOGE,
+      Date.parse('2026-08-29T05:00:10.000Z')
+    );
+    expect(rail.find((reading) => reading.id === 'state')?.value).toBe('Unavailable');
+  });
+
+  it('still reads ready when the chain says so', () => {
+    const rail = readStatusRail(capability(), DOGE, Date.parse('2026-08-29T05:00:10.000Z'));
+    const state = rail.find((reading) => reading.id === 'state');
+    expect(state?.value).toBe('Ready');
+    expect(state?.tone).toBe('proven');
+  });
+});
+
+describe('readNotReadyReasons', () => {
+  it('says nothing about a ready chain', () => {
+    expect(readNotReadyReasons(capability())).toBeNull();
+    expect(readNotReadyReasons(null)).toBeNull();
+  });
+
+  it('reads the reasons the chain gave', () => {
+    const reasons = readNotReadyReasons(
+      capability({ ready: false, degradedReasons: ['base-chain-authority-unavailable', 'protocol-history-unavailable'] })
+    );
+    expect(reasons).toHaveLength(2);
+    expect(reasons?.[0].text).toContain('did not answer');
+  });
+
+  it('says a chain withheld readiness without explaining, rather than showing nothing', () => {
+    const reasons = readNotReadyReasons(capability({ ready: false, degradedReasons: [] }));
+    expect(reasons).toHaveLength(1);
+    expect(reasons?.[0].text).toContain('states no reason');
+  });
+});
+
+describe('readProtocolCoverage reasons', () => {
+  it('hands the page sentences rather than wire codes', () => {
+    const readings = readProtocolCoverage(
+      capability({
+        protocols: [
+          { protocolId: 'drc20', state: 'unavailable', coverage: 'unavailable', updatedAt: null, lagBlocksAtomic: null, degradedReasons: ['authority-capability-disabled'] },
+        ],
+      }),
+      DOGE
+    );
+    const drc20 = readings.find((reading) => reading.protocolId === 'drc20');
+    expect(drc20?.reasons.map((reason) => reason.code)).toEqual(['authority-capability-disabled']);
+    expect(drc20?.reasons[0].text).not.toContain('-disabled');
   });
 });
