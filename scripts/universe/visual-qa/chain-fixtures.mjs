@@ -18,7 +18,7 @@ const DOGE_BLOCK = 'e1b5f9d3a7c2064e8b1d5f9a3c7e0246b8d2f6a0c4e8b2d6f0a4c8e2b6d0
 const DOGE_ADDRESS = 'DH5yaieqoZN36fDVciNyRueRGvGLR3mr7L';
 const ZEC_TXID = '7a3e1c5f9b2d6048a2c6e0f4b8d2a6c0e4f8b2d6a0c4e8f2b6d0a4c8e2f6b0d4';
 const ZEC_ADDRESS = 't1SEgZvXCu3ceE42qrq5pCeSq7HbLjX8NJv';
-const ZEC_BLOCK = '00000000001a8027b33ea8f1972569b135eea78be68a381875307549ddf178e2';
+const ZEC_BLOCK = '00000000004db04aba335b14021f8dd4fa02a0a954edad7da547c3a4fd917141';
 
 /**
  * A chain capability envelope. Dogecoin is at its tip and complete; Zcash is
@@ -37,10 +37,11 @@ function capability(chain, overrides = {}) {
     asset,
     ready: true,
     tip: {
-      // Twelve above the Zcash block fixture, which is a real block at
-      // 3,464,717. A chain tip below the height of a block the same run
-      // renders is a page that contradicts itself, and it read that way for
-      // as long as the two numbers were chosen separately.
+      // The real Zcash tip on 2026-08-29, twelve blocks above the height the
+      // status fixture reports as behind. It used to sit below the height of
+      // the Zcash block the same run renders, which is a page contradicting
+      // itself, and it read that way for as long as the two numbers were
+      // chosen separately.
       heightAtomic: chain === 'dogecoin' ? '5623041' : '3464729',
       blockHash: chain === 'dogecoin' ? DOGE_BLOCK : 'f'.repeat(64),
       observedAt,
@@ -264,48 +265,105 @@ export const chainFixtures = {
     ],
   },
 
-  // The Zcash block response as production returned it on 2026-08-29, with the
-  // protocol arrays emptied and nothing else changed. Zcash puts the block's
+  // A real Zcash block, exactly as production returned it. The transaction
+  // list is kept whole: trimming it left the page saying page 1 of 1 over
+  // four of the seventeen ids the same response counts, which is a false
+  // claim of completeness in a screenshot. Zcash puts the block's
   // fields at the top level, in snake_case, with a unix time and an
   // offset-counted transaction list, and none of that is the Dogecoin shape
   // above. Written from a real response, because the page shipped as a field
   // dump on exactly this difference.
+  //
+  // This block carries one Zerdinal, so it also exercises the path that names
+  // the lists the page has no reading for. A block with all of them empty
+  // would have left that path unrendered by anything.
   [`/api/v1/zcash/block/${ZEC_BLOCK}`]: {
     "schemaVersion": "zcash-metaprotocols-api-v1",
     "network": "mainnet",
     "checkpoint": {
-      "height": "3464717",
-      "hash": "00000000001a8027b33ea8f1972569b135eea78be68a381875307549ddf178e2"
+      "height": "3464740",
+      "hash": "000000000027615ceabc9b72fe71165b65a726b7c8b6cdc49552bedeefe70033"
     },
     "coverage": {
-      "scannedHeight": "3464717",
-      "networkHeight": "3464717",
-      "blocksBehindNetwork": "0",
+      "scannedHeight": "3464740",
+      "networkHeight": "3464742",
+      "blocksBehindNetwork": "2",
       "nodeSynced": true,
-      "verificationProgress": 1,
+      "verificationProgress": 0.9999994227564419,
       "chainComplete": true
     },
-    "height": "3464717",
-    "hash": "00000000001a8027b33ea8f1972569b135eea78be68a381875307549ddf178e2",
-    "prev_hash": "00000000006c247a8c511e915a0370a4bdbae53d4cf4b10931b2df553d186277",
-    "time": "1788003830",
-    "tx_count": "4",
+    "height": "3132356",
+    "hash": "00000000004db04aba335b14021f8dd4fa02a0a954edad7da547c3a4fd917141",
+    "prev_hash": "0000000000404690d08f1b4d51cbd29b629dcf69575477aebb0b8be1e684622c",
+    "time": "1762955823",
+    "tx_count": "17",
     "transactions": {
-      "total": "4",
+      "total": "17",
       "offset": "0",
       "limit": "50",
       "items": [
-        "e743ed36e0a10285fbfd4de57844f0f78bc929ad58b1d391fa294a540f9232bd",
-        "9ff76d00ba46f460a3d2cc536c5e9e82fdabf1ad0eea45fb32a554bbab1d4d59",
-        "10ac3514e6e21b25d35cd5941e887b1936036c5c8a6a556796309765ef3cf30f",
-        "87bee021247fb56e3436447fd7f827266f71f4257ca6050f473ad03fdc09de1d"
+        "c7b1b83c597564f17d3a1e85569f15766e9ec41e8bcb98b80c16cabe8d906efa",
+        "7af7c97b40057e4bd66a060b590a2974364757bac236aa954a311f0565c844ad",
+        "c8629f9c0929e99d16e8848f62ec05f2fc6a8c0c6db8f90db242e89979600b05",
+        "1c85153ef3707e601ff095167d54c4b7dd396c240647828524adbc1518a0fa2a",
+        "385f7a1bfd45b9fc4a79ef110a3144086a51ec0755c92acb473184af2ea38fe7",
+        "219cadf573630d346484043ab12c1199a78730036852870872eeee682f3496d7",
+        "5380b950889eb9b9635cd4ae317b9222e78a773b7e96951df436f5a0163fa5e0",
+        "056c95bdf6858cd66f7cad716695342a21df4c359b75606b3ba70216a9d7b82e",
+        "ecee360011f2866c552e4c3fdb2d183d85fd68b05332d76959531a1791af2b6d",
+        "220f8d2ddb34705808df739a4e08b2d88c0edcc9d012178ba7acb9ff62b49972",
+        "8cf2bd26da6b319647e31ea2a2ac686ad2541d1af1716842cfacb8d9c61f3803",
+        "e3215cff08b36d0dcfc118ff41b8cf18b51ba9b16554a164866e6f4ab1a0c53e",
+        "a88f237bbc8a8035d94c0ebd559cd5b079eddc9f844f241e8c074290826d6f01",
+        "a27482dcbda2bdb279fcea415bc5ba0cf6e776de5411e58fed32a4c3703dfbfc",
+        "a73ad0cf234164acd70a2fa681dbb0efd2379f2d9ab305e292ff649a25515065",
+        "1e8ecb2cd0a20057f838877706d8524ab488b9ac0dd5949ad8e0cc8c6b3444cf",
+        "bd1b547d9c803caff668b8b2801714f0894560156a6923048c71be650416816a"
       ],
       "has_more": false
     },
-    "inscription_count": "0",
-    "inscriptions": [],
-    "envelopes": [],
-    "events": [],
+    "inscription_count": "1",
+    "inscriptions": [
+      {
+        "id": "219cadf573630d346484043ab12c1199a78730036852870872eeee682f3496d7i0",
+        "sequence": "1",
+        "content_type": "text/plain",
+        "content_length": "15",
+        "content_hash": "cc24bb0eb02674e155c2fe8a9e5ee33291e3f3b244cc4f33851c3294acd9d814",
+        "genesis_height": "3132356",
+        "genesis_txid": "219cadf573630d346484043ab12c1199a78730036852870872eeee682f3496d7",
+        "completion_txid": "219cadf573630d346484043ab12c1199a78730036852870872eeee682f3496d7",
+        "completion_height": "3132356",
+        "owner_address": "t1Yidqtcf4FeDzbZi4EBZkn84HyS9sypqWU",
+        "outpoint": "219cadf573630d346484043ab12c1199a78730036852870872eeee682f3496d7:0",
+        "family": "zordinals-legacy",
+        "state": "confirmed",
+        "total_pieces": "1",
+        "pieces_found": "1",
+        "complete": true,
+        "terminal_txid": null,
+        "collection_slug": null
+      }
+    ],
+    "envelopes": [
+      {
+        "txid": "219cadf573630d346484043ab12c1199a78730036852870872eeee682f3496d7",
+        "vin_index": "0",
+        "family": "zordinals-legacy",
+        "total_pieces": "1",
+        "piece_count": "1",
+        "malformed_reason": null
+      }
+    ],
+    "events": [
+      {
+        "inscription_id": "219cadf573630d346484043ab12c1199a78730036852870872eeee682f3496d7i0",
+        "event": "inscribed",
+        "txid": "219cadf573630d346484043ab12c1199a78730036852870872eeee682f3496d7",
+        "to_address": "t1Yidqtcf4FeDzbZi4EBZkn84HyS9sypqWU",
+        "outpoint": "219cadf573630d346484043ab12c1199a78730036852870872eeee682f3496d7:0"
+      }
+    ],
     "zrune_events": [],
     "chain": "zcash"
   },

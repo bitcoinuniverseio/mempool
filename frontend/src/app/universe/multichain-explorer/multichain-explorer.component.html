@@ -382,7 +382,7 @@
     <!-- What the response carries and this page cannot show yet. Named and
          counted, because an unread list and an empty one look the same. -->
     <p class="notice empty" *ngIf="blk.unlisted.length" i18n="universe.chain.block-unlisted">
-      This block also carries {{ unlistedSummary(blk.unlisted) }}. This page has no reading for them yet, so they are counted here rather than left out silently.
+      This block's response also carries {{ unlistedSummary(blk.unlisted) }}. This page has no reading for those yet, so they are counted here rather than left out silently.
     </p>
 
   </ng-container>
