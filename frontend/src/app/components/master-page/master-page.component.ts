@@ -9,6 +9,12 @@ import { StorageService } from '@app/services/storage.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { UniverseLocalService } from '@app/universe/universe-local.service';
 import { ChainCapabilityEnvelope, ExplorerChain } from '@app/universe/universe.types';
+import { describeChainReasons } from '@app/universe/multichain-explorer/chain-reasons';
+import {
+  availabilityLabel,
+  completenessLabel,
+  formatExactInteger,
+} from '@app/universe/multichain-explorer/multichain-view';
 import {
   explorerChainFromUrl,
   explorerSectionRoute,
@@ -171,14 +177,39 @@ export class MasterPageComponent implements OnInit, OnDestroy {
   }
 
   chainState(capability: ChainCapabilityEnvelope | undefined): string {
-    if (!capability) {return 'status unavailable';}
-    return capability.ready ? 'ready' : 'degraded';
+    if (!capability) {return availabilityLabel(null);}
+    return capability.ready ? availabilityLabel('ready') : availabilityLabel('degraded');
   }
 
+  /**
+   * The line under a chain's name in the switcher.
+   *
+   * It used to read "Tip 964557; mempool ready, complete" whether the chain
+   * said it was ready or not, so a chain marked degraded sat beside a sentence
+   * in which nothing was wrong, in the wire's words rather than in English.
+   * The reason is in the same document the verdict came from, so a degraded
+   * chain leads with it and a ready one keeps the tip and pending reading.
+   */
   chainDetail(capability: ChainCapabilityEnvelope | undefined): string {
-    if (!capability) {return 'Tip and mempool unavailable';}
-    const tip = capability.tip?.heightAtomic ?? 'unknown tip';
-    return `Tip ${tip}; mempool ${capability.mempool.state}, ${capability.mempool.completeness}`;
+    if (!capability) {
+      return $localize`:@@master-page.chain-status-unavailable:This chain did not report its status.`;
+    }
+    // Grouped the way the status rail groups it. A block height printed as a
+    // bare run of digits in one place and as 2,884,120 in another is the same
+    // fact in two voices, and the long one is where it is hardest to read.
+    const tip = formatExactInteger(capability.tip?.heightAtomic ?? null);
+    const height = tip
+      ? $localize`:@@master-page.chain-tip:Block ${tip.display}:HEIGHT:`
+      : $localize`:@@master-page.chain-tip-none:No tip reported`;
+    if (!capability.ready) {
+      const [first] = describeChainReasons(capability.degradedReasons ?? []);
+      return first ? `${height}. ${first.text}` : height;
+    }
+    if (!capability.mempool.supported) {
+      return height;
+    }
+    const coverage = completenessLabel(capability.mempool.completeness);
+    return $localize`:@@master-page.chain-ready-detail:${height}:BLOCK:. Pending coverage ${coverage}:COVERAGE:.`;
   }
 
   chainRoute(kind: 'dashboard' | 'mempool' | 'protocols'): string {

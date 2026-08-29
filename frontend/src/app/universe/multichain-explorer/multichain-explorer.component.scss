@@ -1,130 +1,739 @@
+// Dogecoin and Zcash explorer pages.
+//
+// These share their skeleton with the single-asset pages (an identity block, a
+// status block, evidence), so they take the same mixins rather than a second
+// set of literals. Everything below is either a token or derived from one; the
+// colour gate refuses raw interface colour here.
+//
+// Two things are specific to a chain page and live only here: the status rail,
+// which is the trust anchor a reader learns to look at first, and the value
+// flow, which is the one place a transaction's shape is worth drawing.
+
+@use '../universe-tokens' as u;
+
 :host {
+  @include u.universe-protocol-tokens;
+  @include u.universe-state-tokens;
+
   display: block;
 }
 
-.multichain-page {
-  padding-top: 2rem;
-  padding-bottom: 4rem;
-  color: var(--fg);
+.chain-page {
+  padding: 1.25rem 0 3rem;
+  color: var(--u-text-primary);
 }
 
-.page-head {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  align-items: flex-start;
-}
+// ---------------------------------------------------------------------------
+// Head
+// ---------------------------------------------------------------------------
+//
+// The heading itself is the product's shared `.title-block`: the category as a
+// small label, the identifier carrying the weight, and the page action pushed
+// to the end of the rule. Only the chain mark and the save control are added
+// here, so a Dogecoin transaction page and a Bitcoin one open the same way.
 
-.eyebrow {
-  color: var(--transparent-fg);
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+// A chain gets a mark, not a colour that means something. The hue comes from
+// the protocol scale, which is held away from every evidence state, and it
+// never appears without the chain's name beside it.
+.chain-mark {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: var(--u-radius-pill);
+  flex: none;
+  align-self: center;
+
+  &.chain-mark-dogecoin {
+    background: var(--universe-protocol-ordinals);
+  }
+
+  &.chain-mark-zcash {
+    background: var(--universe-protocol-alkanes);
+  }
 }
 
 .lede {
-  overflow-wrap: anywhere;
+  margin: 0 0 var(--u-space-4);
+  max-width: var(--u-width-prose);
+  color: var(--u-text-secondary);
+  line-height: var(--u-leading-normal);
 }
 
-.save,
-.protocol-nav a {
-  border: 1px solid var(--primary);
-  border-radius: 0.45rem;
-  color: var(--fg);
-  padding: 0.55rem 0.75rem;
-  background: transparent;
+.save {
+  flex: none;
+  background: var(--u-surface-raised);
+  border: 1px solid var(--u-border-strong);
+  border-radius: var(--u-radius-md);
+  color: var(--u-text-primary);
+  font-size: var(--u-text-sm);
+  font-weight: var(--u-weight-medium);
+  padding: 0.4rem 0.8rem;
+
+  @include u.universe-motion(all, var(--u-duration-fast));
+
+  &:hover {
+    background: var(--u-surface-hover);
+    border-color: var(--u-brand-border);
+  }
+
+  &.is-saved {
+    background: var(--u-brand-subtle);
+    border-color: var(--u-brand-border);
+    color: var(--u-brand);
+  }
 }
 
-.status-panel,
-.panel,
-.switch-notice {
-  margin-top: 1rem;
-  padding: 1rem;
-  border: 1px solid var(--box-border);
-  border-radius: 0.6rem;
-  background: var(--box-bg);
-}
+// ---------------------------------------------------------------------------
+// Status rail
+// ---------------------------------------------------------------------------
 
-.status-panel {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem 1.2rem;
-}
+.status-rail {
+  @include u.universe-surface;
 
-.state {
-  color: var(--u-state-proven);
-  font-weight: 700;
-}
-
-.state.degraded,
-.error {
-  color: var(--u-state-partial);
-}
-
-.facts {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: var(--u-space-3) var(--u-space-5);
+  padding: var(--u-space-3) var(--u-space-4);
+  margin-bottom: var(--u-space-3);
 }
 
-.facts div {
+.reading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
   min-width: 0;
 }
 
-.facts dt {
-  color: var(--transparent-fg);
+.reading-label {
+  color: var(--u-text-muted);
+  font-size: var(--u-text-2xs);
+  font-weight: var(--u-weight-semibold);
+  letter-spacing: var(--u-eyebrow-tracking);
+  text-transform: uppercase;
 }
 
-.facts dd {
-  margin: 0.15rem 0 0;
+.universe-chip {
+  @include u.universe-chip;
+}
+
+// ---------------------------------------------------------------------------
+// Panels
+// ---------------------------------------------------------------------------
+
+.panel {
+  @include u.universe-surface;
+
+  padding: var(--u-space-4);
+  margin-bottom: var(--u-space-3);
+
+  h2 {
+    font-size: var(--u-text-lg);
+    font-weight: var(--u-weight-semibold);
+    margin: 0 0 var(--u-space-3);
+  }
+
+  h3 {
+    font-size: var(--u-text-base);
+    font-weight: var(--u-weight-semibold);
+    color: var(--u-text-secondary);
+    margin: var(--u-space-4) 0 var(--u-space-2);
+  }
+
+  h3:first-of-type {
+    margin-top: 0;
+  }
+}
+
+.panel-lede {
+  color: var(--u-text-secondary);
+  font-size: var(--u-text-sm);
+  line-height: var(--u-leading-normal);
+  max-width: var(--u-width-prose);
+  margin: 0 0 var(--u-space-3);
+}
+
+.notice {
+  @include u.universe-surface;
+
+  padding: var(--u-space-3) var(--u-space-4);
+  margin-bottom: var(--u-space-3);
+  font-size: var(--u-text-sm);
+  line-height: var(--u-leading-normal);
+  max-width: var(--u-width-prose);
+
+  &.switched {
+    border-left: 3px solid var(--universe-state-pending);
+  }
+
+  &.failure {
+    border-left: 3px solid var(--universe-state-unavailable);
+    color: var(--universe-state-unavailable);
+  }
+
+  &.empty {
+    border-left: 3px solid var(--universe-state-neutral);
+    color: var(--u-text-secondary);
+  }
+}
+
+.secondary {
+  color: var(--u-text-muted);
+}
+
+// ---------------------------------------------------------------------------
+// Why a chain is not ready
+// ---------------------------------------------------------------------------
+
+// Sits directly beneath the rail, because it is the evidence for the verdict
+// the rail just gave. Bordered like a notice rather than raised like a panel:
+// it is a qualification of what is above it, not a section of its own.
+.not-ready {
+  @include u.universe-surface;
+
+  border-left: 3px solid var(--universe-state-partial);
+  padding: var(--u-space-3) var(--u-space-4);
+  margin-bottom: var(--u-space-3);
+  max-width: var(--u-width-prose);
+
+  h2 {
+    font-size: var(--u-text-base);
+    font-weight: var(--u-weight-semibold);
+    margin: 0 0 var(--u-space-2);
+  }
+
+  ul {
+    display: grid;
+    gap: var(--u-space-2);
+    font-size: var(--u-text-sm);
+    line-height: var(--u-leading-normal);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+.reason-raw {
+  color: var(--u-text-muted);
+  display: block;
+  font-size: var(--u-text-xs);
+}
+
+.identifier {
+  @include u.universe-identifier;
+}
+
+.numeric {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.dot {
+  display: inline-block;
+  width: 3px;
+  height: 3px;
+  margin: 0 0.45rem;
+  border-radius: var(--u-radius-pill);
+  background: var(--u-text-faint);
+  vertical-align: middle;
+}
+
+// ---------------------------------------------------------------------------
+// Facts
+// ---------------------------------------------------------------------------
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: var(--u-space-3) var(--u-space-5);
+  margin: 0;
+
+  > div {
+    min-width: 0;
+  }
+
+  dt {
+    color: var(--u-text-muted);
+    font-size: var(--u-text-xs);
+    font-weight: var(--u-weight-medium);
+  }
+
+  dd {
+    margin: 0.2rem 0 0;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+.verdict {
+  margin: 0 0 var(--u-space-3);
+}
+
+// ---------------------------------------------------------------------------
+// Chain overview
+// ---------------------------------------------------------------------------
+
+.read-grid,
+.coverage-list,
+.action-list,
+.conflict-list,
+.identifier-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.read-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: var(--u-space-2) var(--u-space-4);
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: var(--u-space-2);
+    padding: var(--u-space-2) 0;
+    border-top: 1px solid var(--u-divider);
+  }
+
+  .read-label {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: var(--u-text-sm);
+  }
+
+  li.off .read-label {
+    color: var(--u-text-muted);
+  }
+}
+
+.coverage-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--u-space-2) var(--u-space-3);
+  padding: var(--u-space-3) 0;
+  border-top: 1px solid var(--u-divider);
+
+  &:first-child {
+    border-top: 0;
+    padding-top: 0;
+  }
+}
+
+.coverage-name {
+  font-weight: var(--u-weight-semibold);
+  min-width: 7rem;
+}
+
+.coverage-detail {
+  color: var(--u-text-muted);
+  font-size: var(--u-text-sm);
+}
+
+.coverage-reasons-label {
+  flex-basis: 100%;
+  color: var(--u-text-muted);
+  font-size: var(--u-text-2xs);
+  font-weight: var(--u-weight-semibold);
+  letter-spacing: var(--u-eyebrow-tracking);
+  text-transform: uppercase;
+}
+
+.coverage-reasons {
+  flex-basis: 100%;
+  color: var(--universe-state-partial);
+  font-size: var(--u-text-sm);
+  line-height: var(--u-leading-normal);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+// An authority that is working still states the edges of its coverage. Those
+// sentences sit under their own label and must not wear the partial colour,
+// which on this page means something is wrong.
+.coverage-reasons-label + .coverage-reasons {
+  color: var(--u-text-secondary);
+}
+
+.entry-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: var(--u-space-3);
+  margin-bottom: var(--u-space-3);
+}
+
+.entry {
+  @include u.universe-surface;
+
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: var(--u-space-4);
+  color: var(--u-text-primary);
+  text-decoration: none;
+
+  @include u.universe-motion(all, var(--u-duration-fast));
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--u-brand-accent);
+    background: var(--u-surface-hover);
+    text-decoration: none;
+  }
+
+  .entry-title {
+    font-weight: var(--u-weight-semibold);
+    color: var(--u-brand);
+  }
+
+  .entry-detail {
+    color: var(--u-text-muted);
+    font-size: var(--u-text-sm);
+    line-height: var(--u-leading-snug);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Transaction value flow
+// ---------------------------------------------------------------------------
+
+.flow-grid {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: var(--u-space-4);
+  align-items: start;
+}
+
+.flow-side {
+  min-width: 0;
+
+  h3 {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--u-space-3);
+    margin: 0 0 var(--u-space-2);
+    padding-bottom: var(--u-space-2);
+    border-bottom: 1px solid var(--u-divider);
+  }
+}
+
+.flow-total {
+  font-family: var(--u-font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--u-weight-semibold);
+  color: var(--u-text-primary);
+}
+
+// The direction of the transaction, drawn once. It carries no information the
+// column headings do not, so it is hidden from assistive technology and simply
+// disappears when the columns stack.
+.flow-arrow {
+  align-self: center;
+  width: 1.5rem;
+  height: 1px;
+  background: var(--u-border-strong);
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: -3px;
+    border-left: 6px solid var(--u-border-strong);
+    border-top: 3.5px solid transparent;
+    border-bottom: 3.5px solid transparent;
+  }
+}
+
+.party-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) max-content;
+    align-items: baseline;
+    gap: var(--u-space-3);
+    padding: var(--u-space-2) 0;
+    border-bottom: 1px solid var(--u-divider);
+  }
+
+  li:last-child {
+    border-bottom: 0;
+  }
+
+}
+
+.party-address {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--u-space-2);
+  min-width: 0;
   overflow-wrap: anywhere;
 }
 
-.panel a + a {
-  margin-left: 1rem;
+.party-amount {
+  flex: none;
+  font-family: var(--u-font-data);
+  font-variant-numeric: tabular-nums;
+}
+
+.flow-note {
+  color: var(--u-text-muted);
+  font-size: var(--u-text-sm);
+  line-height: var(--u-leading-normal);
+  max-width: var(--u-width-prose);
+  margin: var(--u-space-3) 0 0;
+}
+
+.action-list li,
+.conflict-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--u-space-2) var(--u-space-3);
+  padding: var(--u-space-2) 0;
+  border-top: 1px solid var(--u-divider);
+}
+
+.action-protocol {
+  font-weight: var(--u-weight-semibold);
+  min-width: 6rem;
+}
+
+.action-type {
+  color: var(--u-text-secondary);
+  font-size: var(--u-text-sm);
+}
+
+.panel.warning {
+  border-left: 3px solid var(--universe-state-partial);
+}
+
+// ---------------------------------------------------------------------------
+// Figures
+// ---------------------------------------------------------------------------
+
+.figure-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: var(--u-space-4);
+}
+
+.figure {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.figure-label {
+  color: var(--u-text-muted);
+  font-size: var(--u-text-2xs);
+  font-weight: var(--u-weight-semibold);
+  letter-spacing: var(--u-eyebrow-tracking);
+  text-transform: uppercase;
+}
+
+.figure-value {
+  font-family: var(--u-font-data);
+  font-size: var(--u-text-xl);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--u-weight-semibold);
+  line-height: var(--u-leading-tight);
+  overflow-wrap: anywhere;
+}
+
+.figure-unit {
+  color: var(--u-text-muted);
+  font-size: var(--u-text-sm);
+  font-weight: var(--u-weight-normal);
+}
+
+// The unit belongs to the column, so it is stated once in the header rather
+// than repeated down every row of a dense table.
+.column-unit {
+  color: var(--u-text-faint);
+  font-weight: var(--u-weight-normal);
+}
+
+// ---------------------------------------------------------------------------
+// Lists and tables
+// ---------------------------------------------------------------------------
+
+.identifier-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(21rem, 1fr));
+  gap: 0 var(--u-space-4);
+
+  li {
+    padding: 0.3rem 0;
+    border-bottom: 1px solid var(--u-divider);
+    min-width: 0;
+  }
+}
+
+.pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--u-space-4);
+  margin-top: var(--u-space-4);
+  padding-top: var(--u-space-3);
+  border-top: 1px solid var(--u-divider);
+  font-size: var(--u-text-sm);
+}
+
+.pager-position {
+  color: var(--u-text-muted);
+}
+
+.block-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--u-space-4);
+  margin-top: var(--u-space-4);
+  padding-top: var(--u-space-3);
+  border-top: 1px solid var(--u-divider);
+  font-size: var(--u-text-sm);
 }
 
 .protocol-nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.6rem;
-  margin-top: 1rem;
+  gap: var(--u-space-2);
+  margin-bottom: var(--u-space-3);
+
+  a {
+    border: 1px solid var(--u-border);
+    border-radius: var(--u-radius-pill);
+    background: var(--u-surface-raised);
+    color: var(--u-text-secondary);
+    font-size: var(--u-text-sm);
+    padding: 0.3rem 0.8rem;
+    text-decoration: none;
+
+    @include u.universe-motion(all, var(--u-duration-fast));
+
+    &:hover {
+      border-color: var(--u-brand-border);
+      color: var(--u-brand);
+    }
+
+    &.current {
+      background: var(--u-brand-subtle);
+      border-color: var(--u-brand-border);
+      color: var(--u-brand);
+      font-weight: var(--u-weight-semibold);
+    }
+  }
 }
 
+// A table wide enough to scroll is a scrollable region, and a region a mouse
+// can pan has to be reachable from a keyboard too. It takes focus, so it also
+// has to show that it has it.
 .table-wrap {
   overflow-x: auto;
+
+  &:focus-visible {
+    outline: 2px solid var(--u-focus-ring);
+    outline-offset: 2px;
+  }
 }
 
 table {
-  min-width: 100%;
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--u-text-sm);
 }
 
-th,
-td {
-  padding: 0.55rem;
+thead th {
+  color: var(--u-text-muted);
+  font-size: var(--u-text-2xs);
+  font-weight: var(--u-weight-semibold);
+  letter-spacing: var(--u-eyebrow-tracking);
+  text-transform: uppercase;
   text-align: left;
+  padding: 0 var(--u-space-3) var(--u-space-2) 0;
+  border-bottom: 1px solid var(--u-border);
+  white-space: nowrap;
+
+  &.numeric {
+    text-align: right;
+  }
+}
+
+tbody td {
+  padding: var(--u-space-2) var(--u-space-3) var(--u-space-2) 0;
+  border-bottom: 1px solid var(--u-divider);
   vertical-align: top;
   overflow-wrap: anywhere;
 }
 
-pre {
-  max-height: 36rem;
-  overflow: auto;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
+tbody tr:last-child td {
+  border-bottom: 0;
 }
 
-@media (max-width: 32rem) {
-  .multichain-page {
-    padding-top: 1rem;
+// ---------------------------------------------------------------------------
+// Evidence
+// ---------------------------------------------------------------------------
+
+.evidence {
+  summary {
+    cursor: pointer;
+    font-weight: var(--u-weight-semibold);
+    color: var(--u-text-secondary);
   }
 
-  .page-head {
-    flex-direction: column;
+  &[open] summary {
+    margin-bottom: var(--u-space-3);
   }
 
-  .save {
-    width: 100%;
+  pre {
+    @include u.universe-identifier;
+
+    background: var(--u-surface-sunken);
+    border: 1px solid var(--u-border);
+    border-radius: var(--u-radius-sm);
+    color: var(--u-text-secondary);
+    margin: 0;
+    max-height: 32rem;
+    overflow: auto;
+    padding: var(--u-space-3);
+    white-space: pre-wrap;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Narrow
+// ---------------------------------------------------------------------------
+
+@media (max-width: 767px) {
+  .flow-grid {
+    grid-template-columns: 1fr;
+    gap: var(--u-space-5);
+  }
+
+  .flow-arrow {
+    display: none;
+  }
+}
+
+@media (max-width: 575px) {
+  .chain-page {
+    padding-top: var(--u-space-4);
+  }
+
+  .facts {
+    grid-template-columns: 1fr;
+  }
+
+  .coverage-name {
+    min-width: 0;
+    flex-basis: 100%;
   }
 }

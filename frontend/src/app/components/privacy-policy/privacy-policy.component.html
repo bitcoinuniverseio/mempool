@@ -11,10 +11,20 @@
 
   <h2 i18n="privacy.searches">Searches and browsing</h2>
   <p i18n="privacy.searches-body">
-    Whatever you type into the search box is matched in your browser first. The
-    explorer only asks its own backend for the specific transaction, block,
-    address, output, or asset you opened, and it never sends your query
-    anywhere else.
+    What you type is classified in your browser. Working out whether it looks
+    like a transaction, a block, an address, an output, or an asset happens on
+    your device and asks nobody.
+  </p>
+  <p i18n="privacy.searches-server">
+    Some searches then need the server, and in those the text you typed does
+    reach us. Completing a partly typed address, searching on Dogecoin or
+    Zcash, and widening a search to every chain are all answered by our own
+    backend. Opening a result asks our backend for that one object.
+  </p>
+  <p i18n="privacy.searches-third-party">
+    None of it reaches anyone else. There is no third-party search,
+    autocomplete, suggestion, or analytics call at any point, and no query is
+    tied to a visitor, because there is nothing here to tie it to.
   </p>
 
   <h2 i18n="privacy.local-storage">What your browser stores</h2>
