@@ -1,145 +1,512 @@
-<div class="container-xl multichain-page" *ngIf="vm$ | async as vm">
-  <header class="page-head">
-    <div>
-      <p class="eyebrow">{{ chainName }} mainnet / {{ ticker }}</p>
-      <h1>{{ chainName }} {{ pageLabel() }}</h1>
-      <p class="lede" *ngIf="reference">{{ reference }}</p>
+<div class="container-xl chain-page" *ngIf="vm$ | async as vm">
+
+  <!-- The house detail heading: the category is the label, the identifier
+       carries the weight, and the page action sits at the end of the rule. -->
+  <header class="title-block">
+    <span class="chain-mark" [ngClass]="'chain-mark-' + chain" aria-hidden="true"></span>
+    <h1>{{ chainName }} {{ pageLabel() }}</h1>
+    <span class="txid" *ngIf="reference">{{ reference }}</span>
+
+    <div class="container-buttons" *ngIf="savable()">
+      <button
+        type="button"
+        class="save"
+        [class.is-saved]="saved"
+        (click)="toggleSaved()"
+        [attr.aria-pressed]="saved"
+      >
+        <ng-container *ngIf="saved; else notSaved" i18n="universe.chain.saved">Saved in this browser</ng-container>
+        <ng-template #notSaved><ng-container i18n="universe.chain.save">Save in this browser</ng-container></ng-template>
+      </button>
     </div>
-    <button
-      type="button"
-      class="save"
-      *ngIf="reference"
-      (click)="toggleSaved()"
-      [attr.aria-pressed]="saved"
-    >
-      {{ saved ? "Saved in this browser" : "Save in this browser" }}
-    </button>
   </header>
 
-  <p class="switch-notice" role="status" *ngIf="switchedFrom">
-    Switched from {{ switchedFrom }}. Object identifiers were not carried
-    between chains.
+  <p class="lede" *ngIf="pageLede()">{{ pageLede() }}</p>
+
+  <p class="notice switched" role="status" *ngIf="switchedFrom" i18n="universe.chain.switched">
+    You came from {{ switchedFrom }}. Object identifiers do not carry between chains, so this is the {{ chainName }} overview rather than the same object on {{ chainName }}.
   </p>
 
-  <section class="status-panel" aria-label="Chain status">
-    <ng-container *ngIf="vm.capability as capability; else statusUnavailable">
-      <span class="state" [class.degraded]="!capability.ready">{{
-        stateLabel(capability)
-      }}</span>
-      <span>Tip {{ capability.tip?.heightAtomic || "not available" }}</span>
-      <span>Updated {{ freshness(capability) }}</span>
-      <span
-        >Mempool {{ capability.mempool.state }},
-        {{ capability.mempool.completeness }}</span
-      >
-      <span>{{
-        capability.mempool.snapshotId
-          ? "snapshot " + capability.mempool.snapshotId
-          : "no snapshot id"
-      }}</span>
-    </ng-container>
-    <ng-template #statusUnavailable
-      ><span class="state degraded">status unavailable</span></ng-template
-    >
+  <!-- The trust anchor. Always five readings, always in this order. -->
+  <section class="status-rail" aria-label="Chain status" i18n-aria-label="universe.chain.rail-label">
+    <div class="reading" *ngFor="let reading of vm.rail; trackBy: trackById">
+      <span class="reading-label">{{ reading.label }}</span>
+      <span class="universe-chip" [ngClass]="'state-' + reading.tone" [attr.title]="reading.exact">{{ reading.value }}</span>
+    </div>
   </section>
 
-  <p class="error" role="alert" *ngIf="vm.capabilityError">
+  <p class="notice failure" role="alert" *ngIf="vm.capabilityError">
     {{ vm.capabilityError }}
   </p>
-  <p class="error" role="alert" *ngIf="vm.payloadError">
+  <p class="notice failure" role="alert" *ngIf="vm.payloadError">
     {{ vm.payloadError }}
   </p>
 
-  <section
-    class="panel"
-    *ngIf="page === 'dashboard' && vm.capability as capability"
-  >
-    <h2>What is happening now</h2>
-    <dl class="facts">
-      <div>
-        <dt>Chain tip</dt>
-        <dd>{{ capability.tip?.heightAtomic || "not available" }}</dd>
-      </div>
-      <div>
-        <dt>Sync</dt>
-        <dd>{{ capability.sync.state }}</dd>
-      </div>
-      <div>
-        <dt>Pending coverage</dt>
-        <dd>{{ capability.mempool.completeness }}</dd>
-      </div>
-      <div>
-        <dt>Confirmed history</dt>
-        <dd>{{ capability.coverage.confirmedHistory }}</dd>
-      </div>
-      <div>
-        <dt>Address history</dt>
-        <dd>{{ capability.coverage.addressHistory }}</dd>
-      </div>
-      <div>
-        <dt>Release</dt>
-        <dd>{{ capability.release.sha }}</dd>
-      </div>
-    </dl>
-    <p *ngIf="chain === 'dogecoin'">
-      Fee estimates are shown only when the first-party source supports them.
-      Dogecoin pages do not label fees as sat/vB.
-    </p>
-    <p *ngIf="chain === 'zcash'">
-      Zcash fee guidance uses ZIP-317 logical actions when available.
-      Transparent-chain facts do not reveal shielded participants or shielded
-      amounts.
-    </p>
-    <p *ngIf="!capability.reads.projectedBlocks">
-      Projected blocks are not claimed for this chain.
-    </p>
-    <a [routerLink]="['/', chain, 'mempool']">Open mempool</a>
-    <a [routerLink]="['/', chain, 'protocols']">Open protocols</a>
-  </section>
-
-  <nav
-    class="protocol-nav"
-    aria-label="Protocol families"
-    *ngIf="page.startsWith('protocol')"
-  >
-    <a
-      *ngFor="let protocol of protocolIds"
-      [routerLink]="['/', chain, 'protocols', protocol]"
-    >
-      {{ protocol }}
-    </a>
+  <nav class="protocol-nav" *ngIf="isProtocolPage()"
+       aria-label="Protocol families" i18n-aria-label="universe.chain.protocol-nav-label">
+    <a [routerLink]="['/', chain, 'protocols']"
+       [class.current]="page === 'protocols'"
+       i18n="universe.chain.protocol-nav-all">All protocols</a>
+    <a *ngFor="let protocol of profile.protocols; trackBy: trackById"
+       [routerLink]="['/', chain, 'protocols', protocol.id]"
+       [class.current]="activeProtocolId() === protocol.id">{{ protocol.label }}</a>
   </nav>
 
-  <section
-    class="panel privacy"
-    *ngIf="chain === 'zcash' && (page === 'address' || page === 'transaction')"
-  >
-    <h2>Zcash privacy boundary</h2>
-    <p>
-      This view can report transparent-chain evidence only. Shielded sender,
-      recipient, and amount details are not inferred.
-    </p>
-  </section>
+  <!-- ------------------------------------------------------------------ -->
+  <!-- Chain overview                                                      -->
+  <!-- ------------------------------------------------------------------ -->
+  <ng-container *ngIf="page === 'dashboard'">
 
-  <section class="panel" *ngIf="vm.summary.length">
-    <h2>Verified summary</h2>
+    <section class="panel reads" aria-labelledby="chain-reads-heading">
+      <h2 id="chain-reads-heading" i18n="universe.chain.reads-title">Questions this chain can answer</h2>
+      <p class="panel-lede" i18n="universe.chain.reads-lede">
+        Each entry is a claim the indexer makes about itself. Where it says no, the explorer offers no page for that lookup rather than an empty one.
+      </p>
+      <ul class="read-grid">
+        <li *ngFor="let read of vm.reads; trackBy: trackById" [class.off]="read.state !== 'offered'">
+          <span class="read-label">{{ read.label }}</span>
+          <span class="universe-chip" [ngClass]="'state-' + read.tone">{{ read.stateLabel }}</span>
+        </li>
+      </ul>
+    </section>
+
+    <section class="panel coverage" aria-labelledby="chain-coverage-heading">
+      <h2 id="chain-coverage-heading" i18n="universe.chain.coverage-title">Protocol indexers</h2>
+      <ul class="coverage-list">
+        <li *ngFor="let protocol of vm.protocols; trackBy: trackByProtocol">
+          <a class="coverage-name" [routerLink]="['/', chain, 'protocols', protocol.protocolId]">{{ protocol.label }}</a>
+          <span class="universe-chip" [ngClass]="'state-' + protocol.tone">{{ protocol.stateLabel }}</span>
+          <span class="coverage-detail">
+            {{ protocol.historyLabel }}
+            <ng-container *ngIf="protocol.lag">
+              <span class="dot" aria-hidden="true"></span>
+              <span [attr.title]="protocol.lag.exact" i18n="universe.chain.coverage-lag">{{ protocol.lag.display }} blocks behind</span>
+            </ng-container>
+          </span>
+          <span class="coverage-reasons" *ngIf="protocol.reasons.length">
+            {{ protocol.reasons.join(', ') }}
+          </span>
+        </li>
+      </ul>
+    </section>
+
+    <section class="panel truths" aria-labelledby="chain-truths-heading">
+      <h2 id="chain-truths-heading" i18n="universe.chain.truths-title">What this chain does differently</h2>
+      <p *ngIf="chain === 'dogecoin'" i18n="universe.chain.truth-dogecoin-fees">
+        Dogecoin fees are quoted per kilobyte, not in sat/vB. This explorer prints the unit the chain actually uses and shows a fee rate only when the first-party source reports one.
+      </p>
+      <p *ngIf="chain === 'zcash'" i18n="universe.chain.truth-zcash-fees">
+        Zcash fee guidance follows ZIP-317 logical actions where the node reports them. A transaction's cost is not a simple function of its byte size on this chain.
+      </p>
+      <p *ngIf="chain === 'zcash'" i18n="universe.chain.truth-zcash-privacy">
+        Only the transparent side of Zcash is public. This explorer reports the shape of a shielded transaction, never who was involved or how much moved.
+      </p>
+      <p *ngIf="vm.capability && !vm.capability.reads.projectedBlocks" i18n="universe.chain.truth-no-projection">
+        No projected blocks are shown for this chain. Projecting the next block needs a fee market this explorer does not model here, and a guess presented as a forecast would be worse than nothing.
+      </p>
+    </section>
+
+    <nav class="entry-actions" aria-label="Chain sections" i18n-aria-label="universe.chain.entry-label">
+      <a class="entry" [routerLink]="['/', chain, 'mempool']">
+        <span class="entry-title" i18n="universe.chain.entry-mempool">Pending transactions</span>
+        <span class="entry-detail" i18n="universe.chain.entry-mempool-detail">What our node has seen and no block has confirmed</span>
+      </a>
+      <a class="entry" [routerLink]="['/', chain, 'protocols']">
+        <span class="entry-title" i18n="universe.chain.entry-protocols">Protocols</span>
+        <span class="entry-detail" i18n="universe.chain.entry-protocols-detail">Assets carried on this chain, and which indexer proves them</span>
+      </a>
+    </nav>
+
+  </ng-container>
+
+  <!-- ------------------------------------------------------------------ -->
+  <!-- Transaction                                                         -->
+  <!-- ------------------------------------------------------------------ -->
+  <ng-container *ngIf="vm.transaction as tx">
+
+    <section class="panel tx-status" aria-labelledby="tx-status-heading">
+      <h2 id="tx-status-heading" i18n="universe.chain.tx-status-title">Status</h2>
+      <p class="verdict">
+        <span class="universe-chip" [ngClass]="'state-' + tx.statusTone">{{ tx.statusLabel }}</span>
+      </p>
+      <dl class="facts">
+        <div *ngIf="tx.block">
+          <dt i18n="universe.chain.tx-block">In block</dt>
+          <dd>
+            <a class="identifier" [routerLink]="['/', chain, 'block', tx.block.hash]">{{ short(tx.block.hash) }}</a>
+            <span class="secondary" *ngIf="tx.block.height" [attr.title]="tx.block.height.exact"> {{ tx.block.height.display }}</span>
+          </dd>
+        </div>
+        <div *ngIf="tx.confirmations">
+          <dt i18n="universe.chain.tx-confirmations">Confirmations</dt>
+          <dd [attr.title]="tx.confirmations.exact">{{ tx.confirmations.display }}</dd>
+        </div>
+        <div *ngIf="tx.firstSeenAt">
+          <dt i18n="universe.chain.tx-first-seen">First seen by our node</dt>
+          <dd>{{ tx.firstSeenAt }}</dd>
+        </div>
+        <div *ngIf="tx.size">
+          <dt i18n="universe.chain.tx-size">Size</dt>
+          <dd [attr.title]="tx.size.exact"><ng-container i18n="universe.chain.tx-size-bytes">{{ tx.size.display }} bytes</ng-container></dd>
+        </div>
+        <div *ngIf="tx.virtualSize">
+          <dt i18n="universe.chain.tx-vsize">Virtual size</dt>
+          <dd [attr.title]="tx.virtualSize.exact"><ng-container i18n="universe.chain.tx-vsize-bytes">{{ tx.virtualSize.display }} vbytes</ng-container></dd>
+        </div>
+        <div *ngIf="tx.feeAmount">
+          <dt i18n="universe.chain.tx-fee">Fee paid</dt>
+          <dd [attr.title]="tx.feeAmount.exact">{{ tx.feeAmount.display }} {{ ticker }}</dd>
+        </div>
+        <div *ngIf="tx.feeRate">
+          <dt i18n="universe.chain.tx-fee-rate">Fee rate</dt>
+          <dd>{{ tx.feeRate }} <span class="secondary">{{ tx.feeRateUnit }}</span></dd>
+        </div>
+        <div *ngIf="tx.logicalActions">
+          <dt i18n="universe.chain.tx-logical-actions">ZIP-317 logical actions</dt>
+          <dd [attr.title]="tx.logicalActions.exact">{{ tx.logicalActions.display }}</dd>
+        </div>
+        <div>
+          <dt i18n="universe.chain.tx-completeness">Evidence</dt>
+          <dd><span class="universe-chip" [ngClass]="'state-' + tx.completenessTone">{{ tx.completenessLabel }}</span></dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="panel warning" *ngIf="tx.replacedByTxid || tx.conflicts.length || tx.expiry"
+             aria-labelledby="tx-warning-heading">
+      <h2 id="tx-warning-heading" i18n="universe.chain.tx-warning-title">Why this transaction may never confirm</h2>
+      <p *ngIf="tx.replacedByTxid">
+        <ng-container i18n="universe.chain.tx-replaced-by">Replaced by</ng-container>
+        <a class="identifier" [routerLink]="['/', chain, 'tx', tx.replacedByTxid]"> {{ short(tx.replacedByTxid) }}</a>
+      </p>
+      <ul class="conflict-list" *ngIf="tx.conflicts.length">
+        <li *ngFor="let conflict of tx.conflicts; trackBy: trackByIndex">
+          <a class="identifier" [routerLink]="['/', chain, 'tx', conflict.txid]">{{ short(conflict.txid) }}</a>
+          <span class="secondary"> {{ conflict.reason }}</span>
+        </li>
+      </ul>
+      <p *ngIf="tx.expiry">
+        <ng-container i18n="universe.chain.tx-expiry">Expires at block</ng-container>
+        <span *ngIf="tx.expiry.height" [attr.title]="tx.expiry.height.exact"> {{ tx.expiry.height.display }}</span>
+        <span class="universe-chip" [ngClass]="tx.expiry.state === 'expired' ? 'state-unavailable' : 'state-pending'">{{ tx.expiry.state }}</span>
+      </p>
+    </section>
+
+    <section class="panel flow" *ngIf="tx.inputs.length || tx.outputs.length" aria-labelledby="tx-flow-heading">
+      <h2 id="tx-flow-heading" i18n="universe.chain.tx-flow-title">Transparent value</h2>
+      <div class="flow-grid">
+        <div class="flow-side">
+          <h3>
+            <ng-container i18n="universe.chain.tx-inputs">Inputs</ng-container>
+            <span class="flow-total" *ngIf="tx.inputTotal" [attr.title]="tx.inputTotal.exact">{{ tx.inputTotal.display }} {{ ticker }}</span>
+          </h3>
+          <ol class="party-list">
+            <li *ngFor="let party of tx.inputs; trackBy: trackByIndex">
+              <span class="party-address">
+                <a class="identifier" *ngIf="party.address; else partyNoAddress"
+                   [routerLink]="['/', chain, 'address', party.address]">{{ short(party.address, 12) }}</a>
+                <ng-template #partyNoAddress>
+                  <span class="secondary" *ngIf="party.coinbase; else partyUnknown" i18n="universe.chain.tx-coinbase">Newly issued by the block</span>
+                  <ng-template #partyUnknown><span class="secondary" i18n="universe.chain.tx-no-address">No standard address</span></ng-template>
+                </ng-template>
+              </span>
+              <span class="party-amount" *ngIf="party.amount; else partyNoAmount" [attr.title]="party.amount.exact">{{ party.amount.display }}</span>
+              <ng-template #partyNoAmount><span class="party-amount secondary" i18n="universe.chain.tx-amount-unreported">not reported</span></ng-template>
+            </li>
+          </ol>
+          <p class="flow-note" *ngIf="!tx.inputTotal && tx.inputs.length" i18n="universe.chain.tx-no-input-total">
+            No input total is shown because at least one input arrived without an amount. A partial sum would read as a whole one.
+          </p>
+        </div>
+
+        <div class="flow-arrow" aria-hidden="true"></div>
+
+        <div class="flow-side">
+          <h3>
+            <ng-container i18n="universe.chain.tx-outputs">Outputs</ng-container>
+            <span class="flow-total" *ngIf="tx.outputTotal" [attr.title]="tx.outputTotal.exact">{{ tx.outputTotal.display }} {{ ticker }}</span>
+          </h3>
+          <ol class="party-list">
+            <li *ngFor="let party of tx.outputs; trackBy: trackByIndex">
+              <span class="party-address">
+                <a class="identifier" *ngIf="party.address; else outputNoAddress"
+                   [routerLink]="['/', chain, 'address', party.address]">{{ short(party.address, 12) }}</a>
+                <ng-template #outputNoAddress><span class="secondary" i18n="universe.chain.tx-no-address-out">No standard address</span></ng-template>
+                <span class="universe-chip state-neutral" *ngIf="party.spent === true" i18n="universe.chain.tx-output-spent">Spent</span>
+              </span>
+              <span class="party-amount" *ngIf="party.amount; else outputNoAmount" [attr.title]="party.amount.exact">{{ party.amount.display }}</span>
+              <ng-template #outputNoAmount><span class="party-amount secondary" i18n="universe.chain.tx-amount-unreported-out">not reported</span></ng-template>
+            </li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel shielded" *ngIf="tx.shielded as shielded" aria-labelledby="tx-shielded-heading">
+      <h2 id="tx-shielded-heading" i18n="universe.chain.tx-shielded-title">Shielded structure</h2>
+      <p class="panel-lede">{{ shielded.notice }}</p>
+      <dl class="facts">
+        <div *ngFor="let component of shielded.components; trackBy: trackByIndex">
+          <dt>{{ component.label }}</dt>
+          <dd [class.secondary]="!component.count" [attr.title]="component.count?.exact">
+            <ng-container *ngIf="component.count; else shieldedUnknown">{{ component.count.display }}</ng-container>
+            <ng-template #shieldedUnknown><ng-container i18n="universe.chain.shielded-unknown">Not reported</ng-container></ng-template>
+          </dd>
+        </div>
+      </dl>
+      <p class="flow-note" *ngIf="shielded.valueBalance" [attr.title]="shielded.valueBalance.exact" i18n="universe.chain.shielded-balance">
+        Net movement between the transparent and shielded pools: {{ shielded.valueBalance.display }} {{ ticker }}. This is the only shielded amount the chain itself makes public.
+      </p>
+    </section>
+
+    <section class="panel actions" *ngIf="tx.candidateActions.length || tx.confirmedActions.length"
+             aria-labelledby="tx-actions-heading">
+      <h2 id="tx-actions-heading" i18n="universe.chain.tx-actions-title">Protocol actions</h2>
+
+      <ng-container *ngIf="tx.confirmedActions.length">
+        <h3 i18n="universe.chain.tx-actions-confirmed">Evaluated</h3>
+        <ul class="action-list">
+          <li *ngFor="let action of tx.confirmedActions; trackBy: trackByIndex">
+            <span class="action-protocol">{{ action.protocolLabel }}</span>
+            <span class="action-type">{{ action.actionType }}</span>
+            <span class="universe-chip" [ngClass]="'state-' + action.tone">{{ action.stateLabel }}</span>
+          </li>
+        </ul>
+      </ng-container>
+
+      <ng-container *ngIf="tx.candidateActions.length">
+        <h3 i18n="universe.chain.tx-actions-candidate">Candidates</h3>
+        <p class="panel-lede" i18n="universe.chain.tx-actions-candidate-lede">
+          These look like protocol actions in the raw transaction. Whether the protocol accepts them is decided when the transaction confirms, so nothing here is a result yet.
+        </p>
+        <ul class="action-list">
+          <li *ngFor="let action of tx.candidateActions; trackBy: trackByIndex">
+            <span class="action-protocol">{{ action.protocolLabel }}</span>
+            <span class="action-type">{{ action.actionType }}</span>
+            <span class="universe-chip" [ngClass]="'state-' + action.tone">{{ action.stateLabel }}</span>
+          </li>
+        </ul>
+      </ng-container>
+    </section>
+
+  </ng-container>
+
+  <!-- ------------------------------------------------------------------ -->
+  <!-- Block                                                               -->
+  <!-- ------------------------------------------------------------------ -->
+  <ng-container *ngIf="vm.block as blk">
+
+    <section class="panel" aria-labelledby="block-facts-heading">
+      <h2 id="block-facts-heading" i18n="universe.chain.block-title">Block</h2>
+      <dl class="facts">
+        <div *ngIf="blk.height">
+          <dt i18n="universe.chain.block-height">Height</dt>
+          <dd [attr.title]="blk.height.exact">{{ blk.height.display }}</dd>
+        </div>
+        <div>
+          <dt i18n="universe.chain.block-hash">Hash</dt>
+          <dd class="identifier">{{ blk.hash }}</dd>
+        </div>
+        <div *ngIf="blk.time">
+          <dt i18n="universe.chain.block-time">Mined</dt>
+          <dd>{{ blk.time }}</dd>
+        </div>
+        <div *ngIf="blk.transactionCount">
+          <dt i18n="universe.chain.block-txcount">Transactions</dt>
+          <dd [attr.title]="blk.transactionCount.exact">{{ blk.transactionCount.display }}</dd>
+        </div>
+        <div *ngIf="blk.sizeBytes">
+          <dt i18n="universe.chain.block-size">Size</dt>
+          <dd [attr.title]="blk.sizeBytes.exact"><ng-container i18n="universe.chain.block-size-bytes">{{ blk.sizeBytes.display }} bytes</ng-container></dd>
+        </div>
+        <div *ngIf="blk.confirmations">
+          <dt i18n="universe.chain.block-confirmations">Confirmations</dt>
+          <dd [attr.title]="blk.confirmations.exact">{{ blk.confirmations.display }}</dd>
+        </div>
+        <div *ngIf="blk.difficulty">
+          <dt i18n="universe.chain.block-difficulty">Difficulty</dt>
+          <dd>{{ blk.difficulty }}</dd>
+        </div>
+        <div *ngIf="blk.merkleRoot">
+          <dt i18n="universe.chain.block-merkle">Merkle root</dt>
+          <dd class="identifier">{{ blk.merkleRoot }}</dd>
+        </div>
+      </dl>
+
+      <nav class="block-nav" aria-label="Adjacent blocks" i18n-aria-label="universe.chain.block-nav-label">
+        <a *ngIf="blk.previousBlockHash" [routerLink]="['/', chain, 'block', blk.previousBlockHash]"
+           i18n="universe.chain.block-previous">Previous block</a>
+        <a *ngIf="blk.nextBlockHash" [routerLink]="['/', chain, 'block', blk.nextBlockHash]"
+           i18n="universe.chain.block-next">Next block</a>
+      </nav>
+    </section>
+
+    <section class="panel" *ngIf="blk.txids.length" aria-labelledby="block-txs-heading">
+      <h2 id="block-txs-heading" i18n="universe.chain.block-txs-title">Transactions in this block</h2>
+      <p class="panel-lede" *ngIf="blk.page && blk.totalPages" i18n="universe.chain.block-page">
+        Page {{ blk.page.display }} of {{ blk.totalPages.display }}.
+      </p>
+      <ul class="identifier-list">
+        <li *ngFor="let txid of blk.txids; trackBy: trackByText">
+          <a class="identifier" [routerLink]="['/', chain, 'tx', txid]">{{ txid }}</a>
+        </li>
+      </ul>
+    </section>
+
+  </ng-container>
+
+  <!-- ------------------------------------------------------------------ -->
+  <!-- Address                                                             -->
+  <!-- ------------------------------------------------------------------ -->
+  <ng-container *ngIf="vm.address as addr">
+
+    <section class="panel balances" aria-labelledby="address-balance-heading">
+      <h2 id="address-balance-heading" i18n="universe.chain.address-title">Balance</h2>
+      <div class="figure-row">
+        <div class="figure" *ngIf="addr.balance">
+          <span class="figure-label" i18n="universe.chain.address-balance">Confirmed</span>
+          <span class="figure-value" [attr.title]="addr.balance.exact">{{ addr.balance.display }} <span class="figure-unit">{{ ticker }}</span></span>
+        </div>
+        <div class="figure" *ngIf="addr.unconfirmedBalance">
+          <span class="figure-label" i18n="universe.chain.address-unconfirmed">Pending</span>
+          <span class="figure-value" [attr.title]="addr.unconfirmedBalance.exact">{{ addr.unconfirmedBalance.display }} <span class="figure-unit">{{ ticker }}</span></span>
+        </div>
+        <div class="figure" *ngIf="addr.totalReceived">
+          <span class="figure-label" i18n="universe.chain.address-received">Received in total</span>
+          <span class="figure-value" [attr.title]="addr.totalReceived.exact">{{ addr.totalReceived.display }} <span class="figure-unit">{{ ticker }}</span></span>
+        </div>
+        <div class="figure" *ngIf="addr.totalSent">
+          <span class="figure-label" i18n="universe.chain.address-sent">Sent in total</span>
+          <span class="figure-value" [attr.title]="addr.totalSent.exact">{{ addr.totalSent.display }} <span class="figure-unit">{{ ticker }}</span></span>
+        </div>
+        <div class="figure" *ngIf="addr.transactionCount">
+          <span class="figure-label" i18n="universe.chain.address-txcount">Transactions</span>
+          <span class="figure-value" [attr.title]="addr.transactionCount.exact">{{ addr.transactionCount.display }}</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" *ngIf="addr.utxos.length" aria-labelledby="address-utxo-heading">
+      <h2 id="address-utxo-heading" i18n="universe.chain.address-utxo-title">Unspent outputs</h2>
+      <div class="table-wrap" tabindex="0" role="region" aria-labelledby="address-utxo-heading">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col" i18n="universe.chain.utxo-outpoint">Outpoint</th>
+              <th scope="col" class="numeric" i18n="universe.chain.utxo-amount">Amount</th>
+              <th scope="col" class="numeric" i18n="universe.chain.utxo-height">Block</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let utxo of addr.utxos; trackBy: trackByIndex">
+              <td>
+                <a class="identifier" [routerLink]="['/', chain, 'outpoint', utxo.txid, utxo.vout]">{{ short(utxo.txid) }}:{{ utxo.vout }}</a>
+              </td>
+              <td class="numeric" [class.secondary]="!utxo.amount" [attr.title]="utxo.amount?.exact">
+                <ng-container *ngIf="utxo.amount; else utxoNoAmount">{{ utxo.amount.display }}</ng-container>
+                <ng-template #utxoNoAmount><ng-container i18n="universe.chain.utxo-no-amount">not reported</ng-container></ng-template>
+              </td>
+              <td class="numeric" [class.secondary]="!utxo.height" [attr.title]="utxo.height?.exact">
+                <ng-container *ngIf="utxo.height; else utxoPending">{{ utxo.height.display }}</ng-container>
+                <ng-template #utxoPending><ng-container i18n="universe.chain.utxo-pending">not in a block yet</ng-container></ng-template>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel" *ngIf="addr.txids.length" aria-labelledby="address-txs-heading">
+      <h2 id="address-txs-heading" i18n="universe.chain.address-txs-title">Transaction history</h2>
+      <ul class="identifier-list">
+        <li *ngFor="let txid of addr.txids; trackBy: trackByText">
+          <a class="identifier" [routerLink]="['/', chain, 'tx', txid]">{{ txid }}</a>
+        </li>
+      </ul>
+    </section>
+
+  </ng-container>
+
+  <!-- ------------------------------------------------------------------ -->
+  <!-- Outpoint                                                            -->
+  <!-- ------------------------------------------------------------------ -->
+  <section class="panel" *ngIf="vm.outpoint as out" aria-labelledby="outpoint-heading">
+    <h2 id="outpoint-heading" i18n="universe.chain.outpoint-title">Output</h2>
     <dl class="facts">
-      <div *ngFor="let item of vm.summary">
-        <dt>{{ item.key }}</dt>
-        <dd>{{ item.value }}</dd>
+      <div>
+        <dt i18n="universe.chain.outpoint-transaction">Transaction</dt>
+        <dd><a class="identifier" [routerLink]="['/', chain, 'tx', out.txid]">{{ out.txid }}</a></dd>
+      </div>
+      <div>
+        <dt i18n="universe.chain.outpoint-index">Output index</dt>
+        <dd>{{ out.vout }}</dd>
+      </div>
+      <div *ngIf="out.amount">
+        <dt i18n="universe.chain.outpoint-amount">Amount</dt>
+        <dd [attr.title]="out.amount.exact">{{ out.amount.display }} {{ ticker }}</dd>
+      </div>
+      <div *ngIf="out.address">
+        <dt i18n="universe.chain.outpoint-address">Address</dt>
+        <dd><a class="identifier" [routerLink]="['/', chain, 'address', out.address]">{{ out.address }}</a></dd>
+      </div>
+      <div *ngIf="out.spent !== null">
+        <dt i18n="universe.chain.outpoint-state">State</dt>
+        <dd>
+          <span class="universe-chip" [ngClass]="out.spent ? 'state-neutral' : 'state-proven'">
+            <ng-container *ngIf="out.spent; else outUnspent" i18n="universe.chain.outpoint-spent">Spent</ng-container>
+            <ng-template #outUnspent><ng-container i18n="universe.chain.outpoint-unspent">Unspent</ng-container></ng-template>
+          </span>
+        </dd>
       </div>
     </dl>
   </section>
 
-  <section class="panel" *ngIf="vm.rows.length">
-    <h2>Results</h2>
-    <div class="table-wrap">
+  <!-- ------------------------------------------------------------------ -->
+  <!-- Anything else the authority returned                                -->
+  <!-- ------------------------------------------------------------------ -->
+  <section class="panel" *ngIf="vm.facts.length" aria-labelledby="record-heading">
+    <h2 id="record-heading" *ngIf="vm.generic; else recordExtraHeading"
+        i18n="universe.chain.record-title">What the authority reported</h2>
+    <ng-template #recordExtraHeading>
+      <h2 id="record-heading" i18n="universe.chain.record-extra-title">Other reported fields</h2>
+    </ng-template>
+    <dl class="facts">
+      <div *ngFor="let fact of vm.facts; trackBy: trackByKey">
+        <dt>{{ fact.label }}</dt>
+        <dd [class.secondary]="fact.kind === 'absent'"
+            [class.identifier]="fact.kind === 'identifier'"
+            [attr.title]="fact.exact">
+          <a *ngIf="fact.link; else plainFact" [routerLink]="fact.link">{{ fact.display }}</a>
+          <ng-template #plainFact>{{ fact.display }}</ng-template>
+          <span class="figure-unit" *ngIf="fact.unit"> {{ fact.unit }}</span>
+        </dd>
+      </div>
+    </dl>
+  </section>
+
+  <section class="panel" *ngIf="vm.collection as collection" aria-labelledby="collection-heading">
+    <h2 id="collection-heading">{{ collection.title }}</h2>
+    <p class="panel-lede" *ngIf="collection.shownCount < collection.totalCount"
+       i18n="universe.chain.collection-truncated">
+      Showing the first {{ collection.shownCount }} of {{ collection.totalCount }} rows the authority returned.
+    </p>
+    <div class="table-wrap" tabindex="0" role="region" aria-labelledby="collection-heading">
       <table>
+        <thead>
+          <tr>
+            <th scope="col" *ngFor="let column of collection.columns; trackBy: trackByKey"
+                [class.numeric]="column.numeric">{{ column.label }}<span class="column-unit" *ngIf="column.unit"> {{ column.unit }}</span></th>
+          </tr>
+        </thead>
         <tbody>
-          <tr *ngFor="let row of vm.rows; trackBy: trackRow">
-            <td *ngFor="let key of keys(row)">
-              <strong>{{ key }}</strong
-              ><br />{{ value(row[key]) }}
+          <tr *ngFor="let row of collection.rows; trackBy: trackByIndex">
+            <td *ngFor="let cell of row; trackBy: trackByKey"
+                [class.identifier]="cell.fact?.kind === 'identifier'"
+                [class.numeric]="cell.fact?.kind === 'amount' || cell.fact?.kind === 'count'"
+                [class.secondary]="!cell.fact || cell.fact.kind === 'absent'"
+                [attr.title]="cell.fact?.exact">
+              <a *ngIf="cell.fact?.link; else plainCell" [routerLink]="cell.fact.link">{{ cell.fact.display }}</a>
+              <ng-template #plainCell>{{ cell.fact ? cell.fact.display : '' }}</ng-template>
             </td>
           </tr>
         </tbody>
@@ -147,8 +514,18 @@
     </div>
   </section>
 
+  <p class="notice empty" *ngIf="page !== 'dashboard' && !vm.payloadError && vm.shape === 'empty'"
+     i18n="universe.chain.empty">
+    The {{ chainName }} authority answered, and had nothing to report for this request.
+  </p>
+
+  <!-- The exact response, for anyone who needs to check the page against it. -->
   <details class="panel evidence" *ngIf="vm.payload">
-    <summary>Full first-party response</summary>
+    <summary i18n="universe.chain.evidence-summary">The response this page was built from</summary>
+    <p class="panel-lede" i18n="universe.chain.evidence-lede">
+      Exactly what our own {{ chainName }} authority returned, unedited. Every figure above is a rendering of a value in here.
+    </p>
     <pre>{{ vm.payload | json }}</pre>
   </details>
+
 </div>

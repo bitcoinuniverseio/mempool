@@ -24,6 +24,32 @@ import {
   ExplorerChain,
 } from '@app/universe/universe.types';
 import {
+  AddressReading,
+  BlockReading,
+  ChainProfile,
+  ChainShape,
+  CollectionReading,
+  Fact,
+  OutpointReading,
+  ProtocolReading,
+  ReadCapability,
+  StatusReading,
+  TransactionReading,
+  chainProfile,
+  classifyPayload,
+  readAddress,
+  readBlock,
+  readCapabilities,
+  readCollection,
+  readIdentifierList,
+  readOutpoint,
+  readProtocolCoverage,
+  readRecordFacts,
+  readStatusRail,
+  readTransaction,
+  shortenIdentifier,
+} from '@app/universe/multichain-explorer/multichain-view';
+import {
   Observable,
   Subject,
   catchError,
@@ -55,8 +81,18 @@ interface ExplorerViewModel {
   readonly capabilityError: string | null;
   readonly payload: ChainExplorerPayload | null;
   readonly payloadError: string | null;
-  readonly rows: readonly Record<string, unknown>[];
-  readonly summary: readonly { key: string; value: string }[];
+  readonly rail: readonly StatusReading[];
+  readonly reads: readonly ReadCapability[];
+  readonly protocols: readonly ProtocolReading[];
+  readonly shape: ChainShape;
+  readonly transaction: TransactionReading | null;
+  readonly block: BlockReading | null;
+  readonly address: AddressReading | null;
+  readonly outpoint: OutpointReading | null;
+  readonly collection: CollectionReading | null;
+  readonly facts: readonly Fact[];
+  /** True when the page is showing a response it has no purpose-built reading for. */
+  readonly generic: boolean;
 }
 
 interface RequestContext {
@@ -73,6 +109,29 @@ const PAGE_KINDS: Partial<Record<MultichainPage, UniverseEntryKind>> = {
   'protocol-detail': 'protocol',
 };
 
+/**
+ * Fields a purpose-built reading already presents. They are skipped when the
+ * page lists the remaining scalars, so a value never appears twice: once in
+ * its designed place and again in the leftover record.
+ */
+const PRESENTED_FIELDS: Partial<Record<ChainShape, readonly string[]>> = {
+  transaction: [
+    'schemaVersion', 'chain', 'network', 'txid', 'status', 'block', 'fee',
+    'transparent', 'shielded', 'protocolActions', 'replacement', 'expiry',
+    'confirmationsAtomic', 'sizeBytesAtomic', 'virtualSizeBytesAtomic',
+    'firstSeenAt', 'completeness',
+  ],
+  block: ['chain', 'network', 'block', 'pagination'],
+  address: [
+    'chain', 'network', 'address', 'balanceAtomic', 'totalReceivedAtomic',
+    'totalSentAtomic', 'unconfirmedBalanceAtomic', 'transactionCountAtomic',
+    'unconfirmedTransactionsAtomic',
+  ],
+  outpoint: ['chain', 'network', 'outpoint', 'output', 'transaction'],
+  collection: ['chain', 'network'],
+  record: ['chain', 'network'],
+};
+
 @Component({
   selector: 'app-multichain-explorer',
   standalone: true,
@@ -85,6 +144,7 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
   private readonly destroyed$ = new Subject<void>();
 
   readonly chain: Exclude<ExplorerChain, 'bitcoin'>;
+  readonly profile: ChainProfile;
   readonly chainName: string;
   readonly ticker: string;
   readonly protocolIds: readonly string[];
@@ -103,12 +163,10 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
     private readonly seo: SeoService
   ) {
     this.chain = this.chainFromUrl(router.url);
-    this.chainName = this.chain === 'dogecoin' ? 'Dogecoin' : 'Zcash';
-    this.ticker = this.chain === 'dogecoin' ? 'DOGE' : 'ZEC';
-    this.protocolIds =
-      this.chain === 'dogecoin'
-        ? ['doginals', 'drc20', 'doge-tap']
-        : ['zerdinals', 'zrunes', 'zrc20'];
+    this.profile = chainProfile(this.chain);
+    this.chainName = this.profile.name;
+    this.ticker = this.profile.ticker;
+    this.protocolIds = this.profile.protocols.map((tab) => tab.id);
   }
 
   ngOnInit(): void {
@@ -151,14 +209,9 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
               ),
             ])
           ),
-          map(([status, result]): ExplorerViewModel => ({
-            capability: status.capability,
-            capabilityError: status.error,
-            payload: result.payload,
-            payloadError: result.error,
-            rows: this.rowsFrom(result.payload),
-            summary: this.summaryFrom(result.payload),
-          }))
+          map(([status, result]): ExplorerViewModel =>
+            this.viewModel(status.capability, status.error, result.payload, result.error)
+          )
         );
       }),
       takeUntil(this.destroyed$)
@@ -168,6 +221,44 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroyed$.next();
     this.destroyed$.complete();
+  }
+
+  private viewModel(
+    capability: ChainCapabilityEnvelope | null,
+    capabilityError: string | null,
+    payload: ChainExplorerPayload | null,
+    payloadError: string | null
+  ): ExplorerViewModel {
+    const shape = classifyPayload(payload);
+    const transaction = payload && shape === 'transaction' ? readTransaction(payload, this.profile) : null;
+    const block = payload && shape === 'block' ? readBlock(payload) : null;
+    const address = payload && shape === 'address' ? readAddress(payload, this.profile) : null;
+    const outpoint = payload && shape === 'outpoint' ? readOutpoint(payload, this.profile) : null;
+    const collection =
+      payload && (shape === 'collection' || shape === 'record')
+        ? readCollection(payload, this.profile)
+        : null;
+    const skip = [
+      ...(PRESENTED_FIELDS[shape] ?? []),
+      ...(collection ? [collection.sourceKey] : []),
+    ];
+    return {
+      capability,
+      capabilityError,
+      payload,
+      payloadError,
+      rail: readStatusRail(capability, this.profile, Date.now()),
+      reads: readCapabilities(capability),
+      protocols: readProtocolCoverage(capability, this.profile),
+      shape,
+      transaction,
+      block,
+      address,
+      outpoint,
+      collection,
+      facts: readRecordFacts(payload, this.profile, skip),
+      generic: shape === 'collection' || shape === 'record',
+    };
   }
 
   toggleSaved(): void {
@@ -185,42 +276,88 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
     });
   }
 
+  /** True when this page addresses a single object a visitor can save. */
+  savable(): boolean {
+    return !!PAGE_KINDS[this.page] && !!this.reference;
+  }
+
   pageLabel(): string {
-    return this.page.replace('protocol-', '').replace('-', ' ');
-  }
-
-  stateLabel(capability: ChainCapabilityEnvelope): string {
-    return capability.ready ? 'ready' : 'degraded';
-  }
-
-  freshness(capability: ChainCapabilityEnvelope): string {
-    const observed = Date.parse(capability.updatedAt);
-    if (!Number.isFinite(observed)) {
-      return 'freshness unknown';
+    switch (this.page) {
+      case 'dashboard':
+        return $localize`:@@universe.chain.page-dashboard:overview`;
+      case 'mempool':
+        return $localize`:@@universe.chain.page-mempool:pending transactions`;
+      case 'block':
+        return $localize`:@@universe.chain.page-block:block`;
+      case 'transaction':
+        return $localize`:@@universe.chain.page-transaction:transaction`;
+      case 'address':
+        return $localize`:@@universe.chain.page-address:address`;
+      case 'outpoint':
+        return $localize`:@@universe.chain.page-outpoint:outpoint`;
+      case 'protocols':
+        return $localize`:@@universe.chain.page-protocols:protocols`;
+      case 'protocol-list':
+        return $localize`:@@universe.chain.page-protocol-list:protocol assets`;
+      case 'protocol-detail':
+        return $localize`:@@universe.chain.page-protocol-detail:protocol asset`;
+      case 'protocol-holders':
+        return $localize`:@@universe.chain.page-protocol-holders:holders`;
+      case 'protocol-events':
+        return $localize`:@@universe.chain.page-protocol-events:events`;
+      default:
+        return '';
     }
-    const seconds = Math.max(0, Math.floor((Date.now() - observed) / 1000));
-    if (seconds < 60) {
-      return `${seconds}s ago`;
-    }
-    return `${Math.floor(seconds / 60)}m ago`;
   }
 
-  value(value: unknown): string {
-    if (value === null || value === undefined) {
-      return 'not available';
+  /** One sentence saying what the reader is looking at, under the heading. */
+  pageLede(): string {
+    switch (this.page) {
+      case 'dashboard':
+        return $localize`:@@universe.chain.lede-dashboard:What this explorer can answer about ${this.chainName}:CHAIN: right now, and how far behind the chain tip each answer is.`;
+      case 'mempool':
+        return $localize`:@@universe.chain.lede-mempool:Transactions seen by our own ${this.chainName}:CHAIN: node and not yet in a block.`;
+      case 'protocols':
+        return $localize`:@@universe.chain.lede-protocols:The asset protocols this explorer indexes on ${this.chainName}:CHAIN:, and the state of each indexer.`;
+      default:
+        return '';
     }
-    if (typeof value === 'object') {
-      return JSON.stringify(value);
-    }
-    return String(value);
   }
 
-  keys(row: Record<string, unknown>): string[] {
-    return Object.keys(row).slice(0, 8);
+  isProtocolPage(): boolean {
+    return this.page.startsWith('protocol');
   }
 
-  trackRow(index: number): number {
+  activeProtocolId(): string {
+    return this.route.snapshot.paramMap.get('protocol') ?? '';
+  }
+
+  short(value: string, lead = 8): string {
+    return shortenIdentifier(value, lead);
+  }
+
+  identifierList(values: unknown): readonly string[] {
+    return readIdentifierList(values);
+  }
+
+  trackByIndex(index: number): number {
     return index;
+  }
+
+  trackById(_index: number, item: { id: string }): string {
+    return item.id;
+  }
+
+  trackByKey(_index: number, item: { key: string }): string {
+    return item.key;
+  }
+
+  trackByProtocol(_index: number, item: { protocolId: string }): string {
+    return item.protocolId;
+  }
+
+  trackByText(_index: number, value: string): string {
+    return value;
   }
 
   private chainFromUrl(url: string): Exclude<ExplorerChain, 'bitcoin'> {
@@ -336,56 +473,20 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
     return `${this.chainName} ${context.page.replace('-', ' ')}${suffix ? ` ${suffix}` : ''}`;
   }
 
-  private rowsFrom(
-    payload: ChainExplorerPayload | null
-  ): readonly Record<string, unknown>[] {
-    if (!payload) {
-      return [];
-    }
-    for (const key of [
-      'transactions',
-      'items',
-      'data',
-      'utxos',
-      'holders',
-      'events',
-      'outputs',
-      'inputs',
-    ]) {
-      const candidate = payload[key];
-      if (Array.isArray(candidate)) {
-        return candidate
-          .slice(0, 100)
-          .map((item) =>
-            typeof item === 'object' && item !== null
-              ? (item as Record<string, unknown>)
-              : { value: item }
-          );
-      }
-    }
-    return [];
-  }
-
-  private summaryFrom(
-    payload: ChainExplorerPayload | null
-  ): readonly { key: string; value: string }[] {
-    if (!payload) {
-      return [];
-    }
-    return Object.entries(payload)
-      .filter(
-        ([, value]) =>
-          !Array.isArray(value) && (typeof value !== 'object' || value === null)
-      )
-      .slice(0, 24)
-      .map(([key, value]) => ({ key, value: this.value(value) }));
-  }
-
   private errorMessage(error: unknown): string {
     const status =
       typeof error === 'object' && error !== null && 'status' in error
         ? String((error as { status: unknown }).status)
         : '';
-    return status ? `Request failed (${status}).` : 'Request failed.';
+    if (status === '404') {
+      return $localize`:@@universe.chain.error-not-found:The ${this.chainName}:CHAIN: authority has no record of this object. It may not exist, or it may be outside the range this indexer covers.`;
+    }
+    if (status === '503') {
+      return $localize`:@@universe.chain.error-unavailable:The ${this.chainName}:CHAIN: authority is not answering right now. Nothing here is stale data presented as current: the page shows no facts rather than old ones.`;
+    }
+    if (status === '400') {
+      return $localize`:@@universe.chain.error-malformed:That identifier is not a valid ${this.chainName}:CHAIN: reference, so no lookup was made.`;
+    }
+    return $localize`:@@universe.chain.error-generic:The request to the ${this.chainName}:CHAIN: authority did not complete.`;
   }
 }
