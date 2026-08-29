@@ -13,7 +13,7 @@ import { Network, findOtherNetworks, getRegex, getTargetUrl, needBaseModuleChang
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { UniverseLocalService } from '@app/universe/universe-local.service';
 import { UniverseIdentifier, classifyUniverseQuery, identifierKindLabel } from '@app/universe/universe-identifier';
-import { ExplorerProtocolDefinition } from '@app/universe/universe.types';
+import { ExplorerChain, ExplorerProtocolDefinition, UniverseSearchResponse } from '@app/universe/universe.types';
 
 @Component({
   selector: 'app-search-form',
@@ -24,6 +24,9 @@ import { ExplorerProtocolDefinition } from '@app/universe/universe.types';
 })
 export class SearchFormComponent implements OnInit {
   @Input() hamburgerOpen = false;
+  @Input() activeChain: ExplorerChain = 'bitcoin';
+  searchAllChains = false;
+  private readonly searchAllChains$ = new BehaviorSubject<boolean>(false);
   env: Env;
   network = '';
   assets: object = {};
@@ -136,9 +139,9 @@ export class SearchFormComponent implements OnInit {
       distinctUntilChanged(),
     );
 
-    const searchResults$ = searchText$.pipe(
+    const searchResults$ = combineLatest([searchText$, this.searchAllChains$]).pipe(
       debounceTime(200),
-      switchMap((text) => {
+      switchMap(([text, allChains]) => {
         if (!text.length) {
           return of([
             [],
@@ -147,6 +150,12 @@ export class SearchFormComponent implements OnInit {
           ]);
         }
         this.isTypeaheading$.next(true);
+        if (this.activeChain !== 'bitcoin' || allChains) {
+          return this.universeApiService.search$(text, this.activeChain, allChains).pipe(
+            map((response) => [[], { nodes: [], channels: [] }, [], response]),
+            catchError(() => of([[], { nodes: [], channels: [] }, [], null])),
+          );
+        }
         if (!this.stateService.networkSupportsLightning()) {
           return zip(
             this.electrsApiService.getAddressesByPrefix$(text).pipe(catchError(() => of([]))),
@@ -204,22 +213,26 @@ export class SearchFormComponent implements OnInit {
               pools: [],
               universe: [],
               universeRecent: this.recentEntries(),
+              universeFailures: [],
+              universeNotice: '',
             };
           }
 
           const result = latestData[1];
           const addressPrefixSearchResults = result[0];
           const lightningResults = result[1];
+          const alternateChain = this.activeChain !== 'bitcoin';
+          const remoteUniverse = alternateChain || this.searchAllChains;
 
           // Do not show date and timestamp results for liquid
           const isNetworkBitcoin = this.network === '' || this.network === 'testnet' || this.network === 'testnet4' || this.network === 'signet';
 
-          const matchesBlockHeight = this.regexBlockheight.test(searchText) && parseInt(searchText) <= this.stateService.latestBlockHeight;
-          const matchesDateTime = this.regexDate.test(searchText) && new Date(searchText).toString() !== 'Invalid Date' && new Date(searchText).getTime() <= Date.now() && isNetworkBitcoin;
-          const matchesUnixTimestamp = this.regexUnixTimestamp.test(searchText) && parseInt(searchText) <= Math.floor(Date.now() / 1000) && isNetworkBitcoin;
-          const matchesTxId = this.regexTransaction.test(searchText) && !this.regexBlockhash.test(searchText);
-          const matchesBlockHash = this.regexBlockhash.test(searchText);
-          const matchesAddress = !matchesTxId && this.regexAddress.test(searchText);
+          const matchesBlockHeight = !remoteUniverse && this.regexBlockheight.test(searchText) && parseInt(searchText) <= this.stateService.latestBlockHeight;
+          const matchesDateTime = !remoteUniverse && this.regexDate.test(searchText) && new Date(searchText).toString() !== 'Invalid Date' && new Date(searchText).getTime() <= Date.now() && isNetworkBitcoin;
+          const matchesUnixTimestamp = !remoteUniverse && this.regexUnixTimestamp.test(searchText) && parseInt(searchText) <= Math.floor(Date.now() / 1000) && isNetworkBitcoin;
+          const matchesTxId = !remoteUniverse && this.regexTransaction.test(searchText) && !this.regexBlockhash.test(searchText);
+          const matchesBlockHash = !remoteUniverse && this.regexBlockhash.test(searchText);
+          const matchesAddress = !remoteUniverse && !matchesTxId && this.regexAddress.test(searchText);
           const publicKey = matchesAddress && searchText.startsWith('0');
           const otherNetworks = findOtherNetworks(searchText, this.network as any || 'mainnet', this.env);
           const liquidAsset = this.assets ? (this.assets[searchText] || []) : [];
@@ -244,13 +257,21 @@ export class SearchFormComponent implements OnInit {
             address: matchesAddress,
             publicKey: publicKey,
             addresses: matchesAddress && addressPrefixSearchResults.length === 1 && searchText === addressPrefixSearchResults[0] ? [] : addressPrefixSearchResults, // If there is only one address and it matches the search text, don't show it in the dropdown
-            otherNetworks: otherNetworks,
+            otherNetworks: remoteUniverse ? [] : otherNetworks,
             nodes: lightningResults.nodes,
             channels: lightningResults.channels,
             liquidAsset: liquidAsset,
             pools: pools,
-            universe: this.universeMatches(searchText),
+            universe: remoteUniverse
+              ? this.remoteUniverseMatches(result[3] as UniverseSearchResponse | null)
+              : this.universeMatches(searchText),
             universeRecent: [],
+            universeFailures: remoteUniverse
+              ? this.remoteUniverseFailures(result[3] as UniverseSearchResponse | null)
+              : [],
+            universeNotice: remoteUniverse && result[3]
+              ? (result[3] as UniverseSearchResponse).privacy.zcash
+              : '',
           };
         })
       );
@@ -292,12 +313,31 @@ export class SearchFormComponent implements OnInit {
 
   /** Recently viewed items, offered when the box is empty. Read from this browser only. */
   private recentEntries(): any[] {
-    return this.universeLocalService.recentSnapshot().slice(0, 5).map((entry) => ({
+    return this.universeLocalService.recentSnapshot()
+      .filter((entry) => this.searchAllChains || entry.chain === this.activeChain)
+      .slice(0, 5).map((entry) => ({
       universeRoute: [entry.path],
       kind: entry.kind,
-      kindLabel: entry.kind,
+      kindLabel: `${entry.chain} ${entry.kind}`,
       label: entry.label,
     }));
+  }
+
+  private remoteUniverseMatches(response: UniverseSearchResponse | null): any[] {
+    if (!response) {return [];}
+    return response.groups.flatMap((group) => group.results.map((entry) => ({
+      universeRoute: [entry.path],
+      kind: entry.kind,
+      kindLabel: `${entry.chain} ${entry.kind}`,
+      label: entry.label,
+    })));
+  }
+
+  private remoteUniverseFailures(response: UniverseSearchResponse | null): string[] {
+    if (!response) {return ['Search service unavailable'];}
+    return response.failures.map(
+      (failure) => `${failure.chain} search ${failure.code}`,
+    );
   }
 
   private navigateUniverse(route: string[]): void {
@@ -305,6 +345,11 @@ export class SearchFormComponent implements OnInit {
     this.searchTriggered.emit();
     this.searchForm.setValue({ searchText: '' });
     this.isSearching = false;
+  }
+
+  setSearchAllChains(enabled: boolean): void {
+    this.searchAllChains = enabled;
+    this.searchAllChains$.next(enabled);
   }
 
   itemSelected(): void {
@@ -342,6 +387,20 @@ export class SearchFormComponent implements OnInit {
     const searchText = result || this.searchForm.value.searchText.trim();
     if (searchText) {
       this.isSearching = true;
+
+      if (this.activeChain !== 'bitcoin' || this.searchAllChains) {
+        this.universeApiService.search$(searchText, this.activeChain, this.searchAllChains)
+          .pipe(catchError(() => of(null)))
+          .subscribe((response) => {
+            const first = this.remoteUniverseMatches(response)[0];
+            if (first) {
+              this.navigateUniverse(first.universeRoute);
+            } else {
+              this.isSearching = false;
+            }
+          });
+        return;
+      }
 
       // Universe identifiers that no base Bitcoin pattern can match are
       // resolved first, so submitting an outpoint or a rune name from the

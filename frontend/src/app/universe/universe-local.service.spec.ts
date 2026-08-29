@@ -76,6 +76,14 @@ describe('UniverseLocalService', () => {
     expect(local.isBookmarked('block', ENTRY.value)).toBe(true);
   });
 
+  it('treats the same kind and value on different chains as different entries', () => {
+    const local = service();
+    local.toggleBookmark(ENTRY);
+    local.toggleBookmark({ ...ENTRY, chain: 'dogecoin', path: `/dogecoin/tx/${ENTRY.value}` });
+    expect(local.isBookmarked('transaction', ENTRY.value, 'bitcoin')).toBe(true);
+    expect(local.isBookmarked('transaction', ENTRY.value, 'dogecoin')).toBe(true);
+  });
+
   it('refuses an entry whose path is not a local route', () => {
     const local = service();
     expect(local.toggleBookmark({ ...ENTRY, path: 'https://example.invalid/tx' })).toBe(false);
@@ -91,7 +99,21 @@ describe('UniverseLocalService', () => {
       ]),
     });
     const local = service();
-    expect(local.recentSnapshot().map((entry) => entry.value)).toEqual(['x']);
+    expect(local.recentSnapshot()).toMatchObject([
+      { value: 'x', chain: 'bitcoin', network: 'mainnet' },
+    ]);
+  });
+
+  it('migrates version one entries to explicit Bitcoin mainnet identity', () => {
+    const store = installStorage({
+      'universe.bookmarks.v1': JSON.stringify([{ ...ENTRY, at: 1 }]),
+    });
+    const local = service();
+    expect(local.isBookmarked('transaction', ENTRY.value, 'bitcoin', 'mainnet')).toBe(true);
+    expect(JSON.parse(store.get('universe.bookmarks.v2'))[0]).toMatchObject({
+      chain: 'bitcoin',
+      network: 'mainnet',
+    });
   });
 
   it('survives a store that throws on every access', () => {
@@ -116,6 +138,7 @@ describe('UniverseLocalService', () => {
     const local = service();
     local.setPreferences({ pinnedProtocols: ['runes', 'ordinals'] });
     local.togglePinnedProtocol('runes');
+    local.setSelectedChain('zcash');
     let pinned: readonly string[] = [];
     local.preferences$.subscribe((preferences) => {
       pinned = preferences.pinnedProtocols;
@@ -150,18 +173,28 @@ describe('UniverseLocalService', () => {
     local.resetAll();
     expect(local.recentSnapshot()).toEqual([]);
     expect(local.isBookmarked('transaction', ENTRY.value)).toBe(false);
-    expect(store.has('universe.recent.v1')).toBe(false);
-    expect(store.has('universe.bookmarks.v1')).toBe(false);
-    expect(store.has('universe.preferences.v1')).toBe(false);
+    expect(store.has('universe.recent.v2')).toBe(false);
+    expect(store.has('universe.bookmarks.v2')).toBe(false);
+    expect(store.has('universe.preferences.v2')).toBe(false);
   });
 
   it('never writes anything that was not asked for', () => {
     const store = installStorage();
     const local = service();
     local.recordVisit(ENTRY);
-    expect([...store.keys()]).toEqual(['universe.recent.v1']);
-    const written = JSON.parse(store.get('universe.recent.v1'));
-    expect(Object.keys(written[0]).sort()).toEqual(['at', 'kind', 'label', 'path', 'value']);
+    expect([...store.keys()]).toEqual(['universe.recent.v2']);
+    const written = JSON.parse(store.get('universe.recent.v2'));
+    expect(Object.keys(written[0]).sort()).toEqual([
+      'at', 'chain', 'kind', 'label', 'network', 'path', 'value',
+    ]);
+  });
+
+  it('stores a selected chain preference without changing a shared URL', () => {
+    const store = installStorage();
+    const local = service();
+    local.setSelectedChain('dogecoin');
+    expect(local.selectedChainSnapshot()).toBe('dogecoin');
+    expect(JSON.parse(store.get('universe.preferences.v2')).selectedChain).toBe('dogecoin');
   });
 
   it('truncates an over-long label rather than storing it whole', () => {

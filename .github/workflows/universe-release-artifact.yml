@@ -94,11 +94,19 @@ jobs:
           cp -a backend/package-lock.json "$stage/backend/package-lock.json"
           cp -a frontend/dist/mempool/browser "$stage/frontend/build"
           cp -a scripts/universe "$stage/scripts/universe"
+          # The unit files travel with the release rather than being fetched
+          # from a checkout that happens to be on the right commit. Adopting
+          # socket activation needed both of these on the host, and taking
+          # them from a workstation is the same class of mistake as building
+          # the artifact there.
+          mkdir -p "$stage/production"
+          cp -a production/linux "$stage/production/linux"
+          test -f "$stage/production/linux/universe-explorer-gateway.socket"
           test -f "$stage/backend/dist/index.js"
           test -f "$stage/frontend/build/index.html"
           test -f "$stage/scripts/universe/gateway.mjs"
           out="$PWD/mempool-$sha.tar.gz"
-          tar -czf "$out" -C "$stage" backend frontend scripts
+          tar -czf "$out" -C "$stage" backend frontend scripts production
           sha256sum "$out" | tee "$out.sha256"
           printf 'name=mempool-%s\n' "$sha" >> "$GITHUB_OUTPUT"
 

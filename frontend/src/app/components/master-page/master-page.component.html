@@ -22,6 +22,22 @@
       </ng-container>
     </a>
 
+    <div ngbDropdown class="chain-picker" *ngIf="network.val === '' && (chainCapabilities$ | async) as capabilities">
+      <button ngbDropdownToggle type="button" class="chain-toggle" aria-haspopup="true" aria-label="Select blockchain">
+        <span class="chain-symbol">{{ chainTicker(activeChain) }}</span>
+        <span class="chain-name">{{ chainName(activeChain) }}</span>
+        <span class="chain-current-state">{{ chainState(chainCapability(capabilities, activeChain)) }}</span>
+      </button>
+      <div ngbDropdownMenu class="chain-menu" [ngClass]="{'dropdown-menu-right': isMobile}">
+        <button ngbDropdownItem type="button" *ngFor="let chain of explorerChains" class="chain-option"
+          [class.active]="activeChain === chain" (click)="switchChain(chain)">
+          <span class="chain-option-title">{{ chainName(chain) }} / {{ chainTicker(chain) }}</span>
+          <span class="chain-option-state">{{ chainState(chainCapability(capabilities, chain)) }}</span>
+          <span class="chain-option-detail">{{ chainDetail(chainCapability(capabilities, chain)) }}</span>
+        </button>
+      </div>
+    </div>
+
     <!-- Network. Kept next to the brand and never inside the protocol
          navigation, because choosing a chain and choosing a protocol are
          different decisions and must not look like the same control. -->
@@ -44,7 +60,7 @@
 
     <!-- Search is the fastest route to any answer here, so it takes the space
          the navigation does not need rather than being tucked into a corner. -->
-    <app-search-form class="site-search" location="top" (searchTriggered)="collapse()"></app-search-form>
+    <app-search-form class="site-search" location="top" [activeChain]="activeChain" (searchTriggered)="collapse()"></app-search-form>
 
     <!-- Connection. Only speaks when there is something wrong: a healthy socket
          needs no ornament, and a broken one must not be a silent grey pill. -->
@@ -67,42 +83,42 @@
   <nav class="primary-nav" i18n-aria-label="master-page.primary-navigation" aria-label="Primary">
     <ul class="nav-list {{ network.val }}">
       <li class="nav-item" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" id="btn-home">
-        <a class="nav-link" [routerLink]="['/' | relativeUrl]" (click)="collapse()">
+        <a class="nav-link" [routerLink]="chainRoute('dashboard')" (click)="collapse()">
           <span class="nav-icon"><app-svg-images name="nav-tachometer" width="21.59" height="100%"></app-svg-images></span>
           <span class="nav-label" i18n="master-page.nav-dashboard">Dashboard</span>
         </a>
       </li>
-      <li class="nav-item mining" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" id="btn-pools" *ngIf="stateService.env.MINING_DASHBOARD">
+      <li class="nav-item mining" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" id="btn-pools" *ngIf="activeChain === 'bitcoin' && stateService.env.MINING_DASHBOARD">
         <a class="nav-link" [routerLink]="['/mining' | relativeUrl]" (click)="collapse()">
           <span class="nav-icon"><app-svg-images name="nav-pickaxe" width="21.59" height="100%"></app-svg-images></span>
           <span class="nav-label" i18n="master-page.nav-mining">Mining</span>
         </a>
       </li>
-      <li class="nav-item" routerLinkActive="active" id="btn-blocks" *ngIf="!stateService.env.MINING_DASHBOARD">
+      <li class="nav-item" routerLinkActive="active" id="btn-blocks" *ngIf="activeChain === 'bitcoin' && !stateService.env.MINING_DASHBOARD">
         <a class="nav-link" [routerLink]="['/blocks' | relativeUrl]" (click)="collapse()">
           <span class="nav-icon"><app-svg-images name="nav-cubes" width="21.59" height="100%"></app-svg-images></span>
           <span class="nav-label" i18n="master-page.nav-blocks">Blocks</span>
         </a>
       </li>
       <li class="nav-item" routerLinkActive="active" id="btn-universe-pulse" *ngIf="network.val === ''">
-        <a class="nav-link" [routerLink]="['/pulse' | relativeUrl]" (click)="collapse()">
+        <a class="nav-link" [routerLink]="chainRoute('mempool')" (click)="collapse()">
           <span class="nav-icon"><app-svg-images name="nav-universe-pulse" width="21.59" height="100%"></app-svg-images></span>
-          <span class="nav-label" i18n="master-page.nav-pulse">Pulse</span>
+          <span class="nav-label" i18n="master-page.nav-pulse">Mempool</span>
         </a>
       </li>
       <li class="nav-item" routerLinkActive="active" id="btn-universe-protocols" *ngIf="network.val === ''">
-        <a class="nav-link" [routerLink]="['/protocols' | relativeUrl]" (click)="collapse()">
+        <a class="nav-link" [routerLink]="chainRoute('protocols')" (click)="collapse()">
           <span class="nav-icon"><app-svg-images name="nav-universe-protocols" width="21.59" height="100%"></app-svg-images></span>
           <span class="nav-label" i18n="master-page.nav-protocols">Protocols</span>
         </a>
       </li>
-      <li class="nav-item" routerLinkActive="active" id="btn-lightning" *ngIf="stateService.networkSupportsLightning()">
+      <li class="nav-item" routerLinkActive="active" id="btn-lightning" *ngIf="activeChain === 'bitcoin' && stateService.networkSupportsLightning()">
         <a class="nav-link" [routerLink]="['/lightning' | relativeUrl]" (click)="collapse()">
           <span class="nav-icon"><app-svg-images name="nav-bolt" width="21.59" height="100%"></app-svg-images></span>
           <span class="nav-label" i18n="master-page.nav-lightning">Lightning</span>
         </a>
       </li>
-      <li class="nav-item" routerLinkActive="active" id="btn-graphs">
+      <li class="nav-item" routerLinkActive="active" id="btn-graphs" *ngIf="activeChain === 'bitcoin'">
         <a class="nav-link" [routerLink]="['/graphs' | relativeUrl]" (click)="collapse()">
           <span class="nav-icon"><app-svg-images name="nav-chart-area" width="21.59" height="100%"></app-svg-images></span>
           <span class="nav-label" i18n="master-page.nav-graphs">Charts</span>
