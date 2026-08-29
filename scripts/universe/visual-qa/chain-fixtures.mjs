@@ -156,10 +156,10 @@ function zcashTransaction() {
     expiry: { heightAtomic: '2884160', state: 'pending' },
     transparent: {
       inputs: [
-        { indexAtomic: '0', previousOutpoint: `${ZEC_TXID}:0`, address: 't1KrGGkMTgVTNaAmXcnCrMTgVTNaAmXcnCr', valueAtomic: '250000000', coinbase: false },
+        { indexAtomic: '0', previousOutpoint: `${ZEC_TXID}:0`, address: 't1WhKz4uNbLBmYMsJvUeAqDPxKfR2nGdTca', valueAtomic: '250000000', coinbase: false },
       ],
       outputs: [
-        { indexAtomic: '0', address: 't1SoMeTransparentOutputAddressXXXXX', valueAtomic: '99980000', spent: null },
+        { indexAtomic: '0', address: 't1QjR7bYpNvA3kHsWmEzXuF9dLcT6gVbKrn', valueAtomic: '99980000', spent: null },
       ],
     },
     shielded: {
