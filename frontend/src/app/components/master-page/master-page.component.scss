@@ -8,6 +8,10 @@
 .site-header {
   background-color: var(--u-surface-raised);
   border-bottom: 1px solid var(--u-border);
+  // The bar itself pads for the top inset rather than the header being pushed
+  // down by it, so the header's own background reaches under the status bar
+  // instead of leaving a strip of page colour above it.
+  padding-top: var(--u-safe-top);
   position: sticky;
   top: 0;
   width: 100%;
@@ -21,8 +25,23 @@
   margin: 0 auto;
   max-width: var(--u-width-page);
   min-height: 60px;
-  padding: var(--u-space-2) var(--u-space-3);
+  // max() rather than a bare inset: a phone with no cutout reports zero, and
+  // the row still needs its ordinary side padding. In landscape on a notched
+  // phone the inset is the larger of the two and the row moves clear of it.
+  padding: var(--u-space-2) max(var(--u-space-3), var(--u-safe-right))
+           var(--u-space-2) max(var(--u-space-3), var(--u-safe-left));
   width: 100%;
+
+  // Compact landscape. A phone on its side has about 320 to 430 pixels of
+  // height in total, and a 60px header plus a 56px bar leaves very little of
+  // it for the page. Tightening the header is worth more here than anywhere
+  // else, and the controls inside it keep their own touch floor.
+  @media (max-width: 991.98px) and (max-height: 479.98px) {
+    gap: var(--u-space-2);
+    min-height: 48px;
+    padding-bottom: var(--u-space-1);
+    padding-top: var(--u-space-1);
+  }
 
   @media (min-width: 992px) {
     gap: var(--u-space-4);
@@ -125,6 +144,13 @@
   padding: 0 var(--u-space-2);
   transition: background-color var(--u-duration-fast) var(--u-ease-out),
               border-color var(--u-duration-fast) var(--u-ease-out);
+
+  // Same reasoning as the chain toggle: a control sized for a cursor is not
+  // sized for a thumb, and these two sit side by side.
+  @media (pointer: coarse) {
+    min-height: var(--u-touch-target);
+    padding-inline: var(--u-space-3);
+  }
 
   &:hover {
     background: var(--u-surface-hover);
@@ -229,6 +255,13 @@
   bottom: 0;
   box-shadow: 0 -2px 12px var(--u-shadow-color);
   left: 0;
+  // The bar pads for the home indicator itself instead of sitting above it.
+  // Its background then runs to the physical bottom of the screen, which is
+  // what stops a strip of page colour showing through under the bar, and the
+  // targets sit clear of the gesture area rather than fighting it for taps.
+  padding-bottom: var(--u-safe-bottom);
+  padding-left: var(--u-safe-left);
+  padding-right: var(--u-safe-right);
   position: fixed;
   width: 100%;
   z-index: var(--u-z-sticky);
@@ -257,6 +290,34 @@
     overflow-x: auto;
     scrollbar-width: none;
     &::-webkit-scrollbar { display: none; }
+
+    // The scroller has to say that it scrolls.
+    //
+    // A clipped row with a hidden scrollbar is indistinguishable from a row
+    // that simply ends, so the destinations past the edge were reachable and
+    // undiscoverable at the same time. These are the two-layer scroll shadows:
+    // a pair of covers painted in the bar's own colour that scroll with the
+    // content, and a pair of shadows painted behind them that do not. When the
+    // row is at its left end the left cover sits exactly on the left shadow and
+    // hides it; scroll away from that end and the cover moves off, revealing
+    // the shadow underneath. So a fade appears on precisely the side that has
+    // more to show, and no fade appears at all when everything already fits.
+    //
+    // All of it is CSS. Nothing measures the element, so it stays correct
+    // through rotation, a fold, a split-screen resize and a chain switch that
+    // changes how many destinations there are.
+    background-image:
+      linear-gradient(to right, var(--u-surface-raised) 40%, rgba(0, 0, 0, 0)),
+      linear-gradient(to left, var(--u-surface-raised) 40%, rgba(0, 0, 0, 0)),
+      linear-gradient(to right, var(--u-shadow-color), rgba(0, 0, 0, 0)),
+      linear-gradient(to left, var(--u-shadow-color), rgba(0, 0, 0, 0));
+    background-position: left center, right center, left center, right center;
+    background-repeat: no-repeat;
+    background-size: 32px 100%, 32px 100%, 14px 100%, 14px 100%;
+    background-attachment: local, local, scroll, scroll;
+
+    // Keeping the active destination off the very edge when it is scrolled to.
+    scroll-padding-inline: var(--u-space-5);
   }
 
   @media (min-width: 992px) {
@@ -289,6 +350,16 @@
   text-decoration: none;
   transition: color var(--u-duration-fast) var(--u-ease-out),
               background-color var(--u-duration-fast) var(--u-ease-out);
+
+  // Compact landscape. The bar keeps every destination and every target width,
+  // and gives back the vertical room by putting the icon beside its label
+  // instead of above it. Nothing is hidden to buy the height.
+  @media (max-width: 991.98px) and (max-height: 479.98px) {
+    flex-direction: row;
+    gap: var(--u-space-2);
+    min-height: var(--u-touch-target);
+    padding-inline: var(--u-space-3);
+  }
 
   &:hover {
     background: var(--u-surface-hover);
@@ -387,21 +458,21 @@
 main {
   // No minimum width. A floor here forced every route to overflow sideways on
   // a 320px screen, which is the narrowest phone still in common use.
-  max-width: 100vw;
+  //
+  // 100% rather than 100vw: on a desktop window with a classic scrollbar, 100vw
+  // counts the scrollbar's width and 100% does not, so the viewport unit was
+  // itself a source of the sideways overflow it was meant to prevent.
+  max-width: 100%;
   min-width: 0;
   transition: max-width var(--u-duration-base) var(--u-ease-out);
   width: 100%;
 
-  // Clear the fixed bottom navigation so the last row of any page stays
-  // reachable rather than sitting underneath it.
-  @media (max-width: 991.98px) {
-    padding-bottom: 68px;
-  }
 }
 
 .empty-sidenav {
   background-color: transparent;
   height: calc(100vh - 65px);
+  height: calc(100dvh - 65px);
   padding-bottom: 20px;
   position: sticky;
   top: 65px;
@@ -421,12 +492,57 @@ main {
  * Giving the outlet itself a viewport-height floor starts the footer below the
  * fold instead, so later growth moves it entirely outside the viewport and
  * counts for nothing.
+ *
+ * The unit here is deliberately the large viewport and not the dynamic one.
+ * dvh shrinks and grows as the browser chrome collapses, so a floor written in
+ * dvh would reflow the column on every scroll gesture on a phone, which is the
+ * exact shift this rule exists to prevent. lvh is the tallest the viewport ever
+ * gets, so the footer starts below the fold in every chrome state and the floor
+ * never moves. vh is the same measurement on mobile and is kept underneath for
+ * engines that predate the unit.
  */
 .page-column {
   min-height: 100vh;
+  min-height: 100lvh;
   min-width: 0;
+
+  // The side insets belong here rather than on the body.
+  //
+  // A phone with a cutout held sideways puts the notch beside the page, so
+  // without this the first characters of every line sit under it. It is the
+  // column and not the body that takes it, because the header and the bottom
+  // bar have to keep reaching the physical edges of the screen: padding the
+  // body would have pulled their backgrounds inwards and left a strip of page
+  // colour down the side of both. They carry the same insets internally, so
+  // the chrome is full-bleed and its contents are still clear of the cutout.
+  padding-left: var(--u-safe-left);
+  padding-right: var(--u-safe-right);
+
+  // Clear the fixed bottom bar so the last row of the page stays reachable
+  // rather than sitting underneath it.
+  //
+  // This belongs to the column and not to main, which is where it used to be.
+  // The footer is a sibling of main, so a reservation inside main cleared the
+  // bar for every route and cleared nothing for the footer: the language,
+  // currency and theme controls, and the whole last row of links, sat behind
+  // the bar on every phone. Reserving on their shared parent covers both.
+  //
+  // Derived from what the bar occupies rather than a number copied from it:
+  // its own height plus whatever the device reserves below it, plus a gap so
+  // the last row is not pressed against the rule.
+  @media (max-width: 991.98px) {
+    padding-bottom: calc(var(--u-bottom-nav-space) + var(--u-space-4));
+  }
+
+  // Landscape gives the bar back its height, so the reservation follows it
+  // down. The bar is measured by --u-touch-target there, not by the taller
+  // stacked link.
+  @media (max-width: 991.98px) and (max-height: 479.98px) {
+    padding-bottom: calc(var(--u-touch-target) + 1px + var(--u-safe-bottom) + var(--u-space-3));
+  }
 
   > main {
     min-height: 100vh;
+    min-height: 100lvh;
   }
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Input } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnInit, OnDestroy, Input, ViewChild } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { Env, StateService } from '@app/services/state.service';
 import { Observable, catchError, filter, merge, of, shareReplay, Subscription, switchMap, timer } from 'rxjs';
@@ -8,6 +8,7 @@ import { NavigationService } from '@app/services/navigation.service';
 import { StorageService } from '@app/services/storage.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { UniverseLocalService } from '@app/universe/universe-local.service';
+import { UniverseViewportService } from '@app/universe/universe-viewport.service';
 import { ChainCapabilityEnvelope, ExplorerChain } from '@app/universe/universe.types';
 import { describeChainReasons } from '@app/universe/multichain-explorer/chain-reasons';
 import {
@@ -27,9 +28,11 @@ import {
   styleUrls: ['./master-page.component.scss'],
   standalone: false,
 })
-export class MasterPageComponent implements OnInit, OnDestroy {
+export class MasterPageComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input() headerVisible = true;
   @Input() footerVisibleOverride: boolean | null = null;
+
+  @ViewChild('navList') navList?: ElementRef<HTMLElement>;
 
   env: Env;
   network$: Observable<string>;
@@ -62,6 +65,7 @@ export class MasterPageComponent implements OnInit, OnDestroy {
     private router: Router,
     private universeApi: UniverseApiService,
     private universeLocal: UniverseLocalService,
+    private viewport: UniverseViewportService,
   ) { }
 
   ngOnInit(): void {
@@ -93,7 +97,13 @@ export class MasterPageComponent implements OnInit, OnDestroy {
       filter((event): event is NavigationEnd => event instanceof NavigationEnd),
     ).subscribe((event) => {
       this.activeChain = explorerChainFromUrl(event.urlAfterRedirects);
+      this.revealActiveDestination();
     });
+
+    // The one piece of adaptive behaviour that is not expressible in CSS. See
+    // UniverseViewportService: on iOS the software keyboard covers the page
+    // rather than shortening it, so no viewport unit knows it is there.
+    this.viewport.track();
     this.chainCapabilities$ = this.stateService.isBrowser
       ? timer(0, 15_000).pipe(
           switchMap(() => this.universeApi.getChains$().pipe(catchError(() => of([])))),
@@ -134,6 +144,48 @@ export class MasterPageComponent implements OnInit, OnDestroy {
       case 'liquidtestnet': return $localize`:@@master-page.network-liquidtestnet:Liquid Testnet`;
       default: return network;
     }
+  }
+
+  ngAfterViewInit(): void {
+    this.revealActiveDestination();
+  }
+
+  /**
+   * Scroll the current destination into the bottom bar's visible run.
+   *
+   * Below the breakpoint the bar is a horizontal scroller, because six or more
+   * destinations cannot be full-size targets and all on screen at 320 pixels
+   * at once. Everything that follows from that choice is handled in CSS: the
+   * scroll shadows say which side has more, and the targets keep their size.
+   * What CSS cannot do is put the scroller at the right starting offset.
+   *
+   * Without this, arriving on Charts from a link showed a bar scrolled to its
+   * left end with Dashboard highlighted-looking and Charts off the right edge,
+   * so the bar disagreed with the page about where the visitor was. It runs
+   * after every navigation and once on first paint.
+   *
+   * `nearest` on both axes, so a destination already fully visible does not
+   * move, and the page itself is never scrolled by this.
+   */
+  private revealActiveDestination(): void {
+    // There is no scroller and no animation frame on the server.
+    if (!this.stateService.isBrowser) {
+      return;
+    }
+    const list = this.navList?.nativeElement;
+    if (!list || typeof list.scrollWidth !== 'number') {
+      return;
+    }
+    // Nothing to reveal when the bar is not a scroller, which is every width
+    // at and above the breakpoint.
+    if (list.scrollWidth <= list.clientWidth) {
+      return;
+    }
+    // After the router has swapped the active class on, not before it.
+    requestAnimationFrame(() => {
+      const active = list.querySelector('.nav-item.active');
+      active?.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'auto' });
+    });
   }
 
   collapse(): void {

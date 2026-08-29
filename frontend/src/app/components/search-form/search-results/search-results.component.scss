@@ -19,11 +19,46 @@
   color: var(--red);
 }
 
+// The result list hangs from the field, and has to stay inside the room the
+// field actually has beneath it.
+//
+// Two things were wrong here on a phone. The offset was 42px, a hard-coded
+// copy of a 40px field, so raising the field to a thumb-sized 48px on touch
+// left the list overlapping the last six pixels of the control that produced
+// it. `top: 100%` measures the field instead of restating its height, so the
+// two cannot drift apart again.
+//
+// The height had no cap at all. A query matching a dozen things ran the list
+// off the bottom of the screen, and because this list is positioned rather
+// than in flow, the page would not scroll to reach the rest of it: results
+// existed that could not be looked at. The cap is the smaller of what the
+// window has and what the keyboard has left of it, because those are different
+// numbers on iOS and the keyboard is open in exactly the moment this list is
+// being read.
+//
+// The three declarations are a deliberate ladder, not a repetition. Each is
+// discarded whole by an engine that cannot parse it, so the last one an engine
+// understands is the one that applies: `vh` everywhere, `dvh` from Safari 15.4
+// and Chrome 108, and the visual-viewport figure only where the service could
+// publish it. Writing them into a single `min()` would have made the whole
+// declaration invalid on the older engines rather than degrading through them.
+//
+// 9rem is what the header takes above the field at its tallest, which is the
+// two-row layout below 600px, plus a margin so the list does not sit flush to
+// the keyboard. `max()` keeps a floor under it, because in landscape with the
+// keyboard open the arithmetic can reach a height too short to show a single
+// result, and a short scrollable list is still usable where a collapsed one is
+// not.
 .dropdown-menu {
   position: absolute;
-  top: 42px;
+  top: calc(100% + 2px);
   left: 0px;
   box-shadow: 0.125rem 0.125rem 0.25rem var(--u-shadow-color);
+  max-height: calc(100vh - 9rem);
+  max-height: calc(100dvh - 9rem);
+  max-height: max(8rem, calc(var(--u-visual-viewport-height, 100vh) - 9rem));
+  overflow-y: auto;
+  overscroll-behavior: contain;
   width: 100%;
 }
 

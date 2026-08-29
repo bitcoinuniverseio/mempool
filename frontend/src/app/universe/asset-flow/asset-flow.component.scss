@@ -113,6 +113,15 @@
     color: var(--u-text-muted);
     cursor: pointer;
 
+    // One of these sits on every input and every output, so a transaction with
+    // a dozen positions is a dozen of them stacked a few pixels apart. That is
+    // both a repeated control and a crowded one.
+    @media (pointer: coarse), (max-width: 991.98px) {
+      align-items: center;
+      display: flex;
+      min-height: var(--u-touch-target);
+    }
+
     &:hover { color: var(--u-brand); }
 
     &:focus-visible {
@@ -292,6 +301,13 @@
     cursor: pointer;
     color: var(--u-text-muted);
     min-height: 32px;
+
+    // This is the disclosure that opens the evidence for a whole flow, and
+    // there is one per flow. 32px is a deliberate desktop size; a thumb wants
+    // the platform floor.
+    @media (pointer: coarse), (max-width: 991.98px) {
+      min-height: var(--u-touch-target);
+    }
     display: flex;
     align-items: center;
   }

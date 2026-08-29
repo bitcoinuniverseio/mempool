@@ -598,6 +598,13 @@
 }
 
 .lens-option {
+  // 34px is a comfortable pill to click and a near miss to tap, and there are
+  // three of them side by side. The larger floor only applies where a thumb is
+  // doing the pointing.
+  @media (pointer: coarse), (max-width: 991.98px) {
+    min-height: var(--u-touch-target);
+  }
+
   background: var(--u-surface-sunken);
   border: 1px solid var(--u-border);
   border-radius: var(--u-radius-pill);
@@ -730,11 +737,21 @@
     position: static;
 
     .toggler-option {
+      align-items: center;
       border-radius: var(--u-radius-sm);
       color: var(--u-text-muted);
+      display: inline-flex;
       font-size: var(--u-text-xs);
       font-weight: var(--u-weight-medium);
+      justify-content: center;
       padding: 2px var(--u-space-2);
+
+      // These two are a switch between two readings of the same figure, sat
+      // next to each other. 24px tall was already the thing the comment above
+      // says this rule set out to fix, only less so.
+      @media (pointer: coarse), (max-width: 991.98px) {
+        min-height: var(--u-touch-target);
+      }
 
       &:hover { color: var(--u-text-primary); }
 

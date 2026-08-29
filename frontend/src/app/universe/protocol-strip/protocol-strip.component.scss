@@ -50,6 +50,14 @@
     border-radius: 0.25rem;
     min-height: 32px;
 
+    // The strip is a row of protocol chips, all the same shape, all leading
+    // somewhere. Repeated controls sitting side by side are the case the
+    // platform floor is written for, because a near miss lands on the chip
+    // next to the one that was aimed at rather than on nothing.
+    @media (pointer: coarse), (max-width: 991.98px) {
+      min-height: var(--u-touch-target);
+    }
+
     &:hover,
     &:focus-visible {
       border-color: var(--universe-protocol-runes);
