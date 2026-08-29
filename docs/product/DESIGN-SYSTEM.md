@@ -600,6 +600,46 @@ node scripts/universe/visual-qa/mobile-check.mjs --base=http://127.0.0.1:8080
 come from the same list the visual matrix walks, so the two gates cannot
 disagree about what the product is.
 
+## Performance budgets
+
+`scripts/universe/visual-qa/mobile-perf.mjs`, in the same job, on a 390 by 844
+window with the processor throttled four times and the network at slow 4G.
+
+Two numbers are gated, and they are the two that are properties of the build
+rather than of the machine:
+
+| Budget | Value | Why it is gateable |
+|---|---|---|
+| eager payload, compressed | 480kB | the same commit gives the same number anywhere |
+| cumulative layout shift | 0.1 | a property of the stylesheet, not the clock |
+
+The eager payload is runtime, polyfills, main and styles: what a browser must
+have before the shell exists. Measured at `bea93c1ec`, develop was 463kB
+compressed and 1655kB raw; with the mobile work it is 464kB and 1659kB. The
+ceiling is set where a real regression trips it and ordinary drift does not.
+Raise it deliberately, and say what bought the bytes.
+
+Largest contentful paint is printed and not gated. The 2.5 second target is a
+field number for a real device on a real network, and this is a throttled
+headless browser on a runner that is also building and serving. The same commit
+measured twelve seconds and twenty on two routes whose shells are identical. A
+number that swings by eight seconds between runs of the same code cannot gate
+anything; used as one it fails honest changes and passes slow ones depending on
+what else the machine is doing. What is still failed is a paint that never
+happens, which is a shell that did not render rather than one that rendered
+slowly.
+
+One route is over the layout budget for a reason that is written down rather
+than hidden. On the transaction route, at about three seconds, `div.panel`
+grows from 46 to 193 pixels as the tracker bar and the confirmations render
+into it, pushing `div.bottom-panel` down 148 pixels. That is 0.103 of shift,
+measured on develop before this work and 0.108 after. It is recorded with its
+figure and printed every run, and the route is held to that figure, so drifting
+further fails even while it is over. Reserving the room means knowing the
+panel's height before the transaction is read, and it is not one height: an
+alert, a tracker bar and a confirmation count are three different sizes. That
+is work on the tracker's loading design, not on the shell.
+
 ### Real devices
 
 Emulation is the gate; devices are the proof. Before a mobile change is
@@ -626,6 +666,7 @@ rotation, back navigation, and a live update arriving.
 | `scripts/universe/visual-qa/capture.mjs` | the route matrix: themes, widths, and data states |
 | `scripts/universe/visual-qa/modes-check.mjs` | forced colours and 200 percent zoom |
 | `scripts/universe/visual-qa/mobile-check.mjs` | the mobile gate: windows, insets, targets, fixed layers, rotation |
+| `scripts/universe/visual-qa/mobile-perf.mjs` | the payload, the layout shift, and the recorded exception to it |
 | `frontend/src/app/universe/universe-viewport.service.ts` | the visual viewport, published as CSS, for the software keyboard |
 | `scripts/universe/visual-qa/fixtures.mjs` | the data every reviewed route renders from |
 
