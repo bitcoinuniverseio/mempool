@@ -389,8 +389,11 @@
     border-top: 1px solid var(--u-divider);
   }
 
+  // The label does not stretch to the end of its track. It used to, which put
+  // every state chip against the right edge of a 320 pixel cell with a hand's
+  // width of nothing binding it to the words it answers.
   .read-label {
-    flex: 1 1 auto;
+    flex: 0 1 auto;
     min-width: 0;
     font-size: var(--u-text-sm);
   }
@@ -815,6 +818,15 @@ tbody tr:last-child td {
     cursor: pointer;
     font-weight: var(--u-weight-semibold);
     color: var(--u-text-secondary);
+
+    // The only control that opens this, and a disclosure triangle beside a
+    // word is about 18 pixels tall. 44 is the smallest target a finger can be
+    // expected to hit.
+    @media (pointer: coarse), (max-width: 991.98px) {
+      align-items: center;
+      display: flex;
+      min-height: 44px;
+    }
   }
 
   &[open] summary {
@@ -895,6 +907,11 @@ tbody tr:last-child td {
   &:focus-visible {
     border-color: var(--u-brand-accent);
     color: var(--u-brand);
+  }
+
+  @media (pointer: coarse) {
+    min-height: 44px;
+    padding-inline: var(--u-space-3);
   }
 }
 
