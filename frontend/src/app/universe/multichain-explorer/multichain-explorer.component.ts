@@ -397,14 +397,18 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
     return index;
   }
 
-  /** "3 inscriptions and 2 ZRune events", in the reader's language. */
+  /**
+   * "inscriptions (3), zrune events (1)".
+   *
+   * The count sits beside the name rather than in front of it. The names come
+   * from the response's own field names, which are already plural, so "1
+   * inscriptions" is what putting the number first produces, for every list
+   * with one entry in it.
+   */
   unlistedSummary(entries: readonly { label: string; count: number }[]): string {
-    const parts = entries.map((entry) => `${entry.count} ${entry.label.toLowerCase()}`);
-    if (parts.length < 2) {
-      return parts.join('');
-    }
-    const last = parts[parts.length - 1];
-    return $localize`:@@universe.chain.list-join:${parts.slice(0, -1).join(', ')}:ITEMS: and ${last}:LAST:`;
+    return entries
+      .map((entry) => `${entry.label.toLowerCase()} (${entry.count})`)
+      .join(', ');
   }
 
   trackById(_index: number, item: { id: string }): string {
