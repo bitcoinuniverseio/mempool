@@ -11,6 +11,11 @@ they govern work you submit to that project rather than to this one.
 released branch and is protected: it only ever moves through a promotion from
 `develop`.
 
+The issue tracker is turned off, so a pull request is the only durable place to
+raise something. That is deliberate: a change, its reasoning, its review, and
+its checks stay in one record. Open one even for a report you cannot fix
+yourself, with an empty diff if you have nothing to change yet.
+
 ## Scope conventions
 
 Universe changes live in `frontend/src/app/universe/`, `scripts/universe/`, and
@@ -68,9 +73,9 @@ matters rather than in a glossary.
 
 ## Reporting a vulnerability
 
-Privately, to the Bitcoin Universe security contact, rather than in a public
-pull request. `docs/security/THREAT-MODEL.md` records the trust boundaries this
-deployment assumes.
+Privately, to the Bitcoin Universe security contact. Not in a pull request, and
+not in a commit message. `docs/security/THREAT-MODEL.md` records the trust
+boundaries this deployment assumes.
 
 ---
 

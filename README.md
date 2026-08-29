@@ -290,12 +290,18 @@ upstream security fixes stay easy to take.
 ## Security
 
 Report a suspected vulnerability privately to the Bitcoin Universe security
-contact rather than opening a public issue. `docs/security/THREAT-MODEL.md`
-records the trust boundaries this deployment assumes.
+contact. Do not put it in a pull request.
+`docs/security/THREAT-MODEL.md` records the trust boundaries this deployment
+assumes.
 
 ## Contributing
 
 Work happens on `develop`. Open a pull request against it, keep Universe changes
 inside `frontend/src/app/universe/` and the documented integration points where
-possible, and make sure the checks above pass. [CONTRIBUTING.md](CONTRIBUTING.md)
-covers the details inherited from upstream.
+possible, and make sure the checks above pass.
+
+This repository has its issue tracker turned off, so a pull request is how
+anything gets raised, discussed, and recorded. Open one even for a report you
+cannot fix yourself: describe what you saw and where, and leave the diff empty
+if you have nothing to change yet. [CONTRIBUTING.md](CONTRIBUTING.md) has the
+rest.
