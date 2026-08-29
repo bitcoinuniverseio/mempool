@@ -11,6 +11,10 @@ explorer.bitcoinuniverse.io          public origin, TLS terminated at the gatewa
   -> universe-explorer-tunnel        forward-only SSH tunnel, 127.0.0.1:8385
   -> universe-indexer-01:8099        universe-explorer-gateway
        /api/v1/universe/*  ->  universe-explorer-overlay   127.0.0.1:3400
+       /api/v1/chains      ->  universe-explorer-overlay   127.0.0.1:3400
+       /api/v1/bitcoin/*   ->  universe-explorer-overlay   127.0.0.1:3400
+       /api/v1/dogecoin/*  ->  universe-explorer-overlay   127.0.0.1:3400
+       /api/v1/zcash/*     ->  universe-explorer-overlay   127.0.0.1:3400
        /api/*              ->  universe-explorer-backend   127.0.0.1:8996
        everything else     ->  the built frontend, SPA fallback
 
@@ -141,6 +145,22 @@ suite can see that.
    integration tests against a real database, and the visual matrix.
 2. Build on the runner fleet and pack `backend/dist`, `frontend/dist`, and
    `scripts/universe` into one artifact.
+2b. Refresh `/usr/local/bin/universe-explorer-release` from the artifact
+   before using it. It is a copy, not a symlink, so it does not travel with a
+   release and will otherwise run the previous release's gates against the new
+   one while printing a log that looks entirely normal. It was found a release
+   behind, still carrying gates from before the dependency and rollback guards
+   existed.
+
+   ```bash
+   tar -xzOf mempool-<sha>.tar.gz scripts/universe/release.sh      > /usr/local/bin/universe-explorer-release.new
+   chmod 0755 /usr/local/bin/universe-explorer-release.new
+   mv -f /usr/local/bin/universe-explorer-release.new /usr/local/bin/universe-explorer-release
+   ```
+
+   Taking it from the tarball rather than a checkout keeps the tool and the
+   release it installs on the same commit.
+
 3. `universe-explorer-release install <sha> <artifact>` unpacks it beside the
    running release under `/opt/universe-explorer/releases/mempool-<sha>/` and
    hard-links the dependency tree from the release in use. A release directory
@@ -297,3 +317,31 @@ Every deployment publishes what it is running: the backend reports `gitCommit`
 on `/api/v1/backend-info`, and the public `/source` page renders the release
 SHA, the pinned upstream base, the licence, and the source repository link. A
 build whose SHA is not published must not ship.
+
+## The edge
+
+The public origin terminates on the cPanel host and reaches the explorer
+gateway over an SSH tunnel, through an nginx upstream with a keep-alive pool.
+Two things about that path have already caused incidents and are worth knowing
+before diagnosing a third.
+
+`/favicon.ico` and `/robots.txt` are proxied to apache rather than the tunnel,
+and apache inherited a parent rewrite that redirected them elsewhere. A
+hijacked `robots.txt` means crawlers never saw this site's policy. Both are now
+served from the explorer docroot, with `RewriteEngine On` reset there so the
+parent catch-all does not apply.
+
+The tunnel's server-side sshd child carries every public byte and is
+single-threaded. Under memory pressure it lands in a per-session scope with
+default resource weights, and a few megabytes of page-in on a saturated device
+becomes seconds of stall. Runtime protections were applied during the incident
+of 2026-08-28, but a per-session scope dies with the session, so the protection
+lapses silently whenever the tunnel reconnects. The durable fix is to pin the
+tunnel's server end under a controlled slice.
+
+Operator access degrades before user traffic does on that host, which is
+backwards from what an operator needs: new SSH connections fail during banner
+exchange while the established tunnel keeps serving. A new connection needs
+fork, exec, PAM and password file reads, all uncached IO, and proportional IO
+weight cannot beat a saturated queue. An established session does none of that
+per byte.

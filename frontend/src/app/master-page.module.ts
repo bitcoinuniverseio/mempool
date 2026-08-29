@@ -111,6 +111,16 @@ const routes: Routes = [
         data: { networks: ['bitcoin'] },
       },
       {
+        path: 'dogecoin',
+        loadChildren: () => import('@app/universe/multichain-explorer/multichain-explorer.module').then(m => m.MultichainExplorerModule),
+        data: { networks: ['bitcoin'], chain: 'dogecoin' },
+      },
+      {
+        path: 'zcash',
+        loadChildren: () => import('@app/universe/multichain-explorer/multichain-explorer.module').then(m => m.MultichainExplorerModule),
+        data: { networks: ['bitcoin'], chain: 'zcash' },
+      },
+      {
         path: 'source',
         loadComponent: () => import('@app/universe/source-page/source-page.component').then(m => m.SourcePageComponent),
         data: { networks: ['bitcoin', 'liquid'] },

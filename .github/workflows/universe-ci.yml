@@ -2,7 +2,9 @@ name: Universe CI
 
 on:
   push:
-    branches: [main]
+    # develop is pushed to directly, so restricting this to main left those
+    # pushes with no CI at all between one pull request and the next.
+    branches: [develop, main]
   pull_request:
     branches: [develop, main]
   workflow_dispatch:

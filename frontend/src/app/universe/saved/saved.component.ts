@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Observable, combineLatest, map } from 'rxjs';
 import { SeoService } from '@app/services/seo.service';
+import { ExplorerChain } from '@app/universe/universe.types';
 import {
   UniverseEntry,
   UniverseEntryKind,
@@ -31,6 +32,25 @@ interface SavedViewModel {
 export class SavedComponent implements OnInit {
   vm$: Observable<SavedViewModel>;
   confirmingReset = false;
+  chainFilter: ExplorerChain | 'all' = 'all';
+  kindFilter: UniverseEntryKind | 'all' = 'all';
+  readonly chainFilters: readonly (ExplorerChain | 'all')[] = [
+    'all',
+    'bitcoin',
+    'dogecoin',
+    'zcash',
+  ];
+  readonly kindFilters: readonly (UniverseEntryKind | 'all')[] = [
+    'all',
+    'address',
+    'protocol',
+    'transaction',
+    'block',
+    'outpoint',
+    'inscription',
+    'rune',
+    'sat',
+  ];
 
   constructor(
     private local: UniverseLocalService,
@@ -53,11 +73,36 @@ export class SavedComponent implements OnInit {
   }
 
   remove(entry: UniverseEntry): void {
-    this.local.removeBookmark(entry.kind as UniverseEntryKind, entry.value);
+    this.local.removeBookmark(
+      entry.kind as UniverseEntryKind,
+      entry.value,
+      entry.chain,
+      entry.network,
+    );
   }
 
   clearRecent(): void {
     this.local.clearRecent();
+  }
+
+  visibleEntries(entries: readonly UniverseEntry[]): readonly UniverseEntry[] {
+    return entries.filter(
+      (entry) =>
+        (this.chainFilter === 'all' || entry.chain === this.chainFilter) &&
+        (this.kindFilter === 'all' || entry.kind === this.kindFilter),
+    );
+  }
+
+  updateChainFilter(value: string): void {
+    if (this.chainFilters.includes(value as ExplorerChain | 'all')) {
+      this.chainFilter = value as ExplorerChain | 'all';
+    }
+  }
+
+  updateKindFilter(value: string): void {
+    if (this.kindFilters.includes(value as UniverseEntryKind | 'all')) {
+      this.kindFilter = value as UniverseEntryKind | 'all';
+    }
   }
 
   unpin(protocolId: string): void {
@@ -92,6 +137,6 @@ export class SavedComponent implements OnInit {
   }
 
   trackByEntry(index: number, entry: UniverseEntry): string {
-    return `${entry.kind}:${entry.value}`;
+    return `${entry.chain}:${entry.network}:${entry.kind}:${entry.value}`;
   }
 }

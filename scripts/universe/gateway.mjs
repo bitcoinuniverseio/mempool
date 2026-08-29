@@ -5,6 +5,10 @@
  * One loopback listener that fronts the whole product:
  *
  *   /api/v1/universe/*  ->  the protocol overlay
+ *   /api/v1/chains      ->  the protocol overlay, which owns the chain domain
+ *   /api/v1/bitcoin/*   ->  the protocol overlay
+ *   /api/v1/dogecoin/*  ->  the protocol overlay
+ *   /api/v1/zcash/*     ->  the protocol overlay
  *   /api/*              ->  the explorer backend, including WebSocket upgrades
  *   everything else     ->  the built frontend, with SPA fallback
  *
@@ -151,6 +155,18 @@ const MINING_POOL_LOGO = /^\/resources\/mining-pools\/[A-Za-z0-9._-]+\.svg$/;
 const HASHED_ASSET = /\.[0-9a-f]{16,}\.(?:js|css|woff2?|ttf|png|jpe?g|svg|webp|avif|wasm)$/i;
 
 /**
+ * Chain-domain routes the overlay owns. The overlay registers them under the
+ * same `/api/v1/` prefix the backend uses, so the gateway has to name them
+ * explicitly: anything not listed here still belongs to the Bitcoin backend.
+ */
+const OVERLAY_CHAIN_PREFIXES = [
+  '/api/v1/chains',
+  '/api/v1/bitcoin',
+  '/api/v1/dogecoin',
+  '/api/v1/zcash',
+];
+
+/**
  * Which upstream serves a path, and what path it should see.
  *
  * The explorer backend registers every route under its own `/api/v1/` prefix,
@@ -162,6 +178,11 @@ export function routeFor(pathname, originalUrl) {
   if (pathname === '/api/v1/universe' || pathname.startsWith('/api/v1/universe/')) {
     return { upstream: OVERLAY, path: originalUrl };
   }
+  for (const prefix of OVERLAY_CHAIN_PREFIXES) {
+    if (pathname === prefix || pathname.startsWith(`${prefix}/`)) {
+      return { upstream: OVERLAY, path: originalUrl };
+    }
+  }
   if (pathname === '/api/v1' || pathname.startsWith('/api/v1/')) {
     return { upstream: BACKEND, path: originalUrl };
   }
@@ -172,6 +193,10 @@ export function routeFor(pathname, originalUrl) {
     return { upstream: BACKEND, path: '/api/v1/' };
   }
   return null;
+}
+
+export function websocketUpstreamFor(pathname) {
+  return pathname === '/api/v1/universe/ws' ? OVERLAY : BACKEND;
 }
 
 /**
@@ -404,7 +429,14 @@ const server = http.createServer((request, response) => {
  * through unchanged.
  */
 server.on('upgrade', (request, socket, head) => {
-  const upstream = BACKEND;
+  let pathname;
+  try {
+    pathname = new URL(request.url || '/', 'http://gateway.invalid').pathname;
+  } catch {
+    socket.destroy();
+    return;
+  }
+  const upstream = websocketUpstreamFor(pathname);
   const proxied = net.connect(Number(upstream.port), upstream.hostname, () => {
     const lines = [`${request.method} ${request.url} HTTP/1.1`];
     for (const [name, value] of Object.entries(request.headers)) {
