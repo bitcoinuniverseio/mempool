@@ -496,9 +496,16 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
     );
   }
 
+  /**
+   * The tab title. The chain is already the suffix the SEO service appends, so
+   * naming it here too produced "Dogecoin dashboard - Universe Explorer -
+   * Dogecoin". It also said "dashboard" where the heading said "overview".
+   */
   private pageTitle(context: RequestContext): string {
-    const suffix = this.referenceFrom(context);
-    return `${this.chainName} ${context.page.replace('-', ' ')}${suffix ? ` ${suffix}` : ''}`;
+    const label = this.pageLabel();
+    const reference = this.referenceFrom(context);
+    const subject = label.charAt(0).toUpperCase() + label.slice(1);
+    return reference ? `${subject} ${reference}` : subject;
   }
 
   private errorMessage(error: unknown): string {
