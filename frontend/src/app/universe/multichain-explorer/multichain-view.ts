@@ -34,18 +34,11 @@ import {
   ExplorerChain,
 } from '@app/universe/universe.types';
 import { explorerChainName } from '@app/universe/universe-chain-routing';
-
-/**
- * The evidence tones the design system defines. They are the only tones any
- * chain state may map to, so a chain page and a protocol page describe the
- * same certainty with the same colour and the same word.
- */
-export type EvidenceTone =
-  | 'proven'
-  | 'partial'
-  | 'pending'
-  | 'unavailable'
-  | 'neutral';
+import {
+  EvidenceTone,
+  formatAtomicAmount as formatAtomicDigits,
+  shortenIdentifier as shortenSymmetric,
+} from '@app/universe/universe-evidence';
 
 export interface ChainProtocolTab {
   readonly id: string;
@@ -149,29 +142,19 @@ export function formatAtomicAmount(
   value: string | null | undefined,
   precision: number
 ): ExactNumber | null {
-  if (typeof value !== 'string' || !INTEGER.test(value)) {
+  if (typeof value !== 'string') {
     return null;
   }
-  const negative = value.startsWith('-');
-  const digits = (negative ? value.slice(1) : value).padStart(
-    precision + 1,
-    '0'
-  );
-  const whole = digits.slice(0, digits.length - precision);
-  const fraction = digits.slice(digits.length - precision).replace(/0+$/, '');
-  const display =
-    (negative ? '-' : '') +
-    groupDigits(whole) +
-    (fraction ? `.${fraction}` : '');
-  return { display, exact: value };
+  // The shift itself is the shared evidence vocabulary's, so a Dogecoin balance
+  // and a Bitcoin one are grouped and trimmed by one rule rather than two.
+  // What is added here is the exact source string beside the rendering.
+  const display = formatAtomicDigits(value, precision);
+  return display === '' ? null : { display, exact: value };
 }
 
 /** Shorten a hash for a dense column, keeping both ends so it stays checkable. */
-export function shortenIdentifier(value: string, lead = 8, tail = 6): string {
-  if (value.length <= lead + tail + 1) {
-    return value;
-  }
-  return `${value.slice(0, lead)}…${value.slice(-tail)}`;
+export function shortenIdentifier(value: string, keep = 8): string {
+  return shortenSymmetric(value, keep);
 }
 
 /**
