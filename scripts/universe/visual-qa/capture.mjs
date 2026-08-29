@@ -535,6 +535,11 @@ async function run() {
 
   // The build must not have been rewritten underneath the run.
   //
+  // A server that goes away entirely is already caught mid-run, above, where
+  // a refused connection ends the run rather than logging a hundred identical
+  // page failures. This is the case that guard cannot see: a server that keeps
+  // answering while the files under it are replaced.
+  //
   // An Angular production build empties its output directory before writing
   // it, so a rebuild during a matrix leaves a window where index.html and the
   // lazy chunks are simply absent. The pages served in that window have no
@@ -561,12 +566,6 @@ async function run() {
           `  at the end:   ${bundleAtEnd}`,
           'Rebuild, then run the matrix with nothing else writing to the output.',
         ].join('\n'),
-      );
-    }
-    if (bundleAtStart && !bundleAtEnd) {
-      throw new Error(
-        'the server stopped answering before the matrix finished, so the ' +
-          'results are incomplete. Nothing was measured after that point.',
       );
     }
   }

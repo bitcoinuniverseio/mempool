@@ -29,6 +29,7 @@ import {
   ChainProfile,
   ChainShape,
   CollectionReading,
+  EmptyListReading,
   Fact,
   OutpointReading,
   ProtocolReading,
@@ -42,6 +43,7 @@ import {
   readBlock,
   readCapabilities,
   readCollection,
+  readEmptyList,
   readIdentifierList,
   readOutpoint,
   readProtocolCoverage,
@@ -93,6 +95,7 @@ interface ExplorerViewModel {
   readonly outpoint: OutpointReading | null;
   readonly collection: CollectionReading | null;
   readonly transactionList: TransactionListReading | null;
+  readonly emptyList: EmptyListReading | null;
   readonly facts: readonly Fact[];
   /** True when the page is showing a response it has no purpose-built reading for. */
   readonly generic: boolean;
@@ -281,6 +284,7 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
       outpoint,
       collection,
       transactionList,
+      emptyList: transactionList || collection ? null : readEmptyList(payload),
       facts: readRecordFacts(payload, this.profile, skip),
       generic: shape === 'collection' || shape === 'record',
     };

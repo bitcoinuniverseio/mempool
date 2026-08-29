@@ -585,6 +585,26 @@
     </div>
   </section>
 
+  <!-- An empty list the authority actually returned. Saying nothing here left
+       a reader unable to tell "there are none" from "the list did not load". -->
+  <section class="panel" *ngIf="vm.emptyList as empty" aria-labelledby="empty-list-heading">
+    <h2 id="empty-list-heading">{{ empty.label }}</h2>
+    <p class="verdict">
+      <span class="universe-chip" [ngClass]="empty.proven ? 'state-proven' : 'state-partial'">
+        <ng-container *ngIf="empty.proven; else emptyUnproven" i18n="universe.chain.empty-none">None</ng-container>
+        <ng-template #emptyUnproven><ng-container i18n="universe.chain.empty-unknown">Not established</ng-container></ng-template>
+      </span>
+    </p>
+    <p class="panel-lede" *ngIf="empty.proven; else emptyUnprovenBody" i18n="universe.chain.empty-proven-body">
+      Our own {{ chainName }} node has none right now, and it reported its view as complete. This is none, not an answer that failed to arrive.
+    </p>
+    <ng-template #emptyUnprovenBody>
+      <p class="panel-lede" i18n="universe.chain.empty-unproven-body">
+        The {{ chainName }} authority returned an empty list and did not say its view is complete, so this is not the same as none.
+      </p>
+    </ng-template>
+  </section>
+
   <p class="notice empty" *ngIf="page !== 'dashboard' && !vm.payloadError && vm.shape === 'empty'"
      i18n="universe.chain.empty">
     The {{ chainName }} authority answered, and had nothing to report for this request.
