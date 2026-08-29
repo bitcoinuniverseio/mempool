@@ -81,12 +81,6 @@
   }
 }
 
-// Dim the mark while the socket is down. Paired with the worded status beside
-// it, never as the only signal.
-.brand-dimmed {
-  opacity: 0.45;
-}
-
 .subdomain_logo {
   align-self: center;
   margin: auto;
