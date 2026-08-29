@@ -11,11 +11,15 @@ import { MasterPageComponent } from '@components/master-page/master-page.compone
  * starting offset: the browser has no reason to know that the highlighted item
  * is the one that ought to be on screen.
  *
- * These cover the conditions rather than the scrolling, because the scrolling
- * itself is `scrollIntoView` and belongs to the browser. What is worth pinning
- * down is when it is called at all: never on the server, never on the wide
- * layout where the bar does not scroll, and never for an item that is already
- * fully visible.
+ * What is pinned down here is when the bar moves and by how much: never on the
+ * server, never on the wide layout where the bar does not scroll, never before
+ * the view exists, never for a route that highlights nothing, and never for a
+ * destination that is already inside the bar.
+ *
+ * The offset is written to the bar's own scrollLeft rather than delegated to
+ * scrollIntoView, which adjusts every scrollable ancestor it can reach and so
+ * could move the page's reading position as a side effect of tidying the bar.
+ * These assert the offset, which is only possible because of that choice.
  */
 
 type Rect = { left: number; right: number };
@@ -25,21 +29,18 @@ function navList(opts: {
   clientWidth: number;
   active?: Rect;
   listRect?: Rect;
-}): { el: HTMLElement; scrolled: () => number } {
-  let calls = 0;
+}): { el: HTMLElement; moved: () => number } {
   const active = opts.active
-    ? {
-        getBoundingClientRect: (): Rect => opts.active,
-        scrollIntoView: (): void => void calls++,
-      }
+    ? { getBoundingClientRect: (): Rect => opts.active }
     : null;
   const el = {
     scrollWidth: opts.scrollWidth,
     clientWidth: opts.clientWidth,
+    scrollLeft: 0,
     getBoundingClientRect: (): Rect => opts.listRect ?? { left: 0, right: opts.clientWidth },
     querySelector: (sel: string): unknown => (sel === '.nav-item.active' ? active : null),
   } as unknown as HTMLElement;
-  return { el, scrolled: () => calls };
+  return { el, moved: () => el.scrollLeft };
 }
 
 /**
@@ -71,10 +72,10 @@ function withImmediateFrame(fn: () => void): void {
 }
 
 describe('the bottom bar reveals the current destination', () => {
-  it('scrolls the active item into view when the bar is a scroller', () => {
-    // 480 of destinations in a 320 window, and the active one starts past the
-    // right edge: arriving on Charts from a link.
-    const { el, scrolled } = navList({
+  it('brings a destination past the right edge back into the bar', () => {
+    // 480 of destinations in a 320 window, and the active one ends 110 past
+    // the right edge: arriving on Charts from a link.
+    const { el, moved } = navList({
       scrollWidth: 480,
       clientWidth: 320,
       active: { left: 360, right: 430 },
@@ -82,13 +83,41 @@ describe('the bottom bar reveals the current destination', () => {
 
     withImmediateFrame(() => reveal(component(true, el)));
 
-    expect(scrolled()).toBe(1);
+    // 110 to bring its right edge to the bar's, and 24 more so it does not sit
+    // flush against the edge looking like the last destination there is.
+    expect(moved()).toBe(134);
+  });
+
+  it('brings a destination past the left edge back into the bar', () => {
+    const { el, moved } = navList({
+      scrollWidth: 480,
+      clientWidth: 320,
+      active: { left: -40, right: 30 },
+    });
+    (el as unknown as { scrollLeft: number }).scrollLeft = 200;
+
+    withImmediateFrame(() => reveal(component(true, el)));
+
+    expect(moved()).toBe(200 - 40 - 24);
+  });
+
+  it('leaves a destination that is already inside the bar alone', () => {
+    // The common case. Moving the bar here would be movement the visitor did
+    // not ask for and cannot explain.
+    const { el, moved } = navList({
+      scrollWidth: 480,
+      clientWidth: 320,
+      active: { left: 40, right: 110 },
+    });
+
+    withImmediateFrame(() => reveal(component(true, el)));
+
+    expect(moved()).toBe(0);
   });
 
   it('leaves the wide layout alone', () => {
-    // At and above the breakpoint the bar is a static row that fits. Calling
-    // scrollIntoView there would scroll the page rather than the bar.
-    const { el, scrolled } = navList({
+    // At and above the breakpoint the bar is a static row that fits.
+    const { el, moved } = navList({
       scrollWidth: 700,
       clientWidth: 700,
       active: { left: 0, right: 70 },
@@ -96,11 +125,11 @@ describe('the bottom bar reveals the current destination', () => {
 
     withImmediateFrame(() => reveal(component(true, el)));
 
-    expect(scrolled()).toBe(0);
+    expect(moved()).toBe(0);
   });
 
   it('does nothing on the server', () => {
-    const { el, scrolled } = navList({
+    const { el, moved } = navList({
       scrollWidth: 480,
       clientWidth: 320,
       active: { left: 360, right: 430 },
@@ -108,7 +137,7 @@ describe('the bottom bar reveals the current destination', () => {
 
     withImmediateFrame(() => reveal(component(false, el)));
 
-    expect(scrolled()).toBe(0);
+    expect(moved()).toBe(0);
   });
 
   it('does nothing before the bar exists', () => {
@@ -120,10 +149,10 @@ describe('the bottom bar reveals the current destination', () => {
   it('does nothing when no destination is current', () => {
     // An unrecognised route highlights nothing. Scrolling the bar to its start
     // in that case would be a claim about where the visitor is.
-    const { el, scrolled } = navList({ scrollWidth: 480, clientWidth: 320 });
+    const { el, moved } = navList({ scrollWidth: 480, clientWidth: 320 });
 
     withImmediateFrame(() => reveal(component(true, el)));
 
-    expect(scrolled()).toBe(0);
+    expect(moved()).toBe(0);
   });
 });

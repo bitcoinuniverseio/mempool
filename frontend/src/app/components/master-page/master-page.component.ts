@@ -164,8 +164,14 @@ export class MasterPageComponent implements OnInit, AfterViewInit, OnDestroy {
    * so the bar disagreed with the page about where the visitor was. It runs
    * after every navigation and once on first paint.
    *
-   * `nearest` on both axes, so a destination already fully visible does not
-   * move, and the page itself is never scrolled by this.
+   * The bar's own `scrollLeft` is moved, rather than calling `scrollIntoView`
+   * on the destination. `scrollIntoView` adjusts every scrollable ancestor it
+   * can find, including the document, so a navigation could have moved the
+   * reading position of the page as a side effect of tidying the bar. Writing
+   * one offset on one element cannot do anything but what it says.
+   *
+   * A destination already fully inside the bar is left alone, so the common
+   * case moves nothing at all.
    */
   private revealActiveDestination(): void {
     // There is no scroller and no animation frame on the server.
@@ -184,7 +190,19 @@ export class MasterPageComponent implements OnInit, AfterViewInit, OnDestroy {
     // After the router has swapped the active class on, not before it.
     requestAnimationFrame(() => {
       const active = list.querySelector('.nav-item.active');
-      active?.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'auto' });
+      if (!active) {
+        return;
+      }
+      const item = active.getBoundingClientRect();
+      const bar = list.getBoundingClientRect();
+      // A margin so the revealed destination does not sit flush against the
+      // edge looking like the last one, when it is only the last one visible.
+      const margin = 24;
+      if (item.left < bar.left) {
+        list.scrollLeft -= (bar.left - item.left) + margin;
+      } else if (item.right > bar.right) {
+        list.scrollLeft += (item.right - bar.right) + margin;
+      }
     });
   }
 
