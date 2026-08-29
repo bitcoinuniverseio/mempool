@@ -275,3 +275,79 @@ jobs:
             scripts/universe/visual-qa/artifacts-broad
             scripts/universe/visual-qa/artifacts-chain-states
           retention-days: 30
+
+  # The mobile gate runs beside the visual matrix rather than inside it.
+  #
+  # The matrix job is already 60 minutes of its 100 minute cap, and 78 percent
+  # of that is the deep pass. Adding widths, orientations and device emulation
+  # to it is how a gate stops finishing, which is the fault the split between
+  # the broad and deep passes exists to prevent. So this is a job of its own on
+  # a second runner, and the wall clock of the workflow does not move: it
+  # finishes in roughly a fifth of the time the matrix takes, on hardware that
+  # would otherwise be idle while the matrix runs.
+  #
+  # It builds its own copy rather than taking an artifact from the job beside
+  # it. That costs one extra production build and buys two things worth more
+  # than it: the two gates cannot make each other fail or wait, and this one
+  # can be read, run and debugged on its own.
+  #
+  # Measured at about nine minutes, of which six are the build.
+  mobile:
+    name: Mobile and adaptive layout
+    runs-on: [self-hosted, linux-ultra]
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24.19.0'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install
+        working-directory: frontend
+        run: npm ci
+
+      - name: Production build
+        working-directory: frontend
+        run: npm run build:universe
+
+      - name: Install the visual QA harness
+        working-directory: scripts/universe/visual-qa
+        run: npm ci
+
+      # Same reasoning as the matrix job: a fixed port once measured another
+      # job's build, so each run takes a free one and refuses to continue
+      # unless the process answering is the one it started.
+      - name: Serve the built frontend
+        run: |
+          GATEWAY_PORT=$(node -e "const s=require('net').createServer();s.listen(0,'127.0.0.1',()=>{console.log(s.address().port);s.close()})")
+          echo "GATEWAY_PORT=$GATEWAY_PORT" >> "$GITHUB_ENV"
+          UNIVERSE_GATEWAY_PORT=$GATEWAY_PORT UNIVERSE_GATEWAY_ROOT=frontend/dist/mempool/browser node scripts/universe/gateway.mjs &
+          GATEWAY_PID=$!
+          for i in $(seq 1 30); do
+            curl -fsS -o /dev/null "http://127.0.0.1:$GATEWAY_PORT/" && break
+            sleep 1
+          done
+          kill -0 "$GATEWAY_PID"
+          curl -fsS "http://127.0.0.1:$GATEWAY_PORT/__gateway/health"
+
+      # Eleven routes across seven window sizes, with a coarse pointer, a
+      # software keyboard, a display cutout and a rotation. Seventy-seven page
+      # loads, and every one of them is measured about twelve different ways,
+      # which is why this is cheap: the assertions are free and only the page
+      # loads cost anything.
+      - name: Every window a phone can be, measured with a thumb
+        working-directory: scripts/universe/visual-qa
+        run: node mobile-check.mjs --base=http://127.0.0.1:$GATEWAY_PORT --out=./artifacts-mobile
+
+      - name: Keep the mobile report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: universe-mobile-qa
+          path: scripts/universe/visual-qa/artifacts-mobile
+          retention-days: 30
