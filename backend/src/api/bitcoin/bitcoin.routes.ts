@@ -421,7 +421,14 @@ class BitcoinRoutes {
       res.setHeader('Expires', new Date(Date.now() + 1000 * cacheDuration).toUTCString());
       res.json(block);
     } catch (e: any) {
-      handleError(req, res, e?.response?.status === 404 ? 404 : 500, 'Failed to get block');
+      // Core answers an unknown hash with "Block not found" rather than an
+      // HTTP status, so without this a hash that is simply not a block is
+      // reported as a server fault. Consumers cannot tell that apart from an
+      // outage: the explorer's own search called the whole chain unavailable
+      // whenever it looked up a transaction id here, which is every search.
+      const notFound = e?.response?.status === 404
+        || (e instanceof Error && e.message && e.message.indexOf('Block not found') > -1);
+      handleError(req, res, notFound ? 404 : 500, notFound ? 'Block not found' : 'Failed to get block');
     }
   }
 
