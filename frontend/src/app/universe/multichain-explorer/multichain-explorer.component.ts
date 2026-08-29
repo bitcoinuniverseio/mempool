@@ -157,6 +157,10 @@ const PRESENTED_FIELDS: Partial<Record<ChainShape, readonly string[]>> = {
     'chain', 'network', 'address', 'balanceAtomic', 'totalReceivedAtomic',
     'totalSentAtomic', 'unconfirmedBalanceAtomic', 'transactionCountAtomic',
     'unconfirmedTransactionsAtomic',
+    // The Zcash spellings, read by the address reading. `address_type` and
+    // `publicly_observable` are not repeated here because they are facts about
+    // this address that nothing else on the page states.
+    'schemaVersion', 'balance', 'utxos', 'transactions', 'checkpoint', 'coverage',
   ],
   outpoint: ['chain', 'network', 'outpoint', 'output', 'transaction'],
   collection: ['chain', 'network'],

@@ -1359,12 +1359,67 @@ export function readOffsetPaging(value: unknown): Paging | null {
   };
 }
 
+/**
+ * The Zcash shape. Only what the payload states is read: it publishes the
+ * confirmed and the received balance and nothing about what has been sent or
+ * about anything unconfirmed, and those stay absent. Subtracting one published
+ * figure from the other would produce a total sent that is wrong the moment an
+ * output is immature or unconfirmed, and a wrong figure is worse here than a
+ * missing one.
+ */
+function readFlatAddress(
+  payload: ChainExplorerPayload,
+  profile: ChainProfile
+): AddressReading | null {
+  const address = text(payload.address);
+  if (!address) {
+    return null;
+  }
+  const balance = isRecord(payload.balance) ? payload.balance : {};
+  const history = isRecord(payload.transactions) ? payload.transactions : {};
+  const utxos = Array.isArray(payload.utxos) ? payload.utxos.filter(isRecord) : [];
+  return {
+    address,
+    balance: formatAtomicAmount(text(balance.confirmed_zatoshis), profile.precision),
+    totalReceived: formatAtomicAmount(text(balance.received_zatoshis), profile.precision),
+    totalSent: null,
+    unconfirmedBalance: null,
+    transactionCount: formatExactInteger(integerText(history.total)),
+    unconfirmedCount: null,
+    txids: Array.isArray(history.items)
+      ? history.items.filter((id): id is string => typeof id === 'string')
+      : [],
+    paging: readOffsetPaging(history),
+    utxos: utxos.map((entry) => ({
+      txid: text(entry.txid) ?? '',
+      vout: integerText(entry.vout) ?? '',
+      amount: formatAtomicAmount(text(entry.valueZatoshis), profile.precision),
+      // Not stated for any unspent output by this source, so nothing here says
+      // whether one is confirmed.
+      height: null,
+      confirmations: null,
+      pending: false,
+    })),
+  };
+}
+
 export interface UtxoRow {
   readonly txid: string;
   readonly vout: string;
   readonly amount: ExactNumber | null;
   readonly height: ExactNumber | null;
   readonly confirmations: ExactNumber | null;
+  /**
+   * True when this source states a confirming block for its unspent outputs
+   * and did not state one here, which is what an output still in the mempool
+   * looks like. False when the source never states one, so the absence says
+   * nothing about whether the output is confirmed.
+   *
+   * Without the distinction a missing height read as "not in a block yet", and
+   * every unspent output on a Zcash address, all of them confirmed, was
+   * labelled pending.
+   */
+  readonly pending: boolean;
 }
 
 export interface AddressReading {
@@ -1387,6 +1442,15 @@ export function readAddress(
   if (classifyPayload(payload) !== 'address') {
     return null;
   }
+  // Zcash states the same facts under different names: the balance nested and
+  // in snake_case, the history in an offset-counted envelope, an unspent
+  // output's index as a number rather than a decimal string. Read against the
+  // Dogecoin names alone, a real Zcash address rendered its identifier, no
+  // balance at all, and a table of unspent outputs with every amount blank,
+  // while every one of those figures was in the response.
+  if (isRecord(payload.balance) && !text(payload.balanceAtomic)) {
+    return readFlatAddress(payload, profile);
+  }
   const utxos = Array.isArray(payload.utxos) ? payload.utxos.filter(isRecord) : [];
   return {
     address: text(payload.address) ?? '',
@@ -1404,6 +1468,9 @@ export function readAddress(
       amount: formatAtomicAmount(text(entry.valueAtomic), profile.precision),
       height: formatExactInteger(text(entry.heightAtomic)),
       confirmations: formatExactInteger(text(entry.confirmationsAtomic)),
+      // This source states a height for a confirmed output, so the absence of
+      // one is a statement that the output is still pending.
+      pending: !text(entry.heightAtomic),
     })),
   };
 }

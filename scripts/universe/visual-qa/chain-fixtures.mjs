@@ -17,6 +17,7 @@ const DOGE_TXID = '4c8f0b2e6a1d5937c0f4b8e2a6d0c4f8b2e6a0d4c8f2b6e0a4d8c2f6b0e4a
 const DOGE_BLOCK = 'e1b5f9d3a7c2064e8b1d5f9a3c7e0246b8d2f6a0c4e8b2d6f0a4c8e2b6d0f4a8';
 const DOGE_ADDRESS = 'DH5yaieqoZN36fDVciNyRueRGvGLR3mr7L';
 const ZEC_TXID = '7a3e1c5f9b2d6048a2c6e0f4b8d2a6c0e4f8b2d6a0c4e8f2b6d0a4c8e2f6b0d4';
+const ZEC_ADDRESS = 't1SEgZvXCu3ceE42qrq5pCeSq7HbLjX8NJv';
 const ZEC_BLOCK = '00000000001a8027b33ea8f1972569b135eea78be68a381875307549ddf178e2';
 
 /**
@@ -309,6 +310,69 @@ export const chainFixtures = {
     "chain": "zcash"
   },
 
+  // A Zcash address, as production returned it, with the unspent output list
+  // and the history trimmed. The balance is nested and in snake_case, the
+  // history counts from an offset, and an unspent output states its index as a
+  // number. Read against the Dogecoin names this page showed an identifier, no
+  // balance at all, and a table of unspent outputs with every amount blank.
+  [`/api/v1/zcash/address/${ZEC_ADDRESS}`]: {
+    "schemaVersion": "zcash-metaprotocols-api-v1",
+    "network": "mainnet",
+    "checkpoint": {
+      "height": "3464734",
+      "hash": "0000000000645e18fd55f18a5b2681f0becdc180d14d35a730875c4dc66add1a"
+    },
+    "coverage": {
+      "scannedHeight": "3464734",
+      "networkHeight": "3464734",
+      "blocksBehindNetwork": "0",
+      "nodeSynced": true,
+      "verificationProgress": 0.9999997113775545,
+      "chainComplete": true
+    },
+    "address": "t1SEgZvXCu3ceE42qrq5pCeSq7HbLjX8NJv",
+    "address_type": "transparent",
+    "publicly_observable": true,
+    "balance": {
+      "confirmed_zatoshis": "1251345400",
+      "received_zatoshis": "920300177805"
+    },
+    "utxos": [
+      {
+        "txid": "e642bab049488871a307aff5a46be789b374858dfa7163e33ddff27c76e80438",
+        "vout": 0,
+        "valueZatoshis": "125522000",
+        "scriptPubKey": "76a9145bbd8cad40c669b9ef2a5b7b2fbedbe9f74d7bea88ac"
+      },
+      {
+        "txid": "44b60d006a4197f81385da1718eeddb5be23fdfdaa45553f0cae97766f2e150e",
+        "vout": 0,
+        "valueZatoshis": "125015000",
+        "scriptPubKey": "76a9145bbd8cad40c669b9ef2a5b7b2fbedbe9f74d7bea88ac"
+      },
+      {
+        "txid": "69fb0df1609d51da8f8526bf28fd7d92213461609811e3e119cc88623e93e5a5",
+        "vout": 0,
+        "valueZatoshis": "125176000",
+        "scriptPubKey": "76a9145bbd8cad40c669b9ef2a5b7b2fbedbe9f74d7bea88ac"
+      }
+    ],
+    "transactions": {
+      "total": "8945",
+      "offset": "0",
+      "limit": "50",
+      "items": [
+        "73c47124313064d13e53b921857de4d57ac45e3e712b97233a2b38092f39ffbf",
+        "8dc93dfbc11a54d0a71488e6ba5193216018ef289a3e2f4ea8f115bab03011f6",
+        "983ac6acd606a66b0c948ce14455b0d35c5465100bba275a78c171dbf9a91ccc",
+        "33ca5b4e93fde681a9b263b588398a2623b3198a8a89cf7815d773f235a80ffe"
+      ],
+      "has_more": true
+    },
+    "privacy_notice": "This page covers only publicly observable transparent activity and does not reveal shielded or Unified Address history.",
+    "chain": "zcash"
+  },
+
   // The pending lists carry whole transaction envelopes, one per entry, which
   // is what the live API returns. They were summary rows here until the real
   // payloads were read, and the difference matters: a list of envelopes is
@@ -543,4 +607,4 @@ export const chainStateScope = {
   'chain-object-missing': ['dogecoin'],
 };
 
-export const chainSampleIds = { DOGE_TXID, DOGE_BLOCK, DOGE_ADDRESS, ZEC_TXID, ZEC_BLOCK };
+export const chainSampleIds = { DOGE_TXID, DOGE_BLOCK, DOGE_ADDRESS, ZEC_TXID, ZEC_BLOCK, ZEC_ADDRESS };
