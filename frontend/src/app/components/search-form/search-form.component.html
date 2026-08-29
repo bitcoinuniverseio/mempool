@@ -9,13 +9,18 @@
         formControlName="searchText" type="text" class="form-control search-input"
         autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
         i18n-placeholder="search-form.searchbar-placeholder"
-        placeholder="Search a transaction, block, address, or asset">
+        [placeholder]="activeChain === 'bitcoin' ? 'Search a transaction, block, address, or asset' : 'Search ' + activeChain">
       <app-search-results #searchResults [hidden]="dropdownHidden" [results]="typeAhead$ | async" (selectedResult)="selectedResult($event)"></app-search-results>
     </div>
     <button [disabled]="isSearching" type="submit" class="search-submit"
       i18n-aria-label="search-form.search-title" aria-label="Search">
       <fa-icon *ngIf="!(isTypeaheading$ | async) else searchLoading" [icon]="['fas', 'search']" [fixedWidth]="true"></fa-icon>
     </button>
+    <label class="all-chains">
+      <input type="checkbox" [checked]="searchAllChains"
+        (change)="setSearchAllChains($any($event.target).checked)">
+      <span>All chains</span>
+    </label>
   </div>
 </form>
 

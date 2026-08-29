@@ -297,3 +297,95 @@ export interface OrdBlockInscriptionsView {
   ids: string[];
   more: boolean;
 }
+
+// --- Multi-chain explorer ---
+
+export type ExplorerChain = 'bitcoin' | 'dogecoin' | 'zcash';
+export type ExplorerNetwork = 'mainnet' | 'testnet' | 'regtest';
+
+export interface ChainCapabilityProtocol {
+  protocolId: string;
+  state: 'ready' | 'degraded' | 'unavailable';
+  coverage: 'complete' | 'partial' | 'unavailable';
+  updatedAt: string | null;
+  lagBlocksAtomic: string | null;
+  degradedReasons: string[];
+}
+
+export interface ChainCapabilityEnvelope {
+  schemaVersion: string;
+  chain: ExplorerChain;
+  network: ExplorerNetwork;
+  asset: {
+    symbol: string;
+    name: string;
+    precision: number;
+    atomicUnit: string;
+  };
+  ready: boolean;
+  tip: SourceCheckpoint | null;
+  sync: {
+    state: 'ready' | 'degraded' | 'unavailable';
+    initialBlockDownload: boolean | null;
+    progressDecimal: string | null;
+    updatedAt: string | null;
+  };
+  mempool: {
+    supported: boolean;
+    state: 'ready' | 'degraded' | 'unavailable';
+    completeness: 'complete' | 'partial' | 'unavailable';
+    snapshotId: string | null;
+    sequenceAtomic: string | null;
+    observedAt: string | null;
+  };
+  reads: {
+    transaction: boolean;
+    block: boolean;
+    address: boolean;
+    outpoint: boolean;
+    feeEstimates: boolean;
+    projectedBlocks: boolean;
+  };
+  protocols: ChainCapabilityProtocol[];
+  coverage: {
+    confirmedHistory: 'complete' | 'partial' | 'unavailable';
+    addressHistory: 'complete' | 'partial' | 'unavailable';
+    protocolHistory: 'complete' | 'partial' | 'unavailable';
+  };
+  updatedAt: string;
+  lagBlocksAtomic: string | null;
+  degradedReasons: string[];
+  release: { sha: string };
+}
+
+export type ChainExplorerPayload = Record<string, unknown>;
+
+export interface UniverseSearchResult {
+  chain: ExplorerChain;
+  network: 'mainnet';
+  kind: string;
+  reference: string;
+  label: string;
+  path: string;
+  exact: boolean;
+  proof: { authority: string; state: 'proved' };
+}
+
+export interface UniverseSearchResponse {
+  schemaVersion: 'universe-search-v1';
+  query: string;
+  activeChain: ExplorerChain;
+  scope: 'active' | 'all';
+  groups: Array<{
+    chain: ExplorerChain;
+    network: 'mainnet';
+    results: UniverseSearchResult[];
+  }>;
+  failures: Array<{
+    chain: ExplorerChain;
+    code: 'deadline' | 'unavailable';
+  }>;
+  privacy: {
+    zcash: string;
+  };
+}

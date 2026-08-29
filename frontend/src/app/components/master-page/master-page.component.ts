@@ -1,11 +1,19 @@
 import { Component, OnInit, OnDestroy, Input } from '@angular/core';
-import { Router } from '@angular/router';
+import { NavigationEnd, Router } from '@angular/router';
 import { Env, StateService } from '@app/services/state.service';
-import { Observable, merge, of, Subscription } from 'rxjs';
+import { Observable, catchError, filter, merge, of, shareReplay, Subscription, switchMap, timer } from 'rxjs';
 import { LanguageService } from '@app/services/language.service';
 import { EnterpriseService } from '@app/services/enterprise.service';
 import { NavigationService } from '@app/services/navigation.service';
 import { StorageService } from '@app/services/storage.service';
+import { UniverseApiService } from '@app/universe/universe-api.service';
+import { UniverseLocalService } from '@app/universe/universe-local.service';
+import { ChainCapabilityEnvelope, ExplorerChain } from '@app/universe/universe.types';
+import {
+  explorerChainFromUrl,
+  explorerSectionRoute,
+  explorerSwitchTarget,
+} from '@app/universe/universe-chain-routing';
 
 @Component({
   selector: 'app-master-page',
@@ -31,9 +39,13 @@ export class MasterPageComponent implements OnInit, OnDestroy {
   footerVisible = true;
   user: any = undefined;
   isDropdownVisible: boolean;
+  readonly explorerChains: readonly ExplorerChain[] = ['bitcoin', 'dogecoin', 'zcash'];
+  activeChain: ExplorerChain = 'bitcoin';
+  chainCapabilities$: Observable<ChainCapabilityEnvelope[]>;
 
   enterpriseInfo: any;
   enterpriseInfo$: Subscription;
+  routeInfo$: Subscription;
 
   constructor(
     public stateService: StateService,
@@ -42,6 +54,8 @@ export class MasterPageComponent implements OnInit, OnDestroy {
     private navigationService: NavigationService,
     private storageService: StorageService,
     private router: Router,
+    private universeApi: UniverseApiService,
+    private universeLocal: UniverseLocalService,
   ) { }
 
   ngOnInit(): void {
@@ -68,6 +82,18 @@ export class MasterPageComponent implements OnInit, OnDestroy {
 
     this.refreshAuth();
     this.setDropdownVisibility();
+    this.activeChain = explorerChainFromUrl(this.router.url);
+    this.routeInfo$ = this.router.events.pipe(
+      filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+    ).subscribe((event) => {
+      this.activeChain = explorerChainFromUrl(event.urlAfterRedirects);
+    });
+    this.chainCapabilities$ = this.stateService.isBrowser
+      ? timer(0, 15_000).pipe(
+          switchMap(() => this.universeApi.getChains$().pipe(catchError(() => of([])))),
+          shareReplay({ bufferSize: 1, refCount: true }),
+        )
+      : of([]);
   }
 
   setDropdownVisibility(): void {
@@ -124,9 +150,59 @@ export class MasterPageComponent implements OnInit, OnDestroy {
     this.user = this.storageService.getAuth()?.user ?? null;
   }
 
+  chainName(chain: ExplorerChain): string {
+    switch (chain) {
+      case 'bitcoin': return 'Bitcoin';
+      case 'dogecoin': return 'Dogecoin';
+      case 'zcash': return 'Zcash';
+    }
+  }
+
+  chainTicker(chain: ExplorerChain): string {
+    switch (chain) {
+      case 'bitcoin': return 'BTC';
+      case 'dogecoin': return 'DOGE';
+      case 'zcash': return 'ZEC';
+    }
+  }
+
+  chainCapability(capabilities: ChainCapabilityEnvelope[], chain: ExplorerChain): ChainCapabilityEnvelope | undefined {
+    return capabilities.find((capability) => capability.chain === chain);
+  }
+
+  chainState(capability: ChainCapabilityEnvelope | undefined): string {
+    if (!capability) {return 'status unavailable';}
+    return capability.ready ? 'ready' : 'degraded';
+  }
+
+  chainDetail(capability: ChainCapabilityEnvelope | undefined): string {
+    if (!capability) {return 'Tip and mempool unavailable';}
+    const tip = capability.tip?.heightAtomic ?? 'unknown tip';
+    return `Tip ${tip}; mempool ${capability.mempool.state}, ${capability.mempool.completeness}`;
+  }
+
+  chainRoute(kind: 'dashboard' | 'mempool' | 'protocols'): string {
+    return explorerSectionRoute(this.activeChain, kind);
+  }
+
+  switchChain(chain: ExplorerChain): void {
+    if (chain === this.activeChain) {return;}
+    const sourceChain = this.activeChain;
+    const target = explorerSwitchTarget(this.router.url, chain);
+    this.universeLocal.setSelectedChain(chain);
+    if (target.droppedObject) {
+      void this.router.navigate([target.path], { queryParams: { switchedFrom: sourceChain } });
+      return;
+    }
+    void this.router.navigateByUrl(target.path);
+  }
+
   ngOnDestroy(): void {
     if (this.enterpriseInfo$) {
       this.enterpriseInfo$.unsubscribe();
+    }
+    if (this.routeInfo$) {
+      this.routeInfo$.unsubscribe();
     }
   }
 

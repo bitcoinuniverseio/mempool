@@ -1,4 +1,4 @@
-<div class="dropdown-menu show" *ngIf="results" [hidden]="!results.hashQuickMatch && !results.otherNetworks.length && !results.addresses.length && !results.nodes.length && !results.channels.length && !results.liquidAsset.length && !results.pools.length && !results.universe?.length && !results.universeRecent?.length">
+<div class="dropdown-menu show" *ngIf="results" [hidden]="!results.hashQuickMatch && !results.otherNetworks.length && !results.addresses.length && !results.nodes.length && !results.channels.length && !results.liquidAsset.length && !results.pools.length && !results.universe?.length && !results.universeRecent?.length && !results.universeFailures?.length">
   <ng-template [ngIf]="results.blockHeight">
     <div class="card-title" i18n="search.bitcoin-block-height">{{ networkName }} Block Height</div>
     <button (click)="clickItem(0)" [class.active]="0 === activeIdx" type="button" role="option" class="dropdown-item">
@@ -89,7 +89,7 @@
     </button>
   </ng-template>
   <ng-template [ngIf]="results.universe?.length">
-    <div class="card-title" i18n="search.universe-protocol">Universe protocols and assets</div>
+    <div class="card-title" i18n="search.universe-protocol">Verified search results</div>
     <ng-template ngFor [ngForOf]="results.universe" let-candidate let-i="index">
       <button (click)="clickItem(universeOffset + i)" [class.active]="(universeOffset + i) === activeIdx" type="button" role="option" class="dropdown-item">
         <span class="universe-kind">{{ candidate.kindLabel }}</span>&nbsp;<ngb-highlight [result]="candidate.label" [term]="results.searchText"></ngb-highlight>
@@ -104,6 +104,12 @@
       </button>
     </ng-template>
   </ng-template>
+  <div class="card-title danger" role="status" *ngIf="results.universeFailures?.length">
+    Partial results: {{ results.universeFailures.join('; ') }}
+  </div>
+  <div class="card-title" *ngIf="results.universeNotice">
+    Zcash privacy: {{ results.universeNotice }}
+  </div>
 </div>
 
 <ng-template #goTo let-x i18n="search.go-to">Go to "{{ x }}"</ng-template>
