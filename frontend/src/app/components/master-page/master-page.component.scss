@@ -307,14 +307,40 @@
     // through rotation, a fold, a split-screen resize and a chain switch that
     // changes how many destinations there are.
     background-image:
-      linear-gradient(to right, var(--u-surface-raised) 40%, rgba(0, 0, 0, 0)),
-      linear-gradient(to left, var(--u-surface-raised) 40%, rgba(0, 0, 0, 0)),
-      linear-gradient(to right, var(--u-shadow-color), rgba(0, 0, 0, 0)),
-      linear-gradient(to left, var(--u-shadow-color), rgba(0, 0, 0, 0));
+      linear-gradient(to right, var(--u-surface-raised) 60%, rgba(0, 0, 0, 0)),
+      linear-gradient(to left, var(--u-surface-raised) 60%, rgba(0, 0, 0, 0)),
+      linear-gradient(to right, var(--u-nav-scroll-shadow), rgba(0, 0, 0, 0)),
+      linear-gradient(to left, var(--u-nav-scroll-shadow), rgba(0, 0, 0, 0));
     background-position: left center, right center, left center, right center;
     background-repeat: no-repeat;
-    background-size: 32px 100%, 32px 100%, 14px 100%, 14px 100%;
+    background-size: 28px 100%, 28px 100%, 12px 100%, 12px 100%;
     background-attachment: local, local, scroll, scroll;
+
+    // The shadow band gets padding of its own to sit in.
+    //
+    // Without this the first and last labels start flush against the edge, so
+    // at either end of the scroll one of them is read through the shadow. The
+    // measured contrast probe caught it: the active label dropped from its
+    // token colour on the bar to 3.29:1 over the blend, on fourteen routes. An
+    // affordance that makes a destination harder to read is not worth having,
+    // and the fix is not a fainter shadow, which trades one degree of the same
+    // fault for another. It is for the shadow to fall on nothing.
+    //
+    // 12px of padding for a 12px shadow, at both ends and in both scroll
+    // positions, since the bar rests at one end or the other.
+    padding-inline: 12px;
+
+    // The padding covers the bar at rest. Scrolling is the other half: a
+    // destination dragged past the edge passes under the shadow while it goes,
+    // and it has to stay readable on the way. So the shadow's own weight is
+    // set by that measurement rather than by how it looks.
+    //
+    // The general shadow token is 28 percent, which composites to rgb(194,
+    // 191, 196) over the light bar and takes the active label from 6.5:1 to
+    // 3.29:1, under AA. 14 percent composites to rgb(224, 222, 225) and holds
+    // it at 5.2:1. This is its own token rather than a value written inline so
+    // that check-palettes.mjs can see it and hold it to that.
+    --u-nav-scroll-shadow: rgba(36, 26, 43, 0.14);
 
     // Keeping the active destination off the very edge when it is scrolled to.
     scroll-padding-inline: var(--u-space-5);

@@ -82,7 +82,7 @@ export class UniverseViewportService implements OnDestroy {
       visual.addEventListener('resize', publish);
       visual.addEventListener('scroll', publish);
       publish();
-      this.stop = () => {
+      this.stop = (): void => {
         visual.removeEventListener('resize', publish);
         visual.removeEventListener('scroll', publish);
       };
