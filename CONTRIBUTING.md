@@ -1,3 +1,79 @@
+# Contributing to Universe Explorer
+
+This repository is Bitcoin Universe's fork of the Mempool Open Source Project,
+released under the AGPL. Contributions to it are contributions to this fork.
+The upstream project's own contribution terms are preserved further down, and
+they govern work you submit to that project rather than to this one.
+
+## Where work happens
+
+`develop` is the working branch. Open a pull request against it. `main` is the
+released branch and is protected: it only ever moves through a promotion from
+`develop`.
+
+## Scope conventions
+
+Universe changes live in `frontend/src/app/universe/`, `scripts/universe/`, and
+`docs/`, and reach the inherited application through a small number of
+documented integration points. Keeping them there is what makes upstream
+security fixes easy to take. `UPSTREAM.md` records every subsystem this fork
+modifies and the known conflict points, and
+`docs/operations/UPSTREAM-SYNC.md` is the synchronization procedure.
+
+## What the checks hold you to
+
+Run these before opening a pull request. They are the same ones
+`.github/workflows/universe-ci.yml` runs.
+
+```bash
+cd frontend && npm ci && npm run lint && npm run test && npm run build:universe
+cd backend && npm ci && npm run lint && npm run test:ci
+node scripts/universe/generate-protocol-coverage.mjs --check
+node scripts/universe/check-text.mjs
+node scripts/universe/check-colors.mjs
+node scripts/universe/check-palettes.mjs
+node scripts/universe/check-fills.mjs
+node scripts/universe/check-branding.mjs
+node scripts/universe/check-origins.mjs
+node --test scripts/universe/gateway.test.mjs
+```
+
+Four of them are easy to trip by accident, so they are enforced rather than
+remembered:
+
+- **No em dash.** Use a colon, a comma, or two sentences. The word "canonical"
+  is also out of the vocabulary here.
+- **No raw interface colour.** Everything comes from the tokens in
+  `frontend/src/styles/_universe-tokens.scss`, including in style bindings.
+  Every strong fill declares the ink that goes on it.
+- **No third-party data origin.** Not in the source, not in the built bundle,
+  not as a fallback. `docs/data/ASSET-EVIDENCE.md` explains why.
+- **No obsolete upstream product mark** outside the allowlist recorded in
+  `docs/legal/TRADEMARK-AUDIT.md`.
+
+## If you add or change a page
+
+Add it to the visual matrix in `scripts/universe/visual-qa/`. A route with no
+fixture is a route no screenshot, contrast probe or unfinished-page check ever
+looks at, and every defect this product has shipped visually was on a surface
+in exactly that position. `docs/product/DESIGN-SYSTEM.md` has the account of
+what that has cost, at the end.
+
+## Writing
+
+`docs/product/DESIGN-SYSTEM.md` has the rules the copy is held to. The short
+version: say what is true and no more, distinguish "there is none" from "we
+could not tell", keep exact figures exact, and explain a term at the moment it
+matters rather than in a glossary.
+
+## Reporting a vulnerability
+
+Privately, to the Bitcoin Universe security contact, rather than in a public
+pull request. `docs/security/THREAT-MODEL.md` records the trust boundaries this
+deployment assumes.
+
+---
+
 # Contributing to The Mempool Open Source Project
 
 Thank you for contributing to The Mempool Open Source Project managed by Mempool Space K.K. (“Mempool”).
@@ -47,5 +123,3 @@ Should You wish to submit work that is not Your original creation, You may submi
 ### 8. Notifications
 
 You agree to notify Mempool of any facts or circumstances of which you become aware that would make these representations inaccurate in any respect.
-
-EOF
