@@ -573,6 +573,17 @@ describe('readCollection', () => {
     expect(byKey.sizeBytesAtomic.unit).toBeNull();
   });
 
+  it('says how many fields per row the table left out', () => {
+    const wide = { a: '1', b: '2', c: '3', d: '4', e: '5', f: '6', g: '7', h: '8', i: '9' };
+    const collection = readCollection({ items: [wide] }, DOGE);
+    expect(collection?.columns).toHaveLength(7);
+    expect(collection?.hiddenColumnCount).toBe(2);
+  });
+
+  it('holds nothing back when every field fits', () => {
+    expect(readCollection({ items: [{ a: '1', b: '2' }] }, DOGE)?.hiddenColumnCount).toBe(0);
+  });
+
   it('returns nothing when there is no array to read', () => {
     expect(readCollection({ state: 'unavailable' }, DOGE)).toBeNull();
   });
