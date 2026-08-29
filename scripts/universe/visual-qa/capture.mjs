@@ -572,9 +572,15 @@ async function run() {
 
   const report = { browser: BROWSER, base: BASE, screenshots: shots, findings };
   writeFileSync(join(OUT, `report-${BROWSER}.json`), JSON.stringify(report, null, 2));
-  const stuck = summarise(report);
+  const { blocking: stuck, contrastNotMeasured } = summarise(report);
   if (stuck.length > 0) {
     console.error(`${stuck.length} page(s) never finished loading. This is the failure that shipped last time, so it fails the run.`);
+    process.exitCode = 1;
+  }
+  if (contrastNotMeasured.length > 0) {
+    console.error(
+      `${contrastNotMeasured.length} page(s) had no contrast measurement taken, so this run cannot claim their contrast is correct.`,
+    );
     process.exitCode = 1;
   }
 }
@@ -684,12 +690,30 @@ function summarise(report) {
 
   const contrastFailures = [];
   const blankCanvases = [];
+  // Pages where the contrast probe did not run at all.
+  //
+  // Its failure path records an error and an empty result, and an empty result
+  // is what a clean page produces too, so both printed "contrast failures: 0".
+  // A gate that measures nothing and a gate that measures everything and finds
+  // nothing wrong are not the same statement, and this is the one check here
+  // that an accessibility engine cannot make, so its silence is expensive.
+  const contrastNotMeasured = [];
+  // Pages where it ran and found nothing to measure. Legitimate on a page that
+  // is genuinely empty, so this is reported rather than failed, but it is not
+  // evidence of contrast being correct either.
+  const contrastNoSamples = [];
   for (const f of report.findings) {
+    const where = { route: f.route, state: f.state, theme: f.theme, viewport: f.viewport };
+    if (f.contrast?.error) {
+      contrastNotMeasured.push({ ...where, error: f.contrast.error });
+    } else if (f.contrast && (f.contrast.sampled ?? 0) === 0 && !f.error) {
+      contrastNoSamples.push(where);
+    }
     for (const row of f.contrast?.text ?? []) {
-      contrastFailures.push({ ...row, route: f.route, state: f.state, theme: f.theme, viewport: f.viewport });
+      contrastFailures.push({ ...row, ...where });
     }
     for (const c of f.contrast?.canvas ?? []) {
-      if (c.blank) blankCanvases.push({ ...c, route: f.route, state: f.state, theme: f.theme, viewport: f.viewport });
+      if (c.blank) blankCanvases.push({ ...c, ...where });
     }
   }
   contrastFailures.sort((a, b) => a.ratio - b.ratio);
@@ -712,6 +736,12 @@ function summarise(report) {
   console.log(`a11y rules violated : ${byRule.size}\n`);
 
   console.log(`contrast failures   : ${contrastFailures.length}`);
+  if (contrastNotMeasured.length) {
+    console.log(`contrast NOT MEASURED: ${contrastNotMeasured.length}  (the probe threw; the zero above is not a result)`);
+  }
+  if (contrastNoSamples.length) {
+    console.log(`contrast no samples : ${contrastNoSamples.length}  (ran, found no text to measure)`);
+  }
   console.log(`blank canvases      : ${blankCanvases.length}`);
 
   if (contrastFailures.length) {
@@ -728,6 +758,14 @@ function summarise(report) {
     }
     if (contrastFailures.length > 40) {
       console.log(`  ... and ${contrastFailures.length - 40} more, see the report`);
+    }
+  }
+
+  if (contrastNotMeasured.length) {
+    console.log();
+    console.log('-- pages where the contrast probe did not run --');
+    for (const f of contrastNotMeasured.slice(0, 20)) {
+      console.log(`  ${f.route}/${f.state}/${f.theme}@${f.viewport}: ${f.error}`);
     }
   }
 
@@ -787,7 +825,7 @@ function summarise(report) {
     if (known.length > 40) console.log(`  ... and ${known.length - 40} more, see the report`);
   }
   console.log('');
-  return blocking;
+  return { blocking, contrastNotMeasured };
 }
 
 // Only drive browsers when this file is the program. Importing it, as the
