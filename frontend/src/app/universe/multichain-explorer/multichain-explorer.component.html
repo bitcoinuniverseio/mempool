@@ -592,6 +592,10 @@
        i18n="universe.chain.collection-columns-constant">
       {{ collection.constantColumnCount }} fields held the same value on every row, so they are not columns here.
     </p>
+    <p class="panel-lede" *ngIf="collection.structuredFields.length"
+       i18n="universe.chain.collection-structured">
+      Each row also carries {{ collection.structuredFields.join(', ') }}, which a table cannot hold. This explorer has no reading for them yet, so they are in the full response below and nowhere else on this page.
+    </p>
     <div class="table-wrap" tabindex="0" role="region" aria-labelledby="collection-heading">
       <table>
         <thead>

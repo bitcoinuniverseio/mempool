@@ -612,6 +612,27 @@ describe('readCollection', () => {
     expect(byKey.sizeBytesAtomic.unit).toBeNull();
   });
 
+  it('names the structured fields a table cannot hold, rather than dropping them', () => {
+    // The live ZRC-20 list carries rulesets and divergence on every row. They
+    // were skipped in silence while hiddenColumnCount reported zero, so the
+    // page claimed it had held nothing back while holding back the ledger.
+    const collection = readCollection(
+      {
+        items: [
+          { tick: 'ZERO', decimals: '18', rulesets: { zord: { holders: '2330' } }, divergence: { diverges: true } },
+          { tick: 'ONE', decimals: '18', rulesets: { zord: { holders: '11' } }, divergence: { diverges: false } },
+        ],
+      },
+      DOGE
+    );
+    expect(collection?.structuredFields).toEqual(['rulesets', 'divergence']);
+    expect(collection?.columns.map((c) => c.key)).toEqual(['tick']);
+  });
+
+  it('reports no structured fields when every value is a scalar', () => {
+    expect(readCollection({ items: [{ a: '1' }, { a: '2' }] }, DOGE)?.structuredFields).toEqual([]);
+  });
+
   it('says how many fields per row the table left out', () => {
     const wide = { a: '1', b: '2', c: '3', d: '4', e: '5', f: '6', g: '7', h: '8', i: '9' };
     const collection = readCollection({ items: [wide] }, DOGE);
