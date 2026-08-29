@@ -264,8 +264,44 @@ describe('readCapabilities', () => {
 describe('readProtocolCoverage', () => {
   it('shows every protocol the navigation offers, even one the overlay stopped reporting', () => {
     const readings = readProtocolCoverage(capability({ protocols: [] }), DOGE);
-    expect(readings.map((r) => r.protocolId)).toEqual(['doginals', 'drc20', 'doge-tap']);
+    expect(readings.map((r) => r.routeId)).toEqual(['doginals', 'drc20', 'doge-tap']);
     expect(readings[0].tone).toBe('neutral');
+  });
+
+  it('matches a tab to the registry id the envelope actually uses', () => {
+    // Production reports tap_doge; the route serves it at doge-tap. Matching on
+    // the route id alone listed the protocol twice, once falsely as not stated.
+    const readings = readProtocolCoverage(
+      capability({
+        protocols: [
+          { protocolId: 'tap_doge', state: 'degraded', coverage: 'unavailable', updatedAt: null, lagBlocksAtomic: null, degradedReasons: [] },
+        ],
+      }),
+      DOGE
+    );
+    expect(readings).toHaveLength(3);
+    const tap = readings.find((r) => r.routeId === 'doge-tap');
+    expect(tap?.tone).toBe('partial');
+    expect(tap?.label).toBe('TAP on Doge');
+    expect(readings.filter((r) => r.label === 'TAP on Doge')).toHaveLength(1);
+  });
+
+  it('lists a protocol it has no page for, and offers no route to it', () => {
+    // /dogecoin/protocols/dunes answers 404 and the API service throws before
+    // it asks, so a link there is a dead end. Hiding it would be a claim the
+    // chain did not make.
+    const readings = readProtocolCoverage(
+      capability({
+        protocols: [
+          { protocolId: 'dunes', state: 'unavailable', coverage: 'unavailable', updatedAt: null, lagBlocksAtomic: null, degradedReasons: [] },
+        ],
+      }),
+      DOGE
+    );
+    const dunes = readings.find((r) => r.protocolId === 'dunes');
+    expect(dunes).toBeDefined();
+    expect(dunes?.routeId).toBeNull();
+    expect(dunes?.label).toBe('Dunes');
   });
 
   it('carries the state, coverage and lag the overlay reported', () => {
@@ -294,6 +330,7 @@ describe('readProtocolCoverage', () => {
       DOGE
     );
     expect(readings.map((r) => r.protocolId)).toContain('newthing');
+    expect(readings.find((r) => r.protocolId === 'newthing')?.routeId).toBeNull();
   });
 });
 
@@ -618,6 +655,24 @@ describe('readRecordFacts', () => {
   it('flattens one level of nesting so a nested scalar is not dropped', () => {
     const facts = readRecordFacts({ status: { state: 'ready', lagBlocksAtomic: '3' } }, DOGE);
     expect(facts.map((fact) => fact.label)).toEqual(['Status state', 'Status lag blocks']);
+  });
+
+  it('does not repeat a parent the child already names', () => {
+    // The live pending response nests snapshotId inside snapshot, which read
+    // as "Snapshot snapshot ID".
+    const facts = readRecordFacts(
+      { snapshot: { snapshotId: 'snap-4812', sequenceAtomic: '148201' } },
+      DOGE
+    );
+    expect(facts.map((fact) => fact.label)).toEqual(['Snapshot ID', 'Snapshot sequence']);
+  });
+
+  it('drops a nested chain and network, which only repeat the heading', () => {
+    const facts = readRecordFacts(
+      { snapshot: { chain: 'dogecoin', network: 'mainnet', completeness: 'complete' } },
+      DOGE
+    );
+    expect(facts.map((fact) => fact.key)).toEqual(['snapshot completeness']);
   });
 
   it('shifts only the fields that carry the chain own coin', () => {

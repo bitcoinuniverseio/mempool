@@ -74,7 +74,11 @@
       <h2 id="chain-coverage-heading" i18n="universe.chain.coverage-title">Protocol indexers</h2>
       <ul class="coverage-list">
         <li *ngFor="let protocol of vm.protocols; trackBy: trackByProtocol">
-          <a class="coverage-name" [routerLink]="['/', chain, 'protocols', protocol.protocolId]">{{ protocol.label }}</a>
+          <a class="coverage-name" *ngIf="protocol.routeId; else noProtocolPage"
+             [routerLink]="['/', chain, 'protocols', protocol.routeId]">{{ protocol.label }}</a>
+          <ng-template #noProtocolPage>
+            <span class="coverage-name">{{ protocol.label }}</span>
+          </ng-template>
           <span class="universe-chip" [ngClass]="'state-' + protocol.tone">{{ protocol.stateLabel }}</span>
           <span class="coverage-detail">
             {{ protocol.historyLabel }}
@@ -85,6 +89,10 @@
           </span>
           <span class="coverage-reasons" *ngIf="protocol.reasons.length">
             {{ protocol.reasons.join(', ') }}
+          </span>
+          <span class="coverage-reasons" *ngIf="!protocol.routeId"
+                i18n="universe.chain.coverage-no-page">
+            This chain reports it. This explorer has no page for it yet, so there is nothing to open.
           </span>
         </li>
       </ul>
@@ -483,6 +491,62 @@
     </dl>
   </section>
 
+  <!-- ------------------------------------------------------------------ -->
+  <!-- A list of transactions, read as transactions                        -->
+  <!-- ------------------------------------------------------------------ -->
+  <section class="panel" *ngIf="vm.transactionList as list" aria-labelledby="tx-list-heading">
+    <h2 id="tx-list-heading" i18n="universe.chain.tx-list-title">Transactions</h2>
+    <p class="panel-lede" *ngIf="list.shownCount < list.totalCount"
+       i18n="universe.chain.tx-list-truncated">
+      Showing the first {{ list.shownCount }} of {{ list.totalCount }} the authority returned.
+    </p>
+    <p class="panel-lede" *ngIf="list.costColumn === 'logical-actions'"
+       i18n="universe.chain.tx-list-actions-note">
+      These transactions report no fee amount. A shielded transaction's fee cannot be read from its transparent side, so the chain reports what it costs under ZIP-317 instead.
+    </p>
+    <div class="table-wrap" tabindex="0" role="region" aria-labelledby="tx-list-heading">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col" i18n="universe.chain.tx-list-id">Transaction</th>
+            <th scope="col" i18n="universe.chain.tx-list-state">State</th>
+            <th scope="col" i18n="universe.chain.tx-list-seen">First seen</th>
+            <th scope="col" class="numeric" i18n="universe.chain.tx-list-size">Size</th>
+            <th scope="col" class="numeric" *ngIf="list.costColumn === 'amount'">
+              <ng-container i18n="universe.chain.tx-list-fee">Fee</ng-container><span class="column-unit"> {{ ticker }}</span>
+            </th>
+            <th scope="col" class="numeric" *ngIf="list.costColumn === 'logical-actions'"
+                i18n="universe.chain.tx-list-actions">ZIP-317 actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of list.rows; trackBy: trackByTxid">
+            <td><a class="identifier" [routerLink]="['/', chain, 'tx', row.txid]">{{ short(row.txid) }}</a></td>
+            <td><span class="universe-chip" [ngClass]="'state-' + row.statusTone">{{ row.statusLabel }}</span></td>
+            <td [class.secondary]="!row.firstSeenAt" [attr.title]="row.firstSeenAt?.exact">
+              <ng-container *ngIf="row.firstSeenAt; else noSeen">{{ row.firstSeenAt.display }}</ng-container>
+              <ng-template #noSeen><ng-container i18n="universe.chain.tx-list-no-seen">not reported</ng-container></ng-template>
+            </td>
+            <td class="numeric" [class.secondary]="!row.size" [attr.title]="row.size?.exact">
+              <ng-container *ngIf="row.size; else noSize">{{ row.size.display }}</ng-container>
+              <ng-template #noSize><ng-container i18n="universe.chain.tx-list-no-size">not reported</ng-container></ng-template>
+            </td>
+            <td class="numeric" *ngIf="list.costColumn === 'amount'"
+                [class.secondary]="!row.fee" [attr.title]="row.fee?.exact">
+              <ng-container *ngIf="row.fee; else noFee">{{ row.fee.display }}</ng-container>
+              <ng-template #noFee><ng-container i18n="universe.chain.tx-list-no-fee">not reported</ng-container></ng-template>
+            </td>
+            <td class="numeric" *ngIf="list.costColumn === 'logical-actions'"
+                [class.secondary]="!row.logicalActions" [attr.title]="row.logicalActions?.exact">
+              <ng-container *ngIf="row.logicalActions; else noActions">{{ row.logicalActions.display }}</ng-container>
+              <ng-template #noActions><ng-container i18n="universe.chain.tx-list-no-actions">not reported</ng-container></ng-template>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
   <section class="panel" *ngIf="vm.collection as collection" aria-labelledby="collection-heading">
     <h2 id="collection-heading">{{ collection.title }}</h2>
     <p class="panel-lede" *ngIf="collection.shownCount < collection.totalCount"
@@ -492,6 +556,10 @@
     <p class="panel-lede" *ngIf="collection.hiddenColumnCount"
        i18n="universe.chain.collection-columns-hidden">
       {{ collection.hiddenColumnCount }} further fields per row are not in this table. Every one of them is in the full response below.
+    </p>
+    <p class="panel-lede" *ngIf="collection.constantColumnCount"
+       i18n="universe.chain.collection-columns-constant">
+      {{ collection.constantColumnCount }} fields held the same value on every row, so they are not columns here.
     </p>
     <div class="table-wrap" tabindex="0" role="region" aria-labelledby="collection-heading">
       <table>

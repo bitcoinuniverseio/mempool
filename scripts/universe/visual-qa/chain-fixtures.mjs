@@ -141,7 +141,16 @@ function zcashTransaction() {
     block: null,
     confirmationsAtomic: '0',
     sizeBytesAtomic: '2104',
-    fee: { amountAtomic: '20000', rateDecimal: null, rateUnit: null, logicalActionsAtomic: '4', model: 'zip-317' },
+    // Exactly what production sends for a pending shielded transaction: no fee
+    // amount at all, because it cannot be read from the transparent side, and
+    // the ZIP-317 cost instead.
+    fee: {
+      amountAtomic: null,
+      rateDecimal: null,
+      rateUnit: 'zatoshi/logical-action',
+      logicalActionsAtomic: '4',
+      model: 'ZIP-317-revision-1',
+    },
     conflicts: [],
     replacement: null,
     expiry: { heightAtomic: '2884160', state: 'pending' },
@@ -170,6 +179,24 @@ function zcashTransaction() {
       confirmed: [],
     },
     evidenceIds: ['zcash-indexer:mempool'],
+    completeness: 'partial',
+  };
+}
+
+/** One pending Dogecoin transaction, in the envelope shape the live API sends. */
+function pendingDogecoinTransaction(txid, feeAtomic, sizeBytes, firstSeenAt) {
+  const confirmed = dogecoinTransaction();
+  return {
+    ...confirmed,
+    txid,
+    status: 'pending',
+    firstSeenAt,
+    confirmedAt: null,
+    block: null,
+    confirmationsAtomic: '0',
+    sizeBytesAtomic: sizeBytes,
+    fee: { amountAtomic: feeAtomic, rateDecimal: null, rateUnit: null },
+    protocolActions: { candidates: [], confirmed: [] },
     completeness: 'partial',
   };
 }
@@ -224,29 +251,40 @@ export const chainFixtures = {
     ],
   },
 
+  // The pending lists carry whole transaction envelopes, one per entry, which
+  // is what the live API returns. They were summary rows here until the real
+  // payloads were read, and the difference matters: a list of envelopes is
+  // rendered as transactions, a list of summary rows falls through to the
+  // generic table, and only one of those is what production does.
   '/api/v1/dogecoin/mempool': {
-    chain: 'dogecoin',
-    network: 'mainnet',
-    snapshotId: 'snap-4812',
-    sequenceAtomic: '148201',
-    observedAt: new Date(Date.now() - 9_000).toISOString(),
-    completeness: 'complete',
+    snapshot: {
+      chain: 'dogecoin',
+      network: 'mainnet',
+      snapshotId: 'snap-4812',
+      sequenceAtomic: '148201',
+      observedAt: new Date(Date.now() - 9_000).toISOString(),
+      completeness: 'complete',
+    },
     transactions: [
-      { txid: DOGE_TXID, firstSeenAt: '2026-08-29T05:03:00.000Z', sizeBytesAtomic: '486', feeAtomic: '113400000', state: 'observed' },
-      { txid: DOGE_BLOCK, firstSeenAt: '2026-08-29T05:03:41.000Z', sizeBytesAtomic: '225', feeAtomic: '50000000', state: 'observed' },
+      pendingDogecoinTransaction(DOGE_TXID, '113400000', '486', '2026-08-29T05:03:00.000Z'),
+      pendingDogecoinTransaction(DOGE_BLOCK, '50000000', '225', '2026-08-29T05:03:41.000Z'),
     ],
   },
 
+  // Zcash reports no fee amount on a pending transaction, because a shielded
+  // transaction's fee cannot be read from its transparent side. It reports
+  // ZIP-317 logical actions instead, and the page has to show that rather than
+  // a column of "not reported".
   '/api/v1/zcash/mempool': {
-    chain: 'zcash',
-    network: 'mainnet',
-    snapshotId: 'snap-2210',
-    sequenceAtomic: '22104',
-    observedAt: new Date(Date.now() - 14_000).toISOString(),
-    completeness: 'partial',
-    transactions: [
-      { txid: ZEC_TXID, firstSeenAt: '2026-08-29T05:01:44.000Z', sizeBytesAtomic: '2104', feeAtomic: '20000', state: 'observed' },
-    ],
+    snapshot: {
+      chain: 'zcash',
+      network: 'mainnet',
+      snapshotId: 'snap-2210',
+      sequenceAtomic: '22104',
+      observedAt: new Date(Date.now() - 14_000).toISOString(),
+      completeness: 'partial',
+    },
+    transactions: [zcashTransaction()],
   },
 
   '/api/v1/dogecoin/protocols': {
