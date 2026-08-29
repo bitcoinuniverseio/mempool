@@ -35,19 +35,37 @@
     </div>
   </section>
 
-  <!-- The rail states the verdict. This states the evidence for it, which the
-       capability document carries and nothing rendered until now. -->
-  <section class="not-ready" *ngIf="vm.notReady as notReady"
-           aria-labelledby="chain-not-ready-heading">
-    <h2 id="chain-not-ready-heading" i18n="universe.chain.not-ready-title">Why {{ chainName }} is not ready</h2>
-    <ul>
-      <li *ngFor="let reason of notReady">
-        {{ reason.text }}
-        <span class="reason-raw" *ngIf="reason.kind === 'unstated' && reason.code"
-              i18n="universe.chain.reason-raw">Reported as this code, which this build has no description for.</span>
-      </li>
-    </ul>
-  </section>
+  <!-- The rail states the verdict. These state the evidence for it: on the
+       left what is not answering, on the right what that costs a reader. A
+       fault with no consequence beside it is half the sentence, and until the
+       coverage block existed the page said address history was offered while
+       the same document said it could not be read. -->
+  <div class="readiness-band" [class.fault]="!!vm.notReady"
+       *ngIf="vm.notReady || (page === 'dashboard' && vm.capability)">
+    <section class="not-ready" *ngIf="vm.notReady as notReady"
+             aria-labelledby="chain-not-ready-heading">
+      <h2 id="chain-not-ready-heading" i18n="universe.chain.not-ready-title">Why {{ chainName }} is not ready</h2>
+      <ul>
+        <li *ngFor="let reason of notReady">
+          {{ reason.text }}
+          <span class="reason-raw" *ngIf="reason.kind === 'unstated' && reason.code"
+                i18n="universe.chain.reason-raw">Reported as this code, which this build has no description for.</span>
+        </li>
+      </ul>
+    </section>
+
+    <section class="history-coverage" *ngIf="page === 'dashboard' && vm.capability"
+             aria-labelledby="chain-history-heading">
+      <h2 id="chain-history-heading" i18n="universe.chain.history-title">How much history is readable now</h2>
+      <ul>
+        <li *ngFor="let reading of vm.coverage; trackBy: trackById">
+          <span class="coverage-label">{{ reading.label }}</span>
+          <span class="universe-chip" [ngClass]="'state-' + reading.tone">{{ reading.stateLabel }}</span>
+          <span class="coverage-detail">{{ reading.detail }}</span>
+        </li>
+      </ul>
+    </section>
+  </div>
 
   <p class="notice failure" role="alert" *ngIf="vm.capabilityError">
     {{ vm.capabilityError }}
@@ -144,6 +162,40 @@
         <span class="entry-detail" i18n="universe.chain.entry-protocols-detail">Assets carried on this chain, and which indexer proves them</span>
       </a>
     </nav>
+
+    <!-- The evidence behind the figures above, at the level it belongs at.
+         The snapshot identifier used to sit in the status line, where it was
+         the widest thing on the page. It is kept, exactly, and filed. -->
+    <details class="panel source-details" *ngIf="vm.sourceDetails.length">
+      <summary i18n="universe.chain.source-summary">Where these readings came from</summary>
+      <p class="panel-lede" i18n="universe.chain.source-lede">
+        The identifiers behind this page, for checking a reading against the document it was rendered from.
+      </p>
+      <dl class="source-list">
+        <ng-container *ngFor="let detail of vm.sourceDetails; trackBy: trackById">
+          <dt>{{ detail.label }}</dt>
+          <dd>
+            <span class="source-value" [attr.title]="detail.exact"
+                  [attr.aria-hidden]="detail.truncated ? 'true' : null">{{ detail.display }}</span>
+            <!-- A reader who cannot see the middle of an identifier has not
+                 been given it, so the whole value is here for a screen reader
+                 while the shortened form is what a sighted reader sees. -->
+            <span class="source-exact" *ngIf="detail.truncated">{{ detail.exact }}</span>
+            <button
+              type="button"
+              class="source-copy"
+              *ngIf="detail.exact"
+              (click)="copyDetail(detail)"
+              [attr.aria-label]="copyActionLabel(detail)"
+            >
+              <ng-container *ngIf="copiedDetailId === detail.id; else copyLabel" i18n="universe.chain.source-copied">Copied</ng-container>
+              <ng-template #copyLabel><ng-container i18n="universe.chain.source-copy">Copy</ng-container></ng-template>
+            </button>
+            <span class="source-note" *ngIf="detail.note">{{ detail.note }}</span>
+          </dd>
+        </ng-container>
+      </dl>
+    </details>
 
   </ng-container>
 

@@ -217,6 +217,97 @@
   font-size: var(--u-text-xs);
 }
 
+// ---------------------------------------------------------------------------
+// Readiness band
+// ---------------------------------------------------------------------------
+
+// What is wrong, and what it costs, read together.
+//
+// Both were prose columns the width of the container, which at a desktop width
+// left the fault panel a narrow card with an empty half page beside it. Side by
+// side they fill the row for a reason, and each keeps a readable measure.
+.readiness-band {
+  display: grid;
+  gap: var(--u-space-3);
+  margin-bottom: var(--u-space-3);
+
+  .not-ready,
+  .history-coverage {
+    margin-bottom: 0;
+    max-width: none;
+  }
+}
+
+@media (min-width: 992px) {
+  .readiness-band.fault {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  // A ready chain has no fault panel beside this one, so stacking the three
+  // dimensions left a full width card with content in its first third. Read
+  // across instead: three short columns fill the row they are given.
+  .readiness-band:not(.fault) .history-coverage ul {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--u-space-4);
+  }
+
+  .readiness-band:not(.fault) .history-coverage li {
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    justify-items: start;
+    gap: var(--u-space-1);
+  }
+}
+
+// The three history dimensions the capability document reports. Bordered like
+// the fault panel beside it rather than raised, because it qualifies the rail
+// above rather than opening a new section.
+.history-coverage {
+  @include u.universe-surface;
+
+  border-left: 3px solid var(--universe-state-neutral);
+  padding: var(--u-space-3) var(--u-space-4);
+
+  h2 {
+    font-size: var(--u-text-base);
+    font-weight: var(--u-weight-semibold);
+    margin: 0 0 var(--u-space-2);
+  }
+
+  ul {
+    display: grid;
+    gap: var(--u-space-2);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  // One column for the names and one for the states, shared by all three
+  // rows, so the states line up and can be read down. Sized per row they
+  // stepped sideways with the length of each name.
+  li {
+    display: grid;
+    grid-template-columns: minmax(0, 10rem) minmax(0, max-content);
+    align-items: center;
+    justify-content: start;
+    gap: var(--u-space-2);
+  }
+
+  .coverage-label {
+    font-size: var(--u-text-sm);
+    font-weight: var(--u-weight-semibold);
+  }
+
+  .coverage-detail {
+    grid-column: 1 / -1;
+    color: var(--u-text-muted);
+    font-size: var(--u-text-xs);
+    line-height: var(--u-leading-snug);
+    max-width: var(--u-width-prose);
+  }
+}
+
 .identifier {
   @include u.universe-identifier;
 }
@@ -284,7 +375,10 @@
 
 .read-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  // Capped, not stretched. At a desktop width four equal fractions put each
+  // label and its state at opposite ends of a wide cell, with the whitespace
+  // between them doing the binding.
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 20rem));
   gap: var(--u-space-2) var(--u-space-4);
 
   li {
@@ -709,6 +803,102 @@ tbody tr:last-child td {
 }
 
 // ---------------------------------------------------------------------------
+// Technical source details
+// ---------------------------------------------------------------------------
+
+// The identifiers the page was rendered from. Closed by default: the snapshot
+// identifier used to be the widest thing in the primary status line and said
+// nothing to almost everyone reading it, and it is still needed exactly by the
+// few people checking a figure against its document.
+.source-details {
+  summary {
+    cursor: pointer;
+    font-weight: var(--u-weight-semibold);
+    color: var(--u-text-secondary);
+  }
+
+  &[open] summary {
+    margin-bottom: var(--u-space-3);
+  }
+}
+
+.source-list {
+  display: grid;
+  grid-template-columns: minmax(0, 12rem) minmax(0, 1fr);
+  gap: var(--u-space-2) var(--u-space-4);
+  margin: 0;
+
+  dt {
+    color: var(--u-text-muted);
+    font-size: var(--u-text-sm);
+    font-weight: var(--u-weight-semibold);
+    min-width: 0;
+  }
+
+  dd {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--u-space-2);
+    margin: 0;
+    min-width: 0;
+  }
+}
+
+.source-value {
+  @include u.universe-identifier;
+
+  // A shortened identifier still has to survive a narrow column and a doubled
+  // font size without pushing the page sideways.
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+// The whole identifier, for a screen reader and for anything reading the page
+// rather than looking at it. Clipped rather than `display: none`, which would
+// take it away from both.
+.source-exact {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.source-note {
+  flex-basis: 100%;
+  color: var(--u-text-muted);
+  font-size: var(--u-text-xs);
+  line-height: var(--u-leading-snug);
+  max-width: var(--u-width-prose);
+}
+
+.source-copy {
+  background: none;
+  border: 1px solid var(--u-border);
+  border-radius: var(--u-radius-sm);
+  color: var(--u-text-secondary);
+  cursor: pointer;
+  font-size: var(--u-text-2xs);
+  font-weight: var(--u-weight-semibold);
+  letter-spacing: var(--u-eyebrow-tracking);
+  padding: 0.15rem var(--u-space-2);
+  text-transform: uppercase;
+
+  @include u.universe-motion(all, var(--u-duration-fast));
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--u-brand-accent);
+    color: var(--u-brand);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Narrow
 // ---------------------------------------------------------------------------
 
@@ -735,5 +925,14 @@ tbody tr:last-child td {
   .coverage-name {
     min-width: 0;
     flex-basis: 100%;
+  }
+
+  .source-list {
+    grid-template-columns: 1fr;
+    gap: var(--u-space-1) 0;
+  }
+
+  .source-list dt {
+    margin-top: var(--u-space-2);
   }
 }

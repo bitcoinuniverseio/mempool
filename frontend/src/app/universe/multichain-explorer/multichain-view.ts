@@ -692,7 +692,11 @@ export function readStatusRail(
       label: $localize`:@@universe.chain.rail-observed:Last observed`,
       value: elapsed ?? $localize`:@@universe.chain.rail-observed-unknown:Time not stated`,
       tone: elapsed ? 'neutral' : 'partial',
-      exact: null,
+      // "3 seconds ago" is the reading, and it is the one that changes while
+      // nobody is looking. The instant it was measured from is the fact behind
+      // it, and it was dropped: the rail carried a relative time with no way to
+      // recover the absolute one it was derived from.
+      exact: capability.updatedAt ?? null,
     },
     {
       id: 'mempool',
@@ -734,6 +738,167 @@ export function readNotReadyReasons(
       kind: 'unstated',
     },
   ];
+}
+
+/**
+ * How much history is readable right now, which is a different question from
+ * which lookups this explorer offers.
+ *
+ * `reads` is a static statement of the kinds of lookup that exist for a chain.
+ * `coverage` is the live one: how much of the chain each of them can currently
+ * answer over. The overview rendered the first and dropped the second, so
+ * Dogecoin read "Address history: Offered" while the same document said its
+ * address history was unavailable. Both statements were true and only one was
+ * on the page, which is the shape of turning unavailable into nothing at all.
+ *
+ * Three dimensions, always all three, in the order a reader needs them: the
+ * confirmed chain first, then addresses over it, then the protocols on top.
+ */
+export interface CoverageReading {
+  readonly id: string;
+  readonly label: string;
+  readonly stateLabel: string;
+  readonly tone: EvidenceTone;
+  /** What this dimension covers, in words, so the state is not read alone. */
+  readonly detail: string;
+}
+
+const COVERAGE_LABELS: readonly {
+  id: keyof ChainCapabilityEnvelope['coverage'];
+  label: string;
+  detail: string;
+}[] = [
+  {
+    id: 'confirmedHistory',
+    label: $localize`:@@universe.chain.coverage-confirmed:Confirmed history`,
+    detail: $localize`:@@universe.chain.coverage-confirmed-detail:Blocks and transactions the chain has already confirmed.`,
+  },
+  {
+    id: 'addressHistory',
+    label: $localize`:@@universe.chain.coverage-address:Address history`,
+    detail: $localize`:@@universe.chain.coverage-address-detail:What an address received and spent over that confirmed history.`,
+  },
+  {
+    id: 'protocolHistory',
+    label: $localize`:@@universe.chain.coverage-protocol:Protocol history`,
+    detail: $localize`:@@universe.chain.coverage-protocol-detail:Assets carried on this chain, as the protocol indexers below read them.`,
+  },
+];
+
+export function readHistoryCoverage(
+  capability: ChainCapabilityEnvelope | null
+): readonly CoverageReading[] {
+  return COVERAGE_LABELS.map(({ id, label, detail }) => {
+    const state = capability?.coverage?.[id];
+    return {
+      id,
+      label,
+      stateLabel: capability
+        ? completenessLabel(state)
+        : $localize`:@@universe.chain.coverage-unknown:Not stated`,
+      tone: capability ? completenessTone(state) : ('neutral' as EvidenceTone),
+      detail,
+    };
+  });
+}
+
+/**
+ * The evidence behind the page, at the level it belongs at.
+ *
+ * The snapshot identifier, the schema version and the overlay's own commit are
+ * how an operator checks a rendering against the document it came from. They
+ * are not what a visitor came to read, and the old overview put the whole
+ * opaque snapshot identifier in the primary status line, where it was the
+ * widest thing on the page and said nothing to almost everyone looking at it.
+ *
+ * So they are kept, exactly, in a disclosure that is closed by default. Values
+ * long enough to overflow are shortened for display and carry their exact form
+ * for copying, because a shortened identifier that cannot be recovered is
+ * evidence destroyed rather than evidence filed.
+ */
+export interface SourceDetail {
+  readonly id: string;
+  readonly label: string;
+  /** What is shown. Shortened when the exact value is too long to print. */
+  readonly display: string;
+  /** The exact value, when there is one worth copying. */
+  readonly exact: string | null;
+  /**
+   * True when the display is a shortening of the exact value. The page then
+   * carries the exact form for a screen reader as well, because a reader who
+   * cannot see the middle of an identifier has not been given it.
+   */
+  readonly truncated: boolean;
+  /** Which component this identifies, when the value alone would not say. */
+  readonly note: string | null;
+}
+
+export function readSourceDetails(
+  capability: ChainCapabilityEnvelope | null
+): readonly SourceDetail[] {
+  if (!capability) {
+    return [];
+  }
+  const details: SourceDetail[] = [
+    {
+      id: 'observed',
+      label: $localize`:@@universe.chain.source-observed:Observed at`,
+      display: capability.updatedAt,
+      exact: capability.updatedAt,
+      truncated: false,
+      note: null,
+    },
+  ];
+
+  const snapshotId = capability.mempool?.snapshotId ?? null;
+  if (snapshotId) {
+    details.push({
+      id: 'snapshot',
+      label: $localize`:@@universe.chain.source-snapshot:Pending snapshot`,
+      display: shortenIdentifier(snapshotId, 10),
+      exact: snapshotId,
+      truncated: shortenIdentifier(snapshotId, 10) !== snapshotId,
+      note: $localize`:@@universe.chain.source-snapshot-note:Which reading of the pending set the figures above came from.`,
+    });
+  }
+
+  const sequence = formatExactInteger(capability.mempool?.sequenceAtomic ?? null);
+  if (sequence) {
+    details.push({
+      id: 'sequence',
+      label: $localize`:@@universe.chain.source-sequence:Snapshot sequence`,
+      display: sequence.display,
+      exact: sequence.exact,
+      truncated: false,
+      note: null,
+    });
+  }
+
+  details.push({
+    id: 'schema',
+    label: $localize`:@@universe.chain.source-schema:Document schema`,
+    display: capability.schemaVersion,
+    exact: capability.schemaVersion,
+    truncated: false,
+    note: null,
+  });
+
+  const releaseSha = capability.release?.sha ?? null;
+  if (releaseSha) {
+    details.push({
+      id: 'release',
+      label: $localize`:@@universe.chain.source-release:Overlay release`,
+      display: releaseSha,
+      exact: releaseSha,
+      truncated: false,
+      // Three components carry their own commit, and this is one of them. An
+      // unqualified "Release" here reads as the version of the site, which it
+      // has never been.
+      note: $localize`:@@universe.chain.source-release-note:The commit of the protocol overlay that produced this document. The site and the explorer backend publish their own on the source page.`,
+    });
+  }
+
+  return details;
 }
 
 export interface ReadCapability {
