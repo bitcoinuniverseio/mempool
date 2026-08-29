@@ -124,13 +124,30 @@ function targets(argv) {
 }
 
 const problems = [];
+let scanned = 0;
 for (const target of targets(process.argv.slice(2))) {
   const stats = statSync(target);
   if (stats.isDirectory()) {
-    for (const file of walk(target)) problems.push(...findings(file));
+    for (const file of walk(target)) {
+      scanned += 1;
+      problems.push(...findings(file));
+    }
   } else {
+    scanned += 1;
     problems.push(...findings(target));
   }
+}
+
+// A run that read nothing finds nothing, and used to say so in the same words
+// as a clean one. `frontend/dist` exists as an empty directory for the whole
+// of an Angular build, which empties its output before rewriting it, and the
+// silent build failure this repository has already hit twice leaves it that
+// way. This gate also guards the release artifact, so a pass it did not earn
+// is the expensive kind.
+if (scanned === 0) {
+  console.error('Text gate read no files. There was nothing to check, which is not the same as nothing to find.');
+  console.error(`Targets: ${targets(process.argv.slice(2)).join(', ')}`);
+  process.exit(1);
 }
 
 if (problems.length > 0) {

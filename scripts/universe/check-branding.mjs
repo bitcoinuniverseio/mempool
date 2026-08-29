@@ -167,6 +167,7 @@ function targets(argv) {
 }
 
 const problems = [];
+let scanned = 0;
 for (const target of targets(explicitTargets)) {
   let stats;
   try {
@@ -176,10 +177,25 @@ for (const target of targets(explicitTargets)) {
     process.exit(1);
   }
   if (stats.isDirectory()) {
-    for (const file of walk(target, explicitTargets.length === 0)) problems.push(...findings(file));
+    for (const file of walk(target, explicitTargets.length === 0)) {
+      scanned += 1;
+      problems.push(...findings(file));
+    }
   } else {
+    scanned += 1;
     problems.push(...findings(target));
   }
+}
+
+// The target existing is not the same as the target holding anything. An
+// Angular build empties its output directory before rewriting it, so a run
+// against `frontend/dist` at the wrong moment, or after a build that failed
+// without saying so, reads zero files and reports the same pass as a clean
+// output. This gate guards the release artifact too.
+if (scanned === 0) {
+  console.error('Branding gate read no files. There was nothing to check, which is not the same as nothing to find.');
+  console.error(`Targets: ${targets(explicitTargets).join(', ')}`);
+  process.exit(1);
 }
 
 if (problems.length > 0) {

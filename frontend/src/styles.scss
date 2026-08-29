@@ -1620,18 +1620,24 @@ h2.anchor {
 }
 
 .chain-option {
-  align-items: start;
+  align-items: center;
+  column-gap: var(--u-space-3);
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(0, 1fr) auto;
+  row-gap: 2px;
   white-space: normal;
 }
 
 .chain-option-title {
   font-weight: var(--u-weight-semibold);
+  // The chain name and its ticker are one label and must not be broken across
+  // two lines. The detail line beneath is the part allowed to wrap.
+  white-space: nowrap;
 }
 
 .chain-option-detail {
   font-size: var(--u-text-xs);
+  line-height: 1.3;
 }
 
 @media (min-width: 720px) {
