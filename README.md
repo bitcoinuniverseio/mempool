@@ -296,10 +296,13 @@ upstream security fixes stay easy to take.
 
 ## Security
 
-Report a suspected vulnerability privately to the Bitcoin Universe security
-contact. Do not put it in a pull request.
-`docs/security/THREAT-MODEL.md` records the trust boundaries this deployment
-assumes.
+Report a suspected vulnerability through GitHub's private vulnerability
+reporting for this repository:
+[open a report](https://github.com/bitcoinuniverseio/mempool/security/advisories/new).
+It stays private to the maintainers. Do not put one in a pull request, which is
+public the moment it is written. [SECURITY.md](SECURITY.md) has what to include
+and what is in scope, and `docs/security/THREAT-MODEL.md` records the trust
+boundaries this deployment assumes.
 
 ## Contributing
 

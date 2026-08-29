@@ -54,6 +54,13 @@ when the reading was taken, and how complete the pending set is. A reading whose
 fact is missing says so in its own place rather than disappearing, because a
 rail with a hole in it reads as a page still loading.
 
+A verdict there never travels alone. When a chain says it is not ready, the
+page says which part is missing, in English rather than in the codes the API
+uses, and separates a source that is failing from one that is working and
+stating the edge of what it covers. A one-word verdict with the evidence
+withheld is the shape of every other explorer, and it is the thing this one
+exists not to be.
+
 ## The emotional outcomes to design for
 
 1. **Oriented in seconds.** Live data above the fold, one dominant search field,
