@@ -1533,6 +1533,18 @@ export interface CollectionReading {
   readonly hiddenColumnCount: number;
   /** Fields that were identical on every row, and so became no column at all. */
   readonly constantColumnCount: number;
+  /**
+   * Fields present in every row that a table cannot hold at all, because their
+   * value is a structure rather than a value. Named, not just counted.
+   *
+   * These were dropped in silence while `hiddenColumnCount` reported zero, so
+   * the page stated it had held nothing back at the moment it was holding back
+   * the most. On the live ZRC-20 list that is `rulesets`, the whole ledger for
+   * every token under two disagreeing rulesets, and `divergence`, which names
+   * the fields they disagree on and carries the authority's own prose about
+   * rules neither ruleset evaluates.
+   */
+  readonly structuredFields: readonly string[];
 }
 
 /** How many rows a page renders before it says how many it is holding back. */
@@ -1574,9 +1586,13 @@ export function readCollection(
   );
 
   const order: string[] = [];
+  const structured: string[] = [];
   for (const row of scalarRows) {
     for (const [key, value] of Object.entries(row)) {
       if (value !== null && typeof value === 'object') {
+        if (!structured.includes(key)) {
+          structured.push(key);
+        }
         continue;
       }
       if (!order.includes(key)) {
@@ -1621,6 +1637,7 @@ export function readCollection(
     totalCount: source.length,
     hiddenColumnCount,
     constantColumnCount,
+    structuredFields: structured,
   };
 }
 
