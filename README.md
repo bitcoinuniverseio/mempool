@@ -84,13 +84,15 @@ Object identifiers do not carry between chains, so switching chains from an
 object page lands on that chain's overview and says why, rather than looking up
 a Bitcoin transaction id on Dogecoin.
 
-![The Dogecoin overview page. A status rail reads Ready, block 5,623,041, zero
-blocks behind, observed 39 seconds ago, complete pending coverage. Below it a
-panel titled Questions this chain can answer marks transaction, block, address
-and outpoint lookup as offered and fee estimates and projected blocks as not
-offered. A protocol indexers panel lists Doginals and DRC-20 as ready with
-complete history, and Doge TAP as degraded, 184 blocks behind, because its
-authority is behind the chain
+![The Dogecoin overview page. The chain switcher in the header reads DOGE
+Dogecoin, Ready. A status rail reads Ready, block 5,623,041, zero blocks behind,
+observed 25 seconds ago, complete pending coverage. Below it a panel titled
+Questions this chain can answer marks transaction, block, address and outpoint
+lookup and fee estimates as offered, and projected blocks as not offered. A
+protocol indexers panel lists Doginals and DRC-20 as ready with complete
+history, and TAP on Doge as degraded with partial history, 184 blocks behind,
+followed by the sentence: this protocol's indexer answered, but its last
+checkpoint is behind the chain
 tip.](docs/product/screenshots/dogecoin-overview.png)
 
 Both screenshots are taken by the review harness in
