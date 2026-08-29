@@ -166,7 +166,8 @@ suite can see that.
    hard-links the dependency tree from the release in use. A release directory
    is never overwritten in place.
 4. `universe-explorer-release preflight <sha>` runs the gates and changes
-   nothing. It refuses a release whose build is incomplete, whose
+   nothing. It refuses a release whose build is incomplete, whose manifest is
+   missing or names a different commit from the one being installed, whose
    configuration would advertise a feature it cannot serve, whose database does
    not answer, whose source registry does not parse or names a token variable
    that is missing, or where a protocol the registry calls readable has no
@@ -216,7 +217,10 @@ suite can see that.
    An upstream that is genuinely gone is still reported as a gateway failure
    within a few seconds, so a real outage is never hidden behind a long wait. After the swap it reads `/api/v1/capabilities` and
    fails the release if any feature is enabled with no routes registered, which
-   is exactly the state that shipped. A failed verification rolls back.
+   is exactly the state that shipped. It then holds the three component
+   identities to `RELEASE-MANIFEST.json`, which is where a frontend and a
+   backend from different releases, or an overlay that cannot name itself, stop
+   the cutover. A failed verification rolls back.
 6. Run `node scripts/universe/synthetic-check.mjs` against the public origin.
    It asks the live endpoints with nothing mocked and fails on an empty range,
    a protocol advertised as readable whose authority cannot answer, a
@@ -334,6 +338,22 @@ unnoticed for as long as it did.
 | protocol overlay | `release.sha` on every `/api/v1/<chain>/status` | `releases/backend-apis-<sha>` |
 
 A build whose SHA is not published must not ship.
+
+Every artifact carries `RELEASE-MANIFEST.json` at its root, generated from the
+commit being built by `scripts/universe/release-manifest.mjs`. It names the one
+commit the frontend, the explorer backend and the gateway in that artifact all
+come from, and the contract versions this frontend reads. It deliberately does
+not pin the overlay commit: the overlay is built from another repository on its
+own release train, so what the manifest requires of it is the contract and an
+identity it can state, and the commit it reports is recorded rather than
+required.
+
+```bash
+node scripts/universe/release-manifest.mjs verify   --manifest=/opt/universe-explorer/current/RELEASE-MANIFEST.json   --origin=https://explorer.bitcoinuniverse.io
+```
+
+`release.sh` runs the same check against the loopback gateway before the
+cutover is allowed to stand.
 
 The overlay's identifier shipped as the literal string `development` and served
 that to the public. Two faults produced it, and both are worth knowing because
