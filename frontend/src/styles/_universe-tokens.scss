@@ -330,6 +330,16 @@
   // The shadow carries the plum cast of the page so a lifted card does not
   // drop a grey shadow onto a pink ground.
   --u-shadow-color: rgba(36, 26, 43, 0.28);
+  // The edge fade on a scroller that a label can pass under.
+  //
+  // Lighter than the general shadow, and the number is a measurement rather
+  // than a preference. The bottom navigation bar paints this at its ends to
+  // say that it scrolls, and a destination dragged past the end is read
+  // through it while it goes. At the general 28 percent this composites to
+  // rgb(194, 191, 196) under the active label and takes it from 6.5:1 to
+  // 3.29:1, under AA. At 14 percent it composites to rgb(224, 222, 225) and
+  // holds it at 5.2:1.
+  --u-nav-scroll-shadow: rgba(36, 26, 43, 0.14);
   --u-overlay-scrim: rgba(26, 16, 32, 0.55);
   --u-media-scrim: rgba(16, 7, 22, 0.62);
   --u-shadow-sm: 0 1px 2px rgba(36, 26, 43, 0.07);
@@ -540,6 +550,11 @@
   --u-chart-zoom-track: #241a30;
 
   --u-shadow-color: rgba(0, 0, 0, 0.55);
+  // Darkening a dark bar raises the contrast of the light label on it rather
+  // than lowering it, so this can carry more weight here than in light and
+  // still be the safe direction. It is stated rather than inherited so the
+  // two themes cannot drift apart silently.
+  --u-nav-scroll-shadow: rgba(0, 0, 0, 0.4);
   --u-overlay-scrim: rgba(0, 0, 0, 0.66);
   --u-media-scrim: rgba(8, 4, 12, 0.7);
   --u-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);

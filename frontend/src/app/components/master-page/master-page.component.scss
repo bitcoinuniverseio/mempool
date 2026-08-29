@@ -332,15 +332,11 @@
 
     // The padding covers the bar at rest. Scrolling is the other half: a
     // destination dragged past the edge passes under the shadow while it goes,
-    // and it has to stay readable on the way. So the shadow's own weight is
-    // set by that measurement rather than by how it looks.
-    //
-    // The general shadow token is 28 percent, which composites to rgb(194,
-    // 191, 196) over the light bar and takes the active label from 6.5:1 to
-    // 3.29:1, under AA. 14 percent composites to rgb(224, 222, 225) and holds
-    // it at 5.2:1. This is its own token rather than a value written inline so
-    // that check-palettes.mjs can see it and hold it to that.
-    --u-nav-scroll-shadow: rgba(36, 26, 43, 0.14);
+    // and it has to stay readable on the way. That is why the shadow layers
+    // above take --u-nav-scroll-shadow and not the general elevation token,
+    // which is twice its weight and takes the active label under AA. The
+    // measurement behind the number is with the token, in the token file,
+    // where both themes state it and the palette gate can see it.
 
     // Keeping the active destination off the very edge when it is scrolled to.
     scroll-padding-inline: var(--u-space-5);
