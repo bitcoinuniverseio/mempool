@@ -3,6 +3,21 @@ import { ExplorerChain } from '@app/universe/universe.types';
 export type ExplorerRouteCategory =
   'dashboard' | 'mempool' | 'protocols' | 'object';
 
+/**
+ * How each chain is written when a person reads it. The wire uses lowercase
+ * identifiers; nothing shown to a reader should. One table so a chain is
+ * spelled the same way on a page heading, in a saved list, and in a filter.
+ */
+const CHAIN_NAMES: Record<ExplorerChain, string> = {
+  bitcoin: 'Bitcoin',
+  dogecoin: 'Dogecoin',
+  zcash: 'Zcash',
+};
+
+export function explorerChainName(chain: ExplorerChain): string {
+  return CHAIN_NAMES[chain] ?? chain;
+}
+
 export function explorerChainFromUrl(url: string): ExplorerChain {
   const segment = url.split(/[?#]/, 1)[0].split('/').filter(Boolean)[0];
   return segment === 'dogecoin' || segment === 'zcash' ? segment : 'bitcoin';

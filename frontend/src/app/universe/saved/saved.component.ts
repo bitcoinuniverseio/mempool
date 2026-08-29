@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { Observable, combineLatest, map } from 'rxjs';
 import { SeoService } from '@app/services/seo.service';
 import { ExplorerChain } from '@app/universe/universe.types';
+import { explorerChainName } from '@app/universe/universe-chain-routing';
 import {
   UniverseEntry,
   UniverseEntryKind,
@@ -120,6 +121,34 @@ export class SavedComponent implements OnInit {
   confirmReset(): void {
     this.local.resetAll();
     this.confirmingReset = false;
+  }
+
+  /** A chain as a reader should see it, or the word for every chain. */
+  chainFilterLabel(chain: ExplorerChain | 'all'): string {
+    return chain === 'all'
+      ? $localize`:@@universe.saved.filter-all-chains:Every chain`
+      : explorerChainName(chain);
+  }
+
+  kindFilterLabel(kind: UniverseEntryKind | 'all'): string {
+    return kind === 'all'
+      ? $localize`:@@universe.saved.filter-all-kinds:Every kind`
+      : this.kindLabel(kind);
+  }
+
+  /** Where an entry lives, written out: "Dogecoin, mainnet". */
+  originLabel(entry: UniverseEntry): string {
+    return `${explorerChainName(entry.chain)}, ${entry.network}`;
+  }
+
+  /**
+   * A protocol id as a reader should see it. The registry's display names live
+   * behind a request this page deliberately does not make, so the id is
+   * presented readably rather than raw: nothing is invented, only cased.
+   */
+  protocolLabel(protocolId: string): string {
+    const words = protocolId.replace(/[_-]+/g, ' ').trim();
+    return words.charAt(0).toUpperCase() + words.slice(1);
   }
 
   kindLabel(kind: string): string {

@@ -36,6 +36,7 @@ import AxeBuilder from '@axe-core/playwright';
 import * as playwright from 'playwright';
 import { addressFixtures, detailFixtures, fixtures, sampleIds, stateOverrides } from './fixtures.mjs';
 import { chainFixtures, chainSampleIds, chainStateOverrides, chainStateScope } from './chain-fixtures.mjs';
+import { assetFixtures, assetSampleIds, savedStorageSeed } from './asset-fixtures.mjs';
 import { contrastProbe } from './contrast-probe.mjs';
 import { progressProbe } from './progress-probe.mjs';
 
@@ -82,6 +83,14 @@ const ROUTES = [
   { id: 'zcash-mempool', path: '/zcash/mempool', name: 'Zcash pending' },
   { id: 'zcash-tx', path: `/zcash/tx/${chainSampleIds.ZEC_TXID}`, name: 'Zcash transaction' },
   { id: 'zcash-protocols', path: '/zcash/protocols', name: 'Zcash protocols' },
+
+  // Universe-authored routes that had no coverage either. The saved page is
+  // seeded through localStorage below, because its state was never a request.
+  { id: 'outpoint', path: `/outpoint/${assetSampleIds.OUTPOINT_TXID}/1`, name: 'Output' },
+  { id: 'inscription', path: `/inscription/${assetSampleIds.INSCRIPTION_ID}`, name: 'Inscription' },
+  { id: 'rune', path: `/rune/${assetSampleIds.RUNE_NAME}`, name: 'Rune' },
+  { id: 'sat', path: `/sat/${assetSampleIds.SAT_NUMBER}`, name: 'Sat' },
+  { id: 'saved', path: '/saved', name: 'Saved in this browser' },
 ];
 
 const VIEWPORTS = [
@@ -130,7 +139,7 @@ function pick(list, key, idKey = 'id') {
 /** Answer every API call from fixtures, applying the state's overrides. */
 async function installFixtures(context, state) {
   const overrides = ALL_OVERRIDES[state] || {};
-  const table = { ...fixtures, ...detailFixtures, ...addressFixtures, ...chainFixtures };
+  const table = { ...fixtures, ...detailFixtures, ...addressFixtures, ...chainFixtures, ...assetFixtures };
 
   await context.route('**/api/**', async (route) => {
     const url = new URL(route.request().url());
@@ -308,9 +317,15 @@ async function run() {
           reducedMotion: args.reducedMotion ? 'reduce' : 'no-preference',
         });
         await installFixtures(context, state);
-        await context.addInitScript((t) => {
+        await context.addInitScript(([t, saved]) => {
           try {
             localStorage.setItem('theme-preference', t);
+            // The saved page has an empty face and a populated one, and only
+            // the empty one appears without this. Its state lives in the
+            // browser, so the fixture goes in the browser.
+            for (const [key, value] of Object.entries(saved)) {
+              localStorage.setItem(key, JSON.stringify(value));
+            }
           } catch { /* private mode: the default theme is fine */ }
 
           // A WebGL drawing buffer is cleared once the frame is presented, so
@@ -325,7 +340,7 @@ async function run() {
             }
             return getContext.call(this, type, attributes);
           };
-        }, theme);
+        }, [theme, savedStorageSeed]);
 
         for (const route of routes) {
           if (!stateApplies(state, route.id)) continue;
@@ -508,6 +523,8 @@ export const GATED_ROUTES = new Set([
   'dogecoin', 'dogecoin-mempool', 'dogecoin-tx', 'dogecoin-block',
   'dogecoin-address', 'dogecoin-protocols', 'dogecoin-drc20',
   'zcash', 'zcash-mempool', 'zcash-tx', 'zcash-protocols',
+  // The single-asset pages and the local-state page, for the same reason.
+  'outpoint', 'inscription', 'rune', 'sat', 'saved',
 ]);
 
 /**

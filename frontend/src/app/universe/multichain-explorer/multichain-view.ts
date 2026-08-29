@@ -33,6 +33,7 @@ import {
   ChainExplorerPayload,
   ExplorerChain,
 } from '@app/universe/universe.types';
+import { explorerChainName } from '@app/universe/universe-chain-routing';
 
 /**
  * The evidence tones the design system defines. They are the only tones any
@@ -64,7 +65,7 @@ export interface ChainProfile {
 
 const DOGECOIN: ChainProfile = {
   chain: 'dogecoin',
-  name: 'Dogecoin',
+  name: explorerChainName('dogecoin'),
   ticker: 'DOGE',
   atomicUnit: 'koinu',
   precision: 8,
@@ -77,7 +78,7 @@ const DOGECOIN: ChainProfile = {
 
 const ZCASH: ChainProfile = {
   chain: 'zcash',
-  name: 'Zcash',
+  name: explorerChainName('zcash'),
   ticker: 'ZEC',
   atomicUnit: 'zatoshi',
   precision: 8,
