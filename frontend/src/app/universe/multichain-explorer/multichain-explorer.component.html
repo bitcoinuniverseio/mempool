@@ -1,0 +1,154 @@
+<div class="container-xl multichain-page" *ngIf="vm$ | async as vm">
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">{{ chainName }} mainnet / {{ ticker }}</p>
+      <h1>{{ chainName }} {{ pageLabel() }}</h1>
+      <p class="lede" *ngIf="reference">{{ reference }}</p>
+    </div>
+    <button
+      type="button"
+      class="save"
+      *ngIf="reference"
+      (click)="toggleSaved()"
+      [attr.aria-pressed]="saved"
+    >
+      {{ saved ? "Saved in this browser" : "Save in this browser" }}
+    </button>
+  </header>
+
+  <p class="switch-notice" role="status" *ngIf="switchedFrom">
+    Switched from {{ switchedFrom }}. Object identifiers were not carried
+    between chains.
+  </p>
+
+  <section class="status-panel" aria-label="Chain status">
+    <ng-container *ngIf="vm.capability as capability; else statusUnavailable">
+      <span class="state" [class.degraded]="!capability.ready">{{
+        stateLabel(capability)
+      }}</span>
+      <span>Tip {{ capability.tip?.heightAtomic || "not available" }}</span>
+      <span>Updated {{ freshness(capability) }}</span>
+      <span
+        >Mempool {{ capability.mempool.state }},
+        {{ capability.mempool.completeness }}</span
+      >
+      <span>{{
+        capability.mempool.snapshotId
+          ? "snapshot " + capability.mempool.snapshotId
+          : "no snapshot id"
+      }}</span>
+    </ng-container>
+    <ng-template #statusUnavailable
+      ><span class="state degraded">status unavailable</span></ng-template
+    >
+  </section>
+
+  <p class="error" role="alert" *ngIf="vm.capabilityError">
+    {{ vm.capabilityError }}
+  </p>
+  <p class="error" role="alert" *ngIf="vm.payloadError">
+    {{ vm.payloadError }}
+  </p>
+
+  <section
+    class="panel"
+    *ngIf="page === 'dashboard' && vm.capability as capability"
+  >
+    <h2>What is happening now</h2>
+    <dl class="facts">
+      <div>
+        <dt>Chain tip</dt>
+        <dd>{{ capability.tip?.heightAtomic || "not available" }}</dd>
+      </div>
+      <div>
+        <dt>Sync</dt>
+        <dd>{{ capability.sync.state }}</dd>
+      </div>
+      <div>
+        <dt>Pending coverage</dt>
+        <dd>{{ capability.mempool.completeness }}</dd>
+      </div>
+      <div>
+        <dt>Confirmed history</dt>
+        <dd>{{ capability.coverage.confirmedHistory }}</dd>
+      </div>
+      <div>
+        <dt>Address history</dt>
+        <dd>{{ capability.coverage.addressHistory }}</dd>
+      </div>
+      <div>
+        <dt>Release</dt>
+        <dd>{{ capability.release.sha }}</dd>
+      </div>
+    </dl>
+    <p *ngIf="chain === 'dogecoin'">
+      Fee estimates are shown only when the first-party source supports them.
+      Dogecoin pages do not label fees as sat/vB.
+    </p>
+    <p *ngIf="chain === 'zcash'">
+      Zcash fee guidance uses ZIP-317 logical actions when available.
+      Transparent-chain facts do not reveal shielded participants or shielded
+      amounts.
+    </p>
+    <p *ngIf="!capability.reads.projectedBlocks">
+      Projected blocks are not claimed for this chain.
+    </p>
+    <a [routerLink]="['/', chain, 'mempool']">Open mempool</a>
+    <a [routerLink]="['/', chain, 'protocols']">Open protocols</a>
+  </section>
+
+  <nav
+    class="protocol-nav"
+    aria-label="Protocol families"
+    *ngIf="page.startsWith('protocol')"
+  >
+    <a
+      *ngFor="let protocol of protocolIds"
+      [routerLink]="['/', chain, 'protocols', protocol]"
+    >
+      {{ protocol }}
+    </a>
+  </nav>
+
+  <section
+    class="panel privacy"
+    *ngIf="chain === 'zcash' && (page === 'address' || page === 'transaction')"
+  >
+    <h2>Zcash privacy boundary</h2>
+    <p>
+      This view can report transparent-chain evidence only. Shielded sender,
+      recipient, and amount details are not inferred.
+    </p>
+  </section>
+
+  <section class="panel" *ngIf="vm.summary.length">
+    <h2>Verified summary</h2>
+    <dl class="facts">
+      <div *ngFor="let item of vm.summary">
+        <dt>{{ item.key }}</dt>
+        <dd>{{ item.value }}</dd>
+      </div>
+    </dl>
+  </section>
+
+  <section class="panel" *ngIf="vm.rows.length">
+    <h2>Results</h2>
+    <div class="table-wrap">
+      <table>
+        <tbody>
+          <tr *ngFor="let row of vm.rows; trackBy: trackRow">
+            <td *ngFor="let key of keys(row)">
+              <strong>{{ key }}</strong
+              ><br />{{ value(row[key]) }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <details class="panel evidence" *ngIf="vm.payload">
+    <summary>Full first-party response</summary>
+    <pre>{{ vm.payload | json }}</pre>
+  </details>
+</div>

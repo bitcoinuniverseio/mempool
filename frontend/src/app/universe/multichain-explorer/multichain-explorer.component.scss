@@ -1,0 +1,130 @@
+:host {
+  display: block;
+}
+
+.multichain-page {
+  padding-top: 2rem;
+  padding-bottom: 4rem;
+  color: var(--fg);
+}
+
+.page-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.eyebrow {
+  color: var(--transparent-fg);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.lede {
+  overflow-wrap: anywhere;
+}
+
+.save,
+.protocol-nav a {
+  border: 1px solid var(--primary);
+  border-radius: 0.45rem;
+  color: var(--fg);
+  padding: 0.55rem 0.75rem;
+  background: transparent;
+}
+
+.status-panel,
+.panel,
+.switch-notice {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--box-border);
+  border-radius: 0.6rem;
+  background: var(--box-bg);
+}
+
+.status-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.2rem;
+}
+
+.state {
+  color: var(--u-state-proven);
+  font-weight: 700;
+}
+
+.state.degraded,
+.error {
+  color: var(--u-state-partial);
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.75rem;
+}
+
+.facts div {
+  min-width: 0;
+}
+
+.facts dt {
+  color: var(--transparent-fg);
+}
+
+.facts dd {
+  margin: 0.15rem 0 0;
+  overflow-wrap: anywhere;
+}
+
+.panel a + a {
+  margin-left: 1rem;
+}
+
+.protocol-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  min-width: 100%;
+}
+
+th,
+td {
+  padding: 0.55rem;
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+pre {
+  max-height: 36rem;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 32rem) {
+  .multichain-page {
+    padding-top: 1rem;
+  }
+
+  .page-head {
+    flex-direction: column;
+  }
+
+  .save {
+    width: 100%;
+  }
+}

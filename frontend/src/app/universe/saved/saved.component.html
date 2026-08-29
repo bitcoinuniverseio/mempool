@@ -8,18 +8,42 @@
     </p>
   </header>
 
+  <section class="panel" aria-labelledby="saved-filters-heading">
+    <h2 id="saved-filters-heading">Activity filters</h2>
+    <p>
+      Coverage is limited to pages saved or opened in this browser. Times below
+      show when this device last touched each entry, not chain-index freshness.
+    </p>
+    <div class="filters">
+      <label>
+        Chain
+        <select [value]="chainFilter" (change)="updateChainFilter($any($event.target).value)">
+          <option *ngFor="let chain of chainFilters" [value]="chain">{{ chain }}</option>
+        </select>
+      </label>
+      <label>
+        Activity type
+        <select [value]="kindFilter" (change)="updateKindFilter($any($event.target).value)">
+          <option *ngFor="let kind of kindFilters" [value]="kind">{{ kind }}</option>
+        </select>
+      </label>
+    </div>
+  </section>
+
   <section class="panel" aria-labelledby="saved-bookmarks-heading">
     <h2 id="saved-bookmarks-heading" i18n="universe.saved.bookmarks-title">Saved pages</h2>
 
-    <p class="empty" *ngIf="!vm.bookmarks.length" i18n="universe.saved.bookmarks-empty">
+    <p class="empty" *ngIf="!visibleEntries(vm.bookmarks).length" i18n="universe.saved.bookmarks-empty">
       Nothing saved yet. Use the save button on a transaction, output, address, or
       protocol page and it appears here.
     </p>
 
-    <ul class="entry-list" *ngIf="vm.bookmarks.length">
-      <li *ngFor="let entry of vm.bookmarks; trackBy: trackByEntry">
+    <ul class="entry-list" *ngIf="visibleEntries(vm.bookmarks) as bookmarks">
+      <li *ngFor="let entry of bookmarks; trackBy: trackByEntry">
+        <span class="entry-kind">{{ entry.chain }} / {{ entry.network }}</span>
         <span class="entry-kind">{{ kindLabel(entry.kind) }}</span>
         <a class="entry-label" [routerLink]="[entry.path]">{{ entry.label }}</a>
+        <time [attr.datetime]="entry.at | date:'yyyy-MM-ddTHH:mm:ss.SSSZ'">{{ entry.at | date:'medium' }}</time>
         <button type="button" class="remove" (click)="remove(entry)"
                 [attr.aria-label]="'Remove ' + entry.label">
           <ng-container i18n="universe.saved.remove">Remove</ng-container>
@@ -31,14 +55,16 @@
   <section class="panel" aria-labelledby="saved-recent-heading">
     <h2 id="saved-recent-heading" i18n="universe.saved.recent-title">Recently viewed</h2>
 
-    <p class="empty" *ngIf="!vm.recent.length" i18n="universe.saved.recent-empty">
+    <p class="empty" *ngIf="!visibleEntries(vm.recent).length" i18n="universe.saved.recent-empty">
       Nothing viewed yet in this browser.
     </p>
 
-    <ul class="entry-list" *ngIf="vm.recent.length">
-      <li *ngFor="let entry of vm.recent; trackBy: trackByEntry">
+    <ul class="entry-list" *ngIf="visibleEntries(vm.recent) as recent">
+      <li *ngFor="let entry of recent; trackBy: trackByEntry">
+        <span class="entry-kind">{{ entry.chain }} / {{ entry.network }}</span>
         <span class="entry-kind">{{ kindLabel(entry.kind) }}</span>
         <a class="entry-label" [routerLink]="[entry.path]">{{ entry.label }}</a>
+        <time [attr.datetime]="entry.at | date:'yyyy-MM-ddTHH:mm:ss.SSSZ'">{{ entry.at | date:'medium' }}</time>
       </li>
     </ul>
 
