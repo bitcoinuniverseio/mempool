@@ -73,8 +73,11 @@ matters rather than in a glossary.
 
 ## Reporting a vulnerability
 
-Privately, to the Bitcoin Universe security contact. Not in a pull request, and
-not in a commit message. `docs/security/THREAT-MODEL.md` records the trust
+Through GitHub's private vulnerability reporting for this repository:
+[open a report](https://github.com/bitcoinuniverseio/mempool/security/advisories/new).
+Not in a pull request, and not in a commit message, because both are public as
+soon as they are written. [SECURITY.md](SECURITY.md) has what to include and
+what is in scope, and `docs/security/THREAT-MODEL.md` records the trust
 boundaries this deployment assumes.
 
 ---

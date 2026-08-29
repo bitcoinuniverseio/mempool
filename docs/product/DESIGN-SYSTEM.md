@@ -320,6 +320,31 @@ Three rules hold it.
   chain declined is `unavailable`; a capability nobody could ask about is
   `neutral`. Collapsing them would report an unreachable authority as one that
   answered.
+- **The Chain reading is the chain's own verdict, not its node's.** A chain
+  publishes `ready` for everything the explorer needs and `sync.state` for the
+  node's view of its own blocks, and they disagree: a chain whose node is
+  caught up while a protocol indexer is silent publishes `sync.state: ready`
+  and `ready: false`. The reading takes the stricter of the two, so the rail
+  can never say Ready about a chain that has just said it is not.
+
+### Saying why
+
+The rail states a verdict in one word. Directly beneath it, and only when the
+chain says it is not ready, the page states the evidence for that verdict: the
+codes from `degradedReasons`, read into sentences by
+`multichain-explorer/chain-reasons.ts`.
+
+- The table there is an **allowlist**, not a pattern. A pattern would match a
+  code it has never seen and assert a meaning for it.
+- A code carried by a source that is **ready** is a stated edge of its
+  coverage, not a fault, and appears under its own heading rather than in the
+  colour that means something is broken. `tap_doge` publishes two while ready
+  and complete.
+- A code with **no sentence in this build** keeps its own words and is marked
+  as one this build has no description for.
+- A chain that withholds readiness and **states no reason** is reported as
+  having stated none. An empty space where the explanation belongs reads as a
+  chain that is fine.
 
 ## Numbers
 
