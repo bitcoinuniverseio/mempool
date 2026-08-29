@@ -397,6 +397,12 @@ const DOGECOIN_NOT_READY = {
   ],
 };
 
+/** Answering, and behind. Not a failure: every figure is true as of an older block. */
+const DOGECOIN_BEHIND = {
+  ready: false,
+  degradedReasons: ['protocol-history-partial'],
+};
+
 export const chainStateOverrides = {
   // A pending set that is genuinely empty and says so.
   //
@@ -435,6 +441,11 @@ export const chainStateOverrides = {
   // Both chain authorities are unreachable. The page must say the status is
   // unavailable and must not present an empty overview as a working one.
   'chain-authority-down': {
+    // The list too. It is the same overlay, so an outage that reaches one
+    // reaches both, and overriding only the single status photographed a
+    // header claiming the chain is ready above a page saying it cannot be
+    // reached, which production cannot produce.
+    '/api/v1/chains': { status: 503 },
     '/api/v1/dogecoin/status': { status: 503 },
     '/api/v1/zcash/status': { status: 503 },
     '/api/v1/dogecoin/mempool': { status: 503 },
@@ -445,13 +456,15 @@ export const chainStateOverrides = {
   // status rail exists for, and it is not a failure: every figure on the page
   // is true as of a block that is not the tip, and the page has to say so.
   'chain-behind': {
+    '/api/v1/chains': {
+      body: [capability('dogecoin', DOGECOIN_BEHIND), capability('zcash')],
+    },
     '/api/v1/dogecoin/status': {
       body: capability('dogecoin', {
-        ready: false,
+        ...DOGECOIN_BEHIND,
         lagBlocksAtomic: '2841',
         sync: { state: 'degraded', initialBlockDownload: false, progressDecimal: '0.9994', updatedAt: new Date(Date.now() - 20_000).toISOString() },
         coverage: { confirmedHistory: 'partial', addressHistory: 'partial', protocolHistory: 'partial' },
-        degradedReasons: ['protocol-history-partial'],
       }),
     },
   },
