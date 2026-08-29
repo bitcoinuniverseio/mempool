@@ -61,6 +61,33 @@ describe('UniverseApiService addressing', () => {
       'https://explorer.internal:443/api/v1/backend-info',
     ]);
   });
+
+  it('keeps multichain capability, object, and search reads on the same origin', () => {
+    const { service, urls } = build(true);
+    service.getChains$().subscribe();
+    service.getChainStatus$('dogecoin').subscribe();
+    service.getChainTransaction$('zcash', 'a'.repeat(64)).subscribe();
+    service.search$('tick & rune', 'zcash', true).subscribe();
+    expect(urls).toEqual([
+      '/api/v1/chains?network=mainnet',
+      '/api/v1/dogecoin/status?network=mainnet',
+      '/api/v1/zcash/tx/' + 'a'.repeat(64) + '?network=mainnet',
+      '/api/v1/universe/search?q=tick%20%26%20rune&chain=zcash&all=true',
+    ]);
+  });
+
+  it('uses only allowlisted protocol route segments', () => {
+    const { service, urls } = build(true);
+    service.getChainProtocolList$('dogecoin', 'doge-tap', 25, 50).subscribe();
+    service.getChainProtocolList$('zcash', 'zrc20', 25, 50, 'zord').subscribe();
+    expect(urls).toEqual([
+      '/api/v1/dogecoin/protocols/doge-tap?network=mainnet&limit=25&offset=50',
+      '/api/v1/zcash/protocols/zrc20?network=mainnet&limit=25&ruleset=zord',
+    ]);
+    expect(() => service.getChainProtocolList$('dogecoin', '../zcash')).toThrow(
+      'unsupported-chain-protocol',
+    );
+  });
 });
 
 describe('UniverseApiService protocol registry cache', () => {

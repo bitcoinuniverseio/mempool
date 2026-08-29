@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 
 // Importing the gateway must not open a socket.
 process.env.UNIVERSE_GATEWAY_NO_LISTEN = '1';
-const { routeFor, inheritedListenerFd } = await import('./gateway.mjs');
+const { routeFor, websocketUpstreamFor, inheritedListenerFd } = await import('./gateway.mjs');
 
 /**
  * The path rewrite is load bearing. The explorer backend registers every route
@@ -81,6 +81,11 @@ test('everything outside the api tree is left for the static handler', () => {
     const pathname = new URL(url, 'http://x.invalid').pathname;
     assert.equal(routeFor(pathname, url), null, url);
   }
+});
+
+test('the Universe live socket reaches the overlay while the Bitcoin socket stays on the backend', () => {
+  assert.equal(websocketUpstreamFor('/api/v1/universe/ws').port, OVERLAY_PORT);
+  assert.equal(websocketUpstreamFor('/api/v1/ws').port, BACKEND_PORT);
 });
 
 /**
