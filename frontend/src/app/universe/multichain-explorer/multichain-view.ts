@@ -216,6 +216,40 @@ export function formatElapsed(
     : $localize`:@@universe.chain.elapsed-days:${days}:DAYS: days ago`;
 }
 
+const MONTHS = [
+  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+];
+
+/**
+ * A timestamp a reader can take in at a glance, with the exact string beside
+ * it. The authority sends ISO-8601, which is precise and unreadable at speed:
+ * "2026-08-29T04:02:00.000Z" makes a reader parse punctuation to find the hour.
+ *
+ * The format is built by hand rather than through Intl, and it is always UTC.
+ * A block timestamp is a fact about the chain, not about where the reader is
+ * sitting, and a locale-dependent rendering would make two people describing
+ * the same block disagree about when it happened.
+ */
+export function formatTimestamp(
+  isoTimestamp: string | null | undefined
+): ExactNumber | null {
+  if (typeof isoTimestamp !== 'string') {
+    return null;
+  }
+  const parsed = new Date(isoTimestamp);
+  const time = parsed.getTime();
+  if (!Number.isFinite(time)) {
+    return null;
+  }
+  const pad = (value: number): string => String(value).padStart(2, '0');
+  const display =
+    `${parsed.getUTCDate()} ${MONTHS[parsed.getUTCMonth()]} ` +
+    `${parsed.getUTCFullYear()}, ${pad(parsed.getUTCHours())}:` +
+    `${pad(parsed.getUTCMinutes())} UTC`;
+  return { display, exact: isoTimestamp };
+}
+
 // ---------------------------------------------------------------------------
 // Field naming
 // ---------------------------------------------------------------------------
@@ -394,8 +428,19 @@ function factFrom(
       ? { key, label, kind: 'count', display: count.display, exact: count.exact, unit: null, link: null }
       : { ...base, kind: 'text', display: value };
   }
-  if (TIMESTAMP_FIELD.test(key) && Number.isFinite(Date.parse(value))) {
-    return { ...base, kind: 'timestamp', display: value };
+  if (TIMESTAMP_FIELD.test(key)) {
+    const moment = formatTimestamp(value);
+    if (moment) {
+      return {
+        key,
+        label,
+        kind: 'timestamp',
+        display: moment.display,
+        exact: moment.exact,
+        unit: null,
+        link: null,
+      };
+    }
   }
   if (IDENTIFIER_FIELD.test(key) || /^[0-9a-f]{64}$/.test(value)) {
     return {
@@ -798,8 +843,8 @@ export interface TransactionReading {
   readonly statusLabel: string;
   readonly statusTone: EvidenceTone;
   readonly confirmations: ExactNumber | null;
-  readonly block: { hash: string; height: ExactNumber | null; time: string | null } | null;
-  readonly firstSeenAt: string | null;
+  readonly block: { hash: string; height: ExactNumber | null; time: ExactNumber | null } | null;
+  readonly firstSeenAt: ExactNumber | null;
   readonly size: ExactNumber | null;
   readonly virtualSize: ExactNumber | null;
   readonly feeAmount: ExactNumber | null;
@@ -974,10 +1019,10 @@ export function readTransaction(
       ? {
           hash: text(block.hash) ?? '',
           height: formatExactInteger(text(block.heightAtomic)),
-          time: text(block.time),
+          time: formatTimestamp(text(block.time)),
         }
       : null,
-    firstSeenAt: text(payload.firstSeenAt),
+    firstSeenAt: formatTimestamp(text(payload.firstSeenAt)),
     size: formatExactInteger(text(payload.sizeBytesAtomic)),
     virtualSize: formatExactInteger(text(payload.virtualSizeBytesAtomic)),
     feeAmount: formatAtomicAmount(text(fee.amountAtomic), profile.precision),
@@ -1012,7 +1057,7 @@ export function readTransaction(
 export interface BlockReading {
   readonly hash: string;
   readonly height: ExactNumber | null;
-  readonly time: string | null;
+  readonly time: ExactNumber | null;
   readonly transactionCount: ExactNumber | null;
   readonly sizeBytes: ExactNumber | null;
   readonly confirmations: ExactNumber | null;
@@ -1021,8 +1066,47 @@ export interface BlockReading {
   readonly merkleRoot: string | null;
   readonly difficulty: string | null;
   readonly txids: readonly string[];
-  readonly page: ExactNumber | null;
-  readonly totalPages: ExactNumber | null;
+  readonly paging: Paging | null;
+}
+
+/**
+ * Where a list sits in a longer one, and where the next and previous parts of
+ * it are. A page that states "page 1 of 3" and offers no way to reach the other
+ * two is a dead end, and both the block and the address page were one.
+ */
+export interface Paging {
+  readonly page: number;
+  readonly totalPages: number;
+  readonly previousPage: number | null;
+  readonly nextPage: number | null;
+}
+
+const MAX_PAGE = 100_000;
+
+export function readPaging(value: unknown): Paging | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+  const page = Number(integerText(value.pageAtomic) ?? integerText(value.page));
+  const totalPages = Number(
+    integerText(value.totalPagesAtomic) ?? integerText(value.totalPages)
+  );
+  if (
+    !Number.isSafeInteger(page) ||
+    !Number.isSafeInteger(totalPages) ||
+    page < 1 ||
+    totalPages < 1 ||
+    page > MAX_PAGE ||
+    totalPages > MAX_PAGE
+  ) {
+    return null;
+  }
+  return {
+    page,
+    totalPages,
+    previousPage: page > 1 ? page - 1 : null,
+    nextPage: page < totalPages ? page + 1 : null,
+  };
 }
 
 export function readBlock(payload: ChainExplorerPayload): BlockReading | null {
@@ -1034,7 +1118,7 @@ export function readBlock(payload: ChainExplorerPayload): BlockReading | null {
   return {
     hash: text(block.hash) ?? '',
     height: formatExactInteger(text(block.heightAtomic)),
-    time: text(block.time),
+    time: formatTimestamp(text(block.time)),
     transactionCount: formatExactInteger(text(block.transactionCountAtomic)),
     sizeBytes: formatExactInteger(text(block.sizeBytesAtomic)),
     confirmations: formatExactInteger(text(block.confirmationsAtomic)),
@@ -1043,13 +1127,7 @@ export function readBlock(payload: ChainExplorerPayload): BlockReading | null {
     merkleRoot: text(block.merkleRoot),
     difficulty: text(block.difficulty),
     txids: Array.isArray(payload.txids) ? payload.txids.filter((id): id is string => typeof id === 'string') : [],
-    page: formatExactInteger(
-      integerText(pagination.pageAtomic) ?? integerText(pagination.page)
-    ),
-    totalPages: formatExactInteger(
-      integerText(pagination.totalPagesAtomic) ??
-        integerText(pagination.totalPages)
-    ),
+    paging: readPaging(pagination),
   };
 }
 
@@ -1071,6 +1149,7 @@ export interface AddressReading {
   readonly unconfirmedCount: ExactNumber | null;
   readonly txids: readonly string[];
   readonly utxos: readonly UtxoRow[];
+  readonly paging: Paging | null;
 }
 
 export function readAddress(
@@ -1090,6 +1169,7 @@ export function readAddress(
     transactionCount: formatExactInteger(text(payload.transactionCountAtomic)),
     unconfirmedCount: formatExactInteger(text(payload.unconfirmedTransactionsAtomic)),
     txids: Array.isArray(payload.txids) ? payload.txids.filter((id): id is string => typeof id === 'string') : [],
+    paging: readPaging(payload.pagination),
     utxos: utxos.map((entry) => ({
       txid: text(entry.txid) ?? '',
       vout: text(entry.voutAtomic) ?? '',

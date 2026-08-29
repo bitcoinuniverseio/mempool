@@ -9,6 +9,7 @@ import {
   formatAtomicAmount,
   formatElapsed,
   formatExactInteger,
+  formatTimestamp,
   historyLabel,
   humanizeFieldName,
   readAddress,
@@ -16,6 +17,7 @@ import {
   readCapabilities,
   readCollection,
   readOutpoint,
+  readPaging,
   readProtocolCoverage,
   readRecordFacts,
   readStatusRail,
@@ -133,6 +135,42 @@ describe('historyLabel', () => {
     expect(historyLabel('complete')).toBe('Complete history');
     expect(historyLabel('partial')).toBe('Partial history');
     expect(historyLabel(undefined)).toBe('History not stated');
+  });
+});
+
+describe('formatTimestamp', () => {
+  it('reads at a glance and keeps the exact string', () => {
+    const moment = formatTimestamp('2026-08-29T04:02:00.000Z');
+    expect(moment?.display).toBe('29 Aug 2026, 04:02 UTC');
+    expect(moment?.exact).toBe('2026-08-29T04:02:00.000Z');
+  });
+
+  it('always reports UTC, so two readers describe the same block the same way', () => {
+    expect(formatTimestamp('2026-01-05T23:07:09Z')?.display).toBe('5 Jan 2026, 23:07 UTC');
+  });
+
+  it('returns nothing rather than an invented date', () => {
+    expect(formatTimestamp('not a date')).toBeNull();
+    expect(formatTimestamp(null)).toBeNull();
+  });
+});
+
+describe('readPaging', () => {
+  it('offers the neighbouring pages that exist', () => {
+    expect(readPaging({ pageAtomic: '2', totalPagesAtomic: '3' })).toEqual({
+      page: 2, totalPages: 3, previousPage: 1, nextPage: 3,
+    });
+  });
+
+  it('offers no previous page on the first and no next on the last', () => {
+    expect(readPaging({ pageAtomic: '1', totalPagesAtomic: '3' })?.previousPage).toBeNull();
+    expect(readPaging({ pageAtomic: '3', totalPagesAtomic: '3' })?.nextPage).toBeNull();
+  });
+
+  it('rejects paging it cannot trust rather than linking nowhere', () => {
+    expect(readPaging({ pageAtomic: '0', totalPagesAtomic: '3' })).toBeNull();
+    expect(readPaging({ pageAtomic: '2' })).toBeNull();
+    expect(readPaging(null)).toBeNull();
   });
 });
 
@@ -398,15 +436,15 @@ describe('readBlock', () => {
     const block = readBlock(payload);
     expect(block?.height?.display).toBe('5,123,456');
     expect(block?.transactionCount?.display).toBe('42');
-    expect(block?.page?.display).toBe('1');
-    expect(block?.totalPages?.display).toBe('2');
+    expect(block?.time?.display).toBe('29 Aug 2026, 04:00 UTC');
+    expect(block?.paging).toEqual({ page: 1, totalPages: 2, previousPage: null, nextPage: 2 });
     expect(block?.txids).toEqual([TXID]);
   });
 
   it('accepts pagination that arrives as a JSON number', () => {
     const block = readBlock({ ...payload, pagination: { page: 3, totalPages: 9 } });
-    expect(block?.page?.display).toBe('3');
-    expect(block?.totalPages?.display).toBe('9');
+    expect(block?.paging?.page).toBe(3);
+    expect(block?.paging?.nextPage).toBe(4);
   });
 
   it('leaves the next block absent rather than inventing one', () => {
@@ -441,6 +479,12 @@ describe('readAddress', () => {
 
   it('keeps a zero pending balance as zero rather than dropping it', () => {
     expect(readAddress(payload, DOGE)?.unconfirmedBalance?.display).toBe('0');
+  });
+
+  it('carries the paging so the rest of a long history is reachable', () => {
+    expect(readAddress(payload, DOGE)?.paging).toEqual({
+      page: 1, totalPages: 2, previousPage: null, nextPage: 2,
+    });
   });
 
   it('reads unspent outputs into routable parts', () => {

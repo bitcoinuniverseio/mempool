@@ -99,6 +99,18 @@ interface RequestContext {
   readonly page: MultichainPage;
   readonly params: ParamMap;
   readonly ruleset?: string;
+  /** 1-based list page, from the `page` query parameter. */
+  readonly listPage: number;
+}
+
+/** Rows a paged list requests at a time. Also the offset step. */
+const LIST_PAGE_SIZE = 100;
+
+function listPageFrom(value: string | null): number {
+  if (!value || !/^[1-9][0-9]{0,5}$/.test(value)) {
+    return 1;
+  }
+  return Number(value);
 }
 
 const PAGE_KINDS: Partial<Record<MultichainPage, UniverseEntryKind>> = {
@@ -179,6 +191,7 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
         page: data.page as MultichainPage,
         params,
         ruleset: queryParams.get('ruleset') ?? undefined,
+        listPage: listPageFrom(queryParams.get('page')),
       }))
     );
 
@@ -324,6 +337,11 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
     }
   }
 
+  /** Query parameters for a link to another page of the current list. */
+  pageLink(page: number): Record<string, string> {
+    return { page: String(page) };
+  }
+
   isProtocolPage(): boolean {
     return this.page.startsWith('protocol');
   }
@@ -380,9 +398,19 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
       case 'transaction':
         return this.api.getChainTransaction$(this.chain, txid);
       case 'block':
-        return this.api.getChainBlock$(this.chain, reference);
+        return this.api.getChainBlock$(
+          this.chain,
+          reference,
+          LIST_PAGE_SIZE,
+          (context.listPage - 1) * LIST_PAGE_SIZE
+        );
       case 'address':
-        return this.api.getChainAddress$(this.chain, reference);
+        return this.api.getChainAddress$(
+          this.chain,
+          reference,
+          LIST_PAGE_SIZE,
+          (context.listPage - 1) * LIST_PAGE_SIZE
+        );
       case 'outpoint':
         return this.api.getChainOutpoint$(
           this.chain,

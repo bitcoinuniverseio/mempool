@@ -143,7 +143,7 @@
         </div>
         <div *ngIf="tx.firstSeenAt">
           <dt i18n="universe.chain.tx-first-seen">First seen by our node</dt>
-          <dd>{{ tx.firstSeenAt }}</dd>
+          <dd [attr.title]="tx.firstSeenAt.exact">{{ tx.firstSeenAt.display }}</dd>
         </div>
         <div *ngIf="tx.size">
           <dt i18n="universe.chain.tx-size">Size</dt>
@@ -309,7 +309,7 @@
         </div>
         <div *ngIf="blk.time">
           <dt i18n="universe.chain.block-time">Mined</dt>
-          <dd>{{ blk.time }}</dd>
+          <dd [attr.title]="blk.time.exact">{{ blk.time.display }}</dd>
         </div>
         <div *ngIf="blk.transactionCount">
           <dt i18n="universe.chain.block-txcount">Transactions</dt>
@@ -343,14 +343,12 @@
 
     <section class="panel" *ngIf="blk.txids.length" aria-labelledby="block-txs-heading">
       <h2 id="block-txs-heading" i18n="universe.chain.block-txs-title">Transactions in this block</h2>
-      <p class="panel-lede" *ngIf="blk.page && blk.totalPages" i18n="universe.chain.block-page">
-        Page {{ blk.page.display }} of {{ blk.totalPages.display }}.
-      </p>
       <ul class="identifier-list">
         <li *ngFor="let txid of blk.txids; trackBy: trackByText">
           <a class="identifier" [routerLink]="['/', chain, 'tx', txid]">{{ txid }}</a>
         </li>
       </ul>
+      <ng-container *ngTemplateOutlet="pager; context: { $implicit: blk.paging }"></ng-container>
     </section>
 
   </ng-container>
@@ -423,6 +421,7 @@
           <a class="identifier" [routerLink]="['/', chain, 'tx', txid]">{{ txid }}</a>
         </li>
       </ul>
+      <ng-container *ngTemplateOutlet="pager; context: { $implicit: addr.paging }"></ng-container>
     </section>
 
   </ng-container>
@@ -518,6 +517,21 @@
      i18n="universe.chain.empty">
     The {{ chainName }} authority answered, and had nothing to report for this request.
   </p>
+
+  <!-- Where this list sits, and how to reach the rest of it. Both links are
+       real addresses, so a page of a long history can be shared. -->
+  <ng-template #pager let-paging>
+    <nav class="pager" *ngIf="paging"
+         aria-label="List pages" i18n-aria-label="universe.chain.pager-label">
+      <a *ngIf="paging.previousPage"
+         [routerLink]="[]" [queryParams]="pageLink(paging.previousPage)"
+         i18n="universe.chain.pager-previous">Previous page</a>
+      <span class="pager-position" i18n="universe.chain.pager-position">Page {{ paging.page }} of {{ paging.totalPages }}</span>
+      <a *ngIf="paging.nextPage"
+         [routerLink]="[]" [queryParams]="pageLink(paging.nextPage)"
+         i18n="universe.chain.pager-next">Next page</a>
+    </nav>
+  </ng-template>
 
   <!-- The exact response, for anyone who needs to check the page against it. -->
   <details class="panel evidence" *ngIf="vm.payload">
