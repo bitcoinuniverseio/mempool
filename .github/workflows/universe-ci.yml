@@ -323,9 +323,15 @@ jobs:
       # image has never needed the other two. Downloading them is a few
       # seconds against a warm cache and the alternative is a job that claims
       # three engines and silently runs one.
+      #
+      # `--with-deps` because the browser binary is not enough: WebKit needs a
+      # set of system libraries that a Chromium-only host has never had, and
+      # without them it does not fall back to anything, it refuses to launch
+      # and prints the list. Measured that way on runner-02. The apt step is
+      # idempotent and near-free once the packages are there.
       - name: Fetch the engines this job drives
         working-directory: scripts/universe/visual-qa
-        run: npx playwright install chromium webkit firefox
+        run: npx playwright install --with-deps chromium webkit firefox
 
       # Same reasoning as the matrix job: a fixed port once measured another
       # job's build, so each run takes a free one and refuses to continue
