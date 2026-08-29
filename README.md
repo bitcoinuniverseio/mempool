@@ -38,8 +38,10 @@ guesses.
 - **Live protocol activity, measured.** The pulse page publishes its own
   denominator: how many arriving transactions were checked, and how many carried
   each protocol. Every number on it can be reproduced.
-- **No trackers, no accounts.** Search is matched in your browser. Saved pages
-  and history live in local storage and never leave the device.
+- **No trackers, no accounts.** What you type is classified on your device.
+  The searches that do need the server, completing a partly typed address and
+  searching Dogecoin, Zcash or every chain at once, go to our own backend and
+  to nobody else's. Saved pages and history stay in local storage.
 - **First-party data only.** Every figure comes from Bitcoin Universe's own
   nodes, indexes, and protocol authorities.
 
