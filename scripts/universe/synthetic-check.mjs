@@ -444,6 +444,57 @@ async function checkChainReadsAreServed(chain, envelope) {
 }
 
 /**
+ * Every chain document must name the build that produced it.
+ *
+ * The overlay resolves its release identifier and, when nothing supplied one,
+ * used to fall back to the literal string `development`. Nothing set it: the
+ * unit reads an environment file that never mentioned the variable, and no
+ * example documented it. So production published `Release development` to the
+ * public for as long as the field existed, and every check here passed while
+ * it did, because none of them read the field.
+ *
+ * A placeholder is a legitimate answer from a workstation and never from the
+ * public origin, which is the distinction this makes. The three chains are
+ * served by one overlay process, so they must also agree: two different
+ * release identifiers on one origin means two processes are answering, which
+ * is a deployment fault of its own.
+ */
+const COMMIT_SHA = /^[0-9a-f]{7,64}$/;
+
+function checkChainReleaseIdentity(envelopes) {
+  const named = new Map();
+  for (const [chain, envelope] of envelopes) {
+    const sha = envelope?.release?.sha;
+    if (typeof sha !== 'string' || sha === '') {
+      fail(`chain:${chain}`, 'the capability document names no release');
+      continue;
+    }
+    if (sha === 'development') {
+      fail(
+        `chain:${chain}`,
+        'the capability document reports its release as "development", which is the placeholder for a build that could not name itself. Set UNIVERSE_EXPLORER_RELEASE_SHA, or install a RELEASE-SHA file in the overlay release directory',
+      );
+      continue;
+    }
+    if (!COMMIT_SHA.test(sha)) {
+      fail(`chain:${chain}`, `the release identifier ${JSON.stringify(sha)} is not a commit`);
+      continue;
+    }
+    named.set(chain, sha);
+  }
+  if (named.size === 0) {
+    return;
+  }
+  const distinct = new Set(named.values());
+  if (distinct.size > 1) {
+    const listed = [...named].map(([chain, sha]) => `${chain} ${sha}`).join(', ');
+    fail('release', `the chain documents name different overlay releases: ${listed}`);
+    return;
+  }
+  pass('release', `every chain document names overlay release ${[...distinct][0]}`);
+}
+
+/**
  * The live socket must accept the handshake a browser sends.
  *
  * The overlay refuses an upgrade whose Origin is not allowlisted, and allows
@@ -517,13 +568,16 @@ async function main() {
 
   const chains = await checkChainDirectory();
   if (chains) {
+    const envelopes = [];
     for (const chain of EXPLORER_CHAINS) {
       await checkChainRoutingReachesTheOverlay(chain);
       const envelope = await checkChainStatus(chain);
       if (envelope) {
+        envelopes.push([chain, envelope]);
         await checkChainReadsAreServed(chain, envelope);
       }
     }
+    checkChainReleaseIdentity(envelopes);
   }
   await checkLiveSocketAcceptsABrowser();
 
