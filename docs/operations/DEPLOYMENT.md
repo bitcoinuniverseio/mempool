@@ -222,7 +222,33 @@ suite can see that.
    a protocol advertised as readable whose authority cannot answer, a
    configured authority with no checkpoint, or a frontend and backend on
    different builds.
-7. Keep the previous release directory until the stability window closes.
+7. Check the shell on a phone against the public origin, not only in CI.
+
+   ```bash
+   node scripts/universe/visual-qa/mobile-check.mjs --base=https://explorer.bitcoinuniverse.io
+   ```
+
+   It walks eleven routes across seven window sizes with a coarse pointer, a
+   simulated display cutout and a rotation, and answers every request from
+   fixtures, so what it measures is the deployed shell rather than the chain.
+   Add `--browser=webkit` for the engine Safari is built on.
+
+   This is worth running against production and not only against the build,
+   because the two things it is most likely to catch are things CI cannot see:
+   a gateway serving a stale `index.html`, which shows up immediately as the
+   viewport meta losing `viewport-fit=cover`, and a configuration difference
+   that changes which destinations the bottom bar carries.
+
+   Then look at it by hand on a phone. The gate is emulation, and emulation is
+   not a device: it cannot tell you whether a thumb reaches the bottom bar
+   one-handed, whether the software keyboard covers the result you were
+   reading, or whether the page zooms when you tap the search field. Open the
+   header and search, switch chain, search with the keyboard up, open a
+   transaction, scroll a table, rotate, go back, and watch a live update
+   arrive. Current Safari on iPhone and iPad, Chrome on Android, Samsung
+   Internet, and Chrome on iPhone.
+
+8. Keep the previous release directory until the stability window closes.
 
 Rolling back to a release from before the socket handover needs the port back,
 because such a gateway opens 8099 itself and dies on bind while systemd holds
