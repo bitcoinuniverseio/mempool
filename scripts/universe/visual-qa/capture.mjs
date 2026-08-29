@@ -302,7 +302,16 @@ function socketState(state) {
   };
 }
 
+/** The hashed bundle names an index.html points at, as one comparable string. */
+function bundleIdentity(html) {
+  return [...html.matchAll(/(?:runtime|main|polyfills)\.[a-f0-9]{8,}\.js/g)]
+    .map((match) => match[0])
+    .sort()
+    .join(' ');
+}
+
 async function run() {
+  let bundleAtStart = '';
   const routes = pick(ROUTES, 'routes');
   const viewports = pick(VIEWPORTS, 'viewports');
   const themes = pick(THEMES.map((id) => ({ id })), 'themes').map((t) => t.id);
@@ -330,9 +339,11 @@ async function run() {
     if (!/(runtime|main)\.[a-f0-9]{8,}\.js/.test(html)) {
       throw new Error(`${BASE} served no hashed application bundle; the build output looks incomplete.`);
     }
+    bundleAtStart = bundleIdentity(html);
   }
 
   mkdirSync(OUT, { recursive: true });
+
   // The Lens is drawn with WebGL. Headless Chromium has no GPU, so without a
   // software rasteriser the product's signature view is a grey rectangle in
   // every screenshot and the one thing worth reviewing goes unreviewed.
@@ -521,6 +532,44 @@ async function run() {
   }
 
   await browser.close();
+
+  // The build must not have been rewritten underneath the run.
+  //
+  // An Angular production build empties its output directory before writing
+  // it, so a rebuild during a matrix leaves a window where index.html and the
+  // lazy chunks are simply absent. The pages served in that window have no
+  // title and no lang attribute, which axe reports as two serious violations,
+  // and their chunks 404. Every one of those findings is about the build being
+  // replaced rather than about the interface, and nothing in the output said
+  // so: eleven of them were indistinguishable from real ones until the cause
+  // was found by hand.
+  //
+  // This is the same reasoning as the server-identity check at the start. That
+  // one proves the right thing was being measured; this one proves it stayed
+  // the right thing for the whole run.
+  {
+    const after = await fetch(BASE, { redirect: 'follow' })
+      .then((response) => (response.ok ? response.text() : ''))
+      .catch(() => '');
+    const bundleAtEnd = bundleIdentity(after);
+    if (bundleAtStart && bundleAtEnd && bundleAtEnd !== bundleAtStart) {
+      throw new Error(
+        [
+          'the build changed while the matrix was running, so these results',
+          'measure two different builds and some of them measure neither.',
+          `  at the start: ${bundleAtStart}`,
+          `  at the end:   ${bundleAtEnd}`,
+          'Rebuild, then run the matrix with nothing else writing to the output.',
+        ].join('\n'),
+      );
+    }
+    if (bundleAtStart && !bundleAtEnd) {
+      throw new Error(
+        'the server stopped answering before the matrix finished, so the ' +
+          'results are incomplete. Nothing was measured after that point.',
+      );
+    }
+  }
 
   const report = { browser: BROWSER, base: BASE, screenshots: shots, findings };
   writeFileSync(join(OUT, `report-${BROWSER}.json`), JSON.stringify(report, null, 2));
