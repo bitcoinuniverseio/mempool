@@ -118,16 +118,38 @@ Three processes behind one HTTPS origin:
 | Frontend | `frontend/`, an Angular application served as static files with SPA fallback. |
 
 `scripts/universe/gateway.mjs` is the single public entry point. It serves the
-built frontend and splits `/api` between the two backends: the overlay owns
-`/api/v1/universe/*`, `/api/v1/chains`, and the `/api/v1/bitcoin`,
-`/api/v1/dogecoin` and `/api/v1/zcash` route families, and everything else goes
-to the explorer backend. The route table is in
-`docs/operations/DEPLOYMENT.md` and is held by
+built frontend and splits `/api` between the two backends by path prefix.
+
+```mermaid
+flowchart LR
+  browser["Browser"]
+  gateway["Gateway<br/>scripts/universe/gateway.mjs"]
+  backend["Explorer backend<br/>backend/"]
+  overlay["Protocol overlay<br/>backend-apis"]
+  core[("Bitcoin Core<br/>Fulcrum, MariaDB")]
+  doge[("Dogecoin node<br/>and confirmed history")]
+  zec[("Zcash node")]
+  auth[("Protocol indexers<br/>ord, ord-dogecoin,<br/>doge-tap, zcash-metaprotocols")]
+
+  browser -->|"everything else"| gateway
+  gateway --> backend
+  gateway -->|"/api/v1/universe/*<br/>/api/v1/chains<br/>/api/v1/bitcoin/*, /dogecoin/*, /zcash/*"| overlay
+  backend --> core
+  overlay --> core
+  overlay --> doge
+  overlay --> zec
+  overlay --> auth
+```
+
+Everything the browser can reach is on the left of the gateway. Every node,
+index and credential is on the right of the overlay, and no indexer origin or
+bearer token is ever exposed to a page. Lookalike paths such as
+`/api/v1/chainstats` stay on the explorer backend. The route table is recorded
+in `docs/operations/DEPLOYMENT.md` and held by
 `node --test scripts/universe/gateway.test.mjs`.
 
-The browser never talks to an indexer, and no indexer origin or credential is
-ever exposed to it. See `docs/architecture/` for the overlay design and
-`docs/data/ASSET-EVIDENCE.md` for the evidence contract.
+`docs/architecture/` has the overlay design and `docs/data/ASSET-EVIDENCE.md`
+the evidence contract.
 
 ## First-party data policy
 
