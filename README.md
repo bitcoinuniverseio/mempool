@@ -101,8 +101,15 @@ explorer states plainly which ones it can actually read.
 | Live, read only | A first-party authority is running and its evidence is shown. |
 | Not yet available | No first-party authority for it is configured or answering here. The explorer makes no claim about it. |
 
-Live today, backed by the first-party Ord 0.29 authority: **Ordinals**,
+Readable today, backed by the first-party Ord 0.29 authority: **Ordinals**,
 **Rare Sats**, **Runes**.
+
+Readable is not the same as current, and the product never conflates them. An
+authority that is rebuilding its index is still answering, and every page that
+uses it states how far behind the chain tip it is rather than presenting its
+answers as the present. `/api/v1/universe/sources` publishes the same figure,
+and the production smoke check in
+`.github/workflows/universe-production-smoke.yml` reads it on a schedule.
 
 `docs/protocols/PROTOCOL-COVERAGE.md` is generated from the registry and lists
 every entry with its authority and its release status. Run
