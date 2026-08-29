@@ -377,6 +377,20 @@ jobs:
           --browser=firefox --routes=home,tx,address,blocks,docs
           --out=./artifacts-mobile-firefox
 
+      # What the shell costs a phone, and what it makes the page do while it
+      # arrives. The gated numbers are the compressed payload, which is a
+      # property of the build and identical on any machine, and layout shift,
+      # which is a property of the stylesheet. Largest paint is printed and not
+      # gated: this runner builds, serves and drives browsers at once, and the
+      # same commit measured twelve seconds and twenty on two routes whose
+      # shells are identical, so it would fail honest changes and pass slow
+      # ones depending on what else was running.
+      - name: What the shell costs on a phone
+        working-directory: scripts/universe/visual-qa
+        run: >-
+          node mobile-perf.mjs --base=http://127.0.0.1:$GATEWAY_PORT
+          --out=./artifacts-perf
+
       - name: Keep the mobile report
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -386,4 +400,5 @@ jobs:
             scripts/universe/visual-qa/artifacts-mobile
             scripts/universe/visual-qa/artifacts-mobile-webkit
             scripts/universe/visual-qa/artifacts-mobile-firefox
+            scripts/universe/visual-qa/artifacts-perf
           retention-days: 30
