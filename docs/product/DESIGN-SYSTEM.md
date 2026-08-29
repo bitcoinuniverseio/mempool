@@ -204,9 +204,10 @@ legible in greyscale, in print, and under forced colours.
 
 **The distinction has to survive the trip to get here.** These five states are
 the product's whole claim, and an interface can only show a difference the code
-feeding it preserved. On 29 August 2026 four defects shipped in one release,
-across three repositories, with a single shape: somewhere, "I do not know" and
-"I know, and the answer is no" were the same value.
+feeding it preserved. On 29 August 2026 six defects were found in one release,
+across the product, the infrastructure, the release tooling and these gates,
+with a single shape: somewhere, "I do not know" and "I know, and the answer is
+no" were the same value.
 
 An indexer publishing `block_count` where the reader expected `blockCount` was
 read as publishing no checkpoint. A WebSocket handshake sent with no `Origin`
@@ -214,6 +215,14 @@ header was read as permitted, so every probe passed and every browser was
 refused. A field-name pattern matching `supply` read a token quantity as a coin
 amount. A Bitcoin node answering "no such block" was read as a failure, so a
 healthy chain was reported unavailable on every search.
+
+The last two were in the machinery meant to protect all of this, which is where
+the shape is most expensive because its failure mode is silence. GitHub reports
+a pull request as `CLEAN` whether its checks passed, failed, or never ran, and a
+promotion waiter reading that would have pushed an unvalidated commit to `main`.
+The contrast probe in `scripts/universe/visual-qa` recorded an empty result when
+it threw, which is what a clean page also produces, so a run that measured
+nothing printed the same zero as a run that measured everything.
 
 So the rule is not only about rendering. Anywhere this product reads something
 it does not fully control, a payload, a header, a field name, a status, it must
