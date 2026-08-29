@@ -53,13 +53,13 @@
 }
 
 .state {
-  color: #35c98d;
+  color: var(--u-state-proven);
   font-weight: 700;
 }
 
 .state.degraded,
 .error {
-  color: #ff9f43;
+  color: var(--u-state-partial);
 }
 
 .facts {
