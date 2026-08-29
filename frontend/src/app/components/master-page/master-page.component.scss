@@ -147,7 +147,7 @@
 
   // Same reasoning as the chain toggle: a control sized for a cursor is not
   // sized for a thumb, and these two sit side by side.
-  @media (pointer: coarse) {
+  @media (pointer: coarse), (max-width: 991.98px) {
     min-height: var(--u-touch-target);
     padding-inline: var(--u-space-3);
   }

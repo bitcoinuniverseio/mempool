@@ -156,6 +156,58 @@ html {
   }
 }
 
+// The same reservation again, stated on the targets rather than the scroller.
+//
+// `scroll-padding` on the scroll container is the tidier half of this, and on
+// its own it is not enough. Engines differ on whether they apply it to the
+// scroll a browser performs when focus moves to something off screen, as
+// opposed to an anchor or an explicit `scrollIntoView`. Measured here: Firefox
+// left focused links resting ten pixels under the bottom bar on a 320px window
+// where Chromium and WebKit placed them clear of it.
+//
+// `scroll-margin` is the other half of the same contract and is honoured on the
+// target itself. Declaring both is not redundant: an engine that applies one
+// gets a correct result, and an engine that applies both over-scrolls slightly,
+// which places the focused control further from the bar than needed and is not
+// a fault. Below the breakpoint only, since that is where the fixed bar is.
+@media (max-width: 991.98px) {
+  a[href],
+  button,
+  input,
+  select,
+  textarea,
+  summary,
+  [tabindex]:not([tabindex='-1']) {
+    scroll-margin-bottom: calc(var(--u-bottom-nav-space) + var(--u-space-4));
+    scroll-margin-top: calc(7rem + var(--u-safe-top));
+  }
+
+  @media (min-width: 600px) {
+    a[href],
+    button,
+    input,
+    select,
+    textarea,
+    summary,
+    [tabindex]:not([tabindex='-1']) {
+      scroll-margin-top: calc(4.5rem + var(--u-safe-top));
+    }
+  }
+
+  @media (max-height: 479.98px) {
+    a[href],
+    button,
+    input,
+    select,
+    textarea,
+    summary,
+    [tabindex]:not([tabindex='-1']) {
+      scroll-margin-bottom: calc(var(--u-touch-target) + 1px + var(--u-safe-bottom) + var(--u-space-3));
+      scroll-margin-top: calc(4rem + var(--u-safe-top));
+    }
+  }
+}
+
 body {
   background-color: var(--u-surface-page);
   padding-bottom: 60px;
@@ -1774,7 +1826,7 @@ h2.anchor {
   // reaches for first. Keyed on the pointer rather than the width, because a
   // narrow desktop window is still driven by a mouse and gains nothing from
   // the taller control.
-  @media (pointer: coarse) {
+  @media (pointer: coarse), (max-width: 991.98px) {
     min-height: var(--u-touch-target);
     padding-inline: var(--u-space-3);
   }
@@ -1841,7 +1893,7 @@ h2.anchor {
   row-gap: 2px;
   white-space: normal;
 
-  @media (pointer: coarse) {
+  @media (pointer: coarse), (max-width: 991.98px) {
     min-height: var(--u-touch-target);
     padding-block: var(--u-space-2);
   }

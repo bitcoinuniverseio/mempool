@@ -319,6 +319,14 @@ jobs:
         working-directory: scripts/universe/visual-qa
         run: npm ci
 
+      # The matrix job beside this one drives Chromium only, so the runner
+      # image has never needed the other two. Downloading them is a few
+      # seconds against a warm cache and the alternative is a job that claims
+      # three engines and silently runs one.
+      - name: Fetch the engines this job drives
+        working-directory: scripts/universe/visual-qa
+        run: npx playwright install chromium webkit firefox
+
       # Same reasoning as the matrix job: a fixed port once measured another
       # job's build, so each run takes a free one and refuses to continue
       # unless the process answering is the one it started.
@@ -344,10 +352,38 @@ jobs:
         working-directory: scripts/universe/visual-qa
         run: node mobile-check.mjs --base=http://127.0.0.1:$GATEWAY_PORT --out=./artifacts-mobile
 
+      # WebKit is the engine Safari is built on, and it is the closest an
+      # automated run gets to an iPhone. It is worth its own pass rather than
+      # a sample of one: the rules this work turns on, dvh, safe-area insets
+      # and the pointer media feature, are exactly the ones where engines
+      # differ, and a Chromium-only run would have proved nothing about the
+      # platform the fixes were written for. Measured at about four minutes.
+      - name: The same windows on the engine Safari is built on
+        working-directory: scripts/universe/visual-qa
+        run: >-
+          node mobile-check.mjs --base=http://127.0.0.1:$GATEWAY_PORT
+          --browser=webkit --out=./artifacts-mobile-webkit
+
+      # Firefox cannot be put into mobile emulation, so it reports a fine
+      # pointer and the pointer-conditional rules do not apply to it. What it
+      # still measures is every window size, the overflow, the fixed layers,
+      # the safe areas and the rotation, which is worth having on a third
+      # engine. A subset of routes, because this is a smoke check and the two
+      # passes above are the thorough ones.
+      - name: A third engine, on the checks that do not need a thumb
+        working-directory: scripts/universe/visual-qa
+        run: >-
+          node mobile-check.mjs --base=http://127.0.0.1:$GATEWAY_PORT
+          --browser=firefox --routes=home,tx,address,blocks,docs
+          --out=./artifacts-mobile-firefox
+
       - name: Keep the mobile report
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: universe-mobile-qa
-          path: scripts/universe/visual-qa/artifacts-mobile
+          path: |
+            scripts/universe/visual-qa/artifacts-mobile
+            scripts/universe/visual-qa/artifacts-mobile-webkit
+            scripts/universe/visual-qa/artifacts-mobile-firefox
           retention-days: 30
