@@ -422,7 +422,28 @@ async function run() {
           if (!stateApplies(state, route.id)) continue;
           const page = await context.newPage();
           const consoleErrors = [];
-          page.on('console', (m) => { if (m.type() === 'error') consoleErrors.push(m.text()); });
+          const expectedFetchErrors = [];
+          // A state that tells a request to fail gets exactly that, and the
+          // browser writes its own line about it. That line is the fixture
+          // speaking, not the application: the point of `chain-authority-down`
+          // is a 503, and the page handling it correctly still produces one
+          // console entry per refused request. Counted as a failure, the five
+          // states the status vocabulary exists for could never run here at
+          // all, which is why they never have.
+          //
+          // Narrow on purpose. Only on a state that declares a `status`
+          // override, only for the browser's own resource line, and every one
+          // is printed. Anything the application throws still counts, and so
+          // does a resource failure on a state that asked for none.
+          const stateFailsRequests = Object.values(ALL_OVERRIDES[state] ?? {})
+            .some((override) => override && override.status);
+          const isRefusedFetch = (textLine) =>
+            stateFailsRequests
+            && /Failed to load resource: the server responded with a status of \d+/.test(textLine);
+          page.on('console', (m) => {
+            if (m.type() !== 'error') return;
+            (isRefusedFetch(m.text()) ? expectedFetchErrors : consoleErrors).push(m.text());
+          });
           page.on('pageerror', (e) => consoleErrors.push(String(e)));
 
           const label = `${route.id}__${state}__${theme}__${viewport.id}`;
@@ -563,7 +584,7 @@ async function run() {
 
             findings.push({
               route: route.id, routeName: route.name, state, theme, viewport: viewport.id,
-              overflowBy, consoleErrors, brokenImages, violations, obscured, contrast, progress, settledAfterMs,
+              overflowBy, consoleErrors, expectedFetchErrors, brokenImages, violations, obscured, contrast, progress, settledAfterMs,
             });
           } catch (error) {
             // A server that has gone away is not a page that failed. Reporting
@@ -793,6 +814,17 @@ function summarise(report) {
   console.log(`\n=== ${report.browser} : ${report.screenshots} screenshots -> ${OUT}\n`);
   console.log(`horizontal overflow : ${overflow.length}`);
   console.log(`console errors      : ${errors.length}`);
+
+  // Printed, never counted. A state that asked a request to fail got one line
+  // per refusal, and a rule that is quietly not counted is a rule nobody sees.
+  const refused = report.findings.flatMap((f) =>
+    (f.expectedFetchErrors ?? []).map((line) => `${f.route}/${f.state} ${line}`),
+  );
+  if (refused.length) {
+    console.log(`refused by a failure fixture : ${refused.length}  (asked for, not counted)`);
+    for (const line of refused.slice(0, 8)) console.log(`    ${line}`);
+    if (refused.length > 8) console.log(`    ... and ${refused.length - 8} more`);
+  }
   console.log(`broken images       : ${images.length}`);
   console.log(`navigation failures : ${failed.length}`);
   console.log(`a11y rules violated : ${byRule.size}`);

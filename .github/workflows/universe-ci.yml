@@ -220,6 +220,25 @@ jobs:
           node capture.mjs --base=http://127.0.0.1:$GATEWAY_PORT --out=./artifacts
           --routes=graphs,mining,protocols,home,blocks,tx,address --viewports=320,768,1440
 
+      # The chain failure states have never run here. They are scoped to the
+      # chain routes, so the pass above never reaches them, and they were
+      # reviewed by hand instead: a chain that cannot be reached, one that is
+      # behind, one whose node is caught up while its protocol side is not, one
+      # that withholds readiness without saying why, and an object that simply
+      # is not there. Those five are the states the whole status vocabulary
+      # exists for, and the one set nothing measured.
+      #
+      # Two themes and two widths rather than three and three, because the cost
+      # has to fit beside the pass above and this is the part of the matrix
+      # that catches wording and state, not layout.
+      - name: A chain that cannot answer says so, in every failure state
+        working-directory: scripts/universe/visual-qa
+        run: >-
+          node capture.mjs --base=http://127.0.0.1:$GATEWAY_PORT --out=./artifacts-chain-states
+          --routes=dogecoin,dogecoin-drc20,zcash,zcash-block
+          --states=chain-authority-down,chain-behind,chain-not-ready-protocols,chain-not-ready-unexplained,chain-object-missing
+          --themes=default,dark --viewports=375,1440
+
       - name: Forced colours and 200 percent zoom
         working-directory: scripts/universe/visual-qa
         run: node modes-check.mjs --base=http://127.0.0.1:$GATEWAY_PORT
@@ -232,4 +251,5 @@ jobs:
           path: |
             scripts/universe/visual-qa/artifacts
             scripts/universe/visual-qa/artifacts-broad
+            scripts/universe/visual-qa/artifacts-chain-states
           retention-days: 30
