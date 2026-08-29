@@ -17,6 +17,7 @@ const DOGE_TXID = '4c8f0b2e6a1d5937c0f4b8e2a6d0c4f8b2e6a0d4c8f2b6e0a4d8c2f6b0e4a
 const DOGE_BLOCK = 'e1b5f9d3a7c2064e8b1d5f9a3c7e0246b8d2f6a0c4e8b2d6f0a4c8e2b6d0f4a8';
 const DOGE_ADDRESS = 'DH5yaieqoZN36fDVciNyRueRGvGLR3mr7L';
 const ZEC_TXID = '7a3e1c5f9b2d6048a2c6e0f4b8d2a6c0e4f8b2d6a0c4e8f2b6d0a4c8e2f6b0d4';
+const ZEC_BLOCK = '00000000001a8027b33ea8f1972569b135eea78be68a381875307549ddf178e2';
 
 /**
  * A chain capability envelope. Dogecoin is at its tip and complete; Zcash is
@@ -35,7 +36,11 @@ function capability(chain, overrides = {}) {
     asset,
     ready: true,
     tip: {
-      heightAtomic: chain === 'dogecoin' ? '5623041' : '2884120',
+      // Twelve above the Zcash block fixture, which is a real block at
+      // 3,464,717. A chain tip below the height of a block the same run
+      // renders is a page that contradicts itself, and it read that way for
+      // as long as the two numbers were chosen separately.
+      heightAtomic: chain === 'dogecoin' ? '5623041' : '3464729',
       blockHash: chain === 'dogecoin' ? DOGE_BLOCK : 'f'.repeat(64),
       observedAt,
     },
@@ -48,12 +53,16 @@ function capability(chain, overrides = {}) {
       sequenceAtomic: '148201',
       observedAt,
     },
+    // What each chain declared on 2026-08-29, read from the live capability
+    // document rather than assumed. Zcash was marked here as unable to answer
+    // a block lookup while production answered one, so the overview said the
+    // page was not offered and nothing ever rendered the page that was.
     reads: {
       transaction: true,
-      block: chain === 'dogecoin',
+      block: true,
       address: true,
       outpoint: true,
-      feeEstimates: false,
+      feeEstimates: true,
       projectedBlocks: false,
     },
     protocols: chain === 'dogecoin'
@@ -252,6 +261,52 @@ export const chainFixtures = {
       { txid: DOGE_TXID, voutAtomic: '1', valueAtomic: '74886600000', heightAtomic: '5623038', confirmationsAtomic: '3', address: DOGE_ADDRESS, lockTimeAtomic: '0', coinbase: false },
       { txid: DOGE_BLOCK, voutAtomic: '0', valueAtomic: '1209573400000', heightAtomic: '5620112', confirmationsAtomic: '2929', address: DOGE_ADDRESS, lockTimeAtomic: '0', coinbase: false },
     ],
+  },
+
+  // The Zcash block response as production returned it on 2026-08-29, with the
+  // protocol arrays emptied and nothing else changed. Zcash puts the block's
+  // fields at the top level, in snake_case, with a unix time and an
+  // offset-counted transaction list, and none of that is the Dogecoin shape
+  // above. Written from a real response, because the page shipped as a field
+  // dump on exactly this difference.
+  [`/api/v1/zcash/block/${ZEC_BLOCK}`]: {
+    "schemaVersion": "zcash-metaprotocols-api-v1",
+    "network": "mainnet",
+    "checkpoint": {
+      "height": "3464717",
+      "hash": "00000000001a8027b33ea8f1972569b135eea78be68a381875307549ddf178e2"
+    },
+    "coverage": {
+      "scannedHeight": "3464717",
+      "networkHeight": "3464717",
+      "blocksBehindNetwork": "0",
+      "nodeSynced": true,
+      "verificationProgress": 1,
+      "chainComplete": true
+    },
+    "height": "3464717",
+    "hash": "00000000001a8027b33ea8f1972569b135eea78be68a381875307549ddf178e2",
+    "prev_hash": "00000000006c247a8c511e915a0370a4bdbae53d4cf4b10931b2df553d186277",
+    "time": "1788003830",
+    "tx_count": "4",
+    "transactions": {
+      "total": "4",
+      "offset": "0",
+      "limit": "50",
+      "items": [
+        "e743ed36e0a10285fbfd4de57844f0f78bc929ad58b1d391fa294a540f9232bd",
+        "9ff76d00ba46f460a3d2cc536c5e9e82fdabf1ad0eea45fb32a554bbab1d4d59",
+        "10ac3514e6e21b25d35cd5941e887b1936036c5c8a6a556796309765ef3cf30f",
+        "87bee021247fb56e3436447fd7f827266f71f4257ca6050f473ad03fdc09de1d"
+      ],
+      "has_more": false
+    },
+    "inscription_count": "0",
+    "inscriptions": [],
+    "envelopes": [],
+    "events": [],
+    "zrune_events": [],
+    "chain": "zcash"
   },
 
   // The pending lists carry whole transaction envelopes, one per entry, which
@@ -475,4 +530,4 @@ export const chainStateScope = {
   'chain-object-missing': ['dogecoin'],
 };
 
-export const chainSampleIds = { DOGE_TXID, DOGE_BLOCK, DOGE_ADDRESS, ZEC_TXID };
+export const chainSampleIds = { DOGE_TXID, DOGE_BLOCK, DOGE_ADDRESS, ZEC_TXID, ZEC_BLOCK };
