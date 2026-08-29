@@ -91,6 +91,31 @@ const ROUTES = [
   { id: 'rune', path: `/rune/${assetSampleIds.RUNE_NAME}`, name: 'Rune' },
   { id: 'sat', path: `/sat/${assetSampleIds.SAT_NUMBER}`, name: 'Sat' },
   { id: 'saved', path: '/saved', name: 'Saved in this browser' },
+
+  // The chain switcher, open. Nothing here had ever opened a menu, so the one
+  // surface that decides which chain a visitor is looking at was measured only
+  // while closed. It was collapsed: the header's own `.dropdown-item` rule,
+  // written for the network rows, outranked the switcher's two-column grid and
+  // ran each chain's name, state and detail into a single line.
+  {
+    id: 'chain-menu',
+    path: '/',
+    name: 'Chain switcher, open',
+    open: '.chain-toggle',
+    // An open menu deliberately covers what is under it. axe reads a covered
+    // control as a target too small to hit, and at 320 and 375 it reads the
+    // search field behind this menu that way. That is a real measurement of a
+    // state that is not the one the rule is about: the field is not a target
+    // while a dismissible menu is over it, and the same field at the same
+    // widths passes on the `home` route, which is this path with the menu
+    // closed and is measured in full in every run.
+    //
+    // So obscuring findings on this route are reported on their own line
+    // rather than counted, and every other rule still fails the run. The line
+    // prints what was obscured, because a rule that is quietly not counted is
+    // a rule nobody sees again.
+    overlayObscures: true,
+  },
 ];
 
 const VIEWPORTS = [
@@ -401,6 +426,22 @@ async function run() {
             await page.goto(BASE + route.path, { waitUntil: 'domcontentloaded', timeout: 45_000 });
             await page.waitForTimeout(state === 'loading' ? 1_200 : 2_600);
 
+            // A route may name a control to open before anything is measured.
+            // A menu that never opens is a menu nothing checks. When the
+            // control is genuinely absent in this state, that is recorded as a
+            // navigation failure rather than passed over, because a route that
+            // measured the closed page instead is not the route that was asked
+            // for.
+            if (route.open) {
+              const control = page.locator(route.open).first();
+              if (await control.count()) {
+                await control.click();
+                await page.waitForTimeout(400);
+              } else if (state === 'populated') {
+                throw new Error(`${route.open} is not on the page, so this route measured the closed page instead of the open one`);
+              }
+            }
+
             const overflow = await page.evaluate(() => {
               const d = document.documentElement;
               return { scrollWidth: d.scrollWidth, clientWidth: d.clientWidth };
@@ -414,6 +455,7 @@ async function run() {
             );
 
             let violations = [];
+            const obscured = [];
             if (!args.skipAxe) {
               try {
                 const axe = await new AxeBuilder({ page })
@@ -432,6 +474,22 @@ async function run() {
                     detail: (n.any?.[0]?.message ?? n.failureSummary ?? '').slice(0, 200),
                   })),
                 }));
+
+                // Split off what an open overlay is expected to obscure. Only
+                // on a route that declares it opens one, and only for nodes
+                // axe itself says are obscured; a target that is simply too
+                // small still fails here as it does everywhere else.
+                if (route.overlayObscures) {
+                  for (const violation of violations) {
+                    if (violation.id !== 'target-size') continue;
+                    const covered = violation.nodes.filter((n) => /obscured/i.test(n.detail));
+                    if (!covered.length) continue;
+                    obscured.push({ id: violation.id, nodes: covered });
+                    violation.nodes = violation.nodes.filter((n) => !/obscured/i.test(n.detail));
+                    violation.count -= covered.length;
+                  }
+                  violations = violations.filter((violation) => violation.nodes.length > 0);
+                }
               } catch (e) {
                 violations = [{ id: 'axe-failed', impact: 'unknown', count: 0, help: String(e).slice(0, 200), sample: '' }];
               }
@@ -501,7 +559,7 @@ async function run() {
 
             findings.push({
               route: route.id, routeName: route.name, state, theme, viewport: viewport.id,
-              overflowBy, consoleErrors, brokenImages, violations, contrast, progress, settledAfterMs,
+              overflowBy, consoleErrors, brokenImages, violations, obscured, contrast, progress, settledAfterMs,
             });
           } catch (error) {
             // A server that has gone away is not a page that failed. Reporting
@@ -733,7 +791,22 @@ function summarise(report) {
   console.log(`console errors      : ${errors.length}`);
   console.log(`broken images       : ${images.length}`);
   console.log(`navigation failures : ${failed.length}`);
-  console.log(`a11y rules violated : ${byRule.size}\n`);
+  console.log(`a11y rules violated : ${byRule.size}`);
+
+  // Reported, never counted, and never silent. A route that opens a menu is
+  // measured with the menu open, so the controls beneath it read as obscured.
+  // Printing each one is what keeps this from becoming a rule nobody sees.
+  const covered = report.findings.flatMap((f) =>
+    (f.obscured ?? []).flatMap((v) =>
+      v.nodes.map((n) => `${f.route}@${f.viewport}/${f.theme} ${n.target}`),
+    ),
+  );
+  if (covered.length) {
+    console.log(`obscured by an open overlay : ${covered.length}  (expected, not counted)`);
+    for (const line of covered.slice(0, 12)) console.log(`    ${line}`);
+    if (covered.length > 12) console.log(`    ... and ${covered.length - 12} more`);
+  }
+  console.log('');
 
   console.log(`contrast failures   : ${contrastFailures.length}`);
   if (contrastNotMeasured.length) {
