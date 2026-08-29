@@ -43,6 +43,7 @@ import { fileURLToPath } from 'node:url';
 import playwright from 'playwright';
 
 import { addressFixtures, detailFixtures, fixtures, sampleIds } from './fixtures.mjs';
+import { chainFixtures } from './chain-fixtures.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const args = Object.fromEntries(
@@ -61,11 +62,18 @@ const ROUTES = [
   ['blocks', '/blocks'],
   ['protocols', '/protocols'],
   ['graphs', '/graphs/mempool'],
+
+  // The two chain overviews. They were absent, so the pages this suite most
+  // recently redesigned were the ones nothing measured under a replaced
+  // palette or at 200 percent, and both carry a status rail, a coverage block
+  // and a disclosure that a halved viewport has to reflow rather than clip.
+  ['dogecoin', '/dogecoin'],
+  ['zcash', '/zcash'],
 ];
 
 /** Answer every API call from the same table the matrix uses. */
 async function installFixtures(context) {
-  const table = { ...fixtures, ...detailFixtures, ...addressFixtures };
+  const table = { ...fixtures, ...detailFixtures, ...addressFixtures, ...chainFixtures };
   await context.route('**/api/**', async (route) => {
     const path = new URL(route.request().url()).pathname;
     const body = table[path] ?? Object.entries(table).find(([k]) => path.startsWith(k))?.[1];
