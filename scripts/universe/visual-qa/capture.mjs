@@ -203,6 +203,42 @@ async function installFixtures(context, state) {
     });
     push();
   });
+
+  // The chain pages open their own socket, and nothing answered it: every
+  // chain screenshot carried a failed-handshake console error, which is noise
+  // that would hide a real one, and the live path itself went unexercised.
+  //
+  // The client subscribes to three channels at once and expects one envelope
+  // per channel. Sequence numbers stay fixed so a rerun produces the same
+  // screenshot; the client only uses them to resume after a drop.
+  await context.routeWebSocket('**/api/v1/universe/ws', (ws) => {
+    if (down) return; // connected but silent, which is the reconnecting state
+    ws.onMessage((raw) => {
+      let message;
+      try { message = JSON.parse(String(raw)); } catch { return; }
+      if (message?.type !== 'subscribe' || !Array.isArray(message.subscriptions)) {
+        return;
+      }
+      for (const subscription of message.subscriptions) {
+        const chain = subscription?.chain;
+        const channel = subscription?.channel;
+        if (!chain || !channel) continue;
+        ws.send(JSON.stringify({
+          schemaVersion: 'universe-websocket-v1',
+          chain,
+          network: 'mainnet',
+          channel,
+          snapshotId: 'snap-4812',
+          sequenceAtomic: '148201',
+          observedAt: '2026-08-29T05:03:00.000Z',
+          tip: chainFixtures[`/api/v1/${chain}/status`]?.tip ?? null,
+          reorg: null,
+          completeness: 'complete',
+          data: {},
+        }));
+      }
+    });
+  });
 }
 
 /**
