@@ -103,12 +103,12 @@
         <p>{{ mintExplanation(state.result.value) }}</p>
 
         <ng-container *ngIf="state.result.value.terms as terms">
-          <div class="progress" *ngIf="progress(state.result.value) !== null">
-            <div class="progress-bar" role="img"
+          <div class="mint-progress" *ngIf="progress(state.result.value) !== null">
+            <div class="mint-track" role="img"
                  [attr.aria-label]="'Minted ' + state.result.value.mintsAtomic + ' of ' + terms.capAtomic">
               <span class="fill" [style.width.%]="progress(state.result.value)"></span>
             </div>
-            <p class="progress-label">
+            <p class="mint-progress-label">
               <ng-container i18n="universe.rune.progress">
                 {{ amount(state.result.value.mintsAtomic) }} of {{ amount(terms.capAtomic) }} mints, {{ progress(state.result.value) }} percent
               </ng-container>

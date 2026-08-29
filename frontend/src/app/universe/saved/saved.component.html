@@ -9,22 +9,22 @@
   </header>
 
   <section class="panel" aria-labelledby="saved-filters-heading">
-    <h2 id="saved-filters-heading">Activity filters</h2>
-    <p>
-      Coverage is limited to pages saved or opened in this browser. Times below
-      show when this device last touched each entry, not chain-index freshness.
+    <h2 id="saved-filters-heading" i18n="universe.saved.filters-title">Narrow this list</h2>
+    <p i18n="universe.saved.filters-lede">
+      Only pages saved or opened in this browser appear here. The times are when
+      this device last touched an entry, not how fresh the chain index is.
     </p>
     <div class="filters">
       <label>
-        Chain
+        <ng-container i18n="universe.saved.filter-chain">Chain</ng-container>
         <select [value]="chainFilter" (change)="updateChainFilter($any($event.target).value)">
-          <option *ngFor="let chain of chainFilters" [value]="chain">{{ chain }}</option>
+          <option *ngFor="let chain of chainFilters" [value]="chain">{{ chainFilterLabel(chain) }}</option>
         </select>
       </label>
       <label>
-        Activity type
+        <ng-container i18n="universe.saved.filter-kind">Kind of page</ng-container>
         <select [value]="kindFilter" (change)="updateKindFilter($any($event.target).value)">
-          <option *ngFor="let kind of kindFilters" [value]="kind">{{ kind }}</option>
+          <option *ngFor="let kind of kindFilters" [value]="kind">{{ kindFilterLabel(kind) }}</option>
         </select>
       </label>
     </div>
@@ -40,10 +40,10 @@
 
     <ul class="entry-list" *ngIf="visibleEntries(vm.bookmarks) as bookmarks">
       <li *ngFor="let entry of bookmarks; trackBy: trackByEntry">
-        <span class="entry-kind">{{ entry.chain }} / {{ entry.network }}</span>
+        <span class="entry-origin">{{ originLabel(entry) }}</span>
         <span class="entry-kind">{{ kindLabel(entry.kind) }}</span>
         <a class="entry-label" [routerLink]="[entry.path]">{{ entry.label }}</a>
-        <time [attr.datetime]="entry.at | date:'yyyy-MM-ddTHH:mm:ss.SSSZ'">{{ entry.at | date:'medium' }}</time>
+        <time [attr.datetime]="entry.at | date:'yyyy-MM-ddTHH:mm:ss.SSSZ'">{{ entry.at | date:'d MMM y, HH:mm' }}</time>
         <button type="button" class="remove" (click)="remove(entry)"
                 [attr.aria-label]="'Remove ' + entry.label">
           <ng-container i18n="universe.saved.remove">Remove</ng-container>
@@ -61,10 +61,10 @@
 
     <ul class="entry-list" *ngIf="visibleEntries(vm.recent) as recent">
       <li *ngFor="let entry of recent; trackBy: trackByEntry">
-        <span class="entry-kind">{{ entry.chain }} / {{ entry.network }}</span>
+        <span class="entry-origin">{{ originLabel(entry) }}</span>
         <span class="entry-kind">{{ kindLabel(entry.kind) }}</span>
         <a class="entry-label" [routerLink]="[entry.path]">{{ entry.label }}</a>
-        <time [attr.datetime]="entry.at | date:'yyyy-MM-ddTHH:mm:ss.SSSZ'">{{ entry.at | date:'medium' }}</time>
+        <time [attr.datetime]="entry.at | date:'yyyy-MM-ddTHH:mm:ss.SSSZ'">{{ entry.at | date:'d MMM y, HH:mm' }}</time>
       </li>
     </ul>
 
@@ -77,7 +77,7 @@
     <h2 id="saved-pinned-heading" i18n="universe.saved.pinned-title">Pinned protocols</h2>
     <ul class="entry-list">
       <li *ngFor="let protocolId of vm.pinnedProtocols">
-        <a class="entry-label" [routerLink]="['/protocols', protocolId]">{{ protocolId }}</a>
+        <a class="entry-label" [routerLink]="['/protocols', protocolId]">{{ protocolLabel(protocolId) }}</a>
         <button type="button" class="remove" (click)="unpin(protocolId)">
           <ng-container i18n="universe.saved.unpin">Unpin</ng-container>
         </button>
