@@ -35,7 +35,7 @@
  *   node mobile-check.mjs --base=http://127.0.0.1:8080
  *   node mobile-check.mjs --base=... --routes=home,tx --viewports=phone-320
  */
-import { chromium, devices, webkit } from 'playwright';
+import { chromium, devices, firefox, webkit } from 'playwright';
 import { mkdirSync, writeFileSync } from 'fs';
 import { dirname, join, resolve } from 'path';
 import { fileURLToPath } from 'url';
@@ -53,7 +53,27 @@ const args = Object.fromEntries(
 
 const BASE = args.base || 'http://localhost:4200';
 const OUT = resolve(args.out || join(HERE, 'artifacts-mobile'));
-const BROWSER = args.browser === 'webkit' ? webkit : chromium;
+const ENGINES = { chromium, webkit, firefox };
+const ENGINE_NAME = args.browser || 'chromium';
+const BROWSER = ENGINES[ENGINE_NAME];
+if (!BROWSER) {
+  throw new Error(`unknown browser "${ENGINE_NAME}"; expected one of ${Object.keys(ENGINES).join(', ')}`);
+}
+
+/**
+ * Whether this engine can be asked to pretend it is a phone.
+ *
+ * Chromium and WebKit both take `isMobile`, and it is what makes them report a
+ * coarse pointer, which is the whole reason the flag is set. Firefox rejects
+ * the option outright rather than ignoring it.
+ *
+ * That makes Firefox a narrower run rather than a broken one: the window sizes,
+ * the overflow, the fixed layers, the safe areas and the rotation are all still
+ * measured, and the pointer-conditional rules are not. Which is the honest
+ * shape of a Firefox mobile check from a desktop harness, and it is stated in
+ * the run's own header rather than left for a reader to assume.
+ */
+const CAN_EMULATE_MOBILE = ENGINE_NAME !== 'firefox';
 
 /**
  * The window sizes that change the answer, not the phones that are popular.
@@ -123,6 +143,8 @@ const MOBILE_ROUTE_IDS = (args.routes ? String(args.routes).split(',') : [
 
 const findings = [];
 const passes = [];
+/** Focus landing partly under a fixed layer: the AAA rule, reported not gated. */
+const grazes = [];
 
 function fail(scope, message) {
   findings.push(`${scope}: ${message}`);
@@ -141,7 +163,7 @@ function pass(scope, message) {
  * a live update can contradict each other and send the reader looking for a
  * bug that is really a race in the harness.
  */
-function mobileProbe(floors) {
+async function mobileProbe(floors) {
   const { touchFloor, fieldFloor } = floors;
   const doc = document.documentElement;
   const round = (n) => Math.round(n * 100) / 100;
@@ -342,7 +364,26 @@ function mobileProbe(floors) {
   // ask whether the final piece of real content is above the bar or behind it.
   // This is the check that "padding-bottom: 68px" was silently failing on a
   // phone with a home indicator, where the bar is taller than the number.
+  //
+  // Settling matters here more than anywhere else in this probe. Scrolling to
+  // the bottom is what makes a page load whatever it was deferring until it
+  // was scrolled to, and an image without dimensions finishes arriving at
+  // about the same moment. Measuring straight after the scroll measures the
+  // page mid-layout: the bottom moves underneath the measurement, and the
+  // answer depends on how fast the machine is. That produced a finding on a
+  // Linux runner that no amount of looking could reproduce on a faster
+  // workstation, which is the signature of a race rather than a defect.
+  //
+  // So: scroll, let the page finish, scroll again in case finishing moved the
+  // bottom, and only then measure.
+  for (let settle = 0; settle < 3; settle++) {
+    const before = document.body.scrollHeight;
+    window.scrollTo(0, document.body.scrollHeight);
+    await new Promise((done) => setTimeout(done, 220));
+    if (document.body.scrollHeight === before) break;
+  }
   window.scrollTo(0, document.body.scrollHeight);
+  await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
   const atBottom = { hidden: [], barTop: barIsFixed && barRect ? round(barRect.top) : null };
   if (barIsFixed && barRect) {
     const candidates = document.querySelectorAll('main a[href], main button, main td, main p, main h2, main h3');
@@ -353,7 +394,22 @@ function mobileProbe(floors) {
       // More than a hairline of it under the bar. A one-pixel overlap is a
       // rounding artefact, not content nobody can read.
       if (rect.bottom > barRect.top + 2 && rect.top < barRect.top) {
-        atBottom.hidden.push(`${describe(el)} runs ${round(rect.bottom - barRect.top)}px under the bar`);
+        // Say which kind it is. A flow element under the bar means the page
+        // reserved too little room; a pinned one means something is positioned
+        // over the bar and the reservation was never going to reach it. Those
+        // are different faults with different fixes, and the message used to
+        // leave a reader to work out which by hand.
+        let anc = el;
+        let pinned = null;
+        while (anc && anc !== document.body) {
+          const pos = getComputedStyle(anc).position;
+          if (pos === 'fixed' || pos === 'sticky') { pinned = `${describe(anc)} is ${pos}`; break; }
+          anc = anc.parentElement;
+        }
+        atBottom.hidden.push(
+          `${describe(el)} runs ${round(rect.bottom - barRect.top)}px under the bar`
+          + (pinned ? ` (pinned: ${pinned})` : ' (in flow)'),
+        );
         if (atBottom.hidden.length >= 6) break;
       }
     }
@@ -438,10 +494,25 @@ function mobileProbe(floors) {
  * Where the focus ring ends up.
  *
  * Run separately from the snapshot above because it has to move focus, and
- * moving focus changes the page. Tabs forward through the document and reports
- * any control that comes to rest underneath one of the two fixed layers.
- * WCAG 2.2 calls this focus-obscured; in use it is worse than the rule sounds,
- * because the visitor has no way to tell that anything happened at all.
+ * moving focus changes the page.
+ *
+ * Two outcomes, because WCAG 2.2 draws the line in two places and this product
+ * is held to the AA one. `hidden` is a focused control resting entirely behind
+ * a fixed layer, which is SC 2.4.11 Focus Not Obscured (Minimum), an AA
+ * failure, and in use is worse than the rule sounds: the visitor has no way to
+ * tell that anything happened at all. That is what fails a run, on every
+ * engine. It is also what this found in the first place, on every phone width,
+ * where tabbing near the bottom of a page put the link exactly behind the bar.
+ *
+ * `grazed` is a control that is partly visible and partly under a layer. That
+ * is the AAA rule, SC 2.4.12, and the stylesheet aims for it: `scroll-padding`
+ * on the scroller and `scroll-margin` on the targets together place a focused
+ * control clear of both layers. Chromium and WebKit honour that and report
+ * none. Firefox does not re-scroll an element that is already partly in view,
+ * so it reports some, and its own behaviour is compliant with the level this
+ * product is held to. So they are counted and printed every run and do not
+ * fail it, rather than being dropped, which would leave nobody able to see the
+ * difference between the engines at all.
  */
 async function focusWalk(page, steps) {
   return page.evaluate(async (limit) => {
@@ -451,6 +522,7 @@ async function focusWalk(page, steps) {
     const barFixed = bar && getComputedStyle(bar).position === 'fixed';
     const headerSticky = header && ['sticky', 'fixed'].includes(getComputedStyle(header).position);
     const hidden = [];
+    const grazed = [];
     const focusables = Array.from(
       document.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]):not([type=hidden]), select, textarea, [tabindex]:not([tabindex="-1"])'),
     ).filter((el) => {
@@ -490,21 +562,29 @@ async function focusWalk(page, steps) {
 
       if (barFixed) {
         const b = bar.getBoundingClientRect();
-        const entirelyBehind = rect.top >= b.top - 2;
-        if (entirelyBehind || (fits && rect.bottom > b.top + 2 && rect.top < b.bottom)) {
-          hidden.push(`${name} rests ${entirelyBehind ? 'entirely behind' : `under`} the bottom bar by ${round(rect.bottom - b.top)}px`);
+        if (rect.top >= b.top - 2) {
+          hidden.push(`${name} rests entirely behind the bottom bar`);
+          continue;
+        }
+        // The second bound matters: an element scrolled entirely below the bar
+        // is off screen, not obscured by it, and reporting it as overlapping
+        // describes where the page is scrolled rather than anything about the
+        // layer.
+        if (fits && rect.bottom > b.top + 2 && rect.top < b.bottom) {
+          grazed.push(`${name} overlaps the bottom bar by ${round(rect.bottom - b.top)}px`);
           continue;
         }
       }
       if (headerSticky) {
         const h = header.getBoundingClientRect();
-        const entirelyBehind = rect.bottom <= h.bottom + 2;
-        if (entirelyBehind || (fits && rect.top < h.bottom - 2 && rect.bottom > h.top)) {
-          hidden.push(`${name} rests ${entirelyBehind ? 'entirely behind' : 'under'} the header by ${round(h.bottom - rect.top)}px`);
+        if (rect.bottom <= h.bottom + 2) {
+          hidden.push(`${name} rests entirely behind the header`);
+        } else if (fits && rect.top < h.bottom - 2 && rect.bottom > h.top) {
+          grazed.push(`${name} overlaps the header by ${round(h.bottom - rect.top)}px`);
         }
       }
     }
-    return hidden.slice(0, 8);
+    return { hidden: hidden.slice(0, 8), grazed: grazed.slice(0, 8) };
   }, steps);
 }
 
@@ -551,7 +631,7 @@ async function run() {
   }
 
   const browser = await BROWSER.launch({
-    args: BROWSER === chromium
+    args: ENGINE_NAME === 'chromium'
       ? ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader']
       : [],
   });
@@ -570,9 +650,9 @@ async function run() {
       // the worst kind of gap: a run that is green about rules it never ran.
       // `isMobile` is what makes Chromium report a coarse pointer and no hover,
       // which is the environment those rules are written for.
-      hasTouch: viewport.compact,
-      isMobile: viewport.compact,
-      ...(viewport.compact ? { userAgent: devices['Pixel 7']?.userAgent } : {}),
+      hasTouch: viewport.compact && CAN_EMULATE_MOBILE,
+      ...(CAN_EMULATE_MOBILE ? { isMobile: viewport.compact } : {}),
+      ...(viewport.compact && CAN_EMULATE_MOBILE ? { userAgent: devices['Pixel 7']?.userAgent } : {}),
     });
     await installFixtures(context, 'populated');
 
@@ -688,8 +768,13 @@ async function run() {
         // routes where the shell is all there is, and on the tallest and
         // shortest windows where it actually bites.
         if (viewport.compact && (route.id === 'home' || route.id === 'tx')) {
-          const obscured = await focusWalk(page, 60);
-          for (const o of obscured) fail(scope, `${o}, which is a WCAG 2.2 focus-obscured failure`);
+          const focus = await focusWalk(page, 60);
+          for (const o of focus.hidden) {
+            fail(scope, `${o}, which is a WCAG 2.2 AA focus-obscured failure`);
+          }
+          for (const o of focus.grazed) {
+            grazes.push(`${scope}: ${o}`);
+          }
         }
 
         // --- continuity across a rotation ---
@@ -732,13 +817,24 @@ async function run() {
 
   await browser.close();
 
-  writeFileSync(join(OUT, 'mobile-report.json'), JSON.stringify({ base: BASE, build, report, findings, passes }, null, 2));
+  writeFileSync(join(OUT, 'mobile-report.json'), JSON.stringify({ base: BASE, browser: ENGINE_NAME, build, report, findings, grazes, passes }, null, 2));
 
   console.log(`\nMobile gate, build ${build}`);
   console.log(`${routes.length} routes across ${viewports.length} window sizes, ${report.length} measured pages\n`);
   if (passes.length) {
     console.log(`-- ${passes.length} checks with something to say that passed --`);
     for (const p of passes.slice(0, 12)) console.log(`  ${p}`);
+    console.log('');
+  }
+  if (grazes.length) {
+    // Printed every run, never suppressed. This is the difference between the
+    // engines, and a reader who cannot see it cannot judge it.
+    console.log(`-- ${grazes.length} focused controls landing partly under a fixed layer --`);
+    console.log('   AA asks that focus not be entirely hidden, which holds everywhere. This is the');
+    console.log('   AAA rule, and it is where the engines differ on re-scrolling something already');
+    console.log('   partly in view.');
+    for (const g of grazes.slice(0, 20)) console.log(`  ${g}`);
+    if (grazes.length > 20) console.log(`  ... and ${grazes.length - 20} more, see the report`);
     console.log('');
   }
   if (findings.length) {

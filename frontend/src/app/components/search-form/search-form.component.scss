@@ -53,7 +53,7 @@
   margin: 0;
   white-space: nowrap;
 
-  @media (pointer: coarse) {
+  @media (pointer: coarse), (max-width: 991.98px) {
     min-height: var(--u-touch-target);
     padding-inline: var(--u-space-1);
   }
@@ -106,7 +106,7 @@
     padding-right: calc(var(--u-touch-target) + var(--u-space-1));
   }
 
-  @media (pointer: coarse) {
+  @media (pointer: coarse), (max-width: 991.98px) {
     height: var(--u-touch-target-comfortable);
   }
 
@@ -189,7 +189,7 @@
   // The submit control matches the field it belongs to, and clears the touch
   // floor on its shorter side. 46px wide was already past it; the height was
   // not.
-  @media (pointer: coarse) {
+  @media (pointer: coarse), (max-width: 991.98px) {
     height: var(--u-touch-target-comfortable);
   }
 

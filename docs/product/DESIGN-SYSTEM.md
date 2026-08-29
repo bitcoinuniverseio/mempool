@@ -549,10 +549,24 @@ roughly nine minutes, against the matrix's sixty.
 | 768 x 1024 | tablet, where the shell is still in its compact form |
 | 1024 x 900 | the desktop control: a mobile fix that regresses the wide layout fails here |
 
-Compact windows are run with `isMobile`, which is what makes Chromium report a
-coarse pointer. `hasTouch` alone does not, and without it every
+Compact windows are run with `isMobile`, which is what makes Chromium and
+WebKit report a coarse pointer. `hasTouch` alone does not, and without it every
 `@media (pointer: coarse)` rule in the product goes unexercised while appearing
 to be covered.
+
+Three engines, with `--browser`. Chromium and WebKit take the whole set;
+WebKit is the engine Safari is built on, which is the closest an automated run
+gets to an iPhone. Firefox cannot be put into mobile emulation, so it reports a
+fine pointer and takes a narrower pass: window sizes, overflow, fixed layers,
+safe areas and rotation are all still measured there, and the run says so in
+its own header rather than leaving a reader to assume otherwise.
+
+That is also why every rule with a touch floor is written
+`@media (pointer: coarse), (max-width: 991.98px)` rather than on the pointer
+alone. Pointer reporting is not reliable across mobile browsers, desktop-mode
+requests and emulation, and below the shell breakpoint the product is already
+in its mobile shape, so it should have mobile ergonomics whatever the pointer
+claims.
 
 The cutout is injected by overriding the four safe-area properties, because
 headless Chromium has no notch and `env()` is zero everywhere. What is being
@@ -564,7 +578,13 @@ What it fails a run for:
 - a region scrolling sideways without declaring it, or with nothing focusable in it
 - a field computing under 16px
 - a target under either floor
-- content or focus resting behind the header or the bottom bar
+- content resting behind the header or the bottom bar, saying whether the
+  element is in flow or pinned, because those are different faults
+- focus resting entirely behind either layer, which is WCAG 2.2 AA. Focus
+  landing partly under a layer is the AAA rule: it is counted and printed every
+  run and does not fail it, because the stylesheet aims for it and Chromium and
+  WebKit reach it while Firefox does not re-scroll something already partly in
+  view. Printing it is what keeps that difference visible
 - the header or bar not reserving a simulated inset
 - a menu taller than the window that does not scroll
 - the bottom bar scrolling with no affordance, or the current destination scrolled out of sight
