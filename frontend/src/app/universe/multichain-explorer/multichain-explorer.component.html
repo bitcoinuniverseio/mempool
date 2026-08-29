@@ -489,6 +489,10 @@
        i18n="universe.chain.collection-truncated">
       Showing the first {{ collection.shownCount }} of {{ collection.totalCount }} rows the authority returned.
     </p>
+    <p class="panel-lede" *ngIf="collection.hiddenColumnCount"
+       i18n="universe.chain.collection-columns-hidden">
+      {{ collection.hiddenColumnCount }} further fields per row are not in this table. Every one of them is in the full response below.
+    </p>
     <div class="table-wrap" tabindex="0" role="region" aria-labelledby="collection-heading">
       <table>
         <thead>

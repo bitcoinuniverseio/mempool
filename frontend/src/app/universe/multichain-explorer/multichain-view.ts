@@ -1214,6 +1214,12 @@ export interface CollectionReading {
   readonly rows: readonly (readonly CollectionCell[])[];
   readonly shownCount: number;
   readonly totalCount: number;
+  /**
+   * Fields present in the rows that the table did not have room for. A table
+   * that quietly drops a column reads as a complete answer, so the page says
+   * how many it is holding back and the full response stays one click away.
+   */
+  readonly hiddenColumnCount: number;
 }
 
 /** How many rows a page renders before it says how many it is holding back. */
@@ -1265,6 +1271,7 @@ export function readCollection(
       }
     }
   }
+  const hiddenColumnCount = Math.max(0, order.length - COLLECTION_COLUMN_LIMIT);
   const columns = order.slice(0, COLLECTION_COLUMN_LIMIT).map((key) => ({
     key,
     label: humanizeFieldName(key),
@@ -1284,6 +1291,7 @@ export function readCollection(
     ),
     shownCount: shown.length,
     totalCount: source.length,
+    hiddenColumnCount,
   };
 }
 
