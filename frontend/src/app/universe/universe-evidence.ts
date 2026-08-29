@@ -12,7 +12,17 @@ import {
   OutpointEnrichmentStatus,
 } from '@app/universe/universe.types';
 
-export type EvidenceTone = 'proven' | 'partial' | 'pending' | 'unavailable';
+/**
+ * The five tones the design system defines. `neutral` is the one for a fact
+ * that carries no evidence claim at all, which is different from a claim that
+ * could not be established: a chain that never answered has not answered "no".
+ */
+export type EvidenceTone =
+  | 'proven'
+  | 'partial'
+  | 'pending'
+  | 'unavailable'
+  | 'neutral';
 
 export interface EvidenceView {
   readonly tone: EvidenceTone;
@@ -104,14 +114,22 @@ export function groupPositionsByProtocol(
  * pipeline keeps them as decimal strings and so does this.
  */
 export function formatAtomicAmount(atomic: string, decimals = 0): string {
-  if (typeof atomic !== 'string' || !/^(0|[1-9][0-9]*)$/.test(atomic)) {return '';}
+  // Negatives are accepted because one real amount in the contract is signed:
+  // a Zcash transaction's value balance, the net movement between the
+  // transparent and shielded pools. Rejecting it printed nothing at all.
+  if (typeof atomic !== 'string' || !/^-?(0|[1-9][0-9]*)$/.test(atomic)) {return '';}
+  const negative = atomic.startsWith('-');
+  const digits = negative ? atomic.slice(1) : atomic;
+  const sign = negative ? '-' : '';
   if (!Number.isInteger(decimals) || decimals <= 0 || decimals > 38) {
-    return groupDigits(atomic);
+    return sign + groupDigits(digits);
   }
-  const padded = atomic.padStart(decimals + 1, '0');
+  const padded = digits.padStart(decimals + 1, '0');
   const whole = padded.slice(0, padded.length - decimals);
   const fraction = padded.slice(padded.length - decimals).replace(/0+$/, '');
-  return fraction ? `${groupDigits(whole)}.${fraction}` : groupDigits(whole);
+  return fraction
+    ? `${sign}${groupDigits(whole)}.${fraction}`
+    : sign + groupDigits(whole);
 }
 
 function groupDigits(value: string): string {
