@@ -170,38 +170,25 @@ html {
 // gets a correct result, and an engine that applies both over-scrolls slightly,
 // which places the focused control further from the bar than needed and is not
 // a fault. Below the breakpoint only, since that is where the fixed bar is.
+//
+// The selector list is named once. Three copies of it is three chances for
+// them to drift apart, and the one that drifts is the one nobody notices.
+$focusable: 'a[href], button, input, select, textarea, summary, [tabindex]:not([tabindex="-1"])';
+
 @media (max-width: 991.98px) {
-  a[href],
-  button,
-  input,
-  select,
-  textarea,
-  summary,
-  [tabindex]:not([tabindex='-1']) {
+  #{$focusable} {
     scroll-margin-bottom: calc(var(--u-bottom-nav-space) + var(--u-space-4));
     scroll-margin-top: calc(7rem + var(--u-safe-top));
   }
 
   @media (min-width: 600px) {
-    a[href],
-    button,
-    input,
-    select,
-    textarea,
-    summary,
-    [tabindex]:not([tabindex='-1']) {
+    #{$focusable} {
       scroll-margin-top: calc(4.5rem + var(--u-safe-top));
     }
   }
 
   @media (max-height: 479.98px) {
-    a[href],
-    button,
-    input,
-    select,
-    textarea,
-    summary,
-    [tabindex]:not([tabindex='-1']) {
+    #{$focusable} {
       scroll-margin-bottom: calc(var(--u-touch-target) + 1px + var(--u-safe-bottom) + var(--u-space-3));
       scroll-margin-top: calc(4rem + var(--u-safe-top));
     }
