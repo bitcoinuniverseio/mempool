@@ -34,6 +34,24 @@
   min-width: 0;
 }
 
+.all-chains {
+  align-items: center;
+  color: var(--u-text-secondary);
+  display: flex;
+  flex: 0 0 auto;
+  font-size: var(--u-text-xs);
+  gap: var(--u-space-1);
+  margin: 0;
+  white-space: nowrap;
+}
+
+@media (max-width: 420px) {
+  .all-chains span {
+    max-width: 2.4rem;
+    white-space: normal;
+  }
+}
+
 .search-box-container {
   flex: 1 1 auto;
   min-width: 0;

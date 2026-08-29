@@ -1563,3 +1563,91 @@ h2.anchor {
     transition-duration: 0.01ms !important;
   }
 }
+// The chain picker belongs to the always-present application shell. Keeping
+// these rules global avoids charging them to the master component style budget.
+.chain-picker {
+  flex-shrink: 0;
+}
+
+.chain-toggle {
+  align-items: center;
+  background: var(--u-surface-sunken);
+  border: 1px solid var(--u-border);
+  border-radius: var(--u-radius-md);
+  color: var(--u-text-primary);
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: auto auto;
+  min-height: 38px;
+  padding: 0 var(--u-space-2);
+
+  &:focus-visible {
+    outline: 2px solid var(--u-focus-ring);
+    outline-offset: 2px;
+  }
+}
+
+.chain-symbol {
+  font-size: var(--u-text-sm);
+  font-weight: var(--u-weight-semibold);
+}
+
+.chain-name {
+  display: none;
+  font-size: var(--u-text-sm);
+  font-weight: var(--u-weight-medium);
+  margin-left: var(--u-space-2);
+}
+
+.chain-current-state,
+.chain-option-state,
+.chain-option-detail {
+  color: var(--u-text-secondary);
+}
+
+.chain-current-state,
+.chain-option-detail {
+  grid-column: 1 / -1;
+}
+
+.chain-current-state {
+  font-size: var(--u-text-2xs);
+  text-align: left;
+}
+
+.chain-menu {
+  min-width: min(22rem, calc(100vw - 1rem));
+}
+
+.chain-option {
+  align-items: start;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  white-space: normal;
+}
+
+.chain-option-title {
+  font-weight: var(--u-weight-semibold);
+}
+
+.chain-option-detail {
+  font-size: var(--u-text-xs);
+}
+
+@media (min-width: 720px) {
+  .chain-name {
+    display: inline;
+  }
+}
+
+@media (max-width: 600px) {
+  .header-bar {
+    flex-wrap: wrap;
+    gap: var(--u-space-2);
+  }
+
+  .site-search {
+    flex-basis: 100%;
+    order: 5;
+  }
+}

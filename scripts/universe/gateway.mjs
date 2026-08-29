@@ -174,6 +174,10 @@ export function routeFor(pathname, originalUrl) {
   return null;
 }
 
+export function websocketUpstreamFor(pathname) {
+  return pathname === '/api/v1/universe/ws' ? OVERLAY : BACKEND;
+}
+
 /**
  * How long a request waits for an upstream that is refusing connections.
  *
@@ -404,7 +408,14 @@ const server = http.createServer((request, response) => {
  * through unchanged.
  */
 server.on('upgrade', (request, socket, head) => {
-  const upstream = BACKEND;
+  let pathname;
+  try {
+    pathname = new URL(request.url || '/', 'http://gateway.invalid').pathname;
+  } catch {
+    socket.destroy();
+    return;
+  }
+  const upstream = websocketUpstreamFor(pathname);
   const proxied = net.connect(Number(upstream.port), upstream.hostname, () => {
     const lines = [`${request.method} ${request.url} HTTP/1.1`];
     for (const [name, value] of Object.entries(request.headers)) {
