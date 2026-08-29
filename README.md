@@ -32,6 +32,13 @@ guesses.
   the same five readings in the same order: chain state, chain tip, blocks
   behind the tip, when the reading was taken, and how complete the pending set
   is. A figure that is true as of a block that is not the tip says so.
+- **A verdict never travels without its evidence.** When a chain says it is not
+  ready, the page says which part is missing, in English rather than in the
+  API's codes: whose node did not answer, which indexer is behind, which index
+  was built without a protocol switched on. A working authority that states the
+  edges of its coverage is shown as exactly that, not as something broken. A
+  chain that withholds readiness and gives no reason is reported as having
+  given none.
 - **Exact numbers, end to end.** Amounts cross the API as decimal strings and
   are shifted by string arithmetic, never parsed into a floating point number.
   Every rendered figure keeps the exact value it came from.

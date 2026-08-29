@@ -60,12 +60,15 @@ function capability(chain, overrides = {}) {
       ? [
           { protocolId: 'doginals', state: 'ready', coverage: 'complete', updatedAt: observedAt, lagBlocksAtomic: '0', degradedReasons: [] },
           { protocolId: 'drc20', state: 'ready', coverage: 'complete', updatedAt: observedAt, lagBlocksAtomic: '0', degradedReasons: [] },
-          { protocolId: 'doge-tap', state: 'degraded', coverage: 'partial', updatedAt: observedAt, lagBlocksAtomic: '184', degradedReasons: ['authority behind chain tip'] },
+          // `tap_doge`, not `doge-tap`: the capability envelope and the route
+          // are different namespaces, and a fixture written in the route's
+          // spelling cannot see a reader that only knows one of them.
+          { protocolId: 'tap_doge', state: 'degraded', coverage: 'partial', updatedAt: observedAt, lagBlocksAtomic: '184', degradedReasons: ['protocol-authority-stale'] },
         ]
       : [
           { protocolId: 'zerdinals', state: 'ready', coverage: 'partial', updatedAt: observedAt, lagBlocksAtomic: '12', degradedReasons: [] },
           { protocolId: 'zrunes', state: 'ready', coverage: 'partial', updatedAt: observedAt, lagBlocksAtomic: '12', degradedReasons: [] },
-          { protocolId: 'zrc20', state: 'degraded', coverage: 'partial', updatedAt: observedAt, lagBlocksAtomic: '12', degradedReasons: ['two rulesets disagree below this height'] },
+          { protocolId: 'zrc20', state: 'degraded', coverage: 'partial', updatedAt: observedAt, lagBlocksAtomic: '12', degradedReasons: ['protocol-history-partial'] },
         ],
     coverage: {
       confirmedHistory: chain === 'dogecoin' ? 'complete' : 'partial',
@@ -325,6 +328,20 @@ export const chainFixtures = {
   },
 };
 
+/**
+ * Dogecoin as it stood on 2026-08-29: caught up on blocks, not ready overall,
+ * because the protocol side is not answering and the DRC-20 index was created
+ * without the flag that would let it serve at all.
+ */
+const DOGECOIN_NOT_READY = {
+  ready: false,
+  degradedReasons: [
+    'base-chain-authority-unavailable',
+    'confirmed-history-authority-unavailable',
+    'protocol-history-unavailable',
+  ],
+};
+
 export const chainStateOverrides = {
   // A pending set that is genuinely empty and says so.
   //
@@ -379,8 +396,54 @@ export const chainStateOverrides = {
         lagBlocksAtomic: '2841',
         sync: { state: 'degraded', initialBlockDownload: false, progressDecimal: '0.9994', updatedAt: new Date(Date.now() - 20_000).toISOString() },
         coverage: { confirmedHistory: 'partial', addressHistory: 'partial', protocolHistory: 'partial' },
-        degradedReasons: ['confirmed history authority is behind the chain tip'],
+        degradedReasons: ['protocol-history-partial'],
       }),
+    },
+  },
+
+  // A chain whose node is caught up while the protocol side is not, which is
+  // what Dogecoin published on 2026-08-29: ready false, sync ready, three
+  // reasons, and a DRC-20 index that was created without the flag and so
+  // cannot serve it at all. Reading the sync state alone printed Ready in the
+  // proven tone on a chain that had just said no, and the reasons were carried
+  // in the same document and rendered nowhere.
+  'chain-not-ready-protocols': {
+    // The header switcher reads the chain list and the page reads the single
+    // status, so a fixture that overrides one and not the other photographs a
+    // disagreement production cannot produce, both documents come from the
+    // same overlay.
+    '/api/v1/chains': {
+      body: [
+        capability('dogecoin', DOGECOIN_NOT_READY),
+        capability('zcash'),
+      ],
+    },
+    '/api/v1/dogecoin/status': {
+      body: capability('dogecoin', {
+        ...DOGECOIN_NOT_READY,
+        protocols: [
+          { protocolId: 'doginals', state: 'degraded', coverage: 'unavailable', updatedAt: null, lagBlocksAtomic: null, degradedReasons: ['protocol-authority-unavailable'] },
+          { protocolId: 'drc20', state: 'unavailable', coverage: 'unavailable', updatedAt: null, lagBlocksAtomic: null, degradedReasons: ['authority-capability-disabled'] },
+          // Ready, and still reporting two edges of its coverage. Those are
+          // not faults and must not be printed as though they were.
+          { protocolId: 'tap_doge', state: 'ready', coverage: 'complete', updatedAt: new Date(Date.now() - 20_000).toISOString(), lagBlocksAtomic: '0', degradedReasons: ['pending-protocol-coverage-unavailable', 'reorg-evidence-tail-only'] },
+        ],
+      }),
+    },
+  },
+
+  // A chain that withholds readiness and states no reason for it. The page has
+  // to say that out loud rather than leave the space where the explanation
+  // belongs empty, which reads as a chain that is simply fine.
+  'chain-not-ready-unexplained': {
+    '/api/v1/chains': {
+      body: [
+        capability('dogecoin'),
+        capability('zcash', { ready: false, degradedReasons: [] }),
+      ],
+    },
+    '/api/v1/zcash/status': {
+      body: capability('zcash', { ready: false, degradedReasons: [] }),
     },
   },
 
@@ -407,6 +470,8 @@ export const chainStateScope = {
   'chain-empty-pending': ['dogecoin-mempool', 'zcash-mempool'],
   'chain-authority-down': ['dogecoin', 'zcash'],
   'chain-behind': ['dogecoin'],
+  'chain-not-ready-protocols': ['dogecoin'],
+  'chain-not-ready-unexplained': ['zcash'],
   'chain-object-missing': ['dogecoin'],
 };
 
