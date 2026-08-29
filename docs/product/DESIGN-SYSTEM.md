@@ -202,6 +202,26 @@ Every state token comes with a `-surface` and a `-border` so a status treatment
 is a tinted, bordered, worded object rather than coloured text. That keeps it
 legible in greyscale, in print, and under forced colours.
 
+**The distinction has to survive the trip to get here.** These five states are
+the product's whole claim, and an interface can only show a difference the code
+feeding it preserved. On 29 August 2026 four defects shipped in one release,
+across three repositories, with a single shape: somewhere, "I do not know" and
+"I know, and the answer is no" were the same value.
+
+An indexer publishing `block_count` where the reader expected `blockCount` was
+read as publishing no checkpoint. A WebSocket handshake sent with no `Origin`
+header was read as permitted, so every probe passed and every browser was
+refused. A field-name pattern matching `supply` read a token quantity as a coin
+amount. A Bitcoin node answering "no such block" was read as a failure, so a
+healthy chain was reported unavailable on every search.
+
+So the rule is not only about rendering. Anywhere this product reads something
+it does not fully control, a payload, a header, a field name, a status, it must
+be able to say which of the five it has. If an unrecognised input and a
+definitive negative produce the same value, the interface downstream cannot
+recover the difference, and it will state one of them as the other with the
+full confidence of a measured colour and a word.
+
 ### Themes
 
 **Light is the primary experience.** It is defined on `:root` in `styles.scss`,
