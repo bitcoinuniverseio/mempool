@@ -226,6 +226,19 @@ anchor rather than a washed-out outline, and it means a fee colour reads
 identically whichever theme someone is using. Text printed on a block face takes
 block ink, never page ink.
 
+### Chains carry a mark, not a meaning
+
+A chain gets a small round mark beside its name, drawn from the protocol scale
+(`--universe-protocol-*`). That scale is already held apart from every evidence
+state and from the brand, and it is measured rather than judged, so a chain mark
+can never be mistaken for a verdict. The mark never appears without the chain's
+name beside it, which is the same rule protocol hues follow.
+
+Chain identity is otherwise carried by words and by the chain selector, not by
+repainting the product. Dogecoin does not turn the interface gold and Zcash does
+not turn it yellow: the tokens are the same on all three chains, because the
+evidence vocabulary has to mean the same thing everywhere.
+
 ## Type
 
 A system text face and a system data face, both resolved from the platform.
@@ -251,6 +264,49 @@ above it. A transaction page leads with the hash, not with the word
 
 Panels state what they are, where they lead, and one line on why it matters. The
 note is what turns a number into something a newcomer can act on.
+
+## The status rail
+
+Every chain page opens with the same instrument: five readings, always the same
+five, always in this order.
+
+| Reading | Answers |
+|---|---|
+| Chain | Is this chain answering at all |
+| Chain tip | Which block is the present |
+| Behind tip | How far back the figures on this page are true as of |
+| Last observed | When the reading was taken |
+| Pending coverage | How complete the unconfirmed set is |
+
+Three rules hold it.
+
+- **The rail never loses a reading.** A reading whose fact is missing says so in
+  its own place. A rail with a hole in it reads as a page still loading, which
+  is exactly the wrong thing to communicate when the answer is that a fact is
+  unavailable.
+- **Any lag at all is `partial`, never `proven`.** Zero blocks behind is the
+  only reading that earns the proven treatment, because a page describing a past
+  state of the chain is a partly proven page whatever its other figures say.
+- **Not offered and not stated take different treatments.** A capability the
+  chain declined is `unavailable`; a capability nobody could ask about is
+  `neutral`. Collapsing them would report an unreachable authority as one that
+  answered.
+
+## Numbers
+
+Amounts cross the API as exact decimal strings and are never parsed into a
+JavaScript number anywhere in the presentation path. Grouping and the decimal
+shift are string operations, and every rendered figure keeps the exact source
+string on its `title`, so the value a reader copies is the value the authority
+sent.
+
+The rule that decides whether a figure may be shifted at all is an allowlist of
+the fields that carry the chain's own coin, not a pattern over field names. A
+pattern that matched `supply` once printed a DRC-20 token supply of
+`100000000000` as `1,000 DOGE`, because a token's units are its own and have
+nothing to do with koinu. Anything not on the allowlist is shown as the exact
+integer it arrived as. Shifting an unknown quantity by eight places does not make
+it more readable, it makes it wrong.
 
 ## Writing
 
@@ -281,6 +337,8 @@ WCAG 2.2 AA is the floor, checked automatically rather than remembered.
   colour so a brand-coloured control still shows one.
 - Colour is never the only signal.
 - No critical route overflows horizontally at 320px.
+- A region that scrolls with a mouse takes focus and shows it, so a wide table
+  is reachable from a keyboard. Three chain routes shipped without that.
 - Touch targets clear the minimum on the mobile navigation bar.
 
 `scripts/universe/visual-qa/capture.mjs` drives the whole route matrix across
@@ -296,6 +354,8 @@ changed rather than the chain moving.
 | `frontend/src/styles/_universe-bootstrap-bridge.scss` | the inherited Bootstrap layer, repainted |
 | `frontend/src/theme-dark.scss`, `theme-contrast.scss` | the alternate themes |
 | `frontend/src/app/universe/_universe-tokens.scss` | Universe surface mixins, delegating to the tokens above |
+| `frontend/src/app/universe/multichain-explorer/multichain-view.ts` | the chain presentation model: exact numbers, evidence tones, shape readings |
+| `scripts/universe/visual-qa/chain-fixtures.mjs` | the chain states the matrix holds: at tip, behind tip, authority unreachable, object missing |
 | `scripts/universe/check-text.mjs` | the em dash gate, over source and over the built output |
 | `scripts/universe/check-colors.mjs` | no raw interface colour, including in style and attribute bindings |
 | `scripts/universe/check-palettes.mjs` | every dynamic palette, role separation, theme parity, retired values |
@@ -319,3 +379,12 @@ the numbers were four orders of magnitude too small.
 A route that renders nothing passes every automated check. When a fixture is
 missing or wrong, the review it feeds is not weaker; it is absent, and it
 reports success.
+
+The sixth case was a whole surface rather than a defect. The Dogecoin and Zcash
+routes shipped with no fixture and no route entry, so eleven pages reached
+production without one screenshot, contrast probe or unfinished-page check ever
+looking at them. They are in the matrix now, and the states they hold are the
+ones the interface has to be honest about rather than the ones that are easy to
+produce: a chain at its tip, a chain behind its tip, an authority that cannot be
+reached, and an object that simply does not exist. Chain states are scoped to
+chain routes, so the matrix does not pay for combinations that measure nothing.
