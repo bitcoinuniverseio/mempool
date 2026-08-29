@@ -209,6 +209,7 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
           this.route.snapshot.queryParamMap.get('switchedFrom');
         this.saved = this.isSaved(context);
         this.seo.setTitle(this.pageTitle(context));
+        this.seo.setDescription(this.pageDescription(context));
         this.recordVisit(context);
         return merge(timer(0, 15_000), this.live.stream$(this.chain)).pipe(
           auditTime(100),
@@ -514,6 +515,35 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
       !!this.reference &&
       this.local.isBookmarked(kind, this.reference, this.chain, 'mainnet')
     );
+  }
+
+  /**
+   * What a shared link to this page says it is.
+   *
+   * Without this every chain page fell back to the site description, so a
+   * Dogecoin transaction and the Zcash protocol list previewed identically
+   * wherever a link was pasted.
+   */
+  private pageDescription(context: RequestContext): string {
+    const reference = this.referenceFrom(context);
+    switch (context.page) {
+      case 'dashboard':
+        return $localize`:@@universe.chain.meta-dashboard:What Universe Explorer can answer about ${this.chainName}:CHAIN: right now, how far behind the chain tip each answer is, and which protocol indexers are running.`;
+      case 'mempool':
+        return $localize`:@@universe.chain.meta-mempool:${this.chainName}:CHAIN: transactions seen by Bitcoin Universe's own node and not yet in a block, read from first-party data.`;
+      case 'protocols':
+        return $localize`:@@universe.chain.meta-protocols:The asset protocols Universe Explorer indexes on ${this.chainName}:CHAIN:, and the state and coverage of each indexer.`;
+      case 'transaction':
+        return $localize`:@@universe.chain.meta-transaction:${this.chainName}:CHAIN: transaction ${reference}:REFERENCE:: its state, transparent value, and the protocol actions the authority reported, with the evidence behind each.`;
+      case 'block':
+        return $localize`:@@universe.chain.meta-block:${this.chainName}:CHAIN: block ${reference}:REFERENCE:: its header facts and the transactions it contains, from first-party data.`;
+      case 'address':
+        return $localize`:@@universe.chain.meta-address:${this.chainName}:CHAIN: address ${reference}:REFERENCE:: balance, history, and unspent outputs, with the block each figure is true as of.`;
+      case 'outpoint':
+        return $localize`:@@universe.chain.meta-outpoint:${this.chainName}:CHAIN: output ${reference}:REFERENCE:: what it carries and whether it has been spent.`;
+      default:
+        return $localize`:@@universe.chain.meta-generic:${this.chainName}:CHAIN: data from Bitcoin Universe's own node and protocol indexers, with the evidence behind every claim.`;
+    }
   }
 
   /**
