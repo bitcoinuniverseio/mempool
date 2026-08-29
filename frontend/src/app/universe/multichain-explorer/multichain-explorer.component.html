@@ -439,8 +439,13 @@
                 <ng-template #utxoNoAmount><ng-container i18n="universe.chain.utxo-no-amount">not reported</ng-container></ng-template>
               </td>
               <td class="numeric" [class.secondary]="!utxo.height" [attr.title]="utxo.height?.exact">
-                <ng-container *ngIf="utxo.height; else utxoPending">{{ utxo.height.display }}</ng-container>
-                <ng-template #utxoPending><ng-container i18n="universe.chain.utxo-pending">not in a block yet</ng-container></ng-template>
+                <ng-container *ngIf="utxo.height; else utxoNoHeight">{{ utxo.height.display }}</ng-container>
+                <ng-template #utxoNoHeight>
+                  <ng-container *ngIf="utxo.pending; else utxoHeightUnstated"
+                                i18n="universe.chain.utxo-pending">not in a block yet</ng-container>
+                  <ng-template #utxoHeightUnstated
+                               i18n="universe.chain.utxo-height-unstated">not reported</ng-template>
+                </ng-template>
               </td>
             </tr>
           </tbody>

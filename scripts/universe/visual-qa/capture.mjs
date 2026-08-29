@@ -85,6 +85,7 @@ const ROUTES = [
   // Zcash's block response is not Dogecoin's, and nothing here had ever asked
   // for one. It reached production as a generic field table.
   { id: 'zcash-block', path: `/zcash/block/${chainSampleIds.ZEC_BLOCK}`, name: 'Zcash block' },
+  { id: 'zcash-address', path: `/zcash/address/${chainSampleIds.ZEC_ADDRESS}`, name: 'Zcash address' },
   { id: 'zcash-protocols', path: '/zcash/protocols', name: 'Zcash protocols' },
 
   // Universe-authored routes that had no coverage either. The saved page is
