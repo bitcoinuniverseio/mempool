@@ -53,8 +53,14 @@ const BASE = args.base || 'http://localhost:4200';
 const OUT = resolve(args.out || join(HERE, 'artifacts'));
 const BROWSER = args.browser || 'chromium';
 
-/** Routes under review. `wide` marks pages that legitimately scroll a table. */
-const ROUTES = [
+/**
+ * Routes under review. `wide` marks pages that legitimately scroll a table.
+ *
+ * Exported so the mobile gate walks the same list against the same fixtures.
+ * Two gates with two route lists is two gates that disagree about what the
+ * product is, and the one nobody edits is the one that goes stale.
+ */
+export const ROUTES = [
   { id: 'home', path: '/', name: 'Homepage' },
   { id: 'blocks', path: '/blocks', name: 'Blocks list' },
   { id: 'block', path: `/block/${sampleIds.BLOCK_HASH}`, name: 'Block detail' },
@@ -166,7 +172,7 @@ function pick(list, key, idKey = 'id') {
 }
 
 /** Answer every API call from fixtures, applying the state's overrides. */
-async function installFixtures(context, state) {
+export async function installFixtures(context, state) {
   const overrides = ALL_OVERRIDES[state] || {};
   const table = { ...fixtures, ...detailFixtures, ...addressFixtures, ...chainFixtures, ...assetFixtures };
 

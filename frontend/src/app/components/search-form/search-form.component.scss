@@ -34,21 +34,41 @@
   min-width: 0;
 }
 
+// Searching every chain rather than the one being explored.
+//
+// The label used to be squeezed to 2.4rem below 420px, which wrapped "All
+// chains" onto two lines inside a control barely taller than one of them. The
+// header already gives search a full row of its own below 600px, so the width
+// it was being squeezed out of is width that exists: the label stays on one
+// line and the whole thing is one target rather than a 13px box beside some
+// text.
 .all-chains {
   align-items: center;
   color: var(--u-text-secondary);
+  cursor: pointer;
   display: flex;
   flex: 0 0 auto;
   font-size: var(--u-text-xs);
   gap: var(--u-space-1);
   margin: 0;
   white-space: nowrap;
-}
 
-@media (max-width: 420px) {
-  .all-chains span {
-    max-width: 2.4rem;
-    white-space: normal;
+  @media (pointer: coarse) {
+    min-height: var(--u-touch-target);
+    padding-inline: var(--u-space-1);
+  }
+
+  // The native box is about 13px on every platform, which is under the floor
+  // on its own. The label is part of the same target, and the box is grown so
+  // that the state is legible rather than a speck.
+  input[type='checkbox'] {
+    height: 18px;
+    margin: 0;
+    width: 18px;
+  }
+
+  &:focus-within {
+    color: var(--u-text-primary);
   }
 }
 
@@ -63,10 +83,32 @@
   border: 1px solid var(--u-border-strong);
   border-radius: var(--u-radius-md);
   color: var(--u-text-primary);
-  font-size: var(--u-text-base);
+  // 16px, and not the body scale.
+  //
+  // iOS Safari zooms the entire page in when a focused field computes below
+  // 16px, and it does not zoom back out when the field is blurred. On this
+  // field that meant every search on an iPhone left the visitor on a page
+  // twice as wide as their screen, panning sideways to read the result they
+  // had just asked for. It is an engine threshold, not a preference, so the
+  // only fix is to be at or above it.
+  //
+  // This used to drop to 13px below 576px to fit more of the placeholder in.
+  // That trade is the wrong way round: the placeholder is a hint and the
+  // result list does the real explaining, so a truncated hint costs almost
+  // nothing, while a forced zoom costs something on every single search.
+  font-size: var(--u-text-field);
   height: 40px;
   padding: 0 var(--u-space-3);
   width: 100%;
+
+  // Room for the clear control, which sits inside the field.
+  &.has-text {
+    padding-right: calc(var(--u-touch-target) + var(--u-space-1));
+  }
+
+  @media (pointer: coarse) {
+    height: var(--u-touch-target-comfortable);
+  }
 
   &::placeholder {
     color: var(--u-text-muted);
@@ -81,11 +123,39 @@
     outline: none;
   }
 
-  // The placeholder names four things that can be searched. On a narrow screen
-  // that string is truncated to uselessness, so the field says less and the
-  // result list does the explaining.
-  @media (max-width: 575.98px) {
-    font-size: var(--u-text-sm);
+}
+
+// Clearing the field without aiming at a 12px glyph.
+//
+// A long identifier is exactly the thing a visitor most often wants to replace
+// wholesale, and selecting all of one by dragging inside a single-line field on
+// a phone is a fiddly gesture with no keyboard equivalent. This is the
+// equivalent: one full-size target, present only when there is something to
+// clear, and it returns focus to the field so the next identifier can be typed
+// or pasted straight away.
+.search-clear {
+  align-items: center;
+  background: none;
+  border: 0;
+  border-radius: var(--u-radius-md);
+  color: var(--u-text-secondary);
+  cursor: pointer;
+  display: flex;
+  height: var(--u-touch-target);
+  justify-content: center;
+  position: absolute;
+  right: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: var(--u-touch-target);
+
+  &:hover {
+    color: var(--u-text-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--u-focus-ring);
+    outline-offset: -2px;
   }
 }
 
@@ -110,10 +180,18 @@
   flex: 0 0 auto;
   height: 40px;
   justify-content: center;
+
   transition:
     filter var(--u-duration-fast) var(--u-ease-out),
     box-shadow var(--u-duration-fast) var(--u-ease-out);
   width: 46px;
+
+  // The submit control matches the field it belongs to, and clears the touch
+  // floor on its shorter side. 46px wide was already past it; the height was
+  // not.
+  @media (pointer: coarse) {
+    height: var(--u-touch-target-comfortable);
+  }
 
   // Brightness rather than a second gradient: the measured relationship
   // between the fill and its label survives a uniform lift, and a swapped

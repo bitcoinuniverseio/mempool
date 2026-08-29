@@ -352,6 +352,33 @@ export class SearchFormComponent implements OnInit {
     this.searchAllChains$.next(enabled);
   }
 
+  /**
+   * Whether there is anything to clear.
+   *
+   * Read from the control rather than mirrored into a field of its own, so a
+   * value arriving from anywhere other than a keystroke, such as the reset
+   * after a successful search, cannot leave the button showing over an empty
+   * field.
+   */
+  get hasSearchText(): boolean {
+    return Boolean(this.searchForm?.get('searchText')?.value);
+  }
+
+  /**
+   * Empty the field and hand focus back to it.
+   *
+   * Replacing a 64-character identifier on a phone otherwise means selecting
+   * all of one by dragging inside a single-line field, which is a gesture with
+   * no keyboard equivalent and a poor success rate with a thumb. Focus returns
+   * to the field because clearing is almost always the first half of typing or
+   * pasting something else, and losing the keyboard in between would make it
+   * two actions instead of one.
+   */
+  clearSearch(): void {
+    this.searchForm.setValue({ searchText: '' });
+    this.searchInput?.nativeElement?.focus();
+  }
+
   itemSelected(): void {
     setTimeout(() => this.search());
   }

@@ -139,6 +139,15 @@
   padding: 0 var(--u-space-2);
   pointer-events: all;
 
+  // The height label sits directly above its block, so the two are close
+  // enough that a thumb aimed at one can land on the other. Room around the
+  // text rather than a taller box, so the label stays on the block it names
+  // and the timeline's spacing is unchanged.
+  @media (pointer: coarse), (max-width: 991.98px) {
+    margin-block: -6px;
+    padding-block: 6px;
+  }
+
   &:hover,
   &:focus {
     color: var(--u-brand-hover);
