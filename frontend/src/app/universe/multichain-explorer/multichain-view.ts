@@ -1447,6 +1447,52 @@ export function readTransactionList(
   return { rows, shownCount: shown.length, totalCount: source.length, costColumn };
 }
 
+export interface EmptyListReading {
+  /** The field the list would have come from. */
+  readonly field: string;
+  readonly label: string;
+  /**
+   * True when the authority also said its view is complete, which turns an
+   * empty list into a proven none rather than an absence of knowledge.
+   *
+   * The distinction is the product's whole claim, and this page was missing it:
+   * with no pending Zcash transactions, which is a real and common state, the
+   * page showed a status rail, a record of the snapshot, and nothing at all
+   * where the list would be. A reader could not tell "there are none" from
+   * "the list did not load".
+   */
+  readonly proven: boolean;
+}
+
+/**
+ * An empty list the authority actually returned.
+ *
+ * Only when there is no non-empty array to read instead, so a payload carrying
+ * both a full list and an empty one is described by the full one.
+ */
+export function readEmptyList(
+  payload: ChainExplorerPayload | null
+): EmptyListReading | null {
+  if (!payload || !isRecord(payload)) {
+    return null;
+  }
+  const entries = Object.entries(payload).filter(([, value]) =>
+    Array.isArray(value)
+  );
+  if (!entries.length || entries.some(([, value]) => (value as unknown[]).length)) {
+    return null;
+  }
+  const [field] = entries[0];
+  const snapshot = isRecord(payload.snapshot) ? payload.snapshot : {};
+  const completeness =
+    text(payload.completeness) ?? text(snapshot.completeness);
+  return {
+    field,
+    label: humanizeFieldName(field),
+    proven: completeness === 'complete',
+  };
+}
+
 /**
  * A list of plain identifier strings, which is how block transaction lists and
  * address history arrive. Kept apart from {@link readCollection} because a

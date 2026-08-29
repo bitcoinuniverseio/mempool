@@ -16,6 +16,7 @@ import {
   readBlock,
   readCapabilities,
   readCollection,
+  readEmptyList,
   readOutpoint,
   readPaging,
   readProtocolCoverage,
@@ -623,6 +624,36 @@ describe('readCollection', () => {
 
   it('returns nothing when there is no array to read', () => {
     expect(readCollection({ state: 'unavailable' }, DOGE)).toBeNull();
+  });
+});
+
+describe('readEmptyList', () => {
+  it('calls a complete empty list none, and an incomplete one not established', () => {
+    // The live Zcash pending set is empty and complete, which is a proven none.
+    expect(
+      readEmptyList({ snapshot: { completeness: 'complete' }, transactions: [] })
+    ).toEqual({ field: 'transactions', label: 'Transactions', proven: true });
+
+    expect(
+      readEmptyList({ snapshot: { completeness: 'partial' }, transactions: [] })?.proven
+    ).toBe(false);
+
+    // No completeness stated at all is not a proven none either.
+    expect(readEmptyList({ transactions: [] })?.proven).toBe(false);
+  });
+
+  it('reads a top-level completeness as well as a nested one', () => {
+    expect(readEmptyList({ completeness: 'complete', items: [] })?.proven).toBe(true);
+  });
+
+  it('says nothing when there is a list to show instead', () => {
+    expect(readEmptyList({ transactions: [{ txid: 'a' }] })).toBeNull();
+    expect(readEmptyList({ txids: [], transactions: [{ txid: 'a' }] })).toBeNull();
+  });
+
+  it('says nothing when the payload has no list at all', () => {
+    expect(readEmptyList({ state: 'unavailable' })).toBeNull();
+    expect(readEmptyList(null)).toBeNull();
   });
 });
 

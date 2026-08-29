@@ -326,6 +326,40 @@ export const chainFixtures = {
 };
 
 export const chainStateOverrides = {
+  // A pending set that is genuinely empty and says so.
+  //
+  // This is a real and common production state: at 2026-08-29T08:54Z the live
+  // Zcash pending set held nothing and reported its view complete. It has to
+  // read as a proven none rather than as a list that failed to arrive, and
+  // without a fixture the page said neither.
+  'chain-empty-pending': {
+    '/api/v1/zcash/mempool': {
+      body: {
+        snapshot: {
+          network: 'mainnet',
+          snapshotId: 'zcash-ba6a8834d37e822b13a88c323255e2b3d2c6e68d',
+          sequenceAtomic: '384',
+          completeness: 'complete',
+          transactionCountAtomic: '0',
+          observedAt: new Date(Date.now() - 11_000).toISOString(),
+        },
+        transactions: [],
+      },
+    },
+    '/api/v1/dogecoin/mempool': {
+      body: {
+        snapshot: {
+          network: 'mainnet',
+          snapshotId: 'dogecoin-partial-view',
+          sequenceAtomic: '12',
+          completeness: 'partial',
+          observedAt: new Date(Date.now() - 11_000).toISOString(),
+        },
+        transactions: [],
+      },
+    },
+  },
+
   // Both chain authorities are unreachable. The page must say the status is
   // unavailable and must not present an empty overview as a working one.
   'chain-authority-down': {
@@ -370,6 +404,7 @@ export const chainStateOverrides = {
  * always done.
  */
 export const chainStateScope = {
+  'chain-empty-pending': ['dogecoin-mempool', 'zcash-mempool'],
   'chain-authority-down': ['dogecoin', 'zcash'],
   'chain-behind': ['dogecoin'],
   'chain-object-missing': ['dogecoin'],
