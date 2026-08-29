@@ -11,6 +11,10 @@ explorer.bitcoinuniverse.io          public origin, TLS terminated at the gatewa
   -> universe-explorer-tunnel        forward-only SSH tunnel, 127.0.0.1:8385
   -> universe-indexer-01:8099        universe-explorer-gateway
        /api/v1/universe/*  ->  universe-explorer-overlay   127.0.0.1:3400
+       /api/v1/chains      ->  universe-explorer-overlay   127.0.0.1:3400
+       /api/v1/bitcoin/*   ->  universe-explorer-overlay   127.0.0.1:3400
+       /api/v1/dogecoin/*  ->  universe-explorer-overlay   127.0.0.1:3400
+       /api/v1/zcash/*     ->  universe-explorer-overlay   127.0.0.1:3400
        /api/*              ->  universe-explorer-backend   127.0.0.1:8996
        everything else     ->  the built frontend, SPA fallback
 

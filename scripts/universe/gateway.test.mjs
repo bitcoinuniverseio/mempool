@@ -33,6 +33,32 @@ test('protocol overlay routes reach the overlay unchanged', () => {
   }
 });
 
+test('chain-domain routes reach the overlay unchanged', () => {
+  for (const url of [
+    '/api/v1/chains',
+    '/api/v1/chains?network=mainnet',
+    '/api/v1/bitcoin/status?network=mainnet',
+    '/api/v1/bitcoin/mempool',
+    '/api/v1/dogecoin/status?network=mainnet',
+    '/api/v1/dogecoin/tx/' + 'c'.repeat(64),
+    '/api/v1/dogecoin/protocols/drc20',
+    '/api/v1/zcash/mempool?network=mainnet&limit=100',
+    '/api/v1/zcash/protocols/zrc20/UNIV?ruleset=zrc20-strict',
+  ]) {
+    const pathname = new URL(url, 'http://x.invalid').pathname;
+    const route = routeFor(pathname, url);
+    assert.equal(port(route), OVERLAY_PORT, url);
+    assert.equal(route.path, url, url);
+  }
+});
+
+test('a path that merely begins with a chain name stays on the backend', () => {
+  for (const url of ['/api/v1/chainstats', '/api/v1/bitcoind', '/api/v1/zcashier']) {
+    const pathname = new URL(url, 'http://x.invalid').pathname;
+    assert.equal(port(routeFor(pathname, url)), BACKEND_PORT, url);
+  }
+});
+
 test('explicit v1 routes reach the backend unchanged', () => {
   for (const url of ['/api/v1', '/api/v1/fees/recommended', '/api/v1/backend-info']) {
     const pathname = new URL(url, 'http://x.invalid').pathname;
