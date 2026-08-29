@@ -35,6 +35,7 @@ import { fileURLToPath } from 'node:url';
 import AxeBuilder from '@axe-core/playwright';
 import * as playwright from 'playwright';
 import { addressFixtures, detailFixtures, fixtures, sampleIds, stateOverrides } from './fixtures.mjs';
+import { chainFixtures, chainSampleIds, chainStateOverrides, chainStateScope } from './chain-fixtures.mjs';
 import { contrastProbe } from './contrast-probe.mjs';
 import { progressProbe } from './progress-probe.mjs';
 
@@ -66,6 +67,21 @@ const ROUTES = [
   { id: 'mining', path: '/mining', name: 'Mining dashboard' },
   { id: 'docs', path: '/docs/api', name: 'API docs' },
   { id: 'source', path: '/source', name: 'Source and licenses' },
+
+  // The chain-domain routes. They shipped with no coverage here at all, which
+  // is how eleven routes reached production without one screenshot, contrast
+  // probe or unfinished-page check ever looking at them.
+  { id: 'dogecoin', path: '/dogecoin', name: 'Dogecoin overview' },
+  { id: 'dogecoin-mempool', path: '/dogecoin/mempool', name: 'Dogecoin pending' },
+  { id: 'dogecoin-tx', path: `/dogecoin/tx/${chainSampleIds.DOGE_TXID}`, name: 'Dogecoin transaction' },
+  { id: 'dogecoin-block', path: `/dogecoin/block/${chainSampleIds.DOGE_BLOCK}`, name: 'Dogecoin block' },
+  { id: 'dogecoin-address', path: `/dogecoin/address/${chainSampleIds.DOGE_ADDRESS}`, name: 'Dogecoin address' },
+  { id: 'dogecoin-protocols', path: '/dogecoin/protocols', name: 'Dogecoin protocols' },
+  { id: 'dogecoin-drc20', path: '/dogecoin/protocols/drc20', name: 'DRC-20 assets' },
+  { id: 'zcash', path: '/zcash', name: 'Zcash overview' },
+  { id: 'zcash-mempool', path: '/zcash/mempool', name: 'Zcash pending' },
+  { id: 'zcash-tx', path: `/zcash/tx/${chainSampleIds.ZEC_TXID}`, name: 'Zcash transaction' },
+  { id: 'zcash-protocols', path: '/zcash/protocols', name: 'Zcash protocols' },
 ];
 
 const VIEWPORTS = [
@@ -95,7 +111,15 @@ const SETTLE_DEADLINE_MS = 15_000;
  */
 const FAILURE_SETTLE_DEADLINE_MS = 4_000;
 
-const STATES = ['populated', ...Object.keys(stateOverrides)];
+const ALL_OVERRIDES = { ...stateOverrides, ...chainStateOverrides };
+
+const STATES = ['populated', ...Object.keys(ALL_OVERRIDES)];
+
+/** True when a state is worth measuring on a route. Unscoped states run everywhere. */
+function stateApplies(state, routeId) {
+  const scope = chainStateScope[state];
+  return !scope || scope.some((prefix) => routeId === prefix || routeId.startsWith(`${prefix}-`));
+}
 
 function pick(list, key, idKey = 'id') {
   if (!args[key]) return list;
@@ -105,8 +129,8 @@ function pick(list, key, idKey = 'id') {
 
 /** Answer every API call from fixtures, applying the state's overrides. */
 async function installFixtures(context, state) {
-  const overrides = stateOverrides[state] || {};
-  const table = { ...fixtures, ...detailFixtures, ...addressFixtures };
+  const overrides = ALL_OVERRIDES[state] || {};
+  const table = { ...fixtures, ...detailFixtures, ...addressFixtures, ...chainFixtures };
 
   await context.route('**/api/**', async (route) => {
     const url = new URL(route.request().url());
@@ -304,6 +328,7 @@ async function run() {
         }, theme);
 
         for (const route of routes) {
+          if (!stateApplies(state, route.id)) continue;
           const page = await context.newPage();
           const consoleErrors = [];
           page.on('console', (m) => { if (m.type() === 'error') consoleErrors.push(m.text()); });
@@ -474,7 +499,16 @@ async function run() {
  * transaction and address joined once their waiting and failure states said
  * something instead of holding a bare placeholder.
  */
-export const GATED_ROUTES = new Set(['graphs', 'mining', 'protocols', 'home', 'blocks', 'tx', 'address']);
+export const GATED_ROUTES = new Set([
+  'graphs', 'mining', 'protocols', 'home', 'blocks', 'tx', 'address',
+  // The chain routes join once their status rail, their failure copy and their
+  // empty state all say something. Every one of them reaches a terminal state:
+  // the rail renders all five readings even with no status at all, and a
+  // failed lookup prints why rather than waiting.
+  'dogecoin', 'dogecoin-mempool', 'dogecoin-tx', 'dogecoin-block',
+  'dogecoin-address', 'dogecoin-protocols', 'dogecoin-drc20',
+  'zcash', 'zcash-mempool', 'zcash-tx', 'zcash-protocols',
+]);
 
 /**
  * Fixtures that hold a request open on purpose, to photograph a wait.
