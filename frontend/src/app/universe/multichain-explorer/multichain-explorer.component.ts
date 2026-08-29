@@ -34,6 +34,7 @@ import {
   ProtocolReading,
   ReadCapability,
   StatusReading,
+  TransactionListReading,
   TransactionReading,
   chainProfile,
   classifyPayload,
@@ -47,6 +48,7 @@ import {
   readRecordFacts,
   readStatusRail,
   readTransaction,
+  readTransactionList,
   shortenIdentifier,
 } from '@app/universe/multichain-explorer/multichain-view';
 import {
@@ -90,6 +92,7 @@ interface ExplorerViewModel {
   readonly address: AddressReading | null;
   readonly outpoint: OutpointReading | null;
   readonly collection: CollectionReading | null;
+  readonly transactionList: TransactionListReading | null;
   readonly facts: readonly Fact[];
   /** True when the page is showing a response it has no purpose-built reading for. */
   readonly generic: boolean;
@@ -247,13 +250,21 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
     const block = payload && shape === 'block' ? readBlock(payload) : null;
     const address = payload && shape === 'address' ? readAddress(payload, this.profile) : null;
     const outpoint = payload && shape === 'outpoint' ? readOutpoint(payload, this.profile) : null;
+    // A list of whole transaction envelopes gets read as transactions. Only
+    // what is left over falls through to the generic table.
+    const transactionList =
+      payload && shape === 'collection'
+        ? readTransactionList(payload, this.profile)
+        : null;
     const collection =
-      payload && (shape === 'collection' || shape === 'record')
+      payload && !transactionList && (shape === 'collection' || shape === 'record')
         ? readCollection(payload, this.profile)
         : null;
     const skip = [
       ...(PRESENTED_FIELDS[shape] ?? []),
       ...(collection ? [collection.sourceKey] : []),
+      // The transaction list owns the array it read, whichever field it was in.
+      ...(transactionList ? ['transactions', 'items'] : []),
     ];
     return {
       capability,
@@ -269,6 +280,7 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
       address,
       outpoint,
       collection,
+      transactionList,
       facts: readRecordFacts(payload, this.profile, skip),
       generic: shape === 'collection' || shape === 'record',
     };
@@ -376,6 +388,10 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
 
   trackByText(_index: number, value: string): string {
     return value;
+  }
+
+  trackByTxid(_index: number, item: { txid: string }): string {
+    return item.txid;
   }
 
   private chainFromUrl(url: string): Exclude<ExplorerChain, 'bitcoin'> {

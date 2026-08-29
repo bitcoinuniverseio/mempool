@@ -41,8 +41,20 @@ import {
 } from '@app/universe/universe-evidence';
 
 export interface ChainProtocolTab {
+  /** The path segment the chain API uses, and the route this explorer serves. */
   readonly id: string;
   readonly label: string;
+  /**
+   * Every id the capability envelope might use for this same protocol.
+   *
+   * The route segment and the registry id are different namespaces and they do
+   * not always agree: the API serves TAP on Doge at `/protocols/doge-tap`
+   * while the registry calls it `tap_doge`. Matching on the route id alone
+   * listed the protocol twice on the overview, once from the tab reporting
+   * "not stated" and once appended from the envelope, and neither row was the
+   * whole truth.
+   */
+  readonly registryIds: readonly string[];
 }
 
 export interface ChainProfile {
@@ -63,9 +75,9 @@ const DOGECOIN: ChainProfile = {
   atomicUnit: 'koinu',
   precision: 8,
   protocols: [
-    { id: 'doginals', label: 'Doginals' },
-    { id: 'drc20', label: 'DRC-20' },
-    { id: 'doge-tap', label: 'Doge TAP' },
+    { id: 'doginals', label: 'Doginals', registryIds: ['doginals'] },
+    { id: 'drc20', label: 'DRC-20', registryIds: ['drc20'] },
+    { id: 'doge-tap', label: 'TAP on Doge', registryIds: ['tap_doge', 'doge-tap', 'tap-on-doge', 'tap-doge'] },
   ],
 };
 
@@ -76,9 +88,9 @@ const ZCASH: ChainProfile = {
   atomicUnit: 'zatoshi',
   precision: 8,
   protocols: [
-    { id: 'zerdinals', label: 'Zerdinals' },
-    { id: 'zrunes', label: 'ZRunes' },
-    { id: 'zrc20', label: 'ZRC-20' },
+    { id: 'zerdinals', label: 'Zerdinals', registryIds: ['zerdinals', 'universe-zerdinals'] },
+    { id: 'zrunes', label: 'ZRunes', registryIds: ['zrunes'] },
+    { id: 'zrc20', label: 'ZRC-20', registryIds: ['zrc20'] },
   ],
 };
 
@@ -467,7 +479,19 @@ export function readRecordFacts(
         if (childValue !== null && typeof childValue === 'object') {
           continue;
         }
-        const fact = factFrom(`${key} ${childKey}`, childValue, profile);
+        // A nested chain or network repeats the page heading, the same way the
+        // top-level ones do, and the skip list only reaches the top level.
+        if (childKey === 'chain' || childKey === 'network') {
+          continue;
+        }
+        // "snapshot" plus "snapshotId" reads as "Snapshot snapshot ID". Where
+        // the child already names its parent, the parent is not repeated.
+        const prefixed = childKey.toLowerCase().startsWith(key.toLowerCase());
+        const fact = factFrom(
+          prefixed ? childKey : `${key} ${childKey}`,
+          childValue,
+          profile
+        );
         if (fact) {
           facts.push(fact);
         }
@@ -698,6 +722,14 @@ export function readCapabilities(
 export interface ProtocolReading {
   readonly protocolId: string;
   readonly label: string;
+  /**
+   * The route this protocol has, or null when the explorer serves none for it.
+   * A protocol the chain reports but this explorer cannot open is still listed,
+   * because hiding it would be a claim the chain did not make, but it is not
+   * linked: `/dogecoin/protocols/dunes` answers 404 and the frontend throws
+   * before it even asks.
+   */
+  readonly routeId: string | null;
   readonly stateLabel: string;
   readonly tone: EvidenceTone;
   readonly coverageLabel: string;
@@ -712,21 +744,22 @@ export function readProtocolCoverage(
 ): readonly ProtocolReading[] {
   const declared = capability?.protocols ?? [];
   const byId = new Map(declared.map((entry) => [entry.protocolId, entry]));
-  // The profile's tabs are the list the navigation offers, so a protocol the
-  // overlay stopped reporting still appears, marked as not stated, instead of
-  // vanishing from a page that links to it.
-  const ids = [
-    ...profile.protocols.map((tab) => tab.id),
-    ...declared
-      .map((entry) => entry.protocolId)
-      .filter((id) => !profile.protocols.some((tab) => tab.id === id)),
-  ];
-  return ids.map((protocolId) => {
-    const entry = byId.get(protocolId);
-    const tab = profile.protocols.find((candidate) => candidate.id === protocolId);
+  const claimed = new Set<string>();
+
+  // The tabs first, in the order the navigation offers them, each matched to
+  // whichever id the envelope used for it. A tab the overlay stopped reporting
+  // still appears, marked as not stated, rather than vanishing from a page
+  // that links to it.
+  const readings: ProtocolReading[] = profile.protocols.map((tab) => {
+    const matchedId = tab.registryIds.find((id) => byId.has(id));
+    if (matchedId) {
+      claimed.add(matchedId);
+    }
+    const entry = matchedId ? byId.get(matchedId) : undefined;
     return {
-      protocolId,
-      label: tab?.label ?? humanizeFieldName(protocolId),
+      protocolId: matchedId ?? tab.id,
+      label: tab.label,
+      routeId: tab.id,
       stateLabel: availabilityLabel(entry?.state),
       tone: availabilityTone(entry?.state),
       coverageLabel: completenessLabel(entry?.coverage),
@@ -735,6 +768,27 @@ export function readProtocolCoverage(
       reasons: entry?.degradedReasons ?? [],
     };
   });
+
+  // Then anything the chain reports that this explorer has no page for. It is
+  // listed, because the chain said it is there, and it is not linked, because
+  // the route would throw before it asked.
+  for (const entry of declared) {
+    if (claimed.has(entry.protocolId)) {
+      continue;
+    }
+    readings.push({
+      protocolId: entry.protocolId,
+      label: humanizeFieldName(entry.protocolId),
+      routeId: null,
+      stateLabel: availabilityLabel(entry.state),
+      tone: availabilityTone(entry.state),
+      coverageLabel: completenessLabel(entry.coverage),
+      historyLabel: historyLabel(entry.coverage),
+      lag: formatExactInteger(entry.lagBlocksAtomic ?? null),
+      reasons: entry.degradedReasons ?? [],
+    });
+  }
+  return readings;
 }
 
 // ---------------------------------------------------------------------------
@@ -1220,6 +1274,8 @@ export interface CollectionReading {
    * how many it is holding back and the full response stays one click away.
    */
   readonly hiddenColumnCount: number;
+  /** Fields that were identical on every row, and so became no column at all. */
+  readonly constantColumnCount: number;
 }
 
 /** How many rows a page renders before it says how many it is holding back. */
@@ -1271,8 +1327,23 @@ export function readCollection(
       }
     }
   }
-  const hiddenColumnCount = Math.max(0, order.length - COLLECTION_COLUMN_LIMIT);
-  const columns = order.slice(0, COLLECTION_COLUMN_LIMIT).map((key) => ({
+
+  // A column whose value is the same on every row tells a reader nothing, and
+  // it costs one of the few slots a table has on a phone. The live mempool
+  // response is the case that showed it: its rows are whole transaction
+  // envelopes, so schemaVersion, chain and network were three of the seven
+  // columns and every cell in them was identical. They are still reported,
+  // once each, by the record reading beside the table.
+  const varying =
+    scalarRows.length > 1
+      ? order.filter((key) => {
+          const first = scalarRows[0][key];
+          return scalarRows.some((row) => row[key] !== first);
+        })
+      : order;
+  const constantColumnCount = order.length - varying.length;
+  const hiddenColumnCount = Math.max(0, varying.length - COLLECTION_COLUMN_LIMIT);
+  const columns = varying.slice(0, COLLECTION_COLUMN_LIMIT).map((key) => ({
     key,
     label: humanizeFieldName(key),
     numeric: isCoinAmount(key) || /Atomic$/.test(key),
@@ -1292,7 +1363,88 @@ export function readCollection(
     shownCount: shown.length,
     totalCount: source.length,
     hiddenColumnCount,
+    constantColumnCount,
   };
+}
+
+export interface TransactionListRow {
+  readonly txid: string;
+  readonly statusLabel: string;
+  readonly statusTone: EvidenceTone;
+  readonly firstSeenAt: ExactNumber | null;
+  readonly size: ExactNumber | null;
+  readonly fee: ExactNumber | null;
+  readonly logicalActions: ExactNumber | null;
+}
+
+/**
+ * What the cost column can honestly be, decided by what the rows carry.
+ *
+ * Dogecoin reports a fee amount and no rate. Zcash reports no amount at all on
+ * a pending transaction, because a shielded transaction's fee is not derivable
+ * from its transparent side, and reports ZIP-317 logical actions instead. A
+ * fixed "Fee" column would have been empty on every row of the Zcash pending
+ * list, which is the page's most valuable column spent on nothing.
+ */
+export type TransactionCostColumn = 'amount' | 'logical-actions' | 'none';
+
+export interface TransactionListReading {
+  readonly rows: readonly TransactionListRow[];
+  readonly shownCount: number;
+  readonly totalCount: number;
+  readonly costColumn: TransactionCostColumn;
+}
+
+/**
+ * A pending set, read as transactions rather than as a table of field names.
+ *
+ * The live mempool response carries whole transaction envelopes, one per row,
+ * not the summary rows the fixtures assumed. Rendered generically that produced
+ * seven columns of which three were the same on every row, and the two figures
+ * a reader actually wants from a pending list, what it pays and how big it is,
+ * were not among them.
+ */
+export function readTransactionList(
+  payload: ChainExplorerPayload | null,
+  profile: ChainProfile
+): TransactionListReading | null {
+  if (!payload || !isRecord(payload)) {
+    return null;
+  }
+  const source = Object.values(payload).find(
+    (value): value is unknown[] =>
+      Array.isArray(value) &&
+      value.length > 0 &&
+      value.every((entry) => classifyPayload(entry as ChainExplorerPayload) === 'transaction')
+  );
+  if (!source) {
+    return null;
+  }
+  const shown = source.slice(0, COLLECTION_ROW_LIMIT).filter(isRecord);
+  const rows = shown.map((entry) => {
+    const status = text(entry.status) ?? '';
+    const fee = isRecord(entry.fee) ? entry.fee : {};
+    return {
+      txid: text(entry.txid) ?? '',
+      statusLabel: LIFECYCLE_LABEL[status] ?? availabilityLabel(status),
+      statusTone: LIFECYCLE_TONE[status] ?? 'neutral',
+      firstSeenAt: formatTimestamp(text(entry.firstSeenAt)),
+      size: formatExactInteger(text(entry.sizeBytesAtomic)),
+      fee: formatAtomicAmount(text(fee.amountAtomic), profile.precision),
+      logicalActions: formatExactInteger(text(fee.logicalActionsAtomic)),
+    };
+  });
+
+  // The amount wins where any row has one, because it is the figure a reader
+  // is looking for. Logical actions are the fallback only when no row reports
+  // an amount at all, which is the shielded case rather than a gap.
+  const costColumn: TransactionCostColumn = rows.some((row) => row.fee)
+    ? 'amount'
+    : rows.some((row) => row.logicalActions)
+      ? 'logical-actions'
+      : 'none';
+
+  return { rows, shownCount: shown.length, totalCount: source.length, costColumn };
 }
 
 /**
