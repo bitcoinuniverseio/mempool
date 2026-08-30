@@ -68,10 +68,10 @@ describe('live dogecoin status', () => {
     expect(tap).toHaveLength(1);
     expect(tap[0].routeId).toBe('doge-tap');
 
-    // dunes is reported by the chain and has no page here.
+    // dunes is reported by the chain and now has a page of its own.
     const dunes = readings.find((r) => r.protocolId === 'dunes');
     expect(dunes).toBeDefined();
-    expect(dunes?.routeId).toBeNull();
+    expect(dunes?.routeId).toBe('dunes');
   });
 });
 

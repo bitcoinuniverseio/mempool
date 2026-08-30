@@ -348,7 +348,7 @@ describe('readCapabilities', () => {
   it('lists every read, marking the ones the chain does not offer', () => {
     const reads = readCapabilities(capability());
     expect(reads.map((r) => r.id)).toEqual([
-      'transaction', 'block', 'address', 'outpoint', 'feeEstimates', 'projectedBlocks',
+      'transaction', 'block', 'address', 'outpoint', 'feeEstimates', 'projectedBlocks', 'candidateBuckets',
     ]);
     expect(reads.find((r) => r.id === 'projectedBlocks')?.state).toBe('not-offered');
     expect(reads.find((r) => r.id === 'transaction')?.state).toBe('offered');
@@ -364,7 +364,7 @@ describe('readCapabilities', () => {
 describe('readProtocolCoverage', () => {
   it('shows every protocol the navigation offers, even one the overlay stopped reporting', () => {
     const readings = readProtocolCoverage(capability({ protocols: [] }), DOGE);
-    expect(readings.map((r) => r.routeId)).toEqual(['doginals', 'drc20', 'doge-tap']);
+    expect(readings.map((r) => r.routeId)).toEqual(['doginals', 'drc20', 'doge-tap', 'dunes']);
     expect(readings[0].tone).toBe('neutral');
   });
 
@@ -379,7 +379,7 @@ describe('readProtocolCoverage', () => {
       }),
       DOGE
     );
-    expect(readings).toHaveLength(3);
+    expect(readings).toHaveLength(4);
     const tap = readings.find((r) => r.routeId === 'doge-tap');
     expect(tap?.tone).toBe('partial');
     expect(tap?.label).toBe('TAP on Doge');
@@ -387,9 +387,24 @@ describe('readProtocolCoverage', () => {
   });
 
   it('lists a protocol it has no page for, and offers no route to it', () => {
-    // /dogecoin/protocols/dunes answers 404 and the API service throws before
-    // it asks, so a link there is a dead end. Hiding it would be a claim the
-    // chain did not make.
+    // A protocol this build has no tab for gets no link: the API service
+    // throws before it asks, so a link there is a dead end. Hiding it would
+    // be a claim the chain did not make. Dunes was the live example until it
+    // got a page of its own, so the case now uses an id no tab claims.
+    const readings = readProtocolCoverage(
+      capability({
+        protocols: [
+          { protocolId: 'moon_bones', state: 'unavailable', coverage: 'unavailable', updatedAt: null, lagBlocksAtomic: null, degradedReasons: [] },
+        ],
+      }),
+      DOGE
+    );
+    const unclaimed = readings.find((r) => r.protocolId === 'moon_bones');
+    expect(unclaimed).toBeDefined();
+    expect(unclaimed?.routeId).toBeNull();
+  });
+
+  it('routes dunes to its own page', () => {
     const readings = readProtocolCoverage(
       capability({
         protocols: [
@@ -399,8 +414,7 @@ describe('readProtocolCoverage', () => {
       DOGE
     );
     const dunes = readings.find((r) => r.protocolId === 'dunes');
-    expect(dunes).toBeDefined();
-    expect(dunes?.routeId).toBeNull();
+    expect(dunes?.routeId).toBe('dunes');
     expect(dunes?.label).toBe('Dunes');
   });
 
