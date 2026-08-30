@@ -443,6 +443,29 @@ matrix, and both fixed layers eat into it. The header drops to 48px, the bottom
 bar puts each icon beside its label instead of above it, and the scroll padding
 comes down to match. No destination and no control is removed to buy the space.
 
+### Reserving room for data that has not arrived
+
+In a column with a viewport height, anything that grows moves everything below
+it, and a panel that grows by a third of the screen is the whole layout-shift
+budget on its own. So a block that will be filled from the network reserves its
+room before the answer arrives, and the loading state fills that same box.
+
+The reservation needs one height, and states that carry different content do
+not have one by default. The transaction tracker is the worked example. Its
+rows under the tracker bar settle at two sizes: a pending transaction shows a
+first-seen time and an ETA, one line each; a confirmed one shows a timestamp
+whose relative time goes to a second line below 992px, and a confirmation count
+that is a button rather than a line of text. Reserving the smaller trades one
+shift for another.
+
+The rule that follows: give the row the reservation, not the block. Every row
+in that panel is two lines of value tall, because the tallest of them is, so
+both settled states are 4.5em a row, the block holds 9em with nothing in it,
+and skeleton rows fill it while the transaction is being read. Nothing moves
+when the answer arrives, and nothing moves again if a watched transaction
+confirms. Rows taller than their content centre it, because a reservation that
+shows as a gap under the text reads as a mistake.
+
 ### The safe area
 
 `viewport-fit=cover` is set, so the page runs under the notch and the home
@@ -619,7 +642,7 @@ rather than of the machine:
 | Budget | Value | Why it is gateable |
 |---|---|---|
 | eager payload, compressed | 480kB | the same commit gives the same number anywhere |
-| cumulative layout shift | 0.1 | a property of the stylesheet, not the clock |
+| cumulative layout shift | 0.1 | mostly the stylesheet, and the load can only add to it |
 
 The eager payload is runtime, polyfills, main and styles: what a browser must
 have before the shell exists. Measured at `bea93c1ec`, develop was 463kB
@@ -627,26 +650,26 @@ compressed and 1655kB raw; with the mobile work it is 464kB and 1659kB. The
 ceiling is set where a real regression trips it and ordinary drift does not.
 Raise it deliberately, and say what bought the bytes.
 
+Layout shift is less deterministic than a stylesheet property sounds. The same
+tree measured 0.042, 0.046 and 0.069 on the blocks route across three machines,
+because a busier machine delivers content later and a shift that lands after
+the first paint counts while the same shift before it does not. Load can only
+add shifts, never remove one, so a route over its ceiling is measured again, up
+to twice, and judged on the smallest reading. The table says when a route was
+measured more than once, because a gate that quietly retries until it passes is
+worse than one that fails.
+
 Largest contentful paint is printed and not gated. The 2.5 second target is a
 field number for a real device on a real network, and this is a throttled
 headless browser on a runner that is also building and serving. The same commit
 measured twelve seconds and twenty on two routes whose shells are identical. A
 number that swings by eight seconds between runs of the same code cannot gate
 anything; used as one it fails honest changes and passes slow ones depending on
-what else the machine is doing. What is still failed is a paint that never
-happens, which is a shell that did not render rather than one that rendered
-slowly.
-
-One route is over the layout budget for a reason that is written down rather
-than hidden. On the transaction route, at about three seconds, `div.panel`
-grows from 46 to 193 pixels as the tracker bar and the confirmations render
-into it, pushing `div.bottom-panel` down 148 pixels. That is 0.103 of shift,
-measured on develop before this work and 0.108 after. It is recorded with its
-figure and printed every run, and the route is held to that figure, so drifting
-further fails even while it is over. Reserving the room means knowing the
-panel's height before the transaction is read, and it is not one height: an
-alert, a tracker bar and a confirmation count are three different sizes. That
-is work on the tracker's loading design, not on the shell.
+what else the machine is doing. The paint is waited for rather than read once,
+and when it still has not arrived the page is asked what is on it: a screenful
+of text with no paint entry is a measurement problem and is reported as one,
+while a page with nothing on it is the fault the check exists for. That
+distinction does not move with the load.
 
 ### Real devices
 
@@ -674,7 +697,7 @@ rotation, back navigation, and a live update arriving.
 | `scripts/universe/visual-qa/capture.mjs` | the route matrix: themes, widths, and data states |
 | `scripts/universe/visual-qa/modes-check.mjs` | forced colours and 200 percent zoom |
 | `scripts/universe/visual-qa/mobile-check.mjs` | the mobile gate: windows, insets, targets, fixed layers, rotation |
-| `scripts/universe/visual-qa/mobile-perf.mjs` | the payload, the layout shift, and the recorded exception to it |
+| `scripts/universe/visual-qa/mobile-perf.mjs` | the payload, the layout shift, and the table for recording a route that is over budget |
 | `frontend/src/app/universe/universe-viewport.service.ts` | the visual viewport, published as CSS, for the software keyboard |
 | `scripts/universe/visual-qa/fixtures.mjs` | the data every reviewed route renders from |
 
