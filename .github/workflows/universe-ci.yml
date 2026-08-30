@@ -304,6 +304,15 @@ jobs:
       - name: Keep the contrast report and the route screenshots
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        # Diagnostic only. The gate that decides this job has already run and
+        # failed it if it was going to, so an artifact store that will not take
+        # a screenshot cannot turn a green gate red, and cannot hide a red one
+        # either. It happened: the account hit its Actions storage quota and
+        # every browser job began reporting failure with "No mobile failures"
+        # printed directly above the error. The release artifact upload is
+        # deliberately not marked this way, because there the upload is the
+        # product rather than a report about it.
+        continue-on-error: true
         with:
           name: universe-visual-qa
           path: |
@@ -397,6 +406,9 @@ jobs:
       - name: Keep the mobile report
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        # Diagnostic only: an artifact store that will not take a screenshot
+        # must not turn a green gate red. See the note in the first such step.
+        continue-on-error: true
         with:
           name: universe-mobile-qa
           path: |
@@ -504,6 +516,9 @@ jobs:
       - name: Keep the engine reports
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        # Diagnostic only: an artifact store that will not take a screenshot
+        # must not turn a green gate red. See the note in the first such step.
+        continue-on-error: true
         with:
           name: universe-mobile-engines
           path: |
