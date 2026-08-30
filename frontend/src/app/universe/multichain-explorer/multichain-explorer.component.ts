@@ -98,7 +98,6 @@ import {
 } from 'rxjs';
 
 type MultichainPage =
-  | 'dashboard'
   | 'mempool'
   | 'block'
   | 'transaction'
@@ -225,7 +224,7 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
   readonly chainName: string;
   readonly ticker: string;
   readonly protocolIds: readonly string[];
-  page: MultichainPage = 'dashboard';
+  page: MultichainPage = 'mempool';
   reference = '';
   saved = false;
   switchedFrom: string | null = null;
@@ -436,8 +435,6 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
 
   pageLabel(): string {
     switch (this.page) {
-      case 'dashboard':
-        return $localize`:@@universe.chain.page-dashboard:overview`;
       case 'mempool':
         return $localize`:@@universe.chain.page-mempool:pending transactions`;
       case 'block':
@@ -466,8 +463,6 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
   /** One sentence saying what the reader is looking at, under the heading. */
   pageLede(): string {
     switch (this.page) {
-      case 'dashboard':
-        return $localize`:@@universe.chain.lede-dashboard:What this explorer can answer about ${this.chainName}:CHAIN: right now, and how far behind the chain tip each answer is.`;
       case 'mempool':
         return $localize`:@@universe.chain.lede-mempool:Transactions seen by our own ${this.chainName}:CHAIN: node and not yet in a block.`;
       case 'protocols':
@@ -629,8 +624,6 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
     const reference = context.params.get('reference') ?? '';
     const protocol = context.params.get('protocol') ?? '';
     switch (context.page) {
-      case 'dashboard':
-        return of(null);
       case 'mempool':
         return this.api.getChainMempool$(this.chain);
       case 'transaction':
@@ -744,8 +737,6 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
   private pageDescription(context: RequestContext): string {
     const reference = this.referenceFrom(context);
     switch (context.page) {
-      case 'dashboard':
-        return $localize`:@@universe.chain.meta-dashboard:What Universe Explorer can answer about ${this.chainName}:CHAIN: right now, how far behind the chain tip each answer is, and which protocol indexers are running.`;
       case 'mempool':
         return $localize`:@@universe.chain.meta-mempool:${this.chainName}:CHAIN: transactions seen by Bitcoin Universe's own node and not yet in a block, read from first-party data.`;
       case 'protocols':

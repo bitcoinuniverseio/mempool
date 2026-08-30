@@ -1,0 +1,70 @@
+<ng-container *ngIf="vm$ | async as vm">
+
+  <div class="range-controls" role="radiogroup"
+       aria-label="Time range" i18n-aria-label="universe.graphs.range-label">
+    <button type="button" *ngFor="let range of vm.ranges; trackBy: trackByRange"
+            class="range-option"
+            [class.active]="range.id === vm.activeRange"
+            [disabled]="range.disabled"
+            [attr.title]="range.disabled ? rangeDisabledTitle : null"
+            role="radio" [attr.aria-checked]="range.id === vm.activeRange"
+            (click)="setRange(range.id)">{{ range.id }}</button>
+  </div>
+
+  <figure class="panel chart-card" *ngFor="let card of vm.cards; trackBy: trackByCard">
+
+    <figcaption class="chart-caption">
+      <h2>{{ card.title }}</h2>
+      <button type="button" class="table-toggle"
+              *ngIf="card.status === 'ready'"
+              [attr.aria-pressed]="vm.tables.has(card.id)"
+              (click)="toggleTable(card.id)">
+        <ng-container *ngIf="!vm.tables.has(card.id)" i18n="universe.graphs.view-table">View as table</ng-container>
+        <ng-container *ngIf="vm.tables.has(card.id)" i18n="universe.graphs.view-chart">View as chart</ng-container>
+      </button>
+    </figcaption>
+
+    <div class="chart-skeleton" *ngIf="card.status === 'loading' || (card.status === 'ready' && !isBrowser)" aria-hidden="true"></div>
+
+    <p class="notice failure" role="alert" *ngIf="card.status === 'error'">
+      <span i18n="universe.graphs.fetch-failed">This chart cannot be fetched right now.</span>
+      <button type="button" class="retry-button" (click)="retry()" i18n="universe.graphs.retry">Retry</button>
+    </p>
+
+    <p class="notice empty" *ngIf="card.status === 'empty'" i18n="universe.graphs.no-history">
+      The collector has not stored any history for this range yet. It appears here as the collector runs.
+    </p>
+
+    <ng-container *ngIf="card.status === 'ready'">
+      <p class="notice empty history-note" *ngIf="card.historyStart" i18n="universe.graphs.history-starts">
+        Stored history for this chart starts at {{ card.historyStart }}. Earlier times in this range have nothing to show.
+      </p>
+
+      <div class="chart" *ngIf="isBrowser && !vm.tables.has(card.id)"
+           echarts [initOpts]="chartInitOptions" [options]="card.options!"></div>
+
+      <div class="table-wrap" *ngIf="vm.tables.has(card.id)"
+           tabindex="0" role="region" [attr.aria-label]="card.title">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col" i18n="universe.graphs.col-time">Time</th>
+              <th scope="col" class="numeric" *ngFor="let head of card.tableHead">{{ head }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of card.tableRows">
+              <td>{{ row.time }}</td>
+              <td class="numeric" *ngFor="let value of row.values" [class.secondary]="value === ''">
+                <ng-container *ngIf="value !== ''; else pointAbsent">{{ value }}</ng-container>
+                <ng-template #pointAbsent><ng-container i18n="universe.graphs.point-absent">not recorded</ng-container></ng-template>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </ng-container>
+
+  </figure>
+
+</ng-container>

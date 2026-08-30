@@ -1,0 +1,253 @@
+// Shared skeleton for every chain page: the dashboard, the pending set, the
+// mining page, the charts shell, the docs page, and the object pages. One
+// mixin so a Dogecoin panel and a Zcash table cannot drift apart, and so a
+// new chain page starts from the house grammar rather than a second set of
+// literals. Everything is a token or derived from one.
+
+@use 'universe-tokens' as u;
+
+@mixin universe-chain-page {
+  .chain-page {
+    padding: 1.25rem 0 3rem;
+    color: var(--u-text-primary);
+  }
+
+  // A chain gets a mark, not a colour that means something. The hue comes
+  // from the protocol scale, which is held away from every evidence state,
+  // and it never appears without the chain's name beside it.
+  .chain-mark {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: var(--u-radius-pill);
+    flex: none;
+    align-self: center;
+
+    &.chain-mark-dogecoin {
+      background: var(--universe-protocol-ordinals);
+    }
+
+    &.chain-mark-zcash {
+      background: var(--universe-protocol-alkanes);
+    }
+  }
+
+  .lede {
+    margin: 0 0 var(--u-space-4);
+    max-width: var(--u-width-prose);
+    color: var(--u-text-secondary);
+    line-height: var(--u-leading-normal);
+  }
+
+  .status-rail {
+    @include u.universe-surface;
+
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+    gap: var(--u-space-3) var(--u-space-5);
+    padding: var(--u-space-3) var(--u-space-4);
+    margin-bottom: var(--u-space-3);
+  }
+
+  .reading {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-width: 0;
+  }
+
+  .reading-label {
+    color: var(--u-text-muted);
+    font-size: var(--u-text-2xs);
+    font-weight: var(--u-weight-semibold);
+    letter-spacing: var(--u-eyebrow-tracking);
+    text-transform: uppercase;
+  }
+
+  .universe-chip {
+    @include u.universe-chip;
+  }
+
+  .panel {
+    @include u.universe-surface;
+
+    padding: var(--u-space-4);
+    margin-bottom: var(--u-space-3);
+
+    h2 {
+      font-size: var(--u-text-lg);
+      font-weight: var(--u-weight-semibold);
+      margin: 0 0 var(--u-space-3);
+    }
+
+    h3 {
+      font-size: var(--u-text-base);
+      font-weight: var(--u-weight-semibold);
+      color: var(--u-text-secondary);
+      margin: var(--u-space-4) 0 var(--u-space-2);
+    }
+
+    h3:first-of-type {
+      margin-top: 0;
+    }
+  }
+
+  .panel-lede {
+    color: var(--u-text-secondary);
+    font-size: var(--u-text-sm);
+    line-height: var(--u-leading-normal);
+    max-width: var(--u-width-prose);
+    margin: 0 0 var(--u-space-3);
+  }
+
+  .notice {
+    @include u.universe-surface;
+
+    padding: var(--u-space-3) var(--u-space-4);
+    margin-bottom: var(--u-space-3);
+    font-size: var(--u-text-sm);
+    line-height: var(--u-leading-normal);
+    max-width: var(--u-width-prose);
+
+    &.switched {
+      border-left: 3px solid var(--universe-state-pending);
+    }
+
+    &.failure {
+      border-left: 3px solid var(--universe-state-unavailable);
+      color: var(--universe-state-unavailable);
+    }
+
+    &.empty {
+      border-left: 3px solid var(--universe-state-neutral);
+      color: var(--u-text-secondary);
+    }
+  }
+
+  .secondary {
+    color: var(--u-text-muted);
+  }
+
+  .identifier {
+    @include u.universe-identifier;
+  }
+
+  .numeric {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .dot {
+    display: inline-block;
+    width: 3px;
+    height: 3px;
+    margin: 0 0.45rem;
+    border-radius: var(--u-radius-pill);
+    background: var(--u-text-faint);
+    vertical-align: middle;
+  }
+
+  .facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+    gap: var(--u-space-3) var(--u-space-5);
+    margin: 0;
+
+    > div {
+      min-width: 0;
+    }
+
+    dt {
+      color: var(--u-text-muted);
+      font-size: var(--u-text-xs);
+      font-weight: var(--u-weight-medium);
+    }
+
+    dd {
+      margin: 0.2rem 0 0;
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  .figure-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: var(--u-space-4);
+  }
+
+  .figure {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-width: 0;
+  }
+
+  .figure-label {
+    color: var(--u-text-muted);
+    font-size: var(--u-text-2xs);
+    font-weight: var(--u-weight-semibold);
+    letter-spacing: var(--u-eyebrow-tracking);
+    text-transform: uppercase;
+  }
+
+  .figure-value {
+    font-family: var(--u-font-data);
+    font-size: var(--u-text-xl);
+    font-variant-numeric: tabular-nums;
+    font-weight: var(--u-weight-semibold);
+    line-height: var(--u-leading-tight);
+    overflow-wrap: anywhere;
+  }
+
+  .figure-unit {
+    color: var(--u-text-muted);
+    font-size: var(--u-text-sm);
+    font-weight: var(--u-weight-normal);
+  }
+
+  // A table wide enough to scroll is a scrollable region, and a region a
+  // mouse can pan has to be reachable from a keyboard too. It takes focus,
+  // so it also has to show that it has it.
+  .table-wrap {
+    overflow-x: auto;
+
+    &:focus-visible {
+      outline: 2px solid var(--u-focus-ring);
+      outline-offset: 2px;
+    }
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--u-text-sm);
+  }
+
+  thead th {
+    color: var(--u-text-muted);
+    font-size: var(--u-text-2xs);
+    font-weight: var(--u-weight-semibold);
+    letter-spacing: var(--u-eyebrow-tracking);
+    text-transform: uppercase;
+    text-align: left;
+    padding: 0 var(--u-space-3) var(--u-space-2) 0;
+    border-bottom: 1px solid var(--u-border);
+    white-space: nowrap;
+
+    &.numeric {
+      text-align: right;
+    }
+  }
+
+  tbody td {
+    padding: var(--u-space-2) var(--u-space-3) var(--u-space-2) 0;
+    border-bottom: 1px solid var(--u-divider);
+    vertical-align: top;
+    overflow-wrap: anywhere;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+}
