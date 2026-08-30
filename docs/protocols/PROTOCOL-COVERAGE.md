@@ -14,7 +14,7 @@ Release status semantics: every protocol starts BLOCKED and is upgraded only whe
 its explorer integration is completed and verified against its Universe authority.
 A protocol never silently disappears from this table.
 
-Registry version 1.0.0. 3 of 36 protocols are readable today; the rest are recorded here but not yet served.
+Registry version 1.0.0. 6 of 38 protocols are readable today; the rest are recorded here but not yet served.
 
 | id | family | chain | authority | release status | coverage |
 |---|---|---|---|---|---|
@@ -52,5 +52,7 @@ Registry version 1.0.0. 3 of 36 protocols are readable today; the rest are recor
 | doginals | OTHER | dogecoin | ord-dogecoin | BLOCKED | unknown |
 | drc20 | OTHER | dogecoin | ord-dogecoin | BLOCKED | unknown |
 | tap_doge | OTHER | dogecoin | index-doge-tap | BLOCKED | unknown |
-| zerdinals | OTHER | zcash | index-zcash-metaprotocols | BLOCKED | unknown |
-| zrunes | OTHER | zcash | index-zcash-metaprotocols | BLOCKED | unknown |
+| dunes | OTHER | dogecoin | ord-dogecoin | BLOCKED | unknown |
+| zerdinals | OTHER | zcash | index-zcash-metaprotocols | VERIFIED READ ONLY | complete |
+| zrunes | OTHER | zcash | index-zcash-metaprotocols | VERIFIED READ ONLY | complete |
+| zrc20 | OTHER | zcash | index-zcash-metaprotocols | VERIFIED READ ONLY | complete |
