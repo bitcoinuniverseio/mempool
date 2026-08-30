@@ -1,0 +1,148 @@
+@use '../universe-tokens' as u;
+@use '../chain-page' as page;
+
+:host {
+  @include u.universe-protocol-tokens;
+  @include u.universe-state-tokens;
+
+  display: block;
+}
+
+@include page.universe-chain-page;
+
+.range-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--u-space-2);
+  margin-bottom: var(--u-space-3);
+}
+
+.range-option {
+  border: 1px solid var(--u-border);
+  border-radius: var(--u-radius-pill);
+  background: var(--u-surface-raised);
+  color: var(--u-text-secondary);
+  font-size: var(--u-text-sm);
+  padding: 0.3rem 0.8rem;
+  cursor: pointer;
+
+  @include u.universe-motion(all, var(--u-duration-fast));
+
+  &:hover:not(:disabled) {
+    border-color: var(--u-brand-border);
+    color: var(--u-brand);
+  }
+
+  &.active {
+    background: var(--u-brand-subtle);
+    border-color: var(--u-brand-border);
+    color: var(--u-brand);
+    font-weight: var(--u-weight-semibold);
+  }
+
+  &:disabled {
+    color: var(--u-text-faint);
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--u-focus-ring);
+    outline-offset: 2px;
+  }
+}
+
+.chart-card {
+  margin: 0 0 var(--u-space-3);
+}
+
+.chart-caption {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--u-space-3);
+  margin-bottom: var(--u-space-3);
+
+  h2 {
+    margin: 0;
+  }
+}
+
+.table-toggle {
+  border: 1px solid var(--u-border);
+  border-radius: var(--u-radius-pill);
+  background: var(--u-surface-raised);
+  color: var(--u-text-secondary);
+  font-size: var(--u-text-xs);
+  padding: 0.25rem 0.7rem;
+  cursor: pointer;
+  white-space: nowrap;
+
+  @include u.universe-motion(all, var(--u-duration-fast));
+
+  &:hover {
+    border-color: var(--u-brand-border);
+    color: var(--u-brand);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--u-focus-ring);
+    outline-offset: 2px;
+  }
+}
+
+.chart {
+  height: 22rem;
+  min-width: 0;
+}
+
+// The waiting shape holds the space the chart will take, so the page does
+// not jump when the data lands. The shimmer stops when the reader asked
+// their system for reduced motion.
+.chart-skeleton {
+  height: 22rem;
+  border-radius: var(--u-radius-md);
+  background: var(--u-surface-raised);
+  animation: chart-skeleton-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes chart-skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chart-skeleton {
+    animation: none;
+  }
+}
+
+.history-note {
+  margin-bottom: var(--u-space-3);
+}
+
+.retry-button {
+  margin-left: var(--u-space-3);
+  border: 1px solid var(--u-border);
+  border-radius: var(--u-radius-pill);
+  background: var(--u-surface-raised);
+  color: var(--u-text-secondary);
+  font-size: var(--u-text-xs);
+  padding: 0.2rem 0.7rem;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--u-brand-border);
+    color: var(--u-brand);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--u-focus-ring);
+    outline-offset: 2px;
+  }
+}

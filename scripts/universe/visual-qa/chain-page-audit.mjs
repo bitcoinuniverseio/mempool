@@ -311,3 +311,163 @@ export function auditChainPage({ chain, envelope, seen, observations = {} }) {
 
   return { failures, notes };
 }
+
+/**
+ * The two sentences the timeline prints when a side is honestly empty.
+ *
+ * An empty side that says one of these is an early state, not a defect: the
+ * block collector has not caught up yet, or the pending set really is clear.
+ * An empty side that says nothing is absence dressed as data, and that is the
+ * defect these words tell apart.
+ */
+export const TIMELINE_EMPTY_COPY = {
+  confirmed: 'No recent blocks are stored yet',
+  future: 'Nothing is waiting right now',
+};
+
+/**
+ * What the rebuilt dashboard has to be true about, beyond what auditChainPage
+ * already holds it to.
+ *
+ * The state this exists to catch is a chain route that answers 200, renders a
+ * page, and the page is the capability report the dashboard replaced: no
+ * timeline, no panels, just headings about what the chain can answer. That
+ * page passes every network-level check, so the assertions here are
+ * structural: a timeline was drawn, its populated cubes name their heights,
+ * and an empty side explains itself in the timeline's own words rather than
+ * standing there bare.
+ */
+export function auditDashboardParity(chain, collected) {
+  const scope = `dashboard:${chain}`;
+  const failures = [];
+  const notes = [];
+  const fail = (message) => failures.push(`${scope}: ${message}`);
+  const pass = (message) => notes.push(`${scope}: ${message}`);
+
+  const headings = collected.headings ?? [];
+  const timeline = collected.timeline ?? { present: false };
+
+  if (!timeline.present) {
+    // The two absences are told apart because they mean different things: the
+    // first is the old build still on the origin, the second is the new build
+    // losing its own timeline.
+    if (headings.some((heading) => heading.includes('Questions this chain can answer'))) {
+      fail(
+        'the page leads with the capability report and draws no timeline, so the origin serves the page this dashboard replaced',
+      );
+    } else {
+      fail('the block timeline region is absent, so this is not the rebuilt dashboard');
+    }
+  } else {
+    const future = timeline.futureCubes ?? 0;
+    const confirmed = timeline.confirmedCubes ?? 0;
+    const emptySides = timeline.emptySides ?? [];
+    const explains = (copy) => emptySides.some((text) => text.includes(copy));
+    if (future === 0 && confirmed === 0) {
+      fail('the timeline has zero cubes on both sides, which is a drawn strip with nothing behind it');
+    } else {
+      pass(`timeline shows ${future} future slot(s) and ${confirmed} confirmed block(s)`);
+      for (const [side, count] of [['future', future], ['confirmed', confirmed]]) {
+        if (count > 0) {
+          continue;
+        }
+        if (explains(TIMELINE_EMPTY_COPY[side])) {
+          pass(`the ${side} side is empty and says so in its own words, an honest early state`);
+        } else {
+          fail(`the ${side} side is empty and gives no reason, so absence reads as data`);
+        }
+      }
+      if (timeline.heightsAboveCubes === false) {
+        fail('a populated cube carries no height label, so a reader cannot tell which block a cube stands for');
+      } else {
+        pass('every populated cube carries its height label');
+      }
+    }
+    if (timeline.hasDivider) {
+      pass('the timeline carries its divider');
+    }
+  }
+
+  const panels = collected.panels ?? [];
+  if (panels.length) {
+    pass(`panels read ${panels.join(', ')}`);
+  }
+
+  const consoleErrors = collected.consoleErrors ?? [];
+  const failedRequests = collected.failedRequests ?? [];
+  if (consoleErrors.length) {
+    fail(`${consoleErrors.length} console error(s): ${consoleErrors.slice(0, 3).join(' | ')}`);
+  }
+  if (failedRequests.length) {
+    fail(`${failedRequests.length} failed request(s): ${failedRequests.slice(0, 3).join(' | ')}`);
+  }
+
+  return { failures, notes };
+}
+
+/** The path segment each section lives under, so a redirect can be told from a render. */
+const SECTION_SEGMENTS = { mining: 'mining', graphs: 'graphs', docs: 'docs' };
+
+/**
+ * What a section route has to be true about: it stayed where it was sent, it
+ * rendered its own content rather than a fallback, and it did so cleanly.
+ *
+ * The redirect check comes first because it explains the others. A mining
+ * route that bounces to the dashboard renders a perfectly healthy page with
+ * no mining heading, and without the final path the finding would blame the
+ * heading when the route is what moved.
+ */
+export function auditSectionPage(chain, section, collected) {
+  const scope = `${section}:${chain}`;
+  const failures = [];
+  const notes = [];
+  const fail = (message) => failures.push(`${scope}: ${message}`);
+  const pass = (message) => notes.push(`${scope}: ${message}`);
+
+  const expected = `/${chain}/${SECTION_SEGMENTS[section] ?? section}`;
+  const finalPath = collected.finalPath ?? '';
+  if (finalPath !== expected && !finalPath.startsWith(`${expected}/`)) {
+    fail(
+      `the browser ended at ${JSON.stringify(finalPath || null)} instead of under ${expected}, so the route redirected away`,
+    );
+  } else {
+    pass(`stays at ${finalPath}`);
+  }
+
+  const headings = collected.headings ?? [];
+  if (section === 'mining') {
+    if (headings.some((heading) => heading.toLowerCase().includes('mining'))) {
+      pass('renders its own mining heading');
+    } else {
+      fail('no heading names mining, so the mining page did not render its own content');
+    }
+  } else if (section === 'graphs') {
+    const links = collected.chartNavLinks ?? 0;
+    if (links > 0) {
+      pass(`the chart shell offers ${links} chart page link(s)`);
+    } else {
+      fail('the chart shell navigation is absent, so the graphs page did not render');
+    }
+  } else if (section === 'docs') {
+    const sections = collected.docsSections ?? 0;
+    const links = collected.docsNavLinks ?? 0;
+    if (sections > 0 && links > 0) {
+      pass(`the docs render ${sections} section(s) behind a ${links}-entry section list`);
+    } else {
+      fail(
+        `the docs page renders ${sections} section(s) and ${links} section link(s), so the docs did not render`,
+      );
+    }
+  }
+
+  const consoleErrors = collected.consoleErrors ?? [];
+  const failedRequests = collected.failedRequests ?? [];
+  if (consoleErrors.length) {
+    fail(`${consoleErrors.length} console error(s): ${consoleErrors.slice(0, 3).join(' | ')}`);
+  }
+  if (failedRequests.length) {
+    fail(`${failedRequests.length} failed request(s): ${failedRequests.slice(0, 3).join(' | ')}`);
+  }
+
+  return { failures, notes };
+}

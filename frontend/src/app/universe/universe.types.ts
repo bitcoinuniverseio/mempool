@@ -365,6 +365,196 @@ export interface ChainCapabilityEnvelope {
 
 export type ChainExplorerPayload = Record<string, unknown>;
 
+// --- Chain dashboard, mining, fees, and chart views ---
+// Mirrors backend-apis src/universe-explorer/contracts/chain-dashboard.ts.
+// Quantities are exact decimal strings; unknown facts are null, never zero.
+
+export type PoolAttributionEvidence =
+  | 'coinbase-tag'
+  | 'payout-address'
+  | 'auxpow-parent-tag';
+
+export interface BlockMinerView {
+  poolId: string | null;
+  name: string | null;
+  evidence: PoolAttributionEvidence | null;
+}
+
+export interface ChainBlockSummary {
+  heightAtomic: string;
+  hash: string;
+  time: string;
+  txCountAtomic: string;
+  sizeBytesAtomic: string | null;
+  feesAtomic: string | null;
+  subsidyAtomic: string | null;
+  rewardAtomic: string | null;
+  medianFeeRateDecimal: string | null;
+  difficultyDecimal: string | null;
+  intervalSecondsAtomic: string | null;
+  miner: BlockMinerView;
+}
+
+export interface RecentBlocksView {
+  schemaVersion: string;
+  chain: ExplorerChain;
+  network: ExplorerNetwork;
+  tip: SourceCheckpoint | null;
+  blocks: ChainBlockSummary[];
+  coverage: {
+    fromHeightAtomic: string | null;
+    toHeightAtomic: string | null;
+    complete: boolean;
+  };
+  observedAt: string;
+}
+
+export type FeeRecommendationBasis =
+  | 'node-estimate'
+  | 'mempool-quantile'
+  | 'recent-blocks'
+  | 'relay-floor'
+  | 'zip317-conventional';
+
+export interface FeeRecommendationLevel {
+  id: string;
+  amountDecimal: string;
+  basis: FeeRecommendationBasis;
+}
+
+export type FeeRecommendationsView =
+  | {
+      schemaVersion: string;
+      chain: ExplorerChain;
+      network: ExplorerNetwork;
+      kind: 'fee-per-kilobyte';
+      unit: 'koinu/kB';
+      levels: FeeRecommendationLevel[];
+      minRelayFeeAtomicPerKb: string;
+      tip: SourceCheckpoint | null;
+      observedAt: string;
+    }
+  | {
+      schemaVersion: string;
+      chain: ExplorerChain;
+      network: ExplorerNetwork;
+      kind: 'zip-317';
+      unit: 'zatoshi';
+      marginalFeeAtomic: string;
+      graceActionsAtomic: string;
+      typicalConventionalFeeAtomic: string;
+      paidShareDecimal: string | null;
+      basis: FeeRecommendationBasis;
+      tip: SourceCheckpoint | null;
+      observedAt: string;
+    };
+
+export type HashrateUnit = 'hashes-per-second' | 'solutions-per-second';
+
+export interface MiningSummaryView {
+  schemaVersion: string;
+  chain: ExplorerChain;
+  network: ExplorerNetwork;
+  tip: SourceCheckpoint | null;
+  difficultyDecimal: string | null;
+  networkRateDecimal: string | null;
+  hashrateUnit: HashrateUnit;
+  algorithm: string;
+  targetBlockSecondsAtomic: string;
+  observedIntervalSecondsDecimal: string | null;
+  windowBlocksAtomic: string | null;
+  subsidyAtomic: string | null;
+  meanRewardAtomic: string | null;
+  meanFeesAtomic: string | null;
+  mergedMining: {
+    supported: boolean;
+    noticeId: string | null;
+  };
+  observedAt: string;
+}
+
+export interface MiningPoolShare {
+  poolId: string;
+  name: string;
+  blocksAtomic: string;
+  shareDecimal: string;
+  evidence: PoolAttributionEvidence[];
+}
+
+export interface MiningPoolsView {
+  schemaVersion: string;
+  chain: ExplorerChain;
+  network: ExplorerNetwork;
+  windowId: string;
+  windowBlocksAtomic: string;
+  pools: MiningPoolShare[];
+  attributionDatasetVersion: string;
+  coverageComplete: boolean;
+  observedAt: string;
+}
+
+export interface ChartSeriesLine {
+  key: string;
+  unit: string;
+  points: [string, string | null][];
+}
+
+export interface ChartSeriesView {
+  schemaVersion: string;
+  chain: ExplorerChain;
+  network: ExplorerNetwork;
+  seriesId: string;
+  rangeId: string;
+  lines: ChartSeriesLine[];
+  aggregation: string;
+  bucketSecondsAtomic: string | null;
+  coverage: {
+    fromAtomic: string | null;
+    toAtomic: string | null;
+    complete: boolean;
+    earliestAtomic: string | null;
+  };
+  sourceHeightAtomic: string | null;
+  observedAt: string;
+}
+
+export interface ChainMempoolSummary {
+  txCountAtomic: string | null;
+  totalSizeBytesAtomic: string | null;
+  totalFeesAtomic: string | null;
+  arrivalRatePerSecondDecimal: string | null;
+  observedAt: string | null;
+}
+
+export type ChainSubsystemId =
+  | 'core-node'
+  | 'confirmed-history'
+  | 'address-history'
+  | 'mempool'
+  | 'mining-analytics'
+  | 'historical-statistics'
+  | 'protocol-indexers';
+
+export interface ChainSubsystemHealth {
+  id: ChainSubsystemId;
+  state: 'ready' | 'degraded' | 'unavailable';
+  reasonIds: string[];
+}
+
+export interface ChainDashboardView {
+  schemaVersion: string;
+  chain: ExplorerChain;
+  network: ExplorerNetwork;
+  tip: SourceCheckpoint | null;
+  recentBlocks: RecentBlocksView | null;
+  buckets: ChainExplorerPayload | null;
+  fees: FeeRecommendationsView | null;
+  mempool: ChainMempoolSummary | null;
+  mining: MiningSummaryView | null;
+  subsystems: ChainSubsystemHealth[];
+  observedAt: string;
+}
+
 export interface UniverseSearchResult {
   chain: ExplorerChain;
   network: 'mainnet';

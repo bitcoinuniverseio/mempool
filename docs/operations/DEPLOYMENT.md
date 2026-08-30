@@ -122,6 +122,24 @@ authority, against `DOGE_MARKETPLACE_<AUTHORITY>_AUTHORITY_BEARER_TOKEN`. The
 readiness probe passing proves nothing about the checkpoint request, because
 readiness is unauthenticated.
 
+The dashboard, mining, and chart families for Dogecoin and Zcash read two
+node RPCs and one durable history store, all configured in the same
+`overlay.env`:
+
+- `UNIVERSE_DOGECOIN_RPC_URL` with `UNIVERSE_DOGECOIN_RPC_USER` and
+  `UNIVERSE_DOGECOIN_RPC_PASSWORD` (already present for the mempool
+  collector) also feed the block collector, `estimatesmartfee`, and
+  `getmininginfo`.
+- `UNIVERSE_ZCASH_RPC_URL` points at the Zebra JSON-RPC listener, plain
+  HTTP on loopback (`http://127.0.0.1:8232/`). Zebra runs without RPC
+  auth; set `UNIVERSE_ZCASH_RPC_AUTHORIZATION` only if that changes.
+- `UNIVERSE_EXPLORER_HISTORY_PATH` names the SQLite file holding collected
+  block history and mempool samples
+  (`/var/lib/universe-explorer/chain-history.sqlite`). It is separate from
+  `UNIVERSE_EXPLORER_STATE_PATH` so history writes never contend with the
+  mempool collector's commits. Unset, the history features report
+  themselves unavailable and every other surface keeps working.
+
 ## Configuration
 
 `/etc/universe-explorer/`, owned by root, group `universe-explorer`, mode 0640:
