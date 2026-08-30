@@ -14,6 +14,12 @@ import { fileURLToPath } from 'node:url';
  * are TestBed specs that need a browser environment and an Angular testing
  * module this configuration does not set up, and they cover a feature this
  * deployment does not enable.
+ *
+ * `src/app/components` is included for the shell: the adaptive behaviour that
+ * could not be expressed in CSS lives there, and it is exactly the sort of
+ * thing that is cheap to test directly and expensive to find in a browser.
+ * Only files this product owns are under it; the inherited components in that
+ * tree ship no specs.
  */
 export default defineConfig({
   // The root tsconfig.json is solution-style and carries no compiler options,
@@ -39,7 +45,11 @@ export default defineConfig({
     environment: 'node',
     globals: true,
     setupFiles: ['./src/universe-test-setup.ts'],
-    include: ['src/app/universe/**/*.spec.ts', 'src/app/shared/**/*.spec.ts'],
+    include: [
+      'src/app/universe/**/*.spec.ts',
+      'src/app/shared/**/*.spec.ts',
+      'src/app/components/**/*.spec.ts',
+    ],
     reporters: ['default'],
   },
 });
