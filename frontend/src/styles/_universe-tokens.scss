@@ -139,6 +139,49 @@
   --u-width-prose: 68ch;
   --u-width-page: 1320px;
 
+  // The safe area, named once.
+  //
+  // env() resolves to zero on every browser that has no cutout to report, and
+  // to the real inset on the ones that do, so these are safe to use
+  // unconditionally. They are declared here rather than written inline at each
+  // use because the header, the bottom bar, the sheets and the dropdowns all
+  // have to agree about the same edges: an element that pads for the home
+  // indicator beside one that does not is worse than neither doing it.
+  //
+  // Use them through max(): a plain inset of zero would otherwise delete the
+  // ordinary padding an element needs on a phone with no cutout at all.
+  --u-safe-top: env(safe-area-inset-top, 0px);
+  --u-safe-right: env(safe-area-inset-right, 0px);
+  --u-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --u-safe-left: env(safe-area-inset-left, 0px);
+
+  // What the fixed layers actually occupy, so content can reserve exactly that
+  // much and no more. The bottom bar's own height plus whatever the device
+  // puts below it; anything clearing the bar must clear both.
+  // 52px of link plus the 1px rule above it. Written down rather than guessed
+  // at, because the page reserves exactly this much and a number that drifts
+  // from the bar either hides the last row of content or leaves a gap.
+  --u-bottom-nav-height: 53px;
+  --u-bottom-nav-space: calc(var(--u-bottom-nav-height) + var(--u-safe-bottom));
+
+  // The smallest touch target this product ships.
+  //
+  // WCAG 2.2 AA asks for 24 CSS pixels. Apple asks for 44 points and Android
+  // for 48 dp, and those are the numbers that matter for a control a thumb has
+  // to hit on a moving train, so the larger one is the floor here for anything
+  // primary or repeated.
+  --u-touch-target: 44px;
+  --u-touch-target-comfortable: 48px;
+
+  // Text inside a control that a phone keyboard will open.
+  //
+  // iOS Safari zooms the whole page in when a focused input computes below
+  // 16px, and it does not zoom back out afterwards. That is not a preference,
+  // it is a hard threshold in the engine, so form fields take this rather than
+  // the body scale. Never solve it with maximum-scale: disabling zoom takes
+  // the page away from everyone who needs it to read anything at all.
+  --u-text-field: 1rem;
+
   // Layers. Named so a new overlay never has to guess a number.
   --u-z-base: 0;
   --u-z-sticky: 100;
@@ -287,6 +330,16 @@
   // The shadow carries the plum cast of the page so a lifted card does not
   // drop a grey shadow onto a pink ground.
   --u-shadow-color: rgba(36, 26, 43, 0.28);
+  // The edge fade on a scroller that a label can pass under.
+  //
+  // Lighter than the general shadow, and the number is a measurement rather
+  // than a preference. The bottom navigation bar paints this at its ends to
+  // say that it scrolls, and a destination dragged past the end is read
+  // through it while it goes. At the general 28 percent this composites to
+  // rgb(194, 191, 196) under the active label and takes it from 6.5:1 to
+  // 3.29:1, under AA. At 14 percent it composites to rgb(224, 222, 225) and
+  // holds it at 5.2:1.
+  --u-nav-scroll-shadow: rgba(36, 26, 43, 0.14);
   --u-overlay-scrim: rgba(26, 16, 32, 0.55);
   --u-media-scrim: rgba(16, 7, 22, 0.62);
   --u-shadow-sm: 0 1px 2px rgba(36, 26, 43, 0.07);
@@ -497,6 +550,11 @@
   --u-chart-zoom-track: #241a30;
 
   --u-shadow-color: rgba(0, 0, 0, 0.55);
+  // Darkening a dark bar raises the contrast of the light label on it rather
+  // than lowering it, so this can carry more weight here than in light and
+  // still be the safe direction. It is stated rather than inherited so the
+  // two themes cannot drift apart silently.
+  --u-nav-scroll-shadow: rgba(0, 0, 0, 0.4);
   --u-overlay-scrim: rgba(0, 0, 0, 0.66);
   --u-media-scrim: rgba(8, 4, 12, 0.7);
   --u-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
