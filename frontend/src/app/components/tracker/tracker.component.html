@@ -52,7 +52,7 @@
       }
       <div class="data">
         @if (tx && !tx.status?.confirmed) {
-          <div class="field narrower mt-2">
+          <div class="field narrower">
             <div class="label" i18n="transaction.first-seen|Transaction first seen">First seen</div>
             <div class="value">
               @if (transactionTime > 0) {
@@ -82,7 +82,7 @@
             </div>  
           }
         } @else if (tx && tx.status?.confirmed) {
-          <div class="field narrower mt-2">
+          <div class="field narrower">
             <div class="label" i18n="transaction.confirmed-at">Confirmed at</div>
             <div class="value">
               <app-timestamp [customFormat]="'yyyy-MM-dd HH:mm'" [unixTime]="tx.status.block_time" [hideTimeSince]="true"></app-timestamp>
@@ -105,6 +105,15 @@
                 </div>
               </span>
             </div>
+          </div>
+        } @else if (isLoading) {
+          <div class="field narrower" aria-hidden="true">
+            <div class="label"><span class="skeleton-loader" style="width: 6em;"></span></div>
+            <div class="value"><span class="skeleton-loader" style="max-width: 200px;"></span></div>
+          </div>
+          <div class="field narrower" aria-hidden="true">
+            <div class="label"><span class="skeleton-loader" style="width: 5em;"></span></div>
+            <div class="value"><span class="skeleton-loader" style="max-width: 120px;"></span></div>
           </div>
         }
       </div>

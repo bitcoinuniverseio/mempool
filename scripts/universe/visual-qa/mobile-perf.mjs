@@ -96,30 +96,19 @@ const BUDGETS = {
 /**
  * Routes that are over the layout budget for a reason that predates this gate.
  *
- * One entry, and it is here rather than quietly excluded because a budget
- * nobody can see is not a budget. The number is what develop measured at
- * bea93c1ec under the same throttle, so a route drifting further gets caught
- * even while it is over.
+ * Empty, and kept rather than deleted, because the mechanism is the point: a
+ * route that is over budget for a reason somebody wrote down is recorded here
+ * with the figure it measured, printed on every run, and held to that figure,
+ * so it cannot drift further while it is over. A budget nobody can see is not
+ * a budget, and an exclusion nobody can see is not an exception.
  *
- * The transaction route: at about three seconds, when the transaction's own
- * data arrives, `div.panel` grows from 46 to 193 pixels as the tracker bar and
- * the confirmations render into it. That pushes `div.bottom-panel` down by 148
- * and shrinks it by the same, which is the whole 0.103.
- *
- * Reserving that room means knowing how tall the panel will be before the
- * transaction is read, and it is not one height: a replaced transaction shows
- * an alert, a pending one a tracker bar, a confirmed one a confirmation count.
- * A single min-height would trade a measured shift for unmeasured dead space
- * on the states that are shorter. That is a piece of work on the tracker's
- * loading design rather than on the shell, so it is written down here with its
- * measurement instead of being fixed badly or hidden.
+ * The one entry this held was the transaction route, whose panel grew from 46
+ * to 193 pixels when the transaction arrived and pushed the bottom panel down
+ * 148. That is fixed rather than recorded now: the panel's rows are reserved
+ * at one height, so the box is the same before and after the transaction is
+ * read. See the note beside `.data` in `tracker.component.scss`.
  */
-const KNOWN_LAYOUT_DEBT = {
-  tx: {
-    cls: 0.103,
-    note: 'div.panel grows 46 to 193px when the transaction arrives, pushing div.bottom-panel down 148px',
-  },
-};
+const KNOWN_LAYOUT_DEBT = {};
 
 /** How much worse than the recorded figure counts as a regression rather than
  *  noise. Two runs of the same commit moved this by 0.005. */
