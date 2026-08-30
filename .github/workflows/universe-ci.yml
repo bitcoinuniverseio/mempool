@@ -246,13 +246,24 @@ jobs:
         working-directory: scripts/universe/visual-qa
         run: node modes-check.mjs --base=http://127.0.0.1:$GATEWAY_PORT
 
+      # Kept when there is something to look at, which is when a gate failed.
+      #
+      # A green deep pass is five hundred screenshots nobody opens, and
+      # uploading them on every run filled the Actions artifact quota: run
+      # 33330398257 passed every gate in this job and then failed on
+      # "Artifact storage quota has been hit. Unable to upload any new
+      # artifacts", so a build with nothing wrong with it reported a failure.
+      # Usage is recalculated every six to twelve hours, so the way out is to
+      # stop producing it rather than to delete faster. Retention is capped at
+      # three days by the repository in any case.
       - name: Keep the contrast report and the route screenshots
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: universe-visual-qa-broad
           path: scripts/universe/visual-qa/artifacts-broad
-          retention-days: 30
+          if-no-files-found: ignore
+          retention-days: 3
 
   # The deep visual pass, in three shards.
   #
@@ -358,15 +369,18 @@ jobs:
           --states=chain-authority-down,chain-behind,chain-not-ready-protocols,chain-not-ready-unexplained,chain-object-missing
           --themes=default,dark --viewports=375,1440
 
+      # Same reasoning as the broad pass above: this is the artifact that
+      # filled the quota, at about fifty megabytes a run.
       - name: Keep the contrast report and the route screenshots
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: universe-visual-qa-${{ matrix.shard }}
           path: |
             scripts/universe/visual-qa/artifacts
             scripts/universe/visual-qa/artifacts-chain-states
-          retention-days: 30
+          if-no-files-found: ignore
+          retention-days: 3
 
   # The mobile gate runs beside the visual matrix rather than inside it.
   #
@@ -458,7 +472,7 @@ jobs:
           path: |
             scripts/universe/visual-qa/artifacts-mobile
             scripts/universe/visual-qa/artifacts-perf
-          retention-days: 30
+          retention-days: 3
 
   # The two engines the fleet cannot run.
   #
@@ -552,4 +566,4 @@ jobs:
           path: |
             scripts/universe/visual-qa/artifacts-mobile-webkit
             scripts/universe/visual-qa/artifacts-mobile-firefox
-          retention-days: 30
+          retention-days: 3
