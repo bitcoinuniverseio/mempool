@@ -554,12 +554,20 @@ WebKit report a coarse pointer. `hasTouch` alone does not, and without it every
 `@media (pointer: coarse)` rule in the product goes unexercised while appearing
 to be covered.
 
-Three engines, with `--browser`. Chromium and WebKit take the whole set;
-WebKit is the engine Safari is built on, which is the closest an automated run
-gets to an iPhone. Firefox cannot be put into mobile emulation, so it reports a
-fine pointer and takes a narrower pass: window sizes, overflow, fixed layers,
-safe areas and rotation are all still measured there, and the run says so in
-its own header rather than leaving a reader to assume otherwise.
+Three engines, with `--browser`, across two CI jobs. The `mobile` job runs
+Chromium and the performance gate on the runner fleet. The `mobile-engines` job
+runs WebKit and Firefox on a hosted runner, and that split is not a preference:
+WebKit needs system libraries a Chromium-only host has never had, it refuses to
+launch without them rather than degrading, and the fleet's runner user has no
+passwordless sudo to install them. When the fleet image gains those libraries,
+the two jobs should become one again.
+
+WebKit is the engine Safari is built on, and Chrome on iOS with it, which is
+the closest an automated run gets to an iPhone. Firefox cannot be put into
+mobile emulation, so it reports a fine pointer and takes a narrower pass:
+window sizes, overflow, fixed layers, safe areas and rotation are all still
+measured there, and the run says so in its own header rather than leaving a
+reader to assume otherwise.
 
 That is also why every rule with a touch floor is written
 `@media (pointer: coarse), (max-width: 991.98px)` rather than on the pointer

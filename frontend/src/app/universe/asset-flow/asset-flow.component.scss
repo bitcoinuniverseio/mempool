@@ -302,14 +302,15 @@
     color: var(--u-text-muted);
     min-height: 32px;
 
+    display: flex;
+    align-items: center;
+
     // This is the disclosure that opens the evidence for a whole flow, and
     // there is one per flow. 32px is a deliberate desktop size; a thumb wants
     // the platform floor.
     @media (pointer: coarse), (max-width: 991.98px) {
       min-height: var(--u-touch-target);
     }
-    display: flex;
-    align-items: center;
   }
 
   .evidence-list {

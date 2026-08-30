@@ -598,13 +598,6 @@
 }
 
 .lens-option {
-  // 34px is a comfortable pill to click and a near miss to tap, and there are
-  // three of them side by side. The larger floor only applies where a thumb is
-  // doing the pointing.
-  @media (pointer: coarse), (max-width: 991.98px) {
-    min-height: var(--u-touch-target);
-  }
-
   background: var(--u-surface-sunken);
   border: 1px solid var(--u-border);
   border-radius: var(--u-radius-pill);
@@ -617,6 +610,13 @@
   transition: background-color var(--u-duration-fast) var(--u-ease-out),
               border-color var(--u-duration-fast) var(--u-ease-out),
               color var(--u-duration-fast) var(--u-ease-out);
+
+  // 34px is a comfortable pill to click and a near miss to tap, and there are
+  // three of them side by side. The larger floor only applies where a thumb is
+  // doing the pointing, or where the window is narrow enough to be a phone.
+  @media (pointer: coarse), (max-width: 991.98px) {
+    min-height: var(--u-touch-target);
+  }
 
   &:hover {
     background: var(--u-surface-hover);

@@ -319,20 +319,6 @@ jobs:
         working-directory: scripts/universe/visual-qa
         run: npm ci
 
-      # The matrix job beside this one drives Chromium only, so the runner
-      # image has never needed the other two. Downloading them is a few
-      # seconds against a warm cache and the alternative is a job that claims
-      # three engines and silently runs one.
-      #
-      # `--with-deps` because the browser binary is not enough: WebKit needs a
-      # set of system libraries that a Chromium-only host has never had, and
-      # without them it does not fall back to anything, it refuses to launch
-      # and prints the list. Measured that way on runner-02. The apt step is
-      # idempotent and near-free once the packages are there.
-      - name: Fetch the engines this job drives
-        working-directory: scripts/universe/visual-qa
-        run: npx playwright install --with-deps chromium webkit firefox
-
       # Same reasoning as the matrix job: a fixed port once measured another
       # job's build, so each run takes a free one and refuses to continue
       # unless the process answering is the one it started.
@@ -358,31 +344,6 @@ jobs:
         working-directory: scripts/universe/visual-qa
         run: node mobile-check.mjs --base=http://127.0.0.1:$GATEWAY_PORT --out=./artifacts-mobile
 
-      # WebKit is the engine Safari is built on, and it is the closest an
-      # automated run gets to an iPhone. It is worth its own pass rather than
-      # a sample of one: the rules this work turns on, dvh, safe-area insets
-      # and the pointer media feature, are exactly the ones where engines
-      # differ, and a Chromium-only run would have proved nothing about the
-      # platform the fixes were written for. Measured at about four minutes.
-      - name: The same windows on the engine Safari is built on
-        working-directory: scripts/universe/visual-qa
-        run: >-
-          node mobile-check.mjs --base=http://127.0.0.1:$GATEWAY_PORT
-          --browser=webkit --out=./artifacts-mobile-webkit
-
-      # Firefox cannot be put into mobile emulation, so it reports a fine
-      # pointer and the pointer-conditional rules do not apply to it. What it
-      # still measures is every window size, the overflow, the fixed layers,
-      # the safe areas and the rotation, which is worth having on a third
-      # engine. A subset of routes, because this is a smoke check and the two
-      # passes above are the thorough ones.
-      - name: A third engine, on the checks that do not need a thumb
-        working-directory: scripts/universe/visual-qa
-        run: >-
-          node mobile-check.mjs --base=http://127.0.0.1:$GATEWAY_PORT
-          --browser=firefox --routes=home,tx,address,blocks,docs
-          --out=./artifacts-mobile-firefox
-
       # What the shell costs a phone, and what it makes the page do while it
       # arrives. The gated numbers are the compressed payload, which is a
       # property of the build and identical on any machine, and layout shift,
@@ -404,7 +365,99 @@ jobs:
           name: universe-mobile-qa
           path: |
             scripts/universe/visual-qa/artifacts-mobile
+            scripts/universe/visual-qa/artifacts-perf
+          retention-days: 30
+
+  # The two engines the fleet cannot run.
+  #
+  # WebKit needs a set of system libraries a Chromium-only host has never had,
+  # and it does not degrade without them: it refuses to launch and prints the
+  # list. Installing them is one apt command, and the fleet's runner user has
+  # no passwordless sudo, so `playwright install --with-deps` fails there with
+  # "sudo: a password is required". Measured on universe-linux-ultra-03.
+  #
+  # So this one job runs on a hosted runner, where that command works. It is
+  # the exception to using the fleet, and it is here rather than folded into
+  # the job above so the exception is visible and so a hosted outage cannot
+  # take the Chromium gate down with it.
+  #
+  # It is worth the exception. WebKit is what Safari and Chrome on iOS are both
+  # built on, and dvh, safe-area insets and the pointer media feature are
+  # exactly the rules where engines disagree: a Chromium-only run proves
+  # nothing about the platform half this work was written for.
+  #
+  # When the fleet's image gains those libraries, delete this job and put the
+  # two steps back in the one above, which is where they belong.
+  mobile-engines:
+    name: WebKit and Firefox
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24.19.0'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install
+        working-directory: frontend
+        run: npm ci
+
+      - name: Production build
+        working-directory: frontend
+        run: npm run build:universe
+
+      - name: Install the visual QA harness
+        working-directory: scripts/universe/visual-qa
+        run: npm ci
+
+      - name: Fetch the engines and what they need to start
+        working-directory: scripts/universe/visual-qa
+        run: npx playwright install --with-deps webkit firefox
+
+      - name: Serve the built frontend
+        run: |
+          GATEWAY_PORT=$(node -e "const s=require('net').createServer();s.listen(0,'127.0.0.1',()=>{console.log(s.address().port);s.close()})")
+          echo "GATEWAY_PORT=$GATEWAY_PORT" >> "$GITHUB_ENV"
+          UNIVERSE_GATEWAY_PORT=$GATEWAY_PORT UNIVERSE_GATEWAY_ROOT=frontend/dist/mempool/browser node scripts/universe/gateway.mjs &
+          GATEWAY_PID=$!
+          for i in $(seq 1 30); do
+            curl -fsS -o /dev/null "http://127.0.0.1:$GATEWAY_PORT/" && break
+            sleep 1
+          done
+          kill -0 "$GATEWAY_PID"
+          curl -fsS "http://127.0.0.1:$GATEWAY_PORT/__gateway/health"
+
+      # The full window set, on the engine Safari is built on.
+      - name: Every window a phone can be, on WebKit
+        working-directory: scripts/universe/visual-qa
+        run: >-
+          node mobile-check.mjs --base=http://127.0.0.1:$GATEWAY_PORT
+          --browser=webkit --out=./artifacts-mobile-webkit
+
+      # Firefox cannot be put into mobile emulation, so it reports a fine
+      # pointer and the pointer-conditional rules do not apply to it. What it
+      # still measures is every window size, the overflow, the fixed layers,
+      # the safe areas and the rotation, which is worth having on a third
+      # engine. A subset of routes, because this is the smoke check and the two
+      # thorough passes are elsewhere.
+      - name: A third engine, on the checks that do not need a thumb
+        working-directory: scripts/universe/visual-qa
+        run: >-
+          node mobile-check.mjs --base=http://127.0.0.1:$GATEWAY_PORT
+          --browser=firefox --routes=home,tx,address,blocks,docs
+          --out=./artifacts-mobile-firefox
+
+      - name: Keep the engine reports
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: universe-mobile-engines
+          path: |
             scripts/universe/visual-qa/artifacts-mobile-webkit
             scripts/universe/visual-qa/artifacts-mobile-firefox
-            scripts/universe/visual-qa/artifacts-perf
           retention-days: 30
