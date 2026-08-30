@@ -85,6 +85,56 @@
   </nav>
 
   <!-- ------------------------------------------------------------------ -->
+  <!-- The pending set, grouped under this chain's own fee rules           -->
+  <!-- ------------------------------------------------------------------ -->
+  <section class="panel candidate-buckets" *ngIf="page === 'mempool' && vm.buckets as buckets"
+           aria-labelledby="buckets-heading">
+    <h2 id="buckets-heading" i18n="universe.buckets.title">Waiting for a block</h2>
+    <p class="panel-lede">{{ buckets.semanticsNotice }}</p>
+    <p class="panel-lede" *ngIf="buckets.cadenceNotice">{{ buckets.cadenceNotice }}</p>
+    <p class="notice failure" role="status" *ngIf="buckets.partial" i18n="universe.buckets.partial">
+      This grouping is built from a partial view of the pending set, so a bucket may be missing members. The list below carries the same limitation.
+    </p>
+
+    <div class="cube-row" tabindex="0" role="region" aria-labelledby="buckets-heading">
+      <div class="candidate-cube" *ngFor="let cube of buckets.cubes; trackBy: trackByIndex">
+        <div class="cube-block" [style.background]="cubeBackground(cube)">
+          <div class="cube-body">
+            <span class="cube-median" *ngIf="cube.medianFee">
+              ~{{ cube.medianFee }}
+              <span class="cube-unit">{{ buckets.unit }}</span>
+            </span>
+            <span class="cube-span" *ngIf="cube.feeSpan" i18n="universe.buckets.fee-span">{{ cube.feeSpan.low }} to {{ cube.feeSpan.high }}</span>
+            <span class="cube-count" *ngIf="cube.txCount" [attr.title]="cube.txCount.exact"
+                  i18n="universe.buckets.tx-count">{{ cube.txCount.display }} transactions</span>
+            <span class="cube-size" *ngIf="cube.totalSize" [attr.title]="cube.totalSize.exact"
+                  i18n="universe.buckets.size">{{ cube.totalSize.display }} bytes</span>
+          </div>
+        </div>
+        <div class="cube-caption">
+          <span class="universe-chip" *ngIf="cube.tierLabel" [ngClass]="'state-' + cube.tierTone">{{ cube.tierLabel }}</span>
+          <span class="universe-chip state-neutral" *ngIf="cube.overflow" i18n="universe.buckets.overflow">Everything after these</span>
+          <span class="secondary" *ngIf="cube.unknownFeeCount" [attr.title]="cube.unknownFeeCount.exact"
+                i18n="universe.buckets.unknown-fees">{{ cube.unknownFeeCount.display }} without a readable fee</span>
+        </div>
+      </div>
+    </div>
+    <p class="notice empty" *ngIf="!buckets.cubes.length" i18n="universe.buckets.none">
+      Nothing is waiting right now, as far as our own node can see.
+    </p>
+
+    <dl class="facts bucket-facts" *ngIf="buckets.facts.length">
+      <div *ngFor="let fact of buckets.facts; trackBy: trackByIndex">
+        <dt>{{ fact.label }}</dt>
+        <dd>{{ fact.value }}</dd>
+      </div>
+    </dl>
+    <ul class="bucket-disclosures">
+      <li *ngFor="let line of buckets.disclosures; trackBy: trackByIndex" class="secondary">{{ line }}</li>
+    </ul>
+  </section>
+
+  <!-- ------------------------------------------------------------------ -->
   <!-- Chain overview                                                      -->
   <!-- ------------------------------------------------------------------ -->
   <ng-container *ngIf="page === 'dashboard'">

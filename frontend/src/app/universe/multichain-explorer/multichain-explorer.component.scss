@@ -776,6 +776,119 @@ tbody tr:last-child td {
 }
 
 // ---------------------------------------------------------------------------
+// Candidate buckets
+// ---------------------------------------------------------------------------
+
+// The same cube grammar the Bitcoin projection uses: a face carrying the
+// figures, a skewed top and side for depth, the projected-block palette.
+// What differs is the claim, which the copy above the row states.
+.cube-row {
+  display: flex;
+  gap: calc(var(--u-space-6) + 20px);
+  overflow-x: auto;
+  padding: calc(0.24 * var(--cube-size)) var(--u-space-2) var(--u-space-2)
+    calc(0.16 * var(--cube-size) + var(--u-space-2));
+  --cube-size: 125px;
+
+  &:focus-visible {
+    outline: 2px solid var(--u-focus-ring);
+    outline-offset: 2px;
+  }
+}
+
+.candidate-cube {
+  flex: 0 0 auto;
+  width: var(--cube-size);
+}
+
+.cube-block {
+  position: relative;
+  width: var(--cube-size);
+  height: var(--cube-size);
+  background: var(--u-block-projected-empty);
+}
+
+.cube-block::after {
+  content: '';
+  width: var(--cube-size);
+  height: calc(0.192 * var(--cube-size));
+  position: absolute;
+  top: calc(-0.192 * var(--cube-size));
+  left: calc(-0.16 * var(--cube-size));
+  background-color: var(--u-block-projected-top);
+  transform: skew(40deg);
+  transform-origin: top;
+}
+
+.cube-block::before {
+  content: '';
+  width: calc(0.16 * var(--cube-size));
+  height: var(--cube-size);
+  position: absolute;
+  top: calc(-0.096 * var(--cube-size));
+  left: calc(-0.16 * var(--cube-size));
+  background-color: var(--u-block-projected-side);
+  transform: skewY(50deg);
+  transform-origin: top;
+}
+
+.cube-body {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--u-space-1);
+  text-align: center;
+  padding: var(--u-space-2);
+  color: var(--u-block-ink);
+}
+
+.cube-median {
+  font-size: var(--u-text-md);
+  font-weight: var(--u-weight-bold);
+  overflow-wrap: anywhere;
+}
+
+.cube-unit {
+  font-size: var(--u-text-2xs);
+  font-weight: var(--u-weight-regular);
+}
+
+.cube-span,
+.cube-count,
+.cube-size {
+  font-size: var(--u-text-2xs);
+  color: var(--u-block-ink-muted);
+  overflow-wrap: anywhere;
+}
+
+.cube-caption {
+  margin-top: var(--u-space-2);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--u-space-1);
+  font-size: var(--u-text-2xs);
+}
+
+.bucket-facts {
+  margin-top: var(--u-space-3);
+}
+
+.bucket-disclosures {
+  list-style: none;
+  margin: var(--u-space-3) 0 0;
+  padding: 0;
+  font-size: var(--u-text-sm);
+
+  li + li {
+    margin-top: var(--u-space-1);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Ruleset ledgers
 // ---------------------------------------------------------------------------
 

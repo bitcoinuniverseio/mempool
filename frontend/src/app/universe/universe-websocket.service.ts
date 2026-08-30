@@ -8,7 +8,8 @@ export interface UniverseLiveEnvelope {
   readonly chain: ExplorerChain;
   readonly network: 'mainnet';
   readonly channel:
-    'chain-status' | 'mempool-snapshot' | 'confirmed-protocol-activity';
+    'chain-status' | 'mempool-snapshot' | 'candidate-buckets'
+    | 'confirmed-protocol-activity';
   readonly snapshotId: string;
   readonly sequenceAtomic: string;
   readonly observedAt: string;
@@ -24,6 +25,7 @@ interface ResumeCursor {
 const CHANNELS = [
   'chain-status',
   'mempool-snapshot',
+  'candidate-buckets',
   'confirmed-protocol-activity',
 ] as const;
 const DECIMAL = /^(0|[1-9][0-9]*)$/;

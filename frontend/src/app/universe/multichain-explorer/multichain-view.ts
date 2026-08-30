@@ -922,6 +922,7 @@ const READ_LABELS: readonly { id: keyof ChainCapabilityEnvelope['reads']; label:
   { id: 'outpoint', label: $localize`:@@universe.chain.read-outpoint:Outpoint lookup` },
   { id: 'feeEstimates', label: $localize`:@@universe.chain.read-fees:Fee estimates` },
   { id: 'projectedBlocks', label: $localize`:@@universe.chain.read-projected:Projected blocks` },
+  { id: 'candidateBuckets', label: $localize`:@@universe.chain.read-buckets:Pending set, grouped by fee policy` },
 ];
 
 /**
