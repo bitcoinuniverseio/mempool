@@ -406,28 +406,39 @@ jobs:
 
   # The two engines the fleet cannot run.
   #
-  # WebKit needs a set of system libraries a Chromium-only host has never had,
-  # and it does not degrade without them: it refuses to launch and prints the
-  # list. Installing them is one apt command, and the fleet's runner user has
-  # no passwordless sudo, so `playwright install --with-deps` fails there with
-  # "sudo: a password is required". Measured on universe-linux-ultra-03.
+  # WebKit needs a set of system libraries a Chromium-only Linux host has never
+  # had, and it does not degrade without them: it refuses to launch and prints
+  # the list. Installing them is one apt command, and the Linux fleet's runner
+  # user has no passwordless sudo, so `playwright install --with-deps` fails
+  # there with "sudo: a password is required". Measured on
+  # universe-linux-ultra-03.
   #
-  # So this one job runs on a hosted runner, where that command works. It is
-  # the exception to using the fleet, and it is here rather than folded into
-  # the job above so the exception is visible and so a hosted outage cannot
-  # take the Chromium gate down with it.
+  # This ran on a hosted runner for that reason, and then stopped running at
+  # all: the account was locked for billing and every hosted job began failing
+  # in two seconds with no steps and no log. A required gate that cannot start
+  # is worse than one that fails, because there is nothing to read.
   #
-  # It is worth the exception. WebKit is what Safari and Chrome on iOS are both
-  # built on, and dvh, safe-area insets and the pointer media feature are
-  # exactly the rules where engines disagree: a Chromium-only run proves
-  # nothing about the platform half this work was written for.
+  # So it runs on the Windows fleet instead. Playwright ships every library
+  # WebKit and Firefox need on Windows, so there is no package to install and
+  # no privilege to ask for, and this depends on no capacity outside the
+  # organisation. It is still its own job rather than folded into the one
+  # above, so a problem with one engine host cannot take the Chromium gate down
+  # with it.
   #
-  # When the fleet's image gains those libraries, delete this job and put the
-  # two steps back in the one above, which is where they belong.
+  # It is worth keeping. WebKit is what Safari and Chrome on iOS are both built
+  # on, and dvh, safe-area insets and the pointer media feature are exactly the
+  # rules where engines disagree: a Chromium-only run proves nothing about the
+  # platform half this work was written for.
   mobile-engines:
     name: WebKit and Firefox
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Windows, universe-router]
     timeout-minutes: 45
+    defaults:
+      run:
+        # Every step below is the same shell the Linux jobs use. Git Bash ships
+        # with the runner image, so the two stay one script rather than
+        # diverging into a PowerShell copy that drifts.
+        shell: bash
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -451,9 +462,11 @@ jobs:
         working-directory: scripts/universe/visual-qa
         run: npm ci
 
-      - name: Fetch the engines and what they need to start
+      # No --with-deps: on Windows the browser bundles carry what they need,
+      # which is the whole reason this job is here rather than on Linux.
+      - name: Fetch the engines
         working-directory: scripts/universe/visual-qa
-        run: npx playwright install --with-deps webkit firefox
+        run: npx playwright install webkit firefox
 
       - name: Serve the built frontend
         run: |
