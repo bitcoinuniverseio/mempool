@@ -159,9 +159,9 @@
           <dt i18n="universe.chain.tx-fee">Fee paid</dt>
           <dd [attr.title]="tx.feeAmount.exact">
             {{ tx.feeAmount.display }} {{ ticker }}
-            <span class="secondary" *ngIf="tx.feeEvidence?.sourceLabel as source">
+            <div class="secondary" *ngIf="tx.feeEvidence?.sourceLabel as source">
               <ng-container i18n="universe.chain.tx-fee-source">read from {{ source }}</ng-container>
-            </span>
+            </div>
           </dd>
         </div>
         <!-- No fee is always a read that failed, never a claim about privacy. -->
@@ -195,8 +195,8 @@
             <dt i18n="universe.chain.tx-conventional-fee">Conventional fee</dt>
             <dd [attr.title]="rule.conventionalFee.exact">
               {{ rule.conventionalFee.display }} {{ ticker }}
-              <span class="secondary" *ngIf="rule.marginalFee && rule.graceActions"
-                    i18n="universe.chain.tx-fee-rule-terms">{{ rule.marginalFee.display }} {{ ticker }} per action past {{ rule.graceActions.display }} grace actions</span>
+              <div class="secondary" *ngIf="rule.marginalFee && rule.graceActions"
+                    i18n="universe.chain.tx-fee-rule-terms">{{ rule.marginalFee.display }} {{ ticker }} per action past {{ rule.graceActions.display }} grace actions</div>
             </dd>
           </div>
           <div>
@@ -204,15 +204,15 @@
             <dd>
               <span class="universe-chip"
                     [ngClass]="rule.supported ? 'state-proven' : 'state-partial'">{{ rule.name }}</span>
-              <span class="secondary" *ngIf="rule.upgradeName">
+              <div class="secondary" *ngIf="rule.upgradeName">
                 <ng-container i18n="universe.chain.tx-fee-rule-upgrade">{{ rule.upgradeName }}</ng-container><ng-container
                   *ngIf="rule.activationHeight"
                   i18n="universe.chain.tx-fee-rule-activation">, active from block {{ rule.activationHeight.display }}</ng-container>
-              </span>
-              <span class="secondary" *ngIf="rule.unsupportedLabel"> {{ rule.unsupportedLabel }}</span>
-              <span class="secondary" *ngIf="rule.branchId">
+              </div>
+              <div class="secondary" *ngIf="rule.unsupportedLabel">{{ rule.unsupportedLabel }}</div>
+              <div class="secondary" *ngIf="rule.branchId">
                 <ng-container i18n="universe.chain.tx-fee-rule-branch">branch {{ rule.branchId }}</ng-container>
-              </span>
+              </div>
             </dd>
           </div>
         </ng-container>
