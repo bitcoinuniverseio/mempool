@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 
 // Importing the gateway must not open a socket.
 process.env.UNIVERSE_GATEWAY_NO_LISTEN = '1';
-const { routeFor, websocketUpstreamFor, inheritedListenerFd } = await import('./gateway.mjs');
+const { routeFor, websocketUpstreamFor, inheritedListenerFd, contentSecurityPolicy } =
+  await import('./gateway.mjs');
 
 /**
  * The path rewrite is load bearing. The explorer backend registers every route
@@ -139,4 +140,60 @@ test('a handover of no sockets is not a handover', () => {
   assert.equal(inheritedListenerFd({ LISTEN_PID: '42', LISTEN_FDS: '0' }, 42), null);
   assert.equal(inheritedListenerFd({ LISTEN_PID: '42' }, 42), null);
   assert.equal(inheritedListenerFd({ LISTEN_PID: '42', LISTEN_FDS: 'two' }, 42), null);
+});
+
+/**
+ * The document policy has to describe the document being served.
+ *
+ * `UNIVERSE_GATEWAY_ROOT` is a fixed path whose contents a release swaps
+ * underneath it, which is why a frontend change needs no gateway restart. The
+ * policy was computed once at start-up and did not follow that swap, so a
+ * release that changed the document's inline script and left `gateway.mjs`
+ * byte identical produced a running gateway allowing the previous build's hash
+ * and refusing the script it was itself serving. It reached production, and
+ * the only sign was a console error on every page.
+ */
+test('the content policy follows the build behind the static root', async () => {
+  const { mkdtempSync, writeFileSync, utimesSync, statSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+  const { createHash } = await import('node:crypto');
+
+  const root = mkdtempSync(join(tmpdir(), 'gateway-csp-'));
+  process.env.UNIVERSE_GATEWAY_ROOT = root;
+  process.env.UNIVERSE_GATEWAY_NO_LISTEN = '1';
+  // A second copy of the module, bound to a root this test controls. The one
+  // imported at the top of this file is bound to the default root.
+  const gateway = await import(`./gateway.mjs?csp=${Date.now()}`);
+
+  const hashOf = (body) =>
+    `'sha256-${createHash('sha256').update(body, 'utf8').digest('base64')}'`;
+
+  const first = 'window.__a=1;';
+  writeFileSync(join(root, 'index.html'), `<html><script>${first}</script></html>`);
+  const before = gateway.contentSecurityPolicy();
+  assert.ok(before.includes(hashOf(first)), 'the first build is allowed by name');
+
+  // A longer script: the file changes size as well as time.
+  const second = 'window.__b=2;window.__c=3;';
+  writeFileSync(join(root, 'index.html'), `<html><script>${second}</script></html>`);
+  const after = gateway.contentSecurityPolicy();
+  assert.ok(after.includes(hashOf(second)), 'the build now behind the path is allowed');
+  assert.ok(!after.includes(hashOf(first)), 'the build that is gone is no longer allowed');
+
+  // And a script of exactly the same length, with the modification time forced
+  // back to what it was. Neither dimension of the cache key may be load
+  // bearing on its own: a build that changes the file without changing its
+  // size has to be noticed, and so has one that lands at the same instant.
+  const stamped = statSync(join(root, 'index.html'));
+  const third = 'window.__b=9;window.__c=8;';
+  assert.equal(third.length, second.length, 'the two scripts are the same length');
+  writeFileSync(join(root, 'index.html'), `<html><script>${third}</script></html>`);
+  utimesSync(join(root, 'index.html'), stamped.atime, stamped.mtime);
+
+  const sameSizeSameTime = gateway.contentSecurityPolicy();
+  assert.ok(
+    sameSizeSameTime.includes(hashOf(third)),
+    'a build of the same size at the same instant is still the build being served',
+  );
 });
