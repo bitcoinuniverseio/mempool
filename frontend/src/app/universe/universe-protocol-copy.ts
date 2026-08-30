@@ -109,11 +109,31 @@ const PROTOCOL_COPY: Record<string, ProtocolCopy> = {
     actions: ['deploy', 'mint', 'transfer'],
   },
   doginals: {
-    summary: $localize`:@@universe.copy.doginals:Doginals apply ordinal theory to Dogecoin. They are indexed on a different chain than the one this explorer serves.`,
+    summary: $localize`:@@universe.copy.doginals:Doginals apply ordinal theory to Dogecoin: content inscribed on individual koinu and carried by the unspent output that holds them.`,
     actions: ['inscribe', 'transfer'],
   },
   drc20: {
-    summary: $localize`:@@universe.copy.drc20:DRC-20 is the Dogecoin counterpart of inscription-based fungible tokens, indexed on a different chain than the one this explorer serves.`,
+    summary: $localize`:@@universe.copy.drc20:DRC-20 is the Dogecoin counterpart of inscription-based fungible tokens. Balances belong to an address; a transfer inscription moves an amount onto one unspent output until it is spent.`,
+    actions: ['deploy', 'mint', 'transfer'],
+  },
+  dunes: {
+    summary: $localize`:@@universe.copy.dunes:Dunes are Dogecoin's runestone-style fungible tokens: balances live directly on unspent outputs and move by edicts in the spending transaction.`,
+    actions: ['etch', 'mint', 'transfer'],
+  },
+  tap_doge: {
+    summary: $localize`:@@universe.copy.tap-doge:TAP on Dogecoin keeps token balances in an address-level ledger derived from inscriptions, so holdings belong to the address rather than to any single output.`,
+    actions: ['deploy', 'mint', 'transfer'],
+  },
+  zerdinals: {
+    summary: $localize`:@@universe.copy.zerdinals:Zerdinals inscribe content into Zcash transparent transactions, and each inscription is carried by the unspent output that currently holds it.`,
+    actions: ['inscribe', 'transfer'],
+  },
+  zrunes: {
+    summary: $localize`:@@universe.copy.zrunes:ZRunes are Zcash's runestone-style fungible tokens: balances live on transparent unspent outputs and move by edicts in the spending transaction.`,
+    actions: ['etch', 'mint', 'transfer'],
+  },
+  zrc20: {
+    summary: $localize`:@@universe.copy.zrc20:ZRC-20 tokens keep an address-level ledger on Zcash, read under two published rulesets. Where the rulesets disagree this explorer shows both readings.`,
     actions: ['deploy', 'mint', 'transfer'],
   },
 };
