@@ -496,7 +496,15 @@ jobs:
   # two steps back in the one above, which is where they belong.
   mobile-engines:
     name: WebKit and Firefox
-    runs-on: ubuntu-latest
+    # On our own capacity, not GitHub's.
+    #
+    # This was the one required check in this workflow that needed a
+    # GitHub-hosted runner, and on 2026-08-30 the organization's plan stopped
+    # providing them: every run of this job failed while the four self-hosted
+    # checks beside it kept passing. A required gate that no runner can accept
+    # is the same problem as a gate that cannot finish, and `browser-heavy`
+    # already carries a browser and the system libraries one needs.
+    runs-on: [self-hosted, browser-heavy]
     timeout-minutes: 45
     steps:
       - name: Checkout
@@ -521,9 +529,15 @@ jobs:
         working-directory: scripts/universe/visual-qa
         run: npm ci
 
+      # `--with-deps` installs system libraries and needs root, which a
+      # self-hosted runner account may not have. These runners already carry
+      # what Chromium needs, which is very nearly the same set, so a refused
+      # dependency install falls back to fetching the engines alone rather
+      # than failing a gate over a permission.
       - name: Fetch the engines and what they need to start
         working-directory: scripts/universe/visual-qa
-        run: npx playwright install --with-deps webkit firefox
+        run: |
+          npx playwright install --with-deps webkit firefox             || npx playwright install webkit firefox
 
       - name: Serve the built frontend
         run: |
