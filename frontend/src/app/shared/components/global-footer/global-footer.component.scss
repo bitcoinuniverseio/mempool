@@ -90,6 +90,16 @@ footer {
     // underline on hover rather than carrying a rule each.
     text-decoration: none;
 
+    // A stacked column of destinations is the definition of a repeated
+    // control, and these came out at 41px, which is close enough to the floor
+    // to look intentional and far enough under it to be missed. The row grows
+    // rather than the text, so the column keeps its wording and its rhythm.
+    @media (pointer: coarse), (max-width: 991.98px) {
+      align-items: center;
+      display: flex;
+      min-height: var(--u-touch-target);
+    }
+
     &:hover {
       color: var(--u-brand);
       text-decoration: underline;

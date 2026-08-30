@@ -31,6 +31,17 @@
 	@media( min-width: 576px){
 		font-size: 19px;
 	}
+
+	// The arrow beside each input and output is a link to the transaction on the
+	// other side of it, so it is a target and not decoration. It is a single
+	// glyph, so it can only be given room around itself, and it sits directly
+	// beside the address link above, which is why both need it.
+	@media (pointer: coarse), (max-width: 991.98px) {
+		display: inline-block;
+		min-width: 24px;
+		padding-block: var(--u-space-2);
+		text-align: center;
+	}
 }
 .green {
   color: var(--green);
@@ -302,6 +313,16 @@ h2 {
 
 .address {
 	font-family: monospace;
+
+	// An address in a transaction flow is a link to that address, and there is
+	// one on every input and every output, a few pixels apart. At 18px tall in a
+	// stack that close together, a thumb aimed at one output lands on the one
+	// below it. Room around the text rather than a taller box, because the
+	// address is allowed to wrap when it is long.
+	@media (pointer: coarse), (max-width: 991.98px) {
+		display: inline-block;
+		padding-block: var(--u-space-2);
+	}
 }
 
 .p2pk-address {

@@ -7,9 +7,15 @@
         (focus)="focus$.next($any($event).target.value)"
         (click)="click$.next($any($event).target.value)"
         formControlName="searchText" type="text" class="form-control search-input"
+        [class.has-text]="hasSearchText"
         autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
+        enterkeyhint="search"
         i18n-placeholder="search-form.searchbar-placeholder"
         [placeholder]="activeChain === 'bitcoin' ? 'Search a transaction, block, address, or asset' : 'Search ' + activeChain">
+      <button *ngIf="hasSearchText" type="button" class="search-clear" (click)="clearSearch()"
+        i18n-aria-label="search-form.clear" aria-label="Clear the search field">
+        <fa-icon [icon]="['fas', 'xmark']" [fixedWidth]="true"></fa-icon>
+      </button>
       <app-search-results #searchResults [hidden]="dropdownHidden" [results]="typeAhead$ | async" (selectedResult)="selectedResult($event)"></app-search-results>
     </div>
     <button [disabled]="isSearching" type="submit" class="search-submit"
