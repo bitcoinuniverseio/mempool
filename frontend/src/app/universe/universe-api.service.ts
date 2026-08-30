@@ -164,6 +164,12 @@ export class UniverseApiService {
     );
   }
 
+  getChainCandidateBuckets$(chain: Exclude<ExplorerChain, 'bitcoin'>): Observable<ChainExplorerPayload> {
+    return this.httpClient.get<ChainExplorerPayload>(
+      this.apiBaseUrl + '/api/v1/' + chain + '/candidate-buckets?network=mainnet'
+    );
+  }
+
   getChainTransaction$(chain: Exclude<ExplorerChain, 'bitcoin'>, txid: string): Observable<ChainExplorerPayload> {
     return this.httpClient.get<ChainExplorerPayload>(
       this.apiBaseUrl + '/api/v1/' + chain + '/tx/' + encodeURIComponent(txid) + '?network=mainnet'
@@ -235,7 +241,7 @@ export class UniverseApiService {
 
   private protocolPath(chain: Exclude<ExplorerChain, 'bitcoin'>, protocol: string): string {
     const allowed = chain === 'dogecoin'
-      ? ['doginals', 'drc20', 'doge-tap']
+      ? ['doginals', 'drc20', 'doge-tap', 'dunes']
       : ['zerdinals', 'zrunes', 'zrc20'];
     if (!allowed.includes(protocol)) {throw new Error('unsupported-chain-protocol');}
     return protocol;

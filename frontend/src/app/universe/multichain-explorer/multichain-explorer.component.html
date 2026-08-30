@@ -85,6 +85,56 @@
   </nav>
 
   <!-- ------------------------------------------------------------------ -->
+  <!-- The pending set, grouped under this chain's own fee rules           -->
+  <!-- ------------------------------------------------------------------ -->
+  <section class="panel candidate-buckets" *ngIf="page === 'mempool' && vm.buckets as buckets"
+           aria-labelledby="buckets-heading">
+    <h2 id="buckets-heading" i18n="universe.buckets.title">Waiting for a block</h2>
+    <p class="panel-lede">{{ buckets.semanticsNotice }}</p>
+    <p class="panel-lede" *ngIf="buckets.cadenceNotice">{{ buckets.cadenceNotice }}</p>
+    <p class="notice failure" role="status" *ngIf="buckets.partial" i18n="universe.buckets.partial">
+      This grouping is built from a partial view of the pending set, so a bucket may be missing members. The list below carries the same limitation.
+    </p>
+
+    <div class="cube-row" tabindex="0" role="region" aria-labelledby="buckets-heading">
+      <div class="candidate-cube" *ngFor="let cube of buckets.cubes; trackBy: trackByIndex">
+        <div class="cube-block" [style.background]="cubeBackground(cube)">
+          <div class="cube-body">
+            <span class="cube-median" *ngIf="cube.medianFee">
+              ~{{ cube.medianFee }}
+              <span class="cube-unit">{{ buckets.unit }}</span>
+            </span>
+            <span class="cube-span" *ngIf="cube.feeSpan" i18n="universe.buckets.fee-span">{{ cube.feeSpan.low }} to {{ cube.feeSpan.high }}</span>
+            <span class="cube-count" *ngIf="cube.txCount" [attr.title]="cube.txCount.exact"
+                  i18n="universe.buckets.tx-count">{{ cube.txCount.display }} transactions</span>
+            <span class="cube-size" *ngIf="cube.totalSize" [attr.title]="cube.totalSize.exact"
+                  i18n="universe.buckets.size">{{ cube.totalSize.display }} bytes</span>
+          </div>
+        </div>
+        <div class="cube-caption">
+          <span class="universe-chip" *ngIf="cube.tierLabel" [ngClass]="'state-' + cube.tierTone">{{ cube.tierLabel }}</span>
+          <span class="universe-chip state-neutral" *ngIf="cube.overflow" i18n="universe.buckets.overflow">Everything after these</span>
+          <span class="secondary" *ngIf="cube.unknownFeeCount" [attr.title]="cube.unknownFeeCount.exact"
+                i18n="universe.buckets.unknown-fees">{{ cube.unknownFeeCount.display }} without a readable fee</span>
+        </div>
+      </div>
+    </div>
+    <p class="notice empty" *ngIf="!buckets.cubes.length" i18n="universe.buckets.none">
+      Nothing is waiting right now, as far as our own node can see.
+    </p>
+
+    <dl class="facts bucket-facts" *ngIf="buckets.facts.length">
+      <div *ngFor="let fact of buckets.facts; trackBy: trackByIndex">
+        <dt>{{ fact.label }}</dt>
+        <dd>{{ fact.value }}</dd>
+      </div>
+    </dl>
+    <ul class="bucket-disclosures">
+      <li *ngFor="let line of buckets.disclosures; trackBy: trackByIndex" class="secondary">{{ line }}</li>
+    </ul>
+  </section>
+
+  <!-- ------------------------------------------------------------------ -->
   <!-- Chain overview                                                      -->
   <!-- ------------------------------------------------------------------ -->
   <ng-container *ngIf="page === 'dashboard'">
@@ -696,6 +746,173 @@
     </div>
     <p class="panel-lede" *ngIf="list.unreadRowCount" i18n="universe.chain.ruleset-list-unread">
       {{ list.unreadRowCount }} entries in the response carry no ruleset ledger and are only in the full response below.
+    </p>
+  </section>
+
+  <!-- ------------------------------------------------------------------ -->
+  <!-- The registry manifest and the authorities behind it                 -->
+  <!-- ------------------------------------------------------------------ -->
+  <ng-container *ngIf="vm.protocolIndex as index">
+
+    <section class="panel" aria-labelledby="protocol-index-heading">
+      <h2 id="protocol-index-heading" i18n="universe.protoindex.title">Protocols on this chain</h2>
+      <p class="panel-lede" i18n="universe.protoindex.lede">
+        What the registry lists for this chain, and how far each entry has come. A protocol is only called verified after its integration has been proven end to end; a healthy indexer alone does not earn it.
+      </p>
+      <div class="table-wrap" tabindex="0" role="region" aria-labelledby="protocol-index-heading">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col" i18n="universe.protoindex.col-protocol">Protocol</th>
+              <th scope="col" i18n="universe.protoindex.col-release">Release</th>
+              <th scope="col" i18n="universe.protoindex.col-authority">Indexer</th>
+              <th scope="col" i18n="universe.protoindex.col-coverage">Coverage</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of index.rows; trackBy: trackById">
+              <td>
+                <a *ngIf="row.routeId; else indexNoPage"
+                   [routerLink]="['/', chain, 'protocols', row.routeId]">{{ row.displayName }}</a>
+                <ng-template #indexNoPage>{{ row.displayName }}</ng-template>
+              </td>
+              <td><span class="universe-chip" [ngClass]="'state-' + row.releaseTone">{{ row.releaseLabel }}</span></td>
+              <td class="identifier">{{ row.authorityId }}</td>
+              <td [class.secondary]="!row.coverageLabel">{{ row.coverageLabel }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel" *ngIf="index.authorities.length" aria-labelledby="protocol-authorities-heading">
+      <h2 id="protocol-authorities-heading" i18n="universe.protoindex.authorities-title">The authorities behind them</h2>
+      <p class="panel-lede" i18n="universe.protoindex.authorities-lede">
+        What each first-party source reports about itself right now. A failure is shown under the code the source reported, so it can be checked against the service rather than a paraphrase of it.
+      </p>
+      <ul class="authority-list">
+        <li *ngFor="let authority of index.authorities; trackBy: trackByKey">
+          <span class="authority-label">{{ authority.label }}</span>
+          <span class="universe-chip" [ngClass]="'state-' + authority.tone">{{ authority.stateLabel }}</span>
+          <span class="authority-detail">
+            <span class="identifier" *ngIf="authority.authorityId">{{ authority.authorityId }}</span>
+            <span *ngIf="authority.checkpointHeight" [attr.title]="authority.checkpointHeight.exact"
+                  i18n="universe.protoindex.authority-height">at block {{ authority.checkpointHeight.display }}</span>
+            <span *ngIf="authority.lastSuccess" i18n="universe.protoindex.authority-success">last answered {{ authority.lastSuccess }}</span>
+          </span>
+          <span class="authority-failure secondary" *ngIf="authority.failureCode"
+                i18n="universe.protoindex.authority-failure">Reported as {{ authority.failureCode }}, in the source's own words.</span>
+        </li>
+      </ul>
+    </section>
+
+  </ng-container>
+
+  <!-- ------------------------------------------------------------------ -->
+  <!-- One dune, whose quantities shift by its own divisibility            -->
+  <!-- ------------------------------------------------------------------ -->
+  <section class="panel ruleset-ledger dune-detail" *ngIf="vm.duneAsset as dune" aria-labelledby="dune-heading">
+    <h2 id="dune-heading">
+      {{ dune.dune }}
+      <span class="dune-symbol" *ngIf="dune.symbol">{{ dune.symbol }}</span>
+    </h2>
+    <dl class="facts ruleset-context">
+      <div>
+        <dt i18n="universe.chain.dune-id">Dune</dt>
+        <dd class="identifier">{{ dune.duneId }}</dd>
+      </div>
+      <div *ngIf="dune.divisibilityExact">
+        <dt i18n="universe.chain.dune-divisibility">Divisibility</dt>
+        <dd [attr.title]="dune.divisibilityExact">
+          {{ dune.divisibilityExact }}
+          <span class="secondary" i18n="universe.chain.dune-divisibility-note">Every quantity below is shifted by this, never by the chain's own decimals.</span>
+        </dd>
+      </div>
+      <div *ngIf="dune.etchingTxid">
+        <dt i18n="universe.chain.dune-etching">Etched in</dt>
+        <dd><a class="identifier" [routerLink]="['/', chain, 'tx', dune.etchingTxid]">{{ short(dune.etchingTxid) }}</a></dd>
+      </div>
+      <div *ngIf="dune.etchedAt">
+        <dt i18n="universe.chain.dune-etched-at">Etched</dt>
+        <dd [attr.title]="dune.etchedAt.exact">{{ dune.etchedAt.display }}</dd>
+      </div>
+      <div *ngIf="dune.mintable !== null">
+        <dt i18n="universe.chain.dune-mintable">Minting</dt>
+        <dd>
+          <span class="universe-chip" [ngClass]="dune.mintable ? 'state-proven' : 'state-neutral'">
+            <ng-container *ngIf="dune.mintable; else notMintable" i18n="universe.chain.dune-mintable-open">Open in the next block</ng-container>
+            <ng-template #notMintable><ng-container i18n="universe.chain.dune-mintable-closed">Not open</ng-container></ng-template>
+          </span>
+        </dd>
+      </div>
+    </dl>
+
+    <p class="notice failure" *ngIf="dune.divisibility === null" i18n="universe.chain.dune-no-divisibility">
+      This dune's divisibility could not be read, so no shifted quantity is shown. An unshifted figure presented as one would be wrong by a factor the reader cannot see. The exact digits are in the full response below.
+    </p>
+
+    <dl class="facts">
+      <div *ngFor="let figure of dune.figures; trackBy: trackByKey">
+        <dt>{{ figure.label }}</dt>
+        <dd [class.secondary]="!figure.value" [attr.title]="figure.value?.exact">
+          <ng-container *ngIf="figure.value; else duneNoFigure">{{ figure.value.display }}</ng-container>
+          <ng-template #duneNoFigure><ng-container i18n="universe.chain.dune-not-shown">not shown</ng-container></ng-template>
+        </dd>
+      </div>
+    </dl>
+
+    <p class="panel-lede" *ngIf="dune.unreadFields.length" i18n="universe.chain.dune-unread">
+      The record also carries {{ dune.unreadFields.join(', ') }}, which this build has no reading for. They are named here rather than shifted by a rule that may not apply, and appear in the full response below.
+    </p>
+  </section>
+
+  <!-- ------------------------------------------------------------------ -->
+  <!-- A page of dunes                                                     -->
+  <!-- ------------------------------------------------------------------ -->
+  <section class="panel ruleset-list dune-list" *ngIf="vm.duneList as list" aria-labelledby="dune-list-heading">
+    <h2 id="dune-list-heading" i18n="universe.chain.dune-list-title">Dunes</h2>
+    <p class="panel-lede" i18n="universe.chain.dune-list-lede">
+      Each dune's quantities are shifted by its own divisibility, stated on its page. Nothing here shares a unit with DOGE.
+    </p>
+    <p class="panel-lede" *ngIf="duneListTruncated(list)" i18n="universe.chain.dune-list-truncated">
+      Showing the first {{ list.shownCount }} of {{ list.totalExact }} dunes the authority reports.
+    </p>
+    <p class="panel-lede" *ngIf="list.hiddenFigureFields.length" i18n="universe.chain.dune-list-hidden">
+      Each record also carries {{ list.hiddenFigureFields.join(', ') }}, which are not columns here. Every one of them is on the dune's own page.
+    </p>
+    <div class="table-wrap" tabindex="0" role="region" aria-labelledby="dune-list-heading">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col" i18n="universe.chain.dune-list-name">Dune</th>
+            <th scope="col" class="numeric" *ngFor="let column of list.columns; trackBy: trackByKey">{{ column.label }}</th>
+            <th scope="col" i18n="universe.chain.dune-list-minting">Minting</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of list.rows; trackBy: trackByIndex">
+            <td>
+              <a class="identifier" [routerLink]="['/', chain, 'protocols', activeProtocolId(), row.reading.duneId]">{{ row.reading.dune }}</a>
+              <span class="dune-symbol" *ngIf="row.reading.symbol">{{ row.reading.symbol }}</span>
+            </td>
+            <td class="numeric" *ngFor="let cell of row.cells; trackBy: trackByKey"
+                [class.secondary]="!cell.figure?.value"
+                [attr.title]="cell.figure?.value?.exact">
+              <ng-container *ngIf="cell.figure?.value as value; else duneNoCell">{{ value.display }}</ng-container>
+              <ng-template #duneNoCell><ng-container i18n="universe.chain.dune-list-no-figure">not shown</ng-container></ng-template>
+            </td>
+            <td>
+              <span class="universe-chip" [ngClass]="row.reading.mintable ? 'state-proven' : 'state-neutral'">
+                <ng-container *ngIf="row.reading.mintable; else rowNotMintable" i18n="universe.chain.dune-list-open">Open</ng-container>
+                <ng-template #rowNotMintable><ng-container i18n="universe.chain.dune-list-closed">Closed</ng-container></ng-template>
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="panel-lede" *ngIf="list.unreadRowCount" i18n="universe.chain.dune-list-unread">
+      {{ list.unreadRowCount }} entries in the response could not be read as dunes and are only in the full response below.
     </p>
   </section>
 
