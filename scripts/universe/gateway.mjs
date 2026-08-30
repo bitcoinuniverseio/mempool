@@ -111,8 +111,8 @@ const CONTENT_SECURITY_POLICY_PARTS = [
 /**
  * The build injects one inline script into the document to name the theme
  * files, and its content changes with every build. Rather than weaken the
- * policy with 'unsafe-inline', its hash is computed once at start-up and
- * allowed by name. Anything else inline stays blocked.
+ * policy with 'unsafe-inline', its hash is allowed by name. Anything else
+ * inline stays blocked.
  */
 function inlineScriptHashes() {
   const index = join(ROOT, 'index.html');
@@ -133,18 +133,54 @@ function inlineScriptHashes() {
   return hashes;
 }
 
-const CONTENT_SECURITY_POLICY = (() => {
+/**
+ * The policy for the document being served now, not for the one that was there
+ * at start-up.
+ *
+ * This used to be computed once when the process began. That is wrong here for
+ * the same reason the static root is resolved per request: `ROOT` is a fixed
+ * path whose contents a release swaps underneath it, which is exactly why a
+ * frontend change needs no gateway restart. A policy pinned at start-up does
+ * not follow that swap.
+ *
+ * It reached production. A release changed the document's inline script and
+ * left `gateway.mjs` byte identical, so the cutover correctly left the gateway
+ * running, and the running gateway went on allowing the previous build's hash
+ * while refusing the script it was itself serving. Every page loaded with the
+ * theme bootstrap blocked, and the only sign was a console error.
+ *
+ * Keyed on the file's size and modification time, so a document costs one stat
+ * and a hash is computed only when the file behind the path actually changes.
+ */
+let policyCache = null;
+
+function indexIdentity() {
+  try {
+    const stats = statSync(join(ROOT, 'index.html'));
+    return `${stats.size}:${stats.mtimeMs}`;
+  } catch {
+    return 'absent';
+  }
+}
+
+export function contentSecurityPolicy() {
+  const key = indexIdentity();
+  if (policyCache?.key === key) {
+    return policyCache.value;
+  }
   const hashes = inlineScriptHashes();
-  return CONTENT_SECURITY_POLICY_PARTS.map((part) =>
+  const value = CONTENT_SECURITY_POLICY_PARTS.map((part) =>
     part.startsWith('script-src') && hashes.length
       ? `${part} ${hashes.join(' ')}`
       : part,
   ).join('; ');
-})();
+  policyCache = { key, value };
+  return value;
+}
 
 function withSecurityHeaders(headers, isDocument) {
   const merged = { ...headers, ...SECURITY_HEADERS };
-  if (isDocument) merged['content-security-policy'] = CONTENT_SECURITY_POLICY;
+  if (isDocument) merged['content-security-policy'] = contentSecurityPolicy();
   return merged;
 }
 
