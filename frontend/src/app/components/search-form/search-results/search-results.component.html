@@ -129,7 +129,7 @@
   @if (!addressLookupReady) {
     <div class="search-notice small">
       @if (addressIndex?.state === 'syncing') {
-        @if (addressIndex?.indexedTip !== null && addressIndex?.bitcoinCoreTip !== null) {
+        @if (addressIndex && addressIndex.indexedTip !== null && addressIndex.bitcoinCoreTip !== null) {
           <ng-container i18n="search.address-index-syncing-progress">Address history is still being indexed, through block {{ addressIndex.indexedTip }} of {{ addressIndex.bitcoinCoreTip }}.</ng-container>
         } @else {
           <ng-container i18n="search.address-index-syncing">Address history is still being indexed.</ng-container>
