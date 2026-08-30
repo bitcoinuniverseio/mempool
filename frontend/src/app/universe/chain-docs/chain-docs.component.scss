@@ -77,6 +77,14 @@
     font-size: var(--u-text-sm);
     text-decoration: none;
 
+    // A list of repeated targets, which on a phone is exactly the case the
+    // 44 pixel rule is about.
+    @media (pointer: coarse), (max-width: 991.98px) {
+      align-items: center;
+      display: flex;
+      min-height: 44px;
+    }
+
     &:hover {
       color: var(--u-brand);
     }

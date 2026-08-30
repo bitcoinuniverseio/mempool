@@ -74,6 +74,15 @@
     &:focus-visible {
       text-decoration: underline;
     }
+
+    // One of these ends every panel, so on a phone they are a column of
+    // repeated targets. A line of text is about 24 pixels tall; 44 is the
+    // smallest a thumb can be expected to hit.
+    @media (pointer: coarse), (max-width: 991.98px) {
+      align-items: center;
+      display: inline-flex;
+      min-height: 44px;
+    }
   }
 }
 
@@ -104,6 +113,14 @@
       &:hover,
       &:focus-visible {
         color: var(--u-brand);
+      }
+
+      // A column of one protocol per row, which on a phone is a stack of
+      // repeated targets a thumb has to pick between.
+      @media (pointer: coarse), (max-width: 991.98px) {
+        align-items: center;
+        display: inline-flex;
+        min-height: 44px;
       }
     }
   }
