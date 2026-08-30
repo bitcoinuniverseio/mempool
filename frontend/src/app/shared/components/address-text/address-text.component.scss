@@ -26,6 +26,20 @@
   }
 }
 
+// An address link stacked with others a few pixels apart, one per output. This
+// component is used in the address page's own lists rather than in the
+// transaction flow, so it needs the same room as the flow's addresses do and
+// does not inherit it from there.
+.address {
+  @media (pointer: coarse), (max-width: 991.98px) {
+    display: inline-block;
+    // 13 either side of an 18px line reaches the floor exactly. The number is
+    // written rather than taken from the space scale because it is derived
+    // from the target size and the line height, not from the rhythm.
+    padding-block: 13px;
+  }
+}
+
 .poison-alert {
   margin-left: .5em;
   color: var(--yellow);

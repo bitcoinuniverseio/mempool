@@ -784,6 +784,15 @@ tbody tr:last-child td {
     cursor: pointer;
     font-weight: var(--u-weight-semibold);
     color: var(--u-text-secondary);
+
+    // The one control that opens the raw evidence for an object, and the only
+    // way to reach it. A disclosure triangle beside a word is about 18px tall,
+    // which is a poor target for something this consequential.
+    @media (pointer: coarse), (max-width: 991.98px) {
+      align-items: center;
+      display: flex;
+      min-height: var(--u-touch-target);
+    }
   }
 
   &[open] summary {

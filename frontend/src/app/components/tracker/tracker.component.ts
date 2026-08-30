@@ -852,7 +852,17 @@ export class TrackerComponent implements OnInit, OnDestroy {
   onResize(): void {
     this.isMobile = window.innerWidth < 850;
     this.blockchainWidth = Math.min(600, window.innerWidth);
-    this.blockchainHeight = this.blockchainWidth / 5;
+    // A fifth of the width, but never so short that the blocks stop being
+    // targets.
+    //
+    // Each block in this strip is a link to that block, and the strip renders
+    // them at seven twelfths of its height. At 320px wide that arithmetic
+    // produced 37px blocks: comfortably clickable, and under the 44 a thumb
+    // wants. The floor of 76 is that relationship run backwards from 44, so
+    // the strip grows by twelve pixels on the narrowest phones and is
+    // unchanged from 380px upwards, where a fifth of the width already clears
+    // it.
+    this.blockchainHeight = Math.max(76, this.blockchainWidth / 5);
   }
 
   ngOnDestroy() {

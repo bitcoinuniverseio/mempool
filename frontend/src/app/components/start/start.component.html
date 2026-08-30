@@ -12,7 +12,24 @@
 <div *ngIf="countdown > 0" class="warning-label">{{ eventName }} in {{ countdown | number }} block{{ countdown === 1 ? '' : 's' }}!</div>
 
 <div class="blockchain-wrapper" [class.time-ltr]="timeLtr" [class.time-rtl]="!timeLtr" #blockchainWrapper>
+  <!-- The block timeline is the one place in this product that scrolls
+       sideways on purpose. Blocks are a sequence, and the whole point of the
+       view is the run of them either side of the tip, so stacking them or
+       cutting the row down to what fits a phone would destroy the thing being
+       looked at.
+
+       What was missing was saying so. It was a clipped row with its scrollbar
+       hidden, which to anyone not already expecting a timeline is a row that
+       simply ends, and to a screen reader was an unnamed div. Naming it as a
+       region gives it a landmark and an announced purpose, and marks it as the
+       one region the mobile gate is allowed to find scrolling sideways. Its
+       blocks are links, so a keyboard reaches past the edge by tabbing through
+       them, which is what the gate checks for separately. -->
   <div id="blockchain-container" [dir]="timeLtr ? 'rtl' : 'ltr'" #blockchainContainer
+    data-scroll-region
+    role="region"
+    i18n-aria-label="start.blockchain-region|Block timeline region"
+    aria-label="Block timeline, scrolls sideways"
     [class.with-menu]="hasMenu"
     (mousedown)="onMouseDown($event)"
     (pointerdown)="onPointerDown($event)"

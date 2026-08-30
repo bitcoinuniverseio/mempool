@@ -107,9 +107,236 @@ html, body {
   height: 100%;
 }
 
+// Nothing the browser scrolls to may land underneath a fixed layer.
+//
+// Anchors, `scrollIntoView`, and the scroll a browser performs when focus
+// moves to something off screen all stop with the target flush against the
+// edge of the viewport. Both edges of this product are occupied: a sticky
+// header at the top at every width, and a fixed navigation bar at the bottom
+// below the breakpoint. Without these two, tabbing to a control near the
+// bottom of a page on a phone put it exactly behind the bar, which is a
+// WCAG 2.2 focus-obscured failure and, more plainly, the visitor could not see
+// the thing they had just focused.
+//
+// Written on `html` so it applies to the scrolling element regardless of which
+// route is mounted.
+//
+// The number has to track the header rather than be the largest it ever needs
+// to be. Reserving 7rem where the header is 48px does not simply overshoot: it
+// takes 64 pixels out of the room the browser has to place the focused element
+// in, and anything taller than what is left gets aligned to the top of that
+// room with its bottom hanging past the bar. That is how a scroll-padding rule
+// meant to prevent this fault caused it, on the shortest window of the set. So
+// each of the three header shapes states its own.
+html {
+  // Below 600px the header wraps to two rows, search on its own beneath the
+  // brand and the pickers.
+  scroll-padding-bottom: calc(var(--u-bottom-nav-space) + var(--u-space-4));
+  scroll-padding-top: calc(7rem + var(--u-safe-top));
+
+  // From 600px the header is one row again, and the bottom bar is still there.
+  @media (min-width: 600px) and (max-width: 991.98px) {
+    scroll-padding-top: calc(4.5rem + var(--u-safe-top));
+  }
+
+  // Compact landscape: a short header and a short bar, and the least room of
+  // any window in the set to spend.
+  @media (max-width: 991.98px) and (max-height: 479.98px) {
+    scroll-padding-bottom: calc(var(--u-touch-target) + 1px + var(--u-safe-bottom) + var(--u-space-3));
+    // 4rem, not 3.5. The compact landscape header measures 57px including its
+    // rule, so 3.5rem cleared it by minus one pixel and the focused element
+    // came to rest just under it. Measured rather than estimated a second time.
+    scroll-padding-top: calc(4rem + var(--u-safe-top));
+  }
+
+  @media (min-width: 992px) {
+    // One row of header, and no bottom bar to clear.
+    scroll-padding-bottom: var(--u-space-4);
+    scroll-padding-top: 5rem;
+  }
+}
+
+// The same reservation again, stated on the targets rather than the scroller.
+//
+// `scroll-padding` on the scroll container is the tidier half of this, and on
+// its own it is not enough. Engines differ on whether they apply it to the
+// scroll a browser performs when focus moves to something off screen, as
+// opposed to an anchor or an explicit `scrollIntoView`. Measured here: Firefox
+// left focused links resting ten pixels under the bottom bar on a 320px window
+// where Chromium and WebKit placed them clear of it.
+//
+// `scroll-margin` is the other half of the same contract and is honoured on the
+// target itself. Declaring both is not redundant: an engine that applies one
+// gets a correct result, and an engine that applies both over-scrolls slightly,
+// which places the focused control further from the bar than needed and is not
+// a fault. Below the breakpoint only, since that is where the fixed bar is.
+//
+// The selector list is named once. Three copies of it is three chances for
+// them to drift apart, and the one that drifts is the one nobody notices.
+$focusable: 'a[href], button, input, select, textarea, summary, [tabindex]:not([tabindex="-1"])';
+
+@media (max-width: 991.98px) {
+  #{$focusable} {
+    scroll-margin-bottom: calc(var(--u-bottom-nav-space) + var(--u-space-4));
+    scroll-margin-top: calc(7rem + var(--u-safe-top));
+  }
+
+  @media (min-width: 600px) {
+    #{$focusable} {
+      scroll-margin-top: calc(4.5rem + var(--u-safe-top));
+    }
+  }
+
+  @media (max-height: 479.98px) {
+    #{$focusable} {
+      scroll-margin-bottom: calc(var(--u-touch-target) + 1px + var(--u-safe-bottom) + var(--u-space-3));
+      scroll-margin-top: calc(4rem + var(--u-safe-top));
+    }
+  }
+}
+
 body {
   background-color: var(--u-surface-page);
   padding-bottom: 60px;
+}
+
+// Every control a phone opens a keyboard or a picker for.
+//
+// Written once and globally rather than on each control, because the rule it
+// enforces is an engine threshold rather than a design choice, and a rule that
+// has to be remembered per component is a rule that will be missed by the next
+// one. It was already missed five times: the language, currency, timezone,
+// amount and theme selects in the footer all computed at 14px, courtesy of
+// Bootstrap's `custom-select-sm`, and every one of them zoomed an iPhone in on
+// the footer and left it there.
+//
+// Below 16px iOS Safari zooms the layout viewport when the control takes focus
+// and does not restore it afterwards. The height goes up with the text for the
+// same reason the size exists: a control that is comfortable to read is still
+// unusable if it is too short to hit.
+//
+// Two conditions, not one. A device that reports a coarse pointer is the
+// obvious case, and a window narrow enough to be a phone is the safety net:
+// pointer reporting is not perfectly reliable across mobile browsers and
+// desktop-mode requests, and being wrong about it here costs a zoomed page,
+// while being wrong the other way costs a slightly larger control in a narrow
+// window. The wide desktop layout is untouched by either.
+//
+// The class selectors below are carrying specificity, not styling.
+//
+// Bootstrap sets 0.875rem from `.custom-select-sm` and `.form-control-sm`, both
+// single class selectors, and a bare `select` loses to them. That is precisely
+// how five 14px selects survived in the footer through a redesign. Naming the
+// element and the class together outweighs the class alone, which is the least
+// heavy-handed way to win this and leaves a component free to override it
+// deliberately. `!important` would have won too, and would have taken that
+// freedom away from every component at the same time.
+@media (pointer: coarse), (max-width: 991.98px) {
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='hidden']),
+  select,
+  textarea,
+  input.form-control,
+  input.form-control-sm,
+  select.custom-select,
+  select.custom-select-sm,
+  select.form-control,
+  textarea.form-control {
+    font-size: var(--u-text-field);
+  }
+
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='hidden']),
+  select,
+  input.form-control,
+  input.form-control-sm,
+  select.custom-select,
+  select.custom-select-sm,
+  select.form-control {
+    min-height: var(--u-touch-target);
+  }
+
+  // Box-like controls, given a thumb-sized shorter side.
+  //
+  // Every one of these is already a rectangle with its own background or
+  // border, so growing the shorter side changes how easy it is to hit and
+  // nothing else. They came in between 24 and 42 pixels tall, which is the
+  // range that looks deliberate on a desktop and is a near miss on a phone:
+  // pagination arrows at 38, documentation tabs at 42, the chart's own
+  // controls at 23.
+  //
+  // The flex display is what puts the label back in the middle. A `min-height`
+  // on its own leaves the text at the top of a taller box, which is how this
+  // sort of rule usually announces itself.
+  .btn,
+  .page-link,
+  .nav-link,
+  .lens-option,
+  .dropdown-toggle {
+    align-items: center;
+    display: inline-flex;
+    justify-content: center;
+    min-height: var(--u-touch-target);
+    // Both sides, because several of these are square rather than wide: the
+    // copy control beside every identifier is an icon 21px across, and the
+    // pagination arrows are 35. A floor on the height alone leaves a target
+    // that is tall and still too narrow to hit.
+    min-width: var(--u-touch-target);
+  }
+
+  // Checkboxes and radios keep their own size, which no platform draws larger
+  // than about 13px. That is under the WCAG floor on its own, so the box grows
+  // to the floor where it is not inside a label big enough to stand in for it.
+  input[type='checkbox'],
+  input[type='radio'] {
+    height: 24px;
+    width: 24px;
+  }
+
+  // Identifier links inside dense lists.
+  //
+  // These are words rather than boxes, so they take room around the text
+  // rather than a fixed height: an identifier is allowed to wrap across
+  // several lines when it is a 64-character hash, and a flex box with a
+  // minimum height would stop it doing that.
+  //
+  // The padding is real and the row grows with it. An earlier attempt pulled
+  // the row back to its old height with a negative margin, which kept the
+  // table dense and made every target overlap the two beside it, so aiming at
+  // one landed on its neighbour. That is the fault the rule exists to prevent,
+  // reintroduced by the fix for it. On a phone a row of identifiers is a list
+  // of links to follow, and a list of links to follow should be as tall as the
+  // links are.
+  //
+  // 14px either side of a 16px line reaches the floor exactly.
+  a.identifier,
+  a.truncate-link {
+    display: inline-block;
+    padding-block: 14px;
+  }
+
+  // A link sitting directly in a table cell is that row's target.
+  //
+  // Not `:only-child`, which is what this said first and which missed the one
+  // that started it: the block hash cell holds a direction mark, the link, and
+  // a copy control, so the link has siblings and the rule passed straight over
+  // it while the copy control sat six pixels away. Any link that is a direct
+  // child of a cell is an identifier or a destination, and several of them in
+  // one cell sit side by side rather than stacked, so room on the block axis
+  // separates rows without ever crowding a neighbour.
+  //
+  // Rows of transaction ids and block hashes are the most-followed links in
+  // this product and among the smallest, because an identifier link is one
+  // line of monospace text and nothing else. Stacked at table density they sat
+  // nineteen pixels apart, which is a row of targets where hitting the
+  // intended one is a matter of luck.
+  //
+  // The row grows and the table gets taller. That is the trade: on a phone
+  // these tables are lists of things to open, and a list of things to open has
+  // to be openable. Nothing here changes on the wide layout, where the same
+  // rows are driven by a cursor.
+  td > a {
+    display: inline-block;
+    padding-block: var(--u-space-3);
+  }
 }
 
 .container {
@@ -1581,6 +1808,16 @@ h2.anchor {
   min-height: 38px;
   padding: 0 var(--u-space-2);
 
+  // A thumb, not a cursor. 38px is comfortable to click and awkward to tap,
+  // and this is one of the three controls in the header that a phone user
+  // reaches for first. Keyed on the pointer rather than the width, because a
+  // narrow desktop window is still driven by a mouse and gains nothing from
+  // the taller control.
+  @media (pointer: coarse), (max-width: 991.98px) {
+    min-height: var(--u-touch-target);
+    padding-inline: var(--u-space-3);
+  }
+
   &:focus-visible {
     outline: 2px solid var(--u-focus-ring);
     outline-offset: 2px;
@@ -1615,8 +1852,24 @@ h2.anchor {
   text-align: left;
 }
 
+// A dropdown is a desktop shape, and on a phone it is the shape most likely to
+// run off the bottom of the screen or out of its side. Three constraints keep
+// it inside the window it actually has: never wider than the viewport, never
+// taller than the dynamic viewport minus the header it hangs from, and
+// scrollable inside itself when the chain list outgrows a short screen. Without
+// the height cap, opening this in landscape puts the last chain below the fold
+// with no way to reach it, because a fixed-position menu does not scroll the
+// page.
 .chain-menu {
+  // vh first, then dvh for the engines that have it. An engine without dvh
+  // gets the large viewport, which is slightly too tall while the browser
+  // chrome is showing and still far better than no cap at all.
+  max-height: calc(100vh - 6rem);
+  max-height: calc(100dvh - 6rem);
+  max-width: calc(100vw - var(--u-space-4));
   min-width: min(22rem, calc(100vw - 1rem));
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .chain-option {
@@ -1626,6 +1879,11 @@ h2.anchor {
   grid-template-columns: minmax(0, 1fr) auto;
   row-gap: 2px;
   white-space: normal;
+
+  @media (pointer: coarse), (max-width: 991.98px) {
+    min-height: var(--u-touch-target);
+    padding-block: var(--u-space-2);
+  }
 }
 
 .chain-option-title {
