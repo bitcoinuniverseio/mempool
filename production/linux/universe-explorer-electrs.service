@@ -1,0 +1,47 @@
+[Unit]
+Description=Universe Explorer Bitcoin address index (mempool/electrs v3.3.0)
+Documentation=https://github.com/mempool/electrs
+After=network-online.target bitcoin.service
+Wants=bitcoin.service
+
+[Service]
+Type=simple
+User=universe-electrs
+Group=universe-electrs
+SupplementaryGroups=bitcoin
+Environment=RUST_BACKTRACE=1
+ExecStart=/opt/universe-explorer-electrs/v3.3.0/electrs \
+  --network mainnet \
+  --db-dir /data/indexers-c/universe-explorer-electrs \
+  --daemon-dir /var/lib/bitcoind \
+  --daemon-rpc-addr 127.0.0.1:8332 \
+  --http-addr 127.0.0.1:3001 \
+  --electrum-rpc-addr 127.0.0.1:50002 \
+  --monitoring-addr 127.0.0.1:4224 \
+  --lightmode \
+  --address-search \
+  -vv
+Restart=on-failure
+RestartSec=15
+TimeoutStopSec=300
+KillSignal=SIGINT
+LimitNOFILE=1048576
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+MemoryHigh=10G
+MemoryMax=14G
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+ReadWritePaths=/data/indexers-c/universe-explorer-electrs
+ReadOnlyPaths=/var/lib/bitcoind
+
+[Install]
+WantedBy=multi-user.target
