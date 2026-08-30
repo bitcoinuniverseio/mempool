@@ -12,7 +12,7 @@ on:
 
 jobs:
   manage-project-board:
-    runs-on: mempool-ci
+    runs-on: runs-on=${{ github.run_id }}-manage_project_board/runner=universe-hosted/cpu=2+8/env=production
     steps:
       - name: Update Project Board
         uses: actions/github-script@v7

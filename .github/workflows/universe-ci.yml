@@ -44,8 +44,18 @@ jobs:
         with:
           node-version: '24.19.0'
 
-      - name: Protocol coverage table matches the recorded manifest
-        run: node scripts/universe/generate-protocol-coverage.mjs --check
+      # The roster is owned by backend-apis. This holds the pinned copy to its
+      # schema and its provenance, holds this repository's own surfaces to the
+      # pinned roster, and refuses a roster that lost an entry. The gate it
+      # replaced rendered a table from the recorded JSON and compared it with
+      # the committed table, so it could only prove a file agreed with itself:
+      # dunes and zrc20 were added to the registry and served in production
+      # while the recorded roster here still said thirty-six, green throughout.
+      - name: The pinned protocol roster holds
+        run: node scripts/universe/protocol-contract.mjs --check
+
+      - name: The protocol roster gate fires on the states it exists for
+        run: node --test scripts/universe/protocol-contract.test.mjs
 
       - name: No em dash anywhere
         run: node scripts/universe/check-text.mjs
@@ -132,12 +142,12 @@ jobs:
   frontend:
     name: Frontend build
     runs-on: [self-hosted, linux-ultra]
-    # The deep visual pass measured 48 minutes once the gated route list grew
-    # from three routes to seven, which put the job over the hour it had and
-    # killed it three minutes from the end. A gate that cannot finish protects
-    # nothing, which is the same reason the matrix was split in two to begin
-    # with. Budget is for the pass that actually runs, with room to grow.
-    timeout-minutes: 100
+    # This builds, gates the bundle, and walks every route once at a phone and
+    # a desktop width. The deep pass that used to follow it now runs beside it,
+    # sharded, because it stopped fitting: 71 minutes of a 100 minute cap on
+    # its own, and on develop it reached the cap and the required check died as
+    # a timeout. Budget here is for the work that is left, with room to grow.
+    timeout-minutes: 45
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -232,64 +242,144 @@ jobs:
       # chart panel draws nothing, or when a failure state says nothing about
       # why. Those three states passed every other gate here and shipped.
       #
-      # Split into two passes that finish, rather than one sweep that does not.
-      # Every combination of thirteen routes, seven data states, three themes
-      # and seven widths is nineteen hundred page loads, which does not fit the
-      # job timeout, and a gate that cannot finish protects nothing.
+      # The pass here is the broad one: every route, real data, a phone and a
+      # desktop width, which is where overflow, broken images and a page that
+      # never finishes show up. It measured 5m50s.
       #
-      # The broad pass walks every route at a phone and a desktop width with
-      # real data, which is where overflow, broken images and a page that never
-      # finishes show up. The deep pass takes the routes this suite holds to a
-      # terminal state through every failure state, every theme and the widths
-      # that change the layout, which is where a page that lies about why it is
-      # empty shows up.
-      #
-      # Measured on run 33254326169, 2026-08-29, on universe-linux-ultra-02:
-      #
-      #   broad pass          64 screenshots     5m50s
-      #   deep pass          504 screenshots    47m10s
-      #   chain failures      48 screenshots     3m27s
-      #   forced colours and zoom                  30s
-      #   whole job                            59m57s of a 100 minute cap
-      #
-      # This comment said two and a half minutes and sixteen. The deep pass has
-      # since grown to roughly three times that, it is now 78 percent of the
-      # job, and the job sits at 60 of its 100 minutes. Nothing is failing. The
-      # point of writing the real numbers down is that the next person to add a
-      # route, a state or a theme to the deep pass is the one who meets the
-      # cap, and without this they meet it as a timeout forty-seven minutes
-      # into a run rather than as a number they could have added up first.
-      #
-      # The deep pass is routes multiplied by states multiplied by themes
-      # multiplied by widths. Adding one route to it currently costs about
-      # seven minutes. If it needs to grow again, split it the way it was split
-      # from the broad pass in the first place, rather than raising the cap:
-      # a gate that cannot finish protects nothing, which is the reason the
-      # split exists.
+      # The deep pass is the `visual` job below. It is routes multiplied by
+      # states multiplied by themes multiplied by widths, it grew to 71 minutes
+      # of this job's 100 minute cap, and on develop it reached the cap: run
+      # 33320958080 was killed at 1h41 with the deep pass still going, so the
+      # required check for the promotion had no verdict at all. The comment
+      # that used to sit here said to split it again rather than raise the cap,
+      # because a gate that cannot finish protects nothing. That is what the
+      # shards are.
       - name: Every route renders and finishes, at a phone and a desktop width
         working-directory: scripts/universe/visual-qa
         run: >-
           node capture.mjs --base=http://127.0.0.1:$GATEWAY_PORT --out=./artifacts-broad
           --states=populated --themes=default --viewports=375,1440
 
+      - name: Forced colours and 200 percent zoom
+        working-directory: scripts/universe/visual-qa
+        run: node modes-check.mjs --base=http://127.0.0.1:$GATEWAY_PORT
+
+      # Kept when there is something to look at, which is when a gate failed.
+      #
+      # A green deep pass is five hundred screenshots nobody opens, and
+      # uploading them on every run filled the Actions artifact quota: run
+      # 33330398257 passed every gate in this job and then failed on
+      # "Artifact storage quota has been hit. Unable to upload any new
+      # artifacts", so a build with nothing wrong with it reported a failure.
+      # Usage is recalculated every six to twelve hours, so the way out is to
+      # stop producing it rather than to delete faster. Retention is capped at
+      # three days by the repository in any case.
+      - name: Keep the contrast report and the route screenshots
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: universe-visual-qa-broad
+          path: scripts/universe/visual-qa/artifacts-broad
+          if-no-files-found: ignore
+          retention-days: 3
+
+  # The deep visual pass, in three shards.
+  #
+  # Measured on run 33323262662, 2026-08-30, on universe-linux-ultra-04: seven
+  # gated routes across three widths, seven states and the themes they carry
+  # took 1h11m in one step. Ten minutes a route. One more route would have put
+  # the job past its cap; on develop it already had.
+  #
+  # The split is by route because the cost is per route, and the shards are
+  # sized from that measurement rather than by counting names. Each shard
+  # builds its own copy, the way the mobile gate does: it costs one production
+  # build and buys a gate that can be read, run and debugged on its own, and
+  # that cannot make the job beside it wait.
+  #
+  #   charts-and-mining          graphs, mining              about 20 minutes
+  #   protocols-and-home         protocols, home             about 20 minutes
+  #   blocks-and-transactions    blocks, tx, address         about 30 minutes
+  #                              plus the chain failure states, 3m27s
+  visual:
+    name: Visual matrix (${{ matrix.shard }})
+    runs-on: [self-hosted, linux-ultra]
+    timeout-minutes: 60
+    strategy:
+      # One shard failing says nothing about the others, and finding out that
+      # two route groups are broken in one run beats finding out twice.
+      fail-fast: false
+      matrix:
+        include:
+          - shard: charts-and-mining
+            routes: graphs,mining
+            chainStates: 'no'
+          - shard: protocols-and-home
+            routes: protocols,home
+            chainStates: 'no'
+          - shard: blocks-and-transactions
+            routes: blocks,tx,address
+            chainStates: 'yes'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24.19.0'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install
+        working-directory: frontend
+        run: npm ci
+
+      - name: Production build
+        working-directory: frontend
+        run: npm run build:universe
+
+      - name: Install the visual QA harness
+        working-directory: scripts/universe/visual-qa
+        run: npm ci
+
+      # A fixed port here once measured another job's build: two runners share
+      # a host, the second gateway crashed on the taken port behind "&", the
+      # probe happily reached the first job's server, and the run died halfway
+      # when that other job ended. Each run now serves on its own free port and
+      # refuses to continue unless the process answering is the one it started.
+      - name: Serve the built frontend
+        run: |
+          GATEWAY_PORT=$(node -e "const s=require('net').createServer();s.listen(0,'127.0.0.1',()=>{console.log(s.address().port);s.close()})")
+          echo "GATEWAY_PORT=$GATEWAY_PORT" >> "$GITHUB_ENV"
+          UNIVERSE_GATEWAY_PORT=$GATEWAY_PORT UNIVERSE_GATEWAY_ROOT=frontend/dist/mempool/browser node scripts/universe/gateway.mjs &
+          GATEWAY_PID=$!
+          for i in $(seq 1 30); do
+            curl -fsS -o /dev/null "http://127.0.0.1:$GATEWAY_PORT/" && break
+            sleep 1
+          done
+          kill -0 "$GATEWAY_PID"
+          curl -fsS "http://127.0.0.1:$GATEWAY_PORT/__gateway/health"
+
+      # The routes this suite holds to a terminal state, taken through every
+      # failure state, every theme and the widths that change the layout, which
+      # is where a page that lies about why it is empty shows up.
       - name: The gated routes hold up across themes, widths and every failure state
         working-directory: scripts/universe/visual-qa
         run: >-
           node capture.mjs --base=http://127.0.0.1:$GATEWAY_PORT --out=./artifacts
-          --routes=graphs,mining,protocols,home,blocks,tx,address --viewports=320,768,1440
+          --routes=${{ matrix.routes }} --viewports=320,768,1440
 
-      # The chain failure states have never run here. They are scoped to the
-      # chain routes, so the pass above never reaches them, and they were
-      # reviewed by hand instead: a chain that cannot be reached, one that is
-      # behind, one whose node is caught up while its protocol side is not, one
-      # that withholds readiness without saying why, and an object that simply
-      # is not there. Those five are the states the whole status vocabulary
-      # exists for, and the one set nothing measured.
+      # The chain failure states are scoped to the chain routes, so the pass
+      # above never reaches them. Five states: a chain that cannot be reached,
+      # one that is behind, one whose node is caught up while its protocol side
+      # is not, one that withholds readiness without saying why, and an object
+      # that simply is not there. Those five are what the whole status
+      # vocabulary exists for, and for a long time nothing measured them.
       #
-      # Two themes and two widths rather than three and three, because the cost
-      # has to fit beside the pass above and this is the part of the matrix
-      # that catches wording and state, not layout.
+      # Two themes and two widths rather than three and three, because this is
+      # the part of the matrix that catches wording and state, not layout.
       - name: A chain that cannot answer says so, in every failure state
+        if: matrix.chainStates == 'yes'
         working-directory: scripts/universe/visual-qa
         run: >-
           node capture.mjs --base=http://127.0.0.1:$GATEWAY_PORT --out=./artifacts-chain-states
@@ -297,12 +387,10 @@ jobs:
           --states=chain-authority-down,chain-behind,chain-not-ready-protocols,chain-not-ready-unexplained,chain-object-missing
           --themes=default,dark --viewports=375,1440
 
-      - name: Forced colours and 200 percent zoom
-        working-directory: scripts/universe/visual-qa
-        run: node modes-check.mjs --base=http://127.0.0.1:$GATEWAY_PORT
-
+      # Same reasoning as the broad pass above: this is the artifact that
+      # filled the quota, at about fifty megabytes a run.
       - name: Keep the contrast report and the route screenshots
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         # Diagnostic only. The gate that decides this job has already run and
         # failed it if it was going to, so an artifact store that will not take
@@ -314,12 +402,12 @@ jobs:
         # product rather than a report about it.
         continue-on-error: true
         with:
-          name: universe-visual-qa
+          name: universe-visual-qa-${{ matrix.shard }}
           path: |
             scripts/universe/visual-qa/artifacts
-            scripts/universe/visual-qa/artifacts-broad
             scripts/universe/visual-qa/artifacts-chain-states
-          retention-days: 30
+          if-no-files-found: ignore
+          retention-days: 3
 
   # The mobile gate runs beside the visual matrix rather than inside it.
   #
@@ -403,54 +491,58 @@ jobs:
           node mobile-perf.mjs --base=http://127.0.0.1:$GATEWAY_PORT
           --out=./artifacts-perf
 
+      # Kept on failure only, for the reason in the frontend job above: the
+      # Actions artifact quota is full, and an upload attempt fails the step.
+      # Run 33333310466 passed every measurement in this job and then failed
+      # on this upload, which is a green gate reporting red.
       - name: Keep the mobile report
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         # Diagnostic only: an artifact store that will not take a screenshot
         # must not turn a green gate red. See the note in the first such step.
         continue-on-error: true
         with:
+          if-no-files-found: ignore
           name: universe-mobile-qa
           path: |
             scripts/universe/visual-qa/artifacts-mobile
             scripts/universe/visual-qa/artifacts-perf
-          retention-days: 30
+          retention-days: 3
 
   # The two engines the fleet cannot run.
   #
-  # WebKit needs a set of system libraries a Chromium-only Linux host has never
-  # had, and it does not degrade without them: it refuses to launch and prints
-  # the list. Installing them is one apt command, and the Linux fleet's runner
-  # user has no passwordless sudo, so `playwright install --with-deps` fails
-  # there with "sudo: a password is required". Measured on
-  # universe-linux-ultra-03.
+  # WebKit needs a set of system libraries a Chromium-only host has never had,
+  # and it does not degrade without them: it refuses to launch and prints the
+  # list. Installing them is one apt command, and the fleet's runner user has
+  # no passwordless sudo, so `playwright install --with-deps` fails there with
+  # "sudo: a password is required". Measured on universe-linux-ultra-03.
   #
-  # This ran on a hosted runner for that reason, and then stopped running at
-  # all: the account was locked for billing and every hosted job began failing
-  # in two seconds with no steps and no log. A required gate that cannot start
-  # is worse than one that fails, because there is nothing to read.
+  # So this one job runs on a hosted runner, where that command works. It is
+  # the exception to using the fleet, and it is here rather than folded into
+  # the job above so the exception is visible and so a hosted outage cannot
+  # take the Chromium gate down with it.
   #
-  # So it runs on the Windows fleet instead. Playwright ships every library
-  # WebKit and Firefox need on Windows, so there is no package to install and
-  # no privilege to ask for, and this depends on no capacity outside the
-  # organisation. It is still its own job rather than folded into the one
-  # above, so a problem with one engine host cannot take the Chromium gate down
-  # with it.
+  # It is worth the exception. WebKit is what Safari and Chrome on iOS are both
+  # built on, and dvh, safe-area insets and the pointer media feature are
+  # exactly the rules where engines disagree: a Chromium-only run proves
+  # nothing about the platform half this work was written for.
   #
-  # It is worth keeping. WebKit is what Safari and Chrome on iOS are both built
-  # on, and dvh, safe-area insets and the pointer media feature are exactly the
-  # rules where engines disagree: a Chromium-only run proves nothing about the
-  # platform half this work was written for.
+  # When the fleet's image gains those libraries, delete this job and put the
+  # two steps back in the one above, which is where they belong.
   mobile-engines:
     name: WebKit and Firefox
-    runs-on: [self-hosted, Windows, universe-router]
+    # RunsOn Spot, per the change on develop that replaced the GitHub-hosted
+    # label here. This was the one required check in this workflow that needed
+    # a GitHub-hosted runner, and on 2026-08-30 the organization's plan stopped
+    # providing them: every run of this job failed while the four self-hosted
+    # checks beside it kept passing.
+    #
+    # Worth revisiting: this job takes screenshots at seven widths, and the
+    # routing rule those changes introduced keeps screenshot and baseline work
+    # on the local fleet because its output depends on the host. `browser-heavy`
+    # carries a browser and the libraries these engines need, and costs nothing.
+    runs-on: runs-on=${{ github.run_id }}-mobile_engines/runner=universe-hosted/cpu=2+8/env=production
     timeout-minutes: 45
-    defaults:
-      run:
-        # Every step below is the same shell the Linux jobs use. Git Bash ships
-        # with the runner image, so the two stay one script rather than
-        # diverging into a PowerShell copy that drifts.
-        shell: bash
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -474,11 +566,15 @@ jobs:
         working-directory: scripts/universe/visual-qa
         run: npm ci
 
-      # No --with-deps: on Windows the browser bundles carry what they need,
-      # which is the whole reason this job is here rather than on Linux.
-      - name: Fetch the engines
+      # `--with-deps` installs system libraries and needs root, which a
+      # self-hosted runner account may not have. These runners already carry
+      # what Chromium needs, which is very nearly the same set, so a refused
+      # dependency install falls back to fetching the engines alone rather
+      # than failing a gate over a permission.
+      - name: Fetch the engines and what they need to start
         working-directory: scripts/universe/visual-qa
-        run: npx playwright install webkit firefox
+        run: |
+          npx playwright install --with-deps webkit firefox             || npx playwright install webkit firefox
 
       - name: Serve the built frontend
         run: |
@@ -514,14 +610,15 @@ jobs:
           --out=./artifacts-mobile-firefox
 
       - name: Keep the engine reports
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         # Diagnostic only: an artifact store that will not take a screenshot
         # must not turn a green gate red. See the note in the first such step.
         continue-on-error: true
         with:
+          if-no-files-found: ignore
           name: universe-mobile-engines
           path: |
             scripts/universe/visual-qa/artifacts-mobile-webkit
             scripts/universe/visual-qa/artifacts-mobile-firefox
-          retention-days: 30
+          retention-days: 3
