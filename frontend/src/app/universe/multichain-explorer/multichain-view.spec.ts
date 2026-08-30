@@ -479,7 +479,34 @@ describe('readTransaction', () => {
     confirmationsAtomic: '12',
     sizeBytesAtomic: '1450',
     block: { hash: BLOCK_HASH, heightAtomic: '2900001', time: '2026-08-29T04:10:00.000Z' },
-    fee: { amountAtomic: '15000', rateDecimal: null, rateUnit: null, logicalActionsAtomic: '2' },
+    fee: {
+      amountAtomic: '15000',
+      rateDecimal: null,
+      rateUnit: null,
+      logicalActionsAtomic: '2',
+      model: 'ZIP-317-revision-1',
+      evidence: {
+        source: 'node-and-value-pool',
+        nodeAmountAtomic: '15000',
+        valuePoolAmountAtomic: '15000',
+        unavailableReason: null,
+      },
+      rule: {
+        name: 'ZIP-317-revision-1',
+        revision: '1',
+        supported: true,
+        branchId: '37a5165b',
+        upgradeName: 'NU6.3',
+        activationBasis: 'block-height',
+        activationHeightAtomic: '3428143',
+        marginalFeeAtomic: '5000',
+        graceActionsAtomic: '2',
+        logicalActionsAtomic: '2',
+        conventionalFeeAtomic: '10000',
+        unsupportedReason: null,
+        evidenceSource: 'zebra:getblockchaininfo:upgrades',
+      },
+    },
     conflicts: [],
     replacement: null,
     expiry: null,
@@ -508,6 +535,109 @@ describe('readTransaction', () => {
     evidenceIds: [],
     completeness: 'complete',
   };
+
+  it('reports the fee of a shielded transaction with the readings behind it', () => {
+    const tx = readTransaction(envelope, ZEC);
+    expect(tx?.feeAmount?.display).toBe('0.00015');
+    expect(tx?.feeEvidence?.crossChecked).toBe(true);
+    expect(tx?.feeEvidence?.sourceLabel).toContain('in agreement');
+    expect(tx?.feeEvidence?.unavailableLabel).toBeNull();
+  });
+
+  it('names the read that failed and never calls a fee private', () => {
+    const unreadable = {
+      ...envelope,
+      fee: {
+        ...(envelope.fee as Record<string, unknown>),
+        amountAtomic: null,
+        evidence: {
+          source: null,
+          nodeAmountAtomic: null,
+          valuePoolAmountAtomic: null,
+          unavailableReason: 'transparent-input-value',
+        },
+      },
+    };
+    const tx = readTransaction(unreadable, ZEC);
+    expect(tx?.feeAmount).toBeNull();
+    expect(tx?.feeEvidence?.unavailableLabel).toBe(
+      'a transparent input this transaction spends could not be read'
+    );
+    expect(JSON.stringify(tx?.feeEvidence)).not.toMatch(/not public|private/i);
+  });
+
+  it('keeps both readings visible when the sources disagreed', () => {
+    const disputed = {
+      ...envelope,
+      fee: {
+        ...(envelope.fee as Record<string, unknown>),
+        amountAtomic: null,
+        evidence: {
+          source: null,
+          nodeAmountAtomic: '15000',
+          valuePoolAmountAtomic: '14000',
+          unavailableReason: 'sources-disagree',
+        },
+      },
+    };
+    const tx = readTransaction(disputed, ZEC);
+    expect(tx?.feeAmount).toBeNull();
+    expect(tx?.feeEvidence?.nodeAmount?.display).toBe('0.00015');
+    expect(tx?.feeEvidence?.valuePoolAmount?.display).toBe('0.00014');
+    expect(tx?.feeEvidence?.unavailableLabel).toContain('disagreed');
+  });
+
+  it('states the fee rule with the upgrade that put it in force', () => {
+    const tx = readTransaction(envelope, ZEC);
+    expect(tx?.feeRule?.supported).toBe(true);
+    expect(tx?.feeRule?.name).toBe('ZIP-317-revision-1');
+    expect(tx?.feeRule?.upgradeName).toBe('NU6.3');
+    expect(tx?.feeRule?.activationHeight?.display).toBe('3,428,143');
+    expect(tx?.feeRule?.conventionalFee?.display).toBe('0.0001');
+    expect(tx?.feeRule?.activationBasisLabel).toContain('own block');
+  });
+
+  it('shows an unsupported fee rule as unsupported, and still shows the fee', () => {
+    const historical = {
+      ...envelope,
+      fee: {
+        ...(envelope.fee as Record<string, unknown>),
+        model: 'fee-rule-unsupported',
+        rule: {
+          name: 'fee-rule-unsupported',
+          revision: null,
+          supported: false,
+          branchId: 'e9ff75a6',
+          upgradeName: 'Canopy',
+          activationBasis: 'block-height',
+          activationHeightAtomic: '1046400',
+          marginalFeeAtomic: null,
+          graceActionsAtomic: null,
+          logicalActionsAtomic: '2',
+          conventionalFeeAtomic: null,
+          unsupportedReason: 'zip317-not-in-force-at-this-height',
+          evidenceSource: 'zebra:getblockchaininfo:upgrades',
+        },
+      },
+    };
+    const tx = readTransaction(historical, ZEC);
+    expect(tx?.feeRule?.supported).toBe(false);
+    expect(tx?.feeRule?.unsupportedLabel).toContain('not in force');
+    expect(tx?.feeRule?.conventionalFee).toBeNull();
+    // An unsupported rule never suppresses a fee that could be read.
+    expect(tx?.feeAmount?.display).toBe('0.00015');
+  });
+
+  it('reads an authority that sends no fee evidence without inventing any', () => {
+    const older = {
+      ...envelope,
+      fee: { amountAtomic: '15000', rateDecimal: null, rateUnit: null, logicalActionsAtomic: '2' },
+    };
+    const tx = readTransaction(older, ZEC);
+    expect(tx?.feeAmount?.display).toBe('0.00015');
+    expect(tx?.feeEvidence).toBeNull();
+    expect(tx?.feeRule).toBeNull();
+  });
 
   it('reads the lifecycle state as a sentence with an evidence tone', () => {
     const tx = readTransaction(envelope, ZEC);
