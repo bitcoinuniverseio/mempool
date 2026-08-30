@@ -230,6 +230,14 @@ those is a different sentence on the address page. `syncing` says how far the
 index has got, because an index that will answer in an hour is not the same
 thing as one that is broken.
 
+One thing about `syncing` is worth knowing before reading it as a symptom.
+electrs completes its initial index before it binds its HTTP port at all, so
+the very first build does not report as `syncing`, it reports as `unavailable`:
+there is nothing listening to ask. `syncing` is what a restart looks like once
+the index exists, when it replays the blocks it missed and answers again within
+seconds or minutes. Watch the journal during a first build; watch the
+capability document after one.
+
 Read the current state from the deployment rather than inferring it:
 
 ```bash
