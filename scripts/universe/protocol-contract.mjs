@@ -618,12 +618,21 @@ async function loadDocument(source) {
       redirect: 'error',
       signal: AbortSignal.timeout(30_000),
     });
+    // Read the body either way. An unread body leaves the connection open and
+    // the process cannot finish on its own while it is held.
+    const body = await response.text();
     if (!response.ok) {
       throw new GateFailure(
         `${url} answered HTTP ${response.status}; the roster could not be read.`,
       );
     }
-    return response.json();
+    try {
+      return JSON.parse(body);
+    } catch {
+      throw new GateFailure(
+        `${url} did not answer with JSON; the roster could not be read.`,
+      );
+    }
   }
   return JSON.parse(await readFile(path.resolve(source), 'utf8'));
 }
@@ -765,6 +774,11 @@ const invokedDirectly =
 if (invokedDirectly) {
   main().catch((error) => {
     process.stderr.write(`${error instanceof Error ? error.message : error}\n`);
-    process.exit(1);
+    // Set the code rather than exiting here, so the process ends when its own
+    // handles close instead of being torn down in the middle of a socket
+    // teardown. Exiting mid-teardown aborts with a libuv assertion and an
+    // exit code of 127 on Windows, which is a gate whose verdict depends on
+    // which machine ran it.
+    process.exitCode = 1;
   });
 }
