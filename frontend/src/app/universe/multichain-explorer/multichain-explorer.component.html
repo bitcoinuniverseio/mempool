@@ -40,8 +40,7 @@
        fault with no consequence beside it is half the sentence, and until the
        coverage block existed the page said address history was offered while
        the same document said it could not be read. -->
-  <div class="readiness-band" [class.fault]="!!vm.notReady"
-       *ngIf="vm.notReady || (page === 'dashboard' && vm.capability)">
+  <div class="readiness-band" [class.fault]="!!vm.notReady" *ngIf="vm.notReady">
     <section class="not-ready" *ngIf="vm.notReady as notReady"
              aria-labelledby="chain-not-ready-heading">
       <h2 id="chain-not-ready-heading" i18n="universe.chain.not-ready-title">Why {{ chainName }} is not ready</h2>
@@ -50,18 +49,6 @@
           {{ reason.text }}
           <span class="reason-raw" *ngIf="reason.kind === 'unstated' && reason.code"
                 i18n="universe.chain.reason-raw">Reported as this code, which this build has no description for.</span>
-        </li>
-      </ul>
-    </section>
-
-    <section class="history-coverage" *ngIf="page === 'dashboard' && vm.capability"
-             aria-labelledby="chain-history-heading">
-      <h2 id="chain-history-heading" i18n="universe.chain.history-title">How much history is readable now</h2>
-      <ul>
-        <li *ngFor="let reading of vm.coverage; trackBy: trackById">
-          <span class="coverage-label">{{ reading.label }}</span>
-          <span class="universe-chip" [ngClass]="'state-' + reading.tone">{{ reading.stateLabel }}</span>
-          <span class="coverage-detail">{{ reading.detail }}</span>
         </li>
       </ul>
     </section>
@@ -133,121 +120,6 @@
       <li *ngFor="let line of buckets.disclosures; trackBy: trackByIndex" class="secondary">{{ line }}</li>
     </ul>
   </section>
-
-  <!-- ------------------------------------------------------------------ -->
-  <!-- Chain overview                                                      -->
-  <!-- ------------------------------------------------------------------ -->
-  <ng-container *ngIf="page === 'dashboard'">
-
-    <section class="panel reads" aria-labelledby="chain-reads-heading">
-      <h2 id="chain-reads-heading" i18n="universe.chain.reads-title">Questions this chain can answer</h2>
-      <p class="panel-lede" i18n="universe.chain.reads-lede">
-        Each entry is a claim the indexer makes about itself. Where it says no, the explorer offers no page for that lookup rather than an empty one.
-      </p>
-      <ul class="read-grid">
-        <li *ngFor="let read of vm.reads; trackBy: trackById" [class.off]="read.state !== 'offered'">
-          <span class="read-label">{{ read.label }}</span>
-          <span class="universe-chip" [ngClass]="'state-' + read.tone">{{ read.stateLabel }}</span>
-        </li>
-      </ul>
-    </section>
-
-    <section class="panel coverage" aria-labelledby="chain-coverage-heading">
-      <h2 id="chain-coverage-heading" i18n="universe.chain.coverage-title">Protocol indexers</h2>
-      <ul class="coverage-list">
-        <li *ngFor="let protocol of vm.protocols; trackBy: trackByProtocol">
-          <a class="coverage-name" *ngIf="protocol.routeId; else noProtocolPage"
-             [routerLink]="['/', chain, 'protocols', protocol.routeId]">{{ protocol.label }}</a>
-          <ng-template #noProtocolPage>
-            <span class="coverage-name">{{ protocol.label }}</span>
-          </ng-template>
-          <span class="universe-chip" [ngClass]="'state-' + protocol.tone">{{ protocol.stateLabel }}</span>
-          <span class="coverage-detail">
-            {{ protocol.historyLabel }}
-            <ng-container *ngIf="protocol.lag">
-              <span class="dot" aria-hidden="true"></span>
-              <span [attr.title]="protocol.lag.exact" i18n="universe.chain.coverage-lag">{{ protocol.lag.display }} blocks behind</span>
-            </ng-container>
-          </span>
-          <ng-container *ngIf="protocol.reasons.length">
-            <!-- A working authority still reports the edges of what it covers.
-                 Those are not faults, and under a bare list they read as one. -->
-            <span class="coverage-reasons-label" *ngIf="protocol.tone === 'proven'"
-                  i18n="universe.chain.coverage-limits">What it does not cover</span>
-            <ul class="coverage-reasons">
-              <li *ngFor="let reason of protocol.reasons">{{ reason.text }}</li>
-            </ul>
-          </ng-container>
-          <span class="coverage-reasons" *ngIf="!protocol.routeId"
-                i18n="universe.chain.coverage-no-page">
-            This chain reports it. This explorer has no page for it yet, so there is nothing to open.
-          </span>
-        </li>
-      </ul>
-    </section>
-
-    <section class="panel truths" aria-labelledby="chain-truths-heading">
-      <h2 id="chain-truths-heading" i18n="universe.chain.truths-title">What this chain does differently</h2>
-      <p *ngIf="chain === 'dogecoin'" i18n="universe.chain.truth-dogecoin-fees">
-        Dogecoin fees are quoted per kilobyte, not in sat/vB. This explorer prints the unit the chain actually uses and shows a fee rate only when the first-party source reports one.
-      </p>
-      <p *ngIf="chain === 'zcash'" i18n="universe.chain.truth-zcash-fees">
-        Zcash fee guidance follows ZIP-317 logical actions where the node reports them. A transaction's cost is not a simple function of its byte size on this chain.
-      </p>
-      <p *ngIf="chain === 'zcash'" i18n="universe.chain.truth-zcash-privacy">
-        Only the transparent side of Zcash is public. This explorer reports the shape of a shielded transaction, never who was involved or how much moved.
-      </p>
-      <p *ngIf="vm.capability && !vm.capability.reads.projectedBlocks" i18n="universe.chain.truth-no-projection">
-        No projected blocks are shown for this chain. Projecting the next block needs a fee market this explorer does not model here, and a guess presented as a forecast would be worse than nothing.
-      </p>
-    </section>
-
-    <nav class="entry-actions" aria-label="Chain sections" i18n-aria-label="universe.chain.entry-label">
-      <a class="entry" [routerLink]="['/', chain, 'mempool']">
-        <span class="entry-title" i18n="universe.chain.entry-mempool">Pending transactions</span>
-        <span class="entry-detail" i18n="universe.chain.entry-mempool-detail">What our node has seen and no block has confirmed</span>
-      </a>
-      <a class="entry" [routerLink]="['/', chain, 'protocols']">
-        <span class="entry-title" i18n="universe.chain.entry-protocols">Protocols</span>
-        <span class="entry-detail" i18n="universe.chain.entry-protocols-detail">Assets carried on this chain, and which indexer proves them</span>
-      </a>
-    </nav>
-
-    <!-- The evidence behind the figures above, at the level it belongs at.
-         The snapshot identifier used to sit in the status line, where it was
-         the widest thing on the page. It is kept, exactly, and filed. -->
-    <details class="panel source-details" *ngIf="vm.sourceDetails.length">
-      <summary i18n="universe.chain.source-summary">Where these readings came from</summary>
-      <p class="panel-lede" i18n="universe.chain.source-lede">
-        The identifiers behind this page, for checking a reading against the document it was rendered from.
-      </p>
-      <dl class="source-list">
-        <ng-container *ngFor="let detail of vm.sourceDetails; trackBy: trackById">
-          <dt>{{ detail.label }}</dt>
-          <dd>
-            <span class="source-value" [attr.title]="detail.exact"
-                  [attr.aria-hidden]="detail.truncated ? 'true' : null">{{ detail.display }}</span>
-            <!-- A reader who cannot see the middle of an identifier has not
-                 been given it, so the whole value is here for a screen reader
-                 while the shortened form is what a sighted reader sees. -->
-            <span class="source-exact" *ngIf="detail.truncated">{{ detail.exact }}</span>
-            <button
-              type="button"
-              class="source-copy"
-              *ngIf="detail.exact"
-              (click)="copyDetail(detail)"
-              [attr.aria-label]="copyActionLabel(detail)"
-            >
-              <ng-container *ngIf="copiedDetailId === detail.id; else copyLabel" i18n="universe.chain.source-copied">Copied</ng-container>
-              <ng-template #copyLabel><ng-container i18n="universe.chain.source-copy">Copy</ng-container></ng-template>
-            </button>
-            <span class="source-note" *ngIf="detail.note">{{ detail.note }}</span>
-          </dd>
-        </ng-container>
-      </dl>
-    </details>
-
-  </ng-container>
 
   <!-- ------------------------------------------------------------------ -->
   <!-- Transaction                                                         -->
@@ -1057,7 +929,7 @@
     </ng-template>
   </section>
 
-  <p class="notice empty" *ngIf="page !== 'dashboard' && !vm.payloadError && vm.shape === 'empty'"
+  <p class="notice empty" *ngIf="!vm.payloadError && vm.shape === 'empty'"
      i18n="universe.chain.empty">
     The {{ chainName }} authority answered, and had nothing to report for this request.
   </p>

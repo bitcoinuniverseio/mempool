@@ -139,6 +139,9 @@ const FIELD_FLOOR = 16;
 const MOBILE_ROUTE_IDS = (args.routes ? String(args.routes).split(',') : [
   'home', 'tx', 'address', 'blocks', 'block', 'graphs', 'protocols',
   'dogecoin-tx', 'zcash-block', 'docs', 'chain-menu',
+  // The parity surfaces, one thumb-width each: a chain dashboard with the
+  // block strip, a mining page, a chart page, and chain docs.
+  'dogecoin', 'zcash-mining', 'dogecoin-graphs', 'zcash-docs',
 ]);
 
 const findings = [];

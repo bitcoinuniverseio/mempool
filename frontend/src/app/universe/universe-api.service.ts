@@ -17,8 +17,14 @@ import {
   OrdRuneView,
   OrdSatView,
   ChainCapabilityEnvelope,
+  ChainDashboardView,
   ChainExplorerPayload,
+  ChartSeriesView,
   ExplorerChain,
+  FeeRecommendationsView,
+  MiningPoolsView,
+  MiningSummaryView,
+  RecentBlocksView,
   UniverseSearchResponse,
 } from '@app/universe/universe.types';
 
@@ -167,6 +173,44 @@ export class UniverseApiService {
   getChainCandidateBuckets$(chain: Exclude<ExplorerChain, 'bitcoin'>): Observable<ChainExplorerPayload> {
     return this.httpClient.get<ChainExplorerPayload>(
       this.apiBaseUrl + '/api/v1/' + chain + '/candidate-buckets?network=mainnet'
+    );
+  }
+
+  /** The one-call dashboard aggregate: blocks, buckets, fees, mempool, mining. */
+  getChainDashboard$(chain: Exclude<ExplorerChain, 'bitcoin'>): Observable<ChainDashboardView> {
+    return this.httpClient.get<ChainDashboardView>(
+      this.apiBaseUrl + '/api/v1/' + chain + '/dashboard?network=mainnet'
+    );
+  }
+
+  getChainRecentBlocks$(chain: Exclude<ExplorerChain, 'bitcoin'>, limit = 15): Observable<RecentBlocksView> {
+    return this.httpClient.get<RecentBlocksView>(
+      this.apiBaseUrl + '/api/v1/' + chain + '/blocks/recent?network=mainnet&limit=' + limit
+    );
+  }
+
+  getChainFees$(chain: Exclude<ExplorerChain, 'bitcoin'>): Observable<FeeRecommendationsView> {
+    return this.httpClient.get<FeeRecommendationsView>(
+      this.apiBaseUrl + '/api/v1/' + chain + '/fees?network=mainnet'
+    );
+  }
+
+  getChainMining$(chain: Exclude<ExplorerChain, 'bitcoin'>): Observable<MiningSummaryView> {
+    return this.httpClient.get<MiningSummaryView>(
+      this.apiBaseUrl + '/api/v1/' + chain + '/mining?network=mainnet'
+    );
+  }
+
+  getChainMiningPools$(chain: Exclude<ExplorerChain, 'bitcoin'>, window = '1w'): Observable<MiningPoolsView> {
+    return this.httpClient.get<MiningPoolsView>(
+      this.apiBaseUrl + '/api/v1/' + chain + '/mining/pools?network=mainnet&window=' + encodeURIComponent(window)
+    );
+  }
+
+  getChainChartSeries$(chain: Exclude<ExplorerChain, 'bitcoin'>, seriesId: string, range = '1w'): Observable<ChartSeriesView> {
+    return this.httpClient.get<ChartSeriesView>(
+      this.apiBaseUrl + '/api/v1/' + chain + '/charts/' + encodeURIComponent(seriesId)
+        + '?network=mainnet&range=' + encodeURIComponent(range)
     );
   }
 

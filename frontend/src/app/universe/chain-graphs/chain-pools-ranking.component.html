@@ -1,0 +1,76 @@
+<ng-container *ngIf="vm$ | async as vm">
+
+  <section class="panel" aria-labelledby="pools-ranking-heading">
+    <h2 id="pools-ranking-heading" i18n="universe.graphs.pools-heading">Mining pools</h2>
+
+    <div class="window-controls" role="radiogroup"
+         aria-label="Attribution window" i18n-aria-label="universe.graphs.pools-window-label">
+      <button type="button" *ngFor="let window of windows"
+              class="window-option" [class.active]="vm.window === window"
+              role="radio" [attr.aria-checked]="vm.window === window"
+              (click)="setWindow(window)">{{ window }}</button>
+    </div>
+
+    <p class="panel-lede" i18n="universe.graphs.pools-lede">
+      A block is attributed to a pool only on evidence: a coinbase tag, a known payout address, or an AuxPoW parent tag. Everything else stays Unknown.
+    </p>
+
+    <div class="chart-skeleton" *ngIf="vm.status === 'loading'" aria-hidden="true"></div>
+
+    <p class="notice failure" role="alert" *ngIf="vm.status === 'error'">
+      <span i18n="universe.graphs.pools-failed">Pool shares cannot be computed right now.</span>
+      <button type="button" class="retry-button" (click)="retry()" i18n="universe.graphs.pools-retry">Retry</button>
+    </p>
+
+    <p class="notice empty" *ngIf="vm.status === 'empty'" i18n="universe.graphs.pools-empty">
+      No blocks are stored in this window yet. Shares appear as the block collector catches up.
+    </p>
+
+    <ng-container *ngIf="vm.status === 'ready'">
+
+      <figure class="donut-figure">
+        <figcaption class="visually-hidden" i18n="universe.graphs.pools-donut-caption">
+          Share of blocks by pool over the selected window
+        </figcaption>
+        <div class="donut" *ngIf="isBrowser"
+             echarts [initOpts]="chartInitOptions" [options]="vm.donut!"></div>
+      </figure>
+
+      <div class="table-wrap" tabindex="0" role="region" aria-labelledby="pools-ranking-heading">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col" class="numeric" i18n="universe.graphs.col-rank">Rank</th>
+              <th scope="col" i18n="universe.graphs.col-pool">Pool</th>
+              <th scope="col" class="numeric" i18n="universe.graphs.col-blocks">Blocks</th>
+              <th scope="col" class="share-col" i18n="universe.graphs.col-share">Share</th>
+              <th scope="col" i18n="universe.graphs.col-evidence">Evidence</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of vm.rows; trackBy: trackByPool" [class.unknown-row]="row.unknown">
+              <td class="numeric">{{ row.rank }}</td>
+              <td>{{ row.name }}</td>
+              <td class="numeric" [attr.title]="row.blocks?.exact">{{ row.blocks?.display }}</td>
+              <td class="share-col">
+                <span class="share-bar" aria-hidden="true"><span class="share-fill" [style.width.%]="row.sharePercent"></span></span>
+                <span class="share-value">{{ row.sharePercent | number: '1.0-1' }}%</span>
+              </td>
+              <td class="secondary">{{ row.evidence.join(', ') }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="panel-lede" *ngIf="vm.view && !vm.view.coverageComplete" i18n="universe.graphs.pools-partial">
+        Stored history does not yet span this whole window, so shares describe the covered part only.
+      </p>
+      <p class="secondary dataset-version" *ngIf="vm.view" i18n="universe.graphs.pools-dataset">
+        Attribution dataset {{ vm.view.attributionDatasetVersion }}
+      </p>
+
+    </ng-container>
+
+  </section>
+
+</ng-container>

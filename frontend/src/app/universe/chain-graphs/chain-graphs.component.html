@@ -1,0 +1,27 @@
+<div class="container-xl chain-page">
+
+  <header class="title-block">
+    <span class="chain-mark" [ngClass]="'chain-mark-' + chain" aria-hidden="true"></span>
+    <h1 i18n="universe.graphs.heading">{{ profile.name }} charts</h1>
+  </header>
+
+  <p class="lede" i18n="universe.graphs.lede">
+    History collected by this explorer's own {{ profile.name }} node. Every chart states how far back its stored history reaches.
+  </p>
+
+  <nav class="graph-nav" aria-label="Chart pages" i18n-aria-label="universe.graphs.nav-label">
+    <div class="graph-nav-group" *ngFor="let group of navGroups; trackBy: trackByGroup">
+      <span class="graph-nav-group-label">{{ group.label }}</span>
+      <div class="graph-nav-links">
+        <a *ngFor="let link of group.links; trackBy: trackByLink"
+           class="graph-nav-link"
+           [routerLink]="link.path"
+           routerLinkActive="active"
+           [routerLinkActiveOptions]="{ exact: true }">{{ link.label }}</a>
+      </div>
+    </div>
+  </nav>
+
+  <router-outlet></router-outlet>
+
+</div>

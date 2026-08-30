@@ -282,7 +282,9 @@ export class MasterPageComponent implements OnInit, AfterViewInit, OnDestroy {
     return $localize`:@@master-page.chain-ready-detail:${height}:BLOCK:. Pending coverage ${coverage}:COVERAGE:.`;
   }
 
-  chainRoute(kind: 'dashboard' | 'mempool' | 'protocols'): string {
+  chainRoute(
+    kind: 'dashboard' | 'mining' | 'mempool' | 'protocols' | 'graphs' | 'docs'
+  ): string {
     return explorerSectionRoute(this.activeChain, kind);
   }
 
