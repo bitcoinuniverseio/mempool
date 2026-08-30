@@ -72,36 +72,8 @@
 // Sits directly beneath the rail, because it is the evidence for the verdict
 // the rail just gave. Bordered like a notice rather than raised like a panel:
 // it is a qualification of what is above it, not a section of its own.
-.not-ready {
-  @include u.universe-surface;
-
-  border-left: 3px solid var(--universe-state-partial);
-  padding: var(--u-space-3) var(--u-space-4);
-  margin-bottom: var(--u-space-3);
-  max-width: var(--u-width-prose);
-
-  h2 {
-    font-size: var(--u-text-base);
-    font-weight: var(--u-weight-semibold);
-    margin: 0 0 var(--u-space-2);
-  }
-
-  ul {
-    display: grid;
-    gap: var(--u-space-2);
-    font-size: var(--u-text-sm);
-    line-height: var(--u-leading-normal);
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-}
-
-.reason-raw {
-  color: var(--u-text-muted);
-  display: block;
-  font-size: var(--u-text-xs);
-}
+// The fault panel and its raw-code line are in the shared chain-page
+// partial, so every chain page states a fault the same way.
 
 // ---------------------------------------------------------------------------
 // Readiness band
