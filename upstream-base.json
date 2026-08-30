@@ -9,6 +9,67 @@
   "forkRepository": "https://github.com/bitcoinuniverseio/mempool",
   "integrationBranch": "develop",
   "protectedBranch": "main",
-  "modifiedSubsystems": [],
-  "knownUpstreamConflicts": []
+  "modifiedSubsystems": [
+    {
+      "path": "frontend/src/app/universe/",
+      "nature": "Added. Universe multichain explorer, protocol directory, chain dashboard, mining, charts and documentation surfaces. No upstream file is involved."
+    },
+    {
+      "path": "frontend/src/app/master-page.module.ts",
+      "nature": "Universe lazy routes added; upstream routes untouched."
+    },
+    {
+      "path": "frontend/src/app/components/transaction/",
+      "nature": "The asset flow section is embedded on the transaction page."
+    },
+    {
+      "path": "frontend/package.json, frontend/vitest.config.ts",
+      "nature": "Unit test runner added. Upstream ships no working test target."
+    },
+    {
+      "path": "backend/src/index.ts, backend/src/config.ts",
+      "nature": "MEMPOOL.HTTP_HOST added, defaulting to loopback. Upstream binds every interface."
+    },
+    {
+      "path": "backend/src/api/backend-info.ts",
+      "nature": "Publishes the node's own sync state so the explorer can say when its data is behind the chain."
+    },
+    {
+      "path": "frontend/src/app/services/enterprise.service.ts",
+      "nature": "Hosted analytics reduced to a no-op; the upstream subdomain redirect removed."
+    },
+    {
+      "path": "scripts/universe/",
+      "nature": "Added. Gateway, release manifest, visual QA harness, protocol coverage generator and their gates."
+    },
+    {
+      "path": ".github/workflows/universe-ci.yml, upstream-sync.yml, universe-production-smoke.yml, universe-release-artifact.yml",
+      "nature": "Added. Upstream workflows are unchanged."
+    },
+    {
+      "path": "Branding",
+      "nature": "Mempool Holdings trademarks replaced across templates, SEO and the web manifest. See docs/legal/TRADEMARK-AUDIT.md."
+    },
+    {
+      "path": ".nvmrc",
+      "nature": "Pinned to the Universe toolchain version (24.19.0)."
+    }
+  ],
+  "knownUpstreamConflicts": [
+    {
+      "path": "frontend/src/app/master-page.module.ts",
+      "nature": "Both sides add routes to the same table. Every upstream sync has to merge route lists rather than take a side."
+    },
+    {
+      "path": "frontend/package.json",
+      "nature": "Upstream dependency bumps land beside the Universe test runner and chart dependencies."
+    },
+    {
+      "path": "backend/src/config.ts",
+      "nature": "The loopback default sits in a file upstream edits routinely."
+    }
+  ],
+  "upstreamMirrorSha": "1a23cdfe78c2ee4ccc1b5d39b9a7e74f7f4df3ef",
+  "upstreamMirrorObservedAt": "2026-08-30",
+  "upstreamCommitsSinceForkMirror": 40
 }
