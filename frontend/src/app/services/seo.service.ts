@@ -3,6 +3,10 @@ import { Title, Meta } from '@angular/platform-browser';
 import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { filter, map, switchMap } from 'rxjs';
 import { StateService } from '@app/services/state.service';
+import {
+  explorerChainFromUrl,
+  explorerChainName,
+} from '@app/universe/universe-chain-routing';
 
 @Injectable({
   providedIn: 'root'
@@ -10,7 +14,7 @@ import { StateService } from '@app/services/state.service';
 export class SeoService {
   network = '';
   baseTitle = 'Universe Explorer';
-  baseDescription = 'Universe Explorer is the live protocol-aware Bitcoin explorer for the Bitcoin Universe ecosystem.';
+  baseDescription = 'Universe Explorer is the live protocol-aware explorer for Bitcoin, Dogecoin, and Zcash in the Bitcoin Universe ecosystem.';
   // Overwritten below from the canonical link in index.html; this is only the fallback.
   baseDomain = 'explorer.bitcoinuniverse.io';
 
@@ -98,6 +102,16 @@ export class SeoService {
       {return this.baseTitle + ' - Liquid Network';}
     if (this.network === 'liquidtestnet')
       {return this.baseTitle + ' - Liquid Testnet';}
+    // On mainnet the network is empty, which used to mean every page fell back
+    // to "Bitcoin Explorer". That put the wrong chain in the tab title, the
+    // shared link title, and the search result of every Dogecoin and Zcash
+    // page. The chain is in the URL, so the title can simply say which one.
+    if (!this.network) {
+      const chain = explorerChainFromUrl(this.router.url);
+      if (chain !== 'bitcoin') {
+        return this.baseTitle + ' - ' + explorerChainName(chain);
+      }
+    }
     return this.baseTitle + ' - ' + (this.network ? this.ucfirst(this.network) : 'Bitcoin') + ' Explorer';
   }
 

@@ -6,20 +6,17 @@
     <!-- Brand. One element for every width: the wordmark drops away below the
          breakpoint where it would crowd the search field, and the mark stays. -->
     <a class="site-brand" [routerLink]="['/' | relativeUrl]" (click)="brandClick($event)">
-      <ng-container *ngIf="{ val: connectionState$ | async } as connectionState">
-        @if (enterpriseInfo) {
-          <div class="subdomain_container">
-            <img [src]="enterpriseInfo.logoUrl" [alt]="enterpriseInfo.title" class="subdomain_logo" [class.custom_logo]="!enterpriseInfo?.dualLogo" [class.rounded]="enterpriseInfo.rounded_corner">
-          </div>
-          @if (enterpriseInfo.dualLogo) {
-            <div class="vertical-line"></div>
-          }
+      @if (enterpriseInfo) {
+        <div class="subdomain_container">
+          <img [src]="enterpriseInfo.logoUrl" [alt]="enterpriseInfo.title" class="subdomain_logo" [class.custom_logo]="!enterpriseInfo?.dualLogo" [class.rounded]="enterpriseInfo.rounded_corner">
+        </div>
+        @if (enterpriseInfo.dualLogo) {
+          <div class="vertical-line"></div>
         }
-        @if (!enterpriseInfo || enterpriseInfo.dualLogo) {
-          <app-svg-images name="universe-logo" viewBox="0 0 500 126" class="brand-mark"
-            [class.brand-dimmed]="connectionState.val !== 2"></app-svg-images>
-        }
-      </ng-container>
+      }
+      @if (!enterpriseInfo || enterpriseInfo.dualLogo) {
+        <app-svg-images name="universe-logo" viewBox="0 0 500 126" class="brand-mark"></app-svg-images>
+      }
     </a>
 
     <div ngbDropdown class="chain-picker" *ngIf="network.val === '' && (chainCapabilities$ | async) as capabilities">

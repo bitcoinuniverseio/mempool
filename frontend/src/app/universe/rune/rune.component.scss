@@ -35,11 +35,16 @@
     }
   }
 
-  .progress {
+  // Deliberately not .progress and .progress-bar. The inherited Bootstrap layer
+  // owns those names and makes the outer one a 16px flex row, which collapsed
+  // this track to zero width and printed the label on top of an empty grey
+  // rectangle. The bar had never rendered, on any release, because the rune
+  // route had no fixture and so never appeared in a screenshot.
+  .mint-progress {
     margin: 0.75rem 0;
   }
 
-  .progress-bar {
+  .mint-track {
     height: 0.6rem;
     border-radius: 0.3rem;
     background: var(--u-divider);
@@ -54,7 +59,7 @@
     }
   }
 
-  .progress-label {
+  .mint-progress-label {
     margin: 0.4rem 0 0;
     font-variant-numeric: tabular-nums;
     font-size: 0.9rem;

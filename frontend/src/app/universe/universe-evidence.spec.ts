@@ -106,11 +106,19 @@ describe('formatAtomicAmount', () => {
     expect(formatAtomicAmount(huge).replace(/,/g, '')).toBe(huge);
   });
 
-  it('refuses anything that is not a non-negative integer string', () => {
-    expect(formatAtomicAmount('-1')).toBe('');
+  it('refuses anything that is not an exact integer string', () => {
     expect(formatAtomicAmount('1.5')).toBe('');
     expect(formatAtomicAmount('007')).toBe('');
+    expect(formatAtomicAmount('')).toBe('');
     expect(formatAtomicAmount(undefined as never)).toBe('');
+  });
+
+  it('keeps the sign on the one amount in the contract that is signed', () => {
+    // A Zcash transaction's value balance is the net movement between the
+    // transparent and shielded pools, and it is negative whenever value moves
+    // into the shielded side. Refusing it printed nothing at all.
+    expect(formatAtomicAmount('-50000000', 8)).toBe('-0.5');
+    expect(formatAtomicAmount('-1234567')).toBe('-1,234,567');
   });
 
   it('ignores an out-of-range divisibility rather than guessing', () => {

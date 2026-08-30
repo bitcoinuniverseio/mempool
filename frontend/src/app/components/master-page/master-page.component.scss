@@ -81,12 +81,6 @@
   }
 }
 
-// Dim the mark while the socket is down. Paired with the worded status beside
-// it, never as the only signal.
-.brand-dimmed {
-  opacity: 0.45;
-}
-
 .subdomain_logo {
   align-self: center;
   margin: auto;
@@ -171,7 +165,12 @@
   width: 22px;
 }
 
-.dropdown-item {
+// Scoped to the network picker on purpose. Its rows are an icon beside a
+// label, which is what wants a flex row. Unscoped, this beat the chain
+// switcher's own two-column grid, because a component style carries an
+// attribute selector as well as the class, and collapsed every chain row
+// into one line with its detail line running off the end.
+.network-picker .dropdown-item {
   align-items: center;
   display: flex;
 }

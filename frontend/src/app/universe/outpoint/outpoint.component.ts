@@ -13,6 +13,7 @@ import {
   OutpointEnrichment,
 } from '@app/universe/universe.types';
 import {
+  EvidenceTone,
   EvidenceView,
   ProtocolGroup,
   formatAtomicAmount,
@@ -141,6 +142,29 @@ export class OutpointComponent implements OnInit, OnDestroy {
 
   trackByGroup(index: number, group: ProtocolGroup): string {
     return group.protocolId;
+  }
+
+  /**
+   * The evidence tone for one attached asset. The verdict at the top of the
+   * page is for the whole output; a position can differ from it, and the word
+   * on its own carried no treatment at all.
+   */
+  positionTone(state: string): EvidenceTone {
+    switch (state) {
+      case 'proven':
+        return 'proven';
+      case 'partial':
+      case 'partially-proven':
+        return 'partial';
+      case 'pending':
+      case 'mempool-candidate':
+        return 'pending';
+      case 'unavailable':
+      case 'out-of-coverage':
+        return 'unavailable';
+      default:
+        return 'neutral';
+    }
   }
 
   trackByPosition(index: number, position: ExplorerOutpointPosition): string {
