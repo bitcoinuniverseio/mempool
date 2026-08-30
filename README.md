@@ -85,15 +85,16 @@ object page lands on that chain's overview and says why, rather than looking up
 a Bitcoin transaction id on Dogecoin.
 
 ![The Dogecoin overview page. The chain switcher in the header reads DOGE
-Dogecoin, Ready. A status rail reads Ready, block 5,623,041, zero blocks behind,
-observed 25 seconds ago, complete pending coverage. Below it a panel titled
-Questions this chain can answer marks transaction, block, address and outpoint
-lookup and fee estimates as offered, and projected blocks as not offered. A
-protocol indexers panel lists Doginals and DRC-20 as ready with complete
-history, and TAP on Doge as degraded with partial history, 184 blocks behind,
-followed by the sentence: this protocol's indexer answered, but its last
-checkpoint is behind the chain
-tip.](docs/product/screenshots/dogecoin-overview.png)
+Dogecoin, Ready. A status rail of five labelled readings gives Chain: Ready,
+Chain tip: block 5,623,041, Behind tip: zero blocks, Last observed: 20 seconds
+ago, Pending coverage: Complete. Below it a panel titled How much history is
+readable now reads confirmed history complete, address history complete,
+protocol history partial. A panel titled Questions this chain can answer marks
+transaction, block, address and outpoint lookup and fee estimates as offered,
+and projected blocks as not offered. A protocol indexers panel lists Doginals
+and DRC-20 as ready with complete history, and TAP on Doge as degraded with
+partial history, 184 blocks
+behind.](docs/product/screenshots/dogecoin-overview.png)
 
 Both screenshots are taken by the review harness in
 `scripts/universe/visual-qa`, against fixed review data rather than the live
