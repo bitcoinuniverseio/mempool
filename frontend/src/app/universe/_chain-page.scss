@@ -127,6 +127,40 @@
     color: var(--u-text-muted);
   }
 
+  // Why a chain is not ready. Bordered like a notice rather than raised like
+  // a panel: it qualifies the rail above it rather than opening a section,
+  // and its heading must not outrank the page's own.
+  .not-ready {
+    @include u.universe-surface;
+
+    border-left: 3px solid var(--universe-state-partial);
+    padding: var(--u-space-3) var(--u-space-4);
+    margin-bottom: var(--u-space-3);
+    max-width: var(--u-width-prose);
+
+    h2 {
+      font-size: var(--u-text-base);
+      font-weight: var(--u-weight-semibold);
+      margin: 0 0 var(--u-space-2);
+    }
+
+    ul {
+      display: grid;
+      gap: var(--u-space-2);
+      font-size: var(--u-text-sm);
+      line-height: var(--u-leading-normal);
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+  }
+
+  .reason-raw {
+    color: var(--u-text-muted);
+    display: block;
+    font-size: var(--u-text-xs);
+  }
+
   .identifier {
     @include u.universe-identifier;
   }
