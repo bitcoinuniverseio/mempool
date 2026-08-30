@@ -392,14 +392,15 @@ jobs:
       - name: Keep the contrast report and the route screenshots
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        # Diagnostic only. The gate that decides this job has already run and
-        # failed it if it was going to, so an artifact store that will not take
-        # a screenshot cannot turn a green gate red, and cannot hide a red one
-        # either. It happened: the account hit its Actions storage quota and
-        # every browser job began reporting failure with "No mobile failures"
-        # printed directly above the error. The release artifact upload is
-        # deliberately not marked this way, because there the upload is the
-        # product rather than a report about it.
+        # Diagnostic only, and never fatal. The account hit its Actions storage
+        # quota and every browser job began reporting failure with "No mobile
+        # failures" printed directly above the error. `if: failure()` above
+        # keeps a green run from attempting the upload at all; this covers the
+        # rest, including anyone who changes that back to `always()`. The gate
+        # that decides this job has already run either way, so a store that
+        # will not take a screenshot can neither turn a green gate red nor
+        # hide a red one. The release artifact upload is deliberately not
+        # marked this way, because there the upload is the product.
         continue-on-error: true
         with:
           name: universe-visual-qa-${{ matrix.shard }}
