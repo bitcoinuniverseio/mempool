@@ -19,6 +19,7 @@ const DOGE_ADDRESS = 'DH5yaieqoZN36fDVciNyRueRGvGLR3mr7L';
 const ZEC_TXID = '7a3e1c5f9b2d6048a2c6e0f4b8d2a6c0e4f8b2d6a0c4e8f2b6d0a4c8e2f6b0d4';
 const ZEC_ADDRESS = 't1SEgZvXCu3ceE42qrq5pCeSq7HbLjX8NJv';
 const ZEC_BLOCK = '00000000004db04aba335b14021f8dd4fa02a0a954edad7da547c3a4fd917141';
+const ZEC_ZRC20 = 'ZERO';
 
 /**
  * A chain capability envelope. Dogecoin is at its tip and complete; Zcash is
@@ -212,6 +213,90 @@ function pendingDogecoinTransaction(txid, feeAtomic, sizeBytes, firstSeenAt) {
     fee: { amountAtomic: feeAtomic, rateDecimal: null, rateUnit: null },
     protocolActions: { candidates: [], confirmed: [] },
     completeness: 'partial',
+  };
+}
+
+/**
+ * A ZRC-20 token as the live authority reports one: the whole ledger twice,
+ * once under each ruleset, and a divergence summary naming where the two
+ * disagree. The shape follows /api/v1/zcash/protocols/zrc20/ZERO as captured
+ * on 2026-08-30; the figures are fixture values.
+ */
+function zrc20Token(tick, overrides = {}) {
+  const ledger = {
+    max_supply: '21000000000000000000000000',
+    mint_limit: '1000000000000000000000',
+    minted: '21000000000000000000000000',
+    burned: '0',
+    shielded: '6000000000000000000000',
+    circulating: '20994000000000000000000000',
+    mint_count: '21120',
+    holders: '2330',
+    mint_progress: { minted: '21000000000000000000000000', max_supply: '21000000000000000000000000' },
+    status: 'minted',
+  };
+  return {
+    tick,
+    tick_key: Buffer.from(tick.toLowerCase()).toString('hex'),
+    decimals: '18',
+    deploy_inscription_id: `${ZEC_TXID}i0`,
+    deploy_txid: ZEC_TXID,
+    deploy_height: '3133112',
+    deployer_address: ZEC_ADDRESS,
+    rulesets: {
+      zord: { ...ledger },
+      zecscriptions: { ...ledger },
+    },
+    divergence: { diverges: false, fields: [], absent_from: [], unevaluated: [] },
+    ...overrides,
+  };
+}
+
+/** The token whose readings disagree, which is what the pages exist to show. */
+function zrc20DivergingToken() {
+  const token = zrc20Token(ZEC_ZRC20);
+  token.rulesets.zecscriptions = {
+    ...token.rulesets.zecscriptions,
+    mint_count: '21000',
+    holders: '2539',
+  };
+  token.divergence = {
+    diverges: true,
+    fields: ['mint_count', 'holders'],
+    absent_from: [],
+    unevaluated: [
+      {
+        id: 'zecscriptions-protocol-v2-reveal-outputs',
+        summary: 'zecscriptions protocol version 2 requires three reveal outputs: the minter at vout 0, a deployer share of 19200 zatoshis at vout 1, and a platform share of 172800 zatoshis at vout 2.',
+        reason: 'No activation height for protocol version 2 is recorded in the compatibility matrix, so applying the rule would require inventing one. Neither ruleset evaluates it.',
+      },
+      {
+        id: 'shielded-settlement-accounting',
+        summary: 'A settlement spend into a fully shielded transaction is a permanent burn in zord accounting.',
+        reason: 'Reported as its own bucket rather than as a ruleset switch. Shielded and burned totals are published separately so either accounting can be derived exactly.',
+      },
+    ],
+  };
+  return token;
+}
+
+function zrc20Envelope(body) {
+  return {
+    schemaVersion: 'zcash-metaprotocols-api-v1',
+    chain: 'zcash',
+    network: 'mainnet',
+    checkpoint: { height: '3465589', hash: ZEC_BLOCK },
+    coverage: {
+      scannedHeight: 3465589,
+      networkHeight: 3465590,
+      blocksBehindNetwork: 1,
+      nodeSynced: true,
+      verificationProgress: 1,
+      chainComplete: true,
+    },
+    lens: 'zord',
+    rulesets: ['zord', 'zecscriptions'],
+    ...body,
   };
 }
 
@@ -503,6 +588,20 @@ export const chainFixtures = {
     cursor: '3',
     completeness: 'complete',
   },
+
+  // The ZRC-20 list and one token. Each item carries its ledger twice, under
+  // two rulesets that are allowed to disagree, and the divergence summary.
+  '/api/v1/zcash/protocols/zrc20': zrc20Envelope({
+    total: '159',
+    limit: '50',
+    offset: '0',
+    items: [
+      zrc20DivergingToken(),
+      zrc20Token('ZATS'),
+      zrc20Token('ZILL', { decimals: '0' }),
+    ],
+  }),
+  [`/api/v1/zcash/protocols/zrc20/${ZEC_ZRC20}`]: zrc20Envelope(zrc20DivergingToken()),
 };
 
 /**
@@ -665,4 +764,4 @@ export const chainStateScope = {
   'chain-object-missing': ['dogecoin'],
 };
 
-export const chainSampleIds = { DOGE_TXID, DOGE_BLOCK, DOGE_ADDRESS, ZEC_TXID, ZEC_BLOCK, ZEC_ADDRESS };
+export const chainSampleIds = { DOGE_TXID, DOGE_BLOCK, DOGE_ADDRESS, ZEC_TXID, ZEC_BLOCK, ZEC_ADDRESS, ZEC_ZRC20 };
