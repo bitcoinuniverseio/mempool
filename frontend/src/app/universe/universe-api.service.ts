@@ -253,6 +253,25 @@ export class UniverseApiService {
     );
   }
 
+  /**
+   * The address asset-holdings view for a chain: every paginated unspent
+   * output with its attached protocol assets, address-level balances, and
+   * exact aggregates. Served beside the base address view so a failure here
+   * degrades the asset sections without taking the address page down.
+   */
+  getChainAddressHoldings$(chain: Exclude<ExplorerChain, 'bitcoin'>, address: string, limit = 50, offset = 0): Observable<ChainExplorerPayload> {
+    return this.httpClient.get<ChainExplorerPayload>(
+      this.apiBaseUrl + '/api/v1/' + chain + '/address/' + encodeURIComponent(address) + '/holdings?network=mainnet&limit=' + limit + '&offset=' + offset
+    );
+  }
+
+  /** The Bitcoin address asset-holdings view from the universe overlay. */
+  getAddressHoldings$(address: string, limit = 100, offset = 0): Observable<ChainExplorerPayload> {
+    return this.httpClient.get<ChainExplorerPayload>(
+      this.apiBaseUrl + '/api/v1/universe/addresses/' + encodeURIComponent(address) + '/holdings?limit=' + limit + '&offset=' + offset
+    );
+  }
+
   getChainOutpoint$(chain: Exclude<ExplorerChain, 'bitcoin'>, txid: string, vout: string): Observable<ChainExplorerPayload> {
     return this.httpClient.get<ChainExplorerPayload>(
       this.apiBaseUrl + '/api/v1/' + chain + '/outpoint/' + encodeURIComponent(txid) + '/' + encodeURIComponent(vout) + '?network=mainnet'
