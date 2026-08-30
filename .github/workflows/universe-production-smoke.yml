@@ -86,10 +86,14 @@ jobs:
           node chain-page-smoke.mjs
           --origin="${{ github.event.inputs.origin || 'https://explorer.bitcoinuniverse.io' }}"
 
+      # On failure only. The Actions artifact quota is full, an upload attempt
+      # fails the step, and a scheduled check that reports red for its own
+      # screenshots teaches everyone to ignore it.
       - name: Keep what the chain pages looked like
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
+          if-no-files-found: ignore
           name: universe-chain-page-smoke
           path: scripts/universe/visual-qa/artifacts-chain-smoke
-          retention-days: 30
+          retention-days: 3

@@ -464,10 +464,15 @@ jobs:
           node mobile-perf.mjs --base=http://127.0.0.1:$GATEWAY_PORT
           --out=./artifacts-perf
 
+      # Kept on failure only, for the reason in the frontend job above: the
+      # Actions artifact quota is full, and an upload attempt fails the step.
+      # Run 33333310466 passed every measurement in this job and then failed
+      # on this upload, which is a green gate reporting red.
       - name: Keep the mobile report
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
+          if-no-files-found: ignore
           name: universe-mobile-qa
           path: |
             scripts/universe/visual-qa/artifacts-mobile
@@ -573,9 +578,10 @@ jobs:
           --out=./artifacts-mobile-firefox
 
       - name: Keep the engine reports
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
+          if-no-files-found: ignore
           name: universe-mobile-engines
           path: |
             scripts/universe/visual-qa/artifacts-mobile-webkit
