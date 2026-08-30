@@ -80,6 +80,10 @@ import {
 } from '@app/universe/multichain-explorer/candidate-buckets';
 import { ThemeService } from '@app/services/theme.service';
 import {
+  ProtocolIndexReading,
+  readProtocolIndex,
+} from '@app/universe/multichain-explorer/protocol-index';
+import {
   Observable,
   Subject,
   catchError,
@@ -135,6 +139,8 @@ interface ExplorerViewModel {
   readonly duneList: DuneAssetListReading | null;
   /** The pending set grouped under this chain's own fee rules. */
   readonly buckets: CandidateBucketsReading | null;
+  /** The registry manifest and the authorities behind it, designed. */
+  readonly protocolIndex: ProtocolIndexReading | null;
   readonly emptyList: EmptyListReading | null;
   readonly facts: readonly Fact[];
   /** True when the page is showing a response it has no purpose-built reading for. */
@@ -338,8 +344,12 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
     const rulesetList = payload && !transactionList ? readRulesetAssetList(payload) : null;
     const duneAsset = payload ? readDuneAssetDetail(payload) : null;
     const duneList = payload && !transactionList ? readDuneAssetList(payload) : null;
+    const protocolIndex =
+      payload && !transactionList
+        ? readProtocolIndex(payload, this.profile, Date.now())
+        : null;
     const collection =
-      payload && !transactionList && !rulesetList && !duneList &&
+      payload && !transactionList && !rulesetList && !duneList && !protocolIndex &&
       (shape === 'collection' || shape === 'record')
         ? readCollection(payload, this.profile)
         : null;
@@ -358,6 +368,10 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
       // them stay, because nothing else on the page states them.
       ...(duneAsset ? ['dune'] : []),
       ...(duneList ? ['dunes', 'totalCountAtomic'] : []),
+      // The protocol index owns the manifest rows and every authority record.
+      ...(protocolIndex
+        ? ['items', ...protocolIndex.authorities.map((authority) => authority.key)]
+        : []),
     ];
     return {
       capability,
@@ -381,6 +395,7 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
       rulesetList,
       duneAsset,
       duneList,
+      protocolIndex,
       buckets: bucketsPayload
         ? readCandidateBuckets(
             bucketsPayload,
@@ -389,13 +404,13 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
           )
         : null,
       emptyList:
-        transactionList || collection || rulesetList || duneList
+        transactionList || collection || rulesetList || duneList || protocolIndex
           ? null
           : readEmptyList(payload),
       facts: readRecordFacts(payload, this.profile, skip),
       generic:
         (shape === 'collection' || shape === 'record') &&
-        !rulesetAsset && !rulesetList && !duneAsset && !duneList,
+        !rulesetAsset && !rulesetList && !duneAsset && !duneList && !protocolIndex,
     };
   }
 

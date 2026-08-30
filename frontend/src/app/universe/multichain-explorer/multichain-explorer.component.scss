@@ -930,6 +930,43 @@ tbody tr:last-child td {
   white-space: nowrap;
 }
 
+// One authority per row: what it is, its verdict, then the evidence.
+.authority-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--u-space-2) var(--u-space-3);
+    padding: var(--u-space-2) 0;
+
+    + li {
+      border-top: 1px solid var(--u-divider);
+    }
+  }
+}
+
+.authority-label {
+  font-weight: var(--u-weight-semibold);
+  min-width: 11rem;
+}
+
+.authority-detail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--u-space-3);
+  color: var(--u-text-secondary);
+  font-size: var(--u-text-sm);
+}
+
+.authority-failure {
+  flex-basis: 100%;
+  font-size: var(--u-text-sm);
+}
+
 // The dune's own glyph, beside its name. It is the authority's value, so it
 // sits in a quiet chip rather than decorating the heading.
 .dune-symbol {
