@@ -1595,5 +1595,308 @@ export const LIVE_PAYLOADS = {
       confirmedCoverage: 'complete',
       confirmedLagBlocksAtomic: '2'
     }
+  },
+
+  /**
+   * The ZRC-20 list, captured 2026-08-30T06:07Z from the same origin,
+   * release mempool-e21a26d5c, overlay backend-apis-711b6c25. Trimmed from
+   * fifty items to three; nothing else is edited. Each item carries the
+   * whole ledger twice, under `rulesets`, and `divergence` naming where
+   * the readings disagree, which is what the ruleset reading exists for.
+   */
+  zrc20List: {
+    'schemaVersion': 'zcash-metaprotocols-api-v1',
+    'network': 'mainnet',
+    'checkpoint': {
+      'height': '3465591',
+      'hash': '00000000003153f1b17b3dc0d059dcfa6e093adf9c7467fcfad8debe25bfa123'
+    },
+    'coverage': {
+      'scannedHeight': '3465591',
+      'networkHeight': '3465591',
+      'blocksBehindNetwork': '0',
+      'nodeSynced': true,
+      'verificationProgress': 1,
+      'chainComplete': true
+    },
+    'lens': 'zord',
+    'rulesets': [
+      'zord',
+      'zecscriptions'
+    ],
+    'total': '159',
+    'limit': '50',
+    'offset': '0',
+    'items': [
+      {
+        'tick': 'ZERO',
+        'tick_key': '7a65726f',
+        'decimals': '18',
+        'deploy_inscription_id': '6d3a32c5a6847b14d9e361ad4384b0e0e1bf82b5b2a2ce5dc204ddf34e34ceeei0',
+        'deploy_txid': '6d3a32c5a6847b14d9e361ad4384b0e0e1bf82b5b2a2ce5dc204ddf34e34ceee',
+        'deploy_height': '3133112',
+        'deployer_address': 't1HzoKn3UXD8vjsS2GzvjGxVUSTKa5NpeH9',
+        'rulesets': {
+          'zord': {
+            'max_supply': '21000000000000000000000000',
+            'mint_limit': '1000000000000000000000',
+            'minted': '21000000000000000000000000',
+            'burned': '0',
+            'shielded': '6000000000000000000000',
+            'circulating': '20994000000000000000000000',
+            'mint_count': '21120',
+            'holders': '2330',
+            'mint_progress': {
+              'minted': '21000000000000000000000000',
+              'max_supply': '21000000000000000000000000'
+            },
+            'status': 'minted'
+          },
+          'zecscriptions': {
+            'max_supply': '21000000000000000000000000',
+            'mint_limit': '1000000000000000000000',
+            'minted': '21000000000000000000000000',
+            'burned': '0',
+            'shielded': '6000000000000000000000',
+            'circulating': '20994000000000000000000000',
+            'mint_count': '21000',
+            'holders': '2539',
+            'mint_progress': {
+              'minted': '21000000000000000000000000',
+              'max_supply': '21000000000000000000000000'
+            },
+            'status': 'minted'
+          }
+        },
+        'divergence': {
+          'diverges': true,
+          'fields': [
+            'mint_count',
+            'holders'
+          ],
+          'absent_from': [],
+          'unevaluated': [
+            {
+              'id': 'zecscriptions-protocol-v2-reveal-outputs',
+              'summary': 'zecscriptions protocol version 2 requires three reveal outputs: the minter at vout 0, a deployer share of 19200 zatoshis at vout 1, and a platform share of 172800 zatoshis at vout 2.',
+              'reason': 'No activation height for protocol version 2 is recorded in the compatibility matrix, so applying the rule would require inventing one. Neither ruleset evaluates it.'
+            },
+            {
+              'id': 'shielded-settlement-accounting',
+              'summary': 'A settlement spend into a fully shielded transaction is a permanent burn in zord accounting.',
+              'reason': 'Reported as its own bucket rather than as a ruleset switch. Shielded and burned totals are published separately so either accounting can be derived exactly.'
+            }
+          ]
+        }
+      },
+      {
+        'tick': 'ZATS',
+        'tick_key': '7a617473',
+        'decimals': '18',
+        'deploy_inscription_id': 'e1dea1d897c24b19496aa246d86275bb24c0090203226e572bd5c623f5f0aaa2i0',
+        'deploy_txid': 'e1dea1d897c24b19496aa246d86275bb24c0090203226e572bd5c623f5f0aaa2',
+        'deploy_height': '3133597',
+        'deployer_address': 't1KiqdVSBkCe9BcBYNsG3EVD7nvBmPofHVc',
+        'rulesets': {
+          'zord': {
+            'max_supply': '2100000000000000000000000000000000',
+            'mint_limit': '500000000000000000000000000000',
+            'minted': '2099941120287959000000000000000000',
+            'burned': '0',
+            'shielded': '0',
+            'circulating': '2099941120287959000000000000000000',
+            'mint_count': '4306',
+            'holders': '420',
+            'mint_progress': {
+              'minted': '2099941120287959000000000000000000',
+              'max_supply': '2100000000000000000000000000000000'
+            },
+            'status': 'minting'
+          },
+          'zecscriptions': {
+            'max_supply': '2100000000000000000000000000000000',
+            'mint_limit': '500000000000000000000000000000',
+            'minted': '2100000000000000000000000000000000',
+            'burned': '0',
+            'shielded': '0',
+            'circulating': '2100000000000000000000000000000000',
+            'mint_count': '4200',
+            'holders': '413',
+            'mint_progress': {
+              'minted': '2100000000000000000000000000000000',
+              'max_supply': '2100000000000000000000000000000000'
+            },
+            'status': 'minted'
+          }
+        },
+        'divergence': {
+          'diverges': true,
+          'fields': [
+            'minted',
+            'circulating',
+            'mint_count',
+            'holders'
+          ],
+          'absent_from': [],
+          'unevaluated': [
+            {
+              'id': 'zecscriptions-protocol-v2-reveal-outputs',
+              'summary': 'zecscriptions protocol version 2 requires three reveal outputs: the minter at vout 0, a deployer share of 19200 zatoshis at vout 1, and a platform share of 172800 zatoshis at vout 2.',
+              'reason': 'No activation height for protocol version 2 is recorded in the compatibility matrix, so applying the rule would require inventing one. Neither ruleset evaluates it.'
+            },
+            {
+              'id': 'shielded-settlement-accounting',
+              'summary': 'A settlement spend into a fully shielded transaction is a permanent burn in zord accounting.',
+              'reason': 'Reported as its own bucket rather than as a ruleset switch. Shielded and burned totals are published separately so either accounting can be derived exactly.'
+            }
+          ]
+        }
+      },
+      {
+        'tick': 'ZILL',
+        'tick_key': '7a696c6c',
+        'decimals': '18',
+        'deploy_inscription_id': 'e9ff942cefa0fe09b243170cf80047c1b2e7252f34ce04297cb965b8f4ead318i0',
+        'deploy_txid': 'e9ff942cefa0fe09b243170cf80047c1b2e7252f34ce04297cb965b8f4ead318',
+        'deploy_height': '3133600',
+        'deployer_address': 't1XkJq7Z7dQ1s1ksFUx7qnk9L8A5rTjxaPU',
+        'rulesets': {
+          'zord': {
+            'max_supply': '21000000000000000000000000',
+            'mint_limit': '1000000000000000000000',
+            'minted': '83100000000000000000000',
+            'burned': '0',
+            'shielded': '0',
+            'circulating': '83100000000000000000000',
+            'mint_count': '84',
+            'holders': '24',
+            'mint_progress': {
+              'minted': '83100000000000000000000',
+              'max_supply': '21000000000000000000000000'
+            },
+            'status': 'minting'
+          },
+          'zecscriptions': {
+            'max_supply': '21000000000000000000000000',
+            'mint_limit': '1000000000000000000000',
+            'minted': '83000000000000000000000',
+            'burned': '0',
+            'shielded': '0',
+            'circulating': '83000000000000000000000',
+            'mint_count': '83',
+            'holders': '24',
+            'mint_progress': {
+              'minted': '83000000000000000000000',
+              'max_supply': '21000000000000000000000000'
+            },
+            'status': 'minting'
+          }
+        },
+        'divergence': {
+          'diverges': true,
+          'fields': [
+            'minted',
+            'circulating',
+            'mint_count'
+          ],
+          'absent_from': [],
+          'unevaluated': [
+            {
+              'id': 'zecscriptions-protocol-v2-reveal-outputs',
+              'summary': 'zecscriptions protocol version 2 requires three reveal outputs: the minter at vout 0, a deployer share of 19200 zatoshis at vout 1, and a platform share of 172800 zatoshis at vout 2.',
+              'reason': 'No activation height for protocol version 2 is recorded in the compatibility matrix, so applying the rule would require inventing one. Neither ruleset evaluates it.'
+            },
+            {
+              'id': 'shielded-settlement-accounting',
+              'summary': 'A settlement spend into a fully shielded transaction is a permanent burn in zord accounting.',
+              'reason': 'Reported as its own bucket rather than as a ruleset switch. Shielded and burned totals are published separately so either accounting can be derived exactly.'
+            }
+          ]
+        }
+      }
+    ],
+    'chain': 'zcash'
+  },
+
+  /**
+   * One token, captured 2026-08-30T06:08Z from
+   * /api/v1/zcash/protocols/zrc20/ZERO on the same release. Unedited.
+   */
+  zrc20Detail: {
+    'schemaVersion': 'zcash-metaprotocols-api-v1',
+    'network': 'mainnet',
+    'checkpoint': {
+      'height': '3465591',
+      'hash': '00000000003153f1b17b3dc0d059dcfa6e093adf9c7467fcfad8debe25bfa123'
+    },
+    'coverage': {
+      'scannedHeight': '3465591',
+      'networkHeight': '3465592',
+      'blocksBehindNetwork': '1',
+      'nodeSynced': true,
+      'verificationProgress': 0.9999997114490108,
+      'chainComplete': true
+    },
+    'lens': 'zord',
+    'rulesets': {
+      'zord': {
+        'max_supply': '21000000000000000000000000',
+        'mint_limit': '1000000000000000000000',
+        'minted': '21000000000000000000000000',
+        'burned': '0',
+        'shielded': '6000000000000000000000',
+        'circulating': '20994000000000000000000000',
+        'mint_count': '21120',
+        'holders': '2330',
+        'mint_progress': {
+          'minted': '21000000000000000000000000',
+          'max_supply': '21000000000000000000000000'
+        },
+        'status': 'minted'
+      },
+      'zecscriptions': {
+        'max_supply': '21000000000000000000000000',
+        'mint_limit': '1000000000000000000000',
+        'minted': '21000000000000000000000000',
+        'burned': '0',
+        'shielded': '6000000000000000000000',
+        'circulating': '20994000000000000000000000',
+        'mint_count': '21000',
+        'holders': '2539',
+        'mint_progress': {
+          'minted': '21000000000000000000000000',
+          'max_supply': '21000000000000000000000000'
+        },
+        'status': 'minted'
+      }
+    },
+    'tick': 'ZERO',
+    'tick_key': '7a65726f',
+    'decimals': '18',
+    'deploy_inscription_id': '6d3a32c5a6847b14d9e361ad4384b0e0e1bf82b5b2a2ce5dc204ddf34e34ceeei0',
+    'deploy_txid': '6d3a32c5a6847b14d9e361ad4384b0e0e1bf82b5b2a2ce5dc204ddf34e34ceee',
+    'deploy_height': '3133112',
+    'deployer_address': 't1HzoKn3UXD8vjsS2GzvjGxVUSTKa5NpeH9',
+    'divergence': {
+      'diverges': true,
+      'fields': [
+        'mint_count',
+        'holders'
+      ],
+      'absent_from': [],
+      'unevaluated': [
+        {
+          'id': 'zecscriptions-protocol-v2-reveal-outputs',
+          'summary': 'zecscriptions protocol version 2 requires three reveal outputs: the minter at vout 0, a deployer share of 19200 zatoshis at vout 1, and a platform share of 172800 zatoshis at vout 2.',
+          'reason': 'No activation height for protocol version 2 is recorded in the compatibility matrix, so applying the rule would require inventing one. Neither ruleset evaluates it.'
+        },
+        {
+          'id': 'shielded-settlement-accounting',
+          'summary': 'A settlement spend into a fully shielded transaction is a permanent burn in zord accounting.',
+          'reason': 'Reported as its own bucket rather than as a ruleset switch. Shielded and burned totals are published separately so either accounting can be derived exactly.'
+        }
+      ]
+    },
+    'chain': 'zcash'
   }
 } as const;

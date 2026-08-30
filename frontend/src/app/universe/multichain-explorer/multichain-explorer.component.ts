@@ -61,6 +61,12 @@ import {
 } from '@app/universe/multichain-explorer/multichain-view';
 import { ChainReasonReading } from '@app/universe/multichain-explorer/chain-reasons';
 import {
+  RulesetAssetListReading,
+  RulesetAssetReading,
+  readRulesetAsset,
+  readRulesetAssetList,
+} from '@app/universe/multichain-explorer/ruleset-assets';
+import {
   Observable,
   Subject,
   catchError,
@@ -106,6 +112,10 @@ interface ExplorerViewModel {
   readonly outpoint: OutpointReading | null;
   readonly collection: CollectionReading | null;
   readonly transactionList: TransactionListReading | null;
+  /** One asset whose ledger is reported under more than one ruleset. */
+  readonly rulesetAsset: RulesetAssetReading | null;
+  /** A page of such assets, each row carrying its own ledger. */
+  readonly rulesetList: RulesetAssetListReading | null;
   readonly emptyList: EmptyListReading | null;
   readonly facts: readonly Fact[];
   /** True when the page is showing a response it has no purpose-built reading for. */
@@ -285,8 +295,14 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
       payload && shape === 'collection'
         ? readTransactionList(payload, this.profile)
         : null;
+    // Both readings are shape-driven: a payload without a rulesets ledger, or
+    // without items carrying one, is null here and keeps the reading it had.
+    const rulesetAsset = payload
+      ? readRulesetAsset(payload, typeof payload.lens === 'string' ? payload.lens : null)
+      : null;
+    const rulesetList = payload && !transactionList ? readRulesetAssetList(payload) : null;
     const collection =
-      payload && !transactionList && (shape === 'collection' || shape === 'record')
+      payload && !transactionList && !rulesetList && (shape === 'collection' || shape === 'record')
         ? readCollection(payload, this.profile)
         : null;
     const skip = [
@@ -294,6 +310,12 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
       ...(collection ? [collection.sourceKey] : []),
       // The transaction list owns the array it read, whichever field it was in.
       ...(transactionList ? ['transactions', 'items'] : []),
+      // The ruleset reading owns the ledger, the divergence prose, the lens,
+      // and the decimals it states prominently. `tick` repeats the heading.
+      ...(rulesetAsset ? ['rulesets', 'divergence', 'lens', 'decimals', 'tick'] : []),
+      // The list owns its rows, and its lede states the lens, the ruleset
+      // names and the authority's total.
+      ...(rulesetList ? ['items', 'rulesets', 'lens', 'total'] : []),
     ];
     return {
       capability,
@@ -313,9 +335,13 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
       outpoint,
       collection,
       transactionList,
-      emptyList: transactionList || collection ? null : readEmptyList(payload),
+      rulesetAsset,
+      rulesetList,
+      emptyList:
+        transactionList || collection || rulesetList ? null : readEmptyList(payload),
       facts: readRecordFacts(payload, this.profile, skip),
-      generic: shape === 'collection' || shape === 'record',
+      generic:
+        (shape === 'collection' || shape === 'record') && !rulesetAsset && !rulesetList,
     };
   }
 
@@ -419,6 +445,34 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
     return entries
       .map((entry) => `${entry.label.toLowerCase()} (${entry.count})`)
       .join(', ');
+  }
+
+  /**
+   * True when the authority's own divergence summary and the divergence the
+   * figures actually show do not name the same fields. The two are kept apart
+   * on purpose, and a drift between them is a finding the page states rather
+   * than a difference it smooths over.
+   */
+  rulesetClaimDiffers(asset: RulesetAssetReading): boolean {
+    const observed = [...asset.divergingFields].sort().join(',');
+    const stated = [...asset.statedDivergingFields].sort().join(',');
+    return observed !== stated;
+  }
+
+  /** True when the authority reports more tokens than this page shows. */
+  rulesetListTruncated(list: RulesetAssetListReading): boolean {
+    if (!list.totalExact || !/^(0|[1-9][0-9]*)$/.test(list.totalExact)) {
+      return false;
+    }
+    return list.shownCount < Number(list.totalExact);
+  }
+
+  /** "zord and zecscriptions", or the one name when there is one. */
+  rulesetNames(names: readonly string[]): string {
+    if (names.length < 2) {
+      return names.join('');
+    }
+    return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
   }
 
   /**

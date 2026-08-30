@@ -236,3 +236,128 @@ export function readRulesetAsset(
     unreadFields: unread,
   };
 }
+
+// ---------------------------------------------------------------------------
+// The list page
+// ---------------------------------------------------------------------------
+
+/**
+ * The figure columns the list table shows, in this order, when a row carries
+ * them. Chosen for what a visitor scanning 159 tokens is deciding between:
+ * whether a token is still mintable, how much of it exists, and how widely it
+ * is held. Every other figure is on the token's own page, and the columns the
+ * table is holding back are named beside it rather than dropped.
+ */
+const LIST_FIGURE_COLUMNS = ['status', 'minted', 'max_supply', 'holders'];
+
+export interface RulesetListColumn {
+  readonly key: string;
+  readonly label: string;
+  readonly kind: FigureKind;
+}
+
+export interface RulesetAssetListRow {
+  readonly tick: string;
+  /** The full reading, so the row's cells never re-derive what it holds. */
+  readonly reading: RulesetAssetReading;
+  /** One cell per column. Null where this token has no such figure. */
+  readonly cells: readonly { key: string; figure: RulesetFigure | null }[];
+  /** True when any figure of this token differs between the readings. */
+  readonly diverges: boolean;
+}
+
+export interface RulesetAssetListReading {
+  readonly lens: string | null;
+  /** Every ruleset seen across the rows, lens first. */
+  readonly rulesets: readonly string[];
+  readonly columns: readonly RulesetListColumn[];
+  readonly rows: readonly RulesetAssetListRow[];
+  readonly shownCount: number;
+  /** The authority's own total, exactly as sent. Null when it sent none. */
+  readonly totalExact: string | null;
+  /**
+   * Figure fields present in the rows that are not columns here. Named, so a
+   * table that shows four of nine figures says so instead of reading as the
+   * whole ledger.
+   */
+  readonly hiddenFigureFields: readonly string[];
+  /** Items in the response this reading could not read as ruleset assets. */
+  readonly unreadRowCount: number;
+}
+
+/**
+ * A page of assets whose items each carry their own `rulesets` ledger.
+ *
+ * Returns null for a payload without such items, so everything else keeps the
+ * reading it already had. The list shows each figure under the lens reading;
+ * a cell whose readings disagree shows every reading, because the table
+ * quietly picking one is the same invented consensus the detail reading
+ * refuses to print.
+ */
+export function readRulesetAssetList(payload: unknown): RulesetAssetListReading | null {
+  if (!isRecord(payload) || !Array.isArray(payload.items) || !payload.items.length) {
+    return null;
+  }
+  const lens = text(payload.lens);
+  const rows: RulesetAssetListRow[] = [];
+  let unreadRowCount = 0;
+  for (const item of payload.items) {
+    const reading = readRulesetAsset(item, lens);
+    if (!reading) {
+      unreadRowCount += 1;
+      continue;
+    }
+    rows.push({
+      tick: reading.tick,
+      reading,
+      cells: [],
+      diverges: reading.divergingFields.length > 0,
+    });
+  }
+  if (!rows.length) {
+    return null;
+  }
+
+  const present = new Set<string>();
+  for (const row of rows) {
+    for (const figure of row.reading.figures) {
+      present.add(figure.key);
+    }
+  }
+  const columns: RulesetListColumn[] = LIST_FIGURE_COLUMNS.filter((key) =>
+    present.has(key)
+  ).map((key) => ({
+    key,
+    label: humanizeFieldName(key),
+    kind: FIGURE_KIND[key],
+  }));
+  const hiddenFigureFields = [...present].filter(
+    (key) => !LIST_FIGURE_COLUMNS.includes(key)
+  );
+
+  const rulesets: string[] = [];
+  for (const row of rows) {
+    for (const name of row.reading.rulesets) {
+      if (!rulesets.includes(name)) {
+        rulesets.push(name);
+      }
+    }
+  }
+
+  return {
+    lens,
+    rulesets,
+    columns,
+    rows: rows.map((row) => ({
+      ...row,
+      cells: columns.map((column) => ({
+        key: column.key,
+        figure: row.reading.figures.find((figure) => figure.key === column.key) ?? null,
+      })),
+    })),
+    shownCount: rows.length,
+    totalExact: text(payload.total),
+    hiddenFigureFields,
+    unreadRowCount,
+  };
+}
