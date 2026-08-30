@@ -335,7 +335,13 @@ class Capabilities {
         ? null
         : { from: '0', to: String(probe.indexedTip) },
       rowCount: null,
-      lastSuccessfulUpdate: chainSync?.checkedAt ?? null,
+      // When the index last gave a good answer, which is this probe if it did.
+      // Reading Core's own last-checked time here would report the freshness
+      // of the wrong thing: Core is never behind itself, so that value stays
+      // current while the index it is being compared against is stale.
+      lastSuccessfulUpdate: probe.summaryAnswered && probe.utxoAnswered
+        ? new Date().toISOString()
+        : null,
       lagSeconds: null,
       degradedReason: probe.degradedReason,
       backendKind: probe.backendKind,
