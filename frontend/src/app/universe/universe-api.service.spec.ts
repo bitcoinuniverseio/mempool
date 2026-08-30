@@ -90,6 +90,31 @@ describe('UniverseApiService addressing', () => {
   });
 });
 
+describe('UniverseApiService pending-set bounds', () => {
+  // Zcash refuses a limit above 200 as a bad request rather than trimming it,
+  // so a shared default emptied its lens and its arrivals list in production
+  // while every fixture answered whatever it was asked.
+  it('never asks a chain for more pending transactions than it allows', () => {
+    const { service, urls } = build(true);
+    service.getChainMempool$('zcash', 400).subscribe();
+    service.getChainMempool$('dogecoin', 400).subscribe();
+    expect(urls[0]).toContain('limit=200');
+    expect(urls[1]).toContain('limit=400');
+  });
+
+  it('keeps a request for fewer than the ceiling exactly as asked', () => {
+    const { service, urls } = build(true);
+    service.getChainMempool$('zcash', 50).subscribe();
+    expect(urls[0]).toContain('limit=50');
+  });
+
+  it('refuses a limit below one', () => {
+    const { service, urls } = build(true);
+    service.getChainMempool$('dogecoin', 0).subscribe();
+    expect(urls[0]).toContain('limit=1');
+  });
+});
+
 describe('UniverseApiService protocol registry cache', () => {
   it('fetches the registry once and replays it', () => {
     const get = vi.fn(() => of({ registryVersion: '1.0.0' }));

@@ -19,6 +19,7 @@ import {
   readEmptyList,
   readHistoryCoverage,
   readNotReadyReasons,
+  readAddressHoldings,
   readOutpoint,
   readPaging,
   readProtocolCoverage,
@@ -930,5 +931,291 @@ describe('readProtocolCoverage reasons', () => {
     const drc20 = readings.find((reading) => reading.protocolId === 'drc20');
     expect(drc20?.reasons.map((reason) => reason.code)).toEqual(['authority-capability-disabled']);
     expect(drc20?.reasons[0].text).not.toContain('-disabled');
+  });
+});
+
+describe('per-outpoint asset readings', () => {
+  const duneTx = (): ChainExplorerPayload => ({
+    schemaVersion: 'universe-transaction-v1',
+    txid: TXID,
+    status: 'confirmed',
+    transparent: {
+      inputs: [
+        {
+          indexAtomic: '0',
+          previousOutpoint: `${'c'.repeat(64)}:1`,
+          address: 'D8input',
+          valueAtomic: '100000000',
+          coinbase: false,
+          assets: { positions: [], coverage: 'out-of-coverage', coveredProtocolIds: [] },
+        },
+      ],
+      outputs: [
+        {
+          indexAtomic: '0',
+          address: 'D8output',
+          valueAtomic: '100000',
+          spent: false,
+          assets: {
+            positions: [
+              {
+                outpoint: `${TXID}:0`,
+                vout: 0,
+                valueSatsAtomic: '100000',
+                asset: {
+                  protocolId: 'dunes',
+                  assetId: 'WOW SUCH DUNE',
+                  displayName: 'WOW SUCH DUNE',
+                  ticker: 'W',
+                  assetKind: 'fungible',
+                  decimals: 8,
+                },
+                quantityAtomic: '150000000',
+                state: 'active',
+              },
+              {
+                outpoint: `${TXID}:0`,
+                vout: 0,
+                valueSatsAtomic: '100000',
+                asset: {
+                  protocolId: 'doginals',
+                  assetId: `${'d'.repeat(64)}i0`,
+                  assetKind: 'inscription',
+                },
+                state: 'active',
+              },
+            ],
+            coverage: 'complete',
+            coveredProtocolIds: ['doginals', 'dunes'],
+          },
+        },
+        {
+          indexAtomic: '1',
+          address: 'D8empty',
+          valueAtomic: '5000',
+          spent: false,
+          assets: { positions: [], coverage: 'proven-empty', coveredProtocolIds: ['doginals', 'dunes'] },
+        },
+      ],
+    },
+    protocolActions: {
+      candidates: [],
+      confirmed: [
+        {
+          eventId: 'e1',
+          protocolId: 'dunes',
+          state: 'confirmed-accepted',
+          actionType: 'etch',
+          evidenceIds: [],
+          asset: {
+            protocolId: 'dunes',
+            assetId: 'WOW SUCH DUNE',
+            displayName: 'WOW SUCH DUNE',
+            ticker: 'W',
+            assetKind: 'fungible',
+            decimals: 8,
+          },
+          quantityAtomic: '150000000',
+          outputOutpoints: [`${TXID}:0`],
+        },
+      ],
+    },
+  });
+
+  it('reads asset chips on outputs with quantities shifted by the asset decimals', () => {
+    const reading = readTransaction(duneTx(), DOGE);
+    const output = reading?.outputs[0];
+    expect(output?.outpoint).toBe(`${TXID}:0`);
+    const dune = output?.assets?.chips[0];
+    expect(dune?.protocolLabel).toBe('Dunes');
+    expect(dune?.name).toBe('WOW SUCH DUNE');
+    // 150000000 shifted by the dune's own 8 decimals, not the chain's.
+    expect(dune?.quantity?.display).toBe('1.5');
+    expect(dune?.quantity?.exact).toBe('150000000');
+    expect(dune?.link).toEqual(['/', 'dogecoin', 'protocols', 'dunes', 'WOW SUCH DUNE']);
+    const doginal = output?.assets?.chips[1];
+    expect(doginal?.protocolLabel).toBe('Doginals');
+    // The asset id is the mandated fallback name, never a blank label.
+    expect(doginal?.name).toBe(`${'d'.repeat(64)}i0`);
+    expect(doginal?.quantity).toBeNull();
+  });
+
+  it('keeps proven emptiness and out-of-coverage distinguishable', () => {
+    const reading = readTransaction(duneTx(), DOGE);
+    const empty = reading?.outputs[1].assets;
+    expect(empty?.provenEmpty).toBe(true);
+    expect(empty?.coverageLabel).toBeNull();
+    const input = reading?.inputs[0].assets;
+    expect(input?.provenEmpty).toBe(false);
+    expect(input?.coverageLabel).not.toBeNull();
+    expect(input?.coverageTone).toBe('neutral');
+  });
+
+  it('carries asset identity, exact quantity and outpoints on actions', () => {
+    const reading = readTransaction(duneTx(), DOGE);
+    const action = reading?.confirmedActions[0];
+    expect(action?.assetName).toBe('WOW SUCH DUNE');
+    expect(action?.assetTicker).toBe('W');
+    expect(action?.quantity?.display).toBe('1.5');
+    expect(action?.quantity?.exact).toBe('150000000');
+    expect(action?.outputOutpoints).toEqual([`${TXID}:0`]);
+    expect(action?.assetLink).toEqual(['/', 'dogecoin', 'protocols', 'dunes', 'WOW SUCH DUNE']);
+  });
+
+  it('reads actions without assets exactly as before', () => {
+    const payload = duneTx();
+    (payload.protocolActions as Record<string, unknown>).confirmed = [
+      { eventId: 'e2', protocolId: 'drc20', state: 'confirmed-rejected', actionType: 'transfer', evidenceIds: [] },
+    ];
+    const action = readTransaction(payload, DOGE)?.confirmedActions[0];
+    expect(action?.assetName).toBeNull();
+    expect(action?.quantity).toBeNull();
+    expect(action?.inputOutpoints).toEqual([]);
+  });
+});
+
+describe('readAddressHoldings', () => {
+  const view = (overrides: Record<string, unknown> = {}): ChainExplorerPayload => ({
+    schemaVersion: 'universe-address-holdings-v1',
+    chain: 'zcash',
+    network: 'mainnet',
+    address: 't1Example',
+    utxos: [
+      {
+        outpoint: `${TXID}:0`,
+        txid: TXID,
+        vout: 0,
+        valueAtomic: '250000000',
+        assets: {
+          positions: [
+            {
+              outpoint: `${TXID}:0`,
+              vout: 0,
+              valueSatsAtomic: '250000000',
+              asset: {
+                protocolId: 'zrunes',
+                assetId: '10:1',
+                displayName: 'ZRUNE ONE',
+                ticker: 'Z',
+                assetKind: 'fungible',
+                decimals: 2,
+              },
+              quantityAtomic: '12345',
+              state: 'active',
+            },
+          ],
+          coverage: 'complete',
+          coveredProtocolIds: ['zerdinals', 'zrunes'],
+        },
+      },
+    ],
+    addressLevelBalances: [
+      {
+        asset: {
+          protocolId: 'zrc20',
+          assetId: 'zord:zero',
+          ticker: 'ZERO',
+          assetKind: 'fungible',
+          decimals: 8,
+        },
+        quantityAtomic: '900000000',
+        availableAtomic: '400000000',
+        transferableAtomic: '500000000',
+        decimals: 8,
+        semantics: 'zrc20-zord-ledger',
+      },
+    ],
+    aggregateHoldings: [
+      {
+        asset: {
+          protocolId: 'zrunes',
+          assetId: '10:1',
+          displayName: 'ZRUNE ONE',
+          ticker: 'Z',
+          assetKind: 'fungible',
+          decimals: 2,
+        },
+        quantityAtomic: '12345',
+        utxoCountAtomic: '1',
+        source: 'utxo-bound',
+      },
+    ],
+    paging: {
+      limitAtomic: '50',
+      offsetAtomic: '0',
+      returnedAtomic: '1',
+      totalUtxoCountAtomic: '1',
+      hasMore: false,
+    },
+    checkpoint: { chain: 'zcash', network: 'mainnet', heightAtomic: '3131000', blockHash: BLOCK_HASH, reorgEpoch: '0', observedAt: '2026-08-30T00:00:00.000Z' },
+    sourceEvidence: [],
+    complete: true,
+    unknownAttachmentCount: 0,
+    outOfCoverageCount: 0,
+    ...overrides,
+  });
+
+  it('reads the complete holdings view exactly', () => {
+    const reading = readAddressHoldings(view(), ZEC);
+    expect(reading?.address).toBe('t1Example');
+    expect(reading?.utxos[0].outpoint).toBe(`${TXID}:0`);
+    expect(reading?.utxos[0].amount?.display).toBe('2.5');
+    expect(reading?.utxos[0].assets?.chips[0].quantity?.display).toBe('123.45');
+    expect(reading?.aggregates[0].quantity?.exact).toBe('12345');
+    expect(reading?.aggregates[0].utxoCount?.display).toBe('1');
+    expect(reading?.addressLevel[0].quantity?.display).toBe('9');
+    expect(reading?.addressLevel[0].available?.display).toBe('4');
+    expect(reading?.addressLevel[0].transferable?.display).toBe('5');
+    expect(reading?.complete).toBe(true);
+    expect(reading?.completenessNote).toBeNull();
+    expect(reading?.privacyNotice).toBeNull();
+    expect(reading?.checkpointHeight?.exact).toBe('3131000');
+  });
+
+  it('never renders a partial reading as complete', () => {
+    const reading = readAddressHoldings(
+      view({ complete: false, unknownAttachmentCount: 2 }),
+      ZEC
+    );
+    expect(reading?.complete).toBe(false);
+    expect(reading?.completenessNote).not.toBeNull();
+  });
+
+  it('passes the privacy boundary through verbatim instead of a fabricated empty account', () => {
+    const reading = readAddressHoldings(
+      view({
+        utxos: [],
+        aggregateHoldings: [],
+        addressLevelBalances: [],
+        privacy: { publiclyObservable: false, notice: 'Shielded activity is not publicly observable.' },
+      }),
+      ZEC
+    );
+    expect(reading?.privacyNotice).toBe('Shielded activity is not publicly observable.');
+    expect(reading?.utxos).toEqual([]);
+    expect(reading?.completenessNote).toBeNull();
+  });
+
+  it('refuses payloads that are not the holdings contract', () => {
+    expect(readAddressHoldings({ schemaVersion: 'other', address: 'x' }, ZEC)).toBeNull();
+    expect(readAddressHoldings(null, ZEC)).toBeNull();
+  });
+
+  it('never publishes a partial aggregate sum', () => {
+    const reading = readAddressHoldings(
+      view({
+        aggregateHoldings: [
+          {
+            asset: { protocolId: 'zrunes', assetId: '10:1', assetKind: 'fungible' },
+            quantityAtomic: null,
+            utxoCountAtomic: '2',
+            source: 'utxo-bound',
+          },
+        ],
+      }),
+      ZEC
+    );
+    expect(reading?.aggregates[0].quantity).toBeNull();
+    expect(reading?.aggregates[0].utxoCount?.exact).toBe('2');
   });
 });
