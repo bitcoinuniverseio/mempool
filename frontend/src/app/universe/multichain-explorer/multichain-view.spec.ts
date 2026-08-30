@@ -17,11 +17,13 @@ import {
   readCapabilities,
   readCollection,
   readEmptyList,
+  readHistoryCoverage,
   readNotReadyReasons,
   readOutpoint,
   readPaging,
   readProtocolCoverage,
   readRecordFacts,
+  readSourceDetails,
   readStatusRail,
   readTransaction,
   shortenIdentifier,
@@ -243,6 +245,102 @@ describe('readStatusRail', () => {
       Date.now()
     ).find((r) => r.id === 'mempool');
     expect(reading?.tone).toBe('neutral');
+  });
+});
+
+describe('readStatusRail freshness', () => {
+  // "3 seconds ago" is the reading and the instant behind it was dropped, so
+  // the one figure on the rail that changes on its own could not be checked
+  // against anything.
+  it('carries the exact observation time behind the relative one', () => {
+    const reading = readStatusRail(capability(), DOGE, Date.now()).find(
+      (r) => r.id === 'freshness'
+    );
+    expect(reading?.exact).toBe('2026-08-29T05:00:00.000Z');
+  });
+});
+
+describe('readHistoryCoverage', () => {
+  it('reports all three dimensions, in order', () => {
+    const readings = readHistoryCoverage(capability());
+    expect(readings.map((r) => r.id)).toEqual([
+      'confirmedHistory',
+      'addressHistory',
+      'protocolHistory',
+    ]);
+  });
+
+  // The overview rendered `reads` and dropped `coverage`, so Dogecoin said
+  // address history was offered while the same document said it could not be
+  // read. Both statements are in the envelope and both have to be on the page.
+  it('says an unavailable history is unavailable while the read is still offered', () => {
+    const envelope = capability({
+      ready: false,
+      coverage: {
+        confirmedHistory: 'unavailable',
+        addressHistory: 'unavailable',
+        protocolHistory: 'unavailable',
+      },
+    });
+    expect(readCapabilities(envelope).find((r) => r.id === 'address')?.state).toBe(
+      'offered'
+    );
+    const address = readHistoryCoverage(envelope).find(
+      (r) => r.id === 'addressHistory'
+    );
+    expect(address?.tone).toBe('unavailable');
+    expect(address?.stateLabel).not.toBe('Complete');
+  });
+
+  it('states the dimensions rather than dropping them when nothing answered', () => {
+    const readings = readHistoryCoverage(null);
+    expect(readings).toHaveLength(3);
+    expect(readings.every((r) => r.tone === 'neutral')).toBe(true);
+  });
+});
+
+describe('readSourceDetails', () => {
+  it('keeps the whole snapshot identifier for copying and shortens what is shown', () => {
+    const long = 'dogecoin-mainnet-9304b4b3a53e788898da63a1b52cd509';
+    const detail = readSourceDetails(
+      capability({
+        mempool: {
+          supported: true,
+          state: 'ready',
+          completeness: 'complete',
+          snapshotId: long,
+          sequenceAtomic: '10916',
+          observedAt: '2026-08-29T05:00:00.000Z',
+        },
+      })
+    ).find((entry) => entry.id === 'snapshot');
+    expect(detail?.exact).toBe(long);
+    expect(detail?.display).not.toBe(long);
+    expect(detail?.display.length).toBeLessThan(long.length);
+    expect(detail?.truncated).toBe(true);
+  });
+
+  it('names which component the release identifier belongs to', () => {
+    const detail = readSourceDetails(capability()).find(
+      (entry) => entry.id === 'release'
+    );
+    expect(detail?.exact).toBe('abc1234');
+    expect(detail?.note).toContain('overlay');
+    expect(detail?.truncated).toBe(false);
+  });
+
+  it('carries the exact observation time and the schema the document declares', () => {
+    const details = readSourceDetails(capability());
+    expect(details.find((entry) => entry.id === 'observed')?.exact).toBe(
+      '2026-08-29T05:00:00.000Z'
+    );
+    expect(details.find((entry) => entry.id === 'schema')?.display).toBe(
+      'universe-chain-capability-v1'
+    );
+  });
+
+  it('has nothing to file when no document was read', () => {
+    expect(readSourceDetails(null)).toEqual([]);
   });
 });
 

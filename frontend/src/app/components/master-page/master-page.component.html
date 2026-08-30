@@ -78,7 +78,7 @@
        whether it leads to blocks or to protocols, and below the breakpoint this
        becomes a thumb-reachable bar rather than a squeezed desktop navbar. -->
   <nav class="primary-nav" i18n-aria-label="master-page.primary-navigation" aria-label="Primary">
-    <ul class="nav-list {{ network.val }}">
+    <ul #navList class="nav-list {{ network.val }}">
       <li class="nav-item" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" id="btn-home">
         <a class="nav-link" [routerLink]="chainRoute('dashboard')" (click)="collapse()">
           <span class="nav-icon"><app-svg-images name="nav-tachometer" width="21.59" height="100%"></app-svg-images></span>

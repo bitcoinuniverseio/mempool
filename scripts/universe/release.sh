@@ -96,6 +96,32 @@ gate_release_present() {
   [ -f "$dir/scripts/universe/gateway.mjs" ] || fail "release has no gateway"
   [ -f "$dir/backend/dist/tasks/pools/pools-v2.json" ] \
     || fail "release has no bundled mining pool metadata, so enabling the database would abort at startup"
+  [ -f "$dir/RELEASE-MANIFEST.json" ] \
+    || fail "release carries no manifest, so nothing states what its components are supposed to be"
+}
+
+# The manifest and the directory must name the same commit.
+#
+# A release directory is named by whoever ran install, and the manifest is
+# written by the build. When they disagree, one of them is wrong about what is
+# in the tree, and every check downstream reads the wrong answer.
+gate_manifest_matches() {
+  local dir=$1 sha=$2
+  local named
+  named=$(python3 -c "
+import json,sys
+print(json.load(open(sys.argv[1]))['shortCommit'])
+" "$dir/RELEASE-MANIFEST.json") || fail "the release manifest is not readable"
+  case "$sha" in
+    "$named"*) ;;
+    *)
+      case "$named" in
+        "$sha"*) ;;
+        *) fail "the release manifest names $named and this is being installed as $sha" ;;
+      esac
+      ;;
+  esac
+  log "manifest names $named"
 }
 
 # The same combinations the backend refuses at startup, checked before cutover
@@ -206,6 +232,7 @@ cmd_preflight() {
   local dir; dir=$(release_dir "$sha")
   [ -d "$dir" ] || fail "no release at $dir"
   gate_release_present "$dir"
+  gate_manifest_matches "$dir" "$sha"
   gate_configuration
   gate_database
   gate_address_backend
@@ -232,6 +259,7 @@ wait_for() {
 # Returns non-zero rather than exiting, so a failed check can be rolled back
 # instead of leaving the new release in place with nothing serving.
 verify_live() {
+  local dir=$1
   wait_for "$GATEWAY/__gateway/health" gateway       || { log "gateway did not come back"; return 1; }
   wait_for "$BACKEND/api/v1/backend-info" backend    || { log "backend did not come back"; return 1; }
   wait_for "$OVERLAY/api/v1/universe/status" overlay || { log "overlay did not come back"; return 1; }
@@ -263,6 +291,27 @@ for name, feature in report['features'].items():
 PY
 
   gate_live_socket || return 1
+  gate_component_identity "$dir" || return 1
+}
+
+# The three components behind this origin, held to what the release says they
+# should be.
+#
+# The checks above prove the backend came back and that its enabled features
+# have routes. They say nothing about whether the frontend beside it comes from
+# the same release, which is how this origin went on serving a frontend
+# forty-three commits behind for a day with every check green, and nothing
+# about whether the overlay can name itself, which is how "Release development"
+# reached the public.
+#
+# The overlay is not pinned by the manifest. It is built from another
+# repository on its own release train, so what is required of it is the
+# contract this frontend reads and an identity it can state.
+gate_component_identity() {
+  local dir=$1
+  [ -f "$dir/RELEASE-MANIFEST.json" ] || { log "release carries no manifest"; return 1; }
+  node "$dir/scripts/universe/release-manifest.mjs" verify \
+    --manifest="$dir/RELEASE-MANIFEST.json" --origin="$GATEWAY"
 }
 
 # The live socket, asked for the way a browser asks for it.
@@ -348,7 +397,7 @@ cmd_cutover() {
   else
     log "the gateway is unchanged, leaving it up so the origin sees no gap"
   fi
-  if ! verify_live; then
+  if ! verify_live "$dir"; then
     log "verification failed, rolling back"
     [ -n "$previous" ] && cmd_rollback "$(basename "$previous" | sed 's/^mempool-//')"
     fail "cutover verification failed"
@@ -376,7 +425,7 @@ cmd_rollback() {
   mv -Tf "$CURRENT.new" "$CURRENT"
   # shellcheck disable=SC2086
   systemctl restart $UNITS
-  verify_live || fail "rollback target did not come back either"
+  verify_live "$dir" || fail "rollback target did not come back either"
   log "rolled back to $sha"
 }
 

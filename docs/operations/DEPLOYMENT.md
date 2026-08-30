@@ -166,7 +166,8 @@ suite can see that.
    hard-links the dependency tree from the release in use. A release directory
    is never overwritten in place.
 4. `universe-explorer-release preflight <sha>` runs the gates and changes
-   nothing. It refuses a release whose build is incomplete, whose
+   nothing. It refuses a release whose build is incomplete, whose manifest is
+   missing or names a different commit from the one being installed, whose
    configuration would advertise a feature it cannot serve, whose database does
    not answer, whose source registry does not parse or names a token variable
    that is missing, or where a protocol the registry calls readable has no
@@ -216,13 +217,52 @@ suite can see that.
    An upstream that is genuinely gone is still reported as a gateway failure
    within a few seconds, so a real outage is never hidden behind a long wait. After the swap it reads `/api/v1/capabilities` and
    fails the release if any feature is enabled with no routes registered, which
-   is exactly the state that shipped. A failed verification rolls back.
+   is exactly the state that shipped. It then holds the three component
+   identities to `RELEASE-MANIFEST.json`, which is where a frontend and a
+   backend from different releases, or an overlay that cannot name itself, stop
+   the cutover. A failed verification rolls back.
 6. Run `node scripts/universe/synthetic-check.mjs` against the public origin.
    It asks the live endpoints with nothing mocked and fails on an empty range,
    a protocol advertised as readable whose authority cannot answer, a
-   configured authority with no checkpoint, or a frontend and backend on
-   different builds.
-7. Keep the previous release directory until the stability window closes.
+   configured authority with no checkpoint, a frontend and backend on different
+   builds, or a chain document that cannot name the overlay release behind it.
+7. Run `node scripts/universe/visual-qa/chain-page-smoke.mjs --release=<sha>`
+   against the public origin. Step 6 reads the API and cannot see what the
+   origin renders, which is how a release that was never promoted went on
+   serving an obsolete chain dashboard while every check passed. This one opens
+   `/dogecoin` and `/zcash` in a browser and holds each page to its own
+   capability document: a labelled status rail, a readable explanation whenever
+   the chain says it is not ready and none when it says it is, the three history
+   coverage dimensions, no whole snapshot identifier in the primary interface
+   and the whole one filed under the technical details, next actions that
+   resolve, and the frontend commit this release expected.
+
+8. Check the shell on a phone against the public origin, not only in CI.
+
+   ```bash
+   node scripts/universe/visual-qa/mobile-check.mjs --base=https://explorer.bitcoinuniverse.io
+   ```
+
+   It walks eleven routes across seven window sizes with a coarse pointer, a
+   simulated display cutout and a rotation, and answers every request from
+   fixtures, so what it measures is the deployed shell rather than the chain.
+   Add `--browser=webkit` for the engine Safari is built on.
+
+   This is worth running against production and not only against the build,
+   because the two things it is most likely to catch are things CI cannot see:
+   a gateway serving a stale `index.html`, which shows up immediately as the
+   viewport meta losing `viewport-fit=cover`, and a configuration difference
+   that changes which destinations the bottom bar carries.
+
+   Then look at it by hand on a phone. The gate is emulation, and emulation is
+   not a device: it cannot tell you whether a thumb reaches the bottom bar
+   one-handed, whether the software keyboard covers the result you were
+   reading, or whether the page zooms when you tap the search field. Open the
+   header and search, switch chain, search with the keyboard up, open a
+   transaction, scroll a table, rotate, go back, and watch a live update
+   arrive. Current Safari on iPhone and iPad, Chrome on Android, Samsung
+   Internet, and Chrome on iPhone.
+9. Keep the previous release directory until the stability window closes.
 
 Rolling back to a release from before the socket handover needs the port back,
 because such a gateway opens 8099 itself and dies on bind while systemd holds
@@ -313,10 +353,61 @@ on the same host is a different product and is not part of this stack.
 
 ## Release identity
 
-Every deployment publishes what it is running: the backend reports `gitCommit`
-on `/api/v1/backend-info`, and the public `/source` page renders the release
-SHA, the pinned upstream base, the licence, and the source repository link. A
-build whose SHA is not published must not ship.
+Three components run here and each publishes its own commit. They are allowed
+to differ, and reading one as another is how the last identity defect went
+unnoticed for as long as it did.
+
+| Component | Where it publishes | Release directory |
+| --- | --- | --- |
+| frontend | `GIT_COMMIT_HASH` in `/resources/config.js`, and the `/source` page | `releases/mempool-<sha>` |
+| explorer backend | `gitCommit` on `/api/v1/backend-info` | the same directory |
+| protocol overlay | `release.sha` on every `/api/v1/<chain>/status` | `releases/backend-apis-<sha>` |
+
+A build whose SHA is not published must not ship.
+
+Every artifact carries `RELEASE-MANIFEST.json` at its root, generated from the
+commit being built by `scripts/universe/release-manifest.mjs`. It names the one
+commit the frontend, the explorer backend and the gateway in that artifact all
+come from, and the contract versions this frontend reads. It deliberately does
+not pin the overlay commit: the overlay is built from another repository on its
+own release train, so what the manifest requires of it is the contract and an
+identity it can state, and the commit it reports is recorded rather than
+required.
+
+```bash
+node scripts/universe/release-manifest.mjs verify   --manifest=/opt/universe-explorer/current/RELEASE-MANIFEST.json   --origin=https://explorer.bitcoinuniverse.io
+```
+
+`release.sh` runs the same check against the loopback gateway before the
+cutover is allowed to stand.
+
+The overlay's identifier shipped as the literal string `development` and served
+that to the public. Two faults produced it, and both are worth knowing because
+neither was visible from anything that was being checked:
+
+- Nothing supplied the value. `universe-explorer-overlay.service` reads
+  `/etc/universe-explorer/overlay.env`, no example file mentioned
+  `UNIVERSE_EXPLORER_RELEASE_SHA`, and no install step wrote it. Meanwhile every
+  release directory already carried a `RELEASE-SHA` file naming its commit.
+- The absence was survivable. A missing identity fell back to a placeholder and
+  the service started, so the only signal was a word on a public page.
+
+The overlay now reads its own release directory's `RELEASE-SHA` when the
+variable is absent, which is an identity that cannot drift from the artifact,
+and with `NODE_ENV=production` it refuses to start when neither is a commit.
+Installing an overlay release therefore has one requirement beyond unpacking it:
+
+```bash
+printf '%s
+' "<sha>" > /opt/universe-explorer/releases/backend-apis-<sha>/RELEASE-SHA
+ln -sfn /opt/universe-explorer/releases/backend-apis-<sha> /opt/universe-explorer/current-overlay.new
+mv -Tf /opt/universe-explorer/current-overlay.new /opt/universe-explorer/current-overlay
+systemctl restart universe-explorer-overlay
+```
+
+`synthetic-check.mjs` fails the release when any chain document reports
+`development`, reports something that is not a commit, or when the three chains
+disagree about which overlay answered.
 
 ## The edge
 

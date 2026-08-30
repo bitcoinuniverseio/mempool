@@ -403,12 +403,258 @@ WCAG 2.2 AA is the floor, checked automatically rather than remembered.
 - No critical route overflows horizontally at 320px.
 - A region that scrolls with a mouse takes focus and shows it, so a wide table
   is reachable from a keyboard. Three chain routes shipped without that.
-- Touch targets clear the minimum on the mobile navigation bar.
+- Touch targets clear 24 by 24 everywhere and 44 by 44 in the shell, in
+  pagination, and anywhere a control repeats. See The adaptive window.
+- Nothing the browser scrolls to lands under the header or the bottom bar.
+  Each header shape states its own scroll padding.
+- No field computes under 16px, so no phone zooms the page on focus.
+- Zoom is never restricted.
 
 `scripts/universe/visual-qa/capture.mjs` drives the whole route matrix across
 themes, viewports, and data states, answering every request including the
 WebSocket from fixtures so a difference between runs means the interface
 changed rather than the chain moving.
+
+## The adaptive window
+
+The layout responds to the window it is in, never to the device it believes it
+is on. There is no user-agent sniffing anywhere in the product, because the same
+phone is four different windows depending on its orientation, its browser
+chrome, whether it is sharing the screen and whether it is folded.
+
+### Widths
+
+| Range | Shape |
+|---|---|
+| under 600px | header wraps to two rows, search on its own beneath the brand and the pickers; bottom bar |
+| 600 to 991px | header on one row; bottom bar |
+| 992px and above | header and navigation on one row, navigation returns to the top |
+
+The one shell breakpoint is 992px. Everything else is fluid, wraps, or uses a
+minmax grid. New component rules should prefer a container query to a media
+query: a component that reads its own width keeps working when it is moved into
+a narrower column, and one that reads the viewport does not.
+
+### Heights
+
+Compact landscape, under 480px of height, is its own case and not an
+afterthought. A phone on its side has less room than any other window in the
+matrix, and both fixed layers eat into it. The header drops to 48px, the bottom
+bar puts each icon beside its label instead of above it, and the scroll padding
+comes down to match. No destination and no control is removed to buy the space.
+
+### The safe area
+
+`viewport-fit=cover` is set, so the page runs under the notch and the home
+indicator rather than sitting in a letterbox. That is only safe because
+everything that touches an edge reserves the inset:
+
+| Token | Where it is spent |
+|---|---|
+| `--u-safe-top` | the header's own top padding, so its background reaches under the status bar |
+| `--u-safe-bottom` | the bottom bar's padding, and everything reserving room for the bar |
+| `--u-safe-left`, `--u-safe-right` | the header row, the bottom bar, and the content column |
+
+Two rules go with them. Use them through `max()`, so a phone with no cutout
+keeps its ordinary padding rather than losing it to an inset of zero. And put
+them on the chrome and on the content column, never on `body`: padding the body
+pulls the header and the bar in from the edges and leaves a strip of page colour
+down the side of both.
+
+`--u-bottom-nav-space` is the bar's height plus the bottom inset. Anything
+clearing the bar reserves that, not a copied number. The reservation lives on
+the shared parent of the router outlet and the footer, because the footer is a
+sibling of `main` and a reservation inside `main` cleared the bar for every route
+and not for the footer.
+
+### Viewport units
+
+- `100lvh` for a floor that must not move. The page column uses it to keep the
+  footer below the fold: `dvh` there would reflow the column every time the
+  browser chrome collapsed, which is the shift the floor exists to prevent.
+- `100dvh` for a ceiling on a surface that must fit, such as a menu.
+- `100vh` is kept underneath both as the fallback for engines without them.
+- No layout depends on `100vh` alone.
+
+Neither unit knows about the software keyboard. On iOS the keyboard is painted
+over the page and every unit keeps reporting the full height, so
+`UniverseViewportService` publishes `--u-visual-viewport-height` from
+`visualViewport` where the browser has it. It is the only piece of adaptive
+behaviour in the product written in TypeScript, it is used only as a cap
+alongside a `dvh` value, and where it is absent the CSS fallback is the answer.
+
+### Touch targets
+
+Two floors, because there are two rules.
+
+- **24 by 24 CSS pixels** everywhere, which is WCAG 2.2 AA, with the standard
+  spacing exception: an undersized target passes when nothing else falls inside
+  the 24px circle around it. The exception is the substance of the rule, not a
+  loophole. What makes a small target unusable is hitting the wrong one.
+- **44 by 44** for anything in the application shell, in pagination, or repeated
+  three or more times identically. That is Apple's number; Android asks for 48,
+  and `--u-touch-target-comfortable` is there for controls that can afford it.
+
+Both are measured by `mobile-check.mjs` against what is painted, so a control
+shrunk by its container fails the same as one declared too small.
+
+Box-like controls take a `min-height` and a `min-width`. Text links in dense
+data take room on the block axis instead, and the row grows with them: pulling
+the row back to its old height with a negative margin makes every target overlap
+its neighbours, which is the fault the rule exists to prevent, reintroduced by
+the fix for it.
+
+### Form fields
+
+Every field a software keyboard opens computes at `--u-text-field`, which is
+16px. Below that, iOS Safari zooms the layout viewport in on focus and does not
+zoom back out. It is an engine threshold, not a preference. Never solve it with
+`maximum-scale` or `user-scalable=no`: taking zoom away breaks the page for
+everyone who enlarges it to read.
+
+### Horizontal scrolling
+
+The page never scrolls sideways, at any tested width. A region may, on two
+conditions: it says so, and a keyboard can reach past its edge.
+
+Saying so means a `data-scroll-region` attribute, a `role` and an accessible
+name, and a visible affordance. The block timeline is the one such region in the
+product, because blocks are a sequence and stacking them would destroy the view.
+The bottom bar is the other, and it uses the two-layer background technique for
+its affordance: opaque covers that scroll with the content sitting over static
+shadows, so a fade appears on exactly the side that has more and never when
+everything already fits.
+
+An edge shadow that a label can scroll under is held to the contrast floor like
+any other painted surface. `--u-nav-scroll-shadow` is 14 percent rather than the
+general 28 percent for that reason, and the number came from the measurement.
+
+## The mobile gate
+
+`scripts/universe/visual-qa/mobile-check.mjs`, run by the `mobile` job in CI
+beside the visual matrix rather than inside it.
+
+It is built the opposite way round from the matrix: few page loads and many
+assertions on each, because a page load costs seconds and an assertion costs a
+millisecond. Eleven routes across seven window sizes is seventy-seven pages and
+roughly nine minutes, against the matrix's sixty.
+
+| Window | Why it is in the set |
+|---|---|
+| 320 x 568 | narrowest width still in use; every reflow rule is written against it |
+| 360 x 740 | the most common Android width |
+| 390 x 844 | the most common iPhone width, and the one carrying a simulated cutout |
+| 430 x 932 | the widest phone |
+| 844 x 390 | a phone on its side: compact width, almost no height |
+| 768 x 1024 | tablet, where the shell is still in its compact form |
+| 1024 x 900 | the desktop control: a mobile fix that regresses the wide layout fails here |
+
+Compact windows are run with `isMobile`, which is what makes Chromium and
+WebKit report a coarse pointer. `hasTouch` alone does not, and without it every
+`@media (pointer: coarse)` rule in the product goes unexercised while appearing
+to be covered.
+
+Three engines, with `--browser`, across two CI jobs. The `mobile` job runs
+Chromium and the performance gate on the runner fleet. The `mobile-engines` job
+runs WebKit and Firefox on a hosted runner, and that split is not a preference:
+WebKit needs system libraries a Chromium-only host has never had, it refuses to
+launch without them rather than degrading, and the fleet's runner user has no
+passwordless sudo to install them. When the fleet image gains those libraries,
+the two jobs should become one again.
+
+WebKit is the engine Safari is built on, and Chrome on iOS with it, which is
+the closest an automated run gets to an iPhone. Firefox cannot be put into
+mobile emulation, so it reports a fine pointer and takes a narrower pass:
+window sizes, overflow, fixed layers, safe areas and rotation are all still
+measured there, and the run says so in its own header rather than leaving a
+reader to assume otherwise.
+
+That is also why every rule with a touch floor is written
+`@media (pointer: coarse), (max-width: 991.98px)` rather than on the pointer
+alone. Pointer reporting is not reliable across mobile browsers, desktop-mode
+requests and emulation, and below the shell breakpoint the product is already
+in its mobile shape, so it should have mobile ergonomics whatever the pointer
+claims.
+
+The cutout is injected by overriding the four safe-area properties, because
+headless Chromium has no notch and `env()` is zero everywhere. What is being
+tested is whether the layout reserves room when the numbers are not zero.
+
+What it fails a run for:
+
+- the page scrolling sideways, naming the outermost elements responsible
+- a region scrolling sideways without declaring it, or with nothing focusable in it
+- a field computing under 16px
+- a target under either floor
+- content resting behind the header or the bottom bar, saying whether the
+  element is in flow or pinned, because those are different faults
+- focus resting entirely behind either layer, which is WCAG 2.2 AA. Focus
+  landing partly under a layer is the AAA rule: it is counted and printed every
+  run and does not fail it, because the stylesheet aims for it and Chromium and
+  WebKit reach it while Firefox does not re-scroll something already partly in
+  view. Printing it is what keeps that difference visible
+- the header or bar not reserving a simulated inset
+- a menu taller than the window that does not scroll
+- the bottom bar scrolling with no affordance, or the current destination scrolled out of sight
+- a rotation and a rotation back changing the route or losing the reading position
+
+Run it against any served build:
+
+```
+node scripts/universe/visual-qa/mobile-check.mjs --base=http://127.0.0.1:8080
+```
+
+`--routes` and `--viewports` narrow it while working on one thing. Route ids
+come from the same list the visual matrix walks, so the two gates cannot
+disagree about what the product is.
+
+## Performance budgets
+
+`scripts/universe/visual-qa/mobile-perf.mjs`, in the same job, on a 390 by 844
+window with the processor throttled four times and the network at slow 4G.
+
+Two numbers are gated, and they are the two that are properties of the build
+rather than of the machine:
+
+| Budget | Value | Why it is gateable |
+|---|---|---|
+| eager payload, compressed | 480kB | the same commit gives the same number anywhere |
+| cumulative layout shift | 0.1 | a property of the stylesheet, not the clock |
+
+The eager payload is runtime, polyfills, main and styles: what a browser must
+have before the shell exists. Measured at `bea93c1ec`, develop was 463kB
+compressed and 1655kB raw; with the mobile work it is 464kB and 1659kB. The
+ceiling is set where a real regression trips it and ordinary drift does not.
+Raise it deliberately, and say what bought the bytes.
+
+Largest contentful paint is printed and not gated. The 2.5 second target is a
+field number for a real device on a real network, and this is a throttled
+headless browser on a runner that is also building and serving. The same commit
+measured twelve seconds and twenty on two routes whose shells are identical. A
+number that swings by eight seconds between runs of the same code cannot gate
+anything; used as one it fails honest changes and passes slow ones depending on
+what else the machine is doing. What is still failed is a paint that never
+happens, which is a shell that did not render rather than one that rendered
+slowly.
+
+One route is over the layout budget for a reason that is written down rather
+than hidden. On the transaction route, at about three seconds, `div.panel`
+grows from 46 to 193 pixels as the tracker bar and the confirmations render
+into it, pushing `div.bottom-panel` down 148 pixels. That is 0.103 of shift,
+measured on develop before this work and 0.108 after. It is recorded with its
+figure and printed every run, and the route is held to that figure, so drifting
+further fails even while it is over. Reserving the room means knowing the
+panel's height before the transaction is read, and it is not one height: an
+alert, a tracker bar and a confirmation count are three different sizes. That
+is work on the tracker's loading design, not on the shell.
+
+### Real devices
+
+Emulation is the gate; devices are the proof. Before a mobile change is
+promoted, check on current Safari on iPhone and iPad, Chrome on Android, Samsung
+Internet and Chrome on iPhone: the header and search, a chain switch, a search
+with the software keyboard open, a transaction, a table, the bottom bar, a
+rotation, back navigation, and a live update arriving.
 
 ## Where things live
 
@@ -427,6 +673,9 @@ changed rather than the chain moving.
 | `scripts/universe/check-branding.mjs` | the upstream mark gate |
 | `scripts/universe/visual-qa/capture.mjs` | the route matrix: themes, widths, and data states |
 | `scripts/universe/visual-qa/modes-check.mjs` | forced colours and 200 percent zoom |
+| `scripts/universe/visual-qa/mobile-check.mjs` | the mobile gate: windows, insets, targets, fixed layers, rotation |
+| `scripts/universe/visual-qa/mobile-perf.mjs` | the payload, the layout shift, and the recorded exception to it |
+| `frontend/src/app/universe/universe-viewport.service.ts` | the visual viewport, published as CSS, for the software keyboard |
 | `scripts/universe/visual-qa/fixtures.mjs` | the data every reviewed route renders from |
 
 ## A note on the fixtures

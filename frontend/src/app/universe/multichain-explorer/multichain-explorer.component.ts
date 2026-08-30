@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   OnDestroy,
   OnInit,
@@ -29,11 +30,13 @@ import {
   ChainProfile,
   ChainShape,
   CollectionReading,
+  CoverageReading,
   EmptyListReading,
   Fact,
   OutpointReading,
   ProtocolReading,
   ReadCapability,
+  SourceDetail,
   StatusReading,
   TransactionListReading,
   TransactionReading,
@@ -44,11 +47,13 @@ import {
   readCapabilities,
   readCollection,
   readEmptyList,
+  readHistoryCoverage,
   readIdentifierList,
   readNotReadyReasons,
   readOutpoint,
   readProtocolCoverage,
   readRecordFacts,
+  readSourceDetails,
   readStatusRail,
   readTransaction,
   readTransactionList,
@@ -91,7 +96,9 @@ interface ExplorerViewModel {
   /** Why the chain withholds readiness. Null when it does not. */
   readonly notReady: readonly ChainReasonReading[] | null;
   readonly reads: readonly ReadCapability[];
+  readonly coverage: readonly CoverageReading[];
   readonly protocols: readonly ProtocolReading[];
+  readonly sourceDetails: readonly SourceDetail[];
   readonly shape: ChainShape;
   readonly transaction: TransactionReading | null;
   readonly block: BlockReading | null;
@@ -195,7 +202,8 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
     private readonly api: UniverseApiService,
     private readonly live: UniverseWebsocketService,
     private readonly local: UniverseLocalService,
-    private readonly seo: SeoService
+    private readonly seo: SeoService,
+    private readonly changes: ChangeDetectorRef
   ) {
     this.chain = this.chainFromUrl(router.url);
     this.profile = chainProfile(this.chain);
@@ -295,7 +303,9 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
       rail: readStatusRail(capability, this.profile, Date.now()),
       notReady: readNotReadyReasons(capability),
       reads: readCapabilities(capability),
+      coverage: readHistoryCoverage(capability),
       protocols: readProtocolCoverage(capability, this.profile),
+      sourceDetails: readSourceDetails(capability),
       shape,
       transaction,
       block,
@@ -409,6 +419,45 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
     return entries
       .map((entry) => `${entry.label.toLowerCase()} (${entry.count})`)
       .join(', ');
+  }
+
+  /**
+   * The identifier a technical detail was last copied from.
+   *
+   * Kept so the confirmation names what was copied rather than appearing next
+   * to every row at once, and cleared on the next copy rather than on a timer,
+   * because a message that vanishes on its own is one a screen reader can miss.
+   */
+  copiedDetailId: string | null = null;
+
+  /**
+   * What the copy control is called, naming the value it copies.
+   *
+   * A row of buttons all reading "Copy" is unusable without the table around
+   * them, which a screen reader is under no obligation to convey, and the
+   * confirmation has to reach the same place the action did.
+   */
+  copyActionLabel(detail: { id: string; label: string }): string {
+    return this.copiedDetailId === detail.id
+      ? $localize`:@@universe.chain.source-copied-label:Copied ${detail.label}:LABEL:`
+      : $localize`:@@universe.chain.source-copy-label:Copy ${detail.label}:LABEL:`;
+  }
+
+  async copyDetail(detail: { id: string; exact: string | null }): Promise<void> {
+    if (!detail.exact) {
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(detail.exact);
+      this.copiedDetailId = detail.id;
+      this.changes.markForCheck();
+    } catch {
+      // A browser that refuses the clipboard has still shown the exact value,
+      // which is selectable. Saying "copied" when nothing was would be worse
+      // than saying nothing.
+      this.copiedDetailId = null;
+      this.changes.markForCheck();
+    }
   }
 
   trackById(_index: number, item: { id: string }): string {

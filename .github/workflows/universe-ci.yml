@@ -71,6 +71,9 @@ jobs:
       - name: Gateway routing
         run: node --test scripts/universe/gateway.test.mjs
 
+      - name: The component identity check can still fail
+        run: node --test scripts/universe/release-manifest.test.mjs
+
       - name: The gateway bridges an upstream restart rather than failing
         run: node --test scripts/universe/gateway-restart.test.mjs
 
@@ -174,6 +177,14 @@ jobs:
         working-directory: scripts/universe/visual-qa
         run: node --test progress-gate.test.mjs
 
+      # The public chain page gate, checked against the states it exists for.
+      # It runs against the live origin rather than this build, so nothing in
+      # this job exercises it, and a gate that has only ever passed has not
+      # shown it can fail. Every case it covers shipped past a green suite.
+      - name: The public chain page gate fires on the states that shipped
+        working-directory: scripts/universe/visual-qa
+        run: node --test chain-page-audit.test.mjs
+
       # A fixed port here once measured another job's build: two runners share
       # a host, the second gateway crashed on the taken port behind "&", the
       # probe happily reached the first job's server, and the run died halfway
@@ -206,8 +217,30 @@ jobs:
       # finishes show up. The deep pass takes the routes this suite holds to a
       # terminal state through every failure state, every theme and the widths
       # that change the layout, which is where a page that lies about why it is
-      # empty shows up. Measured at about two and a half minutes and sixteen
-      # minutes respectively.
+      # empty shows up.
+      #
+      # Measured on run 33254326169, 2026-08-29, on universe-linux-ultra-02:
+      #
+      #   broad pass          64 screenshots     5m50s
+      #   deep pass          504 screenshots    47m10s
+      #   chain failures      48 screenshots     3m27s
+      #   forced colours and zoom                  30s
+      #   whole job                            59m57s of a 100 minute cap
+      #
+      # This comment said two and a half minutes and sixteen. The deep pass has
+      # since grown to roughly three times that, it is now 78 percent of the
+      # job, and the job sits at 60 of its 100 minutes. Nothing is failing. The
+      # point of writing the real numbers down is that the next person to add a
+      # route, a state or a theme to the deep pass is the one who meets the
+      # cap, and without this they meet it as a timeout forty-seven minutes
+      # into a run rather than as a number they could have added up first.
+      #
+      # The deep pass is routes multiplied by states multiplied by themes
+      # multiplied by widths. Adding one route to it currently costs about
+      # seven minutes. If it needs to grow again, split it the way it was split
+      # from the broad pass in the first place, rather than raising the cap:
+      # a gate that cannot finish protects nothing, which is the reason the
+      # split exists.
       - name: Every route renders and finishes, at a phone and a desktop width
         working-directory: scripts/universe/visual-qa
         run: >-
@@ -252,4 +285,190 @@ jobs:
             scripts/universe/visual-qa/artifacts
             scripts/universe/visual-qa/artifacts-broad
             scripts/universe/visual-qa/artifacts-chain-states
+          retention-days: 30
+
+  # The mobile gate runs beside the visual matrix rather than inside it.
+  #
+  # The matrix job is already 60 minutes of its 100 minute cap, and 78 percent
+  # of that is the deep pass. Adding widths, orientations and device emulation
+  # to it is how a gate stops finishing, which is the fault the split between
+  # the broad and deep passes exists to prevent. So this is a job of its own on
+  # a second runner, and the wall clock of the workflow does not move: it
+  # finishes in roughly a fifth of the time the matrix takes, on hardware that
+  # would otherwise be idle while the matrix runs.
+  #
+  # It builds its own copy rather than taking an artifact from the job beside
+  # it. That costs one extra production build and buys two things worth more
+  # than it: the two gates cannot make each other fail or wait, and this one
+  # can be read, run and debugged on its own.
+  #
+  # Measured at about nine minutes, of which six are the build.
+  mobile:
+    name: Mobile and adaptive layout
+    runs-on: [self-hosted, linux-ultra]
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24.19.0'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install
+        working-directory: frontend
+        run: npm ci
+
+      - name: Production build
+        working-directory: frontend
+        run: npm run build:universe
+
+      - name: Install the visual QA harness
+        working-directory: scripts/universe/visual-qa
+        run: npm ci
+
+      # Same reasoning as the matrix job: a fixed port once measured another
+      # job's build, so each run takes a free one and refuses to continue
+      # unless the process answering is the one it started.
+      - name: Serve the built frontend
+        run: |
+          GATEWAY_PORT=$(node -e "const s=require('net').createServer();s.listen(0,'127.0.0.1',()=>{console.log(s.address().port);s.close()})")
+          echo "GATEWAY_PORT=$GATEWAY_PORT" >> "$GITHUB_ENV"
+          UNIVERSE_GATEWAY_PORT=$GATEWAY_PORT UNIVERSE_GATEWAY_ROOT=frontend/dist/mempool/browser node scripts/universe/gateway.mjs &
+          GATEWAY_PID=$!
+          for i in $(seq 1 30); do
+            curl -fsS -o /dev/null "http://127.0.0.1:$GATEWAY_PORT/" && break
+            sleep 1
+          done
+          kill -0 "$GATEWAY_PID"
+          curl -fsS "http://127.0.0.1:$GATEWAY_PORT/__gateway/health"
+
+      # Eleven routes across seven window sizes, with a coarse pointer, a
+      # software keyboard, a display cutout and a rotation. Seventy-seven page
+      # loads, and every one of them is measured about twelve different ways,
+      # which is why this is cheap: the assertions are free and only the page
+      # loads cost anything.
+      - name: Every window a phone can be, measured with a thumb
+        working-directory: scripts/universe/visual-qa
+        run: node mobile-check.mjs --base=http://127.0.0.1:$GATEWAY_PORT --out=./artifacts-mobile
+
+      # What the shell costs a phone, and what it makes the page do while it
+      # arrives. The gated numbers are the compressed payload, which is a
+      # property of the build and identical on any machine, and layout shift,
+      # which is a property of the stylesheet. Largest paint is printed and not
+      # gated: this runner builds, serves and drives browsers at once, and the
+      # same commit measured twelve seconds and twenty on two routes whose
+      # shells are identical, so it would fail honest changes and pass slow
+      # ones depending on what else was running.
+      - name: What the shell costs on a phone
+        working-directory: scripts/universe/visual-qa
+        run: >-
+          node mobile-perf.mjs --base=http://127.0.0.1:$GATEWAY_PORT
+          --out=./artifacts-perf
+
+      - name: Keep the mobile report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: universe-mobile-qa
+          path: |
+            scripts/universe/visual-qa/artifacts-mobile
+            scripts/universe/visual-qa/artifacts-perf
+          retention-days: 30
+
+  # The two engines the fleet cannot run.
+  #
+  # WebKit needs a set of system libraries a Chromium-only host has never had,
+  # and it does not degrade without them: it refuses to launch and prints the
+  # list. Installing them is one apt command, and the fleet's runner user has
+  # no passwordless sudo, so `playwright install --with-deps` fails there with
+  # "sudo: a password is required". Measured on universe-linux-ultra-03.
+  #
+  # So this one job runs on a hosted runner, where that command works. It is
+  # the exception to using the fleet, and it is here rather than folded into
+  # the job above so the exception is visible and so a hosted outage cannot
+  # take the Chromium gate down with it.
+  #
+  # It is worth the exception. WebKit is what Safari and Chrome on iOS are both
+  # built on, and dvh, safe-area insets and the pointer media feature are
+  # exactly the rules where engines disagree: a Chromium-only run proves
+  # nothing about the platform half this work was written for.
+  #
+  # When the fleet's image gains those libraries, delete this job and put the
+  # two steps back in the one above, which is where they belong.
+  mobile-engines:
+    name: WebKit and Firefox
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24.19.0'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install
+        working-directory: frontend
+        run: npm ci
+
+      - name: Production build
+        working-directory: frontend
+        run: npm run build:universe
+
+      - name: Install the visual QA harness
+        working-directory: scripts/universe/visual-qa
+        run: npm ci
+
+      - name: Fetch the engines and what they need to start
+        working-directory: scripts/universe/visual-qa
+        run: npx playwright install --with-deps webkit firefox
+
+      - name: Serve the built frontend
+        run: |
+          GATEWAY_PORT=$(node -e "const s=require('net').createServer();s.listen(0,'127.0.0.1',()=>{console.log(s.address().port);s.close()})")
+          echo "GATEWAY_PORT=$GATEWAY_PORT" >> "$GITHUB_ENV"
+          UNIVERSE_GATEWAY_PORT=$GATEWAY_PORT UNIVERSE_GATEWAY_ROOT=frontend/dist/mempool/browser node scripts/universe/gateway.mjs &
+          GATEWAY_PID=$!
+          for i in $(seq 1 30); do
+            curl -fsS -o /dev/null "http://127.0.0.1:$GATEWAY_PORT/" && break
+            sleep 1
+          done
+          kill -0 "$GATEWAY_PID"
+          curl -fsS "http://127.0.0.1:$GATEWAY_PORT/__gateway/health"
+
+      # The full window set, on the engine Safari is built on.
+      - name: Every window a phone can be, on WebKit
+        working-directory: scripts/universe/visual-qa
+        run: >-
+          node mobile-check.mjs --base=http://127.0.0.1:$GATEWAY_PORT
+          --browser=webkit --out=./artifacts-mobile-webkit
+
+      # Firefox cannot be put into mobile emulation, so it reports a fine
+      # pointer and the pointer-conditional rules do not apply to it. What it
+      # still measures is every window size, the overflow, the fixed layers,
+      # the safe areas and the rotation, which is worth having on a third
+      # engine. A subset of routes, because this is the smoke check and the two
+      # thorough passes are elsewhere.
+      - name: A third engine, on the checks that do not need a thumb
+        working-directory: scripts/universe/visual-qa
+        run: >-
+          node mobile-check.mjs --base=http://127.0.0.1:$GATEWAY_PORT
+          --browser=firefox --routes=home,tx,address,blocks,docs
+          --out=./artifacts-mobile-firefox
+
+      - name: Keep the engine reports
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: universe-mobile-engines
+          path: |
+            scripts/universe/visual-qa/artifacts-mobile-webkit
+            scripts/universe/visual-qa/artifacts-mobile-firefox
           retention-days: 30

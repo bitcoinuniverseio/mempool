@@ -51,7 +51,17 @@
   <meta name="theme-color" content="#0e0a13" media="(prefers-color-scheme: dark)">
   <!-- END FAVICONS -->
 
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- viewport-fit=cover puts the page under the notch and the home indicator
+       rather than inside a letterbox, which is what makes the header and the
+       bottom bar reach the edges of the screen. It is only safe alongside the
+       safe-area padding in the stylesheet: without that, cover is how content
+       ends up underneath a rounded corner.
+
+       No maximum-scale and no user-scalable=no. Pinch zoom is how a great many
+       people read anything at all, and taking it away to stop iOS zooming a
+       focused field is fixing the wrong thing; the fields are sized at 16px
+       instead, which is what actually stops it. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 </head>
 
 <body>
