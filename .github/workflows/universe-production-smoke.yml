@@ -27,9 +27,16 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  route:
+    uses: bitcoinuniverseio/.github-private/.github/workflows/route.yml@develop
+    secrets: inherit
+    with:
+      plan: '{"smoke_2":"standard"}'
+
   smoke:
+    needs: route
     name: Live origin answers with real content
-    runs-on: [self-hosted, linux-ultra]
+    runs-on: ${{ fromJSON(needs.route.outputs.targets).smoke_2 }}
     # Ten was for a job that only read the API. It now installs the browser
     # harness and loads two pages in a real browser, which is the only way to
     # see what the origin renders.

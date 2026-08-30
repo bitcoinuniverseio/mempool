@@ -22,9 +22,16 @@ permissions:
   contents: read
 
 jobs:
+  route:
+    uses: bitcoinuniverseio/.github-private/.github/workflows/route.yml@develop
+    secrets: inherit
+    with:
+      plan: '{"artifact_2":"standard"}'
+
   artifact:
+    needs: route
     name: Build and pack
-    runs-on: [self-hosted, linux-ultra]
+    runs-on: ${{ fromJSON(needs.route.outputs.targets).artifact_2 }}
     timeout-minutes: 90
     steps:
       - name: Checkout

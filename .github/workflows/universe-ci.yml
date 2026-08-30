@@ -26,14 +26,21 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  route:
+    uses: bitcoinuniverseio/.github-private/.github/workflows/route.yml@develop
+    secrets: inherit
+    with:
+      plan: '{"docs_2":"light","backend_2":"standard","frontend_2":"standard","mobile_2":"standard"}'
+
   docs:
+    needs: route
     name: Documentation gates
     # Any runner in the fleet. This job is a checkout, a Node install and a set
     # of Node scripts: no browser, no Rust, no Docker. Pinned to `linux-ultra`
     # it competed for the six runners that are the only ones able to run the
     # visual matrix, while eight runners carrying `universe-ci` sat idle, and a
     # three minute job held a slot the fifty minute one was queued for.
-    runs-on: [self-hosted, universe-ci]
+    runs-on: ${{ fromJSON(needs.route.outputs.targets).docs_2 }}
     timeout-minutes: 10
     steps:
       - name: Checkout
@@ -78,8 +85,9 @@ jobs:
         run: node --test scripts/universe/gateway-restart.test.mjs
 
   backend:
+    needs: route
     name: Backend build and test
-    runs-on: [self-hosted, linux-ultra]
+    runs-on: ${{ fromJSON(needs.route.outputs.targets).backend_2 }}
     timeout-minutes: 45
     env:
       COMPOSE_PROJECT_NAME: mempool-integration-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}
@@ -122,8 +130,9 @@ jobs:
           MEMPOOL_CONFIG_FILE: ${{ env.MEMPOOL_TEST_RUNTIME_CONFIG_FILE }}
 
   frontend:
+    needs: route
     name: Frontend build
-    runs-on: [self-hosted, linux-ultra]
+    runs-on: ${{ fromJSON(needs.route.outputs.targets).frontend_2 }}
     # The deep visual pass measured 48 minutes once the gated route list grew
     # from three routes to seven, which put the job over the hour it had and
     # killed it three minutes from the end. A gate that cannot finish protects
@@ -311,8 +320,9 @@ jobs:
   #
   # Measured at about nine minutes, of which six are the build.
   mobile:
+    needs: route
     name: Mobile and adaptive layout
-    runs-on: [self-hosted, linux-ultra]
+    runs-on: ${{ fromJSON(needs.route.outputs.targets).mobile_2 }}
     timeout-minutes: 45
     steps:
       - name: Checkout
@@ -408,7 +418,7 @@ jobs:
   # two steps back in the one above, which is where they belong.
   mobile-engines:
     name: WebKit and Firefox
-    runs-on: ubuntu-latest
+    runs-on: runs-on=${{ github.run_id }}-mobile_engines/runner=universe-hosted/cpu=2+8/env=production
     timeout-minutes: 45
     steps:
       - name: Checkout
