@@ -65,13 +65,19 @@ Measured on the indexer host, process 968854, index
 | implied time | about four years |
 | disk I/O per block | ~3.4 GiB read, ~3.4 GiB written |
 | index size | 1.5 TB real |
-| volume headroom | 115 GB |
+| volume headroom | 115 GB, unchanged across 90 minutes of indexing |
 | Dogecoin Core `getblock` latency | 14 ms |
 
 The node is not the bottleneck. The worker sits in uninterruptible disk sleep;
 this is write amplification against a 1.5 TB file with a 4 GB cache on a host
-with 26 GB of swap in use. No parameter closes a three orders of magnitude gap,
-and the volume exhausts long before the reindex could finish.
+with 26 GB of swap in use. Almost all of that I/O rewrites pages in place
+rather than growing the file, so the headroom held steady over the measurement
+window: throughput alone is the blocker, and no parameter closes a gap of three
+orders of magnitude.
+
+A second reading 90 minutes after the first put the index at block 5,782,609,
+which is 50 blocks of progress, or about 33 blocks an hour. The conclusion does
+not move: at that rate the remaining work is measured in years.
 
 Consequence: `doginals`, `drc20` and `dunes` cannot reach ready on this build,
 and the `tap_doge` custody snapshot cannot be produced. The explorer reports
