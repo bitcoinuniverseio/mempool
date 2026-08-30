@@ -147,6 +147,57 @@
   padding: 1em 0.5em 0;
 }
 
+/**
+ * The two rows under the tracker bar, held at one size.
+ *
+ * They are what used to move the page. The panel painted at 45px with this
+ * block empty, and at about three seconds, when the transaction arrived, two
+ * rows appeared in it and pushed everything below down by 148 pixels. The
+ * bottom panel is flex-grow inside a viewport-height column, so it took the
+ * push as a move and a shrink at once, and that single shift was the route's
+ * whole 0.103 of layout shift.
+ *
+ * Reserving the room needs one height, and the states did not have one.
+ * Measured at 390 by 844: a pending transaction settles at two 48px rows,
+ * first seen and an ETA; a confirmed one at 72 and 68, because below 992px
+ * the confirmed timestamp puts its relative time on a second line and the
+ * confirmation count is a button rather than a line of text. Reserving the
+ * smaller would have traded one shift for another.
+ *
+ * So the row is what gets the reservation, not the block: every row here is
+ * two lines of value tall, because the tallest of them is. Both settled
+ * states are then 4.5em a row and 9em together, the block holds that height
+ * with nothing in it, and skeleton rows fill it while the transaction is being
+ * read. Nothing moves when
+ * the transaction arrives, and nothing moves again if it confirms while it is
+ * being watched, which used to be a second 44px jump at the moment the
+ * tracker exists to show.
+ */
+.data {
+  min-height: 9em;
+  // Carried here from the first row, which used to hold it, so that the space
+  // above the rows is there in the states that have no rows to hold it.
+  margin-top: 0.5rem;
+
+  .field.narrower {
+    // The row is taller than most of its content now, so the content sits in
+    // the middle of it rather than against the top with the reservation
+    // showing as a gap underneath. Baseline alignment cannot do this: it pins
+    // the label to the value's first line, which on the confirmed row is the
+    // date and leaves the label above the relative time rather than beside
+    // the pair of them.
+    align-items: center;
+
+    .value {
+      min-height: 3em;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-end;
+    }
+  }
+}
+
 .accelerate {
   display: flex !important;
   align-self: auto;
