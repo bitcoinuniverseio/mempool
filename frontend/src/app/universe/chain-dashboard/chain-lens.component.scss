@@ -49,6 +49,20 @@
     outline: 2px solid var(--u-focus-ring);
     outline-offset: 2px;
   }
+
+  // A pill a finger has to hit. 44 is the smallest target a thumb can be
+  // expected to land on, and these repeat in a row where a miss selects the
+  // neighbour.
+  @media (pointer: coarse), (max-width: 991.98px) {
+    align-items: center;
+    display: inline-flex;
+    justify-content: center;
+    min-height: 44px;
+    // A label as short as "1w" is narrower than a thumb even when it is
+    // tall enough, so the target is square rather than only tall.
+    min-width: 44px;
+    padding-inline: var(--u-space-3);
+  }
 }
 
 .lens-table-toggle {
