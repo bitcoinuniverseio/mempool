@@ -28,6 +28,7 @@
     <button (click)="clickItem(0)" [class.active]="0 === activeIdx" type="button" role="option" class="dropdown-item">
       <ng-container *ngTemplateOutlet="goTo; context: { $implicit: results.searchText | shortenString : isMobile ? 17 : 30 }"></ng-container>
     </button>
+    <ng-container *ngTemplateOutlet="addressIndexNotice"></ng-container>
   </ng-template>
   <ng-template [ngIf]="results.blockHash">
     <div class="card-title" i18n="search.bitcoin-block">{{ networkName }} Block</div>
@@ -37,6 +38,7 @@
   </ng-template>
   <ng-template [ngIf]="results.addresses.length">
     <div class="card-title" i18n="search.bitcoin-addresses">{{ networkName }} Addresses</div>
+    <ng-container *ngTemplateOutlet="addressIndexNotice"></ng-container>
     <ng-template ngFor [ngForOf]="results.addresses" let-address let-i="index">
       <button (click)="clickItem(results.hashQuickMatch + i)" [class.active]="(results.hashQuickMatch + i) === activeIdx" type="button" role="option" class="dropdown-item">
         <ngb-highlight [result]="address | shortenString : isMobile ? 25 : 36" [term]="results.searchText"></ngb-highlight>
@@ -113,3 +115,28 @@
 </div>
 
 <ng-template #goTo let-x i18n="search.go-to">Go to "{{ x }}"</ng-template>
+
+<!--
+  Said before the reader clicks, not after.
+
+  An address stays recognised and stays clickable while the index is catching
+  up, because it is still the right destination and it will work on its own the
+  moment the index does. What must not happen again is a header that offers
+  address search over a deployment that cannot answer one, with nothing said
+  until the page itself is already blaming the reader's address.
+-->
+<ng-template #addressIndexNotice>
+  @if (!addressLookupReady) {
+    <div class="search-notice small">
+      @if (addressIndex?.state === 'syncing') {
+        @if (addressIndex?.indexedTip !== null && addressIndex?.bitcoinCoreTip !== null) {
+          <ng-container i18n="search.address-index-syncing-progress">Address history is still being indexed, through block {{ addressIndex.indexedTip }} of {{ addressIndex.bitcoinCoreTip }}.</ng-container>
+        } @else {
+          <ng-container i18n="search.address-index-syncing">Address history is still being indexed.</ng-container>
+        }
+      } @else {
+        <ng-container i18n="search.address-index-unavailable">Address history is temporarily unavailable.</ng-container>
+      }
+    </div>
+  }
+</ng-template>
