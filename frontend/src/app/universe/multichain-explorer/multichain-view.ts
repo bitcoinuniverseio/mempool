@@ -82,6 +82,7 @@ const DOGECOIN: ChainProfile = {
     { id: 'doginals', label: 'Doginals', registryIds: ['doginals'] },
     { id: 'drc20', label: 'DRC-20', registryIds: ['drc20'] },
     { id: 'doge-tap', label: 'TAP on Doge', registryIds: ['tap_doge', 'doge-tap', 'tap-on-doge', 'tap-doge'] },
+    { id: 'dunes', label: 'Dunes', registryIds: ['dunes'] },
   ],
 };
 
@@ -921,6 +922,7 @@ const READ_LABELS: readonly { id: keyof ChainCapabilityEnvelope['reads']; label:
   { id: 'outpoint', label: $localize`:@@universe.chain.read-outpoint:Outpoint lookup` },
   { id: 'feeEstimates', label: $localize`:@@universe.chain.read-fees:Fee estimates` },
   { id: 'projectedBlocks', label: $localize`:@@universe.chain.read-projected:Projected blocks` },
+  { id: 'candidateBuckets', label: $localize`:@@universe.chain.read-buckets:Pending set, grouped by fee policy` },
 ];
 
 /**

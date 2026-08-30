@@ -268,7 +268,7 @@ jobs:
         working-directory: scripts/universe/visual-qa
         run: >-
           node capture.mjs --base=http://127.0.0.1:$GATEWAY_PORT --out=./artifacts-chain-states
-          --routes=dogecoin,dogecoin-drc20,zcash,zcash-block
+          --routes=dogecoin,dogecoin-drc20,dogecoin-dunes,dogecoin-dune,zcash,zcash-block,zcash-zrc20,zcash-zrc20-token
           --states=chain-authority-down,chain-behind,chain-not-ready-protocols,chain-not-ready-unexplained,chain-object-missing
           --themes=default,dark --viewports=375,1440
 

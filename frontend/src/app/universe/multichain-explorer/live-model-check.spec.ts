@@ -18,6 +18,10 @@ import {
   readTransaction,
   readTransactionList,
 } from '@app/universe/multichain-explorer/multichain-view';
+import {
+  readRulesetAsset,
+  readRulesetAssetList,
+} from '@app/universe/multichain-explorer/ruleset-assets';
 
 const PAYLOADS: Record<string, unknown> = {
   dogecoin_status: LIVE_PAYLOADS.dogecoinStatus,
@@ -26,6 +30,8 @@ const PAYLOADS: Record<string, unknown> = {
   zcash_mempool: LIVE_PAYLOADS.zcashMempool,
   dogecoin_protocols: LIVE_PAYLOADS.dogecoinProtocols,
   zcash_protocols: LIVE_PAYLOADS.zcashProtocols,
+  zrc20_list: LIVE_PAYLOADS.zrc20List,
+  zrc20_detail: LIVE_PAYLOADS.zrc20Detail,
 };
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- captured payloads are read as the API sends them
 const load = (name: string): any => structuredClone(PAYLOADS[name]);
@@ -62,10 +68,10 @@ describe('live dogecoin status', () => {
     expect(tap).toHaveLength(1);
     expect(tap[0].routeId).toBe('doge-tap');
 
-    // dunes is reported by the chain and has no page here.
+    // dunes is reported by the chain and now has a page of its own.
     const dunes = readings.find((r) => r.protocolId === 'dunes');
     expect(dunes).toBeDefined();
-    expect(dunes?.routeId).toBeNull();
+    expect(dunes?.routeId).toBe('dunes');
   });
 });
 
@@ -185,4 +191,59 @@ describe('live protocol manifests', () => {
       expect(facts.every((f) => f.label.length > 0)).toBe(true);
     });
   }
+});
+
+describe('live zrc20 ledgers', () => {
+  it('reads the whole list page, with nothing silently dropped', () => {
+    const payload = load('zrc20_list');
+    const list = readRulesetAssetList(payload);
+    expect(list).not.toBeNull();
+    expect(list!.shownCount).toBe(payload.items.length);
+    expect(list!.unreadRowCount).toBe(0);
+    expect(list!.lens).toBe(payload.lens);
+    // Every figure the ledger carries is either a column or named as held
+    // back. The union of the two is the ledger.
+    const shown = list!.columns.map((column) => column.key);
+    for (const row of list!.rows) {
+      for (const figure of row.reading.figures) {
+        expect(shown.includes(figure.key) || list!.hiddenFigureFields.includes(figure.key)).toBe(true);
+      }
+      expect(row.reading.unreadFields).toEqual([]);
+    }
+  });
+
+  it('reads the detail payload as one asset under every ruleset it is in', () => {
+    const payload = load('zrc20_detail');
+    const asset = readRulesetAsset(payload, payload.lens);
+    expect(asset).not.toBeNull();
+    expect(asset!.tick).toBe(payload.tick);
+    expect(asset!.rulesets[0]).toBe(payload.lens);
+    expect(asset!.rulesets.length).toBeGreaterThan(1);
+    expect(asset!.unreadFields).toEqual([]);
+    // Whatever the values are when recaptured, exactness is the invariant:
+    // every amount carries its source digits, shifted only by the token's own
+    // decimals, never by the chain's.
+    for (const figure of asset!.figures) {
+      for (const reading of figure.readings) {
+        if (reading.amount) {
+          expect(reading.amount.exact).toMatch(/^(0|[1-9][0-9]*)$/);
+        }
+      }
+    }
+  });
+
+  it('observes divergence for itself rather than trusting the summary', () => {
+    const payload = load('zrc20_detail');
+    const asset = readRulesetAsset(payload, payload.lens);
+    // The capture disagrees on holders and mint_count. If a recapture stops
+    // disagreeing, this assertion is about the cross-check, not the values:
+    // observed and stated must be derived independently and then compared.
+    expect(asset!.divergingFields).toEqual(asset!.statedDivergingFields);
+  });
+
+  it('does not fall through to the generic table for a ruleset list', () => {
+    const payload = load('zrc20_list');
+    expect(classifyPayload(payload)).toBe('collection');
+    expect(readRulesetAssetList(payload)).not.toBeNull();
+  });
 });
