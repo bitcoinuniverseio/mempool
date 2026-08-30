@@ -154,7 +154,7 @@ test('a handover of no sockets is not a handover', () => {
  * the only sign was a console error on every page.
  */
 test('the content policy follows the build behind the static root', async () => {
-  const { mkdtempSync, writeFileSync, utimesSync } = await import('node:fs');
+  const { mkdtempSync, writeFileSync, utimesSync, statSync } = await import('node:fs');
   const { tmpdir } = await import('node:os');
   const { join } = await import('node:path');
   const { createHash } = await import('node:crypto');
@@ -174,15 +174,26 @@ test('the content policy follows the build behind the static root', async () => 
   const before = gateway.contentSecurityPolicy();
   assert.ok(before.includes(hashOf(first)), 'the first build is allowed by name');
 
+  // A longer script: the file changes size as well as time.
   const second = 'window.__b=2;window.__c=3;';
   writeFileSync(join(root, 'index.html'), `<html><script>${second}</script></html>`);
-  // Same second, different content: the identity has to be more than a
-  // timestamp at one second resolution, which a release can land inside.
-  const when = new Date(1780000000000);
-  utimesSync(join(root, 'index.html'), when, when);
-  writeFileSync(join(root, 'index.html'), `<html><script>${second}</script></html>`);
-
   const after = gateway.contentSecurityPolicy();
   assert.ok(after.includes(hashOf(second)), 'the build now behind the path is allowed');
   assert.ok(!after.includes(hashOf(first)), 'the build that is gone is no longer allowed');
+
+  // And a script of exactly the same length, with the modification time forced
+  // back to what it was. Neither dimension of the cache key may be load
+  // bearing on its own: a build that changes the file without changing its
+  // size has to be noticed, and so has one that lands at the same instant.
+  const stamped = statSync(join(root, 'index.html'));
+  const third = 'window.__b=9;window.__c=8;';
+  assert.equal(third.length, second.length, 'the two scripts are the same length');
+  writeFileSync(join(root, 'index.html'), `<html><script>${third}</script></html>`);
+  utimesSync(join(root, 'index.html'), stamped.atime, stamped.mtime);
+
+  const sameSizeSameTime = gateway.contentSecurityPolicy();
+  assert.ok(
+    sameSizeSameTime.includes(hashOf(third)),
+    'a build of the same size at the same instant is still the build being served',
+  );
 });

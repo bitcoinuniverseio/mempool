@@ -149,33 +149,21 @@ function inlineScriptHashes() {
  * while refusing the script it was itself serving. Every page loaded with the
  * theme bootstrap blocked, and the only sign was a console error.
  *
- * Keyed on the file's size and modification time, so a document costs one stat
- * and a hash is computed only when the file behind the path actually changes.
+ * Read from the file on each document rather than cached against its size and
+ * modification time. That cheaper key is wrong in a way that is hard to see
+ * afterwards: two builds of the same length restored to the same instant, which
+ * is what a tar extraction preserving mtimes can produce, share it, and the
+ * failure it causes is a blocked script and nothing else. The document is 3.4
+ * kilobytes and this is the same file the response is about to serve, so the
+ * saving was never worth the class of bug it kept open.
  */
-let policyCache = null;
-
-function indexIdentity() {
-  try {
-    const stats = statSync(join(ROOT, 'index.html'));
-    return `${stats.size}:${stats.mtimeMs}`;
-  } catch {
-    return 'absent';
-  }
-}
-
 export function contentSecurityPolicy() {
-  const key = indexIdentity();
-  if (policyCache?.key === key) {
-    return policyCache.value;
-  }
   const hashes = inlineScriptHashes();
-  const value = CONTENT_SECURITY_POLICY_PARTS.map((part) =>
+  return CONTENT_SECURITY_POLICY_PARTS.map((part) =>
     part.startsWith('script-src') && hashes.length
       ? `${part} ${hashes.join(' ')}`
       : part,
   ).join('; ');
-  policyCache = { key, value };
-  return value;
 }
 
 function withSecurityHeaders(headers, isDocument) {
