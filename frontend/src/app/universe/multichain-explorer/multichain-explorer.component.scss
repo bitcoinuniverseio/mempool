@@ -824,3 +824,61 @@
     margin-top: var(--u-space-2);
   }
 }
+
+/* ------------------------------------------------------------------------ */
+/* Per-outpoint asset chips and the address holdings panel                   */
+/* ------------------------------------------------------------------------ */
+
+/* A party row grew a second line for its assets, so the two-column grid
+   moved from the list item onto the first line. */
+.party-list li {
+  display: block;
+}
+
+.party-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  align-items: baseline;
+  gap: var(--u-space-3);
+}
+
+.party-assets {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--u-space-2);
+  margin-top: var(--u-space-1);
+}
+
+.asset-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--u-space-1);
+  min-width: 0;
+}
+
+.asset-name {
+  overflow-wrap: anywhere;
+}
+
+.asset-quantity,
+.action-quantity {
+  font-family: var(--u-font-data);
+  font-variant-numeric: tabular-nums;
+}
+
+.action-asset {
+  overflow-wrap: anywhere;
+}
+
+.assets-cell {
+  max-width: 28rem;
+}
+
+.assets-cell .party-assets {
+  margin-top: 0;
+}
+
+.holdings h3 {
+  margin-top: var(--u-space-4);
+}
