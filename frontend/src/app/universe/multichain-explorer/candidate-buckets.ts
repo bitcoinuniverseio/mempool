@@ -92,7 +92,7 @@ const DISCLOSURE_COPY: Record<string, string> = {
   'packs-consensus-limit': $localize`:@@universe.buckets.d-consensus:Buckets pack against the consensus block size limit. Miners commonly build against a smaller soft cap this explorer does not claim to know.`,
   'unknown-fees-not-placed': $localize`:@@universe.buckets.d-unknown-fees:Transactions whose fee could not be read are placed in no bucket. Not knowing a fee must neither promote nor demote a transaction.`,
   'zip317-random-selection': $localize`:@@universe.buckets.d-zip317:Zcash block producers select transactions by weighted random sampling under ZIP-317. These are eligibility tiers, not a queue, and no order is implied.`,
-  'shielded-fee-unknown': $localize`:@@universe.buckets.d-shielded:A shielded transaction's fee cannot be read from its transparent side. Those transactions are in the fee-not-readable tier, never assumed paid or unpaid.`,
+  'shielded-fee-unknown': $localize`:@@universe.buckets.d-fee-unreadable:A transaction whose fee the authority could not read sits in the fee-not-readable tier, never assumed paid or unpaid. Shielding is not a cause of this: a Zcash fee is public whatever shielded structure a transaction has.`,
   'expiry-drops-candidates': $localize`:@@universe.buckets.d-expiry:An expiring transaction may never confirm at all. Zcash transactions carry an expiry height; past it they leave the pending set without a block.`,
   'unpaid-admission-not-modeled': $localize`:@@universe.buckets.d-unpaid:Whether an underpaying transaction is admitted depends on each block producer's unpaid budget, which this explorer does not model. The tier states eligibility only.`,
 };
