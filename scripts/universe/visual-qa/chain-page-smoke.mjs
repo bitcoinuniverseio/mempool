@@ -26,7 +26,13 @@ import { fileURLToPath } from 'node:url';
 
 import playwright from 'playwright';
 
-import { CHAIN_NAMES, auditChainPage, auditRelease } from './chain-page-audit.mjs';
+import {
+  CHAIN_NAMES,
+  auditChainPage,
+  auditDashboardParity,
+  auditRelease,
+  auditSectionPage,
+} from './chain-page-audit.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const args = Object.fromEntries(
@@ -122,6 +128,127 @@ function readPageText() {
   };
 }
 
+/**
+ * The facts the dashboard parity judgement needs: whether a timeline was
+ * drawn at all, how many cubes each side carries, whether every populated
+ * cube names its height, whether the divider is there, and what the empty
+ * sides say for themselves.
+ *
+ * Runs inside the page, so it may use no import from this file.
+ */
+function readDashboardFacts() {
+  const region = document.querySelector('.timeline-panel .timeline-row');
+  const populated = [
+    ...document.querySelectorAll('.timeline-side.future .candidate-cube'),
+    ...document.querySelectorAll('.timeline-side.confirmed .candidate-cube'),
+  ];
+  return {
+    headings: [...document.querySelectorAll('h1, h2')].map((node) => node.textContent.trim()),
+    timeline: {
+      present: !!region,
+      futureCubes: document.querySelectorAll('.timeline-side.future .candidate-cube').length,
+      confirmedCubes: document.querySelectorAll('.timeline-side.confirmed .candidate-cube').length,
+      heightsAboveCubes: populated.every(
+        (cube) => (cube.querySelector('.cube-height')?.textContent ?? '').trim().length > 0,
+      ),
+      hasDivider: !!document.querySelector('.timeline-divider'),
+      emptySides: [...document.querySelectorAll('.timeline-side .timeline-empty')].map((node) =>
+        node.textContent.trim(),
+      ),
+    },
+    panels: [...document.querySelectorAll('.chain-page section.panel h2')].map((node) =>
+      node.textContent.trim(),
+    ),
+  };
+}
+
+/**
+ * The facts a section page judgement needs. All three shapes are read on
+ * every section page and the judgement picks the one it is about, so this
+ * stays a single function the page can run.
+ *
+ * Runs inside the page, so it may use no import from this file.
+ */
+function readSectionFacts() {
+  return {
+    headings: [...document.querySelectorAll('h1, h2')].map((node) => node.textContent.trim()),
+    chartNavLinks: document.querySelectorAll('.graph-nav .graph-nav-link').length,
+    docsNavLinks: document.querySelectorAll('.docs-nav a').length,
+    docsSections: document.querySelectorAll('.docs-section').length,
+  };
+}
+
+/**
+ * One navigation, one screenshot, one set of facts.
+ *
+ * Each route gets its own page so console errors and failed answers are
+ * blamed on the page they happened on, not carried over from the previous
+ * route. A failed answer here means a same-origin server error or a missing
+ * API answer; a 404 on a document is the router's business and the app shell
+ * answers 200 for unknown routes anyway.
+ */
+async function visitAndCollect(context, path, screenshotName, reader) {
+  const page = await context.newPage();
+  const consoleErrors = [];
+  const failedRequests = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error') consoleErrors.push(message.text());
+  });
+  page.on('response', (response) => {
+    const url = new URL(response.url());
+    if (url.origin !== new URL(ORIGIN).origin) {
+      return;
+    }
+    if (response.status() >= 500 || (response.status() === 404 && url.pathname.startsWith('/api/'))) {
+      failedRequests.push(`${response.url()} HTTP ${response.status()}`);
+    }
+  });
+  try {
+    await page.goto(`${ORIGIN}${path}`, { waitUntil: 'networkidle', timeout: 45_000 });
+    const facts = await page.evaluate(reader);
+    mkdirSync(OUT, { recursive: true });
+    await page.screenshot({ path: join(OUT, screenshotName), fullPage: true });
+    return { ...facts, consoleErrors, failedRequests, finalPath: new URL(page.url()).pathname };
+  } finally {
+    await page.close();
+  }
+}
+
+/**
+ * The rebuilt dashboard and the section routes under it, one context per
+ * chain. This is additive to checkChain: that one holds the page to the
+ * capability document, this one holds the page to being the dashboard at
+ * all, and holds mining, graphs and docs to having rendered rather than
+ * having redirected somewhere that did.
+ */
+async function checkChainSections(browser, chain) {
+  const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  try {
+    record(
+      auditDashboardParity(
+        chain,
+        await visitAndCollect(context, `/${chain}`, `${chain}-dashboard.png`, readDashboardFacts),
+      ),
+    );
+    const sections = [
+      ['mining', `/${chain}/mining`, `${chain}-mining.png`],
+      ['graphs', `/${chain}/graphs/mempool`, `${chain}-graphs-mempool.png`],
+      ['docs', `/${chain}/docs`, `${chain}-docs.png`],
+    ];
+    for (const [section, path, screenshotName] of sections) {
+      record(
+        auditSectionPage(
+          chain,
+          section,
+          await visitAndCollect(context, path, screenshotName, readSectionFacts),
+        ),
+      );
+    }
+  } finally {
+    await context.close();
+  }
+}
+
 async function checkChain(browser, chain) {
   const { status, body: envelope } = await readJson(`/api/v1/${chain}/status`);
   if (status !== 200 || !envelope) {
@@ -206,6 +333,7 @@ async function main() {
   try {
     for (const chain of Object.keys(CHAIN_NAMES)) {
       await checkChain(browser, chain);
+      await checkChainSections(browser, chain);
     }
   } finally {
     await browser.close();

@@ -1,12 +1,33 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { MultichainExplorerComponent } from '@app/universe/multichain-explorer/multichain-explorer.component';
+import { ChainDashboardComponent } from '@app/universe/chain-dashboard/chain-dashboard.component';
+import { ChainMiningComponent } from '@app/universe/chain-dashboard/chain-mining.component';
 
 const routes: Routes = [
   {
     path: '',
-    component: MultichainExplorerComponent,
+    component: ChainDashboardComponent,
     data: { page: 'dashboard' },
+  },
+  {
+    path: 'mining',
+    component: ChainMiningComponent,
+    data: { page: 'mining' },
+  },
+  {
+    path: 'graphs',
+    loadChildren: () =>
+      import('@app/universe/chain-graphs/chain-graphs.module').then(
+        (m) => m.ChainGraphsModule
+      ),
+  },
+  {
+    path: 'docs',
+    loadChildren: () =>
+      import('@app/universe/chain-docs/chain-docs.module').then(
+        (m) => m.ChainDocsModule
+      ),
   },
   {
     path: 'mempool',
@@ -61,6 +82,11 @@ const routes: Routes = [
 ];
 
 @NgModule({
-  imports: [MultichainExplorerComponent, RouterModule.forChild(routes)],
+  imports: [
+    MultichainExplorerComponent,
+    ChainDashboardComponent,
+    ChainMiningComponent,
+    RouterModule.forChild(routes),
+  ],
 })
 export class MultichainExplorerModule {}

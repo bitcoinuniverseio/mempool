@@ -11,6 +11,11 @@
 
 @use '../universe-tokens' as u;
 
+@use '../chain-page' as page;
+// The cube grammar shared with the dashboard timeline, so the bucket row
+// and the timeline cannot drift apart visually.
+@use '../chain-cubes';
+
 :host {
   @include u.universe-protocol-tokens;
   @include u.universe-state-tokens;
@@ -18,10 +23,10 @@
   display: block;
 }
 
-.chain-page {
-  padding: 1.25rem 0 3rem;
-  color: var(--u-text-primary);
-}
+// The generic chain-page grammar (head, rail, panels, facts, tables) is the
+// shared mixin, so this page and the dashboard, mining, charts, and docs
+// pages stay one design.
+@include page.universe-chain-page;
 
 // ---------------------------------------------------------------------------
 // Head
@@ -31,32 +36,6 @@
 // small label, the identifier carrying the weight, and the page action pushed
 // to the end of the rule. Only the chain mark and the save control are added
 // here, so a Dogecoin transaction page and a Bitcoin one open the same way.
-
-// A chain gets a mark, not a colour that means something. The hue comes from
-// the protocol scale, which is held away from every evidence state, and it
-// never appears without the chain's name beside it.
-.chain-mark {
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: var(--u-radius-pill);
-  flex: none;
-  align-self: center;
-
-  &.chain-mark-dogecoin {
-    background: var(--universe-protocol-ordinals);
-  }
-
-  &.chain-mark-zcash {
-    background: var(--universe-protocol-alkanes);
-  }
-}
-
-.lede {
-  margin: 0 0 var(--u-space-4);
-  max-width: var(--u-width-prose);
-  color: var(--u-text-secondary);
-  line-height: var(--u-leading-normal);
-}
 
 .save {
   flex: none;
@@ -86,99 +65,6 @@
 // Status rail
 // ---------------------------------------------------------------------------
 
-.status-rail {
-  @include u.universe-surface;
-
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
-  gap: var(--u-space-3) var(--u-space-5);
-  padding: var(--u-space-3) var(--u-space-4);
-  margin-bottom: var(--u-space-3);
-}
-
-.reading {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  min-width: 0;
-}
-
-.reading-label {
-  color: var(--u-text-muted);
-  font-size: var(--u-text-2xs);
-  font-weight: var(--u-weight-semibold);
-  letter-spacing: var(--u-eyebrow-tracking);
-  text-transform: uppercase;
-}
-
-.universe-chip {
-  @include u.universe-chip;
-}
-
-// ---------------------------------------------------------------------------
-// Panels
-// ---------------------------------------------------------------------------
-
-.panel {
-  @include u.universe-surface;
-
-  padding: var(--u-space-4);
-  margin-bottom: var(--u-space-3);
-
-  h2 {
-    font-size: var(--u-text-lg);
-    font-weight: var(--u-weight-semibold);
-    margin: 0 0 var(--u-space-3);
-  }
-
-  h3 {
-    font-size: var(--u-text-base);
-    font-weight: var(--u-weight-semibold);
-    color: var(--u-text-secondary);
-    margin: var(--u-space-4) 0 var(--u-space-2);
-  }
-
-  h3:first-of-type {
-    margin-top: 0;
-  }
-}
-
-.panel-lede {
-  color: var(--u-text-secondary);
-  font-size: var(--u-text-sm);
-  line-height: var(--u-leading-normal);
-  max-width: var(--u-width-prose);
-  margin: 0 0 var(--u-space-3);
-}
-
-.notice {
-  @include u.universe-surface;
-
-  padding: var(--u-space-3) var(--u-space-4);
-  margin-bottom: var(--u-space-3);
-  font-size: var(--u-text-sm);
-  line-height: var(--u-leading-normal);
-  max-width: var(--u-width-prose);
-
-  &.switched {
-    border-left: 3px solid var(--universe-state-pending);
-  }
-
-  &.failure {
-    border-left: 3px solid var(--universe-state-unavailable);
-    color: var(--universe-state-unavailable);
-  }
-
-  &.empty {
-    border-left: 3px solid var(--universe-state-neutral);
-    color: var(--u-text-secondary);
-  }
-}
-
-.secondary {
-  color: var(--u-text-muted);
-}
-
 // ---------------------------------------------------------------------------
 // Why a chain is not ready
 // ---------------------------------------------------------------------------
@@ -186,36 +72,8 @@
 // Sits directly beneath the rail, because it is the evidence for the verdict
 // the rail just gave. Bordered like a notice rather than raised like a panel:
 // it is a qualification of what is above it, not a section of its own.
-.not-ready {
-  @include u.universe-surface;
-
-  border-left: 3px solid var(--universe-state-partial);
-  padding: var(--u-space-3) var(--u-space-4);
-  margin-bottom: var(--u-space-3);
-  max-width: var(--u-width-prose);
-
-  h2 {
-    font-size: var(--u-text-base);
-    font-weight: var(--u-weight-semibold);
-    margin: 0 0 var(--u-space-2);
-  }
-
-  ul {
-    display: grid;
-    gap: var(--u-space-2);
-    font-size: var(--u-text-sm);
-    line-height: var(--u-leading-normal);
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-}
-
-.reason-raw {
-  color: var(--u-text-muted);
-  display: block;
-  font-size: var(--u-text-xs);
-}
+// The fault panel and its raw-code line are in the shared chain-page
+// partial, so every chain page states a fault the same way.
 
 // ---------------------------------------------------------------------------
 // Readiness band
@@ -305,53 +163,6 @@
     font-size: var(--u-text-xs);
     line-height: var(--u-leading-snug);
     max-width: var(--u-width-prose);
-  }
-}
-
-.identifier {
-  @include u.universe-identifier;
-}
-
-.numeric {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-
-.dot {
-  display: inline-block;
-  width: 3px;
-  height: 3px;
-  margin: 0 0.45rem;
-  border-radius: var(--u-radius-pill);
-  background: var(--u-text-faint);
-  vertical-align: middle;
-}
-
-// ---------------------------------------------------------------------------
-// Facts
-// ---------------------------------------------------------------------------
-
-.facts {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
-  gap: var(--u-space-3) var(--u-space-5);
-  margin: 0;
-
-  > div {
-    min-width: 0;
-  }
-
-  dt {
-    color: var(--u-text-muted);
-    font-size: var(--u-text-xs);
-    font-weight: var(--u-weight-medium);
-  }
-
-  dd {
-    margin: 0.2rem 0 0;
-    min-width: 0;
-    overflow-wrap: anywhere;
   }
 }
 
@@ -615,42 +426,6 @@
 // Figures
 // ---------------------------------------------------------------------------
 
-.figure-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
-  gap: var(--u-space-4);
-}
-
-.figure {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  min-width: 0;
-}
-
-.figure-label {
-  color: var(--u-text-muted);
-  font-size: var(--u-text-2xs);
-  font-weight: var(--u-weight-semibold);
-  letter-spacing: var(--u-eyebrow-tracking);
-  text-transform: uppercase;
-}
-
-.figure-value {
-  font-family: var(--u-font-data);
-  font-size: var(--u-text-xl);
-  font-variant-numeric: tabular-nums;
-  font-weight: var(--u-weight-semibold);
-  line-height: var(--u-leading-tight);
-  overflow-wrap: anywhere;
-}
-
-.figure-unit {
-  color: var(--u-text-muted);
-  font-size: var(--u-text-sm);
-  font-weight: var(--u-weight-normal);
-}
-
 // The unit belongs to the column, so it is stated once in the header rather
 // than repeated down every row of a dense table.
 .column-unit {
@@ -730,148 +505,9 @@
   }
 }
 
-// A table wide enough to scroll is a scrollable region, and a region a mouse
-// can pan has to be reachable from a keyboard too. It takes focus, so it also
-// has to show that it has it.
-.table-wrap {
-  overflow-x: auto;
-
-  &:focus-visible {
-    outline: 2px solid var(--u-focus-ring);
-    outline-offset: 2px;
-  }
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: var(--u-text-sm);
-}
-
-thead th {
-  color: var(--u-text-muted);
-  font-size: var(--u-text-2xs);
-  font-weight: var(--u-weight-semibold);
-  letter-spacing: var(--u-eyebrow-tracking);
-  text-transform: uppercase;
-  text-align: left;
-  padding: 0 var(--u-space-3) var(--u-space-2) 0;
-  border-bottom: 1px solid var(--u-border);
-  white-space: nowrap;
-
-  &.numeric {
-    text-align: right;
-  }
-}
-
-tbody td {
-  padding: var(--u-space-2) var(--u-space-3) var(--u-space-2) 0;
-  border-bottom: 1px solid var(--u-divider);
-  vertical-align: top;
-  overflow-wrap: anywhere;
-}
-
-tbody tr:last-child td {
-  border-bottom: 0;
-}
-
 // ---------------------------------------------------------------------------
 // Candidate buckets
 // ---------------------------------------------------------------------------
-
-// The same cube grammar the Bitcoin projection uses: a face carrying the
-// figures, a skewed top and side for depth, the projected-block palette.
-// What differs is the claim, which the copy above the row states.
-.cube-row {
-  display: flex;
-  gap: calc(var(--u-space-6) + 20px);
-  overflow-x: auto;
-  padding: calc(0.24 * var(--cube-size)) var(--u-space-2) var(--u-space-2)
-    calc(0.16 * var(--cube-size) + var(--u-space-2));
-  --cube-size: 125px;
-
-  &:focus-visible {
-    outline: 2px solid var(--u-focus-ring);
-    outline-offset: 2px;
-  }
-}
-
-.candidate-cube {
-  flex: 0 0 auto;
-  width: var(--cube-size);
-}
-
-.cube-block {
-  position: relative;
-  width: var(--cube-size);
-  height: var(--cube-size);
-  background: var(--u-block-projected-empty);
-}
-
-.cube-block::after {
-  content: '';
-  width: var(--cube-size);
-  height: calc(0.192 * var(--cube-size));
-  position: absolute;
-  top: calc(-0.192 * var(--cube-size));
-  left: calc(-0.16 * var(--cube-size));
-  background-color: var(--u-block-projected-top);
-  transform: skew(40deg);
-  transform-origin: top;
-}
-
-.cube-block::before {
-  content: '';
-  width: calc(0.16 * var(--cube-size));
-  height: var(--cube-size);
-  position: absolute;
-  top: calc(-0.096 * var(--cube-size));
-  left: calc(-0.16 * var(--cube-size));
-  background-color: var(--u-block-projected-side);
-  transform: skewY(50deg);
-  transform-origin: top;
-}
-
-.cube-body {
-  position: relative;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--u-space-1);
-  text-align: center;
-  padding: var(--u-space-2);
-  color: var(--u-block-ink);
-}
-
-.cube-median {
-  font-size: var(--u-text-md);
-  font-weight: var(--u-weight-bold);
-  overflow-wrap: anywhere;
-}
-
-.cube-unit {
-  font-size: var(--u-text-2xs);
-  font-weight: var(--u-weight-regular);
-}
-
-.cube-span,
-.cube-count,
-.cube-size {
-  font-size: var(--u-text-2xs);
-  color: var(--u-block-ink-muted);
-  overflow-wrap: anywhere;
-}
-
-.cube-caption {
-  margin-top: var(--u-space-2);
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--u-space-1);
-  font-size: var(--u-text-2xs);
-}
 
 .bucket-facts {
   margin-top: var(--u-space-3);
@@ -1187,4 +823,62 @@ tbody tr:last-child td {
   .source-list dt {
     margin-top: var(--u-space-2);
   }
+}
+
+/* ------------------------------------------------------------------------ */
+/* Per-outpoint asset chips and the address holdings panel                   */
+/* ------------------------------------------------------------------------ */
+
+/* A party row grew a second line for its assets, so the two-column grid
+   moved from the list item onto the first line. */
+.party-list li {
+  display: block;
+}
+
+.party-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  align-items: baseline;
+  gap: var(--u-space-3);
+}
+
+.party-assets {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--u-space-2);
+  margin-top: var(--u-space-1);
+}
+
+.asset-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--u-space-1);
+  min-width: 0;
+}
+
+.asset-name {
+  overflow-wrap: anywhere;
+}
+
+.asset-quantity,
+.action-quantity {
+  font-family: var(--u-font-data);
+  font-variant-numeric: tabular-nums;
+}
+
+.action-asset {
+  overflow-wrap: anywhere;
+}
+
+.assets-cell {
+  max-width: 28rem;
+}
+
+.assets-cell .party-assets {
+  margin-top: 0;
+}
+
+.holdings h3 {
+  margin-top: var(--u-space-4);
 }

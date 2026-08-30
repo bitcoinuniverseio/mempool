@@ -13,7 +13,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { auditChainPage, auditRelease } from './chain-page-audit.mjs';
+import {
+  auditChainPage,
+  auditDashboardParity,
+  auditRelease,
+  auditSectionPage,
+} from './chain-page-audit.mjs';
 
 const SNAPSHOT = 'dogecoin-mainnet-9304b4b3a53e788898da63a1b52cd509';
 
@@ -276,6 +281,176 @@ test('sideways scroll, console errors and third-party requests are detected', ()
   assert.ok(saidSomethingAbout(result, 'console error(s)'));
   assert.ok(saidSomethingAbout(result, 'failed request(s)'));
   assert.ok(saidSomethingAbout(result, 'third-party address(es)'));
+});
+
+/** The rebuilt dashboard as a healthy browser run collects it. */
+function dashboardCollected(overrides = {}) {
+  const { timeline, ...rest } = overrides;
+  return {
+    headings: ['Dogecoin dashboard', 'Block timeline', 'Transaction fees', 'Universe Lens', 'Mining'],
+    panels: [
+      'Block timeline',
+      'Transaction fees',
+      'Universe Lens',
+      'Mining',
+      'Waiting to confirm',
+      'Recent blocks',
+      'Arriving now',
+      'Protocol indexers',
+      'Subsystem health',
+    ],
+    consoleErrors: [],
+    failedRequests: [],
+    ...rest,
+    timeline: {
+      present: true,
+      futureCubes: 3,
+      confirmedCubes: 8,
+      heightsAboveCubes: true,
+      hasDivider: true,
+      emptySides: [],
+      ...(timeline ?? {}),
+    },
+  };
+}
+
+/** A section page as a healthy browser run collects it. */
+function sectionCollected(section, overrides = {}) {
+  const base = {
+    mining: { headings: ['Dogecoin mining', 'Network', 'Mining pools'], finalPath: '/dogecoin/mining' },
+    graphs: { headings: ['Dogecoin charts'], chartNavLinks: 10, finalPath: '/dogecoin/graphs/mempool' },
+    docs: {
+      headings: ['Dogecoin explorer docs', 'Overview'],
+      docsNavLinks: 12,
+      docsSections: 12,
+      finalPath: '/dogecoin/docs',
+    },
+  }[section];
+  return { consoleErrors: [], failedRequests: [], ...base, ...overrides };
+}
+
+test('a healthy rebuilt dashboard passes', () => {
+  const result = auditDashboardParity('dogecoin', dashboardCollected());
+  assert.deepEqual(result.failures, []);
+  assert.ok(result.notes.length >= 3);
+});
+
+test('a dashboard without a timeline is detected', () => {
+  const result = auditDashboardParity(
+    'dogecoin',
+    dashboardCollected({ timeline: { present: false, futureCubes: 0, confirmedCubes: 0 } }),
+  );
+  assert.ok(saidSomethingAbout(result, 'timeline region is absent'));
+});
+
+test('the capability report standing in for the dashboard is detected as the old build', () => {
+  const result = auditDashboardParity(
+    'dogecoin',
+    dashboardCollected({
+      headings: ['Questions this chain can answer', 'How much history is readable now'],
+      timeline: { present: false, futureCubes: 0, confirmedCubes: 0 },
+    }),
+  );
+  assert.ok(saidSomethingAbout(result, 'the page this dashboard replaced'));
+});
+
+test('a timeline with zero cubes on both sides is detected', () => {
+  const result = auditDashboardParity(
+    'dogecoin',
+    dashboardCollected({ timeline: { futureCubes: 0, confirmedCubes: 0 } }),
+  );
+  assert.ok(saidSomethingAbout(result, 'zero cubes on both sides'));
+});
+
+test('a populated cube missing its height label is detected', () => {
+  const result = auditDashboardParity(
+    'dogecoin',
+    dashboardCollected({ timeline: { heightsAboveCubes: false } }),
+  );
+  assert.ok(saidSomethingAbout(result, 'no height label'));
+});
+
+test('an empty confirmed side that explains itself passes with a note', () => {
+  const result = auditDashboardParity(
+    'dogecoin',
+    dashboardCollected({
+      timeline: {
+        confirmedCubes: 0,
+        emptySides: ['No recent blocks are stored yet. They appear as the collector catches up.'],
+      },
+    }),
+  );
+  assert.deepEqual(result.failures, []);
+  assert.ok(result.notes.some((note) => note.includes('confirmed side is empty and says so')));
+});
+
+test('an empty side that gives no reason is detected', () => {
+  const result = auditDashboardParity(
+    'dogecoin',
+    dashboardCollected({ timeline: { confirmedCubes: 0, emptySides: [] } }),
+  );
+  assert.ok(saidSomethingAbout(result, 'gives no reason'));
+});
+
+test('console errors and failed answers on the dashboard are detected', () => {
+  const result = auditDashboardParity(
+    'dogecoin',
+    dashboardCollected({
+      consoleErrors: ['TypeError: undefined'],
+      failedRequests: ['/api/v1/dogecoin/dashboard HTTP 503'],
+    }),
+  );
+  assert.ok(saidSomethingAbout(result, 'console error(s)'));
+  assert.ok(saidSomethingAbout(result, 'failed request(s)'));
+});
+
+test('each healthy section page passes', () => {
+  for (const section of ['mining', 'graphs', 'docs']) {
+    const result = auditSectionPage('dogecoin', section, sectionCollected(section));
+    assert.deepEqual(result.failures, [], `${section} should pass clean`);
+  }
+});
+
+test('a mining page redirected to the dashboard is detected', () => {
+  // A route that bounces renders a perfectly healthy dashboard, so both the
+  // path and the missing heading have to be named.
+  const result = auditSectionPage(
+    'dogecoin',
+    'mining',
+    sectionCollected('mining', {
+      finalPath: '/dogecoin',
+      headings: ['Dogecoin dashboard', 'Transaction fees'],
+    }),
+  );
+  assert.ok(saidSomethingAbout(result, 'redirected away'));
+  assert.ok(saidSomethingAbout(result, 'no heading names mining'));
+});
+
+test('a graphs page without its chart shell is detected', () => {
+  const result = auditSectionPage('dogecoin', 'graphs', sectionCollected('graphs', { chartNavLinks: 0 }));
+  assert.ok(saidSomethingAbout(result, 'chart shell navigation is absent'));
+});
+
+test('a docs page without its sections is detected', () => {
+  const result = auditSectionPage(
+    'dogecoin',
+    'docs',
+    sectionCollected('docs', { docsSections: 0, docsNavLinks: 0 }),
+  );
+  assert.ok(saidSomethingAbout(result, 'docs did not render'));
+});
+
+test('console errors and failed answers on a section page are detected', () => {
+  const result = auditSectionPage(
+    'dogecoin',
+    'docs',
+    sectionCollected('docs', {
+      consoleErrors: ['ReferenceError: x is not defined'],
+      failedRequests: ['/api/v1/dogecoin/status HTTP 500'],
+    }),
+  );
+  assert.ok(saidSomethingAbout(result, 'console error(s)'));
+  assert.ok(saidSomethingAbout(result, 'failed request(s)'));
 });
 
 test('an origin serving a different build than the release names is detected', () => {

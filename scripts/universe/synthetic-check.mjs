@@ -461,6 +461,97 @@ async function checkChainReadsAreServed(chain, envelope) {
  */
 const COMMIT_SHA = /^[0-9a-f]{7,64}$/;
 
+/**
+ * The dashboard data families behind the chain dashboard, mining, and
+ * charts pages. Every route must be mounted and answer its own schema; a
+ * missing route here is what a stale overlay looks like when the frontend
+ * already advertises the page.
+ *
+ * Empty history is judged against the deployment's own claim: while the
+ * dashboard reports historical statistics as backfilling, an empty block
+ * list is honest and noted; once it reports ready, empty becomes a failure,
+ * because a chart route answering 200 with nothing to draw is the exact
+ * state this suite exists to catch.
+ */
+async function checkChainDashboardFamilies(chain) {
+  const label = `chain:${chain}:dashboard`;
+  const dashboard = await get(`/api/v1/${chain}/dashboard`);
+  if (dashboard.status !== 200 || dashboard.body?.schemaVersion !== 'universe-chain-dashboard-v1') {
+    fail(label, `/api/v1/${chain}/dashboard answered HTTP ${dashboard.status} (${namedReason(dashboard.body)})`);
+    return;
+  }
+  const subsystems = Array.isArray(dashboard.body.subsystems) ? dashboard.body.subsystems : [];
+  if (!subsystems.length) {
+    fail(label, 'the dashboard names no subsystems, so nothing scopes a failure');
+  } else {
+    pass(label, `dashboard answers with ${subsystems.length} subsystem readings`);
+  }
+  const history = subsystems.find((entry) => entry?.id === 'historical-statistics');
+  const historyReady = history?.state === 'ready';
+
+  const blocks = await get(`/api/v1/${chain}/blocks/recent?limit=12`);
+  if (blocks.status !== 200 || blocks.body?.schemaVersion !== 'universe-recent-blocks-v1') {
+    fail(label, `/blocks/recent answered HTTP ${blocks.status} (${namedReason(blocks.body)})`);
+  } else if (!Array.isArray(blocks.body.blocks) || blocks.body.blocks.length === 0) {
+    if (historyReady) {
+      fail(label, 'historical statistics claim ready while the block list is empty');
+    } else {
+      notes.push(`${label}: block history is still backfilling, list empty and said so`);
+    }
+  } else {
+    const newest = blocks.body.blocks[0];
+    if (typeof newest.heightAtomic !== 'string' || typeof newest.hash !== 'string') {
+      fail(label, 'a recent block is missing its height or hash');
+    } else {
+      pass(label, `recent blocks answer, newest at height ${newest.heightAtomic}`);
+    }
+  }
+
+  const fees = await get(`/api/v1/${chain}/fees`);
+  if (fees.status !== 200 || fees.body?.schemaVersion !== 'universe-fee-recommendations-v1') {
+    fail(label, `/fees answered HTTP ${fees.status} (${namedReason(fees.body)})`);
+  } else if (fees.body.kind !== 'fee-per-kilobyte' && fees.body.kind !== 'zip-317') {
+    fail(label, `fee guidance kind is ${JSON.stringify(fees.body.kind)}`);
+  } else {
+    pass(label, `fee guidance answers as ${fees.body.kind}`);
+  }
+
+  const mining = await get(`/api/v1/${chain}/mining`);
+  if (mining.status !== 200 || mining.body?.schemaVersion !== 'universe-mining-summary-v1') {
+    fail(label, `/mining answered HTTP ${mining.status} (${namedReason(mining.body)})`);
+  } else {
+    pass(label, `mining summary answers (difficulty ${mining.body.difficultyDecimal ?? 'not reported'})`);
+  }
+
+  const pools = await get(`/api/v1/${chain}/mining/pools?window=1w`);
+  if (pools.status !== 200 || pools.body?.schemaVersion !== 'universe-mining-pools-v1') {
+    fail(label, `/mining/pools answered HTTP ${pools.status} (${namedReason(pools.body)})`);
+  } else if (!Array.isArray(pools.body.pools)) {
+    fail(label, 'pool shares answered without a pools array');
+  } else {
+    pass(label, `pool shares answer with ${pools.body.pools.length} rows over ${pools.body.windowBlocksAtomic} blocks`);
+  }
+
+  for (const seriesId of ['block-fees', 'mempool-count']) {
+    const series = await get(`/api/v1/${chain}/charts/${seriesId}?range=24h`);
+    if (series.status !== 200 || series.body?.schemaVersion !== 'universe-chart-series-v1') {
+      fail(label, `/charts/${seriesId} answered HTTP ${series.status} (${namedReason(series.body)})`);
+      continue;
+    }
+    const points = (series.body.lines ?? []).reduce(
+      (sum, line) => sum + (Array.isArray(line?.points) ? line.points.length : 0),
+      0,
+    );
+    if (points === 0 && historyReady) {
+      fail(label, `/charts/${seriesId} answered 200 with nothing to draw while history claims ready`);
+    } else if (points === 0) {
+      notes.push(`${label}: ${seriesId} has no samples yet, and history says it is backfilling`);
+    } else {
+      pass(label, `${seriesId} has ${points} drawable points over 24h`);
+    }
+  }
+}
+
 function checkChainReleaseIdentity(envelopes) {
   const named = new Map();
   for (const [chain, envelope] of envelopes) {
@@ -575,6 +666,11 @@ async function main() {
       if (envelope) {
         envelopes.push([chain, envelope]);
         await checkChainReadsAreServed(chain, envelope);
+      }
+      if (chain !== 'bitcoin') {
+        // The dashboard families run whether or not the status answered:
+        // one red authority must not skip the rest of the matrix.
+        await checkChainDashboardFamilies(chain);
       }
     }
     checkChainReleaseIdentity(envelopes);

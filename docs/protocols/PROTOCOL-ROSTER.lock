@@ -1,0 +1,41 @@
+# Every protocol id this explorer has published.
+# The gate fails when one of these stops appearing in the pinned manifest, so a
+# removal has to be a deliberate edit here rather than a quiet absence.
+alkanes
+arc20
+atomicals_nft
+bitmap
+block20
+brc20
+cat20
+chainbloom
+dmt
+doginals
+drc20
+drops
+dunes
+dust20
+mezcal
+names
+op_drop
+op_inscriptions
+op_names
+op_return
+ordex
+ordinals
+patina
+rare_sats
+realms
+runes
+src101
+src20
+stamps
+subrealms
+tandem
+tap
+tap_doge
+unat
+witness_circles
+zerdinals
+zrc20
+zrunes

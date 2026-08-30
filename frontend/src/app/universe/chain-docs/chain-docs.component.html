@@ -1,0 +1,532 @@
+<div class="container-xl chain-page docs-page">
+
+  <header class="title-block">
+    <span class="chain-mark" [ngClass]="'chain-mark-' + chain" aria-hidden="true"></span>
+    <h1 i18n="universe.docs.heading">{{ profile.name }} explorer docs</h1>
+  </header>
+
+  <p class="lede" i18n="universe.docs.lede">
+    What this explorer shows for {{ profile.name }}, where each reading comes from, and how to use the API behind it. Every page here follows one rule: a fact is shown with its evidence, and a fact we do not have is said to be missing, never dressed up as zero.
+  </p>
+
+  <div class="docs-layout" *ngIf="{ active: activeSection$ | async } as state">
+
+    <button type="button" class="nav-toggle" (click)="toggleNav()"
+            [attr.aria-expanded]="navOpen" aria-controls="docs-nav"
+            i18n="universe.docs.nav-toggle">On this page</button>
+
+    <nav class="docs-nav" id="docs-nav" [class.open]="navOpen"
+         aria-label="Documentation sections" i18n-aria-label="universe.docs.nav-label">
+      <ul>
+        <li *ngFor="let section of sections; trackBy: trackById">
+          <a [routerLink]="['/', chain, 'docs', section.id]"
+             [class.active]="state.active === section.id"
+             (click)="closeNav()">{{ section.title }}</a>
+        </li>
+      </ul>
+    </nav>
+
+    <div class="docs-main">
+
+      <!-- ============================================================= -->
+      <section class="panel docs-section" id="overview">
+        <h2 i18n="universe.docs.overview-title">Overview</h2>
+        <p *ngIf="chain === 'dogecoin'" i18n="universe.docs.overview-scope-doge">
+          This explorer covers the Dogecoin main chain: blocks, transactions, addresses, the pending set, fees, mining, and the protocols carried on top of it (Doginals, DRC-20, TAP on Doge, Dunes).
+        </p>
+        <p *ngIf="chain === 'zcash'" i18n="universe.docs.overview-scope-zcash">
+          This explorer covers the Zcash main chain: blocks, transactions, transparent addresses, the pending set, fees, mining, and the protocols carried on top of it (Zerdinals, ZRunes, ZRC-20). Shielded activity is covered only to the extent the chain makes it public; see the Privacy section.
+        </p>
+        <p i18n="universe.docs.overview-sources">
+          Every reading is first party: it comes from our own {{ profile.name }} node and our own indexers. Nothing is fetched from a third-party explorer, and no number appears without a source that proved it.
+        </p>
+        <p i18n="universe.docs.overview-honesty">
+          Absent and zero are different answers, and the pages keep them apart. A fee the node did not report reads as "not derived", not as 0. A miner without attribution evidence reads as Unknown, never as a guessed pool name.
+        </p>
+      </section>
+
+      <!-- ============================================================= -->
+      <section class="panel docs-section" id="dashboard">
+        <h2 i18n="universe.docs.dashboard-title">Dashboard</h2>
+        <p i18n="universe.docs.dashboard-lede">
+          The dashboard at <span class="identifier">/{{ chain }}</span> is one page of live readings. Each panel degrades on its own: when a source stops answering, that panel says what it is missing and the rest of the page stays up.
+        </p>
+        <h3 i18n="universe.docs.dashboard-rail-title">Status rail</h3>
+        <dl class="facts">
+          <div>
+            <dt i18n="universe.docs.rail-chain">Chain</dt>
+            <dd i18n="universe.docs.rail-chain-def">The chain's own verdict on readiness. Ready means everything the explorer needs is answering; Degraded means the node is caught up but some part, often a protocol indexer, is not.</dd>
+          </div>
+          <div>
+            <dt i18n="universe.docs.rail-tip">Chain tip</dt>
+            <dd i18n="universe.docs.rail-tip-def">The newest block height our node reports.</dd>
+          </div>
+          <div>
+            <dt i18n="universe.docs.rail-lag">Behind tip</dt>
+            <dd i18n="universe.docs.rail-lag-def">How many blocks the explorer's own reading lags the node's tip. Zero is the only reading shown as proven.</dd>
+          </div>
+          <div>
+            <dt i18n="universe.docs.rail-observed">Last observed</dt>
+            <dd i18n="universe.docs.rail-observed-def">How long ago the capability document behind the rail was produced. The exact timestamp sits in the tooltip.</dd>
+          </div>
+          <div>
+            <dt i18n="universe.docs.rail-pending">Pending coverage</dt>
+            <dd i18n="universe.docs.rail-pending-def">Whether the pending set the explorer holds is complete, partial, or unavailable.</dd>
+          </div>
+        </dl>
+        <h3 i18n="universe.docs.dashboard-panels-title">Panels</h3>
+        <dl class="facts">
+          <div>
+            <dt i18n="universe.docs.panel-timeline">Block timeline</dt>
+            <dd i18n="universe.docs.panel-timeline-def">Recent confirmed blocks and the upcoming target slots, defined in the Block timeline section below.</dd>
+          </div>
+          <div>
+            <dt i18n="universe.docs.panel-fees">Transaction fees</dt>
+            <dd i18n="universe.docs.panel-fees-def">Fee guidance in this chain's own units, with the basis of every figure. Defined in the Fees section.</dd>
+          </div>
+          <div>
+            <dt i18n="universe.docs.panel-lens">Universe Lens</dt>
+            <dd i18n="universe.docs.panel-lens-def">Every rectangle is one pending transaction, sized by the space it takes. A lens picks out a kind of activity without hiding the rest.</dd>
+          </div>
+          <div>
+            <dt i18n="universe.docs.panel-mining">Mining</dt>
+            <dd i18n="universe.docs.panel-mining-def">Difficulty, network rate, algorithm, target and observed block time, and the subsidy. Defined in the Mining section.</dd>
+          </div>
+          <div>
+            <dt i18n="universe.docs.panel-mempool">Waiting to confirm</dt>
+            <dd i18n="universe.docs.panel-mempool-def">The pending set summed: transaction count, bytes waiting, fees waiting where every member's fee is known, and the recent arrival rate.</dd>
+          </div>
+          <div>
+            <dt i18n="universe.docs.panel-subsystems">Subsystem health</dt>
+            <dd i18n="universe.docs.panel-subsystems-def">One row per subsystem: core node, confirmed history, address history, pending set, mining analytics, historical statistics, and protocol indexers. Scoped this way so a protocol indexer outage never reads as a chain outage.</dd>
+          </div>
+        </dl>
+      </section>
+
+      <!-- ============================================================= -->
+      <section class="panel docs-section" id="timeline">
+        <h2 i18n="universe.docs.timeline-title">Block timeline</h2>
+        <p i18n="universe.docs.timeline-cubes">
+          The timeline is a strip of cubes. To one side are confirmed blocks, newest first, each carrying its exact height, age, transaction count, size, fees where derived, and the attributed miner. To the other side are future target slots.
+        </p>
+        <p i18n="universe.docs.timeline-heights">
+          A future slot's height is derived arithmetic: the freshest tip this page holds, plus one for each slot outward. Those heights are expectations about numbering, not claims about content.
+        </p>
+        <p i18n="universe.docs.timeline-spacing">
+          The minutes shown against future slots come from the chain's target spacing. A target is an expectation, not an arrival time, which is why no countdown is shown anywhere.
+        </p>
+        <p i18n="universe.docs.timeline-newblock">
+          When a block confirms, it joins the confirmed side and the future slots renumber from the new tip. On a reorganisation, blocks from the replaced branch drop off the strip and the same heights refill from the branch that won.
+        </p>
+      </section>
+
+      <!-- ============================================================= -->
+      <section class="panel docs-section" id="candidate-blocks">
+        <h2 i18n="universe.docs.candidate-title">Candidate blocks</h2>
+        <p i18n="universe.docs.candidate-vs-projected">
+          The future side of the timeline shows candidate buckets, which are a weaker and more honest claim than projected blocks. A projected block says "this is what the next block will contain". A candidate bucket says only "this is what is waiting, grouped under the chain's own fee rules".
+        </p>
+        <p i18n="universe.docs.candidate-gate">
+          The capability document publishes <span class="identifier">projectedBlocks: false</span> for this chain, and the buckets carry that honesty forward: no ETA is derived, and no bucket is presented as the next block.
+        </p>
+        <ng-container *ngIf="chain === 'dogecoin'">
+          <h3 i18n="universe.docs.candidate-doge-title">Dogecoin: an ordering under the relay policy</h3>
+          <p i18n="universe.docs.candidate-doge-1">
+            Dogecoin buckets are ordered by the fee policy nodes relay by, measured in koinu per kilobyte, and packed against the consensus block size limit. Miners commonly build against a smaller soft cap this explorer does not claim to know, so the ordering is a reading of the pending set, not a forecast of the next mined block.
+          </p>
+          <p i18n="universe.docs.candidate-doge-2">
+            A projection audit runs continuously, comparing this ordering with the blocks actually mined. Until that audit proves the ordering predicts block content, <span class="identifier">projectedBlocks</span> stays false. Transactions whose fee cannot be read are placed in no bucket at all: not knowing a fee must neither promote nor demote a transaction.
+          </p>
+        </ng-container>
+        <ng-container *ngIf="chain === 'zcash'">
+          <h3 i18n="universe.docs.candidate-zcash-title">Zcash: ZIP-317 eligibility tiers</h3>
+          <p i18n="universe.docs.candidate-zcash-1">
+            Zcash block producers select transactions by weighted random sampling under ZIP-317, so no ordering of the pending set is honest. Instead of an order, the buckets are eligibility tiers: pays its conventional fee, pays less than convention, fee not readable, and expiring.
+          </p>
+          <p i18n="universe.docs.candidate-zcash-2">
+            A shielded transaction's fee cannot be read from its transparent side, so it sits in the fee-not-readable tier, never assumed paid or unpaid. An expiring transaction may leave the pending set without ever confirming. Whether an underpaying transaction gets in depends on each producer's unpaid budget, which this explorer does not model. No promised order exists between or within tiers, and none is shown.
+          </p>
+        </ng-container>
+      </section>
+
+      <!-- ============================================================= -->
+      <section class="panel docs-section" id="fees">
+        <h2 i18n="universe.docs.fees-title">Fees</h2>
+        <ng-container *ngIf="chain === 'dogecoin'">
+          <p i18n="universe.docs.fees-doge-1">
+            Dogecoin fees are quoted in koinu per kilobyte, the chain's own unit. This explorer never quotes sat/vB here: that is a Bitcoin unit and it has no meaning on this chain.
+          </p>
+          <p i18n="universe.docs.fees-doge-2">
+            The fee panel shows four levels (no, low, medium, high priority), and each figure names its basis. The first choice is the node's own <span class="identifier">estimatesmartfee</span> estimator. When the estimator cannot answer, levels fall back to quantiles of the current pending set, then to recent confirmed blocks, and finally to the relay floor.
+          </p>
+          <p i18n="universe.docs.fees-doge-3">
+            When the pending set is sparse there is little evidence to price against, and the levels sit at or near the relay floor. That is the honest answer: on a chain with empty blocks, the floor is what it costs.
+          </p>
+        </ng-container>
+        <ng-container *ngIf="chain === 'zcash'">
+          <p i18n="universe.docs.fees-zcash-1">
+            Zcash fees follow ZIP-317: a transaction pays for its logical actions, not its byte size, so a rate per byte would be the wrong number. This explorer never quotes sat/vB or any per-byte rate here.
+          </p>
+          <p i18n="universe.docs.fees-zcash-2">
+            The conventional fee is 5,000 zatoshi of marginal fee per logical action, with a grace allowance of 2 actions. A typical transparent spend counts 2 actions, so its conventional fee is 10,000 zatoshi. The panel also shows what share of the current pending set pays at least its conventional fee, when the pending set can be read.
+          </p>
+        </ng-container>
+      </section>
+
+      <!-- ============================================================= -->
+      <section class="panel docs-section" id="mempool">
+        <h2 i18n="universe.docs.mempool-title">Pending transactions</h2>
+        <p i18n="universe.docs.mempool-source">
+          The pending set is our own node's mempool: the transactions it has accepted and would relay, read directly from it. No pending transaction is imported from anywhere else, so this is one node's view, stated as such.
+        </p>
+        <h3 i18n="universe.docs.mempool-lifecycle-title">Lifecycle</h3>
+        <p i18n="universe.docs.mempool-lifecycle">
+          A transaction the explorer has seen carries one of these states: seen in the pending set, waiting for a block, confirmed in a block, replaced by another transaction, in conflict with a confirmed transaction, dropped from the pending set, expired before confirming, removed by a chain reorganisation, or removed for a reason the node did not state. That last state is real: when the node drops a transaction without saying why, the page says exactly that.
+        </p>
+        <p *ngIf="chain === 'zcash'" i18n="universe.docs.mempool-expiry-zcash">
+          Zcash transactions carry an expiry height. Past it, a transaction leaves the pending set without a block, and its page says it expired rather than leaving it forever "pending".
+        </p>
+        <p i18n="universe.docs.mempool-replacement">
+          When a pending transaction is replaced by another spending the same inputs, the replaced one keeps its page and names its replacement, so a payment that "disappeared" can be followed to where it went.
+        </p>
+      </section>
+
+      <!-- ============================================================= -->
+      <section class="panel docs-section" id="lookups">
+        <h2 i18n="universe.docs.lookups-title">Lookups</h2>
+        <dl class="facts">
+          <div>
+            <dt i18n="universe.docs.lookup-tx">Transaction</dt>
+            <dd i18n="universe.docs.lookup-tx-def">By transaction id: 64 lowercase hex characters. Answers for confirmed transactions and for pending ones our node holds.</dd>
+          </div>
+          <div>
+            <dt i18n="universe.docs.lookup-block">Block</dt>
+            <dd i18n="universe.docs.lookup-block-def">By height or by block hash. The transaction list inside a block is paged.</dd>
+          </div>
+          <div>
+            <dt i18n="universe.docs.lookup-address">Address</dt>
+            <dd *ngIf="chain === 'dogecoin'" i18n="universe.docs.lookup-address-doge">A Dogecoin address in its base58 form. The page lists what the address received and spent over the confirmed history our indexer covers.</dd>
+            <dd *ngIf="chain === 'zcash'" i18n="universe.docs.lookup-address-zcash">A transparent Zcash address. Shielded addresses cannot be looked up, by design of the chain: their history is not public, and this explorer does not pretend otherwise.</dd>
+          </div>
+          <div>
+            <dt i18n="universe.docs.lookup-outpoint">Outpoint</dt>
+            <dd i18n="universe.docs.lookup-outpoint-def">One output of one transaction, addressed as transaction id plus output index. Shows its value, its spent state, and any protocol assets attached to it.</dd>
+          </div>
+        </dl>
+        <h3 i18n="universe.docs.lookups-paging-title">Paging</h3>
+        <p *ngIf="chain === 'dogecoin'" i18n="universe.docs.lookups-paging-doge">
+          Dogecoin block and address lists page with <span class="identifier">page</span> (starting at 1) and <span class="identifier">limit</span>. DRC-20 holder and event lists page with a <span class="identifier">cursor</span> instead: pass the cursor value the previous answer returned.
+        </p>
+        <p *ngIf="chain === 'zcash'" i18n="universe.docs.lookups-paging-zcash">
+          Zcash block and address lists page with <span class="identifier">limit</span> and <span class="identifier">offset</span>: offset counts entries from the start of the list, not pages.
+        </p>
+      </section>
+
+      <!-- ============================================================= -->
+      <section class="panel docs-section" id="mining">
+        <h2 i18n="universe.docs.mining-title">Mining</h2>
+        <dl class="facts">
+          <div>
+            <dt i18n="universe.docs.mining-difficulty">Difficulty</dt>
+            <dd i18n="universe.docs.mining-difficulty-def">The proof-of-work difficulty at the tip, as the node reports it.</dd>
+          </div>
+          <div>
+            <dt i18n="universe.docs.mining-rate">Network rate</dt>
+            <dd *ngIf="chain === 'dogecoin'" i18n="universe.docs.mining-rate-doge">Estimated network hashing rate in hashes per second (H/s). Dogecoin uses scrypt proof of work.</dd>
+            <dd *ngIf="chain === 'zcash'" i18n="universe.docs.mining-rate-zcash">Estimated network capacity in solutions per second (Sol/s). Zcash uses Equihash, where a "hash rate" in H/s would be the wrong measure.</dd>
+          </div>
+          <div>
+            <dt i18n="universe.docs.mining-interval">Target and observed interval</dt>
+            <dd *ngIf="chain === 'dogecoin'" i18n="universe.docs.mining-interval-doge">The target spacing is 60 seconds per block. The observed figure is the mean interval over the recent collected window, so the two can be compared honestly.</dd>
+            <dd *ngIf="chain === 'zcash'" i18n="universe.docs.mining-interval-zcash">The target spacing is 75 seconds per block, set by the Blossom upgrade. The observed figure is the mean interval over the recent collected window.</dd>
+          </div>
+          <div>
+            <dt i18n="universe.docs.mining-subsidy">Subsidy</dt>
+            <dd *ngIf="chain === 'dogecoin'" i18n="universe.docs.mining-subsidy-doge">A fixed 10,000 DOGE per block since block 600,000. There is no halving schedule; supply grows by roughly 5 billion DOGE per year.</dd>
+            <dd *ngIf="chain === 'zcash'" i18n="universe.docs.mining-subsidy-zcash">The subsidy halves on a schedule. Part of each subsidy is directed by consensus to development funds and, since NU6, to a lockbox; the subsidy shown on these pages is the miner's share as the node reports it.</dd>
+          </div>
+        </dl>
+        <ng-container *ngIf="chain === 'dogecoin'">
+          <h3 i18n="universe.docs.mining-auxpow-title">Merged mining (AuxPoW)</h3>
+          <p i18n="universe.docs.mining-auxpow">
+            Since block 371,337 Dogecoin allows merged mining through AuxPoW: a Litecoin miner embeds a commitment to a Dogecoin block in its Litecoin work, so one round of scrypt hashing can win both chains. Most Dogecoin blocks are found this way, which is why the pool table is dominated by Litecoin pools.
+          </p>
+        </ng-container>
+      </section>
+
+      <!-- ============================================================= -->
+      <section class="panel docs-section" id="pool-attribution">
+        <h2 i18n="universe.docs.pools-title">Pool attribution</h2>
+        <p i18n="universe.docs.pools-method">
+          A block is attributed to a pool only on evidence, checked in this order: a known tag in the coinbase, then a known payout address, then a known tag in the AuxPoW parent chain's coinbase. Within each class, the first matching rule in the dataset wins, and the block's row names the exact evidence that matched.
+        </p>
+        <p i18n="universe.docs.pools-dataset">
+          The rules live in a versioned attribution dataset, and the page prints the dataset version under the table, so a disputed attribution can be traced to the exact ruleset that produced it.
+        </p>
+        <p i18n="universe.docs.pools-unknown">
+          Unknown is a real bucket. A block with no matching evidence stays Unknown; it is never guessed away by similarity, timing, or anything else.
+        </p>
+        <p *ngIf="chain === 'zcash'" i18n="universe.docs.pools-unknown-zcash">
+          Attribution reads the transparent coinbase only. A shielded coinbase output carries no attribution evidence, so more Zcash blocks stay Unknown than on transparent chains, and that is the honest count.
+        </p>
+      </section>
+
+      <!-- ============================================================= -->
+      <section class="panel docs-section" id="charts">
+        <h2 i18n="universe.docs.charts-title">Charts</h2>
+        <p i18n="universe.docs.charts-lede">
+          Charts live under <span class="identifier">/{{ chain }}/graphs</span>. Ranges run from 24 hours up to all stored history. A range with no stored history behind it is disabled rather than drawn empty: history collection starts when the collector ships, so the "all" range grows over time and old ranges fill in as blocks are collected.
+        </p>
+        <dl class="facts chart-list">
+          <div>
+            <dt><span class="identifier">mempool</span></dt>
+            <dd i18n="universe.docs.chart-mempool">Pending transaction count, total size in bytes, and total fees waiting, sampled over time.</dd>
+          </div>
+          <div>
+            <dt><span class="identifier">mining/hashrate-difficulty</span></dt>
+            <dd *ngIf="chain === 'dogecoin'" i18n="universe.docs.chart-hashrate-doge">Network rate in H/s and difficulty, on two axes, per collected block.</dd>
+            <dd *ngIf="chain === 'zcash'" i18n="universe.docs.chart-hashrate-zcash">Network rate in Sol/s and difficulty, on two axes, per collected block.</dd>
+          </div>
+          <div>
+            <dt><span class="identifier">mining/pools-dominance</span></dt>
+            <dd i18n="universe.docs.chart-dominance">Each attributed pool's share of blocks over time. Unknown is drawn as its own band, never spread across the named pools.</dd>
+          </div>
+          <div>
+            <dt><span class="identifier">mining/pools</span></dt>
+            <dd i18n="universe.docs.chart-pools">Blocks per pool over the selected window, with the evidence class behind each attribution.</dd>
+          </div>
+          <div>
+            <dt><span class="identifier">mining/block-fees</span></dt>
+            <dd i18n="universe.docs.chart-block-fees">Total fees per block in {{ profile.ticker }}, aggregated to the range's bucket width.</dd>
+          </div>
+          <div>
+            <dt><span class="identifier">mining/block-fees-subsidy</span></dt>
+            <dd i18n="universe.docs.chart-fees-subsidy">Fees against subsidy per block, so the share of miner income that comes from fees is readable.</dd>
+          </div>
+          <div>
+            <dt><span class="identifier">mining/block-rewards</span></dt>
+            <dd i18n="universe.docs.chart-rewards">Total miner reward per block: subsidy plus fees, in {{ profile.ticker }}.</dd>
+          </div>
+          <div>
+            <dt><span class="identifier">mining/block-fee-rates</span></dt>
+            <dd *ngIf="chain === 'dogecoin'" i18n="universe.docs.chart-fee-rates-doge">Fee rate quantiles of each block's transactions, in koinu/kB.</dd>
+            <dd *ngIf="chain === 'zcash'" i18n="universe.docs.chart-fee-rates-zcash">Fee quantiles of each block's transactions, in zatoshi, read against the ZIP-317 conventional fee.</dd>
+          </div>
+          <div>
+            <dt><span class="identifier">mining/block-sizes</span></dt>
+            <dd i18n="universe.docs.chart-sizes">Block size in bytes over time. This replaces Bitcoin's sizes-and-weights chart: {{ profile.name }} has one capacity measure, size, because it has no segwit weight.</dd>
+          </div>
+          <div>
+            <dt><span class="identifier">mining/block-interval</span></dt>
+            <dd i18n="universe.docs.chart-interval">Observed seconds between blocks against the target spacing. This replaces Bitcoin's block-health chart: health grades blocks against an audited projection, which this chain honestly does not have yet, so the nearest reliability reading is interval against target.</dd>
+          </div>
+        </dl>
+      </section>
+
+      <!-- ============================================================= -->
+      <section class="panel docs-section" id="privacy" *ngIf="chain === 'zcash'">
+        <h2 i18n="universe.docs.privacy-title">Privacy</h2>
+        <p i18n="universe.docs.privacy-pools">
+          Zcash carries shielded pools (Sprout, Sapling, Orchard) whose senders, receivers, and amounts are hidden by the protocol itself. That is not a gap in this explorer; it is the design of the chain.
+        </p>
+        <p i18n="universe.docs.privacy-public">
+          What is public, and shown: a transaction's structure, its counts of shielded components (spends, outputs, actions), its transparent inputs and outputs with their values, and the value balance the consensus rules reveal where they reveal it.
+        </p>
+        <p i18n="universe.docs.privacy-hidden">
+          What is never shown: the senders, receivers, and amounts of shielded parts. They are unknowable to this explorer, and unknowable is how they are presented. A hidden value is never rendered as zero, because zero is a claim and hidden is not.
+        </p>
+      </section>
+
+      <!-- ============================================================= -->
+      <section class="panel docs-section" id="freshness">
+        <h2 i18n="universe.docs.freshness-title">Freshness</h2>
+        <p i18n="universe.docs.freshness-heights">
+          Every reading carries the height of the source it came from and the timestamp at which it was observed. Relative times like "3 minutes ago" keep the exact timestamp in their tooltip, so the fact behind the phrasing is never lost.
+        </p>
+        <p i18n="universe.docs.freshness-stale">
+          A source that answers from behind the tip is labeled as behind, with the exact block count. A reading whose source stopped answering is labeled unavailable rather than being served from cache as if it were current.
+        </p>
+        <p i18n="universe.docs.freshness-degraded">
+          When a source is down, the widget that needs it degrades and says what it is missing. A page never disappears because a source is down: the rest of its readings stay up with their own evidence.
+        </p>
+      </section>
+
+      <!-- ============================================================= -->
+      <section class="panel docs-section" id="api">
+        <h2 i18n="universe.docs.api-title">API</h2>
+        <p i18n="universe.docs.api-lede">
+          Every reading on these pages comes from the HTTP API below, under <span class="identifier">/api/v1/{{ chain }}/</span>. All endpoints are GET, answer JSON, and take a <span class="identifier">network</span> query parameter that currently must be <span class="identifier">mainnet</span>. Numeric quantities cross the API as exact decimal strings, so amounts survive beyond JavaScript number range. All hashes and heights in the examples below are samples, not live data.
+        </p>
+
+        <h3 i18n="universe.docs.api-status-title">Status</h3>
+        <p i18n="universe.docs.api-status-def">
+          The capability envelope: readiness, tip, sync, pending-set state, per-protocol coverage, and which reads the chain offers.
+        </p>
+        <pre tabindex="0" role="region" aria-label="Code sample, scrolls sideways" i18n-aria-label="universe.docs.code-region"><code>GET /api/v1/{{ chain }}/status?network=mainnet
+
+{{ '{' }} "schemaVersion": "universe-chain-capability-v1",
+  "chain": "{{ chain }}", "ready": true,
+  "tip": {{ '{' }} "heightAtomic": "6350000", "blockHash": "000...abc" {{ '}' }},
+  "reads": {{ '{' }} "transaction": true, "projectedBlocks": false, ... {{ '}' }} {{ '}' }}</code></pre>
+
+        <h3 i18n="universe.docs.api-dashboard-title">Dashboard</h3>
+        <p i18n="universe.docs.api-dashboard-def">
+          The one-call aggregate the dashboard page uses: recent blocks, candidate buckets, fees, pending summary, mining, and subsystem health. Each member degrades to null on its own; the aggregate never fails whole because one subsystem cannot answer.
+        </p>
+        <pre tabindex="0" role="region" aria-label="Code sample, scrolls sideways" i18n-aria-label="universe.docs.code-region"><code>GET /api/v1/{{ chain }}/dashboard?network=mainnet
+
+{{ '{' }} "schemaVersion": "universe-chain-dashboard-v1",
+  "recentBlocks": {{ '{' }} ... {{ '}' }}, "buckets": {{ '{' }} ... {{ '}' }}, "fees": {{ '{' }} ... {{ '}' }},
+  "mempool": {{ '{' }} ... {{ '}' }}, "mining": {{ '{' }} ... {{ '}' }},
+  "subsystems": [ {{ '{' }} "id": "core-node", "state": "ready", "reasonIds": [] {{ '}' }}, ... ] {{ '}' }}</code></pre>
+
+        <h3 i18n="universe.docs.api-blocks-title">Recent blocks</h3>
+        <p i18n="universe.docs.api-blocks-def">
+          Recent confirmed blocks, newest first, with a coverage statement so "few blocks exist" and "few blocks were collected" stay distinguishable. <span class="identifier">limit</span> runs from 1 to 50.
+        </p>
+        <pre tabindex="0" role="region" aria-label="Code sample, scrolls sideways" i18n-aria-label="universe.docs.code-region"><code>GET /api/v1/{{ chain }}/blocks/recent?network=mainnet&amp;limit=15
+
+{{ '{' }} "schemaVersion": "universe-recent-blocks-v1",
+  "blocks": [ {{ '{' }} "heightAtomic": "6350000", "hash": "000...abc",
+      "feesAtomic": null, "miner": {{ '{' }} "name": null, "evidence": null {{ '}' }} {{ '}' }} ],
+  "coverage": {{ '{' }} "fromHeightAtomic": "6349000", "complete": true {{ '}' }} {{ '}' }}</code></pre>
+
+        <h3 i18n="universe.docs.api-fees-title">Fees</h3>
+        <p *ngIf="chain === 'dogecoin'" i18n="universe.docs.api-fees-def-doge">
+          Fee guidance in koinu/kB, four levels, each naming its basis.
+        </p>
+        <p *ngIf="chain === 'zcash'" i18n="universe.docs.api-fees-def-zcash">
+          The ZIP-317 rule rather than rate numbers: marginal fee, grace actions, the typical conventional fee, and the share of the pending set paying it.
+        </p>
+        <pre *ngIf="chain === 'dogecoin'" tabindex="0" role="region" aria-label="Code sample, scrolls sideways" i18n-aria-label="universe.docs.code-region"><code>GET /api/v1/dogecoin/fees?network=mainnet
+
+{{ '{' }} "schemaVersion": "universe-fee-recommendations-v1",
+  "kind": "fee-per-kilobyte", "unit": "koinu/kB",
+  "levels": [ {{ '{' }} "id": "high", "amountDecimal": "1000000", "basis": "node-estimate" {{ '}' }}, ... ],
+  "minRelayFeeAtomicPerKb": "1000000" {{ '}' }}</code></pre>
+        <pre *ngIf="chain === 'zcash'" tabindex="0" role="region" aria-label="Code sample, scrolls sideways" i18n-aria-label="universe.docs.code-region"><code>GET /api/v1/zcash/fees?network=mainnet
+
+{{ '{' }} "schemaVersion": "universe-fee-recommendations-v1",
+  "kind": "zip-317", "unit": "zatoshi",
+  "marginalFeeAtomic": "5000", "graceActionsAtomic": "2",
+  "typicalConventionalFeeAtomic": "10000", "paidShareDecimal": "0.97" {{ '}' }}</code></pre>
+
+        <h3 i18n="universe.docs.api-mining-title">Mining and pools</h3>
+        <p i18n="universe.docs.api-mining-def">
+          The mining summary carries difficulty, network rate and its unit, target and observed interval, and reward figures over the collected window. The pools endpoint takes a <span class="identifier">window</span> of 24h, 3d, 1w, or 1m.
+        </p>
+        <pre tabindex="0" role="region" aria-label="Code sample, scrolls sideways" i18n-aria-label="universe.docs.code-region"><code>GET /api/v1/{{ chain }}/mining?network=mainnet
+GET /api/v1/{{ chain }}/mining/pools?network=mainnet&amp;window=1w
+
+{{ '{' }} "schemaVersion": "universe-mining-pools-v1", "windowId": "1w",
+  "pools": [ {{ '{' }} "poolId": "unknown", "name": "Unknown",
+      "blocksAtomic": "4200", "shareDecimal": "0.41", "evidence": [] {{ '}' }}, ... ],
+  "attributionDatasetVersion": "example-1", "coverageComplete": true {{ '}' }}</code></pre>
+
+        <h3 i18n="universe.docs.api-charts-title">Chart series</h3>
+        <p i18n="universe.docs.api-charts-def">
+          One series per call. <span class="identifier">range</span> is one of 24h, 3d, 1w, 1m, 3m, 6m, 1y, all. The coverage block says whether stored history spans the whole range and where the oldest stored sample sits.
+        </p>
+        <pre tabindex="0" role="region" aria-label="Code sample, scrolls sideways" i18n-aria-label="universe.docs.code-region"><code>GET /api/v1/{{ chain }}/charts/block-fees?network=mainnet&amp;range=1w
+
+{{ '{' }} "schemaVersion": "universe-chart-series-v1", "seriesId": "block-fees",
+  "rangeId": "1w", "aggregation": "sum", "bucketSecondsAtomic": "3600",
+  "lines": [ {{ '{' }} "key": "fees", "unit": "{{ profile.ticker }}",
+      "points": [ ["1756400000", "12.5"], ["1756403600", null] ] {{ '}' }} ],
+  "coverage": {{ '{' }} "complete": false, "earliestAtomic": "1756000000" {{ '}' }} {{ '}' }}</code></pre>
+
+        <h3 i18n="universe.docs.api-mempool-title">Pending set and candidate buckets</h3>
+        <p *ngIf="chain === 'dogecoin'" i18n="universe.docs.api-mempool-def-doge">
+          The pending snapshot lists what our node holds; <span class="identifier">limit</span> runs from 1 to 1000. The candidate buckets endpoint groups the same set under the relay fee policy.
+        </p>
+        <p *ngIf="chain === 'zcash'" i18n="universe.docs.api-mempool-def-zcash">
+          The pending snapshot lists what our node holds; <span class="identifier">limit</span> runs from 1 to 200. The candidate buckets endpoint groups the same set into ZIP-317 eligibility tiers.
+        </p>
+        <pre tabindex="0" role="region" aria-label="Code sample, scrolls sideways" i18n-aria-label="universe.docs.code-region"><code>GET /api/v1/{{ chain }}/mempool?network=mainnet&amp;limit=100
+GET /api/v1/{{ chain }}/candidate-buckets?network=mainnet
+
+{{ '{' }} "schemaVersion": "universe-candidate-buckets-v1",
+  "semantics": "{{ chain === 'zcash' ? 'zip317-eligibility-tiers' : 'ordered-by-fee-policy' }}",
+  "buckets": [ ... ], "disclosures": [ ... ] {{ '}' }}</code></pre>
+
+        <h3 i18n="universe.docs.api-lookups-title">Transaction, block, address, outpoint</h3>
+        <pre *ngIf="chain === 'dogecoin'" tabindex="0" role="region" aria-label="Code sample, scrolls sideways" i18n-aria-label="universe.docs.code-region"><code>GET /api/v1/dogecoin/tx/:txid?network=mainnet
+GET /api/v1/dogecoin/block/:heightOrHash?network=mainnet&amp;page=1&amp;limit=50
+GET /api/v1/dogecoin/address/:address?network=mainnet&amp;page=1&amp;limit=50
+GET /api/v1/dogecoin/outpoint/:txid/:vout?network=mainnet
+
+GET /api/v1/dogecoin/block/6350000?network=mainnet&amp;page=2&amp;limit=50</code></pre>
+        <pre *ngIf="chain === 'zcash'" tabindex="0" role="region" aria-label="Code sample, scrolls sideways" i18n-aria-label="universe.docs.code-region"><code>GET /api/v1/zcash/tx/:txid?network=mainnet
+GET /api/v1/zcash/block/:heightOrHash?network=mainnet&amp;limit=100&amp;offset=0
+GET /api/v1/zcash/address/:address?network=mainnet&amp;limit=100&amp;offset=0
+GET /api/v1/zcash/outpoint/:txid/:vout?network=mainnet
+
+GET /api/v1/zcash/block/3050000?network=mainnet&amp;limit=100&amp;offset=100</code></pre>
+        <p *ngIf="chain === 'dogecoin'" i18n="universe.docs.api-lookups-note-doge">
+          Block and address lists page with page and limit; page starts at 1.
+        </p>
+        <p *ngIf="chain === 'zcash'" i18n="universe.docs.api-lookups-note-zcash">
+          Block and address lists page with limit and offset; offset counts entries, not pages.
+        </p>
+
+        <h3 i18n="universe.docs.api-protocols-title">Protocols</h3>
+        <p *ngIf="chain === 'dogecoin'" i18n="universe.docs.api-protocols-def-doge">
+          The protocols index, then one list and one detail route per protocol. DRC-20 lists and their holder and event sublists page with a <span class="identifier">cursor</span>; TAP on Doge pages with limit and offset.
+        </p>
+        <p *ngIf="chain === 'zcash'" i18n="universe.docs.api-protocols-def-zcash">
+          The protocols index, then one list and one detail route per protocol. ZRC-20 routes accept an optional <span class="identifier">ruleset</span> of zord or zecscriptions.
+        </p>
+        <pre *ngIf="chain === 'dogecoin'" tabindex="0" role="region" aria-label="Code sample, scrolls sideways" i18n-aria-label="universe.docs.code-region"><code>GET /api/v1/dogecoin/protocols?network=mainnet
+GET /api/v1/dogecoin/protocols/drc20?network=mainnet&amp;limit=100&amp;cursor=0
+GET /api/v1/dogecoin/protocols/drc20/:ticker/holders?network=mainnet&amp;limit=100&amp;cursor=0
+GET /api/v1/dogecoin/protocols/doge-tap?network=mainnet&amp;limit=100&amp;offset=0</code></pre>
+        <pre *ngIf="chain === 'zcash'" tabindex="0" role="region" aria-label="Code sample, scrolls sideways" i18n-aria-label="universe.docs.code-region"><code>GET /api/v1/zcash/protocols?network=mainnet
+GET /api/v1/zcash/protocols/zrc20?network=mainnet&amp;limit=100
+GET /api/v1/zcash/protocols/zrc20/:tick?network=mainnet&amp;ruleset=zord</code></pre>
+
+        <ng-container *ngIf="chain === 'zcash'">
+          <h3 i18n="universe.docs.api-search-title">Search</h3>
+          <p i18n="universe.docs.api-search-def">
+            Resolves a query (a height, hash, transaction id, transparent address, or protocol asset) to the pages that can answer it. The query must be 1 to 256 printable characters.
+          </p>
+          <pre tabindex="0" role="region" aria-label="Code sample, scrolls sideways" i18n-aria-label="universe.docs.code-region"><code>GET /api/v1/zcash/search?q=3050000&amp;network=mainnet</code></pre>
+        </ng-container>
+
+        <h3 i18n="universe.docs.api-errors-title">Errors</h3>
+        <ul class="docs-list">
+          <li i18n="universe.docs.api-error-400">400: the reference is invalid; the body says which rule it broke, for example "txid must be 64 lowercase hex characters".</li>
+          <li i18n="universe.docs.api-error-404">404: the reference is valid but the object does not exist on this chain.</li>
+          <li i18n="universe.docs.api-error-503">503: the source that would answer is unavailable; the body names the source. Any network other than mainnet also answers 503, because only mainnet is served today.</li>
+        </ul>
+
+        <h3 i18n="universe.docs.api-reorg-title">Reorganisations</h3>
+        <p i18n="universe.docs.api-reorg">
+          On a reorganisation, rows for replaced blocks are rolled back and the same heights are refilled from the branch that won. A height you fetched can therefore answer with a different hash later; anchor on hashes when you need a stable reference.
+        </p>
+      </section>
+
+      <!-- ============================================================= -->
+      <section class="panel docs-section" id="versions">
+        <h2 i18n="universe.docs.versions-title">Versions</h2>
+        <p i18n="universe.docs.versions-lede">
+          Every payload names its schema, so a consumer can detect a contract change instead of guessing. The schemas in use are:
+        </p>
+        <pre tabindex="0" role="region" aria-label="Code sample, scrolls sideways" i18n-aria-label="universe.docs.code-region"><code>universe-chain-capability-v1
+universe-candidate-buckets-v1
+universe-recent-blocks-v1
+universe-fee-recommendations-v1
+universe-mining-summary-v1
+universe-mining-pools-v1
+universe-chart-series-v1
+universe-chain-dashboard-v1</code></pre>
+        <p i18n="universe.docs.versions-release">
+          The running backend identifies its release at <span class="identifier">/api/v1/backend-info</span>: version, git commit, and which backend produced the answer. The chain capability envelope additionally carries the commit of the protocol overlay that produced it.
+        </p>
+        <pre tabindex="0" role="region" aria-label="Code sample, scrolls sideways" i18n-aria-label="universe.docs.code-region"><code>GET /api/v1/backend-info
+
+{{ '{' }} "version": "3.0.0-example", "gitCommit": "abc0123", "backend": "esplora" {{ '}' }}</code></pre>
+      </section>
+
+    </div>
+  </div>
+</div>
