@@ -176,6 +176,7 @@ configuration that names one.
 | Source | `https://github.com/mempool/electrs`, tag `v3.3.0`, commit `141215c349d5cfbabf8f2b925f3dcea59fed0510` |
 | Binary | `/opt/universe-explorer-electrs/v3.3.0/electrs`, beside `SOURCE-SHA`, `SOURCE-URL` and `SOURCE-VERSION` |
 | Unit | `universe-explorer-electrs.service`, user `universe-electrs`, group `bitcoin` |
+| Unit files | `production/linux/`, so they travel with a release rather than living only on the host |
 | Data | `/data/indexers-c/universe-explorer-electrs/mainnet` |
 | HTTP | `127.0.0.1:3001`, the Esplora REST API the gateway and the backend read |
 | Electrum | `127.0.0.1:50002`, loopback only, not used by this deployment |
