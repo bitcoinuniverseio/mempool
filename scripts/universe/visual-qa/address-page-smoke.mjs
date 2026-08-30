@@ -105,9 +105,13 @@ async function openAddress(context, address) {
       .catch(() => undefined);
 
     const text = await page.evaluate(() => document.body.innerText.replace(/\s+/g, ' ').trim());
+    // The transaction list marks each row with data-cy="tx-<index>". That
+    // attribute is the row itself, present on every page the list appears on,
+    // which the per-row transaction link is not: it is hidden when the list is
+    // rendered inside a transaction page. Counting the rows measures the table
+    // having content; counting the links would measure which page it is on.
     const transactionsRendered = await page.evaluate(
-      () => document.querySelectorAll('app-transactions-list .transaction-box, app-transactions-list app-transaction-box').length > 0
-        || document.querySelectorAll('[id^="tx-"]').length > 0,
+      () => document.querySelectorAll('app-transactions-list [data-cy^="tx-"]').length > 0,
     );
     return { text, consoleErrors, transactionsRendered, page };
   } catch (error) {
