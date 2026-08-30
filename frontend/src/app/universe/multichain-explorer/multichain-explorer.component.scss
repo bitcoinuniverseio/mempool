@@ -776,6 +776,232 @@ tbody tr:last-child td {
 }
 
 // ---------------------------------------------------------------------------
+// Candidate buckets
+// ---------------------------------------------------------------------------
+
+// The same cube grammar the Bitcoin projection uses: a face carrying the
+// figures, a skewed top and side for depth, the projected-block palette.
+// What differs is the claim, which the copy above the row states.
+.cube-row {
+  display: flex;
+  gap: calc(var(--u-space-6) + 20px);
+  overflow-x: auto;
+  padding: calc(0.24 * var(--cube-size)) var(--u-space-2) var(--u-space-2)
+    calc(0.16 * var(--cube-size) + var(--u-space-2));
+  --cube-size: 125px;
+
+  &:focus-visible {
+    outline: 2px solid var(--u-focus-ring);
+    outline-offset: 2px;
+  }
+}
+
+.candidate-cube {
+  flex: 0 0 auto;
+  width: var(--cube-size);
+}
+
+.cube-block {
+  position: relative;
+  width: var(--cube-size);
+  height: var(--cube-size);
+  background: var(--u-block-projected-empty);
+}
+
+.cube-block::after {
+  content: '';
+  width: var(--cube-size);
+  height: calc(0.192 * var(--cube-size));
+  position: absolute;
+  top: calc(-0.192 * var(--cube-size));
+  left: calc(-0.16 * var(--cube-size));
+  background-color: var(--u-block-projected-top);
+  transform: skew(40deg);
+  transform-origin: top;
+}
+
+.cube-block::before {
+  content: '';
+  width: calc(0.16 * var(--cube-size));
+  height: var(--cube-size);
+  position: absolute;
+  top: calc(-0.096 * var(--cube-size));
+  left: calc(-0.16 * var(--cube-size));
+  background-color: var(--u-block-projected-side);
+  transform: skewY(50deg);
+  transform-origin: top;
+}
+
+.cube-body {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--u-space-1);
+  text-align: center;
+  padding: var(--u-space-2);
+  color: var(--u-block-ink);
+}
+
+.cube-median {
+  font-size: var(--u-text-md);
+  font-weight: var(--u-weight-bold);
+  overflow-wrap: anywhere;
+}
+
+.cube-unit {
+  font-size: var(--u-text-2xs);
+  font-weight: var(--u-weight-regular);
+}
+
+.cube-span,
+.cube-count,
+.cube-size {
+  font-size: var(--u-text-2xs);
+  color: var(--u-block-ink-muted);
+  overflow-wrap: anywhere;
+}
+
+.cube-caption {
+  margin-top: var(--u-space-2);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--u-space-1);
+  font-size: var(--u-text-2xs);
+}
+
+.bucket-facts {
+  margin-top: var(--u-space-3);
+}
+
+.bucket-disclosures {
+  list-style: none;
+  margin: var(--u-space-3) 0 0;
+  padding: 0;
+  font-size: var(--u-text-sm);
+
+  li + li {
+    margin-top: var(--u-space-1);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Ruleset ledgers
+// ---------------------------------------------------------------------------
+
+// The figure names are row headers, not cells: the ledger reads figure by
+// figure, and each ruleset's value sits beside the others under its own name.
+.ruleset-ledger,
+.ruleset-list {
+  tbody th {
+    color: var(--u-text-secondary);
+    font-weight: var(--u-weight-semibold);
+    font-size: var(--u-text-sm);
+    text-align: left;
+    padding: var(--u-space-2) var(--u-space-3) var(--u-space-2) 0;
+    border-bottom: 1px solid var(--u-divider);
+    vertical-align: top;
+    white-space: nowrap;
+
+    .universe-chip {
+      margin-left: var(--u-space-2);
+    }
+  }
+
+  tbody tr:last-child th {
+    border-bottom: 0;
+  }
+
+  // A row whose readings disagree is the row a visitor came to check. The
+  // mark is a border rather than a fill, so it survives forced colours.
+  tr.diverges th,
+  tr.diverges td {
+    border-bottom-color: var(--u-border);
+  }
+}
+
+// Both figures of a diverging cell, stacked, each naming its ruleset. On one
+// line they read as a single number with a word in it.
+.reading-stack {
+  display: block;
+  white-space: nowrap;
+}
+
+// One authority per row: what it is, its verdict, then the evidence.
+.authority-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--u-space-2) var(--u-space-3);
+    padding: var(--u-space-2) 0;
+
+    + li {
+      border-top: 1px solid var(--u-divider);
+    }
+  }
+}
+
+.authority-label {
+  font-weight: var(--u-weight-semibold);
+  min-width: 11rem;
+}
+
+.authority-detail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--u-space-3);
+  color: var(--u-text-secondary);
+  font-size: var(--u-text-sm);
+}
+
+.authority-failure {
+  flex-basis: 100%;
+  font-size: var(--u-text-sm);
+}
+
+// The dune's own glyph, beside its name. It is the authority's value, so it
+// sits in a quiet chip rather than decorating the heading.
+.dune-symbol {
+  display: inline-block;
+  margin-left: var(--u-space-2);
+  padding: 0 var(--u-space-2);
+  border: 1px solid var(--u-border);
+  border-radius: var(--u-radius-sm);
+  color: var(--u-text-secondary);
+  font-size: var(--u-text-sm);
+}
+
+// The authority's prose about rules neither reading evaluates.
+.rule-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li + li {
+    margin-top: var(--u-space-3);
+    padding-top: var(--u-space-3);
+    border-top: 1px solid var(--u-divider);
+  }
+
+  p {
+    margin: 0;
+  }
+
+  .rule-reason {
+    margin-top: var(--u-space-1);
+    font-size: var(--u-text-sm);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Evidence
 // ---------------------------------------------------------------------------
 

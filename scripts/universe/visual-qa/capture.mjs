@@ -85,6 +85,9 @@ export const ROUTES = [
   { id: 'dogecoin-address', path: `/dogecoin/address/${chainSampleIds.DOGE_ADDRESS}`, name: 'Dogecoin address' },
   { id: 'dogecoin-protocols', path: '/dogecoin/protocols', name: 'Dogecoin protocols' },
   { id: 'dogecoin-drc20', path: '/dogecoin/protocols/drc20', name: 'DRC-20 assets' },
+  // Dunes carry their own divisibility, so the pages exist to shift by it.
+  { id: 'dogecoin-dunes', path: '/dogecoin/protocols/dunes', name: 'Dune catalog' },
+  { id: 'dogecoin-dune', path: `/dogecoin/protocols/dunes/${chainSampleIds.DOGE_DUNE_ID}`, name: 'Dune' },
   { id: 'zcash', path: '/zcash', name: 'Zcash overview' },
   { id: 'zcash-mempool', path: '/zcash/mempool', name: 'Zcash pending' },
   { id: 'zcash-tx', path: `/zcash/tx/${chainSampleIds.ZEC_TXID}`, name: 'Zcash transaction' },
@@ -93,6 +96,10 @@ export const ROUTES = [
   { id: 'zcash-block', path: `/zcash/block/${chainSampleIds.ZEC_BLOCK}`, name: 'Zcash block' },
   { id: 'zcash-address', path: `/zcash/address/${chainSampleIds.ZEC_ADDRESS}`, name: 'Zcash address' },
   { id: 'zcash-protocols', path: '/zcash/protocols', name: 'Zcash protocols' },
+  // The ZRC-20 pages carry a ledger reported under two rulesets that are
+  // allowed to disagree. They reached production as a JSON string in a cell.
+  { id: 'zcash-zrc20', path: '/zcash/protocols/zrc20', name: 'ZRC-20 tokens' },
+  { id: 'zcash-zrc20-token', path: `/zcash/protocols/zrc20/${chainSampleIds.ZEC_ZRC20}`, name: 'ZRC-20 token' },
 
   // Universe-authored routes that had no coverage either. The saved page is
   // seeded through localStorage below, because its state was never a request.
@@ -701,7 +708,9 @@ export const GATED_ROUTES = new Set([
   // failed lookup prints why rather than waiting.
   'dogecoin', 'dogecoin-mempool', 'dogecoin-tx', 'dogecoin-block',
   'dogecoin-address', 'dogecoin-protocols', 'dogecoin-drc20',
+  'dogecoin-dunes', 'dogecoin-dune',
   'zcash', 'zcash-mempool', 'zcash-tx', 'zcash-protocols',
+  'zcash-zrc20', 'zcash-zrc20-token',
   // The single-asset pages and the local-state page, for the same reason.
   'outpoint', 'inscription', 'rune', 'sat', 'saved',
 ]);

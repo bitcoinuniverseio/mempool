@@ -345,6 +345,11 @@ export interface ChainCapabilityEnvelope {
     outpoint: boolean;
     feeEstimates: boolean;
     projectedBlocks: boolean;
+    /**
+     * A weaker claim than projected blocks: the pending set grouped under
+     * the chain's own fee policy, never a forecast of the next block.
+     */
+    candidateBuckets?: boolean;
   };
   protocols: ChainCapabilityProtocol[];
   coverage: {
