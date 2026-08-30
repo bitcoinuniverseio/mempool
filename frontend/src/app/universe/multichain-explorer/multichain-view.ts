@@ -82,6 +82,7 @@ const DOGECOIN: ChainProfile = {
     { id: 'doginals', label: 'Doginals', registryIds: ['doginals'] },
     { id: 'drc20', label: 'DRC-20', registryIds: ['drc20'] },
     { id: 'doge-tap', label: 'TAP on Doge', registryIds: ['tap_doge', 'doge-tap', 'tap-on-doge', 'tap-doge'] },
+    { id: 'dunes', label: 'Dunes', registryIds: ['dunes'] },
   ],
 };
 
