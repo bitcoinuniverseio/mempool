@@ -1,6 +1,17 @@
 {
+  "schemaVersion": "universe-explorer-protocol-manifest-v1",
   "registryVersion": "1.0.0",
-  "generatedAt": "2026-08-26T06:40:08.985Z",
+  "sourceRepository": "bitcoinuniverseio/backend-apis",
+  "sourceSha": "100c0ec0ccd3fd28c3f7c89bec7cb6b5575c8d96",
+  "generatedAt": "2026-08-30T20:52:56.287Z",
+  "primaryStrip": [
+    "ORDINALS",
+    "RUNES",
+    "ALKANES",
+    "STAMPS",
+    "ATOMICALS",
+    "MORE"
+  ],
   "protocols": [
     {
       "schemaVersion": "universe-explorer-protocol-v1",
@@ -389,9 +400,9 @@
       "visualToken": "protocol-op-inscriptions",
       "implementedReadOperations": [],
       "authorizedReadOperations": [],
-      "releaseStatus": "BLOCKED",
+      "releaseStatus": "VERIFIED READ ONLY",
       "indexerAuthority": "index-opinscriptions",
-      "coverage": "unknown"
+      "coverage": "complete"
     },
     {
       "schemaVersion": "universe-explorer-protocol-v1",
@@ -732,6 +743,25 @@
     },
     {
       "schemaVersion": "universe-explorer-protocol-v1",
+      "id": "dunes",
+      "aliases": [],
+      "displayName": "Dunes",
+      "shortName": "Dunes",
+      "family": "OTHER",
+      "chain": "dogecoin",
+      "networks": [
+        "mainnet"
+      ],
+      "icon": "protocol-dunes",
+      "visualToken": "protocol-dunes",
+      "implementedReadOperations": [],
+      "authorizedReadOperations": [],
+      "releaseStatus": "BLOCKED",
+      "indexerAuthority": "ord-dogecoin",
+      "coverage": "unknown"
+    },
+    {
+      "schemaVersion": "universe-explorer-protocol-v1",
       "id": "zerdinals",
       "aliases": [
         "universe-zerdinals"
@@ -747,9 +777,9 @@
       "visualToken": "protocol-zerdinals",
       "implementedReadOperations": [],
       "authorizedReadOperations": [],
-      "releaseStatus": "BLOCKED",
+      "releaseStatus": "VERIFIED READ ONLY",
       "indexerAuthority": "index-zcash-metaprotocols",
-      "coverage": "unknown"
+      "coverage": "complete"
     },
     {
       "schemaVersion": "universe-explorer-protocol-v1",
@@ -766,9 +796,28 @@
       "visualToken": "protocol-zrunes",
       "implementedReadOperations": [],
       "authorizedReadOperations": [],
-      "releaseStatus": "BLOCKED",
+      "releaseStatus": "VERIFIED READ ONLY",
       "indexerAuthority": "index-zcash-metaprotocols",
-      "coverage": "unknown"
+      "coverage": "complete"
+    },
+    {
+      "schemaVersion": "universe-explorer-protocol-v1",
+      "id": "zrc20",
+      "aliases": [],
+      "displayName": "ZRC-20",
+      "shortName": "ZRC-20",
+      "family": "OTHER",
+      "chain": "zcash",
+      "networks": [
+        "mainnet"
+      ],
+      "icon": "protocol-zrc20",
+      "visualToken": "protocol-zrc20",
+      "implementedReadOperations": [],
+      "authorizedReadOperations": [],
+      "releaseStatus": "VERIFIED READ ONLY",
+      "indexerAuthority": "index-zcash-metaprotocols",
+      "coverage": "complete"
     }
   ]
 }
