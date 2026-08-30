@@ -227,6 +227,53 @@ PY
   log "readable protocols all have authorities"
 }
 
+# The listener gate.
+#
+# index-doge-tap shipped with HOST=0.0.0.0 and answered /ready to the public
+# internet for as long as it ran, on a host whose firewall is inactive. Nothing
+# caught it: every functional check reached the service over loopback, where it
+# behaved perfectly, and no gate ever asked which interface it was answering
+# on.
+#
+# This one asks. It reads the listening sockets, subtracts the ones this
+# deployment is supposed to expose, and refuses the cutover if anything is
+# left. A service that has to be reachable from another host is added to
+# PUBLIC_LISTENERS deliberately, with a reason, rather than discovered in
+# production.
+PUBLIC_LISTENERS="22 8333 50001"
+
+gate_private_listeners() {
+  command -v ss >/dev/null 2>&1 || fail "ss is not available, so the listener gate cannot run"
+
+  local allowed
+  allowed=$(printf '%s
+' $PUBLIC_LISTENERS)
+
+  # Every listening TCP socket that is not on a loopback address. Docker's
+  # bridge address is treated as private: it is reachable only from containers
+  # on this host, and the services behind it are the same ones loopback serves.
+  local exposed
+  exposed=$(ss -ltn 2>/dev/null     | awk 'NR > 1 { print $4 }'     | grep -vE '^(127\.|\[::1\]|172\.17\.0\.1:)'     | sed -E 's/.*:([0-9]+)$//'     | sort -u)
+
+  local unexpected=""
+  local port
+  for port in $exposed; do
+    printf '%s
+' "$allowed" | grep -qx "$port" || unexpected="$unexpected $port"
+  done
+
+  if [ -n "$unexpected" ]; then
+    printf 'These ports answer on a public interface and are not declared:%s
+' "$unexpected" >&2
+    printf 'Bind the service to 127.0.0.1, or add the port to PUBLIC_LISTENERS with a reason.
+' >&2
+    ss -ltnp 2>/dev/null | grep -vE '127\.|\[::1\]' >&2 || true
+    fail "a service is listening on a public interface"
+  fi
+
+  log "no unexpected public listener: only$(printf ' %s' $PUBLIC_LISTENERS) answer off loopback"
+}
+
 cmd_preflight() {
   local sha=$1
   local dir; dir=$(release_dir "$sha")
@@ -237,6 +284,7 @@ cmd_preflight() {
   gate_database
   gate_address_backend
   gate_sources_parse
+  gate_private_listeners
   gate_readable_protocols_have_authorities "$dir"
   log "preflight passed for $sha"
 }
