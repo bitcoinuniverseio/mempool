@@ -21,6 +21,13 @@ ExecStart=/opt/universe-explorer-electrs/v3.3.0/electrs \
   --lightmode \
   --address-search \
   -vv
+# The initial index logs a line per batch for hours, and this journal is
+# shared with every other service on the host. Four and a half hours of it
+# rotated the journal once already, taking everyone else's history with it.
+# The cap is generous enough that real errors still arrive in full and small
+# enough that a sync cannot own the journal.
+LogRateLimitIntervalSec=30s
+LogRateLimitBurst=200
 Restart=on-failure
 RestartSec=15
 TimeoutStopSec=300

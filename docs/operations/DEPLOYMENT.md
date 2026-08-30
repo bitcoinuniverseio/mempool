@@ -269,6 +269,13 @@ journalctl -t electrs-diskguard
 The floor is 120 GB free, set in
 `/usr/local/bin/universe-explorer-electrs-diskguard`.
 
+Watch the journal, but do not rely on it for the whole run. The initial index
+logs a line per batch for hours into a journal shared with every other service
+on this host, and it rotated once during the first build, taking that history
+with it. The unit carries `LogRateLimitIntervalSec` and `LogRateLimitBurst` so
+a sync cannot own the journal again. `du` on the data directory is the
+progress signal that survives a rotation.
+
 Do not switch `MEMPOOL.BACKEND` to `esplora` until the index is ready. The
 preflight will refuse the cutover if you do, which is the intended outcome, but
 the honest sequence is to leave production serving on the previous release
