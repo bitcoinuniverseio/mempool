@@ -85,6 +85,9 @@ export const ROUTES = [
   { id: 'dogecoin-address', path: `/dogecoin/address/${chainSampleIds.DOGE_ADDRESS}`, name: 'Dogecoin address' },
   { id: 'dogecoin-protocols', path: '/dogecoin/protocols', name: 'Dogecoin protocols' },
   { id: 'dogecoin-drc20', path: '/dogecoin/protocols/drc20', name: 'DRC-20 assets' },
+  // Dunes carry their own divisibility, so the pages exist to shift by it.
+  { id: 'dogecoin-dunes', path: '/dogecoin/protocols/dunes', name: 'Dune catalog' },
+  { id: 'dogecoin-dune', path: `/dogecoin/protocols/dunes/${chainSampleIds.DOGE_DUNE_ID}`, name: 'Dune' },
   { id: 'zcash', path: '/zcash', name: 'Zcash overview' },
   { id: 'zcash-mempool', path: '/zcash/mempool', name: 'Zcash pending' },
   { id: 'zcash-tx', path: `/zcash/tx/${chainSampleIds.ZEC_TXID}`, name: 'Zcash transaction' },
@@ -705,6 +708,7 @@ export const GATED_ROUTES = new Set([
   // failed lookup prints why rather than waiting.
   'dogecoin', 'dogecoin-mempool', 'dogecoin-tx', 'dogecoin-block',
   'dogecoin-address', 'dogecoin-protocols', 'dogecoin-drc20',
+  'dogecoin-dunes', 'dogecoin-dune',
   'zcash', 'zcash-mempool', 'zcash-tx', 'zcash-protocols',
   'zcash-zrc20', 'zcash-zrc20-token',
   // The single-asset pages and the local-state page, for the same reason.

@@ -20,6 +20,7 @@ const ZEC_TXID = '7a3e1c5f9b2d6048a2c6e0f4b8d2a6c0e4f8b2d6a0c4e8f2b6d0a4c8e2f6b0
 const ZEC_ADDRESS = 't1SEgZvXCu3ceE42qrq5pCeSq7HbLjX8NJv';
 const ZEC_BLOCK = '00000000004db04aba335b14021f8dd4fa02a0a954edad7da547c3a4fd917141';
 const ZEC_ZRC20 = 'ZERO';
+const DOGE_DUNE_ID = '5084000:1';
 
 /**
  * A chain capability envelope. Dogecoin is at its tip and complete; Zcash is
@@ -296,6 +297,40 @@ function zrc20Envelope(body) {
     },
     lens: 'zord',
     rulesets: ['zord', 'zecscriptions'],
+    ...body,
+  };
+}
+
+/**
+ * One dune as the authority contract reports it. The digits are chosen so a
+ * wrong shift is visible: divisibility 8, supply one hundred million.
+ */
+function dogeDune(dune, duneId, overrides = {}) {
+  return {
+    dune,
+    duneId,
+    numberAtomic: '1',
+    symbol: 'D',
+    divisibilityAtomic: '8',
+    etchingTxid: DOGE_TXID,
+    supplyAtomic: '10000000000000000',
+    premineAtomic: '100000000',
+    mintsAtomic: '21000',
+    burnedAtomic: '0',
+    etchedHeightAtomic: '5084000',
+    etchedTimestampAtomic: '1700000000',
+    mintable: true,
+    ...overrides,
+  };
+}
+
+function dogeDuneEnvelope(body) {
+  return {
+    chain: 'dogecoin',
+    network: 'mainnet',
+    blockCountAtomic: '5900001',
+    blockHash: DOGE_BLOCK,
+    inventoryComplete: true,
     ...body,
   };
 }
@@ -602,6 +637,21 @@ export const chainFixtures = {
     ],
   }),
   [`/api/v1/zcash/protocols/zrc20/${ZEC_ZRC20}`]: zrc20Envelope(zrc20DivergingToken()),
+
+  // The dune catalog: one open mint, one closed with no symbol, and one with
+  // zero divisibility so an unshifted quantity is on the page deliberately.
+  '/api/v1/dogecoin/protocols/dunes': dogeDuneEnvelope({
+    totalCountAtomic: '3',
+    nextCursor: null,
+    dunes: [
+      dogeDune('SUCH•WOW•DUNE', DOGE_DUNE_ID),
+      dogeDune('BARE•DUNE', '5084001:0', { symbol: null, mintable: false }),
+      dogeDune('WHOLE•THINGS', '5084002:0', { divisibilityAtomic: '0', supplyAtomic: '21000' }),
+    ],
+  }),
+  [`/api/v1/dogecoin/protocols/dunes/${DOGE_DUNE_ID}`]: dogeDuneEnvelope({
+    dune: dogeDune('SUCH•WOW•DUNE', DOGE_DUNE_ID),
+  }),
 };
 
 /**
@@ -764,4 +814,4 @@ export const chainStateScope = {
   'chain-object-missing': ['dogecoin'],
 };
 
-export const chainSampleIds = { DOGE_TXID, DOGE_BLOCK, DOGE_ADDRESS, ZEC_TXID, ZEC_BLOCK, ZEC_ADDRESS, ZEC_ZRC20 };
+export const chainSampleIds = { DOGE_TXID, DOGE_BLOCK, DOGE_ADDRESS, DOGE_DUNE_ID, ZEC_TXID, ZEC_BLOCK, ZEC_ADDRESS, ZEC_ZRC20 };

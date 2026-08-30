@@ -67,6 +67,12 @@ import {
   readRulesetAssetList,
 } from '@app/universe/multichain-explorer/ruleset-assets';
 import {
+  DuneAssetListReading,
+  DuneAssetReading,
+  readDuneAssetDetail,
+  readDuneAssetList,
+} from '@app/universe/multichain-explorer/dune-assets';
+import {
   Observable,
   Subject,
   catchError,
@@ -116,6 +122,10 @@ interface ExplorerViewModel {
   readonly rulesetAsset: RulesetAssetReading | null;
   /** A page of such assets, each row carrying its own ledger. */
   readonly rulesetList: RulesetAssetListReading | null;
+  /** One dune, whose quantities shift by its own divisibility. */
+  readonly duneAsset: DuneAssetReading | null;
+  /** A page of dunes, each row carrying its own divisibility. */
+  readonly duneList: DuneAssetListReading | null;
   readonly emptyList: EmptyListReading | null;
   readonly facts: readonly Fact[];
   /** True when the page is showing a response it has no purpose-built reading for. */
@@ -301,8 +311,11 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
       ? readRulesetAsset(payload, typeof payload.lens === 'string' ? payload.lens : null)
       : null;
     const rulesetList = payload && !transactionList ? readRulesetAssetList(payload) : null;
+    const duneAsset = payload ? readDuneAssetDetail(payload) : null;
+    const duneList = payload && !transactionList ? readDuneAssetList(payload) : null;
     const collection =
-      payload && !transactionList && !rulesetList && (shape === 'collection' || shape === 'record')
+      payload && !transactionList && !rulesetList && !duneList &&
+      (shape === 'collection' || shape === 'record')
         ? readCollection(payload, this.profile)
         : null;
     const skip = [
@@ -316,6 +329,10 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
       // The list owns its rows, and its lede states the lens, the ruleset
       // names and the authority's total.
       ...(rulesetList ? ['items', 'rulesets', 'lens', 'total'] : []),
+      // The dune readings own their records; the checkpoint fields beside
+      // them stay, because nothing else on the page states them.
+      ...(duneAsset ? ['dune'] : []),
+      ...(duneList ? ['dunes', 'totalCountAtomic'] : []),
     ];
     return {
       capability,
@@ -337,11 +354,16 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
       transactionList,
       rulesetAsset,
       rulesetList,
+      duneAsset,
+      duneList,
       emptyList:
-        transactionList || collection || rulesetList ? null : readEmptyList(payload),
+        transactionList || collection || rulesetList || duneList
+          ? null
+          : readEmptyList(payload),
       facts: readRecordFacts(payload, this.profile, skip),
       generic:
-        (shape === 'collection' || shape === 'record') && !rulesetAsset && !rulesetList,
+        (shape === 'collection' || shape === 'record') &&
+        !rulesetAsset && !rulesetList && !duneAsset && !duneList,
     };
   }
 
@@ -461,6 +483,14 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
 
   /** True when the authority reports more tokens than this page shows. */
   rulesetListTruncated(list: RulesetAssetListReading): boolean {
+    if (!list.totalExact || !/^(0|[1-9][0-9]*)$/.test(list.totalExact)) {
+      return false;
+    }
+    return list.shownCount < Number(list.totalExact);
+  }
+
+  /** True when the authority reports more dunes than this page shows. */
+  duneListTruncated(list: DuneAssetListReading): boolean {
     if (!list.totalExact || !/^(0|[1-9][0-9]*)$/.test(list.totalExact)) {
       return false;
     }

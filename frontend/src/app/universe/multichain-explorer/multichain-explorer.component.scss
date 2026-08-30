@@ -817,6 +817,18 @@ tbody tr:last-child td {
   white-space: nowrap;
 }
 
+// The dune's own glyph, beside its name. It is the authority's value, so it
+// sits in a quiet chip rather than decorating the heading.
+.dune-symbol {
+  display: inline-block;
+  margin-left: var(--u-space-2);
+  padding: 0 var(--u-space-2);
+  border: 1px solid var(--u-border);
+  border-radius: var(--u-radius-sm);
+  color: var(--u-text-secondary);
+  font-size: var(--u-text-sm);
+}
+
 // The authority's prose about rules neither reading evaluates.
 .rule-list {
   list-style: none;

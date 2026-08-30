@@ -700,6 +700,114 @@
   </section>
 
   <!-- ------------------------------------------------------------------ -->
+  <!-- One dune, whose quantities shift by its own divisibility            -->
+  <!-- ------------------------------------------------------------------ -->
+  <section class="panel ruleset-ledger dune-detail" *ngIf="vm.duneAsset as dune" aria-labelledby="dune-heading">
+    <h2 id="dune-heading">
+      {{ dune.dune }}
+      <span class="dune-symbol" *ngIf="dune.symbol">{{ dune.symbol }}</span>
+    </h2>
+    <dl class="facts ruleset-context">
+      <div>
+        <dt i18n="universe.chain.dune-id">Dune</dt>
+        <dd class="identifier">{{ dune.duneId }}</dd>
+      </div>
+      <div *ngIf="dune.divisibilityExact">
+        <dt i18n="universe.chain.dune-divisibility">Divisibility</dt>
+        <dd [attr.title]="dune.divisibilityExact">
+          {{ dune.divisibilityExact }}
+          <span class="secondary" i18n="universe.chain.dune-divisibility-note">Every quantity below is shifted by this, never by the chain's own decimals.</span>
+        </dd>
+      </div>
+      <div *ngIf="dune.etchingTxid">
+        <dt i18n="universe.chain.dune-etching">Etched in</dt>
+        <dd><a class="identifier" [routerLink]="['/', chain, 'tx', dune.etchingTxid]">{{ short(dune.etchingTxid) }}</a></dd>
+      </div>
+      <div *ngIf="dune.etchedAt">
+        <dt i18n="universe.chain.dune-etched-at">Etched</dt>
+        <dd [attr.title]="dune.etchedAt.exact">{{ dune.etchedAt.display }}</dd>
+      </div>
+      <div *ngIf="dune.mintable !== null">
+        <dt i18n="universe.chain.dune-mintable">Minting</dt>
+        <dd>
+          <span class="universe-chip" [ngClass]="dune.mintable ? 'state-proven' : 'state-neutral'">
+            <ng-container *ngIf="dune.mintable; else notMintable" i18n="universe.chain.dune-mintable-open">Open in the next block</ng-container>
+            <ng-template #notMintable><ng-container i18n="universe.chain.dune-mintable-closed">Not open</ng-container></ng-template>
+          </span>
+        </dd>
+      </div>
+    </dl>
+
+    <p class="notice failure" *ngIf="dune.divisibility === null" i18n="universe.chain.dune-no-divisibility">
+      This dune's divisibility could not be read, so no shifted quantity is shown. An unshifted figure presented as one would be wrong by a factor the reader cannot see. The exact digits are in the full response below.
+    </p>
+
+    <dl class="facts">
+      <div *ngFor="let figure of dune.figures; trackBy: trackByKey">
+        <dt>{{ figure.label }}</dt>
+        <dd [class.secondary]="!figure.value" [attr.title]="figure.value?.exact">
+          <ng-container *ngIf="figure.value; else duneNoFigure">{{ figure.value.display }}</ng-container>
+          <ng-template #duneNoFigure><ng-container i18n="universe.chain.dune-not-shown">not shown</ng-container></ng-template>
+        </dd>
+      </div>
+    </dl>
+
+    <p class="panel-lede" *ngIf="dune.unreadFields.length" i18n="universe.chain.dune-unread">
+      The record also carries {{ dune.unreadFields.join(', ') }}, which this build has no reading for. They are named here rather than shifted by a rule that may not apply, and appear in the full response below.
+    </p>
+  </section>
+
+  <!-- ------------------------------------------------------------------ -->
+  <!-- A page of dunes                                                     -->
+  <!-- ------------------------------------------------------------------ -->
+  <section class="panel ruleset-list dune-list" *ngIf="vm.duneList as list" aria-labelledby="dune-list-heading">
+    <h2 id="dune-list-heading" i18n="universe.chain.dune-list-title">Dunes</h2>
+    <p class="panel-lede" i18n="universe.chain.dune-list-lede">
+      Each dune's quantities are shifted by its own divisibility, stated on its page. Nothing here shares a unit with DOGE.
+    </p>
+    <p class="panel-lede" *ngIf="duneListTruncated(list)" i18n="universe.chain.dune-list-truncated">
+      Showing the first {{ list.shownCount }} of {{ list.totalExact }} dunes the authority reports.
+    </p>
+    <p class="panel-lede" *ngIf="list.hiddenFigureFields.length" i18n="universe.chain.dune-list-hidden">
+      Each record also carries {{ list.hiddenFigureFields.join(', ') }}, which are not columns here. Every one of them is on the dune's own page.
+    </p>
+    <div class="table-wrap" tabindex="0" role="region" aria-labelledby="dune-list-heading">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col" i18n="universe.chain.dune-list-name">Dune</th>
+            <th scope="col" class="numeric" *ngFor="let column of list.columns; trackBy: trackByKey">{{ column.label }}</th>
+            <th scope="col" i18n="universe.chain.dune-list-minting">Minting</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of list.rows; trackBy: trackByIndex">
+            <td>
+              <a class="identifier" [routerLink]="['/', chain, 'protocols', activeProtocolId(), row.reading.duneId]">{{ row.reading.dune }}</a>
+              <span class="dune-symbol" *ngIf="row.reading.symbol">{{ row.reading.symbol }}</span>
+            </td>
+            <td class="numeric" *ngFor="let cell of row.cells; trackBy: trackByKey"
+                [class.secondary]="!cell.figure?.value"
+                [attr.title]="cell.figure?.value?.exact">
+              <ng-container *ngIf="cell.figure?.value as value; else duneNoCell">{{ value.display }}</ng-container>
+              <ng-template #duneNoCell><ng-container i18n="universe.chain.dune-list-no-figure">not shown</ng-container></ng-template>
+            </td>
+            <td>
+              <span class="universe-chip" [ngClass]="row.reading.mintable ? 'state-proven' : 'state-neutral'">
+                <ng-container *ngIf="row.reading.mintable; else rowNotMintable" i18n="universe.chain.dune-list-open">Open</ng-container>
+                <ng-template #rowNotMintable><ng-container i18n="universe.chain.dune-list-closed">Closed</ng-container></ng-template>
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="panel-lede" *ngIf="list.unreadRowCount" i18n="universe.chain.dune-list-unread">
+      {{ list.unreadRowCount }} entries in the response could not be read as dunes and are only in the full response below.
+    </p>
+  </section>
+
+  <!-- ------------------------------------------------------------------ -->
   <!-- Anything else the authority returned                                -->
   <!-- ------------------------------------------------------------------ -->
   <section class="panel" *ngIf="vm.facts.length" aria-labelledby="record-heading">

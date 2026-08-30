@@ -235,7 +235,7 @@ export class UniverseApiService {
 
   private protocolPath(chain: Exclude<ExplorerChain, 'bitcoin'>, protocol: string): string {
     const allowed = chain === 'dogecoin'
-      ? ['doginals', 'drc20', 'doge-tap']
+      ? ['doginals', 'drc20', 'doge-tap', 'dunes']
       : ['zerdinals', 'zrunes', 'zrc20'];
     if (!allowed.includes(protocol)) {throw new Error('unsupported-chain-protocol');}
     return protocol;
