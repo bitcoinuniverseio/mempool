@@ -14,12 +14,26 @@ permissions:
 
 concurrency:
   group: universe-ci-${{ github.ref }}
-  cancel-in-progress: false
+  # A superseded commit on a pull request proves nothing about the commit that
+  # replaced it, and while its run continues it holds one of the six ultra
+  # runners the replacement is queued for. Pushing three times to a branch
+  # under review used to mean three full matrix runs in a queue, and only the
+  # last one was worth waiting for.
+  #
+  # Pushes to develop and main are never cancelled. Every commit on those is
+  # validated on its own, because promotion reads per-commit check results and
+  # the release artifact is built from main.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   docs:
     name: Documentation gates
-    runs-on: [self-hosted, linux-ultra]
+    # Any runner in the fleet. This job is a checkout, a Node install and a set
+    # of Node scripts: no browser, no Rust, no Docker. Pinned to `linux-ultra`
+    # it competed for the six runners that are the only ones able to run the
+    # visual matrix, while eight runners carrying `universe-ci` sat idle, and a
+    # three minute job held a slot the fifty minute one was queued for.
+    runs-on: [self-hosted, universe-ci]
     timeout-minutes: 10
     steps:
       - name: Checkout
@@ -56,6 +70,9 @@ jobs:
 
       - name: Gateway routing
         run: node --test scripts/universe/gateway.test.mjs
+
+      - name: The component identity check can still fail
+        run: node --test scripts/universe/release-manifest.test.mjs
 
       - name: The gateway bridges an upstream restart rather than failing
         run: node --test scripts/universe/gateway-restart.test.mjs
@@ -160,6 +177,14 @@ jobs:
         working-directory: scripts/universe/visual-qa
         run: node --test progress-gate.test.mjs
 
+      # The public chain page gate, checked against the states it exists for.
+      # It runs against the live origin rather than this build, so nothing in
+      # this job exercises it, and a gate that has only ever passed has not
+      # shown it can fail. Every case it covers shipped past a green suite.
+      - name: The public chain page gate fires on the states that shipped
+        working-directory: scripts/universe/visual-qa
+        run: node --test chain-page-audit.test.mjs
+
       # A fixed port here once measured another job's build: two runners share
       # a host, the second gateway crashed on the taken port behind "&", the
       # probe happily reached the first job's server, and the run died halfway
@@ -192,8 +217,30 @@ jobs:
       # finishes show up. The deep pass takes the routes this suite holds to a
       # terminal state through every failure state, every theme and the widths
       # that change the layout, which is where a page that lies about why it is
-      # empty shows up. Measured at about two and a half minutes and sixteen
-      # minutes respectively.
+      # empty shows up.
+      #
+      # Measured on run 33254326169, 2026-08-29, on universe-linux-ultra-02:
+      #
+      #   broad pass          64 screenshots     5m50s
+      #   deep pass          504 screenshots    47m10s
+      #   chain failures      48 screenshots     3m27s
+      #   forced colours and zoom                  30s
+      #   whole job                            59m57s of a 100 minute cap
+      #
+      # This comment said two and a half minutes and sixteen. The deep pass has
+      # since grown to roughly three times that, it is now 78 percent of the
+      # job, and the job sits at 60 of its 100 minutes. Nothing is failing. The
+      # point of writing the real numbers down is that the next person to add a
+      # route, a state or a theme to the deep pass is the one who meets the
+      # cap, and without this they meet it as a timeout forty-seven minutes
+      # into a run rather than as a number they could have added up first.
+      #
+      # The deep pass is routes multiplied by states multiplied by themes
+      # multiplied by widths. Adding one route to it currently costs about
+      # seven minutes. If it needs to grow again, split it the way it was split
+      # from the broad pass in the first place, rather than raising the cap:
+      # a gate that cannot finish protects nothing, which is the reason the
+      # split exists.
       - name: Every route renders and finishes, at a phone and a desktop width
         working-directory: scripts/universe/visual-qa
         run: >-
@@ -205,6 +252,25 @@ jobs:
         run: >-
           node capture.mjs --base=http://127.0.0.1:$GATEWAY_PORT --out=./artifacts
           --routes=graphs,mining,protocols,home,blocks,tx,address --viewports=320,768,1440
+
+      # The chain failure states have never run here. They are scoped to the
+      # chain routes, so the pass above never reaches them, and they were
+      # reviewed by hand instead: a chain that cannot be reached, one that is
+      # behind, one whose node is caught up while its protocol side is not, one
+      # that withholds readiness without saying why, and an object that simply
+      # is not there. Those five are the states the whole status vocabulary
+      # exists for, and the one set nothing measured.
+      #
+      # Two themes and two widths rather than three and three, because the cost
+      # has to fit beside the pass above and this is the part of the matrix
+      # that catches wording and state, not layout.
+      - name: A chain that cannot answer says so, in every failure state
+        working-directory: scripts/universe/visual-qa
+        run: >-
+          node capture.mjs --base=http://127.0.0.1:$GATEWAY_PORT --out=./artifacts-chain-states
+          --routes=dogecoin,dogecoin-drc20,zcash,zcash-block
+          --states=chain-authority-down,chain-behind,chain-not-ready-protocols,chain-not-ready-unexplained,chain-object-missing
+          --themes=default,dark --viewports=375,1440
 
       - name: Forced colours and 200 percent zoom
         working-directory: scripts/universe/visual-qa
@@ -218,4 +284,5 @@ jobs:
           path: |
             scripts/universe/visual-qa/artifacts
             scripts/universe/visual-qa/artifacts-broad
+            scripts/universe/visual-qa/artifacts-chain-states
           retention-days: 30

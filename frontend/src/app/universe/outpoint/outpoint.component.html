@@ -89,7 +89,7 @@
               </div>
               <div class="asset-meta">
                 <span class="asset-kind">{{ position.asset?.assetKind }}</span>
-                <span class="asset-state">{{ position.state }}</span>
+                <span class="universe-chip" [ngClass]="'state-' + positionTone(position.state)">{{ position.state }}</span>
               </div>
               <ul class="notable-sats" *ngIf="position.notableSats?.length">
                 <li *ngFor="let sat of position.notableSats">

@@ -35,6 +35,8 @@ import { fileURLToPath } from 'node:url';
 import AxeBuilder from '@axe-core/playwright';
 import * as playwright from 'playwright';
 import { addressFixtures, detailFixtures, fixtures, sampleIds, stateOverrides } from './fixtures.mjs';
+import { chainFixtures, chainSampleIds, chainStateOverrides, chainStateScope } from './chain-fixtures.mjs';
+import { assetFixtures, assetSampleIds, savedStorageSeed } from './asset-fixtures.mjs';
 import { contrastProbe } from './contrast-probe.mjs';
 import { progressProbe } from './progress-probe.mjs';
 
@@ -66,6 +68,58 @@ const ROUTES = [
   { id: 'mining', path: '/mining', name: 'Mining dashboard' },
   { id: 'docs', path: '/docs/api', name: 'API docs' },
   { id: 'source', path: '/source', name: 'Source and licenses' },
+
+  // The chain-domain routes. They shipped with no coverage here at all, which
+  // is how eleven routes reached production without one screenshot, contrast
+  // probe or unfinished-page check ever looking at them.
+  { id: 'dogecoin', path: '/dogecoin', name: 'Dogecoin overview' },
+  { id: 'dogecoin-mempool', path: '/dogecoin/mempool', name: 'Dogecoin pending' },
+  { id: 'dogecoin-tx', path: `/dogecoin/tx/${chainSampleIds.DOGE_TXID}`, name: 'Dogecoin transaction' },
+  { id: 'dogecoin-block', path: `/dogecoin/block/${chainSampleIds.DOGE_BLOCK}`, name: 'Dogecoin block' },
+  { id: 'dogecoin-address', path: `/dogecoin/address/${chainSampleIds.DOGE_ADDRESS}`, name: 'Dogecoin address' },
+  { id: 'dogecoin-protocols', path: '/dogecoin/protocols', name: 'Dogecoin protocols' },
+  { id: 'dogecoin-drc20', path: '/dogecoin/protocols/drc20', name: 'DRC-20 assets' },
+  { id: 'zcash', path: '/zcash', name: 'Zcash overview' },
+  { id: 'zcash-mempool', path: '/zcash/mempool', name: 'Zcash pending' },
+  { id: 'zcash-tx', path: `/zcash/tx/${chainSampleIds.ZEC_TXID}`, name: 'Zcash transaction' },
+  // Zcash's block response is not Dogecoin's, and nothing here had ever asked
+  // for one. It reached production as a generic field table.
+  { id: 'zcash-block', path: `/zcash/block/${chainSampleIds.ZEC_BLOCK}`, name: 'Zcash block' },
+  { id: 'zcash-address', path: `/zcash/address/${chainSampleIds.ZEC_ADDRESS}`, name: 'Zcash address' },
+  { id: 'zcash-protocols', path: '/zcash/protocols', name: 'Zcash protocols' },
+
+  // Universe-authored routes that had no coverage either. The saved page is
+  // seeded through localStorage below, because its state was never a request.
+  { id: 'outpoint', path: `/outpoint/${assetSampleIds.OUTPOINT_TXID}/1`, name: 'Output' },
+  { id: 'inscription', path: `/inscription/${assetSampleIds.INSCRIPTION_ID}`, name: 'Inscription' },
+  { id: 'rune', path: `/rune/${assetSampleIds.RUNE_NAME}`, name: 'Rune' },
+  { id: 'sat', path: `/sat/${assetSampleIds.SAT_NUMBER}`, name: 'Sat' },
+  { id: 'saved', path: '/saved', name: 'Saved in this browser' },
+
+  // The chain switcher, open. Nothing here had ever opened a menu, so the one
+  // surface that decides which chain a visitor is looking at was measured only
+  // while closed. It was collapsed: the header's own `.dropdown-item` rule,
+  // written for the network rows, outranked the switcher's two-column grid and
+  // ran each chain's name, state and detail into a single line.
+  {
+    id: 'chain-menu',
+    path: '/',
+    name: 'Chain switcher, open',
+    open: '.chain-toggle',
+    // An open menu deliberately covers what is under it. axe reads a covered
+    // control as a target too small to hit, and at 320 and 375 it reads the
+    // search field behind this menu that way. That is a real measurement of a
+    // state that is not the one the rule is about: the field is not a target
+    // while a dismissible menu is over it, and the same field at the same
+    // widths passes on the `home` route, which is this path with the menu
+    // closed and is measured in full in every run.
+    //
+    // So obscuring findings on this route are reported on their own line
+    // rather than counted, and every other rule still fails the run. The line
+    // prints what was obscured, because a rule that is quietly not counted is
+    // a rule nobody sees again.
+    overlayObscures: true,
+  },
 ];
 
 const VIEWPORTS = [
@@ -95,7 +149,15 @@ const SETTLE_DEADLINE_MS = 15_000;
  */
 const FAILURE_SETTLE_DEADLINE_MS = 4_000;
 
-const STATES = ['populated', ...Object.keys(stateOverrides)];
+const ALL_OVERRIDES = { ...stateOverrides, ...chainStateOverrides };
+
+const STATES = ['populated', ...Object.keys(ALL_OVERRIDES)];
+
+/** True when a state is worth measuring on a route. Unscoped states run everywhere. */
+function stateApplies(state, routeId) {
+  const scope = chainStateScope[state];
+  return !scope || scope.some((prefix) => routeId === prefix || routeId.startsWith(`${prefix}-`));
+}
 
 function pick(list, key, idKey = 'id') {
   if (!args[key]) return list;
@@ -105,8 +167,8 @@ function pick(list, key, idKey = 'id') {
 
 /** Answer every API call from fixtures, applying the state's overrides. */
 async function installFixtures(context, state) {
-  const overrides = stateOverrides[state] || {};
-  const table = { ...fixtures, ...detailFixtures, ...addressFixtures };
+  const overrides = ALL_OVERRIDES[state] || {};
+  const table = { ...fixtures, ...detailFixtures, ...addressFixtures, ...chainFixtures, ...assetFixtures };
 
   await context.route('**/api/**', async (route) => {
     const url = new URL(route.request().url());
@@ -169,6 +231,42 @@ async function installFixtures(context, state) {
       }
     });
     push();
+  });
+
+  // The chain pages open their own socket, and nothing answered it: every
+  // chain screenshot carried a failed-handshake console error, which is noise
+  // that would hide a real one, and the live path itself went unexercised.
+  //
+  // The client subscribes to three channels at once and expects one envelope
+  // per channel. Sequence numbers stay fixed so a rerun produces the same
+  // screenshot; the client only uses them to resume after a drop.
+  await context.routeWebSocket('**/api/v1/universe/ws', (ws) => {
+    if (down) return; // connected but silent, which is the reconnecting state
+    ws.onMessage((raw) => {
+      let message;
+      try { message = JSON.parse(String(raw)); } catch { return; }
+      if (message?.type !== 'subscribe' || !Array.isArray(message.subscriptions)) {
+        return;
+      }
+      for (const subscription of message.subscriptions) {
+        const chain = subscription?.chain;
+        const channel = subscription?.channel;
+        if (!chain || !channel) continue;
+        ws.send(JSON.stringify({
+          schemaVersion: 'universe-websocket-v1',
+          chain,
+          network: 'mainnet',
+          channel,
+          snapshotId: 'snap-4812',
+          sequenceAtomic: '148201',
+          observedAt: '2026-08-29T05:03:00.000Z',
+          tip: chainFixtures[`/api/v1/${chain}/status`]?.tip ?? null,
+          reorg: null,
+          completeness: 'complete',
+          data: {},
+        }));
+      }
+    });
   });
 }
 
@@ -233,7 +331,16 @@ function socketState(state) {
   };
 }
 
+/** The hashed bundle names an index.html points at, as one comparable string. */
+function bundleIdentity(html) {
+  return [...html.matchAll(/(?:runtime|main|polyfills)\.[a-f0-9]{8,}\.js/g)]
+    .map((match) => match[0])
+    .sort()
+    .join(' ');
+}
+
 async function run() {
+  let bundleAtStart = '';
   const routes = pick(ROUTES, 'routes');
   const viewports = pick(VIEWPORTS, 'viewports');
   const themes = pick(THEMES.map((id) => ({ id })), 'themes').map((t) => t.id);
@@ -261,9 +368,11 @@ async function run() {
     if (!/(runtime|main)\.[a-f0-9]{8,}\.js/.test(html)) {
       throw new Error(`${BASE} served no hashed application bundle; the build output looks incomplete.`);
     }
+    bundleAtStart = bundleIdentity(html);
   }
 
   mkdirSync(OUT, { recursive: true });
+
   // The Lens is drawn with WebGL. Headless Chromium has no GPU, so without a
   // software rasteriser the product's signature view is a grey rectangle in
   // every screenshot and the one thing worth reviewing goes unreviewed.
@@ -284,9 +393,15 @@ async function run() {
           reducedMotion: args.reducedMotion ? 'reduce' : 'no-preference',
         });
         await installFixtures(context, state);
-        await context.addInitScript((t) => {
+        await context.addInitScript(([t, saved]) => {
           try {
             localStorage.setItem('theme-preference', t);
+            // The saved page has an empty face and a populated one, and only
+            // the empty one appears without this. Its state lives in the
+            // browser, so the fixture goes in the browser.
+            for (const [key, value] of Object.entries(saved)) {
+              localStorage.setItem(key, JSON.stringify(value));
+            }
           } catch { /* private mode: the default theme is fine */ }
 
           // A WebGL drawing buffer is cleared once the frame is presented, so
@@ -301,18 +416,56 @@ async function run() {
             }
             return getContext.call(this, type, attributes);
           };
-        }, theme);
+        }, [theme, savedStorageSeed]);
 
         for (const route of routes) {
+          if (!stateApplies(state, route.id)) continue;
           const page = await context.newPage();
           const consoleErrors = [];
-          page.on('console', (m) => { if (m.type() === 'error') consoleErrors.push(m.text()); });
+          const expectedFetchErrors = [];
+          // A state that tells a request to fail gets exactly that, and the
+          // browser writes its own line about it. That line is the fixture
+          // speaking, not the application: the point of `chain-authority-down`
+          // is a 503, and the page handling it correctly still produces one
+          // console entry per refused request. Counted as a failure, the five
+          // states the status vocabulary exists for could never run here at
+          // all, which is why they never have.
+          //
+          // Narrow on purpose. Only on a state that declares a `status`
+          // override, only for the browser's own resource line, and every one
+          // is printed. Anything the application throws still counts, and so
+          // does a resource failure on a state that asked for none.
+          const stateFailsRequests = Object.values(ALL_OVERRIDES[state] ?? {})
+            .some((override) => override && override.status);
+          const isRefusedFetch = (textLine) =>
+            stateFailsRequests
+            && /Failed to load resource: the server responded with a status of \d+/.test(textLine);
+          page.on('console', (m) => {
+            if (m.type() !== 'error') return;
+            (isRefusedFetch(m.text()) ? expectedFetchErrors : consoleErrors).push(m.text());
+          });
           page.on('pageerror', (e) => consoleErrors.push(String(e)));
 
           const label = `${route.id}__${state}__${theme}__${viewport.id}`;
           try {
             await page.goto(BASE + route.path, { waitUntil: 'domcontentloaded', timeout: 45_000 });
             await page.waitForTimeout(state === 'loading' ? 1_200 : 2_600);
+
+            // A route may name a control to open before anything is measured.
+            // A menu that never opens is a menu nothing checks. When the
+            // control is genuinely absent in this state, that is recorded as a
+            // navigation failure rather than passed over, because a route that
+            // measured the closed page instead is not the route that was asked
+            // for.
+            if (route.open) {
+              const control = page.locator(route.open).first();
+              if (await control.count()) {
+                await control.click();
+                await page.waitForTimeout(400);
+              } else if (state === 'populated') {
+                throw new Error(`${route.open} is not on the page, so this route measured the closed page instead of the open one`);
+              }
+            }
 
             const overflow = await page.evaluate(() => {
               const d = document.documentElement;
@@ -327,6 +480,7 @@ async function run() {
             );
 
             let violations = [];
+            const obscured = [];
             if (!args.skipAxe) {
               try {
                 const axe = await new AxeBuilder({ page })
@@ -345,6 +499,22 @@ async function run() {
                     detail: (n.any?.[0]?.message ?? n.failureSummary ?? '').slice(0, 200),
                   })),
                 }));
+
+                // Split off what an open overlay is expected to obscure. Only
+                // on a route that declares it opens one, and only for nodes
+                // axe itself says are obscured; a target that is simply too
+                // small still fails here as it does everywhere else.
+                if (route.overlayObscures) {
+                  for (const violation of violations) {
+                    if (violation.id !== 'target-size') continue;
+                    const covered = violation.nodes.filter((n) => /obscured/i.test(n.detail));
+                    if (!covered.length) continue;
+                    obscured.push({ id: violation.id, nodes: covered });
+                    violation.nodes = violation.nodes.filter((n) => !/obscured/i.test(n.detail));
+                    violation.count -= covered.length;
+                  }
+                  violations = violations.filter((violation) => violation.nodes.length > 0);
+                }
               } catch (e) {
                 violations = [{ id: 'axe-failed', impact: 'unknown', count: 0, help: String(e).slice(0, 200), sample: '' }];
               }
@@ -414,7 +584,7 @@ async function run() {
 
             findings.push({
               route: route.id, routeName: route.name, state, theme, viewport: viewport.id,
-              overflowBy, consoleErrors, brokenImages, violations, contrast, progress, settledAfterMs,
+              overflowBy, consoleErrors, expectedFetchErrors, brokenImages, violations, obscured, contrast, progress, settledAfterMs,
             });
           } catch (error) {
             // A server that has gone away is not a page that failed. Reporting
@@ -446,11 +616,54 @@ async function run() {
 
   await browser.close();
 
+  // The build must not have been rewritten underneath the run.
+  //
+  // A server that goes away entirely is already caught mid-run, above, where
+  // a refused connection ends the run rather than logging a hundred identical
+  // page failures. This is the case that guard cannot see: a server that keeps
+  // answering while the files under it are replaced.
+  //
+  // An Angular production build empties its output directory before writing
+  // it, so a rebuild during a matrix leaves a window where index.html and the
+  // lazy chunks are simply absent. The pages served in that window have no
+  // title and no lang attribute, which axe reports as two serious violations,
+  // and their chunks 404. Every one of those findings is about the build being
+  // replaced rather than about the interface, and nothing in the output said
+  // so: eleven of them were indistinguishable from real ones until the cause
+  // was found by hand.
+  //
+  // This is the same reasoning as the server-identity check at the start. That
+  // one proves the right thing was being measured; this one proves it stayed
+  // the right thing for the whole run.
+  {
+    const after = await fetch(BASE, { redirect: 'follow' })
+      .then((response) => (response.ok ? response.text() : ''))
+      .catch(() => '');
+    const bundleAtEnd = bundleIdentity(after);
+    if (bundleAtStart && bundleAtEnd && bundleAtEnd !== bundleAtStart) {
+      throw new Error(
+        [
+          'the build changed while the matrix was running, so these results',
+          'measure two different builds and some of them measure neither.',
+          `  at the start: ${bundleAtStart}`,
+          `  at the end:   ${bundleAtEnd}`,
+          'Rebuild, then run the matrix with nothing else writing to the output.',
+        ].join('\n'),
+      );
+    }
+  }
+
   const report = { browser: BROWSER, base: BASE, screenshots: shots, findings };
   writeFileSync(join(OUT, `report-${BROWSER}.json`), JSON.stringify(report, null, 2));
-  const stuck = summarise(report);
+  const { blocking: stuck, contrastNotMeasured } = summarise(report);
   if (stuck.length > 0) {
     console.error(`${stuck.length} page(s) never finished loading. This is the failure that shipped last time, so it fails the run.`);
+    process.exitCode = 1;
+  }
+  if (contrastNotMeasured.length > 0) {
+    console.error(
+      `${contrastNotMeasured.length} page(s) had no contrast measurement taken, so this run cannot claim their contrast is correct.`,
+    );
     process.exitCode = 1;
   }
 }
@@ -474,7 +687,18 @@ async function run() {
  * transaction and address joined once their waiting and failure states said
  * something instead of holding a bare placeholder.
  */
-export const GATED_ROUTES = new Set(['graphs', 'mining', 'protocols', 'home', 'blocks', 'tx', 'address']);
+export const GATED_ROUTES = new Set([
+  'graphs', 'mining', 'protocols', 'home', 'blocks', 'tx', 'address',
+  // The chain routes join once their status rail, their failure copy and their
+  // empty state all say something. Every one of them reaches a terminal state:
+  // the rail renders all five readings even with no status at all, and a
+  // failed lookup prints why rather than waiting.
+  'dogecoin', 'dogecoin-mempool', 'dogecoin-tx', 'dogecoin-block',
+  'dogecoin-address', 'dogecoin-protocols', 'dogecoin-drc20',
+  'zcash', 'zcash-mempool', 'zcash-tx', 'zcash-protocols',
+  // The single-asset pages and the local-state page, for the same reason.
+  'outpoint', 'inscription', 'rune', 'sat', 'saved',
+]);
 
 /**
  * Fixtures that hold a request open on purpose, to photograph a wait.
@@ -549,12 +773,30 @@ function summarise(report) {
 
   const contrastFailures = [];
   const blankCanvases = [];
+  // Pages where the contrast probe did not run at all.
+  //
+  // Its failure path records an error and an empty result, and an empty result
+  // is what a clean page produces too, so both printed "contrast failures: 0".
+  // A gate that measures nothing and a gate that measures everything and finds
+  // nothing wrong are not the same statement, and this is the one check here
+  // that an accessibility engine cannot make, so its silence is expensive.
+  const contrastNotMeasured = [];
+  // Pages where it ran and found nothing to measure. Legitimate on a page that
+  // is genuinely empty, so this is reported rather than failed, but it is not
+  // evidence of contrast being correct either.
+  const contrastNoSamples = [];
   for (const f of report.findings) {
+    const where = { route: f.route, state: f.state, theme: f.theme, viewport: f.viewport };
+    if (f.contrast?.error) {
+      contrastNotMeasured.push({ ...where, error: f.contrast.error });
+    } else if (f.contrast && (f.contrast.sampled ?? 0) === 0 && !f.error) {
+      contrastNoSamples.push(where);
+    }
     for (const row of f.contrast?.text ?? []) {
-      contrastFailures.push({ ...row, route: f.route, state: f.state, theme: f.theme, viewport: f.viewport });
+      contrastFailures.push({ ...row, ...where });
     }
     for (const c of f.contrast?.canvas ?? []) {
-      if (c.blank) blankCanvases.push({ ...c, route: f.route, state: f.state, theme: f.theme, viewport: f.viewport });
+      if (c.blank) blankCanvases.push({ ...c, ...where });
     }
   }
   contrastFailures.sort((a, b) => a.ratio - b.ratio);
@@ -572,11 +814,43 @@ function summarise(report) {
   console.log(`\n=== ${report.browser} : ${report.screenshots} screenshots -> ${OUT}\n`);
   console.log(`horizontal overflow : ${overflow.length}`);
   console.log(`console errors      : ${errors.length}`);
+
+  // Printed, never counted. A state that asked a request to fail got one line
+  // per refusal, and a rule that is quietly not counted is a rule nobody sees.
+  const refused = report.findings.flatMap((f) =>
+    (f.expectedFetchErrors ?? []).map((line) => `${f.route}/${f.state} ${line}`),
+  );
+  if (refused.length) {
+    console.log(`refused by a failure fixture : ${refused.length}  (asked for, not counted)`);
+    for (const line of refused.slice(0, 8)) console.log(`    ${line}`);
+    if (refused.length > 8) console.log(`    ... and ${refused.length - 8} more`);
+  }
   console.log(`broken images       : ${images.length}`);
   console.log(`navigation failures : ${failed.length}`);
-  console.log(`a11y rules violated : ${byRule.size}\n`);
+  console.log(`a11y rules violated : ${byRule.size}`);
+
+  // Reported, never counted, and never silent. A route that opens a menu is
+  // measured with the menu open, so the controls beneath it read as obscured.
+  // Printing each one is what keeps this from becoming a rule nobody sees.
+  const covered = report.findings.flatMap((f) =>
+    (f.obscured ?? []).flatMap((v) =>
+      v.nodes.map((n) => `${f.route}@${f.viewport}/${f.theme} ${n.target}`),
+    ),
+  );
+  if (covered.length) {
+    console.log(`obscured by an open overlay : ${covered.length}  (expected, not counted)`);
+    for (const line of covered.slice(0, 12)) console.log(`    ${line}`);
+    if (covered.length > 12) console.log(`    ... and ${covered.length - 12} more`);
+  }
+  console.log('');
 
   console.log(`contrast failures   : ${contrastFailures.length}`);
+  if (contrastNotMeasured.length) {
+    console.log(`contrast NOT MEASURED: ${contrastNotMeasured.length}  (the probe threw; the zero above is not a result)`);
+  }
+  if (contrastNoSamples.length) {
+    console.log(`contrast no samples : ${contrastNoSamples.length}  (ran, found no text to measure)`);
+  }
   console.log(`blank canvases      : ${blankCanvases.length}`);
 
   if (contrastFailures.length) {
@@ -593,6 +867,14 @@ function summarise(report) {
     }
     if (contrastFailures.length > 40) {
       console.log(`  ... and ${contrastFailures.length - 40} more, see the report`);
+    }
+  }
+
+  if (contrastNotMeasured.length) {
+    console.log();
+    console.log('-- pages where the contrast probe did not run --');
+    for (const f of contrastNotMeasured.slice(0, 20)) {
+      console.log(`  ${f.route}/${f.state}/${f.theme}@${f.viewport}: ${f.error}`);
     }
   }
 
@@ -652,7 +934,7 @@ function summarise(report) {
     if (known.length > 40) console.log(`  ... and ${known.length - 40} more, see the report`);
   }
   console.log('');
-  return blocking;
+  return { blocking, contrastNotMeasured };
 }
 
 // Only drive browsers when this file is the program. Importing it, as the

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
+import { createServer, connect } from 'node:net';
 import { spawn } from 'node:child_process';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { dirname, join } from 'node:path';
@@ -21,15 +22,62 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const GATEWAY = join(HERE, 'gateway.mjs');
 const ROOT = join(HERE, '..', '..', 'frontend', 'dist', 'mempool', 'browser');
 
-// Each test takes its own pair of ports. Sharing them let a gateway from a
-// finished test still be listening when the next one started, and the next
-// test then measured the wrong process.
-let nextPort = 8794;
-function reservePorts() {
-  const gatewayPort = nextPort;
-  const upstreamPort = nextPort + 1;
-  nextPort += 2;
+// Each test takes its own pair of ports, and asks the operating system for
+// them rather than counting from a fixed base.
+//
+// Sharing ports let a gateway from a finished test still be listening when the
+// next one started, and the next test then measured the wrong process. Counting
+// from 8794 has the same fault against anything outside this file: the test
+// asserts that nothing is listening on the upstream port, on a port it never
+// owned. On a runner where something else holds 8795 the connection is accepted
+// and then never answered, so instead of the instant ECONNREFUSED the gateway
+// retries on, the request waits. That is what happened on universe-runner-07:
+// the same assertion that takes six seconds locally gave up after 106 seconds.
+//
+// The visual matrix in this repository learned this already, and its workflow
+// step says so: a fixed port once had it measuring another job's build. Moving
+// this job onto the shared runner pool turned a rare collision into a likely
+// one, which is a good change finding an old fault rather than causing one.
+function freePort() {
+  const server = createServer();
+  server.listen(0, '127.0.0.1');
+  return new Promise((resolve, reject) => {
+    server.once('listening', () => {
+      const { port } = server.address();
+      server.close(() => resolve(port));
+    });
+    server.once('error', reject);
+  });
+}
+
+async function reservePorts() {
+  const [gatewayPort, upstreamPort] = await Promise.all([freePort(), freePort()]);
   return { gatewayPort, upstreamPort };
+}
+
+/**
+ * Refuse to measure a port this test does not own.
+ *
+ * "An upstream that is genuinely gone" is only a true premise if nothing is
+ * listening. If something is, the test is timing a stranger's service and
+ * whatever it concludes is about them.
+ */
+async function assertNothingIsListening(port) {
+  const refused = await new Promise((resolve) => {
+    const socket = connect({ host: '127.0.0.1', port });
+    const done = (answer) => {
+      socket.destroy();
+      resolve(answer);
+    };
+    socket.setTimeout(2_000);
+    socket.once('connect', () => done(false));
+    socket.once('timeout', () => done(false));
+    socket.once('error', (error) => done(error.code === 'ECONNREFUSED'));
+  });
+  assert.ok(
+    refused,
+    `port ${port} is not free: something answered or hung, so this test would be measuring it rather than the gateway`,
+  );
 }
 
 function startGateway({ gatewayPort, upstreamPort }) {
@@ -59,7 +107,7 @@ function ask(gatewayPort, path = '/api/v1/backend-info') {
 }
 
 test('a request waits for an upstream that is restarting, rather than failing', async (t) => {
-  const ports = reservePorts();
+  const ports = await reservePorts();
   const gateway = startGateway(ports);
   t.after(() => gateway.kill());
   await sleep(1200);
@@ -80,7 +128,8 @@ test('a request waits for an upstream that is restarting, rather than failing', 
 });
 
 test('an upstream that is genuinely gone is still reported, and promptly', async (t) => {
-  const ports = reservePorts();
+  const ports = await reservePorts();
+  await assertNothingIsListening(ports.upstreamPort);
   const gateway = startGateway(ports);
   t.after(() => gateway.kill());
   await sleep(1200);
@@ -96,7 +145,7 @@ test('a reader who leaves mid-retry does not take the gateway down', async (t) =
   // This crashed the gateway in CI. With no upstream listening, a request
   // enters the retry loop; the client then goes away, and the write that
   // follows throws from a timer callback where there is no request to fail.
-  const ports = reservePorts();
+  const ports = await reservePorts();
   const gateway = startGateway(ports);
   t.after(() => gateway.kill());
   await sleep(1200);

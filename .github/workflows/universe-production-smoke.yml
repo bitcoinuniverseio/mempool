@@ -30,7 +30,10 @@ jobs:
   smoke:
     name: Live origin answers with real content
     runs-on: [self-hosted, linux-ultra]
-    timeout-minutes: 10
+    # Ten was for a job that only read the API. It now installs the browser
+    # harness and loads two pages in a real browser, which is the only way to
+    # see what the origin renders.
+    timeout-minutes: 25
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -42,3 +45,32 @@ jobs:
 
       - name: Every advertised feature has routes, data, and a matching release
         run: node scripts/universe/synthetic-check.mjs "${{ github.event.inputs.origin || 'https://explorer.bitcoinuniverse.io' }}"
+
+      # The step above reads the API. It cannot see what the origin renders, and
+      # for as long as it could not, production served a chain dashboard whose
+      # status line ran six facts together behind a raw snapshot identifier,
+      # never said why Dogecoin was degraded, and published "Release
+      # development" to the public, while every check here passed. The API was
+      # answering correctly the whole time; the origin was serving an older
+      # build than anything measured it.
+      - name: Install the visual QA harness
+        working-directory: scripts/universe/visual-qa
+        run: npm ci
+
+      - name: The gate can still tell a bad page from a good one
+        working-directory: scripts/universe/visual-qa
+        run: node --test chain-page-audit.test.mjs
+
+      - name: The public chain pages say what the chain documents say
+        working-directory: scripts/universe/visual-qa
+        run: >-
+          node chain-page-smoke.mjs
+          --origin="${{ github.event.inputs.origin || 'https://explorer.bitcoinuniverse.io' }}"
+
+      - name: Keep what the chain pages looked like
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: universe-chain-page-smoke
+          path: scripts/universe/visual-qa/artifacts-chain-smoke
+          retention-days: 30

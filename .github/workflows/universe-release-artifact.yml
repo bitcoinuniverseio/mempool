@@ -74,6 +74,9 @@ jobs:
       - name: No em dash in what the build actually ships
         run: node scripts/universe/check-text.mjs frontend/dist
 
+      - name: The component identity check can still fail
+        run: node --test scripts/universe/release-manifest.test.mjs
+
       # release.sh reads the frontend from frontend/build, the backend from
       # backend/dist, and the gateway from scripts/universe. node_modules and
       # the compiled gbt module are not packed: install hard-links them from the
@@ -102,11 +105,19 @@ jobs:
           mkdir -p "$stage/production"
           cp -a production/linux "$stage/production/linux"
           test -f "$stage/production/linux/universe-explorer-gateway.socket"
+          # What this release is, written down once and carried with it. The
+          # frontend, the explorer backend and the gateway in this artifact are
+          # one commit, and stating so is what makes an origin serving two of
+          # them from different releases a detectable fault rather than an open
+          # question. release.sh refuses an install whose manifest names a
+          # different commit, and the cutover holds the live origin to it.
+          node scripts/universe/release-manifest.mjs emit --commit='${{ steps.sha.outputs.sha }}' --out="$stage/RELEASE-MANIFEST.json"
+          test -f "$stage/RELEASE-MANIFEST.json"
           test -f "$stage/backend/dist/index.js"
           test -f "$stage/frontend/build/index.html"
           test -f "$stage/scripts/universe/gateway.mjs"
           out="$PWD/mempool-$sha.tar.gz"
-          tar -czf "$out" -C "$stage" backend frontend scripts production
+          tar -czf "$out" -C "$stage" backend frontend scripts production RELEASE-MANIFEST.json
           sha256sum "$out" | tee "$out.sha256"
           printf 'name=mempool-%s\n' "$sha" >> "$GITHUB_OUTPUT"
 
