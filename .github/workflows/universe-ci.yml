@@ -408,7 +408,7 @@ jobs:
   # two steps back in the one above, which is where they belong.
   mobile-engines:
     name: WebKit and Firefox
-    runs-on: ubuntu-latest
+    runs-on: runs-on=${{ github.run_id }}-mobile_engines/runner=universe-hosted/cpu=2+8/env=production
     timeout-minutes: 45
     steps:
       - name: Checkout

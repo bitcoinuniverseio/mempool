@@ -4,7 +4,7 @@ on: [workflow_dispatch]
 
 jobs:
   print-backend-sha:
-    runs-on: mempool-ci
+    runs-on: runs-on=${{ github.run_id }}-print_backend_sha/runner=universe-hosted/cpu=2+8/env=production
     name: Print backend hashes
     steps:
       - name: Checkout
