@@ -32,6 +32,20 @@ import {
 export const UNIVERSE_OUTPOINT_BATCH_LIMIT = 50;
 export const UNIVERSE_TRANSACTION_BATCH_LIMIT = 25;
 
+/**
+ * How many pending transactions each chain will return in one request.
+ *
+ * The two chains do not share a ceiling, and asking for more than a chain
+ * allows is refused as a bad request rather than trimmed. Asking Zcash for
+ * four hundred emptied its lens and its arrivals list in production while
+ * every fixture answered whatever it was asked, so the bound is enforced
+ * here, once, where the request is built.
+ */
+export const CHAIN_MEMPOOL_LIMIT: Record<Exclude<ExplorerChain, 'bitcoin'>, number> = {
+  dogecoin: 1000,
+  zcash: 200,
+};
+
 @Injectable({
   providedIn: 'root'
 })
@@ -166,7 +180,8 @@ export class UniverseApiService {
 
   getChainMempool$(chain: Exclude<ExplorerChain, 'bitcoin'>, limit = 100): Observable<ChainExplorerPayload> {
     return this.httpClient.get<ChainExplorerPayload>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/mempool?network=mainnet&limit=' + limit
+      this.apiBaseUrl + '/api/v1/' + chain + '/mempool?network=mainnet&limit='
+        + Math.min(Math.max(1, Math.floor(limit)), CHAIN_MEMPOOL_LIMIT[chain])
     );
   }
 
