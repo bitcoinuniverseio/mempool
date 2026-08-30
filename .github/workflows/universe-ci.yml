@@ -71,6 +71,9 @@ jobs:
       - name: Gateway routing
         run: node --test scripts/universe/gateway.test.mjs
 
+      - name: The component identity check can still fail
+        run: node --test scripts/universe/release-manifest.test.mjs
+
       - name: The gateway bridges an upstream restart rather than failing
         run: node --test scripts/universe/gateway-restart.test.mjs
 
@@ -173,6 +176,14 @@ jobs:
       - name: The unfinished-page gate fires on the states that shipped
         working-directory: scripts/universe/visual-qa
         run: node --test progress-gate.test.mjs
+
+      # The public chain page gate, checked against the states it exists for.
+      # It runs against the live origin rather than this build, so nothing in
+      # this job exercises it, and a gate that has only ever passed has not
+      # shown it can fail. Every case it covers shipped past a green suite.
+      - name: The public chain page gate fires on the states that shipped
+        working-directory: scripts/universe/visual-qa
+        run: node --test chain-page-audit.test.mjs
 
       # A fixed port here once measured another job's build: two runners share
       # a host, the second gateway crashed on the taken port behind "&", the
