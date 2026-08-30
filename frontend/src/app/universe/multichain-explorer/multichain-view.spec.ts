@@ -348,7 +348,7 @@ describe('readCapabilities', () => {
   it('lists every read, marking the ones the chain does not offer', () => {
     const reads = readCapabilities(capability());
     expect(reads.map((r) => r.id)).toEqual([
-      'transaction', 'block', 'address', 'outpoint', 'feeEstimates', 'projectedBlocks',
+      'transaction', 'block', 'address', 'outpoint', 'feeEstimates', 'projectedBlocks', 'candidateBuckets',
     ]);
     expect(reads.find((r) => r.id === 'projectedBlocks')?.state).toBe('not-offered');
     expect(reads.find((r) => r.id === 'transaction')?.state).toBe('offered');

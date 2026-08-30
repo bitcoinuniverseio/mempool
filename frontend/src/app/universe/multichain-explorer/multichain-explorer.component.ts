@@ -73,6 +73,13 @@ import {
   readDuneAssetList,
 } from '@app/universe/multichain-explorer/dune-assets';
 import {
+  CandidateBucketsReading,
+  CandidateCubeReading,
+  cubeGradient,
+  readCandidateBuckets,
+} from '@app/universe/multichain-explorer/candidate-buckets';
+import { ThemeService } from '@app/services/theme.service';
+import {
   Observable,
   Subject,
   catchError,
@@ -126,6 +133,8 @@ interface ExplorerViewModel {
   readonly duneAsset: DuneAssetReading | null;
   /** A page of dunes, each row carrying its own divisibility. */
   readonly duneList: DuneAssetListReading | null;
+  /** The pending set grouped under this chain's own fee rules. */
+  readonly buckets: CandidateBucketsReading | null;
   readonly emptyList: EmptyListReading | null;
   readonly facts: readonly Fact[];
   /** True when the page is showing a response it has no purpose-built reading for. */
@@ -223,6 +232,7 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
     private readonly live: UniverseWebsocketService,
     private readonly local: UniverseLocalService,
     private readonly seo: SeoService,
+    private readonly theme: ThemeService,
     private readonly changes: ChangeDetectorRef
   ) {
     this.chain = this.chainFromUrl(router.url);
@@ -272,10 +282,24 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
                   of({ payload: null, error: this.errorMessage(error) })
                 )
               ),
+              // The bucket view beside the pending list. Its failure is not
+              // the page's failure: the list stands on its own, so a bucket
+              // request that cannot answer simply renders no cubes.
+              context.page === 'mempool'
+                ? this.api.getChainCandidateBuckets$(this.chain).pipe(
+                    catchError(() => of(null))
+                  )
+                : of(null),
             ])
           ),
-          map(([status, result]): ExplorerViewModel =>
-            this.viewModel(status.capability, status.error, result.payload, result.error)
+          map(([status, result, bucketsPayload]): ExplorerViewModel =>
+            this.viewModel(
+              status.capability,
+              status.error,
+              result.payload,
+              result.error,
+              bucketsPayload
+            )
           )
         );
       }),
@@ -292,7 +316,8 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
     capability: ChainCapabilityEnvelope | null,
     capabilityError: string | null,
     payload: ChainExplorerPayload | null,
-    payloadError: string | null
+    payloadError: string | null,
+    bucketsPayload: ChainExplorerPayload | null = null
   ): ExplorerViewModel {
     const shape = classifyPayload(payload);
     const transaction = payload && shape === 'transaction' ? readTransaction(payload, this.profile) : null;
@@ -356,6 +381,13 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
       rulesetList,
       duneAsset,
       duneList,
+      buckets: bucketsPayload
+        ? readCandidateBuckets(
+            bucketsPayload,
+            this.profile.precision,
+            this.ticker
+          )
+        : null,
       emptyList:
         transactionList || collection || rulesetList || duneList
           ? null
@@ -487,6 +519,11 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
       return false;
     }
     return list.shownCount < Number(list.totalExact);
+  }
+
+  /** The cube's background, from its own quantiles and the theme ramp. */
+  cubeBackground(cube: CandidateCubeReading): string {
+    return cubeGradient(cube, this.theme.mempoolFeeColors);
   }
 
   /** True when the authority reports more dunes than this page shows. */

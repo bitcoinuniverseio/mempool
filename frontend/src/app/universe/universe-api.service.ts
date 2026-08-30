@@ -164,6 +164,12 @@ export class UniverseApiService {
     );
   }
 
+  getChainCandidateBuckets$(chain: Exclude<ExplorerChain, 'bitcoin'>): Observable<ChainExplorerPayload> {
+    return this.httpClient.get<ChainExplorerPayload>(
+      this.apiBaseUrl + '/api/v1/' + chain + '/candidate-buckets?network=mainnet'
+    );
+  }
+
   getChainTransaction$(chain: Exclude<ExplorerChain, 'bitcoin'>, txid: string): Observable<ChainExplorerPayload> {
     return this.httpClient.get<ChainExplorerPayload>(
       this.apiBaseUrl + '/api/v1/' + chain + '/tx/' + encodeURIComponent(txid) + '?network=mainnet'

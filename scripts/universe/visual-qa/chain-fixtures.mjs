@@ -652,6 +652,81 @@ export const chainFixtures = {
   [`/api/v1/dogecoin/protocols/dunes/${DOGE_DUNE_ID}`]: dogeDuneEnvelope({
     dune: dogeDune('SUCH•WOW•DUNE', DOGE_DUNE_ID),
   }),
+
+  // The pending set grouped under each chain's own fee rules. Dogecoin's is
+  // an ordering per kilobyte with an overflow bucket holding what could not
+  // be priced; Zcash's are ZIP-317 tiers with no ordering claimed.
+  '/api/v1/dogecoin/candidate-buckets': {
+    schemaVersion: 'universe-candidate-buckets-v1',
+    chain: 'dogecoin',
+    network: 'mainnet',
+    snapshotId: 'dogecoin-mainnet-buckets',
+    sequenceAtomic: '19',
+    observedAt: new Date(Date.now() - 9_000).toISOString(),
+    tip: { heightAtomic: '5900001', blockHash: DOGE_BLOCK, observedAt: new Date(Date.now() - 9_000).toISOString() },
+    completeness: 'partial',
+    semantics: 'ordered-by-fee-policy',
+    feeModel: { kind: 'fee-per-kilobyte', unit: 'koinu/kB', minRelayFeeAtomicPerKb: '100000' },
+    capacity: { maxBlockSizeBytesAtomic: '1000000', minerSoftCapBytesAtomic: null, targetBlockSecondsAtomic: '60' },
+    buckets: [
+      {
+        indexAtomic: '0', txCountAtomic: '412', totalSizeBytesAtomic: '981220',
+        totalFeesAtomic: '10981220000', medianFeeDecimal: '11190476.19',
+        feeQuantilesDecimal: ['1000000', '2600000', '5200000', '8400000', '11100000', '16400000', '24800000', '104000000'],
+        fillDecimal: '0.981', overflow: false, unknownFeeCountAtomic: '0',
+      },
+      {
+        indexAtomic: '1', txCountAtomic: '188', totalSizeBytesAtomic: '412008',
+        totalFeesAtomic: '482008000', medianFeeDecimal: '1160000',
+        feeQuantilesDecimal: ['100000', '220000', '460000', '780000', '1160000', '1520000', '2100000', '2600000'],
+        fillDecimal: '0.412', overflow: false, unknownFeeCountAtomic: '0',
+      },
+      {
+        indexAtomic: '2', txCountAtomic: '44', totalSizeBytesAtomic: '96110',
+        totalFeesAtomic: null, medianFeeDecimal: '100000',
+        feeQuantilesDecimal: ['100000', '100000', '100000', '100000', '100000', '100000', '100000', '100000'],
+        fillDecimal: '0.096', overflow: true, unknownFeeCountAtomic: '9',
+      },
+    ],
+    disclosures: ['ordered-not-a-forecast', 'packs-consensus-limit', 'unknown-fees-not-placed'],
+  },
+  '/api/v1/zcash/candidate-buckets': {
+    schemaVersion: 'universe-candidate-buckets-v1',
+    chain: 'zcash',
+    network: 'mainnet',
+    snapshotId: 'zcash-buckets',
+    sequenceAtomic: '22105',
+    observedAt: new Date(Date.now() - 9_000).toISOString(),
+    tip: { heightAtomic: '3465589', blockHash: ZEC_BLOCK, observedAt: new Date(Date.now() - 9_000).toISOString() },
+    completeness: 'complete',
+    semantics: 'zip317-eligibility-tiers',
+    feeModel: { kind: 'zip-317', unit: 'zatoshi/logical-action', revisionAtomic: '1', marginalFeeAtomic: '5000', graceActionsAtomic: '2', unpaidActionLimitAtomic: null },
+    capacity: { maxBlockSizeBytesAtomic: '2000000', minerSoftCapBytesAtomic: null, targetBlockSecondsAtomic: '75' },
+    buckets: [
+      {
+        indexAtomic: '0', txCountAtomic: '9', totalSizeBytesAtomic: '18420',
+        totalFeesAtomic: '191500', medianFeeDecimal: '5000',
+        feeQuantilesDecimal: ['5000', '5000', '5000', '5000', '5000', '5250', '6100', '7500'],
+        fillDecimal: '0.009', overflow: false, unknownFeeCountAtomic: '0',
+        tier: 'paid', logicalActionsAtomic: '37',
+      },
+      {
+        indexAtomic: '1', txCountAtomic: '2', totalSizeBytesAtomic: '3100',
+        totalFeesAtomic: '4000', medianFeeDecimal: '666.666',
+        feeQuantilesDecimal: ['500', '666.666', null, null, null, null, null, null],
+        fillDecimal: '0.001', overflow: false, unknownFeeCountAtomic: '0',
+        tier: 'unpaid', logicalActionsAtomic: '6',
+      },
+      {
+        indexAtomic: '2', txCountAtomic: '1', totalSizeBytesAtomic: '2100',
+        totalFeesAtomic: null, medianFeeDecimal: null,
+        feeQuantilesDecimal: [null, null, null, null, null, null, null, null],
+        fillDecimal: '0.001', overflow: false, unknownFeeCountAtomic: '1',
+        tier: 'fee-unknown', logicalActionsAtomic: '4',
+      },
+    ],
+    disclosures: ['zip317-random-selection', 'shielded-fee-unknown', 'unpaid-admission-not-modeled'],
+  },
 };
 
 /**
@@ -707,6 +782,35 @@ export const chainStateOverrides = {
         transactions: [],
       },
     },
+    // The cubes beside an empty list must also be empty: a populated bucket
+    // view above an empty pending list is a disagreement production cannot
+    // produce, both come from the same snapshot.
+    '/api/v1/dogecoin/candidate-buckets': {
+      body: {
+        schemaVersion: 'universe-candidate-buckets-v1',
+        chain: 'dogecoin', network: 'mainnet',
+        snapshotId: 'dogecoin-partial-view', sequenceAtomic: '12',
+        observedAt: new Date(Date.now() - 11_000).toISOString(),
+        tip: null, completeness: 'partial',
+        semantics: 'ordered-by-fee-policy',
+        feeModel: { kind: 'fee-per-kilobyte', unit: 'koinu/kB', minRelayFeeAtomicPerKb: '100000' },
+        capacity: { maxBlockSizeBytesAtomic: '1000000', minerSoftCapBytesAtomic: null, targetBlockSecondsAtomic: '60' },
+        buckets: [], disclosures: ['ordered-not-a-forecast'],
+      },
+    },
+    '/api/v1/zcash/candidate-buckets': {
+      body: {
+        schemaVersion: 'universe-candidate-buckets-v1',
+        chain: 'zcash', network: 'mainnet',
+        snapshotId: 'zcash-ba6a8834d37e822b13a88c323255e2b3d2c6e68d', sequenceAtomic: '384',
+        observedAt: new Date(Date.now() - 11_000).toISOString(),
+        tip: null, completeness: 'complete',
+        semantics: 'zip317-eligibility-tiers',
+        feeModel: { kind: 'zip-317', unit: 'zatoshi/logical-action', revisionAtomic: '1', marginalFeeAtomic: '5000', graceActionsAtomic: '2', unpaidActionLimitAtomic: null },
+        capacity: { maxBlockSizeBytesAtomic: '2000000', minerSoftCapBytesAtomic: null, targetBlockSecondsAtomic: '75' },
+        buckets: [], disclosures: ['zip317-random-selection'],
+      },
+    },
   },
 
   // Both chain authorities are unreachable. The page must say the status is
@@ -721,6 +825,8 @@ export const chainStateOverrides = {
     '/api/v1/zcash/status': { status: 503 },
     '/api/v1/dogecoin/mempool': { status: 503 },
     '/api/v1/zcash/mempool': { status: 503 },
+    '/api/v1/dogecoin/candidate-buckets': { status: 503 },
+    '/api/v1/zcash/candidate-buckets': { status: 503 },
   },
 
   // The authority answers, and says it is behind. This is the state the whole
