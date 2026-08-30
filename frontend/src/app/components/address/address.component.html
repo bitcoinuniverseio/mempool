@@ -261,7 +261,12 @@
           @case ('backend-syncing') {
             <span i18n="address.error.index-syncing">Address history is still being indexed.</span>
             <br>
-            @if (addressIndex?.indexedTip !== null && addressIndex?.bitcoinCoreTip !== null) {
+            <!--
+              Both heights, or neither. A null height stays absent rather than
+              rendering as a zero, because "indexed through block 0" is a
+              claim, and it is a false one.
+            -->
+            @if (addressIndex && addressIndex.indexedTip !== null && addressIndex.bitcoinCoreTip !== null) {
               <i class="small" i18n="address.error.index-progress">Indexed through block {{ addressIndex.indexedTip }} of {{ addressIndex.bitcoinCoreTip }}.</i>
             } @else {
               <i class="small" i18n="address.error.index-syncing-detail">This page will work as soon as the index catches up with the chain.</i>
