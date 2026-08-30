@@ -2,18 +2,22 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Pipe, PipeTransform } from '@angular/core';
 
 /**
- * The parenthetical detail under a failed panel's headline.
+ * The parenthetical technical detail under a failed panel's headline.
  *
- * It used to read `${e.status} ${e.statusText}: ${errorMsg}` against whatever
- * it was handed. Two things went wrong with that. The null guard came after the
- * property access, so it could never run. And anything that is not an
- * `HttpErrorResponse` has no `status` and no `statusText`, so a timeout, an
- * aborted request, or a thrown `Error` printed the string
- * "(undefined undefined: )" to the reader. That is worse than printing nothing:
- * it looks like the product is broken rather than the request.
+ * It exists to help somebody report a problem, not to explain one. The
+ * explanation is the panel's own copy, written for the state it is actually
+ * in, and this line carries only what came back on the wire.
  *
- * So this now answers with a detail a person can act on, or with nothing at
- * all. It never invents a status it was not given.
+ * It used to include the status line's reason phrase, and that produced
+ * "(405 OK)" on the public address page. The number came from the backend and
+ * the word came from somewhere in the proxy chain, which is free to write
+ * whatever it likes there or nothing at all, and the two were pasted together
+ * and shown as if they were one authoritative statement. A reason phrase is
+ * not a diagnosis and is not from a source this page can vouch for, so it is
+ * no longer read at all.
+ *
+ * What is left is the number, which is ours, and the message the backend put
+ * in the body, which is also ours.
  */
 @Pipe({
   name: 'httpErrorMsg',
@@ -26,9 +30,8 @@ export class HttpErrorPipe implements PipeTransform {
     }
 
     const status = (e as HttpErrorResponse).status;
-    const statusText = ((e as HttpErrorResponse).statusText || '').trim();
     const body = (e as HttpErrorResponse).error;
-    const detail = (typeof body === 'string' ? body : body?.error ?? '').trim();
+    const detail = this.detailFrom(body);
 
     // status 0 is the browser refusing to tell us why, which is a network
     // failure, a blocked request, or a cancelled one. Reporting "0" helps
@@ -38,12 +41,41 @@ export class HttpErrorPipe implements PipeTransform {
     }
 
     if (typeof status === 'number' && status > 0) {
-      const head = statusText ? `${status} ${statusText}` : `${status}`;
-      return detail ? `${head}: ${detail}` : head;
+      return detail ? `HTTP ${status}: ${detail}` : `HTTP ${status}`;
     }
 
     // Not an HTTP failure. Whatever message it carries is better than a
     // fabricated status, and an empty string is better than both.
     return detail || (e as Error).message || '';
+  }
+
+  /**
+   * The detail the backend sent, and nothing the transport made up.
+   *
+   * A typed failure carries both a sentence and a name; the name is what the
+   * page branches on, and the sentence is what belongs here.
+   */
+  private detailFrom(body: unknown): string {
+    if (typeof body === 'string') {
+      const text = body.trim();
+      if (!text.startsWith('{')) {
+        return text;
+      }
+      try {
+        return this.detailFrom(JSON.parse(text));
+      } catch {
+        return text;
+      }
+    }
+    if (body && typeof body === 'object') {
+      const named = body as { error?: unknown; code?: unknown };
+      if (typeof named.error === 'string') {
+        return named.error.trim();
+      }
+      if (typeof named.code === 'string') {
+        return named.code.trim();
+      }
+    }
+    return '';
   }
 }

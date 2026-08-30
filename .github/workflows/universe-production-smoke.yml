@@ -78,6 +78,30 @@ jobs:
           node chain-page-smoke.mjs
           --origin="${{ github.event.inputs.origin || 'https://explorer.bitcoinuniverse.io' }}"
 
+      # The address family, opened in a browser against the live origin. The
+      # step above covers the chain pages and this covers the one page that
+      # was publicly broken while every check in this repository was green:
+      # nothing here had ever asked this origin for an address.
+      - name: The address page gate can still tell a bad page from a good one
+        if: ${{ !cancelled() }}
+        working-directory: scripts/universe/visual-qa
+        run: node --test address-page-audit.test.mjs
+
+      - name: A real address page loads with real data and no false diagnosis
+        if: ${{ !cancelled() }}
+        working-directory: scripts/universe/visual-qa
+        run: >-
+          node address-page-smoke.mjs
+          --origin="${{ github.event.inputs.origin || 'https://explorer.bitcoinuniverse.io' }}"
+
+      - name: Keep what the address pages looked like
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: universe-address-page-smoke
+          path: scripts/universe/visual-qa/artifacts-address-smoke
+          retention-days: 30
+
       - name: Keep what the chain pages looked like
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
