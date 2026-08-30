@@ -33,7 +33,7 @@ Run these before opening a pull request. They are the same ones
 ```bash
 cd frontend && npm ci && npm run lint && npm run test && npm run build:universe
 cd backend && npm ci && npm run lint && npm run test:ci
-node scripts/universe/generate-protocol-coverage.mjs --check
+node scripts/universe/protocol-contract.mjs --check
 node scripts/universe/check-text.mjs
 node scripts/universe/check-colors.mjs
 node scripts/universe/check-palettes.mjs

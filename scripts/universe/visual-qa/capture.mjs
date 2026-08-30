@@ -78,7 +78,11 @@ export const ROUTES = [
   // The chain-domain routes. They shipped with no coverage here at all, which
   // is how eleven routes reached production without one screenshot, contrast
   // probe or unfinished-page check ever looking at them.
-  { id: 'dogecoin', path: '/dogecoin', name: 'Dogecoin overview' },
+  { id: 'dogecoin', path: '/dogecoin', name: 'Dogecoin dashboard' },
+  { id: 'dogecoin-mining', path: '/dogecoin/mining', name: 'Dogecoin mining' },
+  { id: 'dogecoin-graphs', path: '/dogecoin/graphs/mempool', name: 'Dogecoin charts' },
+  { id: 'dogecoin-graphs-pools', path: '/dogecoin/graphs/mining/pools', name: 'Dogecoin pool ranking' },
+  { id: 'dogecoin-docs', path: '/dogecoin/docs', name: 'Dogecoin docs' },
   { id: 'dogecoin-mempool', path: '/dogecoin/mempool', name: 'Dogecoin pending' },
   { id: 'dogecoin-tx', path: `/dogecoin/tx/${chainSampleIds.DOGE_TXID}`, name: 'Dogecoin transaction' },
   { id: 'dogecoin-block', path: `/dogecoin/block/${chainSampleIds.DOGE_BLOCK}`, name: 'Dogecoin block' },
@@ -88,7 +92,11 @@ export const ROUTES = [
   // Dunes carry their own divisibility, so the pages exist to shift by it.
   { id: 'dogecoin-dunes', path: '/dogecoin/protocols/dunes', name: 'Dune catalog' },
   { id: 'dogecoin-dune', path: `/dogecoin/protocols/dunes/${chainSampleIds.DOGE_DUNE_ID}`, name: 'Dune' },
-  { id: 'zcash', path: '/zcash', name: 'Zcash overview' },
+  { id: 'zcash', path: '/zcash', name: 'Zcash dashboard' },
+  { id: 'zcash-mining', path: '/zcash/mining', name: 'Zcash mining' },
+  { id: 'zcash-graphs', path: '/zcash/graphs/mempool', name: 'Zcash charts' },
+  { id: 'zcash-graphs-hashrate', path: '/zcash/graphs/mining/hashrate-difficulty', name: 'Zcash hashrate chart' },
+  { id: 'zcash-docs', path: '/zcash/docs', name: 'Zcash docs' },
   { id: 'zcash-mempool', path: '/zcash/mempool', name: 'Zcash pending' },
   { id: 'zcash-tx', path: `/zcash/tx/${chainSampleIds.ZEC_TXID}`, name: 'Zcash transaction' },
   // Zcash's block response is not Dogecoin's, and nothing here had ever asked
@@ -711,6 +719,10 @@ export const GATED_ROUTES = new Set([
   'dogecoin-dunes', 'dogecoin-dune',
   'zcash', 'zcash-mempool', 'zcash-tx', 'zcash-protocols',
   'zcash-zrc20', 'zcash-zrc20-token',
+  // The parity surfaces: dashboard timelines, mining, charts, and docs. The
+  // whole point of this release is that these exist and hold the same bar.
+  'dogecoin-mining', 'dogecoin-graphs', 'dogecoin-graphs-pools', 'dogecoin-docs',
+  'zcash-mining', 'zcash-graphs', 'zcash-graphs-hashrate', 'zcash-docs',
   // The single-asset pages and the local-state page, for the same reason.
   'outpoint', 'inscription', 'rune', 'sat', 'saved',
 ]);

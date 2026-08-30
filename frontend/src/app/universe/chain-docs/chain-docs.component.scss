@@ -1,0 +1,185 @@
+@use '../universe-tokens' as u;
+@use '../chain-page' as page;
+
+:host {
+  @include u.universe-protocol-tokens;
+  @include u.universe-state-tokens;
+
+  display: block;
+}
+
+@include page.universe-chain-page;
+
+.title-block {
+  display: flex;
+  align-items: center;
+  gap: var(--u-space-2);
+  margin-bottom: var(--u-space-3);
+
+  h1 {
+    font-size: var(--u-text-2xl);
+    font-weight: var(--u-weight-semibold);
+    margin: 0;
+  }
+}
+
+.docs-layout {
+  display: grid;
+  gap: var(--u-space-3);
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+
+// The mobile toggle: visible only below the two-column breakpoint.
+.nav-toggle {
+  border: 1px solid var(--u-border);
+  border-radius: var(--u-radius-md);
+  background: var(--u-surface-raised);
+  color: var(--u-text-secondary);
+  font-size: var(--u-text-sm);
+  font-weight: var(--u-weight-semibold);
+  padding: var(--u-space-2) var(--u-space-3);
+  cursor: pointer;
+  text-align: left;
+
+  &:focus-visible {
+    outline: 2px solid var(--u-focus-ring);
+    outline-offset: 2px;
+  }
+}
+
+.docs-nav {
+  @include u.universe-surface;
+
+  display: none;
+  padding: var(--u-space-3);
+
+  &.open {
+    display: block;
+  }
+
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  li + li {
+    margin-top: 0.15rem;
+  }
+
+  a {
+    display: block;
+    padding: 0.3rem var(--u-space-2);
+    border-radius: var(--u-radius-sm);
+    border-left: 2px solid transparent;
+    color: var(--u-text-secondary);
+    font-size: var(--u-text-sm);
+    text-decoration: none;
+
+    // A list of repeated targets, which on a phone is exactly the case the
+    // 44 pixel rule is about.
+    @media (pointer: coarse), (max-width: 991.98px) {
+      align-items: center;
+      display: flex;
+      min-height: 44px;
+    }
+
+    &:hover {
+      color: var(--u-brand);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--u-focus-ring);
+      outline-offset: 2px;
+    }
+
+    &.active {
+      border-left-color: var(--u-brand);
+      background: var(--u-brand-subtle);
+      color: var(--u-brand);
+      font-weight: var(--u-weight-semibold);
+    }
+  }
+}
+
+.docs-main {
+  min-width: 0;
+}
+
+.docs-section {
+  // Deep links land the heading below the fixed header rather than under it.
+  scroll-margin-top: 5rem;
+
+  p {
+    max-width: var(--u-width-prose);
+    font-size: var(--u-text-sm);
+    line-height: var(--u-leading-normal);
+    color: var(--u-text-secondary);
+  }
+}
+
+.docs-list {
+  margin: 0;
+  padding-left: 1.2rem;
+  max-width: var(--u-width-prose);
+
+  li {
+    font-size: var(--u-text-sm);
+    line-height: var(--u-leading-normal);
+    color: var(--u-text-secondary);
+    margin-bottom: var(--u-space-2);
+  }
+}
+
+// A definition list of chart routes stacks: the route above its meaning.
+.chart-list {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+pre {
+  background: var(--u-surface-raised);
+  border: 1px solid var(--u-border);
+  border-radius: var(--u-radius-md);
+  padding: var(--u-space-3) var(--u-space-4);
+  margin: 0 0 var(--u-space-3);
+  overflow-x: auto;
+
+  // A sample wide enough to scroll is a scrollable region, so it takes
+  // focus and has to show that it has it.
+  &:focus-visible {
+    outline: 2px solid var(--u-focus-ring);
+    outline-offset: 2px;
+  }
+
+  code {
+    font-family: var(--u-font-data);
+    font-size: var(--u-text-xs);
+    line-height: var(--u-leading-snug);
+    color: var(--u-text-primary);
+    white-space: pre;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--u-focus-ring);
+    outline-offset: 2px;
+  }
+}
+
+@media (min-width: 992px) {
+  .docs-layout {
+    grid-template-columns: 14rem minmax(0, 1fr);
+  }
+
+  .nav-toggle {
+    display: none;
+  }
+
+  .docs-nav {
+    display: block;
+    position: sticky;
+    top: 5rem;
+    max-height: calc(100vh - 6rem);
+    overflow-y: auto;
+  }
+}

@@ -85,8 +85,8 @@
           <span class="nav-label" i18n="master-page.nav-dashboard">Dashboard</span>
         </a>
       </li>
-      <li class="nav-item mining" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" id="btn-pools" *ngIf="activeChain === 'bitcoin' && stateService.env.MINING_DASHBOARD">
-        <a class="nav-link" [routerLink]="['/mining' | relativeUrl]" (click)="collapse()">
+      <li class="nav-item mining" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" id="btn-pools" *ngIf="activeChain !== 'bitcoin' || stateService.env.MINING_DASHBOARD">
+        <a class="nav-link" [routerLink]="activeChain === 'bitcoin' ? ('/mining' | relativeUrl) : chainRoute('mining')" (click)="collapse()">
           <span class="nav-icon"><app-svg-images name="nav-pickaxe" width="21.59" height="100%"></app-svg-images></span>
           <span class="nav-label" i18n="master-page.nav-mining">Mining</span>
         </a>
@@ -115,14 +115,17 @@
           <span class="nav-label" i18n="master-page.nav-lightning">Lightning</span>
         </a>
       </li>
-      <li class="nav-item" routerLinkActive="active" id="btn-graphs" *ngIf="activeChain === 'bitcoin'">
-        <a class="nav-link" [routerLink]="['/graphs' | relativeUrl]" (click)="collapse()">
+      <li class="nav-item" routerLinkActive="active" id="btn-graphs">
+        <a class="nav-link" [routerLink]="activeChain === 'bitcoin' ? ('/graphs' | relativeUrl) : chainRoute('graphs')" (click)="collapse()">
           <span class="nav-icon"><app-svg-images name="nav-chart-area" width="21.59" height="100%"></app-svg-images></span>
           <span class="nav-label" i18n="master-page.nav-graphs">Charts</span>
         </a>
       </li>
+      <!-- Docs stays inside the selected chain: a Dogecoin reader who opens
+           Docs gets Dogecoin documentation, never the Bitcoin manual wearing
+           the chain's name. -->
       <li class="nav-item nav-item-secondary" routerLinkActive="active" id="btn-docs">
-        <a class="nav-link" [routerLink]="['/docs' | relativeUrl ]" (click)="collapse()">
+        <a class="nav-link" [routerLink]="activeChain === 'bitcoin' ? ('/docs' | relativeUrl) : chainRoute('docs')" (click)="collapse()">
           <span class="nav-icon"><app-svg-images name="nav-book" width="21.59" height="100%"></app-svg-images></span>
           <span class="nav-label" i18n="master-page.nav-docs">Docs</span>
         </a>

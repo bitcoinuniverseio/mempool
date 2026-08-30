@@ -17,14 +17,34 @@ import {
   OrdRuneView,
   OrdSatView,
   ChainCapabilityEnvelope,
+  ChainDashboardView,
   ChainExplorerPayload,
+  ChartSeriesView,
   ExplorerChain,
+  FeeRecommendationsView,
+  MiningPoolsView,
+  MiningSummaryView,
+  RecentBlocksView,
   UniverseSearchResponse,
 } from '@app/universe/universe.types';
 
 /** Server-side batch ceilings. Callers must not exceed them. */
 export const UNIVERSE_OUTPOINT_BATCH_LIMIT = 50;
 export const UNIVERSE_TRANSACTION_BATCH_LIMIT = 25;
+
+/**
+ * How many pending transactions each chain will return in one request.
+ *
+ * The two chains do not share a ceiling, and asking for more than a chain
+ * allows is refused as a bad request rather than trimmed. Asking Zcash for
+ * four hundred emptied its lens and its arrivals list in production while
+ * every fixture answered whatever it was asked, so the bound is enforced
+ * here, once, where the request is built.
+ */
+export const CHAIN_MEMPOOL_LIMIT: Record<Exclude<ExplorerChain, 'bitcoin'>, number> = {
+  dogecoin: 1000,
+  zcash: 200,
+};
 
 @Injectable({
   providedIn: 'root'
@@ -160,13 +180,52 @@ export class UniverseApiService {
 
   getChainMempool$(chain: Exclude<ExplorerChain, 'bitcoin'>, limit = 100): Observable<ChainExplorerPayload> {
     return this.httpClient.get<ChainExplorerPayload>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/mempool?network=mainnet&limit=' + limit
+      this.apiBaseUrl + '/api/v1/' + chain + '/mempool?network=mainnet&limit='
+        + Math.min(Math.max(1, Math.floor(limit)), CHAIN_MEMPOOL_LIMIT[chain])
     );
   }
 
   getChainCandidateBuckets$(chain: Exclude<ExplorerChain, 'bitcoin'>): Observable<ChainExplorerPayload> {
     return this.httpClient.get<ChainExplorerPayload>(
       this.apiBaseUrl + '/api/v1/' + chain + '/candidate-buckets?network=mainnet'
+    );
+  }
+
+  /** The one-call dashboard aggregate: blocks, buckets, fees, mempool, mining. */
+  getChainDashboard$(chain: Exclude<ExplorerChain, 'bitcoin'>): Observable<ChainDashboardView> {
+    return this.httpClient.get<ChainDashboardView>(
+      this.apiBaseUrl + '/api/v1/' + chain + '/dashboard?network=mainnet'
+    );
+  }
+
+  getChainRecentBlocks$(chain: Exclude<ExplorerChain, 'bitcoin'>, limit = 15): Observable<RecentBlocksView> {
+    return this.httpClient.get<RecentBlocksView>(
+      this.apiBaseUrl + '/api/v1/' + chain + '/blocks/recent?network=mainnet&limit=' + limit
+    );
+  }
+
+  getChainFees$(chain: Exclude<ExplorerChain, 'bitcoin'>): Observable<FeeRecommendationsView> {
+    return this.httpClient.get<FeeRecommendationsView>(
+      this.apiBaseUrl + '/api/v1/' + chain + '/fees?network=mainnet'
+    );
+  }
+
+  getChainMining$(chain: Exclude<ExplorerChain, 'bitcoin'>): Observable<MiningSummaryView> {
+    return this.httpClient.get<MiningSummaryView>(
+      this.apiBaseUrl + '/api/v1/' + chain + '/mining?network=mainnet'
+    );
+  }
+
+  getChainMiningPools$(chain: Exclude<ExplorerChain, 'bitcoin'>, window = '1w'): Observable<MiningPoolsView> {
+    return this.httpClient.get<MiningPoolsView>(
+      this.apiBaseUrl + '/api/v1/' + chain + '/mining/pools?network=mainnet&window=' + encodeURIComponent(window)
+    );
+  }
+
+  getChainChartSeries$(chain: Exclude<ExplorerChain, 'bitcoin'>, seriesId: string, range = '1w'): Observable<ChartSeriesView> {
+    return this.httpClient.get<ChartSeriesView>(
+      this.apiBaseUrl + '/api/v1/' + chain + '/charts/' + encodeURIComponent(seriesId)
+        + '?network=mainnet&range=' + encodeURIComponent(range)
     );
   }
 
@@ -191,6 +250,25 @@ export class UniverseApiService {
       : '&limit=' + limit + '&offset=' + offset;
     return this.httpClient.get<ChainExplorerPayload>(
       this.apiBaseUrl + '/api/v1/' + chain + '/address/' + encodeURIComponent(address) + '?network=mainnet' + paging
+    );
+  }
+
+  /**
+   * The address asset-holdings view for a chain: every paginated unspent
+   * output with its attached protocol assets, address-level balances, and
+   * exact aggregates. Served beside the base address view so a failure here
+   * degrades the asset sections without taking the address page down.
+   */
+  getChainAddressHoldings$(chain: Exclude<ExplorerChain, 'bitcoin'>, address: string, limit = 50, offset = 0): Observable<ChainExplorerPayload> {
+    return this.httpClient.get<ChainExplorerPayload>(
+      this.apiBaseUrl + '/api/v1/' + chain + '/address/' + encodeURIComponent(address) + '/holdings?network=mainnet&limit=' + limit + '&offset=' + offset
+    );
+  }
+
+  /** The Bitcoin address asset-holdings view from the universe overlay. */
+  getAddressHoldings$(address: string, limit = 100, offset = 0): Observable<ChainExplorerPayload> {
+    return this.httpClient.get<ChainExplorerPayload>(
+      this.apiBaseUrl + '/api/v1/universe/addresses/' + encodeURIComponent(address) + '/holdings?limit=' + limit + '&offset=' + offset
     );
   }
 

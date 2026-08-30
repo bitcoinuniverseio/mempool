@@ -117,24 +117,69 @@ function dogecoinTransaction() {
     expiry: null,
     transparent: {
       inputs: [
-        { indexAtomic: '0', previousOutpoint: `${DOGE_TXID}:1`, address: DOGE_ADDRESS, valueAtomic: '480000000000', coinbase: false },
-        { indexAtomic: '1', previousOutpoint: `${DOGE_TXID}:0`, address: 'DKuVPFPZUwMcNCU9hYzB4Mp3cRVJPuZLyq', valueAtomic: '120000000000', coinbase: false },
+        {
+          indexAtomic: '0', previousOutpoint: `${DOGE_TXID}:1`, address: DOGE_ADDRESS, valueAtomic: '480000000000', coinbase: false,
+          // The authority keeps no inventory for a spent output, so an input
+          // is out of coverage rather than a fabricated empty inventory.
+          assets: { positions: [], coverage: 'out-of-coverage', coveredProtocolIds: [] },
+        },
+        {
+          indexAtomic: '1', previousOutpoint: `${DOGE_TXID}:0`, address: 'DKuVPFPZUwMcNCU9hYzB4Mp3cRVJPuZLyq', valueAtomic: '120000000000', coinbase: false,
+          assets: { positions: [], coverage: 'out-of-coverage', coveredProtocolIds: [] },
+        },
       ],
       outputs: [
-        { indexAtomic: '0', address: 'DPMFn6Yv9GsuTPZWCbTFmZ9UWjjjjcYfWr', valueAtomic: '525000000000', spent: false },
-        { indexAtomic: '1', address: DOGE_ADDRESS, valueAtomic: '74886600000', spent: true },
+        {
+          indexAtomic: '0', address: 'DPMFn6Yv9GsuTPZWCbTFmZ9UWjjjjcYfWr', valueAtomic: '525000000000', spent: false,
+          // One unspent output carrying two protocols at once: a Doginal
+          // inscription and a dune balance with its own divisibility.
+          assets: {
+            positions: [
+              {
+                outpoint: `${DOGE_TXID}:0`, vout: 0, valueSatsAtomic: '525000000000',
+                asset: { protocolId: 'doginals', assetId: `${DOGE_TXID}i0`, assetKind: 'inscription' },
+                ownerAddress: 'DPMFn6Yv9GsuTPZWCbTFmZ9UWjjjjcYfWr', state: 'active',
+                evidence: { authorityId: 'ord-dogecoin', protocolId: 'doginals', releaseSha: 'ord-dogecoin-0.19', schemaVersion: 'ord-dogecoin-json-api', coverage: 'complete', negativeCompleteness: true, checkpoint: { chain: 'dogecoin', network: 'mainnet', heightAtomic: '5623041', blockHash: DOGE_BLOCK, reorgEpoch: '0', observedAt: '2026-08-29T04:05:00.000Z' }, checkedAt: '2026-08-29T04:05:00.000Z' },
+              },
+              {
+                outpoint: `${DOGE_TXID}:0`, vout: 0, valueSatsAtomic: '525000000000',
+                asset: { protocolId: 'dunes', assetId: 'VERY•MUCH•DUNE', displayName: 'VERY•MUCH•DUNE', ticker: '▪', assetKind: 'fungible', decimals: 8 },
+                quantityAtomic: '250000000000',
+                ownerAddress: 'DPMFn6Yv9GsuTPZWCbTFmZ9UWjjjjcYfWr', state: 'active',
+                evidence: { authorityId: 'ord-dogecoin', protocolId: 'dunes', releaseSha: 'ord-dogecoin-0.19', schemaVersion: 'ord-dogecoin-json-api', coverage: 'complete', negativeCompleteness: true, checkpoint: { chain: 'dogecoin', network: 'mainnet', heightAtomic: '5623041', blockHash: DOGE_BLOCK, reorgEpoch: '0', observedAt: '2026-08-29T04:05:00.000Z' }, checkedAt: '2026-08-29T04:05:00.000Z' },
+              },
+            ],
+            coverage: 'complete',
+            coveredProtocolIds: ['doginals', 'dunes'],
+          },
+        },
+        {
+          indexAtomic: '1', address: DOGE_ADDRESS, valueAtomic: '74886600000', spent: true,
+          assets: { positions: [], coverage: 'out-of-coverage', coveredProtocolIds: [] },
+        },
       ],
     },
     shielded: null,
     protocolActions: {
       candidates: [],
       confirmed: [
-        { eventId: 'doginals:1', protocolId: 'doginals', state: 'confirmed-accepted', actionType: 'inscribe', evidenceIds: ['ord-dogecoin:5623038'] },
+        {
+          eventId: 'doginals:1', protocolId: 'doginals', state: 'confirmed-accepted', actionType: 'inscribe', evidenceIds: ['ord-dogecoin:5623038'],
+          asset: { protocolId: 'doginals', assetId: `${DOGE_TXID}i0`, assetKind: 'inscription' },
+          outputOutpoints: [`${DOGE_TXID}:0`],
+        },
         { eventId: 'drc20:1', protocolId: 'drc20', state: 'confirmed-rejected', actionType: 'mintOverCap', evidenceIds: ['ord-dogecoin:5623038'] },
       ],
     },
     evidenceIds: ['dogecoin-blockbook:transaction'],
     completeness: 'complete',
+    assetFlow: {
+      checkpoint: { chain: 'dogecoin', network: 'mainnet', heightAtomic: '5623041', blockHash: DOGE_BLOCK, reorgEpoch: '0', observedAt: '2026-08-29T04:05:00.000Z' },
+      complete: false,
+      unknownAttachmentCount: 0,
+      outOfCoverageCount: 3,
+      coveredProtocolIds: ['doginals', 'dunes'],
+    },
   };
 }
 
@@ -385,6 +430,64 @@ export const chainFixtures = {
     ],
   },
 
+  // The asset-holdings view the address page requests beside the base view:
+  // one output carrying a dune, one proven empty, a DRC-20 ledger balance at
+  // address level, and aggregates that never double count the two sections.
+  [`/api/v1/dogecoin/address/${DOGE_ADDRESS}/holdings`]: {
+    schemaVersion: 'universe-address-holdings-v1',
+    chain: 'dogecoin',
+    network: 'mainnet',
+    address: DOGE_ADDRESS,
+    utxos: [
+      {
+        outpoint: `${DOGE_TXID}:1`, txid: DOGE_TXID, vout: 1, valueAtomic: '74886600000',
+        address: DOGE_ADDRESS, heightAtomic: '5623038', confirmationsAtomic: '3',
+        assets: {
+          positions: [
+            {
+              outpoint: `${DOGE_TXID}:1`, vout: 1, valueSatsAtomic: '74886600000',
+              asset: { protocolId: 'dunes', assetId: 'VERY•MUCH•DUNE', displayName: 'VERY•MUCH•DUNE', ticker: '▪', assetKind: 'fungible', decimals: 8 },
+              quantityAtomic: '90000000000', ownerAddress: DOGE_ADDRESS, state: 'active',
+              evidence: { authorityId: 'ord-dogecoin', protocolId: 'dunes', releaseSha: 'ord-dogecoin-0.19', schemaVersion: 'ord-dogecoin-json-api', coverage: 'complete', negativeCompleteness: true, checkpoint: { chain: 'dogecoin', network: 'mainnet', heightAtomic: '5623041', blockHash: DOGE_BLOCK, reorgEpoch: '0', observedAt: '2026-08-29T04:05:00.000Z' }, checkedAt: '2026-08-29T04:05:00.000Z' },
+            },
+          ],
+          coverage: 'complete',
+          coveredProtocolIds: ['doginals', 'dunes', 'drc20'],
+        },
+      },
+      {
+        outpoint: `${DOGE_BLOCK}:0`, txid: DOGE_BLOCK, vout: 0, valueAtomic: '1209573400000',
+        address: DOGE_ADDRESS, heightAtomic: '5620112', confirmationsAtomic: '2929',
+        assets: { positions: [], coverage: 'proven-empty', coveredProtocolIds: ['doginals', 'dunes', 'drc20'] },
+      },
+    ],
+    addressLevelBalances: [
+      {
+        asset: { protocolId: 'drc20', assetId: 'dogi', ticker: 'dogi', assetKind: 'fungible', decimals: 18 },
+        quantityAtomic: '2500000000000000000000',
+        availableAtomic: '1500000000000000000000',
+        transferableAtomic: '1000000000000000000000',
+        decimals: 18,
+        semantics: 'drc20-address-ledger',
+        evidence: { authorityId: 'ord-dogecoin', protocolId: 'drc20', releaseSha: 'ord-dogecoin-0.19', schemaVersion: 'ord-dogecoin-json-api', coverage: 'complete', negativeCompleteness: true, checkpoint: { chain: 'dogecoin', network: 'mainnet', heightAtomic: '5623041', blockHash: DOGE_BLOCK, reorgEpoch: '0', observedAt: '2026-08-29T04:05:00.000Z' }, checkedAt: '2026-08-29T04:05:00.000Z' },
+      },
+    ],
+    aggregateHoldings: [
+      {
+        asset: { protocolId: 'dunes', assetId: 'VERY•MUCH•DUNE', displayName: 'VERY•MUCH•DUNE', ticker: '▪', assetKind: 'fungible', decimals: 8 },
+        quantityAtomic: '90000000000',
+        utxoCountAtomic: '1',
+        source: 'utxo-bound',
+      },
+    ],
+    paging: { limitAtomic: '100', offsetAtomic: '0', returnedAtomic: '2', totalUtxoCountAtomic: '2', hasMore: false },
+    checkpoint: { chain: 'dogecoin', network: 'mainnet', heightAtomic: '5623041', blockHash: DOGE_BLOCK, reorgEpoch: '0', observedAt: '2026-08-29T04:05:00.000Z' },
+    sourceEvidence: [],
+    complete: true,
+    unknownAttachmentCount: 0,
+    outOfCoverageCount: 0,
+  },
+
   // A real Zcash block, exactly as production returned it. The transaction
   // list is kept whole: trimming it left the page saying page 1 of 1 over
   // four of the seventeen ids the same response counts, which is a false
@@ -486,6 +589,88 @@ export const chainFixtures = {
     ],
     "zrune_events": [],
     "chain": "zcash"
+  },
+
+  // The Zcash address holdings view: a ZRune on one output with its own
+  // divisibility, a Zerdinal on another, one unscanned output that must not
+  // read as empty, and ZRC-20 ledger balances at address level.
+  [`/api/v1/zcash/address/${ZEC_ADDRESS}/holdings`]: {
+    schemaVersion: 'universe-address-holdings-v1',
+    chain: 'zcash',
+    network: 'mainnet',
+    address: ZEC_ADDRESS,
+    utxos: [
+      {
+        outpoint: 'e642bab049488871a307aff5a46be789b374858dfa7163e33ddff27c76e80438:0',
+        txid: 'e642bab049488871a307aff5a46be789b374858dfa7163e33ddff27c76e80438',
+        vout: 0, valueAtomic: '125522000', address: ZEC_ADDRESS,
+        assets: {
+          positions: [
+            {
+              outpoint: 'e642bab049488871a307aff5a46be789b374858dfa7163e33ddff27c76e80438:0',
+              vout: 0, valueSatsAtomic: '125522000',
+              asset: { protocolId: 'zrunes', assetId: '2107254:1', displayName: 'ZCASH•FOREVER', ticker: 'Ⓩ', assetKind: 'fungible', decimals: 2 },
+              quantityAtomic: '1500000', ownerAddress: ZEC_ADDRESS, state: 'active',
+              evidence: { authorityId: 'index-zcash-metaprotocols', protocolId: 'zrunes', releaseSha: 'index-zcash-metaprotocols', schemaVersion: 'zcash-metaprotocols-api-v1', coverage: 'complete', negativeCompleteness: true, checkpoint: { chain: 'zcash', network: 'mainnet', heightAtomic: '3464734', blockHash: '0000000000645e18fd55f18a5b2681f0becdc180d14d35a730875c4dc66add1a', reorgEpoch: '0', observedAt: '2026-08-30T00:00:00.000Z' }, checkedAt: '2026-08-30T00:00:00.000Z' },
+            },
+          ],
+          coverage: 'complete',
+          coveredProtocolIds: ['zerdinals', 'zrunes', 'zrc721'],
+        },
+      },
+      {
+        outpoint: '44b60d006a4197f81385da1718eeddb5be23fdfdaa45553f0cae97766f2e150e:0',
+        txid: '44b60d006a4197f81385da1718eeddb5be23fdfdaa45553f0cae97766f2e150e',
+        vout: 0, valueAtomic: '125015000', address: ZEC_ADDRESS,
+        assets: {
+          positions: [
+            {
+              outpoint: '44b60d006a4197f81385da1718eeddb5be23fdfdaa45553f0cae97766f2e150e:0',
+              vout: 0, valueSatsAtomic: '125015000',
+              asset: { protocolId: 'zerdinals', assetId: '44b60d006a4197f81385da1718eeddb5be23fdfdaa45553f0cae97766f2e150ei0', assetKind: 'inscription' },
+              ownerAddress: ZEC_ADDRESS, state: 'active',
+              evidence: { authorityId: 'index-zcash-metaprotocols', protocolId: 'zerdinals', releaseSha: 'index-zcash-metaprotocols', schemaVersion: 'zcash-metaprotocols-api-v1', coverage: 'complete', negativeCompleteness: true, checkpoint: { chain: 'zcash', network: 'mainnet', heightAtomic: '3464734', blockHash: '0000000000645e18fd55f18a5b2681f0becdc180d14d35a730875c4dc66add1a', reorgEpoch: '0', observedAt: '2026-08-30T00:00:00.000Z' }, checkedAt: '2026-08-30T00:00:00.000Z' },
+            },
+          ],
+          coverage: 'complete',
+          coveredProtocolIds: ['zerdinals', 'zrunes', 'zrc721'],
+        },
+      },
+      {
+        outpoint: '69fb0df1609d51da8f8526bf28fd7d92213461609811e3e119cc88623e93e5a5:0',
+        txid: '69fb0df1609d51da8f8526bf28fd7d92213461609811e3e119cc88623e93e5a5',
+        vout: 0, valueAtomic: '125176000', address: ZEC_ADDRESS,
+        // An output the scanner has not reached: unknown, never empty.
+        assets: { positions: [], coverage: 'unscanned', coveredProtocolIds: ['zerdinals', 'zrunes', 'zrc721'] },
+      },
+    ],
+    addressLevelBalances: [
+      {
+        asset: { protocolId: 'zrc20', assetId: 'zord:zero', ticker: 'ZERO', assetKind: 'fungible', decimals: 8 },
+        quantityAtomic: '4200000000',
+        availableAtomic: '4200000000',
+        transferableAtomic: '0',
+        decimals: 8,
+        semantics: 'zrc20-zord-ledger',
+        evidence: { authorityId: 'index-zcash-metaprotocols', protocolId: 'zrc20', releaseSha: 'index-zcash-metaprotocols', schemaVersion: 'zcash-metaprotocols-api-v1', coverage: 'complete', negativeCompleteness: true, checkpoint: { chain: 'zcash', network: 'mainnet', heightAtomic: '3464734', blockHash: '0000000000645e18fd55f18a5b2681f0becdc180d14d35a730875c4dc66add1a', reorgEpoch: '0', observedAt: '2026-08-30T00:00:00.000Z' }, checkedAt: '2026-08-30T00:00:00.000Z' },
+      },
+    ],
+    aggregateHoldings: [
+      {
+        asset: { protocolId: 'zerdinals', assetId: '44b60d006a4197f81385da1718eeddb5be23fdfdaa45553f0cae97766f2e150ei0', assetKind: 'inscription' },
+        quantityAtomic: '1', utxoCountAtomic: '1', source: 'utxo-bound',
+      },
+      {
+        asset: { protocolId: 'zrunes', assetId: '2107254:1', displayName: 'ZCASH•FOREVER', ticker: 'Ⓩ', assetKind: 'fungible', decimals: 2 },
+        quantityAtomic: '1500000', utxoCountAtomic: '1', source: 'utxo-bound',
+      },
+    ],
+    paging: { limitAtomic: '100', offsetAtomic: '0', returnedAtomic: '3', totalUtxoCountAtomic: '3', hasMore: false },
+    checkpoint: { chain: 'zcash', network: 'mainnet', heightAtomic: '3464734', blockHash: '0000000000645e18fd55f18a5b2681f0becdc180d14d35a730875c4dc66add1a', reorgEpoch: '0', observedAt: '2026-08-30T00:00:00.000Z' },
+    sourceEvidence: [],
+    complete: false,
+    unknownAttachmentCount: 1,
+    outOfCoverageCount: 0,
   },
 
   // A Zcash address, as production returned it, with the unspent output list
@@ -663,7 +848,7 @@ export const chainFixtures = {
     snapshotId: 'dogecoin-mainnet-buckets',
     sequenceAtomic: '19',
     observedAt: new Date(Date.now() - 9_000).toISOString(),
-    tip: { heightAtomic: '5900001', blockHash: DOGE_BLOCK, observedAt: new Date(Date.now() - 9_000).toISOString() },
+    tip: { heightAtomic: '5623041', blockHash: DOGE_BLOCK, observedAt: new Date(Date.now() - 9_000).toISOString() },
     completeness: 'partial',
     semantics: 'ordered-by-fee-policy',
     feeModel: { kind: 'fee-per-kilobyte', unit: 'koinu/kB', minRelayFeeAtomicPerKb: '100000' },
@@ -697,7 +882,7 @@ export const chainFixtures = {
     snapshotId: 'zcash-buckets',
     sequenceAtomic: '22105',
     observedAt: new Date(Date.now() - 9_000).toISOString(),
-    tip: { heightAtomic: '3465589', blockHash: ZEC_BLOCK, observedAt: new Date(Date.now() - 9_000).toISOString() },
+    tip: { heightAtomic: '3464729', blockHash: ZEC_BLOCK, observedAt: new Date(Date.now() - 9_000).toISOString() },
     completeness: 'complete',
     semantics: 'zip317-eligibility-tiers',
     feeModel: { kind: 'zip-317', unit: 'zatoshi/logical-action', revisionAtomic: '1', marginalFeeAtomic: '5000', graceActionsAtomic: '2', unpaidActionLimitAtomic: null },
@@ -727,7 +912,305 @@ export const chainFixtures = {
     ],
     disclosures: ['zip317-random-selection', 'shielded-fee-unknown', 'unpaid-admission-not-modeled'],
   },
+
+  // The dashboard data families behind the chain dashboard, mining, and
+  // charts pages. Function declarations hoist, so the builders live at the
+  // bottom of this file with the other helpers.
+  '/api/v1/dogecoin/dashboard': dashboardFixture('dogecoin'),
+  '/api/v1/zcash/dashboard': dashboardFixture('zcash'),
+  '/api/v1/dogecoin/blocks/recent': recentBlocksFixture('dogecoin'),
+  '/api/v1/zcash/blocks/recent': recentBlocksFixture('zcash'),
+  '/api/v1/dogecoin/fees': feesFixture('dogecoin'),
+  '/api/v1/zcash/fees': feesFixture('zcash'),
+  '/api/v1/dogecoin/mining': miningSummaryFixture('dogecoin'),
+  '/api/v1/zcash/mining': miningSummaryFixture('zcash'),
+  '/api/v1/dogecoin/mining/pools': miningPoolsFixture('dogecoin'),
+  '/api/v1/zcash/mining/pools': miningPoolsFixture('zcash'),
+  ...chartSeriesFixtures('dogecoin'),
+  ...chartSeriesFixtures('zcash'),
 };
+
+// The dashboard aggregate carries the same buckets the bucket route serves,
+// assigned after the table exists so there is one source for both spellings.
+chainFixtures['/api/v1/dogecoin/dashboard'].buckets =
+  chainFixtures['/api/v1/dogecoin/candidate-buckets'];
+chainFixtures['/api/v1/zcash/dashboard'].buckets =
+  chainFixtures['/api/v1/zcash/candidate-buckets'];
+
+/** The tip the dashboard fixtures agree on, matching the capability tip. */
+function fixtureTip(chain) {
+  const observedAt = new Date(Date.now() - 15_000).toISOString();
+  return {
+    heightAtomic: chain === 'dogecoin' ? '5623041' : '3464729',
+    blockHash: chain === 'dogecoin' ? DOGE_BLOCK : ZEC_BLOCK,
+    observedAt,
+  };
+}
+
+/** Twelve stored blocks below the tip, with proven and unproven facts mixed. */
+function recentBlocksFixture(chain) {
+  const tip = fixtureTip(chain);
+  const tipHeight = Number(tip.heightAtomic);
+  const target = chain === 'dogecoin' ? 60 : 75;
+  const pools = chain === 'dogecoin'
+    ? [
+        { poolId: 'viabtc', name: 'ViaBTC', evidence: 'auxpow-parent-tag' },
+        { poolId: 'f2pool', name: 'F2Pool', evidence: 'payout-address' },
+        null,
+      ]
+    : [
+        { poolId: 'viabtc', name: 'ViaBTC', evidence: 'payout-address' },
+        { poolId: '2miners', name: '2Miners', evidence: 'coinbase-tag' },
+        null,
+      ];
+  const blocks = [];
+  for (let index = 0; index < 12; index += 1) {
+    const height = tipHeight - index;
+    const pool = pools[index % pools.length];
+    blocks.push({
+      heightAtomic: String(height),
+      hash: `${height.toString(16)}`.padStart(64, chain === 'dogecoin' ? 'd' : '0'),
+      time: new Date(Date.now() - 15_000 - index * target * 1000 - (index % 3) * 11_000).toISOString(),
+      txCountAtomic: String(40 + ((index * 37) % 260)),
+      sizeBytesAtomic: chain === 'zcash' && index % 5 === 4 ? null : String(21_000 + ((index * 53_017) % 640_000)),
+      feesAtomic: index % 4 === 3 ? null : String(120_000_000 + ((index * 97_003_331) % 9_000_000_000)),
+      subsidyAtomic: chain === 'dogecoin' ? '1000000000000' : '156250000',
+      rewardAtomic: index % 4 === 3 ? null : String((chain === 'dogecoin' ? 1_000_000_000_000 : 156_250_000) + 120_000_000 + ((index * 97_003_331) % 9_000_000_000)),
+      medianFeeRateDecimal: chain === 'dogecoin' ? String(1_000_000 + ((index * 811_001) % 12_000_000)) : null,
+      difficultyDecimal: chain === 'dogecoin' ? '13648321.5' : '68227341.2',
+      intervalSecondsAtomic: index === 11 ? null : String(target + ((index * 29) % 44) - 20),
+      miner: pool
+        ? { poolId: pool.poolId, name: pool.name, evidence: pool.evidence }
+        : { poolId: null, name: null, evidence: null },
+    });
+  }
+  return {
+    schemaVersion: 'universe-recent-blocks-v1',
+    chain,
+    network: 'mainnet',
+    tip,
+    blocks,
+    coverage: {
+      fromHeightAtomic: String(tipHeight - 4_320),
+      toHeightAtomic: tip.heightAtomic,
+      complete: true,
+    },
+    observedAt: new Date(Date.now() - 12_000).toISOString(),
+  };
+}
+
+function feesFixture(chain) {
+  const tip = fixtureTip(chain);
+  const observedAt = new Date(Date.now() - 12_000).toISOString();
+  if (chain === 'dogecoin') {
+    return {
+      schemaVersion: 'universe-fee-recommendations-v1',
+      chain,
+      network: 'mainnet',
+      kind: 'fee-per-kilobyte',
+      unit: 'koinu/kB',
+      levels: [
+        { id: 'none', amountDecimal: '100000', basis: 'relay-floor' },
+        { id: 'low', amountDecimal: '1160000', basis: 'node-estimate' },
+        { id: 'medium', amountDecimal: '5200000', basis: 'node-estimate' },
+        { id: 'high', amountDecimal: '11190476', basis: 'node-estimate' },
+      ],
+      minRelayFeeAtomicPerKb: '100000',
+      tip,
+      observedAt,
+    };
+  }
+  return {
+    schemaVersion: 'universe-fee-recommendations-v1',
+    chain,
+    network: 'mainnet',
+    kind: 'zip-317',
+    unit: 'zatoshi',
+    marginalFeeAtomic: '5000',
+    graceActionsAtomic: '2',
+    typicalConventionalFeeAtomic: '10000',
+    paidShareDecimal: '0.75',
+    basis: 'zip317-conventional',
+    tip,
+    observedAt,
+  };
+}
+
+function miningSummaryFixture(chain) {
+  const tip = fixtureTip(chain);
+  const observedAt = new Date(Date.now() - 12_000).toISOString();
+  return chain === 'dogecoin'
+    ? {
+        schemaVersion: 'universe-mining-summary-v1',
+        chain,
+        network: 'mainnet',
+        tip,
+        difficultyDecimal: '13648321.5',
+        networkRateDecimal: '976431000000000',
+        hashrateUnit: 'hashes-per-second',
+        algorithm: 'scrypt (AuxPoW merged mining)',
+        targetBlockSecondsAtomic: '60',
+        observedIntervalSecondsDecimal: '61.4',
+        windowBlocksAtomic: '1008',
+        subsidyAtomic: '1000000000000',
+        meanRewardAtomic: '1002481202210',
+        meanFeesAtomic: '2481202210',
+        mergedMining: { supported: true, noticeId: 'dogecoin-auxpow' },
+        observedAt,
+      }
+    : {
+        schemaVersion: 'universe-mining-summary-v1',
+        chain,
+        network: 'mainnet',
+        tip,
+        difficultyDecimal: '68227341.2',
+        networkRateDecimal: '8123400000',
+        hashrateUnit: 'solutions-per-second',
+        algorithm: 'Equihash',
+        targetBlockSecondsAtomic: '75',
+        observedIntervalSecondsDecimal: '74.2',
+        windowBlocksAtomic: '960',
+        subsidyAtomic: '156250000',
+        meanRewardAtomic: '156329100',
+        meanFeesAtomic: '79100',
+        mergedMining: { supported: false, noticeId: null },
+        observedAt,
+      };
+}
+
+function miningPoolsFixture(chain) {
+  const observedAt = new Date(Date.now() - 12_000).toISOString();
+  const pools = chain === 'dogecoin'
+    ? [
+        { poolId: 'viabtc', name: 'ViaBTC', blocksAtomic: '4183', shareDecimal: '0.415', evidence: ['auxpow-parent-tag'] },
+        { poolId: 'f2pool', name: 'F2Pool', blocksAtomic: '2140', shareDecimal: '0.212', evidence: ['payout-address', 'auxpow-parent-tag'] },
+        { poolId: 'antpool', name: 'AntPool', blocksAtomic: '1612', shareDecimal: '0.160', evidence: ['auxpow-parent-tag'] },
+        { poolId: 'litecoinpool', name: 'Litecoinpool.org', blocksAtomic: '905', shareDecimal: '0.090', evidence: ['auxpow-parent-tag'] },
+        { poolId: 'unknown', name: 'Unknown', blocksAtomic: '1240', shareDecimal: '0.123', evidence: [] },
+      ]
+    : [
+        { poolId: 'viabtc', name: 'ViaBTC', blocksAtomic: '3410', shareDecimal: '0.423', evidence: ['payout-address'] },
+        { poolId: 'f2pool', name: 'F2Pool', blocksAtomic: '2120', shareDecimal: '0.263', evidence: ['payout-address'] },
+        { poolId: '2miners', name: '2Miners', blocksAtomic: '1180', shareDecimal: '0.146', evidence: ['coinbase-tag'] },
+        { poolId: 'unknown', name: 'Unknown', blocksAtomic: '1353', shareDecimal: '0.168', evidence: [] },
+      ];
+  return {
+    schemaVersion: 'universe-mining-pools-v1',
+    chain,
+    network: 'mainnet',
+    windowId: '1w',
+    windowBlocksAtomic: pools.reduce((sum, pool) => sum + Number(pool.blocksAtomic), 0).toString(),
+    pools,
+    attributionDatasetVersion: 'universe-pools-v1',
+    coverageComplete: true,
+    observedAt,
+  };
+}
+
+function dashboardFixture(chain) {
+  return {
+    schemaVersion: 'universe-chain-dashboard-v1',
+    chain,
+    network: 'mainnet',
+    tip: fixtureTip(chain),
+    recentBlocks: recentBlocksFixture(chain),
+    // Buckets are assigned after the fixture table exists; see the bottom
+    // of this file.
+    buckets: null,
+    fees: feesFixture(chain),
+    mempool: {
+      txCountAtomic: chain === 'dogecoin' ? '644' : '12',
+      totalSizeBytesAtomic: chain === 'dogecoin' ? '1489338' : '23620',
+      totalFeesAtomic: chain === 'dogecoin' ? null : '195500',
+      arrivalRatePerSecondDecimal: chain === 'dogecoin' ? '2.140' : '0.080',
+      observedAt: new Date(Date.now() - 12_000).toISOString(),
+    },
+    mining: miningSummaryFixture(chain),
+    subsystems: [
+      { id: 'core-node', state: 'ready', reasonIds: [] },
+      { id: 'confirmed-history', state: 'ready', reasonIds: [] },
+      { id: 'address-history', state: 'ready', reasonIds: [] },
+      { id: 'mempool', state: 'ready', reasonIds: [] },
+      { id: 'mining-analytics', state: 'ready', reasonIds: [] },
+      { id: 'historical-statistics', state: 'ready', reasonIds: [] },
+      { id: 'protocol-indexers', state: chain === 'dogecoin' ? 'degraded' : 'ready', reasonIds: chain === 'dogecoin' ? ['protocol-authority-stale'] : [] },
+    ],
+    observedAt: new Date(Date.now() - 12_000).toISOString(),
+  };
+}
+
+/** One deterministic week of points per series, at one-hour resolution. */
+function chartSeriesFixtures(chain) {
+  // Listed here rather than at module scope: the fixture table calls this
+  // while the module is still initializing, before top-level consts exist.
+  const CHART_FIXTURE_SERIES = [
+    'mempool-count', 'mempool-size', 'mempool-fees', 'block-fees',
+    'block-rewards', 'block-fees-subsidy', 'block-fee-rates', 'block-sizes',
+    'block-count', 'block-interval', 'difficulty', 'hashrate', 'pools-dominance',
+  ];
+  const entries = {};
+  for (const seriesId of CHART_FIXTURE_SERIES) {
+    entries[`/api/v1/${chain}/charts/${seriesId}`] = chartSeriesFixture(chain, seriesId);
+  }
+  return entries;
+}
+
+function chartSeriesFixture(chain, seriesId) {
+  const nowUnix = Math.floor(Date.now() / 1000);
+  const from = nowUnix - 7 * 86_400;
+  const points = (seed, scale, base) => {
+    const rows = [];
+    for (let hour = 0; hour < 168; hour += 1) {
+      const wobble = Math.abs(Math.sin(seed + hour / 9)) * scale;
+      rows.push([String(from + hour * 3_600), (base + wobble).toFixed(3)]);
+    }
+    return rows;
+  };
+  const atomicUnit = chain === 'dogecoin' ? 'koinu' : 'zatoshi';
+  const lines = {
+    'mempool-count': [{ key: 'count', unit: 'transactions', points: points(1, 900, 120) }],
+    'mempool-size': [{ key: 'size', unit: 'bytes', points: points(2, 2_400_000, 210_000) }],
+    'mempool-fees': [{ key: 'fees', unit: atomicUnit, points: points(3, 9_000_000_000, 400_000_000) }],
+    'block-fees': [{ key: 'fees', unit: atomicUnit, points: points(4, 8_000_000_000, 900_000_000) }],
+    'block-rewards': [{ key: 'reward', unit: atomicUnit, points: points(5, 8_000_000_000, chain === 'dogecoin' ? 1_000_000_000_000 : 156_250_000) }],
+    'block-fees-subsidy': [
+      { key: 'fees', unit: atomicUnit, points: points(6, 8_000_000_000, 900_000_000) },
+      { key: 'subsidy', unit: atomicUnit, points: points(0, 0, chain === 'dogecoin' ? 1_000_000_000_000 : 156_250_000) },
+    ],
+    'block-fee-rates': [{ key: 'median', unit: chain === 'dogecoin' ? 'koinu/kB' : 'zatoshi', points: points(7, 9_000_000, 1_000_000) }],
+    'block-sizes': [{ key: 'size', unit: 'bytes', points: points(8, 500_000, 40_000) }],
+    'block-count': [{ key: 'blocks', unit: 'blocks', points: points(9, 12, 54) }],
+    'block-interval': [
+      { key: 'observed', unit: 'seconds', points: points(10, 30, chain === 'dogecoin' ? 48 : 62) },
+      { key: 'target', unit: 'seconds', points: points(0, 0, chain === 'dogecoin' ? 60 : 75) },
+    ],
+    difficulty: [{ key: 'difficulty', unit: 'difficulty', points: points(11, 2_000_000, chain === 'dogecoin' ? 12_600_000 : 66_000_000) }],
+    hashrate: [{ key: 'rate', unit: chain === 'dogecoin' ? 'hashes-per-second' : 'solutions-per-second', points: points(12, 220_000_000_000_000, chain === 'dogecoin' ? 860_000_000_000_000 : 7_600_000_000) }],
+    'pools-dominance': [
+      { key: 'viabtc', unit: 'share', points: points(13, 0.08, 0.38) },
+      { key: 'f2pool', unit: 'share', points: points(14, 0.06, 0.2) },
+      { key: 'unknown', unit: 'share', points: points(15, 0.05, 0.12) },
+    ],
+  }[seriesId];
+  return {
+    schemaVersion: 'universe-chart-series-v1',
+    chain,
+    network: 'mainnet',
+    seriesId,
+    rangeId: '1w',
+    lines,
+    aggregation: seriesId.startsWith('mempool-') ? 'sample' : 'mean',
+    bucketSecondsAtomic: '3600',
+    coverage: {
+      fromAtomic: String(from),
+      toAtomic: String(nowUnix),
+      complete: true,
+      earliestAtomic: String(from - 21 * 86_400),
+    },
+    sourceHeightAtomic: fixtureTip(chain).heightAtomic,
+    observedAt: new Date(Date.now() - 12_000).toISOString(),
+  };
+}
 
 /**
  * Dogecoin as it stood on 2026-08-29: caught up on blocks, not ready overall,
@@ -827,6 +1310,19 @@ export const chainStateOverrides = {
     '/api/v1/zcash/mempool': { status: 503 },
     '/api/v1/dogecoin/candidate-buckets': { status: 503 },
     '/api/v1/zcash/candidate-buckets': { status: 503 },
+    // The dashboard families ride the same overlay, so the same outage
+    // reaches every one of them. The dashboard page has to degrade panel by
+    // panel under this, never blank the page.
+    '/api/v1/dogecoin/dashboard': { status: 503 },
+    '/api/v1/zcash/dashboard': { status: 503 },
+    '/api/v1/dogecoin/blocks/recent': { status: 503 },
+    '/api/v1/zcash/blocks/recent': { status: 503 },
+    '/api/v1/dogecoin/fees': { status: 503 },
+    '/api/v1/zcash/fees': { status: 503 },
+    '/api/v1/dogecoin/mining': { status: 503 },
+    '/api/v1/zcash/mining': { status: 503 },
+    '/api/v1/dogecoin/charts/': { status: 503 },
+    '/api/v1/zcash/charts/': { status: 503 },
   },
 
   // The authority answers, and says it is behind. This is the state the whole

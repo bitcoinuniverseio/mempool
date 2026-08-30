@@ -1,0 +1,101 @@
+<div class="timeline-shell" *ngIf="reading as strip" [class.time-ltr]="timeLtr$ | async">
+
+  <div class="timeline-scroll" tabindex="0" role="region"
+       aria-label="Block timeline, scrolls sideways"
+       i18n-aria-label="universe.timeline.region-label"
+       data-scroll-region>
+    <div class="timeline-row">
+
+      <!-- The future side: one cube per upcoming target slot. -->
+      <div class="timeline-side future" role="list"
+           aria-label="Upcoming target block slots"
+           i18n-aria-label="universe.timeline.future-label">
+        <div class="timeline-cube candidate-cube" role="listitem"
+             *ngFor="let slot of futureDisplay; trackBy: trackBySlot">
+          <span class="cube-height" *ngIf="slot.height as height" [attr.title]="height.exact">{{ height.display }}</span>
+          <span class="cube-height placeholder" *ngIf="!slot.height" i18n="universe.timeline.height-unknown">height pending</span>
+          <div class="cube-block" [style.background]="cubeBackground(slot.cube)">
+            <div class="cube-body">
+              <span class="cube-median" *ngIf="slot.cube.medianFee">
+                ~{{ slot.cube.medianFee }}
+                <span class="cube-unit">{{ strip.unit }}</span>
+              </span>
+              <span class="cube-span" *ngIf="slot.cube.feeSpan" i18n="universe.timeline.fee-span">{{ slot.cube.feeSpan.low }} to {{ slot.cube.feeSpan.high }}</span>
+              <span class="cube-count" *ngIf="slot.cube.txCount" [attr.title]="slot.cube.txCount.exact"
+                    i18n="universe.timeline.tx-count">{{ slot.cube.txCount.display }} transactions</span>
+              <span class="cube-eta" *ngIf="slot.targetMinutes !== null"
+                    title="Target spacing, not a promise"
+                    i18n-title="universe.timeline.eta-title"
+                    i18n="universe.timeline.eta">In ~{{ slot.targetMinutes }} min</span>
+            </div>
+          </div>
+          <div class="cube-caption">
+            <span class="universe-chip" *ngIf="slot.cube.tierLabel" [ngClass]="'state-' + slot.cube.tierTone">{{ slot.cube.tierLabel }}</span>
+            <span class="universe-chip state-neutral" *ngIf="slot.cube.overflow" i18n="universe.timeline.overflow">Everything after these</span>
+          </div>
+        </div>
+        <p class="timeline-empty" *ngIf="!strip.future.length" i18n="universe.timeline.no-pending">
+          Nothing is waiting right now, as far as our own node can see.
+        </p>
+      </div>
+
+      <!-- The divider carries the direction toggle, as the Bitcoin strip's does. -->
+      <div class="timeline-divider" aria-hidden="false">
+        <button type="button" class="direction-toggle" (click)="toggleDirection()"
+                aria-label="Flip the direction of time"
+                i18n-aria-label="universe.timeline.flip-label"
+                title="Flip the direction of time"
+                i18n-title="universe.timeline.flip-title">&#8645;</button>
+      </div>
+
+      <!-- The confirmed side: one cube per mined block. -->
+      <div class="timeline-side confirmed" role="list"
+           aria-label="Recent confirmed blocks"
+           i18n-aria-label="universe.timeline.confirmed-label">
+        <div class="timeline-cube candidate-cube confirmed-cube" role="listitem"
+             *ngFor="let block of strip.confirmed; trackBy: trackByBlock">
+          <a class="cube-height" [routerLink]="['/', chain, 'block', block.hash]"
+             [attr.title]="block.height.exact">{{ block.height.display }}</a>
+          <a class="cube-block confirmed-block" [routerLink]="['/', chain, 'block', block.hash]"
+             [style.background]="confirmedBackground(block)"
+             [attr.aria-label]="'Block ' + block.height.exact">
+            <div class="cube-body">
+              <span class="cube-median" *ngIf="block.medianFeeRate">
+                ~{{ block.medianFeeRate }}
+                <span class="cube-unit">{{ strip.unit }}</span>
+              </span>
+              <span class="cube-count" *ngIf="block.totalFees" [attr.title]="block.totalFees.exact">{{ block.totalFees.display }} {{ ticker }}</span>
+              <span class="cube-count" *ngIf="block.txCount" [attr.title]="block.txCount.exact"
+                    i18n="universe.timeline.block-tx-count">{{ block.txCount.display }} transactions</span>
+              <span class="cube-eta" [attr.title]="block.timeExact">{{ block.age }}</span>
+            </div>
+          </a>
+          <div class="cube-caption miner-caption">
+            <span class="miner-name" *ngIf="block.minerName; else unknownMiner">{{ block.minerName }}</span>
+            <ng-template #unknownMiner>
+              <span class="miner-name unknown" i18n="universe.timeline.miner-unknown">Unknown</span>
+            </ng-template>
+          </div>
+        </div>
+        <p class="timeline-empty" *ngIf="!strip.confirmed.length" i18n="universe.timeline.no-blocks">
+          No recent blocks are stored yet. They appear as the collector catches up.
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <p class="timeline-note" *ngIf="strip.cadenceNotice">{{ strip.cadenceNotice }}</p>
+  <p class="timeline-note" *ngIf="strip.orderingDisclosure">{{ strip.orderingDisclosure }}</p>
+  <p class="notice failure" role="status" *ngIf="strip.partial" i18n="universe.timeline.partial">
+    The future side is built from a partial view of the pending set, so a slot may be missing members.
+  </p>
+</div>
+
+<div class="timeline-shell loading" *ngIf="!reading && loading" aria-hidden="true">
+  <div class="timeline-row">
+    <div class="candidate-cube" *ngFor="let s of [0, 1, 2, 3, 4, 5]">
+      <div class="cube-block skeleton"></div>
+    </div>
+  </div>
+</div>

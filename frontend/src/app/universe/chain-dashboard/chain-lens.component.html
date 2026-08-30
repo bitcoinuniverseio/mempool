@@ -1,0 +1,77 @@
+<div class="lens" [class.unavailable]="unavailable">
+
+  <div class="lens-controls" role="radiogroup"
+       aria-label="Lens filter" i18n-aria-label="universe.lens.filter-label">
+    <button type="button" *ngFor="let filter of filters"
+            class="lens-filter" [class.active]="activeFilter === filter.id"
+            role="radio" [attr.aria-checked]="activeFilter === filter.id"
+            (click)="setFilter(filter.id)">{{ filter.label }}</button>
+    <button type="button" class="lens-filter lens-table-toggle"
+            *ngIf="webGlEnabled"
+            [attr.aria-pressed]="asTable"
+            (click)="toggleTable()"
+            i18n="universe.lens.table-toggle">Table</button>
+  </div>
+
+  <p class="notice failure" role="status" *ngIf="unavailable" i18n="universe.lens.unavailable">
+    The pending set cannot be read right now, so the lens shows nothing rather than stale rectangles.
+  </p>
+
+  <ng-container *ngIf="!unavailable">
+    <p class="notice empty" *ngIf="webGlEnabled && !asTable && !items.length"
+       i18n="universe.lens.canvas-empty">
+      Nothing is waiting right now, as far as our own node can see.
+    </p>
+    <div class="lens-canvas" *ngIf="webGlEnabled && !asTable && items.length">
+      <app-block-overview-graph
+        #lensGraph
+        [isLoading]="false"
+        [resolution]="80"
+        [blockLimit]="lensLimit"
+        [autofit]="true"
+        [disableSpinner]="true"
+        [overrideColors]="lensColors"
+        (readyEvent)="onGraphReady()"
+        (txClickEvent)="onTxClick($event)"
+        (txHoverEvent)="onTxHover($event)"
+      ></app-block-overview-graph>
+      <div class="lens-tooltip" *ngIf="hovered as item" aria-hidden="true">
+        <span class="identifier">{{ item.txid.slice(0, 16) }}&#8230;</span>
+        <span i18n="universe.lens.tooltip-size">{{ item.sizeBytes }} bytes</span>
+        <span *ngIf="feeDisplay(item) as fee">{{ fee.display }} {{ ticker }}</span>
+        <span *ngIf="item.rateLabel">{{ item.rateLabel }}</span>
+        <span class="secondary" *ngIf="item.shielded" i18n="universe.lens.tooltip-shielded">Shielded structure; fee not public</span>
+      </div>
+    </div>
+
+    <!-- The same information without WebGL: one row per pending transaction. -->
+    <div class="table-wrap" *ngIf="!webGlEnabled || asTable" tabindex="0" role="region"
+         aria-label="Pending transactions by size"
+         i18n-aria-label="universe.lens.table-label">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col" i18n="universe.lens.col-tx">Transaction</th>
+            <th scope="col" class="numeric" i18n="universe.lens.col-size">Bytes</th>
+            <th scope="col" class="numeric" i18n="universe.lens.col-fee">Fee</th>
+            <th scope="col" i18n="universe.lens.col-rate">Rate</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of tableRows">
+            <td><a class="identifier" [routerLink]="['/', chain, 'tx', item.txid]">{{ item.txid.slice(0, 20) }}&#8230;</a></td>
+            <td class="numeric">{{ item.sizeBytes }}</td>
+            <td class="numeric" [class.secondary]="!feeDisplay(item)">
+              <ng-container *ngIf="feeDisplay(item) as fee; else noFee">{{ fee.display }} {{ ticker }}</ng-container>
+              <ng-template #noFee><ng-container i18n="universe.lens.fee-unknown">not public</ng-container></ng-template>
+            </td>
+            <td [class.secondary]="!item.rateLabel">{{ item.rateLabel ?? '' }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="notice empty" *ngIf="!shown.length" i18n="universe.lens.empty">
+        Nothing is waiting right now, as far as our own node can see.
+      </p>
+    </div>
+  </ng-container>
+</div>
