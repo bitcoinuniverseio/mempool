@@ -12,6 +12,7 @@ import {
   diffManifests,
   protocolCopyIds,
   readmeBlockOf,
+  renderMarkdown,
   renderReadmeBlock,
   renderRoster,
   validateManifest,
@@ -257,6 +258,25 @@ test('a served roster in a different order is named', () => {
     problems(diffManifests(comparable(pinned), comparable(served))),
     /the roster order differs/,
   );
+});
+
+test('a value carrying a pipe or a backslash cannot split a table row', () => {
+  const rendered = renderMarkdown({
+    ...pinned,
+    protocols: [
+      {
+        ...pinned.protocols[0],
+        id: 'trick',
+        family: 'a\\',
+        chain: 'b|c',
+        indexerAuthority: 'd\ne',
+      },
+    ],
+  });
+  const row = rendered
+    .split('\n')
+    .find((line) => line.startsWith('| trick '));
+  assert.equal(row.split(/(?<!\\)\|/).length - 1, 7);
 });
 
 test('a served roster identical to the pin reports nothing', () => {

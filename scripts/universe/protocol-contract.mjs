@@ -278,9 +278,18 @@ export function resolvableNames(protocols) {
 // Generated documents
 // ---------------------------------------------------------------------------
 
-/** Escapes the pipe so an authority id can never break the table. */
+/**
+ * Escapes a value so it can never break the table it is written into.
+ *
+ * The backslash goes first: escaping the pipe alone leaves a value ending in
+ * a backslash able to consume the escape and split the row, which is a cell
+ * that reads as two. Newlines end a row outright, so they become spaces.
+ */
 function cell(value) {
-  return String(value ?? '').replace(/\|/g, '\\|');
+  return String(value ?? '')
+    .replace(/\\/g, '\\\\')
+    .replace(/\|/g, '\\|')
+    .replace(/[\r\n]+/g, ' ');
 }
 
 export function readableProtocols(manifest) {
