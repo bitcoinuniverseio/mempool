@@ -552,6 +552,154 @@
   </section>
 
   <!-- ------------------------------------------------------------------ -->
+  <!-- An asset whose ledger is reported under more than one ruleset       -->
+  <!-- ------------------------------------------------------------------ -->
+  <ng-container *ngIf="vm.rulesetAsset as asset">
+
+    <section class="panel ruleset-ledger" aria-labelledby="ruleset-ledger-heading">
+      <h2 id="ruleset-ledger-heading" i18n="universe.chain.ruleset-title">Ledger under each ruleset</h2>
+      <p class="panel-lede" i18n="universe.chain.ruleset-lede">
+        This token is indexed once under each of these rules: {{ rulesetNames(asset.rulesets) }}. Where the readings disagree, both figures are shown. The explorer does not choose between them.
+      </p>
+
+      <dl class="facts ruleset-context">
+        <div *ngIf="asset.decimalsExact">
+          <dt i18n="universe.chain.ruleset-decimals">Decimals</dt>
+          <dd [attr.title]="asset.decimalsExact">
+            {{ asset.decimalsExact }}
+            <span class="secondary" i18n="universe.chain.ruleset-decimals-note">Every quantity below is shifted by this.</span>
+          </dd>
+        </div>
+        <div *ngIf="asset.lens">
+          <dt i18n="universe.chain.ruleset-lens">Default reading</dt>
+          <dd>{{ asset.lens }}</dd>
+        </div>
+      </dl>
+
+      <p class="notice failure" *ngIf="asset.decimals === null" i18n="universe.chain.ruleset-no-decimals">
+        This token's decimals could not be read, so no shifted quantity is shown. An unshifted figure presented as one would be wrong by a factor the reader cannot see. The exact digits are in the full response below.
+      </p>
+
+      <div class="table-wrap" tabindex="0" role="region" aria-labelledby="ruleset-ledger-heading">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col" i18n="universe.chain.ruleset-figure">Figure</th>
+              <th scope="col" class="numeric" *ngFor="let name of asset.rulesets; trackBy: trackByText">{{ name }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let figure of asset.figures; trackBy: trackByKey" [class.diverges]="figure.diverges">
+              <th scope="row">
+                {{ figure.label }}
+                <span class="universe-chip state-partial" *ngIf="figure.diverges" i18n="universe.chain.ruleset-differs">Readings differ</span>
+              </th>
+              <td class="numeric" *ngFor="let value of figure.readings; trackBy: trackByIndex"
+                  [class.secondary]="!value.amount && !value.word"
+                  [attr.title]="value.amount?.exact">
+                <ng-container *ngIf="value.amount">{{ value.amount.display }}</ng-container>
+                <ng-container *ngIf="value.word">{{ value.word }}</ng-container>
+                <ng-container *ngIf="!value.amount && !value.word" i18n="universe.chain.ruleset-not-shown">not shown</ng-container>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="panel-lede" *ngIf="asset.absentFrom.length" i18n="universe.chain.ruleset-absent">
+        The authority reports this token as absent from: {{ rulesetNames(asset.absentFrom) }}.
+      </p>
+      <p class="panel-lede" *ngIf="rulesetClaimDiffers(asset)" i18n="universe.chain.ruleset-claim-differs">
+        The authority's own summary names {{ asset.statedDivergingFields.join(', ') || 'no fields' }} as where the readings disagree, while the figures above show {{ asset.divergingFields.join(', ') || 'none' }}. Both statements are kept; the difference is a fact about the source.
+      </p>
+      <p class="panel-lede" *ngIf="asset.unreadFields.length" i18n="universe.chain.ruleset-unread">
+        The ledger also carries {{ asset.unreadFields.join(', ') }}, which this build has no reading for. They are named here rather than shifted by a rule that may not apply, and appear in the full response below.
+      </p>
+    </section>
+
+    <section class="panel ruleset-unevaluated" *ngIf="asset.unevaluated.length"
+             aria-labelledby="ruleset-unevaluated-heading">
+      <h2 id="ruleset-unevaluated-heading" i18n="universe.chain.ruleset-unevaluated-title">Rules neither reading evaluates</h2>
+      <p class="panel-lede" i18n="universe.chain.ruleset-unevaluated-lede">
+        The authority states these rules exist and explains why no reading applies them. They are part of this token's story, so they are here in the authority's own words.
+      </p>
+      <ul class="rule-list">
+        <li *ngFor="let rule of asset.unevaluated; trackBy: trackById">
+          <p class="rule-summary">{{ rule.summary }}</p>
+          <p class="rule-reason secondary">{{ rule.reason }}</p>
+        </li>
+      </ul>
+    </section>
+
+  </ng-container>
+
+  <!-- ------------------------------------------------------------------ -->
+  <!-- A page of such assets, each carrying its own ledger                 -->
+  <!-- ------------------------------------------------------------------ -->
+  <section class="panel ruleset-list" *ngIf="vm.rulesetList as list" aria-labelledby="ruleset-list-heading">
+    <h2 id="ruleset-list-heading" i18n="universe.chain.ruleset-list-title">Tokens</h2>
+    <p class="panel-lede" i18n="universe.chain.ruleset-list-lede">
+      Every token here is indexed once under each of these rules: {{ rulesetNames(list.rulesets) }}. Figures are the {{ list.lens }} reading; a cell whose readings disagree shows every reading, and each token's page shows its full ledger under both.
+    </p>
+    <p class="panel-lede" *ngIf="rulesetListTruncated(list)"
+       i18n="universe.chain.ruleset-list-truncated">
+      Showing the first {{ list.shownCount }} of {{ list.totalExact }} tokens the authority reports.
+    </p>
+    <p class="panel-lede" *ngIf="list.hiddenFigureFields.length"
+       i18n="universe.chain.ruleset-list-hidden">
+      Each ledger also carries {{ list.hiddenFigureFields.join(', ') }}, which are not columns here. Every one of them is on the token's own page.
+    </p>
+    <div class="table-wrap" tabindex="0" role="region" aria-labelledby="ruleset-list-heading">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col" i18n="universe.chain.ruleset-list-tick">Token</th>
+            <th scope="col" *ngFor="let column of list.columns; trackBy: trackByKey"
+                [class.numeric]="column.kind !== 'word'">{{ column.label }}</th>
+            <th scope="col" i18n="universe.chain.ruleset-list-agreement">Readings</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of list.rows; trackBy: trackByIndex" [class.diverges]="row.diverges">
+            <td>
+              <a class="identifier" [routerLink]="['/', chain, 'protocols', activeProtocolId(), row.tick]">{{ row.tick }}</a>
+            </td>
+            <td *ngFor="let cell of row.cells; trackBy: trackByKey"
+                [class.numeric]="cell.figure?.kind !== 'word'"
+                [class.secondary]="!cell.figure"
+                [attr.title]="cell.figure && !cell.figure.diverges ? cell.figure.readings[0].amount?.exact : null">
+              <ng-container *ngIf="cell.figure as figure; else noFigure">
+                <ng-container *ngIf="!figure.diverges; else divergingCell">
+                  {{ figure.readings[0].amount?.display ?? figure.readings[0].word ?? '' }}
+                </ng-container>
+                <ng-template #divergingCell>
+                  <span class="reading-stack" *ngFor="let value of figure.readings; trackBy: trackByIndex"
+                        [attr.title]="value.amount?.exact">
+                    {{ value.amount?.display ?? value.word ?? '' }}
+                    <span class="secondary">{{ value.ruleset }}</span>
+                  </span>
+                </ng-template>
+              </ng-container>
+              <ng-template #noFigure><ng-container i18n="universe.chain.ruleset-list-no-figure">not reported</ng-container></ng-template>
+            </td>
+            <td>
+              <span class="universe-chip"
+                    [ngClass]="row.diverges ? 'state-partial' : 'state-proven'"
+                    [attr.title]="row.diverges ? row.reading.divergingFields.join(', ') : null">
+                <ng-container *ngIf="row.diverges; else rowAgrees" i18n="universe.chain.ruleset-list-differ">Differ</ng-container>
+                <ng-template #rowAgrees><ng-container i18n="universe.chain.ruleset-list-agree">Agree</ng-container></ng-template>
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="panel-lede" *ngIf="list.unreadRowCount" i18n="universe.chain.ruleset-list-unread">
+      {{ list.unreadRowCount }} entries in the response carry no ruleset ledger and are only in the full response below.
+    </p>
+  </section>
+
+  <!-- ------------------------------------------------------------------ -->
   <!-- Anything else the authority returned                                -->
   <!-- ------------------------------------------------------------------ -->
   <section class="panel" *ngIf="vm.facts.length" aria-labelledby="record-heading">

@@ -93,6 +93,10 @@ export const ROUTES = [
   { id: 'zcash-block', path: `/zcash/block/${chainSampleIds.ZEC_BLOCK}`, name: 'Zcash block' },
   { id: 'zcash-address', path: `/zcash/address/${chainSampleIds.ZEC_ADDRESS}`, name: 'Zcash address' },
   { id: 'zcash-protocols', path: '/zcash/protocols', name: 'Zcash protocols' },
+  // The ZRC-20 pages carry a ledger reported under two rulesets that are
+  // allowed to disagree. They reached production as a JSON string in a cell.
+  { id: 'zcash-zrc20', path: '/zcash/protocols/zrc20', name: 'ZRC-20 tokens' },
+  { id: 'zcash-zrc20-token', path: `/zcash/protocols/zrc20/${chainSampleIds.ZEC_ZRC20}`, name: 'ZRC-20 token' },
 
   // Universe-authored routes that had no coverage either. The saved page is
   // seeded through localStorage below, because its state was never a request.
@@ -702,6 +706,7 @@ export const GATED_ROUTES = new Set([
   'dogecoin', 'dogecoin-mempool', 'dogecoin-tx', 'dogecoin-block',
   'dogecoin-address', 'dogecoin-protocols', 'dogecoin-drc20',
   'zcash', 'zcash-mempool', 'zcash-tx', 'zcash-protocols',
+  'zcash-zrc20', 'zcash-zrc20-token',
   // The single-asset pages and the local-state page, for the same reason.
   'outpoint', 'inscription', 'rune', 'sat', 'saved',
 ]);

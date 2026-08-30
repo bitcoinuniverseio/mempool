@@ -776,6 +776,70 @@ tbody tr:last-child td {
 }
 
 // ---------------------------------------------------------------------------
+// Ruleset ledgers
+// ---------------------------------------------------------------------------
+
+// The figure names are row headers, not cells: the ledger reads figure by
+// figure, and each ruleset's value sits beside the others under its own name.
+.ruleset-ledger,
+.ruleset-list {
+  tbody th {
+    color: var(--u-text-secondary);
+    font-weight: var(--u-weight-semibold);
+    font-size: var(--u-text-sm);
+    text-align: left;
+    padding: var(--u-space-2) var(--u-space-3) var(--u-space-2) 0;
+    border-bottom: 1px solid var(--u-divider);
+    vertical-align: top;
+    white-space: nowrap;
+
+    .universe-chip {
+      margin-left: var(--u-space-2);
+    }
+  }
+
+  tbody tr:last-child th {
+    border-bottom: 0;
+  }
+
+  // A row whose readings disagree is the row a visitor came to check. The
+  // mark is a border rather than a fill, so it survives forced colours.
+  tr.diverges th,
+  tr.diverges td {
+    border-bottom-color: var(--u-border);
+  }
+}
+
+// Both figures of a diverging cell, stacked, each naming its ruleset. On one
+// line they read as a single number with a word in it.
+.reading-stack {
+  display: block;
+  white-space: nowrap;
+}
+
+// The authority's prose about rules neither reading evaluates.
+.rule-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li + li {
+    margin-top: var(--u-space-3);
+    padding-top: var(--u-space-3);
+    border-top: 1px solid var(--u-divider);
+  }
+
+  p {
+    margin: 0;
+  }
+
+  .rule-reason {
+    margin-top: var(--u-space-1);
+    font-size: var(--u-text-sm);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Evidence
 // ---------------------------------------------------------------------------
 
