@@ -397,6 +397,16 @@ suite can see that.
    changed. A cutover was probed once a second through the restart window and
    every request returned 200.
 
+   When the gateway does change, it restarts before the backend, and that
+   order matters as soon as a release moves which upstream owns a path.
+   Adopting the index did exactly that. A new gateway in front of an old
+   backend is fine: it sends `/api/` to the index, which is already up, and
+   `/api/v1/` to the backend, which still answers it. An old gateway in front
+   of a new backend is not: it sends `/api/` to a backend that no longer
+   mounts those routes, and every transaction, block and address page 404s for
+   as long as that lasts. The socket unit holds the port across the gateway's
+   own restart, so going first costs nothing.
+
    A release that changes the gateway itself used to be the one case that
    still showed a gap, because the port went away with the process and nothing
    could bridge it. `universe-explorer-gateway.socket` closes that: systemd

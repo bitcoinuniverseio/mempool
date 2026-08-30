@@ -589,18 +589,39 @@ cmd_cutover() {
   mv -Tf "$CURRENT.new" "$CURRENT"
   log "current now points at $dir"
 
-  systemctl restart universe-explorer-backend universe-explorer-overlay
+  # The gateway goes first, and the order is not arbitrary.
+  #
+  # A release may move which upstream owns a path. Adopting the Esplora index
+  # did exactly that: the explorer backend stops mounting the address,
+  # transaction, block and mempool routes and the index starts serving them.
+  # The two directions are not symmetric across that kind of change.
+  #
+  #   new gateway, old backend  ->  fine. The new table sends /api/ to the
+  #                                 index, which is already up, and /api/v1/
+  #                                 to the backend, which still answers it.
+  #   old gateway, new backend  ->  broken. The old table sends /api/ to a
+  #                                 backend that no longer mounts it, so every
+  #                                 transaction, block and address page 404s.
+  #
+  # Restarting the backend first puts the origin through the broken half for
+  # as long as the backend takes to come up. Restarting the gateway first
+  # never does, because the new table is correct against both. Its socket unit
+  # holds the port across its own restart, so this costs nothing.
   if [ "$gateway_changed" = yes ]; then
     if systemctl is-active --quiet universe-explorer-gateway.socket; then
-      log "the gateway changed, restarting it; systemd holds the port, so the origin sees no refused connection"
+      log "the gateway changed, restarting it first; systemd holds the port, so the origin sees no refused connection"
     else
-      log "the gateway changed, restarting it; nothing holds the port, so the origin sees a brief gap"
+      log "the gateway changed, restarting it first; nothing holds the port, so the origin sees a brief gap"
       log "enable universe-explorer-gateway.socket to close it"
     fi
     systemctl restart universe-explorer-gateway
+    wait_for "$GATEWAY/__gateway/health" gateway \
+      || fail "the gateway did not come back after its restart, and nothing has been switched behind it yet"
   else
     log "the gateway is unchanged, leaving it up so the origin sees no gap"
   fi
+
+  systemctl restart universe-explorer-backend universe-explorer-overlay
   if ! verify_live "$dir"; then
     log "verification failed, rolling back"
     [ -n "$previous" ] && cmd_rollback "$(basename "$previous" | sed 's/^mempool-//')"
