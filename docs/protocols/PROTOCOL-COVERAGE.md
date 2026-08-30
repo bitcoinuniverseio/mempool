@@ -1,20 +1,30 @@
 # Protocol coverage
 
-Generated from the explorer protocol registry in backend-apis
-(src/universe-explorer/registry/explorer-protocol-registry.ts), as served by
-`/api/v1/universe/protocols`. Do not edit rows by hand: regenerate with
+The roster is owned by `bitcoinuniverseio/backend-apis`, in
+`src/universe-explorer/registry/explorer-protocol-registry.ts`, and served by
+`/api/v1/universe/protocols`. This file and `PROTOCOL-COVERAGE.json` are the
+copy this repository pins. Do not edit rows by hand: record a new manifest with
 
 ```
-node scripts/universe/generate-protocol-coverage.mjs --from <manifest url or file>
+node scripts/universe/protocol-contract.mjs --record --from <manifest url or file>
 ```
 
-and verify with `node scripts/universe/generate-protocol-coverage.mjs --check`.
+`node scripts/universe/protocol-contract.mjs --check` holds this repository's
+own surfaces to the pinned roster, and
+`node scripts/universe/protocol-contract.mjs --against <origin>` fails when a
+deployment serves a roster that differs from it.
 
 Release status semantics: every protocol starts BLOCKED and is upgraded only when
 its explorer integration is completed and verified against its Universe authority.
-A protocol never silently disappears from this table.
+A protocol never silently disappears from this table: `PROTOCOL-ROSTER.lock`
+records every id that has been published, and the gate fails when one of them
+stops appearing.
 
-Registry version 1.0.0. 3 of 36 protocols are readable today; the rest are recorded here but not yet served.
+Pinned from bitcoinuniverseio/backend-apis at commit 100c0ec0ccd3fd28c3f7c89bec7cb6b5575c8d96,
+manifest schema universe-explorer-protocol-manifest-v1, registry version 1.0.0,
+recorded 2026-08-30T20:52:56.287Z.
+
+7 of 38 protocols are readable today; the rest are recorded here but not yet served.
 
 | id | family | chain | authority | release status | coverage |
 |---|---|---|---|---|---|
@@ -35,7 +45,7 @@ Registry version 1.0.0. 3 of 36 protocols are readable today; the rest are recor
 | arc20 | ATOMICALS | bitcoin | index-atomicals | BLOCKED | unknown |
 | op_return | OP DATA | bitcoin | index-op20 | BLOCKED | unknown |
 | op_names | OP DATA | bitcoin | index-op20 | BLOCKED | unknown |
-| op_inscriptions | OP DATA | bitcoin | index-opinscriptions | BLOCKED | unknown |
+| op_inscriptions | OP DATA | bitcoin | index-opinscriptions | VERIFIED READ ONLY | complete |
 | op_drop | OP DATA | bitcoin | index-drops-and-opdrop | BLOCKED | unknown |
 | drops | OP DATA | bitcoin | index-drops-and-opdrop | BLOCKED | unknown |
 | brc20 | OTHER | bitcoin | index-brc20 | BLOCKED | unknown |
@@ -52,5 +62,7 @@ Registry version 1.0.0. 3 of 36 protocols are readable today; the rest are recor
 | doginals | OTHER | dogecoin | ord-dogecoin | BLOCKED | unknown |
 | drc20 | OTHER | dogecoin | ord-dogecoin | BLOCKED | unknown |
 | tap_doge | OTHER | dogecoin | index-doge-tap | BLOCKED | unknown |
-| zerdinals | OTHER | zcash | index-zcash-metaprotocols | BLOCKED | unknown |
-| zrunes | OTHER | zcash | index-zcash-metaprotocols | BLOCKED | unknown |
+| dunes | OTHER | dogecoin | ord-dogecoin | BLOCKED | unknown |
+| zerdinals | OTHER | zcash | index-zcash-metaprotocols | VERIFIED READ ONLY | complete |
+| zrunes | OTHER | zcash | index-zcash-metaprotocols | VERIFIED READ ONLY | complete |
+| zrc20 | OTHER | zcash | index-zcash-metaprotocols | VERIFIED READ ONLY | complete |
