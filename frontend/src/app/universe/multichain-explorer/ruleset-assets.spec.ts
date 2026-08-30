@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   readDecimals,
   readRulesetAsset,
+  readRulesetAssetList,
 } from '@app/universe/multichain-explorer/ruleset-assets';
 
 /**
@@ -12,63 +13,63 @@ import {
  * a field the page declined to show.
  */
 const ZERO = {
-    "lens": "zord",
-    "rulesets": {
-      "zord": {
-        "max_supply": "21000000000000000000000000",
-        "mint_limit": "1000000000000000000000",
-        "minted": "21000000000000000000000000",
-        "burned": "0",
-        "shielded": "6000000000000000000000",
-        "circulating": "20994000000000000000000000",
-        "mint_count": "21120",
-        "holders": "2330",
-        "mint_progress": {
-          "minted": "21000000000000000000000000",
-          "max_supply": "21000000000000000000000000"
+    'lens': 'zord',
+    'rulesets': {
+      'zord': {
+        'max_supply': '21000000000000000000000000',
+        'mint_limit': '1000000000000000000000',
+        'minted': '21000000000000000000000000',
+        'burned': '0',
+        'shielded': '6000000000000000000000',
+        'circulating': '20994000000000000000000000',
+        'mint_count': '21120',
+        'holders': '2330',
+        'mint_progress': {
+          'minted': '21000000000000000000000000',
+          'max_supply': '21000000000000000000000000'
         },
-        "status": "minted"
+        'status': 'minted'
       },
-      "zecscriptions": {
-        "max_supply": "21000000000000000000000000",
-        "mint_limit": "1000000000000000000000",
-        "minted": "21000000000000000000000000",
-        "burned": "0",
-        "shielded": "6000000000000000000000",
-        "circulating": "20994000000000000000000000",
-        "mint_count": "21000",
-        "holders": "2539",
-        "mint_progress": {
-          "minted": "21000000000000000000000000",
-          "max_supply": "21000000000000000000000000"
+      'zecscriptions': {
+        'max_supply': '21000000000000000000000000',
+        'mint_limit': '1000000000000000000000',
+        'minted': '21000000000000000000000000',
+        'burned': '0',
+        'shielded': '6000000000000000000000',
+        'circulating': '20994000000000000000000000',
+        'mint_count': '21000',
+        'holders': '2539',
+        'mint_progress': {
+          'minted': '21000000000000000000000000',
+          'max_supply': '21000000000000000000000000'
         },
-        "status": "minted"
+        'status': 'minted'
       }
     },
-    "tick": "ZERO",
-    "tick_key": "7a65726f",
-    "decimals": "18",
-    "deploy_inscription_id": "6d3a32c5a6847b14d9e361ad4384b0e0e1bf82b5b2a2ce5dc204ddf34e34ceeei0",
-    "deploy_txid": "6d3a32c5a6847b14d9e361ad4384b0e0e1bf82b5b2a2ce5dc204ddf34e34ceee",
-    "deploy_height": "3133112",
-    "deployer_address": "t1HzoKn3UXD8vjsS2GzvjGxVUSTKa5NpeH9",
-    "divergence": {
-      "diverges": true,
-      "fields": [
-        "mint_count",
-        "holders"
+    'tick': 'ZERO',
+    'tick_key': '7a65726f',
+    'decimals': '18',
+    'deploy_inscription_id': '6d3a32c5a6847b14d9e361ad4384b0e0e1bf82b5b2a2ce5dc204ddf34e34ceeei0',
+    'deploy_txid': '6d3a32c5a6847b14d9e361ad4384b0e0e1bf82b5b2a2ce5dc204ddf34e34ceee',
+    'deploy_height': '3133112',
+    'deployer_address': 't1HzoKn3UXD8vjsS2GzvjGxVUSTKa5NpeH9',
+    'divergence': {
+      'diverges': true,
+      'fields': [
+        'mint_count',
+        'holders'
       ],
-      "absent_from": [],
-      "unevaluated": [
+      'absent_from': [],
+      'unevaluated': [
         {
-          "id": "zecscriptions-protocol-v2-reveal-outputs",
-          "summary": "zecscriptions protocol version 2 requires three reveal outputs: the minter at vout 0, a deployer share of 19200 zatoshis at vout 1, and a platform share of 172800 zatoshis at vout 2.",
-          "reason": "No activation height for protocol version 2 is recorded in the compatibility matrix, so applying the rule would require inventing one. Neither ruleset evaluates it."
+          'id': 'zecscriptions-protocol-v2-reveal-outputs',
+          'summary': 'zecscriptions protocol version 2 requires three reveal outputs: the minter at vout 0, a deployer share of 19200 zatoshis at vout 1, and a platform share of 172800 zatoshis at vout 2.',
+          'reason': 'No activation height for protocol version 2 is recorded in the compatibility matrix, so applying the rule would require inventing one. Neither ruleset evaluates it.'
         },
         {
-          "id": "shielded-settlement-accounting",
-          "summary": "A settlement spend into a fully shielded transaction is a permanent burn in zord accounting.",
-          "reason": "Reported as its own bucket rather than as a ruleset switch. Shielded and burned totals are published separately so either accounting can be derived exactly."
+          'id': 'shielded-settlement-accounting',
+          'summary': 'A settlement spend into a fully shielded transaction is a permanent burn in zord accounting.',
+          'reason': 'Reported as its own bucket rather than as a ruleset switch. Shielded and burned totals are published separately so either accounting can be derived exactly.'
         }
       ]
     }
@@ -201,5 +202,70 @@ describe('readDecimals', () => {
     expect(readDecimals(18)).toBeNull();
     expect(readDecimals('99')).toBeNull();
     expect(readDecimals(null)).toBeNull();
+  });
+});
+
+describe('a page of assets each carrying its own ledger', () => {
+  const page = {
+    lens: 'zord',
+    rulesets: ['zord', 'zecscriptions'],
+    total: '159',
+    limit: '50',
+    offset: '0',
+    items: [ZERO, { ...ZERO, tick: 'CALM', divergence: { diverges: false, fields: [], absent_from: [], unevaluated: [] } }],
+  };
+
+  it('reads every item and keeps the authority total exactly', () => {
+    const list = readRulesetAssetList(page);
+    expect(list?.shownCount).toBe(2);
+    expect(list?.totalExact).toBe('159');
+    expect(list?.lens).toBe('zord');
+    expect(list?.rulesets).toEqual(['zord', 'zecscriptions']);
+  });
+
+  it('shows the chosen columns and names every figure it is holding back', () => {
+    const list = readRulesetAssetList(page);
+    expect(list?.columns.map((column) => column.key)).toEqual([
+      'status', 'minted', 'max_supply', 'holders',
+    ]);
+    // Nine figures in the ledger, four columns on the page. The other five
+    // are named, because a table that quietly shows four of nine reads as
+    // the whole ledger.
+    expect(list?.hiddenFigureFields).toEqual([
+      'max_supply', 'mint_limit', 'minted', 'burned', 'shielded',
+      'circulating', 'mint_count', 'holders', 'status',
+    ].filter((key) => !['status', 'minted', 'max_supply', 'holders'].includes(key)));
+  });
+
+  it('never shifts a count column and always shifts an amount column', () => {
+    const list = readRulesetAssetList(page);
+    const row = list?.rows[0];
+    const cell = (key) => row?.cells.find((entry) => entry.key === key);
+    expect(cell('minted')?.figure?.readings[0].amount?.display).toBe('21,000,000');
+    expect(cell('holders')?.figure?.readings[0].amount?.display).toBe('2,330');
+    expect(cell('status')?.figure?.readings[0].word).toBe('minted');
+  });
+
+  it('marks the row whose readings disagree, from the figures themselves', () => {
+    const list = readRulesetAssetList(page);
+    expect(list?.rows[0].diverges).toBe(true);
+    // The second row restates ZERO's figures, which still disagree on
+    // holders and mint_count. Divergence is observed from the figures, not
+    // from the summary object, so a summary claiming agreement cannot hide
+    // a ledger that does not agree.
+    expect(list?.rows[1].diverges).toBe(true);
+  });
+
+  it('counts an item it cannot read rather than dropping it in silence', () => {
+    const list = readRulesetAssetList({ ...page, items: [ZERO, { tick: 'BARE' }] });
+    expect(list?.shownCount).toBe(1);
+    expect(list?.unreadRowCount).toBe(1);
+  });
+
+  it('is not this reading at all for a page without ruleset items', () => {
+    expect(readRulesetAssetList({ items: [{ tick: 'BARE' }] })).toBeNull();
+    expect(readRulesetAssetList({ items: [] })).toBeNull();
+    expect(readRulesetAssetList({ transactions: [ZERO] })).toBeNull();
+    expect(readRulesetAssetList(null)).toBeNull();
   });
 });
