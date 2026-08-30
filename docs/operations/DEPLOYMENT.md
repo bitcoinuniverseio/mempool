@@ -100,6 +100,28 @@ The overlay reads only Universe protocol authorities, configured through
 bearer tokens supplied by separate named variables. Credentials never appear in
 the JSON, in responses, or in logs.
 
+Two things about a source entry are easy to get wrong, and both have already
+produced an authority the overlay reported as unreachable while it was running
+and ready.
+
+The scheme has to be the one the authority actually speaks. Most authorities
+here are plain HTTP on loopback; `index-doge-tap` is an HTTPS listener, so its
+entry names `https://doge-tap.internal.bitcoinuniverse.io:3013`. That host is in
+the certificate's subject alternative names and resolves to `127.0.0.1` through
+`/etc/hosts`, so verification passes and the traffic still stays on the loopback
+interface rather than going out to the public address the certificate also
+names. The certificate is trusted through `NODE_EXTRA_CA_CERTS`, never by
+turning verification off. Point an entry at `http://` when the authority serves
+TLS and every probe gets an empty reply, which the overlay can only report as
+unreachable.
+
+The token has to be the one the endpoint being called checks. A service can
+carry more than one: `index-doge-tap` authenticates its reader API with
+`TOKEN_EXPLORER_BEARER_TOKEN` and its marketplace authority endpoints per
+authority, against `DOGE_MARKETPLACE_<AUTHORITY>_AUTHORITY_BEARER_TOKEN`. The
+readiness probe passing proves nothing about the checkpoint request, because
+readiness is unauthenticated.
+
 ## Configuration
 
 `/etc/universe-explorer/`, owned by root, group `universe-explorer`, mode 0640:
@@ -111,6 +133,7 @@ the JSON, in responses, or in logs.
 | `gateway.env` | gateway ports and the static root |
 | `mysql.env` | explorer database name, user, and passwords |
 | `fulcrum.conf` | the Electrum index this deployment reads |
+| `doge-tap-ca.pem` | the certificate `index-doge-tap` presents, trusted by the overlay |
 
 ## Build
 
