@@ -185,6 +185,13 @@ jobs:
         working-directory: scripts/universe/visual-qa
         run: node --test chain-page-audit.test.mjs
 
+      # Structural facts of the multichain parity release: navigation not
+      # gated back to Bitcoin, the route registry whole, the dashboard
+      # requesting real data, cubes carrying heights, chain-native units.
+      - name: The parity regressions gate holds
+        working-directory: scripts/universe
+        run: node --test parity-regressions.test.mjs
+
       # A fixed port here once measured another job's build: two runners share
       # a host, the second gateway crashed on the taken port behind "&", the
       # probe happily reached the first job's server, and the run died halfway

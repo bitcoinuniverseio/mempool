@@ -1,0 +1,250 @@
+@use '../universe-tokens' as u;
+@use '../chain-page' as page;
+
+:host {
+  @include u.universe-protocol-tokens;
+  @include u.universe-state-tokens;
+
+  display: block;
+}
+
+@include page.universe-chain-page;
+
+.title-block {
+  display: flex;
+  align-items: center;
+  gap: var(--u-space-2);
+  margin-bottom: var(--u-space-3);
+
+  h1 {
+    font-size: var(--u-text-2xl);
+    font-weight: var(--u-weight-semibold);
+    margin: 0;
+  }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+// The timeline panel holds the one intentionally sideways-scrolling region.
+.timeline-panel {
+  padding-bottom: var(--u-space-3);
+}
+
+// Two columns at desktop, one below; each panel keeps its own height.
+.dash-grid {
+  display: grid;
+  gap: var(--u-space-3);
+  grid-template-columns: minmax(0, 1fr);
+
+  .panel {
+    margin-bottom: 0;
+    min-width: 0;
+  }
+}
+
+@media (min-width: 992px) {
+  .dash-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+.fee-levels .figure-value {
+  font-size: var(--u-text-2xl);
+}
+
+.panel-link {
+  margin: var(--u-space-3) 0 0;
+  font-size: var(--u-text-sm);
+
+  a {
+    color: var(--u-brand);
+    text-decoration: none;
+
+    &:hover,
+    &:focus-visible {
+      text-decoration: underline;
+    }
+
+    // One of these ends every panel, so on a phone they are a column of
+    // repeated targets. A line of text is about 24 pixels tall; 44 is the
+    // smallest a thumb can be expected to hit.
+    @media (pointer: coarse), (max-width: 991.98px) {
+      align-items: center;
+      display: inline-flex;
+      min-height: 44px;
+    }
+  }
+}
+
+.protocol-strip-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--u-space-2);
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: var(--u-space-2);
+    padding: var(--u-space-2) 0;
+    border-top: 1px solid var(--u-divider);
+
+    &:first-child {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    a {
+      color: var(--u-text-primary);
+      font-weight: var(--u-weight-semibold);
+      text-decoration: none;
+
+      &:hover,
+      &:focus-visible {
+        color: var(--u-brand);
+      }
+
+      // A column of one protocol per row, which on a phone is a stack of
+      // repeated targets a thumb has to pick between.
+      @media (pointer: coarse), (max-width: 991.98px) {
+        align-items: center;
+        display: inline-flex;
+        min-height: 44px;
+      }
+    }
+  }
+}
+
+.subsystems {
+  margin-top: var(--u-space-3);
+}
+
+.subsystem-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: var(--u-space-2) var(--u-space-4);
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: var(--u-space-2);
+  }
+
+  .subsystem-label {
+    font-size: var(--u-text-sm);
+  }
+}
+
+.status-drawer {
+  margin-top: var(--u-space-3);
+
+  summary {
+    cursor: pointer;
+    font-weight: var(--u-weight-semibold);
+
+    &:focus-visible {
+      outline: 2px solid var(--u-focus-ring);
+      outline-offset: 2px;
+    }
+  }
+
+  .drawer-body {
+    margin-top: var(--u-space-3);
+  }
+
+  h3 {
+    font-size: var(--u-text-base);
+    font-weight: var(--u-weight-semibold);
+    color: var(--u-text-secondary);
+    margin: var(--u-space-4) 0 var(--u-space-2);
+
+    &:first-of-type {
+      margin-top: 0;
+    }
+  }
+}
+
+.read-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 20rem));
+  gap: var(--u-space-2) var(--u-space-4);
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: var(--u-space-2);
+    padding: var(--u-space-2) 0;
+    border-top: 1px solid var(--u-divider);
+  }
+
+  .read-label {
+    flex: 0 1 auto;
+    min-width: 0;
+    font-size: var(--u-text-sm);
+  }
+
+  li.off .read-label {
+    color: var(--u-text-muted);
+  }
+}
+
+.coverage-drawer {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--u-space-2);
+
+  li {
+    display: grid;
+    grid-template-columns: minmax(0, 10rem) minmax(0, max-content);
+    align-items: center;
+    gap: var(--u-space-2);
+  }
+
+  .coverage-label {
+    font-size: var(--u-text-sm);
+    font-weight: var(--u-weight-semibold);
+  }
+
+  .coverage-detail {
+    grid-column: 1 / -1;
+    color: var(--u-text-muted);
+    font-size: var(--u-text-xs);
+  }
+}
+
+.source-list {
+  margin: 0;
+
+  dt {
+    color: var(--u-text-muted);
+    font-size: var(--u-text-xs);
+    font-weight: var(--u-weight-medium);
+    margin-top: var(--u-space-2);
+  }
+
+  dd {
+    margin: 0.2rem 0 0;
+    overflow-wrap: anywhere;
+    font-family: var(--u-font-data);
+    font-size: var(--u-text-sm);
+  }
+}

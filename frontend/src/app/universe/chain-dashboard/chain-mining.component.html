@@ -1,0 +1,213 @@
+<div class="container-xl chain-page" *ngIf="vm$ | async as vm">
+
+  <header class="title-block">
+    <span class="chain-mark" [ngClass]="'chain-mark-' + chain" aria-hidden="true"></span>
+    <h1 i18n="universe.mining.heading">{{ profile.name }} mining</h1>
+  </header>
+
+  <p class="lede" *ngIf="chain === 'dogecoin'" i18n="universe.mining.lede-doge">
+    Dogecoin is merged mined: miners work on Litecoin's scrypt proof of work and commit to Dogecoin blocks through AuxPoW, so most Dogecoin blocks are found by Litecoin pools.
+  </p>
+  <p class="lede" *ngIf="chain === 'zcash'" i18n="universe.mining.lede-zcash">
+    Zcash miners solve Equihash puzzles, so network capacity is measured in solutions per second rather than hashes.
+  </p>
+
+  <!-- The block timeline, as on the dashboard, because the mining page is
+       about the blocks being made. -->
+  <section class="panel timeline-panel" aria-labelledby="mining-timeline-heading">
+    <h2 id="mining-timeline-heading" class="visually-hidden" i18n="universe.mining.timeline-title">Block timeline</h2>
+    <app-chain-timeline
+      [chain]="chain"
+      [ticker]="profile.ticker"
+      [reading]="vm.timeline"
+      [loading]="!vm.timeline && !vm.viewError"
+    ></app-chain-timeline>
+  </section>
+
+  <p class="notice failure" role="alert" *ngIf="vm.viewError" i18n="universe.mining.view-error">
+    Some mining readings cannot be fetched right now. Panels below say what they are missing.
+  </p>
+
+  <div class="mining-grid">
+
+    <!-- Network state -->
+    <section class="panel" aria-labelledby="mining-network-heading">
+      <h2 id="mining-network-heading" i18n="universe.mining.network-title">Network</h2>
+      <div class="figure-row">
+        <div class="figure" *ngIf="vm.difficulty">
+          <span class="figure-label" i18n="universe.mining.difficulty">Difficulty</span>
+          <span class="figure-value" [attr.title]="vm.difficulty.exact">{{ vm.difficulty.display }}</span>
+        </div>
+        <div class="figure" *ngIf="vm.networkRate">
+          <span class="figure-label" i18n="universe.mining.rate">Network rate</span>
+          <span class="figure-value" [attr.title]="vm.networkRate.exact">{{ vm.networkRate.display }}</span>
+        </div>
+        <div class="figure" *ngIf="vm.target">
+          <span class="figure-label" i18n="universe.mining.target">Target block time</span>
+          <span class="figure-value" [attr.title]="vm.target.exact + ' seconds'">{{ vm.target.display }}</span>
+        </div>
+        <div class="figure" *ngIf="vm.observed">
+          <span class="figure-label" i18n="universe.mining.observed">Observed recently</span>
+          <span class="figure-value" [attr.title]="vm.observed.exact + ' seconds'">{{ vm.observed.display }}</span>
+        </div>
+      </div>
+      <p class="notice empty" *ngIf="!vm.difficulty && !vm.networkRate" i18n="universe.mining.network-unavailable">
+        The node that reports difficulty and network rate is not answering right now.
+      </p>
+    </section>
+
+    <!-- Rewards -->
+    <section class="panel" aria-labelledby="mining-reward-heading">
+      <h2 id="mining-reward-heading" i18n="universe.mining.reward-title">Block rewards</h2>
+      <div class="figure-row">
+        <div class="figure" *ngIf="vm.subsidy">
+          <span class="figure-label" i18n="universe.mining.subsidy">Subsidy</span>
+          <span class="figure-value" [attr.title]="vm.subsidy.exact">{{ vm.subsidy.display }} <span class="figure-unit">{{ profile.ticker }}</span></span>
+        </div>
+        <div class="figure" *ngIf="vm.meanFees">
+          <span class="figure-label" i18n="universe.mining.mean-fees">Mean fees per block</span>
+          <span class="figure-value" [attr.title]="vm.meanFees.exact">{{ vm.meanFees.display }} <span class="figure-unit">{{ profile.ticker }}</span></span>
+        </div>
+        <div class="figure" *ngIf="vm.meanReward">
+          <span class="figure-label" i18n="universe.mining.mean-reward">Mean total reward</span>
+          <span class="figure-value" [attr.title]="vm.meanReward.exact">{{ vm.meanReward.display }} <span class="figure-unit">{{ profile.ticker }}</span></span>
+        </div>
+      </div>
+      <p class="panel-lede reward-note" *ngIf="vm.summary?.windowBlocksAtomic" i18n="universe.mining.window-note">
+        Means are measured over the last {{ vm.summary?.windowBlocksAtomic }} collected blocks.
+      </p>
+      <p class="notice empty" *ngIf="!vm.subsidy && !vm.meanReward" i18n="universe.mining.reward-unavailable">
+        Reward readings appear once the block collector has stored enough history.
+      </p>
+    </section>
+
+    <!-- Pools -->
+    <section class="panel pools-panel" aria-labelledby="mining-pools-heading">
+      <h2 id="mining-pools-heading" i18n="universe.mining.pools-title">Mining pools</h2>
+      <div class="window-controls" role="radiogroup"
+           aria-label="Attribution window" i18n-aria-label="universe.mining.window-label">
+        <button type="button" *ngFor="let window of windows"
+                class="window-option" [class.active]="(window$ | async) === window"
+                role="radio" [attr.aria-checked]="(window$ | async) === window"
+                (click)="setWindow(window)">{{ window }}</button>
+      </div>
+      <p class="panel-lede" i18n="universe.mining.pools-lede">
+        A block is attributed to a pool only on evidence: a coinbase tag, a known payout address, or an AuxPoW parent tag. Everything else stays Unknown.
+      </p>
+      <ng-container *ngIf="vm.pools as pools; else poolsUnavailable">
+        <div class="table-wrap" tabindex="0" role="region" aria-labelledby="mining-pools-heading">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col" i18n="universe.mining.col-pool">Pool</th>
+                <th scope="col" class="numeric" i18n="universe.mining.col-blocks">Blocks</th>
+                <th scope="col" class="share-col" i18n="universe.mining.col-share">Share</th>
+                <th scope="col" i18n="universe.mining.col-evidence">Evidence</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of vm.poolRows; trackBy: trackByPool" [class.unknown-row]="row.unknown">
+                <td>{{ row.name }}</td>
+                <td class="numeric" [attr.title]="row.blocks?.exact">{{ row.blocks?.display }}</td>
+                <td class="share-col">
+                  <span class="share-bar" aria-hidden="true"><span class="share-fill" [style.width.%]="row.sharePercent"></span></span>
+                  <span class="share-value">{{ row.sharePercent | number: '1.0-1' }}%</span>
+                </td>
+                <td class="secondary">{{ row.evidence.join(', ') }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="panel-lede" *ngIf="!pools.coverageComplete" i18n="universe.mining.pools-partial">
+          Stored history does not yet span this whole window, so shares describe the covered part only.
+        </p>
+        <p class="secondary dataset-version" i18n="universe.mining.dataset-version">Attribution dataset {{ pools.attributionDatasetVersion }}</p>
+      </ng-container>
+      <ng-template #poolsUnavailable>
+        <p class="notice empty" *ngIf="vm.poolsError" i18n="universe.mining.pools-error">
+          Pool shares cannot be computed right now.
+        </p>
+        <p class="notice empty" *ngIf="!vm.poolsError" i18n="universe.mining.pools-empty">
+          Pool shares appear once the block collector has stored blocks in this window.
+        </p>
+      </ng-template>
+    </section>
+
+    <!-- Recent blocks -->
+    <section class="panel blocks-panel" aria-labelledby="mining-blocks-heading">
+      <h2 id="mining-blocks-heading" i18n="universe.mining.blocks-title">Recent blocks</h2>
+      <div class="table-wrap" *ngIf="vm.recentBlocks.length; else blocksUnavailable"
+           tabindex="0" role="region" aria-labelledby="mining-blocks-heading">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col" i18n="universe.mining.col-height">Height</th>
+              <th scope="col" i18n="universe.mining.col-time">Mined</th>
+              <th scope="col" class="numeric" i18n="universe.mining.col-txs">Transactions</th>
+              <th scope="col" class="numeric" i18n="universe.mining.col-size">Bytes</th>
+              <th scope="col" class="numeric" i18n="universe.mining.col-fees">Fees</th>
+              <th scope="col" class="numeric" i18n="universe.mining.col-reward">Reward</th>
+              <th scope="col" i18n="universe.mining.col-miner">Mined by</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let block of vm.recentBlocks; trackBy: trackByHash">
+              <td>
+                <a class="identifier" [routerLink]="['/', chain, 'block', block.hash]"
+                   *ngIf="heightFormatted(block) as height" [attr.title]="block.hash">{{ height.display }}</a>
+              </td>
+              <td>{{ blockTime(block) }}</td>
+              <td class="numeric" [attr.title]="txCountFormatted(block)?.exact">{{ txCountFormatted(block)?.display }}</td>
+              <td class="numeric" [class.secondary]="!sizeFormatted(block)">{{ sizeFormatted(block)?.display ?? '' }}</td>
+              <td class="numeric" [class.secondary]="!feesFormatted(block)">
+                <ng-container *ngIf="feesFormatted(block) as fees; else miningFeesUnknown">{{ fees.display }}</ng-container>
+                <ng-template #miningFeesUnknown><ng-container i18n="universe.mining.fees-unknown">not derived</ng-container></ng-template>
+              </td>
+              <td class="numeric" [class.secondary]="!rewardFormatted(block)">{{ rewardFormatted(block)?.display ?? '' }}</td>
+              <td [class.secondary]="!block.miner.name">
+                <ng-container *ngIf="block.miner.name; else miningMinerUnknown">{{ block.miner.name }}</ng-container>
+                <ng-template #miningMinerUnknown><ng-container i18n="universe.mining.miner-unknown">Unknown</ng-container></ng-template>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <ng-template #blocksUnavailable>
+        <p class="notice empty" i18n="universe.mining.blocks-unavailable">
+          No recent blocks are stored yet. They appear as the collector catches up.
+        </p>
+      </ng-template>
+    </section>
+
+    <!-- How this chain's mining works -->
+    <section class="panel" aria-labelledby="mining-explain-heading">
+      <h2 id="mining-explain-heading" i18n="universe.mining.explain-title">How {{ profile.name }} mining works</h2>
+      <ng-container *ngIf="chain === 'dogecoin'">
+        <p i18n="universe.mining.explain-doge-1">
+          Dogecoin uses scrypt proof of work with a 60 second target and, since block 371,337, allows merged mining through AuxPoW: a Litecoin miner embeds a commitment to a Dogecoin block in its Litecoin work, so one round of hashing can win both chains.
+        </p>
+        <p i18n="universe.mining.explain-doge-2">
+          The block subsidy has been a fixed 10,000 DOGE per block since block 600,000. There is no halving schedule; supply grows by roughly 5 billion DOGE per year.
+        </p>
+        <p i18n="universe.mining.explain-doge-3">
+          Pool attribution reads the Dogecoin coinbase and, where present, the AuxPoW parent chain's coinbase tag. Merged-mining pools usually tag the parent chain, so attribution here is only as strong as that evidence.
+        </p>
+      </ng-container>
+      <ng-container *ngIf="chain === 'zcash'">
+        <p i18n="universe.mining.explain-zcash-1">
+          Zcash uses Equihash proof of work with a 75 second target since the Blossom upgrade. Miner capacity is measured in solutions per second.
+        </p>
+        <p i18n="universe.mining.explain-zcash-2">
+          The block subsidy halves on a schedule; part of each subsidy is directed by consensus to development funds and, since NU6, to a lockbox. The subsidy shown here is the miner's share as the node reports it.
+        </p>
+        <p i18n="universe.mining.explain-zcash-3">
+          Pool attribution reads the transparent coinbase only. Shielded coinbase outputs carry no attribution evidence, so more Zcash blocks stay Unknown than on transparent chains.
+        </p>
+      </ng-container>
+      <p class="panel-link">
+        <a [routerLink]="['/', chain, 'docs']" i18n="universe.mining.docs-link">Read the {{ profile.name }} explorer docs</a>
+      </p>
+    </section>
+
+  </div>
+</div>
