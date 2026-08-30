@@ -113,9 +113,9 @@ explorer states plainly which ones it can actually read.
 
 <!-- protocol-coverage:readable -->
 
-6 of the 38 protocols in the registry are readable today:
+7 of the 38 protocols in the registry are readable today:
 
-- On bitcoin: **Ordinals**, **Rare Sats**, **Runes**, from ord.
+- On bitcoin: **Ordinals**, **Rare Sats**, **Runes**, **OP Inscriptions**, from ord and index-opinscriptions.
 - On zcash: **Zerdinals**, **ZRunes**, **ZRC-20**, from index-zcash-metaprotocols.
 
 <!-- /protocol-coverage:readable -->

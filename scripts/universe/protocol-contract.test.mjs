@@ -201,7 +201,17 @@ test('the copy reader finds the ids the frontend actually writes prose for', asy
 test('the README block states the roster it was generated from', async () => {
   const block = readmeBlockOf(await readFile(PATHS.readme, 'utf8'));
   assert.equal(block, renderReadmeBlock(pinned));
-  assert.match(block, /6 of the 38 protocols in the registry are readable/);
+  // Counted from the pin rather than written down, so a roster change is a
+  // regenerate rather than an edit here.
+  const readable = pinned.protocols.filter((p) =>
+    ['VERIFIED READ ONLY', 'PRODUCTION VERIFIED'].includes(p.releaseStatus),
+  ).length;
+  assert.match(
+    block,
+    new RegExp(
+      `${readable} of the ${pinned.protocols.length} protocols in the registry are readable`,
+    ),
+  );
 });
 
 test('a served roster that gained a protocol is named, not tolerated', () => {

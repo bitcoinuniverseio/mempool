@@ -20,11 +20,11 @@ A protocol never silently disappears from this table: `PROTOCOL-ROSTER.lock`
 records every id that has been published, and the gate fails when one of them
 stops appearing.
 
-Pinned from bitcoinuniverseio/backend-apis at commit 88a616cfdabc93facd3dcc3296f88dc214c24a40,
+Pinned from bitcoinuniverseio/backend-apis at commit 100c0ec0ccd3fd28c3f7c89bec7cb6b5575c8d96,
 manifest schema universe-explorer-protocol-manifest-v1, registry version 1.0.0,
-recorded 2026-08-30T18:18:38.168Z.
+recorded 2026-08-30T20:52:56.287Z.
 
-6 of 38 protocols are readable today; the rest are recorded here but not yet served.
+7 of 38 protocols are readable today; the rest are recorded here but not yet served.
 
 | id | family | chain | authority | release status | coverage |
 |---|---|---|---|---|---|
@@ -45,7 +45,7 @@ recorded 2026-08-30T18:18:38.168Z.
 | arc20 | ATOMICALS | bitcoin | index-atomicals | BLOCKED | unknown |
 | op_return | OP DATA | bitcoin | index-op20 | BLOCKED | unknown |
 | op_names | OP DATA | bitcoin | index-op20 | BLOCKED | unknown |
-| op_inscriptions | OP DATA | bitcoin | index-opinscriptions | BLOCKED | unknown |
+| op_inscriptions | OP DATA | bitcoin | index-opinscriptions | VERIFIED READ ONLY | complete |
 | op_drop | OP DATA | bitcoin | index-drops-and-opdrop | BLOCKED | unknown |
 | drops | OP DATA | bitcoin | index-drops-and-opdrop | BLOCKED | unknown |
 | brc20 | OTHER | bitcoin | index-brc20 | BLOCKED | unknown |
