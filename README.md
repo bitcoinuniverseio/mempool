@@ -111,8 +111,14 @@ explorer states plainly which ones it can actually read.
 | Live, read only | A first-party authority is running and its evidence is shown. |
 | Not yet available | No first-party authority for it is configured or answering here. The explorer makes no claim about it. |
 
-Readable today, backed by the first-party Ord 0.29 authority: **Ordinals**,
-**Rare Sats**, **Runes**.
+<!-- protocol-coverage:readable -->
+
+6 of the 38 protocols in the registry are readable today:
+
+- On bitcoin: **Ordinals**, **Rare Sats**, **Runes**, from ord.
+- On zcash: **Zerdinals**, **ZRunes**, **ZRC-20**, from index-zcash-metaprotocols.
+
+<!-- /protocol-coverage:readable -->
 
 Readable is not the same as current, and the product never conflates them. An
 authority that is rebuilding its index is still answering, and every page that
@@ -121,10 +127,15 @@ answers as the present. `/api/v1/universe/sources` publishes the same figure,
 and the production smoke check in
 `.github/workflows/universe-production-smoke.yml` reads it on a schedule.
 
-`docs/protocols/PROTOCOL-COVERAGE.md` is generated from the registry and lists
-every entry with its authority and its release status. Run
-`node scripts/universe/generate-protocol-coverage.mjs --check` to verify the
-table still matches the recorded manifest.
+The roster itself is owned by `bitcoinuniverseio/backend-apis` and served by
+`/api/v1/universe/protocols`. This repository pins a copy of it in
+`docs/protocols/PROTOCOL-COVERAGE.json`, carrying the schema, the registry
+version, the repository that produced it and the commit it was produced from,
+and `docs/protocols/PROTOCOL-COVERAGE.md` is the readable table.
+`node scripts/universe/protocol-contract.mjs --check` holds the pinned roster
+and this repository's own surfaces together, and
+`node scripts/universe/protocol-contract.mjs --against https://explorer.bitcoinuniverse.io`
+fails when a deployment serves a roster that differs from the pin.
 
 ## Architecture
 
@@ -222,7 +233,7 @@ cd frontend && npm run build:universe   # production build, no third-party fetch
 cd frontend && npm run test             # Universe unit suite
 cd frontend && npm run lint
 cd backend && npm run test:ci && npm run lint
-node scripts/universe/generate-protocol-coverage.mjs --check
+node scripts/universe/protocol-contract.mjs --check
 node scripts/universe/check-text.mjs                 # no em dash anywhere
 node scripts/universe/check-colors.mjs               # no raw interface colour
 node scripts/universe/check-palettes.mjs             # measured contrast, both themes

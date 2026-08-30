@@ -43,6 +43,14 @@ jobs:
         with:
           node-version: '24.19.0'
 
+      # The pinned roster is a copy of another repository's registry, and a copy
+      # is only worth anything while something compares it. This is that
+      # comparison, against what the deployment actually serves: a protocol
+      # added, dropped, renamed, re-authorised or moved between chains fails
+      # here rather than being discovered by a reader of a stale table.
+      - name: The served protocol roster matches the pinned one
+        run: node scripts/universe/protocol-contract.mjs --against "${{ github.event.inputs.origin || 'https://explorer.bitcoinuniverse.io' }}"
+
       - name: Every advertised feature has routes, data, and a matching release
         run: node scripts/universe/synthetic-check.mjs "${{ github.event.inputs.origin || 'https://explorer.bitcoinuniverse.io' }}"
 

@@ -44,8 +44,18 @@ jobs:
         with:
           node-version: '24.19.0'
 
-      - name: Protocol coverage table matches the recorded manifest
-        run: node scripts/universe/generate-protocol-coverage.mjs --check
+      # The roster is owned by backend-apis. This holds the pinned copy to its
+      # schema and its provenance, holds this repository's own surfaces to the
+      # pinned roster, and refuses a roster that lost an entry. The gate it
+      # replaced rendered a table from the recorded JSON and compared it with
+      # the committed table, so it could only prove a file agreed with itself:
+      # dunes and zrc20 were added to the registry and served in production
+      # while the recorded roster here still said thirty-six, green throughout.
+      - name: The pinned protocol roster holds
+        run: node scripts/universe/protocol-contract.mjs --check
+
+      - name: The protocol roster gate fires on the states it exists for
+        run: node --test scripts/universe/protocol-contract.test.mjs
 
       - name: No em dash anywhere
         run: node scripts/universe/check-text.mjs
