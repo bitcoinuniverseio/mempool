@@ -10,7 +10,7 @@ on:
         type: string 
 jobs:
   print-images-sha:
-    runs-on: mempool-ci
+    runs-on: runs-on=${{ github.run_id }}-print_images_sha/runner=universe-hosted/cpu=2+8/env=production
     name: Print digest for images
     steps:
       - name: Checkout
