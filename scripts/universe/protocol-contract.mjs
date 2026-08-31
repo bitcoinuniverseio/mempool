@@ -490,7 +490,12 @@ export function checkSurfaces(manifest, sources, report = new Report()) {
  * in the same commit that takes it out of the registry.
  */
 export function checkRoster(manifest, lock, report = new Report()) {
-  const locked = lock
+  // Normalise first. This tree is checked out with CRLF on Windows, and
+  // JavaScript counts a carriage return as a line terminator, so `.` will not
+  // cross one and `$` cannot assert an end after one. `/#.*$/` therefore
+  // matched nothing on a CRLF checkout and every comment line in this file
+  // was read as a protocol id that had gone missing.
+  const locked = normalise(lock)
     .split('\n')
     .map((line) => line.replace(/#.*$/, '').trim())
     .filter(Boolean);
