@@ -407,6 +407,14 @@ h3 {
     transition: 0.5s opacity ease;
   }
 
+  // The endpoint line is one unbroken string: method, origin, path. At 320px
+  // the merkle proof one runs 16px past the container, and the container's
+  // overflow: hidden is the drawer mechanism, so the tail was simply gone.
+  // anywhere lets the URL break at any character, and only when it must.
+  .endpoint-container .endpoint-content a {
+    overflow-wrap: anywhere;
+  }
+
   .doc-welcome-note {
     font-size: 0.85rem;
   }
