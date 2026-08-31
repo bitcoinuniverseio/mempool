@@ -186,7 +186,8 @@ export function auditChainPage({ chain, envelope, seen, observations = {} }) {
 
   // Coverage: the live answer to how much history is readable, which is a
   // different question from which lookups exist, and was dropped once while
-  // the page went on saying address history was offered.
+  // the page went on saying address history was offered. The dashboard files
+  // it in the capability drawer, which is where a reader is sent for it.
   const coverage = seen.coverage ?? [];
   const declared = envelope.coverage ?? {};
   if (coverage.length !== 3) {
@@ -250,27 +251,38 @@ export function auditChainPage({ chain, envelope, seen, observations = {} }) {
   }
 
   // What makes this chain itself, rather than the other one with a name
-  // swapped in.
+  // swapped in. Compared without case, because the words arrive as labels the
+  // stylesheet may set in capitals ("Shielded" heads a lens) and innerText
+  // reports what is rendered.
   for (const truth of CHAIN_TRUTHS[chain] ?? []) {
-    if (!seen.primary.includes(truth.needle)) {
+    if (!seen.primary.toLowerCase().includes(truth.needle.toLowerCase())) {
       fail(`the page does not state ${truth.id}, which is part of what ${name} does differently`);
     } else {
       pass(`states ${truth.id}`);
     }
   }
-  if (envelope.reads?.projectedBlocks !== true && !/projected block/i.test(seen.primary)) {
+  // A chain that offers no projected blocks must say so. The dashboard says it
+  // where capability answers live, in the drawer's "Projected blocks: Not
+  // offered" row; older copy said it in the primary text, and either counts.
+  if (
+    envelope.reads?.projectedBlocks !== true &&
+    !/projected block/i.test(seen.primary) &&
+    !/projected blocks?\s*not offered/i.test(seen.disclosure ?? '')
+  ) {
     fail('this chain offers no projected blocks and the page never says so');
   }
 
-  // Next actions: real destinations, described, and reachable. Reachability is
-  // measured by the runner and passed in, because it needs the network.
+  // Next actions: real destinations, named, and reachable. The dashboard's
+  // panel links each sit under the panel that describes them, so the link's
+  // own text is what has to be there. Reachability is measured by the runner
+  // and passed in, because it needs the network.
   const entries = seen.entries ?? [];
   if (entries.length < 2) {
     fail(`the page offers ${entries.length} next action(s), expected at least two`);
   }
   for (const entry of entries) {
-    if (!entry.title || !entry.detail) {
-      fail(`a next action has no title or no description: ${JSON.stringify(entry)}`);
+    if (!entry.title) {
+      fail(`a next action has no visible text: ${JSON.stringify(entry)}`);
       continue;
     }
     if (!entry.href?.startsWith(`/${chain}/`)) {

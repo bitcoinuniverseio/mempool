@@ -120,3 +120,56 @@
     animation: none !important;
   }
 }
+
+// ---------------------------------------------------------------------------
+// The touch floor
+// ---------------------------------------------------------------------------
+//
+// The shell reached the floor a while ago and the pages did not. A sweep of
+// every route at 390px found fifty-three distinct controls still under it:
+// the brand link that goes home, the Save control on every asset page, the
+// protocol tabs, the block heights on the chain strip, the pager on every
+// paged list, the disclosure that opens a chain's capability notes. Each one
+// was fixed locally or not at all, which is why they drifted apart.
+//
+// Two shapes of control need two different treatments, and using the wrong one
+// is what makes these rules look like they were applied by a machine:
+//
+//  * A box control already has a background or a border, so growing its
+//    shorter side changes nothing except how easy it is to hit. It takes a
+//    minimum on both axes and centres its label, because a bare min-height
+//    leaves the text stranded at the top of a taller rectangle.
+//
+//  * A text link that is the whole value of a line is not a box. It takes
+//    room around the text instead, so the line it sits on grows with it and
+//    the link keeps wrapping the way a long identifier has to. This is the
+//    same trade the identifier rule in styles.scss already made: on a phone a
+//    list of links to follow has to be followable, and rows get taller.
+//
+// Both are scoped to a coarse pointer and to narrow widths, so nothing moves
+// on a desktop layout driven by a cursor.
+
+@mixin universe-touch-query {
+  @media (pointer: coarse), (max-width: 991.98px) {
+    @content;
+  }
+}
+
+@mixin universe-touch-box($min: var(--u-touch-target)) {
+  @include universe-touch-query {
+    align-items: center;
+    display: inline-flex;
+    justify-content: center;
+    min-height: $min;
+    min-width: $min;
+  }
+}
+
+// $line is what one line of the link occupies. The default is the 16px line
+// the body scale draws; pass the real value where a control sets its own.
+@mixin universe-touch-line($line: 16px) {
+  @include universe-touch-query {
+    display: inline-block;
+    padding-block: calc((var(--u-touch-target) - #{$line}) / 2);
+  }
+}

@@ -23,6 +23,7 @@ import { AsmComponent } from '@app/shared/components/asm/asm.component';
 import { AbsolutePipe } from '@app/shared/pipes/absolute/absolute.pipe';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 import { ImageFallbackDirective } from '@app/shared/directives/image-fallback.directive';
+import { TooltipReachableDirective } from '@app/shared/directives/tooltip-reachable.directive';
 import { ScriptpubkeyTypePipe } from '@app/shared/pipes/scriptpubkey-type-pipe/scriptpubkey-type.pipe';
 import { BytesPipe } from '@app/shared/pipes/bytes-pipe/bytes.pipe';
 import { WuBytesPipe } from '@app/shared/pipes/bytes-pipe/wubytes.pipe';
@@ -152,6 +153,7 @@ import { GithubLogin } from '@components/github-login.component/github-login.com
     ScriptpubkeyTypePipe,
     RelativeUrlPipe,
     ImageFallbackDirective,
+    TooltipReachableDirective,
     NoSanitizePipe,
     Hex2asciiPipe,
     AsmStylerPipe,
@@ -280,6 +282,7 @@ import { GithubLogin } from '@components/github-login.component/github-login.com
     WuBytesPipe,
     RelativeUrlPipe,
     ImageFallbackDirective,
+    TooltipReachableDirective,
     NoSanitizePipe,
     ShortenStringPipe,
     CapAddressPipe,
@@ -313,6 +316,7 @@ import { GithubLogin } from '@components/github-login.component/github-login.com
     ScriptpubkeyTypePipe,
     RelativeUrlPipe,
     ImageFallbackDirective,
+    TooltipReachableDirective,
     Hex2asciiPipe,
     AsmStylerPipe,
     AbsolutePipe,

@@ -34,6 +34,11 @@
     &::-webkit-scrollbar {
       display: none;
     }
+
+    &:focus-visible {
+      outline: 2px solid var(--u-focus-ring);
+      outline-offset: 2px;
+    }
   }
 
   .fade-out {
@@ -134,6 +139,8 @@
       .shape-border {
         display: block;
         margin: auto;
+        // The enlarged touch target below is positioned against this box.
+        position: relative;
         height: calc(1em + 8px);
         width: calc(1em + 8px);
         margin-bottom: -8px;
@@ -143,6 +150,31 @@
         padding: 4px;
         background: transparent;
         transition: background-color 300ms, padding 300ms;
+
+        // The marker is 24 pixels square because that is what reads as one
+        // step on a timeline; making it 44 would turn a row of markers into a
+        // row of tiles and lose the shape that carries the state. So the box
+        // grows and the marker does not: a transparent border is part of the
+        // element for hit testing and for the box model, and the background
+        // that paints the marker's ring is clipped to the padding box so it
+        // does not spread into it. The negative margin hands the 20 pixels
+        // back to the layout, so the timeline's spacing is unchanged.
+        //
+        // Overlap is the usual objection to enlarging a target, and it does
+        // not apply here: the nodes on this timeline sit 220 pixels apart
+        // across and 186 down, so a 44 pixel box around each one touches
+        // nothing.
+        // Every box in this application is border-box, so the border has to be
+        // added to the declared size rather than taken out of it. The content
+        // box is 16 pixels either way, exactly as it was.
+        @media (pointer: coarse), (max-width: 991.98px) {
+          background-clip: padding-box;
+          border: 10px solid transparent;
+          height: calc(1em + 28px);
+          width: calc(1em + 28px);
+          margin: -10px;
+          margin-bottom: -18px;
+        }
 
         .shape {
           width: 100%;

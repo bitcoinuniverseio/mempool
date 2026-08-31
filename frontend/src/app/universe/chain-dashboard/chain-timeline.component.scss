@@ -1,6 +1,7 @@
 // The cube grammar is the shared partial; this file adds only what a
 // two-sided strip needs: the divider, the height labels, and direction.
 @use '../chain-cubes';
+@use '../universe-tokens' as u;
 
 .timeline-shell {
   width: 100%;
@@ -52,9 +53,13 @@
   color: var(--u-text-secondary);
   text-decoration: none;
 
+  // The height above each cube is a second link to the same block, and on a
+  // phone it is the one a thumb lands on.
+  @include u.universe-touch-line;
+
   &.placeholder {
-    color: var(--u-text-tertiary);
-    font-weight: var(--u-weight-regular);
+    color: var(--u-text-muted);
+    font-weight: var(--u-weight-normal);
   }
 }
 
@@ -98,7 +103,7 @@ a.cube-block {
   color: var(--u-text-secondary);
 
   &.unknown {
-    color: var(--u-text-tertiary);
+    color: var(--u-text-muted);
   }
 }
 
@@ -115,12 +120,15 @@ a.cube-block {
 .direction-toggle {
   background: none;
   border: 1px solid var(--u-divider);
-  border-radius: var(--u-radius-sm, 4px);
+  border-radius: var(--u-radius-sm);
   color: var(--u-text-secondary);
   font-size: var(--u-text-md);
   line-height: 1;
   padding: var(--u-space-1) var(--u-space-2);
   cursor: pointer;
+
+  // The control that flips the timeline's direction, at 31 by 26 pixels.
+  @include u.universe-touch-box;
 
   &:hover {
     color: var(--u-text-primary);

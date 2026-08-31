@@ -60,8 +60,6 @@ export class StartComponent implements OnInit, AfterViewChecked, OnDestroy {
 
   chainWidth: number = window.innerWidth;
 
-  hasMenu = false;
-
   constructor(
     public stateService: StateService,
     private cd: ChangeDetectorRef,
@@ -69,9 +67,6 @@ export class StartComponent implements OnInit, AfterViewChecked, OnDestroy {
     private route: ActivatedRoute
   ) {
     this.isiOS = ['iPhone','iPod','iPad'].includes((navigator as any)?.userAgentData?.platform || navigator.platform);
-    if (this.stateService.network === '') {
-      this.hasMenu = true;
-    }
   }
 
   ngOnInit() {

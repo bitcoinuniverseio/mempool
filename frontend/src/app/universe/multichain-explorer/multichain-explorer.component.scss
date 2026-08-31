@@ -49,6 +49,9 @@
 
   @include u.universe-motion(all, var(--u-duration-fast));
 
+  // The one action on eight chain pages, at 34 pixels tall.
+  @include u.universe-touch-box;
+
   &:hover {
     background: var(--u-surface-hover);
     border-color: var(--u-brand-border);
@@ -439,7 +442,12 @@
 
 .identifier-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(21rem, 1fr));
+  // min() rather than a bare 21rem. A track floor wider than the column it
+  // sits in does not wrap, it overflows, and the page shell clips the
+  // difference in silence: at 320px this pushed 33 pixels of every block hash
+  // off the right of the screen with no way to reach it. The floor still
+  // applies wherever there is room for it.
+  grid-template-columns: repeat(auto-fill, minmax(min(21rem, 100%), 1fr));
   gap: 0 var(--u-space-4);
 
   li {
@@ -488,6 +496,12 @@
     font-size: var(--u-text-sm);
     padding: 0.3rem 0.8rem;
     text-decoration: none;
+
+    // These are how a visitor moves between one chain's protocol families,
+    // which makes them the most-pressed controls on seven routes. They came
+    // in at 31 pixels tall. The row already wraps, so reaching the floor
+    // costs height on a narrow screen and nothing else.
+    @include u.universe-touch-box;
 
     @include u.universe-motion(all, var(--u-duration-fast));
 

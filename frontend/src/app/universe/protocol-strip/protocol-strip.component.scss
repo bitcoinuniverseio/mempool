@@ -21,6 +21,8 @@
 
 .strip-link {
   font-size: 0.85rem;
+
+  @include u.universe-touch-box;
 }
 
 .strip-note {
@@ -87,4 +89,8 @@
 
 .strip-all {
   font-size: 0.85rem;
+
+  // Wraps onto two lines on a narrow screen, so it takes room around the text
+  // rather than a fixed height that would cut the second line off.
+  @include u.universe-touch-line;
 }

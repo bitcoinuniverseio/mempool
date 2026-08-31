@@ -9,48 +9,50 @@
   <div class="clearfix"></div>
 
   <div style="min-height: 295px">
-    <table class="table table-borderless">
-      <thead>
-        <th class="height text-left" [ngClass]="{'widget': widget, 'legacy': !isMempoolModule}" i18n="latest-blocks.height">Height</th>
-        <th *ngIf="isMempoolModule" class="pool text-left" [ngClass]="{'widget': widget, 'legacy': !isMempoolModule}" i18n="mining.pool-name"
+    <table class="table table-borderless stacks-on-phone" role="table">
+      <thead role="rowgroup">
+      <tr role="row">
+        <th role="columnheader" class="height text-left" [ngClass]="{'widget': widget, 'legacy': !isMempoolModule}" i18n="latest-blocks.height">Height</th>
+        <th role="columnheader" *ngIf="isMempoolModule" class="pool text-left" [ngClass]="{'widget': widget, 'legacy': !isMempoolModule}" i18n="mining.pool-name"
           i18n-ngbTooltip="mining.pool-name" ngbTooltip="Pool" placement="bottom" #miningpool [disableTooltip]="!isEllipsisActive(miningpool)">Pool</th>
-        <th class="timestamp" i18n="latest-blocks.timestamp" *ngIf="!widget" [class]="isMempoolModule ? '' : 'legacy'">Timestamp</th>
-        <th *ngIf="auditAvailable" class="health text-right" i18n="latest-blocks.health" [ngClass]="{'widget': widget, 'legacy': !isMempoolModule}"
+        <th role="columnheader" class="timestamp" i18n="latest-blocks.timestamp" *ngIf="!widget" [class]="isMempoolModule ? '' : 'legacy'">Timestamp</th>
+        <th role="columnheader" *ngIf="auditAvailable" class="health text-right" i18n="latest-blocks.health" [ngClass]="{'widget': widget, 'legacy': !isMempoolModule}"
           i18n-ngbTooltip="latest-blocks.health" ngbTooltip="Health" placement="bottom" #health [disableTooltip]="!isEllipsisActive(health)">Health</th>
-        <th *ngIf="isMempoolModule" class="reward text-right" i18n="latest-blocks.reward" [ngClass]="{'widget': widget, 'legacy': !isMempoolModule}"
+        <th role="columnheader" *ngIf="isMempoolModule" class="reward text-right" i18n="latest-blocks.reward" [ngClass]="{'widget': widget, 'legacy': !isMempoolModule}"
           i18n-ngbTooltip="latest-blocks.reward" ngbTooltip="Reward" placement="bottom" #reward [disableTooltip]="!isEllipsisActive(reward)">Reward</th>
-        <th *ngIf="isMempoolModule && !auditAvailable || isMempoolModule && !widget" class="fees text-right" i18n="latest-blocks.fees" [class]="isMempoolModule ? '' : 'legacy'">Fees</th>
-        <th *ngIf="auditAvailable && !widget" class="fee-delta" [ngClass]="{'widget': widget, 'legacy': !isMempoolModule}"></th>
-        <th *ngIf="isMempoolModule" class="txs text-right" i18n="dashboard.txs" [ngClass]="{'widget': widget, 'legacy': !isMempoolModule}"
+        <th role="columnheader" *ngIf="isMempoolModule && !auditAvailable || isMempoolModule && !widget" class="fees text-right" i18n="latest-blocks.fees" [class]="isMempoolModule ? '' : 'legacy'">Fees</th>
+        <th role="columnheader" *ngIf="auditAvailable && !widget" class="fee-delta" [ngClass]="{'widget': widget, 'legacy': !isMempoolModule}"></th>
+        <th role="columnheader" *ngIf="isMempoolModule" class="txs text-right" i18n="dashboard.txs" [ngClass]="{'widget': widget, 'legacy': !isMempoolModule}"
           i18n-ngbTooltip="dashboard.txs" ngbTooltip="TXs" placement="bottom" #txs [disableTooltip]="!isEllipsisActive(txs)">TXs</th>
-        <th *ngIf="!isMempoolModule" class="txs text-right" i18n="dashboard.txs" [ngClass]="{'widget': widget, 'legacy': !isMempoolModule}">Transactions</th>
-        <th class="size" i18n="latest-blocks.size" *ngIf="!widget" [class]="isMempoolModule ? '' : 'legacy'">Size</th>
+        <th role="columnheader" *ngIf="!isMempoolModule" class="txs text-right" i18n="dashboard.txs" [ngClass]="{'widget': widget, 'legacy': !isMempoolModule}">Transactions</th>
+        <th role="columnheader" class="size" i18n="latest-blocks.size" *ngIf="!widget" [class]="isMempoolModule ? '' : 'legacy'">Size</th>
+      </tr>
       </thead>
-      <tbody *ngIf="blocks$ | async as blocks; else skeleton" [style]="isLoading ? 'opacity: 0.75' : ''">
-        <tr *ngFor="let block of blocks; let i= index; trackBy: trackByBlock">
-          <td class="height text-left" [class]="widget ? 'widget' : ''">
+      <tbody role="rowgroup" *ngIf="blocks$ | async as blocks; else skeleton" [style]="isLoading ? 'opacity: 0.75' : ''">
+        <tr role="row" *ngFor="let block of blocks; let i= index; trackBy: trackByBlock">
+          <td role="cell" i18n-data-label="latest-blocks.height" data-label="Height" class="height text-left" [class]="widget ? 'widget' : ''">
             <a [routerLink]="['/block' | relativeUrl, block.id]" [state]="{ data: { block: block } }">{{ block.height }}</a>
           </td>
-          <td  *ngIf="isMempoolModule" class="pool text-left" [ngClass]="{'widget': widget, 'legacy': !isMempoolModule}">
+          <td role="cell" i18n-data-label="mining.pool-name" data-label="Pool" *ngIf="isMempoolModule" class="pool text-left" [ngClass]="{'widget': widget, 'legacy': !isMempoolModule}">
             <div *ngIf="indexingAvailable" class="tooltip-custom">
               <a class="clear-link" [routerLink]="['/mining/pool' | relativeUrl, block.extras.pool.slug]">
                 <img width="22" height="22" src="{{ block.extras.pool['logo'] }}"
-                  appImageFallback [alt]="'Logo of ' + block.extras.pool.name + ' mining pool'">
+                  appImageFallback alt="">
                 <span class="pool-name">{{ block.extras.pool.name }}</span>
               </a>
               <span *ngIf="!widget" class="tooltiptext badge badge-secondary scriptmessage">{{ block.extras.coinbaseRaw | hex2ascii }}</span>
             </div>
             <div *ngIf="!indexingAvailable" class="tooltip-custom">
               <img width="22" height="22" src="{{ block.extras.pool['logo'] }}"
-                appImageFallback [alt]="'Logo of ' + block.extras.pool.name + ' mining pool'">
+                appImageFallback alt="">
               <span class="pool-name">{{ block.extras.pool.name }}</span>
               <span *ngIf="!widget" class="tooltiptext badge badge-secondary scriptmessage">{{ block.extras.coinbaseRaw | hex2ascii }}</span>
             </div>
           </td>
-          <td class="timestamp" *ngIf="!widget" [ngClass]="{'widget': widget, 'legacy': !isMempoolModule}">
+          <td role="cell" i18n-data-label="latest-blocks.timestamp" data-label="Timestamp" class="timestamp" *ngIf="!widget" [ngClass]="{'widget': widget, 'legacy': !isMempoolModule}">
             <app-timestamp [customFormat]="'yyyy-MM-dd HH:mm:ss'" [unixTime]="block.timestamp" [hideTimeSince]="true"></app-timestamp>
           </td>
-          <td *ngIf="auditAvailable" class="health text-right" [ngClass]="{'widget': widget, 'legacy': !isMempoolModule}">
+          <td role="cell" i18n-data-label="latest-blocks.health" data-label="Health" *ngIf="auditAvailable" class="health text-right" [ngClass]="{'widget': widget, 'legacy': !isMempoolModule}">
             <a
               *ngIf="block?.extras?.matchRate != null; else nullHealth"
               class="health-badge badge"
@@ -64,21 +66,21 @@
               <span class="health-badge badge badge-secondary" i18n="unknown">Unknown</span>
             </ng-template>
           </td>
-          <td *ngIf="isMempoolModule" class="reward text-right" [ngClass]="{'widget': widget, 'legacy': !isMempoolModule}">
+          <td role="cell" i18n-data-label="latest-blocks.reward" data-label="Reward" *ngIf="isMempoolModule" class="reward text-right" [ngClass]="{'widget': widget, 'legacy': !isMempoolModule}">
             <app-amount [satoshis]="block.extras.reward" [noFiat]="true" digitsInfo="1.2-2"></app-amount>
           </td>
-          <td *ngIf="isMempoolModule && !auditAvailable || isMempoolModule && !widget" class="fees text-right" [class]="isMempoolModule ? '' : 'legacy'">
+          <td role="cell" i18n-data-label="latest-blocks.fees" data-label="Fees" *ngIf="isMempoolModule && !auditAvailable || isMempoolModule && !widget" class="fees text-right" [class]="isMempoolModule ? '' : 'legacy'">
             <app-amount [satoshis]="block.extras.totalFees" [noFiat]="true" digitsInfo="1.2-2"></app-amount>
           </td>
-          <td *ngIf="auditAvailable" class="fee-delta" [ngClass]="{'widget': widget, 'legacy': !isMempoolModule}">
+          <td role="cell" i18n-data-label="latest-blocks.fee-delta" data-label="Fee delta" *ngIf="auditAvailable" class="fee-delta" [ngClass]="{'widget': widget, 'legacy': !isMempoolModule}">
             <span *ngIf="block.extras.feeDelta" class="difference" [class.positive]="block.extras.feeDelta >= 0" [class.negative]="block.extras.feeDelta < 0">
               {{ block.extras.feeDelta > 0 ? '+' : '' }}{{ (block.extras.feeDelta * 100) | amountShortener: 2 }}%
             </span>
           </td>
-          <td class="txs text-right" [ngClass]="{'widget': widget, 'legacy': !isMempoolModule}">
+          <td role="cell" i18n-data-label="dashboard.txs" data-label="Transactions" class="txs text-right" [ngClass]="{'widget': widget, 'legacy': !isMempoolModule}">
             {{ block.tx_count | number }}
           </td>
-          <td class="size" *ngIf="!widget" [class]="isMempoolModule ? '' : 'legacy'">
+          <td role="cell" i18n-data-label="latest-blocks.size" data-label="Size" class="size" *ngIf="!widget" [class]="isMempoolModule ? '' : 'legacy'">
             <div class="progress" role="progressbar" i18n-aria-label="blocks.block-size|Block size" aria-label="Block size">
               <div class="progress-bar progress-mempool"
                 [ngStyle]="{'width': (block.weight / stateService.env.BLOCK_WEIGHT_UNITS)*100 + '%' }"></div>
@@ -88,33 +90,33 @@
         </tr>
       </tbody>
       <ng-template #skeleton>
-        <tbody *ngIf="!failureState">
-          <tr *ngFor="let item of skeletonLines">
+        <tbody role="rowgroup" *ngIf="!failureState">
+          <tr role="row" *ngFor="let item of skeletonLines">
             <td class="height text-left" [ngClass]="{'widget': widget, 'legacy': !isMempoolModule}">
               <span class="skeleton-loader" style="max-width: 75px"></span>
             </td>
             <td *ngIf="isMempoolModule" class="pool text-left" [ngClass]="{'widget': widget, 'legacy': !isMempoolModule}">
               <span class="skeleton-loader" style="max-width: 150px"></span>
             </td>
-            <td class="timestamp" *ngIf="!widget" [class]="isMempoolModule ? '' : 'legacy'">
+            <td role="cell" i18n-data-label="latest-blocks.timestamp" data-label="Timestamp" class="timestamp" *ngIf="!widget" [class]="isMempoolModule ? '' : 'legacy'">
               <span class="skeleton-loader" style="max-width: 150px"></span>
             </td>
-            <td *ngIf="auditAvailable" class="health text-right" [ngClass]="{'widget': widget, 'legacy': !isMempoolModule}">
+            <td role="cell" i18n-data-label="latest-blocks.health" data-label="Health" *ngIf="auditAvailable" class="health text-right" [ngClass]="{'widget': widget, 'legacy': !isMempoolModule}">
               <span class="skeleton-loader" style="max-width: 75px"></span>
             </td>
-            <td *ngIf="isMempoolModule" class="reward text-right" [ngClass]="{'widget': widget, 'legacy': !isMempoolModule}">
+            <td role="cell" i18n-data-label="latest-blocks.reward" data-label="Reward" *ngIf="isMempoolModule" class="reward text-right" [ngClass]="{'widget': widget, 'legacy': !isMempoolModule}">
               <span class="skeleton-loader" style="max-width: 75px"></span>
             </td>
-            <td *ngIf="isMempoolModule && !auditAvailable || isMempoolModule && !widget" class="fees text-right" [class]="isMempoolModule ? '' : 'legacy'">
+            <td role="cell" i18n-data-label="latest-blocks.fees" data-label="Fees" *ngIf="isMempoolModule && !auditAvailable || isMempoolModule && !widget" class="fees text-right" [class]="isMempoolModule ? '' : 'legacy'">
               <span class="skeleton-loader" style="max-width: 75px"></span>
             </td>
             <td *ngIf="auditAvailable && !widget" class="fee-delta" [class]="isMempoolModule ? '' : 'legacy'">
               <span class="skeleton-loader" style="max-width: 75px"></span>
             </td>
-            <td class="txs text-right" [ngClass]="{'widget': widget, 'legacy': !isMempoolModule}">
+            <td role="cell" i18n-data-label="dashboard.txs" data-label="Transactions" class="txs text-right" [ngClass]="{'widget': widget, 'legacy': !isMempoolModule}">
               <span class="skeleton-loader" style="max-width: 75px"></span>
             </td>
-            <td class="size" *ngIf="!widget" [class]="isMempoolModule ? '' : 'legacy'">
+            <td role="cell" i18n-data-label="latest-blocks.size" data-label="Size" class="size" *ngIf="!widget" [class]="isMempoolModule ? '' : 'legacy'">
               <span class="skeleton-loader"></span>
             </td>
           </tr>
