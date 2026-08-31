@@ -1,11 +1,13 @@
-<div class="text-center" class="blockchain-wrapper" [class.time-ltr]="timeLtr" [class.ltr-transition]="ltrTransitionEnabled" #container>
+<!-- The strip is a draggable pan surface: blocks and the 1px scroll spacer
+     extend past the viewport on both sides because dragging is how they are
+     reached. The clip gate must not read any of that as content cut off, so
+     the whole strip declares itself deliberate rather than each child in
+     turn; the spacer, then a mined block, were blamed one after the other. -->
+<div class="text-center" class="blockchain-wrapper" data-clip-ok [class.time-ltr]="timeLtr" [class.ltr-transition]="ltrTransitionEnabled" #container>
   <div #positionContainer class="position-container" [ngClass]="network ? network : ''" [style]="positionStyle">
     <span>
       <div class="blocks-wrapper">
-        <!-- A 1px marker that gives the strip its scrollable width. It is scroll
-     machinery, not content: everything up to it is reached by dragging the
-     strip, so the clip gate must not read it as something cut off. -->
-<div class="scroll-spacer" data-clip-ok *ngIf="minScrollWidth" [style.left]="minScrollWidth + 'px'"></div>
+        <div class="scroll-spacer" *ngIf="minScrollWidth" [style.left]="minScrollWidth + 'px'"></div>
         <app-mempool-blocks [hidden]="pageIndex > 0" [allBlocks]="scrollableMempool" (widthChange)="onMempoolWidthChange($event)"></app-mempool-blocks>
         <app-blockchain-blocks [hidden]="pageIndex > 0"></app-blockchain-blocks>
         <ng-container *ngFor="let page of pages; trackBy: trackByPageFn">
