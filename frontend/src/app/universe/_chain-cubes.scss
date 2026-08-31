@@ -106,3 +106,40 @@
   gap: var(--u-space-1);
   font-size: var(--u-text-2xs);
 }
+
+// The pending-set page uses the cube as a visual marker, not a miniature
+// report. Keep its one decisive reading on the face and file the supporting
+// measurements directly beneath it, where long fee units remain readable.
+.candidate-buckets {
+  .cube-body {
+    padding: var(--u-space-2);
+  }
+
+  .cube-median {
+    max-width: 100%;
+    padding: var(--u-space-1) var(--u-space-2);
+  }
+
+  .cube-metrics {
+    display: grid;
+    gap: 2px;
+    margin-top: var(--u-space-2);
+    min-height: 0;
+  }
+
+  .cube-metrics > span {
+    color: var(--u-text-secondary);
+    font-size: var(--u-text-2xs);
+    line-height: var(--u-leading-snug);
+    overflow-wrap: anywhere;
+  }
+
+  .cube-metrics .cube-unit {
+    color: var(--u-text-muted);
+    font-weight: var(--u-weight-semibold);
+  }
+
+  .cube-caption {
+    margin-top: var(--u-space-1);
+  }
+}
