@@ -20,7 +20,7 @@
   ],
   "main": "index.ts",
   "scripts": {
-    "ng": "./node_modules/@angular/cli/bin/ng.js",
+    "ng": "node ./node_modules/@angular/cli/bin/ng.js",
     "tsc": "./node_modules/typescript/bin/tsc",
     "i18n-extract-from-source": "npm run ng -- extract-i18n --out-file ./src/locale/messages.xlf",
     "i18n-pull-from-transifex": "tx pull -a --minimum-perc 1 --force",
