@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+#
+# Stops the address index before it can fill the filesystem it shares.
+#
+# /data/indexers-c also holds ord-tap, the Fractal node and the explorer's own
+# working data. An index that runs the volume to zero does not just fail
+# itself, it takes those with it, and a rocksdb that was writing when the disk
+# filled is the kind of thing that needs a rebuild rather than a restart. So
+# the index is stopped while there is still room to stop cleanly.
+set -euo pipefail
+VOLUME=/data/indexers-c
+FLOOR_GB=120
+free_gb=$(df -BG --output=avail "$VOLUME" | tail -1 | tr -dc '0-9')
+if [ "$free_gb" -lt "$FLOOR_GB" ]; then
+  logger -t electrs-diskguard "only ${free_gb}G free on $VOLUME, below the ${FLOOR_GB}G floor; stopping the address index"
+  systemctl stop universe-explorer-electrs.service
+  exit 1
+fi
+exit 0
