@@ -114,6 +114,65 @@ jobs:
           cache: npm
           cache-dependency-path: backend/package-lock.json
 
+      # `npm ci` here builds rust-gbt, so it needs a Rust toolchain that can
+      # actually compile. A self-hosted runner can be left holding a toolchain
+      # directory with no usable rustc in it, and cargo then fails in a way
+      # that reads like a source problem:
+      #
+      #   Type Error: Could not parse the Cargo.toml:
+      #   Error: Command failed: cargo metadata --format-version 1
+      #
+      # There is nothing wrong with that Cargo.toml. Measured on 2026-08-31,
+      # the same commit built on universe-runner-02 and universe-runner-04 and
+      # failed on universe-runner-05, universe-linux-ultra-02 and
+      # universe-linux-ultra-03, which is the shape that gets mistaken for
+      # flakiness and retried until it lands somewhere healthy.
+      #
+      # Prove the toolchain compiles before anything depends on it, and
+      # reinstall it in place when it does not. A healthy runner pays one
+      # subsecond check; a broken one repairs itself instead of failing every
+      # job routed to it. Same guard as
+      # bitcoinuniverseio/index-zcash-metaprotocols.
+      - name: Repair a half-installed Rust toolchain before using it
+        shell: bash
+        run: |
+          CARGO_BIN="${CARGO_HOME:-$HOME/.cargo}/bin"
+          export PATH="$CARGO_BIN:$PATH"
+
+          if command -v rustup >/dev/null 2>&1; then
+            if rustup run stable rustc --version >/dev/null 2>&1 \
+               && cargo metadata --format-version 1 \
+                  --manifest-path rust/gbt/Cargo.toml >/dev/null 2>&1; then
+              echo "toolchain is usable"
+            else
+              echo "toolchain cannot read the manifest; reinstalling"
+              rustup toolchain uninstall stable || true
+              rustup toolchain install stable --profile minimal
+              rustup default stable
+            fi
+          else
+            echo "no rustup on this runner"
+          fi
+
+          # Put the repaired toolchain ahead of anything else for the steps
+          # that follow. A step's `export PATH` dies with the step, so without
+          # this the repair above fixes a cargo that `npm ci` never calls: the
+          # first attempt reinstalled cleanly, reported cargo 1.98.0, and the
+          # next step still failed on `cargo metadata` because it was reaching
+          # a different one.
+          if [ -x "$CARGO_BIN/cargo" ]; then
+            echo "$CARGO_BIN" >> "$GITHUB_PATH"
+          fi
+
+          echo "cargo in use: $(command -v cargo || echo none)"
+          cargo --version || true
+          # Prove it can read the manifest the build depends on, here, where
+          # the failure is legible, rather than inside a napi build script that
+          # reports it as "Could not parse the Cargo.toml".
+          cargo metadata --format-version 1 \
+            --manifest-path rust/gbt/Cargo.toml >/dev/null
+          echo "cargo can read rust/gbt/Cargo.toml"
+
       - name: Install (builds rust-gbt)
         working-directory: backend
         run: npm ci
