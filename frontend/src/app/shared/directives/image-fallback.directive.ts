@@ -18,8 +18,29 @@ import { Directive, ElementRef, HostListener, Input } from '@angular/core';
   standalone: false,
 })
 export class ImageFallbackDirective {
-  /** Where to go when the source fails. */
-  @Input() appImageFallback = '/resources/mining-pools/default.svg';
+  /**
+   * Where to go when the source fails.
+   *
+   * Every use of this directive in the product writes it as a bare attribute,
+   * `<img appImageFallback ...>`, which is how a directive is normally turned
+   * on. Angular reads a bare attribute whose name matches an input as that
+   * input set to the empty string, so the default below was never used and
+   * every failed logo had its source replaced with nothing at all. A browser
+   * draws an image with no source as its alt text, at whatever width the
+   * sentence needs: 199 pixels on the block page, which pushed the details
+   * table 120 pixels past the right edge of a 320px screen and had it clipped
+   * away by the page shell.
+   *
+   * So an empty value means "the default", not "nothing".
+   */
+  @Input() appImageFallback = '';
+
+  /** The default, named once. */
+  private static readonly DEFAULT = '/resources/mining-pools/default.svg';
+
+  private get fallback(): string {
+    return this.appImageFallback || ImageFallbackDirective.DEFAULT;
+  }
 
   private failed = false;
 
@@ -32,15 +53,15 @@ export class ImageFallbackDirective {
     }
     this.failed = true;
     const image = this.element.nativeElement;
-    if (image.getAttribute('src') !== this.appImageFallback) {
-      image.setAttribute('src', this.appImageFallback);
+    if (image.getAttribute('src') !== this.fallback) {
+      image.setAttribute('src', this.fallback);
     }
   }
 
   /** A new source is a new chance to load, so the guard resets with it. */
   @HostListener('load')
   onLoad(): void {
-    if (this.element.nativeElement.getAttribute('src') !== this.appImageFallback) {
+    if (this.element.nativeElement.getAttribute('src') !== this.fallback) {
       this.failed = false;
     }
   }

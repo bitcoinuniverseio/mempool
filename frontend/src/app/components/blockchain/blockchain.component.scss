@@ -73,6 +73,21 @@
   padding: 0;
   position: absolute;
 
+  // Both of these sit alone on the divider between the pending blocks and the
+  // mined ones, with nothing within a thumb's width of them, so the floor can
+  // be the comfortable one rather than the minimum. They are also the only two
+  // controls on the busiest surface in the product.
+  //
+  // Each is anchored by its `bottom`, so the twenty pixels it grows by are
+  // taken off the top. Half of them come back off the anchor, which keeps the
+  // glyph exactly where it was and stops the taller box from being cut off by
+  // the strip's own vertical clip.
+  @media (pointer: coarse), (max-width: 991.98px) {
+    bottom: calc(-2.2em - 10px);
+    min-height: var(--u-touch-target);
+    min-width: var(--u-touch-target);
+  }
+
   &:hover { color: var(--u-text-primary); }
 
   &:focus-visible {
@@ -101,6 +116,21 @@
   min-width: 24px;
   padding: 0;
   position: absolute;
+
+  // Both of these sit alone on the divider between the pending blocks and the
+  // mined ones, with nothing within a thumb's width of them, so the floor can
+  // be the comfortable one rather than the minimum. They are also the only two
+  // controls on the busiest surface in the product.
+  //
+  // Each is anchored by its `bottom`, so the twenty pixels it grows by are
+  // taken off the top. Half of them come back off the anchor, which keeps the
+  // glyph exactly where it was and stops the taller box from being cut off by
+  // the strip's own vertical clip.
+  @media (pointer: coarse), (max-width: 991.98px) {
+    bottom: calc(16.1em - 10px);
+    min-height: var(--u-touch-target);
+    min-width: var(--u-touch-target);
+  }
 
   &:hover { color: var(--u-text-primary); }
 

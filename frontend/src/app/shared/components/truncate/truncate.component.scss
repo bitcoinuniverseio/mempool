@@ -1,21 +1,45 @@
+// The host is what the surrounding layout sees.
+//
+// It was left at the default `display: inline`, so a table cell or a flex item
+// could not constrain it: the shrinking flex box inside was measured against
+// its own content rather than against the column it sat in, and the address on
+// the address page printed in full and ran 144 pixels off the right of a 320px
+// screen. Truncation that only happens when there is already room for the text
+// is not truncation.
+:host {
+  display: inline-block;
+  max-width: 100%;
+  min-width: 0;
+  vertical-align: bottom;
+}
+
 .truncate {
   text-overflow: unset;
   display: flex;
   flex-direction: row;
   align-items: start;
   position: relative;
+  // The whole point of this component is to be narrower than the text it is
+  // given, and a flex item's floor is the width of its content unless it is
+  // told otherwise. Without these it was as wide as the untruncated address:
+  // 144 pixels past the right edge of a 320px screen on the address page,
+  // clipped away by the page shell with nothing to say it had happened.
+  max-width: 100%;
+  min-width: 0;
 
   .truncate-link {
     display: flex;
     flex-direction: row;
     align-items: baseline;
     flex-shrink: 1;
+    min-width: 0;
     overflow: hidden;
   }
 
   .first {
     flex-grow: 0;
     flex-shrink: 1;
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     user-select: none;

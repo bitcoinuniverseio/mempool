@@ -10,18 +10,7 @@
 
 @include page.universe-chain-page;
 
-.title-block {
-  display: flex;
-  align-items: center;
-  gap: var(--u-space-2);
-  margin-bottom: var(--u-space-3);
-
-  h1 {
-    font-size: var(--u-text-2xl);
-    font-weight: var(--u-weight-semibold);
-    margin: 0;
-  }
-}
+@include page.universe-chain-title;
 
 .graph-nav {
   @include u.universe-surface;

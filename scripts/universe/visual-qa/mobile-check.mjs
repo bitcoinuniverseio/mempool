@@ -131,18 +131,49 @@ const TOUCH_FLOOR = 44;
  */
 const FIELD_FLOOR = 16;
 
-/** Routes worth walking with a thumb. Every shell surface, and one of each
- *  data shape: a long-identifier page, a table page, a chart page, a chain page
- *  and a document page. Adding a route costs one page load per viewport, so the
- *  list is chosen rather than exhaustive, and the shell checks that catch most
- *  of these faults run on every one of them. */
-const MOBILE_ROUTE_IDS = (args.routes ? String(args.routes).split(',') : [
+/**
+ * Every route, walked with a thumb.
+ *
+ * This used to be a chosen fifteen, on the argument that a page load costs
+ * seconds and the shell checks catch most faults anyway. The argument was
+ * wrong, and the way it was wrong is worth writing down: running the same
+ * checks over the other twenty-nine routes found thirty-six failures on the
+ * first pass. Protocol tabs at 31px on seven routes, a select that zoomed an
+ * iPhone in on the saved page, an output page with overlapping targets, a
+ * replacement timeline scrolling sideways with nothing to say so. None of them
+ * were shell faults, and none of them could have been found by a list that did
+ * not include the page they were on.
+ *
+ * A gate that measures the pages someone thought to list measures the author's
+ * expectations. The cost is real, so it is paid where it buys something: see
+ * FULL_SWEEP_ROUTE_IDS below.
+ */
+const MOBILE_ROUTE_IDS = args.routes ? String(args.routes).split(',') : ROUTES.map((r) => r.id);
+
+/**
+ * The routes that take every window size rather than the narrow three.
+ *
+ * Seven windows on forty-four routes is three hundred page loads, which is a
+ * gate nobody will wait for. Two tiers instead:
+ *
+ *  * Every route is measured at 320, at 390 and in landscape. Those are the
+ *    three that change the answer: the narrowest phone still in use, an
+ *    ordinary modern one with a cutout, and the rotation where the bar and the
+ *    header are both fighting for the same 390 pixels of height.
+ *
+ *  * The routes below add 360, 430, the tablet and the desktop control. They
+ *    are one of each thing the product is made of, so a breakpoint that goes
+ *    wrong between the phone widths, or a wide layout regressed by a mobile
+ *    fix, is still caught by something.
+ */
+const FULL_SWEEP_ROUTE_IDS = new Set([
   'home', 'tx', 'address', 'blocks', 'block', 'graphs', 'protocols',
   'dogecoin-tx', 'zcash-block', 'docs', 'chain-menu',
-  // The parity surfaces, one thumb-width each: a chain dashboard with the
-  // block strip, a mining page, a chart page, and chain docs.
   'dogecoin', 'zcash-mining', 'dogecoin-graphs', 'zcash-docs',
 ]);
+
+/** The three window sizes every route is held to. */
+const NARROW_VIEWPORT_IDS = new Set(['phone-320', 'phone-390', 'phone-landscape']);
 
 const findings = [];
 const passes = [];
@@ -239,6 +270,83 @@ async function mobileProbe(floors) {
       keyboardReachable: el.getAttribute('tabindex') !== null
         || Boolean(el.querySelector('a, button, input, select, textarea, [tabindex]')),
     });
+  }
+
+  // Content cut off sideways with no way to reach it.
+  //
+  // The sibling check above finds a box that scrolls without saying so. This
+  // one finds the worse case: a box that does not scroll at all. `overflow-x:
+  // hidden` and `clip` both cut the excess away and leave no scrollbar, no
+  // drag, and no keyboard route to it, so the page looks finished and part of
+  // it is simply gone.
+  //
+  // Nothing else in this gate could see it. The page-level overflow check
+  // reads the document, and the document does not widen when an ancestor
+  // clips: `.page-shell` carries `overflow: clip`, so a table 120px too wide
+  // for a phone was silently trimmed and every check here passed. That is how
+  // the block page lost its miner, the source page lost 384px of licence
+  // text, and the address page lost the right-hand half of every address.
+  //
+  // Two exclusions, both about telling a fault from a technique:
+  //
+  //  * A box narrower than 40px is the visually-hidden pattern, which clips a
+  //    label on purpose so a screen reader keeps it and the screen does not.
+  //  * `text-overflow: ellipsis` is deliberate truncation. It says so on the
+  //    screen, with the ellipsis, and the full value is on the page it links
+  //    to. Cutting a hash short is not the same as cutting a column off.
+  //  * `app-truncate` is the same argument one component along. It shortens an
+  //    identifier on purpose, shows the head and the tail of it, links to the
+  //    page that carries the whole thing, and keeps a hidden full copy inside
+  //    itself so a selection copies the real value. Every part of that reads
+  //    as clipping from the outside, on every route that prints an identifier.
+  //    So the overflow has to be attributed rather than counted: a box is at
+  //    fault only when something outside the deliberate machinery is what
+  //    sticks out of it.
+  const clippers = [];
+  for (const el of document.querySelectorAll('body *')) {
+    const hidden = el.scrollWidth - el.clientWidth;
+    if (hidden <= 2) continue;
+    if (el.clientWidth < 40) continue;
+    const style = getComputedStyle(el);
+    if (style.overflowX !== 'hidden' && style.overflowX !== 'clip') continue;
+    if (style.textOverflow === 'ellipsis') continue;
+    if (el.closest('app-truncate, [data-clip-ok]')) continue;
+    //
+    // A wrapper around a deliberate truncation is deliberate too. The link in
+    // a dashboard table cell holds one `app-truncate` and nothing else, so its
+    // box is the truncation's box and blaming it says the same thing twice.
+    const deliberate = (node) => {
+      if (node.closest('app-truncate, [data-clip-ok]')) return true;
+      const children = Array.from(node.children);
+      return children.length > 0
+        && children.every((c) => c.matches('app-truncate, [data-clip-ok]'));
+    };
+    const edge = el.getBoundingClientRect().right;
+    // Every culprit, not the first one. Naming one element per run turned a
+    // single overhang into three rounds of fix, push and wait, each round
+    // revealing the next thing past the edge.
+    const blamed = [];
+    for (const child of el.querySelectorAll('*')) {
+      if (deliberate(child)) continue;
+      const rect = child.getBoundingClientRect();
+      if (rect.width === 0 && rect.height === 0) continue;
+      // An element that keeps its geometry while invisible is not content a
+      // reader is being denied: the block tooltip parks itself hidden at its
+      // last position between hovers, and its box sticking past an edge hides
+      // nothing anyone could see. The same reasoning as the zero-size check,
+      // one visibility state along.
+      if (getComputedStyle(child).visibility === 'hidden') continue;
+      if (rect.right > edge + 2) {
+        blamed.push(describe(child));
+        if (blamed.length >= 3) break;
+      }
+    }
+    if (!blamed.length) continue;
+    clippers.push(
+      `${describe(el)} hides ${round(hidden)}px of its content sideways with no way to reach it`
+      + ` (${blamed.join(', ')} reach past its edge)`,
+    );
+    if (clippers.length >= 6) break;
   }
 
   // --- Fields that open a keyboard ----------------------------------------
@@ -485,7 +593,7 @@ async function mobileProbe(floors) {
     : null;
 
   return {
-    overflowBy, viewportWidth, culprits, scrollers, smallFields,
+    overflowBy, viewportWidth, culprits, scrollers, clippers, smallFields,
     targetsBelowWcag, targetsBelowPlatform,
     atBottom, insets, chrome, overflowingSurfaces, nav,
     innerHeight: window.innerHeight,
@@ -679,6 +787,13 @@ async function run() {
     }
 
     for (const route of routes) {
+      // The second tier. A route outside the full sweep is measured at the
+      // three narrow windows only; asking for a viewport explicitly overrides
+      // the tiering, because a run with --viewports is someone chasing one
+      // thing and it should measure exactly what was asked for.
+      if (!args.viewports && !FULL_SWEEP_ROUTE_IDS.has(route.id) && !NARROW_VIEWPORT_IDS.has(viewport.id)) {
+        continue;
+      }
       const page = await context.newPage();
       const scope = `${route.id}@${viewport.id}`;
       try {
@@ -700,6 +815,9 @@ async function run() {
         if (m.overflowBy > 0) {
           fail(scope, `the page scrolls sideways by ${m.overflowBy}px at ${m.viewportWidth}px`
             + (m.culprits.length ? ` (${m.culprits.join('; ')})` : ''));
+        }
+        for (const c of m.clippers) {
+          fail(scope, c);
         }
         for (const s of m.scrollers) {
           if (!s.declared) {
