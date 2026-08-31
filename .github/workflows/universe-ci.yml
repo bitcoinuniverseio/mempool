@@ -435,6 +435,19 @@ jobs:
   # Measured at about nine minutes, of which six are the build.
   mobile:
     name: Mobile and adaptive layout
+    # Takes the frontend job's build, for the same reason the visual shards do.
+    #
+    # The comment above says this job builds its own copy so the two gates
+    # cannot make each other fail or wait. That was written when a run made two
+    # builds. It stopped being free: with the fleet running more than one
+    # runner per host, a second concurrent Angular build is enough to have a
+    # runner killed mid-step, and run 33342564898 lost this job to exactly that
+    # with only one other run in flight.
+    #
+    # Waiting costs nothing here. The shards already gate on the frontend job,
+    # so the run is as long as the longest shard either way, and a run now
+    # makes exactly one build.
+    needs: frontend
     runs-on: [self-hosted, linux-ultra]
     timeout-minutes: 45
     steps:
@@ -448,13 +461,22 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
-      - name: Install
-        working-directory: frontend
-        run: npm ci
+      - name: Take the build the frontend job made
+        id: dist
+        uses: actions/cache/restore@v4
+        with:
+          path: frontend/dist
+          key: universe-dist-${{ github.sha }}
 
-      - name: Production build
+      # Survivable, not fatal, and loud: a miss pays the memory this change
+      # exists to save.
+      - name: Build it here if the cache did not have it
+        if: steps.dist.outputs.cache-hit != 'true'
         working-directory: frontend
-        run: npm run build:universe
+        run: |
+          echo "no build cached for ${{ github.sha }}; building one here"
+          npm ci
+          npm run build:universe
 
       - name: Install the visual QA harness
         working-directory: scripts/universe/visual-qa
