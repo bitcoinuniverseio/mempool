@@ -247,7 +247,7 @@
               <td class="numeric">{{ item.sizeBytes }}</td>
               <td class="numeric" [class.secondary]="!feeFormatted(item)">
                 <ng-container *ngIf="feeFormatted(item) as fee; else recentNoFee">{{ fee.display }} {{ profile.ticker }}</ng-container>
-                <ng-template #recentNoFee><ng-container i18n="universe.dash.fee-not-public">not public</ng-container></ng-template>
+                <ng-template #recentNoFee><ng-container i18n="universe.dash.fee-not-reported">not reported</ng-container></ng-template>
               </td>
             </tr>
           </tbody>
