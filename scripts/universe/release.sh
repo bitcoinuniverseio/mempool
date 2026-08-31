@@ -360,7 +360,7 @@ gate_private_listeners() {
   # bridge address is treated as private: it is reachable only from containers
   # on this host, and the services behind it are the same ones loopback serves.
   local exposed
-  exposed=$(ss -ltn 2>/dev/null     | awk 'NR > 1 { print $4 }'     | grep -vE '^(127\.|\[::1\]|172\.17\.0\.1:)'     | sed -E 's/.*:([0-9]+)$//'     | sort -u)
+  exposed=$(ss -ltn 2>/dev/null     | awk 'NR > 1 { print $4 }'     | grep -vE '^(127\.|\[::1\]|172\.17\.0\.1:)'     | sed -E 's/.*:([0-9]+)$/\1/'     | sort -u)
 
   local unexpected=""
   local port
@@ -400,7 +400,7 @@ cmd_preflight() {
 
 # Waits for a URL to answer 200 within a bounded time.
 wait_for() {
-  local url=$1 name=$2 deadline=$((SECONDS + 90))
+  local url=$1 name=$2 deadline=$((SECONDS + 300))
   while [ $SECONDS -lt $deadline ]; do
     if [ "$(curl -sS -o /dev/null -m 5 -w '%{http_code}' "$url" || true)" = 200 ]; then
       log "$name is answering"
