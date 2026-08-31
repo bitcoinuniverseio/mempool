@@ -14,6 +14,17 @@
   pointer-events: none;
   z-index: 11;
 
+  // On a phone the block this hangs over is narrower than 340px and clips its
+  // own overflow, so the tooltip was cut off down its right-hand side: the
+  // amount, the fee rate and the age were all in the part that was cut. A
+  // tooltip that reports the transaction under a thumb has to fit the space a
+  // thumb has.
+  @media (max-width: 575.98px) {
+    max-width: 100%;
+    min-width: 0;
+    width: 100%;
+  }
+
   &.clickable {
     pointer-events: all;
   }

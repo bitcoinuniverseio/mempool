@@ -527,6 +527,42 @@ the row back to its old height with a negative margin makes every target overlap
 its neighbours, which is the fault the rule exists to prevent, reintroduced by
 the fix for it.
 
+Two mixins in `src/app/universe/_universe-tokens.scss` write both shapes, so a
+component does not restate the numbers:
+
+| Mixin | For |
+|---|---|
+| `universe-touch-box($min)` | a control that already has a background or a border |
+| `universe-touch-line($line)` | a text link that is the whole value of a line |
+
+Whole families of control are handled once in `styles.scss` rather than
+component by component, because the pattern is what identifies them and not the
+class they happen to wear: a link in a table cell, a link that is the value of a
+`<dd>`, a link inside a `<nav>`, a link that is an entire heading, a `<summary>`,
+and a link written as a direct child of a `.panel`, which is how a section's own
+call to action is written here.
+
+There are two exceptions, and both are in the standard. A link inside a run of
+text is exempt, because enlarging a word inside a sentence breaks the sentence.
+A control inside a `<label>` that itself clears the floor is not the target; the
+label is, and measuring the 18px checkbox inside it describes the markup rather
+than what a thumb hits.
+
+Where a control cannot grow without changing what it means, the box grows and
+the paint does not. The replacement timeline's markers are 24px because that is
+what reads as one step on a timeline: they take a 10px transparent border with
+`background-clip: padding-box`, and a negative margin hands the space back to
+the layout, so the target is 44 and the marker is still 24. That is only safe
+where nothing is beside it, which on that timeline is 220px across and 186 down.
+
+### Room down the sides
+
+Every page keeps its container's 15px of side padding. `.container-xl` is what
+supplies it and a shorthand `padding` on a class written onto the same element
+silently takes it away, which is how six Universe pages came to run their
+headings and their prose hard against both edges of a phone. Set the block axis
+by name: `padding-block: 1.25rem 3rem`.
+
 ### Form fields
 
 Every field a software keyboard opens computes at `--u-text-field`, which is
@@ -552,6 +588,55 @@ An edge shadow that a label can scroll under is held to the contrast floor like
 any other painted surface. `--u-nav-scroll-shadow` is 14 percent rather than the
 general 28 percent for that reason, and the number came from the measurement.
 
+### Clipping is worse than scrolling
+
+A box that scrolls sideways without saying so is a fault. A box that does not
+scroll at all is a worse one: `overflow-x: hidden` and `clip` cut the excess
+away and leave no scrollbar, no drag and no keyboard route to it, so the page
+looks finished and part of it is simply gone.
+
+`.page-shell` carries `overflow: clip`, which means nothing inside it can widen
+the document. Every check that reads the document therefore passed while the
+block page lost 120px of its details table, the source page lost 384px of
+licence text, the address page lost the right-hand half of every address, and
+both chain dashboards drew the lens 130px wider than the screen. The gate now
+measures the clip itself, and attributes it: it names the box that is cutting
+and the element sticking out of it.
+
+Deliberate clipping is not a fault and the gate knows the difference. A box
+under 40px wide is the visually-hidden pattern. `text-overflow: ellipsis` says
+what it is doing on the screen. `app-truncate` shortens an identifier on
+purpose, shows its head and its tail, links to the page carrying the whole
+value, and keeps a hidden full copy so a selection copies the real thing.
+
+### Tables on a phone
+
+Two answers, and which one is right depends on what the table is for.
+
+**A list of things to open becomes a list.** The blocks list is one row per
+block and each row is a thing to open, so below 576px `stacks-on-phone` turns it
+into one card per row, each field on its own line with its column name beside
+it. Nothing is hidden and nothing is clipped, and the columns that a desktop
+breakpoint used to drop come back: at 320px the blocks list had been showing a
+height, a broken logo, and a reward cut in half by the edge of the screen.
+
+Two rules make it safe. The template MUST carry explicit ARIA roles, because
+changing `display` away from the table values is what strips a table of its
+implicit ones and a stack of unlabelled divs is worse than the table it
+replaced. Every cell MUST carry `data-label` with its column's name, which is
+what gets printed beside the value. The header row stays in the accessibility
+tree and leaves the screen, so it is clipped rather than `display: none`.
+
+**A ledger stays a ledger and the region scrolls.** A figure read under two
+rulesets that are allowed to disagree is read across, so the chain pages keep
+their columns inside `.table-wrap`, which declares itself with a role, a name, a
+tab stop and the two-layer scroll shadow. That contract was a claim rather than
+a fact until recently: the table took `width: 100%` and nothing else, so it
+never grew past the screen and squeezed its columns instead, and the ZRC-20
+token column came out 24px wide, one character per line, inside a wrapper
+announcing itself as a scroller with nothing to scroll. `min-width: max-content`
+is what makes it true.
+
 ## The mobile gate
 
 `scripts/universe/visual-qa/mobile-check.mjs`, run by the `mobile` job in CI
@@ -559,8 +644,24 @@ beside the visual matrix rather than inside it.
 
 It is built the opposite way round from the matrix: few page loads and many
 assertions on each, because a page load costs seconds and an assertion costs a
-millisecond. Eleven routes across seven window sizes is seventy-seven pages and
-roughly nine minutes, against the matrix's sixty.
+millisecond.
+
+It walks every route the matrix walks. It used to walk a chosen fifteen of them,
+on the argument that the shell checks catch most faults wherever they are, and
+the argument was wrong in a way worth writing down: running the same checks over
+the other twenty-nine found thirty-six failures on the first pass, none of them
+shell faults. Protocol tabs at 31px on seven routes, a select that zoomed an
+iPhone in on the saved page and left it there, an output page with overlapping
+targets, a replacement timeline scrolling sideways with nothing to say so. A
+gate that measures the pages someone thought to list measures the author's
+expectations.
+
+The cost is paid where it buys something. Every route is measured at 320, at 390
+and in landscape, which are the three windows that change the answer. The
+fifteen that are one of each thing the product is made of add the other four,
+so a breakpoint that goes wrong between the phone widths, or a wide layout
+regressed by a mobile fix, is still caught. Forty-four routes comes to about ten
+minutes, against the matrix's sixty.
 
 | Window | Why it is in the set |
 |---|---|
@@ -607,6 +708,8 @@ What it fails a run for:
 
 - the page scrolling sideways, naming the outermost elements responsible
 - a region scrolling sideways without declaring it, or with nothing focusable in it
+- a box clipping its content sideways with no way to reach it, naming both the
+  box and the element sticking out of it
 - a field computing under 16px
 - a target under either floor
 - content resting behind the header or the bottom bar, saying whether the
@@ -627,9 +730,11 @@ Run it against any served build:
 node scripts/universe/visual-qa/mobile-check.mjs --base=http://127.0.0.1:8080
 ```
 
-`--routes` and `--viewports` narrow it while working on one thing. Route ids
-come from the same list the visual matrix walks, so the two gates cannot
-disagree about what the product is.
+`--routes` and `--viewports` narrow it while working on one thing. Passing
+`--viewports` also turns off the tiering, because a run with it is someone
+chasing one thing and should measure exactly what was asked for. Route ids come
+from the same list the visual matrix walks, so the two gates cannot disagree
+about what the product is.
 
 ## Performance budgets
 
@@ -646,9 +751,15 @@ rather than of the machine:
 
 The eager payload is runtime, polyfills, main and styles: what a browser must
 have before the shell exists. Measured at `bea93c1ec`, develop was 463kB
-compressed and 1655kB raw; with the mobile work it is 464kB and 1659kB. The
-ceiling is set where a real regression trips it and ordinary drift does not.
-Raise it deliberately, and say what bought the bytes.
+compressed and 1655kB raw; with the first mobile work it was 464kB and 1659kB,
+and with the tables, the touch floors and the reachable tooltips it is 465kB
+and 1664kB. The ceiling is set where a real regression trips it and ordinary
+drift does not. Raise it deliberately, and say what bought the bytes.
+
+Four kilobytes of headroom is not much, and it is worth knowing where the last
+of it went: a stylesheet rule costs bytes whether or not any page uses it, so
+the shared patterns above are cheaper than the same rules written out per
+component, and that is part of why they are shared.
 
 Layout shift is less deterministic than a stylesheet property sounds. The same
 tree measured 0.042, 0.046 and 0.069 on the blocks route across three machines,

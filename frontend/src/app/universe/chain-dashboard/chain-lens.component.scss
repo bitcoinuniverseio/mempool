@@ -73,6 +73,17 @@
   position: relative;
   aspect-ratio: 16 / 10;
   min-height: 260px;
+  // An aspect ratio and a minimum height together imply a minimum width, and
+  // the browser applies it: 260px of height at 16/10 is 416px across, which is
+  // wider than a 320px phone. The panel grew to fit it and the page shell
+  // clipped the difference away, so the lens was drawn 130 pixels wider than
+  // the screen on both chain dashboards and nothing said so.
+  //
+  // `min-width: 0` does not undo it. The transferred minimum is applied to the
+  // used width rather than through min-width, and Chromium keeps it either
+  // way; a maximum is what actually holds. Measured rather than assumed: at
+  // 320px the box is 416 wide with this line removed and 286 with it.
+  max-width: 100%;
 
   app-block-overview-graph {
     position: absolute;

@@ -10,10 +10,6 @@
 
   transform: translateX(0px);
   transition: transform 0;
-
-  &.with-menu {
-    width: calc(100% + 120px);
-  }
 }
 
 #blockchain-container::-webkit-scrollbar {

@@ -353,11 +353,17 @@ jobs:
           kill -0 "$GATEWAY_PID"
           curl -fsS "http://127.0.0.1:$GATEWAY_PORT/__gateway/health"
 
-      # Eleven routes across seven window sizes, with a coarse pointer, a
-      # software keyboard, a display cutout and a rotation. Seventy-seven page
-      # loads, and every one of them is measured about twelve different ways,
-      # which is why this is cheap: the assertions are free and only the page
+      # Every route, with a coarse pointer, a software keyboard, a display
+      # cutout and a rotation. Each one is measured at 320, at 390 and in
+      # landscape, and the fifteen that are one of each thing the product is
+      # made of take the other four windows as well. About two hundred page
+      # loads, and every one of them is measured a dozen different ways, which
+      # is why this stays cheap: the assertions are free and only the page
       # loads cost anything.
+      #
+      # It used to walk a chosen fifteen routes. Running the same checks over
+      # the rest found thirty-six failures on the first pass, none of them in
+      # the shell, so the list was measuring what somebody had thought to list.
       - name: Every window a phone can be, measured with a thumb
         working-directory: scripts/universe/visual-qa
         run: node mobile-check.mjs --base=http://127.0.0.1:$GATEWAY_PORT --out=./artifacts-mobile
@@ -450,7 +456,9 @@ jobs:
           kill -0 "$GATEWAY_PID"
           curl -fsS "http://127.0.0.1:$GATEWAY_PORT/__gateway/health"
 
-      # The full window set, on the engine Safari is built on.
+      # The full window set and the full route list, on the engine Safari is
+      # built on. This is the closest an automated run gets to an iPhone, so it
+      # is the one place worth paying for the whole matrix twice.
       - name: Every window a phone can be, on WebKit
         working-directory: scripts/universe/visual-qa
         run: >-

@@ -344,6 +344,15 @@ h2 {
 	width: 0;
 	flex-grow: 1;
 	margin-inline-end: 2em;
+
+	// The transaction id at the head of each card is the way into that
+	// transaction, and it is the most-followed link on the address page. It
+	// came out 21 pixels tall.
+	@media (pointer: coarse), (max-width: 991.98px) {
+		align-items: center;
+		display: flex;
+		min-height: var(--u-touch-target);
+	}
 }
 
 .vin-witness {
