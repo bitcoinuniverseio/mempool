@@ -322,17 +322,29 @@ async function mobileProbe(floors) {
         && children.every((c) => c.matches('app-truncate, [data-clip-ok]'));
     };
     const edge = el.getBoundingClientRect().right;
-    let blamed = null;
+    // Every culprit, not the first one. Naming one element per run turned a
+    // single overhang into three rounds of fix, push and wait, each round
+    // revealing the next thing past the edge.
+    const blamed = [];
     for (const child of el.querySelectorAll('*')) {
       if (deliberate(child)) continue;
       const rect = child.getBoundingClientRect();
       if (rect.width === 0 && rect.height === 0) continue;
-      if (rect.right > edge + 2) { blamed = child; break; }
+      // An element that keeps its geometry while invisible is not content a
+      // reader is being denied: the block tooltip parks itself hidden at its
+      // last position between hovers, and its box sticking past an edge hides
+      // nothing anyone could see. The same reasoning as the zero-size check,
+      // one visibility state along.
+      if (getComputedStyle(child).visibility === 'hidden') continue;
+      if (rect.right > edge + 2) {
+        blamed.push(describe(child));
+        if (blamed.length >= 3) break;
+      }
     }
-    if (!blamed) continue;
+    if (!blamed.length) continue;
     clippers.push(
       `${describe(el)} hides ${round(hidden)}px of its content sideways with no way to reach it`
-      + ` (${describe(blamed)} reaches past its edge)`,
+      + ` (${blamed.join(', ')} reach past its edge)`,
     );
     if (clippers.length >= 6) break;
   }
