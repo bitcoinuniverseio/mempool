@@ -247,7 +247,7 @@
               <td class="numeric">{{ item.sizeBytes }}</td>
               <td class="numeric" [class.secondary]="!feeFormatted(item)">
                 <ng-container *ngIf="feeFormatted(item) as fee; else recentNoFee">{{ fee.display }} {{ profile.ticker }}</ng-container>
-                <ng-template #recentNoFee><ng-container i18n="universe.dash.fee-not-public">not public</ng-container></ng-template>
+                <ng-template #recentNoFee><ng-container i18n="universe.dash.fee-not-reported">not reported</ng-container></ng-template>
               </td>
             </tr>
           </tbody>
@@ -324,7 +324,13 @@
         <dl class="source-list">
           <ng-container *ngFor="let detail of vm.sourceDetails; trackBy: trackById">
             <dt>{{ detail.label }}</dt>
-            <dd><span class="source-value" [attr.title]="detail.exact">{{ detail.display }}</span></dd>
+            <dd>
+              <span class="source-value" [attr.title]="detail.exact">{{ detail.display }}</span>
+              <!-- A shortened identifier that cannot be recovered is evidence
+                   destroyed rather than filed, so the exact form travels with
+                   it for screen readers and for copying. -->
+              <span class="visually-hidden" *ngIf="detail.truncated">{{ detail.exact }}</span>
+            </dd>
           </ng-container>
         </dl>
       </ng-container>
