@@ -21,7 +21,7 @@
   "main": "index.ts",
   "scripts": {
     "ng": "node ./node_modules/@angular/cli/bin/ng.js",
-    "tsc": "./node_modules/typescript/bin/tsc",
+    "tsc": "tsc",
     "i18n-extract-from-source": "npm run ng -- extract-i18n --out-file ./src/locale/messages.xlf",
     "i18n-pull-from-transifex": "tx pull -a --minimum-perc 1 --force",
     "serve": "npm run generate-themes && npm run generate-config && npm run ng -- serve -c local",
@@ -39,14 +39,14 @@
     "sync-assets-dev": "node sync-assets.js 'src/resources/'",
     "generate-config": "node generate-config.js",
     "test": "vitest run",
-    "lint": "./node_modules/.bin/eslint . --ext .ts",
-    "lint:fix": "./node_modules/.bin/eslint . --ext .ts --fix",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix",
     "prettier": "prettier --write \"src/app/**/*.{js,json,css,scss,less,md,ts,html,component.html}\"",
     "e2e": "npm run generate-config && npm run ng -- e2e",
     "e2e:ci": "npm run cypress:run:ci",
     "dev:ssr": "npm run generate-config && ng run mempool:serve-ssr",
     "serve:ssr": "npm run generate-config && node server.run.js",
-    "build:ssr": "npm run build && ng run mempool:server:production && ./node_modules/typescript/bin/tsc server.run.ts",
+    "build:ssr": "npm run build && ng run mempool:server:production && tsc server.run.ts",
     "config:defaults:mempool": "node update-config.js TESTNET_ENABLED=true TESTNET4_ENABLED=true SIGNET_ENABLED=true LIQUID_ENABLED=true LIQUID_TESTNET_ENABLED=true ITEMS_PER_PAGE=25 BASE_MODULE=mempool BLOCK_WEIGHT_UNITS=4000000 && npm run generate-config",
     "config:defaults:liquid": "node update-config.js TESTNET_ENABLED=true TESTNET4_ENABLED=true SIGNET_ENABLED=true LIQUID_ENABLED=true LIQUID_TESTNET_ENABLED=true ITEMS_PER_PAGE=25 BASE_MODULE=liquid BLOCK_WEIGHT_UNITS=300000 && npm run generate-config",
     "prerender": "npm run ng -- run mempool:prerender",
@@ -100,7 +100,6 @@
     "@types/node": "^24.9.2",
     "@typescript-eslint/eslint-plugin": "^8.46.2",
     "@typescript-eslint/parser": "^8.46.2",
-    "browser-sync": "^3.0.3",
     "eslint": "^9.39.0",
     "http-proxy-middleware": "~2.0.6",
     "jsdom": "^30.0.1",
@@ -119,6 +118,16 @@
     "start-server-and-test": "~2.1.2"
   },
   "overrides": {
+    "browser-sync": {
+      "immutable": "^5.1.9"
+    },
+    "browser-sync-ui": {
+      "immutable": "^5.1.9"
+    },
+    "less": "^4.9.0",
+    "sockjs": {
+      "uuid": "^11.1.1"
+    },
     "tar": "^7.5.5"
   },
   "scarfSettings": {
