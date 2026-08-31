@@ -86,9 +86,30 @@ index is not answering yet.
 | `/data/indexers-c` free | 786 GB of 1.9 TB |
 
 The remaining blocks are the larger ones, so the height fraction overstates
-progress. The volume is shared with ord-tap, the Fractal node and the explorer's
-own working data, and an index that fills it takes those down with it, so the
-free space figure is a release reading and not an aside.
+progress. How badly is measurable from the milestones the index logs every ten
+thousand blocks:
+
+| milestone | reached | interval |
+| --- | --- | --- |
+| 520,000 | 15:44 | |
+| 530,000 | 16:11 | 27 minutes |
+| 540,000 | 16:50 | 39 minutes |
+| 550,000 | 17:45 | 55 minutes |
+
+Each ten thousand blocks is taking roughly forty percent longer than the last,
+and 560,000 had not landed an hour and a quarter after 550,000. With about
+415,000 blocks left, the remaining work is measured in days rather than hours.
+Anyone reading "550,000 of 964,897" as most of the way there will plan the
+cutover for the wrong day.
+
+The volume is shared with ord-tap, the Fractal node and the explorer's own
+working data, and an index that fills it takes those down with it, so the free
+space figure is a release reading and not an aside. Free space fell from 784 GB
+to 781 GB across fifteen minutes, about 12 GB per hour. Against the roughly
+434 GB still to write if the finished index lands near the terabyte the runbook
+describes, that fits with a few hundred gigabytes to spare, but the margin is
+thinner than the raw free figure suggests and the failure mode is not a slow
+explorer, it is two unrelated services losing their volume.
 
 ## Live origin
 
