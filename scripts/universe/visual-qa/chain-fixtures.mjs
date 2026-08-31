@@ -1055,6 +1055,10 @@ function miningSummaryFixture(chain) {
         subsidyAtomic: '1000000000000',
         meanRewardAtomic: '1002481202210',
         meanFeesAtomic: '2481202210',
+        // Every Dogecoin coinbase is transparent, so the window and the two
+        // denominators agree and the page states the window alone.
+        rewardBlocksAtomic: '1008',
+        feeBlocksAtomic: '1008',
         mergedMining: { supported: true, noticeId: 'dogecoin-auxpow' },
         observedAt,
       }
@@ -1073,6 +1077,12 @@ function miningSummaryFixture(chain) {
         subsidyAtomic: '156250000',
         meanRewardAtomic: '156329100',
         meanFeesAtomic: '79100',
+        // The production reading: about three percent of a Zcash window pays
+        // a shielded coinbase, so neither figure can be derived from it and
+        // the means are over the rest. This is the state that makes the page
+        // say which blocks it measured.
+        rewardBlocksAtomic: '931',
+        feeBlocksAtomic: '931',
         mergedMining: { supported: false, noticeId: null },
         observedAt,
       };
