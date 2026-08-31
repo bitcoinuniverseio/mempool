@@ -331,6 +331,23 @@
   font-weight: var(--u-weight-medium);
   padding: 0 var(--u-space-2);
 
+  // The pool credit is a link to the pool, and at 12px on one line it was a
+  // 15 pixel target on five routes.
+  //
+  // The negative margin gives the added height back to the layout, so the
+  // strip's spacing is exactly what it was and only the area a thumb can hit
+  // grows. That area is over the block's own link, which is the trade: a block
+  // face 125 pixels tall gives up 15 of them so the pool beside it can be hit
+  // at all. The credit sits above the block link in the stacking order, so the
+  // overlap resolves to the label a thumb was aimed at.
+  @media (pointer: coarse), (max-width: 991.98px) {
+    align-items: center;
+    display: inline-flex;
+    justify-content: center;
+    margin-block: calc((15px - var(--u-touch-target)) / 2);
+    min-height: var(--u-touch-target);
+  }
+
   &:hover,
   &:focus {
     color: var(--u-brand);

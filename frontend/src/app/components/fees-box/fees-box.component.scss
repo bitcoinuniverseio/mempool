@@ -152,6 +152,24 @@
   white-space: nowrap;
   width: 25%;
 
+  // On a phone the three bands share 33 percent each of about 260 pixels, and
+  // "Medium Priority" does not fit in eighty of them. It was being cut to
+  // "Medium…", which names no band at all. Two short lines name it exactly.
+  @media (max-width: 575.98px) {
+    line-height: var(--u-leading-tight);
+    text-overflow: clip;
+    white-space: normal;
+  }
+
+  // The tooltip on each of these explains where in the queue that band lands a
+  // transaction, and the shared directive gives the span a tab stop so it can
+  // be opened by a keyboard and by a tap. A tab stop has to be visible.
+  &:focus-visible {
+    border-radius: var(--u-radius-sm);
+    outline: 2px solid var(--u-focus-ring);
+    outline-offset: 2px;
+  }
+
   @media (767px < width < 992px), (width < 576px) {
     width: 33%;
 

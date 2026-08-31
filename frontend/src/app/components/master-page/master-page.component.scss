@@ -57,6 +57,17 @@
   flex-shrink: 0;
   text-decoration: none;
 
+  // Below 480px the lockup is the mark alone, 28px across and 34 tall, which
+  // is the smallest control in the shell and one of the most used: it is how
+  // you get back to the dashboard from anywhere. The padding reaches the touch
+  // floor without scaling the mark, which would make the wordmark unreadable
+  // at the widths where it is shown.
+  @media (pointer: coarse), (max-width: 991.98px) {
+    justify-content: center;
+    min-height: var(--u-touch-target);
+    min-width: var(--u-touch-target);
+  }
+
   &:focus-visible {
     outline: 2px solid var(--u-focus-ring);
     outline-offset: 3px;

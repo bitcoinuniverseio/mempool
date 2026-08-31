@@ -13,9 +13,46 @@
     margin-top: 1.5rem;
   }
 
+  // Fixed layout, so the table cannot be wider than the column it sits in.
+  //
+  // Without it the widths below are suggestions the browser is free to ignore
+  // when a cell's content will not fit, and the content here is repository
+  // URLs and commit hashes with no space in them: the table came out ten
+  // pixels wider than a phone held sideways, and `.page-shell` clipped the
+  // difference away. Fixed layout plus a break rule means the value column
+  // takes whatever is left and wraps inside it.
+  .source-table {
+    table-layout: fixed;
+  }
+
   .source-table td:first-child {
     width: 12rem;
     opacity: 0.7;
+  }
+
+  // Repository URLs and licence names. A URL has no space in it, so without
+  // this it decides how wide the table is and the page shell cuts off whatever
+  // did not fit. It applies at every width because a phone held sideways is
+  // not a desktop: the same URL ran 10 pixels past the edge there too.
+  .source-table td {
+    overflow-wrap: anywhere;
+    // These cells are sentences and URLs, not figures, and the global
+    // `tr { white-space: nowrap }` is written for figures. It kept a licence
+    // description on one line and pushed it 134 pixels past the edge of a
+    // phone held sideways, where the width-keyed override does not reach:
+    // landscape is 844 wide and the override stops at 768.
+    white-space: normal;
+  }
+
+  // On a phone a 12rem label column leaves under a hundred pixels for a value,
+  // and the values here are repository URLs and licence names. They pushed 384
+  // pixels past the right edge of a 320px screen, where the page shell clipped
+  // them away. The label goes above its value instead, both wrap, and a URL
+  // breaks wherever it has to rather than deciding the width of the page.
+  @media (max-width: 575.98px) {
+    .source-table td:first-child {
+      width: 40%;
+    }
   }
 
   .trademark-note {

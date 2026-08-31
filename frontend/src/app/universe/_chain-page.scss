@@ -8,7 +8,16 @@
 
 @mixin universe-chain-page {
   .chain-page {
-    padding: 1.25rem 0 3rem;
+    // Vertical only.
+    //
+    // `padding: 1.25rem 0 3rem` also set the inline padding to zero, and this
+    // class is written on a `.container-xl`, whose 15px of side padding is the
+    // only thing keeping a line of text off the edge of a phone. Every Universe
+    // page ran its headings, its ledes and its panels hard against both edges
+    // of the screen: measured at 390px, the container was 390 wide with nothing
+    // either side of it. Naming the block axis leaves the container's own side
+    // padding alone.
+    padding-block: 1.25rem 3rem;
     color: var(--u-text-primary);
   }
 
@@ -53,6 +62,10 @@
     flex-direction: column;
     gap: 0.3rem;
     min-width: 0;
+    // A column flex stretches its children, which turned each chip into a
+    // full-width coloured bar the moment the rail became one column. A chip
+    // states a reading; a bar the width of the page states an alarm.
+    align-items: start;
   }
 
   .reading-label {
@@ -61,6 +74,33 @@
     font-weight: var(--u-weight-semibold);
     letter-spacing: var(--u-eyebrow-tracking);
     text-transform: uppercase;
+  }
+
+  // One column on a phone, so a stacked label and value is two lines each and
+  // the five readings take most of a screen before the page begins. The label
+  // moves beside its value: same five readings, same order, a third of the
+  // height, and the chips line up down the right where they can be compared
+  // at a glance.
+  @media (max-width: 575.98px) {
+    .status-rail {
+      // One reading per line. Two columns fit at 390px and the result is
+      // "CHAIN TIP" wrapping onto two lines beside a chip squeezed into what
+      // is left, which is worse than the stack it replaced. A single column of
+      // label-and-value lines is the shape this reads best in.
+      grid-template-columns: 1fr;
+      gap: var(--u-space-2);
+    }
+
+    .reading {
+      align-items: center;
+      flex-direction: row;
+      gap: var(--u-space-3);
+      justify-content: space-between;
+    }
+
+    .reading-label {
+      flex: 0 1 auto;
+    }
   }
 
   .universe-chip {
@@ -206,11 +246,35 @@
     font-weight: var(--u-weight-normal);
   }
 
-  // A table wide enough to scroll is a scrollable region, and a region a
-  // mouse can pan has to be reachable from a keyboard too. It takes focus,
-  // so it also has to show that it has it.
+  // A wide table on a narrow screen.
+  //
+  // These are ledgers: a figure read under two rulesets that are allowed to
+  // disagree, a token's supply beside its holders, an index of protocols
+  // against their authorities. Reading one across is the whole point, so the
+  // columns stay columns and the region scrolls, which is what the region role
+  // and the tabindex on it have always claimed. They were not true: `table`
+  // took `width: 100%` and nothing else, so the table never grew past the
+  // screen and the columns were squeezed instead. On the ZRC-20 list the token
+  // name column came out 24 pixels wide, one character per line, under a
+  // wrapper announcing itself as a scroller with nothing to scroll.
+  //
+  // The two rules together are what makes it work: full width where there is
+  // room, and never narrower than the content needs.
   .table-wrap {
     overflow-x: auto;
+    // The scroller has to say that it scrolls. Same two-layer shadow the
+    // navigation bar uses: covers painted in the surface colour that scroll
+    // with the content, over shadows that do not, so a fade appears only on
+    // the side that has more to show.
+    background-image:
+      linear-gradient(to right, var(--u-surface-raised) 60%, rgba(0, 0, 0, 0)),
+      linear-gradient(to left, var(--u-surface-raised) 60%, rgba(0, 0, 0, 0)),
+      linear-gradient(to right, var(--u-nav-scroll-shadow), rgba(0, 0, 0, 0)),
+      linear-gradient(to left, var(--u-nav-scroll-shadow), rgba(0, 0, 0, 0));
+    background-position: left center, right center, left center, right center;
+    background-repeat: no-repeat;
+    background-size: 24px 100%, 24px 100%, 10px 100%, 10px 100%;
+    background-attachment: local, local, scroll, scroll;
 
     &:focus-visible {
       outline: 2px solid var(--u-focus-ring);
@@ -222,6 +286,36 @@
     width: 100%;
     border-collapse: collapse;
     font-size: var(--u-text-sm);
+  }
+
+  .table-wrap > table {
+    min-width: max-content;
+  }
+
+  // Inside a scrolling region a cell does not have to fit, so it does not
+  // wrap. Two rules elsewhere make it wrap and both are wrong here: the phone
+  // override that lets an ordinary table row break, and the identifier
+  // treatment that breaks a string at any character so a 64 character hash
+  // never widens a layout. Together they printed a four letter ticker one
+  // character per line in a 24 pixel column, inside a region that was free to
+  // be as wide as it liked.
+  .table-wrap td,
+  .table-wrap th {
+    white-space: nowrap;
+  }
+
+  .table-wrap .identifier {
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+
+  // A ticker is four characters wide. The shared rule gives a link in a cell
+  // the room it needs on the block axis, and inside a region that scrolls the
+  // inline axis is free, so it can have the floor on both.
+  @media (pointer: coarse), (max-width: 991.98px) {
+    .table-wrap td > a {
+      min-width: var(--u-touch-target);
+    }
   }
 
   thead th {
@@ -249,5 +343,36 @@
 
   tbody tr:last-child td {
     border-bottom: 0;
+  }
+}
+
+// The page title on a chain's own pages.
+//
+// Distinct from the shared `.title-block` in styles.scss, which is the product's
+// detail heading: an eyebrow naming the category, with an identifier beside it
+// carrying the weight. The multichain object pages use that as written, because
+// they always have an identifier. A dashboard, a mining page, a charts shell and
+// a docs page have none, so their heading is the title and is set as one.
+//
+// Undoing the eyebrow is the point of the last two declarations. The four pages
+// were overriding the size and inheriting the case and the tracking, so "Zcash
+// dashboard" arrived as 28px of tracked capitals running almost the full width
+// of a 320px screen. It was written out four times, once per page, which is why
+// nothing fixed it in one place.
+@mixin universe-chain-title {
+  .title-block {
+    display: flex;
+    align-items: center;
+    gap: var(--u-space-2);
+    margin-bottom: var(--u-space-3);
+
+    h1 {
+      color: var(--u-text-primary);
+      font-size: var(--u-text-2xl);
+      font-weight: var(--u-weight-semibold);
+      letter-spacing: var(--u-display-tracking);
+      margin: 0;
+      text-transform: none;
+    }
   }
 }

@@ -241,3 +241,33 @@
   font-size: var(--u-text-sm);
   color: var(--u-text-muted);
 }
+
+
+// The three icon controls on a phone.
+//
+// The clock, the fee filter and the invert control are each a single glyph with
+// no label, and below 830px they were stretched to half the width of the card
+// apiece. Three full-width pink slabs carrying one glyph each read as the three
+// most important actions on the page, which they are not: the chart is, and the
+// range selector under it is how the chart is driven.
+//
+// They keep their accessible names, they keep the touch floor, and they stop
+// claiming the weight of a primary action. Their row sits at the end rather
+// than filling it, so the range selector above is unmistakably the control the
+// page is about.
+@media (max-width: 829.98px) {
+  .small-buttons {
+    justify-content: flex-end;
+    gap: var(--u-space-2);
+    width: auto;
+
+    .btn,
+    .dropdown,
+    #dropdownFees {
+      flex: 0 0 auto;
+      margin-right: 0;
+      min-width: var(--u-touch-target);
+      width: auto;
+    }
+  }
+}

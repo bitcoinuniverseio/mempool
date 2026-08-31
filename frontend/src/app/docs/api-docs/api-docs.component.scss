@@ -562,3 +562,17 @@ fa-icon {
     }
   }
 }
+
+// The endpoint line, on a phone.
+//
+// It is a full URL on a line of its own: not a word inside a sentence, so it
+// takes the touch floor, and long enough that it ran past the right edge of a
+// 320px screen, so it breaks wherever it has to rather than deciding how wide
+// the page is.
+@media (pointer: coarse), (max-width: 991.98px) {
+  .endpoint > a {
+    display: inline-block;
+    overflow-wrap: anywhere;
+    padding-block: var(--u-space-3);
+  }
+}
