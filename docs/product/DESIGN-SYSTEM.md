@@ -577,12 +577,17 @@ The page never scrolls sideways, at any tested width. A region may, on two
 conditions: it says so, and a keyboard can reach past its edge.
 
 Saying so means a `data-scroll-region` attribute, a `role` and an accessible
-name, and a visible affordance. The block timeline is the one such region in the
-product, because blocks are a sequence and stacking them would destroy the view.
-The bottom bar is the other, and it uses the two-layer background technique for
-its affordance: opaque covers that scroll with the content sitting over static
-shadows, so a fade appears on exactly the side that has more and never when
-everything already fits.
+name, and a visible affordance. There are three such regions. The block timeline,
+because blocks are a sequence and stacking them would destroy the view. The
+bottom bar, when a chain has more destinations than a screen has room for. And
+the chain ledgers in `.table-wrap`, because a figure read under two rulesets is
+read across.
+
+All three use the same two-layer background for the affordance: opaque covers
+that scroll with the content sitting over static shadows, so a fade appears on
+exactly the side that has more and never when everything already fits. It is
+pure CSS and nothing measures the element, so it stays correct through a
+rotation, a fold, a split-screen resize and a chain switch.
 
 An edge shadow that a label can scroll under is held to the contrast floor like
 any other painted surface. `--u-nav-scroll-shadow` is 14 percent rather than the
