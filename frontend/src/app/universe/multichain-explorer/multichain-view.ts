@@ -1253,6 +1253,36 @@ export interface ProtocolActionRow {
   readonly outputOutpoints: readonly string[];
 }
 
+/**
+ * Where a fee came from, and when there is none, which read failed.
+ *
+ * A missing fee is always a reading condition. It is never a privacy
+ * property: a Zcash fee is public whatever shielded structure a transaction
+ * has, and this explorer must never say otherwise.
+ */
+export interface FeeEvidenceReading {
+  readonly sourceLabel: string;
+  readonly nodeAmount: ExactNumber | null;
+  readonly valuePoolAmount: ExactNumber | null;
+  readonly unavailableLabel: string | null;
+  readonly crossChecked: boolean;
+}
+
+/** The fee rule a transaction is read under, as the authority resolved it. */
+export interface FeeRuleReading {
+  readonly name: string;
+  readonly supported: boolean;
+  readonly upgradeName: string | null;
+  readonly branchId: string | null;
+  readonly activationBasisLabel: string;
+  readonly activationHeight: ExactNumber | null;
+  readonly marginalFee: ExactNumber | null;
+  readonly graceActions: ExactNumber | null;
+  readonly conventionalFee: ExactNumber | null;
+  readonly unsupportedLabel: string | null;
+  readonly evidenceSource: string | null;
+}
+
 export interface TransactionReading {
   readonly txid: string;
   readonly statusLabel: string;
@@ -1266,6 +1296,8 @@ export interface TransactionReading {
   readonly feeRate: string | null;
   readonly feeRateUnit: string | null;
   readonly logicalActions: ExactNumber | null;
+  readonly feeEvidence: FeeEvidenceReading | null;
+  readonly feeRule: FeeRuleReading | null;
   readonly inputs: readonly TransactionPartyRow[];
   readonly outputs: readonly TransactionPartyRow[];
   readonly inputTotal: ExactNumber | null;
@@ -1278,6 +1310,98 @@ export interface TransactionReading {
   readonly expiry: { height: ExactNumber | null; state: string } | null;
   readonly completenessLabel: string;
   readonly completenessTone: EvidenceTone;
+}
+
+/**
+ * How a fee was established. An id this build has no words for is shown as
+ * itself, because an unfamiliar label beats a silently dropped claim.
+ */
+const FEE_SOURCE_LABEL: Record<string, string> = {
+  'node-and-value-pool': $localize`:@@universe.fee.src-both:our node and the value pool arithmetic, in agreement`,
+  'node-mempool-verbose': $localize`:@@universe.fee.src-node:our node's own pending set`,
+  'value-pool': $localize`:@@universe.fee.src-pool:the transparent value pool arithmetic`,
+  'node-reported': $localize`:@@universe.fee.src-reported:our node`,
+};
+
+/**
+ * Why no fee could be established. Every entry names a read that failed.
+ * None of them is about privacy, and none of them may become about privacy.
+ */
+const FEE_UNAVAILABLE_LABEL: Record<string, string> = {
+  'sources-disagree': $localize`:@@universe.fee.un-disagree:our node and the value pool arithmetic disagreed, so neither figure is shown`,
+  'transparent-input-value': $localize`:@@universe.fee.un-prevout:a transparent input this transaction spends could not be read`,
+  'transparent-output-value': $localize`:@@universe.fee.un-output:a transparent output value could not be read`,
+  'sapling-value-balance': $localize`:@@universe.fee.un-sapling:the Sapling value balance could not be read`,
+  'orchard-value-balance': $localize`:@@universe.fee.un-orchard:the Orchard value balance could not be read`,
+  'ironwood-value-balance': $localize`:@@universe.fee.un-ironwood:the Ironwood value balance could not be read`,
+  'joinsplit-public-value': $localize`:@@universe.fee.un-joinsplit:a JoinSplit public value could not be read`,
+  'negative-value-pool': $localize`:@@universe.fee.un-negative:the value pool did not balance, so no fee is claimed`,
+  coinbase: $localize`:@@universe.fee.un-coinbase:a coinbase transaction collects fees rather than paying one`,
+  'fee-unreadable': $localize`:@@universe.fee.un-generic:no source could read this fee`,
+};
+
+const FEE_RULE_UNSUPPORTED_LABEL: Record<string, string> = {
+  'zip317-not-in-force-at-this-height': $localize`:@@universe.fee.rule-pre317:the ZIP-317 fee mechanism was not in force at this height`,
+  'unrecognised-consensus-branch': $localize`:@@universe.fee.rule-unknown:this release does not recognise the network upgrade in force here`,
+};
+
+const FEE_ACTIVATION_BASIS_LABEL: Record<string, string> = {
+  'block-height': $localize`:@@universe.fee.basis-height:the upgrade in force at this transaction's own block`,
+  'next-block': $localize`:@@universe.fee.basis-next:the upgrade the next block will be mined under`,
+  'pre-overwinter': $localize`:@@universe.fee.basis-pre:a height before the first network upgrade`,
+  unknown: $localize`:@@universe.fee.basis-unknown:not stated by the authority`,
+  unstated: $localize`:@@universe.fee.basis-unstated:not stated by the authority`,
+};
+
+function feeEvidenceReading(
+  value: unknown,
+  profile: ChainProfile
+): FeeEvidenceReading | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+  const source = text(value.source);
+  const unavailable = text(value.unavailableReason);
+  return {
+    sourceLabel: source === null ? '' : (FEE_SOURCE_LABEL[source] ?? source),
+    nodeAmount: formatAtomicAmount(text(value.nodeAmountAtomic), profile.precision),
+    valuePoolAmount: formatAtomicAmount(
+      text(value.valuePoolAmountAtomic),
+      profile.precision
+    ),
+    unavailableLabel:
+      unavailable === null
+        ? null
+        : (FEE_UNAVAILABLE_LABEL[unavailable] ?? unavailable),
+    crossChecked: source === 'node-and-value-pool',
+  };
+}
+
+function feeRuleReading(value: unknown, profile: ChainProfile): FeeRuleReading | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+  const basis = text(value.activationBasis) ?? 'unknown';
+  const unsupported = text(value.unsupportedReason);
+  return {
+    name: text(value.name) ?? '',
+    supported: value.supported === true,
+    upgradeName: text(value.upgradeName),
+    branchId: text(value.branchId),
+    activationBasisLabel: FEE_ACTIVATION_BASIS_LABEL[basis] ?? basis,
+    activationHeight: formatExactInteger(text(value.activationHeightAtomic)),
+    marginalFee: formatAtomicAmount(text(value.marginalFeeAtomic), profile.precision),
+    graceActions: formatExactInteger(text(value.graceActionsAtomic)),
+    conventionalFee: formatAtomicAmount(
+      text(value.conventionalFeeAtomic),
+      profile.precision
+    ),
+    unsupportedLabel:
+      unsupported === null
+        ? null
+        : (FEE_RULE_UNSUPPORTED_LABEL[unsupported] ?? unsupported),
+    evidenceSource: text(value.evidenceSource),
+  };
 }
 
 const LIFECYCLE_TONE: Record<string, EvidenceTone> = {
@@ -1485,6 +1609,8 @@ export function readTransaction(
     feeRate: text(fee.rateDecimal),
     feeRateUnit: text(fee.rateUnit),
     logicalActions: formatExactInteger(text(fee.logicalActionsAtomic)),
+    feeEvidence: feeEvidenceReading(fee.evidence, profile),
+    feeRule: feeRuleReading(fee.rule, profile),
     inputs,
     outputs,
     inputTotal: sumAtomic(inputs, profile.precision),
@@ -2140,11 +2266,11 @@ export interface TransactionListRow {
 /**
  * What the cost column can honestly be, decided by what the rows carry.
  *
- * Dogecoin reports a fee amount and no rate. Zcash reports no amount at all on
- * a pending transaction, because a shielded transaction's fee is not derivable
- * from its transparent side, and reports ZIP-317 logical actions instead. A
- * fixed "Fee" column would have been empty on every row of the Zcash pending
- * list, which is the page's most valuable column spent on nothing.
+ * Dogecoin reports a fee amount and no rate. Zcash reports both a fee amount
+ * and its ZIP-317 logical actions, and an authority that could not read an
+ * amount for any row leaves only the actions to show. The column follows what
+ * the rows actually carry, so it is never a heading over an empty column, and
+ * a shielded transaction is never the reason one is missing.
  */
 export type TransactionCostColumn = 'amount' | 'logical-actions' | 'none';
 

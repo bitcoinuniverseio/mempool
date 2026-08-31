@@ -144,7 +144,7 @@
             Zcash block producers select transactions by weighted random sampling under ZIP-317, so no ordering of the pending set is honest. Instead of an order, the buckets are eligibility tiers: pays its conventional fee, pays less than convention, fee not readable, and expiring.
           </p>
           <p i18n="universe.docs.candidate-zcash-2">
-            A shielded transaction's fee cannot be read from its transparent side, so it sits in the fee-not-readable tier, never assumed paid or unpaid. An expiring transaction may leave the pending set without ever confirming. Whether an underpaying transaction gets in depends on each producer's unpaid budget, which this explorer does not model. No promised order exists between or within tiers, and none is shown.
+            A transaction whose fee the authority could not read sits in the fee-not-readable tier, never assumed paid or unpaid, and shielding is not a cause of that. An expiring transaction may leave the pending set without ever confirming. Whether an underpaying transaction gets in depends on each producer's unpaid budget, which this explorer does not model. No promised order exists between or within tiers, and none is shown.
           </p>
         </ng-container>
       </section>
@@ -169,6 +169,20 @@
           </p>
           <p i18n="universe.docs.fees-zcash-2">
             The conventional fee is 5,000 zatoshi of marginal fee per logical action, with a grace allowance of 2 actions. A typical transparent spend counts 2 actions, so its conventional fee is 10,000 zatoshi. The panel also shows what share of the current pending set pays at least its conventional fee, when the pending set can be read.
+          </p>
+          <h3 i18n="universe.docs.fees-zcash-public-title">A shielded transaction's fee is public</h3>
+          <p i18n="universe.docs.fees-zcash-public-1">
+            Shielding hides who sent, who received, how much moved, and any memo. It does not hide the fee. The fee is the value left in the transparent transaction value pool once every public term is counted: transparent inputs and outputs, the Sapling, Orchard and Ironwood value balances, and the Sprout JoinSplit public values. Every one of those is on chain in the clear.
+          </p>
+          <p i18n="universe.docs.fees-zcash-public-2">
+            So this explorer shows the fee for every transaction, shielded or not. Two independent readings answer for each one: the fee our own node charged it in its pending set, and the value pool arithmetic computed from the transaction's public structure. A transaction page names which of the two answered, and says so when both did and agreed.
+          </p>
+          <p i18n="universe.docs.fees-zcash-public-3">
+            When the two disagree, no fee is shown and both readings are printed side by side. A figure nobody can confirm is worse than none. When neither can answer, the page names the read that failed, for instance a transparent input it could not resolve. That is always a reading condition. It is never a claim that the fee was private, and no page here will ever make that claim.
+          </p>
+          <h3 i18n="universe.docs.fees-zcash-rule-title">Which fee rule applies</h3>
+          <p i18n="universe.docs.fees-zcash-rule">
+            The ZIP-317 revision a transaction is read under is resolved, not assumed. A confirmed transaction is read under the consensus branch in force at its own block; one still waiting is read under the branch the next block will be mined under. Both come from what our node reports about its own network. A transaction from a height before the ZIP-317 fee mechanism gets no conventional fee quoted, and a network upgrade this release does not recognise is shown as unsupported with its branch id, never read through an older revision. In either case the fee itself is still shown when it could be read.
           </p>
         </ng-container>
       </section>
@@ -330,10 +344,16 @@
           Zcash carries shielded pools (Sprout, Sapling, Orchard) whose senders, receivers, and amounts are hidden by the protocol itself. That is not a gap in this explorer; it is the design of the chain.
         </p>
         <p i18n="universe.docs.privacy-public">
-          What is public, and shown: a transaction's structure, its counts of shielded components (spends, outputs, actions), its transparent inputs and outputs with their values, and the value balance the consensus rules reveal where they reveal it.
+          What is public, and shown: a transaction's structure, its counts of shielded components (spends, outputs, actions), its transparent inputs and outputs with their values, the value balance the consensus rules reveal where they reveal it, and the fee it paid. The fee is public for every transaction on this chain, including a fully shielded one, because it is what the value balances leave behind.
         </p>
         <p i18n="universe.docs.privacy-hidden">
           What is never shown: the senders, receivers, and amounts of shielded parts. They are unknowable to this explorer, and unknowable is how they are presented. A hidden value is never rendered as zero, because zero is a claim and hidden is not.
+        </p>
+        <p i18n="universe.docs.privacy-boundary">
+          The boundary matters both ways. Calling a public fact private is as wrong as revealing a private one, and it teaches a reader that this chain hides more than it does. Where a figure is missing here, the page names the read that failed rather than reaching for privacy as the explanation.
+        </p>
+        <p i18n="universe.docs.privacy-viewing-keys">
+          A viewing key lets its holder read their own shielded activity. That is a wallet capability, not an explorer one: this explorer never asks for a viewing key, has no field to enter one, and stores none. Nothing you can do on these pages will reveal shielded detail, and any site that asks you for a viewing key to show you an explorer page is asking for something it does not need.
         </p>
       </section>
 

@@ -179,7 +179,30 @@
         </div>
         <div *ngIf="tx.feeAmount">
           <dt i18n="universe.chain.tx-fee">Fee paid</dt>
-          <dd [attr.title]="tx.feeAmount.exact">{{ tx.feeAmount.display }} {{ ticker }}</dd>
+          <dd [attr.title]="tx.feeAmount.exact">
+            {{ tx.feeAmount.display }} {{ ticker }}
+            <div class="secondary" *ngIf="tx.feeEvidence?.sourceLabel as source">
+              <ng-container i18n="universe.chain.tx-fee-source">read from {{ source }}</ng-container>
+            </div>
+          </dd>
+        </div>
+        <!-- No fee is always a read that failed, never a claim about privacy. -->
+        <div *ngIf="!tx.feeAmount && tx.feeEvidence?.unavailableLabel as unreadable">
+          <dt i18n="universe.chain.tx-fee">Fee paid</dt>
+          <dd>
+            <span class="universe-chip state-partial" i18n="universe.chain.tx-fee-unread">not reported</span>
+            <span class="secondary"> {{ unreadable }}</span>
+          </dd>
+        </div>
+        <div *ngIf="tx.feeEvidence?.unavailableLabel && tx.feeEvidence.nodeAmount && tx.feeEvidence.valuePoolAmount">
+          <dt i18n="universe.chain.tx-fee-readings">The two readings</dt>
+          <dd>
+            <span [attr.title]="tx.feeEvidence.nodeAmount.exact"
+                  i18n="universe.chain.tx-fee-node">our node {{ tx.feeEvidence.nodeAmount.display }} {{ ticker }}</span>
+            <span class="secondary"> / </span>
+            <span [attr.title]="tx.feeEvidence.valuePoolAmount.exact"
+                  i18n="universe.chain.tx-fee-pool">value pool {{ tx.feeEvidence.valuePoolAmount.display }} {{ ticker }}</span>
+          </dd>
         </div>
         <div *ngIf="tx.feeRate">
           <dt i18n="universe.chain.tx-fee-rate">Fee rate</dt>
@@ -189,6 +212,32 @@
           <dt i18n="universe.chain.tx-logical-actions">ZIP-317 logical actions</dt>
           <dd [attr.title]="tx.logicalActions.exact">{{ tx.logicalActions.display }}</dd>
         </div>
+        <ng-container *ngIf="tx.feeRule as rule">
+          <div *ngIf="rule.supported && rule.conventionalFee">
+            <dt i18n="universe.chain.tx-conventional-fee">Conventional fee</dt>
+            <dd [attr.title]="rule.conventionalFee.exact">
+              {{ rule.conventionalFee.display }} {{ ticker }}
+              <div class="secondary" *ngIf="rule.marginalFee && rule.graceActions"
+                    i18n="universe.chain.tx-fee-rule-terms">{{ rule.marginalFee.display }} {{ ticker }} per action past {{ rule.graceActions.display }} grace actions</div>
+            </dd>
+          </div>
+          <div>
+            <dt i18n="universe.chain.tx-fee-rule">Fee rule</dt>
+            <dd>
+              <span class="universe-chip"
+                    [ngClass]="rule.supported ? 'state-proven' : 'state-partial'">{{ rule.name }}</span>
+              <div class="secondary" *ngIf="rule.upgradeName">
+                <ng-container i18n="universe.chain.tx-fee-rule-upgrade">{{ rule.upgradeName }}</ng-container><ng-container
+                  *ngIf="rule.activationHeight"
+                  i18n="universe.chain.tx-fee-rule-activation">, active from block {{ rule.activationHeight.display }}</ng-container>
+              </div>
+              <div class="secondary" *ngIf="rule.unsupportedLabel">{{ rule.unsupportedLabel }}</div>
+              <div class="secondary" *ngIf="rule.branchId">
+                <ng-container i18n="universe.chain.tx-fee-rule-branch">branch {{ rule.branchId }}</ng-container>
+              </div>
+            </dd>
+          </div>
+        </ng-container>
         <div>
           <dt i18n="universe.chain.tx-completeness">Evidence</dt>
           <dd><span class="universe-chip" [ngClass]="'state-' + tx.completenessTone">{{ tx.completenessLabel }}</span></dd>
@@ -950,7 +999,7 @@
     </p>
     <p class="panel-lede" *ngIf="list.costColumn === 'logical-actions'"
        i18n="universe.chain.tx-list-actions-note">
-      These transactions report no fee amount. A shielded transaction's fee cannot be read from its transparent side, so the chain reports what it costs under ZIP-317 instead.
+      These transactions report no fee amount, so the column shows what each costs in ZIP-317 logical actions instead. A missing amount is always something the authority could not read, never a property of shielding: a Zcash fee is public.
     </p>
     <div class="table-wrap" tabindex="0" role="region" aria-labelledby="tx-list-heading">
       <table>
