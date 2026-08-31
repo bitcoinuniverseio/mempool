@@ -92,6 +92,13 @@ jobs:
       - name: The release script parses
         run: bash -n scripts/universe/release.sh
 
+      # `bash -n` proves the script parses, not that its gates measure
+      # anything. The listener parser shipped comparing empty strings against
+      # the allowlist, green the whole time. These run the script's own text
+      # against healthy and unhealthy fixtures.
+      - name: The release gates fail on the faults they exist for
+        run: node --test scripts/universe/release-gates.test.mjs
+
       - name: The production synthetic check parses
         run: node --check scripts/universe/synthetic-check.mjs
 
