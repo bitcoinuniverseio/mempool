@@ -15,7 +15,7 @@
  *     so a generic table spent three of its seven columns on schemaVersion,
  *     chain and network, identical in every row;
  *   - Zcash reports no fee amount on a pending transaction at all, because a
- *     shielded transaction's fee cannot be read from its transparent side, and
+ *     transaction reports the fee it paid whatever its shielded structure, and
  *     reports ZIP-317 logical actions instead;
  *   - the capability envelope names TAP on Doge `tap_doge` while the API
  *     serves it at `/protocols/doge-tap`, and reports `dunes`, which this

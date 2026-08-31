@@ -1,5 +1,7 @@
-import { Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnDestroy, Output } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { StateService } from '@app/services/state.service';
+import { AddressCapabilityService, AddressLookupCapability } from '@app/services/address-capability.service';
 
 @Component({
   selector: 'app-search-results',
@@ -7,9 +9,24 @@ import { StateService } from '@app/services/state.service';
   styleUrls: ['./search-results.component.scss'],
   standalone: false,
 })
-export class SearchResultsComponent implements OnChanges {
+export class SearchResultsComponent implements OnChanges, OnDestroy {
   @Input() results: any = {};
   @Output() selectedResult = new EventEmitter();
+
+  /**
+   * What the deployment says about its address index, read only once a search
+   * has actually produced an address.
+   *
+   * The header invites a reader to search an address, and for a while this
+   * deployment could not answer one. The invitation stayed, the result stayed
+   * clickable, and the page behind it said the address had too many
+   * transactions. Recognising an address is still right, and so is offering
+   * it: the address is what the reader typed and it is the right destination.
+   * What was missing is telling them, before they go, that the answer will not
+   * be there yet.
+   */
+  addressIndex: AddressLookupCapability | null = null;
+  private addressIndexSubscription: Subscription | undefined;
 
   isMobile = (window.innerWidth <= 1150);
   resultsFlattened = [];
@@ -19,7 +36,13 @@ export class SearchResultsComponent implements OnChanges {
 
   constructor(
     public stateService: StateService,
+    private addressCapabilityService: AddressCapabilityService,
     ) { }
+
+  /** True only when the deployment says address lookups will work right now. */
+  get addressLookupReady(): boolean {
+    return this.addressIndex === null || this.addressIndex.state === 'ready';
+  }
 
   ngOnInit() {
     this.networkName = this.stateService.network.charAt(0).toUpperCase() + this.stateService.network.slice(1);
@@ -45,8 +68,18 @@ export class SearchResultsComponent implements OnChanges {
     return this.universeOffset + (this.results?.universe?.length || 0);
   }
 
+  ngOnDestroy(): void {
+    this.addressIndexSubscription?.unsubscribe();
+  }
+
   ngOnChanges() {
     this.activeIdx = 0;
+    // Only once there is an address on screen, and the service caches its
+    // answer, so typing does not put a request on the wire per keystroke.
+    if (this.results?.address && !this.addressIndexSubscription) {
+      this.addressIndexSubscription = this.addressCapabilityService.getAddressLookup$()
+        .subscribe((capability) => { this.addressIndex = capability; });
+    }
     if (this.results) {
       this.resultsFlattened = [...(this.results.hashQuickMatch ? [this.results.searchText] : []), ...this.results.addresses, ...this.results.pools, ...this.results.nodes, ...this.results.channels, ...this.results.otherNetworks, ...(this.results.universe || []), ...(this.results.universeRecent || [])];
       // If searchText is a public key corresponding to a node, select it by default

@@ -52,12 +52,15 @@ import {
   readNotReadyReasons,
   readOutpoint,
   readProtocolCoverage,
+  readAddressHoldings,
   readRecordFacts,
   readSourceDetails,
   readStatusRail,
   readTransaction,
   readTransactionList,
   shortenIdentifier,
+  AddressHoldingsReading,
+  OutpointAssetsReading,
 } from '@app/universe/multichain-explorer/multichain-view';
 import { ChainReasonReading } from '@app/universe/multichain-explorer/chain-reasons';
 import {
@@ -125,6 +128,8 @@ interface ExplorerViewModel {
   readonly transaction: TransactionReading | null;
   readonly block: BlockReading | null;
   readonly address: AddressReading | null;
+  /** The address's protocol asset holdings, served beside the base view. */
+  readonly holdings: AddressHoldingsReading | null;
   readonly outpoint: OutpointReading | null;
   readonly collection: CollectionReading | null;
   readonly transactionList: TransactionListReading | null;
@@ -183,6 +188,8 @@ const PRESENTED_FIELDS: Partial<Record<ChainShape, readonly string[]>> = {
     'transparent', 'shielded', 'protocolActions', 'replacement', 'expiry',
     'confirmationsAtomic', 'sizeBytesAtomic', 'virtualSizeBytesAtomic',
     'firstSeenAt', 'completeness',
+    // The per-outpoint asset readings own this summary block.
+    'assetFlow',
   ],
   block: [
     'chain', 'network', 'block', 'pagination',
@@ -295,15 +302,29 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
                     catchError(() => of(null))
                   )
                 : of(null),
+              // The asset holdings beside the address view. Same rule: a
+              // protocol authority that cannot answer costs the asset
+              // sections, never the address page.
+              context.page === 'address' && this.reference
+                ? this.api
+                    .getChainAddressHoldings$(
+                      this.chain,
+                      this.reference,
+                      LIST_PAGE_SIZE,
+                      (context.listPage - 1) * LIST_PAGE_SIZE
+                    )
+                    .pipe(catchError(() => of(null)))
+                : of(null),
             ])
           ),
-          map(([status, result, bucketsPayload]): ExplorerViewModel =>
+          map(([status, result, bucketsPayload, holdingsPayload]): ExplorerViewModel =>
             this.viewModel(
               status.capability,
               status.error,
               result.payload,
               result.error,
-              bucketsPayload
+              bucketsPayload,
+              holdingsPayload
             )
           )
         );
@@ -322,7 +343,8 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
     capabilityError: string | null,
     payload: ChainExplorerPayload | null,
     payloadError: string | null,
-    bucketsPayload: ChainExplorerPayload | null = null
+    bucketsPayload: ChainExplorerPayload | null = null,
+    holdingsPayload: ChainExplorerPayload | null = null
   ): ExplorerViewModel {
     const shape = classifyPayload(payload);
     const transaction = payload && shape === 'transaction' ? readTransaction(payload, this.profile) : null;
@@ -387,6 +409,9 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
       transaction,
       block,
       address,
+      holdings: holdingsPayload
+        ? readAddressHoldings(holdingsPayload, this.profile)
+        : null,
       outpoint,
       collection,
       transactionList,
@@ -483,6 +508,25 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
 
   activeProtocolId(): string {
     return this.route.snapshot.paramMap.get('protocol') ?? '';
+  }
+
+  /**
+   * The asset reading for one base-view unspent output, joined from the
+   * holdings view by outpoint. Null when the holdings page does not cover
+   * this output, which renders as no claim rather than as empty.
+   */
+  holdingsAssetsFor(
+    holdings: AddressHoldingsReading | null,
+    txid: string,
+    vout: string
+  ): OutpointAssetsReading | null {
+    if (!holdings) {
+      return null;
+    }
+    return (
+      holdings.utxos.find((utxo) => utxo.txid === txid && utxo.vout === vout)
+        ?.assets ?? null
+    );
   }
 
   short(value: string, lead = 8): string {

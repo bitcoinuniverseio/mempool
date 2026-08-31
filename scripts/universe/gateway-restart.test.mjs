@@ -80,7 +80,7 @@ async function assertNothingIsListening(port) {
   );
 }
 
-function startGateway({ gatewayPort, upstreamPort }) {
+function startGateway({ gatewayPort, upstreamPort, esploraPort }) {
   return spawn(process.execPath, [GATEWAY], {
     env: {
       ...process.env,
@@ -88,6 +88,7 @@ function startGateway({ gatewayPort, upstreamPort }) {
       UNIVERSE_GATEWAY_PORT: String(gatewayPort),
       UNIVERSE_GATEWAY_BACKEND: `http://127.0.0.1:${upstreamPort}`,
       UNIVERSE_GATEWAY_OVERLAY: `http://127.0.0.1:${upstreamPort}`,
+      ...(esploraPort ? { UNIVERSE_GATEWAY_ESPLORA: `http://127.0.0.1:${esploraPort}` } : {}),
       UNIVERSE_GATEWAY_ROOT: ROOT,
     },
     stdio: 'ignore',
@@ -163,4 +164,91 @@ test('a reader who leaves mid-retry does not take the gateway down', async (t) =
 
   const stillServing = await ask(ports.gatewayPort, '/');
   assert.notEqual(stillServing.status, 0, 'the gateway died while serving abandoned requests');
+});
+
+/**
+ * The address index restarts too, and it is a separate process from the two
+ * above with its own reasons to go away: a rebuild, a compaction that ran the
+ * volume low, the disk guard stopping it.
+ *
+ * What must not happen while it is down is the rest of the site going with it.
+ * The address page is allowed to say it cannot answer right now; a block page,
+ * a transaction page, and the frontend itself are not, because none of them
+ * reads that index. A gateway that treated one dead upstream as a dead origin
+ * would turn a bounded degradation into an outage.
+ */
+test('an index restart is bridged, and only address traffic waits for it', async (t) => {
+  const ports = await reservePorts();
+  const esploraPort = await freePort();
+  await assertNothingIsListening(esploraPort);
+
+  const backend = http.createServer((_, response) => {
+    response.writeHead(200, { 'content-type': 'application/json' });
+    response.end('{"gitCommit":"abc1234"}');
+  });
+  await new Promise((resolve) => backend.listen(ports.upstreamPort, '127.0.0.1', resolve));
+  t.after(() => backend.close());
+
+  const gateway = startGateway({ ...ports, esploraPort });
+  t.after(() => gateway.kill());
+  await sleep(1200);
+
+  // The index is down. An address request enters the retry loop.
+  const address = ask(ports.gatewayPort, '/api/address/1Q2TWHE3GMdB6BZKafqwxXtWAWgFt5Jvm3');
+
+  // Everything that does not read the index keeps working while it waits.
+  const backendInfo = await ask(ports.gatewayPort, '/api/v1/backend-info');
+  assert.equal(backendInfo.status, 200, 'a down index must not take the explorer backend with it');
+  const document = await ask(ports.gatewayPort, '/');
+  assert.ok(document.status === 200 || document.status === 503, 'the frontend must still be served');
+
+  // The index comes back, and the waiting request is answered rather than failed.
+  const index = http.createServer((request, response) => {
+    assert.equal(request.url, '/address/1Q2TWHE3GMdB6BZKafqwxXtWAWgFt5Jvm3', 'the /api prefix must be stripped');
+    response.writeHead(200, { 'content-type': 'application/json' });
+    response.end('{"address":"1Q2TWHE3GMdB6BZKafqwxXtWAWgFt5Jvm3"}');
+  });
+  await new Promise((resolve) => index.listen(esploraPort, '127.0.0.1', resolve));
+  t.after(() => index.close());
+
+  const bridged = await address;
+  assert.equal(bridged.status, 200, 'an index restart should be bridged, not reported as a failure');
+});
+
+test('an index that is genuinely gone is reported as unavailable, not as an empty address', async (t) => {
+  const ports = await reservePorts();
+  const esploraPort = await freePort();
+  await assertNothingIsListening(esploraPort);
+
+  const gateway = startGateway({ ...ports, esploraPort });
+  t.after(() => gateway.kill());
+  await sleep(1200);
+
+  const dead = await ask(ports.gatewayPort, '/api/address/1Q2TWHE3GMdB6BZKafqwxXtWAWgFt5Jvm3');
+  // Never 200 with an empty body. An address page that renders a zero balance
+  // because the index is down has told somebody their money is gone.
+  assert.equal(dead.status, 502, 'a dead index must be a gateway failure, never an empty success');
+  assert.ok(dead.ms < 12_000, `gave up after ${dead.ms}ms, which is too long to hold a reader`);
+});
+
+test('the index administrative surface is refused rather than proxied', async (t) => {
+  const ports = await reservePorts();
+  const esploraPort = await freePort();
+
+  let reachedTheIndex = false;
+  const index = http.createServer((_, response) => {
+    reachedTheIndex = true;
+    response.writeHead(200, { 'content-type': 'application/json' });
+    response.end('[]');
+  });
+  await new Promise((resolve) => index.listen(esploraPort, '127.0.0.1', resolve));
+  t.after(() => index.close());
+
+  const gateway = startGateway({ ...ports, esploraPort });
+  t.after(() => gateway.kill());
+  await sleep(1200);
+
+  const internal = await ask(ports.gatewayPort, '/api/internal/txs');
+  assert.equal(internal.status, 404, 'the index administrative routes must not be public');
+  assert.equal(reachedTheIndex, false, 'the request must not have reached the index at all');
 });

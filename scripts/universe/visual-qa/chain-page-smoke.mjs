@@ -114,14 +114,13 @@ function readPageText() {
     notReadyReasons: notReady
       ? [...notReady.querySelectorAll('li')].map((node) => node.innerText.trim())
       : [],
-    coverage: [...root.querySelectorAll('.history-coverage li')].map((node) => ({
-      label: node.querySelector('.coverage-label')?.innerText?.trim() ?? '',
-      state: node.querySelector('.universe-chip')?.innerText?.trim() ?? '',
+    coverage: [...root.querySelectorAll('.coverage-drawer li')].map((node) => ({
+      label: node.querySelector('.coverage-label')?.textContent?.trim() ?? '',
+      state: node.querySelector('.universe-chip')?.textContent?.trim() ?? '',
     })),
-    entries: [...root.querySelectorAll('.entry-actions a.entry')].map((node) => ({
+    entries: [...root.querySelectorAll('.panel-link a')].map((node) => ({
       href: node.getAttribute('href'),
-      title: node.querySelector('.entry-title')?.innerText?.trim() ?? '',
-      detail: node.querySelector('.entry-detail')?.innerText?.trim() ?? '',
+      title: node.innerText?.trim() ?? '',
     })),
     horizontalOverflow:
       document.documentElement.scrollWidth - document.documentElement.clientWidth,

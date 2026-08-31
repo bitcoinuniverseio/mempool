@@ -26,6 +26,15 @@ GATEWAY=http://127.0.0.1:8099
 BACKEND=http://127.0.0.1:8996
 OVERLAY=http://127.0.0.1:3400
 
+# The address the gates ask about. It is the receiving output of the first
+# Bitcoin transaction ever sent between two people, in block 170, so its
+# history cannot be undone and asking about it is cheap. The same address is
+# named in the backend probe and the production synthetic check.
+ADDRESS_PROBE=1Q2TWHE3GMdB6BZKafqwxXtWAWgFt5Jvm3
+# Mainnet block zero. An index pointed at another network answers everything,
+# and answers all of it wrong.
+GENESIS_HASH=000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f
+
 log()  { printf '%s %s\n' "$(date -u +%H:%M:%SZ)" "$*"; }
 fail() { printf '%s FAILED: %s\n' "$(date -u +%H:%M:%SZ)" "$*" >&2; exit 1; }
 
@@ -153,19 +162,117 @@ PY
   log "database accepts connections"
 }
 
-# An address backend configured at a port nothing listens on does not fail
-# loudly: it retries. That produced roughly two connection errors a second,
-# forever, which buried every real error in the journal.
+# Address lookup, held to the same standard as anything else this origin
+# publicly offers.
+#
+# What was here before permitted the exact state that shipped. It looked at
+# MEMPOOL.BACKEND, saw `none`, decided there was "nothing to reach", and passed.
+# Meanwhile the header invited a reader to search an address, the search box
+# recognised one, and every address answered 405 with a page that blamed the
+# address for having too much history.
+#
+# So `none` is now a blocker, and a configured index has to prove itself with
+# real requests rather than an open socket. A port that accepts a connection
+# says nothing about whether the thing behind it has an index, is on this
+# chain, has caught up, or can answer the three questions an address page asks.
 gate_address_backend() {
   local backend; backend=$(conf_value MEMPOOL.BACKEND | tr -d '"')
-  [ "$backend" = electrum ] || { log "address backend is $backend, nothing to reach"; return; }
-  python3 - <<'PYGATE' || fail "MEMPOOL.BACKEND is electrum but nothing is listening on the configured Electrum port"
+
+  if [ "$backend" = none ]; then
+    fail "MEMPOOL.BACKEND is none, so every address, script hash and UTXO lookup would fail while the site still offers them"
+  fi
+
+  if [ "$backend" = electrum ]; then
+    python3 - <<'PYGATE' || fail "MEMPOOL.BACKEND is electrum but nothing is listening on the configured Electrum port"
 import json, socket
 conf = json.load(open('/etc/universe-explorer/backend.json'))['ELECTRUM']
 with socket.create_connection((conf['HOST'], conf['PORT']), timeout=5):
     pass
 PYGATE
-  log "the configured Electrum server accepts connections"
+    log "the configured Electrum server accepts connections"
+    return
+  fi
+
+  [ "$backend" = esplora ] || fail "MEMPOOL.BACKEND is $backend, which is not an address backend this deployment knows how to gate"
+
+  python3 - "$ADDRESS_PROBE" "$GENESIS_HASH" <<'PYGATE' || fail "the first-party address index is not ready to serve this release"
+import json, sys, urllib.request, urllib.error
+
+probe, genesis = sys.argv[1], sys.argv[2]
+conf = json.load(open('/etc/universe-explorer/backend.json'))
+esplora = conf.get('ESPLORA') or {}
+base = esplora.get('REST_API_URL')
+if not base:
+    print('MEMPOOL.BACKEND is esplora but ESPLORA.REST_API_URL is not set')
+    sys.exit(1)
+
+# Data sovereignty. A fallback is a source too, and a fallback is exactly where
+# a third-party API gets in unnoticed: it only answers when something is
+# already wrong, and nobody is reading the logs then.
+for entry in [base] + list(esplora.get('FALLBACK') or []):
+    host = entry.split('//')[-1].split('/')[0].split(':')[0]
+    if not entry.startswith('/') and host not in ('127.0.0.1', 'localhost', '::1', '[::1]'):
+        print(f'address source {entry} is not infrastructure this host operates')
+        sys.exit(1)
+
+def get(path, raw=False):
+    with urllib.request.urlopen(base + path, timeout=20) as answer:
+        body = answer.read()
+        return (body.decode().strip(), answer.headers) if raw else (json.loads(body), answer.headers)
+
+try:
+    height, headers = get('/blocks/tip/height', raw=True)
+except (urllib.error.URLError, OSError) as error:
+    print(f'the address index did not answer: {error}')
+    sys.exit(1)
+
+# The chain it indexed, not the chain it was told to index. A configuration
+# pointed at the wrong network answers everything, and answers it wrong.
+try:
+    indexed_genesis, _ = get('/block-height/0', raw=True)
+except Exception as error:
+    print(f'the address index would not name its genesis block: {error}')
+    sys.exit(1)
+if indexed_genesis != genesis:
+    print(f'the address index is on another chain: genesis {indexed_genesis}')
+    sys.exit(1)
+
+try:
+    with urllib.request.urlopen('http://127.0.0.1:8996/api/v1/backend-info', timeout=20) as answer:
+        core_tip = json.loads(answer.read())['chainSync']['blocks']
+except Exception as error:
+    print(f'could not read the Bitcoin Core height to compare against: {error}')
+    sys.exit(1)
+
+indexed_tip = int(height)
+max_behind = int(esplora.get('MAX_BEHIND_TIP') or 2)
+lag = core_tip - indexed_tip
+if lag > max_behind:
+    print(f'the address index is at block {indexed_tip} of {core_tip}, {lag} behind, and may be at most {max_behind}')
+    sys.exit(1)
+
+# The three questions an address page actually asks. A tip alone proves the
+# block index; it proves nothing about the history and UTXO indexes the page
+# is made of.
+summary, _ = get(f'/address/{probe}')
+if summary.get('address') != probe or not isinstance(summary.get('chain_stats', {}).get('tx_count'), int):
+    print('the address summary query did not return a usable document')
+    sys.exit(1)
+
+history, _ = get(f'/address/{probe}/txs')
+if not isinstance(history, list) or not history:
+    print('the address history query returned nothing for an address that has history')
+    sys.exit(1)
+
+utxos, _ = get(f'/address/{probe}/utxo')
+if not isinstance(utxos, list):
+    print('the UTXO query did not return a list')
+    sys.exit(1)
+
+powered_by = headers.get('X-Powered-By') or 'unnamed'
+print(f'address index {powered_by} at block {indexed_tip} of {core_tip}, summary, history and UTXO all answered')
+PYGATE
+  log "the first-party address index answered real address, history and UTXO queries"
 }
 
 gate_sources_parse() {
@@ -227,6 +334,53 @@ PY
   log "readable protocols all have authorities"
 }
 
+# The listener gate.
+#
+# index-doge-tap shipped with HOST=0.0.0.0 and answered /ready to the public
+# internet for as long as it ran, on a host whose firewall is inactive. Nothing
+# caught it: every functional check reached the service over loopback, where it
+# behaved perfectly, and no gate ever asked which interface it was answering
+# on.
+#
+# This one asks. It reads the listening sockets, subtracts the ones this
+# deployment is supposed to expose, and refuses the cutover if anything is
+# left. A service that has to be reachable from another host is added to
+# PUBLIC_LISTENERS deliberately, with a reason, rather than discovered in
+# production.
+PUBLIC_LISTENERS="22 8333 50001"
+
+gate_private_listeners() {
+  command -v ss >/dev/null 2>&1 || fail "ss is not available, so the listener gate cannot run"
+
+  local allowed
+  allowed=$(printf '%s
+' $PUBLIC_LISTENERS)
+
+  # Every listening TCP socket that is not on a loopback address. Docker's
+  # bridge address is treated as private: it is reachable only from containers
+  # on this host, and the services behind it are the same ones loopback serves.
+  local exposed
+  exposed=$(ss -ltn 2>/dev/null     | awk 'NR > 1 { print $4 }'     | grep -vE '^(127\.|\[::1\]|172\.17\.0\.1:)'     | sed -E 's/.*:([0-9]+)$//'     | sort -u)
+
+  local unexpected=""
+  local port
+  for port in $exposed; do
+    printf '%s
+' "$allowed" | grep -qx "$port" || unexpected="$unexpected $port"
+  done
+
+  if [ -n "$unexpected" ]; then
+    printf 'These ports answer on a public interface and are not declared:%s
+' "$unexpected" >&2
+    printf 'Bind the service to 127.0.0.1, or add the port to PUBLIC_LISTENERS with a reason.
+' >&2
+    ss -ltnp 2>/dev/null | grep -vE '127\.|\[::1\]' >&2 || true
+    fail "a service is listening on a public interface"
+  fi
+
+  log "no unexpected public listener: only$(printf ' %s' $PUBLIC_LISTENERS) answer off loopback"
+}
+
 cmd_preflight() {
   local sha=$1
   local dir; dir=$(release_dir "$sha")
@@ -237,6 +391,7 @@ cmd_preflight() {
   gate_database
   gate_address_backend
   gate_sources_parse
+  gate_private_listeners
   gate_readable_protocols_have_authorities "$dir"
   log "preflight passed for $sha"
 }
@@ -291,7 +446,104 @@ for name, feature in report['features'].items():
 PY
 
   gate_live_socket || return 1
+  gate_live_address || return 1
   gate_component_identity "$dir" || return 1
+}
+
+# The public address contract, asked for through the gateway, after the switch.
+#
+# Everything above this proves the components came back and that the capability
+# report is internally consistent. None of it opens the path a reader takes to
+# an address page, which is exactly the path that was broken while every gate
+# was green: the gateway sent `/api/address/...` to a backend that answered
+# 405, and nothing in the release ever asked it for an address.
+#
+# The verdict on readiness comes from the capability document rather than being
+# recomputed here, so the deployment and the gate cannot form different
+# opinions about what ready means. What is checked in addition is the thing a
+# document cannot tell you: that the route in front of it works, and that the
+# process answering it is the one that is supposed to.
+gate_live_address() {
+  python3 - "$GATEWAY" "$BACKEND" "$ADDRESS_PROBE" <<'PYADDRESS' || return 1
+import json, sys, urllib.request, urllib.error
+
+gateway, backend, probe = sys.argv[1], sys.argv[2], sys.argv[3]
+
+def fetch(url):
+    try:
+        with urllib.request.urlopen(urllib.request.Request(url), timeout=25) as answer:
+            return answer.status, answer.read()
+    except urllib.error.HTTPError as error:
+        return error.code, error.read()
+    except (urllib.error.URLError, OSError) as error:
+        print(f'{url} could not be reached: {error}')
+        return None, b''
+
+status, body = fetch(backend + '/api/v1/capabilities')
+if status != 200:
+    print('the capability report could not be read')
+    sys.exit(1)
+address = json.loads(body)['features'].get('addressLookup')
+if address is None:
+    print('the capability report does not mention address lookup at all')
+    sys.exit(1)
+if address['state'] != 'ready':
+    print(f"address lookup is {address['state']}: {address.get('degradedReason')}")
+    sys.exit(1)
+print(f"address lookup is ready on {address.get('backendKind')} "
+      f"at block {address.get('indexedTip')} of {address.get('bitcoinCoreTip')}")
+
+# Summary, first history page, and UTXOs, through the gateway, exactly as a
+# reader's browser asks for them.
+status, body = fetch(f'{gateway}/api/address/{probe}')
+if status != 200:
+    print(f'the address summary answered {status} through the gateway')
+    sys.exit(1)
+summary = json.loads(body)
+if summary.get('address') != probe:
+    print('the address summary is about a different address than the one asked for')
+    sys.exit(1)
+for section in ('chain_stats', 'mempool_stats'):
+    stats = summary.get(section) or {}
+    for field in ('funded_txo_count', 'funded_txo_sum', 'spent_txo_count', 'spent_txo_sum', 'tx_count'):
+        if not isinstance(stats.get(field), int):
+            print(f'{section}.{field} is {stats.get(field)!r} rather than a whole number')
+            sys.exit(1)
+
+status, body = fetch(f'{gateway}/api/address/{probe}/txs')
+if status != 200:
+    print(f'the address history answered {status} through the gateway')
+    sys.exit(1)
+history = json.loads(body)
+if not isinstance(history, list) or not history:
+    print('the address history came back empty for an address that has history')
+    sys.exit(1)
+for transaction in history:
+    if len(transaction.get('txid', '')) != 64:
+        print('a history entry does not name a transaction')
+        sys.exit(1)
+
+status, body = fetch(f'{gateway}/api/address/{probe}/utxo')
+if status != 200:
+    print(f'the UTXO query answered {status} through the gateway')
+    sys.exit(1)
+if not isinstance(json.loads(body), list):
+    print('the UTXO query did not return a list')
+    sys.exit(1)
+
+# Which process answered. In this configuration the explorer backend
+# deliberately does not mount the address family, so if it answers this at all
+# the gateway is sending address traffic to the wrong upstream and the 200s
+# above came from the wrong place.
+if address.get('backendKind') == 'esplora':
+    status, _ = fetch(f'{backend}/api/v1/address/{probe}')
+    if status == 200:
+        print('the explorer backend served an address lookup, so the gateway is routing /api/ to it '
+              'rather than to the index')
+        sys.exit(1)
+
+print('the public address contract answers through the gateway: summary, history and UTXOs')
+PYADDRESS
 }
 
 # The three components behind this origin, held to what the release says they
@@ -385,18 +637,39 @@ cmd_cutover() {
   mv -Tf "$CURRENT.new" "$CURRENT"
   log "current now points at $dir"
 
-  systemctl restart universe-explorer-backend universe-explorer-overlay
+  # The gateway goes first, and the order is not arbitrary.
+  #
+  # A release may move which upstream owns a path. Adopting the Esplora index
+  # did exactly that: the explorer backend stops mounting the address,
+  # transaction, block and mempool routes and the index starts serving them.
+  # The two directions are not symmetric across that kind of change.
+  #
+  #   new gateway, old backend  ->  fine. The new table sends /api/ to the
+  #                                 index, which is already up, and /api/v1/
+  #                                 to the backend, which still answers it.
+  #   old gateway, new backend  ->  broken. The old table sends /api/ to a
+  #                                 backend that no longer mounts it, so every
+  #                                 transaction, block and address page 404s.
+  #
+  # Restarting the backend first puts the origin through the broken half for
+  # as long as the backend takes to come up. Restarting the gateway first
+  # never does, because the new table is correct against both. Its socket unit
+  # holds the port across its own restart, so this costs nothing.
   if [ "$gateway_changed" = yes ]; then
     if systemctl is-active --quiet universe-explorer-gateway.socket; then
-      log "the gateway changed, restarting it; systemd holds the port, so the origin sees no refused connection"
+      log "the gateway changed, restarting it first; systemd holds the port, so the origin sees no refused connection"
     else
-      log "the gateway changed, restarting it; nothing holds the port, so the origin sees a brief gap"
+      log "the gateway changed, restarting it first; nothing holds the port, so the origin sees a brief gap"
       log "enable universe-explorer-gateway.socket to close it"
     fi
     systemctl restart universe-explorer-gateway
+    wait_for "$GATEWAY/__gateway/health" gateway \
+      || fail "the gateway did not come back after its restart, and nothing has been switched behind it yet"
   else
     log "the gateway is unchanged, leaving it up so the origin sees no gap"
   fi
+
+  systemctl restart universe-explorer-backend universe-explorer-overlay
   if ! verify_live "$dir"; then
     log "verification failed, rolling back"
     [ -n "$previous" ] && cmd_rollback "$(basename "$previous" | sed 's/^mempool-//')"

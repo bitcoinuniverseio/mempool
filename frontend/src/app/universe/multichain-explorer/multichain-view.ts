@@ -1105,6 +1105,118 @@ export function classifyPayload(payload: ChainExplorerPayload | null): ChainShap
   return 'record';
 }
 
+/**
+ * One protocol asset attached to an outpoint, ready to render: protocol
+ * label from the chain profile, the asset's own name with the id as the
+ * mandated fallback, and the exact quantity shifted by the asset's own
+ * decimals rather than the chain's precision.
+ */
+export interface AssetChipRow {
+  readonly protocolId: string;
+  readonly protocolLabel: string;
+  readonly name: string;
+  readonly assetId: string;
+  readonly ticker: string | null;
+  readonly quantity: ExactNumber | null;
+  readonly kind: string;
+  /** Route to the asset's detail page, when this explorer serves one. */
+  readonly link: readonly string[] | null;
+}
+
+/**
+ * The asset reading for one outpoint. An empty chip list means nothing by
+ * itself: `coverageLabel` says whether emptiness was proven, unscanned,
+ * outside the authority's coverage, or simply unavailable, and only a
+ * proven empty renders as the quiet compact row.
+ */
+export interface OutpointAssetsReading {
+  readonly chips: readonly AssetChipRow[];
+  readonly coverageLabel: string | null;
+  readonly coverageTone: EvidenceTone;
+  readonly provenEmpty: boolean;
+}
+
+const ASSET_COVERAGE_LABEL: Record<string, string> = {
+  partial: $localize`:@@universe.chain.assets-partial:Partially checked`,
+  unscanned: $localize`:@@universe.chain.assets-unscanned:Not scanned yet`,
+  'out-of-coverage': $localize`:@@universe.chain.assets-out-of-coverage:Outside the authority's coverage`,
+  unavailable: $localize`:@@universe.chain.assets-unavailable:Asset authority unavailable`,
+};
+
+const ASSET_COVERAGE_TONE: Record<string, EvidenceTone> = {
+  complete: 'proven',
+  'proven-empty': 'proven',
+  partial: 'partial',
+  unscanned: 'neutral',
+  'out-of-coverage': 'neutral',
+  unavailable: 'unavailable',
+};
+
+function protocolTabFor(
+  profile: ChainProfile,
+  protocolId: string
+): ChainProtocolTab | null {
+  return (
+    profile.protocols.find(
+      (tab) => tab.id === protocolId || tab.registryIds.includes(protocolId)
+    ) ?? null
+  );
+}
+
+function assetChip(entry: Record<string, unknown>, profile: ChainProfile): AssetChipRow | null {
+  const asset = isRecord(entry.asset) ? entry.asset : null;
+  if (!asset) {
+    return null;
+  }
+  const protocolId = text(asset.protocolId) ?? '';
+  const assetId = text(asset.assetId) ?? '';
+  if (!protocolId || !assetId) {
+    return null;
+  }
+  const tab = protocolTabFor(profile, protocolId);
+  const decimals =
+    typeof asset.decimals === 'number' &&
+    Number.isSafeInteger(asset.decimals) &&
+    asset.decimals >= 0 &&
+    asset.decimals <= 77
+      ? asset.decimals
+      : 0;
+  return {
+    protocolId,
+    protocolLabel: tab?.label ?? humanizeFieldName(protocolId),
+    // A missing display name falls back to the asset id, never to a blank.
+    name: text(asset.displayName) ?? assetId,
+    assetId,
+    ticker: text(asset.ticker),
+    quantity: formatAtomicAmount(text(entry.quantityAtomic), decimals),
+    kind: text(asset.assetKind) ?? 'unknown',
+    link: tab
+      ? ['/', profile.chain, 'protocols', tab.id, assetId]
+      : null,
+  };
+}
+
+/** Reads the additive per-outpoint `assets` field a transaction view carries. */
+export function readOutpointAssets(
+  value: unknown,
+  profile: ChainProfile
+): OutpointAssetsReading | null {
+  if (!isRecord(value) || !Array.isArray(value.positions)) {
+    return null;
+  }
+  const chips = value.positions
+    .filter(isRecord)
+    .map((entry) => assetChip(entry, profile))
+    .filter((chip): chip is AssetChipRow => chip !== null);
+  const coverage = text(value.coverage) ?? '';
+  return {
+    chips,
+    coverageLabel: ASSET_COVERAGE_LABEL[coverage] ?? null,
+    coverageTone: ASSET_COVERAGE_TONE[coverage] ?? 'neutral',
+    provenEmpty: coverage === 'proven-empty' && chips.length === 0,
+  };
+}
+
 export interface TransactionPartyRow {
   readonly index: string;
   readonly address: string | null;
@@ -1112,6 +1224,9 @@ export interface TransactionPartyRow {
   readonly reference: string | null;
   readonly coinbase: boolean;
   readonly spent: boolean | null;
+  /** The outpoint this row is, when it can be stated. */
+  readonly outpoint: string | null;
+  readonly assets: OutpointAssetsReading | null;
 }
 
 export interface ShieldedReading {
@@ -1127,6 +1242,45 @@ export interface ProtocolActionRow {
   readonly actionType: string;
   readonly stateLabel: string;
   readonly tone: EvidenceTone;
+  /** The asset the action concerns, when the authority named one. */
+  readonly assetName: string | null;
+  readonly assetTicker: string | null;
+  readonly assetLink: readonly string[] | null;
+  /** Exact quantity in the asset's atomic unit, shifted by its decimals. */
+  readonly quantity: ExactNumber | null;
+  /** Outpoints the action consumed and produced, for linking. */
+  readonly inputOutpoints: readonly string[];
+  readonly outputOutpoints: readonly string[];
+}
+
+/**
+ * Where a fee came from, and when there is none, which read failed.
+ *
+ * A missing fee is always a reading condition. It is never a privacy
+ * property: a Zcash fee is public whatever shielded structure a transaction
+ * has, and this explorer must never say otherwise.
+ */
+export interface FeeEvidenceReading {
+  readonly sourceLabel: string;
+  readonly nodeAmount: ExactNumber | null;
+  readonly valuePoolAmount: ExactNumber | null;
+  readonly unavailableLabel: string | null;
+  readonly crossChecked: boolean;
+}
+
+/** The fee rule a transaction is read under, as the authority resolved it. */
+export interface FeeRuleReading {
+  readonly name: string;
+  readonly supported: boolean;
+  readonly upgradeName: string | null;
+  readonly branchId: string | null;
+  readonly activationBasisLabel: string;
+  readonly activationHeight: ExactNumber | null;
+  readonly marginalFee: ExactNumber | null;
+  readonly graceActions: ExactNumber | null;
+  readonly conventionalFee: ExactNumber | null;
+  readonly unsupportedLabel: string | null;
+  readonly evidenceSource: string | null;
 }
 
 export interface TransactionReading {
@@ -1142,6 +1296,8 @@ export interface TransactionReading {
   readonly feeRate: string | null;
   readonly feeRateUnit: string | null;
   readonly logicalActions: ExactNumber | null;
+  readonly feeEvidence: FeeEvidenceReading | null;
+  readonly feeRule: FeeRuleReading | null;
   readonly inputs: readonly TransactionPartyRow[];
   readonly outputs: readonly TransactionPartyRow[];
   readonly inputTotal: ExactNumber | null;
@@ -1154,6 +1310,98 @@ export interface TransactionReading {
   readonly expiry: { height: ExactNumber | null; state: string } | null;
   readonly completenessLabel: string;
   readonly completenessTone: EvidenceTone;
+}
+
+/**
+ * How a fee was established. An id this build has no words for is shown as
+ * itself, because an unfamiliar label beats a silently dropped claim.
+ */
+const FEE_SOURCE_LABEL: Record<string, string> = {
+  'node-and-value-pool': $localize`:@@universe.fee.src-both:our node and the value pool arithmetic, in agreement`,
+  'node-mempool-verbose': $localize`:@@universe.fee.src-node:our node's own pending set`,
+  'value-pool': $localize`:@@universe.fee.src-pool:the transparent value pool arithmetic`,
+  'node-reported': $localize`:@@universe.fee.src-reported:our node`,
+};
+
+/**
+ * Why no fee could be established. Every entry names a read that failed.
+ * None of them is about privacy, and none of them may become about privacy.
+ */
+const FEE_UNAVAILABLE_LABEL: Record<string, string> = {
+  'sources-disagree': $localize`:@@universe.fee.un-disagree:our node and the value pool arithmetic disagreed, so neither figure is shown`,
+  'transparent-input-value': $localize`:@@universe.fee.un-prevout:a transparent input this transaction spends could not be read`,
+  'transparent-output-value': $localize`:@@universe.fee.un-output:a transparent output value could not be read`,
+  'sapling-value-balance': $localize`:@@universe.fee.un-sapling:the Sapling value balance could not be read`,
+  'orchard-value-balance': $localize`:@@universe.fee.un-orchard:the Orchard value balance could not be read`,
+  'ironwood-value-balance': $localize`:@@universe.fee.un-ironwood:the Ironwood value balance could not be read`,
+  'joinsplit-public-value': $localize`:@@universe.fee.un-joinsplit:a JoinSplit public value could not be read`,
+  'negative-value-pool': $localize`:@@universe.fee.un-negative:the value pool did not balance, so no fee is claimed`,
+  coinbase: $localize`:@@universe.fee.un-coinbase:a coinbase transaction collects fees rather than paying one`,
+  'fee-unreadable': $localize`:@@universe.fee.un-generic:no source could read this fee`,
+};
+
+const FEE_RULE_UNSUPPORTED_LABEL: Record<string, string> = {
+  'zip317-not-in-force-at-this-height': $localize`:@@universe.fee.rule-pre317:the ZIP-317 fee mechanism was not in force at this height`,
+  'unrecognised-consensus-branch': $localize`:@@universe.fee.rule-unknown:this release does not recognise the network upgrade in force here`,
+};
+
+const FEE_ACTIVATION_BASIS_LABEL: Record<string, string> = {
+  'block-height': $localize`:@@universe.fee.basis-height:the upgrade in force at this transaction's own block`,
+  'next-block': $localize`:@@universe.fee.basis-next:the upgrade the next block will be mined under`,
+  'pre-overwinter': $localize`:@@universe.fee.basis-pre:a height before the first network upgrade`,
+  unknown: $localize`:@@universe.fee.basis-unknown:not stated by the authority`,
+  unstated: $localize`:@@universe.fee.basis-unstated:not stated by the authority`,
+};
+
+function feeEvidenceReading(
+  value: unknown,
+  profile: ChainProfile
+): FeeEvidenceReading | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+  const source = text(value.source);
+  const unavailable = text(value.unavailableReason);
+  return {
+    sourceLabel: source === null ? '' : (FEE_SOURCE_LABEL[source] ?? source),
+    nodeAmount: formatAtomicAmount(text(value.nodeAmountAtomic), profile.precision),
+    valuePoolAmount: formatAtomicAmount(
+      text(value.valuePoolAmountAtomic),
+      profile.precision
+    ),
+    unavailableLabel:
+      unavailable === null
+        ? null
+        : (FEE_UNAVAILABLE_LABEL[unavailable] ?? unavailable),
+    crossChecked: source === 'node-and-value-pool',
+  };
+}
+
+function feeRuleReading(value: unknown, profile: ChainProfile): FeeRuleReading | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+  const basis = text(value.activationBasis) ?? 'unknown';
+  const unsupported = text(value.unsupportedReason);
+  return {
+    name: text(value.name) ?? '',
+    supported: value.supported === true,
+    upgradeName: text(value.upgradeName),
+    branchId: text(value.branchId),
+    activationBasisLabel: FEE_ACTIVATION_BASIS_LABEL[basis] ?? basis,
+    activationHeight: formatExactInteger(text(value.activationHeightAtomic)),
+    marginalFee: formatAtomicAmount(text(value.marginalFeeAtomic), profile.precision),
+    graceActions: formatExactInteger(text(value.graceActionsAtomic)),
+    conventionalFee: formatAtomicAmount(
+      text(value.conventionalFeeAtomic),
+      profile.precision
+    ),
+    unsupportedLabel:
+      unsupported === null
+        ? null
+        : (FEE_RULE_UNSUPPORTED_LABEL[unsupported] ?? unsupported),
+    evidenceSource: text(value.evidenceSource),
+  };
 }
 
 const LIFECYCLE_TONE: Record<string, EvidenceTone> = {
@@ -1225,19 +1473,41 @@ function sumAtomic(
 function partyRows(
   values: unknown,
   profile: ChainProfile,
-  kind: 'input' | 'output'
+  kind: 'input' | 'output',
+  txid: string
 ): readonly TransactionPartyRow[] {
   if (!Array.isArray(values)) {
     return [];
   }
-  return values.filter(isRecord).map((entry) => ({
-    index: text(entry.indexAtomic) ?? '',
-    address: text(entry.address),
-    amount: formatAtomicAmount(text(entry.valueAtomic), profile.precision),
-    reference: kind === 'input' ? text(entry.previousOutpoint) : null,
-    coinbase: entry.coinbase === true,
-    spent: typeof entry.spent === 'boolean' ? entry.spent : null,
-  }));
+  return values.filter(isRecord).map((entry) => {
+    const index = text(entry.indexAtomic) ?? '';
+    const reference = kind === 'input' ? text(entry.previousOutpoint) : null;
+    return {
+      index,
+      address: text(entry.address),
+      amount: formatAtomicAmount(text(entry.valueAtomic), profile.precision),
+      reference,
+      coinbase: entry.coinbase === true,
+      spent: typeof entry.spent === 'boolean' ? entry.spent : null,
+      outpoint:
+        kind === 'output'
+          ? txid && index !== ''
+            ? `${txid}:${index}`
+            : null
+          : reference,
+      assets: readOutpointAssets(entry.assets, profile),
+    };
+  });
+}
+
+function outpointList(value: unknown): readonly string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value.filter(
+    (entry): entry is string =>
+      typeof entry === 'string' && /^[0-9a-f]{64}:\d{1,10}$/.test(entry)
+  );
 }
 
 function actionRows(
@@ -1250,15 +1520,33 @@ function actionRows(
   return values.filter(isRecord).map((entry) => {
     const state = text(entry.state) ?? '';
     const protocolId = text(entry.protocolId) ?? '';
+    const asset = isRecord(entry.asset) ? entry.asset : null;
+    const assetId = asset ? text(asset.assetId) : null;
+    const tab = protocolTabFor(profile, protocolId);
+    const decimals =
+      asset &&
+      typeof asset.decimals === 'number' &&
+      Number.isSafeInteger(asset.decimals) &&
+      asset.decimals >= 0 &&
+      asset.decimals <= 77
+        ? asset.decimals
+        : 0;
     return {
       eventId: text(entry.eventId) ?? '',
       protocolId,
-      protocolLabel:
-        profile.protocols.find((tab) => tab.id === protocolId)?.label ??
-        humanizeFieldName(protocolId),
+      protocolLabel: tab?.label ?? humanizeFieldName(protocolId),
       actionType: humanizeFieldName(text(entry.actionType) ?? ''),
       stateLabel: PROTOCOL_STATE_LABEL[state] ?? availabilityLabel(state),
       tone: PROTOCOL_STATE_TONE[state] ?? 'neutral',
+      assetName: asset ? (text(asset.displayName) ?? assetId) : null,
+      assetTicker: asset ? text(asset.ticker) : null,
+      assetLink:
+        tab && assetId
+          ? ['/', profile.chain, 'protocols', tab.id, assetId]
+          : null,
+      quantity: formatAtomicAmount(text(entry.quantityAtomic), decimals),
+      inputOutpoints: outpointList(entry.inputOutpoints),
+      outputOutpoints: outpointList(entry.outputOutpoints),
     };
   });
 }
@@ -1291,9 +1579,10 @@ export function readTransaction(
     return null;
   }
   const status = text(payload.status) ?? '';
+  const txid = text(payload.txid) ?? '';
   const transparent = isRecord(payload.transparent) ? payload.transparent : {};
-  const inputs = partyRows(transparent.inputs, profile, 'input');
-  const outputs = partyRows(transparent.outputs, profile, 'output');
+  const inputs = partyRows(transparent.inputs, profile, 'input', txid);
+  const outputs = partyRows(transparent.outputs, profile, 'output', txid);
   const fee = isRecord(payload.fee) ? payload.fee : {};
   const block = isRecord(payload.block) ? payload.block : null;
   const replacement = isRecord(payload.replacement) ? payload.replacement : null;
@@ -1320,6 +1609,8 @@ export function readTransaction(
     feeRate: text(fee.rateDecimal),
     feeRateUnit: text(fee.rateUnit),
     logicalActions: formatExactInteger(text(fee.logicalActionsAtomic)),
+    feeEvidence: feeEvidenceReading(fee.evidence, profile),
+    feeRule: feeRuleReading(fee.rule, profile),
     inputs,
     outputs,
     inputTotal: sumAtomic(inputs, profile.precision),
@@ -1642,6 +1933,160 @@ export function readAddress(
   };
 }
 
+/** One unspent output from the holdings view, with its asset reading. */
+export interface EnrichedUtxoRow {
+  readonly txid: string;
+  readonly vout: string;
+  readonly outpoint: string;
+  readonly amount: ExactNumber | null;
+  readonly height: ExactNumber | null;
+  readonly assets: OutpointAssetsReading | null;
+}
+
+/** One asset holding row: an aggregate or an address-level balance. */
+export interface HoldingRow {
+  readonly protocolId: string;
+  readonly protocolLabel: string;
+  readonly name: string;
+  readonly assetId: string;
+  readonly ticker: string | null;
+  readonly quantity: ExactNumber | null;
+  readonly utxoCount: ExactNumber | null;
+  readonly available: ExactNumber | null;
+  readonly transferable: ExactNumber | null;
+  readonly link: readonly string[] | null;
+}
+
+/**
+ * The address asset-holdings view: the paginated unspent outputs with
+ * their attached assets, aggregates by asset, and the balances the
+ * protocol defines at address level, kept apart so the same quantity is
+ * never counted in both sections.
+ */
+export interface AddressHoldingsReading {
+  readonly address: string;
+  readonly utxos: readonly EnrichedUtxoRow[];
+  readonly aggregates: readonly HoldingRow[];
+  readonly addressLevel: readonly HoldingRow[];
+  readonly hasMore: boolean;
+  readonly totalUtxos: ExactNumber | null;
+  readonly complete: boolean;
+  /** Set when the reading is incomplete; says what kind of hole exists. */
+  readonly completenessNote: string | null;
+  readonly privacyNotice: string | null;
+  readonly checkpointHeight: ExactNumber | null;
+}
+
+function holdingRow(
+  entry: Record<string, unknown>,
+  profile: ChainProfile
+): HoldingRow | null {
+  const asset = isRecord(entry.asset) ? entry.asset : null;
+  if (!asset) {
+    return null;
+  }
+  const protocolId = text(asset.protocolId) ?? '';
+  const assetId = text(asset.assetId) ?? '';
+  if (!protocolId || !assetId) {
+    return null;
+  }
+  const tab = protocolTabFor(profile, protocolId);
+  const decimals =
+    typeof asset.decimals === 'number' &&
+    Number.isSafeInteger(asset.decimals) &&
+    asset.decimals >= 0 &&
+    asset.decimals <= 77
+      ? asset.decimals
+      : 0;
+  return {
+    protocolId,
+    protocolLabel: tab?.label ?? humanizeFieldName(protocolId),
+    name: text(asset.displayName) ?? assetId,
+    assetId,
+    ticker: text(asset.ticker),
+    quantity: formatAtomicAmount(text(entry.quantityAtomic), decimals),
+    utxoCount: formatExactInteger(text(entry.utxoCountAtomic)),
+    available: formatAtomicAmount(text(entry.availableAtomic), decimals),
+    transferable: formatAtomicAmount(text(entry.transferableAtomic), decimals),
+    link: tab ? ['/', profile.chain, 'protocols', tab.id, assetId] : null,
+  };
+}
+
+/** Reads the address-holdings endpoint's `universe-address-holdings-v1` view. */
+export function readAddressHoldings(
+  payload: unknown,
+  profile: ChainProfile
+): AddressHoldingsReading | null {
+  if (
+    !isRecord(payload) ||
+    payload.schemaVersion !== 'universe-address-holdings-v1'
+  ) {
+    return null;
+  }
+  const address = text(payload.address);
+  if (!address) {
+    return null;
+  }
+  const utxos = Array.isArray(payload.utxos)
+    ? payload.utxos.filter(isRecord)
+    : [];
+  const paging = isRecord(payload.paging) ? payload.paging : {};
+  const privacy = isRecord(payload.privacy) ? payload.privacy : null;
+  const checkpoint = isRecord(payload.checkpoint) ? payload.checkpoint : null;
+  const rows = (value: unknown): readonly HoldingRow[] =>
+    Array.isArray(value)
+      ? value
+          .filter(isRecord)
+          .map((entry) => holdingRow(entry, profile))
+          .filter((row): row is HoldingRow => row !== null)
+      : [];
+  const unknownCount = Number(text(payload.unknownAttachmentCount) ?? payload.unknownAttachmentCount ?? 0);
+  const outOfCoverageCount = Number(text(payload.outOfCoverageCount) ?? payload.outOfCoverageCount ?? 0);
+  const complete = payload.complete === true;
+  let completenessNote: string | null = null;
+  if (!complete && privacy?.publiclyObservable !== false) {
+    if (Number.isSafeInteger(unknownCount) && unknownCount > 0) {
+      completenessNote = $localize`:@@universe.chain.holdings-unknown:Some outputs could not be checked against every protocol authority.`;
+    } else if (Number.isSafeInteger(outOfCoverageCount) && outOfCoverageCount > 0) {
+      completenessNote = $localize`:@@universe.chain.holdings-out-of-coverage:Some outputs are outside the protocol authorities' coverage.`;
+    } else {
+      completenessNote = $localize`:@@universe.chain.holdings-partial:This reading is not complete.`;
+    }
+  }
+  return {
+    address,
+    utxos: utxos.map((entry) => {
+      const txid = text(entry.txid) ?? '';
+      const vout =
+        typeof entry.vout === 'number' && Number.isSafeInteger(entry.vout)
+          ? String(entry.vout)
+          : (text(entry.vout) ?? '');
+      return {
+        txid,
+        vout,
+        outpoint: text(entry.outpoint) ?? `${txid}:${vout}`,
+        amount: formatAtomicAmount(text(entry.valueAtomic), profile.precision),
+        height: formatExactInteger(text(entry.heightAtomic)),
+        assets: readOutpointAssets(entry.assets, profile),
+      };
+    }),
+    aggregates: rows(payload.aggregateHoldings),
+    addressLevel: rows(payload.addressLevelBalances),
+    hasMore: paging.hasMore === true,
+    totalUtxos: formatExactInteger(text(paging.totalUtxoCountAtomic)),
+    complete,
+    completenessNote,
+    privacyNotice:
+      privacy && privacy.publiclyObservable === false
+        ? (text(privacy.notice) ??
+          $localize`:@@universe.chain.holdings-privacy:This address's holdings are not publicly observable.`)
+        : null,
+    checkpointHeight: checkpoint
+      ? formatExactInteger(text(checkpoint.heightAtomic))
+      : null,
+  };
+}
+
 export interface OutpointReading {
   readonly txid: string;
   readonly vout: string;
@@ -1821,11 +2266,11 @@ export interface TransactionListRow {
 /**
  * What the cost column can honestly be, decided by what the rows carry.
  *
- * Dogecoin reports a fee amount and no rate. Zcash reports no amount at all on
- * a pending transaction, because a shielded transaction's fee is not derivable
- * from its transparent side, and reports ZIP-317 logical actions instead. A
- * fixed "Fee" column would have been empty on every row of the Zcash pending
- * list, which is the page's most valuable column spent on nothing.
+ * Dogecoin reports a fee amount and no rate. Zcash reports both a fee amount
+ * and its ZIP-317 logical actions, and an authority that could not read an
+ * amount for any row leaves only the actions to show. The column follows what
+ * the rows actually carry, so it is never a heading over an empty column, and
+ * a shielded transaction is never the reason one is missing.
  */
 export type TransactionCostColumn = 'amount' | 'logical-actions' | 'none';
 
