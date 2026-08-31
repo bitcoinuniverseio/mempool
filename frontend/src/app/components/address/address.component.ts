@@ -13,6 +13,8 @@ import { SeoService } from '@app/services/seo.service';
 import { seoDescriptionNetwork } from '@app/shared/common.utils';
 import { AddressInformation } from '@interfaces/node-api.interface';
 import { AddressTypeInfo } from '@app/shared/address-utils';
+import { AddressCapabilityService, AddressLookupCapability } from '@app/services/address-capability.service';
+import { AddressFailure, classifyAddressFailure, shouldConsultCapability } from '@app/shared/address-error';
 import { extractTapLeaves, fillTapTree, convertTextToBuffer, PsbtKeyValue } from '@app/shared/transaction.utils';
 
 class AddressStats implements ChainStats {
@@ -102,7 +104,6 @@ export class AddressComponent implements OnInit, OnDestroy {
 
   isMobile: boolean;
   showQR: boolean = false;
-  officialMempoolSpace = this.stateService.env.OFFICIAL_MEMPOOL_SPACE;
 
   address: Address;
   addressString: string;
@@ -112,6 +113,16 @@ export class AddressComponent implements OnInit, OnDestroy {
   isLoadingTransactions = true;
   retryLoadMore = false;
   error: any;
+  /**
+   * What the page is allowed to say went wrong, derived from the reason the
+   * backend named rather than from the status a proxy handed us.
+   */
+  addressFailure: AddressFailure | null = null;
+  /**
+   * What the deployment says about its own address index, read only when the
+   * failure is about our infrastructure and the reader deserves the detail.
+   */
+  addressIndex: AddressLookupCapability | null = null;
   mainSubscription: Subscription;
   mempoolTxSubscription: Subscription;
   mempoolRemovedTxSubscription: Subscription;
@@ -141,6 +152,7 @@ export class AddressComponent implements OnInit, OnDestroy {
   private tempTransactions: Transaction[];
   private timeTxIndexes: number[];
   private lastTransactionTxId: string;
+  private addressCapabilitySubscription: Subscription | undefined;
 
   constructor(
     private route: ActivatedRoute,
@@ -151,7 +163,44 @@ export class AddressComponent implements OnInit, OnDestroy {
     private apiService: ApiService,
     private seoService: SeoService,
     private formBuilder: UntypedFormBuilder,
+    private addressCapabilityService: AddressCapabilityService,
   ) { }
+
+  /**
+   * Records a failure in terms the page can render.
+   *
+   * Everything that used to reach the template was the raw error, and the
+   * template decided what it meant from the status number. That is how a
+   * deployment with no address index, a timed-out request and an address with
+   * a genuinely enormous history all came to be described to readers as the
+   * same thing: too many transactions on their address.
+   */
+  private setError(error: unknown): void {
+    this.error = error;
+    this.addressFailure = classifyAddressFailure(error);
+    this.addressIndex = null;
+    if (shouldConsultCapability(this.addressFailure)) {
+      // The failing request cannot tell an index that is missing from one that
+      // is still building. The deployment can, and it is the same document the
+      // release gates read, so the page and the gates cannot disagree.
+      this.addressCapabilitySubscription?.unsubscribe();
+      this.addressCapabilitySubscription = this.addressCapabilityService.getAddressLookup$()
+        .subscribe((capability) => {
+          this.addressIndex = capability;
+          if (capability.state === 'syncing') {
+            this.addressFailure = 'backend-syncing';
+          }
+        });
+    }
+  }
+
+  private clearError(): void {
+    this.error = undefined;
+    this.addressFailure = null;
+    this.addressIndex = null;
+    this.addressCapabilitySubscription?.unsubscribe();
+    this.addressCapabilitySubscription = undefined;
+  }
 
   ngOnInit(): void {
     this.network = this.stateService.network;
@@ -183,7 +232,7 @@ export class AddressComponent implements OnInit, OnDestroy {
     this.mainSubscription = this.route.paramMap
       .pipe(
         switchMap((params: ParamMap) => {
-          this.error = undefined;
+          this.clearError();
           this.isLoadingAddress = true;
           this.fullyLoaded = false;
           this.address = null;
@@ -219,9 +268,8 @@ export class AddressComponent implements OnInit, OnDestroy {
             ).pipe(
                 catchError((err) => {
                   this.isLoadingAddress = false;
-                  this.error = err;
+                  this.setError(err);
                   this.seoService.logSoft404();
-                  console.log(err);
                   return of(null);
                 })
               )
@@ -284,9 +332,8 @@ export class AddressComponent implements OnInit, OnDestroy {
             catchError((err) => {
               this.isLoadingAddress = false;
               this.isLoadingTransactions = false;
-              this.error = err;
+              this.setError(err);
               this.seoService.logSoft404();
-              console.log(err);
               return of([]);
             })
           );
@@ -339,8 +386,7 @@ export class AddressComponent implements OnInit, OnDestroy {
         }
       },
       (error) => {
-        console.log(error);
-        this.error = error;
+        this.setError(error);
         this.seoService.logSoft404();
         this.isLoadingAddress = false;
       });
@@ -661,6 +707,9 @@ export class AddressComponent implements OnInit, OnDestroy {
     this.fragmentSubscription?.unsubscribe();
     this.networkChangeSubscription?.unsubscribe();
     this.accelerationsSubscription?.unsubscribe();
+    // A reader who leaves while the capability document is in flight must not
+    // leave a subscription writing into a destroyed component.
+    this.addressCapabilitySubscription?.unsubscribe();
     this.websocketService.stopTrackAccelerations();
   }
 }
