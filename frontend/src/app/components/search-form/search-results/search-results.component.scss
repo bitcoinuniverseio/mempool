@@ -86,3 +86,12 @@
   letter-spacing: 0.06em;
   color: var(--u-text-muted);
 }
+
+// The advance warning that an address page will not have data yet. It is a
+// note rather than a result: it is never focusable and never selectable, so it
+// cannot land in the keyboard order between two things a reader can act on.
+.search-notice {
+  padding: 0.25rem 1rem 0.5rem;
+  color: var(--u-text-muted);
+  line-height: 1.3;
+}

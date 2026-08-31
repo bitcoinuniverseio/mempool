@@ -197,3 +197,141 @@ test('the content policy follows the build behind the static root', async () => 
     'a build of the same size at the same instant is still the build being served',
   );
 });
+
+/**
+ * The split between the explorer backend and the first-party Esplora index.
+ *
+ * With `MEMPOOL.BACKEND` set to `esplora` the backend deliberately does not
+ * mount the address, transaction, block or mempool routes: it expects the edge
+ * to send that whole family to the index instead. If this table is wrong the
+ * failure is not subtle in effect and is entirely silent in cause, because the
+ * site still loads and every one of those paths answers 404 or, worse, is
+ * answered by the wrong process.
+ */
+
+const ESPLORA_PORT = '3001';
+
+const withEsplora = await (async () => {
+  process.env.UNIVERSE_GATEWAY_ESPLORA = `http://127.0.0.1:${ESPLORA_PORT}`;
+  process.env.UNIVERSE_GATEWAY_NO_LISTEN = '1';
+  const module = await import('./gateway.mjs?esplora=1');
+  delete process.env.UNIVERSE_GATEWAY_ESPLORA;
+  return module;
+})();
+
+function esploraRoute(url) {
+  const pathname = new URL(url, 'http://x.invalid').pathname;
+  return withEsplora.routeFor(pathname, url);
+}
+
+test('the whole Esplora address family reaches the index with the api prefix stripped', () => {
+  const address = 'bc1qcx70rmarfudyct7lx0ptrat2c5kgstghx2j69';
+  const scripthash = 'd'.repeat(64);
+  const cases = [
+    [`/api/address/${address}`, `/address/${address}`],
+    [`/api/address/${address}/txs`, `/address/${address}/txs`],
+    [`/api/address/${address}/txs/chain`, `/address/${address}/txs/chain`],
+    [`/api/address/${address}/txs/chain/${'e'.repeat(64)}`, `/address/${address}/txs/chain/${'e'.repeat(64)}`],
+    [`/api/address/${address}/txs/mempool`, `/address/${address}/txs/mempool`],
+    [`/api/address/${address}/utxo`, `/address/${address}/utxo`],
+    [`/api/scripthash/${scripthash}`, `/scripthash/${scripthash}`],
+    [`/api/scripthash/${scripthash}/txs`, `/scripthash/${scripthash}/txs`],
+    [`/api/scripthash/${scripthash}/utxo`, `/scripthash/${scripthash}/utxo`],
+    ['/api/address-prefix/bc1qcx', '/address-prefix/bc1qcx'],
+  ];
+  for (const [url, expected] of cases) {
+    const route = esploraRoute(url);
+    assert.equal(port(route), ESPLORA_PORT, url);
+    assert.equal(route.path, expected, url);
+  }
+});
+
+test('the rest of the Esplora surface reaches the index too', () => {
+  const cases = [
+    [`/api/tx/${'b'.repeat(64)}`, `/tx/${'b'.repeat(64)}`],
+    [`/api/block/${'0'.repeat(64)}`, `/block/${'0'.repeat(64)}`],
+    [`/api/block/${'0'.repeat(64)}/txs/25`, `/block/${'0'.repeat(64)}/txs/25`],
+    ['/api/blocks/tip/height', '/blocks/tip/height'],
+    ['/api/mempool', '/mempool'],
+    ['/api/mempool/recent', '/mempool/recent'],
+    ['/api/fee-estimates', '/fee-estimates'],
+  ];
+  for (const [url, expected] of cases) {
+    const route = esploraRoute(url);
+    assert.equal(port(route), ESPLORA_PORT, url);
+    assert.equal(route.path, expected, url);
+  }
+});
+
+test('a query string survives the rewrite onto the index', () => {
+  const route = esploraRoute('/api/address/bc1qexample/txs?after_txid=abc');
+  assert.equal(port(route), ESPLORA_PORT);
+  assert.equal(route.path, '/address/bc1qexample/txs?after_txid=abc');
+});
+
+test('the index never receives a v1 path', () => {
+  for (const url of [
+    '/api/v1',
+    '/api/v1/backend-info',
+    '/api/v1/capabilities',
+    '/api/v1/fees/recommended',
+    '/api/v1/mining/pools/1w',
+    '/api/v1/statistics/2h',
+    '/api/v1/transaction-times?txId=' + 'a'.repeat(64),
+    '/api/v1/validate-address/bc1qexample',
+    '/api/v1/cpfp',
+    '/api/v1/blocks/0',
+  ]) {
+    const route = esploraRoute(url);
+    assert.equal(port(route), BACKEND_PORT, url);
+    assert.equal(route.path, url, url);
+  }
+});
+
+test('the overlay keeps its routes when an index is configured', () => {
+  for (const url of [
+    '/api/v1/universe/protocols',
+    '/api/v1/chains',
+    '/api/v1/bitcoin/status',
+    '/api/v1/dogecoin/mempool',
+    '/api/v1/zcash/status',
+  ]) {
+    const route = esploraRoute(url);
+    assert.equal(port(route), OVERLAY_PORT, url);
+    assert.equal(route.path, url, url);
+  }
+});
+
+test('the index administrative surface is refused rather than proxied', () => {
+  for (const url of ['/api/internal', '/api/internal/', '/api/internal/precache-scripts']) {
+    const route = esploraRoute(url);
+    assert.equal(route.upstream, null, url);
+    assert.equal(route.status, 404, url);
+  }
+  // The v1 internal routes belong to the explorer backend and are unchanged.
+  assert.equal(port(esploraRoute('/api/v1/internal/blocks/definition/list')), BACKEND_PORT);
+});
+
+test('WebSocket ownership is unchanged by the index', () => {
+  assert.equal(withEsplora.websocketUpstreamFor('/api/v1/universe/ws').port, OVERLAY_PORT);
+  assert.equal(withEsplora.websocketUpstreamFor('/api/v1/ws').port, BACKEND_PORT);
+});
+
+test('nothing outside the api tree is sent to the index', () => {
+  for (const url of ['/', '/address/bc1qexample', '/resources/config.js', '/apixyz']) {
+    const pathname = new URL(url, 'http://x.invalid').pathname;
+    assert.equal(withEsplora.routeFor(pathname, url), null, url);
+  }
+});
+
+test('with no index configured the backend still owns the whole api surface', () => {
+  // This is the deployment that reads Bitcoin Core alone. The address family
+  // has to keep reaching the backend, which answers that it cannot serve it,
+  // rather than reaching an index that is not there.
+  const route = routeFor('/api/address/bc1qexample', '/api/address/bc1qexample');
+  assert.equal(port(route), BACKEND_PORT);
+  assert.equal(route.path, '/api/v1/address/bc1qexample');
+  // And with nothing to refuse on its behalf, the internal path is rewritten
+  // like any other rather than being answered here.
+  assert.equal(port(routeFor('/api/internal/x', '/api/internal/x')), BACKEND_PORT);
+});

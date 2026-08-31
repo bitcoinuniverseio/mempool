@@ -364,6 +364,15 @@ class Server {
   setUpHttpApiRoutes(): void {
     bitcoinRoutes.initRoutes(this.app);
     capabilitiesRoutes.initRoutes(this.app);
+    // Who owns the address family depends on the backend, and the capability
+    // report has to say so rather than assume it. With `esplora` this process
+    // deliberately does not mount those routes: the Esplora index serves them
+    // and the gateway sends `/api/` there. With `electrum` they are mounted
+    // here. With `none` nothing serves them at all, which is the state that
+    // reached production.
+    if (capabilities.addressLookupEnabled()) {
+      capabilities.markRoutesRegistered('addressLookup');
+    }
     if (config.MEMPOOL.OFFICIAL) {
       bitcoinCoreRoutes.initRoutes(this.app);
     }
