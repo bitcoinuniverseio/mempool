@@ -73,8 +73,19 @@
           <span class="figure-value" [attr.title]="vm.meanReward.exact">{{ vm.meanReward.display }} <span class="figure-unit">{{ profile.ticker }}</span></span>
         </div>
       </div>
-      <p class="panel-lede reward-note" *ngIf="vm.summary?.windowBlocksAtomic" i18n="universe.mining.window-note">
-        Means are measured over the last {{ vm.summary?.windowBlocksAtomic }} collected blocks.
+      <p class="panel-lede reward-note" *ngIf="vm.meanBasis && !vm.meanBasis.narrower" i18n="universe.mining.window-note">
+        Means are measured over the last {{ vm.meanBasis?.windowBlocks }} collected blocks.
+      </p>
+      <p class="panel-lede reward-note" *ngIf="vm.meanBasis?.narrower">
+        <ng-container i18n="universe.mining.window-note-narrower">
+          The window is the last {{ vm.meanBasis?.windowBlocks }} collected blocks. The mean total
+          reward is taken over the {{ vm.meanBasis?.rewardBlocks }} of them that state one, and the
+          mean fees over {{ vm.meanBasis?.feeBlocks }}.
+        </ng-container>
+        <ng-container i18n="universe.mining.window-note-why">
+          A block whose reward cannot be derived from public data is left out of the mean rather
+          than counted as zero.
+        </ng-container>
       </p>
       <p class="notice empty" *ngIf="!vm.subsidy && !vm.meanReward" i18n="universe.mining.reward-unavailable">
         Reward readings appear once the block collector has stored enough history.

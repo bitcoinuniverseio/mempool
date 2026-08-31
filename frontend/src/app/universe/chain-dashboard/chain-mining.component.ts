@@ -23,6 +23,10 @@ import {
   readChainTimeline,
 } from '@app/universe/chain-dashboard/chain-timeline';
 import {
+  readMeanBasis,
+  type MeanBasisReading,
+} from '@app/universe/chain-dashboard/mean-basis';
+import {
   formatDifficulty,
   formatNetworkRate,
   formatSeconds,
@@ -62,6 +66,7 @@ interface MiningViewModel {
   readonly subsidy: ExactNumber | null;
   readonly meanReward: ExactNumber | null;
   readonly meanFees: ExactNumber | null;
+  readonly meanBasis: MeanBasisReading | null;
   readonly pools: MiningPoolsView | null;
   readonly poolRows: readonly PoolRowReading[];
   readonly poolsError: boolean;
@@ -151,6 +156,7 @@ export class ChainMiningComponent implements OnInit {
           subsidy: formatAtomicAmount(summary?.subsidyAtomic ?? null, this.profile.precision),
           meanReward: formatAtomicAmount(summary?.meanRewardAtomic ?? null, this.profile.precision),
           meanFees: formatAtomicAmount(summary?.meanFeesAtomic ?? null, this.profile.precision),
+          meanBasis: readMeanBasis(summary ?? null),
           pools: pools.pools,
           poolRows: this.poolRows(pools.pools),
           poolsError: pools.error,
