@@ -1,5 +1,27 @@
 <div class="container-xl chain-page" *ngIf="vm$ | async as vm">
 
+  <!-- One asset rendering for every outpoint on this page: transaction
+       inputs and outputs, and address unspent outputs. An empty chip list
+       only renders quietly when emptiness was proven; any other coverage
+       state is named. -->
+  <ng-template #outpointAssets let-assets="assets">
+    <div class="party-assets" *ngIf="assets && (assets.chips.length || assets.coverageLabel)">
+      <span class="asset-chip" *ngFor="let chipRow of assets.chips; trackBy: trackByIndex">
+        <span class="universe-chip protocol-chip">{{ chipRow.protocolLabel }}</span>
+        <a *ngIf="chipRow.link; else chipPlain" class="asset-name" [routerLink]="chipRow.link"
+           [attr.title]="chipRow.assetId">{{ chipRow.name.length > 24 ? short(chipRow.name, 8) : chipRow.name }}</a>
+        <ng-template #chipPlain>
+          <span class="asset-name" [attr.title]="chipRow.assetId">{{ chipRow.name.length > 24 ? short(chipRow.name, 8) : chipRow.name }}</span>
+        </ng-template>
+        <span class="asset-quantity" *ngIf="chipRow.quantity" [attr.title]="chipRow.quantity.exact">
+          {{ chipRow.quantity.display }}<ng-container *ngIf="chipRow.ticker"> {{ chipRow.ticker }}</ng-container>
+        </span>
+      </span>
+      <span class="universe-chip asset-coverage" *ngIf="assets.coverageLabel"
+            [ngClass]="'state-' + assets.coverageTone">{{ assets.coverageLabel }}</span>
+    </div>
+  </ng-template>
+
   <!-- The house detail heading: the category is the label, the identifier
        carries the weight, and the page action sits at the end of the rule. -->
   <header class="title-block">
@@ -196,6 +218,7 @@
 
     <section class="panel flow" *ngIf="tx.inputs.length || tx.outputs.length" aria-labelledby="tx-flow-heading">
       <h2 id="tx-flow-heading" i18n="universe.chain.tx-flow-title">Transparent value</h2>
+
       <div class="flow-grid">
         <div class="flow-side">
           <h3>
@@ -204,16 +227,19 @@
           </h3>
           <ol class="party-list">
             <li *ngFor="let party of tx.inputs; trackBy: trackByIndex">
-              <span class="party-address">
-                <a class="identifier" *ngIf="party.address; else partyNoAddress"
-                   [routerLink]="['/', chain, 'address', party.address]">{{ short(party.address, 12) }}</a>
-                <ng-template #partyNoAddress>
-                  <span class="secondary" *ngIf="party.coinbase; else partyUnknown" i18n="universe.chain.tx-coinbase">Newly issued by the block</span>
-                  <ng-template #partyUnknown><span class="secondary" i18n="universe.chain.tx-no-address">No standard address</span></ng-template>
-                </ng-template>
-              </span>
-              <span class="party-amount" *ngIf="party.amount; else partyNoAmount" [attr.title]="party.amount.exact">{{ party.amount.display }}</span>
-              <ng-template #partyNoAmount><span class="party-amount secondary" i18n="universe.chain.tx-amount-unreported">not reported</span></ng-template>
+              <div class="party-main">
+                <span class="party-address">
+                  <a class="identifier" *ngIf="party.address; else partyNoAddress"
+                     [routerLink]="['/', chain, 'address', party.address]">{{ short(party.address, 12) }}</a>
+                  <ng-template #partyNoAddress>
+                    <span class="secondary" *ngIf="party.coinbase; else partyUnknown" i18n="universe.chain.tx-coinbase">Newly issued by the block</span>
+                    <ng-template #partyUnknown><span class="secondary" i18n="universe.chain.tx-no-address">No standard address</span></ng-template>
+                  </ng-template>
+                </span>
+                <span class="party-amount" *ngIf="party.amount; else partyNoAmount" [attr.title]="party.amount.exact">{{ party.amount.display }}</span>
+                <ng-template #partyNoAmount><span class="party-amount secondary" i18n="universe.chain.tx-amount-unreported">not reported</span></ng-template>
+              </div>
+              <ng-container *ngTemplateOutlet="outpointAssets; context: { assets: party.assets }"></ng-container>
             </li>
           </ol>
           <p class="flow-note" *ngIf="!tx.inputTotal && tx.inputs.length" i18n="universe.chain.tx-no-input-total">
@@ -230,14 +256,21 @@
           </h3>
           <ol class="party-list">
             <li *ngFor="let party of tx.outputs; trackBy: trackByIndex">
-              <span class="party-address">
-                <a class="identifier" *ngIf="party.address; else outputNoAddress"
-                   [routerLink]="['/', chain, 'address', party.address]">{{ short(party.address, 12) }}</a>
-                <ng-template #outputNoAddress><span class="secondary" i18n="universe.chain.tx-no-address-out">No standard address</span></ng-template>
-                <span class="universe-chip state-neutral" *ngIf="party.spent === true" i18n="universe.chain.tx-output-spent">Spent</span>
-              </span>
-              <span class="party-amount" *ngIf="party.amount; else outputNoAmount" [attr.title]="party.amount.exact">{{ party.amount.display }}</span>
-              <ng-template #outputNoAmount><span class="party-amount secondary" i18n="universe.chain.tx-amount-unreported-out">not reported</span></ng-template>
+              <div class="party-main">
+                <span class="party-address">
+                  <a class="identifier" *ngIf="party.address; else outputNoAddress"
+                     [routerLink]="['/', chain, 'address', party.address]">{{ short(party.address, 12) }}</a>
+                  <ng-template #outputNoAddress><span class="secondary" i18n="universe.chain.tx-no-address-out">No standard address</span></ng-template>
+                  <a class="universe-chip state-neutral outpoint-link" *ngIf="party.outpoint"
+                     [routerLink]="['/', chain, 'outpoint', party.outpoint.split(':')[0], party.outpoint.split(':')[1]]"
+                     i18n-title="universe.chain.tx-outpoint-title" title="Open this output"
+                     i18n="universe.chain.tx-outpoint">#{{ party.index }}</a>
+                  <span class="universe-chip state-neutral" *ngIf="party.spent === true" i18n="universe.chain.tx-output-spent">Spent</span>
+                </span>
+                <span class="party-amount" *ngIf="party.amount; else outputNoAmount" [attr.title]="party.amount.exact">{{ party.amount.display }}</span>
+                <ng-template #outputNoAmount><span class="party-amount secondary" i18n="universe.chain.tx-amount-unreported-out">not reported</span></ng-template>
+              </div>
+              <ng-container *ngTemplateOutlet="outpointAssets; context: { assets: party.assets }"></ng-container>
             </li>
           </ol>
         </div>
@@ -265,13 +298,29 @@
              aria-labelledby="tx-actions-heading">
       <h2 id="tx-actions-heading" i18n="universe.chain.tx-actions-title">Protocol actions</h2>
 
+      <ng-template #actionRow let-action="action">
+        <span class="action-protocol">{{ action.protocolLabel }}</span>
+        <span class="action-type">{{ action.actionType }}</span>
+        <ng-container *ngIf="action.assetName">
+          <a *ngIf="action.assetLink; else actionAssetPlain" class="action-asset identifier"
+             [routerLink]="action.assetLink">{{ action.assetName.length > 24 ? short(action.assetName, 8) : action.assetName }}</a>
+          <ng-template #actionAssetPlain>
+            <span class="action-asset">{{ action.assetName.length > 24 ? short(action.assetName, 8) : action.assetName }}</span>
+          </ng-template>
+        </ng-container>
+        <span class="action-quantity" *ngIf="action.quantity" [attr.title]="action.quantity.exact">
+          {{ action.quantity.display }}<ng-container *ngIf="action.assetTicker"> {{ action.assetTicker }}</ng-container>
+        </span>
+        <a class="action-outpoint identifier" *ngFor="let op of action.outputOutpoints; trackBy: trackByIndex"
+           [routerLink]="['/', chain, 'outpoint', op.split(':')[0], op.split(':')[1]]">{{ short(op, 6) }}</a>
+        <span class="universe-chip" [ngClass]="'state-' + action.tone">{{ action.stateLabel }}</span>
+      </ng-template>
+
       <ng-container *ngIf="tx.confirmedActions.length">
         <h3 i18n="universe.chain.tx-actions-confirmed">Evaluated</h3>
         <ul class="action-list">
           <li *ngFor="let action of tx.confirmedActions; trackBy: trackByIndex">
-            <span class="action-protocol">{{ action.protocolLabel }}</span>
-            <span class="action-type">{{ action.actionType }}</span>
-            <span class="universe-chip" [ngClass]="'state-' + action.tone">{{ action.stateLabel }}</span>
+            <ng-container *ngTemplateOutlet="actionRow; context: { action: action }"></ng-container>
           </li>
         </ul>
       </ng-container>
@@ -283,9 +332,7 @@
         </p>
         <ul class="action-list">
           <li *ngFor="let action of tx.candidateActions; trackBy: trackByIndex">
-            <span class="action-protocol">{{ action.protocolLabel }}</span>
-            <span class="action-type">{{ action.actionType }}</span>
-            <span class="universe-chip" [ngClass]="'state-' + action.tone">{{ action.stateLabel }}</span>
+            <ng-container *ngTemplateOutlet="actionRow; context: { action: action }"></ng-container>
           </li>
         </ul>
       </ng-container>
@@ -392,6 +439,83 @@
       </div>
     </section>
 
+    <section class="panel holdings" *ngIf="vm.holdings as hold" aria-labelledby="address-holdings-heading">
+      <h2 id="address-holdings-heading" i18n="universe.chain.address-holdings-title">Asset holdings</h2>
+
+      <p class="notice" role="status" *ngIf="hold.privacyNotice">{{ hold.privacyNotice }}</p>
+      <p class="flow-note" *ngIf="hold.completenessNote">{{ hold.completenessNote }}</p>
+
+      <ng-container *ngIf="hold.aggregates.length">
+        <h3 i18n="universe.chain.holdings-aggregate-title">Held on unspent outputs</h3>
+        <div class="table-wrap" tabindex="0" role="region" aria-labelledby="address-holdings-heading">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col" i18n="universe.chain.holdings-protocol">Protocol</th>
+                <th scope="col" i18n="universe.chain.holdings-asset">Asset</th>
+                <th scope="col" class="numeric" i18n="universe.chain.holdings-quantity">Quantity</th>
+                <th scope="col" class="numeric" i18n="universe.chain.holdings-utxos">Outputs</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of hold.aggregates; trackBy: trackByIndex">
+                <td><span class="universe-chip protocol-chip">{{ row.protocolLabel }}</span></td>
+                <td>
+                  <a *ngIf="row.link; else aggPlain" class="identifier" [routerLink]="row.link"
+                     [attr.title]="row.assetId">{{ row.name.length > 24 ? short(row.name, 8) : row.name }}</a>
+                  <ng-template #aggPlain><span [attr.title]="row.assetId">{{ row.name.length > 24 ? short(row.name, 8) : row.name }}</span></ng-template>
+                  <span class="secondary" *ngIf="row.ticker"> {{ row.ticker }}</span>
+                </td>
+                <td class="numeric" [class.secondary]="!row.quantity" [attr.title]="row.quantity?.exact">
+                  <ng-container *ngIf="row.quantity; else aggNoQuantity">{{ row.quantity.display }}</ng-container>
+                  <ng-template #aggNoQuantity><ng-container i18n="universe.chain.holdings-no-quantity">not summable</ng-container></ng-template>
+                </td>
+                <td class="numeric" [attr.title]="row.utxoCount?.exact">{{ row.utxoCount?.display }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </ng-container>
+
+      <ng-container *ngIf="hold.addressLevel.length">
+        <h3 i18n="universe.chain.holdings-address-level-title">Address-level balances</h3>
+        <p class="panel-lede" i18n="universe.chain.holdings-address-level-lede">
+          These protocols keep their ledger per address rather than per output, so these balances belong to the address as a whole and are never assigned to any single unspent output above.
+        </p>
+        <div class="table-wrap" tabindex="0" role="region" aria-labelledby="address-holdings-heading">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col" i18n="universe.chain.holdings-protocol-2">Protocol</th>
+                <th scope="col" i18n="universe.chain.holdings-asset-2">Asset</th>
+                <th scope="col" class="numeric" i18n="universe.chain.holdings-balance">Balance</th>
+                <th scope="col" class="numeric" i18n="universe.chain.holdings-available">Available</th>
+                <th scope="col" class="numeric" i18n="universe.chain.holdings-transferable">Transferable</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of hold.addressLevel; trackBy: trackByIndex">
+                <td><span class="universe-chip protocol-chip">{{ row.protocolLabel }}</span></td>
+                <td>
+                  <a *ngIf="row.link; else levelPlain" class="identifier" [routerLink]="row.link"
+                     [attr.title]="row.assetId">{{ row.name.length > 24 ? short(row.name, 8) : row.name }}</a>
+                  <ng-template #levelPlain><span [attr.title]="row.assetId">{{ row.name.length > 24 ? short(row.name, 8) : row.name }}</span></ng-template>
+                </td>
+                <td class="numeric" [attr.title]="row.quantity?.exact">{{ row.quantity?.display }}</td>
+                <td class="numeric secondary" [attr.title]="row.available?.exact">{{ row.available?.display }}</td>
+                <td class="numeric secondary" [attr.title]="row.transferable?.exact">{{ row.transferable?.display }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </ng-container>
+
+      <p class="empty" *ngIf="!hold.aggregates.length && !hold.addressLevel.length && hold.complete && !hold.privacyNotice"
+         i18n="universe.chain.holdings-proven-empty">
+        Every unspent output was checked against the protocol authorities and none carries a protocol asset.
+      </p>
+    </section>
+
     <section class="panel" *ngIf="addr.utxos.length" aria-labelledby="address-utxo-heading">
       <h2 id="address-utxo-heading" i18n="universe.chain.address-utxo-title">Unspent outputs</h2>
       <div class="table-wrap" tabindex="0" role="region" aria-labelledby="address-utxo-heading">
@@ -401,6 +525,7 @@
               <th scope="col" i18n="universe.chain.utxo-outpoint">Outpoint</th>
               <th scope="col" class="numeric" i18n="universe.chain.utxo-amount">Amount</th>
               <th scope="col" class="numeric" i18n="universe.chain.utxo-height">Block</th>
+              <th scope="col" *ngIf="vm.holdings" i18n="universe.chain.utxo-assets">Assets</th>
             </tr>
           </thead>
           <tbody>
@@ -420,6 +545,9 @@
                   <ng-template #utxoHeightUnstated
                                i18n="universe.chain.utxo-height-unstated">not reported</ng-template>
                 </ng-template>
+              </td>
+              <td *ngIf="vm.holdings" class="assets-cell">
+                <ng-container *ngTemplateOutlet="outpointAssets; context: { assets: holdingsAssetsFor(vm.holdings, utxo.txid, utxo.vout) }"></ng-container>
               </td>
             </tr>
           </tbody>

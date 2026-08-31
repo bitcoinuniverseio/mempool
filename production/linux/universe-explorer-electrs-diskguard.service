@@ -1,0 +1,6 @@
+[Unit]
+Description=Stop the Universe Explorer address index before it fills its volume
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/universe-explorer-electrs-diskguard

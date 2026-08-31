@@ -21,6 +21,7 @@ import transactionRepository from '../../repositories/TransactionRepository';
 import rbfCache from '../rbf-cache';
 import { calculateMempoolTxCpfp } from '../cpfp';
 import { handleError } from '../../utils/api';
+import { classifyAddressError, sendAddressError } from './address-errors';
 import poolsUpdater from '../../tasks/pools-updater';
 import chainTips from '../chain-tips';
 
@@ -659,11 +660,11 @@ class BitcoinRoutes {
 
   private async getAddress(req: Request, res: Response) {
     if (config.MEMPOOL.BACKEND === 'none') {
-      handleError(req, res, 405, 'Address lookups cannot be used with bitcoind as backend.');
+      sendAddressError(req, res, 'address-backend-unavailable');
       return;
     }
     if (!ADDRESS_REGEX.test(req.params.address)) {
-      handleError(req, res, 501, `Invalid address`);
+      sendAddressError(req, res, 'invalid-address');
       return;
     }
 
@@ -671,25 +672,17 @@ class BitcoinRoutes {
       const addressData = await bitcoinApi.$getAddress(req.params.address);
       res.json(addressData);
     } catch (e) {
-      if (e instanceof Error && e.message === 'Invalid Bitcoin address') {
-        res.status(400).send(e.message);
-        return;
-      }
-      if (e instanceof Error && e.message && (e.message.indexOf('too long') > 0 || e.message.indexOf('confirmed status') > 0)) {
-        handleError(req, res, 413, e.message);
-        return;
-      }
-      handleError(req, res, 500, 'Failed to get address');
+      sendAddressError(req, res, classifyAddressError(e));
     }
   }
 
   private async getAddressTransactions(req: Request, res: Response): Promise<void> {
     if (config.MEMPOOL.BACKEND === 'none') {
-      handleError(req, res, 405, 'Address lookups cannot be used with bitcoind as backend.');
+      sendAddressError(req, res, 'address-backend-unavailable');
       return;
     }
     if (!ADDRESS_REGEX.test(req.params.address)) {
-      handleError(req, res, 501, `Invalid address`);
+      sendAddressError(req, res, 'invalid-address');
       return;
     }
 
@@ -701,25 +694,17 @@ class BitcoinRoutes {
       const transactions = await bitcoinApi.$getAddressTransactions(req.params.address, lastTxId);
       res.json(transactions);
     } catch (e) {
-      if (e instanceof Error && e.message === 'Invalid Bitcoin address') {
-        res.status(400).send(e.message);
-        return;
-      }
-      if (e instanceof Error && e.message && (e.message.indexOf('too long') > 0 || e.message.indexOf('confirmed status') > 0)) {
-        handleError(req, res, 413, e.message);
-        return;
-      }
-      handleError(req, res, 500, 'Failed to get address transactions');
+      sendAddressError(req, res, classifyAddressError(e));
     }
   }
 
   private async getAddressUtxo(req: Request, res: Response): Promise<void> {
     if (config.MEMPOOL.BACKEND === 'none') {
-      handleError(req, res, 405, 'Address lookups cannot be used with bitcoind as backend.');
+      sendAddressError(req, res, 'address-backend-unavailable');
       return;
     }
     if (!ADDRESS_REGEX.test(req.params.address)) {
-      handleError(req, res, 501, `Invalid address`);
+      sendAddressError(req, res, 'invalid-address');
       return;
     }
 
@@ -727,32 +712,24 @@ class BitcoinRoutes {
       const addressData = await bitcoinApi.$getAddressUtxos(req.params.address);
       res.json(addressData);
     } catch (e) {
-      if (e instanceof Error && e.message === 'Invalid Bitcoin address') {
-        res.status(400).send(e.message);
-        return;
-      }
-      if (e instanceof Error && e.message && (e.message.indexOf('too long') > 0 || e.message.indexOf('confirmed status') > 0)) {
-        handleError(req, res, 413, e.message);
-        return;
-      }
-      handleError(req, res, 500, 'Failed to get address');
+      sendAddressError(req, res, classifyAddressError(e));
     }
   }
 
   private async getAddressTransactionSummary(req: Request, res: Response): Promise<void> {
     if (config.MEMPOOL.BACKEND !== 'esplora') {
-      handleError(req, res, 405, 'Address summary lookups require mempool/electrs backend.');
+      sendAddressError(req, res, 'address-backend-unavailable', 'Address summaries need the Esplora index.');
       return;
     }
   }
 
   private async getScriptHash(req: Request, res: Response) {
     if (config.MEMPOOL.BACKEND === 'none') {
-      handleError(req, res, 405, 'Address lookups cannot be used with bitcoind as backend.');
+      sendAddressError(req, res, 'address-backend-unavailable');
       return;
     }
     if (!SCRIPT_HASH_REGEX.test(req.params.scripthash)) {
-      handleError(req, res, 501, `Invalid scripthash`);
+      sendAddressError(req, res, 'invalid-address', 'A script hash is 64 hexadecimal characters.');
       return;
     }
 
@@ -762,21 +739,17 @@ class BitcoinRoutes {
       const addressData = await bitcoinApi.$getScriptHash(electrumScripthash);
       res.json(addressData);
     } catch (e) {
-      if (e instanceof Error && e.message && (e.message.indexOf('too long') > 0 || e.message.indexOf('confirmed status') > 0)) {
-        handleError(req, res, 413, e.message);
-        return;
-      }
-      handleError(req, res, 500, 'Failed to get script hash');
+      sendAddressError(req, res, classifyAddressError(e));
     }
   }
 
   private async getScriptHashTransactions(req: Request, res: Response): Promise<void> {
     if (config.MEMPOOL.BACKEND === 'none') {
-      handleError(req, res, 405, 'Address lookups cannot be used with bitcoind as backend.');
+      sendAddressError(req, res, 'address-backend-unavailable');
       return;
     }
     if (!SCRIPT_HASH_REGEX.test(req.params.scripthash)) {
-      handleError(req, res, 501, `Invalid scripthash`);
+      sendAddressError(req, res, 'invalid-address', 'A script hash is 64 hexadecimal characters.');
       return;
     }
 
@@ -790,21 +763,17 @@ class BitcoinRoutes {
       const transactions = await bitcoinApi.$getScriptHashTransactions(electrumScripthash, lastTxId);
       res.json(transactions);
     } catch (e) {
-      if (e instanceof Error && e.message && (e.message.indexOf('too long') > 0 || e.message.indexOf('confirmed status') > 0)) {
-        handleError(req, res, 413, e.message);
-        return;
-      }
-      handleError(req, res, 500, 'Failed to get script hash transactions');
+      sendAddressError(req, res, classifyAddressError(e));
     }
   }
 
   private async getScriptHashUtxo(req: Request, res: Response): Promise<void> {
     if (config.MEMPOOL.BACKEND === 'none') {
-      handleError(req, res, 405, 'Address lookups cannot be used with bitcoind as backend.');
+      sendAddressError(req, res, 'address-backend-unavailable');
       return;
     }
     if (!SCRIPT_HASH_REGEX.test(req.params.scripthash)) {
-      handleError(req, res, 501, `Invalid scripthash`);
+      sendAddressError(req, res, 'invalid-address', 'A script hash is 64 hexadecimal characters.');
       return;
     }
 
@@ -814,11 +783,7 @@ class BitcoinRoutes {
       const addressData = await bitcoinApi.$getScriptHashUtxos(electrumScripthash);
       res.json(addressData);
     } catch (e) {
-      if (e instanceof Error && e.message && (e.message.indexOf('too long') > 0 || e.message.indexOf('confirmed status') > 0)) {
-        handleError(req, res, 413, e.message);
-        return;
-      }
-      handleError(req, res, 500, 'Failed to get script hash');
+      sendAddressError(req, res, classifyAddressError(e));
     }
   }
 
@@ -964,7 +929,7 @@ class BitcoinRoutes {
 
   private async validateAddress(req: Request, res: Response) {
     if (!ADDRESS_REGEX.test(req.params.address)) {
-      handleError(req, res, 501, `Invalid address`);
+      sendAddressError(req, res, 'invalid-address');
       return;
     }
     try {

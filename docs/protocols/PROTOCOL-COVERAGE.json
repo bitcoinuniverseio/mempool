@@ -1,6 +1,17 @@
 {
+  "schemaVersion": "universe-explorer-protocol-manifest-v1",
   "registryVersion": "1.0.0",
-  "generatedAt": "2026-08-30T18:21:47.538Z",
+  "sourceRepository": "bitcoinuniverseio/backend-apis",
+  "sourceSha": "100c0ec0ccd3fd28c3f7c89bec7cb6b5575c8d96",
+  "generatedAt": "2026-08-30T20:52:56.287Z",
+  "primaryStrip": [
+    "ORDINALS",
+    "RUNES",
+    "ALKANES",
+    "STAMPS",
+    "ATOMICALS",
+    "MORE"
+  ],
   "protocols": [
     {
       "schemaVersion": "universe-explorer-protocol-v1",
@@ -389,9 +400,9 @@
       "visualToken": "protocol-op-inscriptions",
       "implementedReadOperations": [],
       "authorizedReadOperations": [],
-      "releaseStatus": "BLOCKED",
+      "releaseStatus": "VERIFIED READ ONLY",
       "indexerAuthority": "index-opinscriptions",
-      "coverage": "unknown"
+      "coverage": "complete"
     },
     {
       "schemaVersion": "universe-explorer-protocol-v1",
