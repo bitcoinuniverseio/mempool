@@ -116,6 +116,19 @@
   letter-spacing: 0.06em;
   margin: 0 0 0.5rem;
   color: var(--u-text-muted);
+
+  // A repeated link sized by its own word: a short protocol id like runes
+  // measures a half pixel under the target floor on one host's fonts and a
+  // half pixel over on another's. The floor is stated, not inherited from
+  // glyph widths.
+  @media (pointer: coarse), (max-width: 991.98px) {
+    a {
+      align-items: center;
+      display: inline-flex;
+      min-height: var(--u-touch-target);
+      min-width: var(--u-touch-target);
+    }
+  }
 }
 
 .position-list,
