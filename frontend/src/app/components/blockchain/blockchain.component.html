@@ -2,7 +2,10 @@
   <div #positionContainer class="position-container" [ngClass]="network ? network : ''" [style]="positionStyle">
     <span>
       <div class="blocks-wrapper">
-        <div class="scroll-spacer" *ngIf="minScrollWidth" [style.left]="minScrollWidth + 'px'"></div>
+        <!-- A 1px marker that gives the strip its scrollable width. It is scroll
+     machinery, not content: everything up to it is reached by dragging the
+     strip, so the clip gate must not read it as something cut off. -->
+<div class="scroll-spacer" data-clip-ok *ngIf="minScrollWidth" [style.left]="minScrollWidth + 'px'"></div>
         <app-mempool-blocks [hidden]="pageIndex > 0" [allBlocks]="scrollableMempool" (widthChange)="onMempoolWidthChange($event)"></app-mempool-blocks>
         <app-blockchain-blocks [hidden]="pageIndex > 0"></app-blockchain-blocks>
         <ng-container *ngFor="let page of pages; trackBy: trackByPageFn">
