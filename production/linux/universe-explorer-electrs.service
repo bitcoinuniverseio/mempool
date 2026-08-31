@@ -1,0 +1,54 @@
+[Unit]
+Description=Universe Explorer Bitcoin address index (mempool/electrs v3.3.0)
+Documentation=https://github.com/mempool/electrs
+After=network-online.target bitcoin.service
+Wants=bitcoin.service
+
+[Service]
+Type=simple
+User=universe-electrs
+Group=universe-electrs
+SupplementaryGroups=bitcoin
+Environment=RUST_BACKTRACE=1
+ExecStart=/opt/universe-explorer-electrs/v3.3.0/electrs \
+  --network mainnet \
+  --db-dir /data/indexers-c/universe-explorer-electrs \
+  --daemon-dir /var/lib/bitcoind \
+  --daemon-rpc-addr 127.0.0.1:8332 \
+  --http-addr 127.0.0.1:3001 \
+  --electrum-rpc-addr 127.0.0.1:50002 \
+  --monitoring-addr 127.0.0.1:4224 \
+  --lightmode \
+  --address-search \
+  -vv
+# The initial index logs a line per batch for hours, and this journal is
+# shared with every other service on the host. Four and a half hours of it
+# rotated the journal once already, taking everyone else's history with it.
+# The cap is generous enough that real errors still arrive in full and small
+# enough that a sync cannot own the journal.
+LogRateLimitIntervalSec=30s
+LogRateLimitBurst=200
+Restart=on-failure
+RestartSec=15
+TimeoutStopSec=300
+KillSignal=SIGINT
+LimitNOFILE=1048576
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+MemoryHigh=10G
+MemoryMax=14G
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+ReadWritePaths=/data/indexers-c/universe-explorer-electrs
+ReadOnlyPaths=/var/lib/bitcoind
+
+[Install]
+WantedBy=multi-user.target

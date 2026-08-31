@@ -12836,7 +12836,7 @@ export const faqData = [
     category: 'self-hosting',
     showConditions: bitcoinNetworks,
     fragment: 'address-lookup-issues',
-    title: 'Why do I get an error for certain address lookups on my Mempool instance?',
+    title: 'Why does an address page sometimes say it cannot show a balance?',
   }
 ];
 
