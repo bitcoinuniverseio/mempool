@@ -324,7 +324,13 @@
         <dl class="source-list">
           <ng-container *ngFor="let detail of vm.sourceDetails; trackBy: trackById">
             <dt>{{ detail.label }}</dt>
-            <dd><span class="source-value" [attr.title]="detail.exact">{{ detail.display }}</span></dd>
+            <dd>
+              <span class="source-value" [attr.title]="detail.exact">{{ detail.display }}</span>
+              <!-- A shortened identifier that cannot be recovered is evidence
+                   destroyed rather than filed, so the exact form travels with
+                   it for screen readers and for copying. -->
+              <span class="visually-hidden" *ngIf="detail.truncated">{{ detail.exact }}</span>
+            </dd>
           </ng-container>
         </dl>
       </ng-container>
