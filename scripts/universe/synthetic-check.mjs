@@ -101,6 +101,269 @@ async function checkCapabilities() {
 }
 
 /**
+ * The addresses this check asks about, and why each one is here.
+ *
+ * Every assertion below is about shape and identity, never about a balance.
+ * Anyone may pay any of these addresses at any time, so a check that pinned a
+ * number would start failing on somebody else's transaction and teach whoever
+ * reads the alerts to ignore them.
+ */
+const ADDRESS_SMOKE = [
+  {
+    address: '1Q2TWHE3GMdB6BZKafqwxXtWAWgFt5Jvm3',
+    label: 'p2pkh-historic',
+    // The receiving output of the first Bitcoin transaction ever sent between
+    // two people, block 170. Its history cannot be undone, so this is one of
+    // the few addresses here that is required to have any.
+    hasHistory: true,
+  },
+  {
+    address: '1PuJjnF476W3zXfVYmJfGnouzFDAXakkL4',
+    label: 'p2pkh',
+    hasHistory: true,
+  },
+  {
+    address: '33mapDgyY1XMs6wEts36p1ucR5e6irwRLv',
+    label: 'p2sh',
+    hasHistory: true,
+  },
+  {
+    address: 'bc1qntndgqfx46wks63jep34cjk3pw63es86kp45c6',
+    label: 'p2wpkh',
+    hasHistory: true,
+  },
+  {
+    address: 'bc1q5ejhdljezu47220c3rqs27aq5l0sfawcvyhqaadau7gfpeu8yassntm3wt',
+    label: 'p2wsh',
+    hasHistory: true,
+  },
+  {
+    address: 'bc1pgtdpjs0l3l54l6072f9mh962g4nu5r500rfzsv39twxlalejjrjsq6u69p',
+    label: 'taproot',
+    hasHistory: true,
+  },
+  {
+    // Four addresses above are outputs of block 900,000, one of each script
+    // type. They are here rather than hand-picked favourites because a block
+    // that is 900,000 deep is never coming back, so each of them permanently
+    // has exactly the confirmed history this check needs and no maintenance.
+    address: '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa',
+    label: 'genesis-coinbase',
+    // The most-paid address on the chain. It is here because an address with
+    // an enormous history is the case that used to be indistinguishable from
+    // a broken backend, and it must now answer like any other.
+    hasHistory: true,
+  },
+  {
+    address: 'bc1qq6hag67dl53wl99vzg42z8eyzfz2xlkvxechjp',
+    label: 'unused',
+    // An address nobody has any reason to have paid. A backend that answers
+    // "unknown" as "zero" and one that has genuinely never seen this address
+    // produce the same document, so what is checked is that the document is
+    // well formed rather than what the numbers in it are.
+    hasHistory: false,
+  },
+];
+
+/**
+ * The exact string from the production screenshot.
+ *
+ * It is not a valid address: the bech32 checksum does not verify, and Bitcoin
+ * Core rejects it. That is the whole point of keeping it. This string is what
+ * a reader gets when an address is mistyped or copied badly, and what the
+ * public site did with it was answer "405 OK: Address lookups cannot be used
+ * with bitcoind as backend" and then explain, underneath, that the address had
+ * too many transactions for the backend to handle.
+ *
+ * Three claims, none of them true. The correct answer is that the string is
+ * not an address, and that is what this holds the origin to.
+ */
+const MALFORMED_ADDRESS = 'bc1qcx70rmarfudyct7lx0ptrat2c5kgstghx2j69';
+
+/** A whole number of satoshis, and never a string that merely looks like one. */
+function isCount(value) {
+  return Number.isInteger(value) && value >= 0;
+}
+
+/**
+ * The address family, asked for the way a reader's browser asks for it.
+ *
+ * This is the blind spot that let the defect ship. Every check in this file
+ * covered charts, mining, protocols, chains and the live socket, and not one
+ * of them ever asked this origin for an address. So the deployment served a
+ * header inviting a reader to search an address, a search box that recognised
+ * one, and an address page that answered 405 under a sentence blaming the
+ * reader's own address, and every gate stayed green through all of it.
+ */
+async function checkAddressLookup(capabilities) {
+  const feature = capabilities?.features?.addressLookup;
+  if (!feature) {
+    fail('address', 'this deployment publishes no address capability at all, so nothing states whether it can serve one');
+    return;
+  }
+  if (feature.state !== 'ready') {
+    fail('address', `address lookup is ${feature.state}: ${feature.degradedReason ?? 'no reason given'}`);
+    return;
+  }
+  if (!feature.enabled || !feature.routesRegistered) {
+    fail('address', 'address lookup reports ready while saying it is not enabled or has no routes');
+    return;
+  }
+  // Ready means current, and the document has to be able to show its work.
+  if (!isCount(feature.indexedTip) || !isCount(feature.bitcoinCoreTip)) {
+    fail('address', 'address lookup reports ready without naming an indexed height and a chain height');
+    return;
+  }
+  if (isCount(feature.maxLagBlocks) && feature.lagBlocks > feature.maxLagBlocks) {
+    fail('address', `address lookup reports ready while ${feature.lagBlocks} blocks behind, past its limit of ${feature.maxLagBlocks}`);
+    return;
+  }
+  pass('address', `index at block ${feature.indexedTip} of ${feature.bitcoinCoreTip} on ${feature.backendKind}`);
+
+  for (const subject of ADDRESS_SMOKE) {
+    await checkOneAddress(subject);
+  }
+  await checkAddressPagination();
+  await checkMalformedAddressIsCalledMalformed();
+}
+
+/**
+ * A string that is not an address has to be described as a string that is not
+ * an address.
+ *
+ * This is the one from the screenshot. What must never happen again is the
+ * origin answering it with a status that the page reads as a fact about the
+ * amount of history it has, so the check is as much about what the answer is
+ * not as about what it is.
+ */
+async function checkMalformedAddressIsCalledMalformed() {
+  const { status, body, text } = await get(`/api/address/${MALFORMED_ADDRESS}`);
+  if (status === 200) {
+    fail('address', 'a string that is not an address was answered as though it were one');
+    return;
+  }
+  if (status === 413) {
+    fail('address', 'a malformed address was reported as having too much history, which is the defect this replaces');
+    return;
+  }
+  if (status === 405) {
+    fail('address', 'a malformed address answered 405, which means an address backend is still missing behind this origin');
+    return;
+  }
+  if (status < 400 || status >= 500) {
+    fail('address', `a malformed address answered HTTP ${status}, which says nothing a reader can act on`);
+    return;
+  }
+  const said = (body?.error ?? text ?? '').toLowerCase();
+  if (said.includes('too many transactions')) {
+    fail('address', 'a malformed address was explained to the reader as having too many transactions');
+    return;
+  }
+  pass('address', `a malformed address is refused with HTTP ${status} rather than blamed on its history`);
+}
+
+async function checkOneAddress({ address, label, hasHistory }) {
+  const summary = await get(`/api/address/${address}`);
+  if (summary.status !== 200) {
+    fail('address', `${label}: the summary answered HTTP ${summary.status}`);
+    return;
+  }
+  if (summary.body?.address !== address) {
+    fail('address', `${label}: the summary is about ${summary.body?.address ?? 'nothing'} rather than the address asked for`);
+    return;
+  }
+  for (const section of ['chain_stats', 'mempool_stats']) {
+    const stats = summary.body?.[section];
+    if (!stats) {
+      fail('address', `${label}: the summary has no ${section}`);
+      return;
+    }
+    for (const field of ['funded_txo_count', 'funded_txo_sum', 'spent_txo_count', 'spent_txo_sum', 'tx_count']) {
+      if (!isCount(stats[field])) {
+        // An amount that arrives as a string, a float, or a missing value is
+        // an amount this page would render wrong, and money rendered wrong is
+        // worse than money not rendered.
+        fail('address', `${label}: ${section}.${field} is ${JSON.stringify(stats[field])} rather than a whole number`);
+        return;
+      }
+    }
+  }
+  pass('address', `${label}: summary answers with whole-number amounts`);
+
+  const history = await get(`/api/address/${address}/txs`);
+  if (history.status !== 200 || !Array.isArray(history.body)) {
+    fail('address', `${label}: the first history page answered HTTP ${history.status}`);
+    return;
+  }
+  if (hasHistory && history.body.length === 0) {
+    fail('address', `${label}: the history came back empty for an address whose history cannot be undone`);
+    return;
+  }
+  for (const transaction of history.body) {
+    if (!/^[0-9a-f]{64}$/.test(transaction?.txid ?? '')) {
+      fail('address', `${label}: a history entry does not name a transaction`);
+      return;
+    }
+  }
+  pass('address', `${label}: first history page carries ${history.body.length} transactions`);
+
+  const utxos = await get(`/api/address/${address}/utxo`);
+  if (utxos.status !== 200 || !Array.isArray(utxos.body)) {
+    fail('address', `${label}: the UTXO query answered HTTP ${utxos.status}`);
+    return;
+  }
+  for (const utxo of utxos.body) {
+    if (!/^[0-9a-f]{64}$/.test(utxo?.txid ?? '') || !isCount(utxo?.value)) {
+      fail('address', `${label}: a UTXO does not name a transaction and a whole-number value`);
+      return;
+    }
+  }
+  pass('address', `${label}: UTXO query answers with ${utxos.body.length} outputs`);
+}
+
+/**
+ * The page after the first, on an address with enough history to have one.
+ *
+ * The browser must never be handed an address's whole confirmed history in a
+ * single response, so the contract that matters is the cursor: page two has to
+ * start after page one ended, and must not repeat what page one already
+ * showed. A cursor that is silently ignored looks like a working page and
+ * quietly serves the same transactions forever.
+ */
+async function checkAddressPagination() {
+  // A burn address with far more history than one page can hold. Nobody
+  // controls it, so its history only ever grows and never reorganises out
+  // from under this check.
+  const address = '1BitcoinEaterAddressDontSendf59kuE';
+  const first = await get(`/api/address/${address}/txs`);
+  if (first.status !== 200 || !Array.isArray(first.body)) {
+    fail('address', `pagination: the first page answered HTTP ${first.status}`);
+    return;
+  }
+  if (first.body.length === 0) {
+    notes.push('address: pagination: the sample address has no history yet, skipping the cursor check');
+    return;
+  }
+  if (first.body.length > 100) {
+    fail('address', `pagination: the first page returned ${first.body.length} transactions, which is not a bounded page`);
+    return;
+  }
+  const last = first.body[first.body.length - 1].txid;
+  const second = await get(`/api/address/${address}/txs?after_txid=${last}`);
+  if (second.status !== 200 || !Array.isArray(second.body)) {
+    fail('address', `pagination: the second page answered HTTP ${second.status}`);
+    return;
+  }
+  const firstPage = new Set(first.body.map((transaction) => transaction.txid));
+  const repeated = second.body.filter((transaction) => firstPage.has(transaction.txid));
+  if (repeated.length > 0) {
+    fail('address', `pagination: the cursor was ignored and ${repeated.length} transactions came back twice`);
+    return;
+  }
+  pass('address', `pagination: page one holds ${first.body.length} and page two starts after it`);
+}
+
+/**
  * Every route a page depends on must exist. A 404 here is a deployment
  * failure, never an empty state.
  */
@@ -676,6 +939,7 @@ async function main() {
     checkChainReleaseIdentity(envelopes);
   }
   await checkLiveSocketAcceptsABrowser();
+  await checkAddressLookup(capabilities);
 
   if (capabilities?.features?.statistics?.enabled) {
     await checkRoutesExist('charts', [

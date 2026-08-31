@@ -124,6 +124,18 @@ test('the lock accepts the roster it was rendered from', () => {
   assert.deepEqual(checkRoster(pinned, renderRoster(pinned)).problems, []);
 });
 
+// This tree is checked out with CRLF on Windows. JavaScript counts a carriage
+// return as a line terminator, so `.` will not cross one and `$` cannot assert
+// an end after one: the comment stripper matched nothing and the gate reported
+// all three comment lines of the lock file as protocols that had disappeared.
+// Linux CI never saw it, because Linux checkouts are LF.
+test('the lock reads the same whichever line ending it was checked out with', () => {
+  const lf = renderRoster(pinned);
+  const crlf = lf.split('\n').join('\r\n');
+  assert.deepEqual(checkRoster(pinned, crlf).problems, []);
+  assert.deepEqual(checkRoster(pinned, lf).problems, []);
+});
+
 test('this repository names no protocol the registry does not carry', async () => {
   const sources = {
     protocolCopy: await readFile(PATHS.protocolCopy, 'utf8'),
