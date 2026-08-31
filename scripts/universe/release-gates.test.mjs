@@ -26,7 +26,7 @@ import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const script = readFileSync(join(here, 'release.sh'), 'utf8');
+const script = readFileSync(join(here, 'release.sh'), 'utf8').replaceAll('\r\n', '\n');
 const workdir = mkdtempSync(join(tmpdir(), 'release-gates-'));
 
 function bash(source, env = {}) {
