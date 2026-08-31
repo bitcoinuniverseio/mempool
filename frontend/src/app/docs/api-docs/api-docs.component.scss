@@ -407,11 +407,14 @@ h3 {
     transition: 0.5s opacity ease;
   }
 
-  // The endpoint line is one unbroken string: method, origin, path. At 320px
-  // the merkle proof one runs 16px past the container, and the container's
-  // overflow: hidden is the drawer mechanism, so the tail was simply gone.
-  // anywhere lets the URL break at any character, and only when it must.
-  .endpoint-container .endpoint-content a {
+  // An endpoint entry is full of strings with no spaces in them: the request
+  // line, response fields, paths in the description. At 320px the merkle
+  // proof one ran 16px past a container whose overflow: hidden is the drawer
+  // mechanism, so the tail was simply gone, and only WebKit's font metrics
+  // pushed it over. overflow-wrap inherits, so saying it once on the
+  // container gives every descendant a break opportunity, and only when a
+  // token is longer than the line it is on.
+  .endpoint-container {
     overflow-wrap: anywhere;
   }
 
