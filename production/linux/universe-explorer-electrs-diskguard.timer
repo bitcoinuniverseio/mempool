@@ -1,0 +1,10 @@
+[Unit]
+Description=Watch free space on the volume holding the Universe Explorer address index
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=5min
+AccuracySec=30s
+
+[Install]
+WantedBy=timers.target
