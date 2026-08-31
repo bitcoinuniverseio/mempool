@@ -136,22 +136,42 @@ jobs:
       - name: Repair a half-installed Rust toolchain before using it
         shell: bash
         run: |
-          export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
-          if ! command -v rustup >/dev/null 2>&1; then
-            echo "no rustup on this runner; cargo comes from somewhere else"
-            cargo --version || true
-            exit 0
+          CARGO_BIN="${CARGO_HOME:-$HOME/.cargo}/bin"
+          export PATH="$CARGO_BIN:$PATH"
+
+          if command -v rustup >/dev/null 2>&1; then
+            if rustup run stable rustc --version >/dev/null 2>&1 \
+               && cargo metadata --format-version 1 \
+                  --manifest-path rust/gbt/Cargo.toml >/dev/null 2>&1; then
+              echo "toolchain is usable"
+            else
+              echo "toolchain cannot read the manifest; reinstalling"
+              rustup toolchain uninstall stable || true
+              rustup toolchain install stable --profile minimal
+              rustup default stable
+            fi
+          else
+            echo "no rustup on this runner"
           fi
-          if rustup run stable rustc --version >/dev/null 2>&1 \
-             && cargo --version >/dev/null 2>&1; then
-            echo "stable toolchain is usable"
-            exit 0
+
+          # Put the repaired toolchain ahead of anything else for the steps
+          # that follow. A step's `export PATH` dies with the step, so without
+          # this the repair above fixes a cargo that `npm ci` never calls: the
+          # first attempt reinstalled cleanly, reported cargo 1.98.0, and the
+          # next step still failed on `cargo metadata` because it was reaching
+          # a different one.
+          if [ -x "$CARGO_BIN/cargo" ]; then
+            echo "$CARGO_BIN" >> "$GITHUB_PATH"
           fi
-          echo "stable toolchain is present but not usable; reinstalling"
-          rustup toolchain uninstall stable || true
-          rustup toolchain install stable --profile minimal
-          rustup default stable
-          cargo --version
+
+          echo "cargo in use: $(command -v cargo || echo none)"
+          cargo --version || true
+          # Prove it can read the manifest the build depends on, here, where
+          # the failure is legible, rather than inside a napi build script that
+          # reports it as "Could not parse the Cargo.toml".
+          cargo metadata --format-version 1 \
+            --manifest-path rust/gbt/Cargo.toml >/dev/null
+          echo "cargo can read rust/gbt/Cargo.toml"
 
       - name: Install (builds rust-gbt)
         working-directory: backend
