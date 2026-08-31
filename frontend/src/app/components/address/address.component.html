@@ -245,19 +245,67 @@
 
   </ng-template>
 
+  <!--
+    One state, one sentence.
+
+    This used to be a single message for 405, 413 and 504 together, telling
+    every reader that their address had too many transactions for the backend.
+    Only one of those three was ever about the address. The other two were an
+    address index that was not there and a request that ran out of time, and
+    both were reported to the reader as a fact about their own money.
+  -->
   <ng-template [ngIf]="error">
     <br>
-      <div class="text-center">
-        <span i18n="address.error.loading-address-data">Error loading address data.</span>
-        <br>
-        <i class="small">({{ error | httpErrorMsg }})</i>
-        <br>
-        @if (!officialMempoolSpace && (error.status === 413 || error.status === 405 || error.status === 504)) {
-        <ng-container i18n="Electrum server limit exceeded error">
-          <br>
-          <i>There are too many transactions on this address, more than the backend can handle. See more on <a href="/docs/faq#address-lookup-issues">setting up a stronger backend</a>.</i>
-        </ng-container>
+      <div class="text-center address-error">
+        @switch (addressFailure) {
+          @case ('backend-syncing') {
+            <span i18n="address.error.index-syncing">Address history is still being indexed.</span>
+            <br>
+            <!--
+              Both heights, or neither. A null height stays absent rather than
+              rendering as a zero, because "indexed through block 0" is a
+              claim, and it is a false one.
+            -->
+            @if (addressIndex && addressIndex.indexedTip !== null && addressIndex.bitcoinCoreTip !== null) {
+              <i class="small" i18n="address.error.index-progress">Indexed through block {{ addressIndex.indexedTip }} of {{ addressIndex.bitcoinCoreTip }}.</i>
+            } @else {
+              <i class="small" i18n="address.error.index-syncing-detail">This page will work as soon as the index catches up with the chain.</i>
+            }
+          }
+          @case ('backend-unavailable') {
+            <span i18n="address.error.index-unavailable">Address history is temporarily unavailable.</span>
+            <br>
+            <i class="small" i18n="address.error.index-unavailable-detail">The address index is not ready. Nothing is wrong with this address.</i>
+          }
+          @case ('history-too-large') {
+            <span i18n="address.error.history-too-large">This address has more history than a single lookup can return.</span>
+            <br>
+            <i class="small"><ng-container i18n="address.error.history-too-large-detail">Its balance and history are larger than the configured lookup limit.</ng-container> <a href="/docs/faq#address-lookup-issues" i18n="address.error.history-too-large-link">Read more about address history limits</a>.</i>
+          }
+          @case ('timeout') {
+            <span i18n="address.error.timeout">The address index did not answer in time.</span>
+            <br>
+            <i class="small" i18n="address.error.timeout-detail">Try again in a moment.</i>
+          }
+          @case ('invalid-address') {
+            <span i18n="address.error.invalid">This is not a valid Bitcoin address.</span>
+            <br>
+            <i class="small" i18n="address.error.invalid-detail">Check the address and try again.</i>
+          }
+          @case ('not-found') {
+            <span i18n="address.error.not-found">Nothing was found at this address.</span>
+          }
+          @default {
+            <span i18n="address.error.loading-address-data">Error loading address data.</span>
+          }
         }
+        <br>
+        <!--
+          The technical detail, and only the technical detail. The sentence
+          above is the explanation; this line exists so a reader can quote
+          something useful when reporting a problem.
+        -->
+        <i class="small text-muted">({{ error | httpErrorMsg }})</i>
       </div>
   </ng-template>
 

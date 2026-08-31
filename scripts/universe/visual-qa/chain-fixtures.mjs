@@ -202,15 +202,37 @@ function zcashTransaction() {
     block: null,
     confirmationsAtomic: '0',
     sizeBytesAtomic: '2104',
-    // Exactly what production sends for a pending shielded transaction: no fee
-    // amount at all, because it cannot be read from the transparent side, and
-    // the ZIP-317 cost instead.
+    // Exactly what production sends for a pending shielded transaction. The
+    // fee is public and is reported, cross-checked between the node's own
+    // pending set and the transparent value pool arithmetic, alongside the
+    // ZIP-317 rule the transaction is read under.
     fee: {
-      amountAtomic: null,
+      amountAtomic: '20000',
       rateDecimal: null,
       rateUnit: 'zatoshi/logical-action',
       logicalActionsAtomic: '4',
       model: 'ZIP-317-revision-1',
+      evidence: {
+        source: 'node-and-value-pool',
+        nodeAmountAtomic: '20000',
+        valuePoolAmountAtomic: '20000',
+        unavailableReason: null,
+      },
+      rule: {
+        name: 'ZIP-317-revision-1',
+        revision: '1',
+        supported: true,
+        branchId: '37a5165b',
+        upgradeName: 'NU6.3',
+        activationBasis: 'next-block',
+        activationHeightAtomic: '3428143',
+        marginalFeeAtomic: '5000',
+        graceActionsAtomic: '2',
+        logicalActionsAtomic: '4',
+        conventionalFeeAtomic: '20000',
+        unsupportedReason: null,
+        evidenceSource: 'zebra:getblockchaininfo:upgrades',
+      },
     },
     conflicts: [],
     replacement: null,
@@ -756,10 +778,9 @@ export const chainFixtures = {
     ],
   },
 
-  // Zcash reports no fee amount on a pending transaction, because a shielded
-  // transaction's fee cannot be read from its transparent side. It reports
-  // ZIP-317 logical actions instead, and the page has to show that rather than
-  // a column of "not reported".
+  // Zcash reports the fee a pending transaction pays whatever its shielded
+  // structure, together with the ZIP-317 logical actions that fee is measured
+  // against and the rule in force. The page shows both.
   '/api/v1/zcash/mempool': {
     snapshot: {
       chain: 'zcash',
@@ -1055,6 +1076,10 @@ function miningSummaryFixture(chain) {
         subsidyAtomic: '1000000000000',
         meanRewardAtomic: '1002481202210',
         meanFeesAtomic: '2481202210',
+        // Every Dogecoin coinbase is transparent, so the window and the two
+        // denominators agree and the page states the window alone.
+        rewardBlocksAtomic: '1008',
+        feeBlocksAtomic: '1008',
         mergedMining: { supported: true, noticeId: 'dogecoin-auxpow' },
         observedAt,
       }
@@ -1073,6 +1098,12 @@ function miningSummaryFixture(chain) {
         subsidyAtomic: '156250000',
         meanRewardAtomic: '156329100',
         meanFeesAtomic: '79100',
+        // The production reading: about three percent of a Zcash window pays
+        // a shielded coinbase, so neither figure can be derived from it and
+        // the means are over the rest. This is the state that makes the page
+        // say which blocks it measured.
+        rewardBlocksAtomic: '931',
+        feeBlocksAtomic: '931',
         mergedMining: { supported: false, noticeId: null },
         observedAt,
       };

@@ -466,6 +466,17 @@ export interface MiningSummaryView {
   subsidyAtomic: string | null;
   meanRewardAtomic: string | null;
   meanFeesAtomic: string | null;
+  /**
+   * Blocks in the window that stated a reward, and that stated fees.
+   *
+   * These are the denominators of the two means, and they are not the window:
+   * a block whose reward cannot be derived from public data is left out of the
+   * mean rather than counted as zero. Optional because an overlay released
+   * before they existed sends neither, and the page has to stay correct
+   * against one that does.
+   */
+  rewardBlocksAtomic?: string | null;
+  feeBlocksAtomic?: string | null;
   mergedMining: {
     supported: boolean;
     noticeId: string | null;

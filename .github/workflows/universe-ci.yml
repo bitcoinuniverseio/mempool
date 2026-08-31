@@ -87,6 +87,14 @@ jobs:
       - name: The gateway bridges an upstream restart rather than failing
         run: node --test scripts/universe/gateway-restart.test.mjs
 
+      # The release gates are shell, and a shell script that has never been
+      # parsed is a shell script that fails at three in the morning.
+      - name: The release script parses
+        run: bash -n scripts/universe/release.sh
+
+      - name: The production synthetic check parses
+        run: node --check scripts/universe/synthetic-check.mjs
+
   backend:
     name: Backend build and test
     runs-on: [self-hosted, linux-ultra]
@@ -195,6 +203,16 @@ jobs:
         working-directory: scripts/universe/visual-qa
         run: node --test chain-page-audit.test.mjs
 
+      # The address page gate, held to the page that actually shipped: a 405
+      # rendered beside the word OK, under a sentence telling the reader their
+      # own address had too many transactions. Like the chain gate above, it
+      # runs against the live origin, so nothing else in this job would ever
+      # exercise it, and a gate that has only ever passed has not been shown
+      # to fail.
+      - name: The address page gate fires on the page that shipped
+        working-directory: scripts/universe/visual-qa
+        run: node --test address-page-audit.test.mjs
+
       # Structural facts of the multichain parity release: navigation not
       # gated back to Bitcoin, the route registry whole, the dashboard
       # requesting real data, cubes carrying heights, chain-native units.
@@ -246,6 +264,14 @@ jobs:
         working-directory: scripts/universe/visual-qa
         run: node modes-check.mjs --base=http://127.0.0.1:$GATEWAY_PORT
 
+      # The shards take this instead of building their own copy. See the note
+      # on the `visual` job below for why that matters.
+      - name: Keep the build for the visual shards
+        uses: actions/cache/save@v4
+        with:
+          path: frontend/dist
+          key: universe-dist-${{ github.sha }}
+
       # Kept when there is something to look at, which is when a gate failed.
       #
       # A green deep pass is five hundred screenshots nobody opens, and
@@ -284,6 +310,21 @@ jobs:
   #                              plus the chain failure states, 3m27s
   visual:
     name: Visual matrix (${{ matrix.shard }})
+    # Waits for the frontend job and takes its build rather than making a
+    # fourth one.
+    #
+    # When these shards each built their own copy, a mempool run started five
+    # Angular production builds within ninety seconds, and the fleet runs more
+    # than one runner per host. Run 33335430574 is what that looks like: the
+    # three jobs that started at 21:48 passed, and every build that started at
+    # 21:52 was killed with exit code 137. Out of memory, on a change that
+    # touched two script files.
+    #
+    # Sharing one build costs the shards a twenty minute wait and removes
+    # three concurrent builds from every run. The cache is keyed by commit, so
+    # a shard can only ever pick up the build made from its own source, and a
+    # miss falls back to building rather than failing.
+    needs: frontend
     runs-on: [self-hosted, linux-ultra]
     timeout-minutes: 60
     strategy:
@@ -312,13 +353,23 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
-      - name: Install
-        working-directory: frontend
-        run: npm ci
+      - name: Take the build the frontend job made
+        id: dist
+        uses: actions/cache/restore@v4
+        with:
+          path: frontend/dist
+          key: universe-dist-${{ github.sha }}
 
-      - name: Production build
+      # A miss is survivable, not fatal: the shard builds what it needs. It
+      # costs the memory this change exists to save, so it should be rare, and
+      # it is loud in the log when it happens.
+      - name: Build it here if the cache did not have it
+        if: steps.dist.outputs.cache-hit != 'true'
         working-directory: frontend
-        run: npm run build:universe
+        run: |
+          echo "no build cached for ${{ github.sha }}; building one here"
+          npm ci
+          npm run build:universe
 
       - name: Install the visual QA harness
         working-directory: scripts/universe/visual-qa
@@ -331,6 +382,8 @@ jobs:
       # refuses to continue unless the process answering is the one it started.
       - name: Serve the built frontend
         run: |
+          test -d frontend/dist/mempool/browser \
+            || { echo "no built frontend to serve"; exit 1; }
           GATEWAY_PORT=$(node -e "const s=require('net').createServer();s.listen(0,'127.0.0.1',()=>{console.log(s.address().port);s.close()})")
           echo "GATEWAY_PORT=$GATEWAY_PORT" >> "$GITHUB_ENV"
           UNIVERSE_GATEWAY_PORT=$GATEWAY_PORT UNIVERSE_GATEWAY_ROOT=frontend/dist/mempool/browser node scripts/universe/gateway.mjs &
@@ -374,6 +427,16 @@ jobs:
       - name: Keep the contrast report and the route screenshots
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        # Diagnostic only, and never fatal. The account hit its Actions storage
+        # quota and every browser job began reporting failure with "No mobile
+        # failures" printed directly above the error. `if: failure()` above
+        # keeps a green run from attempting the upload at all; this covers the
+        # rest, including anyone who changes that back to `always()`. The gate
+        # that decides this job has already run either way, so a store that
+        # will not take a screenshot can neither turn a green gate red nor
+        # hide a red one. The release artifact upload is deliberately not
+        # marked this way, because there the upload is the product.
+        continue-on-error: true
         with:
           name: universe-visual-qa-${{ matrix.shard }}
           path: |
@@ -400,6 +463,19 @@ jobs:
   # Measured at about nine minutes, of which six are the build.
   mobile:
     name: Mobile and adaptive layout
+    # Takes the frontend job's build, for the same reason the visual shards do.
+    #
+    # The comment above says this job builds its own copy so the two gates
+    # cannot make each other fail or wait. That was written when a run made two
+    # builds. It stopped being free: with the fleet running more than one
+    # runner per host, a second concurrent Angular build is enough to have a
+    # runner killed mid-step, and run 33342564898 lost this job to exactly that
+    # with only one other run in flight.
+    #
+    # Waiting costs nothing here. The shards already gate on the frontend job,
+    # so the run is as long as the longest shard either way, and a run now
+    # makes exactly one build.
+    needs: frontend
     runs-on: [self-hosted, linux-ultra]
     timeout-minutes: 45
     steps:
@@ -413,13 +489,22 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
-      - name: Install
-        working-directory: frontend
-        run: npm ci
+      - name: Take the build the frontend job made
+        id: dist
+        uses: actions/cache/restore@v4
+        with:
+          path: frontend/dist
+          key: universe-dist-${{ github.sha }}
 
-      - name: Production build
+      # Survivable, not fatal, and loud: a miss pays the memory this change
+      # exists to save.
+      - name: Build it here if the cache did not have it
+        if: steps.dist.outputs.cache-hit != 'true'
         working-directory: frontend
-        run: npm run build:universe
+        run: |
+          echo "no build cached for ${{ github.sha }}; building one here"
+          npm ci
+          npm run build:universe
 
       - name: Install the visual QA harness
         working-directory: scripts/universe/visual-qa
@@ -471,6 +556,9 @@ jobs:
       - name: Keep the mobile report
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        # Diagnostic only: an artifact store that will not take a screenshot
+        # must not turn a green gate red. See the note in the first such step.
+        continue-on-error: true
         with:
           if-no-files-found: ignore
           name: universe-mobile-qa
@@ -582,6 +670,9 @@ jobs:
       - name: Keep the engine reports
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        # Diagnostic only: an artifact store that will not take a screenshot
+        # must not turn a green gate red. See the note in the first such step.
+        continue-on-error: true
         with:
           if-no-files-found: ignore
           name: universe-mobile-engines

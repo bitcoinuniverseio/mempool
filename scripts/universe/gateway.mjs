@@ -9,7 +9,8 @@
  *   /api/v1/bitcoin/*   ->  the protocol overlay
  *   /api/v1/dogecoin/*  ->  the protocol overlay
  *   /api/v1/zcash/*     ->  the protocol overlay
- *   /api/*              ->  the explorer backend, including WebSocket upgrades
+ *   /api/v1/*           ->  the explorer backend, including WebSocket upgrades
+ *   /api/*              ->  the first-party Esplora index, with /api stripped
  *   everything else     ->  the built frontend, with SPA fallback
  *
  * It exists so the public origin has a single upstream to point at, and so the
@@ -22,6 +23,7 @@
  *   UNIVERSE_GATEWAY_PORT     default 8099
  *   UNIVERSE_GATEWAY_BACKEND  default http://127.0.0.1:8996
  *   UNIVERSE_GATEWAY_OVERLAY  default http://127.0.0.1:3400
+ *   UNIVERSE_GATEWAY_ESPLORA  unset; the local mempool/electrs Esplora API
  *   UNIVERSE_GATEWAY_ROOT     default ./frontend/dist/mempool/browser
  */
 
@@ -35,6 +37,20 @@ const HOST = process.env.UNIVERSE_GATEWAY_HOST || '127.0.0.1';
 const PORT = Number(process.env.UNIVERSE_GATEWAY_PORT || 8099);
 const BACKEND = new URL(process.env.UNIVERSE_GATEWAY_BACKEND || 'http://127.0.0.1:8996');
 const OVERLAY = new URL(process.env.UNIVERSE_GATEWAY_OVERLAY || 'http://127.0.0.1:3400');
+/**
+ * The first-party Esplora index, when this deployment runs one.
+ *
+ * Unset means the explorer backend still owns the whole `/api/` family, which
+ * is what a deployment reading Bitcoin Core alone does. Set means
+ * `MEMPOOL.BACKEND` is `esplora`, and the backend then deliberately does not
+ * mount the address, transaction, block or mempool routes at all: it expects
+ * the edge to send them to the index instead. Getting that split wrong is not
+ * a subtle failure, it is every one of those paths answering 404 while the
+ * site still loads.
+ */
+const ESPLORA = process.env.UNIVERSE_GATEWAY_ESPLORA
+  ? new URL(process.env.UNIVERSE_GATEWAY_ESPLORA)
+  : null;
 const ROOT = resolve(process.env.UNIVERSE_GATEWAY_ROOT || 'frontend/dist/mempool/browser');
 
 /** Upstream request budget. Long enough for a cold index read, short enough to fail fast. */
@@ -193,10 +209,24 @@ const OVERLAY_CHAIN_PREFIXES = [
 /**
  * Which upstream serves a path, and what path it should see.
  *
- * The explorer backend registers every route under its own `/api/v1/` prefix,
- * while clients and the Esplora-compatible surface address them as `/api/`.
- * Upstream resolves that in nginx; this does the same rewrite, because getting
- * it wrong silently 404s the entire chain API while the site still loads.
+ * Three upstreams share one `/api` tree and each owns a disjoint part of it.
+ *
+ * The overlay owns the Universe and chain families. It registers them under
+ * the same `/api/v1/` prefix the explorer backend uses, so they are named
+ * explicitly and everything else under `/api/v1/` belongs to the backend.
+ *
+ * The rest of `/api/` is the Esplora-compatible surface. Where a first-party
+ * index is configured it owns that surface outright, and the path reaches it
+ * with `/api` stripped, because electrs serves its REST API at the root of its
+ * own listener rather than under a prefix. That is the same rewrite upstream
+ * performs in nginx (`rewrite ^/api/(.*) /$1 break`), and it is the routing the
+ * explorer backend assumes when `MEMPOOL.BACKEND` is `esplora`: in that mode it
+ * does not mount the address, transaction, block or mempool routes at all.
+ *
+ * With no index configured the surface stays with the backend, rewritten onto
+ * its own `/api/v1/` prefix. That is a deployment reading Bitcoin Core alone,
+ * where the address family answers that it cannot be served rather than not
+ * existing.
  */
 export function routeFor(pathname, originalUrl) {
   if (pathname === '/api/v1/universe' || pathname.startsWith('/api/v1/universe/')) {
@@ -210,8 +240,17 @@ export function routeFor(pathname, originalUrl) {
   if (pathname === '/api/v1' || pathname.startsWith('/api/v1/')) {
     return { upstream: BACKEND, path: originalUrl };
   }
+  // The index keeps administrative routes under `/internal/`. They are for the
+  // operator of the index, never for a reader, and upstream refuses them at
+  // the edge for the same reason. Refusing here rather than proxying keeps
+  // them off the public origin whatever the index decides to expose.
+  if (ESPLORA && (pathname === '/api/internal' || pathname.startsWith('/api/internal/'))) {
+    return { upstream: null, status: 404 };
+  }
   if (pathname.startsWith('/api/')) {
-    return { upstream: BACKEND, path: `/api/v1/${originalUrl.slice('/api/'.length)}` };
+    return ESPLORA
+      ? { upstream: ESPLORA, path: `/${originalUrl.slice('/api/'.length)}` }
+      : { upstream: BACKEND, path: `/api/v1/${originalUrl.slice('/api/'.length)}` };
   }
   if (pathname === '/api') {
     return { upstream: BACKEND, path: '/api/v1/' };
@@ -404,6 +443,17 @@ const server = http.createServer((request, response) => {
 
   const route = routeFor(pathname, request.url);
   if (route) {
+    // A route with no upstream is one this gateway refuses outright. It is
+    // answered as absent rather than as forbidden, because saying "forbidden"
+    // confirms the path exists behind here.
+    if (!route.upstream) {
+      response.writeHead(route.status || 404, {
+        'content-type': 'application/json; charset=utf-8',
+        'cache-control': 'no-store',
+      });
+      response.end(JSON.stringify({ error: 'not-found' }));
+      return;
+    }
     proxy(request, response, route);
     return;
   }
@@ -534,6 +584,8 @@ if (process.env.UNIVERSE_GATEWAY_NO_LISTEN !== '1') {
       `  overlay  ${OVERLAY.origin}
 ` +
       `  backend  ${BACKEND.origin}
+` +
+      `  esplora  ${ESPLORA ? ESPLORA.origin : 'not configured, the backend owns /api/'}
 ` +
       `  static   ${ROOT}
 `,
