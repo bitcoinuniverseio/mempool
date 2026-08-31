@@ -116,3 +116,18 @@
   text-decoration: none;
   color: inherit;
 }
+
+
+// The mining dashboard's own links.
+//
+// A card's heading doubles as the link into that card's full page, and each
+// card ends with a "View more" out of it. Both are the point of the card and
+// both came out around 21 to 24 pixels tall on a phone.
+@media (pointer: coarse), (max-width: 991.98px) {
+  .title-link,
+  .card-body .mt-1 > a {
+    align-items: center;
+    display: flex;
+    min-height: var(--u-touch-target);
+  }
+}

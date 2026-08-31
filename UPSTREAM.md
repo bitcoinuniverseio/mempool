@@ -60,19 +60,22 @@ inferred from upstream's commit list:
   `sockjs`, `uuid` and `@angular-devkit/build-webpack` are all compile-time or
   dev-server packages. They are worth clearing and they are not shipped code.
 
-### The one that ships
+### The one that shipped, now resolved
 
-`echarts` 5.4.3 carries
+`echarts` 5.4.3 carried
 [GHSA-fgmj-fm8m-jvvx](https://github.com/advisories/GHSA-fgmj-fm8m-jvvx), a
 moderate cross-site scripting advisory, CVSS 6.1. echarts is a runtime
 dependency: it draws every chart in the explorer, upstream's and Universe's.
 
-The advisory is fixed in **echarts 6.1.0**, a major version. Upstream is still
-on 5.x, so there is no upstream change to take here. Moving a charting library
-across a major version touches every chart on every chain and needs the full
-visual matrix behind it; doing that as an unreviewed step inside a release
-would be the wrong trade. It is recorded here with its exact identity so it is
-tracked rather than forgotten, and it is the next dependency task.
+Resolved on 2026-08-31 by moving to **echarts 6.1.0** with zrender 6.1.0.
+`ngx-echarts` stays at 20.0.2, whose peer range (`echarts >=5.0.0`,
+`@angular/core >=20.0.0`) covers the new major on the Angular 20 line this
+fork runs. The chart registration in `frontend/src/app/graphs/echarts.ts`
+uses the tree-shakeable `echarts/core` entry points, which are unchanged
+across the major. The full unit suite and the production build pass on the
+new version, and `npm audit` no longer reports any advisory against a
+package that reaches a browser. Upstream remains on 5.x; on future syncs
+its `~5.4.0` pin loses to this one on conflict.
 
 ### Mirror policy
 

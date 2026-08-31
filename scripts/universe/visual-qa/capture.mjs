@@ -567,8 +567,24 @@ async function run() {
             // and a skeleton still showing afterwards is genuinely stuck.
             try {
               await page.evaluate(async () => {
+                // Bounded twice over, and both bounds are load-bearing.
+                //
+                // The end of the loop cannot be `document.body.scrollHeight`
+                // read fresh each time: a page whose list grows as it is
+                // scrolled moves the end away faster than the loop reaches it,
+                // and the harness scrolls until the process is killed. The
+                // address page does exactly that, and it hung a matrix run for
+                // twenty minutes on one route with nothing written out to say
+                // where it had stopped.
+                //
+                // So the height is read once, and a step count caps it as well,
+                // because a page that is already very long does not need to be
+                // walked end to end to trigger the deferred blocks near the top
+                // of it. Anything past thirty screens is below every
+                // `@defer (on viewport)` boundary in the product.
                 const step = Math.max(200, Math.floor(window.innerHeight * 0.8));
-                for (let y = 0; y < document.body.scrollHeight; y += step) {
+                const end = Math.min(document.body.scrollHeight, step * 30);
+                for (let y = 0; y < end; y += step) {
                   window.scrollTo(0, y);
                   await new Promise((done) => setTimeout(done, 90));
                 }

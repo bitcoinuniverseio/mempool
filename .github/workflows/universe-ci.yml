@@ -114,6 +114,65 @@ jobs:
           cache: npm
           cache-dependency-path: backend/package-lock.json
 
+      # `npm ci` here builds rust-gbt, so it needs a Rust toolchain that can
+      # actually compile. A self-hosted runner can be left holding a toolchain
+      # directory with no usable rustc in it, and cargo then fails in a way
+      # that reads like a source problem:
+      #
+      #   Type Error: Could not parse the Cargo.toml:
+      #   Error: Command failed: cargo metadata --format-version 1
+      #
+      # There is nothing wrong with that Cargo.toml. Measured on 2026-08-31,
+      # the same commit built on universe-runner-02 and universe-runner-04 and
+      # failed on universe-runner-05, universe-linux-ultra-02 and
+      # universe-linux-ultra-03, which is the shape that gets mistaken for
+      # flakiness and retried until it lands somewhere healthy.
+      #
+      # Prove the toolchain compiles before anything depends on it, and
+      # reinstall it in place when it does not. A healthy runner pays one
+      # subsecond check; a broken one repairs itself instead of failing every
+      # job routed to it. Same guard as
+      # bitcoinuniverseio/index-zcash-metaprotocols.
+      - name: Repair a half-installed Rust toolchain before using it
+        shell: bash
+        run: |
+          CARGO_BIN="${CARGO_HOME:-$HOME/.cargo}/bin"
+          export PATH="$CARGO_BIN:$PATH"
+
+          if command -v rustup >/dev/null 2>&1; then
+            if rustup run stable rustc --version >/dev/null 2>&1 \
+               && cargo metadata --format-version 1 \
+                  --manifest-path rust/gbt/Cargo.toml >/dev/null 2>&1; then
+              echo "toolchain is usable"
+            else
+              echo "toolchain cannot read the manifest; reinstalling"
+              rustup toolchain uninstall stable || true
+              rustup toolchain install stable --profile minimal
+              rustup default stable
+            fi
+          else
+            echo "no rustup on this runner"
+          fi
+
+          # Put the repaired toolchain ahead of anything else for the steps
+          # that follow. A step's `export PATH` dies with the step, so without
+          # this the repair above fixes a cargo that `npm ci` never calls: the
+          # first attempt reinstalled cleanly, reported cargo 1.98.0, and the
+          # next step still failed on `cargo metadata` because it was reaching
+          # a different one.
+          if [ -x "$CARGO_BIN/cargo" ]; then
+            echo "$CARGO_BIN" >> "$GITHUB_PATH"
+          fi
+
+          echo "cargo in use: $(command -v cargo || echo none)"
+          cargo --version || true
+          # Prove it can read the manifest the build depends on, here, where
+          # the failure is legible, rather than inside a napi build script that
+          # reports it as "Could not parse the Cargo.toml".
+          cargo metadata --format-version 1 \
+            --manifest-path rust/gbt/Cargo.toml >/dev/null
+          echo "cargo can read rust/gbt/Cargo.toml"
+
       - name: Install (builds rust-gbt)
         working-directory: backend
         run: npm ci
@@ -141,7 +200,15 @@ jobs:
 
   frontend:
     name: Frontend build
-    runs-on: [self-hosted, linux-ultra]
+    # universe-linux-ultra, not linux-ultra: only the six PowerVPS runners
+    # carry the narrower label, and every job that measures pixels in a
+    # browser has to run on hosts with one font stack. The broader label
+    # spread to the OVH runners, whose fonts size a content-width link a half
+    # pixel differently, and the same commit then passes or fails the target
+    # floor depending on which machine measured it. The mobile and visual
+    # jobs below are pinned for the same reason; the backend job is not,
+    # because nothing it runs measures a glyph.
+    runs-on: [self-hosted, universe-linux-ultra]
     # This builds, gates the bundle, and walks every route once at a phone and
     # a desktop width. The deep pass that used to follow it now runs beside it,
     # sharded, because it stopped fitting: 71 minutes of a 100 minute cap on
@@ -325,7 +392,7 @@ jobs:
     # a shard can only ever pick up the build made from its own source, and a
     # miss falls back to building rather than failing.
     needs: frontend
-    runs-on: [self-hosted, linux-ultra]
+    runs-on: [self-hosted, universe-linux-ultra]
     timeout-minutes: 60
     strategy:
       # One shard failing says nothing about the others, and finding out that
@@ -476,7 +543,7 @@ jobs:
     # so the run is as long as the longest shard either way, and a run now
     # makes exactly one build.
     needs: frontend
-    runs-on: [self-hosted, linux-ultra]
+    runs-on: [self-hosted, universe-linux-ultra]
     timeout-minutes: 45
     steps:
       - name: Checkout
@@ -526,11 +593,17 @@ jobs:
           kill -0 "$GATEWAY_PID"
           curl -fsS "http://127.0.0.1:$GATEWAY_PORT/__gateway/health"
 
-      # Eleven routes across seven window sizes, with a coarse pointer, a
-      # software keyboard, a display cutout and a rotation. Seventy-seven page
-      # loads, and every one of them is measured about twelve different ways,
-      # which is why this is cheap: the assertions are free and only the page
+      # Every route, with a coarse pointer, a software keyboard, a display
+      # cutout and a rotation. Each one is measured at 320, at 390 and in
+      # landscape, and the fifteen that are one of each thing the product is
+      # made of take the other four windows as well. About two hundred page
+      # loads, and every one of them is measured a dozen different ways, which
+      # is why this stays cheap: the assertions are free and only the page
       # loads cost anything.
+      #
+      # It used to walk a chosen fifteen routes. Running the same checks over
+      # the rest found thirty-six failures on the first pass, none of them in
+      # the shell, so the list was measuring what somebody had thought to list.
       - name: Every window a phone can be, measured with a thumb
         working-directory: scripts/universe/visual-qa
         run: node mobile-check.mjs --base=http://127.0.0.1:$GATEWAY_PORT --out=./artifacts-mobile
@@ -647,7 +720,9 @@ jobs:
           kill -0 "$GATEWAY_PID"
           curl -fsS "http://127.0.0.1:$GATEWAY_PORT/__gateway/health"
 
-      # The full window set, on the engine Safari is built on.
+      # The full window set and the full route list, on the engine Safari is
+      # built on. This is the closest an automated run gets to an iPhone, so it
+      # is the one place worth paying for the whole matrix twice.
       - name: Every window a phone can be, on WebKit
         working-directory: scripts/universe/visual-qa
         run: >-

@@ -40,6 +40,15 @@ tr, td, th {
 
 .clear-link {
   color: var(--u-brand);
+
+  // The pool credit is a link to that pool's page, wrapped in the tooltip
+  // container rather than sitting directly in the cell, so the shared rule for
+  // a link in a table cell passes over it. It was 19 pixels tall.
+  @media (pointer: coarse), (max-width: 991.98px) {
+    align-items: center;
+    display: inline-flex;
+    min-height: var(--u-touch-target);
+  }
 }
 
 .disabled {
@@ -290,4 +299,38 @@ tr, td, th {
 	vertical-align: middle;
 	max-width: 50vw;
   text-align: left;
+}
+
+
+// The phone layout.
+//
+// The stacking itself is the shared `stacks-on-phone` rule in styles.scss.
+// What is left here is the part that only this table knows: three cells were
+// built to hold a single line of a fixed-width column and have to stop doing
+// that once the column is gone.
+@media (max-width: 575.98px) {
+  .pool,
+  .pool-name,
+  .reward,
+  .txs {
+    max-width: none;
+    overflow: visible;
+    padding-right: 0;
+    text-overflow: clip;
+    white-space: normal;
+    width: auto;
+  }
+
+  .pool-name {
+    padding-left: var(--u-space-2);
+  }
+
+  // The size cell is a bar with its figure printed on top, which reads as a
+  // proportion of a block rather than as a number. It keeps that, but a bar
+  // squeezed into the value half of a label-and-value line is unreadable, so
+  // it takes the room the line has.
+  .progress {
+    flex: 1 1 auto;
+    min-width: 120px;
+  }
 }

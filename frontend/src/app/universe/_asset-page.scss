@@ -11,7 +11,16 @@
   display: block;
 
   .universe-asset {
-    padding: 1.25rem 0 3rem;
+    // Vertical only.
+    //
+    // `padding: 1.25rem 0 3rem` also set the inline padding to zero, and this
+    // class is written on a `.container-xl`, whose 15px of side padding is the
+    // only thing keeping a line of text off the edge of a phone. Every Universe
+    // page ran its headings, its ledes and its panels hard against both edges
+    // of the screen: measured at 390px, the container was 390 wide with nothing
+    // either side of it. Naming the block axis leaves the container's own side
+    // padding alone.
+    padding-block: 1.25rem 3rem;
   }
 
   .page-head {
