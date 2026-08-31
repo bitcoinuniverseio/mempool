@@ -18,6 +18,12 @@ export interface PreflightInput {
   readonly databaseEnabled: boolean;
   readonly mempoolEnabled: boolean;
   readonly indexingBlocksAmount: number;
+  /** Which address index this deployment reads, if any. */
+  readonly addressBackend: 'none' | 'electrum' | 'esplora';
+  /** An Esplora endpoint is named in configuration. */
+  readonly esploraEndpointConfigured: boolean;
+  /** Extra Esplora hosts this deployment would fall back to. */
+  readonly esploraFallbacks: readonly string[];
 }
 
 /**
@@ -51,5 +57,56 @@ export function preflightFailures(input: PreflightInput): PreflightFailure[] {
       reason: 'DATABASE.ENABLED is true but neither block indexing nor statistics uses it.',
     });
   }
+
+  // Address lookup is not optional on this product. The header invites a
+  // reader to search an address, the search box recognises one, and every link
+  // out of a transaction goes to an address page. A deployment that cannot
+  // answer those is not a reduced deployment, it is a broken one, and it
+  // shipped once already because nothing here said so.
+  if (input.addressBackend === 'none') {
+    failures.push({
+      feature: 'addressLookup',
+      reason: 'MEMPOOL.BACKEND is none, so every address, script hash and UTXO lookup would fail while the site still offers them.',
+    });
+  }
+  if (input.addressBackend === 'esplora' && !input.esploraEndpointConfigured) {
+    failures.push({
+      feature: 'addressLookup',
+      reason: 'MEMPOOL.BACKEND is esplora but no ESPLORA endpoint is configured, so nothing would answer the address family.',
+    });
+  }
+  // Data sovereignty: every address answer has to come from infrastructure we
+  // run. A fallback is a source too, and a fallback is exactly where a public
+  // API gets in unnoticed, because it only answers when something is already
+  // wrong and nobody is reading the logs.
+  for (const fallback of input.esploraFallbacks) {
+    if (!isFirstPartyEndpoint(fallback)) {
+      failures.push({
+        feature: 'addressLookup',
+        reason: `ESPLORA.FALLBACK names ${fallback}, which is not a loopback or Unix socket endpoint this deployment operates.`,
+      });
+    }
+  }
   return failures;
+}
+
+/**
+ * Whether an endpoint is one this host serves itself.
+ *
+ * Loopback and Unix sockets are the only shapes a first-party index takes in
+ * this deployment. A name that resolves elsewhere might still be ours, but
+ * nothing here can prove that, and a rule that cannot prove its answer is not
+ * a rule worth having in a release gate.
+ */
+function isFirstPartyEndpoint(endpoint: string): boolean {
+  if (endpoint.startsWith('/')) {
+    return true;
+  }
+  let host: string;
+  try {
+    host = new URL(endpoint.includes('://') ? endpoint : `http://${endpoint}`).hostname;
+  } catch {
+    return false;
+  }
+  return host === '127.0.0.1' || host === 'localhost' || host === '::1' || host === '[::1]';
 }
