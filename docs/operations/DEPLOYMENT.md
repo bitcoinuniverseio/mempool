@@ -605,6 +605,32 @@ Never restart a protocol indexer to make a deployment convenient. Never stop
 Bitcoin Core. Never interrupt an ord index rebuild. `universe-mempool.service`
 on the same host is a different product and is not part of this stack.
 
+## Private listeners
+
+`release.sh preflight` refuses a cutover if anything answers on a public
+interface that this deployment has not declared. Three ports are declared, in
+`PUBLIC_LISTENERS` in `scripts/universe/release.sh`:
+
+| port | why it is public |
+| --- | --- |
+| 22 | SSH |
+| 8333 | Bitcoin Core peer to peer |
+| 50001 | the peer restricted Fulcrum endpoint the other host reads |
+
+Everything else in this stack answers on loopback and is reached through it.
+The overlay, the backend, the gateway and every protocol authority bind to
+`127.0.0.1`, and the public origin arrives over a forward-only SSH tunnel
+rather than an open port.
+
+This gate exists because `index-doge-tap` shipped with `HOST=0.0.0.0` and
+answered `/ready` to the internet for as long as it ran, on a host whose
+firewall is inactive. Nothing caught it. Every functional check reached the
+service over loopback, where it behaved perfectly, and no gate asked which
+interface it was answering on.
+
+Adding a port here is a decision with a reason next to it. Discovering one in
+production is not.
+
 ## Release identity
 
 Three components run here and each publishes its own commit. They are allowed

@@ -4,9 +4,10 @@
  * Every rectangle is one real pending transaction, sized by the space it
  * takes: serialized bytes on both chains, because that is the public,
  * chain-native cost of carrying it. Color follows the known fee rate
- * relative to the rest of the pending set; a transaction whose fee cannot
- * be read from the public side, which is normal for a shielded Zcash
- * transaction, keeps a neutral color rather than pretending a rate.
+ * relative to the rest of the pending set. A shielded Zcash transaction is
+ * coloured like any other, because its fee is public. A transaction the
+ * authority could not read a rate for keeps a neutral color rather than
+ * pretending one.
  */
 
 import { ChainExplorerPayload, ExplorerChain } from '@app/universe/universe.types';
