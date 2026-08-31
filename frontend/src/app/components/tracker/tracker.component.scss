@@ -53,6 +53,16 @@
   align-items: center;
   justify-content: space-between;
 
+  // The brand here is the way back to the rest of the explorer, and it was a
+  // 36 pixel target.
+  > a {
+    align-items: center;
+    display: inline-flex;
+    justify-content: center;
+    min-height: var(--u-touch-target);
+    min-width: var(--u-touch-target);
+  }
+
   .network-label {
     font-size: 1.4em;
     .network {
@@ -255,6 +265,19 @@
   background: var(--primary);
   color: var(--u-brand-contrast);
   cursor: pointer;
+  min-height: var(--u-touch-target);
+  text-decoration: none;
+
+  &:hover,
+  &:focus {
+    color: var(--u-brand-contrast);
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--u-focus-ring);
+    outline-offset: -2px;
+  }
 }
 
 .alert-replaced {
@@ -262,4 +285,16 @@
   margin: 1em 0.5em;
   padding: 0.5em;
   border-radius: 0.5em;
+}
+
+// The block height in the tracker's own detail list is a link into that block,
+// and the only one in that list. It was a 24 pixel target.
+.block-link {
+  @media (pointer: coarse), (max-width: 991.98px) {
+    align-items: center;
+    display: inline-flex;
+    justify-content: center;
+    min-height: var(--u-touch-target);
+    min-width: var(--u-touch-target);
+  }
 }

@@ -407,6 +407,17 @@ h3 {
     transition: 0.5s opacity ease;
   }
 
+  // An endpoint entry is full of strings with no spaces in them: the request
+  // line, response fields, paths in the description. At 320px the merkle
+  // proof one ran 16px past a container whose overflow: hidden is the drawer
+  // mechanism, so the tail was simply gone, and only WebKit's font metrics
+  // pushed it over. overflow-wrap inherits, so saying it once on the
+  // container gives every descendant a break opportunity, and only when a
+  // token is longer than the line it is on.
+  .endpoint-container {
+    overflow-wrap: anywhere;
+  }
+
   .doc-welcome-note {
     font-size: 0.85rem;
   }
@@ -560,5 +571,19 @@ fa-icon {
         margin-bottom: 10px;
       }
     }
+  }
+}
+
+// The endpoint line, on a phone.
+//
+// It is a full URL on a line of its own: not a word inside a sentence, so it
+// takes the touch floor, and long enough that it ran past the right edge of a
+// 320px screen, so it breaks wherever it has to rather than deciding how wide
+// the page is.
+@media (pointer: coarse), (max-width: 991.98px) {
+  .endpoint > a {
+    display: inline-block;
+    overflow-wrap: anywhere;
+    padding-block: var(--u-space-3);
   }
 }

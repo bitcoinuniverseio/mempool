@@ -1,4 +1,9 @@
-<div class="text-center" class="blockchain-wrapper" [class.time-ltr]="timeLtr" [class.ltr-transition]="ltrTransitionEnabled" #container>
+<!-- The strip is a draggable pan surface: blocks and the 1px scroll spacer
+     extend past the viewport on both sides because dragging is how they are
+     reached. The clip gate must not read any of that as content cut off, so
+     the whole strip declares itself deliberate rather than each child in
+     turn; the spacer, then a mined block, were blamed one after the other. -->
+<div class="text-center" class="blockchain-wrapper" data-clip-ok [class.time-ltr]="timeLtr" [class.ltr-transition]="ltrTransitionEnabled" #container>
   <div #positionContainer class="position-container" [ngClass]="network ? network : ''" [style]="positionStyle">
     <span>
       <div class="blocks-wrapper">

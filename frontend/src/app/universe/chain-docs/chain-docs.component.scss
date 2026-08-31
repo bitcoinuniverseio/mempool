@@ -10,18 +10,7 @@
 
 @include page.universe-chain-page;
 
-.title-block {
-  display: flex;
-  align-items: center;
-  gap: var(--u-space-2);
-  margin-bottom: var(--u-space-3);
-
-  h1 {
-    font-size: var(--u-text-2xl);
-    font-weight: var(--u-weight-semibold);
-    margin: 0;
-  }
-}
+@include page.universe-chain-title;
 
 .docs-layout {
   display: grid;
@@ -41,6 +30,13 @@
   padding: var(--u-space-2) var(--u-space-3);
   cursor: pointer;
   text-align: left;
+
+  // The control that opens the table of contents on a phone, at 38px tall.
+  // It runs the width of the page, so only the shorter side needs the floor
+  // and the label keeps its left alignment.
+  @media (pointer: coarse), (max-width: 991.98px) {
+    min-height: var(--u-touch-target);
+  }
 
   &:focus-visible {
     outline: 2px solid var(--u-focus-ring);

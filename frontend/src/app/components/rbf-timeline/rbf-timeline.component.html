@@ -1,5 +1,10 @@
 <div class="rbf-timeline box" [class.mined]="replacements.mined">
-  <div class="timeline-wrapper">
+  <!-- The row of replacements is wider than a phone, so it scrolls. A scroller
+       has to say so: without a role and a label it is a region a screen reader
+       walks straight past, and without tabindex a keyboard cannot reach the
+       replacements that are off the right edge. -->
+  <div class="timeline-wrapper" tabindex="0" role="region"
+       i18n-aria-label="transaction.rbf-history|RBF Timeline" aria-label="RBF Timeline">
     <div class="timeline" *ngFor="let timeline of rows; let j = index">
       <div class="intervals" *ngIf="j < rowLimit || timelineExpanded">
         <ng-container *ngFor="let cell of timeline; let i = index;">

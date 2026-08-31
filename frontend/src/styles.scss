@@ -337,6 +337,200 @@ body {
     display: inline-block;
     padding-block: var(--u-space-3);
   }
+
+  // A link that is the whole value of a described field.
+  //
+  // The same argument as the table cell above, one element along. A definition
+  // list is what this product uses for "field: value" everywhere outside a
+  // table, and when the value is a link it is the only thing to press on that
+  // line. Those links measured between 16 and 21 pixels tall on the output,
+  // inscription, rune and sat pages, stacked a few pixels apart.
+  dd > a,
+  .identifier > a {
+    display: inline-block;
+    padding-block: var(--u-space-3);
+  }
+
+  // A link inside a navigation landmark is a destination, and a destination is
+  // never incidental to the sentence around it. Pagers and previous/next block
+  // links were 20px tall on every paged list and every chain block page.
+  //
+  // Scoped to nav rather than applied to every link, because a link inside a
+  // paragraph of documentation is a different thing: growing those would push
+  // the lines of the paragraph apart and make the text harder to read, not the
+  // link easier to hit.
+  //
+  // A minimum rather than padding: 12px either side of a 19.5px line comes to
+  // 43.5, and a floor that misses by half a pixel is a floor that has to be
+  // re-derived every time a font size moves.
+  nav a {
+    align-items: center;
+    display: inline-flex;
+    min-height: var(--u-touch-target);
+  }
+
+  // A disclosure is a control even though it is written as a heading.
+  summary {
+    min-height: var(--u-touch-target);
+    padding-block: var(--u-space-2);
+  }
+
+  // A panel's own call to action: a link written as a direct child of a
+  // section, on a line of its own, rather than a word inside a sentence.
+  // "See every protocol and its authority" on the pulse page, "Open the
+  // transaction instead" on a failed output, and the rest of that family
+  // measured 19 to 21 pixels tall.
+  .panel > a {
+    display: inline-block;
+    padding-block: var(--u-space-3);
+  }
+
+  // A link that is an entire heading is the section's own name, and the
+  // section is what it opens. It is never mid-sentence.
+  //
+  // A minimum rather than padding, because these are set at every size from a
+  // 12px eyebrow to a 28px title and a fixed amount of padding reaches the
+  // floor at exactly one of them.
+  h1 > a,
+  h2 > a,
+  h3 > a,
+  h4 > a {
+    align-items: center;
+    display: inline-flex;
+    min-height: var(--u-touch-target);
+  }
+}
+
+// A tooltip trigger that is not otherwise a control.
+//
+// `TooltipReachableDirective` gives every such element a tab stop, because a
+// tooltip that only opens on hover is invisible to a keyboard and to a phone.
+// A tab stop that cannot be seen is its own fault, so the ring is stated here
+// once rather than in each of the eighty components that carry one.
+[ngbTooltip]:focus-visible {
+  border-radius: var(--u-radius-sm);
+  outline: 2px solid var(--u-focus-ring);
+  outline-offset: 2px;
+}
+
+// ---------------------------------------------------------------------------
+// A table that becomes a list on a phone
+// ---------------------------------------------------------------------------
+//
+// A column table is a grid of comparisons, and a phone has room for about two
+// of them. Every table here was built for a cursor and then trimmed for the
+// phone by hiding columns at breakpoints, which is why the blocks list arrived
+// at 320px showing a height, a broken logo, and a reward cut in half by the
+// edge of the screen. The columns that were left still needed more width than
+// the screen had, and the page shell clipped the difference in silence: the
+// content was present, off-screen, and unreachable, and no gate could see it
+// because the document itself never scrolled sideways.
+//
+// So below the phone breakpoint the table stops being columns and becomes what
+// it actually is on a phone: one card per row, each field on its own line with
+// its column name beside it. Nothing is hidden, nothing is clipped, and the
+// figures that were trimmed away at a breakpoint come back.
+//
+// Two rules make it safe to apply:
+//
+//  1. The template MUST carry explicit ARIA roles (role="table", "rowgroup",
+//     "row", "columnheader", "cell"). Changing `display` away from the table
+//     values is what strips a table of its implicit roles, and a stack of
+//     unlabelled divs is worse for a screen reader than the table it replaced.
+//     With the roles written down they survive the display change, so the
+//     header row still names each cell.
+//
+//  2. Every cell MUST carry `data-label` with its column's name. That is what
+//     is printed beside the value; a cell without one prints nothing and the
+//     value loses its meaning.
+//
+// The header row stays in the accessibility tree and leaves the screen, which
+// is why it is clipped rather than `display: none`.
+@media (max-width: 575.98px) {
+  table.stacks-on-phone {
+    display: block;
+    width: 100%;
+
+    thead,
+    tbody,
+    tr,
+    th,
+    td {
+      display: block;
+    }
+
+    thead {
+      clip-path: inset(50%);
+      height: 1px;
+      overflow: hidden;
+      position: absolute;
+      white-space: nowrap;
+      width: 1px;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--u-divider);
+      padding: var(--u-space-3) 0;
+    }
+
+    tbody tr:last-child {
+      border-bottom: 0;
+    }
+
+    td {
+      // The bootstrap table rules this sits inside set cell padding and a
+      // top border for the column layout. Neither belongs to a stacked line.
+      border: 0 !important;
+      display: flex;
+      align-items: baseline;
+      gap: var(--u-space-3);
+      justify-content: space-between;
+      padding: var(--u-space-1) 0 !important;
+      // A stacked cell is as wide as the card, so a percentage width written
+      // for a column would squeeze it back down.
+      max-width: none !important;
+      text-align: left !important;
+      width: auto !important;
+
+      &::before {
+        color: var(--u-text-muted);
+        content: attr(data-label);
+        flex: 0 0 auto;
+        font-size: var(--u-text-2xs);
+        font-weight: var(--u-weight-semibold);
+        letter-spacing: var(--u-eyebrow-tracking);
+        text-transform: uppercase;
+      }
+
+    }
+
+    // The first cell is what the row is called, so it leads rather than
+    // sitting in the same label-and-value rhythm as the fields under it.
+    td:first-child {
+      font-size: var(--u-text-lg);
+      font-weight: var(--u-weight-semibold);
+      padding-top: 0 !important;
+
+      &::before {
+        display: none;
+      }
+    }
+
+    // Columns hidden by a desktop breakpoint come back: the reason they were
+    // hidden was that they did not fit across, and nothing is across any more.
+    // The attribute is carrying specificity here, not selection: a component's
+    // own `display: none` arrives with its scoping attribute attached and
+    // outranks a plain element selector.
+    td[data-label] {
+      display: flex;
+    }
+
+    // A cell with nothing in it has nothing to say, and a lone label with no
+    // value beside it reads as missing data rather than as an absent column.
+    td[data-label]:empty {
+      display: none;
+    }
+  }
 }
 
 .container {
@@ -972,6 +1166,28 @@ tr {
   white-space: nowrap;
 }
 
+// The same rule, undone where it cannot be afforded.
+//
+// Keeping a row on one line is what stops a date, an amount and its unit, or a
+// fee rate from breaking across two lines in a wide table, and on a desktop
+// layout there is always room for it. On a phone there is not, and the cost
+// was not a wrapped figure: it was the whole right-hand end of the table.
+//
+// `tr { white-space: nowrap }` made every table in this product as wide as its
+// widest row, and `.page-shell` clips rather than scrolls, so the difference
+// was cut off and unreachable. The block page lost 120 pixels that way, the
+// source page 384. Nothing scrolled, nothing looked broken, and the figures
+// were simply not there.
+//
+// Below the tablet breakpoint the rows wrap. A number on two lines is worse
+// than a number on one, and it is very much better than no number.
+@media (max-width: 767.98px) {
+  tr,
+  th {
+    white-space: normal;
+  }
+}
+
 h1, h2, h3 {
   margin-bottom: 1rem;
 }
@@ -1473,11 +1689,6 @@ th {
     @extend .profile_image_container;
     margin-right: 0px !important;
     margin-left: 15px;
-  }
-
-  #blockchain-container.with-menu {
-    width: calc(100% + 120px);
-    left: 120px;
   }
 }
 

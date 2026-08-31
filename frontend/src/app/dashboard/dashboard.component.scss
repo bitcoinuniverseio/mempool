@@ -562,6 +562,14 @@
   margin-left: auto;
   white-space: nowrap;
 
+  // The one link out of each dashboard panel. It sits on the panel's heading
+  // rule, which has the room for it, and it measured 20px tall.
+  @media (pointer: coarse), (max-width: 991.98px) {
+    align-items: center;
+    display: inline-flex;
+    min-height: var(--u-touch-target);
+  }
+
   &:hover { color: var(--u-brand-hover); }
 }
 

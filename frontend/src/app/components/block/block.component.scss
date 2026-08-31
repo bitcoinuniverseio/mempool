@@ -140,6 +140,22 @@ h1 {
     font-size: 36px;
   }
 
+  // Previous block, this block, next block: the three controls in the page's
+  // own title, and the only way to walk the chain from here. The arrows came
+  // out 35 by 30 and the height 96 by 30, which is a near miss on every axis.
+  // A block's height is also a wide, thin target sitting between two arrows,
+  // so height is what has to grow rather than width.
+  @media (pointer: coarse), (max-width: 991.98px) {
+    .nav-arrow,
+    .block-link {
+      align-items: center;
+      display: inline-flex;
+      justify-content: center;
+      min-height: var(--u-touch-target);
+      min-width: var(--u-touch-target);
+    }
+  }
+
   a {
     &:hover, &:focus {
       display: inline-block;
@@ -318,5 +334,19 @@ h1 {
       max-width: 100%;
       white-space: nowrap;
     }
+  }
+}
+
+// The miner credit in the block details.
+//
+// It is a link in a table cell, which the shared rule in styles.scss already
+// gives room to, but Bootstrap's own `.badge` padding is a class selector and
+// outranks it. Saying it here, next to the element that wears the class, is
+// what makes the shared rule reach it.
+@media (pointer: coarse), (max-width: 991.98px) {
+  td > a.badge {
+    align-items: center;
+    display: inline-flex;
+    min-height: var(--u-touch-target);
   }
 }
