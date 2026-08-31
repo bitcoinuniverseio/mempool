@@ -40,7 +40,7 @@
         <span i18n="universe.lens.tooltip-size">{{ item.sizeBytes }} bytes</span>
         <span *ngIf="feeDisplay(item) as fee">{{ fee.display }} {{ ticker }}</span>
         <span *ngIf="item.rateLabel">{{ item.rateLabel }}</span>
-        <span class="secondary" *ngIf="item.shielded" i18n="universe.lens.tooltip-shielded">Shielded structure; fee not public</span>
+        <span class="secondary" *ngIf="item.shielded" i18n="universe.lens.tooltip-shielded">Shielded: sender, recipient and amount are private. The fee above is not.</span>
       </div>
     </div>
 
@@ -63,7 +63,7 @@
             <td class="numeric">{{ item.sizeBytes }}</td>
             <td class="numeric" [class.secondary]="!feeDisplay(item)">
               <ng-container *ngIf="feeDisplay(item) as fee; else noFee">{{ fee.display }} {{ ticker }}</ng-container>
-              <ng-template #noFee><ng-container i18n="universe.lens.fee-unknown">not public</ng-container></ng-template>
+              <ng-template #noFee><ng-container i18n="universe.lens.fee-not-reported">not reported</ng-container></ng-template>
             </td>
             <td [class.secondary]="!item.rateLabel">{{ item.rateLabel ?? '' }}</td>
           </tr>

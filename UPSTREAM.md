@@ -29,6 +29,59 @@ passes the complete upstream test suite as a known-stable reference point.
 
 The complete upstream Git history and all upstream tags are preserved in this fork.
 
+## Upstream reconciliation, 2026-08-30
+
+`upstream/master` was at `1a23cdfe78c2ee4ccc1b5d39b9a7e74f7f4df3ef`, which is
+**40 commits** ahead of the master recorded at fork time. Every one of those 40
+was read and classified:
+
+| class | count | what they are |
+| --- | --- | --- |
+| Dependency bumps | 36 | Dependabot pull requests and their merges: axios, body-parser, qs and express, nanoid, tar, engine.io, socket.io-parser, shell-quote, websocket-driver, ip-address, mysql2, sigstore, systeminformation, hono |
+| Toolchain | 2 | Angular bumped to 20.3.29 |
+| Infrastructure | 2 | A less aggressive CI provenance check |
+| Product features | 0 | none |
+| Correctness or security fixes to product code | 0 | none |
+
+No upstream commit in that range changes product behaviour, and none fixes a
+defect this fork carries. The work is dependency maintenance.
+
+### What that means for this fork
+
+The bumps upstream applied do not describe this fork's exposure, because this
+fork has its own lockfiles. So the exposure was measured directly rather than
+inferred from upstream's commit list:
+
+- **`backend`: zero advisories.** `npm audit` reports no vulnerability at any
+  severity against the installed tree.
+- **`frontend`: eleven advisories, ten of them in build tooling that never
+  reaches a browser.** `@angular-devkit/build-angular`, `browser-sync`,
+  `browser-sync-ui`, `immutable`, `less`, `image-size`, `webpack-dev-server`,
+  `sockjs`, `uuid` and `@angular-devkit/build-webpack` are all compile-time or
+  dev-server packages. They are worth clearing and they are not shipped code.
+
+### The one that ships
+
+`echarts` 5.4.3 carries
+[GHSA-fgmj-fm8m-jvvx](https://github.com/advisories/GHSA-fgmj-fm8m-jvvx), a
+moderate cross-site scripting advisory, CVSS 6.1. echarts is a runtime
+dependency: it draws every chart in the explorer, upstream's and Universe's.
+
+The advisory is fixed in **echarts 6.1.0**, a major version. Upstream is still
+on 5.x, so there is no upstream change to take here. Moving a charting library
+across a major version touches every chart on every chain and needs the full
+visual matrix behind it; doing that as an unreviewed step inside a release
+would be the wrong trade. It is recorded here with its exact identity so it is
+tracked rather than forgotten, and it is the next dependency task.
+
+### Mirror policy
+
+`master` in this fork is the read-only upstream mirror and nothing else.
+`develop` is the integration branch and `main` is the release branch. The
+scheduled `upstream-sync` workflow runs weekly and opens a synchronization pull
+request when it finds drift; that is the mechanism that keeps this section from
+going stale, and this reconciliation is what it was measured against.
+
 ## Modified subsystems
 
 Universe modifications are tracked here as they land. See `docs/architecture/` for
