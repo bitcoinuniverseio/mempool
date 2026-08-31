@@ -57,15 +57,19 @@ function envelope(overrides = {}) {
 function seenPage(overrides = {}) {
   return {
     primary: [
-      'DOGECOIN OVERVIEW',
+      'DOGECOIN DASHBOARD',
       'CHAIN Degraded CHAIN TIP Block 6,352,650 BEHIND TIP Not stated',
       'Why Dogecoin is not ready',
-      'Questions this chain can answer',
-      'How much history is readable now',
-      'Dogecoin fees are quoted per kilobyte, not in sat/vB.',
-      'No projected blocks are shown for this chain.',
+      'This chain targets a block every 60 seconds. A target is not an arrival time, so no countdown is shown.',
+      'What it costs to get into the next few blocks, in DOGE per kilobyte.',
+      'Open the mining dashboard',
+      'Open pending transactions',
+      'Open protocols',
     ].join('\n'),
-    disclosure: `Where these readings came from Pending snapshot ${SNAPSHOT} Overlay release bea93c1ec`,
+    disclosure:
+      'What this explorer can answer about Dogecoin ' +
+      'Questions this chain can answer Projected blocks Not offered ' +
+      `Where these readings came from Pending snapshot ${SNAPSHOT} Overlay release bea93c1ec`,
     rail: [
       { label: 'CHAIN', value: 'Degraded' },
       { label: 'CHAIN TIP', value: 'Block 6,352,650' },
@@ -73,7 +77,7 @@ function seenPage(overrides = {}) {
       { label: 'LAST OBSERVED', value: '3 seconds ago' },
       { label: 'PENDING COVERAGE', value: 'Complete' },
     ],
-    headings: ['DOGECOIN OVERVIEW', 'Why Dogecoin is not ready'],
+    headings: ['DOGECOIN DASHBOARD', 'Why Dogecoin is not ready'],
     notReadyReasons: [
       "The node that serves this chain's own blocks and transactions did not answer.",
       'The source of confirmed history did not answer, so history older than the pending set cannot be read.',
@@ -85,8 +89,9 @@ function seenPage(overrides = {}) {
       { label: 'Protocol history', state: 'Unavailable' },
     ],
     entries: [
-      { href: '/dogecoin/mempool', title: 'Pending transactions', detail: 'What our node has seen' },
-      { href: '/dogecoin/protocols', title: 'Protocols', detail: 'Assets carried on this chain' },
+      { href: '/dogecoin/mining', title: 'Open the mining dashboard' },
+      { href: '/dogecoin/mempool', title: 'Open pending transactions' },
+      { href: '/dogecoin/protocols', title: 'Open protocols' },
     ],
     horizontalOverflow: 0,
     ...overrides,
@@ -99,7 +104,7 @@ function audit(envelopeOverrides = {}, seenOverrides = {}, observations = {}) {
     envelope: envelope(envelopeOverrides),
     seen: seenOverrides === null ? null : seenPage(seenOverrides),
     observations: {
-      entryStatus: { '/dogecoin/mempool': 200, '/dogecoin/protocols': 200 },
+      entryStatus: { '/dogecoin/mining': 200, '/dogecoin/mempool': 200, '/dogecoin/protocols': 200 },
       ...observations,
     },
   });
@@ -241,8 +246,8 @@ test('a next action pointing at another chain is detected', () => {
     {},
     {
       entries: [
-        { href: '/zcash/mempool', title: 'Pending transactions', detail: 'Wrong chain' },
-        { href: '/dogecoin/protocols', title: 'Protocols', detail: 'Assets on this chain' },
+        { href: '/zcash/mempool', title: 'Open pending transactions' },
+        { href: '/dogecoin/protocols', title: 'Open protocols' },
       ],
     },
   );
@@ -254,17 +259,37 @@ test('a next action whose destination does not answer is detected', () => {
   assert.ok(saidSomethingAbout(result, '/dogecoin/mempool answered HTTP 404'));
 });
 
-test('a bare link with no description is detected', () => {
+test('a bare link with no visible text is detected', () => {
   const result = audit(
     {},
     {
       entries: [
-        { href: '/dogecoin/mempool', title: 'Open mempool', detail: '' },
-        { href: '/dogecoin/protocols', title: 'Open protocols', detail: '' },
+        { href: '/dogecoin/mempool', title: '' },
+        { href: '/dogecoin/protocols', title: 'Open protocols' },
       ],
     },
   );
-  assert.ok(saidSomethingAbout(result, 'no title or no description'));
+  assert.ok(saidSomethingAbout(result, 'no visible text'));
+});
+
+test('a chain truth set in different capitals still counts', () => {
+  // The lens heads its filter "Shielded" and stylesheets set labels in
+  // capitals; the words are there, so their case must not fail the page.
+  const result = audit({}, { primary: seenPage().primary.replace('per kilobyte', 'Per Kilobyte') });
+  assert.ok(!saidSomethingAbout(result, 'fee-unit'));
+});
+
+test('a page that hides that projected blocks are not offered is detected', () => {
+  const result = audit(
+    {},
+    { disclosure: `Where these readings came from Pending snapshot ${SNAPSHOT}` },
+  );
+  assert.ok(saidSomethingAbout(result, 'offers no projected blocks'));
+});
+
+test('the drawer stating projected blocks are not offered satisfies the disclosure', () => {
+  // The base fixture says it only in the drawer, the way the dashboard does.
+  assert.ok(!saidSomethingAbout(audit(), 'projected blocks'));
 });
 
 test('sideways scroll, console errors and third-party requests are detected', () => {
