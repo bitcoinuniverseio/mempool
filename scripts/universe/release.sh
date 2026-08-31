@@ -360,7 +360,7 @@ gate_private_listeners() {
   # bridge address is treated as private: it is reachable only from containers
   # on this host, and the services behind it are the same ones loopback serves.
   local exposed
-  exposed=$(ss -ltn 2>/dev/null     | awk 'NR > 1 { print $4 }'     | grep -vE '^(127\.|\[::1\]|172\.17\.0\.1:)'     | sed -E 's/.*:([0-9]+)$//'     | sort -u)
+  exposed=$(ss -ltn 2>/dev/null     | awk 'NR > 1 { print $4 }'     | grep -vE '^(127\.|\[::1\]|172\.17\.0\.1:)'     | sed -E 's/.*:([0-9]+)$/\1/'     | sort -u)
 
   local unexpected=""
   local port
@@ -398,16 +398,27 @@ cmd_preflight() {
 
 # ---------------------------------------------------------------- cutover ----
 
-# Waits for a URL to answer 200 within a bounded time.
+# Waits for a URL to answer 200 within a bounded time. On timeout the log
+# names the last observed state, because a service that answered 503 for five
+# minutes and one that never accepted a connection are different faults and
+# are repaired differently. WAIT_FOR_SECONDS exists so a test can prove the
+# timeout path without holding a runner for five minutes.
 wait_for() {
-  local url=$1 name=$2 deadline=$((SECONDS + 90))
+  local url=$1 name=$2 timeout=${WAIT_FOR_SECONDS:-300} last=""
+  local deadline=$((SECONDS + timeout))
   while [ $SECONDS -lt $deadline ]; do
-    if [ "$(curl -sS -o /dev/null -m 5 -w '%{http_code}' "$url" || true)" = 200 ]; then
+    last=$(curl -sS -o /dev/null -m 5 -w '%{http_code}' "$url" 2>/dev/null || true)
+    if [ "$last" = 200 ]; then
       log "$name is answering"
       return 0
     fi
     sleep 2
   done
+  case "$last" in
+    ''|000) last="no HTTP response (connection refused, unreachable, or timed out)" ;;
+    *)      last="HTTP $last" ;;
+  esac
+  log "$name did not answer 200 within ${timeout}s; last observed state: $last"
   return 1
 }
 
