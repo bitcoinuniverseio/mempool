@@ -162,6 +162,21 @@ describe('GET mempool/clusters', () => {
     expect(body.total).toBe(0);
   });
 
+  it('answers only clusters with a dependency when asked for packages', () => {
+    fakeMempool = {
+      [id('a')]: entry('a', 100, 100),
+      [id('b')]: entry('b', 1000, 100, ['a']),
+      [id('c')]: entry('c', 900, 100),
+    };
+    const body = call(PREFIX + 'mempool/clusters', { query: { minTxCount: '2' } }).body as any;
+    expect(body.total).toBe(1);
+    expect(body.clusters[0].id).toBe(id('a'));
+  });
+
+  it('refuses a minTxCount of zero', () => {
+    expect(call(PREFIX + 'mempool/clusters', { query: { minTxCount: '0' } }).status)
+      .toBe(400);
+  });
   it('caches only as long as the freshness budget', () => {
     const result = call(PREFIX + 'mempool/clusters', {});
     expect(result.headers['Cache-control']).toBe('public, max-age=5');
