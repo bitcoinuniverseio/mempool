@@ -44,10 +44,11 @@ function bash(source, env = {}) {
 }
 
 test('a changed backend lock can build an independent release dependency tree', () => {
-  assert.match(script, /dependencies_changed=yes/);
-  assert.match(script, /npm ci --omit=dev/);
-  assert.match(artifactWorkflow, /git archive HEAD backend\/vendor rust\/gbt/);
-  assert.match(artifactWorkflow, /stage\/rust\/gbt\/Cargo\.toml/);
+  assert.match(script, /reuse_previous=false/);
+  assert.match(script, /npm ci --omit=dev --omit=optional --ignore-scripts/);
+  assert.match(artifactWorkflow, /cp -a backend\/vendor/);
+  assert.match(artifactWorkflow, /cp -a backend\/rust-gbt/);
+  assert.match(artifactWorkflow, /stage\/backend\/rust-gbt\/package\.json/);
 });
 
 // ------------------------------------------------- the listener parser ----
