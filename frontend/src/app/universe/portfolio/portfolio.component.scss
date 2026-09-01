@@ -476,6 +476,76 @@
   }
 }
 
+// The profit and loss calendar. Bands carry a border weight as well as a
+// fill, so the scale survives without colour, and every cell also states
+// its value in text.
+.calendar-grid {
+  border-collapse: separate;
+  border-spacing: 3px;
+  font-size: var(--u-text-sm);
+
+  th {
+    color: var(--u-text-muted);
+    font-weight: 600;
+    font-size: 0.85em;
+    text-align: center;
+    padding: 0 0.2rem;
+  }
+
+  td {
+    width: 4.5rem;
+    height: 3rem;
+    vertical-align: top;
+    padding: 0.25rem 0.35rem;
+    border-radius: var(--u-radius-md);
+    border: 1px solid transparent;
+  }
+
+  .cell-date {
+    display: block;
+    color: var(--u-text-muted);
+    font-size: 0.8em;
+  }
+
+  .cell-value {
+    display: block;
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+  }
+
+  .band-empty { background: none; }
+
+  .band-flat {
+    background: var(--u-surface-raised);
+    border-color: var(--u-border-strong);
+  }
+
+  .band-gain-1,
+  .band-gain-2,
+  .band-gain-3 {
+    background: var(--u-surface-raised);
+    border-color: var(--u-positive, var(--u-border-strong));
+  }
+
+  .band-gain-2 { border-width: 2px; }
+  .band-gain-3 { border-width: 3px; }
+
+  .band-loss-1,
+  .band-loss-2,
+  .band-loss-3 {
+    background: var(--u-surface-raised);
+    border-color: var(--u-negative, var(--u-border-strong));
+  }
+
+  .band-loss-2 { border-width: 2px; }
+  .band-loss-3 { border-width: 3px; }
+}
+
+.summary-cell .unit {
+  color: var(--u-text-muted);
+  font-size: 0.75em;
+}
+
 // Alerts sit above the summary because they are the reason somebody
 // came back to the page. Each kind carries a word as well as a tone.
 .alerts-panel {
