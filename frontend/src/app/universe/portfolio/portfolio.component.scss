@@ -545,3 +545,59 @@
   color: var(--u-text-muted);
   font-size: 0.75em;
 }
+
+// Alerts sit above the summary because they are the reason somebody
+// came back to the page. Each kind carries a word as well as a tone.
+.alerts-panel {
+  background: var(--u-surface-raised);
+  border: 1px solid var(--u-border-strong);
+  border-radius: var(--u-radius-md);
+  padding: 0.85rem 1rem;
+  margin-bottom: 1rem;
+
+  h2 {
+    font-size: 1.05rem;
+    margin: 0 0 0.5rem;
+  }
+
+  .alert-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.4rem;
+
+    li {
+      display: grid;
+      gap: 0.1rem;
+      border-inline-start: 3px solid var(--u-border-strong);
+      padding-inline-start: 0.7rem;
+    }
+
+    .alert-asset-received { border-inline-start-color: var(--u-positive, var(--u-border-strong)); }
+    .alert-asset-sent { border-inline-start-color: var(--u-negative, var(--u-border-strong)); }
+    .alert-source-degraded { border-inline-start-color: var(--u-caution, var(--u-border-strong)); }
+  }
+
+  .alert-title { color: var(--u-text-primary); }
+
+  .alert-detail {
+    color: var(--u-text-muted);
+    font-size: var(--u-text-sm);
+    overflow-wrap: anywhere;
+  }
+
+  .alert-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.9rem;
+    margin-top: 0.7rem;
+  }
+
+  .alert-privacy {
+    margin: 0.5rem 0 0;
+    color: var(--u-text-muted);
+    font-size: var(--u-text-sm);
+    max-width: 68ch;
+  }
+}

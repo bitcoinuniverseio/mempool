@@ -81,6 +81,27 @@ remain, the page says so and the totals do not pretend to be final.
 data table. The chart carries an `aria-label` naming its range and point
 count. Gains and losses are named in the cell text, not only toned.
 
+## Alerts
+
+A watched address is compared, on each visit, against what you last
+saw. What changed is listed above the summary, and can also raise a
+browser notification once you ask for one.
+
+The rule the alerts follow is the same one the rest of the product
+follows, and it is the reason they can be trusted:
+
+**A source going quiet is never reported as assets leaving.** An asset
+missing from a protocol that has stopped answering has not been sent
+anywhere. So a departure is only reported when that protocol answered
+both times, and an arrival is only reported when the protocol was
+answering before as well, since otherwise the asset may have been held
+all along and simply unseen. A source that degrades is reported as
+exactly that, once, when it degrades.
+
+Quantities are compared exactly, so a change larger than a JavaScript
+number can hold is still seen. Every alert is raised once and never
+repeated.
+
 ## What stays in this browser
 
 Labels, groups, and the watchlist live in local storage and are never
