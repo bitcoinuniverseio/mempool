@@ -43,6 +43,10 @@
     </div>
   </header>
 
+  <ng-container *ngIf="page === 'mempool' && vm.buckets as buckets">
+    <ng-container *ngTemplateOutlet="candidateBuckets; context: { $implicit: buckets }"></ng-container>
+  </ng-container>
+
   <p class="lede" *ngIf="pageLede()">{{ pageLede() }}</p>
 
   <p class="notice switched" role="status" *ngIf="switchedFrom" i18n="universe.chain.switched">
@@ -96,7 +100,8 @@
   <!-- ------------------------------------------------------------------ -->
   <!-- The pending set, grouped under this chain's own fee rules           -->
   <!-- ------------------------------------------------------------------ -->
-  <section class="panel candidate-buckets" *ngIf="page === 'mempool' && vm.buckets as buckets"
+  <ng-template #candidateBuckets let-buckets>
+  <section class="panel candidate-buckets"
            aria-labelledby="buckets-heading">
     <h2 id="buckets-heading" i18n="universe.buckets.title">Waiting for a block</h2>
     <p class="panel-lede">{{ buckets.semanticsNotice }}</p>
@@ -111,14 +116,16 @@
           <div class="cube-body">
             <span class="cube-median" *ngIf="cube.medianFee">
               ~{{ cube.medianFee }}
-              <span class="cube-unit">{{ buckets.unit }}</span>
             </span>
-            <span class="cube-span" *ngIf="cube.feeSpan" i18n="universe.buckets.fee-span">{{ cube.feeSpan.low }} to {{ cube.feeSpan.high }}</span>
-            <span class="cube-count" *ngIf="cube.txCount" [attr.title]="cube.txCount.exact"
-                  i18n="universe.buckets.tx-count">{{ cube.txCount.display }} transactions</span>
-            <span class="cube-size" *ngIf="cube.totalSize" [attr.title]="cube.totalSize.exact"
-                  i18n="universe.buckets.size">{{ cube.totalSize.display }} bytes</span>
           </div>
+        </div>
+        <div class="cube-metrics">
+          <span class="cube-unit">{{ buckets.unit }}</span>
+          <span class="cube-span" *ngIf="cube.feeSpan" i18n="universe.buckets.fee-span">{{ cube.feeSpan.low }} to {{ cube.feeSpan.high }}</span>
+          <span class="cube-count" *ngIf="cube.txCount" [attr.title]="cube.txCount.exact"
+                i18n="universe.buckets.tx-count">{{ cube.txCount.display }} transactions</span>
+          <span class="cube-size" *ngIf="cube.totalSize" [attr.title]="cube.totalSize.exact"
+                i18n="universe.buckets.size">{{ cube.totalSize.display }} bytes</span>
         </div>
         <div class="cube-caption">
           <span class="universe-chip" *ngIf="cube.tierLabel" [ngClass]="'state-' + cube.tierTone">{{ cube.tierLabel }}</span>
@@ -142,6 +149,7 @@
       <li *ngFor="let line of buckets.disclosures; trackBy: trackByIndex" class="secondary">{{ line }}</li>
     </ul>
   </section>
+  </ng-template>
 
   <!-- ------------------------------------------------------------------ -->
   <!-- Transaction                                                         -->

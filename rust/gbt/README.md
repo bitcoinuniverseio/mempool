@@ -28,6 +28,15 @@ $ npm run build
 
 This command uses the [napi build](https://www.npmjs.com/package/@napi-rs/cli) utility to run the Rust build and copy the built library into `./gbt.[TARGET_TRIPLE].node`.
 
+`npm run check-cargo-version` reads the repository's `rust-toolchain` pin with
+Node so the same check works under PowerShell, cmd, and POSIX shells. A missing
+Cargo executable fails immediately; a different installed version is reported
+as a warning before the build continues.
+
+The `to-backend` and `clean` scripts also use Node filesystem operations. This
+keeps native-module installation and cleanup identical on Windows and Linux,
+including the optional `FD` destination override used by packaging jobs.
+
 ## Exploring gbt
 
 After building gbt, you can explore its exports at the Node REPL:

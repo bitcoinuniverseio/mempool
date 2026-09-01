@@ -77,7 +77,7 @@ Query OK, 0 rows affected (0.00 sec)
 
 #### Build
 
-_Make sure to use Node.js 20.x and npm 9.x or newer_
+_Use Node.js 24.19.0 and npm 11.17.0, matching the repository pins._
 
 _The build process requires [Rust](https://www.rust-lang.org/tools/install) to be installed._
 
@@ -85,9 +85,13 @@ Install dependencies with `npm` and build the backend:
 
 ```
 cd backend
-npm install --no-install-links # npm@9.4.2 and later can omit the --no-install-links
+npm ci
 npm run build
 ```
+
+The npm build, lint, test, resource-copy, native-module, and cleanup commands
+use Node-based helpers and npm binary resolution, so the same commands run from
+PowerShell, cmd, and POSIX shells.
 
 #### Configure
 

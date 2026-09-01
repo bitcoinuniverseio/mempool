@@ -33,7 +33,7 @@ $ npm run config:defaults:liquid
 
 ### 3. Run the Frontend
 
-_Make sure to use Node.js 20.x and npm 9.x or newer._
+_Use Node.js 24.19.0 and npm 11.17.0, matching the repository pins._
 
 Install project dependencies and run the frontend server:
 
@@ -41,6 +41,9 @@ Install project dependencies and run the frontend server:
 $ npm install
 $ npm run serve:local-prod
 ```
+
+The npm lint, test, TypeScript, and Universe build commands use npm binary
+resolution and run unchanged from PowerShell, cmd, and POSIX shells.
 
 The frontend will be available at http://localhost:4200/ and all API requests will be proxied to the production server at https://mempool.space.
 
