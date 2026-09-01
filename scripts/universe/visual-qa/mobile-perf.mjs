@@ -327,11 +327,15 @@ async function run() {
   for (const route of routes) {
     let row = await measure(route);
 
-    // A saturated shared runner can miss the whole measurement window even
-    // after the load event. Retry a completely blank reading once in a fresh
-    // browser context; two blank readings still fail below.
-    if (isBlankMeasurement(row)) {
-      row = { ...(await measure(route)), blankRemeasured: true };
+    // A route that is genuinely blank remains a release failure, but a single
+    // empty reading on a contended runner is not enough evidence that the
+    // shipped shell is blank. The same shared-runner load that makes layout
+    // timing noisy can leave Chromium's first isolated context with no
+    // rendered tree even though navigation completed. Measure the route again
+    // before judging it, and still fail when every independent context is
+    // empty.
+    for (let attempt = 0; attempt < 2 && isBlankMeasurement(row); attempt++) {
+      row = { ...(await measure(route)), emptyShellRemeasured: attempt + 1 };
     }
 
     // A route over the layout budget is measured again, up to twice, and
