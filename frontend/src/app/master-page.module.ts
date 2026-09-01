@@ -141,6 +141,16 @@ const routes: Routes = [
         data: { networks: ['bitcoin'] },
       },
       {
+        path: 'portfolio',
+        loadComponent: () => import('@app/universe/portfolio/portfolio-lookup.component').then(m => m.PortfolioLookupComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'portfolio/:chain/:network/:address',
+        loadComponent: () => import('@app/universe/portfolio/portfolio.component').then(m => m.PortfolioComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
         path: 'inscription/:reference',
         loadComponent: () => import('@app/universe/inscription/inscription.component').then(m => m.InscriptionComponent),
         data: { networkSpecific: true, networks: ['bitcoin'] },
