@@ -27,6 +27,12 @@ describe('Database Connection Integration Tests', () => {
     expect(result[0].sum).toBe(42);
   });
 
+  test('should preserve JSON columns as strings for repository parsers', async () => {
+    const [result] = await DB.query<any>('SELECT JSON_ARRAY(1, 2) as payload');
+    expect(typeof result[0].payload).toBe('string');
+    expect(JSON.parse(result[0].payload)).toEqual([1, 2]);
+  });
+
   test('should check database connection', async () => {
     await expect(DB.checkDbConnection()).resolves.not.toThrow();
   });
