@@ -59,19 +59,26 @@ cmd_install() {
   # It is only correct while the dependency tree is actually unchanged. Hard
   # linking a stale node_modules into a release that asked for different
   # packages produces a backend that runs, imports the wrong versions, and
-  # fails somewhere unrelated later. The artifact carries its lock file so
-  # that this can be checked here, where both trees are visible, rather than
-  # trusted at build time where only one of them is.
-  if [ -n "$previous" ]; then
+  # fails somewhere unrelated later. The artifact carries the locked inputs
+  # needed to build an independent dependency tree when the lock changes.
+  local dependencies_changed=yes
+  if [ -n "$previous" ] && [ -d "$previous/backend/node_modules" ]; then
     previous_lock="$previous/backend/package-lock.json"
     release_lock="$dir/backend/package-lock.json"
     if [ -f "$previous_lock" ] && [ -f "$release_lock" ]; then
-      if ! cmp -s "$previous_lock" "$release_lock"; then
-        fail "backend dependencies changed since $(basename "$previous"); install this release its own node_modules rather than hard linking, then re-run"
+      if cmp -s "$previous_lock" "$release_lock"; then
+        dependencies_changed=no
       fi
     fi
   fi
-  if [ -n "$previous" ] && [ -d "$previous/backend/node_modules" ]; then
+  if [ "$dependencies_changed" = yes ]; then
+    [ -d "$dir/rust/gbt" ] || fail "artifact has no Rust gbt source for an independent dependency install"
+    [ -d "$dir/backend/vendor" ] || fail "artifact has no vendored backend packages for an independent dependency install"
+    command -v npm >/dev/null || fail "npm is required to install changed backend dependencies"
+    command -v cargo >/dev/null || fail "cargo is required to build the backend gbt module"
+    log "backend dependencies require an independent install; installing the release's locked production tree"
+    (cd "$dir/backend" && npm ci --omit=dev)
+  elif [ -n "$previous" ]; then
     [ -d "$dir/backend/node_modules" ] || cp -al "$previous/backend/node_modules" "$dir/backend/node_modules"
     [ -d "$dir/backend/rust-gbt" ]     || cp -al "$previous/backend/rust-gbt" "$dir/backend/rust-gbt"
     [ -f "$dir/backend/package.json" ] || cp -a  "$previous/backend/package.json" "$dir/backend/package.json"
