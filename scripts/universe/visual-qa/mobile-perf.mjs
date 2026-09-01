@@ -210,6 +210,11 @@ function renderedSomething() {
   return { textLength: text.length, paintable, sample: text.slice(0, 120) };
 }
 
+function isBlankMeasurement(row) {
+  const { textLength = 0, paintable = 0 } = row.rendered || {};
+  return row.lcpMs === 0 && textLength < 40 && paintable < 3;
+}
+
 async function run() {
   mkdirSync(OUT, { recursive: true });
 
@@ -322,6 +327,13 @@ async function run() {
   for (const route of routes) {
     let row = await measure(route);
 
+    // A saturated shared runner can miss the whole measurement window even
+    // after the load event. Retry a completely blank reading once in a fresh
+    // browser context; two blank readings still fail below.
+    if (isBlankMeasurement(row)) {
+      row = { ...(await measure(route)), blankRemeasured: true };
+    }
+
     // A route over the layout budget is measured again, up to twice, and
     // judged on the smallest reading. See the note on `measure`: a busy
     // machine can only add shifts, so the minimum is the closest available
@@ -375,7 +387,7 @@ async function run() {
     // is for, and that distinction does not move with the load.
     if (row.lcpMs === 0) {
       const { textLength, paintable } = row.rendered || { textLength: 0, paintable: 0 };
-      if (textLength < 40 && paintable < 3) {
+      if (isBlankMeasurement(row)) {
         failures.push(
           `${route.id}: nothing painted. No largest contentful paint after waiting, and the page holds`
           + ` ${textLength} characters of text in ${paintable} paintable elements`,
