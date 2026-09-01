@@ -179,7 +179,6 @@ export class PortfolioAlertsService {
         ? first.detail
         : `${first.detail} and ${alerts.length - 1} more changes`;
     try {
-      // eslint-disable-next-line no-new
       new Notification(first.title, { body, tag: first.id });
     } catch {
       // Notification construction can throw in some embedded contexts;

@@ -10,11 +10,11 @@ import {
 function installStorage(): void {
   const store = new Map<string, string>();
   (globalThis as { localStorage?: unknown }).localStorage = {
-    getItem: (key: string) => store.get(key) ?? null,
-    setItem: (key: string, value: string) => { store.set(key, value); },
-    removeItem: (key: string) => { store.delete(key); },
-    clear: () => { store.clear(); },
-    key: () => null,
+    getItem: (key: string): string | null => store.get(key) ?? null,
+    setItem: (key: string, value: string): void => { store.set(key, value); },
+    removeItem: (key: string): void => { store.delete(key); },
+    clear: (): void => { store.clear(); },
+    key: (): null => null,
     length: 0,
   };
 }

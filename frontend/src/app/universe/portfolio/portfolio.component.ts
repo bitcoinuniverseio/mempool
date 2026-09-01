@@ -10,11 +10,16 @@ import {
   PortfolioHistoryPoint,
   PortfolioHolding,
   PortfolioPnlReport,
+  PortfolioDistributionBucket,
   PortfolioProtocolStatement,
   PortfolioRealization,
   PortfolioSourceState,
   PortfolioSummary,
 } from '@app/universe/portfolio/portfolio.types';
+import {
+  buildCalendarGrid,
+  type CalendarGrid,
+} from '@app/universe/portfolio/portfolio-calendar';
 import {
   buildChartGeometry,
   type ChartGeometry,
@@ -389,6 +394,44 @@ export class PortfolioComponent implements OnInit, OnDestroy {
   /** True when an exact decimal string is negative. */
   isNegative(value: string | null | undefined): boolean {
     return typeof value === 'string' && value.startsWith('-');
+  }
+
+  /** The calendar grid for the loaded report, built once per report. */
+  private calendarCache: { source: unknown; grid: CalendarGrid } | null = null;
+
+  get calendarGrid(): CalendarGrid | null {
+    const days = this.pnl.report?.analytics?.calendar;
+    if (!days || days.length === 0) { return null; }
+    if (this.calendarCache?.source !== days) {
+      this.calendarCache = { source: days, grid: buildCalendarGrid(days) };
+    }
+    return this.calendarCache.grid;
+  }
+
+  /** A readable label for a return bucket, from its own bounds. */
+  bucketLabel(bucket: PortfolioDistributionBucket): string {
+    const percent = (ratio: string): string => {
+      const negative = ratio.startsWith('-');
+      const magnitude = negative ? ratio.slice(1) : ratio;
+      const [whole, fraction = ''] = magnitude.split('.');
+      const shifted = (whole + fraction.padEnd(2, '0')).replace(/^0+(?=d)/, '');
+      return `${negative ? '-' : ''}${shifted}`;
+    };
+    if (bucket.fromRatio === null && bucket.toRatio !== null) {
+      return $localize`:@@universe.portfolio.bucket-below:Worse than ${percent(bucket.toRatio)}:bound:%`;
+    }
+    if (bucket.toRatio === null && bucket.fromRatio !== null) {
+      return $localize`:@@universe.portfolio.bucket-above:Better than ${percent(bucket.fromRatio)}:bound:%`;
+    }
+    if (bucket.fromRatio === null || bucket.toRatio === null) { return bucket.id; }
+    return `${percent(bucket.fromRatio)}% to ${percent(bucket.toRatio)}%`;
+  }
+
+  /** A calendar cell class from its band, so colour is never the only cue. */
+  bandClass(band: number | null): string {
+    if (band === null) { return 'band-empty'; }
+    if (band === 0) { return 'band-flat'; }
+    return band > 0 ? `band-gain-${band}` : `band-loss-${-band}`;
   }
 
   pnlTone(value: string | null | undefined): string {
