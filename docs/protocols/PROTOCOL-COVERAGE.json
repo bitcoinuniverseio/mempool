@@ -2,8 +2,8 @@
   "schemaVersion": "universe-explorer-protocol-manifest-v1",
   "registryVersion": "1.0.0",
   "sourceRepository": "bitcoinuniverseio/backend-apis",
-  "sourceSha": "100c0ec0ccd3fd28c3f7c89bec7cb6b5575c8d96",
-  "generatedAt": "2026-08-30T20:52:56.287Z",
+  "sourceSha": "17118a01b466596996e81a05e129994e13045864",
+  "generatedAt": "2026-09-01T09:04:49.162Z",
   "primaryStrip": [
     "ORDINALS",
     "RUNES",
@@ -643,9 +643,10 @@
       "displayName": "CAT-20",
       "shortName": "CAT-20",
       "family": "OTHER",
-      "chain": "bitcoin",
+      "chain": "fractal",
       "networks": [
-        "mainnet"
+        "mainnet",
+        "testnet"
       ],
       "icon": "protocol-cat20",
       "visualToken": "protocol-cat20",

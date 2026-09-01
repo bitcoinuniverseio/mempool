@@ -71,6 +71,10 @@
   .panel { margin-bottom: 0; }
 }
 
+.live {
+  margin-top: 0.75rem;
+}
+
 .universe-chip {
   @include u.universe-chip;
 }

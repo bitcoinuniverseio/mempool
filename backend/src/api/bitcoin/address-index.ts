@@ -219,15 +219,84 @@ export async function $probeAddressIndex(chainTip: number | null): Promise<Addre
     return { ...base, ...addressIndexState(factsFor(backendKind, maxBehindTip, chainTip)) };
   }
 
-  // The Electrum path is served from inside this process rather than by a
-  // separate index, so what there is to probe is the socket the client already
-  // owns. It reports as configured and reachable when a host and port are set,
-  // and never as ready, because this deployment does not run on it and calling
-  // it ready would be a claim nothing here checked.
+  // The Electrum path is served through the client this process already holds
+  // open, so what there is to probe is that socket.
+  //
+  // This used to report configured and reachable and never an indexed height,
+  // on the stated grounds that the deployment did not run on Electrum. It
+  // does. The consequence was that addressLookup could only ever be degraded,
+  // and since the cutover gate requires ready, every cutover on this host
+  // switched, failed its own verification and rolled itself back. So the same
+  // three questions the esplora branch answers are answered here: what height
+  // does the index have, does a real address summary come back usable, and
+  // does a real UTXO list.
   if (backendKind === 'electrum') {
     const configured = !!config.ELECTRUM.HOST && !!config.ELECTRUM.PORT;
-    const facts = factsFor(backendKind, maxBehindTip, chainTip, { configured, reachable: configured });
-    return { ...base, configured, reachable: configured, ...addressIndexState(facts) };
+    if (!configured) {
+      return { ...base, ...addressIndexState(factsFor(backendKind, maxBehindTip, chainTip)) };
+    }
+
+    // Loaded here rather than at the top of the file. The state rule above is
+    // pure and is imported by its own test in isolation; a top-level import of
+    // the API factory drags the whole backend graph, and the compiled gbt
+    // module with it, into anything that merely wants to reason about states.
+    let client: {
+      $getIndexedTip?: () => Promise<number | null>;
+      $getAddress?: (address: string) => Promise<unknown>;
+      $getAddressUtxos?: (address: string) => Promise<unknown>;
+    };
+    try {
+      const { default: api } = await import('./bitcoin-api-factory');
+      client = api as unknown as typeof client;
+    } catch (e) {
+      logger.debug('Address index probe could not load the Bitcoin API: ' + (e instanceof Error ? e.message : e));
+      const facts = factsFor(backendKind, maxBehindTip, chainTip, { configured: true, reachable: false });
+      return { ...base, configured: true, reachable: false, ...addressIndexState(facts) };
+    }
+
+    let reachable = false;
+    let indexedTip: number | null = null;
+    let summaryAnswered = false;
+    let utxoAnswered = false;
+
+    try {
+      indexedTip = (await client.$getIndexedTip?.()) ?? null;
+      reachable = indexedTip !== null;
+    } catch (e) {
+      logger.debug('Address index probe could not read the indexed height: ' + (e instanceof Error ? e.message : e));
+    }
+
+    if (reachable) {
+      try {
+        const summary = await client.$getAddress?.(ADDRESS_PROBE);
+        summaryAnswered = addressSummaryProblems(summary, ADDRESS_PROBE).length === 0;
+      } catch (e) {
+        logger.debug('Address index probe could not read an address summary: ' + (e instanceof Error ? e.message : e));
+      }
+      try {
+        const utxos = await client.$getAddressUtxos?.(ADDRESS_PROBE);
+        utxoAnswered = utxoListProblems(utxos).length === 0;
+      } catch (e) {
+        logger.debug('Address index probe could not read a UTXO list: ' + (e instanceof Error ? e.message : e));
+      }
+    }
+
+    const facts = factsFor(backendKind, maxBehindTip, chainTip, {
+      configured: true,
+      reachable,
+      indexedTip,
+      summaryAnswered,
+      utxoAnswered,
+    });
+    return {
+      ...base,
+      configured: true,
+      reachable,
+      indexedTip,
+      summaryAnswered,
+      utxoAnswered,
+      ...addressIndexState(facts),
+    };
   }
 
   const configured = !!(config.ESPLORA.UNIX_SOCKET_PATH || config.ESPLORA.REST_API_URL);

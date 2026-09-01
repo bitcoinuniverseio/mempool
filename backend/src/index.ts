@@ -165,7 +165,7 @@ class Server {
       .use(runtimeMetricsMiddleware())
       ;
 
-    if (config.DATABASE.ENABLED && config.FIAT_PRICE.ENABLED) {
+    if (config.DATABASE.ENABLED) {
       /** @asyncUnsafe */
       await priceUpdater.$initializeLatestPriceWithDb();
     }
