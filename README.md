@@ -52,6 +52,24 @@ guesses.
 - **First-party data only.** Every figure comes from Bitcoin Universe's own
   nodes, indexes, and protocol authorities.
 
+## What it is not
+
+- **Not a wallet.** It holds no keys, has no accounts, and cannot move funds.
+  The only thing it writes to a chain is a raw transaction you hand it to
+  broadcast.
+- **Not a marketplace.** There is no listing, no bidding, no purchase, and no
+  price for any asset it shows.
+- **Not a trading or valuation tool.** Fiat conversion, where enabled, is a
+  convenience reading and nothing more.
+- **Not an asset authority.** It reads what first-party indexers report and
+  says which one said it. It does not decide what an inscription or a rune is.
+- **Not a Zcash shielded explorer.** Only the transparent side is public. The
+  shielded side is reported by shape and by the one amount the chain itself
+  makes public, never by inference.
+- **Not a general-purpose Esplora host.** The API exists to serve this product.
+  Nothing here promises rate limits, uptime, or a compatibility window to a
+  third-party client.
+
 ## Three chains, and what each can answer
 
 Chains are not interchangeable, and the interface does not pretend they are. The
@@ -210,10 +228,24 @@ is measured rather than trusted:
 `docs/product/DESIGN-SYSTEM.md` is the full account. The gates that hold it are
 in the testing section below.
 
+## Documentation
+
+[`docs/README.md`](docs/README.md) is the index. The documents a developer
+reaches for first:
+
+| | |
+| --- | --- |
+| [`docs/operations/INSTALL.md`](docs/operations/INSTALL.md) | requirements, build, run your own instance |
+| [`docs/operations/CONFIGURATION.md`](docs/operations/CONFIGURATION.md) | every configuration key that matters |
+| [`docs/api/HTTP-API.md`](docs/api/HTTP-API.md) | the public HTTP surface and how to integrate |
+| [`docs/operations/RELEASING.md`](docs/operations/RELEASING.md) | how releases are cut and what the version numbers mean |
+| [`docs/data/ASSET-EVIDENCE.md`](docs/data/ASSET-EVIDENCE.md) | what the explorer will and will not claim about an asset |
+
 ## Local development
 
 Requires Node 24.19.0 and npm 11.17.0, both pinned in `.nvmrc` and
-`package.json`.
+`package.json`. Building the backend also needs Rust and `cargo` 1.84, because
+`rust/gbt` is compiled first.
 
 ```bash
 cd backend && npm ci && npm run build && npm run start
@@ -223,8 +255,16 @@ cd backend && npm ci && npm run build && npm run start
 cd frontend && npm ci && npm run serve
 ```
 
-The frontend proxies `/api` to the backend. To point it at a running deployment
-instead, set `MEMPOOL_BACKEND` in `frontend/proxy.conf.json`.
+The dev server proxies `/api` to `http://localhost:8999`. The proxy table is
+`frontend/proxy.conf.local.js`; to point the dev server at a different backend,
+edit the targets there.
+
+Building the backend runs `rust/gbt` first, so `cargo` has to be on the path.
+[`docs/operations/INSTALL.md`](docs/operations/INSTALL.md) has the full
+requirements, the build, and what the explorer can and cannot do without the
+protocol overlay.
+[`docs/operations/CONFIGURATION.md`](docs/operations/CONFIGURATION.md) is the
+configuration reference.
 
 ## Testing
 
@@ -284,6 +324,12 @@ registry rather than serving partially trusted data.
 
 ## Deployment
 
+Universe Explorer cuts its own releases, tagged `universe-YYYY.MM.DD` with a
+`.N` suffix for a second release on the same day. Those are Universe releases;
+upstream's tags in this repository are the upstream project's release line.
+[`docs/operations/RELEASING.md`](docs/operations/RELEASING.md) explains the
+version scheme, the artifact, and the gates.
+
 `docs/operations/DEPLOYMENT.md` documents the release procedure. Releases are
 deployed beside the running one and the gateway upstream is flipped, so a
 rollback is a single flip back. Every deployment publishes its own commit on
@@ -328,4 +374,5 @@ This repository has its issue tracker turned off, so a pull request is how
 anything gets raised, discussed, and recorded. Open one even for a report you
 cannot fix yourself: describe what you saw and where, and leave the diff empty
 if you have nothing to change yet. [CONTRIBUTING.md](CONTRIBUTING.md) has the
-rest.
+rest, and [SUPPORT.md](SUPPORT.md) says where a given question belongs and what
+the explorer already answers for itself.

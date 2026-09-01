@@ -496,13 +496,17 @@ if status != 200:
     sys.exit(1)
 address = json.loads(body)['features'].get('addressLookup')
 if address is None:
-    print('the capability report does not mention address lookup at all')
-    sys.exit(1)
-if address['state'] != 'ready':
+    # A release from before this capability existed cannot report it. That is
+    # the normal case when rolling back, and it is the worst possible moment to
+    # raise a false alarm, so the functional checks below decide instead. They
+    # ask the origin the same questions a browser does and need no self report.
+    print('this release predates the address capability; judging it by what it serves')
+elif address['state'] != 'ready':
     print(f"address lookup is {address['state']}: {address.get('degradedReason')}")
     sys.exit(1)
-print(f"address lookup is ready on {address.get('backendKind')} "
-      f"at block {address.get('indexedTip')} of {address.get('bitcoinCoreTip')}")
+else:
+    print(f"address lookup is ready on {address.get('backendKind')} "
+          f"at block {address.get('indexedTip')} of {address.get('bitcoinCoreTip')}")
 
 # Summary, first history page, and UTXOs, through the gateway, exactly as a
 # reader's browser asks for them.

@@ -40,6 +40,27 @@ class BitcoindElectrsApi extends BitcoinApi implements AbstractBitcoinApi {
       });
   }
 
+  /**
+   * The height this index has. Null when the server did not say.
+   *
+   * Electrum reports its tip through the header subscription, which answers
+   * with the current header immediately on subscribe. Nothing else in this
+   * class needed it, so nothing asked, and the capability report had to call
+   * the whole feature degraded for want of one number.
+   *
+   * @asyncSafe
+   */
+  async $getIndexedTip(): Promise<number | null> {
+    try {
+      const header = await this.electrumClient.blockchainHeaders_subscribe();
+      const height = header?.height ?? header?.block_height;
+      return Number.isInteger(height) ? height : null;
+    } catch (e) {
+      logger.debug('Electrum did not report its indexed height: ' + (e instanceof Error ? e.message : e));
+      return null;
+    }
+  }
+
   /** @asyncUnsafe */
   async $getAddress(address: string): Promise<IEsploraApi.Address> {
     const addressInfo = await this.bitcoindClient.validateAddress(address);
