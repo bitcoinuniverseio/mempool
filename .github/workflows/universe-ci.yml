@@ -57,6 +57,19 @@ jobs:
       - name: The protocol roster gate fires on the states it exists for
         run: node --test scripts/universe/protocol-contract.test.mjs
 
+      # The portfolio API is described by a document backend-apis generates
+      # from its own contracts, and this repository reads that API through
+      # handwritten interfaces. Handwritten interfaces are where a contract
+      # quietly stops being true: a field is renamed upstream, the interface
+      # keeps the old name, and every read of it is undefined at runtime
+      # while the compiler stays perfectly happy. This holds the two
+      # together in both directions.
+      - name: The pinned portfolio contract matches the interfaces that read it
+        run: node scripts/universe/portfolio-contract.mjs --check
+
+      - name: The portfolio contract gate fires on the states it exists for
+        run: node --test scripts/universe/portfolio-contract.test.mjs
+
       - name: No em dash anywhere
         run: node scripts/universe/check-text.mjs
 
