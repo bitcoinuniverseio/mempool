@@ -240,12 +240,19 @@ export async function $probeAddressIndex(chainTip: number | null): Promise<Addre
     // pure and is imported by its own test in isolation; a top-level import of
     // the API factory drags the whole backend graph, and the compiled gbt
     // module with it, into anything that merely wants to reason about states.
-    const { default: api } = await import('./bitcoin-api-factory');
-    const client = api as unknown as {
+    let client: {
       $getIndexedTip?: () => Promise<number | null>;
       $getAddress?: (address: string) => Promise<unknown>;
       $getAddressUtxos?: (address: string) => Promise<unknown>;
     };
+    try {
+      const { default: api } = await import('./bitcoin-api-factory');
+      client = api as unknown as typeof client;
+    } catch (e) {
+      logger.debug('Address index probe could not load the Bitcoin API: ' + (e instanceof Error ? e.message : e));
+      const facts = factsFor(backendKind, maxBehindTip, chainTip, { configured: true, reachable: false });
+      return { ...base, configured: true, reachable: false, ...addressIndexState(facts) };
+    }
 
     let reachable = false;
     let indexedTip: number | null = null;
