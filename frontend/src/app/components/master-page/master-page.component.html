@@ -109,6 +109,12 @@
           <span class="nav-label" i18n="master-page.nav-protocols">Protocols</span>
         </a>
       </li>
+      <li class="nav-item" routerLinkActive="active" id="btn-universe-portfolio" *ngIf="network.val === ''">
+        <a class="nav-link" routerLink="/portfolio" (click)="collapse()">
+          <span class="nav-icon"><app-svg-images name="nav-universe-portfolio" width="21.59" height="100%"></app-svg-images></span>
+          <span class="nav-label" i18n="master-page.nav-portfolio">Portfolio</span>
+        </a>
+      </li>
       <li class="nav-item" routerLinkActive="active" id="btn-lightning" *ngIf="activeChain === 'bitcoin' && stateService.networkSupportsLightning()">
         <a class="nav-link" [routerLink]="['/lightning' | relativeUrl]" (click)="collapse()">
           <span class="nav-icon"><app-svg-images name="nav-bolt" width="21.59" height="100%"></app-svg-images></span>
