@@ -1,0 +1,64 @@
+<div class="container-xl universe-portfolio-lookup">
+
+  <header class="page-head">
+    <h1 i18n="universe.portfolio.lookup-heading">Address portfolio</h1>
+    <p class="lede" i18n="universe.portfolio.lookup-lede">
+      Everything an address holds across the Universe protocols: coins, tokens,
+      inscriptions, names, and rare sats, with the exact source and coverage of
+      every answer. Watch any address; no wallet or account is needed.
+    </p>
+  </header>
+
+  <section class="panel" aria-labelledby="portfolio-lookup-form-heading">
+    <h2 id="portfolio-lookup-form-heading" class="visually-hidden" i18n="universe.portfolio.lookup-form-heading">Look up an address</h2>
+    <form (ngSubmit)="submit()">
+      <label class="address-label" for="portfolio-address-input" i18n="universe.portfolio.lookup-label">Address</label>
+      <input
+        id="portfolio-address-input"
+        name="address"
+        type="text"
+        autocomplete="off"
+        spellcheck="false"
+        [value]="input"
+        (input)="update($any($event.target).value)"
+        placeholder="bc1p…, 1…, 3…, D…, t1…"
+        i18n-placeholder="universe.portfolio.lookup-placeholder"
+      />
+    </form>
+
+    <div class="interpretations" *ngIf="interpretations.length > 0">
+      <p class="chain-question" *ngIf="interpretations.length > 1" i18n="universe.portfolio.lookup-choose">
+        This address is readable on more than one chain. They are separate
+        ledgers with separate holdings; pick the one you mean.
+      </p>
+      <div class="chain-buttons">
+        <button
+          type="button"
+          class="chain-button"
+          *ngFor="let interpretation of interpretations"
+          (click)="open(interpretation)"
+        >
+          <span class="chain-name">{{ interpretation.label }}</span>
+          <span class="chain-network" *ngIf="interpretation.network !== 'mainnet'">{{ interpretation.network }}</span>
+          <span class="chain-open" i18n="universe.portfolio.lookup-open">Open portfolio</span>
+        </button>
+      </div>
+    </div>
+
+    <p class="no-reading" *ngIf="touched && input.trim().length > 0 && interpretations.length === 0" i18n="universe.portfolio.lookup-none">
+      This does not look like an address on any served chain yet. Check for
+      typos or missing characters.
+    </p>
+  </section>
+
+  <section class="panel" aria-labelledby="portfolio-lookup-about-heading">
+    <h2 id="portfolio-lookup-about-heading" i18n="universe.portfolio.about-title">What you get</h2>
+    <ul class="about-list">
+      <li i18n="universe.portfolio.about-holdings">Every asset the configured sources can prove, with exact quantities and the outputs that hold them.</li>
+      <li i18n="universe.portfolio.about-truth">The state of every source, on every read. A source that did not answer is shown as exactly that, never as a zero.</li>
+      <li i18n="universe.portfolio.about-chains">Bitcoin, Fractal, Dogecoin, and Zcash results are kept fully separate, even when an address string is valid on more than one.</li>
+      <li i18n="universe.portfolio.about-local">Saved addresses stay in this browser. Nothing is sent to a server about what you watch.</li>
+    </ul>
+  </section>
+
+</div>
