@@ -37,6 +37,11 @@ class Mempool {
   private vBytesPerSecond: number = 0;
   private mempoolProtection = 0;
   private latestTransactions: any[] = [];
+  /**
+   * When the mempool last finished an update cycle. Without this, a mempool
+   * that silently stopped updating is indistinguishable from a quiet one.
+   */
+  private lastMempoolUpdateAt: number | null = null;
 
   private ESPLORA_MISSING_TX_WARNING_THRESHOLD = 100;
   private SAMPLE_TIME = 10000; // In ms
@@ -207,6 +212,11 @@ class Mempool {
   /** @asyncUnsafe */
   public async $updateMemPoolInfo() {
     this.mempoolInfo = await this.$getMempoolInfo();
+  }
+
+  /** Null until the first update cycle finishes. */
+  public getLastMempoolUpdateAt(): number | null {
+    return this.lastMempoolUpdateAt;
   }
 
   public getMempoolInfo(): IBitcoinApi.MempoolInfo {
@@ -415,6 +425,8 @@ class Mempool {
       await redisCache.$removeTransactions(deletedTransactions.map(tx => tx.txid));
       await rbfCache.updateCache();
     }
+
+    this.lastMempoolUpdateAt = Date.now();
 
     const end = new Date().getTime();
     const time = end - start;
