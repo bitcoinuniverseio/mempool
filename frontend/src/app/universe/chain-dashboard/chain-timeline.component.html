@@ -1,8 +1,11 @@
 <div class="timeline-shell" *ngIf="reading as strip" [class.time-ltr]="timeLtr$ | async">
 
-  <div class="timeline-scroll" tabindex="0" role="region"
+  <div class="timeline-scroll" [class.dragging]="dragging" tabindex="0" role="region"
        aria-label="Block timeline, scrolls sideways"
        i18n-aria-label="universe.timeline.region-label"
+       (pointerdown)="startDrag($event)" (pointermove)="drag($event)"
+       (pointerup)="endDrag($event)" (pointercancel)="endDrag($event)"
+       (click)="suppressDragClick($event)"
        data-scroll-region>
     <div class="timeline-row">
 
@@ -14,20 +17,17 @@
              *ngFor="let slot of futureDisplay; trackBy: trackBySlot">
           <span class="cube-height" *ngIf="slot.height as height" [attr.title]="height.exact">{{ height.display }}</span>
           <span class="cube-height placeholder" *ngIf="!slot.height" i18n="universe.timeline.height-unknown">height pending</span>
-          <div class="cube-block" [style.background]="cubeBackground(slot.cube)">
-            <div class="cube-body">
-              <span class="cube-median" *ngIf="slot.cube.medianFee">
-                ~{{ slot.cube.medianFee }}
-                <span class="cube-unit">{{ strip.unit }}</span>
-              </span>
-              <span class="cube-span" *ngIf="slot.cube.feeSpan" i18n="universe.timeline.fee-span">{{ slot.cube.feeSpan.low }} to {{ slot.cube.feeSpan.high }}</span>
-              <span class="cube-count" *ngIf="slot.cube.txCount" [attr.title]="slot.cube.txCount.exact"
-                    i18n="universe.timeline.tx-count">{{ slot.cube.txCount.display }} transactions</span>
-              <span class="cube-eta" *ngIf="slot.targetMinutes !== null"
-                    title="Target spacing, not a promise"
-                    i18n-title="universe.timeline.eta-title"
-                    i18n="universe.timeline.eta">In ~{{ slot.targetMinutes }} min</span>
-            </div>
+          <div class="cube-block" [style.background]="cubeBackground(slot.cube)"></div>
+          <div class="cube-readings">
+            <span class="cube-median" *ngIf="slot.cube.medianFee">~{{ slot.cube.medianFee }}</span>
+            <span class="cube-unit">{{ strip.unit }}</span>
+            <span class="cube-span" *ngIf="slot.cube.feeSpan" i18n="universe.timeline.fee-span">{{ slot.cube.feeSpan.low }} to {{ slot.cube.feeSpan.high }}</span>
+            <span class="cube-count" *ngIf="slot.cube.txCount" [attr.title]="slot.cube.txCount.exact"
+                  i18n="universe.timeline.tx-count">{{ slot.cube.txCount.display }} transactions</span>
+            <span class="cube-eta" *ngIf="slot.targetMinutes !== null"
+                  title="Target spacing, not a promise"
+                  i18n-title="universe.timeline.eta-title"
+                  i18n="universe.timeline.eta">In ~{{ slot.targetMinutes }} min</span>
           </div>
           <div class="cube-caption">
             <span class="universe-chip" *ngIf="slot.cube.tierLabel" [ngClass]="'state-' + slot.cube.tierTone">{{ slot.cube.tierLabel }}</span>
@@ -58,18 +58,15 @@
              [attr.title]="block.height.exact">{{ block.height.display }}</a>
           <a class="cube-block confirmed-block" [routerLink]="['/', chain, 'block', block.hash]"
              [style.background]="confirmedBackground(block)"
-             [attr.aria-label]="'Block ' + block.height.exact">
-            <div class="cube-body">
-              <span class="cube-median" *ngIf="block.medianFeeRate">
-                ~{{ block.medianFeeRate }}
-                <span class="cube-unit">{{ strip.unit }}</span>
-              </span>
-              <span class="cube-count" *ngIf="block.totalFees" [attr.title]="block.totalFees.exact">{{ block.totalFees.display }} {{ ticker }}</span>
-              <span class="cube-count" *ngIf="block.txCount" [attr.title]="block.txCount.exact"
-                    i18n="universe.timeline.block-tx-count">{{ block.txCount.display }} transactions</span>
-              <span class="cube-eta" [attr.title]="block.timeExact">{{ block.age }}</span>
-            </div>
-          </a>
+             [attr.aria-label]="'Block ' + block.height.exact"></a>
+          <div class="cube-readings">
+            <span class="cube-median" *ngIf="block.medianFeeRate">~{{ block.medianFeeRate }}</span>
+            <span class="cube-unit">{{ strip.unit }}</span>
+            <span class="cube-count" *ngIf="block.totalFees" [attr.title]="block.totalFees.exact">{{ block.totalFees.display }} {{ ticker }}</span>
+            <span class="cube-count" *ngIf="block.txCount" [attr.title]="block.txCount.exact"
+                  i18n="universe.timeline.block-tx-count">{{ block.txCount.display }} transactions</span>
+            <span class="cube-eta" [attr.title]="block.timeExact">{{ block.age }}</span>
+          </div>
           <div class="cube-caption miner-caption">
             <span class="miner-name" *ngIf="block.minerName; else unknownMiner">{{ block.minerName }}</span>
             <ng-template #unknownMiner>
