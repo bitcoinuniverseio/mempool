@@ -685,18 +685,14 @@ jobs:
   # two steps back in the one above, which is where they belong.
   mobile-engines:
     name: WebKit and Firefox
-    # RunsOn Spot, per the change on develop that replaced the GitHub-hosted
-    # label here. This was the one required check in this workflow that needed
-    # a GitHub-hosted runner, and on 2026-08-30 the organization's plan stopped
-    # providing them: every run of this job failed while the four self-hosted
-    # checks beside it kept passing.
-    #
-    # Worth revisiting: this job takes screenshots at seven widths, and the
-    # routing rule those changes introduced keeps screenshot and baseline work
-    # on the local fleet because its output depends on the host. `browser-heavy`
-    # carries a browser and the libraries these engines need, and costs nothing.
-    runs-on: runs-on=${{ github.run_id }}-mobile_engines/runner=universe-hosted/cpu=2+8/env=production
+    # The Windows browser fleet can run both engines without a privileged
+    # system package install. The job uses Git Bash so it shares one script
+    # with the Linux browser checks.
+    runs-on: [self-hosted, Windows, X64, universe-router]
     timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -720,15 +716,9 @@ jobs:
         working-directory: scripts/universe/visual-qa
         run: npm ci
 
-      # `--with-deps` installs system libraries and needs root, which a
-      # self-hosted runner account may not have. These runners already carry
-      # what Chromium needs, which is very nearly the same set, so a refused
-      # dependency install falls back to fetching the engines alone rather
-      # than failing a gate over a permission.
-      - name: Fetch the engines and what they need to start
+      - name: Fetch the engines
         working-directory: scripts/universe/visual-qa
-        run: |
-          npx playwright install --with-deps webkit firefox             || npx playwright install webkit firefox
+        run: npx playwright install webkit firefox
 
       - name: Serve the built frontend
         run: |
