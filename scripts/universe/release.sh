@@ -52,30 +52,35 @@ cmd_install() {
   mkdir -p "$dir"
   tar -xzf "$tarball" -C "$dir"
 
-  # Dependencies and the compiled gbt module do not change between most
-  # releases, so they are hard-linked from the running one. That keeps the
-  # install quick and the disk flat, and the files stay immutable either way.
-  #
-  # It is only correct while the dependency tree is actually unchanged. Hard
-  # linking a stale node_modules into a release that asked for different
-  # packages produces a backend that runs, imports the wrong versions, and
-  # fails somewhere unrelated later. The artifact carries its lock file so
-  # that this can be checked here, where both trees are visible, rather than
-  # trusted at build time where only one of them is.
-  if [ -n "$previous" ]; then
+  # Reuse the running dependency tree only when both lock files match. A
+  # changed lock must use the package inputs carried by the new artifact.
+  local reuse_previous=false
+  if [ -n "$previous" ] && [ -d "$previous/backend/node_modules" ]; then
     previous_lock="$previous/backend/package-lock.json"
     release_lock="$dir/backend/package-lock.json"
-    if [ -f "$previous_lock" ] && [ -f "$release_lock" ]; then
-      if ! cmp -s "$previous_lock" "$release_lock"; then
-        fail "backend dependencies changed since $(basename "$previous"); install this release its own node_modules rather than hard linking, then re-run"
-      fi
+    if [ -f "$previous_lock" ] && [ -f "$release_lock" ] && cmp -s "$previous_lock" "$release_lock"; then
+      reuse_previous=true
     fi
   fi
-  if [ -n "$previous" ] && [ -d "$previous/backend/node_modules" ]; then
-    [ -d "$dir/backend/node_modules" ] || cp -al "$previous/backend/node_modules" "$dir/backend/node_modules"
+
+  if [ ! -d "$dir/backend/node_modules" ] && [ "$reuse_previous" = true ]; then
+    cp -al "$previous/backend/node_modules" "$dir/backend/node_modules"
     [ -d "$dir/backend/rust-gbt" ]     || cp -al "$previous/backend/rust-gbt" "$dir/backend/rust-gbt"
     [ -f "$dir/backend/package.json" ] || cp -a  "$previous/backend/package.json" "$dir/backend/package.json"
     [ -d "$dir/rust" ]                 || cp -al "$previous/rust" "$dir/rust"
+  fi
+
+  if [ ! -d "$dir/backend/node_modules" ]; then
+    [ -f "$dir/backend/package.json" ]      || fail "release has no backend package manifest"
+    [ -f "$dir/backend/package-lock.json" ] || fail "release has no backend lock file"
+    [ -d "$dir/backend/vendor" ]            || fail "release has no vendored package inputs"
+    [ -d "$dir/backend/rust-gbt" ]          || fail "release has no compiled gbt module"
+    log "installing the release dependency tree"
+    (
+      cd "$dir/backend"
+      npm ci --omit=dev --omit=optional --ignore-scripts
+      node -e "require('@bitcoinuniverse/ecosystem-contracts'); require('rust-gbt')"
+    ) || fail "the release dependency tree could not be installed"
   fi
 
   printf '%s\n' "$sha" > "$dir/RELEASE-SHA"
