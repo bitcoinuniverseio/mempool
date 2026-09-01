@@ -31,6 +31,8 @@ import {
 import { formatAtomicAmount, shortenIdentifier } from '@app/universe/universe-evidence';
 import { BookmarkButtonComponent } from '@app/universe/bookmark-button/bookmark-button.component';
 import { ExplorerChain, ExplorerNetwork } from '@app/universe/universe.types';
+import { PortfolioAlertsService } from '@app/universe/portfolio/portfolio-alerts.service';
+import { PortfolioAlert } from '@app/universe/portfolio/portfolio-alerts';
 import {
   MAXIMUM_GROUP_LENGTH,
   MAXIMUM_LABEL_LENGTH,
@@ -138,6 +140,8 @@ export class PortfolioComponent implements OnInit, OnDestroy {
   private subscriptions = new Subscription();
 
   watched = false;
+  alerts: readonly PortfolioAlert[] = [];
+  alertsEnabled = false;
   editingLabel = false;
   labelDraft = '';
   groupDraft = '';
@@ -149,6 +153,7 @@ export class PortfolioComponent implements OnInit, OnDestroy {
     private api: PortfolioApiService,
     private seo: SeoService,
     private watchlist: PortfolioWatchlistService,
+    private alertsService: PortfolioAlertsService,
     private changeDetector: ChangeDetectorRef,
   ) {}
 
@@ -163,6 +168,22 @@ export class PortfolioComponent implements OnInit, OnDestroy {
 
   get knownGroups(): readonly string[] {
     return this.watchlist.groups();
+  }
+
+  /** Turns browser notifications on, asked for by the visitor only. */
+  async enableNotifications(): Promise<void> {
+    this.alertsEnabled = await this.alertsService.requestNotifications();
+    this.changeDetector.markForCheck();
+  }
+
+  dismissAlerts(): void {
+    this.alerts = [];
+    this.alertsService.dismissAll();
+    this.changeDetector.markForCheck();
+  }
+
+  trackByAlert(index: number, alert: PortfolioAlert): string {
+    return alert.id;
   }
 
   toggleWatch(): void {
@@ -239,6 +260,17 @@ export class PortfolioComponent implements OnInit, OnDestroy {
             nextCursor: response.nextCursor,
             loadingMore: false,
           };
+          // Only a watched address is compared against its last seen
+          // state; an address somebody merely looked at once is not
+          // something to be told about later.
+          if (this.watched) {
+            this.alerts = this.alertsService.evaluate(
+              this.chain,
+              this.network,
+              this.address,
+              response.summary,
+            );
+          }
           this.changeDetector.markForCheck();
         },
         error: (error: { status?: number }) => {
