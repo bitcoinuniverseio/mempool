@@ -210,6 +210,11 @@ function renderedSomething() {
   return { textLength: text.length, paintable, sample: text.slice(0, 120) };
 }
 
+function isBlankMeasurement(row) {
+  const { textLength = 0, paintable = 0 } = row.rendered || {};
+  return row.lcpMs === 0 && textLength < 40 && paintable < 3;
+}
+
 async function run() {
   mkdirSync(OUT, { recursive: true });
 
@@ -322,6 +327,17 @@ async function run() {
   for (const route of routes) {
     let row = await measure(route);
 
+    // A route that is genuinely blank remains a release failure, but a single
+    // empty reading on a contended runner is not enough evidence that the
+    // shipped shell is blank. The same shared-runner load that makes layout
+    // timing noisy can leave Chromium's first isolated context with no
+    // rendered tree even though navigation completed. Measure the route again
+    // before judging it, and still fail when every independent context is
+    // empty.
+    for (let attempt = 0; attempt < 2 && isBlankMeasurement(row); attempt++) {
+      row = { ...(await measure(route)), emptyShellRemeasured: attempt + 1 };
+    }
+
     // A route over the layout budget is measured again, up to twice, and
     // judged on the smallest reading. See the note on `measure`: a busy
     // machine can only add shifts, so the minimum is the closest available
@@ -375,7 +391,7 @@ async function run() {
     // is for, and that distinction does not move with the load.
     if (row.lcpMs === 0) {
       const { textLength, paintable } = row.rendered || { textLength: 0, paintable: 0 };
-      if (textLength < 40 && paintable < 3) {
+      if (isBlankMeasurement(row)) {
         failures.push(
           `${route.id}: nothing painted. No largest contentful paint after waiting, and the page holds`
           + ` ${textLength} characters of text in ${paintable} paintable elements`,

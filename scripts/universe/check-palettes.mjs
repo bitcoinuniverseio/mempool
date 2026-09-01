@@ -256,6 +256,15 @@ for (const [theme, marker] of [['light', LIGHT], ['dark', DARK]]) {
   }
 }
 
+// The accelerate chip predates the Universe token layer. Its semantic ink is
+// authoritative once tokens load, while the exact light-token literal protects
+// the legacy first paint. Hold that fallback to the same body-text floor on
+// both fills the chip can wear.
+check('accelerate chip first-paint fallback', '#ffffff', [
+  token(tokensSource, 'u-lavender', { after: LIGHT }),
+  token(tokensSource, 'u-brand', { after: LIGHT }),
+]);
+
 // --- High contrast ---------------------------------------------------------
 
 const hcSurfaces = ['u-surface-page', 'u-surface-raised', 'u-surface-sunken', 'u-surface-inset'].map((n) =>
