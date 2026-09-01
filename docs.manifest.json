@@ -4,7 +4,7 @@
   "name": "Universe explorer",
   "classification": "infrastructure",
   "repository": "bitcoinuniverseio/mempool",
-  "documentationUrl": "https://docs.bitcoinuniverse.io/infrastructure/mempool/",
+  "documentationUrl": "https://docs.bitcoinuniverse.io/developers/interfaces/",
   "docsRoot": "docs",
   "sourceRef": "develop",
   "releasedRef": "universe-2026.08.29.2",
