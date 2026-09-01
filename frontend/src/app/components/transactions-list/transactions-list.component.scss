@@ -438,7 +438,7 @@ h2 {
 	// row's text colour over a filled purple chip. This is the paired
 	// foreground for both fills it wears: the lavender at rest and the brand
 	// colour the pulse animation paints.
-	color: var(--u-brand-contrast, #ffffff);
+	color: var(--u-brand-contrast);
 	margin-left: 5px;
 
 	&.blink {
