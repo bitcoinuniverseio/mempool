@@ -28,6 +28,10 @@ import test from 'node:test';
 const here = dirname(fileURLToPath(import.meta.url));
 const script = readFileSync(join(here, 'release.sh'), 'utf8').replaceAll('\r\n', '\n');
 const workdir = mkdtempSync(join(tmpdir(), 'release-gates-'));
+const artifactWorkflow = readFileSync(
+  join(here, '..', '..', '.github', 'workflows', 'universe-release-artifact.yml'),
+  'utf8',
+).replaceAll('\r\n', '\n');
 
 function bash(source, env = {}) {
   const result = spawnSync('bash', ['-c', source], {
@@ -38,6 +42,13 @@ function bash(source, env = {}) {
   assert.equal(result.error, undefined, `bash did not run: ${result.error}`);
   return result;
 }
+
+test('a changed backend lock can build an independent release dependency tree', () => {
+  assert.match(script, /dependencies_changed=yes/);
+  assert.match(script, /npm ci --omit=dev/);
+  assert.match(artifactWorkflow, /git archive HEAD backend\/vendor rust\/gbt/);
+  assert.match(artifactWorkflow, /stage\/rust\/gbt\/Cargo\.toml/);
+});
 
 // ------------------------------------------------- the listener parser ----
 

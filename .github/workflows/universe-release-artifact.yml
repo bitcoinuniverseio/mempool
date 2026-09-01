@@ -80,11 +80,9 @@ jobs:
       # release.sh reads the frontend from frontend/build, the backend from
       # backend/dist, and the gateway from scripts/universe. node_modules and
       # the compiled gbt module are not packed: install hard-links them from the
-      # running release, which is correct only while the dependency tree is
-      # unchanged. The lock file is packed so that release.sh install can
-      # compare it against the running release and refuse the hard link when it
-      # differs. That check belongs there, where both trees are visible; here
-      # only one of them is.
+      # running release while the dependency tree is unchanged. When it changes,
+      # the tracked Rust source and vendored packages let install create the
+      # exact locked production tree without borrowing stale dependencies.
       - name: Pack
         id: pack
         run: |
@@ -95,6 +93,7 @@ jobs:
           cp -a backend/dist "$stage/backend/dist"
           cp -a backend/package.json "$stage/backend/package.json"
           cp -a backend/package-lock.json "$stage/backend/package-lock.json"
+          git archive HEAD backend/vendor rust/gbt | tar -x -C "$stage"
           cp -a frontend/dist/mempool/browser "$stage/frontend/build"
           cp -a scripts/universe "$stage/scripts/universe"
           # The unit files travel with the release rather than being fetched
@@ -114,6 +113,8 @@ jobs:
           node scripts/universe/release-manifest.mjs emit --commit='${{ steps.sha.outputs.sha }}' --out="$stage/RELEASE-MANIFEST.json"
           test -f "$stage/RELEASE-MANIFEST.json"
           test -f "$stage/backend/dist/index.js"
+          test -f "$stage/backend/vendor/bitcoinuniverse-ecosystem-contracts-1.2.0.tgz"
+          test -f "$stage/rust/gbt/Cargo.toml"
           test -f "$stage/frontend/build/index.html"
           test -f "$stage/scripts/universe/gateway.mjs"
           out="$PWD/mempool-$sha.tar.gz"
