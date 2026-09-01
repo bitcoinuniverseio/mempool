@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "id": "mempool",
+  "name": "Universe explorer",
+  "classification": "infrastructure",
+  "repository": "bitcoinuniverseio/mempool",
+  "documentationUrl": "https://docs.bitcoinuniverse.io/infrastructure/mempool/",
+  "docsRoot": "docs",
+  "sourceRef": "develop",
+  "releasedRef": "universe-2026.08.29.2",
+  "releaseVersion": "2026.08.29.2",
+  "lifecycle": "stable",
+  "chains": [
+    {
+      "chain": "bitcoin",
+      "networks": [
+        "mainnet"
+      ]
+    },
+    {
+      "chain": "dogecoin",
+      "networks": [
+        "mainnet"
+      ]
+    },
+    {
+      "chain": "zcash",
+      "networks": [
+        "mainnet"
+      ]
+    }
+  ],
+  "audiences": [
+    "user",
+    "app-developer",
+    "infrastructure-operator"
+  ],
+  "owners": [
+    "bitcoinuniverseio"
+  ],
+  "upstream": {
+    "project": "mempool/mempool",
+    "url": "https://github.com/mempool/mempool",
+    "license": "AGPL-3.0",
+    "relationship": "fork",
+    "divergenceSummary": "Block and mempool explorer extended to read the asset protocols carried on Bitcoin, Dogecoin, and Zcash. Universe releases are tagged universe-*."
+  },
+  "lastVerified": {
+    "commit": "532621a682bdc52436d1a2a3bee016071cee260d",
+    "timestamp": "2026-09-01T02:00:00Z"
+  },
+  "securityClassification": "public"
+}
