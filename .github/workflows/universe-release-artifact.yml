@@ -95,6 +95,21 @@ jobs:
           cp -a backend/dist "$stage/backend/dist"
           cp -a backend/package.json "$stage/backend/package.json"
           cp -a backend/package-lock.json "$stage/backend/package-lock.json"
+          # The lock file names a first-party dependency by path,
+          # `file:vendor/...tgz`, and the compiled gbt module is reached
+          # through a symlink into the backend directory. Without both, a
+          # release whose dependency tree changed cannot be installed at
+          # all: `npm ci` fails on the missing tarball, and the symlink
+          # dangles. The install hard-links node_modules from the running
+          # release when the lock is unchanged, which is why this went
+          # unnoticed until a release actually added a dependency, and then
+          # it had to be assembled by hand on the host.
+          if [ -d backend/vendor ]; then
+            cp -a backend/vendor "$stage/backend/vendor"
+          fi
+          if [ -d backend/rust-gbt ]; then
+            cp -a backend/rust-gbt "$stage/backend/rust-gbt"
+          fi
           cp -a frontend/dist/mempool/browser "$stage/frontend/build"
           cp -a scripts/universe "$stage/scripts/universe"
           # The unit files travel with the release rather than being fetched
