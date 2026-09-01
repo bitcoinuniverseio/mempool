@@ -1,7 +1,7 @@
 import {
   INDEXED_TIP_METHOD,
   readIndexedTip,
-} from '../api/bitcoin/electrum-api';
+} from '../api/bitcoin/electrum-indexed-tip';
 
 /**
  * How the address index reports the height it has reached.
