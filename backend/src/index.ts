@@ -51,6 +51,9 @@ import capabilitiesRoutes from './api/capabilities.routes';
 import mempoolBlocks from './api/mempool-blocks';
 import walletApi from './api/services/wallets';
 import stratumApi from './api/services/stratum';
+import adminAdapterRoutes from './api/admin-adapter/admin-adapter.routes';
+import adminAdapterRunStore from './api/admin-adapter/admin-adapter.runs';
+import { runtimeMetrics, runtimeMetricsMiddleware } from './api/admin-adapter/admin-adapter.runtime';
 
 class Server {
   private wss: WebSocket.Server | undefined;
@@ -159,6 +162,7 @@ class Server {
       .use(express.urlencoded({ extended: true, limit: '10mb' }))
       .use(express.text({ type: ['text/plain', 'application/base64'], limit: '10mb' }))
       .use(express.json({ limit: '10mb' }))
+      .use(runtimeMetricsMiddleware())
       ;
 
     if (config.DATABASE.ENABLED && config.FIAT_PRICE.ENABLED) {
@@ -217,6 +221,12 @@ class Server {
       void priceUpdater.$run();
     }
     await chainTips.updateOrphanedBlocks();
+
+    runtimeMetrics.start();
+    // A restart in the middle of an operation leaves a run with an expired
+    // lease. Reclaiming here is what stops the panel from showing a spinner
+    // nothing will ever resolve.
+    void adminAdapterRunStore.reconcileAbandonedRuns();
 
     this.setUpHttpApiRoutes();
 
@@ -405,6 +415,24 @@ class Server {
     if (!config.MEMPOOL.OFFICIAL && config.EXTERNAL_DATA_SERVER.MEMPOOL_API) {
       aboutRoutes.initRoutes(this.app);
     }
+    // Capability route registration the optional reports read. Doing this
+    // here keeps "the routes were mounted" a fact rather than a guess.
+    if (Common.isLiquid()) {
+      capabilities.markRoutesRegistered('liquid');
+    }
+    if (config.LIGHTNING.ENABLED) {
+      capabilities.markRoutesRegistered('lightning');
+    }
+    capabilities.markRoutesRegistered('prices');
+    if (config.MEMPOOL_SERVICES.ACCELERATIONS) {
+      capabilities.markRoutesRegistered('accelerations');
+    }
+    if (config.WALLETS.ENABLED) {
+      capabilities.markRoutesRegistered('wallets');
+    }
+    // The private Control Center adapter. Its guard refuses anything that
+    // did not arrive over a private path with a valid signature.
+    adminAdapterRoutes.initRoutes(this.app);
   }
 
   healthCheck(): void {
