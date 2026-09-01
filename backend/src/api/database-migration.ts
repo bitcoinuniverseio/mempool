@@ -7,7 +7,7 @@ import cpfpRepository from '../repositories/CpfpRepository';
 import { RowDataPacket } from 'mysql2';
 
 class DatabaseMigration {
-  private static currentVersion = 106;
+  private static currentVersion = 107;
   private queryTimeout = 3600_000;
   private statisticsAddedIndexed = false;
   private uniqueLogs: string[] = [];
@@ -1204,6 +1204,47 @@ class DatabaseMigration {
 
     // another liquid failure, fix bad timelocks on federation txos
     // (safe to make this conditional on the network since it doesn't change the database schema)
+    // Durable operation runs for the private Control Center adapter.
+    //
+    // The Control Center starts an operation here and polls for its outcome,
+    // so a run has to survive a restart. A run whose lease expires without
+    // reaching a terminal state is moved to NEEDS_REVIEW rather than being
+    // reported as success or failure, since neither can be proven.
+    if (databaseSchemaVersion < 107) {
+      await this.$executeQuery(`CREATE TABLE IF NOT EXISTS admin_adapter_runs (
+        run_id CHAR(36) NOT NULL,
+        operation_id VARCHAR(160) NOT NULL,
+        operation_version VARCHAR(32) NOT NULL,
+        state VARCHAR(24) NOT NULL,
+        target VARCHAR(300) NOT NULL,
+        correlation_id VARCHAR(128) NOT NULL,
+        idempotency_key VARCHAR(200) NULL,
+        actor VARCHAR(200) NOT NULL,
+        reason VARCHAR(500) NULL,
+        queued_at DATETIME(3) NOT NULL,
+        started_at DATETIME(3) NULL,
+        updated_at DATETIME(3) NOT NULL,
+        finished_at DATETIME(3) NULL,
+        heartbeat_at DATETIME(3) NULL,
+        lease_expires_at DATETIME(3) NULL,
+        progress_percent SMALLINT UNSIGNED NULL,
+        cancel_requested TINYINT(1) NOT NULL DEFAULT 0,
+        document JSON NOT NULL,
+        PRIMARY KEY (run_id),
+        UNIQUE KEY uq_admin_adapter_runs_idempotency (operation_id, idempotency_key),
+        INDEX admin_adapter_runs_state (state, updated_at),
+        INDEX admin_adapter_runs_queued (queued_at)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
+      await this.$executeQuery(`CREATE TABLE IF NOT EXISTS admin_adapter_locks (
+        lock_key VARCHAR(200) NOT NULL,
+        run_id CHAR(36) NOT NULL,
+        acquired_at DATETIME(3) NOT NULL,
+        expires_at DATETIME(3) NOT NULL,
+        PRIMARY KEY (lock_key),
+        INDEX admin_adapter_locks_expiry (expires_at)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
+      await this.updateToSchemaVersion(107);
+    }
     if (databaseSchemaVersion < 106 && config.MEMPOOL.NETWORK === 'liquid') {
       // In a specific setup it's possible that 3G6neksSBMp51kHJ2if8SeDUrzT8iVETWT and bc1qwnevjp8nsq7adu3hxlvdvslrf242q4vuavfg0y929jp2zntp3vgq7cq6z2
       // were set with a timelock of 2016 instead of 4032

@@ -4,6 +4,7 @@ import logger from '../logger';
 import backendInfo from './backend-info';
 import { Common } from './common';
 import { preflightFailures, type PreflightFailure, type PreflightInput } from './capabilities.preflight';
+import { $optionalCapabilityReports } from './capabilities.optional';
 import {
   $probeAddressIndex,
   addressBackendKind,
@@ -146,6 +147,13 @@ class Capabilities {
     if (this.cached && now - this.cached.at < CACHE_TTL_MS) {
       return this.cached.value;
     }
+    let optional: Awaited<ReturnType<typeof $optionalCapabilityReports>> | Record<string, never>;
+    try {
+      optional = await $optionalCapabilityReports((feature) => this.routesRegistered(feature));
+    } catch (e) {
+      logger.debug('Optional capability probes failed: ' + (e instanceof Error ? e.message : e));
+      optional = {};
+    }
     const value: CapabilitiesResponse = {
       schemaVersion: 'universe-explorer-capabilities-v1',
       releaseSha: backendInfo.getBackendInfo().gitCommit,
@@ -155,6 +163,10 @@ class Capabilities {
         statistics: await this.$statisticsReport(),
         mining: await this.$miningReport(),
         addressLookup: await this.$addressLookupReport(),
+        // Optional subsystems stay in the document even when a deployment
+        // does not run them, so a switched-off feature reads as switched
+        // off rather than as missing.
+        ...optional,
       },
     };
     this.cached = { at: now, value };

@@ -52,6 +52,11 @@ class WebsocketHandler {
   private extraInitProperties = {};
 
   private numClients = 0;
+
+  /** How many browsers this process is currently streaming to. */
+  public getNumClients(): number {
+    return this.numClients;
+  }
   private numConnected = 0;
   private numDisconnected = 0;
 
