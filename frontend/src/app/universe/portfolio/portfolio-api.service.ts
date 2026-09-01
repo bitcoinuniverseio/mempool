@@ -4,7 +4,9 @@ import { Observable } from 'rxjs';
 import { StateService } from '@app/services/state.service';
 import {
   PortfolioActivityPage,
+  PortfolioHistoryPage,
   PortfolioNetworksResponse,
+  PortfolioPnlReport,
   PortfolioSummaryResponse,
 } from '@app/universe/portfolio/portfolio.types';
 
@@ -85,5 +87,61 @@ export class PortfolioApiService {
         + '/activity',
       { params },
     );
+  }
+
+  /**
+   * The native balance history, valued where the historical feed holds
+   * that day. An incomplete window carries its own boundary and cursor.
+   */
+  getHistory$(
+    chain: string,
+    network: string,
+    address: string,
+    cursor?: string,
+  ): Observable<PortfolioHistoryPage> {
+    let params = new HttpParams();
+    if (cursor) {
+      params = params.set('cursor', cursor);
+    }
+    return this.httpClient.get<PortfolioHistoryPage>(
+      this.apiBaseUrl
+        + '/api/v1/universe/portfolio/'
+        + encodeURIComponent(chain)
+        + '/' + encodeURIComponent(network)
+        + '/' + encodeURIComponent(address)
+        + '/history',
+      { params },
+    );
+  }
+
+  /** FIFO profit and loss, or a typed statement about why there is none. */
+  getPnl$(
+    chain: string,
+    network: string,
+    address: string,
+  ): Observable<PortfolioPnlReport> {
+    return this.httpClient.get<PortfolioPnlReport>(
+      this.apiBaseUrl
+        + '/api/v1/universe/portfolio/'
+        + encodeURIComponent(chain)
+        + '/' + encodeURIComponent(network)
+        + '/' + encodeURIComponent(address)
+        + '/pnl',
+    );
+  }
+
+  /** The export URL for a format; the browser downloads it directly. */
+  exportUrl(
+    chain: string,
+    network: string,
+    address: string,
+    format: 'assets-csv' | 'activity-csv' | 'evidence-json',
+  ): string {
+    return this.apiBaseUrl
+      + '/api/v1/universe/portfolio/'
+      + encodeURIComponent(chain)
+      + '/' + encodeURIComponent(network)
+      + '/' + encodeURIComponent(address)
+      + '/export?format=' + format;
   }
 }
