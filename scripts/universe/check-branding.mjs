@@ -71,6 +71,8 @@ const ALLOWED = [
   { prefix: 'rust/', reason: 'inherited crate notes' },
   { prefix: 'audits/', reason: 'dated audit records' },
   { prefix: 'README.md', reason: 'fork attribution required by the licence' },
+  { prefix: 'SUPPORT.md', reason: 'fork attribution required by the licence' },
+  { prefix: 'docs.manifest.json', reason: 'the upstream block attributes the upstream project to the documentation portal' },
   { prefix: 'scripts/universe/check-origins.mjs', reason: 'the origin gate lists the hosts it bans' },
   { prefix: 'frontend/cypress/', reason: 'inherited upstream end-to-end suite and recorded fixtures, not shipped' },
   { prefix: '.github/workflows/', reason: 'inherited upstream CI definitions; Universe CI is separate' },
