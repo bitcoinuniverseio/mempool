@@ -93,7 +93,7 @@ describe('address index readiness', () => {
     expect(verdict.state).toBe('ready');
   });
 
-  it('never calls an Electrum deployment ready, because nothing here checked one', () => {
+  it('never calls an Electrum deployment ready without an indexed height', () => {
     const verdict = addressIndexState({ ...current, backendKind: 'electrum', indexedTip: null });
     expect(verdict.state).not.toBe('ready');
   });
