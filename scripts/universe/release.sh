@@ -455,7 +455,7 @@ report = None
 last = 'no attempt was made'
 while time.monotonic() < deadline:
     answer = subprocess.run(
-        ['curl', '-sS', '-m', '15', sys.argv[1] + '/api/v1/capabilities'],
+        ['curl', '-fsS', '-m', '15', sys.argv[1] + '/api/v1/capabilities'],
         capture_output=True, text=True)
     if answer.returncode != 0:
         last = f'curl exited {answer.returncode}: ' + (answer.stderr or '').strip()[:120]
@@ -463,8 +463,12 @@ while time.monotonic() < deadline:
         last = 'the backend answered with an empty body'
     else:
         try:
-            report = json.loads(answer.stdout)
-            break
+            candidate = json.loads(answer.stdout)
+            if not isinstance(candidate, dict) or not isinstance(candidate.get('features'), dict):
+                last = 'the answer did not contain a feature report'
+            else:
+                report = candidate
+                break
         except json.JSONDecodeError as error:
             last = f'the answer was not JSON: {error}'
     time.sleep(3)
