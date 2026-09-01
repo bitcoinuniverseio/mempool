@@ -327,3 +327,151 @@
   0%, 100% { opacity: 0.55; }
   50% { opacity: 1; }
 }
+
+.export-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.9rem;
+  margin-top: 0.9rem;
+  font-size: var(--u-text-sm);
+
+  .export-label { color: var(--u-text-muted); }
+}
+
+.subsection {
+  font-size: 1.05rem;
+  margin: 1.4rem 0 0.6rem;
+}
+
+.history-chart {
+  margin: 0.75rem 0 0;
+
+  .chart-svg {
+    width: 100%;
+    height: 180px;
+    display: block;
+    // The line keeps its weight when the viewBox is stretched to fit.
+    vector-effect: non-scaling-stroke;
+  }
+
+  .chart-line {
+    fill: none;
+    stroke: var(--u-accent, currentColor);
+    stroke-width: 2;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .chart-area {
+    fill: var(--u-accent, currentColor);
+    opacity: 0.12;
+    stroke: none;
+  }
+
+  .chart-caption {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 1.25rem;
+    margin-top: 0.5rem;
+    color: var(--u-text-muted);
+    font-size: var(--u-text-sm);
+  }
+}
+
+// Gain and loss are named in the cell text as well as toned, so the
+// meaning survives without color.
+.holdings-table .tone-good { color: var(--u-positive, inherit); }
+.holdings-table .tone-bad { color: var(--u-negative, inherit); }
+
+.summary-value.tone-good { color: var(--u-positive, inherit); }
+.summary-value.tone-bad { color: var(--u-negative, inherit); }
+.summary-value.tone-muted { color: var(--u-text-muted); }
+
+.head-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.watch-button {
+  background: var(--u-surface-raised);
+  border: 1px solid var(--u-border-strong);
+  border-radius: var(--u-radius-md);
+  color: var(--u-text-primary);
+  font-size: var(--u-text-sm);
+  padding: 0.4rem 0.9rem;
+  cursor: pointer;
+
+  &[aria-pressed='true'] {
+    border-color: var(--u-accent, var(--u-text-primary));
+  }
+}
+
+.link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--u-link, var(--u-text-primary));
+  font-size: var(--u-text-sm);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.watch-label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin: 0.5rem 0 0;
+
+  .label-text {
+    color: var(--u-text-primary);
+    font-weight: 600;
+  }
+
+  .label-group {
+    background: var(--u-surface-raised);
+    border: 1px solid var(--u-border-strong);
+    border-radius: var(--u-radius-md);
+    color: var(--u-text-muted);
+    font-size: var(--u-text-sm);
+    padding: 0.1rem 0.5rem;
+  }
+}
+
+.label-form {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0.6rem 0 0;
+  max-width: 26rem;
+
+  label {
+    color: var(--u-text-muted);
+    font-size: var(--u-text-sm);
+  }
+
+  input[type='text'] {
+    background: var(--u-surface-raised);
+    border: 1px solid var(--u-border-strong);
+    border-radius: var(--u-radius-md);
+    color: var(--u-text-primary);
+    padding: 0.45rem 0.6rem;
+
+    @media (pointer: coarse), (max-width: 991.98px) {
+      font-size: var(--u-text-field);
+    }
+  }
+
+  .label-form-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 0.25rem;
+  }
+
+  .label-privacy {
+    margin: 0.2rem 0 0;
+    color: var(--u-text-muted);
+    font-size: var(--u-text-sm);
+  }
+}

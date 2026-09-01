@@ -7,11 +7,18 @@ import { PortfolioApiService } from '@app/universe/portfolio/portfolio-api.servi
 import {
   PortfolioActivityEvent,
   PortfolioActivityType,
+  PortfolioHistoryPoint,
   PortfolioHolding,
+  PortfolioPnlReport,
   PortfolioProtocolStatement,
+  PortfolioRealization,
   PortfolioSourceState,
   PortfolioSummary,
 } from '@app/universe/portfolio/portfolio.types';
+import {
+  buildChartGeometry,
+  type ChartGeometry,
+} from '@app/universe/portfolio/portfolio-chart';
 import {
   COLLECTIBLE_ASSET_TYPES,
   TOKEN_ASSET_TYPES,
@@ -24,10 +31,25 @@ import {
 import { formatAtomicAmount, shortenIdentifier } from '@app/universe/universe-evidence';
 import { BookmarkButtonComponent } from '@app/universe/bookmark-button/bookmark-button.component';
 import { ExplorerChain, ExplorerNetwork } from '@app/universe/universe.types';
+import {
+  MAXIMUM_GROUP_LENGTH,
+  MAXIMUM_LABEL_LENGTH,
+  PortfolioWatchlistService,
+} from '@app/universe/portfolio/portfolio-watchlist.service';
 
-export type PortfolioTab = 'overview' | 'tokens' | 'collectibles' | 'protocols' | 'activity' | 'coverage';
+export type PortfolioTab =
+  | 'overview'
+  | 'tokens'
+  | 'collectibles'
+  | 'protocols'
+  | 'activity'
+  | 'performance'
+  | 'pnl'
+  | 'coverage';
 
-const TABS: readonly PortfolioTab[] = ['overview', 'tokens', 'collectibles', 'protocols', 'activity', 'coverage'];
+const TABS: readonly PortfolioTab[] = [
+  'overview', 'tokens', 'collectibles', 'protocols', 'activity', 'performance', 'pnl', 'coverage',
+];
 
 /** Chains whose classic explorer pages exist, for evidence deep links. */
 const ADDRESS_PAGE_BY_CHAIN: Readonly<Record<string, (address: string) => string>> = {
@@ -51,6 +73,30 @@ interface ActivityState {
   readonly events?: readonly PortfolioActivityEvent[];
   readonly nextCursor?: string | null;
   readonly loadingMore?: boolean;
+  readonly detail?: string;
+}
+
+interface HistoryState {
+  readonly kind: 'idle' | 'loading' | 'ready' | 'unavailable' | 'unsupported';
+  readonly points?: readonly PortfolioHistoryPoint[];
+  readonly geometry?: ChartGeometry;
+  readonly complete?: boolean;
+  readonly nextCursor?: string | null;
+  readonly loadingMore?: boolean;
+  readonly unpricedPointCount?: number;
+  readonly openingBalanceAtomic?: string;
+  readonly detail?: string;
+}
+
+interface PnlState {
+  readonly kind:
+    | 'idle'
+    | 'loading'
+    | 'ready'
+    | 'unavailable'
+    | 'unsupported'
+    | 'outside-coverage';
+  readonly report?: PortfolioPnlReport;
   readonly detail?: string;
 }
 
@@ -82,6 +128,8 @@ export class PortfolioComponent implements OnInit, OnDestroy {
   tab: PortfolioTab = 'overview';
   state: PortfolioPageState = { kind: 'loading' };
   activity: ActivityState = { kind: 'idle' };
+  history: HistoryState = { kind: 'idle' };
+  pnl: PnlState = { kind: 'idle' };
 
   readonly shorten = shortenIdentifier;
   readonly stateCopy = sourceStateCopy;
@@ -89,12 +137,67 @@ export class PortfolioComponent implements OnInit, OnDestroy {
 
   private subscriptions = new Subscription();
 
+  watched = false;
+  editingLabel = false;
+  labelDraft = '';
+  groupDraft = '';
+  readonly maximumLabelLength = MAXIMUM_LABEL_LENGTH;
+  readonly maximumGroupLength = MAXIMUM_GROUP_LENGTH;
+
   constructor(
     private route: ActivatedRoute,
     private api: PortfolioApiService,
     private seo: SeoService,
+    private watchlist: PortfolioWatchlistService,
     private changeDetector: ChangeDetectorRef,
   ) {}
+
+  /** The visitor's own name for this address, or the empty string. */
+  get watchLabel(): string {
+    return this.watchlist.watchedEntry(this.chain, this.network, this.address)?.label ?? '';
+  }
+
+  get watchGroup(): string {
+    return this.watchlist.watchedEntry(this.chain, this.network, this.address)?.group ?? '';
+  }
+
+  get knownGroups(): readonly string[] {
+    return this.watchlist.groups();
+  }
+
+  toggleWatch(): void {
+    this.watched = this.watchlist.toggle({
+      chain: this.chain,
+      network: this.network,
+      address: this.address,
+    });
+    this.changeDetector.markForCheck();
+  }
+
+  startEditingLabel(): void {
+    this.labelDraft = this.watchLabel;
+    this.groupDraft = this.watchGroup;
+    this.editingLabel = true;
+    this.changeDetector.markForCheck();
+  }
+
+  cancelEditingLabel(): void {
+    this.editingLabel = false;
+    this.changeDetector.markForCheck();
+  }
+
+  saveLabel(): void {
+    this.watchlist.watch({
+      chain: this.chain,
+      network: this.network,
+      address: this.address,
+      label: this.labelDraft,
+      group: this.groupDraft,
+    });
+    this.watched = true;
+    this.editingLabel = false;
+    this.changeDetector.markForCheck();
+  }
 
   ngOnInit(): void {
     this.subscriptions.add(this.route.paramMap.subscribe((params) => {
@@ -104,14 +207,14 @@ export class PortfolioComponent implements OnInit, OnDestroy {
       this.seo.setTitle(
         $localize`:@@universe.portfolio.page-title:Portfolio of ${this.shorten(this.address)}:address: on ${this.chainLabel()}:chain:`
       );
+      this.watched = this.watchlist.isWatched(this.chain, this.network, this.address);
+      this.editingLabel = false;
       this.load();
     }));
     this.subscriptions.add(this.route.queryParamMap.subscribe((params) => {
       const tab = params.get('tab') as PortfolioTab | null;
       this.tab = tab !== null && TABS.includes(tab) ? tab : 'overview';
-      if (this.tab === 'activity' && this.activity.kind === 'idle') {
-        this.loadActivity();
-      }
+      this.loadTabData();
       this.changeDetector.markForCheck();
     }));
   }
@@ -123,9 +226,9 @@ export class PortfolioComponent implements OnInit, OnDestroy {
   private load(): void {
     this.state = { kind: 'loading' };
     this.activity = { kind: 'idle' };
-    if (this.tab === 'activity') {
-      this.loadActivity();
-    }
+    this.history = { kind: 'idle' };
+    this.pnl = { kind: 'idle' };
+    this.loadTabData();
     this.changeDetector.markForCheck();
     this.subscriptions.add(
       this.api.getSummary$(this.chain, this.network, this.address).subscribe({
@@ -148,6 +251,146 @@ export class PortfolioComponent implements OnInit, OnDestroy {
         },
       })
     );
+  }
+
+  /** Loads whatever the visible tab needs, once, on first view. */
+  private loadTabData(): void {
+    if (this.tab === 'activity' && this.activity.kind === 'idle') {
+      this.loadActivity();
+    }
+    if (
+      (this.tab === 'performance' || this.tab === 'overview')
+      && this.history.kind === 'idle'
+    ) {
+      this.loadHistory();
+    }
+    if (this.tab === 'pnl' && this.pnl.kind === 'idle') {
+      this.loadPnl();
+    }
+  }
+
+  private loadHistory(cursor?: string): void {
+    if (!this.address || !this.chain) { return; }
+    const previous = this.history.kind === 'ready' && cursor !== undefined
+      ? (this.history.points ?? [])
+      : [];
+    this.history = cursor === undefined
+      ? { kind: 'loading' }
+      : { ...this.history, loadingMore: true };
+    this.changeDetector.markForCheck();
+    this.subscriptions.add(
+      this.api.getHistory$(this.chain, this.network, this.address, cursor).subscribe({
+        next: (page) => {
+          if (page.state === 'unsupported') {
+            this.history = { kind: 'unsupported', detail: page.detail };
+          } else {
+            // Older pages arrive after newer ones; the series stays in
+            // oldest-first order so the chart reads left to right in time.
+            const points = [...(page.points ?? []), ...previous];
+            this.history = {
+              kind: 'ready',
+              points,
+              geometry: buildChartGeometry(points),
+              complete: page.complete ?? false,
+              nextCursor: page.nextCursor ?? null,
+              loadingMore: false,
+              unpricedPointCount: page.unpricedPointCount ?? 0,
+              openingBalanceAtomic: page.openingBalanceAtomic,
+            };
+          }
+          this.changeDetector.markForCheck();
+        },
+        error: () => {
+          this.history = cursor === undefined
+            ? { kind: 'unavailable' }
+            : { ...this.history, loadingMore: false };
+          this.changeDetector.markForCheck();
+        },
+      })
+    );
+  }
+
+  loadMoreHistory(): void {
+    if (this.history.kind === 'ready' && this.history.nextCursor && !this.history.loadingMore) {
+      this.loadHistory(this.history.nextCursor);
+    }
+  }
+
+  private loadPnl(): void {
+    if (!this.address || !this.chain) { return; }
+    this.pnl = { kind: 'loading' };
+    this.changeDetector.markForCheck();
+    this.subscriptions.add(
+      this.api.getPnl$(this.chain, this.network, this.address).subscribe({
+        next: (report) => {
+          if (report.state === 'unsupported') {
+            this.pnl = { kind: 'unsupported', detail: report.detail };
+          } else if (report.state === 'outside_coverage') {
+            this.pnl = { kind: 'outside-coverage', detail: report.detail };
+          } else {
+            this.pnl = { kind: 'ready', report };
+          }
+          this.changeDetector.markForCheck();
+        },
+        error: () => {
+          this.pnl = { kind: 'unavailable' };
+          this.changeDetector.markForCheck();
+        },
+      })
+    );
+  }
+
+  exportUrl(format: 'assets-csv' | 'activity-csv' | 'evidence-json'): string {
+    return this.api.exportUrl(this.chain, this.network, this.address, format);
+  }
+
+  /** A balance in whole coins, exact string arithmetic only. */
+  coins(atomic: string | null | undefined): string | null {
+    if (atomic === null || atomic === undefined) { return null; }
+    const negative = atomic.startsWith('-');
+    const magnitude = negative ? atomic.slice(1) : atomic;
+    if (!/^(0|[1-9][0-9]*)$/.test(magnitude)) { return null; }
+    const formatted = formatAtomicAmount(magnitude, 8);
+    return negative ? `-${formatted}` : formatted;
+  }
+
+  /** True when an exact decimal string is negative. */
+  isNegative(value: string | null | undefined): boolean {
+    return typeof value === 'string' && value.startsWith('-');
+  }
+
+  pnlTone(value: string | null | undefined): string {
+    if (value === null || value === undefined) { return 'tone-muted'; }
+    if (value.startsWith('-')) { return 'tone-bad'; }
+    return value === '0' ? 'tone-muted' : 'tone-good';
+  }
+
+  /** The P/L ratio as a percentage string, exact digits preserved. */
+  ratioPercent(ratio: string | null | undefined): string | null {
+    if (ratio === null || ratio === undefined) { return null; }
+    const negative = ratio.startsWith('-');
+    const magnitude = negative ? ratio.slice(1) : ratio;
+    if (!/^(0|[1-9][0-9]*)(\.[0-9]+)?$/.test(magnitude)) { return null; }
+    // Times 100 by shifting the decimal point, so no float is involved.
+    const [whole, fraction = ''] = magnitude.split('.');
+    const digits = whole + fraction.padEnd(2, '0');
+    const shifted = fraction.length <= 2
+      ? digits
+      : `${digits.slice(0, whole.length + 2)}.${digits.slice(whole.length + 2)}`;
+    const trimmed = shifted.replace(/^0+(?=[0-9])/, '');
+    return `${negative ? '-' : ''}${trimmed}`;
+  }
+
+  trackByLot(index: number, lot: { eventId: string }): string {
+    return lot.eventId;
+  }
+
+  trackByRealization(index: number, realization: PortfolioRealization): string {
+    return realization.eventId;
+  }
+
+  trackByPoint(index: number, point: PortfolioHistoryPoint): string {
+    return point.txid;
   }
 
   private loadActivity(cursor?: string): void {

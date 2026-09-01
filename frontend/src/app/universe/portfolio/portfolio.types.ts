@@ -211,3 +211,76 @@ export interface PortfolioActivityPage {
   readonly detail?: string;
   readonly warnings?: readonly string[];
 }
+
+export interface PortfolioHistoryPoint {
+  readonly txid: string;
+  readonly blockHeightAtomic: string;
+  readonly blockTimeAtomic: string | null;
+  readonly balanceAtomic: string;
+  readonly deltaAtomic: string;
+  readonly value: string | null;
+}
+
+export interface PortfolioHistoryPage {
+  readonly schemaVersion: string;
+  readonly chain: string;
+  readonly network: string;
+  readonly address: string;
+  readonly points?: readonly PortfolioHistoryPoint[];
+  readonly openingBalanceAtomic?: string;
+  readonly complete?: boolean;
+  readonly nextCursor?: string | null;
+  readonly unpricedPointCount?: number;
+  readonly state?: 'unsupported';
+  readonly detail?: string;
+  readonly warnings?: readonly string[];
+}
+
+export interface PortfolioBasisLot {
+  readonly eventId: string;
+  readonly timestampAtomic: string | null;
+  readonly quantityAtomic: string;
+  readonly unitPrice: string | null;
+}
+
+export interface PortfolioRealization {
+  readonly eventId: string;
+  readonly timestampAtomic: string | null;
+  readonly quantityAtomic: string;
+  readonly proceeds: string | null;
+  readonly costBasis: string | null;
+  readonly realized: string | null;
+  readonly basisState: 'known' | 'unknown';
+}
+
+export interface PortfolioPnlReport {
+  readonly schemaVersion: string;
+  readonly chain: string;
+  readonly network: string;
+  readonly address: string;
+  readonly quoteCurrency?: string;
+  readonly methodology?: string;
+  readonly realizedPnl?: string;
+  readonly unrealizedPnl?: string | null;
+  readonly totalPnl?: string | null;
+  readonly pnlRatio?: string | null;
+  readonly invested?: string;
+  readonly proceeds?: string;
+  readonly feesQuantityAtomic?: string;
+  readonly feesValue?: string;
+  readonly averageAcquisitionPrice?: string | null;
+  readonly winningRealizations?: number;
+  readonly losingRealizations?: number;
+  readonly knownRealizationCount?: number;
+  readonly unknownRealizationCount?: number;
+  readonly remainingQuantityAtomic?: string;
+  readonly remainingCostBasis?: string;
+  readonly unknownBasisQuantityAtomic?: string;
+  readonly lots?: readonly PortfolioBasisLot[];
+  readonly realizations?: readonly PortfolioRealization[];
+  readonly eventCount?: number;
+  readonly unpricedEventCount?: number;
+  readonly state?: 'unsupported' | 'outside_coverage';
+  readonly detail?: string;
+  readonly warnings?: readonly string[];
+}
