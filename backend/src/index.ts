@@ -161,7 +161,7 @@ class Server {
       .use(express.json({ limit: '10mb' }))
       ;
 
-    if (config.DATABASE.ENABLED && config.FIAT_PRICE.ENABLED) {
+    if (config.DATABASE.ENABLED) {
       /** @asyncUnsafe */
       await priceUpdater.$initializeLatestPriceWithDb();
     }

@@ -42,6 +42,11 @@ export class ChainTimelineComponent {
   @Input() ticker = '';
 
   readonly timeLtr$: BehaviorSubject<boolean>;
+  dragging = false;
+  private dragPointerId: number | null = null;
+  private dragStartX = 0;
+  private dragStartScroll = 0;
+  private dragged = false;
 
   constructor(
     private readonly stateService: StateService,
@@ -52,6 +57,53 @@ export class ChainTimelineComponent {
 
   toggleDirection(): void {
     this.stateService.timeLtr.next(!this.stateService.timeLtr.value);
+  }
+
+  startDrag(event: PointerEvent): void {
+    if (event.pointerType !== 'mouse' || event.button !== 0) {
+      return;
+    }
+    const scroller = event.currentTarget as HTMLElement;
+    this.dragPointerId = event.pointerId;
+    this.dragStartX = event.clientX;
+    this.dragStartScroll = scroller.scrollLeft;
+    this.dragged = false;
+    scroller.setPointerCapture(event.pointerId);
+  }
+
+  drag(event: PointerEvent): void {
+    if (event.pointerId !== this.dragPointerId) {
+      return;
+    }
+    const distance = event.clientX - this.dragStartX;
+    if (!this.dragging && Math.abs(distance) < 4) {
+      return;
+    }
+    this.dragging = true;
+    this.dragged = true;
+    (event.currentTarget as HTMLElement).scrollLeft = this.dragStartScroll - distance;
+    event.preventDefault();
+  }
+
+  endDrag(event: PointerEvent): void {
+    if (event.pointerId !== this.dragPointerId) {
+      return;
+    }
+    const scroller = event.currentTarget as HTMLElement;
+    if (scroller.hasPointerCapture(event.pointerId)) {
+      scroller.releasePointerCapture(event.pointerId);
+    }
+    this.dragPointerId = null;
+    this.dragging = false;
+    setTimeout(() => this.dragged = false);
+  }
+
+  suppressDragClick(event: MouseEvent): void {
+    if (!this.dragged) {
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
   }
 
   /**
