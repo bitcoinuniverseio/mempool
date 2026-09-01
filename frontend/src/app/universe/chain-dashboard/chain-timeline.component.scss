@@ -8,9 +8,23 @@
 }
 
 .timeline-scroll {
+  cursor: grab;
   overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  &.dragging {
+    cursor: grabbing;
+    user-select: none;
+  }
+
   // The strip is the one intentionally sideways-scrolling region on the
-  // page. A visible focus ring keeps that discoverable from the keyboard.
+  // page. It is pointer-draggable, and a visible focus ring keeps its
+  // keyboard scrolling discoverable.
   &:focus-visible {
     outline: 2px solid var(--u-focus-ring);
     outline-offset: 2px;
@@ -88,9 +102,35 @@ a.cube-block {
   background-color: var(--u-block-confirmed-side);
 }
 
-.cube-eta {
-  font-size: var(--u-text-2xs);
-  color: var(--u-block-ink-muted);
+.cube-readings {
+  display: grid;
+  gap: 2px;
+  justify-items: center;
+  margin-top: var(--u-space-2);
+  text-align: center;
+  width: var(--cube-size);
+
+  > span {
+    color: var(--u-text-secondary);
+    font-size: var(--u-text-2xs);
+    line-height: var(--u-leading-snug);
+    overflow-wrap: anywhere;
+  }
+
+  .cube-median {
+    color: var(--u-text-primary);
+    font-size: var(--u-text-sm);
+    font-weight: var(--u-weight-bold);
+  }
+
+  .cube-unit,
+  .cube-eta {
+    color: var(--u-text-muted);
+  }
+
+  .cube-unit {
+    font-weight: var(--u-weight-semibold);
+  }
 }
 
 .miner-caption {
