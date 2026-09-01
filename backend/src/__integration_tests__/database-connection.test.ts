@@ -1,6 +1,11 @@
 import DB from '../database';
 import config from '../config';
 import { setupTestDatabase, waitForDatabase, getTestDatabaseConfig } from './test-helpers';
+import { RowDataPacket } from 'mysql2';
+
+interface JsonStringRow extends RowDataPacket {
+  document: string;
+}
 
 describe('Database Connection Integration Tests', () => {
   beforeAll(async () => {
@@ -25,6 +30,20 @@ describe('Database Connection Integration Tests', () => {
     const [result] = await DB.query<any>('SELECT ? as sum', [42]);
     expect(result).toHaveLength(1);
     expect(result[0].sum).toBe(42);
+  });
+
+  test('should return JSON columns as strings for repository parsing', async () => {
+    const table = 'json_strings_contract_test';
+    await DB.query(`DROP TABLE IF EXISTS ${table}`);
+    try {
+      await DB.query(`CREATE TABLE ${table} (document JSON NOT NULL)`);
+      await DB.query(`INSERT INTO ${table} (document) VALUES (?)`, [JSON.stringify([1, 2])]);
+      const [result] = await DB.query<JsonStringRow[]>(`SELECT document FROM ${table}`);
+      expect(typeof result[0].document).toBe('string');
+      expect(JSON.parse(result[0].document)).toEqual([1, 2]);
+    } finally {
+      await DB.query(`DROP TABLE IF EXISTS ${table}`);
+    }
   });
 
   test('should check database connection', async () => {
