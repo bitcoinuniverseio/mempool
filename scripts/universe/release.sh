@@ -442,14 +442,40 @@ verify_live() {
   # A public feature must not be advertised by a backend that did not mount its
   # routes. This is the exact failure that shipped last time.
   python3 - "$BACKEND" <<'PY' || return 1
-import json, subprocess, sys
-answer = subprocess.run(
-    ['curl', '-sS', '-m', '10', sys.argv[1] + '/api/v1/capabilities'],
-    capture_output=True, text=True)
-if answer.returncode != 0 or not answer.stdout.strip():
-    print('the capability report could not be read')
+import json, os, subprocess, sys, time
+# A backend answers /backend-info the moment its HTTP server is listening,
+# which is what the wait above proves. The capability report needs more
+# than that: it describes the address index, and describing it means
+# having reached the Electrum server first. On a cold start that
+# connection lands tens of seconds after the port opens, so a single
+# ten second read asked a backend that was still connecting, gave up,
+# and rolled a good release back. Measured on this host: the report was
+# requested at 17:17:04 and the backend logged its Electrum connection
+# at 17:17:26.
+#
+# So this waits for the report the way everything else here waits for a
+# service, rather than asking once and calling a warming backend broken.
+deadline = time.monotonic() + float(os.environ.get('CAPABILITY_WAIT_SECONDS', '180'))
+report = None
+last = 'no attempt was made'
+while time.monotonic() < deadline:
+    answer = subprocess.run(
+        ['curl', '-sS', '-m', '15', sys.argv[1] + '/api/v1/capabilities'],
+        capture_output=True, text=True)
+    if answer.returncode != 0:
+        last = f'curl exited {answer.returncode}: ' + (answer.stderr or '').strip()[:120]
+    elif not answer.stdout.strip():
+        last = 'the backend answered with an empty body'
+    else:
+        try:
+            report = json.loads(answer.stdout)
+            break
+        except json.JSONDecodeError as error:
+            last = f'the answer was not JSON: {error}'
+    time.sleep(3)
+if report is None:
+    print('the capability report could not be read; last attempt: ' + last)
     sys.exit(1)
-report = json.loads(answer.stdout)
 bad = [
     name for name, feature in report['features'].items()
     if feature['enabled'] and not feature['routesRegistered']
