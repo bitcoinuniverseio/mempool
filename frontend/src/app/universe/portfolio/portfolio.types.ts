@@ -278,9 +278,47 @@ export interface PortfolioPnlReport {
   readonly unknownBasisQuantityAtomic?: string;
   readonly lots?: readonly PortfolioBasisLot[];
   readonly realizations?: readonly PortfolioRealization[];
+  readonly analytics?: PortfolioPnlAnalytics;
   readonly eventCount?: number;
   readonly unpricedEventCount?: number;
   readonly state?: 'unsupported' | 'outside_coverage';
   readonly detail?: string;
   readonly warnings?: readonly string[];
+}
+
+export interface PortfolioDistributionBucket {
+  readonly id: string;
+  readonly fromRatio: string | null;
+  readonly toRatio: string | null;
+  readonly count: number;
+}
+
+export interface PortfolioCalendarDay {
+  readonly date: string;
+  readonly realized: string;
+  readonly realizationCount: number;
+}
+
+export interface PortfolioRealizationSummary {
+  readonly eventId: string;
+  readonly realized: string;
+  readonly quantityAtomic: string;
+}
+
+export interface PortfolioPnlAnalytics {
+  readonly winRate: string | null;
+  readonly knownRealizationCount: number;
+  readonly winningCount: number;
+  readonly losingCount: number;
+  readonly breakEvenCount: number;
+  readonly averageWinner: string | null;
+  readonly averageLoser: string | null;
+  readonly bestRealization: PortfolioRealizationSummary | null;
+  readonly worstRealization: PortfolioRealizationSummary | null;
+  readonly totalWinnings: string;
+  readonly totalLosses: string;
+  readonly averageRemainingHoldingDays: string | null;
+  readonly undatedLotCount: number;
+  readonly distribution: readonly PortfolioDistributionBucket[];
+  readonly calendar: readonly PortfolioCalendarDay[];
 }
