@@ -8,6 +8,7 @@ import logger from '../../logger';
 import crypto from 'crypto-js';
 import loadingIndicators from '../loading-indicators';
 import memoryCache from '../memory-cache';
+import { readIndexedTip } from './electrum-indexed-tip';
 
 class BitcoindElectrsApi extends BitcoinApi implements AbstractBitcoinApi {
   private electrumClient: any;
@@ -51,14 +52,9 @@ class BitcoindElectrsApi extends BitcoinApi implements AbstractBitcoinApi {
    * @asyncSafe
    */
   async $getIndexedTip(): Promise<number | null> {
-    try {
-      const header = await this.electrumClient.blockchainHeaders_subscribe();
-      const height = header?.height ?? header?.block_height;
-      return Number.isInteger(height) ? height : null;
-    } catch (e) {
-      logger.debug('Electrum did not report its indexed height: ' + (e instanceof Error ? e.message : e));
-      return null;
-    }
+    return readIndexedTip((method, params) =>
+      this.electrumClient.request(method, params),
+    );
   }
 
   /** @asyncUnsafe */
