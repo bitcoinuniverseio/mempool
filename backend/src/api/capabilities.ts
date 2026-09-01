@@ -98,6 +98,24 @@ class Capabilities {
     return this.registeredRoutes.has(feature);
   }
 
+  /**
+   * How many unconfirmed transactions this process is holding.
+   *
+   * Imported lazily because the mempool module pulls in most of the backend,
+   * and this file is also loaded by the preflight check, which runs before any
+   * of that exists. A failure here means the count is unknown, and zero is the
+   * honest thing to report for a subsystem that could not be asked.
+   */
+  private mempoolSize(): number {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const mempool = require('./mempool').default;
+      return Object.keys(mempool.getMempool() ?? {}).length;
+    } catch (e) {
+      return 0;
+    }
+  }
+
   /** True when configuration says the statistics feature should be served. */
   public statisticsEnabled(): boolean {
     return config.STATISTICS.ENABLED === true
@@ -149,7 +167,10 @@ class Capabilities {
     }
     let optional: Awaited<ReturnType<typeof $optionalCapabilityReports>> | Record<string, never>;
     try {
-      optional = await $optionalCapabilityReports((feature) => this.routesRegistered(feature));
+      optional = await $optionalCapabilityReports(
+        (feature) => this.routesRegistered(feature),
+        this.mempoolSize(),
+      );
     } catch (e) {
       logger.debug('Optional capability probes failed: ' + (e instanceof Error ? e.message : e));
       optional = {};
