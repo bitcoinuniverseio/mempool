@@ -304,6 +304,12 @@ above it. A transaction page leads with the hash, not with the word
 Panels state what they are, where they lead, and one line on why it matters. The
 note is what turns a number into something a newcomer can act on.
 
+Pending-set cubes keep only the decisive median fee on the cube face. The fee
+unit, range, transaction count and byte count sit in a readable metric stack
+beneath it, so long chain-specific units never compete for the fixed cube face
+or become clipped. The whole pending-set panel appears before the page lede so
+the answer a visitor requested is the first chain-specific reading they reach.
+
 ## The status rail
 
 Every chain page opens with the same instrument: five readings, always the same
