@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { UniverseEntryKind, UniverseLocalService } from '@app/universe/universe-local.service';
+import { ExplorerChain, ExplorerNetwork } from '@app/universe/universe.types';
 
 /**
  * Saves a page to the visitor's own browser. No account, no server call, no
@@ -21,6 +22,9 @@ export class BookmarkButtonComponent implements OnInit, OnDestroy {
   @Input() value: string;
   @Input() path: string;
   @Input() label: string;
+  /** The chain and network the entry belongs to. Defaults match the service. */
+  @Input() chain: ExplorerChain = 'bitcoin';
+  @Input() network: ExplorerNetwork = 'mainnet';
 
   saved = false;
   private subscription?: Subscription;
@@ -32,7 +36,7 @@ export class BookmarkButtonComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.subscription = this.local.bookmarks$.subscribe(() => {
-      const next = this.local.isBookmarked(this.kind, this.value);
+      const next = this.local.isBookmarked(this.kind, this.value, this.chain, this.network);
       if (next !== this.saved) {
         this.saved = next;
         this.changeDetector.markForCheck();
@@ -51,6 +55,8 @@ export class BookmarkButtonComponent implements OnInit, OnDestroy {
       value: this.value,
       path: this.path,
       label: this.label,
+      chain: this.chain,
+      network: this.network,
     });
     this.changeDetector.markForCheck();
   }
