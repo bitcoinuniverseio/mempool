@@ -110,6 +110,27 @@
     <ng-container *ngSwitchCase="'ready'">
       <ng-container *ngIf="state.summary as summary">
 
+    <section class="alerts-panel" *ngIf="alerts.length > 0" aria-labelledby="portfolio-alerts-heading" role="status">
+      <h2 id="portfolio-alerts-heading" i18n="universe.portfolio.alerts-heading">Since you last looked</h2>
+      <ul class="alert-list">
+        <li *ngFor="let alert of alerts; trackBy: trackByAlert" [ngClass]="'alert-' + alert.kind">
+          <span class="alert-title">{{ alert.title }}</span>
+          <span class="alert-detail">{{ alert.detail }}</span>
+        </li>
+      </ul>
+      <div class="alert-actions">
+        <button type="button" class="link-button" (click)="dismissAlerts()" i18n="universe.portfolio.alerts-dismiss">Dismiss</button>
+        <button type="button" class="link-button" *ngIf="!alertsEnabled" (click)="enableNotifications()" i18n="universe.portfolio.alerts-notify">
+          Also notify me in the browser
+        </button>
+      </div>
+      <p class="alert-privacy" i18n="universe.portfolio.alerts-privacy">
+        Alerts are worked out in this browser by comparing what you last saw
+        with what the sources say now. Nothing is sent anywhere, and a source
+        that stops answering is never reported as assets leaving.
+      </p>
+    </section>
+
         <section class="panel summary-panel" aria-labelledby="portfolio-summary-heading">
           <h2 id="portfolio-summary-heading" class="visually-hidden" i18n="universe.portfolio.summary-heading">Portfolio summary</h2>
 

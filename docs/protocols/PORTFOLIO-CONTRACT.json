@@ -1,0 +1,1989 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Universe Portfolio API",
+    "version": "universe-portfolio-v1",
+    "description": "Read-only address portfolio and intelligence.\n\nEvery answer carries an evidence envelope naming what each source\nsaid. A protocol statement with an empty holdings list is only\nmeaningful under the `proven` state; under any other state the\nempty list is the absence of an answer, not the absence of\nholdings. No quantity, price, or total is ever a JSON number:\nthey are exact decimal strings."
+  },
+  "servers": [
+    {
+      "url": "/api/v1/universe/portfolio"
+    }
+  ],
+  "paths": {
+    "/networks": {
+      "get": {
+        "summary": "The chain and network pairs this API serves.",
+        "responses": {
+          "200": {
+            "description": "The served roster.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "schemaVersion": {
+                      "type": "string"
+                    },
+                    "networks": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "chain": {
+                            "type": "string"
+                          },
+                          "network": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{chain}/{network}/{address}/summary": {
+      "get": {
+        "summary": "The portfolio summary with its evidence envelope.",
+        "parameters": [
+          {
+            "name": "chain",
+            "in": "path",
+            "required": true,
+            "description": "The chain the address is read on. Never inferred from the address.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "bitcoin",
+                "fractal",
+                "dogecoin",
+                "zcash"
+              ]
+            }
+          },
+          {
+            "name": "network",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "mainnet",
+                "testnet"
+              ]
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "required": true,
+            "description": "The address, validated against the chain it is read on.",
+            "schema": {
+              "type": "string",
+              "minLength": 10,
+              "maxLength": 256
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "description": "Opaque continuation token from a prior response. Carries one position per authority.",
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,4096}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The summary and a continuation cursor when more remains.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "summary"
+                  ],
+                  "properties": {
+                    "summary": {
+                      "$ref": "#/components/schemas/PortfolioSummary"
+                    },
+                    "nextCursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The address, cursor, or a filter is malformed."
+          },
+          "404": {
+            "description": "The chain and network pair is not served."
+          },
+          "503": {
+            "description": "The service could not answer at all."
+          }
+        }
+      }
+    },
+    "/{chain}/{network}/{address}/assets": {
+      "get": {
+        "summary": "Every holding, filterable by protocol and asset type.",
+        "parameters": [
+          {
+            "name": "chain",
+            "in": "path",
+            "required": true,
+            "description": "The chain the address is read on. Never inferred from the address.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "bitcoin",
+                "fractal",
+                "dogecoin",
+                "zcash"
+              ]
+            }
+          },
+          {
+            "name": "network",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "mainnet",
+                "testnet"
+              ]
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "required": true,
+            "description": "The address, validated against the chain it is read on.",
+            "schema": {
+              "type": "string",
+              "minLength": 10,
+              "maxLength": 256
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "description": "Opaque continuation token from a prior response. Carries one position per authority.",
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,4096}$"
+            }
+          },
+          {
+            "name": "protocol",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/ProtocolId"
+            }
+          },
+          {
+            "name": "assetType",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/AssetType"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The matching holdings with the envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "envelope": {
+                      "$ref": "#/components/schemas/EvidenceEnvelope"
+                    },
+                    "holdings": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Holding"
+                      }
+                    },
+                    "nextCursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The address, cursor, or a filter is malformed."
+          },
+          "404": {
+            "description": "The chain and network pair is not served."
+          },
+          "503": {
+            "description": "The service could not answer at all."
+          }
+        }
+      }
+    },
+    "/{chain}/{network}/{address}/tokens": {
+      "get": {
+        "summary": "Native and fungible holdings.",
+        "parameters": [
+          {
+            "name": "chain",
+            "in": "path",
+            "required": true,
+            "description": "The chain the address is read on. Never inferred from the address.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "bitcoin",
+                "fractal",
+                "dogecoin",
+                "zcash"
+              ]
+            }
+          },
+          {
+            "name": "network",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "mainnet",
+                "testnet"
+              ]
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "required": true,
+            "description": "The address, validated against the chain it is read on.",
+            "schema": {
+              "type": "string",
+              "minLength": 10,
+              "maxLength": 256
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "description": "Opaque continuation token from a prior response. Carries one position per authority.",
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,4096}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Token holdings."
+          },
+          "400": {
+            "description": "The address, cursor, or a filter is malformed."
+          },
+          "404": {
+            "description": "The chain and network pair is not served."
+          },
+          "503": {
+            "description": "The service could not answer at all."
+          }
+        }
+      }
+    },
+    "/{chain}/{network}/{address}/nfts": {
+      "get": {
+        "summary": "Collectibles, inscriptions, names, bitmaps, and rare sats.",
+        "parameters": [
+          {
+            "name": "chain",
+            "in": "path",
+            "required": true,
+            "description": "The chain the address is read on. Never inferred from the address.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "bitcoin",
+                "fractal",
+                "dogecoin",
+                "zcash"
+              ]
+            }
+          },
+          {
+            "name": "network",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "mainnet",
+                "testnet"
+              ]
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "required": true,
+            "description": "The address, validated against the chain it is read on.",
+            "schema": {
+              "type": "string",
+              "minLength": 10,
+              "maxLength": 256
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "description": "Opaque continuation token from a prior response. Carries one position per authority.",
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,4096}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Collectible holdings."
+          },
+          "400": {
+            "description": "The address, cursor, or a filter is malformed."
+          },
+          "404": {
+            "description": "The chain and network pair is not served."
+          },
+          "503": {
+            "description": "The service could not answer at all."
+          }
+        }
+      }
+    },
+    "/{chain}/{network}/{address}/protocols": {
+      "get": {
+        "summary": "One statement per protocol, whether or not it holds anything.",
+        "parameters": [
+          {
+            "name": "chain",
+            "in": "path",
+            "required": true,
+            "description": "The chain the address is read on. Never inferred from the address.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "bitcoin",
+                "fractal",
+                "dogecoin",
+                "zcash"
+              ]
+            }
+          },
+          {
+            "name": "network",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "mainnet",
+                "testnet"
+              ]
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "required": true,
+            "description": "The address, validated against the chain it is read on.",
+            "schema": {
+              "type": "string",
+              "minLength": 10,
+              "maxLength": 256
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "description": "Opaque continuation token from a prior response. Carries one position per authority.",
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,4096}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Protocol statements."
+          },
+          "400": {
+            "description": "The address, cursor, or a filter is malformed."
+          },
+          "404": {
+            "description": "The chain and network pair is not served."
+          },
+          "503": {
+            "description": "The service could not answer at all."
+          }
+        }
+      }
+    },
+    "/{chain}/{network}/{address}/activity": {
+      "get": {
+        "summary": "The normalized activity ledger.",
+        "parameters": [
+          {
+            "name": "chain",
+            "in": "path",
+            "required": true,
+            "description": "The chain the address is read on. Never inferred from the address.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "bitcoin",
+                "fractal",
+                "dogecoin",
+                "zcash"
+              ]
+            }
+          },
+          {
+            "name": "network",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "mainnet",
+                "testnet"
+              ]
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "required": true,
+            "description": "The address, validated against the chain it is read on.",
+            "schema": {
+              "type": "string",
+              "minLength": 10,
+              "maxLength": 256
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "description": "Opaque continuation token from a prior response. Carries one position per authority.",
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,4096}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of classified events, or a typed unsupported statement for a chain whose history authority is not wired.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "schemaVersion": {
+                      "type": "string"
+                    },
+                    "events": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ActivityEvent"
+                      }
+                    },
+                    "nextCursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "state": {
+                      "type": "string",
+                      "enum": [
+                        "unsupported"
+                      ]
+                    },
+                    "detail": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The address, cursor, or a filter is malformed."
+          },
+          "404": {
+            "description": "The chain and network pair is not served."
+          },
+          "503": {
+            "description": "The service could not answer at all."
+          }
+        }
+      }
+    },
+    "/{chain}/{network}/{address}/history": {
+      "get": {
+        "summary": "The native balance series, valued where a price exists.",
+        "parameters": [
+          {
+            "name": "chain",
+            "in": "path",
+            "required": true,
+            "description": "The chain the address is read on. Never inferred from the address.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "bitcoin",
+                "fractal",
+                "dogecoin",
+                "zcash"
+              ]
+            }
+          },
+          {
+            "name": "network",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "mainnet",
+                "testnet"
+              ]
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "required": true,
+            "description": "The address, validated against the chain it is read on.",
+            "schema": {
+              "type": "string",
+              "minLength": 10,
+              "maxLength": 256
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "description": "Opaque continuation token from a prior response. Carries one position per authority.",
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,4096}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The series with its coverage boundary.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "schemaVersion": {
+                      "type": "string"
+                    },
+                    "points": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/HistoryPoint"
+                      }
+                    },
+                    "openingBalanceAtomic": {
+                      "type": "string"
+                    },
+                    "complete": {
+                      "type": "boolean"
+                    },
+                    "nextCursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "unpricedPointCount": {
+                      "type": "integer"
+                    },
+                    "warnings": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The address, cursor, or a filter is malformed."
+          },
+          "404": {
+            "description": "The chain and network pair is not served."
+          },
+          "503": {
+            "description": "The service could not answer at all."
+          }
+        }
+      }
+    },
+    "/{chain}/{network}/{address}/pnl": {
+      "get": {
+        "summary": "FIFO profit and loss with the lots and realizations behind it.",
+        "parameters": [
+          {
+            "name": "chain",
+            "in": "path",
+            "required": true,
+            "description": "The chain the address is read on. Never inferred from the address.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "bitcoin",
+                "fractal",
+                "dogecoin",
+                "zcash"
+              ]
+            }
+          },
+          {
+            "name": "network",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "mainnet",
+                "testnet"
+              ]
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "required": true,
+            "description": "The address, validated against the chain it is read on.",
+            "schema": {
+              "type": "string",
+              "minLength": 10,
+              "maxLength": 256
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The report, or a typed statement about why there is none.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PnlReport"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The address, cursor, or a filter is malformed."
+          },
+          "404": {
+            "description": "The chain and network pair is not served."
+          },
+          "503": {
+            "description": "The service could not answer at all."
+          }
+        }
+      }
+    },
+    "/{chain}/{network}/{address}/coverage": {
+      "get": {
+        "summary": "What each source said, and how each protocol is served here.",
+        "parameters": [
+          {
+            "name": "chain",
+            "in": "path",
+            "required": true,
+            "description": "The chain the address is read on. Never inferred from the address.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "bitcoin",
+                "fractal",
+                "dogecoin",
+                "zcash"
+              ]
+            }
+          },
+          {
+            "name": "network",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "mainnet",
+                "testnet"
+              ]
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "required": true,
+            "description": "The address, validated against the chain it is read on.",
+            "schema": {
+              "type": "string",
+              "minLength": 10,
+              "maxLength": 256
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The envelope plus the protocol serving roster.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "envelope": {
+                      "$ref": "#/components/schemas/EvidenceEnvelope"
+                    },
+                    "roster": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "protocol": {
+                            "$ref": "#/components/schemas/ProtocolId"
+                          },
+                          "servingMode": {
+                            "type": "string",
+                            "enum": [
+                              "chain-view",
+                              "source-contract"
+                            ]
+                          },
+                          "authorityId": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The address, cursor, or a filter is malformed."
+          },
+          "404": {
+            "description": "The chain and network pair is not served."
+          },
+          "503": {
+            "description": "The service could not answer at all."
+          }
+        }
+      }
+    },
+    "/{chain}/{network}/{address}/export": {
+      "get": {
+        "summary": "CSV and JSON renderings of what the portfolio proved.",
+        "parameters": [
+          {
+            "name": "chain",
+            "in": "path",
+            "required": true,
+            "description": "The chain the address is read on. Never inferred from the address.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "bitcoin",
+                "fractal",
+                "dogecoin",
+                "zcash"
+              ]
+            }
+          },
+          {
+            "name": "network",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "mainnet",
+                "testnet"
+              ]
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "required": true,
+            "description": "The address, validated against the chain it is read on.",
+            "schema": {
+              "type": "string",
+              "minLength": 10,
+              "maxLength": 256
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "assets-csv",
+                "activity-csv",
+                "evidence-json"
+              ],
+              "default": "assets-csv"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The export as an attachment. CSV fields are defended against spreadsheet formula injection.",
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The address, cursor, or a filter is malformed."
+          },
+          "404": {
+            "description": "The chain and network pair is not served."
+          },
+          "503": {
+            "description": "The service could not answer at all."
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "SourceState": {
+        "type": "string",
+        "enum": [
+          "proven",
+          "partial",
+          "outside_coverage",
+          "pending",
+          "stale",
+          "unavailable",
+          "unsupported"
+        ],
+        "description": "How completely one source answered. None of these may be read as a zero balance, and an empty holdings list is only meaningful under `proven`."
+      },
+      "AssetType": {
+        "type": "string",
+        "enum": [
+          "native",
+          "fungible",
+          "nft",
+          "inscription",
+          "rare_sat",
+          "name",
+          "realm",
+          "subrealm",
+          "bitmap",
+          "position",
+          "claimable",
+          "unknown"
+        ]
+      },
+      "ProtocolId": {
+        "type": "string",
+        "enum": [
+          "ordinals",
+          "rare_sats",
+          "names",
+          "bitmap",
+          "unat",
+          "runes",
+          "alkanes",
+          "mezcal",
+          "stamps",
+          "src20",
+          "src101",
+          "atomicals_nft",
+          "realms",
+          "subrealms",
+          "arc20",
+          "op_return",
+          "op_names",
+          "op_inscriptions",
+          "op_drop",
+          "drops",
+          "brc20",
+          "tap",
+          "dmt",
+          "dust20",
+          "block20",
+          "chainbloom",
+          "patina",
+          "witness_circles",
+          "tandem",
+          "cat20",
+          "ordex",
+          "doginals",
+          "drc20",
+          "tap_doge",
+          "dunes",
+          "zerdinals",
+          "zrunes",
+          "zrc20"
+        ],
+        "description": "A public protocol identity from the Universe registry."
+      },
+      "Checkpoint": {
+        "type": "object",
+        "required": [
+          "chain",
+          "network",
+          "heightAtomic",
+          "blockHash",
+          "observedAt"
+        ],
+        "properties": {
+          "chain": {
+            "type": "string"
+          },
+          "network": {
+            "type": "string"
+          },
+          "heightAtomic": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]*)$"
+          },
+          "blockHash": {
+            "type": "string"
+          },
+          "reorgEpoch": {
+            "type": "string"
+          },
+          "observedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "AssetIdentity": {
+        "type": "object",
+        "required": [
+          "chain",
+          "network",
+          "protocol",
+          "assetType",
+          "assetId"
+        ],
+        "properties": {
+          "chain": {
+            "type": "string"
+          },
+          "network": {
+            "type": "string"
+          },
+          "protocol": {
+            "$ref": "#/components/schemas/ProtocolId"
+          },
+          "assetType": {
+            "$ref": "#/components/schemas/AssetType"
+          },
+          "assetId": {
+            "type": "string",
+            "description": "The protocol's own stable identifier. Never a display name."
+          }
+        }
+      },
+      "PriceObservation": {
+        "type": "object",
+        "required": [
+          "quoteCurrency",
+          "unitPrice",
+          "source",
+          "methodology",
+          "observedAt",
+          "stale"
+        ],
+        "properties": {
+          "quoteCurrency": {
+            "type": "string"
+          },
+          "unitPrice": {
+            "type": "string",
+            "description": "Exact decimal string."
+          },
+          "source": {
+            "type": "string"
+          },
+          "methodology": {
+            "type": "string"
+          },
+          "observedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "sampleCountAtomic": {
+            "type": "string"
+          },
+          "stale": {
+            "type": "boolean",
+            "description": "A stale observation is shown but excluded from every total."
+          }
+        }
+      },
+      "Holding": {
+        "type": "object",
+        "required": [
+          "schemaVersion",
+          "assetKey",
+          "identity",
+          "quantityAtomic",
+          "custody",
+          "ownerAddress",
+          "state",
+          "valuationState",
+          "costBasisState",
+          "sourceAuthority",
+          "sourceState",
+          "warnings"
+        ],
+        "properties": {
+          "schemaVersion": {
+            "type": "string"
+          },
+          "assetKey": {
+            "type": "string",
+            "description": "chain:network:protocol:assetType:assetId. The assetId may itself contain colons, so the key parses by fixed segment count."
+          },
+          "identity": {
+            "$ref": "#/components/schemas/AssetIdentity"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "ticker": {
+            "type": "string"
+          },
+          "collectionId": {
+            "type": "string"
+          },
+          "collectionName": {
+            "type": "string"
+          },
+          "decimals": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 77
+          },
+          "quantityAtomic": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Exact atomic quantity as a decimal string, or null when the source stated none. Never a JSON number."
+          },
+          "spendableAtomic": {
+            "type": "string"
+          },
+          "lockedAtomic": {
+            "type": "string"
+          },
+          "transferableAtomic": {
+            "type": "string"
+          },
+          "pendingIncomingAtomic": {
+            "type": "string"
+          },
+          "pendingOutgoingAtomic": {
+            "type": "string"
+          },
+          "custody": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "kind",
+                "reference"
+              ],
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "outpoint",
+                    "protocol-ledger"
+                  ]
+                },
+                "reference": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "ownerAddress": {
+            "type": "string"
+          },
+          "mediaContentId": {
+            "type": "string",
+            "description": "Reference the media proxy resolves. Never a URL the page fetches directly."
+          },
+          "price": {
+            "$ref": "#/components/schemas/PriceObservation"
+          },
+          "value": {
+            "type": "string",
+            "description": "Exact decimal value in the price quote currency. Absent when unpriced."
+          },
+          "state": {
+            "type": "string"
+          },
+          "valuationState": {
+            "type": "string",
+            "enum": [
+              "priced",
+              "unpriced",
+              "stale-price",
+              "not-applicable"
+            ]
+          },
+          "costBasisState": {
+            "type": "string"
+          },
+          "sourceAuthority": {
+            "type": "string"
+          },
+          "sourceState": {
+            "$ref": "#/components/schemas/SourceState"
+          },
+          "checkpoint": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Checkpoint"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "SourceReport": {
+        "type": "object",
+        "required": [
+          "authorityId",
+          "protocols",
+          "state"
+        ],
+        "properties": {
+          "authorityId": {
+            "type": "string"
+          },
+          "protocols": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "state": {
+            "$ref": "#/components/schemas/SourceState"
+          },
+          "checkpoint": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Checkpoint"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "lagAtomic": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Blocks behind the chain reference, when both are known."
+          },
+          "detail": {
+            "type": "string",
+            "description": "What the authority said about its own state, when it said anything."
+          }
+        }
+      },
+      "EvidenceEnvelope": {
+        "type": "object",
+        "description": "Carried by every answer. A total cannot be read correctly without it.",
+        "required": [
+          "schemaVersion",
+          "chain",
+          "network",
+          "address",
+          "requestedAt",
+          "completedAt",
+          "snapshotId",
+          "sources",
+          "warnings",
+          "errors",
+          "unresolvedCount",
+          "hasMore"
+        ],
+        "properties": {
+          "schemaVersion": {
+            "type": "string",
+            "const": "universe-portfolio-v1"
+          },
+          "chain": {
+            "type": "string"
+          },
+          "network": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "requestedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "snapshotId": {
+            "type": "string"
+          },
+          "chainTip": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Checkpoint"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SourceReport"
+            }
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "unresolvedCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "hasMore": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ProtocolStatement": {
+        "type": "object",
+        "description": "One protocol answer. Branch on `state` before reading `holdings`: an empty list means nothing on its own.",
+        "required": [
+          "protocol",
+          "chain",
+          "network",
+          "state",
+          "holdings",
+          "truncated",
+          "warnings"
+        ],
+        "properties": {
+          "protocol": {
+            "$ref": "#/components/schemas/ProtocolId"
+          },
+          "chain": {
+            "type": "string"
+          },
+          "network": {
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/SourceState"
+          },
+          "holdings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Holding"
+            }
+          },
+          "authorityId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "checkpoint": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Checkpoint"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "truncated": {
+            "type": "boolean"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ValuationCoverage": {
+        "type": "object",
+        "description": "Every total states how much of it is priced. A displayed value never silently excludes holdings.",
+        "required": [
+          "quoteCurrency",
+          "pricedValue",
+          "pricedHoldingCount",
+          "unpricedHoldingCount",
+          "state"
+        ],
+        "properties": {
+          "quoteCurrency": {
+            "type": "string"
+          },
+          "pricedValue": {
+            "type": "string"
+          },
+          "pricedHoldingCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "unpricedHoldingCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "complete-priced",
+              "partially-priced",
+              "unpriced"
+            ]
+          }
+        }
+      },
+      "PortfolioSummary": {
+        "type": "object",
+        "required": [
+          "envelope",
+          "totalHoldingCount",
+          "valuation",
+          "protocols"
+        ],
+        "properties": {
+          "envelope": {
+            "$ref": "#/components/schemas/EvidenceEnvelope"
+          },
+          "nativeBalance": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Holding"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "totalHoldingCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "fungibleCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "nftCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "inscriptionCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "protocolCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "valuation": {
+            "$ref": "#/components/schemas/ValuationCoverage"
+          },
+          "protocols": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProtocolStatement"
+            }
+          }
+        }
+      },
+      "ActivityEvent": {
+        "type": "object",
+        "required": [
+          "eventId",
+          "chain",
+          "network",
+          "txid",
+          "type",
+          "confirmation",
+          "amountAtomic"
+        ],
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "description": "chain:network:base:txid:0:0"
+          },
+          "chain": {
+            "type": "string"
+          },
+          "network": {
+            "type": "string"
+          },
+          "txid": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "receive",
+              "send",
+              "self-transfer",
+              "coinbase-reward",
+              "unknown"
+            ]
+          },
+          "confirmation": {
+            "type": "string",
+            "enum": [
+              "mempool-candidate",
+              "confirmed"
+            ]
+          },
+          "blockHeightAtomic": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "blockHash": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "inflowAtomic": {
+            "type": "string"
+          },
+          "outflowAtomic": {
+            "type": "string"
+          },
+          "amountAtomic": {
+            "type": "string"
+          },
+          "feePaidAtomic": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Present only when this address paid the fee."
+          },
+          "counterparty": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Named only when the transaction shape identifies exactly one. Never a guess."
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "HistoryPoint": {
+        "type": "object",
+        "required": [
+          "txid",
+          "blockHeightAtomic",
+          "balanceAtomic",
+          "deltaAtomic"
+        ],
+        "properties": {
+          "txid": {
+            "type": "string"
+          },
+          "blockHeightAtomic": {
+            "type": "string"
+          },
+          "blockTimeAtomic": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "balanceAtomic": {
+            "type": "string"
+          },
+          "deltaAtomic": {
+            "type": "string",
+            "description": "Signed exact decimal."
+          },
+          "value": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Null when no price exists for that day. Never zero."
+          }
+        }
+      },
+      "PnlReport": {
+        "type": "object",
+        "description": "FIFO from the first transaction. Unknown cost is carried and counted, never valued at zero.",
+        "properties": {
+          "schemaVersion": {
+            "type": "string"
+          },
+          "quoteCurrency": {
+            "type": "string"
+          },
+          "methodology": {
+            "type": "string",
+            "enum": [
+              "fifo"
+            ]
+          },
+          "realizedPnl": {
+            "type": "string"
+          },
+          "unrealizedPnl": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Null when no fresh current price exists."
+          },
+          "totalPnl": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "pnlRatio": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "invested": {
+            "type": "string"
+          },
+          "proceeds": {
+            "type": "string"
+          },
+          "feesQuantityAtomic": {
+            "type": "string"
+          },
+          "feesValue": {
+            "type": "string"
+          },
+          "averageAcquisitionPrice": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "winningRealizations": {
+            "type": "integer"
+          },
+          "losingRealizations": {
+            "type": "integer"
+          },
+          "remainingQuantityAtomic": {
+            "type": "string"
+          },
+          "remainingCostBasis": {
+            "type": "string"
+          },
+          "unknownBasisQuantityAtomic": {
+            "type": "string"
+          },
+          "analytics": {
+            "type": "object",
+            "description": "Win rate, winner and loser averages, best and worst realization, return distribution, daily calendar, and quantity-weighted holding period. A statistic with no known-basis population is null rather than zero.",
+            "properties": {
+              "winRate": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "knownRealizationCount": {
+                "type": "integer"
+              },
+              "winningCount": {
+                "type": "integer"
+              },
+              "losingCount": {
+                "type": "integer"
+              },
+              "breakEvenCount": {
+                "type": "integer"
+              },
+              "averageWinner": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "averageLoser": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "bestRealization": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "worstRealization": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "totalWinnings": {
+                "type": "string"
+              },
+              "totalLosses": {
+                "type": "string"
+              },
+              "averageRemainingHoldingDays": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "undatedLotCount": {
+                "type": "integer"
+              },
+              "distribution": {
+                "type": "array",
+                "items": {
+                  "type": "object"
+                }
+              },
+              "calendar": {
+                "type": "array",
+                "items": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "lots": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "realizations": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "unsupported",
+              "outside_coverage"
+            ],
+            "description": "Present instead of figures when no defensible report can be produced."
+          },
+          "detail": {
+            "type": "string"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "securitySchemes": {}
+  },
+  "x-universe-protocol-traits": {
+    "ordinals": {
+      "assetType": "inscription",
+      "servingMode": "chain-view",
+      "authorityId": "ord"
+    },
+    "rare_sats": {
+      "assetType": "rare_sat",
+      "servingMode": "chain-view",
+      "authorityId": "ord"
+    },
+    "runes": {
+      "assetType": "fungible",
+      "servingMode": "chain-view",
+      "authorityId": "ord"
+    },
+    "atomicals_nft": {
+      "assetType": "nft",
+      "servingMode": "chain-view",
+      "authorityId": "index-atomicals-nfts-and-realms"
+    },
+    "realms": {
+      "assetType": "realm",
+      "servingMode": "chain-view",
+      "authorityId": "index-atomicals-nfts-and-realms"
+    },
+    "subrealms": {
+      "assetType": "subrealm",
+      "servingMode": "chain-view",
+      "authorityId": "index-atomicals-nfts-and-realms"
+    },
+    "names": {
+      "assetType": "name",
+      "servingMode": "source-contract",
+      "authorityId": "index-names"
+    },
+    "bitmap": {
+      "assetType": "bitmap",
+      "servingMode": "source-contract",
+      "authorityId": "index-bitmap"
+    },
+    "unat": {
+      "assetType": "nft",
+      "servingMode": "source-contract",
+      "authorityId": "index-unat"
+    },
+    "alkanes": {
+      "assetType": "fungible",
+      "servingMode": "source-contract",
+      "authorityId": "index-alkanes"
+    },
+    "mezcal": {
+      "assetType": "fungible",
+      "servingMode": "source-contract",
+      "authorityId": "index-mezcal"
+    },
+    "stamps": {
+      "assetType": "nft",
+      "servingMode": "source-contract",
+      "authorityId": "index-stamps"
+    },
+    "src20": {
+      "assetType": "fungible",
+      "servingMode": "source-contract",
+      "authorityId": "index-stamps"
+    },
+    "src101": {
+      "assetType": "name",
+      "servingMode": "source-contract",
+      "authorityId": "index-stamps"
+    },
+    "arc20": {
+      "assetType": "fungible",
+      "servingMode": "source-contract",
+      "authorityId": "index-atomicals"
+    },
+    "op_return": {
+      "assetType": "unknown",
+      "servingMode": "source-contract",
+      "authorityId": "index-op20"
+    },
+    "op_names": {
+      "assetType": "name",
+      "servingMode": "source-contract",
+      "authorityId": "index-op20"
+    },
+    "op_inscriptions": {
+      "assetType": "inscription",
+      "servingMode": "source-contract",
+      "authorityId": "index-opinscriptions"
+    },
+    "op_drop": {
+      "assetType": "position",
+      "servingMode": "source-contract",
+      "authorityId": "index-drops-and-opdrop"
+    },
+    "drops": {
+      "assetType": "position",
+      "servingMode": "source-contract",
+      "authorityId": "index-drops-and-opdrop"
+    },
+    "brc20": {
+      "assetType": "fungible",
+      "servingMode": "source-contract",
+      "authorityId": "index-brc20"
+    },
+    "tap": {
+      "assetType": "fungible",
+      "servingMode": "source-contract",
+      "authorityId": "index-tap"
+    },
+    "dmt": {
+      "assetType": "nft",
+      "servingMode": "source-contract",
+      "authorityId": "index-dmt"
+    },
+    "dust20": {
+      "assetType": "fungible",
+      "servingMode": "source-contract",
+      "authorityId": "index-dust20"
+    },
+    "block20": {
+      "assetType": "fungible",
+      "servingMode": "source-contract",
+      "authorityId": "index-block20"
+    },
+    "chainbloom": {
+      "assetType": "nft",
+      "servingMode": "source-contract",
+      "authorityId": "index-chainbloom"
+    },
+    "patina": {
+      "assetType": "nft",
+      "servingMode": "chain-view",
+      "authorityId": "index-patina"
+    },
+    "witness_circles": {
+      "assetType": "nft",
+      "servingMode": "source-contract",
+      "authorityId": "index-witness-circles"
+    },
+    "tandem": {
+      "assetType": "position",
+      "servingMode": "source-contract",
+      "authorityId": "index-tandem"
+    },
+    "ordex": {
+      "assetType": "position",
+      "servingMode": "source-contract",
+      "authorityId": "index-ordinals"
+    },
+    "cat20": {
+      "assetType": "fungible",
+      "servingMode": "chain-view",
+      "authorityId": "index-cat20"
+    },
+    "doginals": {
+      "assetType": "inscription",
+      "servingMode": "chain-view",
+      "authorityId": "ord-dogecoin"
+    },
+    "drc20": {
+      "assetType": "fungible",
+      "servingMode": "chain-view",
+      "authorityId": "ord-dogecoin"
+    },
+    "dunes": {
+      "assetType": "fungible",
+      "servingMode": "chain-view",
+      "authorityId": "ord-dogecoin"
+    },
+    "tap_doge": {
+      "assetType": "fungible",
+      "servingMode": "source-contract",
+      "authorityId": "index-doge-tap"
+    },
+    "zerdinals": {
+      "assetType": "inscription",
+      "servingMode": "chain-view",
+      "authorityId": "index-zcash-metaprotocols"
+    },
+    "zrunes": {
+      "assetType": "fungible",
+      "servingMode": "chain-view",
+      "authorityId": "index-zcash-metaprotocols"
+    },
+    "zrc20": {
+      "assetType": "fungible",
+      "servingMode": "chain-view",
+      "authorityId": "index-zcash-metaprotocols"
+    }
+  }
+}
