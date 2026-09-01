@@ -131,6 +131,20 @@ Schema version 107 adds `admin_adapter_runs` and `admin_adapter_locks`.
 - With the database switched off, operations refuse rather than run without a
   record. An operation nobody can audit is not one worth having.
 
+## The /admin address on this host
+
+The Explorer never served an administration panel of its own. Operations for
+it live in the unified Control Center, so nginx answers `/admin` and anything
+under it with a permanent redirect to
+`https://inscribe.bitcoinuniverse.io/admin/apps?application=explorer`.
+
+The redirect is in nginx rather than in the application on purpose: it has to
+answer before the Angular bundle loads, and it has to answer for a request
+that never reaches Angular at all. `scripts/universe/admin-redirect.test.mjs`
+holds it to that: permanent, https only, every path under `/admin`, declared
+before the site fallback, and marked so the redirect itself never appears in a
+search result.
+
 ## Rollback
 
 The tables are additive and no public route reads them. To roll the schema

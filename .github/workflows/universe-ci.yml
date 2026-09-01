@@ -81,6 +81,9 @@ jobs:
       - name: Gateway routing
         run: node --test scripts/universe/gateway.test.mjs
 
+      - name: The Explorer admin address redirects to the Control Center
+        run: node --test scripts/universe/admin-redirect.test.mjs
+
       - name: The component identity check can still fail
         run: node --test scripts/universe/release-manifest.test.mjs
 
