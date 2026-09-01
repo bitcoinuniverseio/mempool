@@ -117,6 +117,21 @@ describe('listClusters', () => {
     expect(result.offset).toBe(1);
   });
 
+  it('counts only the clusters the caller asked for when filtering', () => {
+    // A total that counted every cluster while the page held only packages
+    // would make the paging report more than it could ever show.
+    const mempool = mempoolOf([
+      entry('a', 100, 100),
+      entry('b', 1000, 100, ['a']),
+      entry('c', 900, 100),
+    ]);
+    const all = intelligence.listClusters(mempool, 0, 10);
+    const packages = intelligence.listClusters(mempool, 0, 10, Date.now(), 2);
+    expect(all.total).toBe(2);
+    expect(packages.total).toBe(1);
+    expect(packages.clusters[0].id).toBe(id('a'));
+  });
+
   it('describes a child pays for parent cluster as one cluster', () => {
     const result = intelligence.listClusters(mempoolOf([
       entry('a', 100, 100),

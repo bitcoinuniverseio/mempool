@@ -1,0 +1,123 @@
+<div class="container-xl cluster-list">
+  <header class="page-head">
+    <div *ngIf="!packagesOnly">
+      <h1 i18n="mempool.clusters.heading">Mempool clusters</h1>
+      <p class="lede" i18n="mempool.clusters.lede">
+        A cluster is a group of unconfirmed transactions tied together by
+        spending, so a miner has to take them in order. This is what a miner
+        chooses from, rather than a flat list of transactions.
+      </p>
+    </div>
+    <div *ngIf="packagesOnly">
+      <h1 i18n="mempool.packages.heading">Mempool packages</h1>
+      <p class="lede" i18n="mempool.packages.lede">
+        Only the clusters that hold a real dependency: an unconfirmed
+        transaction spending another unconfirmed transaction. These are the
+        cases where a miner cannot take one without the other.
+      </p>
+    </div>
+    <div class="freshness" *ngIf="freshness as f" [attr.data-tone]="f.tone">
+      <span class="freshness-label">{{ f.label }}</span>
+      <span class="freshness-age" *ngIf="f.ageSeconds > 0">
+        <ng-container i18n="mempool.freshness.age">built {{ f.ageSeconds }} seconds ago</ng-container>
+      </span>
+      <p class="freshness-detail">{{ f.detail }}</p>
+    </div>
+  </header>
+
+  <p class="error" role="alert" *ngIf="error">{{ error }}</p>
+
+  <p class="loading" role="status" *ngIf="loading && !response" i18n="mempool.clusters.loading">
+    Reading the clusters in this node mempool.
+  </p>
+
+  <ng-container *ngIf="response as data">
+    <p class="summary" role="status" *ngIf="!packagesOnly">
+      <ng-container i18n="mempool.clusters.summary">
+        Showing {{ shownFrom }} to {{ shownTo }} of {{ data.total }} clusters,
+        built from {{ data.freshness.mempoolSize }} unconfirmed transactions.
+      </ng-container>
+    </p>
+    <p class="summary" role="status" *ngIf="packagesOnly">
+      <ng-container i18n="mempool.packages.summary">
+        Showing {{ shownFrom }} to {{ shownTo }} of {{ data.total }} packages,
+        found among {{ data.freshness.mempoolSize }} unconfirmed transactions.
+      </ng-container>
+    </p>
+
+    <p class="empty" *ngIf="!data.clusters.length && !data.total && !packagesOnly"
+      i18n="mempool.clusters.empty">
+      This node is holding no unconfirmed transactions, so there is no cluster
+      to show. That is different from the clusters being unavailable.
+    </p>
+    <p class="empty" *ngIf="!data.clusters.length && !data.total && packagesOnly"
+      i18n="mempool.packages.empty">
+      Every unconfirmed transaction this node holds stands on its own, so
+      there is no package to show. That is different from packages being
+      unavailable.
+    </p>
+
+    <table class="table table-sm cluster-table" *ngIf="data.clusters.length">
+      <caption class="sr-only" i18n="mempool.clusters.caption">
+        Clusters in this node mempool, ordered by the best fee rate each one
+        can offer a miner.
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col" i18n="mempool.clusters.col-cluster">Cluster</th>
+          <th scope="col" class="numeric" i18n="mempool.clusters.col-txs">Transactions</th>
+          <th scope="col" class="numeric" i18n="mempool.clusters.col-groups">Mining groups</th>
+          <th scope="col" class="numeric" i18n="mempool.clusters.col-top">Best fee rate</th>
+          <th scope="col" class="numeric" i18n="mempool.clusters.col-fee">Total fee</th>
+          <th scope="col" class="numeric" i18n="mempool.clusters.col-vsize">Total size</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let cluster of data.clusters; trackBy: trackById">
+          <th scope="row">
+            <a [routerLink]="['/mempool/clusters', cluster.id]">
+              <code>{{ cluster.id.slice(0, 8) }}…{{ cluster.id.slice(-8) }}</code>
+            </a>
+          </th>
+          <td class="numeric">{{ cluster.txCount }}</td>
+          <td class="numeric">{{ cluster.chunkCount }}</td>
+          <td class="numeric">
+            {{ feerate(cluster.topFeerate) }}
+            <span class="unit" i18n="mempool.unit.satvb">sat/vB</span>
+          </td>
+          <td class="numeric">
+            {{ sats(cluster.feeSats) }}
+            <span class="unit" i18n="mempool.unit.sats">sats</span>
+          </td>
+          <td class="numeric">
+            {{ vsize(cluster.vsize) }}
+            <span class="unit" i18n="mempool.unit.vb">vB</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <nav class="paging" *ngIf="data.total > pageSize" aria-label="Cluster pages" i18n-aria-label="mempool.clusters.paging-label">
+      <button type="button" class="btn btn-sm" (click)="previousPage()" [disabled]="!hasPrevious"
+        i18n="mempool.clusters.previous">Previous</button>
+      <button type="button" class="btn btn-sm" (click)="nextPage()" [disabled]="!hasNext"
+        i18n="mempool.clusters.next">Next</button>
+    </nav>
+  </ng-container>
+
+  <section class="explainer">
+    <h2 i18n="mempool.clusters.explainer-heading">Why clusters and not transactions</h2>
+    <p i18n="mempool.clusters.explainer-body">
+      A transaction that spends an unconfirmed output cannot be mined without
+      its parent. So a cheap parent with a rich child is worth more together
+      than the parent looks alone, and a rich parent with a cheap child does
+      not become cheaper. Ordering by each transaction's own fee rate produces
+      a block no miner could build.
+    </p>
+    <p>
+      <a routerLink="/mempool/feerate-diagram" i18n="mempool.clusters.diagram-link">
+        See the fee rate diagram for this mempool
+      </a>
+    </p>
+  </section>
+</div>

@@ -203,9 +203,16 @@ class MempoolIntelligence {
     offset: number,
     limit: number,
     now: number = Date.now(),
+    minTxCount = 1,
   ): ClusterListResult {
     const view = this.build(mempool, now);
-    const summaries: ClusterSummary[] = view.clusters.map((cluster) => ({
+    // Filtering before the total is counted, not after, so `total` describes
+    // the set the caller asked for. A total that counted every cluster while
+    // the page held only packages would make the paging lie.
+    const selected = minTxCount > 1
+      ? view.clusters.filter((cluster) => cluster.txCount >= minTxCount)
+      : view.clusters;
+    const summaries: ClusterSummary[] = selected.map((cluster) => ({
       id: cluster.id,
       txCount: cluster.txCount,
       chunkCount: cluster.chunks.length,

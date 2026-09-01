@@ -70,7 +70,16 @@ class MempoolIntelligenceRoutes {
         handleError(req, res, 400, `limit must be a whole number from 1 to ${MAX_LIMIT}`);
         return;
       }
-      const result = intelligence.listClusters(mempool.getMempool(), offset, limit);
+      // `minTxCount=2` is how the packages page asks for only the clusters
+      // that actually have a dependency in them.
+      const minTxCount = readBound(req.query.minTxCount, 1, 1000);
+      if (minTxCount === null || minTxCount === 0) {
+        handleError(req, res, 400, 'minTxCount must be a whole number of at least 1');
+        return;
+      }
+      const result = intelligence.listClusters(
+        mempool.getMempool(), offset, limit, Date.now(), minTxCount,
+      );
       MempoolIntelligenceRoutes.setLiveCache(res);
       res.json(result);
     } catch (e) {
