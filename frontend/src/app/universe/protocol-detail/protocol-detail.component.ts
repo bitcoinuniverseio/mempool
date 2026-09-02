@@ -1,17 +1,33 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { Observable, catchError, combineLatest, map, of, shareReplay, switchMap, tap } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, combineLatest, map, of, shareReplay, switchMap, tap } from 'rxjs';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { UniverseLocalService } from '@app/universe/universe-local.service';
 import { PulseEvent, PulseState, UniversePulseService } from '@app/universe/universe-pulse.service';
 import { ProtocolCopy, protocolCopy } from '@app/universe/universe-protocol-copy';
 import {
+  ExplorerProtocolActivityPage,
   ExplorerProtocolDefinition,
   ProtocolCoverage,
   SourceEntry,
 } from '@app/universe/universe.types';
 import { shortenIdentifier } from '@app/universe/universe-evidence';
+import {
+  ProtocolActivityRow,
+  activitySummary,
+  readActivityRows,
+} from '@app/universe/protocol-activity-view';
+
+type ProtocolActivityState =
+  | { readonly kind: 'idle' | 'loading' | 'error' }
+  | {
+      readonly kind: 'loaded';
+      readonly page: ExplorerProtocolActivityPage;
+      readonly rows: readonly ProtocolActivityRow[];
+      readonly summary: string;
+      readonly loadingMore: boolean;
+    };
 
 interface ProtocolDetailViewModel {
   readonly kind: 'loading' | 'ready' | 'missing' | 'error';
@@ -43,6 +59,10 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
   vm$: Observable<ProtocolDetailViewModel>;
   readonly shorten = shortenIdentifier;
   readonly notConfiguredLabel = $localize`:@@universe.detail.authority-none:Not configured here`;
+
+  readonly activity$ = new BehaviorSubject<ProtocolActivityState>({ kind: 'idle' });
+  private activityCursor: string | null = null;
+  private activityPages: ExplorerProtocolActivityPage[] = [];
 
   constructor(
     private route: ActivatedRoute,
@@ -79,6 +99,7 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
           path: `/protocols/${protocol.id}`,
           label: protocol.displayName,
         });
+        this.loadActivity(protocol.id);
       }),
       shareReplay({ bufferSize: 1, refCount: true }),
     );
@@ -114,6 +135,60 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.pulse.stop();
+  }
+
+  /**
+   * Reads the protocol's authority feed, first page. Every terminal state
+   * resolves to a page the template can state truthfully; only a transport
+   * failure of the explorer's own overlay lands here as an error.
+   */
+  loadActivity(protocolId: string): void {
+    this.activityPages = [];
+    this.activityCursor = null;
+    this.activity$.next({ kind: 'loading' });
+    this.api.getProtocolActivity$(protocolId).subscribe({
+      next: (page) => this.pushActivityPage(page),
+      error: () => this.activity$.next({ kind: 'error' }),
+    });
+  }
+
+  /** Appends the next cursor page of the same feed. */
+  loadMoreActivity(protocolId: string): void {
+    const state = this.activity$.value;
+    if (state.kind !== 'loaded' || !this.activityCursor || state.loadingMore) {
+      return;
+    }
+    this.activity$.next({ ...state, loadingMore: true });
+    this.api.getProtocolActivity$(protocolId, this.activityCursor).subscribe({
+      next: (page) => this.pushActivityPage(page),
+      error: () => this.activity$.next({ ...state, loadingMore: false }),
+    });
+  }
+
+  private pushActivityPage(page: ExplorerProtocolActivityPage): void {
+    this.activityPages.push(page);
+    this.activityCursor = page.hasMore ? page.nextCursor : null;
+    const merged = {
+      events: this.activityPages.flatMap((entry) => entry.events),
+      assets: this.activityPages.flatMap((entry) => entry.assets),
+      invalidations: this.activityPages.flatMap((entry) => entry.invalidations),
+    };
+    const latest = this.activityPages[this.activityPages.length - 1];
+    this.activity$.next({
+      kind: 'loaded',
+      page: { ...latest, ...merged, hasMore: latest.hasMore },
+      rows: readActivityRows([...merged.events, ...merged.invalidations]),
+      summary: activitySummary(latest),
+      loadingMore: false,
+    });
+  }
+
+  activitySummaryLabel(state: ProtocolActivityState): string | null {
+    return state.kind === 'loaded' ? state.summary : null;
+  }
+
+  trackByRow(index: number, row: ProtocolActivityRow): string {
+    return row.id ?? `${index}`;
   }
 
   togglePin(protocolId: string): void {
