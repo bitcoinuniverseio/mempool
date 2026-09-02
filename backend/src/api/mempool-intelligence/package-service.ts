@@ -156,6 +156,8 @@ function lookupFor(
  * Read from the node rather than assumed, because it is a configurable and a
  * replacement calculation built on the wrong one is wrong by exactly the
  * amount that matters. One sat per vbyte is the default and the fallback.
+ *
+ * @asyncSafe Falls back to the default rather than rejecting.
  */
 export async function $incrementalRelayFeeSatPerVb(): Promise<number> {
   try {
@@ -170,6 +172,11 @@ export async function $incrementalRelayFeeSatPerVb(): Promise<number> {
 
 /**
  * Decodes, judges and describes a package.
+ *
+ * @asyncUnsafe A transaction the node cannot decode rejects here, and the
+ * route turns that into a four hundred carrying the node's own words. Caught
+ * and flattened into a result, that answer would arrive as a five hundred
+ * saying nothing, which is the wrong answer to a caller's malformed input.
  */
 export async function $simulate(rawTxs: string[]): Promise<PackageSimulation> {
   const decoded = await Promise.all(
