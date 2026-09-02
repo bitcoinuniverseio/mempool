@@ -148,6 +148,14 @@ const routes: Routes = [
         loadComponent: () => import('@app/universe/pulse/pulse.component').then(m => m.PulseComponent),
         data: { networkSpecific: true, networks: ['bitcoin'] },
       },
+      {
+        // The cross chain live view: everything this deployment's stream
+        // delivers, with pause, scrub, and replay over what this page has
+        // actually received.
+        path: 'live',
+        loadComponent: () => import('@app/universe/live/live-universe.component').then(m => m.LiveUniverseComponent),
+        data: { networks: ['bitcoin'] },
+      },
       // Clusters, packages and the fee rate diagram. The list serves both
       // /mempool/clusters and /mempool/packages, and the detail view serves
       // both a cluster id and a transaction's package, because those are the
