@@ -1,0 +1,66 @@
+@use '../universe-tokens' as u;
+
+:host {
+  @include u.universe-state-tokens;
+
+  display: block;
+}
+
+.share-receiver {
+  margin: var(--u-space-6) auto;
+  max-width: 34rem;
+  padding: 0 var(--u-space-4);
+}
+
+.title {
+  font-size: var(--u-text-xl);
+  margin: 0 0 var(--u-space-3);
+}
+
+.detail {
+  color: var(--u-text-secondary);
+  margin: var(--u-space-2) 0;
+}
+
+.result {
+  align-items: flex-start;
+  background: var(--universe-state-unavailable-surface);
+  border: 1px solid var(--universe-state-unavailable-border);
+  border-radius: var(--u-radius-md);
+  display: flex;
+  gap: var(--u-space-3);
+  margin: var(--u-space-4) 0;
+  padding: var(--u-space-3) var(--u-space-4);
+}
+
+.mark {
+  color: var(--universe-state-unavailable);
+  flex: none;
+  height: 1.25rem;
+  margin-top: 0.15rem;
+  width: 1.25rem;
+}
+
+.received {
+  margin: var(--u-space-2) 0 0;
+  overflow-wrap: anywhere;
+
+  code {
+    background: var(--u-surface-inset);
+    border-radius: var(--u-radius-sm);
+    font-family: var(--u-font-data);
+    font-size: var(--u-text-xs);
+    padding: 0.1em 0.4em;
+  }
+}
+
+.home {
+  color: var(--u-brand);
+  display: inline-block;
+  margin-top: var(--u-space-3);
+
+  &:focus-visible {
+    outline: 2px solid var(--u-focus-ring);
+    outline-offset: var(--u-focus-ring-offset, 2px);
+  }
+}

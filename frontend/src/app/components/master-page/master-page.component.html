@@ -146,6 +146,7 @@
   <div class="flex-grow-1 d-flex flex-column page-column">
     <app-testnet-alert *ngIf="network.val === 'testnet' || network.val === 'testnet4' || network.val === 'signet'"></app-testnet-alert>
     <app-universe-chain-sync-notice></app-universe-chain-sync-notice>
+    <app-universe-connectivity-banner></app-universe-connectivity-banner>
 
     <main id="main-content">
       <router-outlet></router-outlet>
