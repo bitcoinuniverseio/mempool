@@ -1,0 +1,412 @@
+<div class="container-xl psbt-workbench">
+  <header class="page-head">
+    <h1 i18n="workbench.psbt.heading">PSBT workbench</h1>
+    <p class="lede" i18n="workbench.psbt.lede">
+      Read a partially signed transaction field by field, including the fields
+      this explorer does not recognise. Everything happens in your browser.
+      Nothing is uploaded, and nothing here can sign.
+    </p>
+  </header>
+
+  <form class="entry" (ngSubmit)="inspect()" novalidate>
+    <div class="dropzone" [class.dragging]="dragging"
+      (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event)">
+      <label class="file-label" for="psbt-file" i18n="workbench.psbt.file-label">
+        Open a .psbt file
+      </label>
+      <input id="psbt-file" type="file" accept=".psbt,.txt,application/octet-stream"
+        (change)="onFileChosen($event)"
+        aria-describedby="psbt-file-help">
+      <p id="psbt-file-help" class="field-help" i18n="workbench.psbt.file-help">
+        Or drop one here. Raw bytes and base64 text are both read. The file is
+        opened in this page and is not uploaded.
+      </p>
+      <p class="file-name" *ngIf="fileName" role="status">
+        <ng-container i18n="workbench.psbt.file-read">Read from</ng-container>
+        <code>{{ fileName }}</code>
+      </p>
+    </div>
+
+    <label for="psbt-input" i18n="workbench.psbt.input-label">
+      PSBT, as base64 or hexadecimal
+    </label>
+    <textarea id="psbt-input" name="psbt" rows="5" spellcheck="false"
+      autocomplete="off" autocapitalize="off" autocorrect="off"
+      [(ngModel)]="input"
+      aria-describedby="psbt-input-help"
+      i18n-placeholder="workbench.psbt.placeholder"
+      placeholder="cHNidP8BA..."></textarea>
+    <p id="psbt-input-help" class="field-help" i18n="workbench.psbt.input-help">
+      This never leaves the page. A private key, an extended private key, or a
+      recovery phrase is refused before anything else happens.
+    </p>
+
+    <ng-container *ngIf="compareMode">
+      <label for="psbt-compare" i18n="workbench.psbt.compare-label">
+        Second PSBT to compare against
+      </label>
+      <textarea id="psbt-compare" name="compare" rows="4" spellcheck="false"
+        autocomplete="off" autocapitalize="off" autocorrect="off"
+        [(ngModel)]="comparison"
+        aria-describedby="psbt-compare-help"></textarea>
+      <p id="psbt-compare-help" class="field-help" i18n="workbench.psbt.compare-help">
+        Usually the same file after a signer has touched it. The comparison
+        shows exactly which records changed.
+      </p>
+    </ng-container>
+
+    <div class="actions">
+      <button type="submit" class="btn btn-primary btn-sm" i18n="workbench.psbt.read">Read it</button>
+      <button type="button" class="btn btn-sm" (click)="toggleCompare()"
+        [attr.aria-pressed]="compareMode">
+        <ng-container *ngIf="!compareMode" i18n="workbench.psbt.compare-on">Compare two files</ng-container>
+        <ng-container *ngIf="compareMode" i18n="workbench.psbt.compare-off">Stop comparing</ng-container>
+      </button>
+      <button type="button" class="btn btn-sm" (click)="clear()" i18n="workbench.psbt.clear">Clear</button>
+    </div>
+  </form>
+
+  <p class="secret" role="alert" *ngIf="secretWarning">{{ secretWarning }}</p>
+  <p class="error" role="alert" *ngIf="error">{{ error }}</p>
+
+  <ng-container *ngIf="inspection as p">
+    <section class="overview">
+      <h2 i18n="workbench.psbt.overview-heading">What this file is</h2>
+      <dl class="facts">
+        <div>
+          <dt i18n="workbench.psbt.fact-version">Version</dt>
+          <dd>
+            {{ p.version }}
+            <span class="note" *ngIf="p.declaredVersion === null" i18n="workbench.psbt.version-implied">
+              inferred from the unsigned transaction, since no version record is present
+            </span>
+          </dd>
+        </div>
+        <div>
+          <dt i18n="workbench.psbt.fact-inputs">Inputs</dt>
+          <dd>{{ p.inputCount }}</dd>
+        </div>
+        <div>
+          <dt i18n="workbench.psbt.fact-outputs">Outputs</dt>
+          <dd>{{ p.outputCount }}</dd>
+        </div>
+        <div>
+          <dt i18n="workbench.psbt.fact-records">Records</dt>
+          <dd>{{ p.records.length }}</dd>
+        </div>
+        <div>
+          <dt i18n="workbench.psbt.fact-size">Size</dt>
+          <dd>{{ p.byteLength }} <span class="unit" i18n="workbench.psbt.unit-bytes">bytes</span></dd>
+        </div>
+      </dl>
+
+      <p class="roundtrip" [attr.data-ok]="roundTripVerified" role="status">
+        <ng-container *ngIf="roundTripVerified" i18n="workbench.psbt.roundtrip-ok">
+          Written back out, this reader reproduces the file byte for byte.
+          Nothing was dropped or reordered, including the fields it does not
+          recognise.
+        </ng-container>
+        <ng-container *ngIf="!roundTripVerified" i18n="workbench.psbt.roundtrip-fail">
+          Written back out, this reader does not reproduce the file exactly.
+          Treat the breakdown below as incomplete and use the original bytes.
+        </ng-container>
+      </p>
+
+      <div class="actions">
+        <button type="button" class="btn btn-sm" (click)="downloadUnchanged()"
+          [disabled]="!roundTripVerified"
+          aria-describedby="psbt-save-help"
+          i18n="workbench.psbt.save">Save these bytes</button>
+        <p id="psbt-save-help" class="field-help">
+          <ng-container *ngIf="roundTripVerified" i18n="workbench.psbt.save-help">
+            Saves the file this page read, unaltered, including the fields it
+            has no name for. No signature is added, because none can be.
+          </ng-container>
+          <ng-container *ngIf="!roundTripVerified" i18n="workbench.psbt.save-blocked">
+            Saving is unavailable because the round trip above did not match.
+            Keep the original file rather than one this page wrote.
+          </ng-container>
+        </p>
+      </div>
+    </section>
+
+    <section class="amounts" *ngIf="amounts as money">
+      <h2 i18n="workbench.psbt.amounts-heading">What it moves</h2>
+
+      <p class="fee" [attr.data-known]="money.fee !== null" role="status">
+        <ng-container *ngIf="money.fee !== null">
+          <ng-container i18n="workbench.psbt.fee-known">Fee</ng-container>
+          <strong>{{ sats(money.fee) }} BTC</strong>
+          <span class="note">{{ money.fee }} <ng-container i18n="workbench.psbt.unit-sats">sat</ng-container></span>
+        </ng-container>
+        <ng-container *ngIf="money.fee === null">{{ money.feeUnknownReason }}</ng-container>
+      </p>
+
+      <dl class="facts">
+        <div>
+          <dt i18n="workbench.psbt.fact-in-total">Inputs total</dt>
+          <dd>
+            {{ sats(money.inputTotal) }}
+            <span class="note" *ngIf="money.inputsMissingAmount.length"
+              i18n="workbench.psbt.in-partial">
+              covering {{ amounts.inputs.length - money.inputsMissingAmount.length }} of
+              {{ amounts.inputs.length }} inputs, so this is not the total
+            </span>
+          </dd>
+        </div>
+        <div>
+          <dt i18n="workbench.psbt.fact-out-total">Outputs total</dt>
+          <dd>
+            {{ sats(money.outputTotal) }}
+            <span class="note" *ngIf="money.outputsMissingAmount.length"
+              i18n="workbench.psbt.out-partial">
+              covering {{ amounts.outputs.length - money.outputsMissingAmount.length }} of
+              {{ amounts.outputs.length }} outputs, so this is not the total
+            </span>
+          </dd>
+        </div>
+      </dl>
+
+      <table class="table table-sm record-table">
+        <caption class="sr-only" i18n="workbench.psbt.in-caption">
+          Every input, the previous output it spends, and its value.
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col" i18n="workbench.psbt.col-input">Input</th>
+            <th scope="col" i18n="workbench.psbt.col-spends">Spends</th>
+            <th scope="col" class="numeric" i18n="workbench.psbt.col-value-btc">Value</th>
+            <th scope="col" i18n="workbench.psbt.col-known-from">Known from</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let input of money.inputs" [attr.data-missing]="input.amount === null">
+            <th scope="row">{{ input.index }}</th>
+            <td>
+              <code *ngIf="input.previousTxid">{{ shortValue(input.previousTxid, 8) }}:{{ input.previousIndex }}</code>
+              <span *ngIf="!input.previousTxid" class="unnamed" i18n="workbench.psbt.no-outpoint">
+                the file does not say
+              </span>
+            </td>
+            <td class="numeric">
+              <span *ngIf="input.amount !== null">{{ sats(input.amount) }}</span>
+              <span *ngIf="input.amount === null" class="unnamed" i18n="workbench.psbt.unknown-value">unknown</span>
+            </td>
+            <td>
+              <span *ngIf="input.source">{{ input.source }}</span>
+              <span *ngIf="input.missingReason" class="unnamed">{{ input.missingReason }}</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <table class="table table-sm record-table">
+        <caption class="sr-only" i18n="workbench.psbt.out-caption">
+          Every output, what it pays, and the script it pays to.
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col" i18n="workbench.psbt.col-output">Output</th>
+            <th scope="col" class="numeric" i18n="workbench.psbt.col-pays">Pays</th>
+            <th scope="col" i18n="workbench.psbt.col-script">Script</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let output of money.outputs" [attr.data-missing]="output.amount === null">
+            <th scope="row">{{ output.index }}</th>
+            <td class="numeric">
+              <span *ngIf="output.amount !== null">{{ sats(output.amount) }}</span>
+              <span *ngIf="output.amount === null" class="unnamed">{{ output.missingReason }}</span>
+            </td>
+            <td>
+              <code *ngIf="output.scriptPubKeyHex">{{ shortValue(output.scriptPubKeyHex, 16) }}</code>
+              <span *ngIf="!output.scriptPubKeyHex" class="unnamed" i18n="workbench.psbt.no-script">
+                no script record
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="derivations" *ngIf="derivations.length">
+      <h2 i18n="workbench.psbt.derivation-heading">Which keys the file says must sign</h2>
+      <p class="field-help" i18n="workbench.psbt.derivation-note">
+        A fingerprint and a path name a wallet and a position within it. They
+        cannot produce the key, and nothing here tries to.
+      </p>
+      <table class="table table-sm record-table">
+        <caption class="sr-only" i18n="workbench.psbt.derivation-caption">
+          Every derivation record, with its wallet fingerprint and path.
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col" i18n="workbench.psbt.col-where2">Where</th>
+            <th scope="col" i18n="workbench.psbt.col-key">Key</th>
+            <th scope="col" i18n="workbench.psbt.col-wallet">Wallet</th>
+            <th scope="col" i18n="workbench.psbt.col-path">Path</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let d of derivations; trackBy: trackByDerivation">
+            <th scope="row">
+              {{ d.scope }}
+              <ng-container *ngIf="d.index >= 0">{{ d.index }}</ng-container>
+              <span class="tag" *ngIf="d.taproot" i18n="workbench.psbt.tag-taproot">taproot</span>
+            </th>
+            <td><code>{{ shortValue(d.keyHex, 12) }}</code></td>
+            <td><code>{{ d.masterFingerprint }}</code></td>
+            <td>
+              <code>{{ d.path }}</code>
+              <span class="note" *ngIf="d.leafHashes.length" i18n="workbench.psbt.leaf-count">
+                signs {{ d.leafHashes.length }} script paths
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="signing">
+      <h2 i18n="workbench.psbt.signing-heading">Signing state</h2>
+      <p *ngIf="!p.signedInputs.length && !p.finalizedInputs.length"
+        i18n="workbench.psbt.signing-none">
+        No input carries a signature yet.
+      </p>
+      <p *ngIf="p.signedInputs.length" i18n="workbench.psbt.signing-partial">
+        Signed but not yet final: input {{ p.signedInputs.join(', ') }}. A
+        signed input still needs a finalizer before the transaction can be
+        broadcast.
+      </p>
+      <p *ngIf="p.finalizedInputs.length" i18n="workbench.psbt.signing-final">
+        Final: input {{ p.finalizedInputs.join(', ') }}. These carry a
+        completed script and need nothing further.
+      </p>
+    </section>
+
+    <section class="sighash" *ngIf="p.sighashFindings.length">
+      <h2 i18n="workbench.psbt.sighash-heading">What each signature would commit to</h2>
+      <ul class="findings">
+        <li *ngFor="let finding of p.sighashFindings" [attr.data-permissive]="finding.permissive">
+          <span class="finding-head">
+            <ng-container i18n="workbench.psbt.sighash-input">Input {{ finding.inputIndex }}</ng-container>
+            <code>{{ finding.name }}</code>
+            <span class="tag" *ngIf="finding.permissive" i18n="workbench.psbt.sighash-permissive">leaves part unsigned</span>
+            <span class="tag" *ngIf="!finding.permissive" i18n="workbench.psbt.sighash-complete">commits to everything</span>
+          </span>
+          <span class="finding-detail">{{ finding.explanation }}</span>
+        </li>
+      </ul>
+    </section>
+
+    <section class="unrecognised" *ngIf="p.unknownRecords.length || p.proprietaryRecords.length">
+      <h2 i18n="workbench.psbt.unrecognised-heading">Fields this explorer does not define</h2>
+      <p *ngIf="p.proprietaryRecords.length" i18n="workbench.psbt.proprietary-note">
+        {{ p.proprietaryRecords.length }} proprietary records. The
+        specification reserves these for other tools, so their meaning belongs
+        to whichever tool wrote them.
+      </p>
+      <p *ngIf="p.unknownRecords.length" i18n="workbench.psbt.unknown-note">
+        {{ p.unknownRecords.length }} records of a type this reader has no
+        name for. They are shown below with their exact bytes and are kept
+        unchanged.
+      </p>
+    </section>
+
+    <section class="records">
+      <h2 i18n="workbench.psbt.records-heading">Every record</h2>
+      <article class="group" *ngFor="let group of groups; trackBy: trackByGroup">
+        <h3>{{ group.title }}</h3>
+        <p class="group-empty" *ngIf="!group.records.length" i18n="workbench.psbt.group-empty">
+          This section is present but carries no records.
+        </p>
+        <table class="table table-sm record-table" *ngIf="group.records.length">
+          <caption class="sr-only" i18n="workbench.psbt.group-caption">
+            Every record in the {{ group.title }} section, with its exact bytes.
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col" i18n="workbench.psbt.col-field">Field</th>
+              <th scope="col" i18n="workbench.psbt.col-type">Type</th>
+              <th scope="col" i18n="workbench.psbt.col-keydata">Key data</th>
+              <th scope="col" i18n="workbench.psbt.col-value">Value</th>
+              <th scope="col" class="numeric" i18n="workbench.psbt.col-bytes">Bytes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let record of group.records; trackBy: trackByRecord"
+              [attr.data-unknown]="record.unknown">
+              <th scope="row">
+                <span *ngIf="record.typeName">{{ record.typeName }}</span>
+                <span *ngIf="!record.typeName" class="unnamed" i18n="workbench.psbt.unnamed">
+                  not named by this reader
+                </span>
+              </th>
+              <td><code>0x{{ record.keyType.toString(16) }}</code></td>
+              <td><code>{{ record.keyDataHex || '' }}</code></td>
+              <td><code class="value">{{ shortValue(record.valueHex) }}</code></td>
+              <td class="numeric">{{ byteLength(record.valueHex) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </article>
+    </section>
+
+    <section class="diff" *ngIf="diff as entries">
+      <h2 i18n="workbench.psbt.diff-heading">What changed between the two files</h2>
+      <p *ngIf="!entries.length" i18n="workbench.psbt.diff-empty">
+        The two files carry exactly the same records. Nothing was added,
+        removed, or altered.
+      </p>
+      <table class="table table-sm record-table" *ngIf="entries.length">
+        <caption class="sr-only" i18n="workbench.psbt.diff-caption">
+          Records that differ between the two files.
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col" i18n="workbench.psbt.col-change">Change</th>
+            <th scope="col" i18n="workbench.psbt.col-where">Where</th>
+            <th scope="col" i18n="workbench.psbt.col-field2">Field</th>
+            <th scope="col" i18n="workbench.psbt.col-before">Before</th>
+            <th scope="col" i18n="workbench.psbt.col-after">After</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let entry of entries; trackBy: trackByDiff" [attr.data-kind]="entry.kind">
+            <th scope="row">
+              <ng-container [ngSwitch]="entry.kind">
+                <span *ngSwitchCase="'added'" i18n="workbench.psbt.kind-added">Added</span>
+                <span *ngSwitchCase="'removed'" i18n="workbench.psbt.kind-removed">Removed</span>
+                <span *ngSwitchDefault i18n="workbench.psbt.kind-changed">Changed</span>
+              </ng-container>
+            </th>
+            <td>
+              {{ entry.scope }}
+              <ng-container *ngIf="entry.index >= 0">{{ entry.index }}</ng-container>
+            </td>
+            <td>
+              <span *ngIf="entry.typeName">{{ entry.typeName }}</span>
+              <code *ngIf="!entry.typeName">0x{{ entry.keyType.toString(16) }}</code>
+            </td>
+            <td><code class="value">{{ entry.beforeHex === null ? '' : shortValue(entry.beforeHex, 16) }}</code></td>
+            <td><code class="value">{{ entry.afterHex === null ? '' : shortValue(entry.afterHex, 16) }}</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </ng-container>
+
+  <section class="boundary">
+    <h2 i18n="workbench.psbt.boundary-heading">What this page will not do</h2>
+    <ul>
+      <li i18n="workbench.psbt.boundary-sign">It cannot sign. There is no signing code on this page and no key ever reaches it.</li>
+      <li i18n="workbench.psbt.boundary-network">
+        It sends nothing. Reading a file here makes no request of any kind.
+        The site navigation around this page loads as it does everywhere,
+        and what you paste is never part of it.
+      </li>
+      <li i18n="workbench.psbt.boundary-store">It stores nothing. Leaving the page discards whatever was in the boxes.</li>
+      <li i18n="workbench.psbt.boundary-alter">It alters nothing. What it reads, it can write back byte for byte.</li>
+    </ul>
+  </section>
+</div>

@@ -1,0 +1,184 @@
+@use '../universe-tokens' as u;
+
+:host {
+  @include u.universe-state-tokens;
+
+  display: block;
+}
+
+.package-simulator {
+  padding-block: 1.25rem 3rem;
+}
+
+.page-head {
+  margin-bottom: 1.25rem;
+
+  h1 { margin-bottom: 0.5rem; }
+}
+
+.lede {
+  max-width: 64ch;
+  color: var(--u-text-muted);
+  margin-bottom: 0;
+}
+
+.entry {
+  @include u.universe-surface;
+
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+
+  label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+  }
+
+  textarea {
+    width: 100%;
+    font-family: monospace;
+    font-size: 0.85rem;
+    // A raw transaction is one long line, and wrapping it is the only way to
+    // see all of it without a horizontal scroll inside the field.
+    word-break: break-all;
+    background: var(--u-surface-sunken);
+    color: var(--u-text);
+    border: 1px solid var(--u-border);
+    border-radius: 0.35rem;
+    padding: 0.5rem 0.65rem;
+  }
+}
+
+.field-help {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+  color: var(--u-text-muted);
+  max-width: 68ch;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: flex-start;
+  margin-top: 0.85rem;
+}
+
+.secret,
+.error {
+  @include u.universe-surface;
+
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.25rem;
+  max-width: 68ch;
+  border-left: 4px solid var(--universe-state-unavailable-border);
+}
+
+.secret {
+  border-left-color: var(--universe-state-partial-border);
+}
+
+// The wording states the outcome. The border repeats it for anyone scanning,
+// and neither is the only signal.
+.headline {
+  @include u.universe-surface;
+
+  padding: 0.85rem 1.1rem;
+  margin-bottom: 1.5rem;
+  max-width: 72ch;
+  font-size: 1.02rem;
+  border-left: 4px solid var(--universe-state-partial-border);
+
+  &[data-positive='true'] { border-left-color: var(--universe-state-proven-border); }
+}
+
+section {
+  margin-bottom: 1.75rem;
+
+  h2 {
+    font-size: 1.05rem;
+    margin-bottom: 0.65rem;
+  }
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.75rem 1.25rem;
+  margin-bottom: 0.85rem;
+
+  dt {
+    font-size: 0.8rem;
+    color: var(--u-text-muted);
+    font-weight: 400;
+    margin-bottom: 0.15rem;
+  }
+
+  dd { margin-bottom: 0; }
+}
+
+.note,
+.unit {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--u-text-muted);
+}
+
+.unit { display: inline; }
+
+.tag {
+  font-size: 0.75rem;
+  border: 1px solid var(--u-border);
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+  color: var(--u-text-muted);
+}
+
+.record-table {
+  // A package table is wide on a phone, and scrolling the table is better
+  // than scrolling the page sideways.
+  display: block;
+  overflow-x: auto;
+  max-width: 100%;
+
+  .numeric {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  code { font-size: 0.8rem; }
+
+  // A refused transaction says so in its own cell. The tint is the second
+  // signal, not the only one.
+  tr[data-allowed='false'] {
+    background: var(--universe-state-unavailable-surface);
+  }
+}
+
+.unnamed {
+  color: var(--u-text-muted);
+  font-style: italic;
+}
+
+.boundary {
+  @include u.universe-surface;
+
+  padding: 1rem 1.25rem;
+  max-width: 72ch;
+
+  ul { margin-bottom: 0; }
+
+  li { margin-bottom: 0.35rem; }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

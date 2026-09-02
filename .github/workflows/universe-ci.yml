@@ -261,8 +261,16 @@ jobs:
         working-directory: frontend
         run: npm run test:ci
 
+      # The runner host shares memory across every job it holds. A webpack
+      # build left to size its own worker pool will grow into whatever the
+      # machine has and die to the kernel OOM killer mid build, so both the
+      # worker pool and the main heap are bounded here. The build takes a
+      # little longer and actually finishes.
       - name: Production build
         working-directory: frontend
+        env:
+          NG_BUILD_MAX_WORKERS: '2'
+          NODE_OPTIONS: --max-old-space-size=4096
         run: npm run build:universe
 
       - name: Built bundle carries no upstream marks
@@ -708,8 +716,14 @@ jobs:
         working-directory: frontend
         run: npm ci
 
+      # Same bounds as the frontend job's build: a bounded worker pool and a
+      # bounded heap, so the build survives a host that shares memory with
+      # everything else it holds.
       - name: Production build
         working-directory: frontend
+        env:
+          NG_BUILD_MAX_WORKERS: '2'
+          NODE_OPTIONS: --max-old-space-size=4096
         run: npm run build:universe
 
       - name: Install the visual QA harness

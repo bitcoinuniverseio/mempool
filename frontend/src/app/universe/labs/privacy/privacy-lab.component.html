@@ -1,0 +1,175 @@
+<div class="container-xl privacy-lab">
+  <header class="page-head">
+    <h1 i18n="labs.privacy.heading">Privacy lab</h1>
+    <p class="lede" i18n="labs.privacy.lede">
+      What a transaction's shape gives away. Every rule runs in your browser,
+      reads one transaction, and says what it would take for it to be wrong.
+      Nothing here names a person.
+    </p>
+  </header>
+
+  <div class="entries">
+    <form class="entry" (ngSubmit)="lookup(txid)" novalidate>
+      <label for="privacy-txid" i18n="labs.privacy.txid-label">A transaction id</label>
+      <div class="row">
+        <input id="privacy-txid" name="txid" type="text" spellcheck="false"
+          autocomplete="off" autocapitalize="off" [(ngModel)]="txid"
+          aria-describedby="privacy-txid-help">
+        <button type="submit" class="btn btn-primary btn-sm" i18n="labs.privacy.look">Look at it</button>
+      </div>
+      <p id="privacy-txid-help" class="field-help" i18n="labs.privacy.txid-help">
+        Fetched from this node. One request for one transaction, and no record
+        of who asked for it.
+      </p>
+    </form>
+
+    <form class="entry" (ngSubmit)="analyzeRaw()" novalidate>
+      <label for="privacy-raw" i18n="labs.privacy.raw-label">Or raw hexadecimal</label>
+      <textarea id="privacy-raw" name="raw" rows="4" spellcheck="false"
+        autocomplete="off" autocapitalize="off" [(ngModel)]="rawInput"
+        aria-describedby="privacy-raw-help"></textarea>
+      <div class="row">
+        <button type="submit" class="btn btn-primary btn-sm" i18n="labs.privacy.read">Read it here</button>
+      </div>
+      <p id="privacy-raw-help" class="field-help" i18n="labs.privacy.raw-help">
+        Read entirely in this page. No request is made, which is what makes
+        this usable for a transaction you have not broadcast.
+      </p>
+    </form>
+  </div>
+
+  <p class="secret" role="alert" *ngIf="secretWarning">{{ secretWarning }}</p>
+  <p class="error" role="alert" *ngIf="error">{{ error }}</p>
+  <p class="loading" role="status" *ngIf="loading" i18n="labs.privacy.loading">Fetching it…</p>
+
+  <ng-container *ngIf="report as r">
+    <section class="summary">
+      <h2 i18n="labs.privacy.summary-heading">What was found</h2>
+      <p class="counts" role="status">
+        <ng-container *ngIf="r.findings.length" i18n="labs.privacy.counts">
+          {{ countOf('reveals') }} findings that give something away,
+          {{ countOf('notable') }} worth noticing, and
+          {{ countOf('neutral') }} in this transaction's favour.
+        </ng-container>
+        <ng-container *ngIf="!r.findings.length" i18n="labs.privacy.none">
+          No rule found anything to report. That is not the same as privacy:
+          it means these rules had nothing to measure, and the list below says
+          which ones and why.
+        </ng-container>
+      </p>
+      <p class="provenance">
+        <ng-container *ngIf="fromLocalRaw" i18n="labs.privacy.local">
+          Read from hexadecimal in this page. Nothing was sent anywhere.
+        </ng-container>
+        <ng-container *ngIf="!fromLocalRaw" i18n="labs.privacy.fetched">
+          Fetched from this node, then read in this page.
+        </ng-container>
+        <span class="revision" i18n="labs.privacy.revision">
+          Rules revision {{ r.revision }}
+        </span>
+      </p>
+      <p class="coinbase" *ngIf="coinbase" i18n="labs.privacy.coinbase">
+        This spends a coinbase, which has no previous output. Several rules
+        find nothing here for that reason rather than any other.
+      </p>
+    </section>
+
+    <section class="findings" *ngIf="r.findings.length">
+      <h2 i18n="labs.privacy.findings-heading">Findings</h2>
+      <article class="finding" *ngFor="let finding of r.findings; trackBy: trackByRule"
+        [attr.data-severity]="finding.severity">
+        <header>
+          <h3>{{ finding.title }}</h3>
+          <span class="tags">
+            <span class="tag severity">
+              <ng-container [ngSwitch]="finding.severity">
+                <ng-container *ngSwitchCase="'reveals'" i18n="labs.privacy.sev-reveals">gives something away</ng-container>
+                <ng-container *ngSwitchCase="'notable'" i18n="labs.privacy.sev-notable">worth noticing</ng-container>
+                <ng-container *ngSwitchDefault i18n="labs.privacy.sev-neutral">in its favour</ng-container>
+              </ng-container>
+            </span>
+            <span class="tag">
+              <ng-container [ngSwitch]="finding.confidence">
+                <ng-container *ngSwitchCase="'observed'" i18n="labs.privacy.conf-observed">measured</ng-container>
+                <ng-container *ngSwitchCase="'likely'" i18n="labs.privacy.conf-likely">likely</ng-container>
+                <ng-container *ngSwitchDefault i18n="labs.privacy.conf-heuristic">an assumption</ng-container>
+              </ng-container>
+            </span>
+            <code class="tag rule-id">{{ finding.ruleId }}</code>
+          </span>
+        </header>
+
+        <p class="plain">{{ finding.plain }}</p>
+        <p class="technical">{{ finding.technical }}</p>
+
+        <dl class="evidence">
+          <div *ngFor="let item of finding.evidence; trackBy: trackByIndex">
+            <dt>{{ item.label }}</dt>
+            <dd>{{ item.value }}</dd>
+          </div>
+        </dl>
+
+        <details class="wrongness">
+          <summary i18n="labs.privacy.wrongness">When this is wrong</summary>
+          <p>
+            <strong i18n="labs.privacy.fp">Fires and should not:</strong>
+            {{ finding.falsePositives }}
+          </p>
+          <p>
+            <strong i18n="labs.privacy.fn">Stays quiet and should not:</strong>
+            {{ finding.falseNegatives }}
+          </p>
+        </details>
+      </article>
+    </section>
+
+    <section class="skipped">
+      <h2 i18n="labs.privacy.skipped-heading">Rules that had nothing to measure</h2>
+      <p class="field-help" i18n="labs.privacy.skipped-note">
+        {{ r.rulesSkipped.length }} of {{ r.rulesRun.length }} rules found no
+        evidence to weigh. A rule staying quiet is not a rule saying this
+        transaction is private, which is why they are listed rather than
+        hidden.
+      </p>
+      <button type="button" class="btn btn-sm" (click)="toggleSkipped()"
+        [attr.aria-expanded]="showSkipped" aria-controls="skipped-list">
+        <ng-container *ngIf="!showSkipped" i18n="labs.privacy.show-skipped">Show them</ng-container>
+        <ng-container *ngIf="showSkipped" i18n="labs.privacy.hide-skipped">Hide them</ng-container>
+      </button>
+      <dl id="skipped-list" class="skipped-list" [hidden]="!showSkipped">
+        <div *ngFor="let entry of r.rulesSkipped; trackBy: trackBySkipped">
+          <dt><code>{{ entry.ruleId }}</code></dt>
+          <dd>{{ entry.reason }}</dd>
+        </div>
+      </dl>
+    </section>
+  </ng-container>
+
+  <section class="boundary">
+    <h2 i18n="labs.privacy.boundary-heading">What this page will not do</h2>
+    <ul>
+      <li i18n="labs.privacy.boundary-identity">
+        It does not name anyone, infer an owner, or attach a label to an
+        address. It reads a transaction's structure, and structure is all it
+        reports.
+      </li>
+      <li i18n="labs.privacy.boundary-risk">
+        It has no risk score, no watch list, and no notion of a transaction
+        being suspicious. Those are judgements about people, and this reads
+        transactions.
+      </li>
+      <li i18n="labs.privacy.boundary-outside">
+        It uses no outside source. Every rule reads the one transaction in
+        front of it, from this node or from your own hexadecimal.
+      </li>
+      <li i18n="labs.privacy.boundary-store">
+        It stores nothing. What you paste is discarded when you leave, and no
+        record of what you looked at is kept anywhere.
+      </li>
+      <li i18n="labs.privacy.boundary-certainty">
+        It does not pretend to certainty. Every finding says what would make
+        it wrong, in both directions, next to the finding itself.
+      </li>
+    </ul>
+  </section>
+</div>
