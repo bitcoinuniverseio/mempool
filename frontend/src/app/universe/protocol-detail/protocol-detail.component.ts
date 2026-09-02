@@ -19,15 +19,13 @@ import {
   readActivityRows,
 } from '@app/universe/protocol-activity-view';
 
-type ProtocolActivityState =
-  | { readonly kind: 'idle' | 'loading' | 'error' }
-  | {
-      readonly kind: 'loaded';
-      readonly page: ExplorerProtocolActivityPage;
-      readonly rows: readonly ProtocolActivityRow[];
-      readonly summary: string;
-      readonly loadingMore: boolean;
-    };
+interface ProtocolActivityState {
+  readonly kind: 'idle' | 'loading' | 'error' | 'loaded';
+  readonly page?: ExplorerProtocolActivityPage;
+  readonly rows?: readonly ProtocolActivityRow[];
+  readonly summary?: string;
+  readonly loadingMore?: boolean;
+}
 
 interface ProtocolDetailViewModel {
   readonly kind: 'loading' | 'ready' | 'missing' | 'error';

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, catchError, shareReplay, throwError } from 'rxjs';
+import { Observable, catchError, of, shareReplay, throwError } from 'rxjs';
 import { StateService } from '@app/services/state.service';
 import {
   BackendInfo,
