@@ -92,3 +92,72 @@ export interface DiagramResponse {
   readonly totalFeeSats: number;
   readonly freshness: ClusterFreshness;
 }
+
+// The shape `POST /api/v1/mempool/simulate` answers with.
+//
+// A fee is null when the node reported none and this process could not work
+// it out. Null is not zero anywhere in here, and a reader that renders it as
+// zero reports a free transaction that does not exist.
+
+export interface PackageTxView {
+  readonly txid: string;
+  readonly vsize: number;
+  readonly weight: number;
+  readonly feeSats: number | null;
+  readonly feeUnknownReason: string | null;
+  readonly individualFeerate: number | null;
+  readonly effectiveFeerate: number | null;
+  readonly chunkIndex: number | null;
+  readonly parents: string[];
+  readonly children: string[];
+  /** Inputs from neither the package nor the mempool, so confirmed or absent. */
+  readonly externalInputs: number;
+  readonly mempoolInputs: number;
+  readonly allowed: boolean;
+  readonly rejectReason: string | null;
+  readonly effectiveIncludes: string[];
+}
+
+export interface ConflictView {
+  readonly outpoint: string;
+  readonly candidateTxid: string;
+  readonly incumbentTxid: string;
+  readonly evictedTxids: string[];
+  readonly evictedFeeSats: number;
+  readonly evictedVsize: number;
+}
+
+export interface ReplacementView {
+  readonly conflictCount: number;
+  readonly evictedTxids: string[];
+  readonly evictedFeeSats: number;
+  readonly evictedVsize: number;
+  readonly packageFeeSats: number;
+  readonly packageVsize: number;
+  /** Everything evicted, plus the relay cost of the package's own size. */
+  readonly requiredFeeSats: number;
+  readonly shortfallSats: number;
+  readonly satisfiesFeeRules: boolean;
+  readonly incompleteReason: string | null;
+}
+
+export interface QueuePosition {
+  readonly vsizeAhead: number;
+  readonly chunksAhead: number;
+  readonly feerate: number;
+}
+
+export interface PackageSimulation {
+  readonly transactions: PackageTxView[];
+  readonly topologicalOrder: string[];
+  readonly chunks: ChunkView[];
+  readonly accepted: boolean;
+  readonly conflicts: ConflictView[];
+  readonly replacement: ReplacementView | null;
+  readonly queuePosition: QueuePosition | null;
+  readonly packageFeeSats: number | null;
+  readonly packageVsize: number;
+  readonly packageWeight: number;
+  readonly connected: boolean;
+  readonly cyclic: boolean;
+}

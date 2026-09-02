@@ -283,12 +283,18 @@ function liquidReport(routesRegistered: boolean): CapabilityReport {
 }
 
 /**
- * Cluster, chunk and fee rate diagram reporting.
+ * Cluster, chunk, fee rate diagram and package simulation reporting.
  *
- * It is derived entirely from the mempool this process keeps, so it has one
- * dependency and no database. An empty mempool is reported as `syncing`
- * rather than `ready`, because a page that renders no clusters at all has not
- * proved it can render clusters.
+ * The reading routes are derived entirely from the mempool this process
+ * keeps, so they have one dependency and no database. The package simulator
+ * is the exception: it asks Bitcoin Core to decode and judge, so Core is
+ * named as a dependency of that route rather than left unstated. Its
+ * reachability is not probed here, because the reading routes are the ones
+ * this state is about and a probe on every capability call would cost the
+ * shared RPC budget on every call.
+ *
+ * An empty mempool is reported as `syncing` rather than `ready`, because a
+ * page that renders no clusters at all has not proved it can render clusters.
  */
 function mempoolIntelligenceReport(
   routesRegistered: boolean,
@@ -305,6 +311,12 @@ function mempoolIntelligenceReport(
         configured: true,
         reachable: routesRegistered,
         detail: routesRegistered ? null : 'The cluster routes were not mounted.',
+      },
+      {
+        name: 'bitcoin-rpc',
+        configured: true,
+        reachable: routesRegistered,
+        detail: 'Needed by the package simulator only. The cluster, package and diagram routes answer without it.',
       },
     ],
     rowCount: mempoolSize,

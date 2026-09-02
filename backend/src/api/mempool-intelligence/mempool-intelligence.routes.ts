@@ -3,6 +3,7 @@ import config from '../../config';
 import mempool from '../mempool';
 import { handleError } from '../../utils/api';
 import intelligence from './mempool-intelligence';
+import { $simulate, validateRawTxs } from './package-service';
 
 const TXID = /^[a-f0-9]{64}$/i;
 
@@ -45,7 +46,8 @@ class MempoolIntelligenceRoutes {
       .get(prefix + 'mempool/clusters', this.getClusters)
       .get(prefix + 'mempool/clusters/:reference', this.getCluster)
       .get(prefix + 'mempool/feerate-diagram', this.getDiagram)
-      .get(prefix + 'mempool/packages/:txid', this.getPackage);
+      .get(prefix + 'mempool/packages/:txid', this.getPackage)
+      .post(prefix + 'mempool/simulate', this.$simulatePackage);
   }
 
   /**
@@ -135,6 +137,36 @@ class MempoolIntelligenceRoutes {
       res.json({ cluster: found.cluster, freshness: found.freshness });
     } catch (e) {
       handleError(req, res, 500, 'Failed to build that package');
+    }
+  }
+
+  /**
+   * Says what this node would do with a package, without sending it.
+   *
+   * Not cached, and explicitly so. The answer depends on the mempool at this
+   * instant, and a cached verdict on a replacement is a verdict about a
+   * conflict that may already be gone.
+   */
+  private async $simulatePackage(req: Request, res: Response): Promise<void> {
+    const invalid = validateRawTxs(req.body?.rawTxs);
+    if (invalid) {
+      handleError(req, res, invalid.status, invalid.message);
+      return;
+    }
+    try {
+      const simulation = await $simulate(req.body.rawTxs as string[]);
+      res.header('Cache-control', 'no-store');
+      res.json(simulation);
+    } catch (e: any) {
+      // A transaction the node cannot decode is the caller's error, not this
+      // service failing, and it is reported as the former with the node's own
+      // words rather than as an opaque five hundred.
+      const message = typeof e?.message === 'string' ? e.message : '';
+      if (/decode|deserial|malformed|hex/i.test(message)) {
+        handleError(req, res, 400, `The node could not read one of these transactions: ${message}`);
+        return;
+      }
+      handleError(req, res, 500, 'Failed to simulate that package');
     }
   }
 }

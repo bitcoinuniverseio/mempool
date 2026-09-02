@@ -201,6 +201,14 @@ const routes: Routes = [
       // Reads a partially signed transaction field by field, in the browser.
       // It makes no request and cannot sign, which is what lets it be handed
       // a file somebody is about to put a key to.
+      // Asks the node what it would do with a package. It lives under tools
+      // rather than under mempool because it is about a package somebody
+      // holds, not about one the mempool already has.
+      {
+        path: 'tools/package',
+        loadComponent: () => import('@app/universe/mempool-intelligence/package-simulator.component').then(m => m.PackageSimulatorComponent),
+        data: { networkSpecific: true, networks: ['bitcoin'] },
+      },
       {
         path: 'tools/psbt',
         loadComponent: () => import('@app/universe/workbench/psbt-workbench.component').then(m => m.PsbtWorkbenchComponent),

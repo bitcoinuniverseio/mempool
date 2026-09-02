@@ -13,8 +13,16 @@ import {
 let fakeMempool: { [txid: string]: MempoolTransactionExtended } = {};
 jest.mock('../api/mempool', () => ({
   __esModule: true,
-  default: { getMempool: () => fakeMempool },
+  default: { getMempool: () => fakeMempool, getSpendMap: () => new Map() },
 }));
+
+/**
+ * The simulate route reaches a Bitcoin Core client, and importing the real one
+ * opens a connection that keeps the test runner alive after the assertions
+ * finish. These tests are about request handling and never reach it.
+ */
+jest.mock('../api/bitcoin/bitcoin-client', () => ({ __esModule: true, default: {} }));
+jest.mock('../api/bitcoin/bitcoin-api-factory', () => ({ __esModule: true, default: {} }));
 
 // Imported after the mock so the routes module picks the stub up.
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -53,9 +61,15 @@ interface Captured {
  */
 function registeredHandlers(): Map<string, (req: any, res: any) => void> {
   const handlers = new Map<string, (req: any, res: any) => void>();
+  // Keyed by method and path, so a route registered under one verb cannot be
+  // reached by a test that meant the other.
   const app: any = {
     get(path: string, handler: (req: any, res: any) => void) {
       handlers.set(path, handler);
+      return app;
+    },
+    post(path: string, handler: (req: any, res: any) => void) {
+      handlers.set('POST ' + path, handler);
       return app;
     },
   };
@@ -83,6 +97,25 @@ function call(
   // `handleError` asks the request what it accepts before choosing between a
   // JSON body and plain text, so the stub has to answer that too.
   handler({ params: {}, query: {}, accepts: () => 'json', ...req }, res);
+  return captured;
+}
+
+/** The same, for a route whose handler returns a promise. */
+async function callAsync(
+  path: string,
+  req: { body?: unknown },
+): Promise<Captured> {
+  const handler = registeredHandlers().get(path);
+  if (!handler) { throw new Error('no handler registered for ' + path); }
+  const captured: Captured = { status: 200, body: undefined, headers: {} };
+  const res: any = {
+    json(body: unknown) { captured.body = body; return res; },
+    send(body: unknown) { captured.body = body; return res; },
+    status(code: number) { captured.status = code; return res; },
+    header(name: string, value: string) { captured.headers[name] = value; return res; },
+    setHeader(name: string, value: string) { captured.headers[name] = value; return res; },
+  };
+  await handler({ params: {}, query: {}, accepts: () => 'json', ...req } as any, res);
   return captured;
 }
 
@@ -253,5 +286,36 @@ describe('GET mempool/packages/:txid', () => {
   it('answers 404 when the transaction is not in the mempool', () => {
     expect(call(PREFIX + 'mempool/packages/:txid', { params: { txid: id('ee') } }).status)
       .toBe(404);
+  });
+});
+
+describe('POST mempool/simulate', () => {
+  const RAW = 'ab'.repeat(80);
+
+  it('refuses a body that is not a list of raw transactions', async () => {
+    const answer = await callAsync(`POST ${PREFIX}mempool/simulate`, { body: {} });
+    expect(answer.status).toBe(400);
+  });
+
+  it('refuses an empty package rather than asking the node about nothing', async () => {
+    const answer = await callAsync(`POST ${PREFIX}mempool/simulate`, { body: { rawTxs: [] } });
+    expect(answer.status).toBe(400);
+  });
+
+  it('refuses anything that is not hexadecimal, before the node sees it', async () => {
+    const answer = await callAsync(`POST ${PREFIX}mempool/simulate`, { body: { rawTxs: ['zz'] } });
+    expect(answer.status).toBe(400);
+  });
+
+  it('refuses more transactions than a node relays as one package', async () => {
+    const many = Array.from({ length: 26 }, (_, i) => RAW + i.toString(16).padStart(2, '0'));
+    const answer = await callAsync(`POST ${PREFIX}mempool/simulate`, { body: { rawTxs: many } });
+    expect(answer.status).toBe(400);
+  });
+
+  it('is registered under POST only, so a GET cannot reach it', () => {
+    const handlers = registeredHandlers();
+    expect(handlers.has(`${PREFIX}mempool/simulate`)).toBe(false);
+    expect(handlers.has(`POST ${PREFIX}mempool/simulate`)).toBe(true);
   });
 });
