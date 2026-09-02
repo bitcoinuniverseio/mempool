@@ -8,10 +8,10 @@ import { UniverseApiService } from '@app/universe/universe-api.service';
 import { AnimaOrganismDocument } from '@app/universe/universe.types';
 import { shortenIdentifier } from '@app/universe/universe-evidence';
 
-type AnimaItemViewModel =
-  | { readonly kind: 'loading' | 'error' }
-  | { readonly kind: 'missing' }
-  | { readonly kind: 'ready'; readonly organism: AnimaOrganismDocument };
+interface AnimaItemViewModel {
+  readonly kind: 'loading' | 'error' | 'missing' | 'ready';
+  readonly organism?: AnimaOrganismDocument;
+}
 
 /**
  * One organism: identity, current vessel, full waymark timeline, and

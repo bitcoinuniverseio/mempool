@@ -8,10 +8,10 @@ import { UniverseApiService } from '@app/universe/universe-api.service';
 import { AnimaOrganismHistoryDocument } from '@app/universe/universe.types';
 import { shortenIdentifier } from '@app/universe/universe-evidence';
 
-type AnimaHistoryViewModel =
-  | { readonly kind: 'loading' | 'error' }
-  | { readonly kind: 'missing' }
-  | { readonly kind: 'ready'; readonly history: AnimaOrganismHistoryDocument };
+interface AnimaHistoryViewModel {
+  readonly kind: 'loading' | 'error' | 'missing' | 'ready';
+  readonly history?: AnimaOrganismHistoryDocument;
+}
 
 /**
  * One organism's transition history: its waymarks and achievements beside
