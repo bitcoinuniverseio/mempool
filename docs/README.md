@@ -22,6 +22,7 @@ you actually have.
 | How are reorgs and checkpoints handled? | [`data/CHECKPOINTS-AND-REORGS.md`](data/CHECKPOINTS-AND-REORGS.md) |
 | Which protocols can actually be read? | [`protocols/PROTOCOL-COVERAGE.md`](protocols/PROTOCOL-COVERAGE.md) |
 | What does the address portfolio surface do? | [`product/ADDRESS-PORTFOLIO.md`](product/ADDRESS-PORTFOLIO.md) |
+| What does the mining lab measure, and what does the AuxPoW viewer prove? | [`product/MINING-LAB.md`](product/MINING-LAB.md) |
 
 ## I want to understand the design
 
