@@ -142,12 +142,7 @@ const routes: Routes = [
       },
       {
         path: 'portfolio',
-        loadComponent: () => import('@app/universe/portfolio/portfolio-lookup.component').then(m => m.PortfolioLookupComponent),
-        data: { networks: ['bitcoin'] },
-      },
-      {
-        path: 'portfolio/:chain/:network/:address',
-        loadComponent: () => import('@app/universe/portfolio/portfolio.component').then(m => m.PortfolioComponent),
+        loadChildren: () => import('@app/universe/portfolio/portfolio.routes').then(m => m.PORTFOLIO_ROUTES),
         data: { networks: ['bitcoin'] },
       },
       {
