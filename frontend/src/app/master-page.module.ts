@@ -153,6 +153,7 @@ const routes: Routes = [
         loadComponent: () => import('@app/universe/live/live-universe.component').then(m => m.LiveUniverseComponent),
         data: { networks: ['bitcoin'] },
       },
+      {
         // The mining and consensus lab: intervals, empty blocks, pool
         // shares, the AuxPoW proof parsed in the browser, and the stale
         // tips this node has seen.
