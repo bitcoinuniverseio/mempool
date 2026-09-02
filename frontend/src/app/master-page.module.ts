@@ -210,6 +210,19 @@ const routes: Routes = [
       // Reads a partially signed transaction field by field, in the browser.
       // It makes no request and cannot sign, which is what lets it be handed
       // a file somebody is about to put a key to.
+      // What a transaction's shape gives away. Both entry points run every
+      // rule in the browser; the raw hex one makes no request at all, which
+      // is what makes it usable for a transaction not yet broadcast.
+      {
+        path: 'labs/privacy',
+        loadComponent: () => import('@app/universe/labs/privacy/privacy-lab.component').then(m => m.PrivacyLabComponent),
+        data: { networkSpecific: true, networks: ['bitcoin'] },
+      },
+      {
+        path: 'labs/privacy/:txid',
+        loadComponent: () => import('@app/universe/labs/privacy/privacy-lab.component').then(m => m.PrivacyLabComponent),
+        data: { networkSpecific: true, networks: ['bitcoin'] },
+      },
       // Asks the node what it would do with a package. It lives under tools
       // rather than under mempool because it is about a package somebody
       // holds, not about one the mempool already has.
