@@ -135,6 +135,35 @@ const routes: Routes = [
         loadComponent: () => import('@app/universe/pulse/pulse.component').then(m => m.PulseComponent),
         data: { networkSpecific: true, networks: ['bitcoin'] },
       },
+      // Clusters, packages and the fee rate diagram. The list serves both
+      // /mempool/clusters and /mempool/packages, and the detail view serves
+      // both a cluster id and a transaction's package, because those are the
+      // same object reached two ways.
+      {
+        path: 'mempool/clusters',
+        loadComponent: () => import('@app/universe/mempool-intelligence/cluster-list.component').then(m => m.ClusterListComponent),
+        data: { networkSpecific: true, networks: ['bitcoin'] },
+      },
+      {
+        path: 'mempool/clusters/:clusterId',
+        loadComponent: () => import('@app/universe/mempool-intelligence/cluster-detail.component').then(m => m.ClusterDetailComponent),
+        data: { networkSpecific: true, networks: ['bitcoin'] },
+      },
+      {
+        path: 'mempool/packages',
+        loadComponent: () => import('@app/universe/mempool-intelligence/cluster-list.component').then(m => m.ClusterListComponent),
+        data: { networkSpecific: true, networks: ['bitcoin'], packagesOnly: true },
+      },
+      {
+        path: 'mempool/feerate-diagram',
+        loadComponent: () => import('@app/universe/mempool-intelligence/feerate-diagram.component').then(m => m.FeerateDiagramComponent),
+        data: { networkSpecific: true, networks: ['bitcoin'] },
+      },
+      {
+        path: 'tx/:txid/package',
+        loadComponent: () => import('@app/universe/mempool-intelligence/cluster-detail.component').then(m => m.ClusterDetailComponent),
+        data: { networkSpecific: true, networks: ['bitcoin'] },
+      },
       {
         path: 'saved',
         loadComponent: () => import('@app/universe/saved/saved.component').then(m => m.SavedComponent),

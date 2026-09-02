@@ -27,7 +27,8 @@ export type OptionalFeature =
   | 'accelerations'
   | 'wallets'
   | 'stratum'
-  | 'liquid';
+  | 'liquid'
+  | 'mempoolIntelligence';
 
 function disabled(reason: string, dependencies: CapabilityDependency[] = []): CapabilityReport {
   return {
@@ -282,6 +283,41 @@ function liquidReport(routesRegistered: boolean): CapabilityReport {
 }
 
 /**
+ * Cluster, chunk and fee rate diagram reporting.
+ *
+ * It is derived entirely from the mempool this process keeps, so it has one
+ * dependency and no database. An empty mempool is reported as `syncing`
+ * rather than `ready`, because a page that renders no clusters at all has not
+ * proved it can render clusters.
+ */
+function mempoolIntelligenceReport(
+  routesRegistered: boolean,
+  mempoolSize: number,
+): CapabilityReport {
+  if (config.MEMPOOL.ENABLED !== true) {
+    return disabled('The mempool is switched off in this deployment.');
+  }
+  return ready({
+    routesRegistered,
+    dependencies: [
+      {
+        name: 'mempool',
+        configured: true,
+        reachable: routesRegistered,
+        detail: routesRegistered ? null : 'The cluster routes were not mounted.',
+      },
+    ],
+    rowCount: mempoolSize,
+    state: !routesRegistered ? 'unavailable' : mempoolSize === 0 ? 'syncing' : 'ready',
+    degradedReason: !routesRegistered
+      ? 'The mempool is enabled but the cluster routes were never mounted.'
+      : mempoolSize === 0
+        ? 'No unconfirmed transaction has been loaded yet, so no cluster exists to show.'
+        : null,
+  });
+}
+
+/**
  * Builds the optional half of the capability report. Every entry is present
  * in every deployment, so a feature never vanishes from the document; it
  * reports `disabled` with a reason instead.
@@ -290,6 +326,7 @@ function liquidReport(routesRegistered: boolean): CapabilityReport {
  */
 export async function $optionalCapabilityReports(
   routesRegistered: (feature: string) => boolean,
+  mempoolSize = 0,
 ): Promise<Record<OptionalFeature, CapabilityReport>> {
   // Awaited one at a time rather than in parallel: each probe already
   // catches its own failures, and running them in sequence keeps the promise
@@ -304,5 +341,9 @@ export async function $optionalCapabilityReports(
     wallets: walletsReport(routesRegistered('wallets')),
     stratum: stratumReport(),
     liquid: liquidReport(routesRegistered('liquid')),
+    mempoolIntelligence: mempoolIntelligenceReport(
+      routesRegistered('mempoolIntelligence'),
+      mempoolSize,
+    ),
   };
 }
