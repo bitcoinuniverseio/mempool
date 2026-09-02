@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, catchError, of, shareReplay, throwError } from 'rxjs';
+import { Observable, catchError, map, of, shareReplay, throwError } from 'rxjs';
 import { StateService } from '@app/services/state.service';
 import {
   BackendInfo,
@@ -38,6 +38,39 @@ import {
 /** Server-side batch ceilings. Callers must not exceed them. */
 export const UNIVERSE_OUTPOINT_BATCH_LIMIT = 50;
 export const UNIVERSE_TRANSACTION_BATCH_LIMIT = 25;
+
+const ACTIVITY_STATES = ['served', 'unconfigured', 'unavailable', 'unsupported'];
+
+/**
+ * Guards the activity envelope before it reaches a component. A response
+ * that is not the documented document (a gateway's HTML, an array, an older
+ * release) resolves to the explicit unsupported page rather than flowing
+ * into the page as if it were feed data.
+ */
+function isActivityPage(value: unknown): value is ExplorerProtocolActivityPage {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+    && ACTIVITY_STATES.includes((value as ExplorerProtocolActivityPage).state);
+}
+
+function unsupportedActivityPage(protocolId: string): ExplorerProtocolActivityPage {
+  return {
+    schemaVersion: 'universe-protocol-activity-v1',
+    protocolId,
+    state: 'unsupported',
+    authorityId: null,
+    feedPath: null,
+    source: null,
+    assets: [],
+    events: [],
+    invalidations: [],
+    holderSnapshots: [],
+    nextCursor: null,
+    hasMore: false,
+    checkpoint: null,
+    degradedReason: null,
+    observedAt: new Date().toISOString(),
+  };
+}
 
 /**
  * How many pending transactions each chain will return in one request.
@@ -98,25 +131,10 @@ export class UniverseApiService {
     return this.httpClient.get<ExplorerProtocolActivityPage>(
       this.apiBaseUrl + '/api/v1/universe/protocols/' + encodeURIComponent(protocolId) + '/activity' + query
     ).pipe(
+      map((page) => isActivityPage(page) ? page : unsupportedActivityPage(protocolId)),
       catchError((error) => {
         if (error?.status === 404) {
-          return of({
-            schemaVersion: 'universe-protocol-activity-v1',
-            protocolId,
-            state: 'unsupported',
-            authorityId: null,
-            feedPath: null,
-            source: null,
-            assets: [],
-            events: [],
-            invalidations: [],
-            holderSnapshots: [],
-            nextCursor: null,
-            hasMore: false,
-            checkpoint: null,
-            degradedReason: null,
-            observedAt: new Date().toISOString(),
-          } as ExplorerProtocolActivityPage);
+          return of(unsupportedActivityPage(protocolId));
         }
         return throwError(() => error);
       }),
