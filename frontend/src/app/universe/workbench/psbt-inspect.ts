@@ -160,7 +160,7 @@ export function decodePsbtInput(raw: string): Uint8Array {
     let binary: string;
     try {
       binary = atob(trimmed);
-    } catch (e) {
+    } catch {
       throw new PsbtParseError('This is neither valid hexadecimal nor valid base64.', 0);
     }
     const out = new Uint8Array(binary.length);

@@ -59,6 +59,8 @@ export function readTargetFeerate(raw: unknown): number | null {
  * `fullrbf` is absent on a node old enough not to have the setting, and its
  * absence is read as off. That is what it meant on those releases, and
  * reading it as on would report a route as open that the node would refuse.
+ *
+ * @asyncSafe Falls back to the conservative pair rather than rejecting.
  */
 export async function $bumpPolicy(): Promise<{
   incrementalRelayFeeSatPerVb: number;
