@@ -1,0 +1,58 @@
+<ng-container *ngIf="state$ | async as state">
+
+  <div class="banner offline" role="status" *ngIf="state === 'offline'">
+    <!-- A wave form for the network, so the state survives a monochrome
+         screen, forced colours, and every colour vision difference. -->
+    <svg class="mark" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+      <path d="M2 13.2c2.6-2.4 5.4-2.4 8 0s5.4 2.4 8 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+      <path d="M2 8.4c2.6-2.4 5.4-2.4 8 0s5.4 2.4 8 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" opacity="0.35" />
+      <line x1="3.4" y1="16.6" x2="16.6" y2="3.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+    </svg>
+
+    <div class="body">
+      <strong class="title" i18n="universe.pwa.offline.title">You are offline</strong>
+      <p class="detail" i18n="universe.pwa.offline.detail">
+        Pages you already visited open from this device, marked with the time
+        they were captured. Nothing here pretends a stored answer is a live
+        one.
+      </p>
+    </div>
+
+    <a class="action" routerLink="/offline" i18n="universe.pwa.offline.manage">Manage stored data</a>
+  </div>
+
+  <div class="banner update" role="status" *ngIf="state === 'update'">
+    <svg class="mark" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+      <path d="M10 2.6a7.4 7.4 0 1 1-6.9 4.7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+      <path d="M2.4 3.2v4.4h4.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+    </svg>
+
+    <div class="body">
+      <strong class="title" i18n="universe.pwa.update.title">A newer build is ready</strong>
+      <p class="detail" i18n="universe.pwa.update.detail">
+        It is already downloaded. Reloading applies it; staying here finishes
+        what you are reading first.
+      </p>
+    </div>
+
+    <button type="button" class="action" (click)="applyUpdate()" i18n="universe.pwa.update.apply">Reload to update</button>
+  </div>
+
+  <div class="banner install" role="status" *ngIf="state === 'install'">
+    <svg class="mark" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+      <rect x="4.2" y="1.8" width="11.6" height="16.4" rx="2" fill="none" stroke="currentColor" stroke-width="1.8" />
+      <path d="M10 6.4v6M7.4 10l2.6 2.6L12.6 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+    </svg>
+
+    <div class="body">
+      <strong class="title" i18n="universe.pwa.install.title">The explorer can live on this device</strong>
+      <p class="detail" i18n="universe.pwa.install.detail">
+        Installed, the transaction and privacy tools keep working without a
+        network, and recently seen pages open from storage.
+      </p>
+    </div>
+
+    <button type="button" class="action" (click)="install()" i18n="universe.pwa.install.do">Install</button>
+  </div>
+
+</ng-container>
