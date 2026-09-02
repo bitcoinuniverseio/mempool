@@ -135,6 +135,29 @@ const routes: Routes = [
         loadComponent: () => import('@app/universe/pulse/pulse.component').then(m => m.PulseComponent),
         data: { networkSpecific: true, networks: ['bitcoin'] },
       },
+      {
+        // The mining and consensus lab: intervals, empty blocks, pool
+        // shares, the AuxPoW proof parsed in the browser, and the stale
+        // tips this node has seen.
+        path: 'labs/mining',
+        loadComponent: () => import('@app/universe/mining-lab/mining-lab.component').then(m => m.MiningLabComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'labs/mining/bitcoin',
+        loadComponent: () => import('@app/universe/mining-lab/bitcoin-mining.component').then(m => m.BitcoinMiningComponent),
+        data: { networkSpecific: true, networks: ['bitcoin'] },
+      },
+      {
+        path: 'labs/mining/dogecoin',
+        loadComponent: () => import('@app/universe/mining-lab/dogecoin-mining.component').then(m => m.DogecoinMiningComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'labs/mining/reorgs',
+        loadComponent: () => import('@app/universe/mining-lab/reorgs.component').then(m => m.ReorgsComponent),
+        data: { networkSpecific: true, networks: ['bitcoin'] },
+      },
       // Clusters, packages and the fee rate diagram. The list serves both
       // /mempool/clusters and /mempool/packages, and the detail view serves
       // both a cluster id and a transaction's package, because those are the

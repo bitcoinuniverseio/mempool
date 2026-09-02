@@ -1,0 +1,63 @@
+<div class="page">
+  <h1 class="title" i18n="universe.mining.bitcoin.page">Bitcoin mining</h1>
+
+  <ng-container *ngIf="stats$ | async as stats">
+    <p class="window" role="note">
+      <ng-container i18n="universe.mining.window">Measured over the last</ng-container>
+      {{ stats.window | number }}
+      <ng-container i18n="universe.mining.blocks-word">blocks. Descriptive statistics over a sample; nothing here explains a pool's private choices.</ng-container>
+    </p>
+
+    <section class="panel">
+      <h2 class="heading" i18n="universe.mining.intervals">Block intervals</h2>
+      <table class="table" *ngIf="stats.intervals.samples">
+        <tbody>
+          <tr><th scope="row" i18n="universe.mining.mean">Mean against the ten minute target</th><td>{{ stats.intervals.meanSeconds | number }} s ({{ stats.intervals.drift > 0 ? '+' : '' }}{{ stats.intervals.drift * 100 }}%)</td></tr>
+          <tr><th scope="row" i18n="universe.mining.median">Median</th><td>{{ stats.intervals.medianSeconds | number }} s</td></tr>
+          <tr><th scope="row" i18n="universe.mining.fastest">Fastest</th><td>{{ stats.intervals.fastestSeconds | number }} s</td></tr>
+          <tr><th scope="row" i18n="universe.mining.slowest">Slowest</th><td>{{ stats.intervals.slowestSeconds | number }} s</td></tr>
+          <tr><th scope="row" i18n="universe.mining.slow-list">Slower than twice the target</th><td>{{ stats.intervals.slowBlocks.length ? stats.intervals.slowBlocks.join(', ') : '-' }}</td></tr>
+        </tbody>
+      </table>
+      <p class="empty-note" *ngIf="!stats.intervals.samples" i18n="universe.mining.no-data">No blocks were available to measure.</p>
+    </section>
+
+    <section class="panel">
+      <h2 class="heading" i18n="universe.mining.empty">Empty blocks</h2>
+      <p class="stat-line">
+        {{ stats.empty.emptyCount | number }}
+        <ng-container i18n="universe.mining.of">of</ng-container>
+        {{ stats.empty.samples | number }}
+        <ng-container i18n="universe.mining.carried-nothing">carried nothing but their subsidy</ng-container>
+        <ng-container *ngIf="stats.empty.emptyShare !== null"> ({{ stats.empty.emptyShare * 100 }}%)</ng-container>.
+      </p>
+      <p class="hint" *ngIf="stats.empty.emptyHeights.length" i18n="universe.mining.empty-list">
+        Empty at heights: {{ stats.empty.emptyHeights.join(', ') }}. An empty block is a
+        choice by the miner; this page counts them and explains nothing further.
+      </p>
+    </section>
+
+    <section class="panel">
+      <h2 class="heading" i18n="universe.mining.pools">Pool shares in the window</h2>
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col" i18n="universe.mining.col-pool">Pool</th>
+            <th scope="col" i18n="universe.mining.col-blocks">Blocks</th>
+            <th scope="col" i18n="universe.mining.col-share">Share</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let share of stats.pools">
+            <td>{{ share.name }}</td>
+            <td>{{ share.blocks | number }}</td>
+            <td>{{ share.share === null ? '' : (share.share * 100) + '%' }}</td>
+          </tr>
+          <tr *ngIf="!stats.pools.length">
+            <td colspan="3" i18n="universe.mining.no-pools">No pool attribution was available for this window.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </ng-container>
+</div>
