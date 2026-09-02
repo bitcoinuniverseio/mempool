@@ -1,0 +1,143 @@
+<div class="container-xl cluster-detail">
+  <nav class="crumbs" aria-label="Breadcrumb" i18n-aria-label="mempool.cluster.crumbs-label">
+    <a routerLink="/mempool/clusters" i18n="mempool.cluster.back">All clusters</a>
+    <ng-container *ngIf="fromTransaction">
+      <span aria-hidden="true">/</span>
+      <a [routerLink]="['/tx', reference]" i18n="mempool.cluster.back-tx">This transaction</a>
+    </ng-container>
+  </nav>
+
+  <p class="loading" role="status" *ngIf="loading" i18n="mempool.cluster.loading">
+    Reading this cluster from the node mempool.
+  </p>
+
+  <div class="missing" role="alert" *ngIf="error && !loading">
+    <h1 i18n="mempool.cluster.missing-heading">This cluster is not in the mempool</h1>
+    <p>{{ error }}</p>
+    <p>
+      <a [routerLink]="['/tx', reference]" i18n="mempool.cluster.try-tx">
+        Look the transaction up instead
+      </a>
+    </p>
+  </div>
+
+  <ng-container *ngIf="cluster as c">
+    <header class="page-head">
+      <div>
+        <h1 i18n="mempool.cluster.heading">Cluster {{ short(c.id) }}</h1>
+        <p class="lede" i18n="mempool.cluster.lede">
+          {{ c.txCount }} unconfirmed transactions a miner has to take in
+          order, split into {{ c.chunks.length }} mining groups.
+        </p>
+      </div>
+      <div class="freshness" *ngIf="freshness as f" [attr.data-tone]="f.tone">
+        <span class="freshness-label">{{ f.label }}</span>
+        <span class="freshness-age" *ngIf="f.ageSeconds > 0">
+          <ng-container i18n="mempool.cluster.freshness-age">built {{ f.ageSeconds }} seconds ago</ng-container>
+        </span>
+        <p class="freshness-detail">{{ f.detail }}</p>
+      </div>
+    </header>
+
+    <dl class="totals">
+      <div>
+        <dt i18n="mempool.cluster.total-fee">Total fee</dt>
+        <dd>{{ sats(c.feeSats) }} <span class="unit" i18n="mempool.cluster.unit-sats">sats</span></dd>
+      </div>
+      <div>
+        <dt i18n="mempool.cluster.total-vsize">Total size</dt>
+        <dd>{{ vsize(c.vsize) }} <span class="unit" i18n="mempool.cluster.unit-vb">vB</span></dd>
+      </div>
+      <div>
+        <dt i18n="mempool.cluster.total-weight">Weight</dt>
+        <dd>{{ vsize(c.weight) }} <span class="unit" i18n="mempool.cluster.unit-wu">WU</span></dd>
+      </div>
+    </dl>
+
+    <section class="graph-section">
+      <h2 i18n="mempool.cluster.graph-heading">Dependency graph</h2>
+      <p class="graph-note" i18n="mempool.cluster.graph-note">
+        Each arrow runs from a transaction to one that spends it. Transactions
+        in the same mining group share a fill; an arrow that crosses a group
+        boundary is drawn dashed. Every transaction below appears in the table
+        that follows, with the same numbers.
+      </p>
+      <div class="graph-scroll">
+        <svg *ngIf="layout as l" class="cluster-graph" role="presentation" aria-hidden="true"
+          [attr.viewBox]="'0 0 ' + l.width + ' ' + l.height"
+          [style.width.px]="l.width" [style.height.px]="l.height">
+          <g class="edges">
+            <line *ngFor="let edge of l.edges"
+              [attr.x1]="edge.x1" [attr.y1]="edge.y1"
+              [attr.x2]="edge.x2" [attr.y2]="edge.y2"
+              [class.crossing]="!edge.withinChunk" />
+          </g>
+          <g class="nodes">
+            <g *ngFor="let node of l.nodes" [attr.transform]="'translate(' + node.x + ',' + node.y + ')'">
+              <circle [attr.r]="nodeRadius" [attr.data-group]="node.chunkIndex % 6" />
+              <text class="node-group" text-anchor="middle" dy="0.35em">{{ node.chunkIndex + 1 }}</text>
+            </g>
+          </g>
+        </svg>
+      </div>
+    </section>
+
+    <section class="groups">
+      <h2 i18n="mempool.cluster.groups-heading">Mining groups</h2>
+      <p class="groups-note" i18n="mempool.cluster.groups-note">
+        A group is what a miner takes together, at one shared fee rate. Groups
+        are listed in the order a miner reaches them, and a group is never
+        worth more than the one above it.
+      </p>
+
+      <article class="group" *ngFor="let group of groups; trackBy: trackByChunk">
+        <h3>
+          <ng-container i18n="mempool.cluster.group-heading">Group {{ group.chunk.index + 1 }}</ng-container>
+          <span class="group-rate">
+            {{ feerate(group.chunk.feerate) }}
+            <span class="unit" i18n="mempool.cluster.unit-satvb">sat/vB</span>
+          </span>
+        </h3>
+        <p class="group-note">{{ chunkNote(group.chunk.index) }}</p>
+        <p class="group-totals">
+          <ng-container i18n="mempool.cluster.group-totals">
+            {{ sats(group.chunk.feeSats) }} sats over {{ vsize(group.chunk.vsize) }} vB
+          </ng-container>
+        </p>
+
+        <table class="table table-sm group-table">
+          <caption class="sr-only" i18n="mempool.cluster.group-caption">
+            Transactions in mining group {{ group.chunk.index + 1 }}, in the
+            order a miner would take them.
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col" i18n="mempool.cluster.col-tx">Transaction</th>
+              <th scope="col" class="numeric" i18n="mempool.cluster.col-fee">Fee</th>
+              <th scope="col" class="numeric" i18n="mempool.cluster.col-vsize">Size</th>
+              <th scope="col" class="numeric" i18n="mempool.cluster.col-own">Own rate</th>
+              <th scope="col" class="numeric" i18n="mempool.cluster.col-effective">Effective rate</th>
+              <th scope="col" class="numeric" i18n="mempool.cluster.col-ancestors">Ancestors</th>
+              <th scope="col" class="numeric" i18n="mempool.cluster.col-descendants">Descendants</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let tx of group.transactions; trackBy: trackByTxid">
+              <th scope="row">
+                <a [routerLink]="['/tx', tx.txid]" [attr.aria-label]="nodeLabel(tx)">
+                  <code>{{ short(tx.txid) }}</code>
+                </a>
+              </th>
+              <td class="numeric">{{ sats(tx.feeSats) }}</td>
+              <td class="numeric">{{ vsize(tx.vsize) }}</td>
+              <td class="numeric">{{ feerate(tx.individualFeerate) }}</td>
+              <td class="numeric">{{ feerate(tx.effectiveFeerate) }}</td>
+              <td class="numeric">{{ tx.ancestorCount }}</td>
+              <td class="numeric">{{ tx.descendantCount }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </article>
+    </section>
+  </ng-container>
+</div>

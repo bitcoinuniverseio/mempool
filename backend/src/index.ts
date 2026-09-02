@@ -48,6 +48,7 @@ import accelerationRoutes from './api/acceleration/acceleration.routes';
 import aboutRoutes from './api/about.routes';
 import capabilities from './api/capabilities';
 import capabilitiesRoutes from './api/capabilities.routes';
+import mempoolIntelligenceRoutes from './api/mempool-intelligence/mempool-intelligence.routes';
 import mempoolBlocks from './api/mempool-blocks';
 import walletApi from './api/services/wallets';
 import stratumApi from './api/services/stratum';
@@ -385,6 +386,14 @@ class Server {
     }
     if (config.MEMPOOL.OFFICIAL) {
       bitcoinCoreRoutes.initRoutes(this.app);
+    }
+    // Clusters, chunks and the fee rate diagram are read from the mempool
+    // this process already holds, so they cost no Bitcoin Core RPC call. With
+    // the mempool switched off there is nothing to describe and the routes
+    // stay unmounted rather than answering with an empty mempool.
+    if (config.MEMPOOL.ENABLED) {
+      mempoolIntelligenceRoutes.initRoutes(this.app);
+      capabilities.markRoutesRegistered('mempoolIntelligence');
     }
     pricesRoutes.initRoutes(this.app);
     if (capabilities.statisticsEnabled()) {
