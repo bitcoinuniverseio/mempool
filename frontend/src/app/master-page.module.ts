@@ -18,11 +18,8 @@ import { FaucetComponent } from '@components/faucet/faucet.component';
 import { SimpleProofWidgetComponent } from '@components/simpleproof-widget/simpleproof-widget.component';
 import { SimpleProofCuboWidgetComponent } from '@components/simpleproof-widget/simpleproof-cubo-widget.component';
 import { ChainSyncNoticeComponent } from '@app/universe/chain-sync-notice/chain-sync-notice.component';
-<<<<<<< HEAD
 import { ConnectivityBannerComponent } from '@app/universe/pwa/connectivity-banner.component';
-=======
 import { CommandPaletteComponent } from '@app/universe/command-center/command-palette.component';
->>>>>>> origin/feat/command-center
 
 const browserWindow = window || {};
 // @ts-ignore
@@ -155,6 +152,28 @@ const routes: Routes = [
         path: 'live',
         loadComponent: () => import('@app/universe/live/live-universe.component').then(m => m.LiveUniverseComponent),
         data: { networks: ['bitcoin'] },
+      },
+        // The mining and consensus lab: intervals, empty blocks, pool
+        // shares, the AuxPoW proof parsed in the browser, and the stale
+        // tips this node has seen.
+        path: 'labs/mining',
+        loadComponent: () => import('@app/universe/mining-lab/mining-lab.component').then(m => m.MiningLabComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'labs/mining/bitcoin',
+        loadComponent: () => import('@app/universe/mining-lab/bitcoin-mining.component').then(m => m.BitcoinMiningComponent),
+        data: { networkSpecific: true, networks: ['bitcoin'] },
+      },
+      {
+        path: 'labs/mining/dogecoin',
+        loadComponent: () => import('@app/universe/mining-lab/dogecoin-mining.component').then(m => m.DogecoinMiningComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'labs/mining/reorgs',
+        loadComponent: () => import('@app/universe/mining-lab/reorgs.component').then(m => m.ReorgsComponent),
+        data: { networkSpecific: true, networks: ['bitcoin'] },
       },
       // Clusters, packages and the fee rate diagram. The list serves both
       // /mempool/clusters and /mempool/packages, and the detail view serves
@@ -361,11 +380,8 @@ export class MasterPageRoutingModule { }
     MasterPageRoutingModule,
     SharedModule,
     ChainSyncNoticeComponent,
-<<<<<<< HEAD
     ConnectivityBannerComponent,
-=======
     CommandPaletteComponent,
->>>>>>> origin/feat/command-center
   ],
   declarations: [
     MasterPageComponent,

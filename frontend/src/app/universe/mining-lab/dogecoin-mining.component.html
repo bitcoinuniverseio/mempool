@@ -1,0 +1,101 @@
+<div class="page">
+  <h1 class="title" i18n="universe.mining.doge.page">Dogecoin and AuxPoW</h1>
+
+  <section class="panel">
+    <h2 class="heading" i18n="universe.mining.doge.viewer">AuxPoW proof viewer</h2>
+    <p class="hint" i18n="universe.mining.doge.viewer-hint">
+      Paste a raw merge mined Dogecoin block in hexadecimal. Everything is
+      parsed and checked in this browser: the Dogecoin header hash, the
+      parent chain header and its hash, the coinbase commitment, the merkle
+      branch, and the chain index. Nothing is sent anywhere.
+    </p>
+    <textarea
+      class="hex-input"
+      rows="5"
+      [value]="rawHex()"
+      (input)="onHexInput($any($event.target).value)"
+      i18n-aria-label="universe.mining.doge.hex-label"
+      aria-label="Raw merge mined Dogecoin block in hexadecimal"></textarea>
+    <button type="button" class="control primary" (click)="parse()" [disabled]="!rawHex().trim()" i18n="universe.mining.doge.parse">Parse the proof</button>
+
+    <ng-container *ngIf="result() as unwrapped">
+      <div class="error" *ngIf="isError(unwrapped)" role="alert">{{ unwrapped.message }}</div>
+
+      <div class="proof" *ngIf="isParsed(unwrapped)">
+        <div class="verdict" [ngClass]="'commitment-' + unwrapped.commitment.state" role="status">
+          <ng-container [ngSwitch]="unwrapped.commitment.state">
+            <span *ngSwitchCase="'verified'" i18n="universe.mining.doge.verified">Commitment verified: the coinbase commits to this exact Dogecoin header.</span>
+            <span *ngSwitchCase="'mismatch'" i18n="universe.mining.doge.mismatch">The coinbase carries a commitment, but not for this header.</span>
+            <span *ngSwitchCase="'absent'" i18n="universe.mining.doge.absent">No merge mining commitment was found in the coinbase.</span>
+          </ng-container>
+        </div>
+
+        <h3 class="sub">Dogecoin header</h3>
+        <table class="table">
+          <tbody>
+            <tr><th scope="row">Hash</th><td><code>{{ unwrapped.dogecoinHeader.hash }}</code></td></tr>
+            <tr><th scope="row">Version</th><td>{{ unwrapped.dogecoinHeader.versionHex }}</td></tr>
+            <tr><th scope="row">Previous block</th><td><code>{{ unwrapped.dogecoinHeader.previousBlockHashReversed }}</code></td></tr>
+            <tr><th scope="row">Time</th><td>{{ unwrapped.dogecoinHeader.time | date:'yyyy-MM-dd HH:mm:ss' }} UTC</td></tr>
+            <tr><th scope="row">Nonce</th><td>{{ unwrapped.dogecoinHeader.nonce }}</td></tr>
+          </tbody>
+        </table>
+
+        <h3 class="sub">Parent chain header</h3>
+        <table class="table">
+          <tbody>
+            <tr><th scope="row">Hash</th><td><code>{{ unwrapped.parentHeader.hash }}</code></td></tr>
+            <tr><th scope="row">Previous block</th><td><code>{{ unwrapped.parentHeader.previousBlockHashReversed }}</code></td></tr>
+            <tr><th scope="row">Time</th><td>{{ unwrapped.parentHeader.time | date:'yyyy-MM-dd HH:mm:ss' }} UTC</td></tr>
+          </tbody>
+        </table>
+
+        <h3 class="sub">Parent coinbase</h3>
+        <table class="table">
+          <tbody>
+            <tr><th scope="row">Hash</th><td><code>{{ unwrapped.coinbase.hash }}</code></td></tr>
+            <tr><th scope="row">Readable text</th><td>{{ unwrapped.coinbase.readableScriptText || '(none)' }}</td></tr>
+          </tbody>
+        </table>
+        <p class="hint" i18n="universe.mining.doge.attribution-note">
+          Attribution stops here. The readable text often names the pool that
+          built the parent coinbase; it is shown as text, and claimed as
+          nothing more.
+        </p>
+
+        <h3 class="sub">Chain merkle branch and index</h3>
+        <p class="hint">
+          Chain index {{ unwrapped.chainIndex }},
+          {{ unwrapped.branchHashes.length }} branch {{ unwrapped.branchHashes.length === 1 ? 'hash' : 'hashes' }}.
+        </p>
+        <code class="branch" *ngFor="let branchHash of unwrapped.branchHashes">{{ branchHash }}</code>
+      </div>
+    </ng-container>
+  </section>
+
+  <ng-container *ngIf="stats$ | async as stats">
+    <section class="panel">
+      <h2 class="heading" i18n="universe.mining.doge.chain">The Dogecoin chain, measured</h2>
+      <p class="window" role="note">
+        <ng-container i18n="universe.mining.window">Measured over the last</ng-container>
+        {{ stats.window | number }} <ng-container i18n="universe.mining.blocks-word">blocks</ng-container>.
+        <ng-container i18n="universe.mining.doge.digishield">The target is one minute under DigiShield retargeting.</ng-container>
+      </p>
+      <table class="table" *ngIf="stats.intervals.samples">
+        <tbody>
+          <tr><th scope="row" i18n="universe.mining.mean">Mean against the one minute target</th><td>{{ stats.intervals.meanSeconds | number }} s ({{ stats.intervals.drift > 0 ? '+' : '' }}{{ stats.intervals.drift * 100 }}%)</td></tr>
+          <tr><th scope="row" i18n="universe.mining.median">Median</th><td>{{ stats.intervals.medianSeconds | number }} s</td></tr>
+          <tr><th scope="row" i18n="universe.mining.slow-list">Slower than twice the target</th><td>{{ stats.intervals.slowBlocks.length ? stats.intervals.slowBlocks.join(', ') : '-' }}</td></tr>
+        </tbody>
+      </table>
+      <p class="stat-line">
+        {{ stats.empty.emptyCount | number }}
+        <ng-container i18n="universe.mining.of">of</ng-container>
+        {{ stats.empty.samples | number }}
+        <ng-container i18n="universe.mining.carried-nothing">carried nothing but their subsidy</ng-container>
+        <ng-container *ngIf="stats.empty.emptyShare !== null"> ({{ stats.empty.emptyShare * 100 }}%)</ng-container>.
+      </p>
+      <p class="empty-note" *ngIf="!stats.window" i18n="universe.mining.no-data">No blocks were available to measure.</p>
+    </section>
+  </ng-container>
+</div>
