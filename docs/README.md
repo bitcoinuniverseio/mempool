@@ -25,6 +25,7 @@ you actually have.
 | What do the cluster and package pages show? | [`product/MEMPOOL-INTELLIGENCE.md`](product/MEMPOOL-INTELLIGENCE.md) |
 | What can the transaction and PSBT tools do, and what can they never do? | [`product/TRANSACTION-WORKBENCH.md`](product/TRANSACTION-WORKBENCH.md) |
 | What does a transaction give away, and how sure is the answer? | [`product/PRIVACY-LAB.md`](product/PRIVACY-LAB.md) |
+| What can the public node console reach, and what can it never reach? | [`product/NODE-CONSOLE.md`](product/NODE-CONSOLE.md) |
 
 ## I want to understand the design
 
