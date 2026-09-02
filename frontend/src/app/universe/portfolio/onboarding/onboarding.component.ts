@@ -22,6 +22,7 @@ import {
   classifyExtendedKey,
 } from '../shared/derivation';
 import type { LocalAccount, LocalPortfolio, ScriptKind } from '../stores/portfolio-model';
+import { importCsv, importJson, type ImportEntry } from '../workspace/workspace-import';
 
 type EntryChoice =
   | 'ephemeral'
@@ -164,6 +165,7 @@ export class OnboardingComponent {
   readonly valid = signal(false);
 
   private portfolio: LocalPortfolio | null = null;
+  private importedEntries: ImportEntry[] = [];
   private material = '';
 
   protected choose(choice: EntryChoice): void {
@@ -255,10 +257,8 @@ export class OnboardingComponent {
       );
       return;
     }
-    const addresses = text
-      .split(/[\s,;]+/)
-      .map((candidate) => candidate.trim())
-      .filter((candidate) => candidate.length > 0);
+    const imported = this.parseList(text);
+    const addresses = imported.entries.map((entry) => entry.address);
     const unknown = addresses.filter(
       (candidate) => !ADDRESS_PATTERNS.some((entry) => entry.pattern.test(candidate)),
     );
@@ -268,10 +268,45 @@ export class OnboardingComponent {
       );
       return;
     }
+    this.importedEntries = imported.entries;
     this.validation.set(
       $localize`:@@universe.portfolio.onboarding.addresses-ok:${addresses.length}:count: address(es) recognized.`,
     );
     this.valid.set(true);
+  }
+
+  /**
+   * Parses a pasted list through the workspace importers, so an address
+   * list with labels, groups, CSV headers, or JSON shape carries its
+   * labels into the new portfolio. Plain whitespace lists still work.
+   */
+  private parseList(text: string): { entries: ImportEntry[]; rejected: number } {
+    if (/^[[{]/.test(text) || /(?:^|,)\s*(?:chain|address)/im.test(text)) {
+      const asJson = importJson(text);
+      if (asJson.entries.length > 0 || asJson.rejections.length > 0) {
+        return { entries: asJson.entries, rejected: asJson.rejections.length };
+      }
+    }
+    const rows = text
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+    const looksTabular =
+      rows.length > 0 &&
+      rows.every((line) => line.split(',').length >= 2 || !line.includes(','));
+    if (looksTabular && rows.some((line) => line.includes(','))) {
+      const asCsv = importCsv(text);
+      if (asCsv.entries.length > 0) {
+        return { entries: asCsv.entries, rejected: asCsv.rejections.length };
+      }
+    }
+    return {
+      entries: rows.map((line) => {
+        const address = line.split(/[\s,;]+/)[0] ?? line;
+        return { chain: '', network: '', address, label: '', group: '' };
+      }),
+      rejected: 0,
+    };
   }
 
   protected async save(): Promise<void> {
@@ -308,20 +343,17 @@ export class OnboardingComponent {
         });
       }
     } else {
-      const addresses = this.material
-        .split(/[\s,;]+/)
-        .map((candidate) => candidate.trim())
-        .filter((candidate) => candidate.length > 0);
-      for (const address of addresses) {
-        const match = ADDRESS_PATTERNS.find((entry) => entry.pattern.test(address));
+      const imported = this.parseList(this.material);
+      for (const entry of imported.entries) {
+        const match = ADDRESS_PATTERNS.find((candidate) => candidate.pattern.test(entry.address));
         if (match === undefined) continue;
         accounts.push({
           id: crypto.randomUUID(),
-          name: address.slice(0, 12) + '…',
-          chain: match.chain,
-          network: match.network,
-          kind: addresses.length > 1 ? 'addresses' : 'address',
-          addresses: [address],
+          name: entry.label.length > 0 ? entry.label : entry.address.slice(0, 12) + '…',
+          chain: entry.chain.length > 0 ? entry.chain : match.chain,
+          network: entry.network.length > 0 ? entry.network : match.network,
+          kind: imported.entries.length > 1 ? 'addresses' : 'address',
+          addresses: [entry.address],
           tags: [],
           createdAt: now,
         });
