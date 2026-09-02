@@ -1,0 +1,129 @@
+<div class="container-xl node-console">
+  <header class="page-head">
+    <h1 i18n="node.rpc.heading">Ask this node</h1>
+    <p class="lede" i18n="node.rpc.lede">
+      Every read only method this explorer will put to its node, and a way to
+      put one. The list comes from the server, so it cannot claim a method the
+      server would refuse or omit one it would accept.
+    </p>
+    <nav class="crumbs">
+      <a routerLink="/node" i18n="node.rpc.to-overview">What this node is</a>
+    </nav>
+  </header>
+
+  <p class="error" role="alert" *ngIf="error">{{ error }}</p>
+  <p class="loading" role="status" *ngIf="loading" i18n="node.rpc.loading">Fetching the list…</p>
+
+  <p class="note" *ngIf="note">{{ note }}</p>
+
+  <form class="entry" (ngSubmit)="applyFilter()" novalidate>
+    <label for="rpc-search" i18n="node.rpc.search-label">Search the list</label>
+    <input id="rpc-search" name="search" type="text" autocomplete="off"
+      [(ngModel)]="query" (ngModelChange)="applyFilter()"
+      aria-describedby="rpc-search-help"
+      i18n-placeholder="node.rpc.search-placeholder" placeholder="fee, peers, block…">
+    <p id="rpc-search-help" class="field-help" i18n="node.rpc.search-help">
+      Matches the name and the description, so you can search for what you
+      want rather than for what it is called.
+    </p>
+  </form>
+
+  <div class="console">
+    <section class="catalog">
+      <h2 i18n="node.rpc.catalog-heading">The methods</h2>
+      <p class="unnamed" *ngIf="!groups.length && !loading" i18n="node.rpc.no-match">
+        Nothing in the list matches that.
+      </p>
+      <div class="group" *ngFor="let group of groups; trackBy: trackByCategory">
+        <h3>{{ group.category }}</h3>
+        <ul class="method-list">
+          <li *ngFor="let method of group.methods; trackBy: trackByName">
+            <button type="button" class="method"
+              [class.chosen]="selected?.name === method.name"
+              [attr.aria-pressed]="selected?.name === method.name"
+              (click)="choose(method)">
+              <code class="method-name">{{ method.name }}</code>
+              <span class="method-summary">{{ method.summary }}</span>
+              <span class="tags">
+                <span class="tag" *ngIf="method.immutable" i18n="node.rpc.tag-immutable">same answer every time</span>
+                <span class="tag" *ngIf="method.redacted" i18n="node.rpc.tag-trimmed">answer is trimmed</span>
+              </span>
+            </button>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="caller" *ngIf="selected as method">
+      <h2><code>{{ method.name }}</code></h2>
+      <p class="method-summary">{{ method.summary }}</p>
+      <p class="redaction" *ngIf="method.redactionNote">{{ method.redactionNote }}</p>
+
+      <form (ngSubmit)="run()" novalidate>
+        <p class="unnamed" *ngIf="!method.params.length" i18n="node.rpc.no-args">
+          This method takes no arguments.
+        </p>
+        <div class="argument" *ngFor="let param of method.params; let i = index; trackBy: trackByIndex">
+          <label [attr.for]="'rpc-arg-' + i">
+            {{ param.name }}
+            <span class="note" *ngIf="!param.required" i18n="node.rpc.optional">optional</span>
+          </label>
+          <input [attr.id]="'rpc-arg-' + i" type="text" autocomplete="off" spellcheck="false"
+            [(ngModel)]="values[i]" [name]="'arg' + i"
+            [attr.aria-describedby]="'rpc-arg-help-' + i"
+            [attr.aria-invalid]="problemFor(i) ? 'true' : null">
+          <p [attr.id]="'rpc-arg-help-' + i" class="field-help">
+            {{ param.description }}
+            <span class="argument-problem" *ngIf="problemFor(i) as problem" role="alert">{{ problem }}</span>
+          </p>
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="btn btn-primary btn-sm" [disabled]="running">
+            <ng-container *ngIf="!running" i18n="node.rpc.run">Ask it</ng-container>
+            <ng-container *ngIf="running" i18n="node.rpc.running">Asking…</ng-container>
+          </button>
+          <button type="button" class="btn btn-sm" (click)="clear()" i18n="node.rpc.close">Close</button>
+        </div>
+      </form>
+
+      <div class="result" *ngIf="result as answer">
+        <h3 i18n="node.rpc.result-heading">What it said</h3>
+        <p class="field-help" i18n="node.rpc.result-args">
+          Asked as <code>{{ answer.method }}</code> with the arguments the
+          server settled on after checking them: <code>{{ answer.args | json }}</code>
+        </p>
+        <p class="redaction" *ngIf="answer.redacted">{{ answer.redactionNote }}</p>
+        <pre class="result-json"><code>{{ resultJson }}</code></pre>
+      </div>
+    </section>
+  </div>
+
+  <section class="boundary">
+    <h2 i18n="node.rpc.boundary-heading">Why this is safe to leave open</h2>
+    <ul>
+      <li i18n="node.rpc.boundary-allowlist">
+        The server holds a list of the methods it will call. A method absent
+        from that list has no path to a call at all, so nothing new becomes
+        reachable when the node gains a method.
+      </li>
+      <li i18n="node.rpc.boundary-nostring">
+        No name from a request is ever turned into a call. A name is matched
+        against the list first, and it is the list's own entry that is
+        invoked.
+      </li>
+      <li i18n="node.rpc.boundary-args">
+        Every argument is checked against a declared shape, and an argument
+        past the last declared one is refused rather than dropped.
+      </li>
+      <li i18n="node.rpc.boundary-excluded">
+        Some read only methods are still kept out: those that describe the
+        process rather than the chain, and those whose cost is unbounded.
+      </li>
+      <li i18n="node.rpc.boundary-rate">
+        Each method has a budget per minute, so this cannot be used to make
+        the node's time somebody else's.
+      </li>
+    </ul>
+  </section>
+</div>
