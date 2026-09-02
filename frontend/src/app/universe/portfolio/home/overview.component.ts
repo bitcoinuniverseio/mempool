@@ -9,6 +9,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, signal } f
 import { RouterLink } from '@angular/router';
 import { NgxEchartsDirective } from 'ngx-echarts';
 import type { EChartsOption } from '@app/graphs/echarts';
+import { chartChrome } from '@app/shared/chart-theme';
 import { PortfolioDataService } from '../data/portfolio-data.service';
 import { PortfoliosStore } from '../stores/portfolios.store';
 import { PortfolioSessionService } from '../stores/session.service';
