@@ -17,6 +17,7 @@ inside them, and the fee rate curve that ordering actually produces.**
 | `/mempool/packages` | The clusters that are packages, meaning more than one transaction. |
 | `/mempool/feerate-diagram` | The cumulative fee rate curve, against the curve a naive ordering would draw. |
 | `/tx/:txid/package` | The package around one transaction. |
+| `/tools/package` | The package simulator. Ask the node about a package you hold, without sending it. |
 
 ## API
 
@@ -26,6 +27,7 @@ inside them, and the fee rate curve that ordering actually produces.**
 | `GET /api/v1/mempool/clusters/:reference` | One cluster, by cluster id or by any member txid. |
 | `GET /api/v1/mempool/feerate-diagram` | Both curves. |
 | `GET /api/v1/mempool/packages/:txid` | The package around one transaction. |
+| `POST /api/v1/mempool/simulate` | What this node would do with a package, given `{ "rawTxs": [...] }`. |
 
 `/api/v1/capabilities` carries a `mempoolIntelligence` entry. A deployment
 with the mempool switched off reports `disabled`; one where the routes were
@@ -60,6 +62,46 @@ unconfirmed parent and describes a block no miner can build.
 Drawn together, the gap between them is the claim that naive ordering makes
 and cannot keep. That gap is the point of the page.
 
+## The package simulator
+
+`testmempoolaccept` answers the question that matters: would this be accepted,
+and if not, why not. What it gives back is a short string. It says
+`insufficient fee` without saying how much is missing, `txn-mempool-conflict`
+without saying which transaction is in the way, and nothing about the shape of
+the package that produced either. Someone holding that string still cannot
+act on it.
+
+So the simulator carries the node's verdict through unchanged and adds
+everything it leaves out:
+
+- **Topology.** Which member spends which, ordered so every parent comes
+  before its children. A set of transactions that spend each other in a loop
+  is reported as one, because no node will relay that.
+- **Conflicts.** The exact outpoint two transactions both want, the mempool
+  transaction that already has it, and everything descended from that
+  transaction, all of which leaves with it.
+- **The replacement arithmetic.** What the package has to pay is everything it
+  evicts plus the relay cost of its own size at this node's incremental rate,
+  read from the node rather than assumed. The result is the exact shortfall in
+  satoshis, not the observation that there is one.
+- **Grouping.** The package run through the same linearizer the cluster pages
+  use, so a package is described in the terms everything already in the
+  mempool is described in.
+- **Position.** How many virtual bytes of the current mempool pay better than
+  the package's best group. A projection, labelled as one.
+
+A fee the node did not report and this process cannot work out is unknown, not
+zero. No group is claimed while any fee is missing, because a group's rate is
+a sum and a sum with a hole in it is not a sum. No total is claimed either.
+
+The route is the only one here that costs an RPC call, and the only one that
+is not cached: a cached verdict on a replacement is a verdict about a conflict
+that may already be gone. `/api/v1/capabilities` names Bitcoin Core as a
+dependency of this route alone.
+
+The simulator does not broadcast. Testing a package and sending one are
+different actions, and it does only the first.
+
 ## Freshness
 
 Three states, not two. Inside the budget, aged past the budget, and old
@@ -69,8 +111,8 @@ absent.
 
 ## Cost
 
-Everything is derived from the mempool this process already holds. No page
-here makes an RPC call. A page that recomputed clusters from `getrawmempool`
+Every reading page is derived from the mempool this process already holds. No
+such page makes an RPC call. A page that recomputed clusters from `getrawmempool`
 would take a share of the shared RPC budget away from indexers that have no
 other source for it.
 
