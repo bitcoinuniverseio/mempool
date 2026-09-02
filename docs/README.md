@@ -22,7 +22,7 @@ you actually have.
 | How are reorgs and checkpoints handled? | [`data/CHECKPOINTS-AND-REORGS.md`](data/CHECKPOINTS-AND-REORGS.md) |
 | Which protocols can actually be read? | [`protocols/PROTOCOL-COVERAGE.md`](protocols/PROTOCOL-COVERAGE.md) |
 | What does the address portfolio surface do? | [`product/ADDRESS-PORTFOLIO.md`](product/ADDRESS-PORTFOLIO.md) |
-| What is arriving right now, and what did this page see? | [`product/LIVE-UNIVERSE.md`](product/LIVE-UNIVERSE.md) |
+| What does the private workspace do with a whole watchlist? | [`product/PORTFOLIO-WORKSPACE.md`](product/PORTFOLIO-WORKSPACE.md) |
 
 ## I want to understand the design
 
