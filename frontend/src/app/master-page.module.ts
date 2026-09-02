@@ -131,6 +131,14 @@ const routes: Routes = [
         data: { networkSpecific: true, networks: ['bitcoin'] },
       },
       {
+        // Where one transaction's value came from and went, drawn and
+        // stated as a table, with replacement and package edges the node
+        // actually reported.
+        path: 'graph/tx/:txid',
+        loadComponent: () => import('@app/universe/provenance-graph/provenance-graph.component').then(m => m.ProvenanceGraphComponent),
+        data: { networkSpecific: true, networks: ['bitcoin'] },
+      },
+      {
         path: 'pulse',
         loadComponent: () => import('@app/universe/pulse/pulse.component').then(m => m.PulseComponent),
         data: { networkSpecific: true, networks: ['bitcoin'] },
