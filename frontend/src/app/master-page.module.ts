@@ -197,6 +197,22 @@ const routes: Routes = [
       {
         path: 'tools/calculator',
         component: CalculatorComponent
+      },
+      // Reads a partially signed transaction field by field, in the browser.
+      // It makes no request and cannot sign, which is what lets it be handed
+      // a file somebody is about to put a key to.
+      {
+        path: 'tools/psbt',
+        loadComponent: () => import('@app/universe/workbench/psbt-workbench.component').then(m => m.PsbtWorkbenchComponent),
+        data: { networks: ['bitcoin', 'liquid'] },
+      },
+      // The raw transaction analyser has lived at /tx/preview since before
+      // there was a tools section. It is the same page under both addresses
+      // rather than a second copy, so the two cannot drift apart.
+      {
+        path: 'tools/transaction',
+        redirectTo: 'tx/preview',
+        pathMatch: 'full',
       }
     ],
   }
