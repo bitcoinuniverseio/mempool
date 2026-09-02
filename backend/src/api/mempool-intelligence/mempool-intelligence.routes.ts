@@ -4,6 +4,7 @@ import mempool from '../mempool';
 import { handleError } from '../../utils/api';
 import intelligence from './mempool-intelligence';
 import { $simulate, validateRawTxs } from './package-service';
+import { $planBumpFor, readTargetFeerate, MAX_TARGET_FEERATE } from './bump-service';
 
 const TXID = /^[a-f0-9]{64}$/i;
 
@@ -47,7 +48,8 @@ class MempoolIntelligenceRoutes {
       .get(prefix + 'mempool/clusters/:reference', this.getCluster)
       .get(prefix + 'mempool/feerate-diagram', this.getDiagram)
       .get(prefix + 'mempool/packages/:txid', this.getPackage)
-      .post(prefix + 'mempool/simulate', this.$simulatePackage);
+      .post(prefix + 'mempool/simulate', this.$simulatePackage)
+      .get(prefix + 'mempool/bump/:txid', this.$getBumpPlan);
   }
 
   /**
@@ -167,6 +169,41 @@ class MempoolIntelligenceRoutes {
         return;
       }
       handleError(req, res, 500, 'Failed to simulate that package');
+    }
+  }
+
+  /**
+   * What it would cost to make an unconfirmed transaction confirm sooner.
+   *
+   * Cached for the same window as the cluster routes rather than not at all,
+   * because unlike the simulator the answer is about a transaction already in
+   * the mempool and moves only when the mempool does.
+   */
+  private async $getBumpPlan(req: Request, res: Response): Promise<void> {
+    const txid = req.params.txid;
+    if (!TXID.test(txid)) {
+      handleError(req, res, 400, 'A transaction id is 64 hexadecimal characters');
+      return;
+    }
+    const targetFeerate = readTargetFeerate(req.query.targetFeerate);
+    if (targetFeerate === null) {
+      handleError(
+        req, res, 400,
+        `targetFeerate must be a fee rate in satoshis per virtual byte, above zero and at most ${MAX_TARGET_FEERATE}`,
+      );
+      return;
+    }
+    try {
+      const plan = await $planBumpFor(txid.toLowerCase(), targetFeerate);
+      if (!plan) {
+        // Not the same as an invalid id, and the message says which.
+        handleError(req, res, 404, 'That transaction is not unconfirmed in this node mempool, so there is nothing to bump');
+        return;
+      }
+      MempoolIntelligenceRoutes.setLiveCache(res);
+      res.json(plan);
+    } catch (e) {
+      handleError(req, res, 500, 'Failed to plan a bump for that transaction');
     }
   }
 }

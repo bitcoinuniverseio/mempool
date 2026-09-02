@@ -319,3 +319,58 @@ describe('POST mempool/simulate', () => {
     expect(handlers.has(`POST ${PREFIX}mempool/simulate`)).toBe(true);
   });
 });
+
+describe('GET mempool/bump/:txid', () => {
+  it('refuses something that is not a transaction id', async () => {
+    const answer = await callAsync(`${PREFIX}mempool/bump/:txid`, {
+      params: { txid: 'nope' }, query: { targetFeerate: '20' },
+    } as any);
+    expect(answer.status).toBe(400);
+  });
+
+  it('refuses a missing target rate rather than picking one', async () => {
+    const answer = await callAsync(`${PREFIX}mempool/bump/:txid`, {
+      params: { txid: id('a') },
+    } as any);
+    expect(answer.status).toBe(400);
+  });
+
+  it('refuses a target rate of zero, which asks for nothing', async () => {
+    const answer = await callAsync(`${PREFIX}mempool/bump/:txid`, {
+      params: { txid: id('a') }, query: { targetFeerate: '0' },
+    } as any);
+    expect(answer.status).toBe(400);
+  });
+
+  it('answers 404 for a transaction that is not unconfirmed here', async () => {
+    const answer = await callAsync(`${PREFIX}mempool/bump/:txid`, {
+      params: { txid: id('a') }, query: { targetFeerate: '20' },
+    } as any);
+    expect(answer.status).toBe(404);
+  });
+
+  it('plans a bump for a transaction the mempool holds', async () => {
+    fakeMempool = {
+      [id('a')]: {
+        txid: id('a'),
+        fee: 1000,
+        vsize: 200,
+        adjustedVsize: 200,
+        weight: 800,
+        vin: [{ txid: id('funding'), vout: 0, sequence: 0xfffffffd }],
+        vout: [{ value: 100_000, scriptpubkey_type: 'v0_p2wpkh' }],
+      } as unknown as MempoolTransactionExtended,
+    };
+    const answer = await callAsync(`${PREFIX}mempool/bump/:txid`, {
+      params: { txid: id('a') }, query: { targetFeerate: '20' },
+    } as any);
+    expect(answer.status).toBe(200);
+    const plan = answer.body as any;
+    expect(plan.txid).toBe(id('a'));
+    expect(plan.rbf.requiredFeeSats).toBe(4000);
+    expect(plan.cpfp.available).toBe(true);
+    // The node was not reached, so the fallback policy applies: one satoshi
+    // per virtual byte of relay, and no unsignalled replacement.
+    expect(plan.rbf.available).toBe(true);
+  });
+});

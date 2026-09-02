@@ -28,6 +28,7 @@ import {
   UniverseSearchResponse,
 } from '@app/universe/universe.types';
 import {
+  BumpPlan,
   ClusterListResponse,
   ClusterResponse,
   DiagramResponse,
@@ -369,6 +370,19 @@ export class UniverseApiService {
     return this.httpClient.post<PackageSimulation>(
       this.apiBaseUrl + '/api/v1/mempool/simulate',
       { rawTxs },
+    );
+  }
+
+  /**
+   * What it would cost to make an unconfirmed transaction confirm sooner.
+   *
+   * The target rate is required by the server rather than defaulted, so a
+   * plan is always a plan for a rate the caller actually asked for.
+   */
+  getBumpPlan$(txid: string, targetFeerate: number): Observable<BumpPlan> {
+    return this.httpClient.get<BumpPlan>(
+      this.apiBaseUrl + '/api/v1/mempool/bump/' + encodeURIComponent(txid)
+        + '?targetFeerate=' + encodeURIComponent(String(targetFeerate)),
     );
   }
 
