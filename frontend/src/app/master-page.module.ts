@@ -121,6 +121,11 @@ const routes: Routes = [
         data: { networks: ['bitcoin'], chain: 'zcash' },
       },
       {
+        path: 'anima',
+        loadChildren: () => import('@app/universe/anima/anima.routes').then(m => m.ANIMA_ROUTES),
+        data: { networks: ['bitcoin'] },
+      },
+      {
         path: 'source',
         loadComponent: () => import('@app/universe/source-page/source-page.component').then(m => m.SourcePageComponent),
         data: { networks: ['bitcoin', 'liquid'] },
