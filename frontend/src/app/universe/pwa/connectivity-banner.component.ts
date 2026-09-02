@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { AsyncPipe, CommonModule, DatePipe, I18nSelectPipe } from '@angular/common';
+import { AsyncPipe, CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Observable, combineLatest, map } from 'rxjs';
 import { PwaService } from './pwa.service';

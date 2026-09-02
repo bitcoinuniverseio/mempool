@@ -177,7 +177,6 @@ function hasWorkerScope(scope) {
     && typeof caches !== 'undefined';
 }
 
-/* eslint-disable-next-line no-restricted-globals */
 const worker = typeof self !== 'undefined' ? self : undefined;
 
 if (worker && hasWorkerScope(worker)) {
