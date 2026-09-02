@@ -35,6 +35,7 @@ export class PwaService {
 
   private installEvent: any = null;
   private reloading = false;
+  private hadController = false;
 
   readonly offline$: Observable<boolean> = this.offlineSubject.asObservable();
   readonly updateReady$: Observable<boolean> = this.updateSubject.asObservable();
@@ -86,7 +87,13 @@ export class PwaService {
         }
       });
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        // One reload, after the visitor accepted the update.
+        // The first controller is this registration claiming the page after
+        // install; adopting it needs no reload. Only a later change of
+        // controller is an applied update, and the visitor asked for it.
+        if (!this.hadController) {
+          this.hadController = true;
+          return;
+        }
         if (this.reloading) { return; }
         this.reloading = true;
         window.location.reload();
