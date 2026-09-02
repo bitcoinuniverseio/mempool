@@ -49,6 +49,7 @@ import aboutRoutes from './api/about.routes';
 import capabilities from './api/capabilities';
 import capabilitiesRoutes from './api/capabilities.routes';
 import mempoolIntelligenceRoutes from './api/mempool-intelligence/mempool-intelligence.routes';
+import nodeConsoleRoutes from './api/node-console/node-console.routes';
 import mempoolBlocks from './api/mempool-blocks';
 import walletApi from './api/services/wallets';
 import stratumApi from './api/services/stratum';
@@ -395,6 +396,12 @@ class Server {
       mempoolIntelligenceRoutes.initRoutes(this.app);
       capabilities.markRoutesRegistered('mempoolIntelligence');
     }
+    // The node console reads Bitcoin Core through an allowlist and never
+    // through a name taken from a request. Mounted in every deployment,
+    // because this process talks to Core whatever the address backend is,
+    // and each section of the console reports its own unavailability rather
+    // than the whole page going missing when one method is quiet.
+    nodeConsoleRoutes.initRoutes(this.app);
     pricesRoutes.initRoutes(this.app);
     if (capabilities.statisticsEnabled()) {
       statisticsRoutes.initRoutes(this.app);

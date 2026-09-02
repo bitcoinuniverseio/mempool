@@ -34,6 +34,11 @@ import {
   DiagramResponse,
   PackageSimulation,
 } from '@app/universe/mempool-intelligence/mempool-intelligence.types';
+import {
+  NodeOverview,
+  RpcCatalog,
+  RpcResult,
+} from '@app/universe/node-console/node-console.types';
 
 /** Server-side batch ceilings. Callers must not exceed them. */
 export const UNIVERSE_OUTPOINT_BATCH_LIMIT = 50;
@@ -383,6 +388,30 @@ export class UniverseApiService {
     return this.httpClient.get<BumpPlan>(
       this.apiBaseUrl + '/api/v1/mempool/bump/' + encodeURIComponent(txid)
         + '?targetFeerate=' + encodeURIComponent(String(targetFeerate)),
+    );
+  }
+
+  /** What this node is, section by section, each with its own state. */
+  getNodeOverview$(): Observable<NodeOverview> {
+    return this.httpClient.get<NodeOverview>(this.apiBaseUrl + '/api/v1/node/overview');
+  }
+
+  /** The only node methods the console will call. */
+  getRpcCatalog$(): Observable<RpcCatalog> {
+    return this.httpClient.get<RpcCatalog>(this.apiBaseUrl + '/api/v1/node/rpc/catalog');
+  }
+
+  /**
+   * Calls one allowlisted node method.
+   *
+   * The method name goes in the body rather than the path, so no part of a
+   * URL is ever interpolated into a call, and the server matches it against
+   * its allowlist before anything else happens.
+   */
+  callNodeRpc$(method: string, args: unknown[]): Observable<RpcResult> {
+    return this.httpClient.post<RpcResult>(
+      this.apiBaseUrl + '/api/v1/node/rpc',
+      { method, args },
     );
   }
 
