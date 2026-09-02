@@ -92,3 +92,116 @@ export interface DiagramResponse {
   readonly totalFeeSats: number;
   readonly freshness: ClusterFreshness;
 }
+
+// The shape `POST /api/v1/mempool/simulate` answers with.
+//
+// A fee is null when the node reported none and this process could not work
+// it out. Null is not zero anywhere in here, and a reader that renders it as
+// zero reports a free transaction that does not exist.
+
+export interface PackageTxView {
+  readonly txid: string;
+  readonly vsize: number;
+  readonly weight: number;
+  readonly feeSats: number | null;
+  readonly feeUnknownReason: string | null;
+  readonly individualFeerate: number | null;
+  readonly effectiveFeerate: number | null;
+  readonly chunkIndex: number | null;
+  readonly parents: string[];
+  readonly children: string[];
+  /** Inputs from neither the package nor the mempool, so confirmed or absent. */
+  readonly externalInputs: number;
+  readonly mempoolInputs: number;
+  readonly allowed: boolean;
+  readonly rejectReason: string | null;
+  readonly effectiveIncludes: string[];
+}
+
+export interface ConflictView {
+  readonly outpoint: string;
+  readonly candidateTxid: string;
+  readonly incumbentTxid: string;
+  readonly evictedTxids: string[];
+  readonly evictedFeeSats: number;
+  readonly evictedVsize: number;
+}
+
+export interface ReplacementView {
+  readonly conflictCount: number;
+  readonly evictedTxids: string[];
+  readonly evictedFeeSats: number;
+  readonly evictedVsize: number;
+  readonly packageFeeSats: number;
+  readonly packageVsize: number;
+  /** Everything evicted, plus the relay cost of the package's own size. */
+  readonly requiredFeeSats: number;
+  readonly shortfallSats: number;
+  readonly satisfiesFeeRules: boolean;
+  readonly incompleteReason: string | null;
+}
+
+export interface QueuePosition {
+  readonly vsizeAhead: number;
+  readonly chunksAhead: number;
+  readonly feerate: number;
+}
+
+export interface PackageSimulation {
+  readonly transactions: PackageTxView[];
+  readonly topologicalOrder: string[];
+  readonly chunks: ChunkView[];
+  readonly accepted: boolean;
+  readonly conflicts: ConflictView[];
+  readonly replacement: ReplacementView | null;
+  readonly queuePosition: QueuePosition | null;
+  readonly packageFeeSats: number | null;
+  readonly packageVsize: number;
+  readonly packageWeight: number;
+  readonly connected: boolean;
+  readonly cyclic: boolean;
+}
+
+// The shape `GET /api/v1/mempool/bump/:txid?targetFeerate=N` answers with.
+//
+// Each route has an `available` flag and a reason when it is false. A route
+// that is closed is closed for a stated reason, never by rendering a zero.
+
+export interface RbfPlan {
+  readonly available: boolean;
+  readonly unavailableReason: string | null;
+  readonly requiredFeeSats: number;
+  readonly additionalFeeSats: number;
+  readonly resultingFeerate: number;
+  readonly evictedTxids: string[];
+  readonly evictedFeeSats: number;
+  /** True when the replacement rules, not the target rate, set the price. */
+  readonly boundByReplacementRules: boolean;
+  readonly largestOutputSats: number | null;
+  readonly outputAfterBumpSats: number | null;
+  readonly outputWouldBecomeDust: boolean;
+}
+
+export interface CpfpPlan {
+  readonly available: boolean;
+  readonly unavailableReason: string | null;
+  readonly spendOutputIndex: number | null;
+  readonly spendValueSats: number | null;
+  readonly childVsize: number | null;
+  readonly requiredChildFeeSats: number;
+  readonly changeSats: number | null;
+  readonly changeIsDust: boolean;
+  readonly resultingPackageFeerate: number;
+}
+
+export interface BumpPlan {
+  readonly txid: string;
+  readonly currentFeeSats: number;
+  readonly currentFeerate: number;
+  readonly targetFeerate: number;
+  readonly rbf: RbfPlan;
+  readonly cpfp: CpfpPlan;
+  readonly alreadyAtTarget: boolean;
+  /** Every output, because this process reads the base chain only. */
+  readonly outputsToCheckForAssets: number[];
+}

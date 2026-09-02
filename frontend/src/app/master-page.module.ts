@@ -159,6 +159,15 @@ const routes: Routes = [
         loadComponent: () => import('@app/universe/mempool-intelligence/feerate-diagram.component').then(m => m.FeerateDiagramComponent),
         data: { networkSpecific: true, networks: ['bitcoin'] },
       },
+      // Prices both routes to a higher fee rate. The target lives in the
+      // query string so a plan can be linked to, and the page picks no rate
+      // of its own, because the right one depends on how soon somebody needs
+      // the transaction and nothing here knows that.
+      {
+        path: 'tx/:txid/bump',
+        loadComponent: () => import('@app/universe/mempool-intelligence/bump.component').then(m => m.BumpComponent),
+        data: { networkSpecific: true, networks: ['bitcoin'] },
+      },
       {
         path: 'tx/:txid/package',
         loadComponent: () => import('@app/universe/mempool-intelligence/cluster-detail.component').then(m => m.ClusterDetailComponent),
@@ -197,6 +206,43 @@ const routes: Routes = [
       {
         path: 'tools/calculator',
         component: CalculatorComponent
+      },
+      // Reads a partially signed transaction field by field, in the browser.
+      // It makes no request and cannot sign, which is what lets it be handed
+      // a file somebody is about to put a key to.
+      // What a transaction's shape gives away. Both entry points run every
+      // rule in the browser; the raw hex one makes no request at all, which
+      // is what makes it usable for a transaction not yet broadcast.
+      {
+        path: 'labs/privacy',
+        loadComponent: () => import('@app/universe/labs/privacy/privacy-lab.component').then(m => m.PrivacyLabComponent),
+        data: { networkSpecific: true, networks: ['bitcoin'] },
+      },
+      {
+        path: 'labs/privacy/:txid',
+        loadComponent: () => import('@app/universe/labs/privacy/privacy-lab.component').then(m => m.PrivacyLabComponent),
+        data: { networkSpecific: true, networks: ['bitcoin'] },
+      },
+      // Asks the node what it would do with a package. It lives under tools
+      // rather than under mempool because it is about a package somebody
+      // holds, not about one the mempool already has.
+      {
+        path: 'tools/package',
+        loadComponent: () => import('@app/universe/mempool-intelligence/package-simulator.component').then(m => m.PackageSimulatorComponent),
+        data: { networkSpecific: true, networks: ['bitcoin'] },
+      },
+      {
+        path: 'tools/psbt',
+        loadComponent: () => import('@app/universe/workbench/psbt-workbench.component').then(m => m.PsbtWorkbenchComponent),
+        data: { networks: ['bitcoin', 'liquid'] },
+      },
+      // The raw transaction analyser has lived at /tx/preview since before
+      // there was a tools section. It is the same page under both addresses
+      // rather than a second copy, so the two cannot drift apart.
+      {
+        path: 'tools/transaction',
+        redirectTo: 'tx/preview',
+        pathMatch: 'full',
       }
     ],
   }

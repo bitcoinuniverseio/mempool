@@ -28,9 +28,11 @@ import {
   UniverseSearchResponse,
 } from '@app/universe/universe.types';
 import {
+  BumpPlan,
   ClusterListResponse,
   ClusterResponse,
   DiagramResponse,
+  PackageSimulation,
 } from '@app/universe/mempool-intelligence/mempool-intelligence.types';
 
 /** Server-side batch ceilings. Callers must not exceed them. */
@@ -354,6 +356,33 @@ export class UniverseApiService {
   getMempoolPackage$(txid: string): Observable<ClusterResponse> {
     return this.httpClient.get<ClusterResponse>(
       this.apiBaseUrl + '/api/v1/mempool/packages/' + encodeURIComponent(txid)
+    );
+  }
+
+  /**
+   * Asks the node what it would do with a package, without sending it.
+   *
+   * The answer depends on the mempool at this instant, so it is cached on
+   * neither side. A cached verdict on a replacement is a verdict about a
+   * conflict that may already be gone.
+   */
+  simulatePackage$(rawTxs: string[]): Observable<PackageSimulation> {
+    return this.httpClient.post<PackageSimulation>(
+      this.apiBaseUrl + '/api/v1/mempool/simulate',
+      { rawTxs },
+    );
+  }
+
+  /**
+   * What it would cost to make an unconfirmed transaction confirm sooner.
+   *
+   * The target rate is required by the server rather than defaulted, so a
+   * plan is always a plan for a rate the caller actually asked for.
+   */
+  getBumpPlan$(txid: string, targetFeerate: number): Observable<BumpPlan> {
+    return this.httpClient.get<BumpPlan>(
+      this.apiBaseUrl + '/api/v1/mempool/bump/' + encodeURIComponent(txid)
+        + '?targetFeerate=' + encodeURIComponent(String(targetFeerate)),
     );
   }
 

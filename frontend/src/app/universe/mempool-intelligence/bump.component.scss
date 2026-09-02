@@ -1,0 +1,238 @@
+@use '../universe-tokens' as u;
+
+:host {
+  @include u.universe-state-tokens;
+
+  display: block;
+}
+
+.bump {
+  padding-block: 1.25rem 3rem;
+}
+
+.page-head {
+  margin-bottom: 1.25rem;
+
+  h1 { margin-bottom: 0.5rem; }
+}
+
+.crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+.lede {
+  max-width: 64ch;
+  color: var(--u-text-muted);
+  margin-bottom: 0;
+
+  code { word-break: break-all; }
+}
+
+.entry {
+  @include u.universe-surface;
+
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+
+  fieldset {
+    border: 0;
+    padding: 0;
+    margin: 0;
+  }
+
+  legend {
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+  }
+}
+
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.85rem;
+
+  // The chosen preset is marked by a border and by aria-pressed, so the
+  // state does not rest on the fill alone.
+  .chosen {
+    border-color: var(--universe-state-proven-border);
+    font-weight: 600;
+  }
+}
+
+.typed {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+
+  label { margin: 0; }
+
+  input {
+    width: 8rem;
+    background: var(--u-surface-sunken);
+    color: var(--u-text);
+    border: 1px solid var(--u-border);
+    border-radius: 0.35rem;
+    padding: 0.3rem 0.5rem;
+  }
+}
+
+.field-help {
+  margin: 0.6rem 0 0;
+  font-size: 0.85rem;
+  color: var(--u-text-muted);
+  max-width: 68ch;
+}
+
+.error,
+.prompt,
+.loading {
+  @include u.universe-surface;
+
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.25rem;
+  max-width: 68ch;
+}
+
+.error { border-left: 4px solid var(--universe-state-unavailable-border); }
+
+.headline {
+  @include u.universe-surface;
+
+  padding: 0.85rem 1.1rem;
+  margin-bottom: 1.5rem;
+  max-width: 72ch;
+  font-size: 1.02rem;
+  border-left: 4px solid var(--universe-state-partial-border);
+
+  &[data-actionable='true'] { border-left-color: var(--universe-state-proven-border); }
+}
+
+section {
+  margin-bottom: 1.75rem;
+
+  h2 {
+    font-size: 1.05rem;
+    margin-bottom: 0.65rem;
+  }
+
+  h3 {
+    font-size: 0.9rem;
+    margin-bottom: 0.4rem;
+  }
+}
+
+.warnings {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.5rem;
+
+  li {
+    @include u.universe-surface;
+
+    padding: 0.65rem 0.9rem;
+    margin-bottom: 0.5rem;
+    max-width: 72ch;
+    border-left: 4px solid var(--universe-state-partial-border);
+  }
+}
+
+// Two routes side by side on a wide screen, stacked on a narrow one. Each
+// carries its own state in words, so the order they fall into does not
+// change what either says.
+.routes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1.75rem;
+}
+
+.route {
+  @include u.universe-surface;
+
+  padding: 1rem 1.25rem;
+  margin-bottom: 0;
+  border-top: 3px solid var(--universe-state-unavailable-border);
+
+  &[data-open='true'] { border-top-color: var(--universe-state-proven-border); }
+}
+
+.route-state {
+  color: var(--u-text-muted);
+  margin-bottom: 0;
+  max-width: 60ch;
+}
+
+.facts {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 0;
+
+  dt {
+    font-size: 0.8rem;
+    color: var(--u-text-muted);
+    font-weight: 400;
+    margin-bottom: 0.15rem;
+  }
+
+  dd { margin-bottom: 0; }
+
+  .figure { font-size: 1.15rem; font-weight: 600; }
+}
+
+.now .facts {
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+}
+
+.note,
+.unit {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--u-text-muted);
+}
+
+.unit { display: inline; }
+
+.evicted {
+  margin-top: 1rem;
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 0.5rem;
+  }
+
+  code { word-break: break-all; }
+}
+
+.outpoints {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+
+  code { word-break: break-all; }
+}
+
+.assets p {
+  max-width: 72ch;
+  margin-bottom: 0.65rem;
+}
+
+.boundary {
+  @include u.universe-surface;
+
+  padding: 1rem 1.25rem;
+  max-width: 72ch;
+
+  ul { margin-bottom: 0; }
+
+  li { margin-bottom: 0.35rem; }
+}
