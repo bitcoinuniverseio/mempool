@@ -645,3 +645,25 @@ export type {
   AnimaOrganismDocument,
   AnimaOrganismHistoryDocument,
 } from './anima.types';
+
+/**
+ * One protocol's standing objects, read from that protocol's own
+ * first-party authority. The records travel through verbatim; quantities
+ * stay the decimal strings the authority issued.
+ */
+export interface ExplorerProtocolObjectsPage {
+  schemaVersion: 'universe-protocol-objects-v1';
+  protocolId: string;
+  state: 'served' | 'unconfigured' | 'unavailable' | 'unsupported';
+  authorityId: string | null;
+  objectsPath: string | null;
+  items: Array<Record<string, unknown>>;
+  nextCursor: string | null;
+  checkpoint: {
+    heightAtomic: string;
+    blockHash: string;
+    observedAt: string;
+  } | null;
+  degradedReason: string | null;
+  observedAt: string;
+}
