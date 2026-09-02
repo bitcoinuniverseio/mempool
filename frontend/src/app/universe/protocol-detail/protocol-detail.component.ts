@@ -9,20 +9,32 @@ import { ProtocolCopy, protocolCopy } from '@app/universe/universe-protocol-copy
 import {
   ExplorerProtocolActivityPage,
   ExplorerProtocolDefinition,
+  ExplorerProtocolObjectsPage,
   ProtocolCoverage,
   SourceEntry,
 } from '@app/universe/universe.types';
 import { shortenIdentifier } from '@app/universe/universe-evidence';
 import {
   ProtocolActivityRow,
+  ProtocolObjectRow,
   activitySummary,
+  objectsSummary,
   readActivityRows,
+  readObjectRows,
 } from '@app/universe/protocol-activity-view';
 
 interface ProtocolActivityState {
   readonly kind: 'idle' | 'loading' | 'error' | 'loaded';
   readonly page?: ExplorerProtocolActivityPage;
   readonly rows?: readonly ProtocolActivityRow[];
+  readonly summary?: string;
+  readonly loadingMore?: boolean;
+}
+
+interface ProtocolObjectsState {
+  readonly kind: 'idle' | 'loading' | 'error' | 'loaded';
+  readonly page?: ExplorerProtocolObjectsPage;
+  readonly rows?: readonly ProtocolObjectRow[];
   readonly summary?: string;
   readonly loadingMore?: boolean;
 }
@@ -62,6 +74,10 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
   private activityCursor: string | null = null;
   private activityPages: ExplorerProtocolActivityPage[] = [];
 
+  readonly objects$ = new BehaviorSubject<ProtocolObjectsState>({ kind: 'idle' });
+  private objectCursor: string | null = null;
+  private objectPages: ExplorerProtocolObjectsPage[] = [];
+
   constructor(
     private route: ActivatedRoute,
     private api: UniverseApiService,
@@ -98,6 +114,7 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
           label: protocol.displayName,
         });
         this.loadActivity(protocol.id);
+        this.loadObjects(protocol.id);
       }),
       shareReplay({ bufferSize: 1, refCount: true }),
     );
@@ -179,6 +196,62 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
       summary: activitySummary(latest),
       loadingMore: false,
     });
+  }
+
+  /**
+   * Reads the protocol's authority objects, first page, on the same terms
+   * as the activity feed above.
+   */
+  loadObjects(protocolId: string): void {
+    this.objectPages = [];
+    this.objectCursor = null;
+    this.objects$.next({ kind: 'loading' });
+    this.api.getProtocolObjects$(protocolId).subscribe({
+      next: (page) => this.pushObjectsPage(page),
+      error: () => this.objects$.next({ kind: 'error' }),
+    });
+  }
+
+  loadMoreObjects(protocolId: string): void {
+    const state = this.objects$.value;
+    if (state.kind !== 'loaded' || !this.objectCursor || state.loadingMore) {
+      return;
+    }
+    this.objects$.next({ ...state, loadingMore: true });
+    this.api.getProtocolObjects$(protocolId, this.objectCursor).subscribe({
+      next: (page) => this.pushObjectsPage(page),
+      error: () => this.objects$.next({ ...state, loadingMore: false }),
+    });
+  }
+
+  private pushObjectsPage(page: ExplorerProtocolObjectsPage): void {
+    this.objectPages.push(page);
+    this.objectCursor = page.state === 'served' && page.nextCursor ? page.nextCursor : null;
+    const merged = {
+      items: this.objectPages.flatMap((entry) => entry.items),
+      nextCursor: page.nextCursor,
+    };
+    const latest = this.objectPages[this.objectPages.length - 1];
+    const served: ExplorerProtocolObjectsPage = {
+      ...latest,
+      items: merged.items,
+      nextCursor: merged.nextCursor,
+    };
+    this.objects$.next({
+      kind: 'loaded',
+      page: served,
+      rows: readObjectRows(merged.items),
+      summary: objectsSummary(latest, merged.items.length),
+      loadingMore: false,
+    });
+  }
+
+  objectsSummaryLabel(state: ProtocolObjectsState): string | null {
+    return state.kind === 'loaded' ? state.summary : null;
+  }
+
+  trackByObject(index: number, row: ProtocolObjectRow): string {
+    return row.id ?? `${index}`;
   }
 
   activitySummaryLabel(state: ProtocolActivityState): string | null {

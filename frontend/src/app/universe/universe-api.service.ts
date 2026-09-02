@@ -27,6 +27,7 @@ import {
   RecentBlocksView,
   UniverseSearchResponse,
   ExplorerProtocolActivityPage,
+  ExplorerProtocolObjectsPage,
   AnimaStatusDocument,
   AnimaEventsDocument,
   AnimaEventDocument,
@@ -66,6 +67,28 @@ function unsupportedActivityPage(protocolId: string): ExplorerProtocolActivityPa
     holderSnapshots: [],
     nextCursor: null,
     hasMore: false,
+    checkpoint: null,
+    degradedReason: null,
+    observedAt: new Date().toISOString(),
+  };
+}
+
+const OBJECTS_STATES = ['served', 'unconfigured', 'unavailable', 'unsupported'];
+
+function isObjectsPage(value: unknown): value is ExplorerProtocolObjectsPage {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+    && OBJECTS_STATES.includes((value as ExplorerProtocolObjectsPage).state);
+}
+
+function unsupportedObjectsPage(protocolId: string): ExplorerProtocolObjectsPage {
+  return {
+    schemaVersion: 'universe-protocol-objects-v1',
+    protocolId,
+    state: 'unsupported',
+    authorityId: null,
+    objectsPath: null,
+    items: [],
+    nextCursor: null,
     checkpoint: null,
     degradedReason: null,
     observedAt: new Date().toISOString(),
@@ -384,6 +407,28 @@ export class UniverseApiService {
       : ['zerdinals', 'zrunes', 'zrc20'];
     if (!allowed.includes(protocol)) {throw new Error('unsupported-chain-protocol');}
     return protocol;
+  }
+
+  /**
+   * One protocol's standing objects from its own authority. A 404 means the
+   * authority publishes no objects route this explorer reads; any body that
+   * is not the documented page resolves to the same explicit state instead
+   * of flowing into the page as object data.
+   */
+  getProtocolObjects$(protocolId: string, cursor?: string, limit = 25): Observable<ExplorerProtocolObjectsPage> {
+    let query = '?limit=' + Math.min(Math.max(1, Math.floor(limit)), 200);
+    if (cursor) {query += '&cursor=' + encodeURIComponent(cursor);}
+    return this.httpClient.get<ExplorerProtocolObjectsPage>(
+      this.apiBaseUrl + '/api/v1/universe/protocols/' + encodeURIComponent(protocolId) + '/objects' + query
+    ).pipe(
+      map((page) => isObjectsPage(page) ? page : unsupportedObjectsPage(protocolId)),
+      catchError((error) => {
+        if (error?.status === 404) {
+          return of(unsupportedObjectsPage(protocolId));
+        }
+        return throwError(() => error);
+      }),
+    );
   }
 
   /** ANIMA protocol status, scanner readiness, and exact supply. */

@@ -93,3 +93,62 @@ export function activitySummary(
       return 'This protocol has no activity feed this explorer reads yet.';
   }
 }
+
+const OBJECT_ID_KEYS = ['id', 'assetId', 'asset_id', 'objectKey', 'artifact_id', 'artifactId', 'worldId', 'circleId'];
+const OBJECT_STATUS_KEYS = ['status', 'state', 'objectStatus'];
+
+export interface ProtocolObjectRow {
+  readonly id: string | null;
+  readonly kind: string | null;
+  /** How many keys the record carries that this reading did not name. */
+  readonly unnamedFields: number;
+  readonly record: Record<string, unknown>;
+}
+
+/**
+ * Reads one page of a protocol's standing objects the way the activity
+ * reader reads its feed: find the few keys every object really has, keep
+ * the record itself, and never flatten a protocol's schema into guessed
+ * columns.
+ */
+export function readObjectRows(
+  records: readonly Record<string, unknown>[],
+): ProtocolObjectRow[] {
+  return records.map((record) => {
+    const named = new Set([...OBJECT_ID_KEYS, ...OBJECT_STATUS_KEYS]);
+    let unnamedFields = 0;
+    for (const key of Object.keys(record)) {
+      if (!named.has(key)) {unnamedFields += 1;}
+    }
+    return {
+      id: firstString(record, OBJECT_ID_KEYS),
+      kind: firstString(record, OBJECT_STATUS_KEYS),
+      unnamedFields,
+      record,
+    };
+  });
+}
+
+/**
+ * The one-line summary for an objects page, on the same terms as the
+ * activity summary: a zero-row page is a real answer, and every
+ * unserved state says what is missing.
+ */
+export function objectsSummary(
+  page: ExplorerProtocolObjectsPage,
+  totalItems: number,
+): string {
+  switch (page.state) {
+    case 'served':
+      return totalItems === 1
+        ? 'The authority answered: 1 object in this page of its collection.'
+        : `The authority answered: ${totalItems} objects in this page of its collection.`;
+    case 'unconfigured':
+      return 'No authority for this protocol is configured in this deployment, so its objects are not shown.';
+    case 'unavailable':
+      return page.degradedReason
+        ?? 'The authority could not answer, so its objects are not shown.';
+    case 'unsupported':
+      return 'This protocol has no objects route this explorer reads yet.';
+  }
+}

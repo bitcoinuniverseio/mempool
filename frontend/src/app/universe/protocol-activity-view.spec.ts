@@ -87,3 +87,31 @@ describe('activitySummary', () => {
       .toBe('This protocol has no activity feed this explorer reads yet.');
   });
 });
+
+import { readObjectRows } from './protocol-activity-view';
+
+describe('readObjectRows', () => {
+  it('reads the identity and status keys the object collections publish', () => {
+    const rows = readObjectRows([
+      { id: 'asset-1', status: 'alive', owner: 'bc1qexample', supply: '1000' },
+    ]);
+    expect(rows[0].id).toBe('asset-1');
+    expect(rows[0].kind).toBe('alive');
+    expect(rows[0].unnamedFields).toBe(2);
+  });
+
+  it('falls back through the identity aliases per authority', () => {
+    const rows = readObjectRows([
+      { artifact_id: 'patina:0:0', status: 'ALIVE' },
+      { worldId: 'w-1' },
+      { objectKey: 'aa'.repeat(32) },
+    ]);
+    expect(rows.map((row) => row.id)).toEqual(['patina:0:0', 'w-1', 'aa'.repeat(32)]);
+  });
+
+  it('keeps an unnamed record rather than inventing columns', () => {
+    const rows = readObjectRows([{ shape: { deep: true } }]);
+    expect(rows[0].id).toBeNull();
+    expect(rows[0].unnamedFields).toBe(1);
+  });
+});
