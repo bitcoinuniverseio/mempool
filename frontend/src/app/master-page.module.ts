@@ -18,6 +18,8 @@ import { FaucetComponent } from '@components/faucet/faucet.component';
 import { SimpleProofWidgetComponent } from '@components/simpleproof-widget/simpleproof-widget.component';
 import { SimpleProofCuboWidgetComponent } from '@components/simpleproof-widget/simpleproof-cubo-widget.component';
 import { ChainSyncNoticeComponent } from '@app/universe/chain-sync-notice/chain-sync-notice.component';
+import { ConnectivityBannerComponent } from '@app/universe/pwa/connectivity-banner.component';
+import { CommandPaletteComponent } from '@app/universe/command-center/command-palette.component';
 
 const browserWindow = window || {};
 // @ts-ignore
@@ -131,8 +133,85 @@ const routes: Routes = [
         data: { networkSpecific: true, networks: ['bitcoin'] },
       },
       {
+        // Where one transaction's value came from and went, drawn and
+        // stated as a table, with replacement and package edges the node
+        // actually reported.
+        path: 'graph/tx/:txid',
+        loadComponent: () => import('@app/universe/provenance-graph/provenance-graph.component').then(m => m.ProvenanceGraphComponent),
+        data: { networkSpecific: true, networks: ['bitcoin'] },
+      },
+      {
         path: 'pulse',
         loadComponent: () => import('@app/universe/pulse/pulse.component').then(m => m.PulseComponent),
+        data: { networkSpecific: true, networks: ['bitcoin'] },
+      },
+      {
+        // The cross chain live view: everything this deployment's stream
+        // delivers, with pause, scrub, and replay over what this page has
+        // actually received.
+        path: 'live',
+        loadComponent: () => import('@app/universe/live/live-universe.component').then(m => m.LiveUniverseComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        // The mining and consensus lab: intervals, empty blocks, pool
+        // shares, the AuxPoW proof parsed in the browser, and the stale
+        // tips this node has seen.
+        path: 'labs/mining',
+        loadComponent: () => import('@app/universe/mining-lab/mining-lab.component').then(m => m.MiningLabComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'labs/mining/bitcoin',
+        loadComponent: () => import('@app/universe/mining-lab/bitcoin-mining.component').then(m => m.BitcoinMiningComponent),
+        data: { networkSpecific: true, networks: ['bitcoin'] },
+      },
+      {
+        path: 'labs/mining/dogecoin',
+        loadComponent: () => import('@app/universe/mining-lab/dogecoin-mining.component').then(m => m.DogecoinMiningComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'labs/mining/reorgs',
+        loadComponent: () => import('@app/universe/mining-lab/reorgs.component').then(m => m.ReorgsComponent),
+        data: { networkSpecific: true, networks: ['bitcoin'] },
+      },
+      // Clusters, packages and the fee rate diagram. The list serves both
+      // /mempool/clusters and /mempool/packages, and the detail view serves
+      // both a cluster id and a transaction's package, because those are the
+      // same object reached two ways.
+      {
+        path: 'mempool/clusters',
+        loadComponent: () => import('@app/universe/mempool-intelligence/cluster-list.component').then(m => m.ClusterListComponent),
+        data: { networkSpecific: true, networks: ['bitcoin'] },
+      },
+      {
+        path: 'mempool/clusters/:clusterId',
+        loadComponent: () => import('@app/universe/mempool-intelligence/cluster-detail.component').then(m => m.ClusterDetailComponent),
+        data: { networkSpecific: true, networks: ['bitcoin'] },
+      },
+      {
+        path: 'mempool/packages',
+        loadComponent: () => import('@app/universe/mempool-intelligence/cluster-list.component').then(m => m.ClusterListComponent),
+        data: { networkSpecific: true, networks: ['bitcoin'], packagesOnly: true },
+      },
+      {
+        path: 'mempool/feerate-diagram',
+        loadComponent: () => import('@app/universe/mempool-intelligence/feerate-diagram.component').then(m => m.FeerateDiagramComponent),
+        data: { networkSpecific: true, networks: ['bitcoin'] },
+      },
+      // Prices both routes to a higher fee rate. The target lives in the
+      // query string so a plan can be linked to, and the page picks no rate
+      // of its own, because the right one depends on how soon somebody needs
+      // the transaction and nothing here knows that.
+      {
+        path: 'tx/:txid/bump',
+        loadComponent: () => import('@app/universe/mempool-intelligence/bump.component').then(m => m.BumpComponent),
+        data: { networkSpecific: true, networks: ['bitcoin'] },
+      },
+      {
+        path: 'tx/:txid/package',
+        loadComponent: () => import('@app/universe/mempool-intelligence/cluster-detail.component').then(m => m.ClusterDetailComponent),
         data: { networkSpecific: true, networks: ['bitcoin'] },
       },
       {
@@ -141,8 +220,29 @@ const routes: Routes = [
         data: { networks: ['bitcoin'] },
       },
       {
+        // Captured by the service worker at install, so it opens with no
+        // network at all and carries the storage controls with it.
+        path: 'offline',
+        loadComponent: () => import('@app/universe/pwa/offline-page.component').then(m => m.OfflinePageComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        // The share target the manifest names. Everything the operating
+        // system hands the explorer lands here first.
+        path: 'share',
+        loadComponent: () => import('@app/universe/pwa/share-receiver.component').then(m => m.ShareReceiverComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
         path: 'portfolio',
         loadComponent: () => import('@app/universe/portfolio/portfolio-lookup.component').then(m => m.PortfolioLookupComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        // The local first multi address workspace: the visitor's own list,
+        // labels, and groups, with exact aggregates and named failures.
+        path: 'portfolio/workspace',
+        loadComponent: () => import('@app/universe/portfolio/workspace/workspace.component').then(m => m.PortfolioWorkspaceComponent),
         data: { networks: ['bitcoin'] },
       },
       {
@@ -168,6 +268,56 @@ const routes: Routes = [
       {
         path: 'tools/calculator',
         component: CalculatorComponent
+      },
+      // Reads a partially signed transaction field by field, in the browser.
+      // It makes no request and cannot sign, which is what lets it be handed
+      // a file somebody is about to put a key to.
+      // What the node behind this explorer is, and the read only methods it
+      // will answer. The catalog comes from the server rather than being
+      // repeated here, so the page cannot claim a method the server refuses.
+      {
+        path: 'node',
+        loadComponent: () => import('@app/universe/node-console/node-overview.component').then(m => m.NodeOverviewComponent),
+        data: { networkSpecific: true, networks: ['bitcoin'] },
+      },
+      {
+        path: 'node/rpc',
+        loadComponent: () => import('@app/universe/node-console/node-rpc.component').then(m => m.NodeRpcComponent),
+        data: { networkSpecific: true, networks: ['bitcoin'] },
+      },
+      // What a transaction's shape gives away. Both entry points run every
+      // rule in the browser; the raw hex one makes no request at all, which
+      // is what makes it usable for a transaction not yet broadcast.
+      {
+        path: 'labs/privacy',
+        loadComponent: () => import('@app/universe/labs/privacy/privacy-lab.component').then(m => m.PrivacyLabComponent),
+        data: { networkSpecific: true, networks: ['bitcoin'] },
+      },
+      {
+        path: 'labs/privacy/:txid',
+        loadComponent: () => import('@app/universe/labs/privacy/privacy-lab.component').then(m => m.PrivacyLabComponent),
+        data: { networkSpecific: true, networks: ['bitcoin'] },
+      },
+      // Asks the node what it would do with a package. It lives under tools
+      // rather than under mempool because it is about a package somebody
+      // holds, not about one the mempool already has.
+      {
+        path: 'tools/package',
+        loadComponent: () => import('@app/universe/mempool-intelligence/package-simulator.component').then(m => m.PackageSimulatorComponent),
+        data: { networkSpecific: true, networks: ['bitcoin'] },
+      },
+      {
+        path: 'tools/psbt',
+        loadComponent: () => import('@app/universe/workbench/psbt-workbench.component').then(m => m.PsbtWorkbenchComponent),
+        data: { networks: ['bitcoin', 'liquid'] },
+      },
+      // The raw transaction analyser has lived at /tx/preview since before
+      // there was a tools section. It is the same page under both addresses
+      // rather than a second copy, so the two cannot drift apart.
+      {
+        path: 'tools/transaction',
+        redirectTo: 'tx/preview',
+        pathMatch: 'full',
       }
     ],
   }
@@ -231,6 +381,8 @@ export class MasterPageRoutingModule { }
     MasterPageRoutingModule,
     SharedModule,
     ChainSyncNoticeComponent,
+    ConnectivityBannerComponent,
+    CommandPaletteComponent,
   ],
   declarations: [
     MasterPageComponent,

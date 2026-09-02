@@ -1,0 +1,39 @@
+<div class="page">
+  <h1 class="title" i18n="universe.mining.reorgs.page">Reorgs</h1>
+
+  <ng-container *ngIf="staleTips$ | async as tips">
+
+    <div class="error" *ngIf="tips === null" role="alert" i18n="universe.mining.reorgs.unavailable">
+      The chain tips source did not answer. Rather than an empty list that
+      could be misread, this page says so.
+    </div>
+
+    <ng-container *ngIf="tips !== null">
+      <table class="table" *ngIf="tips.length">
+        <caption class="visually-hidden" i18n="universe.mining.reorgs.caption">Displacements this node observed</caption>
+        <thead>
+          <tr>
+            <th scope="col" i18n="universe.mining.reorgs.col-stale">Stale block</th>
+            <th scope="col" i18n="universe.mining.reorgs.col-replacement">Displaced by</th>
+            <th scope="col" i18n="universe.mining.reorgs.col-height">Height</th>
+            <th scope="col" i18n="universe.mining.reorgs.col-when">Displaced at</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let tip of tips">
+            <td><code>{{ tip.staleId }}</code></td>
+            <td><code>{{ tip.displacedById }}</code></td>
+            <td>{{ tip.staleHeight | number }}</td>
+            <td>{{ tip.displacedAt === null ? '' : (tip.displacedAt | date:'yyyy-MM-dd HH:mm:ss') }} UTC</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="quiet" *ngIf="!tips.length" role="status" i18n="universe.mining.reorgs.quiet">
+        This node has observed no stale tips in its current window. That is
+        what one witness sees; it is not a statement about the chain's whole
+        history.
+      </div>
+    </ng-container>
+  </ng-container>
+</div>

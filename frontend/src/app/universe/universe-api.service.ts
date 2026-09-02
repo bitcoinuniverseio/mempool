@@ -27,6 +27,18 @@ import {
   RecentBlocksView,
   UniverseSearchResponse,
 } from '@app/universe/universe.types';
+import {
+  BumpPlan,
+  ClusterListResponse,
+  ClusterResponse,
+  DiagramResponse,
+  PackageSimulation,
+} from '@app/universe/mempool-intelligence/mempool-intelligence.types';
+import {
+  NodeOverview,
+  RpcCatalog,
+  RpcResult,
+} from '@app/universe/node-console/node-console.types';
 
 /** Server-side batch ceilings. Callers must not exceed them. */
 export const UNIVERSE_OUTPOINT_BATCH_LIMIT = 50;
@@ -314,6 +326,92 @@ export class UniverseApiService {
       : '&offset=' + offset;
     return this.httpClient.get<ChainExplorerPayload>(
       this.apiBaseUrl + '/api/v1/' + chain + '/protocols/' + path + '/' + encodeURIComponent(reference) + '/' + section + '?network=mainnet&limit=' + limit + paging
+    );
+  }
+
+
+  /**
+   * Clusters in this node mempool, highest fee rate first.
+   *
+   * The response carries the age of the snapshot it was built from, so a
+   * caller renders how old the answer is rather than implying it is live.
+   */
+  getMempoolClusters$(offset = 0, limit = 50, minTxCount = 1): Observable<ClusterListResponse> {
+    return this.httpClient.get<ClusterListResponse>(
+      this.apiBaseUrl + '/api/v1/mempool/clusters?offset=' + offset + '&limit=' + limit
+        + '&minTxCount=' + minTxCount
+    );
+  }
+
+  /** One cluster in full, addressed by its id or by any member txid. */
+  getMempoolCluster$(reference: string): Observable<ClusterResponse> {
+    return this.httpClient.get<ClusterResponse>(
+      this.apiBaseUrl + '/api/v1/mempool/clusters/' + encodeURIComponent(reference)
+    );
+  }
+
+  /** The mempool wide fee rate diagram, with the naive curve beside it. */
+  getMempoolFeerateDiagram$(): Observable<DiagramResponse> {
+    return this.httpClient.get<DiagramResponse>(
+      this.apiBaseUrl + '/api/v1/mempool/feerate-diagram'
+    );
+  }
+
+  /** The package around one unconfirmed transaction. */
+  getMempoolPackage$(txid: string): Observable<ClusterResponse> {
+    return this.httpClient.get<ClusterResponse>(
+      this.apiBaseUrl + '/api/v1/mempool/packages/' + encodeURIComponent(txid)
+    );
+  }
+
+  /**
+   * Asks the node what it would do with a package, without sending it.
+   *
+   * The answer depends on the mempool at this instant, so it is cached on
+   * neither side. A cached verdict on a replacement is a verdict about a
+   * conflict that may already be gone.
+   */
+  simulatePackage$(rawTxs: string[]): Observable<PackageSimulation> {
+    return this.httpClient.post<PackageSimulation>(
+      this.apiBaseUrl + '/api/v1/mempool/simulate',
+      { rawTxs },
+    );
+  }
+
+  /**
+   * What it would cost to make an unconfirmed transaction confirm sooner.
+   *
+   * The target rate is required by the server rather than defaulted, so a
+   * plan is always a plan for a rate the caller actually asked for.
+   */
+  getBumpPlan$(txid: string, targetFeerate: number): Observable<BumpPlan> {
+    return this.httpClient.get<BumpPlan>(
+      this.apiBaseUrl + '/api/v1/mempool/bump/' + encodeURIComponent(txid)
+        + '?targetFeerate=' + encodeURIComponent(String(targetFeerate)),
+    );
+  }
+
+  /** What this node is, section by section, each with its own state. */
+  getNodeOverview$(): Observable<NodeOverview> {
+    return this.httpClient.get<NodeOverview>(this.apiBaseUrl + '/api/v1/node/overview');
+  }
+
+  /** The only node methods the console will call. */
+  getRpcCatalog$(): Observable<RpcCatalog> {
+    return this.httpClient.get<RpcCatalog>(this.apiBaseUrl + '/api/v1/node/rpc/catalog');
+  }
+
+  /**
+   * Calls one allowlisted node method.
+   *
+   * The method name goes in the body rather than the path, so no part of a
+   * URL is ever interpolated into a call, and the server matches it against
+   * its allowlist before anything else happens.
+   */
+  callNodeRpc$(method: string, args: unknown[]): Observable<RpcResult> {
+    return this.httpClient.post<RpcResult>(
+      this.apiBaseUrl + '/api/v1/node/rpc',
+      { method, args },
     );
   }
 
