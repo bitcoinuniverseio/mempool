@@ -22,6 +22,7 @@ you actually have.
 | How are reorgs and checkpoints handled? | [`data/CHECKPOINTS-AND-REORGS.md`](data/CHECKPOINTS-AND-REORGS.md) |
 | Which protocols can actually be read? | [`protocols/PROTOCOL-COVERAGE.md`](protocols/PROTOCOL-COVERAGE.md) |
 | What does the address portfolio surface do? | [`product/ADDRESS-PORTFOLIO.md`](product/ADDRESS-PORTFOLIO.md) |
+| What can the command center resolve, and what will it refuse to do? | [`product/COMMAND-CENTER.md`](product/COMMAND-CENTER.md) |
 
 ## I want to understand the design
 
