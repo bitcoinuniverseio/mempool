@@ -1,0 +1,100 @@
+<ng-container *ngIf="result$ | async as result">
+
+  <div class="page">
+    <h1 class="title" i18n="universe.provenance.title">Provenance of a transaction</h1>
+    <p class="txid"><code>{{ result.txid }}</code></p>
+
+    <div class="unavailable" *ngIf="result.state === 'invalid'" role="alert">
+      <ng-container i18n="universe.provenance.invalid">
+        That is not a transaction id. A transaction id is 64 hexadecimal
+        characters.
+      </ng-container>
+    </div>
+
+    <div class="unavailable" *ngIf="result.state === 'unavailable'" role="alert">
+      <ng-container i18n="universe.provenance.unavailable">
+        The chain did not answer for this transaction. Nothing is shown
+        rather than something wrong.
+      </ng-container>
+    </div>
+
+    <ng-container *ngIf="layout$ | async as layout">
+
+      <div class="toolbar">
+        <button type="button" class="tool" (click)="download(result.graph, 'json')" i18n="universe.provenance.export-json">Export JSON</button>
+        <button type="button" class="tool" (click)="download(result.graph, 'csv')" i18n="universe.provenance.export-csv">Export edge list CSV</button>
+      </div>
+
+      <figure class="drawing" role="group" i18n-aria-label="universe.provenance.drawing-label" aria-label="Transaction provenance diagram. The same facts are in the table below.">
+        <svg [attr.viewBox]="'0 0 ' + layout.width + ' ' + layout.height" [attr.width]="layout.width" [attr.height]="layout.height" focusable="false">
+          <g class="edges">
+            <g *ngFor="let edge of layout.edges" class="edge" [ngClass]="edgeClass(edge.kind)">
+              <title>{{ edgeWord(edge.kind) }}</title>
+              <line [attr.x1]="edge.x1" [attr.y1]="edge.y1" [attr.x2]="edge.x2" [attr.y2]="edge.y2" />
+            </g>
+          </g>
+          <g *ngFor="let node of layout.nodes" class="node" [ngClass]="'node-' + node.kind" tabindex="0" role="link" [attr.aria-label]="nodeLabel(node.state, node.label, node.valueSat)" (click)="open(node.path)" (keydown.enter)="open(node.path)">
+            <title>{{ node.state }}: {{ node.label }}</title>
+            <rect [attr.x]="node.x" [attr.y]="node.y" width="90" height="40" rx="6" />
+            <text [attr.x]="node.x + 45" [attr.y]="node.y + 18" text-anchor="middle">{{ node.label }}</text>
+            <text class="state" [attr.x]="node.x + 45" [attr.y]="node.y + 32" text-anchor="middle">{{ node.state }}</text>
+          </g>
+        </svg>
+        <figcaption class="legend">
+          <span class="legend-item"><span class="swatch prevout"></span> <ng-container i18n="universe.provenance.legend-prevout">prevout</ng-container></span>
+          <span class="legend-item"><span class="swatch transaction"></span> <ng-container i18n="universe.provenance.legend-tx">transaction</ng-container></span>
+          <span class="legend-item"><span class="swatch output"></span> <ng-container i18n="universe.provenance.legend-output">output</ng-container></span>
+          <span class="legend-item"><span class="swatch spender"></span> <ng-container i18n="universe.provenance.legend-spender">spender</ng-container></span>
+        </figcaption>
+      </figure>
+
+      <div class="notes" *ngIf="result.graph.notes.length" role="note">
+        <p *ngFor="let note of result.graph.notes">{{ note }}</p>
+      </div>
+
+      <h2 class="heading" i18n="universe.provenance.table-heading">The same facts, as a table</h2>
+      <div class="facts">
+        <table class="table">
+          <caption class="visually-hidden" i18n="universe.provenance.nodes-caption">Every object in the graph</caption>
+          <thead>
+            <tr>
+              <th scope="col" i18n="universe.provenance.col-object">Object</th>
+              <th scope="col" i18n="universe.provenance.col-kind">Kind</th>
+              <th scope="col" i18n="universe.provenance.col-state">State</th>
+              <th scope="col" i18n="universe.provenance.col-value">Value (sats)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let node of layout.nodes">
+              <td><a [href]="node.path" (click)="open(node.path); $event.preventDefault()"><code>{{ node.label }}</code></a></td>
+              <td>{{ node.kind }}</td>
+              <td>{{ node.state }}</td>
+              <td>{{ node.valueSat === null ? '' : (node.valueSat | number) }}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <table class="table">
+          <caption class="visually-hidden" i18n="universe.provenance.edges-caption">Every relationship in the graph</caption>
+          <thead>
+            <tr>
+              <th scope="col" i18n="universe.provenance.col-from">From</th>
+              <th scope="col" i18n="universe.provenance.col-to">To</th>
+              <th scope="col" i18n="universe.provenance.col-relationship">Relationship</th>
+              <th scope="col" i18n="universe.provenance.col-value">Value (sats)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let edge of layout.edges">
+              <td><code>{{ edge.from }}</code></td>
+              <td><code>{{ edge.to }}</code></td>
+              <td>{{ edgeWord(edge.kind) }}</td>
+              <td>{{ edge.valueSat === null ? '' : (edge.valueSat | number) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </ng-container>
+  </div>
+</ng-container>
