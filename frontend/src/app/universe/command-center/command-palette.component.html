@@ -1,0 +1,195 @@
+<div
+  class="scrim"
+  *ngIf="open()"
+  (click)="hide()">
+  <div
+    #dialogElement
+    class="palette"
+    role="dialog"
+    aria-modal="true"
+    i18n-aria-label="universe.command.dialog-label"
+    aria-label="Command center"
+    (click)="$event.stopPropagation()">
+
+    <div class="input-row">
+      <!-- A combobox with a listbox, per the ARIA pattern: the field owns
+           focus, the list owns selection, and aria-activedescendant carries
+           the selection to a screen reader without moving focus. -->
+      <input
+        #queryInput
+        type="text"
+        class="query"
+        role="combobox"
+        autocomplete="off"
+        spellcheck="false"
+        aria-expanded="true"
+        aria-controls="universe-command-listbox"
+        aria-autocomplete="list"
+        [attr.aria-activedescendant]="selected() !== null ? optionId(selected()) : null"
+        i18n-aria-label="universe.command.input-label"
+        aria-label="Search transactions, blocks, addresses, and protocol objects"
+        i18n-placeholder="universe.command.input-hint"
+        placeholder="Search, or type a query. Try / for this box anywhere."
+        [value]="value()"
+        (input)="onValueChange($any($event.target).value)"
+        (keydown)="onInputKey($event)" />
+
+      <button
+        type="button"
+        class="tool"
+        (click)="saveCurrent()"
+        [disabled]="!value().trim()"
+        i18n="universe.command.save">Save</button>
+      <button
+        type="button"
+        class="tool"
+        (click)="pasteFromClipboard()"
+        i18n="universe.command.paste">Paste</button>
+      <label
+        class="tool file"
+        *ngIf="qrSupported()"
+        i18n="universe.command.qr">QR image
+        <input type="file" accept="image/*" (change)="onQrImage($event)" />
+      </label>
+      <button
+        type="button"
+        class="tool"
+        (click)="setMode(mode() === 'batch' ? 'results' : 'batch')"
+        [class.active]="mode() === 'batch'"
+        i18n="universe.command.batch">Batch</button>
+      <button
+        type="button"
+        class="tool"
+        (click)="hide()"
+        i18n="universe.command.close">Close</button>
+    </div>
+
+    <div class="chips" *ngIf="parsed().applied.length" role="list" i18n-aria-label="universe.command.filters-label" aria-label="Active filters">
+      <span class="chip" role="listitem" *ngFor="let filter of parsed().applied">
+        {{ filter.raw }}
+      </span>
+      <span class="chip scope" role="listitem">
+        {{ allChains() ? 'all chains' : activeChain }}
+        <button type="button" class="scope-toggle" (click)="toggleAllChains()" i18n="universe.command.toggle-scope">switch</button>
+      </span>
+    </div>
+
+    <p class="notice" *ngIf="secretLike()" role="status">
+      <ng-container i18n="universe.command.secret">
+        This looks like private key material. Nothing was sent anywhere, and
+        no page was opened. If it is not key material, use the index fields
+        that name it instead.
+      </ng-container>
+    </p>
+
+    <p class="notice recorded" *ngIf="recordedNote() as note" role="note">{{ note }}</p>
+    <p class="notice unknown" *ngIf="unknownNote() as note" role="status">{{ note }}</p>
+    <p class="notice unknown" *ngIf="qrMessage() as note" role="status">{{ note }}</p>
+    <p class="notice unknown" *ngIf="remoteFailures().length" role="status">
+      <ng-container i18n="universe.command.failures">Some chains did not answer:</ng-container>
+      {{ remoteFailures().join(', ') }}
+    </p>
+
+    <!-- Results panel -->
+    <ul
+      id="universe-command-listbox"
+      class="results"
+      role="listbox"
+      *ngIf="mode() === 'results'">
+
+      <li class="empty" *ngIf="!flatList().length" role="status">
+        <ng-container *ngIf="value().trim(); else idle" i18n="universe.command.no-results">
+          Nothing matched. A transaction id, a block hash or height, an
+          address, an outpoint, an inscription, a rune, a sat, or a filter
+          query are all understood here.
+        </ng-container>
+        <ng-template #idle>
+          <ng-container i18n="universe.command.idle">
+            Type to search, paste a batch, or open a recent query below.
+          </ng-container>
+        </ng-template>
+      </li>
+
+      <ng-container *ngFor="let group of groups(); let groupIndex = index">
+        <li class="group-title" role="presentation">{{ group.title }}</li>
+        <li
+          *ngFor="let candidate of group.candidates; let index = index"
+          role="option"
+          class="row"
+          [class.selected]="flatIndex(groupIndex, index) === selected()"
+          [id]="optionId(flatIndex(groupIndex, index))"
+          [attr.aria-selected]="flatIndex(groupIndex, index) === selected()"
+          (mousemove)="selected.set(flatIndex(groupIndex, index))"
+          (click)="choose(candidate)">
+          <span class="kind">{{ isStored(candidate) ? '' : candidate.kind }}</span>
+          <span class="label">{{ candidate.label }}</span>
+          <span class="meta">
+            <ng-container *ngIf="candidate.chain">{{ candidate.chain }} · </ng-container>
+            <ng-container *ngIf="!isStored(candidate)">{{ sourceLabel(candidate) }}<ng-container *ngIf="candidate.exact"> · exact</ng-container></ng-container>
+          </span>
+          <button
+            type="button"
+            class="remove"
+            *ngIf="candidate.kind === 'saved'"
+            (click)="removeSavedFromList(candidate.label); $event.stopPropagation()"
+            i18n="universe.command.unsave">Remove</button>
+        </li>
+      </ng-container>
+    </ul>
+
+    <!-- Batch panel -->
+    <div class="batch" *ngIf="mode() === 'batch'">
+      <p class="batch-hint" i18n="universe.command.batch-hint">
+        One identifier per line. Up to 25 are resolved per batch, from the
+        patterns this device knows. Nothing from this box reaches a server.
+      </p>
+      <textarea
+        class="batch-input"
+        rows="6"
+        i18n-aria-label="universe.command.batch-label"
+        aria-label="Batch identifiers, one per line"
+        [value]="batchText()"
+        (input)="onBatchText($any($event.target).value)"></textarea>
+      <div class="batch-actions">
+        <button type="button" class="tool primary" (click)="runBatch()" i18n="universe.command.run-batch">Resolve batch</button>
+        <button type="button" class="tool" (click)="exportBatch('json')" [disabled]="!batchRows().length" i18n="universe.command.export-json">Export JSON</button>
+        <button type="button" class="tool" (click)="exportBatch('csv')" [disabled]="!batchRows().length" i18n="universe.command.export-csv">Export CSV</button>
+      </div>
+      <p class="notice recorded" *ngIf="batchDropped() as dropped" role="status">
+        <ng-container i18n="universe.command.batch-dropped">Lines past the limit were not resolved:</ng-container>
+        {{ dropped }}
+      </p>
+      <table class="batch-table" *ngIf="batchRows().length">
+        <caption class="visually-hidden" i18n="universe.command.batch-caption">Batch resolution results</caption>
+        <thead>
+          <tr>
+            <th scope="col" i18n="universe.command.batch-col-value">Value</th>
+            <th scope="col" i18n="universe.command.batch-col-result">Result</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of batchRows()">
+            <td class="batch-value">{{ row.value }}</td>
+            <td>
+              <ng-container *ngIf="row.note; else found">
+                {{ row.note }}
+              </ng-container>
+              <ng-template #found>
+                <span *ngFor="let candidate of row.candidates" class="batch-hit">
+                  <button type="button" class="link" (click)="choose(candidate)">
+                    {{ candidate.kind }}<ng-container *ngIf="candidate.chain"> · {{ candidate.chain }}</ng-container>
+                  </button>
+                </span>
+              </ng-template>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="footnote" i18n="universe.command.footnote">
+      Open anywhere with / or Ctrl K. Recent and saved queries stay on this
+      device and are never sent anywhere.
+    </p>
+  </div>
+</div>

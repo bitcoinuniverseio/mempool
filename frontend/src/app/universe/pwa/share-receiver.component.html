@@ -1,0 +1,33 @@
+<ng-container *ngIf="resolution$ | async as resolution">
+  <div class="share-receiver" *ngIf="resolution.state !== 'opening'">
+
+    <h1 class="title" i18n="universe.pwa.share.title">Shared item</h1>
+
+    <p class="detail" *ngIf="resolution.state === 'resolving'" i18n="universe.pwa.share.resolving">
+      Asking the chain whether this is a block or a transaction.
+    </p>
+
+    <div class="result" *ngIf="resolution.state === 'failed'" role="status">
+      <!-- A circle with a slash, so the refusal survives a monochrome screen,
+           forced colours, and every colour vision difference. -->
+      <svg class="mark" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+        <circle cx="10" cy="10" r="7.6" fill="none" stroke="currentColor" stroke-width="1.8" />
+        <line x1="4.8" y1="15.2" x2="15.2" y2="4.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+      </svg>
+      <div class="body">
+        <strong i18n="universe.pwa.share.unrecognized">Nothing here could identify it</strong>
+        <p class="detail" i18n="universe.pwa.share.unrecognized-detail">
+          The shared item arrived, but it is not a transaction, block,
+          address, outpoint, inscription, rune, sat, or page of this
+          explorer. Nothing was guessed.
+        </p>
+        <p class="received" *ngIf="resolution.value">
+          <span i18n="universe.pwa.share.received">Received:</span>
+          <code>{{ resolution.value }}</code>
+        </p>
+      </div>
+    </div>
+
+    <a class="home" routerLink="/" i18n="universe.pwa.share.home">Go to the explorer</a>
+  </div>
+</ng-container>

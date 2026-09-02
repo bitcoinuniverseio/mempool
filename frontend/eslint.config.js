@@ -35,6 +35,27 @@ export default [
     },
   },
   {
+    // The service worker runs in a worker global scope whose globals are a
+    // strict subset of the browser's. Naming them here keeps the boundary
+    // the file itself draws readable, instead of sprinkle-and-pray globals
+    // for the whole package.
+    files: ['src/universe-service-worker.js'],
+    languageOptions: {
+      globals: {
+        self: 'readonly',
+        caches: 'readonly',
+        clients: 'readonly',
+        location: 'readonly',
+        navigator: 'readonly',
+        fetch: 'readonly',
+        Request: 'readonly',
+        Response: 'readonly',
+        Headers: 'readonly',
+        URL: 'readonly',
+      },
+    },
+  },
+  {
     files: ['**/*.ts'],
     languageOptions: {
       parser: tsParser,

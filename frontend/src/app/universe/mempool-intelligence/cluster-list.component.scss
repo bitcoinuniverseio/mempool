@@ -1,0 +1,143 @@
+@use '../universe-tokens' as u;
+
+:host {
+  @include u.universe-state-tokens;
+
+  display: block;
+}
+
+.cluster-list {
+  // Block axis only. The container's own inline padding is what keeps text
+  // off the edge of a narrow screen, so it is left alone.
+  padding-block: 1.25rem 3rem;
+}
+
+.page-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+
+  h1 {
+    margin-bottom: 0.5rem;
+  }
+}
+
+.lede {
+  max-width: 56ch;
+  color: var(--u-text-muted);
+  margin-bottom: 0;
+}
+
+.freshness {
+  @include u.universe-surface;
+
+  padding: 0.75rem 1rem;
+  max-width: 34ch;
+  border-left: 4px solid var(--universe-state-neutral-border);
+
+  // The word is always present, so the state never depends on the colour.
+  &[data-tone='proven'] { border-left-color: var(--universe-state-proven-border); }
+  &[data-tone='partial'] { border-left-color: var(--universe-state-partial-border); }
+  &[data-tone='unavailable'] { border-left-color: var(--universe-state-unavailable-border); }
+}
+
+.freshness-label {
+  font-weight: 600;
+}
+
+.freshness-age {
+  color: var(--u-text-muted);
+  margin-left: 0.4rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.freshness-detail {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  color: var(--u-text-muted);
+}
+
+.error {
+  @include u.universe-surface;
+
+  padding: 0.75rem 1rem;
+  border-left: 4px solid var(--universe-state-unavailable-border);
+}
+
+.summary,
+.loading,
+.empty {
+  color: var(--u-text-muted);
+}
+
+.empty {
+  max-width: 60ch;
+}
+
+.cluster-table {
+  // A wide table on a narrow screen scrolls inside its own box rather than
+  // pushing the whole page sideways.
+  display: block;
+  overflow-x: auto;
+  white-space: nowrap;
+
+  th,
+  td {
+    vertical-align: middle;
+  }
+
+  .numeric {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .unit {
+    color: var(--u-text-muted);
+    font-size: 0.8em;
+    margin-left: 0.25rem;
+  }
+}
+
+.paging {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+
+  button {
+    border: 1px solid var(--u-border);
+    background: var(--u-surface-raised);
+    color: inherit;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.explainer {
+  @include u.universe-surface;
+
+  margin-top: 2rem;
+  padding: 1rem 1.25rem;
+  max-width: 68ch;
+
+  h2 {
+    font-size: 1.1rem;
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
