@@ -18,6 +18,7 @@ import { FaucetComponent } from '@components/faucet/faucet.component';
 import { SimpleProofWidgetComponent } from '@components/simpleproof-widget/simpleproof-widget.component';
 import { SimpleProofCuboWidgetComponent } from '@components/simpleproof-widget/simpleproof-cubo-widget.component';
 import { ChainSyncNoticeComponent } from '@app/universe/chain-sync-notice/chain-sync-notice.component';
+import { ConnectivityBannerComponent } from '@app/universe/pwa/connectivity-banner.component';
 
 const browserWindow = window || {};
 // @ts-ignore
@@ -170,6 +171,20 @@ const routes: Routes = [
         data: { networks: ['bitcoin'] },
       },
       {
+        // Captured by the service worker at install, so it opens with no
+        // network at all and carries the storage controls with it.
+        path: 'offline',
+        loadComponent: () => import('@app/universe/pwa/offline-page.component').then(m => m.OfflinePageComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        // The share target the manifest names. Everything the operating
+        // system hands the explorer lands here first.
+        path: 'share',
+        loadComponent: () => import('@app/universe/pwa/share-receiver.component').then(m => m.ShareReceiverComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
         path: 'portfolio',
         loadComponent: () => import('@app/universe/portfolio/portfolio-lookup.component').then(m => m.PortfolioLookupComponent),
         data: { networks: ['bitcoin'] },
@@ -260,6 +275,7 @@ export class MasterPageRoutingModule { }
     MasterPageRoutingModule,
     SharedModule,
     ChainSyncNoticeComponent,
+    ConnectivityBannerComponent,
   ],
   declarations: [
     MasterPageComponent,
