@@ -595,3 +595,53 @@ export interface UniverseSearchResponse {
     zcash: string;
   };
 }
+
+/**
+ * One protocol's recent activity, read from that protocol's own first-party
+ * authority by the explorer backend. The authority's records travel through
+ * verbatim: quantities are the decimal strings the authority issued, and a
+ * field this build has no reading for is kept rather than dropped.
+ */
+export interface ExplorerProtocolActivityPage {
+  schemaVersion: 'universe-protocol-activity-v1';
+  protocolId: string;
+  state: 'served' | 'unconfigured' | 'unavailable' | 'unsupported';
+  authorityId: string | null;
+  feedPath: string | null;
+  source: {
+    id: string | null;
+    protocol: string | null;
+    chain: string | null;
+    network: string | null;
+    coverage: string | null;
+    cursor: string | null;
+    asOf: string | null;
+  } | null;
+  assets: Array<Record<string, unknown>>;
+  events: Array<Record<string, unknown>>;
+  invalidations: Array<Record<string, unknown>>;
+  holderSnapshots: Array<Record<string, unknown>>;
+  nextCursor: string | null;
+  hasMore: boolean;
+  checkpoint: {
+    heightAtomic: string;
+    blockHash: string;
+    observedAt: string;
+  } | null;
+  degradedReason: string | null;
+  observedAt: string;
+}
+
+export type {
+  AnimaSupply,
+  AnimaStatusDocument,
+  AnimaLoggedEvent,
+  AnimaEventsDocument,
+  AnimaEventDocument,
+  AnimaWaymark,
+  AnimaAchievement,
+  AnimaOrganism,
+  AnimaOrganismsDocument,
+  AnimaOrganismDocument,
+  AnimaOrganismHistoryDocument,
+} from './anima.types';
