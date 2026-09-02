@@ -126,7 +126,7 @@
               </ul>
               <ng-template #objectsEmpty></ng-template>
 
-              <button type="button" class="load-more" *ngIf="objects.page.hasMore"
+              <button type="button" class="load-more" *ngIf="objects.page.nextCursor"
                       (click)="loadMoreObjects(vm.protocol.id)"
                       [disabled]="objects.loadingMore">
                 <ng-container *ngIf="!objects.loadingMore" i18n="universe.detail.objects-load-more">Load more</ng-container>

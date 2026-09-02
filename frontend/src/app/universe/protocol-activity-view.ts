@@ -9,7 +9,10 @@
  * flattened into guessed columns.
  */
 
-import { ExplorerProtocolActivityPage } from './universe.types';
+import {
+  ExplorerProtocolActivityPage,
+  ExplorerProtocolObjectsPage,
+} from './universe.types';
 
 export interface ProtocolActivityRow {
   /** Stable identity for tracking; null when the record carries none. */
