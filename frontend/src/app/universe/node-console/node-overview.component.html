@@ -1,0 +1,250 @@
+<div class="container-xl node-console">
+  <header class="page-head">
+    <h1 i18n="node.overview.heading">This node</h1>
+    <p class="lede" i18n="node.overview.lede">
+      What the node behind this explorer is running, how far it has got, and
+      the policy it applies. Read only, and no peer address appears anywhere:
+      that is this node's topology rather than a fact about Bitcoin.
+    </p>
+    <nav class="crumbs">
+      <a routerLink="/node/rpc" i18n="node.overview.to-rpc">Ask it something</a>
+    </nav>
+  </header>
+
+  <p class="error" role="alert" *ngIf="error">{{ error }}</p>
+  <p class="loading" role="status" *ngIf="loading && !overview" i18n="node.overview.loading">
+    Asking the node about itself…
+  </p>
+
+  <ng-container *ngIf="overview as node">
+    <p class="headline" *ngIf="health as line" [attr.data-health]="line.health" role="status">
+      {{ line.text }}
+    </p>
+
+    <p class="answered" *ngIf="answered.ready < answered.total" i18n="node.overview.partial">
+      {{ answered.ready }} of {{ answered.total }} sections answered. The rest
+      say below why they did not, rather than showing nothing.
+    </p>
+
+    <section class="identity" *ngIf="node.network as network">
+      <h2 i18n="node.overview.identity-heading">What it is</h2>
+      <p class="section-down" *ngIf="network.state !== 'ready'">{{ network.reason }}</p>
+      <dl class="facts" *ngIf="network.data as info">
+        <div>
+          <dt i18n="node.overview.fact-client">Client</dt>
+          <dd><code>{{ info.subversion }}</code></dd>
+        </div>
+        <div>
+          <dt i18n="node.overview.fact-version">Version</dt>
+          <dd>{{ info.version }}</dd>
+        </div>
+        <div>
+          <dt i18n="node.overview.fact-protocol">Protocol</dt>
+          <dd>{{ info.protocolVersion }}</dd>
+        </div>
+        <div>
+          <dt i18n="node.overview.fact-reachable">Reachable networks</dt>
+          <dd>
+            <span *ngIf="info.reachable.length">{{ info.reachable.join(', ') }}</span>
+            <span *ngIf="!info.reachable.length" class="unnamed" i18n="node.overview.none-reachable">none</span>
+          </dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="chain" *ngIf="node.chain as chainSection">
+      <h2 i18n="node.overview.chain-heading">Where it has got to</h2>
+      <p class="section-down" *ngIf="chainSection.state !== 'ready'">{{ chainSection.reason }}</p>
+      <dl class="facts" *ngIf="chainSection.data as info">
+        <div>
+          <dt i18n="node.overview.fact-chain">Chain</dt>
+          <dd>{{ info.chain }}</dd>
+        </div>
+        <div>
+          <dt i18n="node.overview.fact-blocks">Validated to</dt>
+          <dd>{{ info.blocks }}</dd>
+        </div>
+        <div>
+          <dt i18n="node.overview.fact-headers">Headers seen</dt>
+          <dd>
+            {{ info.headers }}
+            <span class="note" *ngIf="info.blocksBehindHeaders > 0" i18n="node.overview.behind-note">
+              {{ info.blocksBehindHeaders }} ahead of what it has checked
+            </span>
+          </dd>
+        </div>
+        <div>
+          <dt i18n="node.overview.fact-verified">Verified</dt>
+          <dd>{{ ratio(info.verificationProgress) }}</dd>
+        </div>
+        <div>
+          <dt i18n="node.overview.fact-storage">On disk</dt>
+          <dd>
+            {{ size(info.sizeOnDiskBytes) }}
+            <span class="note" *ngIf="info.pruned" i18n="node.overview.pruned">
+              pruned, so it does not hold every historic block
+            </span>
+          </dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="indexes" *ngIf="node.indexes as indexSection">
+      <h2 i18n="node.overview.indexes-heading">What it indexes</h2>
+      <p class="section-down" *ngIf="indexSection.state !== 'ready'">{{ indexSection.reason }}</p>
+      <ng-container *ngIf="indexSection.data as indexes">
+        <p *ngIf="!indexes.length" class="unnamed" i18n="node.overview.no-indexes">
+          It keeps no optional index. Anything that needs one is served from
+          elsewhere in this deployment.
+        </p>
+        <table class="table table-sm record-table" *ngIf="indexes.length">
+          <caption class="sr-only" i18n="node.overview.indexes-caption">
+            Each optional index this node keeps and how far it has got.
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col" i18n="node.overview.col-index">Index</th>
+              <th scope="col" i18n="node.overview.col-state">State</th>
+              <th scope="col" class="numeric" i18n="node.overview.col-height">Height</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let index of indexes; trackBy: trackByName" [attr.data-synced]="index.synced">
+              <th scope="row"><code>{{ index.name }}</code></th>
+              <td>
+                <ng-container *ngIf="index.synced" i18n="node.overview.index-synced">caught up</ng-container>
+                <ng-container *ngIf="!index.synced" i18n="node.overview.index-behind">still building</ng-container>
+              </td>
+              <td class="numeric">{{ index.bestBlockHeight }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </ng-container>
+    </section>
+
+    <section class="policy" *ngIf="node.mempool as mempoolSection">
+      <h2 i18n="node.overview.policy-heading">What it will accept</h2>
+      <p class="section-down" *ngIf="mempoolSection.state !== 'ready'">{{ mempoolSection.reason }}</p>
+      <ng-container *ngIf="mempoolSection.data as info">
+        <ul class="policy-lines">
+          <li *ngFor="let line of policy; trackBy: trackByIndex">{{ line }}</li>
+        </ul>
+        <dl class="facts">
+          <div>
+            <dt i18n="node.overview.fact-mempool-count">Transactions held</dt>
+            <dd>{{ info.transactionCount }}</dd>
+          </div>
+          <div>
+            <dt i18n="node.overview.fact-mempool-usage">Memory in use</dt>
+            <dd>
+              {{ size(info.usageBytes) }}
+              <span class="note" *ngIf="fullness !== null" i18n="node.overview.of-limit">
+                {{ ratio(fullness) }} of the {{ size(info.maxMempoolBytes) }} limit
+              </span>
+            </dd>
+          </div>
+        </dl>
+      </ng-container>
+    </section>
+
+    <section class="peers" *ngIf="node.peers as peerSection">
+      <h2 i18n="node.overview.peers-heading">How it is connected</h2>
+      <p class="section-down" *ngIf="peerSection.state !== 'ready'">{{ peerSection.reason }}</p>
+      <ng-container *ngIf="peerSection.data as info">
+        <p class="warning" *ngIf="balance?.noOutbound" role="alert" i18n="node.overview.no-outbound">
+          This node has no outbound connections. Whatever its inbound count
+          says, it is isolated from the network it believes it is on.
+        </p>
+        <dl class="facts">
+          <div>
+            <dt i18n="node.overview.fact-peers">Peers</dt>
+            <dd>{{ info.total }}</dd>
+          </div>
+          <div>
+            <dt i18n="node.overview.fact-out">Outbound</dt>
+            <dd>{{ balance?.outbound }}</dd>
+          </div>
+          <div>
+            <dt i18n="node.overview.fact-in">Inbound</dt>
+            <dd>
+              {{ balance?.inbound }}
+              <span class="note" *ngIf="balance && !balance.acceptsInbound" i18n="node.overview.no-inbound">
+                nothing has connected in, which is normal for a node behind a tunnel
+              </span>
+            </dd>
+          </div>
+          <div>
+            <dt i18n="node.overview.fact-oldest">Oldest connection</dt>
+            <dd>{{ ago(info.oldestConnectionSeconds) }}</dd>
+          </div>
+        </dl>
+
+        <table class="table table-sm record-table" *ngIf="info.byNetwork.length">
+          <caption class="sr-only" i18n="node.overview.networks-caption">
+            Peers by network, with how many connect in, out, and relay transactions.
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col" i18n="node.overview.col-network">Network</th>
+              <th scope="col" class="numeric" i18n="node.overview.col-out">Out</th>
+              <th scope="col" class="numeric" i18n="node.overview.col-in">In</th>
+              <th scope="col" class="numeric" i18n="node.overview.col-relaying">Relaying</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let entry of info.byNetwork; trackBy: trackByNetwork">
+              <th scope="row">{{ entry.network }}</th>
+              <td class="numeric">{{ entry.outbound }}</td>
+              <td class="numeric">{{ entry.inbound }}</td>
+              <td class="numeric">{{ entry.relaying }}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <table class="table table-sm record-table" *ngIf="info.versions.length">
+          <caption class="sr-only" i18n="node.overview.versions-caption">
+            The client versions this node is connected to, and how many of each.
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col" i18n="node.overview.col-client">Peer client</th>
+              <th scope="col" class="numeric" i18n="node.overview.col-count">Count</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let entry of info.versions; trackBy: trackBySubversion">
+              <th scope="row"><code>{{ entry.subversion }}</code></th>
+              <td class="numeric">{{ entry.count }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </ng-container>
+    </section>
+
+    <p class="observed" i18n="node.overview.observed">
+      Observed at {{ node.observedAt }}. This page reloads every 15 seconds.
+    </p>
+  </ng-container>
+
+  <section class="boundary">
+    <h2 i18n="node.overview.boundary-heading">What this page will not show</h2>
+    <ul>
+      <li i18n="node.overview.boundary-peers">
+        No peer address, on any network. That is this node's topology, and
+        publishing it hands an attacker the list of peers to go after.
+      </li>
+      <li i18n="node.overview.boundary-local">
+        None of the node's own addresses. On a host behind a tunnel those are
+        exactly what the tunnel exists to keep private.
+      </li>
+      <li i18n="node.overview.boundary-process">
+        Nothing about the process running the node: no log path, no
+        configuration, no credential, no filesystem layout.
+      </li>
+      <li i18n="node.overview.boundary-control">
+        Nothing that could change the node. There is no control here to find,
+        because the server has no route that would accept one.
+      </li>
+    </ul>
+  </section>
+</div>

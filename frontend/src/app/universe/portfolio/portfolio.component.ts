@@ -10,11 +10,16 @@ import {
   PortfolioHistoryPoint,
   PortfolioHolding,
   PortfolioPnlReport,
+  PortfolioDistributionBucket,
   PortfolioProtocolStatement,
   PortfolioRealization,
   PortfolioSourceState,
   PortfolioSummary,
 } from '@app/universe/portfolio/portfolio.types';
+import {
+  buildCalendarGrid,
+  type CalendarGrid,
+} from '@app/universe/portfolio/portfolio-calendar';
 import {
   buildChartGeometry,
   type ChartGeometry,
@@ -31,6 +36,8 @@ import {
 import { formatAtomicAmount, shortenIdentifier } from '@app/universe/universe-evidence';
 import { BookmarkButtonComponent } from '@app/universe/bookmark-button/bookmark-button.component';
 import { ExplorerChain, ExplorerNetwork } from '@app/universe/universe.types';
+import { PortfolioAlertsService } from '@app/universe/portfolio/portfolio-alerts.service';
+import { PortfolioAlert } from '@app/universe/portfolio/portfolio-alerts';
 import {
   MAXIMUM_GROUP_LENGTH,
   MAXIMUM_LABEL_LENGTH,
@@ -138,6 +145,8 @@ export class PortfolioComponent implements OnInit, OnDestroy {
   private subscriptions = new Subscription();
 
   watched = false;
+  alerts: readonly PortfolioAlert[] = [];
+  alertsEnabled = false;
   editingLabel = false;
   labelDraft = '';
   groupDraft = '';
@@ -149,6 +158,7 @@ export class PortfolioComponent implements OnInit, OnDestroy {
     private api: PortfolioApiService,
     private seo: SeoService,
     private watchlist: PortfolioWatchlistService,
+    private alertsService: PortfolioAlertsService,
     private changeDetector: ChangeDetectorRef,
   ) {}
 
@@ -163,6 +173,22 @@ export class PortfolioComponent implements OnInit, OnDestroy {
 
   get knownGroups(): readonly string[] {
     return this.watchlist.groups();
+  }
+
+  /** Turns browser notifications on, asked for by the visitor only. */
+  async enableNotifications(): Promise<void> {
+    this.alertsEnabled = await this.alertsService.requestNotifications();
+    this.changeDetector.markForCheck();
+  }
+
+  dismissAlerts(): void {
+    this.alerts = [];
+    this.alertsService.dismissAll();
+    this.changeDetector.markForCheck();
+  }
+
+  trackByAlert(index: number, alert: PortfolioAlert): string {
+    return alert.id;
   }
 
   toggleWatch(): void {
@@ -239,6 +265,17 @@ export class PortfolioComponent implements OnInit, OnDestroy {
             nextCursor: response.nextCursor,
             loadingMore: false,
           };
+          // Only a watched address is compared against its last seen
+          // state; an address somebody merely looked at once is not
+          // something to be told about later.
+          if (this.watched) {
+            this.alerts = this.alertsService.evaluate(
+              this.chain,
+              this.network,
+              this.address,
+              response.summary,
+            );
+          }
           this.changeDetector.markForCheck();
         },
         error: (error: { status?: number }) => {
@@ -357,6 +394,44 @@ export class PortfolioComponent implements OnInit, OnDestroy {
   /** True when an exact decimal string is negative. */
   isNegative(value: string | null | undefined): boolean {
     return typeof value === 'string' && value.startsWith('-');
+  }
+
+  /** The calendar grid for the loaded report, built once per report. */
+  private calendarCache: { source: unknown; grid: CalendarGrid } | null = null;
+
+  get calendarGrid(): CalendarGrid | null {
+    const days = this.pnl.report?.analytics?.calendar;
+    if (!days || days.length === 0) { return null; }
+    if (this.calendarCache?.source !== days) {
+      this.calendarCache = { source: days, grid: buildCalendarGrid(days) };
+    }
+    return this.calendarCache.grid;
+  }
+
+  /** A readable label for a return bucket, from its own bounds. */
+  bucketLabel(bucket: PortfolioDistributionBucket): string {
+    const percent = (ratio: string): string => {
+      const negative = ratio.startsWith('-');
+      const magnitude = negative ? ratio.slice(1) : ratio;
+      const [whole, fraction = ''] = magnitude.split('.');
+      const shifted = (whole + fraction.padEnd(2, '0')).replace(/^0+(?=d)/, '');
+      return `${negative ? '-' : ''}${shifted}`;
+    };
+    if (bucket.fromRatio === null && bucket.toRatio !== null) {
+      return $localize`:@@universe.portfolio.bucket-below:Worse than ${percent(bucket.toRatio)}:bound:%`;
+    }
+    if (bucket.toRatio === null && bucket.fromRatio !== null) {
+      return $localize`:@@universe.portfolio.bucket-above:Better than ${percent(bucket.fromRatio)}:bound:%`;
+    }
+    if (bucket.fromRatio === null || bucket.toRatio === null) { return bucket.id; }
+    return `${percent(bucket.fromRatio)}% to ${percent(bucket.toRatio)}%`;
+  }
+
+  /** A calendar cell class from its band, so colour is never the only cue. */
+  bandClass(band: number | null): string {
+    if (band === null) { return 'band-empty'; }
+    if (band === 0) { return 'band-flat'; }
+    return band > 0 ? `band-gain-${band}` : `band-loss-${-band}`;
   }
 
   pnlTone(value: string | null | undefined): string {

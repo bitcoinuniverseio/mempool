@@ -1,0 +1,120 @@
+<div class="container-xl feerate-diagram">
+  <header class="page-head">
+    <div>
+      <h1 i18n="mempool.diagram.heading">Fee rate diagram</h1>
+      <p class="lede" i18n="mempool.diagram.lede">
+        Cumulative size against cumulative fee, in the order a miner would
+        take this mempool. The curve only ever flattens, because each mining
+        group is worth less than the one before it.
+      </p>
+    </div>
+    <div class="freshness" *ngIf="freshness as f" [attr.data-tone]="f.tone">
+      <span class="freshness-label">{{ f.label }}</span>
+      <span class="freshness-age" *ngIf="f.ageSeconds > 0">
+        <ng-container i18n="mempool.diagram.freshness-age">built {{ f.ageSeconds }} seconds ago</ng-container>
+      </span>
+      <p class="freshness-detail">{{ f.detail }}</p>
+    </div>
+  </header>
+
+  <p class="error" role="alert" *ngIf="error">{{ error }}</p>
+
+  <p class="loading" role="status" *ngIf="loading && !response" i18n="mempool.diagram.loading">
+    Reading the fee rate diagram from this node mempool.
+  </p>
+
+  <ng-container *ngIf="response as data">
+    <p class="empty" *ngIf="!data.chunkCount" i18n="mempool.diagram.empty">
+      This node is holding no unconfirmed transactions, so there is no curve
+      to draw. That is different from the diagram being unavailable.
+    </p>
+
+    <ng-container *ngIf="data.chunkCount">
+      <figure class="chart">
+        <div class="chart-scroll">
+          <svg class="diagram" role="img" [attr.viewBox]="'0 0 ' + width + ' ' + height"
+            [attr.aria-label]="'Fee rate diagram over ' + vsize(data.totalVsize) + ' virtual bytes and ' + sats(data.totalFeeSats) + ' satoshis'">
+            <g class="axes">
+              <line [attr.x1]="36" [attr.y1]="height - 36" [attr.x2]="width - 12" [attr.y2]="height - 36" />
+              <line [attr.x1]="36" [attr.y1]="12" [attr.x2]="36" [attr.y2]="height - 36" />
+            </g>
+            <path class="curve naive" [attr.d]="naivePath" fill="none" />
+            <path class="curve real" [attr.d]="realPath" fill="none" />
+          </svg>
+        </div>
+        <figcaption>
+          <span class="key">
+            <span class="swatch real" aria-hidden="true"></span>
+            <ng-container i18n="mempool.diagram.key-real">Solid: the order a miner can build</ng-container>
+          </span>
+          <span class="key">
+            <span class="swatch naive" aria-hidden="true"></span>
+            <ng-container i18n="mempool.diagram.key-naive">Dashed: ordering by each transaction's own fee rate</ng-container>
+          </span>
+        </figcaption>
+      </figure>
+
+      <p class="reading" i18n="mempool.diagram.reading">
+        Where the dashed curve sits above the solid one, that ordering is
+        claiming fee a miner could not collect, because it takes a child
+        before the unconfirmed parent it depends on. The two meet again at the
+        end, since both order the same mempool.
+      </p>
+
+      <section class="table-section">
+        <h2 i18n="mempool.diagram.table-heading">The same curve as numbers</h2>
+        <p class="table-note" i18n="mempool.diagram.table-note">
+          Every point where one mining group ends and the next begins.
+        </p>
+        <table class="table table-sm diagram-table">
+          <caption class="sr-only" i18n="mempool.diagram.table-caption">
+            Cumulative size and fee at the end of each mining group.
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col" i18n="mempool.diagram.col-group">Group</th>
+              <th scope="col" class="numeric" i18n="mempool.diagram.col-rate">Group rate</th>
+              <th scope="col" class="numeric" i18n="mempool.diagram.col-cum-vsize">Cumulative size</th>
+              <th scope="col" class="numeric" i18n="mempool.diagram.col-cum-fee">Cumulative fee</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of rows; let i = index; trackBy: trackByIndex">
+              <th scope="row">
+                <ng-container *ngIf="row.point.chunkIndex === null" i18n="mempool.diagram.origin">Start</ng-container>
+                <ng-container *ngIf="row.point.chunkIndex !== null">{{ row.point.chunkIndex + 1 }}</ng-container>
+              </th>
+              <td class="numeric">
+                <ng-container *ngIf="row.point.feerate !== null">
+                  {{ feerate(row.point.feerate) }}
+                  <span class="unit" i18n="mempool.diagram.unit-satvb">sat/vB</span>
+                </ng-container>
+                <ng-container *ngIf="row.point.feerate === null">&mdash;</ng-container>
+              </td>
+              <td class="numeric">
+                {{ vsize(row.point.vsize) }}
+                <span class="unit" i18n="mempool.diagram.unit-vb">vB</span>
+              </td>
+              <td class="numeric">
+                {{ sats(row.point.feeSats) }}
+                <span class="unit" i18n="mempool.diagram.unit-sats">sats</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="truncated" role="status" *ngIf="rowsTruncated > 0">
+          <ng-container i18n="mempool.diagram.truncated">
+            {{ rowsTruncated }} further groups are on the curve but not in this
+            table. The chart above shows all of them.
+          </ng-container>
+        </p>
+      </section>
+    </ng-container>
+  </ng-container>
+
+  <p class="link-out">
+    <a routerLink="/mempool/clusters" i18n="mempool.diagram.clusters-link">
+      Browse the clusters this curve is built from
+    </a>
+  </p>
+</div>

@@ -1,0 +1,93 @@
+@use '../universe-tokens' as u;
+
+:host {
+  @include u.universe-state-tokens;
+
+  display: block;
+}
+
+// Each state sits on its own tinted surface with a border and a shape, the
+// same discipline the chain sync notice follows: three signals, never colour
+// alone, and never a modal interruption.
+.banner {
+  align-items: flex-start;
+  border: 1px solid var(--u-border);
+  border-radius: var(--u-radius-md);
+  color: var(--u-text-primary);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--u-space-2) var(--u-space-4);
+  line-height: var(--u-leading-snug);
+  margin: 0 var(--u-space-3) var(--u-space-3);
+  padding: var(--u-space-3) var(--u-space-4);
+}
+
+.offline {
+  background: var(--universe-state-partial-surface);
+  border-color: var(--universe-state-partial-border);
+
+  .mark { color: var(--universe-state-partial); }
+}
+
+.update {
+  background: var(--universe-state-proven-surface);
+  border-color: var(--universe-state-proven-border);
+
+  .mark { color: var(--universe-state-proven); }
+}
+
+.install {
+  background: var(--u-surface-sunken);
+
+  .mark { color: var(--u-text-secondary); }
+}
+
+.mark {
+  flex: none;
+  height: 1.25rem;
+  margin-top: 0.1rem;
+  width: 1.25rem;
+}
+
+.body {
+  flex: 1 1 16rem;
+  min-width: 0;
+}
+
+.title {
+  display: block;
+  font-size: 0.95rem;
+}
+
+.detail {
+  margin: 0.15rem 0 0;
+  font-size: 0.85rem;
+  color: var(--u-text-secondary);
+}
+
+.action {
+  align-self: center;
+  background: var(--u-surface-raised);
+  border: 1px solid var(--u-border-strong);
+  border-radius: var(--u-radius-sm);
+  color: var(--u-text-primary);
+  cursor: pointer;
+  flex: none;
+  font-size: var(--u-text-sm);
+  padding: var(--u-space-1) var(--u-space-3);
+
+  &:hover {
+    border-color: var(--u-brand);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--u-focus-ring);
+    outline-offset: var(--u-focus-ring-offset, 2px);
+  }
+}
+
+@media (forced-colors: active) {
+  .banner {
+    border-color: CanvasText;
+  }
+}

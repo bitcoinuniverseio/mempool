@@ -176,6 +176,11 @@
                 "glob": "*.css",
                 "input": ".theme-build",
                 "output": "/"
+              },
+              {
+                "glob": "universe-service-worker.js",
+                "input": "src",
+                "output": "/"
               }
             ],
             "styles": [
@@ -201,6 +206,11 @@
                 {
                   "glob": "*.css",
                   "input": ".theme-build",
+                  "output": "/"
+                },
+                {
+                  "glob": "universe-service-worker.js",
+                  "input": "src",
                   "output": "/"
                 }
               ],
