@@ -22,6 +22,7 @@ you actually have.
 | How are reorgs and checkpoints handled? | [`data/CHECKPOINTS-AND-REORGS.md`](data/CHECKPOINTS-AND-REORGS.md) |
 | Which protocols can actually be read? | [`protocols/PROTOCOL-COVERAGE.md`](protocols/PROTOCOL-COVERAGE.md) |
 | What does the address portfolio surface do? | [`product/ADDRESS-PORTFOLIO.md`](product/ADDRESS-PORTFOLIO.md) |
+| What happens when the network is gone, and what is stored on this device? | [`product/OFFLINE-AND-PWA.md`](product/OFFLINE-AND-PWA.md) |
 
 ## I want to understand the design
 
