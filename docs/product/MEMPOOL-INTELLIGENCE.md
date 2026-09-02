@@ -18,6 +18,7 @@ inside them, and the fee rate curve that ordering actually produces.**
 | `/mempool/feerate-diagram` | The cumulative fee rate curve, against the curve a naive ordering would draw. |
 | `/tx/:txid/package` | The package around one transaction. |
 | `/tools/package` | The package simulator. Ask the node about a package you hold, without sending it. |
+| `/tx/:txid/bump` | What it would cost to make an unconfirmed transaction confirm sooner. |
 
 ## API
 
@@ -28,6 +29,7 @@ inside them, and the fee rate curve that ordering actually produces.**
 | `GET /api/v1/mempool/feerate-diagram` | Both curves. |
 | `GET /api/v1/mempool/packages/:txid` | The package around one transaction. |
 | `POST /api/v1/mempool/simulate` | What this node would do with a package, given `{ "rawTxs": [...] }`. |
+| `GET /api/v1/mempool/bump/:txid?targetFeerate=N` | Both routes to a higher fee rate, priced. |
 
 `/api/v1/capabilities` carries a `mempoolIntelligence` entry. A deployment
 with the mempool switched off reports `disabled`; one where the routes were
@@ -101,6 +103,55 @@ dependency of this route alone.
 
 The simulator does not broadcast. Testing a package and sending one are
 different actions, and it does only the first.
+
+## The fee bump planner
+
+There are two ways to make an unconfirmed transaction confirm sooner, and
+which of them is open is not a matter of taste. `/tx/:txid/bump` prices both
+against this node's own policy and says which is cheaper, or which is closed
+and why.
+
+**Replacing it.** The price is whichever is higher of two floors: the rate you
+asked for, or everything the replacement evicts plus the relay cost of its own
+size at the node's incremental rate. When the second floor is the binding one
+the page says so, because asking for a lower rate would then not make it any
+cheaper. A replacement always costs something even when the transaction
+already pays the target, since it still has to beat the fee it removes.
+
+The route is closed when no input signalled for replacement and this node does
+not accept unsignalled ones. Both values are read from the node rather than
+assumed: an incremental relay fee that is wrong makes every figure wrong by
+exactly the amount that matters, and guessing the replacement setting would
+open a route the node would refuse or close one it would take. On a node old
+enough not to have the setting at all, its absence is read as off, because
+that is what it meant on those releases.
+
+**Attaching a child.** The price is what a child has to pay to lift the whole
+unconfirmed group to the rate you asked for. The group is the transaction,
+everything unconfirmed above it, and the child, because that is the set a
+miner takes at one rate.
+
+The child's size is worked out from the script it would spend, and only for
+the four types where the type settles the spend. For a bare script hash, a
+multisig or a raw pubkey it does not: the spend depends on a script the node
+has not been shown, and a plausible size for it would be a number with nothing
+behind it. That route is reported as closed with that reason rather than
+priced on a guess. It is also closed when every output is already spent in the
+mempool, and when the output a child would spend is worth less than the fee
+that child would owe.
+
+**Warnings** are facts, not advice. An output pushed below the dust line, a
+child left with dust, and the transactions a replacement takes with it are
+each stated with the number that makes them true. Nothing here says what to do
+about them, because that depends on a wallet this page cannot see.
+
+**Every output is listed for an asset check.** This process reads the base
+chain only, so it cannot say which outputs carry an inscription, a rune or
+anything else. Naming a subset would imply it can, so it names all of them and
+links each to its outpoint page.
+
+The planner builds nothing and signs nothing. It produces the numbers a wallet
+needs and stops.
 
 ## Freshness
 

@@ -159,6 +159,15 @@ const routes: Routes = [
         loadComponent: () => import('@app/universe/mempool-intelligence/feerate-diagram.component').then(m => m.FeerateDiagramComponent),
         data: { networkSpecific: true, networks: ['bitcoin'] },
       },
+      // Prices both routes to a higher fee rate. The target lives in the
+      // query string so a plan can be linked to, and the page picks no rate
+      // of its own, because the right one depends on how soon somebody needs
+      // the transaction and nothing here knows that.
+      {
+        path: 'tx/:txid/bump',
+        loadComponent: () => import('@app/universe/mempool-intelligence/bump.component').then(m => m.BumpComponent),
+        data: { networkSpecific: true, networks: ['bitcoin'] },
+      },
       {
         path: 'tx/:txid/package',
         loadComponent: () => import('@app/universe/mempool-intelligence/cluster-detail.component').then(m => m.ClusterDetailComponent),

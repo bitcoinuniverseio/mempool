@@ -161,3 +161,47 @@ export interface PackageSimulation {
   readonly connected: boolean;
   readonly cyclic: boolean;
 }
+
+// The shape `GET /api/v1/mempool/bump/:txid?targetFeerate=N` answers with.
+//
+// Each route has an `available` flag and a reason when it is false. A route
+// that is closed is closed for a stated reason, never by rendering a zero.
+
+export interface RbfPlan {
+  readonly available: boolean;
+  readonly unavailableReason: string | null;
+  readonly requiredFeeSats: number;
+  readonly additionalFeeSats: number;
+  readonly resultingFeerate: number;
+  readonly evictedTxids: string[];
+  readonly evictedFeeSats: number;
+  /** True when the replacement rules, not the target rate, set the price. */
+  readonly boundByReplacementRules: boolean;
+  readonly largestOutputSats: number | null;
+  readonly outputAfterBumpSats: number | null;
+  readonly outputWouldBecomeDust: boolean;
+}
+
+export interface CpfpPlan {
+  readonly available: boolean;
+  readonly unavailableReason: string | null;
+  readonly spendOutputIndex: number | null;
+  readonly spendValueSats: number | null;
+  readonly childVsize: number | null;
+  readonly requiredChildFeeSats: number;
+  readonly changeSats: number | null;
+  readonly changeIsDust: boolean;
+  readonly resultingPackageFeerate: number;
+}
+
+export interface BumpPlan {
+  readonly txid: string;
+  readonly currentFeeSats: number;
+  readonly currentFeerate: number;
+  readonly targetFeerate: number;
+  readonly rbf: RbfPlan;
+  readonly cpfp: CpfpPlan;
+  readonly alreadyAtTarget: boolean;
+  /** Every output, because this process reads the base chain only. */
+  readonly outputsToCheckForAssets: number[];
+}
