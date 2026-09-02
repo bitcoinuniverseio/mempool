@@ -104,6 +104,16 @@ const ALLOWLIST = [
     owner: 'Universe Explorer chain surfaces',
   },
   {
+    paths: ['frontend/src/app/components/transactions-list/transactions-list.component.scss'],
+    values: ['#ffffff'],
+    reason:
+      'The accelerate chip keeps the semantic --u-brand-contrast token, but its ' +
+      'legacy first paint can precede that new token. The literal is only the exact ' +
+      'light-token fallback and is measured against both chip fills by ' +
+      'check-palettes.mjs.',
+    owner: 'Universe Explorer frontend',
+  },
+  {
     paths: ['scripts/universe/'],
     reason:
       'The gates and the visual QA harness. These exist to measure colour, so they ' +
@@ -205,7 +215,8 @@ for (const target of targets) {
         const text = (lines[line - 1] || '').trim();
         // A commented-out rule is not a rule.
         if (/^(\/\/|\*|\/\*|<!--)/.test(text)) continue;
-        if (allowance) {
+        const allowedValue = match[1].toLowerCase();
+        if (allowance && (!allowance.values || allowance.values.includes(allowedValue))) {
           allowed.set(allowance, (allowed.get(allowance) || 0) + 1);
         } else {
           findings.push({ file: relativePath.split(sep).join('/'), line, value: match[1], text: text.slice(0, 110) });

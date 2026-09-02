@@ -1,0 +1,202 @@
+<div class="container-xl bump">
+  <header class="page-head">
+    <nav class="crumbs" aria-label="Breadcrumb" i18n-aria-label="mempool.bump.crumbs-label">
+      <a [routerLink]="['/tx', txid]" i18n="mempool.bump.back-tx">This transaction</a>
+      <a [routerLink]="['/tx', txid, 'package']" i18n="mempool.bump.back-package">Its package</a>
+    </nav>
+    <h1 i18n="mempool.bump.heading">Fee bump planner</h1>
+    <p class="lede" i18n="mempool.bump.lede">
+      What it would cost to make
+      <code>{{ short(txid) }}</code>
+      confirm sooner, both ways, priced against this node's own policy.
+    </p>
+  </header>
+
+  <form class="entry" (ngSubmit)="submitTyped()" novalidate>
+    <fieldset>
+      <legend i18n="mempool.bump.target-legend">Fee rate to aim for</legend>
+      <div class="presets">
+        <button type="button" class="btn btn-sm" *ngFor="let preset of presets"
+          [class.chosen]="target === preset"
+          [attr.aria-pressed]="target === preset"
+          (click)="choose(preset)">
+          {{ preset }} <span class="unit">sat/vB</span>
+        </button>
+      </div>
+      <div class="typed">
+        <label for="bump-target" i18n="mempool.bump.target-label">Or a rate of your own</label>
+        <input id="bump-target" name="target" type="text" inputmode="decimal"
+          autocomplete="off" [(ngModel)]="targetInput"
+          aria-describedby="bump-target-help">
+        <button type="submit" class="btn btn-primary btn-sm" i18n="mempool.bump.plan">Plan it</button>
+      </div>
+      <p id="bump-target-help" class="field-help" i18n="mempool.bump.target-help">
+        In satoshis per virtual byte, from 1 to {{ maxTarget }}. The rate is
+        part of the address, so a plan can be linked to.
+      </p>
+    </fieldset>
+  </form>
+
+  <p class="error" role="alert" *ngIf="error">{{ error }}</p>
+
+  <p class="prompt" *ngIf="target === null && !error" i18n="mempool.bump.choose-first">
+    Choose a rate above. This page does not pick one for you, because the
+    right rate depends on how soon you need the transaction and nothing here
+    knows that.
+  </p>
+
+  <p class="loading" *ngIf="loading" role="status" i18n="mempool.bump.loading">
+    Working out both routes…
+  </p>
+
+  <ng-container *ngIf="plan as p">
+    <p class="headline" *ngIf="recommendation as advice"
+      [attr.data-actionable]="advice.actionable" role="status">
+      {{ advice.text }}
+    </p>
+
+    <section class="now">
+      <h2 i18n="mempool.bump.now-heading">Where it stands</h2>
+      <dl class="facts">
+        <div>
+          <dt i18n="mempool.bump.fact-fee">Fee now</dt>
+          <dd>{{ sats(p.currentFeeSats) }} <span class="unit">sat</span></dd>
+        </div>
+        <div>
+          <dt i18n="mempool.bump.fact-rate">Rate now</dt>
+          <dd>{{ rate(p.currentFeerate) }} <span class="unit">sat/vB</span></dd>
+        </div>
+        <div>
+          <dt i18n="mempool.bump.fact-target">Rate asked for</dt>
+          <dd>{{ rate(p.targetFeerate) }} <span class="unit">sat/vB</span></dd>
+        </div>
+      </dl>
+    </section>
+
+    <ul class="warnings" *ngIf="warnings.length">
+      <li *ngFor="let warning of warnings; trackBy: trackByIndex">{{ warning }}</li>
+    </ul>
+
+    <div class="routes">
+      <section class="route" [attr.data-open]="p.rbf.available">
+        <h2 i18n="mempool.bump.rbf-heading">Replace it</h2>
+        <p class="route-state" *ngIf="!p.rbf.available">{{ p.rbf.unavailableReason }}</p>
+
+        <ng-container *ngIf="p.rbf.available">
+          <dl class="facts">
+            <div>
+              <dt i18n="mempool.bump.rbf-extra">Extra fee needed</dt>
+              <dd class="figure">{{ sats(p.rbf.additionalFeeSats) }} <span class="unit">sat</span></dd>
+            </div>
+            <div>
+              <dt i18n="mempool.bump.rbf-total">Total fee it must pay</dt>
+              <dd>{{ sats(p.rbf.requiredFeeSats) }} <span class="unit">sat</span></dd>
+            </div>
+            <div>
+              <dt i18n="mempool.bump.rbf-rate">Rate it would reach</dt>
+              <dd>{{ rate(p.rbf.resultingFeerate) }} <span class="unit">sat/vB</span></dd>
+            </div>
+            <div *ngIf="p.rbf.largestOutputSats !== null">
+              <dt i18n="mempool.bump.rbf-output">Largest output afterwards</dt>
+              <dd>
+                {{ sats(p.rbf.outputAfterBumpSats) }} <span class="unit">sat</span>
+                <span class="note" i18n="mempool.bump.rbf-output-from">
+                  from {{ sats(p.rbf.largestOutputSats) }}
+                </span>
+              </dd>
+            </div>
+          </dl>
+
+          <div class="evicted" *ngIf="p.rbf.evictedTxids.length">
+            <h3 i18n="mempool.bump.evicted-heading">What it removes</h3>
+            <ul>
+              <li *ngFor="let evicted of p.rbf.evictedTxids; trackBy: trackByIndex">
+                <a [routerLink]="['/tx', evicted]"><code>{{ short(evicted) }}</code></a>
+              </li>
+            </ul>
+            <p class="field-help" i18n="mempool.bump.evicted-note">
+              Together they pay {{ sats(p.rbf.evictedFeeSats) }} satoshis, and
+              a replacement has to beat that whatever rate you asked for.
+            </p>
+          </div>
+        </ng-container>
+      </section>
+
+      <section class="route" [attr.data-open]="p.cpfp.available">
+        <h2 i18n="mempool.bump.cpfp-heading">Attach a child</h2>
+        <p class="route-state" *ngIf="!p.cpfp.available">{{ p.cpfp.unavailableReason }}</p>
+
+        <ng-container *ngIf="p.cpfp.available">
+          <dl class="facts">
+            <div>
+              <dt i18n="mempool.bump.cpfp-fee">Fee the child must pay</dt>
+              <dd class="figure">{{ sats(p.cpfp.requiredChildFeeSats) }} <span class="unit">sat</span></dd>
+            </div>
+            <div>
+              <dt i18n="mempool.bump.cpfp-output">Output it would spend</dt>
+              <dd>
+                <a [routerLink]="['/tx', txid]">
+                  <code>{{ short(txid) }}:{{ p.cpfp.spendOutputIndex }}</code>
+                </a>
+                <span class="note">{{ sats(p.cpfp.spendValueSats) }} <ng-container i18n="mempool.bump.unit-sat">sat</ng-container></span>
+              </dd>
+            </div>
+            <div>
+              <dt i18n="mempool.bump.cpfp-size">Size assumed for the child</dt>
+              <dd>
+                {{ vsize(p.cpfp.childVsize) }} <span class="unit">vB</span>
+                <span class="note" i18n="mempool.bump.cpfp-size-note">
+                  one input, one output, sized from the script it spends
+                </span>
+              </dd>
+            </div>
+            <div>
+              <dt i18n="mempool.bump.cpfp-change">Left for the child to pay out</dt>
+              <dd>{{ sats(p.cpfp.changeSats) }} <span class="unit">sat</span></dd>
+            </div>
+            <div>
+              <dt i18n="mempool.bump.cpfp-rate">Rate the group would reach</dt>
+              <dd>{{ rate(p.cpfp.resultingPackageFeerate) }} <span class="unit">sat/vB</span></dd>
+            </div>
+          </dl>
+        </ng-container>
+      </section>
+    </div>
+
+    <section class="assets">
+      <h2 i18n="mempool.bump.assets-heading">Check the outputs before spending them</h2>
+      <p i18n="mempool.bump.assets-note">
+        This page reads the base chain only, so it cannot say which of these
+        outputs carry an inscription, a rune, or any other protocol asset.
+        That is why it lists all of them rather than a chosen few. Spending or
+        replacing an output that carries something can destroy it.
+      </p>
+      <ul class="outpoints">
+        <li *ngFor="let index of p.outputsToCheckForAssets; trackBy: trackByIndex">
+          <a [routerLink]="['/outpoint', txid, index]">
+            <code>{{ short(txid) }}:{{ index }}</code>
+          </a>
+        </li>
+      </ul>
+    </section>
+
+    <section class="boundary">
+      <h2 i18n="mempool.bump.boundary-heading">What this page will not do</h2>
+      <ul>
+        <li i18n="mempool.bump.boundary-build">
+          It does not build a transaction. It produces the numbers a wallet
+          needs and stops there.
+        </li>
+        <li i18n="mempool.bump.boundary-sign">It cannot sign. No key reaches this page.</li>
+        <li i18n="mempool.bump.boundary-promise">
+          It does not promise confirmation. A rate is a bid, and a block is
+          whatever a miner chooses to build.
+        </li>
+        <li i18n="mempool.bump.boundary-node">
+          Every figure is against this node's own policy, read from it rather
+          than assumed. Another node may hold a different one.
+        </li>
+      </ul>
+    </section>
+  </ng-container>
+</div>

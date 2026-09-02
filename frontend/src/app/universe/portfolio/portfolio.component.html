@@ -110,6 +110,27 @@
     <ng-container *ngSwitchCase="'ready'">
       <ng-container *ngIf="state.summary as summary">
 
+    <section class="alerts-panel" *ngIf="alerts.length > 0" aria-labelledby="portfolio-alerts-heading" role="status">
+      <h2 id="portfolio-alerts-heading" i18n="universe.portfolio.alerts-heading">Since you last looked</h2>
+      <ul class="alert-list">
+        <li *ngFor="let alert of alerts; trackBy: trackByAlert" [ngClass]="'alert-' + alert.kind">
+          <span class="alert-title">{{ alert.title }}</span>
+          <span class="alert-detail">{{ alert.detail }}</span>
+        </li>
+      </ul>
+      <div class="alert-actions">
+        <button type="button" class="link-button" (click)="dismissAlerts()" i18n="universe.portfolio.alerts-dismiss">Dismiss</button>
+        <button type="button" class="link-button" *ngIf="!alertsEnabled" (click)="enableNotifications()" i18n="universe.portfolio.alerts-notify">
+          Also notify me in the browser
+        </button>
+      </div>
+      <p class="alert-privacy" i18n="universe.portfolio.alerts-privacy">
+        Alerts are worked out in this browser by comparing what you last saw
+        with what the sources say now. Nothing is sent anywhere, and a source
+        that stops answering is never reported as assets leaving.
+      </p>
+    </section>
+
         <section class="panel summary-panel" aria-labelledby="portfolio-summary-heading">
           <h2 id="portfolio-summary-heading" class="visually-hidden" i18n="universe.portfolio.summary-heading">Portfolio summary</h2>
 
@@ -593,6 +614,99 @@
                   </table>
                 </div>
 
+                <ng-container *ngIf="report.analytics as analytics">
+                  <h3 class="subsection" i18n="universe.portfolio.pnl-record-title">The record behind the figures</h3>
+                  <div class="summary-grid">
+                    <div class="summary-cell">
+                      <span class="summary-label" i18n="universe.portfolio.pnl-win-rate">Win rate</span>
+                      <span class="summary-value numeric">
+                        <ng-container *ngIf="analytics.winRate !== null; else noPopulation">{{ analytics.winRate }}%</ng-container>
+                      </span>
+                      <span class="summary-footnote" *ngIf="analytics.winRate !== null" i18n="universe.portfolio.pnl-win-rate-note">
+                        {{ analytics.winningCount }} up, {{ analytics.losingCount }} down, {{ analytics.breakEvenCount }} level
+                      </span>
+                    </div>
+                    <div class="summary-cell">
+                      <span class="summary-label" i18n="universe.portfolio.pnl-average-winner">Average win</span>
+                      <span class="summary-value numeric tone-good">
+                        <ng-container *ngIf="analytics.averageWinner !== null; else noPopulation">{{ analytics.averageWinner }}</ng-container>
+                      </span>
+                    </div>
+                    <div class="summary-cell">
+                      <span class="summary-label" i18n="universe.portfolio.pnl-average-loser">Average loss</span>
+                      <span class="summary-value numeric tone-bad">
+                        <ng-container *ngIf="analytics.averageLoser !== null; else noPopulation">{{ analytics.averageLoser }}</ng-container>
+                      </span>
+                    </div>
+                    <div class="summary-cell">
+                      <span class="summary-label" i18n="universe.portfolio.pnl-holding-period">Held on average</span>
+                      <span class="summary-value numeric">
+                        <ng-container *ngIf="analytics.averageRemainingHoldingDays !== null; else noPopulation">
+                          {{ analytics.averageRemainingHoldingDays }}<span class="unit" i18n="universe.portfolio.days-unit"> days</span>
+                        </ng-container>
+                      </span>
+                      <span class="summary-footnote" *ngIf="analytics.undatedLotCount > 0" i18n="universe.portfolio.pnl-undated-lots">
+                        {{ analytics.undatedLotCount }} lots carry no time and are not counted here
+                      </span>
+                    </div>
+                  </div>
+
+                  <h3 class="subsection" i18n="universe.portfolio.pnl-distribution-title">How the disposals turned out</h3>
+                  <p class="empty" *ngIf="analytics.knownRealizationCount === 0" i18n="universe.portfolio.pnl-no-population">
+                    No disposal has a known cost, so there is nothing to distribute.
+                  </p>
+                  <div class="table-scroll" *ngIf="analytics.knownRealizationCount > 0">
+                    <table class="holdings-table">
+                      <caption class="visually-hidden" i18n="universe.portfolio.pnl-distribution-caption">Disposals grouped by how much they returned against their cost</caption>
+                      <thead>
+                        <tr>
+                          <th scope="col" i18n="universe.portfolio.column-return">Return</th>
+                          <th scope="col" class="numeric" i18n="universe.portfolio.column-disposals">Disposals</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr *ngFor="let bucket of analytics.distribution">
+                          <td>{{ bucketLabel(bucket) }}</td>
+                          <td class="numeric">{{ bucket.count }}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <h3 class="subsection" i18n="universe.portfolio.pnl-calendar-title">Day by day</h3>
+                  <p class="empty" *ngIf="!calendarGrid" i18n="universe.portfolio.pnl-no-calendar">
+                    No disposal carries a date, so there is no calendar to draw.
+                  </p>
+                  <ng-container *ngIf="calendarGrid as calendar">
+                    <p class="lede" i18n="universe.portfolio.pnl-calendar-range">
+                      {{ calendar.firstDate }} to {{ calendar.lastDate }}, {{ calendar.activeDayCount }} days with a disposal.
+                    </p>
+                    <div class="table-scroll">
+                      <table class="calendar-grid">
+                        <caption class="visually-hidden" i18n="universe.portfolio.pnl-calendar-caption">Realized profit and loss for each day, arranged by week</caption>
+                        <thead>
+                          <tr>
+                            <th scope="col" *ngFor="let weekday of calendar.weekdays">{{ weekday }}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr *ngFor="let week of calendar.weeks">
+                            <td *ngFor="let cell of week.cells" [ngClass]="bandClass(cell.band)">
+                              <ng-container *ngIf="cell.date">
+                                <span class="cell-date">{{ cell.date | slice:8 }}</span>
+                                <span class="cell-value numeric" *ngIf="cell.realized !== null">{{ cell.realized }}</span>
+                                <span class="visually-hidden" *ngIf="cell.realized !== null">
+                                  {{ cell.date }}: {{ cell.realized }} from {{ cell.realizationCount }} disposals
+                                </span>
+                              </ng-container>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </ng-container>
+                </ng-container>
+
                 <h3 class="subsection" i18n="universe.portfolio.pnl-lots-title">What is still held, and what it cost</h3>
                 <div class="table-scroll" *ngIf="report.lots?.length">
                   <table class="holdings-table">
@@ -680,6 +794,9 @@
     <span class="muted" i18n="universe.portfolio.quantity-unknown">not stated</span>
   </ng-template>
   <ng-template #dash><span class="muted">-</span></ng-template>
+  <ng-template #noPopulation>
+    <span class="muted" i18n="universe.portfolio.no-population">not yet</span>
+  </ng-template>
   <ng-template #noPrice>
     <span class="muted" i18n="universe.portfolio.no-current-price">no current price</span>
   </ng-template>

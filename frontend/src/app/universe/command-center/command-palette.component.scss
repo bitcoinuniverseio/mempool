@@ -1,0 +1,323 @@
+@use '../universe-tokens' as u;
+
+:host {
+  display: contents;
+}
+
+.scrim {
+  align-items: flex-start;
+  background: var(--u-surface-overlay);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  position: fixed;
+  z-index: 1060;
+}
+
+.palette {
+  background: var(--u-surface-raised);
+  border: 1px solid var(--u-border-strong);
+  border-radius: var(--u-radius-md);
+  display: flex;
+  flex-direction: column;
+  margin-top: 8vh;
+  max-height: 80vh;
+  max-width: 44rem;
+  outline: none;
+  overflow: hidden;
+  width: calc(100% - 2 * var(--u-space-4));
+}
+
+.input-row {
+  align-items: center;
+  border-bottom: 1px solid var(--u-border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--u-space-2);
+  padding: var(--u-space-3) var(--u-space-4);
+}
+
+.query {
+  background: var(--u-surface-page);
+  border: 1px solid var(--u-border);
+  border-radius: var(--u-radius-sm);
+  color: var(--u-text-primary);
+  flex: 1 1 14rem;
+  font-size: var(--u-text-md);
+  min-width: 0;
+  padding: var(--u-space-2) var(--u-space-3);
+
+  &:focus-visible {
+    outline: 2px solid var(--u-focus-ring);
+    outline-offset: var(--u-focus-ring-offset, 2px);
+  }
+}
+
+.tool {
+  background: var(--u-surface-raised);
+  border: 1px solid var(--u-border);
+  border-radius: var(--u-radius-sm);
+  color: var(--u-text-primary);
+  cursor: pointer;
+  flex: none;
+  font-size: var(--u-text-sm);
+  padding: var(--u-space-1) var(--u-space-2);
+
+  &.primary {
+    border-color: var(--u-brand);
+  }
+
+  &.active {
+    background: var(--u-surface-selected);
+    border-color: var(--u-brand);
+  }
+
+  &:disabled {
+    color: var(--u-text-faint);
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--u-focus-ring);
+    outline-offset: var(--u-focus-ring-offset, 2px);
+  }
+
+  &.file {
+    align-items: center;
+    display: inline-flex;
+    position: relative;
+
+    input[type='file'] {
+      cursor: pointer;
+      inset: 0;
+      opacity: 0;
+      position: absolute;
+    }
+  }
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--u-space-2);
+  padding: var(--u-space-2) var(--u-space-4) 0;
+}
+
+.chip {
+  background: var(--u-surface-inset);
+  border: 1px solid var(--u-border);
+  border-radius: var(--u-radius-pill);
+  color: var(--u-text-secondary);
+  font-size: var(--u-text-xs);
+  padding: 0.1em 0.6em;
+}
+
+.scope-toggle {
+  background: none;
+  border: none;
+  color: var(--u-brand);
+  cursor: pointer;
+  font-size: inherit;
+  padding: 0;
+
+  &:focus-visible {
+    outline: 2px solid var(--u-focus-ring);
+    outline-offset: 2px;
+  }
+}
+
+.notice {
+  color: var(--u-text-secondary);
+  font-size: var(--u-text-sm);
+  margin: var(--u-space-2) var(--u-space-4) 0;
+}
+
+.notice.unknown {
+  color: var(--u-state-unavailable);
+}
+
+.results {
+  list-style: none;
+  margin: 0;
+  overflow-y: auto;
+  padding: var(--u-space-2) 0 var(--u-space-3);
+}
+
+.group-title {
+  color: var(--u-text-faint);
+  font-size: var(--u-text-xs);
+  letter-spacing: 0.04em;
+  padding: var(--u-space-3) var(--u-space-4) var(--u-space-1);
+  text-transform: uppercase;
+}
+
+.empty {
+  color: var(--u-text-secondary);
+  padding: var(--u-space-4);
+}
+
+.row {
+  align-items: baseline;
+  cursor: pointer;
+  display: flex;
+  gap: var(--u-space-3);
+  padding: var(--u-space-2) var(--u-space-4);
+
+  &.selected {
+    background: var(--u-surface-selected);
+  }
+}
+
+.kind {
+  color: var(--u-text-faint);
+  flex: none;
+  font-size: var(--u-text-xs);
+  min-width: 6rem;
+}
+
+.label {
+  color: var(--u-text-primary);
+  flex: 1 1 auto;
+  font-family: var(--u-font-data);
+  font-size: var(--u-text-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meta {
+  color: var(--u-text-secondary);
+  flex: none;
+  font-size: var(--u-text-xs);
+}
+
+.remove {
+  background: none;
+  border: 1px solid var(--u-border);
+  border-radius: var(--u-radius-sm);
+  color: var(--u-text-secondary);
+  cursor: pointer;
+  flex: none;
+  font-size: var(--u-text-xs);
+  padding: 0 var(--u-space-2);
+
+  &:focus-visible {
+    outline: 2px solid var(--u-focus-ring);
+    outline-offset: 2px;
+  }
+}
+
+.batch {
+  display: flex;
+  flex-direction: column;
+  gap: var(--u-space-3);
+  overflow-y: auto;
+  padding: var(--u-space-3) var(--u-space-4) var(--u-space-4);
+}
+
+.batch-hint {
+  color: var(--u-text-secondary);
+  font-size: var(--u-text-sm);
+  margin: 0;
+}
+
+.batch-input {
+  background: var(--u-surface-page);
+  border: 1px solid var(--u-border);
+  border-radius: var(--u-radius-sm);
+  color: var(--u-text-primary);
+  font-family: var(--u-font-data);
+  font-size: var(--u-text-sm);
+  padding: var(--u-space-2) var(--u-space-3);
+  resize: vertical;
+  width: 100%;
+
+  &:focus-visible {
+    outline: 2px solid var(--u-focus-ring);
+    outline-offset: var(--u-focus-ring-offset, 2px);
+  }
+}
+
+.batch-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--u-space-2);
+}
+
+.batch-table {
+  border-collapse: collapse;
+  font-size: var(--u-text-sm);
+  width: 100%;
+
+  th,
+  td {
+    border-bottom: 1px solid var(--u-border);
+    padding: var(--u-space-2);
+    text-align: left;
+  }
+
+  th {
+    color: var(--u-text-faint);
+    font-size: var(--u-text-xs);
+    text-transform: uppercase;
+  }
+}
+
+.batch-value {
+  font-family: var(--u-font-data);
+  overflow-wrap: anywhere;
+}
+
+.batch-hit .link {
+  background: none;
+  border: none;
+  color: var(--u-brand);
+  cursor: pointer;
+  font-size: inherit;
+  padding: 0 var(--u-space-2) 0 0;
+
+  &:focus-visible {
+    outline: 2px solid var(--u-focus-ring);
+    outline-offset: 2px;
+  }
+}
+
+.footnote {
+  border-top: 1px solid var(--u-border);
+  color: var(--u-text-faint);
+  font-size: var(--u-text-xs);
+  margin: 0;
+  padding: var(--u-space-2) var(--u-space-4);
+}
+
+.visually-hidden {
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+// A phone gets a sheet: full width, anchored to the bottom, the same content.
+@media (max-width: 640px) {
+  .palette {
+    align-self: flex-end;
+    margin: 0;
+    max-height: 92vh;
+    max-width: none;
+    width: 100%;
+  }
+}
+
+@media (forced-colors: active) {
+  .palette {
+    border-color: CanvasText;
+  }
+
+  .row.selected {
+    background: SelectedItem;
+    color: SelectedItemText;
+  }
+}

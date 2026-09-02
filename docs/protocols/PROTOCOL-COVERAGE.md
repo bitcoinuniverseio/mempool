@@ -20,9 +20,9 @@ A protocol never silently disappears from this table: `PROTOCOL-ROSTER.lock`
 records every id that has been published, and the gate fails when one of them
 stops appearing.
 
-Pinned from bitcoinuniverseio/backend-apis at commit 100c0ec0ccd3fd28c3f7c89bec7cb6b5575c8d96,
+Pinned from bitcoinuniverseio/backend-apis at commit 17118a01b466596996e81a05e129994e13045864,
 manifest schema universe-explorer-protocol-manifest-v1, registry version 1.0.0,
-recorded 2026-08-30T20:52:56.287Z.
+recorded 2026-09-01T09:04:49.162Z.
 
 7 of 38 protocols are readable today; the rest are recorded here but not yet served.
 
@@ -57,7 +57,7 @@ recorded 2026-08-30T20:52:56.287Z.
 | patina | OTHER | bitcoin | index-patina | BLOCKED | unknown |
 | witness_circles | OTHER | bitcoin | index-witness-circles | BLOCKED | unknown |
 | tandem | OTHER | bitcoin | index-tandem | BLOCKED | unknown |
-| cat20 | OTHER | bitcoin | index-cat20 | BLOCKED | unknown |
+| cat20 | OTHER | fractal | index-cat20 | BLOCKED | unknown |
 | ordex | OTHER | bitcoin | index-ordinals | BLOCKED | unknown |
 | doginals | OTHER | dogecoin | ord-dogecoin | BLOCKED | unknown |
 | drc20 | OTHER | dogecoin | ord-dogecoin | BLOCKED | unknown |
