@@ -3,8 +3,15 @@ name: 'Check if servers are in sync'
 on: [workflow_dispatch]
 
 jobs:
+  route:
+    uses: bitcoinuniverseio/.github-private/.github/workflows/route.yml@develop
+    secrets: inherit
+    with:
+      plan: '{"print_backend_sha":"light"}'
+
   print-backend-sha:
-    runs-on: runs-on=${{ github.run_id }}-print_backend_sha/runner=universe-hosted/cpu=2+8/env=production
+    needs: route
+    runs-on: ${{ fromJSON(needs.route.outputs.targets).print_backend_sha }}
     name: Get block height
     steps:
       - name: Checkout

@@ -9,8 +9,15 @@ on:
         default: 'latest'
         type: string 
 jobs:
+  route:
+    uses: bitcoinuniverseio/.github-private/.github/workflows/route.yml@develop
+    secrets: inherit
+    with:
+      plan: '{"print_images_sha":"light"}'
+
   print-images-sha:
-    runs-on: runs-on=${{ github.run_id }}-print_images_sha/runner=universe-hosted/cpu=2+8/env=production
+    needs: route
+    runs-on: ${{ fromJSON(needs.route.outputs.targets).print_images_sha }}
     name: Print digest for images
     steps:
       - name: Checkout
