@@ -150,7 +150,7 @@ type RangeKey = '24h' | '7d' | '30d' | '90d' | '1y' | 'all';
       .hero {
         display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap;
         padding: 24px; border-radius: 16px;
-        background: var(--u-hero-surface, linear-gradient(160deg, rgba(196,0,89,0.05), transparent 60%));
+        background: var(--u-hero-surface, linear-gradient(160deg, rgba(128,128,128,0.05), transparent 60%));
         border: 1px solid var(--u-separator, rgba(0,0,0,0.06));
       }
       .hero-label { margin: 0 0 4px; font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--u-fg-soft, inherit); }
@@ -167,7 +167,7 @@ type RangeKey = '24h' | '7d' | '30d' | '90d' | '1y' | 'all';
         min-height: 32px; padding: 4px 10px; border: none; background: transparent;
         border-radius: 6px; font-size: 12px; cursor: pointer; color: var(--u-fg-soft, inherit);
       }
-      .range-picker button.active { background: var(--u-selected-bg, rgba(196,0,89,0.1)); color: var(--u-brand, #c40059); font-weight: 600; }
+      .range-picker button.active { background: var(--u-selected-bg, rgba(128,128,128,0.1)); color: var(--u-brand, var(--u-primary, inherit)); font-weight: 600; }
       .chart { height: 320px; }
       .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
       .panel { border: 1px solid var(--u-separator, rgba(0,0,0,0.07)); border-radius: 12px; padding: 14px 16px; }
@@ -180,7 +180,7 @@ type RangeKey = '24h' | '7d' | '30d' | '90d' | '1y' | 'all';
       .driver-value { font-variant-numeric: tabular-nums; }
       .soft { font-size: 13px; color: var(--u-fg-soft, inherit); }
       .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-      a { color: var(--u-brand, #c40059); }
+      a { color: var(--u-brand, var(--u-primary, inherit)); }
     `,
   ],
 })
@@ -274,19 +274,32 @@ export class OverviewComponent {
     const total = aggregation?.pricedTotal ?? null;
     const series: number[] = total === null ? [] : [Number(total)];
     void series;
+    const chrome = chartChrome();
+    const line = chrome.series[0];
     return {
       grid: { left: 48, right: 16, top: 16, bottom: 28 },
       tooltip: { trigger: 'axis' },
-      xAxis: { type: 'category', data: ['now'] },
-      yAxis: { type: 'value', scale: true },
+      xAxis: {
+        type: 'category',
+        data: ['now'],
+        axisLine: { lineStyle: { color: chrome.axis } },
+        axisLabel: { color: chrome.label },
+      },
+      yAxis: {
+        type: 'value',
+        scale: true,
+        axisLabel: { color: chrome.label },
+        splitLine: { lineStyle: { color: chrome.grid } },
+      },
       dataZoom: [{ type: 'inside' }],
       series: [
         {
           type: 'line',
           data: series,
           symbol: 'circle',
-          lineStyle: { width: 2, color: '#c40059' },
-          areaStyle: { opacity: 0.06, color: '#c40059' },
+          lineStyle: { width: 2, color: line },
+          areaStyle: { opacity: 0.06, color: line },
+          itemStyle: { color: line },
         },
       ],
     };

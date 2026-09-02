@@ -115,7 +115,7 @@ import { PortfolioDataStateComponent } from '../shared/data-state.component';
         border-radius: 8px; font-size: 15px; min-height: 44px;
       }
       .selector:hover { background: var(--u-surface-raised, rgba(0,0,0,0.04)); }
-      .accent { color: var(--u-brand, #c40059); }
+      .accent { color: var(--u-brand, var(--u-primary, inherit)); }
       .caret { font-size: 10px; opacity: 0.6; }
       .selector-menu {
         position: absolute; top: calc(100% + 4px); left: 0; z-index: 30;
@@ -132,7 +132,7 @@ import { PortfolioDataStateComponent } from '../shared/data-state.component';
       }
       .section-link.active {
         background: var(--u-selected-bg, rgba(196, 0, 89, 0.09));
-        color: var(--u-brand, #c40059); font-weight: 600;
+        color: var(--u-brand, var(--u-primary, inherit)); font-weight: 600;
       }
       .controls { display: flex; gap: 6px; align-items: center; }
       .control {
@@ -141,7 +141,7 @@ import { PortfolioDataStateComponent } from '../shared/data-state.component';
         font-size: 12.5px; cursor: pointer;
       }
       .control:hover:not(:disabled) { background: var(--u-surface-raised, rgba(0,0,0,0.05)); }
-      .control[aria-pressed='true'] { border-color: var(--u-brand, #c40059); color: var(--u-brand, #c40059); }
+      .control[aria-pressed='true'] { border-color: var(--u-brand, var(--u-primary, inherit)); color: var(--u-brand, var(--u-primary, inherit)); }
       .refresh-strip {
         font-size: 12px; color: var(--u-fg-soft, inherit);
         background: var(--u-partial-bg, rgba(180,120,0,0.06));
