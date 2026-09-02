@@ -210,6 +210,19 @@ const routes: Routes = [
       // Reads a partially signed transaction field by field, in the browser.
       // It makes no request and cannot sign, which is what lets it be handed
       // a file somebody is about to put a key to.
+      // What the node behind this explorer is, and the read only methods it
+      // will answer. The catalog comes from the server rather than being
+      // repeated here, so the page cannot claim a method the server refuses.
+      {
+        path: 'node',
+        loadComponent: () => import('@app/universe/node-console/node-overview.component').then(m => m.NodeOverviewComponent),
+        data: { networkSpecific: true, networks: ['bitcoin'] },
+      },
+      {
+        path: 'node/rpc',
+        loadComponent: () => import('@app/universe/node-console/node-rpc.component').then(m => m.NodeRpcComponent),
+        data: { networkSpecific: true, networks: ['bitcoin'] },
+      },
       // What a transaction's shape gives away. Both entry points run every
       // rule in the browser; the raw hex one makes no request at all, which
       // is what makes it usable for a transaction not yet broadcast.
