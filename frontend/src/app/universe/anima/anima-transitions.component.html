@@ -1,0 +1,85 @@
+<div class="container-xl anima-page">
+  <header class="page-head">
+    <div class="title-block">
+      <nav class="crumbs">
+        <a [routerLink]="['/protocols']" i18n="anima.crumb">Protocols</a>
+        <span class="divider">/</span>
+        <a [routerLink]="['/protocols', 'anima']">ANIMA</a>
+      </nav>
+      <h1 i18n="anima.transitions-title">ANIMA transitions</h1>
+      <p class="summary" i18n="anima.transitions-summary">
+        Every state transition the ANIMA protocol state machine has logged from
+        confirmed Bitcoin blocks, oldest first. The authority applies blocks
+        with undo records, so what is listed here is what its own reorg
+        handling says is on the chain.
+      </p>
+    </div>
+  </header>
+
+  <ng-container *ngIf="vm$ | async as vm">
+    <ng-container [ngSwitch]="vm.kind">
+
+      <div *ngSwitchCase="'loading'" class="panel state-panel" aria-busy="true">
+        <p class="skeleton-line"></p>
+        <p class="skeleton-line short"></p>
+      </div>
+
+      <div *ngSwitchCase="'error'" class="panel state-panel degraded">
+        <h2 i18n="anima.overlay-error-title">The explorer overlay could not be read</h2>
+        <p i18n="anima.overlay-error-body">
+          The explorer could not reach its own overlay. Nothing about the ANIMA
+          protocol is inferred from the failure.
+        </p>
+      </div>
+
+      <div *ngSwitchCase="'degraded'" class="panel state-panel degraded">
+        <h2 i18n="anima.degraded-title">The authority is not serving this page</h2>
+        <p>{{ vm.degradedReason }}</p>
+      </div>
+
+      <ng-container *ngSwitchCase="'ready'">
+        <section class="panel" aria-labelledby="anima-supply-heading" *ngIf="vm.status as status">
+          <h2 id="anima-supply-heading" i18n="anima.supply-title">Protocol state</h2>
+          <dl class="facts">
+            <dt i18n="anima.field-tip">Indexed tip</dt>
+            <dd>
+              block {{ status.status.scanner.tipHeight }}
+              <ng-container *ngIf="status.status.scanner.syncing">
+                (<span i18n="anima.scanner-syncing">catching up</span>)
+              </ng-container>
+            </dd>
+            <dt i18n="anima.field-organisms">Organisms logged</dt>
+            <dd>{{ status.loggedEventCountAtomic }} transitions</dd>
+            <dt i18n="anima.field-live">Live supply</dt>
+            <dd>{{ status.status.supply.live }}</dd>
+            <dt>
+              <a [routerLink]="['/anima', 'items']" i18n="anima.open-items">Browse organisms</a>
+            </dt>
+            <dd></dd>
+          </dl>
+        </section>
+
+        <section class="panel" aria-labelledby="anima-events-heading" *ngIf="vm.events as events">
+          <h2 id="anima-events-heading" i18n="anima.events-title">Logged transitions</h2>
+          <p class="muted" *ngIf="events.events.length === 0" i18n="anima.events-empty">
+            The authority has logged no transitions yet.
+          </p>
+          <ul class="event-list" *ngIf="events.events.length > 0">
+            <li *ngFor="let event of events.events">
+              <a class="identifier" [routerLink]="['/anima', 'event', event.eventId]">{{ event.eventId }}</a>
+              <span class="kind">{{ event.kind }}</span>
+              <a class="identifier" [routerLink]="['/tx', event.txid]">{{ shorten(event.txid, 10) }}</a>
+              <span class="height">block {{ event.height }}</span>
+            </li>
+          </ul>
+          <button type="button" class="load-more" *ngIf="vm.canLoadMore"
+                  (click)="more()" [disabled]="vm.loadingMore">
+            <ng-container *ngIf="!vm.loadingMore" i18n="anima.load-more">Load more</ng-container>
+            <ng-container *ngIf="vm.loadingMore" i18n="anima.loading">Loading…</ng-container>
+          </button>
+        </section>
+      </ng-container>
+
+    </ng-container>
+  </ng-container>
+</div>
