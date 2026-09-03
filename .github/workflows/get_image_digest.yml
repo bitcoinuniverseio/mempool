@@ -10,7 +10,7 @@ on:
         type: string 
 jobs:
   print-images-sha:
-    runs-on: [self-hosted, linux, x64, universe-linux]
+    runs-on: [self-hosted, linux, x64, universe-super]
     name: Print digest for images
     steps:
       - name: Checkout

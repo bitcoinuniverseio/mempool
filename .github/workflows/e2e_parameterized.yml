@@ -22,7 +22,7 @@ on:
 jobs:
   cache:
     name: "Cache assets for builds"
-    runs-on: [self-hosted, linux, x64, universe-linux]
+    runs-on: [self-hosted, linux, x64, universe-super]
     steps:
       - name: Determine checkout ref
         id: determine-ref
@@ -123,7 +123,7 @@ jobs:
           key: promo-video-assets-cache
 
   e2e:
-    runs-on: [self-hosted, linux, x64, universe-linux]
+    runs-on: [self-hosted, linux, x64, universe-super]
     needs: [cache]
     strategy:
       fail-fast: false
