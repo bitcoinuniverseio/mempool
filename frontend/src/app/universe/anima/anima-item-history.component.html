@@ -1,0 +1,76 @@
+<div class="container-xl anima-page">
+  <ng-container *ngIf="vm$ | async as vm">
+    <ng-container [ngSwitch]="vm.kind">
+
+      <div *ngSwitchCase="'error'" class="panel state-panel degraded">
+        <h2 i18n="anima.history-error-title">The history could not be read</h2>
+        <p i18n="anima.history-error-body">
+          The authority did not answer, so this history is not shown.
+        </p>
+      </div>
+
+      <div *ngSwitchCase="'missing'" class="panel state-panel">
+        <h1 i18n="anima.history-missing-title">No organism under that id</h1>
+        <p i18n="anima.history-missing-body">
+          The authority tracks no organism with this id, so there is no history
+          to show.
+        </p>
+        <a [routerLink]="['/anima', 'items']" i18n="anima.history-back">Back to organisms</a>
+      </div>
+
+      <ng-container *ngSwitchCase="'ready'">
+        <header class="page-head">
+          <div class="title-block">
+            <nav class="crumbs">
+              <a [routerLink]="['/anima', 'items']" i18n="anima.crumb-history">ANIMA organisms</a>
+              <span class="divider">/</span>
+              <a [routerLink]="['/anima', 'item', vm.history.organism.id]">{{ shorten(vm.history.organism.id, 16) }}</a>
+              <span class="divider">/</span>
+              <span i18n="anima.crumb-history-self">history</span>
+            </nav>
+            <h1 i18n="anima.history-title">Transition history</h1>
+          </div>
+        </header>
+
+        <section class="panel" aria-labelledby="anima-history-timeline-heading">
+          <h2 id="anima-history-timeline-heading" i18n="anima.history-timeline-title">The organism's own record</h2>
+          <dl class="facts">
+            <dt i18n="anima.history-field-created">Created</dt>
+            <dd>block {{ vm.history.organism.createdHeight }}</dd>
+            <dt i18n="anima.history-field-waymarks">Waymarks</dt>
+            <dd>{{ vm.history.organism.waymarkSeq }}</dd>
+            <dt i18n="anima.history-field-transfers">Transfers</dt>
+            <dd>{{ vm.history.organism.transferCount }}</dd>
+          </dl>
+        </section>
+
+        <section class="panel" aria-labelledby="anima-history-lineage-heading" *ngIf="vm.history.lineage as lineage">
+          <h2 id="anima-history-lineage-heading" i18n="anima.history-lineage-title">Lineage</h2>
+          <dl class="facts">
+            <dt i18n="anima.lineage-parents">Parents</dt>
+            <dd>
+              <ng-container *ngIf="lineage.parents.length; else noParents">
+                <a class="identifier" *ngFor="let parent of lineage.parents"
+                   [routerLink]="['/anima', 'item', parent]">{{ shorten(parent, 14) }}</a>
+              </ng-container>
+              <ng-template #noParents><span i18n="anima.lineage-none">none</span></ng-template>
+            </dd>
+            <dt i18n="anima.lineage-children">Children</dt>
+            <dd>
+              <ng-container *ngIf="lineage.children.length; else noChildren">
+                <a class="identifier" *ngFor="let child of lineage.children"
+                   [routerLink]="['/anima', 'item', child]">{{ shorten(child, 14) }}</a>
+              </ng-container>
+              <ng-template #noChildren><span i18n="anima.lineage-none-2">none</span></ng-template>
+            </dd>
+            <dt i18n="anima.lineage-ancestors">Ancestors</dt>
+            <dd>{{ lineage.ancestors.length }}</dd>
+            <dt i18n="anima.lineage-descendants">Descendants</dt>
+            <dd>{{ lineage.descendants.length }}</dd>
+          </dl>
+        </section>
+      </ng-container>
+
+    </ng-container>
+  </ng-container>
+</div>

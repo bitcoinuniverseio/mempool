@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, catchError, shareReplay, throwError } from 'rxjs';
+import { Observable, catchError, map, of, shareReplay, throwError } from 'rxjs';
 import { StateService } from '@app/services/state.service';
 import {
   BackendInfo,
@@ -26,6 +26,14 @@ import {
   MiningSummaryView,
   RecentBlocksView,
   UniverseSearchResponse,
+  ExplorerProtocolActivityPage,
+  ExplorerProtocolObjectsPage,
+  AnimaStatusDocument,
+  AnimaEventsDocument,
+  AnimaEventDocument,
+  AnimaOrganismsDocument,
+  AnimaOrganismDocument,
+  AnimaOrganismHistoryDocument,
 } from '@app/universe/universe.types';
 import {
   BumpPlan,
@@ -43,6 +51,61 @@ import {
 /** Server-side batch ceilings. Callers must not exceed them. */
 export const UNIVERSE_OUTPOINT_BATCH_LIMIT = 50;
 export const UNIVERSE_TRANSACTION_BATCH_LIMIT = 25;
+
+const ACTIVITY_STATES = ['served', 'unconfigured', 'unavailable', 'unsupported'];
+
+/**
+ * Guards the activity envelope before it reaches a component. A response
+ * that is not the documented document (a gateway's HTML, an array, an older
+ * release) resolves to the explicit unsupported page rather than flowing
+ * into the page as if it were feed data.
+ */
+function isActivityPage(value: unknown): value is ExplorerProtocolActivityPage {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+    && ACTIVITY_STATES.includes((value as ExplorerProtocolActivityPage).state);
+}
+
+function unsupportedActivityPage(protocolId: string): ExplorerProtocolActivityPage {
+  return {
+    schemaVersion: 'universe-protocol-activity-v1',
+    protocolId,
+    state: 'unsupported',
+    authorityId: null,
+    feedPath: null,
+    source: null,
+    assets: [],
+    events: [],
+    invalidations: [],
+    holderSnapshots: [],
+    nextCursor: null,
+    hasMore: false,
+    checkpoint: null,
+    degradedReason: null,
+    observedAt: new Date().toISOString(),
+  };
+}
+
+const OBJECTS_STATES = ['served', 'unconfigured', 'unavailable', 'unsupported'];
+
+function isObjectsPage(value: unknown): value is ExplorerProtocolObjectsPage {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+    && OBJECTS_STATES.includes((value as ExplorerProtocolObjectsPage).state);
+}
+
+function unsupportedObjectsPage(protocolId: string): ExplorerProtocolObjectsPage {
+  return {
+    schemaVersion: 'universe-protocol-objects-v1',
+    protocolId,
+    state: 'unsupported',
+    authorityId: null,
+    objectsPath: null,
+    items: [],
+    nextCursor: null,
+    checkpoint: null,
+    degradedReason: null,
+    observedAt: new Date().toISOString(),
+  };
+}
 
 /**
  * How many pending transactions each chain will return in one request.
@@ -90,6 +153,27 @@ export class UniverseApiService {
       );
     }
     return this.protocolsCache$;
+  }
+
+  /**
+   * One protocol's recent activity from its own authority. A 404 means the
+   * authority publishes no feed this explorer reads, which is a state to
+   * render, not an error, so it resolves to an explicit unsupported page.
+   */
+  getProtocolActivity$(protocolId: string, cursor?: string, limit = 25): Observable<ExplorerProtocolActivityPage> {
+    let query = '?limit=' + Math.min(Math.max(1, Math.floor(limit)), 200);
+    if (cursor) {query += '&cursor=' + encodeURIComponent(cursor);}
+    return this.httpClient.get<ExplorerProtocolActivityPage>(
+      this.apiBaseUrl + '/api/v1/universe/protocols/' + encodeURIComponent(protocolId) + '/activity' + query
+    ).pipe(
+      map((page) => isActivityPage(page) ? page : unsupportedActivityPage(protocolId)),
+      catchError((error) => {
+        if (error?.status === 404) {
+          return of(unsupportedActivityPage(protocolId));
+        }
+        return throwError(() => error);
+      }),
+    );
   }
 
   getStatus$(): Observable<StatusResponse> {
@@ -421,5 +505,73 @@ export class UniverseApiService {
       : ['zerdinals', 'zrunes', 'zrc20'];
     if (!allowed.includes(protocol)) {throw new Error('unsupported-chain-protocol');}
     return protocol;
+  }
+
+  /**
+   * One protocol's standing objects from its own authority. A 404 means the
+   * authority publishes no objects route this explorer reads; any body that
+   * is not the documented page resolves to the same explicit state instead
+   * of flowing into the page as object data.
+   */
+  getProtocolObjects$(protocolId: string, cursor?: string, limit = 25): Observable<ExplorerProtocolObjectsPage> {
+    let query = '?limit=' + Math.min(Math.max(1, Math.floor(limit)), 200);
+    if (cursor) {query += '&cursor=' + encodeURIComponent(cursor);}
+    return this.httpClient.get<ExplorerProtocolObjectsPage>(
+      this.apiBaseUrl + '/api/v1/universe/protocols/' + encodeURIComponent(protocolId) + '/objects' + query
+    ).pipe(
+      map((page) => isObjectsPage(page) ? page : unsupportedObjectsPage(protocolId)),
+      catchError((error) => {
+        if (error?.status === 404) {
+          return of(unsupportedObjectsPage(protocolId));
+        }
+        return throwError(() => error);
+      }),
+    );
+  }
+
+  /** ANIMA protocol status, scanner readiness, and exact supply. */
+  getAnimaStatus$(): Observable<AnimaStatusDocument> {
+    return this.httpClient.get<AnimaStatusDocument>(
+      this.apiBaseUrl + '/api/v1/anima/status'
+    );
+  }
+
+  /** One page of the ANIMA logged transition list. */
+  getAnimaEvents$(from = 0, limit = 50): Observable<AnimaEventsDocument> {
+    return this.httpClient.get<AnimaEventsDocument>(
+      this.apiBaseUrl + '/api/v1/anima/events?from=' + Math.max(0, Math.floor(from))
+        + '&limit=' + Math.min(Math.max(1, Math.floor(limit)), 200)
+    );
+  }
+
+  /** One ANIMA logged transition by the composite id this explorer issues. */
+  getAnimaEvent$(eventId: string): Observable<AnimaEventDocument> {
+    return this.httpClient.get<AnimaEventDocument>(
+      this.apiBaseUrl + '/api/v1/anima/events/' + encodeURIComponent(eventId)
+    );
+  }
+
+  /** One page of the ANIMA organism list. */
+  getAnimaOrganisms$(offset = 0, limit = 50, status?: string): Observable<AnimaOrganismsDocument> {
+    let query = '?offset=' + Math.max(0, Math.floor(offset))
+      + '&limit=' + Math.min(Math.max(1, Math.floor(limit)), 200);
+    if (status) {query += '&status=' + encodeURIComponent(status);}
+    return this.httpClient.get<AnimaOrganismsDocument>(
+      this.apiBaseUrl + '/api/v1/anima/organisms' + query
+    );
+  }
+
+  /** One ANIMA organism with its waymarks and achievements. */
+  getAnimaOrganism$(organismId: string): Observable<AnimaOrganismDocument> {
+    return this.httpClient.get<AnimaOrganismDocument>(
+      this.apiBaseUrl + '/api/v1/anima/organisms/' + encodeURIComponent(organismId)
+    );
+  }
+
+  /** The transition history and lineage around one ANIMA organism. */
+  getAnimaOrganismHistory$(organismId: string): Observable<AnimaOrganismHistoryDocument> {
+    return this.httpClient.get<AnimaOrganismHistoryDocument>(
+      this.apiBaseUrl + '/api/v1/anima/organisms/' + encodeURIComponent(organismId) + '/history'
+    );
   }
 }
