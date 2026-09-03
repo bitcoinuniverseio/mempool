@@ -152,8 +152,6 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 24.13.0
-          cache: "npm"
-          cache-dependency-path: ${{ matrix.module }}/frontend/package-lock.json
 
       - name: Restore cached mining pool assets
         continue-on-error: true
