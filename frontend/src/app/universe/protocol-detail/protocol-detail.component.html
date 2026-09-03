@@ -106,6 +106,78 @@
         <a [routerLink]="['/pulse']" i18n="universe.detail.open-pulse">Open the live protocol feed</a>
       </section>
 
+      <section class="panel authority-objects" aria-labelledby="detail-authority-objects-heading">
+        <h2 id="detail-authority-objects-heading" i18n="universe.detail.authority-objects-title">Objects from its authority</h2>
+        <ng-container *ngIf="objects$ | async as objects">
+          <ng-container [ngSwitch]="objects.kind">
+            <p *ngSwitchCase="'loading'" class="skeleton-line" aria-busy="true"></p>
+            <p *ngSwitchCase="'error'" class="degraded" i18n="universe.detail.authority-objects-error">
+              The explorer could not reach its own overlay to read this collection. Nothing about the
+              protocol is inferred from the failure.
+            </p>
+            <ng-container *ngSwitchCase="'loaded'">
+              <p class="activity-summary">{{ objectsSummaryLabel(objects) }}</p>
+
+              <ul class="authority-event-list" *ngIf="objects.rows.length; else objectsEmpty">
+                <li *ngFor="let row of objects.rows; trackBy: trackByObject">
+                  <span class="identifier">{{ row.id ? shorten(row.id, 18) : '' }}</span>
+                  <span class="kind" *ngIf="row.kind">{{ row.kind }}</span>
+                </li>
+              </ul>
+              <ng-template #objectsEmpty></ng-template>
+
+              <button type="button" class="load-more" *ngIf="objects.page.nextCursor"
+                      (click)="loadMoreObjects(vm.protocol.id)"
+                      [disabled]="objects.loadingMore">
+                <ng-container *ngIf="!objects.loadingMore" i18n="universe.detail.objects-load-more">Load more</ng-container>
+                <ng-container *ngIf="objects.loadingMore" i18n="universe.detail.objects-loading-more">Loading…</ng-container>
+              </button>
+            </ng-container>
+          </ng-container>
+        </ng-container>
+      </section>
+
+      <section class="panel authority-activity" aria-labelledby="detail-authority-activity-heading">
+        <h2 id="detail-authority-activity-heading" i18n="universe.detail.authority-activity-title">Recent activity from its authority</h2>
+        <ng-container *ngIf="activity$ | async as activity">
+          <ng-container [ngSwitch]="activity.kind">
+            <p *ngSwitchCase="'loading'" class="skeleton-line" aria-busy="true"></p>
+            <p *ngSwitchCase="'error'" class="degraded" i18n="universe.detail.authority-activity-error">
+              The explorer could not reach its own overlay to read this feed. Nothing about the
+              protocol is inferred from the failure.
+            </p>
+            <ng-container *ngSwitchCase="'loaded'">
+              <p class="activity-summary">{{ activitySummaryLabel(activity) }}</p>
+
+              <ul class="authority-event-list" *ngIf="activity.rows.length; else activityEmpty">
+                <li *ngFor="let row of activity.rows; trackBy: trackByRow">
+                  <span class="kind" *ngIf="row.kind">{{ row.kind }}</span>
+                  <a class="identifier" *ngIf="row.txid; else rowIdentity" [routerLink]="['/tx', row.txid]">{{ shorten(row.txid, 10) }}</a>
+                  <ng-template #rowIdentity>
+                    <span class="identifier">{{ row.id ? shorten(row.id, 16) : '' }}</span>
+                  </ng-template>
+                  <span class="height" *ngIf="row.heightAtomic">block {{ row.heightAtomic }}</span>
+                </li>
+              </ul>
+              <ng-template #activityEmpty></ng-template>
+
+              <button type="button" class="load-more" *ngIf="activity.page.hasMore"
+                      (click)="loadMoreActivity(vm.protocol.id)"
+                      [disabled]="activity.loadingMore">
+                <ng-container *ngIf="!activity.loadingMore" i18n="universe.detail.load-more">Load more</ng-container>
+                <ng-container *ngIf="activity.loadingMore" i18n="universe.detail.loading-more">Loading…</ng-container>
+              </button>
+
+              <ng-container *ngIf="activity.page.checkpoint as feedCheckpoint">
+                <p class="checkpoint" i18n="universe.detail.authority-checkpoint">
+                  Authority proven through block {{ feedCheckpoint.heightAtomic }}.
+                </p>
+              </ng-container>
+            </ng-container>
+          </ng-container>
+        </ng-container>
+      </section>
+
     </ng-container>
 
     <div *ngSwitchDefault class="panel" aria-busy="true">

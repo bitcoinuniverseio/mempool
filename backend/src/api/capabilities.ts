@@ -4,6 +4,7 @@ import logger from '../logger';
 import backendInfo from './backend-info';
 import { Common } from './common';
 import { preflightFailures, type PreflightFailure, type PreflightInput } from './capabilities.preflight';
+import { $optionalCapabilityReports } from './capabilities.optional';
 import {
   $probeAddressIndex,
   addressBackendKind,
@@ -97,6 +98,24 @@ class Capabilities {
     return this.registeredRoutes.has(feature);
   }
 
+  /**
+   * How many unconfirmed transactions this process is holding.
+   *
+   * Imported lazily because the mempool module pulls in most of the backend,
+   * and this file is also loaded by the preflight check, which runs before any
+   * of that exists. A failure here means the count is unknown, and zero is the
+   * honest thing to report for a subsystem that could not be asked.
+   */
+  private mempoolSize(): number {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const mempool = require('./mempool').default;
+      return Object.keys(mempool.getMempool() ?? {}).length;
+    } catch (e) {
+      return 0;
+    }
+  }
+
   /** True when configuration says the statistics feature should be served. */
   public statisticsEnabled(): boolean {
     return config.STATISTICS.ENABLED === true
@@ -146,6 +165,16 @@ class Capabilities {
     if (this.cached && now - this.cached.at < CACHE_TTL_MS) {
       return this.cached.value;
     }
+    let optional: Awaited<ReturnType<typeof $optionalCapabilityReports>> | Record<string, never>;
+    try {
+      optional = await $optionalCapabilityReports(
+        (feature) => this.routesRegistered(feature),
+        this.mempoolSize(),
+      );
+    } catch (e) {
+      logger.debug('Optional capability probes failed: ' + (e instanceof Error ? e.message : e));
+      optional = {};
+    }
     const value: CapabilitiesResponse = {
       schemaVersion: 'universe-explorer-capabilities-v1',
       releaseSha: backendInfo.getBackendInfo().gitCommit,
@@ -155,6 +184,10 @@ class Capabilities {
         statistics: await this.$statisticsReport(),
         mining: await this.$miningReport(),
         addressLookup: await this.$addressLookupReport(),
+        // Optional subsystems stay in the document even when a deployment
+        // does not run them, so a switched-off feature reads as switched
+        // off rather than as missing.
+        ...optional,
       },
     };
     this.cached = { at: now, value };

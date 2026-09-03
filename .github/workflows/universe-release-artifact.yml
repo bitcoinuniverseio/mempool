@@ -95,6 +95,17 @@ jobs:
           cp -a backend/dist "$stage/backend/dist"
           cp -a backend/package.json "$stage/backend/package.json"
           cp -a backend/package-lock.json "$stage/backend/package-lock.json"
+          # The lock file names a first-party dependency by path,
+          # `file:vendor/...tgz`, and the compiled gbt module is reached
+          # through a symlink into the backend directory. Without both, a
+          # release whose dependency tree changed cannot be installed at
+          # all: `npm ci` fails on the missing tarball, and the symlink
+          # dangles. The install hard-links node_modules from the running
+          # release when the lock is unchanged, which is why this went
+          # unnoticed until a release actually added a dependency, and then
+          # it had to be assembled by hand on the host.
+          cp -a backend/vendor "$stage/backend/vendor"
+          cp -a backend/rust-gbt "$stage/backend/rust-gbt"
           cp -a frontend/dist/mempool/browser "$stage/frontend/build"
           cp -a scripts/universe "$stage/scripts/universe"
           # The unit files travel with the release rather than being fetched
@@ -114,6 +125,8 @@ jobs:
           node scripts/universe/release-manifest.mjs emit --commit='${{ steps.sha.outputs.sha }}' --out="$stage/RELEASE-MANIFEST.json"
           test -f "$stage/RELEASE-MANIFEST.json"
           test -f "$stage/backend/dist/index.js"
+          test -f "$stage/backend/vendor/bitcoinuniverse-ecosystem-contracts-1.2.0.tgz"
+          test -f "$stage/backend/rust-gbt/package.json"
           test -f "$stage/frontend/build/index.html"
           test -f "$stage/scripts/universe/gateway.mjs"
           out="$PWD/mempool-$sha.tar.gz"

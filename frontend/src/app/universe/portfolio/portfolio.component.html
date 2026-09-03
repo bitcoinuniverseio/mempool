@@ -1,0 +1,804 @@
+<div class="container-xl universe-portfolio">
+
+  <header class="page-head">
+    <div class="title-row">
+      <div>
+        <h1 i18n="universe.portfolio.title">Address portfolio</h1>
+        <p class="context">
+          <span class="chain-chip">{{ chainLabel() }}</span>
+          <span class="network-chip" *ngIf="network !== 'mainnet'">{{ network }}</span>
+        </p>
+      </div>
+      <div class="head-actions">
+        <button type="button" class="watch-button" (click)="toggleWatch()" [attr.aria-pressed]="watched">
+          <ng-container *ngIf="!watched" i18n="universe.portfolio.watch">Watch</ng-container>
+          <ng-container *ngIf="watched" i18n="universe.portfolio.unwatch">Watching</ng-container>
+        </button>
+        <app-universe-bookmark-button
+          *ngIf="bookmarkable()"
+          kind="address"
+          [value]="address"
+          [chain]="bookmarkChain()"
+          [network]="bookmarkNetwork()"
+          [path]="'/portfolio/' + chain + '/' + network + '/' + address"
+          [label]="'Portfolio ' + shorten(address)"
+        ></app-universe-bookmark-button>
+      </div>
+    </div>
+
+    <p class="watch-label" *ngIf="watched && !editingLabel">
+      <span class="label-text" *ngIf="watchLabel">{{ watchLabel }}</span>
+      <span class="label-group" *ngIf="watchGroup">{{ watchGroup }}</span>
+      <button type="button" class="link-button" (click)="startEditingLabel()">
+        <ng-container *ngIf="watchLabel" i18n="universe.portfolio.edit-label">Edit name</ng-container>
+        <ng-container *ngIf="!watchLabel" i18n="universe.portfolio.add-label">Add your own name</ng-container>
+      </button>
+    </p>
+
+    <form class="label-form" *ngIf="watched && editingLabel" (ngSubmit)="saveLabel()">
+      <label for="portfolio-label-input" i18n="universe.portfolio.label-field">Your name for this address</label>
+      <input
+        id="portfolio-label-input"
+        type="text"
+        [value]="labelDraft"
+        (input)="labelDraft = $any($event.target).value"
+        [attr.maxlength]="maximumLabelLength"
+        autocomplete="off"
+      />
+      <label for="portfolio-group-input" i18n="universe.portfolio.group-field">Group</label>
+      <input
+        id="portfolio-group-input"
+        type="text"
+        list="portfolio-known-groups"
+        [value]="groupDraft"
+        (input)="groupDraft = $any($event.target).value"
+        [attr.maxlength]="maximumGroupLength"
+        autocomplete="off"
+      />
+      <datalist id="portfolio-known-groups">
+        <option *ngFor="let group of knownGroups" [value]="group"></option>
+      </datalist>
+      <div class="label-form-actions">
+        <button type="submit" class="load-more" i18n="universe.portfolio.label-save">Save</button>
+        <button type="button" class="link-button" (click)="cancelEditingLabel()" i18n="universe.portfolio.label-cancel">Cancel</button>
+      </div>
+      <p class="label-privacy" i18n="universe.portfolio.label-privacy">
+        Names and groups stay in this browser. They are never sent anywhere and
+        never appear in a shared link.
+      </p>
+    </form>
+
+    <p class="address identifier" data-testid="portfolio-address">{{ address }}</p>
+    <p class="evidence-link" *ngIf="addressPageLink() as link">
+      <a [routerLink]="link" i18n="universe.portfolio.evidence-link">Open the classic address page for raw evidence</a>
+    </p>
+  </header>
+
+  <ng-container [ngSwitch]="state.kind">
+
+    <section class="panel skeleton" *ngSwitchCase="'loading'" aria-busy="true">
+      <p i18n="universe.portfolio.loading">Asking every configured source about this address…</p>
+      <div class="skeleton-bar"></div>
+      <div class="skeleton-bar"></div>
+      <div class="skeleton-bar short"></div>
+    </section>
+
+    <section class="panel state-panel" *ngSwitchCase="'invalid'">
+      <h2 i18n="universe.portfolio.invalid-title">This is not a valid address here</h2>
+      <p i18n="universe.portfolio.invalid-lede">
+        The address does not fit {{ chainLabel() }}. If it belongs to another chain,
+        open it under that chain instead; results are never merged across chains.
+      </p>
+    </section>
+
+    <section class="panel state-panel" *ngSwitchCase="'unknown-network'">
+      <h2 i18n="universe.portfolio.unknown-network-title">This chain and network is not served</h2>
+      <p i18n="universe.portfolio.unknown-network-lede">
+        The portfolio serves the chains the Universe registry declares. Check the
+        chain and network in the link.
+      </p>
+    </section>
+
+    <section class="panel state-panel" *ngSwitchCase="'unavailable'">
+      <h2 i18n="universe.portfolio.unavailable-title">The portfolio service did not answer</h2>
+      <p i18n="universe.portfolio.unavailable-lede">
+        Nothing could be read just now. This says nothing about what the address
+        holds; try again shortly.
+      </p>
+    </section>
+
+    <ng-container *ngSwitchCase="'ready'">
+      <ng-container *ngIf="state.summary as summary">
+
+    <section class="alerts-panel" *ngIf="alerts.length > 0" aria-labelledby="portfolio-alerts-heading" role="status">
+      <h2 id="portfolio-alerts-heading" i18n="universe.portfolio.alerts-heading">Since you last looked</h2>
+      <ul class="alert-list">
+        <li *ngFor="let alert of alerts; trackBy: trackByAlert" [ngClass]="'alert-' + alert.kind">
+          <span class="alert-title">{{ alert.title }}</span>
+          <span class="alert-detail">{{ alert.detail }}</span>
+        </li>
+      </ul>
+      <div class="alert-actions">
+        <button type="button" class="link-button" (click)="dismissAlerts()" i18n="universe.portfolio.alerts-dismiss">Dismiss</button>
+        <button type="button" class="link-button" *ngIf="!alertsEnabled" (click)="enableNotifications()" i18n="universe.portfolio.alerts-notify">
+          Also notify me in the browser
+        </button>
+      </div>
+      <p class="alert-privacy" i18n="universe.portfolio.alerts-privacy">
+        Alerts are worked out in this browser by comparing what you last saw
+        with what the sources say now. Nothing is sent anywhere, and a source
+        that stops answering is never reported as assets leaving.
+      </p>
+    </section>
+
+        <section class="panel summary-panel" aria-labelledby="portfolio-summary-heading">
+          <h2 id="portfolio-summary-heading" class="visually-hidden" i18n="universe.portfolio.summary-heading">Portfolio summary</h2>
+
+          <div class="summary-grid">
+            <div class="summary-cell" *ngIf="summary.nativeBalance as native">
+              <span class="summary-label" i18n="universe.portfolio.native-balance">{{ native.ticker }} balance</span>
+              <span class="summary-value numeric">{{ quantity(native) }}</span>
+              <span class="summary-footnote" *ngIf="pendingIncoming(native) as pending" i18n="universe.portfolio.native-pending">
+                {{ pending }} pending confirmation
+              </span>
+            </div>
+            <div class="summary-cell">
+              <span class="summary-label" i18n="universe.portfolio.total-holdings">Assets</span>
+              <span class="summary-value numeric">{{ summary.totalHoldingCount }}</span>
+            </div>
+            <div class="summary-cell">
+              <span class="summary-label" i18n="universe.portfolio.token-count">Tokens</span>
+              <span class="summary-value numeric">{{ summary.fungibleCount }}</span>
+            </div>
+            <div class="summary-cell">
+              <span class="summary-label" i18n="universe.portfolio.collectible-count">Collectibles</span>
+              <span class="summary-value numeric">{{ summary.nftCount + summary.inscriptionCount }}</span>
+            </div>
+            <div class="summary-cell">
+              <span class="summary-label" i18n="universe.portfolio.protocol-count">Protocols with holdings</span>
+              <span class="summary-value numeric">{{ summary.protocolCount }}</span>
+            </div>
+            <div class="summary-cell" *ngIf="summary.valuation.state !== 'unpriced'">
+              <span class="summary-label" i18n="universe.portfolio.priced-value">Priced value ({{ summary.valuation.quoteCurrency }})</span>
+              <span class="summary-value numeric">{{ summary.valuation.pricedValue }}</span>
+              <span class="summary-footnote" *ngIf="summary.valuation.state === 'partially-priced'" i18n="universe.portfolio.priced-partial">
+                {{ summary.valuation.unpricedHoldingCount }} holdings are unpriced and excluded from this value
+              </span>
+            </div>
+          </div>
+
+          <p class="coverage-sentence" role="status">{{ coverageSentence(summary) }}</p>
+
+          <ul class="envelope-facts">
+            <li *ngIf="summary.envelope.chainTip as tip" i18n="universe.portfolio.fact-tip">
+              Read at block {{ tip.heightAtomic }}
+            </li>
+            <li i18n="universe.portfolio.fact-completed">Completed {{ summary.envelope.completedAt | date:'medium' }}</li>
+            <li *ngIf="summary.envelope.hasMore" i18n="universe.portfolio.fact-more">
+              More outputs remain to be read
+            </li>
+          </ul>
+
+          <div class="export-row">
+            <span class="export-label" i18n="universe.portfolio.export-label">Take it with you</span>
+            <a [href]="exportUrl('assets-csv')" download i18n="universe.portfolio.export-assets">Assets CSV</a>
+            <a [href]="exportUrl('activity-csv')" download i18n="universe.portfolio.export-activity">Activity CSV</a>
+            <a [href]="exportUrl('evidence-json')" download i18n="universe.portfolio.export-evidence">Evidence JSON</a>
+          </div>
+        </section>
+
+        <nav class="tab-row" aria-label="Portfolio sections" i18n-aria-label="universe.portfolio.tabs-label">
+          <a [routerLink]="[]" [queryParams]="tabLink('overview')" [class.active]="tab === 'overview'" [attr.aria-current]="tab === 'overview' ? 'page' : null" i18n="universe.portfolio.tab-overview">Overview</a>
+          <a [routerLink]="[]" [queryParams]="tabLink('tokens')" [class.active]="tab === 'tokens'" [attr.aria-current]="tab === 'tokens' ? 'page' : null" i18n="universe.portfolio.tab-tokens">Tokens</a>
+          <a [routerLink]="[]" [queryParams]="tabLink('collectibles')" [class.active]="tab === 'collectibles'" [attr.aria-current]="tab === 'collectibles' ? 'page' : null" i18n="universe.portfolio.tab-collectibles">Collectibles</a>
+          <a [routerLink]="[]" [queryParams]="tabLink('protocols')" [class.active]="tab === 'protocols'" [attr.aria-current]="tab === 'protocols' ? 'page' : null" i18n="universe.portfolio.tab-protocols">Protocols</a>
+          <a [routerLink]="[]" [queryParams]="tabLink('activity')" [class.active]="tab === 'activity'" [attr.aria-current]="tab === 'activity' ? 'page' : null" i18n="universe.portfolio.tab-activity">Activity</a>
+          <a [routerLink]="[]" [queryParams]="tabLink('performance')" [class.active]="tab === 'performance'" [attr.aria-current]="tab === 'performance' ? 'page' : null" i18n="universe.portfolio.tab-performance">Performance</a>
+          <a [routerLink]="[]" [queryParams]="tabLink('pnl')" [class.active]="tab === 'pnl'" [attr.aria-current]="tab === 'pnl' ? 'page' : null" i18n="universe.portfolio.tab-pnl">Profit and loss</a>
+          <a [routerLink]="[]" [queryParams]="tabLink('coverage')" [class.active]="tab === 'coverage'" [attr.aria-current]="tab === 'coverage' ? 'page' : null" i18n="universe.portfolio.tab-coverage">Sources</a>
+        </nav>
+
+        <!-- Overview -->
+        <ng-container *ngIf="tab === 'overview'">
+          <section class="panel" aria-labelledby="portfolio-top-heading">
+            <h2 id="portfolio-top-heading" i18n="universe.portfolio.top-title">Largest holdings</h2>
+            <p class="empty" *ngIf="holdings(summary).length === 0">{{ emptyPortfolioSentence(summary) }}</p>
+            <div class="table-scroll" *ngIf="holdings(summary).length > 0">
+              <table class="holdings-table">
+                <thead>
+                  <tr>
+                    <th scope="col" i18n="universe.portfolio.column-asset">Asset</th>
+                    <th scope="col" i18n="universe.portfolio.column-protocol">Protocol</th>
+                    <th scope="col" class="numeric" i18n="universe.portfolio.column-quantity">Quantity</th>
+                    <th scope="col" i18n="universe.portfolio.column-custody">Held in</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let holding of topHoldings(summary); trackBy: trackByHolding">
+                    <td class="asset-cell">
+                      <span class="asset-name">{{ holdingName(holding) }}</span>
+                      <span class="asset-id identifier" *ngIf="holding.identity.assetType !== 'native'">{{ shorten(holding.identity.assetId, 10) }}</span>
+                    </td>
+                    <td>{{ protocolLabel(holding.identity.protocol) }}</td>
+                    <td class="numeric">
+                      <ng-container *ngIf="quantity(holding) as amount; else unknownQuantity">{{ amount }}</ng-container>
+                    </td>
+                    <td>
+                      <a *ngIf="custodyLink(holding) as link; else custodyCountOnly" [routerLink]="link">
+                        <ng-container [ngPlural]="custodyCount(holding)">
+                          <ng-template ngPluralCase="=1"><span i18n="universe.portfolio.custody-one">1 output</span></ng-template>
+                          <ng-template ngPluralCase="other"><span i18n="universe.portfolio.custody-many">{{ custodyCount(holding) }} outputs</span></ng-template>
+                        </ng-container>
+                      </a>
+                      <ng-template #custodyCountOnly>
+                        <span *ngIf="custodyCount(holding) > 0" i18n="universe.portfolio.custody-count">{{ custodyCount(holding) }} outputs</span>
+                        <span *ngIf="custodyCount(holding) === 0" i18n="universe.portfolio.custody-ledger">Protocol ledger</span>
+                      </ng-template>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="panel" aria-labelledby="portfolio-active-protocols-heading" *ngIf="answeringStatements(summary).length > 0">
+            <h2 id="portfolio-active-protocols-heading" i18n="universe.portfolio.active-protocols-title">Protocols with holdings</h2>
+            <ul class="protocol-strip">
+              <li *ngFor="let statement of answeringStatements(summary); trackBy: trackByStatement">
+                <span class="protocol-name">{{ protocolLabel(statement.protocol) }}</span>
+                <span class="numeric">{{ statement.holdings.length }}</span>
+              </li>
+            </ul>
+          </section>
+
+          <section class="panel warnings-panel" *ngIf="summary.envelope.warnings.length > 0" aria-labelledby="portfolio-warnings-heading">
+            <h2 id="portfolio-warnings-heading" i18n="universe.portfolio.warnings-title">What could not be answered</h2>
+            <ul>
+              <li *ngFor="let warning of summary.envelope.warnings">{{ warning }}</li>
+            </ul>
+          </section>
+        </ng-container>
+
+        <!-- Tokens -->
+        <section class="panel" *ngIf="tab === 'tokens'" aria-labelledby="portfolio-tokens-heading">
+          <h2 id="portfolio-tokens-heading" i18n="universe.portfolio.tokens-title">Tokens and coins</h2>
+          <p class="empty" *ngIf="tokens(summary).length === 0">{{ emptyPortfolioSentence(summary) }}</p>
+          <div class="table-scroll" *ngIf="tokens(summary).length > 0">
+            <table class="holdings-table">
+              <thead>
+                <tr>
+                  <th scope="col" i18n="universe.portfolio.column-asset">Asset</th>
+                  <th scope="col" i18n="universe.portfolio.column-protocol">Protocol</th>
+                  <th scope="col" class="numeric" i18n="universe.portfolio.column-quantity">Quantity</th>
+                  <th scope="col" class="numeric" i18n="universe.portfolio.column-available">Available</th>
+                  <th scope="col" class="numeric" i18n="universe.portfolio.column-transferable">Transferable</th>
+                  <th scope="col" i18n="universe.portfolio.column-custody">Held in</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let holding of tokens(summary); trackBy: trackByHolding">
+                  <td class="asset-cell">
+                    <span class="asset-name">{{ holdingName(holding) }}</span>
+                    <span class="asset-id identifier" *ngIf="holding.identity.assetType !== 'native'">{{ shorten(holding.identity.assetId, 10) }}</span>
+                  </td>
+                  <td>{{ protocolLabel(holding.identity.protocol) }}</td>
+                  <td class="numeric">
+                    <ng-container *ngIf="quantity(holding) as amount; else unknownQuantity">{{ amount }}</ng-container>
+                  </td>
+                  <td class="numeric">
+                    <ng-container *ngIf="spendable(holding) as amount; else dash">{{ amount }}</ng-container>
+                  </td>
+                  <td class="numeric">
+                    <ng-container *ngIf="transferable(holding) as amount; else dash">{{ amount }}</ng-container>
+                  </td>
+                  <td>
+                    <a *ngIf="custodyLink(holding) as link; else tokenCustody" [routerLink]="link" i18n="universe.portfolio.custody-outputs">{{ custodyCount(holding) }} outputs</a>
+                    <ng-template #tokenCustody>
+                      <span *ngIf="custodyCount(holding) > 0" i18n="universe.portfolio.custody-count">{{ custodyCount(holding) }} outputs</span>
+                      <span *ngIf="custodyCount(holding) === 0" i18n="universe.portfolio.custody-ledger">Protocol ledger</span>
+                    </ng-template>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Collectibles -->
+        <section class="panel" *ngIf="tab === 'collectibles'" aria-labelledby="portfolio-collectibles-heading">
+          <h2 id="portfolio-collectibles-heading" i18n="universe.portfolio.collectibles-title">Collectibles, names, and rare sats</h2>
+          <p class="empty" *ngIf="collectibles(summary).length === 0">{{ emptyPortfolioSentence(summary) }}</p>
+          <div class="table-scroll" *ngIf="collectibles(summary).length > 0">
+            <table class="holdings-table">
+              <thead>
+                <tr>
+                  <th scope="col" i18n="universe.portfolio.column-item">Item</th>
+                  <th scope="col" i18n="universe.portfolio.column-kind">Kind</th>
+                  <th scope="col" i18n="universe.portfolio.column-protocol">Protocol</th>
+                  <th scope="col" i18n="universe.portfolio.column-custody">Held in</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let holding of collectibles(summary); trackBy: trackByHolding">
+                  <td class="asset-cell">
+                    <span class="asset-name">{{ holdingName(holding) }}</span>
+                    <span class="asset-id identifier">{{ shorten(holding.identity.assetId, 12) }}</span>
+                  </td>
+                  <td>{{ holding.identity.assetType.replace('_', ' ') }}</td>
+                  <td>{{ protocolLabel(holding.identity.protocol) }}</td>
+                  <td>
+                    <a *ngIf="custodyLink(holding) as link; else collectibleCustody" [routerLink]="link" i18n="universe.portfolio.custody-output-link">View output</a>
+                    <ng-template #collectibleCustody>
+                      <span i18n="universe.portfolio.custody-ledger">Protocol ledger</span>
+                    </ng-template>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Protocols -->
+        <section class="panel" *ngIf="tab === 'protocols'" aria-labelledby="portfolio-protocols-heading">
+          <h2 id="portfolio-protocols-heading" i18n="universe.portfolio.protocols-title">Every protocol on {{ chainLabel() }}</h2>
+          <p class="lede" i18n="universe.portfolio.protocols-lede">
+            Each protocol states what its source answered. An empty answer from a
+            source that answered in full is a real empty; anything else says so.
+          </p>
+          <ul class="statement-list">
+            <li *ngFor="let statement of protocolStatements(summary); trackBy: trackByStatement" class="statement-row">
+              <div class="statement-head">
+                <span class="protocol-name">{{ protocolLabel(statement.protocol) }}</span>
+                <span class="state-chip" [ngClass]="stateTone(statement.state)">{{ stateCopy(statement.state) }}</span>
+              </div>
+              <div class="statement-facts">
+                <span class="numeric" *ngIf="statement.holdings.length > 0" i18n="universe.portfolio.statement-holdings">{{ statement.holdings.length }} holdings</span>
+                <span *ngIf="statement.holdings.length === 0 && emptyMeansEmpty(statement.state)" i18n="universe.portfolio.statement-empty">Nothing held</span>
+                <span *ngIf="statement.checkpoint as checkpoint" i18n="universe.portfolio.statement-checkpoint">at block {{ checkpoint.heightAtomic }}</span>
+                <span *ngIf="statement.truncated" i18n="universe.portfolio.statement-truncated">more pages remain</span>
+              </div>
+              <ul class="statement-warnings" *ngIf="statement.warnings.length > 0">
+                <li *ngFor="let warning of statement.warnings">{{ warning }}</li>
+              </ul>
+            </li>
+          </ul>
+        </section>
+
+        <!-- Activity -->
+        <section class="panel" *ngIf="tab === 'activity'" aria-labelledby="portfolio-activity-heading">
+          <h2 id="portfolio-activity-heading" i18n="universe.portfolio.activity-title">Activity</h2>
+          <ng-container [ngSwitch]="activity.kind">
+            <p *ngSwitchCase="'loading'" aria-busy="true" i18n="universe.portfolio.activity-loading">Reading the transaction history…</p>
+            <p class="empty" *ngSwitchCase="'unsupported'">{{ activity.detail }}</p>
+            <p class="empty" *ngSwitchCase="'unavailable'" i18n="universe.portfolio.activity-unavailable">
+              The transaction history could not be read just now. This says nothing
+              about what happened on chain; try again shortly.
+            </p>
+            <ng-container *ngSwitchCase="'ready'">
+              <p class="empty" *ngIf="(activity.events ?? []).length === 0" i18n="universe.portfolio.activity-empty">
+                No transactions were found for this address.
+              </p>
+              <div class="table-scroll" *ngIf="(activity.events ?? []).length > 0">
+                <table class="holdings-table">
+                  <thead>
+                    <tr>
+                      <th scope="col" i18n="universe.portfolio.column-event">Event</th>
+                      <th scope="col" class="numeric" i18n="universe.portfolio.column-amount">Amount</th>
+                      <th scope="col" class="numeric" i18n="universe.portfolio.column-fee">Fee paid</th>
+                      <th scope="col" i18n="universe.portfolio.column-counterparty">Counterparty</th>
+                      <th scope="col" i18n="universe.portfolio.column-status">Status</th>
+                      <th scope="col" i18n="universe.portfolio.column-transaction">Transaction</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let event of activity.events; trackBy: trackByEvent">
+                      <td>{{ activityTypeLabel(event.type) }}</td>
+                      <td class="numeric">{{ activitySign(event) }}{{ activityAmount(event) }}</td>
+                      <td class="numeric">
+                        <ng-container *ngIf="activityFee(event) as fee; else dash">{{ fee }}</ng-container>
+                      </td>
+                      <td>
+                        <span class="identifier" *ngIf="event.counterparty; else dash">{{ shorten(event.counterparty, 10) }}</span>
+                      </td>
+                      <td>
+                        <span *ngIf="event.confirmation === 'confirmed'" i18n="universe.portfolio.activity-confirmed">Block {{ event.blockHeightAtomic }}</span>
+                        <span class="state-chip tone-warn" *ngIf="event.confirmation === 'mempool-candidate'" i18n="universe.portfolio.activity-pending">Pending</span>
+                      </td>
+                      <td><a [routerLink]="['/tx', event.txid]" class="identifier">{{ shorten(event.txid, 8) }}</a></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="load-more-row" *ngIf="activity.nextCursor">
+                <button type="button" class="load-more" (click)="loadMoreActivity()" [disabled]="activity.loadingMore">
+                  <ng-container *ngIf="!activity.loadingMore" i18n="universe.portfolio.activity-load-more">Load older activity</ng-container>
+                  <ng-container *ngIf="activity.loadingMore" i18n="universe.portfolio.activity-loading-more">Reading older activity…</ng-container>
+                </button>
+              </div>
+            </ng-container>
+          </ng-container>
+        </section>
+
+        <!-- Performance -->
+        <section class="panel" *ngIf="tab === 'performance'" aria-labelledby="portfolio-performance-heading">
+          <h2 id="portfolio-performance-heading" i18n="universe.portfolio.performance-title">Balance over time</h2>
+          <ng-container [ngSwitch]="history.kind">
+            <p *ngSwitchCase="'loading'" aria-busy="true" i18n="universe.portfolio.history-loading">Reconstructing the balance history…</p>
+            <p class="empty" *ngSwitchCase="'unsupported'">{{ history.detail }}</p>
+            <p class="empty" *ngSwitchCase="'unavailable'" i18n="universe.portfolio.history-unavailable">
+              The balance history could not be read just now. This says nothing
+              about what happened on chain; try again shortly.
+            </p>
+            <ng-container *ngSwitchCase="'ready'">
+              <p class="empty" *ngIf="(history.points ?? []).length < 2" i18n="universe.portfolio.history-too-short">
+                This address has fewer than two confirmed transactions, so there
+                is no series to draw yet. The table below lists what is known.
+              </p>
+
+              <figure class="history-chart" *ngIf="history.geometry as chart">
+                <svg
+                  *ngIf="chart.points.length >= 2"
+                  class="chart-svg"
+                  [attr.viewBox]="'0 0 ' + chart.width + ' ' + chart.height"
+                  preserveAspectRatio="none"
+                  role="img"
+                  [attr.aria-label]="'Balance history from ' + coins(chart.minBalanceAtomic) + ' to ' + coins(chart.maxBalanceAtomic) + ' across ' + chart.points.length + ' confirmed transactions'"
+                >
+                  <path class="chart-area" [attr.d]="chart.areaPath"></path>
+                  <polyline class="chart-line" [attr.points]="chart.polyline"></polyline>
+                </svg>
+                <figcaption class="chart-caption">
+                  <span i18n="universe.portfolio.chart-high">High {{ coins(chart.maxBalanceAtomic) }}</span>
+                  <span i18n="universe.portfolio.chart-low">Low {{ coins(chart.minBalanceAtomic) }}</span>
+                  <span *ngIf="history.unpricedPointCount > 0" i18n="universe.portfolio.chart-unpriced">
+                    {{ history.unpricedPointCount }} points have no price for their day and show no value
+                  </span>
+                </figcaption>
+              </figure>
+
+              <p class="coverage-sentence" role="status" *ngIf="!history.complete" i18n="universe.portfolio.history-partial">
+                This series does not reach the first transaction. The balance
+                before it was {{ coins(history.openingBalanceAtomic) }}, and
+                older history continues below.
+              </p>
+
+              <!-- The chart's own data, readable without seeing the chart. -->
+              <div class="table-scroll" *ngIf="(history.points ?? []).length > 0">
+                <table class="holdings-table">
+                  <caption class="visually-hidden" i18n="universe.portfolio.history-table-caption">Balance after each confirmed transaction</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col" class="numeric" i18n="universe.portfolio.column-block">Block</th>
+                      <th scope="col" class="numeric" i18n="universe.portfolio.column-change">Change</th>
+                      <th scope="col" class="numeric" i18n="universe.portfolio.column-balance">Balance</th>
+                      <th scope="col" class="numeric" i18n="universe.portfolio.column-value">Value (USD)</th>
+                      <th scope="col" i18n="universe.portfolio.column-transaction">Transaction</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let point of history.points; trackBy: trackByPoint">
+                      <td class="numeric">{{ point.blockHeightAtomic }}</td>
+                      <td class="numeric" [ngClass]="isNegative(point.deltaAtomic) ? 'tone-bad' : 'tone-good'">{{ coins(point.deltaAtomic) }}</td>
+                      <td class="numeric">{{ coins(point.balanceAtomic) }}</td>
+                      <td class="numeric">
+                        <ng-container *ngIf="point.value; else unpricedPoint">{{ point.value }}</ng-container>
+                        <ng-template #unpricedPoint>
+                          <span class="muted" i18n="universe.portfolio.point-unpriced">no price for this day</span>
+                        </ng-template>
+                      </td>
+                      <td><a [routerLink]="['/tx', point.txid]" class="identifier">{{ shorten(point.txid, 8) }}</a></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="load-more-row" *ngIf="history.nextCursor">
+                <button type="button" class="load-more" (click)="loadMoreHistory()" [disabled]="history.loadingMore">
+                  <ng-container *ngIf="!history.loadingMore" i18n="universe.portfolio.history-load-more">Load older history</ng-container>
+                  <ng-container *ngIf="history.loadingMore" i18n="universe.portfolio.history-loading-more">Reading older history…</ng-container>
+                </button>
+              </div>
+            </ng-container>
+          </ng-container>
+        </section>
+
+        <!-- Profit and loss -->
+        <section class="panel" *ngIf="tab === 'pnl'" aria-labelledby="portfolio-pnl-heading">
+          <h2 id="portfolio-pnl-heading" i18n="universe.portfolio.pnl-title">Profit and loss</h2>
+          <ng-container [ngSwitch]="pnl.kind">
+            <p *ngSwitchCase="'loading'" aria-busy="true" i18n="universe.portfolio.pnl-loading">Working through the acquisition history…</p>
+            <p class="empty" *ngSwitchCase="'unsupported'">{{ pnl.detail }}</p>
+            <p class="empty" *ngSwitchCase="'outside-coverage'">{{ pnl.detail }}</p>
+            <p class="empty" *ngSwitchCase="'unavailable'" i18n="universe.portfolio.pnl-unavailable">
+              The profit and loss report could not be produced just now. Try again shortly.
+            </p>
+            <ng-container *ngSwitchCase="'ready'">
+              <ng-container *ngIf="pnl.report as report">
+                <p class="lede" i18n="universe.portfolio.pnl-lede">
+                  First in, first out, from this address's first transaction.
+                  Acquisitions are valued at the price of the day they arrived;
+                  anything with no price that day is carried as unknown cost,
+                  never as zero.
+                </p>
+
+                <div class="summary-grid">
+                  <div class="summary-cell">
+                    <span class="summary-label" i18n="universe.portfolio.pnl-realized">Realized</span>
+                    <span class="summary-value numeric" [ngClass]="pnlTone(report.realizedPnl)">{{ report.realizedPnl }}</span>
+                  </div>
+                  <div class="summary-cell">
+                    <span class="summary-label" i18n="universe.portfolio.pnl-unrealized">Unrealized</span>
+                    <span class="summary-value numeric" [ngClass]="pnlTone(report.unrealizedPnl)">
+                      <ng-container *ngIf="report.unrealizedPnl !== null && report.unrealizedPnl !== undefined; else noPrice">{{ report.unrealizedPnl }}</ng-container>
+                    </span>
+                  </div>
+                  <div class="summary-cell">
+                    <span class="summary-label" i18n="universe.portfolio.pnl-total">Total</span>
+                    <span class="summary-value numeric" [ngClass]="pnlTone(report.totalPnl)">
+                      <ng-container *ngIf="report.totalPnl !== null && report.totalPnl !== undefined; else noPrice">{{ report.totalPnl }}</ng-container>
+                    </span>
+                  </div>
+                  <div class="summary-cell" *ngIf="ratioPercent(report.pnlRatio) as ratio">
+                    <span class="summary-label" i18n="universe.portfolio.pnl-ratio">Return</span>
+                    <span class="summary-value numeric" [ngClass]="pnlTone(report.pnlRatio)">{{ ratio }}%</span>
+                  </div>
+                  <div class="summary-cell">
+                    <span class="summary-label" i18n="universe.portfolio.pnl-invested">Invested</span>
+                    <span class="summary-value numeric">{{ report.invested }}</span>
+                  </div>
+                  <div class="summary-cell">
+                    <span class="summary-label" i18n="universe.portfolio.pnl-proceeds">Proceeds</span>
+                    <span class="summary-value numeric">{{ report.proceeds }}</span>
+                  </div>
+                  <div class="summary-cell">
+                    <span class="summary-label" i18n="universe.portfolio.pnl-average-cost">Average cost</span>
+                    <span class="summary-value numeric">
+                      <ng-container *ngIf="report.averageAcquisitionPrice; else noPrice">{{ report.averageAcquisitionPrice }}</ng-container>
+                    </span>
+                  </div>
+                  <div class="summary-cell">
+                    <span class="summary-label" i18n="universe.portfolio.pnl-wins">Wins and losses</span>
+                    <span class="summary-value numeric">{{ report.winningRealizations }} / {{ report.losingRealizations }}</span>
+                  </div>
+                  <div class="summary-cell">
+                    <span class="summary-label" i18n="universe.portfolio.pnl-fees">Fees paid</span>
+                    <span class="summary-value numeric">{{ coins(report.feesQuantityAtomic) }}</span>
+                    <span class="summary-footnote" i18n="universe.portfolio.pnl-fees-value">{{ report.feesValue }} USD where priced</span>
+                  </div>
+                </div>
+
+                <p class="coverage-sentence" role="status" *ngIf="report.unknownBasisQuantityAtomic !== '0'" i18n="universe.portfolio.pnl-unknown-basis">
+                  {{ coins(report.unknownBasisQuantityAtomic) }} of the remaining
+                  balance has unknown cost, so it is excluded from these figures
+                  rather than counted at zero.
+                </p>
+
+                <ul class="statement-warnings" *ngIf="report.warnings?.length">
+                  <li *ngFor="let warning of report.warnings">{{ warning }}</li>
+                </ul>
+
+                <h3 class="subsection" i18n="universe.portfolio.pnl-realizations-title">Every disposal behind the realized figure</h3>
+                <p class="empty" *ngIf="!report.realizations?.length" i18n="universe.portfolio.pnl-no-realizations">
+                  Nothing has been disposed of from this address, so no profit or
+                  loss has been realized.
+                </p>
+                <div class="table-scroll" *ngIf="report.realizations?.length">
+                  <table class="holdings-table">
+                    <thead>
+                      <tr>
+                        <th scope="col" i18n="universe.portfolio.column-event">Event</th>
+                        <th scope="col" class="numeric" i18n="universe.portfolio.column-quantity">Quantity</th>
+                        <th scope="col" class="numeric" i18n="universe.portfolio.column-proceeds">Proceeds</th>
+                        <th scope="col" class="numeric" i18n="universe.portfolio.column-cost">Cost</th>
+                        <th scope="col" class="numeric" i18n="universe.portfolio.column-realized">Realized</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let realization of report.realizations; trackBy: trackByRealization">
+                        <td class="identifier">{{ shorten(realization.eventId, 10) }}</td>
+                        <td class="numeric">{{ coins(realization.quantityAtomic) }}</td>
+                        <td class="numeric">
+                          <ng-container *ngIf="realization.proceeds; else dash">{{ realization.proceeds }}</ng-container>
+                        </td>
+                        <td class="numeric">
+                          <ng-container *ngIf="realization.costBasis; else unknownCost">{{ realization.costBasis }}</ng-container>
+                          <ng-template #unknownCost>
+                            <span class="muted" i18n="universe.portfolio.cost-unknown">unknown</span>
+                          </ng-template>
+                        </td>
+                        <td class="numeric" [ngClass]="pnlTone(realization.realized)">
+                          <ng-container *ngIf="realization.realized; else dash">{{ realization.realized }}</ng-container>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <ng-container *ngIf="report.analytics as analytics">
+                  <h3 class="subsection" i18n="universe.portfolio.pnl-record-title">The record behind the figures</h3>
+                  <div class="summary-grid">
+                    <div class="summary-cell">
+                      <span class="summary-label" i18n="universe.portfolio.pnl-win-rate">Win rate</span>
+                      <span class="summary-value numeric">
+                        <ng-container *ngIf="analytics.winRate !== null; else noPopulation">{{ analytics.winRate }}%</ng-container>
+                      </span>
+                      <span class="summary-footnote" *ngIf="analytics.winRate !== null" i18n="universe.portfolio.pnl-win-rate-note">
+                        {{ analytics.winningCount }} up, {{ analytics.losingCount }} down, {{ analytics.breakEvenCount }} level
+                      </span>
+                    </div>
+                    <div class="summary-cell">
+                      <span class="summary-label" i18n="universe.portfolio.pnl-average-winner">Average win</span>
+                      <span class="summary-value numeric tone-good">
+                        <ng-container *ngIf="analytics.averageWinner !== null; else noPopulation">{{ analytics.averageWinner }}</ng-container>
+                      </span>
+                    </div>
+                    <div class="summary-cell">
+                      <span class="summary-label" i18n="universe.portfolio.pnl-average-loser">Average loss</span>
+                      <span class="summary-value numeric tone-bad">
+                        <ng-container *ngIf="analytics.averageLoser !== null; else noPopulation">{{ analytics.averageLoser }}</ng-container>
+                      </span>
+                    </div>
+                    <div class="summary-cell">
+                      <span class="summary-label" i18n="universe.portfolio.pnl-holding-period">Held on average</span>
+                      <span class="summary-value numeric">
+                        <ng-container *ngIf="analytics.averageRemainingHoldingDays !== null; else noPopulation">
+                          {{ analytics.averageRemainingHoldingDays }}<span class="unit" i18n="universe.portfolio.days-unit"> days</span>
+                        </ng-container>
+                      </span>
+                      <span class="summary-footnote" *ngIf="analytics.undatedLotCount > 0" i18n="universe.portfolio.pnl-undated-lots">
+                        {{ analytics.undatedLotCount }} lots carry no time and are not counted here
+                      </span>
+                    </div>
+                  </div>
+
+                  <h3 class="subsection" i18n="universe.portfolio.pnl-distribution-title">How the disposals turned out</h3>
+                  <p class="empty" *ngIf="analytics.knownRealizationCount === 0" i18n="universe.portfolio.pnl-no-population">
+                    No disposal has a known cost, so there is nothing to distribute.
+                  </p>
+                  <div class="table-scroll" *ngIf="analytics.knownRealizationCount > 0">
+                    <table class="holdings-table">
+                      <caption class="visually-hidden" i18n="universe.portfolio.pnl-distribution-caption">Disposals grouped by how much they returned against their cost</caption>
+                      <thead>
+                        <tr>
+                          <th scope="col" i18n="universe.portfolio.column-return">Return</th>
+                          <th scope="col" class="numeric" i18n="universe.portfolio.column-disposals">Disposals</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr *ngFor="let bucket of analytics.distribution">
+                          <td>{{ bucketLabel(bucket) }}</td>
+                          <td class="numeric">{{ bucket.count }}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <h3 class="subsection" i18n="universe.portfolio.pnl-calendar-title">Day by day</h3>
+                  <p class="empty" *ngIf="!calendarGrid" i18n="universe.portfolio.pnl-no-calendar">
+                    No disposal carries a date, so there is no calendar to draw.
+                  </p>
+                  <ng-container *ngIf="calendarGrid as calendar">
+                    <p class="lede" i18n="universe.portfolio.pnl-calendar-range">
+                      {{ calendar.firstDate }} to {{ calendar.lastDate }}, {{ calendar.activeDayCount }} days with a disposal.
+                    </p>
+                    <div class="table-scroll">
+                      <table class="calendar-grid">
+                        <caption class="visually-hidden" i18n="universe.portfolio.pnl-calendar-caption">Realized profit and loss for each day, arranged by week</caption>
+                        <thead>
+                          <tr>
+                            <th scope="col" *ngFor="let weekday of calendar.weekdays">{{ weekday }}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr *ngFor="let week of calendar.weeks">
+                            <td *ngFor="let cell of week.cells" [ngClass]="bandClass(cell.band)">
+                              <ng-container *ngIf="cell.date">
+                                <span class="cell-date">{{ cell.date | slice:8 }}</span>
+                                <span class="cell-value numeric" *ngIf="cell.realized !== null">{{ cell.realized }}</span>
+                                <span class="visually-hidden" *ngIf="cell.realized !== null">
+                                  {{ cell.date }}: {{ cell.realized }} from {{ cell.realizationCount }} disposals
+                                </span>
+                              </ng-container>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </ng-container>
+                </ng-container>
+
+                <h3 class="subsection" i18n="universe.portfolio.pnl-lots-title">What is still held, and what it cost</h3>
+                <div class="table-scroll" *ngIf="report.lots?.length">
+                  <table class="holdings-table">
+                    <thead>
+                      <tr>
+                        <th scope="col" i18n="universe.portfolio.column-lot">Lot</th>
+                        <th scope="col" class="numeric" i18n="universe.portfolio.column-quantity">Quantity</th>
+                        <th scope="col" class="numeric" i18n="universe.portfolio.column-unit-cost">Unit cost</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let lot of report.lots; trackBy: trackByLot">
+                        <td class="identifier">{{ shorten(lot.eventId, 10) }}</td>
+                        <td class="numeric">{{ coins(lot.quantityAtomic) }}</td>
+                        <td class="numeric">
+                          <ng-container *ngIf="lot.unitPrice; else unknownCost2">{{ lot.unitPrice }}</ng-container>
+                          <ng-template #unknownCost2>
+                            <span class="muted" i18n="universe.portfolio.cost-unknown">unknown</span>
+                          </ng-template>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </ng-container>
+            </ng-container>
+          </ng-container>
+        </section>
+
+        <!-- Coverage / sources -->
+        <section class="panel" *ngIf="tab === 'coverage'" aria-labelledby="portfolio-coverage-heading">
+          <h2 id="portfolio-coverage-heading" i18n="universe.portfolio.coverage-title">What each source said</h2>
+          <div class="table-scroll" *ngIf="summary.envelope.sources.length > 0">
+            <table class="holdings-table">
+              <thead>
+                <tr>
+                  <th scope="col" i18n="universe.portfolio.column-source">Source</th>
+                  <th scope="col" i18n="universe.portfolio.column-protocols">Protocols</th>
+                  <th scope="col" i18n="universe.portfolio.column-state">Answer</th>
+                  <th scope="col" class="numeric" i18n="universe.portfolio.column-checkpoint">Block</th>
+                  <th scope="col" class="numeric" i18n="universe.portfolio.column-lag">Behind tip</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let source of summary.envelope.sources">
+                  <td class="identifier">{{ source.authorityId }}</td>
+                  <td>{{ source.protocols.join(', ') }}</td>
+                  <td><span class="state-chip" [ngClass]="stateTone(source.state)">{{ stateCopy(source.state) }}</span></td>
+                  <td class="numeric">{{ source.checkpoint?.heightAtomic ?? '' }}</td>
+                  <td class="numeric">{{ source.lagAtomic ?? '' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="empty" *ngIf="summary.envelope.sources.length === 0" i18n="universe.portfolio.no-sources">
+            No protocol source is configured for this chain yet.
+          </p>
+          <dl class="envelope-details">
+            <dt i18n="universe.portfolio.envelope-snapshot">Snapshot</dt>
+            <dd class="identifier">{{ summary.envelope.snapshotId }}</dd>
+            <dt i18n="universe.portfolio.envelope-requested">Requested</dt>
+            <dd>{{ summary.envelope.requestedAt | date:'medium' }}</dd>
+            <dt i18n="universe.portfolio.envelope-completed">Completed</dt>
+            <dd>{{ summary.envelope.completedAt | date:'medium' }}</dd>
+          </dl>
+        </section>
+
+        <div class="load-more-row" *ngIf="state.nextCursor && tab !== 'activity'">
+          <button type="button" class="load-more" (click)="loadMore()" [disabled]="state.loadingMore">
+            <ng-container *ngIf="!state.loadingMore" i18n="universe.portfolio.load-more">Load more outputs</ng-container>
+            <ng-container *ngIf="state.loadingMore" i18n="universe.portfolio.loading-more">Reading further outputs…</ng-container>
+          </button>
+          <p class="load-more-note" i18n="universe.portfolio.load-more-note">
+            This address has more outputs than one read covers. Totals grow as
+            pages load and never pretend to be complete early.
+          </p>
+        </div>
+
+      </ng-container>
+    </ng-container>
+
+  </ng-container>
+
+  <ng-template #unknownQuantity>
+    <span class="muted" i18n="universe.portfolio.quantity-unknown">not stated</span>
+  </ng-template>
+  <ng-template #dash><span class="muted">-</span></ng-template>
+  <ng-template #noPopulation>
+    <span class="muted" i18n="universe.portfolio.no-population">not yet</span>
+  </ng-template>
+  <ng-template #noPrice>
+    <span class="muted" i18n="universe.portfolio.no-current-price">no current price</span>
+  </ng-template>
+
+</div>

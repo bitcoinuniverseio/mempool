@@ -1,0 +1,65 @@
+<div class="container-xl product-page">
+  <header class="page-head">
+    <nav class="crumbs">
+      <a [routerLink]="['/']">Home</a>
+      <span class="divider">/</span>
+      <a [routerLink]="['/data']">Data Studio</a>
+      <span class="divider">/</span>
+      <span>Live Streams</span>
+    </nav>
+    <h1>Universe Durable Stream Inspector</h1>
+    <p class="summary">
+      Real-time Server-Sent Events (SSE) and WebSocket streams with durable resume cursors, backpressure protection, and event schemas.
+    </p>
+  </header>
+
+  <nav class="nav-tabs">
+    <a [routerLink]="['/data']">Datasets & Query Studio</a>
+    <a [routerLink]="['/data/live']" class="active">Live Streams</a>
+  </nav>
+
+  <ng-container *ngIf="vm$ | async as vm">
+    <div *ngIf="vm.kind === 'loading'" class="panel" aria-busy="true">
+      <p>Loading live stream manifest...</p>
+    </div>
+
+    <ng-container *ngIf="vm.kind === 'ready' && vm.streams">
+      <section class="panel">
+        <h2>Available Event Streams</h2>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Stream Name</th>
+              <th>Endpoint</th>
+              <th>Transport</th>
+              <th>Event Schema</th>
+              <th>Avg Rate</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let s of vm.streams">
+              <td><strong>{{ s.name }}</strong></td>
+              <td class="mono">{{ s.endpoint }}</td>
+              <td><span class="badge badge-info">{{ s.transport | uppercase }}</span></td>
+              <td class="mono">{{ s.schemaRef }}</td>
+              <td>{{ s.messageRatePerSec }} msg/s</td>
+              <td><span class="badge badge-success">Active</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="panel">
+        <h2>Stream Consumer Example (TypeScript)</h2>
+        <pre class="mono code-block">
+const events = new EventSource('/api/v1/data/live/mempool?cursor=now');
+events.onmessage = (event) =&gt; &#123;
+  const txEvent = JSON.parse(event.data);
+  console.log('Observed live transaction:', txEvent.txid, txEvent.fee_rate);
+&#125;;
+        </pre>
+      </section>
+    </ng-container>
+  </ng-container>
+</div>

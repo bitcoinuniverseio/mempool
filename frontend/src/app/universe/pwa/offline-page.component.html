@@ -1,0 +1,86 @@
+<div class="offline-page">
+
+  <h1 class="title" i18n="universe.pwa.page.title">This device</h1>
+
+  <p class="lede" i18n="universe.pwa.page.lede">
+    The explorer keeps three things in this browser: its own interface, so
+    the transaction and privacy tools open without a network; recent answers
+    from the chain, each marked with the time it was captured; and your own
+    saved items. Everything below is on this device. Nothing here is sent
+    anywhere.
+  </p>
+
+  <p class="unsupported" *ngIf="!supported" role="note" i18n="universe.pwa.page.unsupported">
+    This browser does not support offline storage. The explorer still works
+    while connected; it simply keeps nothing between visits.
+  </p>
+
+  <section class="panel" *ngIf="supported">
+    <h2 class="heading" i18n="universe.pwa.storage.heading">Stored data</h2>
+
+    <p class="storage-line">
+      {{ storageLine$ | async }}
+    </p>
+    <p class="hint" i18n="universe.pwa.storage.hint">
+      Stored chain answers are only ever shown while the network is away, and
+      always with their capture time, so a stored answer can never pose as a
+      live one.
+    </p>
+
+    <div class="actions">
+      <button type="button" class="action" (click)="deleteStored()" i18n="universe.pwa.storage.delete">
+        Delete stored interface and chain data
+      </button>
+      <span class="outcome" *ngIf="deletedStored() === true" role="status" i18n="universe.pwa.storage.deleted">
+        Deleted.
+      </span>
+      <span class="outcome failure" *ngIf="deletedStored() === false" role="status" i18n="universe.pwa.storage.delete-failed">
+        The browser refused. Nothing was deleted.
+      </span>
+    </div>
+  </section>
+
+  <section class="panel" *ngIf="supported">
+    <h2 class="heading" i18n="universe.pwa.personal.heading">Your own data</h2>
+
+    <p class="detail" i18n="universe.pwa.personal.detail">
+      Saved items, recent pages, and display preferences live here too, and
+      they are yours to remove on their own.
+    </p>
+
+    <div class="actions">
+      <button type="button" class="action" (click)="deletePersonal()" i18n="universe.pwa.personal.delete">
+        Delete saved items and preferences
+      </button>
+      <span class="outcome" *ngIf="deletedPersonal() !== null" role="status">
+        <ng-container i18n="universe.pwa.personal.deleted">Deleted</ng-container>
+        {{ deletedPersonal() | number }}
+        <ng-container i18n="universe.pwa.personal.deleted-items">items.</ng-container>
+      </span>
+    </div>
+  </section>
+
+  <section class="panel" *ngIf="supported">
+    <h2 class="heading" i18n="universe.pwa.build.heading">The application</h2>
+
+    <div class="actions" *ngIf="updateReady$ | async">
+      <button type="button" class="action primary" (click)="applyUpdate()" i18n="universe.pwa.build.update">
+        Reload to apply the newer build
+      </button>
+    </div>
+
+    <div class="actions" *ngIf="installable$ | async">
+      <button type="button" class="action" (click)="install()" i18n="universe.pwa.build.install">
+        Install the explorer on this device
+      </button>
+    </div>
+
+    <p class="detail" *ngIf="!(updateReady$ | async) && !(installable$ | async)" i18n="universe.pwa.build.current">
+      This is the newest build, and the explorer is installed or your browser
+      has not offered installation.
+    </p>
+  </section>
+
+  <p><a class="back" routerLink="/" i18n="universe.pwa.page.back">Back to the explorer</a></p>
+
+</div>

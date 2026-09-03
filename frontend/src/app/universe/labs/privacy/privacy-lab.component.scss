@@ -1,0 +1,233 @@
+@use '../../universe-tokens' as u;
+
+:host {
+  @include u.universe-state-tokens;
+
+  display: block;
+}
+
+.privacy-lab {
+  padding-block: 1.25rem 3rem;
+}
+
+.page-head {
+  margin-bottom: 1.25rem;
+
+  h1 { margin-bottom: 0.5rem; }
+}
+
+.lede {
+  max-width: 64ch;
+  color: var(--u-text-muted);
+  margin-bottom: 0;
+}
+
+// The two ways in sit side by side on a wide screen, so neither reads as the
+// fallback for the other. They do different things.
+.entries {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.entry {
+  @include u.universe-surface;
+
+  padding: 1rem 1.25rem;
+
+  label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+  }
+
+  input,
+  textarea {
+    width: 100%;
+    font-family: monospace;
+    font-size: 0.85rem;
+    word-break: break-all;
+    background: var(--u-surface-sunken);
+    color: var(--u-text);
+    border: 1px solid var(--u-border);
+    border-radius: 0.35rem;
+    padding: 0.4rem 0.6rem;
+  }
+
+  textarea { margin-bottom: 0.5rem; }
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.field-help {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+  color: var(--u-text-muted);
+  max-width: 68ch;
+}
+
+.secret,
+.error,
+.loading {
+  @include u.universe-surface;
+
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.25rem;
+  max-width: 68ch;
+}
+
+.error { border-left: 4px solid var(--universe-state-unavailable-border); }
+.secret { border-left: 4px solid var(--universe-state-partial-border); }
+
+section {
+  margin-bottom: 1.75rem;
+
+  h2 {
+    font-size: 1.05rem;
+    margin-bottom: 0.65rem;
+  }
+}
+
+.counts {
+  font-size: 1.02rem;
+  max-width: 72ch;
+}
+
+.provenance,
+.coinbase {
+  font-size: 0.85rem;
+  color: var(--u-text-muted);
+  max-width: 72ch;
+  margin-bottom: 0.35rem;
+}
+
+.revision {
+  display: block;
+  margin-top: 0.15rem;
+}
+
+.finding {
+  @include u.universe-surface;
+
+  padding: 1rem 1.25rem;
+  margin-bottom: 0.85rem;
+  // Severity is named in words in the tag row, so the border is a second
+  // signal and never the only one.
+  border-left: 4px solid var(--universe-state-neutral-border);
+
+  &[data-severity='reveals'] { border-left-color: var(--universe-state-unavailable-border); }
+  &[data-severity='notable'] { border-left-color: var(--universe-state-partial-border); }
+  &[data-severity='neutral'] { border-left-color: var(--universe-state-proven-border); }
+
+  header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  h3 {
+    font-size: 1rem;
+    margin: 0;
+  }
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.tag {
+  font-size: 0.72rem;
+  border: 1px solid var(--u-border);
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+  color: var(--u-text-muted);
+  white-space: nowrap;
+}
+
+.rule-id { font-family: monospace; }
+
+.plain {
+  max-width: 72ch;
+  margin-bottom: 0.5rem;
+}
+
+.technical {
+  max-width: 72ch;
+  font-size: 0.9rem;
+  color: var(--u-text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.evidence {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 0.5rem 1.25rem;
+  margin-bottom: 0.75rem;
+
+  dt {
+    font-size: 0.78rem;
+    color: var(--u-text-muted);
+    font-weight: 400;
+    word-break: break-all;
+  }
+
+  dd {
+    margin-bottom: 0;
+    font-size: 0.88rem;
+    word-break: break-all;
+  }
+}
+
+.wrongness {
+  font-size: 0.88rem;
+
+  summary {
+    cursor: pointer;
+    color: var(--u-text-muted);
+  }
+
+  p {
+    max-width: 72ch;
+    margin: 0.5rem 0 0;
+  }
+}
+
+.skipped-list {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+
+  dt {
+    font-size: 0.8rem;
+    font-weight: 400;
+  }
+
+  dd {
+    margin-bottom: 0;
+    font-size: 0.88rem;
+    color: var(--u-text-muted);
+    max-width: 72ch;
+  }
+}
+
+.boundary {
+  @include u.universe-surface;
+
+  padding: 1rem 1.25rem;
+  max-width: 72ch;
+
+  ul { margin-bottom: 0; }
+
+  li { margin-bottom: 0.45rem; }
+}

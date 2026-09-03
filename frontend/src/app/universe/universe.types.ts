@@ -595,3 +595,554 @@ export interface UniverseSearchResponse {
     zcash: string;
   };
 }
+
+/**
+ * One protocol's recent activity, read from that protocol's own first-party
+ * authority by the explorer backend. The authority's records travel through
+ * verbatim: quantities are the decimal strings the authority issued, and a
+ * field this build has no reading for is kept rather than dropped.
+ */
+export interface ExplorerProtocolActivityPage {
+  schemaVersion: 'universe-protocol-activity-v1';
+  protocolId: string;
+  state: 'served' | 'unconfigured' | 'unavailable' | 'unsupported';
+  authorityId: string | null;
+  feedPath: string | null;
+  source: {
+    id: string | null;
+    protocol: string | null;
+    chain: string | null;
+    network: string | null;
+    coverage: string | null;
+    cursor: string | null;
+    asOf: string | null;
+  } | null;
+  assets: Array<Record<string, unknown>>;
+  events: Array<Record<string, unknown>>;
+  invalidations: Array<Record<string, unknown>>;
+  holderSnapshots: Array<Record<string, unknown>>;
+  nextCursor: string | null;
+  hasMore: boolean;
+  checkpoint: {
+    heightAtomic: string;
+    blockHash: string;
+    observedAt: string;
+  } | null;
+  degradedReason: string | null;
+  observedAt: string;
+}
+
+export type {
+  AnimaSupply,
+  AnimaStatusDocument,
+  AnimaLoggedEvent,
+  AnimaEventsDocument,
+  AnimaEventDocument,
+  AnimaWaymark,
+  AnimaAchievement,
+  AnimaOrganism,
+  AnimaOrganismsDocument,
+  AnimaOrganismDocument,
+  AnimaOrganismHistoryDocument,
+} from './anima.types';
+
+/**
+ * One protocol's standing objects, read from that protocol's own
+ * first-party authority. The records travel through verbatim; quantities
+ * stay the decimal strings the authority issued.
+ */
+export interface ExplorerProtocolObjectsPage {
+  schemaVersion: 'universe-protocol-objects-v1';
+  protocolId: string;
+  state: 'served' | 'unconfigured' | 'unavailable' | 'unsupported';
+  authorityId: string | null;
+  objectsPath: string | null;
+  items: Array<Record<string, unknown>>;
+  nextCursor: string | null;
+  checkpoint: {
+    heightAtomic: string;
+    blockHash: string;
+    observedAt: string;
+  } | null;
+  degradedReason: string | null;
+  observedAt: string;
+}
+
+// ---------------------------------------------------------------------------
+// Product Verticals Type Declarations
+// ---------------------------------------------------------------------------
+
+export interface FractalBlockSummary {
+  readonly hash: string;
+  readonly height: number;
+  readonly time: number;
+  readonly txCount: number;
+  readonly size: number;
+  readonly weight: number;
+  readonly merkleRoot: string;
+  readonly difficulty: number;
+  readonly miner?: string;
+}
+
+export interface FractalTransactionView {
+  readonly txid: string;
+  readonly hash: string;
+  readonly version: number;
+  readonly size: number;
+  readonly weight: number;
+  readonly locktime: number;
+  readonly vin: readonly any[];
+  readonly vout: readonly any[];
+  readonly blockHash?: string;
+  readonly blockHeight?: number;
+  readonly blockTime?: number;
+  readonly feeAtomic: string;
+  readonly cat20Operations?: readonly Cat20Operation[];
+}
+
+export interface Cat20Token {
+  readonly tokenId: string;
+  readonly name: string;
+  readonly symbol: string;
+  readonly decimals: number;
+  readonly maxSupplyAtomic: string;
+  readonly circulatingSupplyAtomic: string;
+  readonly mintLimitAtomic: string;
+  readonly deployTxid: string;
+  readonly deployHeight: number;
+  readonly minterAddress: string;
+  readonly minterType: 'open' | 'closed' | 'covenant';
+  readonly holderCount: number;
+  readonly transferCount: number;
+  readonly state: 'active' | 'minting' | 'capped';
+}
+
+export interface Cat20Holder {
+  readonly address: string;
+  readonly balanceAtomic: string;
+  readonly percentage: string;
+}
+
+export interface Cat20Operation {
+  readonly type: 'deploy' | 'mint' | 'transfer' | 'burn';
+  readonly tokenId: string;
+  readonly amountAtomic: string;
+  readonly fromAddress?: string;
+  readonly toAddress?: string;
+  readonly valid: boolean;
+  readonly invalidReason?: string;
+}
+
+export interface FractalMempoolOverview {
+  readonly count: number;
+  readonly totalBytes: number;
+  readonly totalWeight: number;
+  readonly minFeeRate: number;
+  readonly maxFeeRate: number;
+  readonly medianFeeRate: number;
+  readonly pendingCat20TxCount: number;
+}
+
+export interface ZcashValuePool {
+  readonly id: 'transparent' | 'sprout' | 'sapling' | 'orchard' | 'lockbox';
+  readonly name: string;
+  readonly balanceZat: string;
+  readonly balanceZec: string;
+  readonly percentageOfSupply: string;
+  readonly txCount: number;
+  readonly description: string;
+  readonly shielded: boolean;
+  readonly deprecationStatus: 'active' | 'retiring' | 'deprecated';
+}
+
+export interface ZcashPoolFlow {
+  readonly height: number;
+  readonly blockHash: string;
+  readonly timestamp: number;
+  readonly pool: string;
+  readonly inflowZat: string;
+  readonly outflowZat: string;
+  readonly netChangeZat: string;
+  readonly transactionCount: number;
+}
+
+export interface ZcashNetworkUpgrade {
+  readonly name: string;
+  readonly activationHeight: number;
+  readonly branchId: string;
+  readonly activatedAt: string;
+  readonly features: readonly string[];
+}
+
+export interface ZcashPrivacySummary {
+  readonly tipHeight: number;
+  readonly totalCirculatingSupplyZat: string;
+  readonly totalShieldedSupplyZat: string;
+  readonly shieldedPercentage: string;
+  readonly pools: readonly ZcashValuePool[];
+  readonly recentFlows: readonly ZcashPoolFlow[];
+  readonly upgrades: readonly ZcashNetworkUpgrade[];
+}
+
+export interface LiquidAssetRecord {
+  readonly assetId: string;
+  readonly name: string;
+  readonly ticker: string;
+  readonly precision: number;
+  readonly issuanceTxid: string;
+  readonly issuanceVin: number;
+  readonly reissuanceToken?: string;
+  readonly isConfidential: boolean;
+  readonly circulatingAmount?: string;
+  readonly issuerPubkey?: string;
+  readonly hasProof: boolean;
+}
+
+export interface LiquidPegRecord {
+  readonly id: string;
+  readonly type: 'peg-in' | 'peg-out';
+  readonly bitcoinTxid: string;
+  readonly bitcoinVout?: number;
+  readonly liquidTxid: string;
+  readonly liquidVout?: number;
+  readonly amountSats: string;
+  readonly status: 'initiated' | 'confirmed' | 'finalized' | 'reorged';
+  readonly confirmations: number;
+  readonly timestamp: number;
+  readonly federationWitnessAddress: string;
+}
+
+export interface LiquidFederationEpoch {
+  readonly epochNumber: number;
+  readonly signblockscript: string;
+  readonly activeSigners: number;
+  readonly totalSigners: number;
+  readonly threshold: number;
+  readonly startHeight: number;
+  readonly endHeight?: number;
+  readonly blockSignerCounts: Record<string, number>;
+}
+
+export interface LiquidObservatorySummary {
+  readonly blockHeight: number;
+  readonly blockHash: string;
+  readonly dynamicFederation: {
+    readonly currentEpoch: number;
+    readonly signersOnline: number;
+    readonly totalSigners: number;
+    readonly blockSigningThreshold: string;
+  };
+  readonly peggedReserveSats: string;
+  readonly activeAssetCount: number;
+  readonly confidentialTxPercentage: string;
+  readonly recentPegs: readonly LiquidPegRecord[];
+}
+
+export interface DatasetManifest {
+  readonly id: string;
+  readonly name: string;
+  readonly category: 'blockchain' | 'mempool' | 'protocols' | 'network';
+  readonly description: string;
+  readonly updateFrequency: 'realtime' | 'per-block' | 'hourly' | 'daily';
+  readonly rowCountEstimate: string;
+  readonly sizeEstimateBytes: string;
+  readonly supportedFormats: readonly ('parquet' | 'ndjson' | 'csv' | 'json')[];
+  readonly fields: readonly { readonly name: string; readonly type: string; readonly description: string; readonly primaryKey?: boolean }[];
+}
+
+export interface StreamManifest {
+  readonly id: string;
+  readonly name: string;
+  readonly endpoint: string;
+  readonly transport: 'sse' | 'websocket';
+  readonly description: string;
+  readonly schemaRef: string;
+  readonly messageRatePerSec: number;
+}
+
+export interface QueryResult {
+  readonly datasetId: string;
+  readonly rowCount: number;
+  readonly totalAvailable: number;
+  readonly executionTimeMs: number;
+  readonly columns: readonly string[];
+  readonly rows: readonly (readonly unknown[])[];
+}
+
+export interface McpToolDeclaration {
+  readonly name: string;
+  readonly description: string;
+  readonly parameters: Record<string, unknown>;
+  readonly sampleCall: string;
+}
+
+export interface ObserverNode {
+  readonly id: string;
+  readonly name: string;
+  readonly region: string;
+  readonly clientVersion: string;
+  readonly protocolVersion: number;
+  readonly fullRbf: boolean;
+  readonly minRelayFeeRate: number;
+  readonly clockOffsetMs: number;
+  readonly connectedPeers: number;
+  readonly mempoolTxCount: number;
+  readonly status: 'online' | 'syncing' | 'degraded';
+}
+
+export interface PropagationObservation {
+  readonly txid: string;
+  readonly firstSeenTimestamp: number;
+  readonly nodeObservations: readonly { readonly nodeId: string; readonly nodeName: string; readonly arrivedAt: number; readonly deltaFromFirstMs: number; readonly accepted: boolean }[];
+  readonly medianLatencyMs: number;
+  readonly p95LatencyMs: number;
+  readonly spreadDeltaMs: number;
+}
+
+export interface BlockTemplateComparison {
+  readonly blockHeight: number;
+  readonly generatedAt: number;
+  readonly candidateTemplates: readonly { readonly poolName: string; readonly txCount: number; readonly totalWeight: number; readonly totalFeesSats: string; readonly expectedMedianFeeRate: number }[];
+  readonly consensusMempoolTxCount: number;
+  readonly missingFromLocalCount: number;
+  readonly feeRateSpreadSatVb: number;
+}
+
+export interface TaprootAssetItem {
+  readonly assetId: string;
+  readonly assetType: 'normal' | 'collectible';
+  readonly name: string;
+  readonly groupKey?: string;
+  readonly genesisPoint: string;
+  readonly genesisHeight: number;
+  readonly totalAmountAtomic: string;
+  readonly anchorTxid: string;
+  readonly anchorOutpoint: string;
+  readonly scriptKey: string;
+  readonly hasProofFile: boolean;
+  readonly mintTime: number;
+}
+
+export interface TaprootAssetGroup {
+  readonly groupKey: string;
+  readonly name: string;
+  readonly totalAssetsCount: number;
+  readonly totalCirculatingSupplyAtomic: string;
+}
+
+export interface Bolt12Offer {
+  readonly offerId: string;
+  readonly offerString: string;
+  readonly description: string;
+  readonly issuer?: string;
+  readonly amountMsat?: string;
+  readonly currency?: string;
+  readonly blindRoutesCount: number;
+  readonly valid: boolean;
+  readonly expiry?: number;
+}
+
+export interface LightningRfqQuote {
+  readonly quoteId: string;
+  readonly baseAsset: string;
+  readonly quoteAsset: string;
+  readonly askRate: string;
+  readonly bidRate: string;
+  readonly spreadBps: number;
+  readonly validUntil: number;
+}
+
+export interface ArkOperator {
+  readonly id: string;
+  readonly name: string;
+  readonly aspPubkey: string;
+  readonly roundIntervalSec: number;
+  readonly currentBatchHeight: number;
+  readonly activeVtxoCount: number;
+  readonly totalVolumeSats: string;
+  readonly status: 'online' | 'degraded';
+}
+
+export interface ArkBatch {
+  readonly batchId: string;
+  readonly operatorId: string;
+  readonly anchorTxid: string;
+  readonly rootHash: string;
+  readonly vtxoCount: number;
+  readonly totalAmountSats: string;
+  readonly roundTimestamp: number;
+  readonly expirationTimestamp: number;
+  readonly status: 'settled' | 'provisional' | 'swept';
+}
+
+export interface ArkVirtualTx {
+  readonly virtualTxId: string;
+  readonly inputs: readonly string[];
+  readonly outputs: readonly { readonly userPubkey: string; readonly amountSats: string }[];
+  readonly feeSats: string;
+  readonly roundSequence: number;
+  readonly submittedAt: number;
+}
+
+export interface ArkVtxo {
+  readonly vtxoId: string;
+  readonly batchId: string;
+  readonly amountSats: string;
+  readonly userPubkey: string;
+  readonly aspPubkey: string;
+  readonly timelockExpiryBlocks: number;
+  readonly treeDepth: number;
+  readonly treeIndex: number;
+  readonly status: 'spendable' | 'settled' | 'exiting' | 'expired';
+  readonly exitTxid?: string;
+}
+
+export interface StratumV2RoleStatus {
+  readonly role: 'mining-proxy' | 'job-declarator' | 'template-provider' | 'pool';
+  readonly name: string;
+  readonly endpoint: string;
+  readonly noiseProtocolSecured: boolean;
+  readonly negotiatedSubprotocols: readonly string[];
+  readonly connectedDownstreams: number;
+  readonly uptimeSec: number;
+  readonly status: 'active' | 'degraded';
+}
+
+export interface StratumV2Template {
+  readonly templateId: string;
+  readonly blockHeight: number;
+  readonly coinbaseTxValueSats: string;
+  readonly declaredTxCount: number;
+  readonly poolSelectedTxCount: number;
+  readonly feeRateDeltaSatVb: number;
+  readonly totalWeight: number;
+  readonly status: 'mining' | 'superseded' | 'won';
+  readonly generatedAt: number;
+}
+
+export interface StratumV2JobDeclaration {
+  readonly jobId: string;
+  readonly templateId: string;
+  readonly declaratorId: string;
+  readonly minerDeclaredTxids: readonly string[];
+  readonly poolModifiedTxids: readonly string[];
+  readonly acceptedByPool: boolean;
+  readonly poolRejectionCode?: string;
+  readonly latencyMs: number;
+}
+
+export interface L2BridgeSystem {
+  readonly id: string;
+  readonly name: string;
+  readonly architecture: 'bitvm2' | 'clementine-bitvm' | 'zk-rollup-bridge' | 'sidechain-peg';
+  readonly trustModel: '1-of-n' | 'multisig-federated' | 'committee-attested';
+  readonly bridgeContractAddress: string;
+  readonly lockedBtcSats: string;
+  readonly operatorCount: number;
+  readonly challengePeriodBlocks: number;
+  readonly activeChallengesCount: number;
+  readonly status: 'live' | 'testing' | 'halted';
+  readonly description: string;
+}
+
+export interface L2Challenge {
+  readonly challengeId: string;
+  readonly systemId: string;
+  readonly assertionTxid: string;
+  readonly challengeTxid: string;
+  readonly assertBlockHeight: number;
+  readonly challengerAddress: string;
+  readonly bondAmountSats: string;
+  readonly status: 'pending_response' | 'disproved' | 'confirmed_honest' | 'slashed';
+  readonly timeoutBlockHeight: number;
+}
+
+export interface L2ReserveAudit {
+  readonly systemId: string;
+  readonly totalLockedReserveSats: string;
+  readonly reportedL2SupplySats: string;
+  readonly reserveRatio: string;
+  readonly lastAuditHeight: number;
+  readonly reserveOutpoints: readonly { readonly outpoint: string; readonly valueSats: string }[];
+}
+
+export interface UtxoCheckpoint {
+  readonly blockHeight: number;
+  readonly blockHash: string;
+  readonly muhashHex: string;
+  readonly totalTxOuts: number;
+  readonly bogoSize: string;
+  readonly totalAmountSats: string;
+  readonly verifiedAtTimestamp: number;
+}
+
+export interface SupplyCohort {
+  readonly label: string;
+  readonly txOutCount: number;
+  readonly totalAmountSats: string;
+  readonly supplyPercentage: string;
+}
+
+export interface ScriptTypeDistribution {
+  readonly scriptType: 'p2pk' | 'p2pkh' | 'p2sh' | 'p2wpkh' | 'p2wsh' | 'p2tr' | 'other';
+  readonly count: number;
+  readonly totalAmountSats: string;
+  readonly percentage: string;
+}
+
+export interface ProtocolBearingUtxos {
+  readonly ordinalsBearingCount: number;
+  readonly runesBearingCount: number;
+  readonly stampsBearingCount: number;
+  readonly multiProtocolCount: number;
+  readonly pureBitcoinCount: number;
+}
+
+export interface UtreexoRootsView {
+  readonly blockHeight: number;
+  readonly numLeaves: number;
+  readonly roots: readonly string[];
+  readonly forestRows: number;
+}
+
+export interface WildkinCreature {
+  readonly creatureId: string;
+  readonly inscriptionId: string;
+  readonly inscriptionNumber: number;
+  readonly name: string;
+  readonly generation: number;
+  readonly bindingUtxo: string;
+  readonly ownerAddress: string;
+  readonly parentAId?: string;
+  readonly parentBId?: string;
+  readonly genomeHex: string;
+  readonly formatTag: 'wk';
+  readonly rulesetVersion: number;
+  readonly hasBraided: boolean;
+  readonly status: 'active' | 'transferred' | 'braided';
+  readonly birthBlockHeight: number;
+  readonly birthTimestamp: number;
+}
+
+export interface WildkinBraidCeremony {
+  readonly braidTxid: string;
+  readonly heirCreatureId: string;
+  readonly parentAId: string;
+  readonly parentBId: string;
+  readonly inheritanceManifestHash: string;
+  readonly relationshipAttestationHash: string;
+  readonly blockHeight: number;
+  readonly timestamp: number;
+  readonly confirmations: number;
+  readonly valid: boolean;
+}
+
+export interface WildkinStatusSummary {
+  readonly ruleset: string;
+  readonly activationStatus: 'draft' | 'active';
+  readonly totalCreaturesCount: number;
+  readonly totalBraidsCount: number;
+  readonly maxAncestryDepth: number;
+  readonly latestCreatures: readonly WildkinCreature[];
+}
+
