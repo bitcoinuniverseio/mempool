@@ -20,6 +20,8 @@ interface PrivacyViewModel {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ZcashPrivacyComponent implements OnInit {
+  // Templates format raw strings through the Number global; AOT needs it bound.
+  protected readonly Number = Number;
   private readonly state = new BehaviorSubject<PrivacyViewModel>({ kind: 'loading' });
   readonly vm$: Observable<PrivacyViewModel> = this.state.asObservable();
 

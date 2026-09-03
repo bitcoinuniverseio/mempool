@@ -24,6 +24,8 @@ interface L2ViewModel {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class L2ObservatoryComponent implements OnInit {
+  // Templates format raw strings through the Number global; AOT needs it bound.
+  protected readonly Number = Number;
   private readonly state = new BehaviorSubject<L2ViewModel>({ kind: 'loading' });
   readonly vm$: Observable<L2ViewModel> = this.state.asObservable();
 

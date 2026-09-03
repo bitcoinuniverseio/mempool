@@ -18,7 +18,7 @@ class ZcashPrivacyRoutes {
       const summary = await zcashPrivacyService.$getSummary();
       res.json(summary);
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 
@@ -27,7 +27,7 @@ class ZcashPrivacyRoutes {
       const pools = await zcashPrivacyService.$getPools();
       res.json({ pools, total: pools.length });
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 
@@ -36,7 +36,7 @@ class ZcashPrivacyRoutes {
       const upgrades = await zcashPrivacyService.$getUpgrades();
       res.json({ upgrades, total: upgrades.length });
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 }

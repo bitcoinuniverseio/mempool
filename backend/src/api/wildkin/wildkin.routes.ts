@@ -19,7 +19,7 @@ class WildkinRoutes {
       const status = await wildkinService.$getStatus();
       res.json(status);
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 
@@ -28,7 +28,7 @@ class WildkinRoutes {
       const creatures = await wildkinService.$getCreatures();
       res.json({ creatures, total: creatures.length });
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 
@@ -41,7 +41,7 @@ class WildkinRoutes {
       }
       res.json(creature);
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 
@@ -50,7 +50,7 @@ class WildkinRoutes {
       const braids = await wildkinService.$getBraids();
       res.json({ braids, total: braids.length });
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 }

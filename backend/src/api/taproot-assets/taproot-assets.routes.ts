@@ -21,7 +21,7 @@ class TaprootAssetsRoutes {
       const assets = await taprootAssetsService.$getAssets();
       res.json({ assets, total: assets.length });
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 
@@ -34,7 +34,7 @@ class TaprootAssetsRoutes {
       }
       res.json(asset);
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 
@@ -43,7 +43,7 @@ class TaprootAssetsRoutes {
       const groups = await taprootAssetsService.$getGroups();
       res.json({ groups, total: groups.length });
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 
@@ -57,7 +57,7 @@ class TaprootAssetsRoutes {
       const result = await taprootAssetsService.$verifyProof(assetId, proofData);
       res.json(result);
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 
@@ -66,7 +66,7 @@ class TaprootAssetsRoutes {
       const offers = await taprootAssetsService.$getOffers();
       res.json({ offers, total: offers.length });
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 
@@ -75,7 +75,7 @@ class TaprootAssetsRoutes {
       const quotes = await taprootAssetsService.$getRfqQuotes();
       res.json({ quotes, total: quotes.length });
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 }

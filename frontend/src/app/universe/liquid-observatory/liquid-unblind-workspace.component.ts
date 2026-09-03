@@ -21,6 +21,8 @@ interface UnblindResult {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LiquidUnblindWorkspaceComponent {
+  // Templates format raw strings through the Number global; AOT needs it bound.
+  protected readonly Number = Number;
   blindingKey = '';
   outputHex = '';
   verifying = false;

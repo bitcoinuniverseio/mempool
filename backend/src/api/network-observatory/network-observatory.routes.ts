@@ -19,7 +19,7 @@ class NetworkObservatoryRoutes {
       const nodes = await networkObservatoryService.$getNodes();
       res.json({ nodes, total: nodes.length });
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 
@@ -28,7 +28,7 @@ class NetworkObservatoryRoutes {
       const data = await networkObservatoryService.$getPropagation();
       res.json(data);
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 
@@ -37,7 +37,7 @@ class NetworkObservatoryRoutes {
       const data = await networkObservatoryService.$getPropagation(req.params.txid);
       res.json(data);
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 
@@ -46,7 +46,7 @@ class NetworkObservatoryRoutes {
       const templates = await networkObservatoryService.$getTemplates();
       res.json(templates);
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 }

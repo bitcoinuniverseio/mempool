@@ -22,7 +22,7 @@ class FractalRoutes {
       const tip = await fractalService.$getTip();
       res.json(tip);
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 
@@ -31,7 +31,7 @@ class FractalRoutes {
       const mempool = await fractalService.$getMempool();
       res.json(mempool);
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 
@@ -44,7 +44,7 @@ class FractalRoutes {
       }
       res.json(block);
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 
@@ -57,7 +57,7 @@ class FractalRoutes {
       }
       res.json(tx);
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 
@@ -66,7 +66,7 @@ class FractalRoutes {
       const tokens = await fractalService.$getCat20Tokens();
       res.json({ tokens, total: tokens.length });
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 
@@ -79,7 +79,7 @@ class FractalRoutes {
       }
       res.json(token);
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 
@@ -88,7 +88,7 @@ class FractalRoutes {
       const holders = await fractalService.$getCat20Holders(req.params.tokenId);
       res.json({ holders, total: holders.length });
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 }

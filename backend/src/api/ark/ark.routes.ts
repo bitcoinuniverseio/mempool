@@ -21,7 +21,7 @@ class ArkRoutes {
       const operators = await arkService.$getOperators();
       res.json({ operators, total: operators.length });
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 
@@ -30,7 +30,7 @@ class ArkRoutes {
       const batches = await arkService.$getBatches();
       res.json({ batches, total: batches.length });
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 
@@ -43,7 +43,7 @@ class ArkRoutes {
       }
       res.json(batch);
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 
@@ -56,7 +56,7 @@ class ArkRoutes {
       }
       res.json(vtxo);
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 
@@ -65,7 +65,7 @@ class ArkRoutes {
       const virtualTxs = await arkService.$getVirtualTxs();
       res.json({ virtualTxs, total: virtualTxs.length });
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 
@@ -75,7 +75,7 @@ class ArkRoutes {
       const result = await arkService.$verifyProof(vtxoId || '', proofPath || []);
       res.json(result);
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 }

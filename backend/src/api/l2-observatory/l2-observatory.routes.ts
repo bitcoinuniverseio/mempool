@@ -19,7 +19,7 @@ class L2ObservatoryRoutes {
       const systems = await l2ObservatoryService.$getSystems();
       res.json({ systems, total: systems.length });
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 
@@ -32,7 +32,7 @@ class L2ObservatoryRoutes {
       }
       res.json(system);
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 
@@ -42,7 +42,7 @@ class L2ObservatoryRoutes {
       const challenges = await l2ObservatoryService.$getChallenges(systemId);
       res.json({ challenges, total: challenges.length });
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 
@@ -55,7 +55,7 @@ class L2ObservatoryRoutes {
       }
       res.json(audit);
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 }
