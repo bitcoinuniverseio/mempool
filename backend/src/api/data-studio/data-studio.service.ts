@@ -135,6 +135,7 @@ const MCP_TOOLS: McpToolDeclaration[] = [
 ];
 
 export class DataStudioService {
+  /** @asyncSafe */
   public async $getCatalog(): Promise<{ datasets: DatasetManifest[]; streams: StreamManifest[]; mcpTools: McpToolDeclaration[] }> {
     return {
       datasets: DATASETS,
@@ -142,6 +143,8 @@ export class DataStudioService {
       mcpTools: MCP_TOOLS,
     };
   }
+
+  /** @asyncSafe */
 
   public async $executeQuery(query: QueryRequest): Promise<QueryResult> {
     const dataset = DATASETS.find((d) => d.id === query.datasetId);

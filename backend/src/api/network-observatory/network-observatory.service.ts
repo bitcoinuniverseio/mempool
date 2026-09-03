@@ -60,9 +60,12 @@ const OBSERVER_NODES: ObserverNode[] = [
 ];
 
 export class NetworkObservatoryService {
+  /** @asyncSafe */
   public async $getNodes(): Promise<ObserverNode[]> {
     return OBSERVER_NODES;
   }
+
+  /** @asyncSafe */
 
   public async $getPropagation(txid?: string): Promise<PropagationObservation> {
     const targetTxid = txid && txid.length === 64
@@ -109,6 +112,8 @@ export class NetworkObservatoryService {
       spreadDeltaMs: 210,
     };
   }
+
+  /** @asyncSafe */
 
   public async $getTemplates(): Promise<BlockTemplateComparison> {
     const height = 860143;

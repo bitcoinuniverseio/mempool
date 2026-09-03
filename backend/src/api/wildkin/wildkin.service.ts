@@ -73,6 +73,7 @@ const BRAIDS: WildkinBraidCeremony[] = [
 ];
 
 export class WildkinService {
+  /** @asyncSafe */
   public async $getStatus(): Promise<WildkinStatusSummary> {
     return {
       ruleset: 'Wildkin ruleset v0',
@@ -84,9 +85,13 @@ export class WildkinService {
     };
   }
 
+  /** @asyncSafe */
+
   public async $getCreatures(): Promise<WildkinCreature[]> {
     return CREATURES;
   }
+
+  /** @asyncSafe */
 
   public async $getCreature(id: string): Promise<WildkinCreature | null> {
     const match = CREATURES.find(
@@ -94,6 +99,8 @@ export class WildkinService {
     );
     return match || null;
   }
+
+  /** @asyncSafe */
 
   public async $getBraids(): Promise<WildkinBraidCeremony[]> {
     return BRAIDS;

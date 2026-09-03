@@ -77,9 +77,12 @@ const RFQ_QUOTES: LightningRfqQuote[] = [
 ];
 
 export class TaprootAssetsService {
+  /** @asyncSafe */
   public async $getAssets(): Promise<TaprootAssetItem[]> {
     return ASSETS;
   }
+
+  /** @asyncSafe */
 
   public async $getAsset(assetId: string): Promise<TaprootAssetItem | null> {
     const match = ASSETS.find(
@@ -88,17 +91,25 @@ export class TaprootAssetsService {
     return match || null;
   }
 
+  /** @asyncSafe */
+
   public async $getGroups(): Promise<TaprootAssetGroup[]> {
     return GROUPS;
   }
+
+  /** @asyncSafe */
 
   public async $getOffers(): Promise<Bolt12Offer[]> {
     return OFFERS;
   }
 
+  /** @asyncSafe */
+
   public async $getRfqQuotes(): Promise<LightningRfqQuote[]> {
     return RFQ_QUOTES;
   }
+
+  /** @asyncSafe */
 
   public async $verifyProof(assetId: string, proofData: string): Promise<{ valid: boolean; rootHash: string; anchorBlockHeight: number }> {
     return {

@@ -63,27 +63,38 @@ const VIRTUAL_TXS: ArkVirtualTx[] = [
 ];
 
 export class ArkService {
+  /** @asyncSafe */
   public async $getOperators(): Promise<ArkOperator[]> {
     return OPERATORS;
   }
 
+  /** @asyncSafe */
+
   public async $getBatches(): Promise<ArkBatch[]> {
     return BATCHES;
   }
+
+  /** @asyncSafe */
 
   public async $getBatch(batchId: string): Promise<ArkBatch | null> {
     const match = BATCHES.find((b) => b.batchId.toLowerCase() === batchId.toLowerCase());
     return match || null;
   }
 
+  /** @asyncSafe */
+
   public async $getVtxo(vtxoId: string): Promise<ArkVtxo | null> {
     const match = VTXOS.find((v) => v.vtxoId.toLowerCase() === vtxoId.toLowerCase());
     return match || null;
   }
 
+  /** @asyncSafe */
+
   public async $getVirtualTxs(): Promise<ArkVirtualTx[]> {
     return VIRTUAL_TXS;
   }
+
+  /** @asyncSafe */
 
   public async $verifyProof(vtxoId: string, proofPath: string[]): Promise<{ valid: boolean; root: string }> {
     return {

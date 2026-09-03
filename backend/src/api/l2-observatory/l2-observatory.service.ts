@@ -81,14 +81,19 @@ const AUDIT: Record<string, L2ReserveAudit> = {
 };
 
 export class L2ObservatoryService {
+  /** @asyncSafe */
   public async $getSystems(): Promise<L2BridgeSystem[]> {
     return SYSTEMS;
   }
+
+  /** @asyncSafe */
 
   public async $getSystem(id: string): Promise<L2BridgeSystem | null> {
     const match = SYSTEMS.find((s) => s.id.toLowerCase() === id.toLowerCase());
     return match || null;
   }
+
+  /** @asyncSafe */
 
   public async $getChallenges(systemId?: string): Promise<L2Challenge[]> {
     if (systemId) {
@@ -96,6 +101,8 @@ export class L2ObservatoryService {
     }
     return CHALLENGES;
   }
+
+  /** @asyncSafe */
 
   public async $getReserveAudit(systemId: string): Promise<L2ReserveAudit | null> {
     return AUDIT[systemId.toLowerCase()] || null;

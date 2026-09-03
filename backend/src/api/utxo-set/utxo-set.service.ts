@@ -64,9 +64,12 @@ const UTREEXO_ROOTS: UtreexoRootsView = {
 };
 
 export class UtxoSetService {
+  /** @asyncSafe */
   public async $getCheckpoints(): Promise<UtxoCheckpoint[]> {
     return CHECKPOINTS;
   }
+
+  /** @asyncSafe */
 
   public async $getDistribution(): Promise<{ valueCohorts: SupplyCohort[]; scriptTypes: ScriptTypeDistribution[] }> {
     return {
@@ -75,13 +78,19 @@ export class UtxoSetService {
     };
   }
 
+  /** @asyncSafe */
+
   public async $getProtocolUtxos(): Promise<ProtocolBearingUtxos> {
     return PROTOCOL_UTXOS;
   }
 
+  /** @asyncSafe */
+
   public async $getUtreexoRoots(): Promise<UtreexoRootsView> {
     return UTREEXO_ROOTS;
   }
+
+  /** @asyncSafe */
 
   public async $verifyUtreexoProof(proof: string[]): Promise<{ valid: boolean; leafCount: number }> {
     return {
