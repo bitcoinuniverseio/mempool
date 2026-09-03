@@ -28,6 +28,17 @@
 
 .crumbs {
   font-size: 0.85rem;
+
+  // Crumb links are repeated controls, so each one carries the touch floor:
+  // inline padding alone measured 43.56px wide, a hair under the 44px the
+  // mobile gate requires of a control a thumb can land on repeatedly.
+  a {
+    display: inline-block;
+    min-width: var(--u-touch-target);
+    min-height: var(--u-touch-target);
+    line-height: var(--u-touch-target);
+  }
+
   .divider { margin: 0 0.35rem; }
 }
 
