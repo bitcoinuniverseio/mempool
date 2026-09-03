@@ -1,0 +1,120 @@
+@use '../universe-tokens' as u;
+
+:host {
+  @include u.universe-protocol-tokens;
+  @include u.universe-state-tokens;
+
+  display: block;
+}
+
+.anima-page {
+  padding-block: 1.25rem 3rem;
+}
+
+.page-head {
+  margin-bottom: 1rem;
+
+  h1 {
+    font-size: 1.5rem;
+    margin: 0.2rem 0 0;
+  }
+
+  .summary {
+    margin: 0.5rem 0 0;
+    max-width: 68ch;
+    color: var(--u-text-muted);
+  }
+}
+
+.crumbs {
+  font-size: 0.85rem;
+  .divider { margin: 0 0.35rem; }
+}
+
+.panel {
+  @include u.universe-surface;
+
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+
+  h2 {
+    font-size: 1rem;
+    margin: 0 0 0.6rem;
+  }
+
+  p { margin: 0 0 0.5rem; max-width: 72ch; }
+  p:last-of-type { margin-bottom: 0; }
+}
+
+.state-panel.degraded {
+  border-left: 3px solid var(--universe-state-partial);
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: minmax(7rem, max-content) 1fr;
+  gap: 0.35rem 1rem;
+  margin: 0;
+
+  dt { color: var(--u-text-muted); }
+  dd { margin: 0; overflow-wrap: anywhere; }
+}
+
+.event-list {
+  list-style: none;
+  margin: 0 0 0.6rem;
+  padding: 0;
+
+  li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding: 0.25rem 0;
+    border-bottom: 1px solid var(--u-divider);
+
+    &:last-child { border-bottom: none; }
+  }
+
+  .kind {
+    font-size: 0.8rem;
+    color: var(--u-text-muted);
+    text-transform: lowercase;
+    min-width: 4.5rem;
+  }
+
+  .height {
+    font-size: 0.8rem;
+    color: var(--u-text-muted);
+    margin-inline-start: auto;
+    white-space: nowrap;
+  }
+}
+
+.identifier {
+  @include u.universe-identifier;
+}
+
+.muted { color: var(--u-text-muted); }
+
+.load-more {
+  padding: 0.3em 0.9em;
+  border-radius: 0.25rem;
+  border: 1px solid var(--u-border);
+  background: transparent;
+  color: var(--u-text-muted);
+  font-size: 0.85rem;
+  min-height: 34px;
+  cursor: pointer;
+
+  &:disabled { opacity: 0.6; cursor: default; }
+}
+
+.skeleton-line {
+  height: 1rem;
+  border-radius: 0.2rem;
+  background: var(--u-divider);
+  margin: 0 0 0.6rem;
+
+  &.short { width: 40%; }
+}
