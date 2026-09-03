@@ -18,7 +18,7 @@ class DataStudioRoutes {
       const catalog = await dataStudioService.$getCatalog();
       res.json(catalog);
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 
@@ -32,7 +32,7 @@ class DataStudioRoutes {
       const result = await dataStudioService.$executeQuery(req.body);
       res.json(result);
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 
@@ -41,7 +41,7 @@ class DataStudioRoutes {
       const catalog = await dataStudioService.$getCatalog();
       res.json({ tools: catalog.mcpTools });
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 }

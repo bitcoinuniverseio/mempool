@@ -28,6 +28,8 @@ interface ArkViewModel {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ArkDashboardComponent implements OnInit {
+  // Templates format raw strings through the Number global; AOT needs it bound.
+  protected readonly Number = Number;
   private readonly state = new BehaviorSubject<ArkViewModel>({ kind: 'loading' });
   readonly vm$: Observable<ArkViewModel> = this.state.asObservable();
 

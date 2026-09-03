@@ -18,7 +18,7 @@ class StratumV2Routes {
       const roles = await stratumV2Service.$getRoles();
       res.json({ roles, total: roles.length });
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 
@@ -27,7 +27,7 @@ class StratumV2Routes {
       const templates = await stratumV2Service.$getTemplates();
       res.json({ templates, total: templates.length });
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 
@@ -36,7 +36,7 @@ class StratumV2Routes {
       const declarations = await stratumV2Service.$getDeclarations();
       res.json({ declarations, total: declarations.length });
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 }

@@ -31,6 +31,8 @@ interface Bip353Result {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PaymentStudioComponent {
+  // Templates format raw strings through the Number global; AOT needs it bound.
+  protected readonly Number = Number;
   bip21Uri = 'bitcoin:bc1q89abcdefabbaabbaabbaabbaabbaabbaabba?amount=0.005&label=Universe&lightning=lno1pg257enxv4ezqcneype82um50ynhxgrwdajx283q890cdse444n894v69n0q2sxve80q';
   bip353Name = 'user@bitcoinuniverse.io';
 

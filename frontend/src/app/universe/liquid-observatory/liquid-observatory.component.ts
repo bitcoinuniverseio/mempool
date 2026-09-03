@@ -28,6 +28,8 @@ interface LiquidViewModel {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LiquidObservatoryComponent implements OnInit {
+  // Templates format raw strings through the Number global; AOT needs it bound.
+  protected readonly Number = Number;
   private readonly state = new BehaviorSubject<LiquidViewModel>({ kind: 'loading' });
   readonly vm$: Observable<LiquidViewModel> = this.state.asObservable();
 

@@ -20,7 +20,7 @@ class LiquidObservatoryRoutes {
       const summary = await liquidObservatoryService.$getSummary();
       res.json(summary);
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 
@@ -29,7 +29,7 @@ class LiquidObservatoryRoutes {
       const assets = await liquidObservatoryService.$getAssets();
       res.json({ assets, total: assets.length });
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 
@@ -42,7 +42,7 @@ class LiquidObservatoryRoutes {
       }
       res.json(asset);
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 
@@ -51,7 +51,7 @@ class LiquidObservatoryRoutes {
       const pegs = await liquidObservatoryService.$getPegs();
       res.json({ pegs, total: pegs.length });
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 
@@ -60,7 +60,7 @@ class LiquidObservatoryRoutes {
       const federation = await liquidObservatoryService.$getFederation();
       res.json(federation);
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 }

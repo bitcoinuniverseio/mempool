@@ -20,7 +20,7 @@ class UtxoSetRoutes {
       const checkpoints = await utxoSetService.$getCheckpoints();
       res.json({ checkpoints, total: checkpoints.length });
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 
@@ -29,7 +29,7 @@ class UtxoSetRoutes {
       const distribution = await utxoSetService.$getDistribution();
       res.json(distribution);
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 
@@ -38,7 +38,7 @@ class UtxoSetRoutes {
       const data = await utxoSetService.$getProtocolUtxos();
       res.json(data);
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 
@@ -47,7 +47,7 @@ class UtxoSetRoutes {
       const roots = await utxoSetService.$getUtreexoRoots();
       res.json(roots);
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 
@@ -57,7 +57,7 @@ class UtxoSetRoutes {
       const result = await utxoSetService.$verifyUtreexoProof(proof || []);
       res.json(result);
     } catch (e) {
-      handleError(res, e);
+        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }
   }
 }

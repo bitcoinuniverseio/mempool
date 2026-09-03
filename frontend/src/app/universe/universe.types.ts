@@ -975,6 +975,15 @@ export interface ArkBatch {
   readonly status: 'settled' | 'provisional' | 'swept';
 }
 
+export interface ArkVirtualTx {
+  readonly virtualTxId: string;
+  readonly inputs: readonly string[];
+  readonly outputs: readonly { readonly userPubkey: string; readonly amountSats: string }[];
+  readonly feeSats: string;
+  readonly roundSequence: number;
+  readonly submittedAt: number;
+}
+
 export interface ArkVtxo {
   readonly vtxoId: string;
   readonly batchId: string;
