@@ -249,9 +249,18 @@
   &.tone-muted { color: var(--u-text-muted); }
 }
 
-.warnings-panel ul {
-  margin: 0;
-  padding-inline-start: 1.1rem;
+.warnings-panel {
+  h2 { margin: 0; }
+
+  .warning-copy {
+    max-width: 62ch;
+    margin: 0.4rem 0 0;
+    color: var(--u-text-muted);
+  }
+}
+
+.statement-warning {
+  margin: 0.4rem 0 0;
   color: var(--u-text-muted);
   font-size: var(--u-text-sm);
 }
