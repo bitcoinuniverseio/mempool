@@ -109,6 +109,30 @@
           <span class="nav-label" i18n="master-page.nav-protocols">Protocols</span>
         </a>
       </li>
+      <li class="nav-item" routerLinkActive="active" id="btn-universe-network" *ngIf="network.val === ''">
+        <a class="nav-link" [routerLink]="['/network/propagation']" (click)="collapse()">
+          <span class="nav-icon"><app-svg-images name="nav-universe-pulse" width="21.59" height="100%"></app-svg-images></span>
+          <span class="nav-label">Network</span>
+        </a>
+      </li>
+      <li class="nav-item" routerLinkActive="active" id="btn-universe-data" *ngIf="network.val === ''">
+        <a class="nav-link" routerLink="/data" (click)="collapse()">
+          <span class="nav-icon"><app-svg-images name="nav-book" width="21.59" height="100%"></app-svg-images></span>
+          <span class="nav-label">Data</span>
+        </a>
+      </li>
+      <li class="nav-item" routerLinkActive="active" id="btn-universe-tools" *ngIf="network.val === ''">
+        <a class="nav-link" routerLink="/tools/script" (click)="collapse()">
+          <span class="nav-icon"><app-svg-images name="nav-pickaxe" width="21.59" height="100%"></app-svg-images></span>
+          <span class="nav-label">Tools</span>
+        </a>
+      </li>
+      <li class="nav-item" routerLinkActive="active" id="btn-universe-labs" *ngIf="network.val === ''">
+        <a class="nav-link" routerLink="/l2" (click)="collapse()">
+          <span class="nav-icon"><app-svg-images name="nav-cubes" width="21.59" height="100%"></app-svg-images></span>
+          <span class="nav-label">Labs</span>
+        </a>
+      </li>
       <li class="nav-item" routerLinkActive="active" id="btn-universe-portfolio" *ngIf="network.val === ''">
         <a class="nav-link" routerLink="/portfolio" (click)="collapse()">
           <span class="nav-icon"><app-svg-images name="nav-universe-portfolio" width="21.59" height="100%"></app-svg-images></span>

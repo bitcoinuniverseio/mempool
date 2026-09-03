@@ -56,6 +56,17 @@ import stratumApi from './api/services/stratum';
 import adminAdapterRoutes from './api/admin-adapter/admin-adapter.routes';
 import adminAdapterRunStore from './api/admin-adapter/admin-adapter.runs';
 import { runtimeMetrics, runtimeMetricsMiddleware } from './api/admin-adapter/admin-adapter.runtime';
+import fractalRoutes from './api/fractal/fractal.routes';
+import zcashPrivacyRoutes from './api/zcash-privacy/zcash-privacy.routes';
+import liquidObservatoryRoutes from './api/liquid-observatory/liquid-observatory.routes';
+import dataStudioRoutes from './api/data-studio/data-studio.routes';
+import networkObservatoryRoutes from './api/network-observatory/network-observatory.routes';
+import taprootAssetsRoutes from './api/taproot-assets/taproot-assets.routes';
+import arkRoutes from './api/ark/ark.routes';
+import stratumV2Routes from './api/stratum-v2/stratum-v2.routes';
+import l2ObservatoryRoutes from './api/l2-observatory/l2-observatory.routes';
+import utxoSetRoutes from './api/utxo-set/utxo-set.routes';
+import wildkinRoutes from './api/wildkin/wildkin.routes';
 
 class Server {
   private wss: WebSocket.Server | undefined;
@@ -449,6 +460,17 @@ class Server {
     // The private Control Center adapter. Its guard refuses anything that
     // did not arrive over a private path with a valid signature.
     adminAdapterRoutes.initRoutes(this.app);
+    fractalRoutes.initRoutes(this.app);
+    zcashPrivacyRoutes.initRoutes(this.app);
+    liquidObservatoryRoutes.initRoutes(this.app);
+    dataStudioRoutes.initRoutes(this.app);
+    networkObservatoryRoutes.initRoutes(this.app);
+    taprootAssetsRoutes.initRoutes(this.app);
+    arkRoutes.initRoutes(this.app);
+    stratumV2Routes.initRoutes(this.app);
+    l2ObservatoryRoutes.initRoutes(this.app);
+    utxoSetRoutes.initRoutes(this.app);
+    wildkinRoutes.initRoutes(this.app);
   }
 
   healthCheck(): void {

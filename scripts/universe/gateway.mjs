@@ -237,6 +237,9 @@ export function routeFor(pathname, originalUrl) {
   if (pathname === '/api/v2/universe' || pathname.startsWith('/api/v2/universe/')) {
     return { upstream: OVERLAY, path: originalUrl };
   }
+  if (pathname === '/api/v1/zcash/privacy' || pathname.startsWith('/api/v1/zcash/privacy/')) {
+    return { upstream: BACKEND, path: originalUrl };
+  }
   for (const prefix of OVERLAY_CHAIN_PREFIXES) {
     if (pathname === prefix || pathname.startsWith(`${prefix}/`)) {
       return { upstream: OVERLAY, path: originalUrl };
