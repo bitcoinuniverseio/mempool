@@ -48,9 +48,25 @@ import accelerationRoutes from './api/acceleration/acceleration.routes';
 import aboutRoutes from './api/about.routes';
 import capabilities from './api/capabilities';
 import capabilitiesRoutes from './api/capabilities.routes';
+import mempoolIntelligenceRoutes from './api/mempool-intelligence/mempool-intelligence.routes';
+import nodeConsoleRoutes from './api/node-console/node-console.routes';
 import mempoolBlocks from './api/mempool-blocks';
 import walletApi from './api/services/wallets';
 import stratumApi from './api/services/stratum';
+import adminAdapterRoutes from './api/admin-adapter/admin-adapter.routes';
+import adminAdapterRunStore from './api/admin-adapter/admin-adapter.runs';
+import { runtimeMetrics, runtimeMetricsMiddleware } from './api/admin-adapter/admin-adapter.runtime';
+import fractalRoutes from './api/fractal/fractal.routes';
+import zcashPrivacyRoutes from './api/zcash-privacy/zcash-privacy.routes';
+import liquidObservatoryRoutes from './api/liquid-observatory/liquid-observatory.routes';
+import dataStudioRoutes from './api/data-studio/data-studio.routes';
+import networkObservatoryRoutes from './api/network-observatory/network-observatory.routes';
+import taprootAssetsRoutes from './api/taproot-assets/taproot-assets.routes';
+import arkRoutes from './api/ark/ark.routes';
+import stratumV2Routes from './api/stratum-v2/stratum-v2.routes';
+import l2ObservatoryRoutes from './api/l2-observatory/l2-observatory.routes';
+import utxoSetRoutes from './api/utxo-set/utxo-set.routes';
+import wildkinRoutes from './api/wildkin/wildkin.routes';
 
 class Server {
   private wss: WebSocket.Server | undefined;
@@ -159,6 +175,7 @@ class Server {
       .use(express.urlencoded({ extended: true, limit: '10mb' }))
       .use(express.text({ type: ['text/plain', 'application/base64'], limit: '10mb' }))
       .use(express.json({ limit: '10mb' }))
+      .use(runtimeMetricsMiddleware())
       ;
 
     if (config.DATABASE.ENABLED) {
@@ -217,6 +234,12 @@ class Server {
       void priceUpdater.$run();
     }
     await chainTips.updateOrphanedBlocks();
+
+    runtimeMetrics.start();
+    // A restart in the middle of an operation leaves a run with an expired
+    // lease. Reclaiming here is what stops the panel from showing a spinner
+    // nothing will ever resolve.
+    void adminAdapterRunStore.reconcileAbandonedRuns();
 
     this.setUpHttpApiRoutes();
 
@@ -376,6 +399,20 @@ class Server {
     if (config.MEMPOOL.OFFICIAL) {
       bitcoinCoreRoutes.initRoutes(this.app);
     }
+    // Clusters, chunks and the fee rate diagram are read from the mempool
+    // this process already holds, so they cost no Bitcoin Core RPC call. With
+    // the mempool switched off there is nothing to describe and the routes
+    // stay unmounted rather than answering with an empty mempool.
+    if (config.MEMPOOL.ENABLED) {
+      mempoolIntelligenceRoutes.initRoutes(this.app);
+      capabilities.markRoutesRegistered('mempoolIntelligence');
+    }
+    // The node console reads Bitcoin Core through an allowlist and never
+    // through a name taken from a request. Mounted in every deployment,
+    // because this process talks to Core whatever the address backend is,
+    // and each section of the console reports its own unavailability rather
+    // than the whole page going missing when one method is quiet.
+    nodeConsoleRoutes.initRoutes(this.app);
     pricesRoutes.initRoutes(this.app);
     if (capabilities.statisticsEnabled()) {
       statisticsRoutes.initRoutes(this.app);
@@ -405,6 +442,35 @@ class Server {
     if (!config.MEMPOOL.OFFICIAL && config.EXTERNAL_DATA_SERVER.MEMPOOL_API) {
       aboutRoutes.initRoutes(this.app);
     }
+    // Capability route registration the optional reports read. Doing this
+    // here keeps "the routes were mounted" a fact rather than a guess.
+    if (Common.isLiquid()) {
+      capabilities.markRoutesRegistered('liquid');
+    }
+    if (config.LIGHTNING.ENABLED) {
+      capabilities.markRoutesRegistered('lightning');
+    }
+    capabilities.markRoutesRegistered('prices');
+    if (config.MEMPOOL_SERVICES.ACCELERATIONS) {
+      capabilities.markRoutesRegistered('accelerations');
+    }
+    if (config.WALLETS.ENABLED) {
+      capabilities.markRoutesRegistered('wallets');
+    }
+    // The private Control Center adapter. Its guard refuses anything that
+    // did not arrive over a private path with a valid signature.
+    adminAdapterRoutes.initRoutes(this.app);
+    fractalRoutes.initRoutes(this.app);
+    zcashPrivacyRoutes.initRoutes(this.app);
+    liquidObservatoryRoutes.initRoutes(this.app);
+    dataStudioRoutes.initRoutes(this.app);
+    networkObservatoryRoutes.initRoutes(this.app);
+    taprootAssetsRoutes.initRoutes(this.app);
+    arkRoutes.initRoutes(this.app);
+    stratumV2Routes.initRoutes(this.app);
+    l2ObservatoryRoutes.initRoutes(this.app);
+    utxoSetRoutes.initRoutes(this.app);
+    wildkinRoutes.initRoutes(this.app);
   }
 
   healthCheck(): void {

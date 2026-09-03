@@ -101,6 +101,9 @@ export const fixtures = {
       { protocolId: 'alkanes', displayName: 'Alkanes', chain: 'bitcoin', family: 'contracts', releaseStatus: 'verified_read_only', authority: 'metashrew', coverage: { fromHeight: 880_000, toHeight: 887_412 } },
       { protocolId: 'stamps', displayName: 'Stamps', chain: 'bitcoin', family: 'inscriptions', releaseStatus: 'experimental', authority: 'stampchain', coverage: { fromHeight: 779_652, toHeight: 886_900 } },
       { protocolId: 'atomicals', displayName: 'Atomicals', chain: 'bitcoin', family: 'fungible', releaseStatus: 'blocked', authority: null, coverage: null },
+      // The ANIMA entry in the registry contract's own shape, so the
+      // protocol page for it renders as the real page will.
+      { schemaVersion: 'universe-explorer-protocol-v1', id: 'anima', aliases: [], displayName: 'ANIMA', shortName: 'ANIMA', family: 'OTHER', chain: 'bitcoin', networks: ['mainnet'], icon: 'protocol-anima', visualToken: 'protocol-anima', implementedReadOperations: [], authorizedReadOperations: [], releaseStatus: 'BLOCKED', indexerAuthority: 'index-anima', coverage: 'unknown' },
     ],
   },
 
@@ -124,6 +127,60 @@ export const fixtures = {
     checked: 512,
     authorityAnswering: true,
     counts: { ordinals: 41, runes: 12, alkanes: 3, stamps: 0 },
+  },
+
+  // The ANIMA evidence explorer reads its own authority through the overlay.
+  // The fixture carries the served documents the pages render, in the
+  // authority's own field shapes.
+  '/api/v1/anima/status': {
+    schemaVersion: 'universe-anima-v1',
+    authorityId: 'index-anima',
+    state: 'served',
+    status: {
+      network: 'mainnet',
+      activationHeight: 864_720,
+      kindling: { start: 864_720, end: 868_751 },
+      scanner: {
+        tipHeight: 907_144,
+        tipHash: '000000000000000000012a4c5d8e9f0a1b2c3d4e5f60718293a4b5c6d7e8f90a1b',
+        nodeHeight: 907_144,
+        reorgs: 2,
+        blocksApplied: 42_424,
+        syncing: false,
+        lastError: null,
+      },
+      supply: { created: 3_412, live: 2_980, fused: 104, spawned: 210, retired: 88, burned: 30 },
+    },
+    loggedEventCountAtomic: '12_804'.replace('_', ''),
+    degradedReason: null,
+  },
+  '/api/v1/anima/events': {
+    schemaVersion: 'universe-anima-v1',
+    authorityId: 'index-anima',
+    state: 'served',
+    total: 4,
+    from: 0,
+    events: [
+      { eventId: 'a907100:1', height: 907_100, txIndex: 1, txid: '1f2e3d4c5b6a79880123456789abcdef0123456789abcdef0123456789abcdef'.slice(0, 64), kind: 'transfer', organisms: ['0aff'] },
+      { eventId: 'a907098:0', height: 907_098, txIndex: 0, txid: '2e3d4c5b6a79880123456789abcdef0123456789abcdef0123456789abcdef01'.slice(0, 64), kind: 'waymark', organisms: ['0aff', '0b3e'] },
+      { eventId: 'a907090:2', height: 907_090, txIndex: 2, txid: '3d4c5b6a79880123456789abcdef0123456789abcdef0123456789abcdef0122'.slice(0, 64), kind: 'achieve', organisms: ['0b3e'] },
+      { eventId: 'a907081:0', height: 907_081, txIndex: 0, txid: '4c5b6a79880123456789abcdef0123456789abcdef0123456789abcdef01233'.slice(0, 64), kind: 'genesis', organisms: ['0c7d'] },
+    ],
+    degradedReason: null,
+  },
+  '/api/v1/anima/organisms': {
+    schemaVersion: 'universe-anima-v1',
+    authorityId: 'index-anima',
+    state: 'served',
+    total: 3,
+    offset: 0,
+    limit: 50,
+    organisms: [
+      { id: '0aff', genesisTxid: '1f2e3d4c5b6a79880123456789abcdef0123456789abcdef0123456789abcdef', genesisVout: 0, genome: 'aa55aa55', spec: 'a-1', meta: null, vessel: null, status: 'alive', createdHeight: 907_081, generationZero: true, origin: 'genesis', parents: [], children: [], waymarkSeq: 1, waymarks: [], achievements: [], transferCount: 4, endedHeight: null, endedTxid: null },
+      { id: '0b3e', genesisTxid: '2e3d4c5b6a79880123456789abcdef0123456789abcdef0123456789abcdef01'.slice(0, 64), genesisVout: 1, genome: 'bb66bb66', spec: 'a-1', meta: null, vessel: null, status: 'fused', createdHeight: 899_212, generationZero: false, origin: 'fuse', parents: ['0aff'], children: [], waymarkSeq: 3, waymarks: [], achievements: [], transferCount: 9, endedHeight: 906_402, endedTxid: null },
+      { id: '0c7d', genesisTxid: '3d4c5b6a79880123456789abcdef0123456789abcdef0123456789abcdef0122'.slice(0, 64), genesisVout: 0, genome: 'cc77cc77', spec: 'a-2', meta: null, vessel: null, status: 'retired', createdHeight: 890_004, generationZero: false, origin: 'spawn', parents: [], children: ['0aff'], waymarkSeq: 0, waymarks: [], achievements: [], transferCount: 2, endedHeight: 902_118, endedTxid: null },
+    ],
+    degradedReason: null,
   },
 };
 

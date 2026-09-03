@@ -22,6 +22,9 @@ import { execSync } from 'child_process';
     password: config.DATABASE.PASSWORD,
     connectionLimit: config.DATABASE.POOL_SIZE,
     supportBigNumbers: true,
+    // Repository code parses JSON columns at its API boundaries. Keep the
+    // driver response stable across MySQL and MariaDB extended metadata.
+    jsonStrings: true,
     timezone: '+00:00',
   };
 

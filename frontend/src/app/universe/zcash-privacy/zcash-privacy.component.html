@@ -1,0 +1,106 @@
+<div class="container-xl product-page">
+  <header class="page-head">
+    <nav class="crumbs">
+      <a [routerLink]="['/']">Home</a>
+      <span class="divider">/</span>
+      <a [routerLink]="['/zcash']">Zcash</a>
+      <span class="divider">/</span>
+      <span>Privacy Observatory</span>
+    </nav>
+    <h1>Zcash Privacy Observatory</h1>
+    <p class="summary">
+      Pool supply accounting, Halo 2 Orchard turnstile migrations, Groth16 Sapling pools, and non-custodial viewing-key workspaces.
+    </p>
+  </header>
+
+  <nav class="nav-tabs">
+    <a [routerLink]="['/zcash/privacy']" class="active">Pools & Upgrades</a>
+    <a [routerLink]="['/zcash/privacy/workspace']">Viewing-Key Workspace</a>
+  </nav>
+
+  <ng-container *ngIf="vm$ | async as vm">
+    <div *ngIf="vm.kind === 'loading'" class="panel" aria-busy="true">
+      <p>Reading Zcash privacy pool ledger...</p>
+    </div>
+
+    <div *ngIf="vm.kind === 'error'" class="panel">
+      <h2>Zcash Node Offline</h2>
+      <p>Could not connect to Universe first-party Zcash consensus node.</p>
+    </div>
+
+    <ng-container *ngIf="vm.kind === 'ready' && vm.summary">
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <span class="metric-label">Shielded Supply</span>
+          <span class="metric-value">{{ vm.summary.shieldedPercentage }}%</span>
+          <span class="metric-sub">{{ (Number(vm.summary.totalShieldedSupplyZat) / 1e8).toFixed(2) }} ZEC</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Circulating Supply</span>
+          <span class="metric-value">{{ (Number(vm.summary.totalCirculatingSupplyZat) / 1e8).toFixed(2) }} ZEC</span>
+          <span class="metric-sub">Tip Height: #{{ vm.summary.tipHeight }}</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Orchard Pool (Halo 2)</span>
+          <span class="metric-value">{{ vm.summary.pools[1].balanceZec }} ZEC</span>
+          <span class="metric-sub">{{ vm.summary.pools[1].percentageOfSupply }}% of supply</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Sapling Pool</span>
+          <span class="metric-value">{{ vm.summary.pools[2].balanceZec }} ZEC</span>
+          <span class="metric-sub">{{ vm.summary.pools[2].percentageOfSupply }}% of supply</span>
+        </div>
+      </div>
+
+      <section class="panel">
+        <h2>Value Pool Breakdown</h2>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Pool Name</th>
+              <th>Shielded</th>
+              <th>Balance (ZEC)</th>
+              <th>Supply Share</th>
+              <th>Transactions</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of vm.summary.pools">
+              <td><strong>{{ p.name }}</strong></td>
+              <td><span class="badge" [ngClass]="p.shielded ? 'badge-success' : 'badge-warning'">{{ p.shielded ? 'Shielded' : 'Transparent' }}</span></td>
+              <td class="mono">{{ p.balanceZec }}</td>
+              <td>{{ p.percentageOfSupply }}%</td>
+              <td>{{ p.txCount.toLocaleString() }}</td>
+              <td><span class="badge badge-info">{{ p.deprecationStatus }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="panel">
+        <h2>Network Upgrade Milestones</h2>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Upgrade Name</th>
+              <th>Branch ID</th>
+              <th>Activation Block</th>
+              <th>Date</th>
+              <th>Key Innovations</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let u of vm.summary.upgrades">
+              <td><strong>{{ u.name }}</strong></td>
+              <td class="mono">{{ u.branchId }}</td>
+              <td>#{{ u.activationHeight }}</td>
+              <td>{{ u.activatedAt }}</td>
+              <td>{{ u.features.join(', ') }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </ng-container>
+  </ng-container>
+</div>

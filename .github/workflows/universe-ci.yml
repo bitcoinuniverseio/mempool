@@ -57,6 +57,19 @@ jobs:
       - name: The protocol roster gate fires on the states it exists for
         run: node --test scripts/universe/protocol-contract.test.mjs
 
+      # The portfolio API is described by a document backend-apis generates
+      # from its own contracts, and this repository reads that API through
+      # handwritten interfaces. Handwritten interfaces are where a contract
+      # quietly stops being true: a field is renamed upstream, the interface
+      # keeps the old name, and every read of it is undefined at runtime
+      # while the compiler stays perfectly happy. This holds the two
+      # together in both directions.
+      - name: The pinned portfolio contract matches the interfaces that read it
+        run: node scripts/universe/portfolio-contract.mjs --check
+
+      - name: The portfolio contract gate fires on the states it exists for
+        run: node --test scripts/universe/portfolio-contract.test.mjs
+
       - name: No em dash anywhere
         run: node scripts/universe/check-text.mjs
 
@@ -80,6 +93,9 @@ jobs:
 
       - name: Gateway routing
         run: node --test scripts/universe/gateway.test.mjs
+
+      - name: The Explorer admin address redirects to the Control Center
+        run: node --test scripts/universe/admin-redirect.test.mjs
 
       - name: The component identity check can still fail
         run: node --test scripts/universe/release-manifest.test.mjs
@@ -245,8 +261,16 @@ jobs:
         working-directory: frontend
         run: npm run test:ci
 
+      # The runner host shares memory across every job it holds. A webpack
+      # build left to size its own worker pool will grow into whatever the
+      # machine has and die to the kernel OOM killer mid build, so both the
+      # worker pool and the main heap are bounded here. The build takes a
+      # little longer and actually finishes.
       - name: Production build
         working-directory: frontend
+        env:
+          NG_BUILD_MAX_WORKERS: '2'
+          NODE_OPTIONS: --max-old-space-size=4096
         run: npm run build:universe
 
       - name: Built bundle carries no upstream marks
@@ -669,18 +693,14 @@ jobs:
   # two steps back in the one above, which is where they belong.
   mobile-engines:
     name: WebKit and Firefox
-    # RunsOn Spot, per the change on develop that replaced the GitHub-hosted
-    # label here. This was the one required check in this workflow that needed
-    # a GitHub-hosted runner, and on 2026-08-30 the organization's plan stopped
-    # providing them: every run of this job failed while the four self-hosted
-    # checks beside it kept passing.
-    #
-    # Worth revisiting: this job takes screenshots at seven widths, and the
-    # routing rule those changes introduced keeps screenshot and baseline work
-    # on the local fleet because its output depends on the host. `browser-heavy`
-    # carries a browser and the libraries these engines need, and costs nothing.
-    runs-on: runs-on=${{ github.run_id }}-mobile_engines/runner=universe-hosted/cpu=2+8/env=production
+    # The Windows browser fleet can run both engines without a privileged
+    # system package install. The job uses Git Bash so it shares one script
+    # with the Linux browser checks.
+    runs-on: [self-hosted, Windows, X64, universe-router]
     timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -696,23 +716,23 @@ jobs:
         working-directory: frontend
         run: npm ci
 
+      # Same bounds as the frontend job's build: a bounded worker pool and a
+      # bounded heap, so the build survives a host that shares memory with
+      # everything else it holds.
       - name: Production build
         working-directory: frontend
+        env:
+          NG_BUILD_MAX_WORKERS: '2'
+          NODE_OPTIONS: --max-old-space-size=4096
         run: npm run build:universe
 
       - name: Install the visual QA harness
         working-directory: scripts/universe/visual-qa
         run: npm ci
 
-      # `--with-deps` installs system libraries and needs root, which a
-      # self-hosted runner account may not have. These runners already carry
-      # what Chromium needs, which is very nearly the same set, so a refused
-      # dependency install falls back to fetching the engines alone rather
-      # than failing a gate over a permission.
-      - name: Fetch the engines and what they need to start
+      - name: Fetch the engines
         working-directory: scripts/universe/visual-qa
-        run: |
-          npx playwright install --with-deps webkit firefox             || npx playwright install webkit firefox
+        run: npx playwright install webkit firefox
 
       - name: Serve the built frontend
         run: |

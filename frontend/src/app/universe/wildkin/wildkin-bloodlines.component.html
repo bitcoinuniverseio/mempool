@@ -1,0 +1,61 @@
+<div class="container-xl product-page">
+  <header class="page-head">
+    <nav class="crumbs">
+      <a [routerLink]="['/protocols']">Protocols</a>
+      <span class="divider">/</span>
+      <a [routerLink]="['/wildkin']">Wildkin</a>
+      <span class="divider">/</span>
+      <span>Bloodlines</span>
+    </nav>
+    <h1>Wildkin Bloodlines & Braid Ceremonies</h1>
+    <p class="summary">
+      Dual-parent inscription provenance, inheritance commitments, and lifetime reproduction limits enforced on-chain.
+    </p>
+  </header>
+
+  <nav class="nav-tabs">
+    <a [routerLink]="['/wildkin']">Overview</a>
+    <a [routerLink]="['/wildkin/creatures']">Creatures</a>
+    <a [routerLink]="['/wildkin/bloodlines']" class="active">Bloodlines & Braids</a>
+  </nav>
+
+  <ng-container *ngIf="vm$ | async as vm">
+    <div *ngIf="vm.kind === 'loading'" class="panel" aria-busy="true">
+      <p>Loading braid ceremony history...</p>
+    </div>
+
+    <ng-container *ngIf="vm.kind === 'ready'">
+      <section class="panel">
+        <h2>Settled Braid Ceremonies</h2>
+        <p>
+          A transaction is a valid braid when it spends the binding UTXO of both named parents, commits the inheritance manifest hash, and inscribes exactly one heir creature as a child of both parents.
+        </p>
+
+        <table class="data-table" *ngIf="vm.braids?.length">
+          <thead>
+            <tr>
+              <th>Braid Txid</th>
+              <th>Heir Creature</th>
+              <th>Parent Alpha</th>
+              <th>Parent Beta</th>
+              <th>Inheritance Manifest</th>
+              <th>Block</th>
+              <th>Validity</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let b of vm.braids">
+              <td class="mono"><a [routerLink]="['/tx', b.braidTxid]">{{ b.braidTxid.slice(0, 16) }}...</a></td>
+              <td class="mono"><strong><a [routerLink]="['/wildkin/creature', b.heirCreatureId]">{{ b.heirCreatureId }}</a></strong></td>
+              <td class="mono"><a [routerLink]="['/wildkin/creature', b.parentAId]">{{ b.parentAId }}</a></td>
+              <td class="mono"><a [routerLink]="['/wildkin/creature', b.parentBId]">{{ b.parentBId }}</a></td>
+              <td class="mono">{{ b.inheritanceManifestHash.slice(0, 14) }}...</td>
+              <td>{{ b.blockHeight }}</td>
+              <td><span class="badge badge-success">Valid Braid</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </ng-container>
+  </ng-container>
+</div>

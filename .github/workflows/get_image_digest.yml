@@ -9,8 +9,16 @@ on:
         default: 'latest'
         type: string 
 jobs:
+  route:
+    uses: ./.github/workflows/route.yml
+    secrets: inherit
+    with:
+      plan: '{"print_images_sha":"light"}'
+      config_ref: 1dd19289af21f4f6be01f874390a180b3af8bb38
+
   print-images-sha:
-    runs-on: runs-on=${{ github.run_id }}-print_images_sha/runner=universe-hosted/cpu=2+8/env=production
+    needs: route
+    runs-on: ${{ fromJSON(needs.route.outputs.targets).print_images_sha }}
     name: Print digest for images
     steps:
       - name: Checkout

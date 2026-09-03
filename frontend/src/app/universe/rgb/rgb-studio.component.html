@@ -1,0 +1,62 @@
+<div class="container-xl product-page">
+  <header class="page-head">
+    <nav class="crumbs">
+      <a [routerLink]="['/']">Home</a>
+      <span class="divider">/</span>
+      <span>Client-Side Validation</span>
+    </nav>
+    <h1>RGB Client-Side Validation & Consignment Studio</h1>
+    <p class="summary">
+      Browser-isolated client-side validation engine for RGB consignments, single-use seals, transition DAGs, and Bitcoin transaction anchors.
+    </p>
+  </header>
+
+  <section class="panel">
+    <h2>Client-Side Consignment Validator</h2>
+    <p>
+      Load or paste an RGB consignment (binary or hex). Validation executes completely in-memory using WebAssembly; no consignment data is uploaded to any server.
+    </p>
+
+    <div class="form-group">
+      <label for="consignmentInput">RGB Consignment Data (Hex / Armored)</label>
+      <textarea id="consignmentInput" [(ngModel)]="consignmentHex" rows="4" placeholder="rgb:consignment:... or hex data"></textarea>
+    </div>
+
+    <button type="button" class="btn-primary" (click)="validate()" [disabled]="validating || !consignmentHex.trim()">
+      {{ validating ? 'Validating Seals in WASM...' : 'Validate Consignment' }}
+    </button>
+  </section>
+
+  <ng-container *ngIf="result$ | async as res">
+    <section class="panel">
+      <h2>Validation Evidence</h2>
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <span class="metric-label">Status</span>
+          <span class="metric-value text-success">{{ res.valid ? 'VALID' : 'INVALID' }}</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Transitions</span>
+          <span class="metric-value">{{ res.transitionsCount }}</span>
+          <span class="metric-sub">DAG Depth Verified</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Single-Use Seals</span>
+          <span class="metric-value">{{ res.sealsCount }}</span>
+          <span class="metric-sub">All Outpoints Closed</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Anchor TX</span>
+          <span class="metric-value" style="font-size: 1rem;">{{ res.genesisTxid.slice(0, 12) }}...</span>
+          <span class="metric-sub">Bitcoin confirmed</span>
+        </div>
+      </div>
+
+      <div style="margin-top: 1rem;">
+        <p><strong>Contract ID:</strong> <span class="mono">{{ res.contractId }}</span></p>
+        <p><strong>Schema:</strong> <span class="mono">{{ res.schemaId }}</span></p>
+        <p><span class="badge badge-success">Client-Validated</span> {{ res.statusMessage }}</p>
+      </div>
+    </section>
+  </ng-container>
+</div>

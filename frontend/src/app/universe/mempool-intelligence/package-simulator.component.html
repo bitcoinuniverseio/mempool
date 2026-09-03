@@ -1,0 +1,249 @@
+<div class="container-xl package-simulator">
+  <header class="page-head">
+    <h1 i18n="mempool.simulate.heading">Package simulator</h1>
+    <p class="lede" i18n="mempool.simulate.lede">
+      Ask this node what it would do with a set of transactions, without
+      sending them. It reports the verdict in the node's own words, the
+      transactions in the way, and how much a replacement is short by.
+    </p>
+  </header>
+
+  <form class="entry" (ngSubmit)="run()" novalidate>
+    <label for="package-input" i18n="mempool.simulate.input-label">
+      Raw transactions, one per line
+    </label>
+    <textarea id="package-input" name="package" rows="6" spellcheck="false"
+      autocomplete="off" autocapitalize="off" autocorrect="off"
+      [(ngModel)]="input"
+      aria-describedby="package-input-help"
+      placeholder="0200000001..."></textarea>
+    <p id="package-input-help" class="field-help" i18n="mempool.simulate.input-help">
+      Hexadecimal only, up to {{ maxPackageSize }} transactions, which is the
+      most a node relays as one package. A pasted JSON array works as it is.
+      Nothing here is broadcast.
+    </p>
+
+    <div class="actions">
+      <button type="submit" class="btn btn-primary btn-sm" [disabled]="running">
+        <ng-container *ngIf="!running" i18n="mempool.simulate.run">Ask the node</ng-container>
+        <ng-container *ngIf="running" i18n="mempool.simulate.running">Asking…</ng-container>
+      </button>
+      <button type="button" class="btn btn-sm" (click)="clear()" i18n="mempool.simulate.clear">Clear</button>
+    </div>
+  </form>
+
+  <p class="secret" role="alert" *ngIf="secretWarning">{{ secretWarning }}</p>
+  <p class="error" role="alert" *ngIf="inputError">{{ inputError }}</p>
+  <p class="error" role="alert" *ngIf="requestError">{{ requestError }}</p>
+
+  <ng-container *ngIf="simulation as sim">
+    <p class="headline" *ngIf="headline as verdict"
+      [attr.data-positive]="verdict.positive" role="status">
+      {{ verdict.text }}
+    </p>
+
+    <section class="summary">
+      <h2 i18n="mempool.simulate.summary-heading">The package as a whole</h2>
+      <dl class="facts">
+        <div>
+          <dt i18n="mempool.simulate.fact-count">Transactions</dt>
+          <dd>{{ sim.transactions.length }}</dd>
+        </div>
+        <div>
+          <dt i18n="mempool.simulate.fact-fee">Total fee</dt>
+          <dd>
+            {{ sats(sim.packageFeeSats) }}
+            <span class="unit" *ngIf="sim.packageFeeSats !== null" i18n="mempool.simulate.unit-sat">sat</span>
+          </dd>
+        </div>
+        <div>
+          <dt i18n="mempool.simulate.fact-vsize">Virtual size</dt>
+          <dd>{{ vsize(sim.packageVsize) }} <span class="unit" i18n="mempool.simulate.unit-vb">vB</span></dd>
+        </div>
+        <div>
+          <dt i18n="mempool.simulate.fact-shape">Shape</dt>
+          <dd>
+            <ng-container *ngIf="sim.connected" i18n="mempool.simulate.shape-connected">
+              One connected package
+            </ng-container>
+            <ng-container *ngIf="!sim.connected" i18n="mempool.simulate.shape-separate">
+              Separate transactions, not one package
+            </ng-container>
+          </dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="queue" *ngIf="sim.queuePosition as position">
+      <h2 i18n="mempool.simulate.queue-heading">Where it would sit</h2>
+      <p i18n="mempool.simulate.queue-body">
+        At {{ exactRate(position.feerate) }} sat/vB, {{ vsize(position.vsizeAhead) }}
+        virtual bytes of mempool pay better than this package's best group.
+        That is {{ blocks(position.vsizeAhead) }} full blocks of work ahead of it.
+      </p>
+      <p class="field-help" i18n="mempool.simulate.queue-caveat">
+        A projection from the mempool this node holds right now, and nothing
+        more. The mempool changes, and a miner is free to build any block they
+        like.
+      </p>
+    </section>
+
+    <section class="replacement" *ngIf="sim.replacement as rbf">
+      <h2 i18n="mempool.simulate.replacement-heading">What it would replace</h2>
+      <dl class="facts">
+        <div>
+          <dt i18n="mempool.simulate.fact-evicted">Transactions evicted</dt>
+          <dd>{{ rbf.evictedTxids.length }}</dd>
+        </div>
+        <div>
+          <dt i18n="mempool.simulate.fact-evicted-fee">Fees they pay</dt>
+          <dd>{{ sats(rbf.evictedFeeSats) }} <span class="unit">sat</span></dd>
+        </div>
+        <div>
+          <dt i18n="mempool.simulate.fact-required">Fee required</dt>
+          <dd>{{ sats(rbf.requiredFeeSats) }} <span class="unit">sat</span></dd>
+        </div>
+        <div>
+          <dt i18n="mempool.simulate.fact-shortfall">Short by</dt>
+          <dd>
+            <ng-container *ngIf="rbf.incompleteReason === null">
+              {{ sats(rbf.shortfallSats) }} <span class="unit">sat</span>
+            </ng-container>
+            <span class="unnamed" *ngIf="rbf.incompleteReason">{{ rbf.incompleteReason }}</span>
+          </dd>
+        </div>
+      </dl>
+      <p class="field-help" i18n="mempool.simulate.replacement-rule">
+        A replacement pays for everything it evicts, plus the relay cost of its
+        own size at this node's incremental rate. Descendants go with their
+        parent, because they spend outputs that would stop existing.
+      </p>
+
+      <table class="table table-sm record-table">
+        <caption class="sr-only" i18n="mempool.simulate.conflict-caption">
+          Every outpoint two transactions both want, and the transaction that has it.
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col" i18n="mempool.simulate.col-outpoint">Outpoint</th>
+            <th scope="col" i18n="mempool.simulate.col-wanted-by">Wanted by</th>
+            <th scope="col" i18n="mempool.simulate.col-held-by">Already held by</th>
+            <th scope="col" class="numeric" i18n="mempool.simulate.col-goes">Goes with it</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let conflict of sim.conflicts; trackBy: trackByOutpoint">
+            <th scope="row"><code>{{ short(conflict.outpoint) }}</code></th>
+            <td><code>{{ short(conflict.candidateTxid) }}</code></td>
+            <td>
+              <a [routerLink]="['/tx', conflict.incumbentTxid]">
+                <code>{{ short(conflict.incumbentTxid) }}</code>
+              </a>
+            </td>
+            <td class="numeric">{{ conflict.evictedTxids.length }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="members">
+      <h2 i18n="mempool.simulate.members-heading">Each transaction</h2>
+      <table class="table table-sm record-table">
+        <caption class="sr-only" i18n="mempool.simulate.members-caption">
+          Every transaction in the package, with the node verdict and the group it falls in.
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col" i18n="mempool.simulate.col-tx">Transaction</th>
+            <th scope="col" class="numeric" i18n="mempool.simulate.col-vsize">vB</th>
+            <th scope="col" class="numeric" i18n="mempool.simulate.col-fee">Fee</th>
+            <th scope="col" class="numeric" i18n="mempool.simulate.col-own-rate">Own rate</th>
+            <th scope="col" class="numeric" i18n="mempool.simulate.col-group-rate">Group rate</th>
+            <th scope="col" i18n="mempool.simulate.col-verdict">Verdict</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let tx of sim.transactions; trackBy: trackByTxid"
+            [attr.data-allowed]="tx.allowed">
+            <th scope="row">
+              <code>{{ short(tx.txid) }}</code>
+              <span class="note" *ngIf="tx.parents.length" i18n="mempool.simulate.spends-count">
+                spends {{ tx.parents.length }} in this package
+              </span>
+              <span class="note" *ngIf="tx.mempoolInputs" i18n="mempool.simulate.mempool-inputs">
+                {{ tx.mempoolInputs }} inputs from the mempool
+              </span>
+            </th>
+            <td class="numeric">{{ vsize(tx.vsize) }}</td>
+            <td class="numeric">
+              <span *ngIf="tx.feeSats !== null">{{ sats(tx.feeSats) }}</span>
+              <span *ngIf="tx.feeSats === null" class="unnamed" i18n="mempool.simulate.no-fee">unknown</span>
+            </td>
+            <td class="numeric">{{ rate(tx.individualFeerate) }}</td>
+            <td class="numeric">{{ rate(tx.effectiveFeerate) }}</td>
+            <td>
+              <span class="tag" *ngIf="tx.allowed" i18n="mempool.simulate.allowed">would be accepted</span>
+              <span *ngIf="!tx.allowed">{{ tx.rejectReason }}</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p class="field-help" *ngIf="sim.transactions.length && !sim.chunks.length"
+        i18n="mempool.simulate.no-groups">
+        No grouping is shown, because at least one fee in this package is not
+        known here and a group's rate is a sum.
+      </p>
+    </section>
+
+    <section class="groups" *ngIf="sim.chunks.length">
+      <h2 i18n="mempool.simulate.groups-heading">How it would be mined</h2>
+      <p class="field-help" i18n="mempool.simulate.groups-note">
+        A miner takes a group whole or not at all, at the rate of the group
+        rather than of any transaction in it. Best rate first.
+      </p>
+      <table class="table table-sm record-table">
+        <caption class="sr-only" i18n="mempool.simulate.groups-caption">
+          Each group the package would be mined as, with its rate and size.
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col" i18n="mempool.simulate.col-group">Group</th>
+            <th scope="col" class="numeric" i18n="mempool.simulate.col-members">Members</th>
+            <th scope="col" class="numeric" i18n="mempool.simulate.col-group-fee">Fee</th>
+            <th scope="col" class="numeric" i18n="mempool.simulate.col-group-vsize">vB</th>
+            <th scope="col" class="numeric" i18n="mempool.simulate.col-rate">sat/vB</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let chunk of sim.chunks; trackBy: trackByIndex">
+            <th scope="row">{{ chunk.index + 1 }}</th>
+            <td class="numeric">{{ chunk.txids.length }}</td>
+            <td class="numeric">{{ sats(chunk.feeSats) }}</td>
+            <td class="numeric">{{ vsize(chunk.vsize) }}</td>
+            <td class="numeric">{{ exactRate(chunk.feerate) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </ng-container>
+
+  <section class="boundary">
+    <h2 i18n="mempool.simulate.boundary-heading">What this page will not do</h2>
+    <ul>
+      <li i18n="mempool.simulate.boundary-broadcast">
+        It does not broadcast. Testing a package and sending one are different
+        actions, and this page only does the first.
+      </li>
+      <li i18n="mempool.simulate.boundary-sign">It cannot sign, and refuses anything that looks like key material.</li>
+      <li i18n="mempool.simulate.boundary-guarantee">
+        It does not promise confirmation. A verdict is what one node would do
+        with a package now, not what the network will do with it.
+      </li>
+      <li i18n="mempool.simulate.boundary-guess">
+        It does not fill a gap with a guess. A fee this node cannot work out
+        is reported as unknown, and no total that depends on it is claimed.
+      </li>
+    </ul>
+  </section>
+</div>

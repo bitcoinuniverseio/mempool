@@ -1,0 +1,154 @@
+<div class="live">
+
+  <div class="head">
+    <h1 class="title" i18n="universe.live.title">Live universe</h1>
+    <p class="lede" i18n="universe.live.lede">
+      What this deployment's stream is delivering right now. Replay covers
+      what arrived while this page has been open, and never pretends to
+      reach further back.
+    </p>
+  </div>
+
+  <!-- The one announcement channel. One line at a time, at the visitor's
+       chosen verbosity, and silent while the view is paused. -->
+  <p class="visually-hidden" role="status" aria-live="polite">{{ announcement() }}</p>
+
+  <div class="controls">
+    <button
+      type="button"
+      class="control primary"
+      (click)="togglePause()"
+      [disabled]="!filtered().length">
+      <ng-container *ngIf="!paused(); else resume" i18n="universe.live.pause">Pause the view</ng-container>
+      <ng-template #resume i18n="universe.live.resume">Resume</ng-template>
+    </button>
+
+    <button
+      type="button"
+      class="control"
+      (click)="jumpToLive()"
+      [disabled]="atLiveEdge()"
+      i18n="universe.live.jump">Jump to live</button>
+
+    <label class="control labelled">
+      <ng-container i18n="universe.live.scrub">Scrub</ng-container>
+      <input
+        type="range"
+        min="0"
+        [max]="scrubMax()"
+        [value]="paused() && position() !== null ? position() : scrubMax()"
+        [disabled]="filtered().length < 2"
+        (input)="onScrub($any($event.target).valueAsNumber)"
+        i18n-aria-label="universe.live.scrub-label"
+        aria-label="Move through what this view has received" />
+    </label>
+
+    <label class="control labelled">
+      <ng-container i18n="universe.live.chain">Chain</ng-container>
+      <select [value]="filter().chain ?? ''" (change)="setFilter('chain', $any($event.target).value)">
+        <option value="" i18n="universe.live.all">All</option>
+        <option *ngFor="let chain of chains" [value]="chain">{{ chain }}</option>
+      </select>
+    </label>
+
+    <label class="control labelled">
+      <ng-container i18n="universe.live.channel">Channel</ng-container>
+      <select [value]="filter().channel ?? ''" (change)="setFilter('channel', $any($event.target).value)">
+        <option value="" i18n="universe.live.all">All</option>
+        <option *ngFor="let channel of channels" [value]="channel">{{ channel }}</option>
+      </select>
+    </label>
+
+    <label class="control labelled">
+      <ng-container i18n="universe.live.completeness">Completeness</ng-container>
+      <select [value]="filter().completeness ?? ''" (change)="setFilter('completeness', $any($event.target).value)">
+        <option value="" i18n="universe.live.all">All</option>
+        <option *ngFor="let completion of completions" [value]="completion">{{ completion }}</option>
+      </select>
+    </label>
+
+    <label class="control labelled">
+      <ng-container i18n="universe.live.verbosity">Announcements</ng-container>
+      <select [value]="verbosity()" (change)="setVerbosity($any($event.target).value)">
+        <option value="key" i18n="universe.live.verbosity-key">Key events</option>
+        <option value="off" i18n="universe.live.verbosity-off">Off</option>
+      </select>
+    </label>
+  </div>
+
+  <p class="state-note" *ngIf="paused()" role="status">
+    <ng-container i18n="universe.live.paused-note">
+      The view is paused. Arrivals keep filling the buffer behind it.
+    </ng-container>
+    {{ position() !== null ? (position() + 1) : 0 }} / {{ filtered().length }}
+  </p>
+
+  <h2 class="heading" i18n="universe.live.board">Channel board</h2>
+  <div class="board">
+    <table class="table">
+      <caption class="visually-hidden" i18n="universe.live.board-caption">Each channel, how much it delivered, and how long ago its last word arrived</caption>
+      <thead>
+        <tr>
+          <th scope="col" i18n="universe.live.col-channel">Channel</th>
+          <th scope="col" i18n="universe.live.col-count">Received here</th>
+          <th scope="col" i18n="universe.live.col-sequence">Last sequence</th>
+          <th scope="col" i18n="universe.live.col-completeness">Completeness</th>
+          <th scope="col" i18n="universe.live.col-age">Last arrival</th>
+          <th scope="col" i18n="universe.live.col-gaps">Reported gaps</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of summaries()">
+          <td>{{ row.chain }} · {{ row.channel }}</td>
+          <td>{{ row.count | number }}</td>
+          <td><code>{{ row.lastSequence }}</code></td>
+          <td>{{ row.completeness }}</td>
+          <td>{{ row.lastReceivedAt === null ? 'never' : ageWordsAt(row.lastReceivedAt) }}</td>
+          <td>{{ row.missing === 0 ? '' : row.missing | number }}</td>
+        </tr>
+        <tr *ngIf="!summaries().length">
+          <td colspan="6" i18n="universe.live.nothing-yet">
+            Nothing has arrived yet. The stream reconnects on its own; this
+            page says so rather than filling the silence.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 class="heading" i18n="universe.live.feed">What arrived</h2>
+  <div class="feed" [class.still]="reducedMotion()">
+    <table class="table">
+      <caption class="visually-hidden" i18n="universe.live.feed-caption">The arrivals the view is showing</caption>
+      <thead>
+        <tr>
+          <th scope="col" i18n="universe.live.col-received">Received</th>
+          <th scope="col" i18n="universe.live.col-channel">Channel</th>
+          <th scope="col" i18n="universe.live.col-sequence">Sequence</th>
+          <th scope="col" i18n="universe.live.col-completeness">Completeness</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let entry of visible()">
+          <td>{{ ageWordsAt(entry.receivedAt) }}</td>
+          <td>{{ entry.envelope.chain }} · {{ entry.envelope.channel }}</td>
+          <td><code>{{ entry.envelope.sequenceAtomic }}</code></td>
+          <td>{{ entry.envelope.completeness }}</td>
+        </tr>
+        <tr *ngIf="!visible().length">
+          <td colspan="4" i18n="universe.live.empty-filter">
+            Nothing matches here. Either the stream has been quiet or the
+            filters are narrower than what has arrived.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="footnote" i18n="universe.live.footnote">
+    Buffer holds 500 arrivals. Duplicates absorbed:
+    {{ buffer().duplicates | number }}. Dropped from the front:
+    {{ buffer().evicted | number }}.
+  </p>
+
+</div>

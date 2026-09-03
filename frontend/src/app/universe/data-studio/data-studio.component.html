@@ -1,0 +1,90 @@
+<div class="container-xl product-page">
+  <header class="page-head">
+    <nav class="crumbs">
+      <a [routerLink]="['/']">Home</a>
+      <span class="divider">/</span>
+      <span>Developer Platform</span>
+    </nav>
+    <h1>Universe Data Studio & Developer Platform</h1>
+    <p class="summary">
+      Constrained SQL query grammar, real-time SSE streams, Parquet/NDJSON exports, SDK snippets, and read-only Model Context Protocol (MCP) tool catalog.
+    </p>
+  </header>
+
+  <nav class="nav-tabs">
+    <a [routerLink]="['/data']" class="active">Datasets & Query Studio</a>
+    <a [routerLink]="['/data/live']">Live Streams</a>
+  </nav>
+
+  <ng-container *ngIf="vm$ | async as vm">
+    <div *ngIf="vm.kind === 'loading'" class="panel" aria-busy="true">
+      <p>Reading Data Studio catalog...</p>
+    </div>
+
+    <div *ngIf="vm.kind === 'error'" class="panel">
+      <h2>Data Service Offline</h2>
+      <p>Could not reach the Universe Data Studio catalog.</p>
+    </div>
+
+    <ng-container *ngIf="vm.kind === 'ready' && vm.datasets">
+      <!-- Catalog Selection -->
+      <section class="panel">
+        <h2>Dataset Query Workspace</h2>
+        <div style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+          <div class="form-group" style="flex: 1; min-width: 240px; margin-bottom: 0;">
+            <label for="datasetSelect">Select Dataset</label>
+            <select id="datasetSelect" [ngModel]="selectedDatasetId" (ngModelChange)="onDatasetChange($event)">
+              <option *ngFor="let d of vm.datasets" [value]="d.id">{{ d.name }} ({{ d.category }})</option>
+            </select>
+          </div>
+          <div class="form-group" style="width: 120px; margin-bottom: 0;">
+            <label for="queryLimitInput">Max Rows</label>
+            <input id="queryLimitInput" type="number" [(ngModel)]="queryLimit" min="1" max="100" />
+          </div>
+          <button type="button" class="btn-primary" (click)="runQuery()" [disabled]="vm.executing">
+            {{ vm.executing ? 'Executing...' : 'Run Query' }}
+          </button>
+        </div>
+      </section>
+
+      <!-- Results Table -->
+      <section class="panel" *ngIf="vm.queryResult">
+        <h2>Query Results ({{ vm.queryResult.rowCount }} rows in {{ vm.queryResult.executionTimeMs }} ms)</h2>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th *ngFor="let col of vm.queryResult.columns">{{ col }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of vm.queryResult.rows">
+              <td *ngFor="let cell of row" class="mono">{{ cell }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- MCP Tool Declarations -->
+      <section class="panel" *ngIf="vm.mcpTools?.length">
+        <h2>Model Context Protocol (MCP) Tools</h2>
+        <p>Read-only MCP server definitions allowing autonomous AI coding agents to query the Universe platform.</p>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Tool Name</th>
+              <th>Description</th>
+              <th>Sample Request</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let t of vm.mcpTools">
+              <td class="mono"><strong>{{ t.name }}</strong></td>
+              <td>{{ t.description }}</td>
+              <td class="mono">{{ t.sampleCall }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </ng-container>
+  </ng-container>
+</div>
