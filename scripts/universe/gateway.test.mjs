@@ -34,6 +34,24 @@ test('protocol overlay routes reach the overlay unchanged', () => {
   }
 });
 
+test('portfolio v2 routes reach the overlay unchanged', () => {
+  for (const url of [
+    '/api/v2/universe/portfolio/networks',
+    '/api/v2/universe/portfolio/bitcoin/mainnet/bc1qexample/summary',
+    '/api/v2/universe/portfolio/bitcoin/mainnet/bc1qexample/utxos?limit=25',
+    '/api/v2/universe/portfolio/share/some-share-id',
+  ]) {
+    const pathname = new URL(url, 'http://x.invalid').pathname;
+    const route = routeFor(pathname, url);
+    assert.equal(port(route), OVERLAY_PORT, url);
+    assert.equal(route.path, url, url);
+  }
+  // Other v2 families do not exist yet: anything else under /api/v2
+  // belongs to nobody, and must not silently fall through to /api/v1.
+  const pathname = new URL('/api/v2/other', 'http://x.invalid').pathname;
+  assert.notEqual(port(routeFor(pathname, '/api/v2/other')), OVERLAY_PORT);
+});
+
 test('chain-domain routes reach the overlay unchanged', () => {
   for (const url of [
     '/api/v1/chains',

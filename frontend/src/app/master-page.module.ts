@@ -240,19 +240,7 @@ const routes: Routes = [
       },
       {
         path: 'portfolio',
-        loadComponent: () => import('@app/universe/portfolio/portfolio-lookup.component').then(m => m.PortfolioLookupComponent),
-        data: { networks: ['bitcoin'] },
-      },
-      {
-        // The local first multi address workspace: the visitor's own list,
-        // labels, and groups, with exact aggregates and named failures.
-        path: 'portfolio/workspace',
-        loadComponent: () => import('@app/universe/portfolio/workspace/workspace.component').then(m => m.PortfolioWorkspaceComponent),
-        data: { networks: ['bitcoin'] },
-      },
-      {
-        path: 'portfolio/:chain/:network/:address',
-        loadComponent: () => import('@app/universe/portfolio/portfolio.component').then(m => m.PortfolioComponent),
+loadChildren: () => import('@app/universe/portfolio/portfolio.routes').then(m => m.PORTFOLIO_ROUTES),
         data: { networks: ['bitcoin'] },
       },
       {
