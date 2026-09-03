@@ -118,6 +118,20 @@ const PRODUCT_COMMANDS: ReadonlyArray<{ readonly keywords: readonly string[]; re
   { keywords: ['payment', 'bip21', 'bip353', 'payjoin', 'silent'], kind: 'product', label: 'Payment Standards Studio', path: '/tools/payment' },
   { keywords: ['utxo', 'utreexo', 'supply'], kind: 'product', label: 'UTXO-Set, Supply & Utreexo Observatory', path: '/utxo-set' },
   { keywords: ['wildkin', 'creatures', 'bloodlines', 'braid'], kind: 'product', label: 'Wildkin Evidence Explorer', path: '/wildkin' },
+  { keywords: ['policy', 'package', 'forecast', 'inclusion', 'remediation', 'cpfp'], kind: 'product', label: 'Transaction Package, Policy, and Inclusion Lab', path: '/tools/policy-lab' },
+  { keywords: ['relay', 'latency', 'bip324', 'propagation', 'divergence', 'observatory'], kind: 'product', label: 'Distributed Relay and Policy Observatory', path: '/intelligence/relay' },
+  { keywords: ['time-machine', 'history', 'replay', 'archival', 'checkpoint'], kind: 'product', label: 'Historical Mempool Time Machine', path: '/intelligence/time-machine' },
+  { keywords: ['template', 'templates', 'gbt', 'datum', 'mining-templates'], kind: 'product', label: 'Mining Template and Inclusion Observatory', path: '/intelligence/mining-templates' },
+  { keywords: ['utxo-set', 'supply', 'cohorts', 'dust', 'hodl'], kind: 'product', label: 'UTXO Set and Supply Intelligence', path: '/intelligence/utxo-set' },
+  { keywords: ['graph', 'multi-hop', 'provenance', 'tracing', 'flow'], kind: 'product', label: 'Multi-Hop Transaction Graph Workspace', path: '/intelligence/transaction-graph' },
+  { keywords: ['workbench', 'script', 'descriptor', 'miniscript', 'psbt'], kind: 'product', label: 'Script, Descriptor, Miniscript, and PSBT Workbench', path: '/tools/workbench' },
+  { keywords: ['incident', 'incidents', 'reorg', 'consensus', 'invalid'], kind: 'product', label: 'Consensus Incident and Reorg Center', path: '/intelligence/incidents' },
+  { keywords: ['proof', 'spv', 'merkle', 'bip322', 'verify-proof'], kind: 'product', label: 'Proof and Verification Center', path: '/tools/verify-proof' },
+  { keywords: ['api', 'developers', 'keys', 'webhook', 'rest'], kind: 'product', label: 'Developer Data Platform', path: '/developers' },
+  { keywords: ['query-studio', 'sql', 'sandbox', 'tables', 'schema'], kind: 'product', label: 'Mempool Query Studio', path: '/developers/query-studio' },
+  { keywords: ['watchlist', 'watchlists', 'alerts', 'blinded', 'notification'], kind: 'product', label: 'Privacy-First Watchlists and Alerts', path: '/user/watchlists' },
+  { keywords: ['knowledge', 'labels', 'attribution', 'evidence', 'registry'], kind: 'product', label: 'Evidence-Backed Labels and Knowledge Registry', path: '/intelligence/knowledge' },
+  { keywords: ['protocols', 'runes', 'ordinals', 'brc20', 'metaprotocols'], kind: 'product', label: 'Universal Protocol Intelligence Registry', path: '/explore/protocols' },
 ];
 
 /**
