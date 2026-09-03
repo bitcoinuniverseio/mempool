@@ -1,0 +1,72 @@
+<div class="container-xl product-page">
+  <header class="page-head">
+    <nav class="crumbs">
+      <a [routerLink]="['/']">Home</a>
+      <span class="divider">/</span>
+      <a [routerLink]="['/zcash']">Zcash</a>
+      <span class="divider">/</span>
+      <a [routerLink]="['/zcash/privacy']">Privacy Observatory</a>
+      <span class="divider">/</span>
+      <span>Workspace</span>
+    </nav>
+    <h1>Client-Only Viewing-Key Workspace</h1>
+    <p class="summary">
+      Inspect Unified Full Viewing Keys (UFVK), Sapling viewing keys, and decode note commitments strictly inside your browser. Key material never leaves your local memory.
+    </p>
+  </header>
+
+  <nav class="nav-tabs">
+    <a [routerLink]="['/zcash/privacy']">Pools & Upgrades</a>
+    <a [routerLink]="['/zcash/privacy/workspace']" class="active">Viewing-Key Workspace</a>
+  </nav>
+
+  <section class="panel">
+    <h2>Client-Side Note Scanner</h2>
+    <p>
+      Enter your Unified Full Viewing Key or Sapling Incoming Viewing Key to derive receivers and scan compact block ranges.
+    </p>
+
+    <div class="form-group">
+      <label for="viewingKeyInput">Viewing Key or Unified Address</label>
+      <input id="viewingKeyInput" type="text" [(ngModel)]="viewingKey" placeholder="uview1... or zxviews1..." />
+    </div>
+
+    <div class="form-group">
+      <label for="startHeightInput">Scan Start Height</label>
+      <input id="startHeightInput" type="number" [(ngModel)]="startHeight" />
+    </div>
+
+    <button type="button" class="btn-primary" (click)="scan()" [disabled]="scanning || !viewingKey.trim()">
+      {{ scanning ? 'Scanning Compact Blocks...' : 'Scan Locally' }}
+    </button>
+  </section>
+
+  <ng-container *ngIf="result$ | async as res">
+    <section class="panel">
+      <h2>Scan Results</h2>
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <span class="metric-label">Key Family</span>
+          <span class="metric-value">{{ res.addressType | uppercase }}</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Scanned Blocks</span>
+          <span class="metric-value">{{ res.scannedBlocks }}</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Notes Decrypted</span>
+          <span class="metric-value">{{ res.notesFound }}</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Balance</span>
+          <span class="metric-value">{{ res.totalZatoshis }} zat</span>
+        </div>
+      </div>
+
+      <div style="margin-top: 1rem;">
+        <p><strong>Decoded Receiver Components:</strong> {{ res.receivers.join(', ') }}</p>
+        <p><span class="badge badge-success">Zero-Leakage Verified</span> Note decryption executed in isolated browser context.</p>
+      </div>
+    </section>
+  </ng-container>
+</div>

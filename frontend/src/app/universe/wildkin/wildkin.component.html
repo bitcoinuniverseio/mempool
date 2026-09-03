@@ -1,0 +1,81 @@
+<div class="container-xl product-page">
+  <header class="page-head">
+    <nav class="crumbs">
+      <a [routerLink]="['/protocols']">Protocols</a>
+      <span class="divider">/</span>
+      <span>Wildkin</span>
+    </nav>
+    <h1>Wildkin Evidence Explorer</h1>
+    <p class="summary">
+      Wildkin creatures and bloodlines inscribed on Bitcoin with CBOR genomes and parentage provenance enforced by ruleset v0.
+    </p>
+  </header>
+
+  <nav class="nav-tabs">
+    <a [routerLink]="['/wildkin']" class="active">Overview</a>
+    <a [routerLink]="['/wildkin/creatures']">Creatures</a>
+    <a [routerLink]="['/wildkin/bloodlines']">Bloodlines & Braids</a>
+  </nav>
+
+  <ng-container *ngIf="vm$ | async as vm">
+    <div *ngIf="vm.kind === 'loading'" class="panel" aria-busy="true">
+      <p>Reading Wildkin authority status...</p>
+    </div>
+
+    <div *ngIf="vm.kind === 'error'" class="panel">
+      <h2>Authority Offline</h2>
+      <p>The first-party Wildkin indexer authority could not be reached.</p>
+    </div>
+
+    <ng-container *ngIf="vm.kind === 'ready' && vm.status">
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <span class="metric-label">Ruleset</span>
+          <span class="metric-value">{{ vm.status.ruleset }}</span>
+          <span class="metric-sub">Activation: {{ vm.status.activationStatus }}</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Settled Creatures</span>
+          <span class="metric-value">{{ vm.status.totalCreaturesCount }}</span>
+          <span class="metric-sub">Inscription-verified</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Braid Ceremonies</span>
+          <span class="metric-value">{{ vm.status.totalBraidsCount }}</span>
+          <span class="metric-sub">Dual-parent provenance</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Max Ancestry Depth</span>
+          <span class="metric-value">{{ vm.status.maxAncestryDepth }}</span>
+          <span class="metric-sub">Generations tracked</span>
+        </div>
+      </div>
+
+      <section class="panel">
+        <h2>Recent Settled Creatures</h2>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Gen</th>
+              <th>Status</th>
+              <th>Binding UTXO</th>
+              <th>Birth Block</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of vm.status.latestCreatures">
+              <td class="mono"><a [routerLink]="['/wildkin/creature', c.creatureId]">{{ c.creatureId }}</a></td>
+              <td><strong>{{ c.name }}</strong></td>
+              <td>Gen {{ c.generation }}</td>
+              <td><span class="badge badge-success">{{ c.status }}</span></td>
+              <td class="mono">{{ c.bindingUtxo.slice(0, 16) }}...</td>
+              <td>{{ c.birthBlockHeight }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </ng-container>
+  </ng-container>
+</div>

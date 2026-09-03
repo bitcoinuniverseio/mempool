@@ -1,0 +1,82 @@
+<div class="container-xl product-page">
+  <header class="page-head">
+    <nav class="crumbs">
+      <a [routerLink]="['/']">Home</a>
+      <span class="divider">/</span>
+      <span>Fractal Bitcoin</span>
+    </nav>
+    <h1>Fractal Bitcoin Explorer</h1>
+    <p class="summary">
+      Fractal Bitcoin consensus chain, block templates, sub-30-second cadence, and native CAT-20 covenants.
+    </p>
+  </header>
+
+  <nav class="nav-tabs">
+    <a [routerLink]="['/fractal']" class="active">Chain Overview</a>
+    <a [routerLink]="['/fractal/cat20']">CAT-20 Center</a>
+  </nav>
+
+  <ng-container *ngIf="vm$ | async as vm">
+    <div *ngIf="vm.kind === 'loading'" class="panel" aria-busy="true">
+      <p>Reading Fractal consensus node...</p>
+    </div>
+
+    <div *ngIf="vm.kind === 'error'" class="panel">
+      <h2>Fractal Node Unavailable</h2>
+      <p>Could not connect to Universe first-party Fractal Bitcoin node.</p>
+    </div>
+
+    <ng-container *ngIf="vm.kind === 'ready' && vm.tip && vm.mempool && vm.latestBlock">
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <span class="metric-label">Chain Tip</span>
+          <span class="metric-value">#{{ vm.tip.height }}</span>
+          <span class="metric-sub">{{ vm.tip.network }}</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Mempool Count</span>
+          <span class="metric-value">{{ vm.mempool.count }} txs</span>
+          <span class="metric-sub">{{ vm.mempool.pendingCat20TxCount }} CAT-20</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Median Fee Rate</span>
+          <span class="metric-value">{{ vm.mempool.medianFeeRate }} sat/vB</span>
+          <span class="metric-sub">Min: {{ vm.mempool.minFeeRate }} | Max: {{ vm.mempool.maxFeeRate }}</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Difficulty</span>
+          <span class="metric-value">{{ vm.latestBlock.difficulty }}</span>
+          <span class="metric-sub">Cadence: ~30s</span>
+        </div>
+      </div>
+
+      <section class="panel">
+        <h2>Latest Confirmed Block</h2>
+        <table class="data-table">
+          <tbody>
+            <tr>
+              <td><strong>Height</strong></td>
+              <td>#{{ vm.latestBlock.height }}</td>
+            </tr>
+            <tr>
+              <td><strong>Hash</strong></td>
+              <td class="mono">{{ vm.latestBlock.hash }}</td>
+            </tr>
+            <tr>
+              <td><strong>Transactions</strong></td>
+              <td>{{ vm.latestBlock.txCount }} txs</td>
+            </tr>
+            <tr>
+              <td><strong>Weight</strong></td>
+              <td>{{ vm.latestBlock.weight }} WU ({{ (vm.latestBlock.size / 1000).toFixed(1) }} kB)</td>
+            </tr>
+            <tr>
+              <td><strong>Miner</strong></td>
+              <td>{{ vm.latestBlock.miner }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </ng-container>
+  </ng-container>
+</div>
