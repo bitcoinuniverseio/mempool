@@ -1,0 +1,103 @@
+<div class="container-xl product-page">
+  <header class="page-head">
+    <nav class="crumbs">
+      <a [routerLink]="['/']">Home</a>
+      <span class="divider">/</span>
+      <span>UTXO Intelligence</span>
+    </nav>
+    <h1>UTXO-Set, Supply & Utreexo Observatory</h1>
+    <p class="summary">
+      Coinstatsindex MuHash checkpoints, value and age cohort distributions, protocol-bearing output accounting, and Utreexo dynamic accumulator roots.
+    </p>
+  </header>
+
+  <ng-container *ngIf="vm$ | async as vm">
+    <div *ngIf="vm.kind === 'loading'" class="panel" aria-busy="true">
+      <p>Reading UTXO-set checkpoints and accumulator state...</p>
+    </div>
+
+    <ng-container *ngIf="vm.kind === 'ready'">
+      <!-- Protocol Bearing Summary -->
+      <div class="metrics-grid" *ngIf="vm.protocolUtxos">
+        <div class="metric-card">
+          <span class="metric-label">Pure Bitcoin UTXOs</span>
+          <span class="metric-value">{{ vm.protocolUtxos.pureBitcoinCount.toLocaleString() }}</span>
+          <span class="metric-sub">No metadata attached</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Ordinals Bearing</span>
+          <span class="metric-value">{{ vm.protocolUtxos.ordinalsBearingCount.toLocaleString() }}</span>
+          <span class="metric-sub">Inscribed satoshis</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Runes Bearing</span>
+          <span class="metric-value">{{ vm.protocolUtxos.runesBearingCount.toLocaleString() }}</span>
+          <span class="metric-sub">Edict/balance outputs</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Stamps Bearing</span>
+          <span class="metric-value">{{ vm.protocolUtxos.stampsBearingCount.toLocaleString() }}</span>
+          <span class="metric-sub">Bare multisig / P2SH</span>
+        </div>
+      </div>
+
+      <!-- Coinstatsindex Checkpoints -->
+      <section class="panel" *ngIf="vm.checkpoints?.length">
+        <h2>Coinstatsindex & MuHash Checkpoints</h2>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Block Height</th>
+              <th>MuHash</th>
+              <th>Total Outputs</th>
+              <th>Total Supply (BTC)</th>
+              <th>Bogosize</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of vm.checkpoints">
+              <td>#{{ c.blockHeight }}</td>
+              <td class="mono">{{ c.muhashHex.slice(0, 24) }}...</td>
+              <td>{{ c.totalTxOuts.toLocaleString() }}</td>
+              <td class="mono"><strong>{{ (Number(c.totalAmountSats) / 1e8).toFixed(2) }}</strong></td>
+              <td>{{ (Number(c.bogoSize) / 1e9).toFixed(2) }} GB</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Script Type Distribution -->
+      <section class="panel" *ngIf="vm.scriptTypes?.length">
+        <h2>Script Type Distribution in UTXO Set</h2>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Script Type</th>
+              <th>Output Count</th>
+              <th>Share</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let s of vm.scriptTypes">
+              <td><strong>{{ s.scriptType | uppercase }}</strong></td>
+              <td>{{ s.count.toLocaleString() }}</td>
+              <td><span class="badge badge-info">{{ s.percentage }}%</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Utreexo Accumulator -->
+      <section class="panel" *ngIf="vm.utreexo">
+        <h2>Utreexo Accumulator State (Block #{{ vm.utreexo.blockHeight }})</h2>
+        <p>Forest rows: {{ vm.utreexo.forestRows }} | Leaves: {{ vm.utreexo.numLeaves.toLocaleString() }}</p>
+        <p><strong>Forest Root Hashes:</strong></p>
+        <ul style="list-style: none; padding: 0;">
+          <li *ngFor="let r of vm.utreexo.roots" class="mono" style="margin-bottom: 0.35rem;">
+            {{ r }}
+          </li>
+        </ul>
+      </section>
+    </ng-container>
+  </ng-container>
+</div>

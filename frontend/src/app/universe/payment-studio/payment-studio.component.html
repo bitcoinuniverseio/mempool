@@ -1,0 +1,70 @@
+<div class="container-xl product-page">
+  <header class="page-head">
+    <nav class="crumbs">
+      <a [routerLink]="['/']">Home</a>
+      <span class="divider">/</span>
+      <span>Tools</span>
+    </nav>
+    <h1>Payment Standards & Private-Discovery Studio</h1>
+    <p class="summary">
+      BIP21 multi-protocol payment URIs, BIP353 DNSSEC name resolution, Payjoin v2 proposals, and Silent Payments (BIP352) scanners.
+    </p>
+  </header>
+
+  <!-- BIP21 Section -->
+  <section class="panel">
+    <h2>BIP21 Multi-Protocol Payment URI Inspector</h2>
+    <div class="form-group">
+      <label for="bip21Input">BIP21 URI String</label>
+      <input id="bip21Input" type="text" [(ngModel)]="bip21Uri" />
+    </div>
+    <button type="button" class="btn-primary" (click)="parseBip21()">Parse URI</button>
+
+    <div *ngIf="parsedBip21$ | async as p" style="margin-top: 1rem;">
+      <table class="data-table">
+        <tbody>
+          <tr>
+            <td><strong>On-Chain Address</strong></td>
+            <td class="mono">{{ p.address }}</td>
+          </tr>
+          <tr *ngIf="p.amountBtc">
+            <td><strong>Amount (BTC)</strong></td>
+            <td>{{ p.amountBtc }} BTC ({{ (Number(p.amountBtc) * 1e8).toLocaleString() }} sats)</td>
+          </tr>
+          <tr *ngIf="p.label">
+            <td><strong>Label</strong></td>
+            <td>{{ p.label }}</td>
+          </tr>
+          <tr *ngIf="p.lightning">
+            <td><strong>Lightning Offer / Invoice</strong></td>
+            <td class="mono">{{ p.lightning.slice(0, 32) }}...</td>
+          </tr>
+          <tr *ngIf="p.pj">
+            <td><strong>Payjoin Endpoint</strong></td>
+            <td class="mono">{{ p.pj }}</td>
+          </tr>
+          <tr *ngIf="p.silentPayment">
+            <td><strong>Silent Payment (BIP352)</strong></td>
+            <td class="mono">{{ p.silentPayment }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- BIP353 Section -->
+  <section class="panel">
+    <h2>BIP353 DNSSEC Human-Readable Name Resolver</h2>
+    <div class="form-group">
+      <label for="bip353Input">BIP353 Name (user@domain)</label>
+      <input id="bip353Input" type="text" [(ngModel)]="bip353Name" />
+    </div>
+    <button type="button" class="btn-primary" (click)="resolveBip353()">Resolve DNSSEC Name</button>
+
+    <div *ngIf="bip353$ | async as b" style="margin-top: 1rem;">
+      <p><strong>Resolved Address:</strong> <span class="mono">{{ b.resolvedAddress }}</span></p>
+      <p><strong>DNS TXT Record:</strong> <span class="mono">{{ b.txtRecord }}</span></p>
+      <p><span class="badge badge-success">DNSSEC Validated</span> Cryptographic DNS root signatures verified.</p>
+    </div>
+  </section>
+</div>
