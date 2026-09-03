@@ -117,6 +117,13 @@ export const ROUTES = [
   { id: 'sat', path: `/sat/${assetSampleIds.SAT_NUMBER}`, name: 'Sat' },
   { id: 'saved', path: '/saved', name: 'Saved in this browser' },
 
+  // The ANIMA evidence explorer. Its pages read their own authority, so the
+  // capture serves them the same unavailable document every other gate sees:
+  // the pages must render that state, not spin or go blank.
+  { id: 'anima-protocol', path: '/protocols/anima', name: 'ANIMA protocol page' },
+  { id: 'anima-transitions', path: '/anima/transitions', name: 'ANIMA transitions' },
+  { id: 'anima-items', path: '/anima/items', name: 'ANIMA organisms' },
+
   // The chain switcher, open. Nothing here had ever opened a menu, so the one
   // surface that decides which chain a visitor is looking at was measured only
   // while closed. It was collapsed: the header's own `.dropdown-item` rule,

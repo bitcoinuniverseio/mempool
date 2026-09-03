@@ -354,6 +354,14 @@
   }
 
   @media (min-width: 992px) {
+    // At desktop widths the row sits in the page flow, so an overflow here
+    // used to become page-level sideways scrolling the moment the roster of
+    // destinations outgrew the viewport (four new destinations did exactly
+    // that at 1024px). Wrapping keeps every destination visible and reachable
+    // without inventing a second scroll affordance for the desktop, and a
+    // wrapped row still reads left-to-right.
+    flex-wrap: wrap;
+    row-gap: var(--u-space-1);
     gap: var(--u-space-1);
   }
 }

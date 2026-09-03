@@ -1,5 +1,6 @@
 sitemap
 data
+!frontend/src/app/universe/portfolio/data/
 docker-compose.yml
 backend/mempool-config.json
 *.swp

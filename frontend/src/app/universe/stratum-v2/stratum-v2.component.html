@@ -1,0 +1,79 @@
+<div class="container-xl product-page">
+  <header class="page-head">
+    <nav class="crumbs">
+      <a [routerLink]="['/']">Home</a>
+      <span class="divider">/</span>
+      <a [routerLink]="['/mining']">Mining</a>
+      <span class="divider">/</span>
+      <span>Stratum V2</span>
+    </nav>
+    <h1>Stratum V2 Job-Declaration & Template Observatory</h1>
+    <p class="summary">
+      End-to-end telemetry for Stratum V2 mining roles, Noise protocol encryption, miner transaction selection, and pool job acceptance.
+    </p>
+  </header>
+
+  <ng-container *ngIf="vm$ | async as vm">
+    <div *ngIf="vm.kind === 'loading'" class="panel" aria-busy="true">
+      <p>Reading Stratum V2 telemetry...</p>
+    </div>
+
+    <ng-container *ngIf="vm.kind === 'ready'">
+      <!-- Roles -->
+      <section class="panel" *ngIf="vm.roles?.length">
+        <h2>Active Stratum V2 Endpoints</h2>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Role</th>
+              <th>Endpoint Name</th>
+              <th>Address</th>
+              <th>Noise Encryption</th>
+              <th>Downstream Connections</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let r of vm.roles">
+              <td><span class="badge badge-info">{{ r.role }}</span></td>
+              <td><strong>{{ r.name }}</strong></td>
+              <td class="mono">{{ r.endpoint }}</td>
+              <td><span class="badge badge-success">{{ r.noiseProtocolSecured ? 'Noise Secured' : 'Plaintext' }}</span></td>
+              <td>{{ r.connectedDownstreams }} miners</td>
+              <td><span class="badge badge-success">{{ r.status }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Templates -->
+      <section class="panel" *ngIf="vm.templates?.length">
+        <h2>Declared Block Templates</h2>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Template ID</th>
+              <th>Block Height</th>
+              <th>Coinbase Value (sats)</th>
+              <th>Declared Txs</th>
+              <th>Pool Selected</th>
+              <th>Fee Delta (sat/vB)</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let t of vm.templates">
+              <td class="mono"><strong>{{ t.templateId }}</strong></td>
+              <td>#{{ t.blockHeight }}</td>
+              <td class="mono">{{ t.coinbaseTxValueSats }}</td>
+              <td>{{ t.declaredTxCount }}</td>
+              <td>{{ t.poolSelectedTxCount }}</td>
+              <td>+{{ t.feeRateDeltaSatVb }}</td>
+              <td><span class="badge badge-success">{{ t.status }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </ng-container>
+  </ng-container>
+</div>

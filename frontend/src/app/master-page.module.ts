@@ -123,6 +123,191 @@ const routes: Routes = [
         data: { networks: ['bitcoin'], chain: 'zcash' },
       },
       {
+        path: 'anima',
+        loadChildren: () => import('@app/universe/anima/anima.routes').then(m => m.ANIMA_ROUTES),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'wildkin',
+        loadComponent: () => import('@app/universe/wildkin/wildkin.component').then(m => m.WildkinComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'wildkin/creatures',
+        loadComponent: () => import('@app/universe/wildkin/wildkin-creatures.component').then(m => m.WildkinCreaturesComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'wildkin/creature/:id',
+        loadComponent: () => import('@app/universe/wildkin/wildkin-creatures.component').then(m => m.WildkinCreaturesComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'wildkin/bloodlines',
+        loadComponent: () => import('@app/universe/wildkin/wildkin-bloodlines.component').then(m => m.WildkinBloodlinesComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'fractal',
+        loadComponent: () => import('@app/universe/fractal/fractal-dashboard.component').then(m => m.FractalDashboardComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'fractal/cat20',
+        loadComponent: () => import('@app/universe/fractal/cat20-center.component').then(m => m.Cat20CenterComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'fractal/cat20/token/:tokenId',
+        loadComponent: () => import('@app/universe/fractal/cat20-center.component').then(m => m.Cat20CenterComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'zcash/privacy',
+        loadComponent: () => import('@app/universe/zcash-privacy/zcash-privacy.component').then(m => m.ZcashPrivacyComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'zcash/privacy/workspace',
+        loadComponent: () => import('@app/universe/zcash-privacy/zcash-viewing-key-workspace.component').then(m => m.ZcashViewingKeyWorkspaceComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'liquid/observatory',
+        loadComponent: () => import('@app/universe/liquid-observatory/liquid-observatory.component').then(m => m.LiquidObservatoryComponent),
+        data: { networks: ['bitcoin', 'liquid'] },
+      },
+      {
+        path: 'liquid/unblind',
+        loadComponent: () => import('@app/universe/liquid-observatory/liquid-unblind-workspace.component').then(m => m.LiquidUnblindWorkspaceComponent),
+        data: { networks: ['bitcoin', 'liquid'] },
+      },
+      {
+        path: 'data',
+        loadComponent: () => import('@app/universe/data-studio/data-studio.component').then(m => m.DataStudioComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'data/live',
+        loadComponent: () => import('@app/universe/data-studio/data-live-stream.component').then(m => m.DataLiveStreamComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'network/propagation',
+        loadComponent: () => import('@app/universe/network-observatory/network-observatory.component').then(m => m.NetworkObservatoryComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'network/policy',
+        loadComponent: () => import('@app/universe/network-observatory/network-observatory.component').then(m => m.NetworkObservatoryComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'network/nodes',
+        loadComponent: () => import('@app/universe/network-observatory/network-observatory.component').then(m => m.NetworkObservatoryComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'network/templates',
+        loadComponent: () => import('@app/universe/network-observatory/network-observatory.component').then(m => m.NetworkObservatoryComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'taproot-assets',
+        loadComponent: () => import('@app/universe/taproot-assets/taproot-assets.component').then(m => m.TaprootAssetsComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'taproot-assets/asset/:assetId',
+        loadComponent: () => import('@app/universe/taproot-assets/taproot-assets.component').then(m => m.TaprootAssetsComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'lightning/offers',
+        loadComponent: () => import('@app/universe/taproot-assets/lightning-standards.component').then(m => m.LightningStandardsComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'lightning/rfq',
+        loadComponent: () => import('@app/universe/taproot-assets/lightning-standards.component').then(m => m.LightningStandardsComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'ark',
+        loadComponent: () => import('@app/universe/ark/ark-dashboard.component').then(m => m.ArkDashboardComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'rgb',
+        loadComponent: () => import('@app/universe/rgb/rgb-studio.component').then(m => m.RgbStudioComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'rgb/validate',
+        loadComponent: () => import('@app/universe/rgb/rgb-studio.component').then(m => m.RgbStudioComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'mining/stratum-v2',
+        loadComponent: () => import('@app/universe/stratum-v2/stratum-v2.component').then(m => m.StratumV2Component),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'tools/script',
+        loadComponent: () => import('@app/universe/script-studio/script-studio.component').then(m => m.ScriptStudioComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'tools/miniscript',
+        loadComponent: () => import('@app/universe/script-studio/script-studio.component').then(m => m.ScriptStudioComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'tools/descriptor',
+        loadComponent: () => import('@app/universe/script-studio/script-studio.component').then(m => m.ScriptStudioComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'tools/taproot',
+        loadComponent: () => import('@app/universe/script-studio/script-studio.component').then(m => m.ScriptStudioComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'l2',
+        loadComponent: () => import('@app/universe/l2-observatory/l2-observatory.component').then(m => m.L2ObservatoryComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'l2/:systemId',
+        loadComponent: () => import('@app/universe/l2-observatory/l2-observatory.component').then(m => m.L2ObservatoryComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'tools/payment',
+        loadComponent: () => import('@app/universe/payment-studio/payment-studio.component').then(m => m.PaymentStudioComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'tools/payment/bip21',
+        loadComponent: () => import('@app/universe/payment-studio/payment-studio.component').then(m => m.PaymentStudioComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'tools/payment/bip353',
+        loadComponent: () => import('@app/universe/payment-studio/payment-studio.component').then(m => m.PaymentStudioComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'utxo-set',
+        loadComponent: () => import('@app/universe/utxo-set/utxo-set.component').then(m => m.UtxoSetComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'utreexo',
+        loadComponent: () => import('@app/universe/utxo-set/utxo-set.component').then(m => m.UtxoSetComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
         path: 'source',
         loadComponent: () => import('@app/universe/source-page/source-page.component').then(m => m.SourcePageComponent),
         data: { networks: ['bitcoin', 'liquid'] },
@@ -235,19 +420,7 @@ const routes: Routes = [
       },
       {
         path: 'portfolio',
-        loadComponent: () => import('@app/universe/portfolio/portfolio-lookup.component').then(m => m.PortfolioLookupComponent),
-        data: { networks: ['bitcoin'] },
-      },
-      {
-        // The local first multi address workspace: the visitor's own list,
-        // labels, and groups, with exact aggregates and named failures.
-        path: 'portfolio/workspace',
-        loadComponent: () => import('@app/universe/portfolio/workspace/workspace.component').then(m => m.PortfolioWorkspaceComponent),
-        data: { networks: ['bitcoin'] },
-      },
-      {
-        path: 'portfolio/:chain/:network/:address',
-        loadComponent: () => import('@app/universe/portfolio/portfolio.component').then(m => m.PortfolioComponent),
+loadChildren: () => import('@app/universe/portfolio/portfolio.routes').then(m => m.PORTFOLIO_ROUTES),
         data: { networks: ['bitcoin'] },
       },
       {
