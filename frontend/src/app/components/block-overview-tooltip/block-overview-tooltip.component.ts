@@ -20,6 +20,10 @@ export class BlockOverviewTooltipComponent implements OnChanges {
   @Input() blockConversion: Price;
   @Input() filterFlags: bigint | null = null;
   @Input() filterMode: FilterMode = 'and';
+  /** Empty preserves the Bitcoin-specific tooltip; chain dashboards opt in. */
+  @Input() nativeTicker = '';
+  @Input() nativePrecision = 8;
+  @Input() nativeAtomicUnit = '';
 
   txid = '';
   time: number = 0;
@@ -100,5 +104,13 @@ export class BlockOverviewTooltipComponent implements OnChanges {
 
   getTooltipLeftPosition(): string {
     return window.innerWidth < 392 ? '-50px' : this.tooltipPosition.x + 'px';
+  }
+
+  nativeAmount(value: number): string {
+    const precision = Math.max(0, Math.min(18, this.nativePrecision));
+    return (value / 10 ** precision).toLocaleString(undefined, {
+      minimumFractionDigits: precision,
+      maximumFractionDigits: precision,
+    });
   }
 }
