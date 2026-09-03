@@ -1,17 +1,43 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { Observable, catchError, combineLatest, map, of, shareReplay, switchMap, tap } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, combineLatest, map, of, shareReplay, switchMap, tap } from 'rxjs';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { UniverseLocalService } from '@app/universe/universe-local.service';
 import { PulseEvent, PulseState, UniversePulseService } from '@app/universe/universe-pulse.service';
 import { ProtocolCopy, protocolCopy } from '@app/universe/universe-protocol-copy';
 import {
+  ExplorerProtocolActivityPage,
   ExplorerProtocolDefinition,
+  ExplorerProtocolObjectsPage,
   ProtocolCoverage,
   SourceEntry,
 } from '@app/universe/universe.types';
 import { shortenIdentifier } from '@app/universe/universe-evidence';
+import {
+  ProtocolActivityRow,
+  ProtocolObjectRow,
+  activitySummary,
+  objectsSummary,
+  readActivityRows,
+  readObjectRows,
+} from '@app/universe/protocol-activity-view';
+
+interface ProtocolActivityState {
+  readonly kind: 'idle' | 'loading' | 'error' | 'loaded';
+  readonly page?: ExplorerProtocolActivityPage;
+  readonly rows?: readonly ProtocolActivityRow[];
+  readonly summary?: string;
+  readonly loadingMore?: boolean;
+}
+
+interface ProtocolObjectsState {
+  readonly kind: 'idle' | 'loading' | 'error' | 'loaded';
+  readonly page?: ExplorerProtocolObjectsPage;
+  readonly rows?: readonly ProtocolObjectRow[];
+  readonly summary?: string;
+  readonly loadingMore?: boolean;
+}
 
 interface ProtocolDetailViewModel {
   readonly kind: 'loading' | 'ready' | 'missing' | 'error';
@@ -43,6 +69,14 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
   vm$: Observable<ProtocolDetailViewModel>;
   readonly shorten = shortenIdentifier;
   readonly notConfiguredLabel = $localize`:@@universe.detail.authority-none:Not configured here`;
+
+  readonly activity$ = new BehaviorSubject<ProtocolActivityState>({ kind: 'idle' });
+  private activityCursor: string | null = null;
+  private activityPages: ExplorerProtocolActivityPage[] = [];
+
+  readonly objects$ = new BehaviorSubject<ProtocolObjectsState>({ kind: 'idle' });
+  private objectCursor: string | null = null;
+  private objectPages: ExplorerProtocolObjectsPage[] = [];
 
   constructor(
     private route: ActivatedRoute,
@@ -79,6 +113,8 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
           path: `/protocols/${protocol.id}`,
           label: protocol.displayName,
         });
+        this.loadActivity(protocol.id);
+        this.loadObjects(protocol.id);
       }),
       shareReplay({ bufferSize: 1, refCount: true }),
     );
@@ -114,6 +150,116 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.pulse.stop();
+  }
+
+  /**
+   * Reads the protocol's authority feed, first page. Every terminal state
+   * resolves to a page the template can state truthfully; only a transport
+   * failure of the explorer's own overlay lands here as an error.
+   */
+  loadActivity(protocolId: string): void {
+    this.activityPages = [];
+    this.activityCursor = null;
+    this.activity$.next({ kind: 'loading' });
+    this.api.getProtocolActivity$(protocolId).subscribe({
+      next: (page) => this.pushActivityPage(page),
+      error: () => this.activity$.next({ kind: 'error' }),
+    });
+  }
+
+  /** Appends the next cursor page of the same feed. */
+  loadMoreActivity(protocolId: string): void {
+    const state = this.activity$.value;
+    if (state.kind !== 'loaded' || !this.activityCursor || state.loadingMore) {
+      return;
+    }
+    this.activity$.next({ ...state, loadingMore: true });
+    this.api.getProtocolActivity$(protocolId, this.activityCursor).subscribe({
+      next: (page) => this.pushActivityPage(page),
+      error: () => this.activity$.next({ ...state, loadingMore: false }),
+    });
+  }
+
+  private pushActivityPage(page: ExplorerProtocolActivityPage): void {
+    this.activityPages.push(page);
+    this.activityCursor = page.hasMore ? page.nextCursor : null;
+    const merged = {
+      events: this.activityPages.flatMap((entry) => entry.events),
+      assets: this.activityPages.flatMap((entry) => entry.assets),
+      invalidations: this.activityPages.flatMap((entry) => entry.invalidations),
+    };
+    const latest = this.activityPages[this.activityPages.length - 1];
+    this.activity$.next({
+      kind: 'loaded',
+      page: { ...latest, ...merged, hasMore: latest.hasMore },
+      rows: readActivityRows([...merged.events, ...merged.invalidations]),
+      summary: activitySummary(latest),
+      loadingMore: false,
+    });
+  }
+
+  /**
+   * Reads the protocol's authority objects, first page, on the same terms
+   * as the activity feed above.
+   */
+  loadObjects(protocolId: string): void {
+    this.objectPages = [];
+    this.objectCursor = null;
+    this.objects$.next({ kind: 'loading' });
+    this.api.getProtocolObjects$(protocolId).subscribe({
+      next: (page) => this.pushObjectsPage(page),
+      error: () => this.objects$.next({ kind: 'error' }),
+    });
+  }
+
+  loadMoreObjects(protocolId: string): void {
+    const state = this.objects$.value;
+    if (state.kind !== 'loaded' || !this.objectCursor || state.loadingMore) {
+      return;
+    }
+    this.objects$.next({ ...state, loadingMore: true });
+    this.api.getProtocolObjects$(protocolId, this.objectCursor).subscribe({
+      next: (page) => this.pushObjectsPage(page),
+      error: () => this.objects$.next({ ...state, loadingMore: false }),
+    });
+  }
+
+  private pushObjectsPage(page: ExplorerProtocolObjectsPage): void {
+    this.objectPages.push(page);
+    this.objectCursor = page.state === 'served' && page.nextCursor ? page.nextCursor : null;
+    const merged = {
+      items: this.objectPages.flatMap((entry) => entry.items),
+      nextCursor: page.nextCursor,
+    };
+    const latest = this.objectPages[this.objectPages.length - 1];
+    const served: ExplorerProtocolObjectsPage = {
+      ...latest,
+      items: merged.items,
+      nextCursor: merged.nextCursor,
+    };
+    this.objects$.next({
+      kind: 'loaded',
+      page: served,
+      rows: readObjectRows(merged.items),
+      summary: objectsSummary(latest, merged.items.length),
+      loadingMore: false,
+    });
+  }
+
+  objectsSummaryLabel(state: ProtocolObjectsState): string | null {
+    return state.kind === 'loaded' ? state.summary : null;
+  }
+
+  trackByObject(index: number, row: ProtocolObjectRow): string {
+    return row.id ?? `${index}`;
+  }
+
+  activitySummaryLabel(state: ProtocolActivityState): string | null {
+    return state.kind === 'loaded' ? state.summary : null;
+  }
+
+  trackByRow(index: number, row: ProtocolActivityRow): string {
+    return row.id ?? `${index}`;
   }
 
   togglePin(protocolId: string): void {

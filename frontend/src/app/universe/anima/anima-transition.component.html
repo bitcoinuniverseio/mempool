@@ -1,0 +1,66 @@
+<div class="container-xl anima-page">
+  <ng-container *ngIf="vm$ | async as vm">
+    <ng-container [ngSwitch]="vm.kind">
+
+      <div *ngSwitchCase="'error'" class="panel state-panel degraded">
+        <h2 i18n="anima.event-error-title">The transition could not be read</h2>
+        <p i18n="anima.event-error-body">
+          The authority did not answer, so this transition is not shown. Nothing
+          is inferred from the failure.
+        </p>
+        <a [routerLink]="['/anima', 'transitions']" i18n="anima.back-transitions">Back to transitions</a>
+      </div>
+
+      <div *ngSwitchCase="'missing'" class="panel state-panel">
+        <h1 i18n="anima.event-missing-title">No transition under that id</h1>
+        <p i18n="anima.event-missing-body">
+          The authority logs no transition under this id. Ids look like
+          aHEIGHT:txIndex and are issued on the transitions page.
+        </p>
+        <a [routerLink]="['/anima', 'transitions']" i18n="anima.back-transitions-2">Back to transitions</a>
+      </div>
+
+      <ng-container *ngSwitchCase="'ready'">
+        <header class="page-head">
+          <div class="title-block">
+            <nav class="crumbs">
+              <a [routerLink]="['/anima', 'transitions']" i18n="anima.crumb-transitions">ANIMA transitions</a>
+              <span class="divider">/</span>
+              <span>{{ vm.event.event.eventId }}</span>
+            </nav>
+            <h1>{{ vm.event.event.eventId }}</h1>
+          </div>
+        </header>
+
+        <section class="panel" aria-labelledby="anima-event-heading">
+          <h2 id="anima-event-heading" i18n="anima.event-record-title">The authority's record</h2>
+          <dl class="facts">
+            <dt i18n="anima.field-kind">Kind</dt>
+            <dd>{{ vm.event.event.kind }}</dd>
+            <dt i18n="anima.field-height">Block</dt>
+            <dd>{{ vm.event.event.height }}</dd>
+            <dt i18n="anima.field-txindex">Transaction index</dt>
+            <dd>{{ vm.event.event.txIndex }}</dd>
+            <dt i18n="anima.field-anchor">Bitcoin anchor</dt>
+            <dd>
+              <a class="identifier" [routerLink]="['/tx', vm.event.event.txid]">{{ shorten(vm.event.event.txid, 14) }}</a>
+            </dd>
+          </dl>
+        </section>
+
+        <section class="panel" aria-labelledby="anima-event-organisms-heading">
+          <h2 id="anima-event-organisms-heading" i18n="anima.event-organisms-title">Organisms it touched</h2>
+          <ul class="plain-list">
+            <li *ngFor="let organismId of vm.event.event.organisms">
+              <a class="identifier" [routerLink]="['/anima', 'item', organismId]">{{ organismId }}</a>
+            </li>
+          </ul>
+          <p class="muted" *ngIf="vm.event.event.organisms.length === 0" i18n="anima.event-no-organisms">
+            The record names no organisms.
+          </p>
+        </section>
+      </ng-container>
+
+    </ng-container>
+  </ng-container>
+</div>

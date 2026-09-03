@@ -1,0 +1,59 @@
+<div class="container-xl anima-page">
+  <header class="page-head">
+    <div class="title-block">
+      <nav class="crumbs">
+        <a [routerLink]="['/protocols']" i18n="anima.crumb-items">Protocols</a>
+        <span class="divider">/</span>
+        <a [routerLink]="['/protocols', 'anima']">ANIMA</a>
+      </nav>
+      <h1 i18n="anima.items-title">ANIMA organisms</h1>
+      <p class="summary" i18n="anima.items-summary">
+        Every organism the ANIMA state machine tracks, as its first-party
+        authority lists them.
+      </p>
+    </div>
+  </header>
+
+  <ng-container *ngIf="vm$ | async as vm">
+    <ng-container [ngSwitch]="vm.kind">
+      <div *ngSwitchCase="'loading'" class="panel state-panel" aria-busy="true">
+        <p class="skeleton-line"></p>
+        <p class="skeleton-line short"></p>
+      </div>
+
+      <div *ngSwitchCase="'error'" class="panel state-panel degraded">
+        <h2 i18n="anima.overlay-error-title-2">The explorer overlay could not be read</h2>
+        <p i18n="anima.overlay-error-body-2">
+          The explorer could not reach its own overlay. Nothing about the ANIMA
+          protocol is inferred from the failure.
+        </p>
+      </div>
+
+      <div *ngSwitchCase="'degraded'" class="panel state-panel degraded">
+        <h2 i18n="anima.items-degraded-title">The authority is not serving this page</h2>
+        <p>{{ vm.degradedReason }}</p>
+      </div>
+
+      <ng-container *ngSwitchCase="'ready'">
+        <section class="panel">
+          <p class="muted" *ngIf="vm.organisms?.length === 0" i18n="anima.items-empty">
+            The authority tracks no organisms yet.
+          </p>
+          <ul class="event-list" *ngIf="vm.organisms?.length">
+            <li *ngFor="let organism of vm.organisms">
+              <a class="identifier" [routerLink]="['/anima', 'item', organism.id]">{{ shorten(organism.id, 16) }}</a>
+              <span class="kind">{{ organism.status }}</span>
+              <span class="kind">{{ organism.origin }}</span>
+              <span class="height">created at block {{ organism.createdHeight }}</span>
+            </li>
+          </ul>
+          <button type="button" class="load-more" *ngIf="vm.canLoadMore"
+                  (click)="more()" [disabled]="vm.loadingMore">
+            <ng-container *ngIf="!vm.loadingMore" i18n="anima.load-more-2">Load more</ng-container>
+            <ng-container *ngIf="vm.loadingMore" i18n="anima.loading-2">Loading…</ng-container>
+          </button>
+        </section>
+      </ng-container>
+    </ng-container>
+  </ng-container>
+</div>
