@@ -1,0 +1,106 @@
+<div class="container-xl product-page">
+  <header class="page-head">
+    <nav class="crumbs">
+      <a [routerLink]="['/']">Home</a>
+      <span class="divider">/</span>
+      <span>Liquid Network</span>
+    </nav>
+    <h1>Liquid Confidential-Asset, Peg, and Federation Observatory</h1>
+    <p class="summary">
+      Dynamic federation epochs, block signing matrices, peg-in/peg-out reserves, and confidential asset issuances on Liquid.
+    </p>
+  </header>
+
+  <nav class="nav-tabs">
+    <a [routerLink]="['/liquid/observatory']" class="active">Observatory</a>
+    <a [routerLink]="['/liquid/unblind']">Unblinding Workspace</a>
+  </nav>
+
+  <ng-container *ngIf="vm$ | async as vm">
+    <div *ngIf="vm.kind === 'loading'" class="panel" aria-busy="true">
+      <p>Reading Liquid Elements node and federation state...</p>
+    </div>
+
+    <div *ngIf="vm.kind === 'error'" class="panel">
+      <h2>Liquid Elements Node Offline</h2>
+      <p>Could not connect to Universe first-party Liquid node.</p>
+    </div>
+
+    <ng-container *ngIf="vm.kind === 'ready' && vm.summary && vm.federation">
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <span class="metric-label">Pegged L-BTC Reserve</span>
+          <span class="metric-value">{{ (Number(vm.summary.peggedReserveSats) / 1e8).toFixed(2) }} BTC</span>
+          <span class="metric-sub">{{ vm.summary.peggedReserveSats }} sats</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Active Signers</span>
+          <span class="metric-value">{{ vm.summary.dynamicFederation.signersOnline }} / {{ vm.summary.dynamicFederation.totalSigners }}</span>
+          <span class="metric-sub">Threshold: {{ vm.summary.dynamicFederation.blockSigningThreshold }}</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Dynamic Epoch</span>
+          <span class="metric-value">Epoch #{{ vm.summary.dynamicFederation.currentEpoch }}</span>
+          <span class="metric-sub">Block #{{ vm.summary.blockHeight }}</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Confidential Ratio</span>
+          <span class="metric-value">{{ vm.summary.confidentialTxPercentage }}%</span>
+          <span class="metric-sub">{{ vm.summary.activeAssetCount }} Issued Assets</span>
+        </div>
+      </div>
+
+      <section class="panel">
+        <h2>Registered Confidential Assets</h2>
+        <table class="data-table" *ngIf="vm.assets?.length">
+          <thead>
+            <tr>
+              <th>Ticker</th>
+              <th>Asset Name</th>
+              <th>Asset ID</th>
+              <th>Precision</th>
+              <th>Confidential</th>
+              <th>Proof</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let a of vm.assets">
+              <td><strong>{{ a.ticker }}</strong></td>
+              <td>{{ a.name }}</td>
+              <td class="mono">{{ a.assetId.slice(0, 16) }}...</td>
+              <td>{{ a.precision }}</td>
+              <td><span class="badge badge-success">{{ a.isConfidential ? 'Confidential' : 'Explicit' }}</span></td>
+              <td><span class="badge badge-info">{{ a.hasProof ? 'Verified' : 'Unproved' }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="panel">
+        <h2>Recent Peg-in & Peg-out Operations</h2>
+        <table class="data-table" *ngIf="vm.pegs?.length">
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Amount (BTC)</th>
+              <th>Bitcoin Txid</th>
+              <th>Liquid Txid</th>
+              <th>Confirmations</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of vm.pegs">
+              <td><span class="badge" [ngClass]="p.type === 'peg-in' ? 'badge-success' : 'badge-warning'">{{ p.type | uppercase }}</span></td>
+              <td><strong>{{ (Number(p.amountSats) / 1e8).toFixed(4) }}</strong></td>
+              <td class="mono"><a [routerLink]="['/tx', p.bitcoinTxid]">{{ p.bitcoinTxid.slice(0, 14) }}...</a></td>
+              <td class="mono">{{ p.liquidTxid.slice(0, 14) }}...</td>
+              <td>{{ p.confirmations }}</td>
+              <td><span class="badge badge-success">{{ p.status }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </ng-container>
+  </ng-container>
+</div>

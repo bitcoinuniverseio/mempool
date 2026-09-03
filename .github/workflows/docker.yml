@@ -18,9 +18,17 @@ permissions:
   contents: read
 
 jobs:
+  route:
+    uses: ./.github/workflows/route.yml
+    secrets: inherit
+    with:
+      plan: '{"test_images":"docker","build":"docker","tag_latest":"docker"}'
+      config_ref: 1dd19289af21f4f6be01f874390a180b3af8bb38
+
   test-images:
+    needs: route
     # Always run on tag pushes and all pull requests
-    runs-on: runs-on=${{ github.run_id }}-test_images/runner=universe-hosted/cpu=2+8/env=production
+    runs-on: ${{ fromJSON(needs.route.outputs.targets).test_images }}
     timeout-minutes: 30
     name: Test built Docker images
     steps:
@@ -222,7 +230,7 @@ jobs:
           docker compose -f docker-compose.test.yml down -v
 
   build:
-    needs: test-images
+    needs: [route, test-images]
     # Run on tag pushes OR on PRs with "docker-push" label (after test-images passes)
     if: |
       needs.test-images.result == 'success' &&
@@ -233,7 +241,7 @@ jobs:
         service:
           - frontend
           - backend
-    runs-on: runs-on=${{ github.run_id }}-build/runner=universe-hosted/cpu=2+8/env=production
+    runs-on: ${{ fromJSON(needs.route.outputs.targets).build }}
     timeout-minutes: 120
     name: Build and push to DockerHub
     outputs:
@@ -360,10 +368,10 @@ jobs:
           ./${{ matrix.service }}/
 
   tag-latest:
-    needs: build
+    needs: [route, build]
     # Only for successful tag pushes (not PRs with docker-push label) and only for "plain" versions (no '-')
     if: ${{ needs.build.result == 'success' && github.event_name == 'push' && !contains(github.ref_name, '-') }}
-    runs-on: runs-on=${{ github.run_id }}-tag_latest/runner=universe-hosted/cpu=2+8/env=production
+    runs-on: ${{ fromJSON(needs.route.outputs.targets).tag_latest }}
     timeout-minutes: 30
     name: Tag release build as latest
     strategy:

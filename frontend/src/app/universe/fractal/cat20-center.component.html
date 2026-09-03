@@ -1,0 +1,115 @@
+<div class="container-xl product-page">
+  <header class="page-head">
+    <nav class="crumbs">
+      <a [routerLink]="['/']">Home</a>
+      <span class="divider">/</span>
+      <a [routerLink]="['/fractal']">Fractal Bitcoin</a>
+      <span class="divider">/</span>
+      <span>CAT-20</span>
+    </nav>
+    <h1>Fractal CAT-20 Center</h1>
+    <p class="summary">
+      Covenant-enforced native tokens on Fractal Bitcoin with deterministic state transitions, minter covenants, and integer balances.
+    </p>
+  </header>
+
+  <nav class="nav-tabs">
+    <a [routerLink]="['/fractal']">Chain Overview</a>
+    <a [routerLink]="['/fractal/cat20']" class="active">CAT-20 Center</a>
+  </nav>
+
+  <ng-container *ngIf="vm$ | async as vm">
+    <div *ngIf="vm.kind === 'loading'" class="panel" aria-busy="true">
+      <p>Loading CAT-20 token directory...</p>
+    </div>
+
+    <div *ngIf="vm.kind === 'error'" class="panel">
+      <h2>Token Error</h2>
+      <p>The CAT-20 token or directory could not be loaded.</p>
+    </div>
+
+    <!-- Detail View -->
+    <ng-container *ngIf="vm.kind === 'detail' && vm.selected">
+      <section class="panel">
+        <h2>{{ vm.selected.name }} ({{ vm.selected.symbol }})</h2>
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <span class="metric-label">Max Supply</span>
+            <span class="metric-value">{{ vm.selected.maxSupplyAtomic }}</span>
+            <span class="metric-sub">{{ vm.selected.decimals }} Decimals</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Circulating Supply</span>
+            <span class="metric-value">{{ vm.selected.circulatingSupplyAtomic }}</span>
+            <span class="metric-sub">Mint Limit: {{ vm.selected.mintLimitAtomic }}</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Holders</span>
+            <span class="metric-value">{{ vm.selected.holderCount }}</span>
+            <span class="metric-sub">{{ vm.selected.transferCount }} Transfers</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Minter Covenant</span>
+            <span class="metric-value">{{ vm.selected.minterType }}</span>
+            <span class="metric-sub">State: {{ vm.selected.state }}</span>
+          </div>
+        </div>
+
+        <div style="margin-top: 1rem;">
+          <p><strong>Token ID:</strong> <span class="mono">{{ vm.selected.tokenId }}</span></p>
+          <p><strong>Deploy Txid:</strong> <span class="mono">{{ vm.selected.deployTxid }}</span></p>
+          <p><strong>Deploy Height:</strong> Block #{{ vm.selected.deployHeight }}</p>
+          <p><strong>Minter Address:</strong> <span class="mono">{{ vm.selected.minterAddress }}</span></p>
+        </div>
+
+        <h3 style="margin-top: 1.5rem; font-size: 1.1rem;">Top Token Holders</h3>
+        <table class="data-table" *ngIf="vm.holders?.length">
+          <thead>
+            <tr>
+              <th>Holder Address</th>
+              <th>Balance</th>
+              <th>Share</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let h of vm.holders">
+              <td class="mono">{{ h.address }}</td>
+              <td class="mono">{{ h.balanceAtomic }}</td>
+              <td><span class="badge badge-info">{{ h.percentage }}%</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </ng-container>
+
+    <!-- List View -->
+    <ng-container *ngIf="vm.kind === 'ready' && vm.tokens">
+      <section class="panel">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Token ID</th>
+              <th>Symbol</th>
+              <th>Name</th>
+              <th>Max Supply</th>
+              <th>Holders</th>
+              <th>Minter Type</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let t of vm.tokens">
+              <td class="mono"><a [routerLink]="['/fractal/cat20/token', t.tokenId]">{{ t.tokenId.slice(0, 16) }}...</a></td>
+              <td><strong>{{ t.symbol }}</strong></td>
+              <td>{{ t.name }}</td>
+              <td class="mono">{{ t.maxSupplyAtomic }}</td>
+              <td>{{ t.holderCount }}</td>
+              <td><span class="badge badge-info">{{ t.minterType }}</span></td>
+              <td><span class="badge badge-success">{{ t.state }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </ng-container>
+  </ng-container>
+</div>

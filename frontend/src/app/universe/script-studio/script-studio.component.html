@@ -1,0 +1,57 @@
+<div class="container-xl product-page">
+  <header class="page-head">
+    <nav class="crumbs">
+      <a [routerLink]="['/']">Home</a>
+      <span class="divider">/</span>
+      <span>Tools</span>
+    </nav>
+    <h1>Bitcoin Script, Miniscript, Descriptor & Taproot Studio</h1>
+    <p class="summary">
+      Interactive opcode stack execution tracer, Miniscript satisfaction compiler, output script descriptors, and Taproot tree visualizer.
+    </p>
+  </header>
+
+  <section class="panel">
+    <h2>Script Execution & Stack Tracer</h2>
+    <div class="form-group">
+      <label for="scriptInput">Script ASM / Opcode Sequence</label>
+      <input id="scriptInput" type="text" [(ngModel)]="scriptInput" />
+    </div>
+
+    <div style="display: flex; gap: 1rem; align-items: center;">
+      <button type="button" class="btn-primary" (click)="trace()">
+        Step Trace Script
+      </button>
+      <span class="badge badge-info">Standard Consensus Profile</span>
+    </div>
+  </section>
+
+  <ng-container *ngIf="result$ | async as res">
+    <section class="panel">
+      <h2>Opcode Execution Stack Trace</h2>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Step</th>
+            <th>Opcode</th>
+            <th>Stack Before</th>
+            <th>Stack After</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let s of res.executionSteps; let i = index">
+            <td>#{{ i + 1 }}</td>
+            <td class="mono"><strong>{{ s.opcode }}</strong></td>
+            <td class="mono">[{{ s.stackBefore.join(', ') }}]</td>
+            <td class="mono">[{{ s.stackAfter.join(', ') }}]</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div style="margin-top: 1rem;">
+        <p><strong>Satisfaction State:</strong> <span class="badge" [ngClass]="res.satisfactionValid ? 'badge-success' : 'badge-warning'">{{ res.satisfactionValid ? 'SUCCESS (Top of Stack: 1)' : 'FAIL' }}</span></p>
+        <p *ngIf="res.derivedAddress"><strong>Derived Address:</strong> <span class="mono">{{ res.derivedAddress }}</span></p>
+      </div>
+    </section>
+  </ng-container>
+</div>

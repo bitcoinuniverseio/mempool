@@ -1,0 +1,97 @@
+<div class="container-xl product-page">
+  <header class="page-head">
+    <nav class="crumbs">
+      <a [routerLink]="['/protocols']">Protocols</a>
+      <span class="divider">/</span>
+      <a [routerLink]="['/wildkin']">Wildkin</a>
+      <span class="divider">/</span>
+      <span>Creatures</span>
+    </nav>
+    <h1>Wildkin Creatures Catalog</h1>
+    <p class="summary">
+      Every settled creature inscription with CBOR genome validation, generation level, and binding UTXO state.
+    </p>
+  </header>
+
+  <nav class="nav-tabs">
+    <a [routerLink]="['/wildkin']">Overview</a>
+    <a [routerLink]="['/wildkin/creatures']" class="active">Creatures</a>
+    <a [routerLink]="['/wildkin/bloodlines']">Bloodlines & Braids</a>
+  </nav>
+
+  <ng-container *ngIf="vm$ | async as vm">
+    <div *ngIf="vm.kind === 'loading'" class="panel" aria-busy="true">
+      <p>Reading creature ledger...</p>
+    </div>
+
+    <div *ngIf="vm.kind === 'error'" class="panel">
+      <h2>Ledger Error</h2>
+      <p>The creature record could not be loaded from the Wildkin authority.</p>
+    </div>
+
+    <!-- Detail View -->
+    <ng-container *ngIf="vm.kind === 'detail' && vm.selected">
+      <section class="panel">
+        <h2>{{ vm.selected.name }} ({{ vm.selected.creatureId }})</h2>
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <span class="metric-label">Generation</span>
+            <span class="metric-value">Gen {{ vm.selected.generation }}</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Inscription</span>
+            <span class="metric-value">#{{ vm.selected.inscriptionNumber }}</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Status</span>
+            <span class="metric-value">{{ vm.selected.status }}</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Lifetime Braids</span>
+            <span class="metric-value">{{ vm.selected.hasBraided ? '1 / 1 (Max)' : '0 / 1 (Available)' }}</span>
+          </div>
+        </div>
+
+        <div style="margin-top: 1rem;">
+          <p><strong>Binding UTXO:</strong> <span class="mono">{{ vm.selected.bindingUtxo }}</span></p>
+          <p><strong>Owner:</strong> <span class="mono">{{ vm.selected.ownerAddress }}</span></p>
+          <p *ngIf="vm.selected.parentAId">
+            <strong>Parentage:</strong>
+            <a [routerLink]="['/wildkin/creature', vm.selected.parentAId]">{{ vm.selected.parentAId }}</a> and
+            <a [routerLink]="['/wildkin/creature', vm.selected.parentBId]">{{ vm.selected.parentBId }}</a>
+          </p>
+          <p><strong>Genome Hex (CBOR):</strong> <span class="mono">{{ vm.selected.genomeHex }}</span></p>
+          <p><strong>Ruleset Version:</strong> v{{ vm.selected.rulesetVersion }} (draft)</p>
+        </div>
+      </section>
+    </ng-container>
+
+    <!-- List View -->
+    <ng-container *ngIf="vm.kind === 'ready' && vm.creatures">
+      <section class="panel">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Creature ID</th>
+              <th>Name</th>
+              <th>Generation</th>
+              <th>Status</th>
+              <th>Binding UTXO</th>
+              <th>Parentage</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of vm.creatures">
+              <td class="mono"><a [routerLink]="['/wildkin/creature', c.creatureId]">{{ c.creatureId }}</a></td>
+              <td><strong>{{ c.name }}</strong></td>
+              <td>Gen {{ c.generation }}</td>
+              <td><span class="badge badge-success">{{ c.status }}</span></td>
+              <td class="mono">{{ c.bindingUtxo.slice(0, 16) }}...</td>
+              <td>{{ c.parentAId ? (c.parentAId + ' + ' + c.parentBId) : 'Gen 0 Alpha' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </ng-container>
+  </ng-container>
+</div>

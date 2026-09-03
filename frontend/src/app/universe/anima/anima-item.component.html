@@ -1,0 +1,104 @@
+<div class="container-xl anima-page">
+  <ng-container *ngIf="vm$ | async as vm">
+    <ng-container [ngSwitch]="vm.kind">
+
+      <div *ngSwitchCase="'error'" class="panel state-panel degraded">
+        <h2 i18n="anima.item-error-title">The organism could not be read</h2>
+        <p i18n="anima.item-error-body">
+          The authority did not answer, so this organism is not shown.
+        </p>
+        <a [routerLink]="['/anima', 'items']" i18n="anima.back-items">Back to organisms</a>
+      </div>
+
+      <div *ngSwitchCase="'missing'" class="panel state-panel">
+        <h1 i18n="anima.item-missing-title">No organism under that id</h1>
+        <p i18n="anima.item-missing-body">
+          The authority tracks no organism with this id.
+        </p>
+        <a [routerLink]="['/anima', 'items']" i18n="anima.back-items-2">Back to organisms</a>
+      </div>
+
+      <ng-container *ngSwitchCase="'ready'">
+        <header class="page-head">
+          <div class="title-block">
+            <nav class="crumbs">
+              <a [routerLink]="['/anima', 'items']" i18n="anima.crumb-items-2">ANIMA organisms</a>
+              <span class="divider">/</span>
+              <span>{{ shorten(vm.organism.organism.id, 16) }}</span>
+            </nav>
+            <h1>
+              {{ shorten(vm.organism.organism.id, 16) }}
+              <span class="universe-chip">{{ vm.organism.organism.status }}</span>
+            </h1>
+          </div>
+        </header>
+
+        <section class="panel" aria-labelledby="anima-item-identity-heading">
+          <h2 id="anima-item-identity-heading" i18n="anima.item-identity-title">Identity</h2>
+          <dl class="facts">
+            <dt i18n="anima.field-origin">Origin</dt>
+            <dd>{{ vm.organism.organism.origin }}</dd>
+            <dt i18n="anima.field-genesis">Genesis</dt>
+            <dd>
+              <a class="identifier" [routerLink]="['/tx', vm.organism.organism.genesisTxid]">{{ shorten(vm.organism.organism.genesisTxid, 14) }}</a>
+              (vout {{ vm.organism.organism.genesisVout }})
+            </dd>
+            <dt i18n="anima.field-created">Created at</dt>
+            <dd>block {{ vm.organism.organism.createdHeight }}</dd>
+            <dt i18n="anima.field-genome">Genome</dt>
+            <dd><span class="identifier">{{ shorten(vm.organism.organism.genome, 20) }}</span></dd>
+            <dt i18n="anima.field-generation">Generation zero</dt>
+            <dd>{{ vm.organism.organism.generationZero ? 'yes' : 'no' }}</dd>
+            <dt i18n="anima.field-transfers">Transfers</dt>
+            <dd>{{ vm.organism.organism.transferCount }}</dd>
+            <ng-container *ngIf="vm.organism.organism.vessel as vessel">
+              <dt i18n="anima.field-vessel">Current vessel</dt>
+              <dd>
+                <a class="identifier" [routerLink]="['/outpoint', vessel.txid, vessel.vout]">{{ shorten(vessel.txid, 12) }}:{{ vessel.vout }}</a>
+              </dd>
+            </ng-container>
+            <ng-container *ngIf="vm.organism.organism.endedHeight !== null">
+              <dt i18n="anima.field-ended">Ended at</dt>
+              <dd>block {{ vm.organism.organism.endedHeight }}</dd>
+            </ng-container>
+          </dl>
+        </section>
+
+        <section class="panel" aria-labelledby="anima-item-waymarks-heading">
+          <h2 id="anima-item-waymarks-heading" i18n="anima.item-waymarks-title">Waymarks</h2>
+          <p class="muted" *ngIf="vm.organism.organism.waymarks.length === 0" i18n="anima.item-no-waymarks">
+            No waymark has been recorded for this organism.
+          </p>
+          <ul class="event-list" *ngIf="vm.organism.organism.waymarks.length > 0">
+            <li *ngFor="let waymark of vm.organism.organism.waymarks">
+              <span class="kind">waymark {{ waymark.seq }}</span>
+              <a class="identifier" [routerLink]="['/tx', waymark.txid]">{{ shorten(waymark.txid, 10) }}</a>
+              <span class="height">block {{ waymark.height }}</span>
+            </li>
+          </ul>
+        </section>
+
+        <section class="panel" aria-labelledby="anima-item-achievements-heading">
+          <h2 id="anima-item-achievements-heading" i18n="anima.item-achievements-title">Achievements</h2>
+          <p class="muted" *ngIf="vm.organism.organism.achievements.length === 0" i18n="anima.item-no-achievements">
+            No achievement has been recorded for this organism.
+          </p>
+          <ul class="event-list" *ngIf="vm.organism.organism.achievements.length > 0">
+            <li *ngFor="let achievement of vm.organism.organism.achievements">
+              <span class="kind">{{ achievement.claim }}</span>
+              <a class="identifier" [routerLink]="['/tx', achievement.txid]">{{ shorten(achievement.txid, 10) }}</a>
+              <span class="height">block {{ achievement.height }}</span>
+            </li>
+          </ul>
+        </section>
+
+        <section class="panel">
+          <a [routerLink]="['/anima', 'item', vm.organism.organism.id, 'history']" i18n="anima.item-open-history">
+            Open its transition history and lineage
+          </a>
+        </section>
+      </ng-container>
+
+    </ng-container>
+  </ng-container>
+</div>

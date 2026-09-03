@@ -1,0 +1,77 @@
+<div class="container-xl product-page">
+  <header class="page-head">
+    <nav class="crumbs">
+      <a [routerLink]="['/']">Home</a>
+      <span class="divider">/</span>
+      <span>Layer 2 & Bridges</span>
+    </nav>
+    <h1>BitVM & Bitcoin L2 Bridge-Proof Observatory</h1>
+    <p class="summary">
+      Bridge reserves, 1-of-N honest verifier trust models, fraud proof challenge timelines, and operator committees across Bitcoin L2s.
+    </p>
+  </header>
+
+  <ng-container *ngIf="vm$ | async as vm">
+    <div *ngIf="vm.kind === 'loading'" class="panel" aria-busy="true">
+      <p>Reading BitVM bridge contracts and reserve states...</p>
+    </div>
+
+    <ng-container *ngIf="vm.kind === 'ready'">
+      <!-- Systems Table -->
+      <section class="panel" *ngIf="vm.systems?.length">
+        <h2>Active Bitcoin Bridge Systems</h2>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>System Name</th>
+              <th>Architecture</th>
+              <th>Trust Model</th>
+              <th>Locked Reserves (BTC)</th>
+              <th>Operators</th>
+              <th>Challenge Period</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let s of vm.systems">
+              <td><strong>{{ s.name }}</strong></td>
+              <td><span class="badge badge-info">{{ s.architecture }}</span></td>
+              <td>{{ s.trustModel }}</td>
+              <td class="mono"><strong>{{ (Number(s.lockedBtcSats) / 1e8).toFixed(2) }}</strong></td>
+              <td>{{ s.operatorCount }}</td>
+              <td>{{ s.challengePeriodBlocks }} blocks</td>
+              <td><span class="badge badge-success">{{ s.status }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Active Challenges -->
+      <section class="panel" *ngIf="vm.challenges?.length">
+        <h2>Live Dispute & Challenge Windows</h2>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Challenge ID</th>
+              <th>System</th>
+              <th>Assertion Txid</th>
+              <th>Challenge Txid</th>
+              <th>Timeout Height</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of vm.challenges">
+              <td class="mono"><strong>{{ c.challengeId }}</strong></td>
+              <td>{{ c.systemId }}</td>
+              <td class="mono"><a [routerLink]="['/tx', c.assertionTxid]">{{ c.assertionTxid.slice(0, 14) }}...</a></td>
+              <td class="mono"><a [routerLink]="['/tx', c.challengeTxid]">{{ c.challengeTxid.slice(0, 14) }}...</a></td>
+              <td>Block #{{ c.timeoutBlockHeight }}</td>
+              <td><span class="badge badge-warning">{{ c.status }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </ng-container>
+  </ng-container>
+</div>

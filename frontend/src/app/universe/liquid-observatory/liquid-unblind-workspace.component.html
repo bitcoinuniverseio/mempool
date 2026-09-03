@@ -1,0 +1,69 @@
+<div class="container-xl product-page">
+  <header class="page-head">
+    <nav class="crumbs">
+      <a [routerLink]="['/']">Home</a>
+      <span class="divider">/</span>
+      <a [routerLink]="['/liquid/observatory']">Liquid Network</a>
+      <span class="divider">/</span>
+      <span>Unblind Workspace</span>
+    </nav>
+    <h1>Client-Only Unblinding Inspector</h1>
+    <p class="summary">
+      Inspect confidential Liquid outputs and verify secp256k1-zkp rangeproofs locally without revealing amounts or blinding keys to any server.
+    </p>
+  </header>
+
+  <nav class="nav-tabs">
+    <a [routerLink]="['/liquid/observatory']">Observatory</a>
+    <a [routerLink]="['/liquid/unblind']" class="active">Unblinding Workspace</a>
+  </nav>
+
+  <section class="panel">
+    <h2>Output Unblinding Form</h2>
+    <p>
+      Provide your private blinding key or unblinding nonce to decrypt an output's value commitment and verify its rangeproof.
+    </p>
+
+    <div class="form-group">
+      <label for="blindingKeyInput">Blinding Private Key (Hex)</label>
+      <input id="blindingKeyInput" type="password" [(ngModel)]="blindingKey" placeholder="64-character hex key..." />
+    </div>
+
+    <div class="form-group">
+      <label for="outputHexInput">Confidential Output / ScriptPubKey Hex</label>
+      <input id="outputHexInput" type="text" [(ngModel)]="outputHex" placeholder="Raw output hex or outpoint txid:vout..." />
+    </div>
+
+    <button type="button" class="btn-primary" (click)="unblind()" [disabled]="verifying || !blindingKey.trim()">
+      {{ verifying ? 'Verifying Rangeproofs...' : 'Unblind Locally' }}
+    </button>
+  </section>
+
+  <ng-container *ngIf="result$ | async as res">
+    <section class="panel">
+      <h2>Unblinded Output Commitment</h2>
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <span class="metric-label">Decrypted Amount</span>
+          <span class="metric-value">{{ (Number(res.valueSat) / 1e8).toFixed(4) }} L-BTC</span>
+          <span class="metric-sub">{{ res.valueSat }} satoshis</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Rangeproof</span>
+          <span class="metric-value text-success">Valid</span>
+          <span class="metric-sub">Zero-Knowledge proven</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Surjectionproof</span>
+          <span class="metric-value text-success">Valid</span>
+          <span class="metric-sub">Asset commitment verified</span>
+        </div>
+      </div>
+
+      <div style="margin-top: 1rem;">
+        <p><strong>Committed Asset:</strong> <span class="mono">{{ res.assetId }}</span></p>
+        <p><span class="badge badge-success">Client-Private</span> Proof evaluation was performed strictly in-browser.</p>
+      </div>
+    </section>
+  </ng-container>
+</div>

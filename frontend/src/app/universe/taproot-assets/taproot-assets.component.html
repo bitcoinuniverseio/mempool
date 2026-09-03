@@ -1,0 +1,113 @@
+<div class="container-xl product-page">
+  <header class="page-head">
+    <nav class="crumbs">
+      <a [routerLink]="['/']">Home</a>
+      <span class="divider">/</span>
+      <span>Taproot Assets</span>
+    </nav>
+    <h1>Taproot Assets Directory & Proof Inspector</h1>
+    <p class="summary">
+      Taproot Assets on Bitcoin and Lightning with Universe flat-file proof verification, asset tranches, and collectible galleries.
+    </p>
+  </header>
+
+  <nav class="nav-tabs">
+    <a [routerLink]="['/taproot-assets']" class="active">Assets & Groups</a>
+    <a [routerLink]="['/lightning/offers']">Lightning BOLT12 & RFQ</a>
+  </nav>
+
+  <ng-container *ngIf="vm$ | async as vm">
+    <div *ngIf="vm.kind === 'loading'" class="panel" aria-busy="true">
+      <p>Reading Taproot Universe directory...</p>
+    </div>
+
+    <div *ngIf="vm.kind === 'error'" class="panel">
+      <h2>Taproot Assets Error</h2>
+      <p>Could not retrieve Taproot Assets from the Universe directory server.</p>
+    </div>
+
+    <!-- Detail View -->
+    <ng-container *ngIf="vm.kind === 'detail' && vm.selected">
+      <section class="panel">
+        <h2>{{ vm.selected.name }}</h2>
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <span class="metric-label">Asset Type</span>
+            <span class="metric-value">{{ vm.selected.assetType | uppercase }}</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Total Amount</span>
+            <span class="metric-value">{{ vm.selected.totalAmountAtomic }}</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Genesis Block</span>
+            <span class="metric-value">#{{ vm.selected.genesisHeight }}</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Proof File</span>
+            <span class="metric-value text-success">Available</span>
+          </div>
+        </div>
+
+        <div style="margin-top: 1rem;">
+          <p><strong>Asset ID:</strong> <span class="mono">{{ vm.selected.assetId }}</span></p>
+          <p *ngIf="vm.selected.groupKey"><strong>Group Key:</strong> <span class="mono">{{ vm.selected.groupKey }}</span></p>
+          <p><strong>Anchor Txid:</strong> <span class="mono"><a [routerLink]="['/tx', vm.selected.anchorTxid]">{{ vm.selected.anchorTxid }}</a></span></p>
+          <p><strong>Genesis Outpoint:</strong> <span class="mono">{{ vm.selected.genesisPoint }}</span></p>
+          <p><strong>Script Key:</strong> <span class="mono">{{ vm.selected.scriptKey }}</span></p>
+        </div>
+      </section>
+    </ng-container>
+
+    <!-- List View -->
+    <ng-container *ngIf="vm.kind === 'ready' && vm.assets">
+      <section class="panel">
+        <h2>Active Taproot Assets</h2>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Asset Name</th>
+              <th>Type</th>
+              <th>Total Amount</th>
+              <th>Genesis Height</th>
+              <th>Anchor Txid</th>
+              <th>Proof</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let a of vm.assets">
+              <td><strong><a [routerLink]="['/taproot-assets/asset', a.assetId]">{{ a.name }}</a></strong></td>
+              <td><span class="badge" [ngClass]="a.assetType === 'normal' ? 'badge-info' : 'badge-warning'">{{ a.assetType | uppercase }}</span></td>
+              <td class="mono">{{ a.totalAmountAtomic }}</td>
+              <td>#{{ a.genesisHeight }}</td>
+              <td class="mono"><a [routerLink]="['/tx', a.anchorTxid]">{{ a.anchorTxid.slice(0, 16) }}...</a></td>
+              <td><span class="badge badge-success">Proved</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="panel" *ngIf="vm.groups?.length">
+        <h2>Asset Groups & Tranches</h2>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Group Name</th>
+              <th>Group Key</th>
+              <th>Total Assets Count</th>
+              <th>Circulating Supply</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let g of vm.groups">
+              <td><strong>{{ g.name }}</strong></td>
+              <td class="mono">{{ g.groupKey.slice(0, 16) }}...</td>
+              <td>{{ g.totalAssetsCount }}</td>
+              <td class="mono">{{ g.totalCirculatingSupplyAtomic }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </ng-container>
+  </ng-container>
+</div>
