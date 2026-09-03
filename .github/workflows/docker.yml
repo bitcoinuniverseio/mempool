@@ -20,7 +20,7 @@ permissions:
 jobs:
   test-images:
     # Always run on tag pushes and all pull requests
-    runs-on: [self-hosted, linux, x64, universe, gcp, universe-gcp-medium]
+    runs-on: [self-hosted, linux, x64, universe-linux]
     timeout-minutes: 30
     name: Test built Docker images
     steps:
@@ -233,7 +233,7 @@ jobs:
         service:
           - frontend
           - backend
-    runs-on: [self-hosted, linux, x64, universe, gcp, universe-gcp-medium]
+    runs-on: [self-hosted, linux, x64, universe-linux]
     timeout-minutes: 120
     name: Build and push to DockerHub
     outputs:
@@ -363,7 +363,7 @@ jobs:
     needs: [build]
     # Only for successful tag pushes (not PRs with docker-push label) and only for "plain" versions (no '-')
     if: ${{ needs.build.result == 'success' && github.event_name == 'push' && !contains(github.ref_name, '-') }}
-    runs-on: [self-hosted, linux, x64, universe, gcp, universe-gcp-medium]
+    runs-on: [self-hosted, linux, x64, universe-linux]
     timeout-minutes: 30
     name: Tag release build as latest
     strategy:

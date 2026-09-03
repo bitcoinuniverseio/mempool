@@ -29,7 +29,7 @@ concurrency:
 jobs:
   smoke:
     name: Live origin answers with real content
-    runs-on: [self-hosted, linux, x64, universe, gcp, universe-gcp-medium]
+    runs-on: [self-hosted, linux, x64, universe-linux]
     # Ten was for a job that only read the API. It now installs the browser
     # harness and loads two pages in a real browser, which is the only way to
     # see what the origin renders.
