@@ -85,6 +85,7 @@ const FEDERATION_EPOCH: LiquidFederationEpoch = {
 };
 
 export class LiquidObservatoryService {
+  /** @asyncSafe */
   public async $getSummary(): Promise<LiquidObservatorySummary> {
     return {
       blockHeight: 3120490,
@@ -102,9 +103,13 @@ export class LiquidObservatoryService {
     };
   }
 
+  /** @asyncSafe */
+
   public async $getAssets(): Promise<LiquidAssetRecord[]> {
     return KNOWN_LIQUID_ASSETS;
   }
+
+  /** @asyncSafe */
 
   public async $getAsset(assetId: string): Promise<LiquidAssetRecord | null> {
     const match = KNOWN_LIQUID_ASSETS.find(
@@ -113,9 +118,13 @@ export class LiquidObservatoryService {
     return match || null;
   }
 
+  /** @asyncSafe */
+
   public async $getPegs(): Promise<LiquidPegRecord[]> {
     return PEGS;
   }
+
+  /** @asyncSafe */
 
   public async $getFederation(): Promise<LiquidFederationEpoch> {
     return FEDERATION_EPOCH;

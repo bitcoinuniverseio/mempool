@@ -54,13 +54,18 @@ const DECLARATIONS: StratumV2JobDeclaration[] = [
 ];
 
 export class StratumV2Service {
+  /** @asyncSafe */
   public async $getRoles(): Promise<StratumV2RoleStatus[]> {
     return ROLES;
   }
 
+  /** @asyncSafe */
+
   public async $getTemplates(): Promise<StratumV2Template[]> {
     return TEMPLATES;
   }
+
+  /** @asyncSafe */
 
   public async $getDeclarations(): Promise<StratumV2JobDeclaration[]> {
     return DECLARATIONS;

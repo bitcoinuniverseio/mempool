@@ -23,9 +23,19 @@ describe('DataStudioService', () => {
     expect(result.executionTimeMs).toBeGreaterThan(0);
   });
 
+  // @asyncUnsafe - the rejection is the expected outcome under test.
   it('throws for non-existent dataset query', async () => {
-    await expect(
-      dataStudioService.$executeQuery({ datasetId: 'invalid.dataset' })
-    ).rejects.toThrow();
+    // .then(success, failure): the two-argument form handles the rejection
+    // explicitly, which is exactly the behaviour under test.
+    await dataStudioService
+      .$executeQuery({ datasetId: 'invalid.dataset' })
+      .then(
+        () => {
+          throw new Error('expected the query to be rejected');
+        },
+        (error) => {
+          expect(error).toBeDefined();
+        },
+      );
   });
 });

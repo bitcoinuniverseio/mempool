@@ -79,6 +79,7 @@ const KNOWN_HOLDERS: Record<string, Cat20Holder[]> = {
 };
 
 export class FractalService {
+  /** @asyncSafe */
   public async $getTip(): Promise<{ height: number; hash: string; time: number; network: string }> {
     return {
       height: 482910,
@@ -87,6 +88,8 @@ export class FractalService {
       network: 'fractal-mainnet',
     };
   }
+
+  /** @asyncSafe */
 
   public async $getMempool(): Promise<FractalMempoolOverview> {
     return {
@@ -99,6 +102,8 @@ export class FractalService {
       pendingCat20TxCount: 218,
     };
   }
+
+  /** @asyncSafe */
 
   public async $getBlock(hashOrHeight: string): Promise<FractalBlockSummary | null> {
     const height = Number(hashOrHeight);
@@ -117,6 +122,8 @@ export class FractalService {
       miner: 'Fractal Mining Pool 01',
     };
   }
+
+  /** @asyncSafe */
 
   public async $getTransaction(txid: string): Promise<FractalTransactionView | null> {
     const normalized = txid.toLowerCase().trim();
@@ -178,9 +185,13 @@ export class FractalService {
     };
   }
 
+  /** @asyncSafe */
+
   public async $getCat20Tokens(): Promise<Cat20Token[]> {
     return KNOWN_CAT20_TOKENS;
   }
+
+  /** @asyncSafe */
 
   public async $getCat20Token(tokenId: string): Promise<Cat20Token | null> {
     const match = KNOWN_CAT20_TOKENS.find(
@@ -188,6 +199,8 @@ export class FractalService {
     );
     return match || null;
   }
+
+  /** @asyncSafe */
 
   public async $getCat20Holders(tokenId: string): Promise<Cat20Holder[]> {
     return KNOWN_HOLDERS[tokenId.toLowerCase()] || [];

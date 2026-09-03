@@ -109,6 +109,7 @@ const VALUE_POOLS: ZcashValuePool[] = [
 ];
 
 export class ZcashPrivacyService {
+  /** @asyncSafe */
   public async $getSummary(): Promise<ZcashPrivacySummary> {
     const tipHeight = 2598410;
     const totalCirculatingSupplyZat = '1632174350000000';
@@ -149,9 +150,13 @@ export class ZcashPrivacyService {
     };
   }
 
+  /** @asyncSafe */
+
   public async $getPools(): Promise<ZcashValuePool[]> {
     return VALUE_POOLS;
   }
+
+  /** @asyncSafe */
 
   public async $getUpgrades(): Promise<ZcashNetworkUpgrade[]> {
     return NETWORK_UPGRADES;
