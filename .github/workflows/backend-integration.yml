@@ -15,7 +15,7 @@ jobs:
       matrix:
         node: ["24.13.0"]
       fail-fast: false
-    runs-on: [self-hosted, linux, x64, universe, gcp, universe-gcp-medium]
+    runs-on: [self-hosted, linux, x64, universe-linux]
     env:
       COMPOSE_PROJECT_NAME: mempool-integration-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}
       MEMPOOL_TEST_BASE_CONFIG_FILE: ${{ github.workspace }}/${{ matrix.node }}/integration/backend/mempool-config.test.json
