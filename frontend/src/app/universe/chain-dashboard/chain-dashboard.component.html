@@ -1,5 +1,19 @@
 <div class="container-xl chain-page" *ngIf="vm$ | async as vm">
 
+  <!-- The block timeline is the dashboard's first content, matching Bitcoin. -->
+  <section class="panel timeline-panel" aria-labelledby="dash-timeline-heading">
+    <h2 id="dash-timeline-heading" class="visually-hidden" i18n="universe.dash.timeline-title">Block timeline</h2>
+    <app-chain-timeline
+      [chain]="chain"
+      [ticker]="profile.ticker"
+      [reading]="vm.timeline"
+      [loading]="!vm.timeline && !vm.viewError"
+    ></app-chain-timeline>
+    <p class="notice empty" *ngIf="!vm.timeline && vm.viewError" i18n="universe.dash.timeline-empty">
+      No timeline can be drawn until the block and pending sources answer.
+    </p>
+  </section>
+
   <header class="title-block">
     <span class="chain-mark" [ngClass]="'chain-mark-' + chain" aria-hidden="true"></span>
     <h1 i18n="universe.dash.heading">{{ profile.name }} dashboard</h1>
@@ -25,22 +39,6 @@
   <p class="notice failure" role="alert" *ngIf="vm.viewError && !vm.timeline" i18n="universe.dash.view-error">
     The {{ profile.name }} dashboard data cannot be read right now. Each panel below says what it is missing; nothing here is stale data presented as current.
   </p>
-
-  <!-- ------------------------------------------------------------------ -->
-  <!-- The block timeline                                                  -->
-  <!-- ------------------------------------------------------------------ -->
-  <section class="panel timeline-panel" aria-labelledby="dash-timeline-heading">
-    <h2 id="dash-timeline-heading" class="visually-hidden" i18n="universe.dash.timeline-title">Block timeline</h2>
-    <app-chain-timeline
-      [chain]="chain"
-      [ticker]="profile.ticker"
-      [reading]="vm.timeline"
-      [loading]="!vm.timeline && !vm.viewError"
-    ></app-chain-timeline>
-    <p class="notice empty" *ngIf="!vm.timeline && vm.viewError" i18n="universe.dash.timeline-empty">
-      No timeline can be drawn until the block and pending sources answer.
-    </p>
-  </section>
 
   <div class="dash-grid">
 

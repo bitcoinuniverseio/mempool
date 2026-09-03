@@ -55,7 +55,7 @@
 
   .protocol-row {
     display: grid;
-    grid-template-columns: 23rem minmax(0, 1fr) max-content;
+    grid-template-columns: 23rem max-content minmax(0, 1fr);
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem 0.25rem;
@@ -73,10 +73,7 @@
 
     .protocol-state {
       display: flex;
-      // Three chips do not fit beside a protocol name on a narrow screen, and
-      // without wrapping they simply left the viewport. They wrap now, and the
-      // row grows instead of hiding its own state.
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       align-items: center;
       gap: 0.35rem 0.5rem;
       min-width: 0;
@@ -91,6 +88,7 @@
       .protocol-state {
         grid-column: 1 / -1;
         grid-row: 2;
+        flex-wrap: wrap;
       }
 
       .protocol-evidence {
