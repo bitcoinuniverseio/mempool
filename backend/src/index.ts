@@ -67,6 +67,18 @@ import stratumV2Routes from './api/stratum-v2/stratum-v2.routes';
 import l2ObservatoryRoutes from './api/l2-observatory/l2-observatory.routes';
 import utxoSetRoutes from './api/utxo-set/utxo-set.routes';
 import wildkinRoutes from './api/wildkin/wildkin.routes';
+import policyLabRoutes from './api/intelligence/policy-lab/policy-lab.routes';
+import relayRoutes from './api/intelligence/relay/relay.routes';
+import timeMachineRoutes from './api/intelligence/time-machine/time-machine.routes';
+import templatesRoutes from './api/intelligence/templates/templates.routes';
+import utxoRoutes from './api/intelligence/utxo/utxo.routes';
+import graphRoutes from './api/intelligence/graph/graph.routes';
+import workbenchRoutes from './api/intelligence/workbench/workbench.routes';
+import verificationRoutes from './api/intelligence/verification/verification.routes';
+import queryStudioRoutes from './api/intelligence/query-studio/query-studio.routes';
+import watchlistsRoutes from './api/intelligence/watchlists/watchlists.routes';
+import knowledgeRoutes from './api/intelligence/knowledge/knowledge.routes';
+import protocolsRoutes from './api/intelligence/protocols/protocols.routes';
 
 class Server {
   private wss: WebSocket.Server | undefined;
@@ -471,6 +483,18 @@ class Server {
     l2ObservatoryRoutes.initRoutes(this.app);
     utxoSetRoutes.initRoutes(this.app);
     wildkinRoutes.initRoutes(this.app);
+    policyLabRoutes.initRoutes(this.app);
+    relayRoutes.initRoutes(this.app);
+    timeMachineRoutes.initRoutes(this.app);
+    templatesRoutes.initRoutes(this.app);
+    utxoRoutes.initRoutes(this.app);
+    graphRoutes.initRoutes(this.app);
+    workbenchRoutes.initRoutes(this.app);
+    verificationRoutes.initRoutes(this.app);
+    queryStudioRoutes.initRoutes(this.app);
+    watchlistsRoutes.initRoutes(this.app);
+    knowledgeRoutes.initRoutes(this.app);
+    protocolsRoutes.initRoutes(this.app);
   }
 
   healthCheck(): void {
