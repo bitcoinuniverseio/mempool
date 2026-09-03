@@ -24,7 +24,7 @@ permissions:
 jobs:
   artifact:
     name: Build and pack
-    runs-on: [self-hosted, linux-ultra]
+    runs-on: [self-hosted, linux, x64, universe, gcp, universe-gcp-large]
     timeout-minutes: 90
     steps:
       - name: Checkout
