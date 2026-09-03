@@ -6,7 +6,7 @@
  *
  *   source path: src/universe-portfolio/v2/portfolio-v2-contracts.ts
  *   schema version:        universe-portfolio-v2
- *   source hash (sha256):  0b5760c8c2c471c9b2e2fa6b7101da91ec0df59a69f84e388828d60cbf1ad500
+ *   source hash (sha256):  c1a533860b85092619102a9dae5a1f6c5c70d70e9977c0f5c59759cc61dfaa85
  *
  * Regenerate with `npm run contract:portfolio-v2` in backend-apis and
  * re-vendor this file; CI fails when this header's hash no longer matches
