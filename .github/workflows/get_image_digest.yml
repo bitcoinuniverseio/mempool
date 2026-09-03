@@ -10,7 +10,7 @@ on:
         type: string 
 jobs:
   print-images-sha:
-    runs-on: runs-on=${{ github.run_id }}-print_images_sha/runner=universe-hosted/cpu=2+8/env=production
+    runs-on: [self-hosted, linux, x64, universe, gcp, universe-gcp-small]
     name: Print digest for images
     steps:
       - name: Checkout

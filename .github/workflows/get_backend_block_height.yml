@@ -4,7 +4,7 @@ on: [workflow_dispatch]
 
 jobs:
   print-backend-sha:
-    runs-on: runs-on=${{ github.run_id }}-print_backend_sha/runner=universe-hosted/cpu=2+8/env=production
+    runs-on: [self-hosted, linux, x64, universe, gcp, universe-gcp-small]
     name: Get block height
     steps:
       - name: Checkout
