@@ -9,22 +9,14 @@ on:
       - master
 
 jobs:
-  route:
-    uses: ./.github/workflows/route.yml
-    secrets: inherit
-    with:
-      plan: '{"backend":"light","cache":"light","frontend":"light","e2e":"light","validate_docker_json":"light"}'
-      config_ref: 1dd19289af21f4f6be01f874390a180b3af8bb38
-
   backend:
-    needs: route
     if: "(github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'ops') && !contains(github.head_ref, 'ops/')) || github.event_name == 'push'"
     strategy:
       matrix:
         node: ["24.13.0"]
         flavor: ["dev", "prod"]
       fail-fast: false
-    runs-on: ${{ fromJSON(needs.route.outputs.targets).backend }}
+    runs-on: [self-hosted, linux, x64, universe, gcp, universe-gcp-small]
 
     name: Backend (${{ matrix.flavor }}) - node ${{ matrix.node }}
     steps:
@@ -105,12 +97,11 @@ jobs:
 
 
   cache:
-    needs: route
     name: "Cache assets for builds"
     strategy:
       matrix:
         node: ["24.13.0"]
-    runs-on: ${{ fromJSON(needs.route.outputs.targets).cache }}
+    runs-on: [self-hosted, linux, x64, universe, gcp, universe-gcp-small]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -214,14 +205,14 @@ jobs:
           key: promo-video-assets-cache
 
   frontend:
-    needs: [route, cache]
+    needs: cache
     if: "(github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'ops') && !contains(github.head_ref, 'ops/')) || github.event_name == 'push'"
     strategy:
       matrix:
         node: ["24.13.0"]
         flavor: ["dev", "prod"]
       fail-fast: false
-    runs-on: ${{ fromJSON(needs.route.outputs.targets).frontend }}
+    runs-on: [self-hosted, linux, x64, universe, gcp, universe-gcp-small]
 
     name: Frontend (${{ matrix.flavor }}) - node ${{ matrix.node }}
     steps:
@@ -318,8 +309,8 @@ jobs:
   
   e2e:
     if: "(github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'ops') && !contains(github.head_ref, 'ops/')) || github.event_name == 'push'"
-    runs-on: ${{ fromJSON(needs.route.outputs.targets).e2e }}
-    needs: [route, frontend]
+    runs-on: [self-hosted, linux, x64, universe, gcp, universe-gcp-small]
+    needs: frontend
     strategy:
       fail-fast: false
       matrix:
@@ -461,9 +452,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CYPRESS_PROJECT_ID: ${{ secrets.CYPRESS_PROJECT_ID }}
   validate_docker_json:
-    needs: route
     if: "(github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'ops') && !contains(github.head_ref, 'ops/')) || github.event_name == 'push'"
-    runs-on: ${{ fromJSON(needs.route.outputs.targets).validate_docker_json }}
+    runs-on: [self-hosted, linux, x64, universe, gcp, universe-gcp-small]
     name: Validate generated backend Docker JSON
 
     steps: 

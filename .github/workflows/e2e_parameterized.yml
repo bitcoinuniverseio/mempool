@@ -20,17 +20,9 @@ on:
         type: string 
 
 jobs:
-  route:
-    uses: ./.github/workflows/route.yml
-    secrets: inherit
-    with:
-      plan: '{"cache":"light","e2e":"light"}'
-      config_ref: 1dd19289af21f4f6be01f874390a180b3af8bb38
-
   cache:
-    needs: route
     name: "Cache assets for builds"
-    runs-on: ${{ fromJSON(needs.route.outputs.targets).cache }}
+    runs-on: [self-hosted, linux, x64, universe, gcp, universe-gcp-small]
     steps:
       - name: Determine checkout ref
         id: determine-ref
@@ -131,8 +123,8 @@ jobs:
           key: promo-video-assets-cache
 
   e2e:
-    runs-on: ${{ fromJSON(needs.route.outputs.targets).e2e }}
-    needs: [route, cache]
+    runs-on: [self-hosted, linux, x64, universe, gcp, universe-gcp-small]
+    needs: cache
     strategy:
       fail-fast: false
       matrix:
