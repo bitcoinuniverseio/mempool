@@ -3,8 +3,16 @@ name: 'Print backend hashes'
 on: [workflow_dispatch]
 
 jobs:
+  route:
+    uses: ./.github/workflows/route.yml
+    secrets: inherit
+    with:
+      plan: '{"print_backend_sha":"light"}'
+      config_ref: 1dd19289af21f4f6be01f874390a180b3af8bb38
+
   print-backend-sha:
-    runs-on: runs-on=${{ github.run_id }}-print_backend_sha/runner=universe-hosted/cpu=2+8/env=production
+    needs: route
+    runs-on: ${{ fromJSON(needs.route.outputs.targets).print_backend_sha }}
     name: Print backend hashes
     steps:
       - name: Checkout

@@ -11,8 +11,16 @@ on:
     types: [opened]
 
 jobs:
+  route:
+    uses: ./.github/workflows/route.yml
+    secrets: inherit
+    with:
+      plan: '{"manage_project_board":"light"}'
+      config_ref: 1dd19289af21f4f6be01f874390a180b3af8bb38
+
   manage-project-board:
-    runs-on: runs-on=${{ github.run_id }}-manage_project_board/runner=universe-hosted/cpu=2+8/env=production
+    needs: route
+    runs-on: ${{ fromJSON(needs.route.outputs.targets).manage_project_board }}
     steps:
       - name: Update Project Board
         uses: actions/github-script@v7
