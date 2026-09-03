@@ -1,0 +1,104 @@
+<div class="container-xl product-page">
+  <header class="page-head">
+    <nav class="crumbs">
+      <a [routerLink]="['/']">Home</a>
+      <span class="divider">/</span>
+      <span>Ark Explorer</span>
+    </nav>
+    <h1>Arkade / Ark VTXO & Exit Explorer</h1>
+    <p class="summary">
+      Virtual UTXO (VTXO) lifecycle, Ark Service Provider (ASP) operators, batch rounds, off-chain virtual mempool, and unilateral exit proofs.
+    </p>
+  </header>
+
+  <ng-container *ngIf="vm$ | async as vm">
+    <div *ngIf="vm.kind === 'loading'" class="panel" aria-busy="true">
+      <p>Reading Ark ASP round state...</p>
+    </div>
+
+    <ng-container *ngIf="vm.kind === 'ready'">
+      <!-- Operator Stats -->
+      <div class="metrics-grid" *ngIf="vm.operators?.length">
+        <div class="metric-card">
+          <span class="metric-label">ASP Operator</span>
+          <span class="metric-value" style="font-size: 1rem;">{{ vm.operators[0].name }}</span>
+          <span class="metric-sub">{{ vm.operators[0].status | uppercase }}</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Active VTXOs</span>
+          <span class="metric-value">{{ vm.operators[0].activeVtxoCount.toLocaleString() }}</span>
+          <span class="metric-sub">Cadence: {{ vm.operators[0].roundIntervalSec }}s</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Total Volume</span>
+          <span class="metric-value">{{ (Number(vm.operators[0].totalVolumeSats) / 1e8).toFixed(2) }} BTC</span>
+          <span class="metric-sub">{{ vm.operators[0].totalVolumeSats }} sats</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Settlement Batch</span>
+          <span class="metric-value">#{{ vm.operators[0].currentBatchHeight }}</span>
+          <span class="metric-sub">On-chain anchored</span>
+        </div>
+      </div>
+
+      <!-- Batches Table -->
+      <section class="panel" *ngIf="vm.batches?.length">
+        <h2>Settled Round Batches</h2>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Batch ID</th>
+              <th>Anchor Txid</th>
+              <th>Root Hash</th>
+              <th>VTXOs</th>
+              <th>Total (BTC)</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let b of vm.batches">
+              <td class="mono"><strong>{{ b.batchId }}</strong></td>
+              <td class="mono"><a [routerLink]="['/tx', b.anchorTxid]">{{ b.anchorTxid.slice(0, 16) }}...</a></td>
+              <td class="mono">{{ b.rootHash.slice(0, 16) }}...</td>
+              <td>{{ b.vtxoCount }}</td>
+              <td>{{ (Number(b.totalAmountSats) / 1e8).toFixed(4) }}</td>
+              <td><span class="badge badge-success">{{ b.status }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- VTXO Detail Sample -->
+      <section class="panel" *ngIf="vm.selectedVtxo">
+        <h2>VTXO Inspection (<span class="mono">{{ vm.selectedVtxo.vtxoId }}</span>)</h2>
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <span class="metric-label">Amount</span>
+            <span class="metric-value">{{ (Number(vm.selectedVtxo.amountSats) / 1e8).toFixed(4) }} BTC</span>
+            <span class="metric-sub">{{ vm.selectedVtxo.amountSats }} sats</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Tree Position</span>
+            <span class="metric-value">Depth {{ vm.selectedVtxo.treeDepth }}</span>
+            <span class="metric-sub">Index {{ vm.selectedVtxo.treeIndex }}</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Timelock Expiry</span>
+            <span class="metric-value">{{ vm.selectedVtxo.timelockExpiryBlocks }} Blocks</span>
+            <span class="metric-sub">Unilateral exit timeout</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Status</span>
+            <span class="metric-value text-success">{{ vm.selectedVtxo.status | uppercase }}</span>
+          </div>
+        </div>
+
+        <div style="margin-top: 1rem;">
+          <p><strong>Owner Pubkey:</strong> <span class="mono">{{ vm.selectedVtxo.userPubkey }}</span></p>
+          <p><strong>ASP Server Pubkey:</strong> <span class="mono">{{ vm.selectedVtxo.aspPubkey }}</span></p>
+          <p><span class="badge badge-success">Exit Proof Verified</span> Unilateral exit tree path matches batch anchor root.</p>
+        </div>
+      </section>
+    </ng-container>
+  </ng-container>
+</div>

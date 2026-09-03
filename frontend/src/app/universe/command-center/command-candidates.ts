@@ -101,7 +101,27 @@ export function looksSecretLike(text: string): boolean {
 }
 
 /**
- * Every reading of one line, best first.
+ * Product navigation shortcuts.
+ */
+const PRODUCT_COMMANDS: ReadonlyArray<{ readonly keywords: readonly string[]; readonly kind: string; readonly label: string; readonly path: string }> = [
+  { keywords: ['fractal', 'cat20', 'cat-20'], kind: 'product', label: 'Fractal Bitcoin & CAT-20 Center', path: '/fractal' },
+  { keywords: ['zcash', 'privacy', 'shielded', 'orchard'], kind: 'product', label: 'Zcash Privacy Observatory', path: '/zcash/privacy' },
+  { keywords: ['liquid', 'peg', 'confidential', 'federation'], kind: 'product', label: 'Liquid Observatory & Assets', path: '/liquid/observatory' },
+  { keywords: ['data', 'query', 'sql', 'stream', 'mcp'], kind: 'product', label: 'Universe Data Studio & Developer Platform', path: '/data' },
+  { keywords: ['network', 'propagation', 'policy', 'nodes'], kind: 'product', label: 'Cross-Node Mempool & Template Observatory', path: '/network/propagation' },
+  { keywords: ['taproot', 'assets', 'lightning', 'bolt12', 'rfq'], kind: 'product', label: 'Taproot Assets & Lightning Standards', path: '/taproot-assets' },
+  { keywords: ['ark', 'vtxo', 'asp'], kind: 'product', label: 'Arkade / Ark VTXO & Exit Explorer', path: '/ark' },
+  { keywords: ['rgb', 'consignment', 'seal'], kind: 'product', label: 'RGB Client-Side Validation Studio', path: '/rgb' },
+  { keywords: ['stratum', 'sv2', 'mining'], kind: 'product', label: 'Stratum V2 Observatory', path: '/mining/stratum-v2' },
+  { keywords: ['script', 'miniscript', 'descriptor'], kind: 'product', label: 'Bitcoin Script, Miniscript & Taproot Studio', path: '/tools/script' },
+  { keywords: ['l2', 'bitvm', 'citrea', 'bridge'], kind: 'product', label: 'BitVM & Bitcoin L2 Bridge-Proof Observatory', path: '/l2' },
+  { keywords: ['payment', 'bip21', 'bip353', 'payjoin', 'silent'], kind: 'product', label: 'Payment Standards Studio', path: '/tools/payment' },
+  { keywords: ['utxo', 'utreexo', 'supply'], kind: 'product', label: 'UTXO-Set, Supply & Utreexo Observatory', path: '/utxo-set' },
+  { keywords: ['wildkin', 'creatures', 'bloodlines', 'braid'], kind: 'product', label: 'Wildkin Evidence Explorer', path: '/wildkin' },
+];
+
+/**
+ * Resolves local candidates for a typed value.
  *
  * `network` is the network the visitor is on, used only where the reading
  * depends on it, such as a block height or the address shape check.
@@ -111,6 +131,20 @@ export function localCandidates(raw: string, network: Network): CommandCandidate
   if (!value || value.length > 4096) { return []; }
 
   const candidates: CommandCandidate[] = [];
+
+  const q = value.toLowerCase();
+  for (const cmd of PRODUCT_COMMANDS) {
+    if (cmd.keywords.some((k) => q.includes(k) || k.includes(q))) {
+      candidates.push({
+        kind: cmd.kind,
+        chain: 'bitcoin',
+        label: cmd.label,
+        path: cmd.path,
+        source: 'pattern',
+        exact: true,
+      });
+    }
+  }
 
   // Universe identifiers: outpoints, inscriptions, runes, sats.
   for (const match of classifyUniverseQuery(value)) {

@@ -1,0 +1,96 @@
+<div class="container-xl product-page">
+  <header class="page-head">
+    <nav class="crumbs">
+      <a [routerLink]="['/']">Home</a>
+      <span class="divider">/</span>
+      <a [routerLink]="['/taproot-assets']">Taproot Assets</a>
+      <span class="divider">/</span>
+      <span>Lightning Standards</span>
+    </nav>
+    <h1>Lightning Standards Intelligence</h1>
+    <p class="summary">
+      BOLT12 offers, invoice request inspection, blinded paths, and Lightning RFQ asset exchange rate transparency.
+    </p>
+  </header>
+
+  <nav class="nav-tabs">
+    <a [routerLink]="['/taproot-assets']">Assets & Groups</a>
+    <a [routerLink]="['/lightning/offers']" class="active">Lightning BOLT12 & RFQ</a>
+  </nav>
+
+  <!-- Decoder Section -->
+  <section class="panel">
+    <h2>BOLT12 Offer Decoder</h2>
+    <div class="form-group">
+      <label for="offerInput">BOLT12 Offer String (lno1...)</label>
+      <input id="offerInput" type="text" [(ngModel)]="offerInput" placeholder="lno1pg257enxv4ezqcneype82um50ynhxgrwdajx283q890cdse444n894v69n0q2sxve80q" />
+    </div>
+    <button type="button" class="btn-primary" (click)="decode()" [disabled]="!offerInput.trim()">
+      Decode Offer
+    </button>
+  </section>
+
+  <ng-container *ngIf="decodedOffer">
+    <section class="panel">
+      <h2>Decoded Offer Summary</h2>
+      <p><strong>Offer ID:</strong> <span class="mono">{{ decodedOffer.offerId }}</span></p>
+      <p><strong>Description:</strong> {{ decodedOffer.description }}</p>
+      <p><strong>Blinded Routes:</strong> {{ decodedOffer.blindRoutesCount }} hops</p>
+      <p><span class="badge badge-success">Valid BOLT12 Syntax</span></p>
+    </section>
+  </ng-container>
+
+  <ng-container *ngIf="vm$ | async as vm">
+    <ng-container *ngIf="vm.kind === 'ready'">
+      <!-- Active Offers -->
+      <section class="panel" *ngIf="vm.offers?.length">
+        <h2>Active Verified BOLT12 Offers</h2>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Description</th>
+              <th>Issuer</th>
+              <th>Amount (msat)</th>
+              <th>Blinded Paths</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let o of vm.offers">
+              <td><strong>{{ o.description }}</strong></td>
+              <td>{{ o.issuer }}</td>
+              <td class="mono">{{ o.amountMsat }}</td>
+              <td>{{ o.blindRoutesCount }} paths</td>
+              <td><span class="badge badge-success">Valid</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- RFQ Quotes -->
+      <section class="panel" *ngIf="vm.quotes?.length">
+        <h2>Lightning RFQ Quotes (Taproot Assets on Lightning)</h2>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Pair</th>
+              <th>Ask Rate</th>
+              <th>Bid Rate</th>
+              <th>Spread (bps)</th>
+              <th>Valid Until</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let q of vm.quotes">
+              <td><strong>{{ q.baseAsset }} / {{ q.quoteAsset }}</strong></td>
+              <td class="mono">{{ q.askRate }}</td>
+              <td class="mono">{{ q.bidRate }}</td>
+              <td><span class="badge badge-info">{{ q.spreadBps }} bps</span></td>
+              <td>in 60s</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </ng-container>
+  </ng-container>
+</div>

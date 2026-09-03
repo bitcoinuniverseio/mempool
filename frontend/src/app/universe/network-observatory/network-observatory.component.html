@@ -1,0 +1,126 @@
+<div class="container-xl product-page">
+  <header class="page-head">
+    <nav class="crumbs">
+      <a [routerLink]="['/']">Home</a>
+      <span class="divider">/</span>
+      <span>Network Intelligence</span>
+    </nav>
+    <h1>Cross-Node Mempool, Relay, Policy & Block-Template Observatory</h1>
+    <p class="summary">
+      Observer fleet topology, first-seen timelines, multi-node acceptance matrix, local vs pool block-template comparisons.
+    </p>
+  </header>
+
+  <ng-container *ngIf="vm$ | async as vm">
+    <div *ngIf="vm.kind === 'loading'" class="panel" aria-busy="true">
+      <p>Reading cross-node observer metrics...</p>
+    </div>
+
+    <div *ngIf="vm.kind === 'error'" class="panel">
+      <h2>Network Observatory Error</h2>
+      <p>Could not fetch node propagation or block-template data.</p>
+    </div>
+
+    <ng-container *ngIf="vm.kind === 'ready' && vm.propagation && vm.templates">
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <span class="metric-label">Observer Nodes</span>
+          <span class="metric-value">{{ vm.nodes?.length }} Online</span>
+          <span class="metric-sub">Global vantage fleet</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Median Latency</span>
+          <span class="metric-value">{{ vm.propagation.medianLatencyMs }} ms</span>
+          <span class="metric-sub">P95: {{ vm.propagation.p95LatencyMs }} ms</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Propagation Spread</span>
+          <span class="metric-value">{{ vm.propagation.spreadDeltaMs }} ms</span>
+          <span class="metric-sub">Global delta</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Template Spread</span>
+          <span class="metric-value">{{ vm.templates.feeRateSpreadSatVb }} sat/vB</span>
+          <span class="metric-sub">{{ vm.templates.candidateTemplates.length }} Candidates</span>
+        </div>
+      </div>
+
+      <!-- Fleet Matrix -->
+      <section class="panel">
+        <h2>Universe Observer Fleet & Relay Policies</h2>
+        <table class="data-table" *ngIf="vm.nodes?.length">
+          <thead>
+            <tr>
+              <th>Node Name</th>
+              <th>Region</th>
+              <th>Client Software</th>
+              <th>Full-RBF</th>
+              <th>Min Relay Fee</th>
+              <th>Clock Drift</th>
+              <th>Mempool Size</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let n of vm.nodes">
+              <td><strong>{{ n.name }}</strong></td>
+              <td>{{ n.region }}</td>
+              <td class="mono">{{ n.clientVersion }}</td>
+              <td><span class="badge" [ngClass]="n.fullRbf ? 'badge-success' : 'badge-warning'">{{ n.fullRbf ? 'Active' : 'Opt-in' }}</span></td>
+              <td>{{ n.minRelayFeeRate }} sat/vB</td>
+              <td>{{ n.clockOffsetMs }} ms</td>
+              <td>{{ n.mempoolTxCount }} txs</td>
+              <td><span class="badge badge-success">{{ n.status }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- First-Seen Propagation Timeline -->
+      <section class="panel">
+        <h2>Sample Transaction Propagation Timeline (<span class="mono">{{ vm.propagation.txid.slice(0, 16) }}...</span>)</h2>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Observer Node</th>
+              <th>Arrival Delta (ms)</th>
+              <th>Accepted</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let o of vm.propagation.nodeObservations">
+              <td><strong>{{ o.nodeName }}</strong></td>
+              <td>+{{ o.deltaFromFirstMs }} ms</td>
+              <td><span class="badge badge-success">Accepted</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Block Template Observatory -->
+      <section class="panel">
+        <h2>Candidate Block Templates (Height #{{ vm.templates.blockHeight }})</h2>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Template Source</th>
+              <th>Transaction Count</th>
+              <th>Total Weight</th>
+              <th>Total Fees (sats)</th>
+              <th>Median Fee Rate</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let t of vm.templates.candidateTemplates">
+              <td><strong>{{ t.poolName }}</strong></td>
+              <td>{{ t.txCount }}</td>
+              <td>{{ t.totalWeight }} WU</td>
+              <td class="mono">{{ t.totalFeesSats }}</td>
+              <td>{{ t.expectedMedianFeeRate }} sat/vB</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </ng-container>
+  </ng-container>
+</div>
