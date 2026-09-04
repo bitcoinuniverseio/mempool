@@ -35,6 +35,14 @@ export const STABLE_DYNAMIC_SAMPLES = {
   ':proposalId': 'bip-0119',
   ':providerId': 'prov-bitreserve-custody',
   ':snapshotId': 'snap-860395-bitreserve',
+  ':oracleId': 'oracle-kormir-rates',
+  ':eventId': 'event-btc-usd-2026-q4',
+  ':programId': 'sim-multisig-v1',
+  ':operatorId': 'sc-mercury-alpha',
+  ':heightOrHash': '840000',
+  ':sessionId': 'session-musig2-cold-01',
+  ':shareId': 'share-datum-881290',
+  ':delegationId': 'del-882001-allnodes',
 };
 
 /**
