@@ -141,6 +141,73 @@ export const ROUTES = [
   { id: 'intelligence-watchlists', path: '/user/watchlists', name: 'Privacy Watchlists' },
   { id: 'intelligence-protocols', path: '/explore/protocols', name: 'Protocol Intelligence' },
 
+  // Product 1: Global Bitcoin Network Observatory
+  { id: 'global-network', path: '/network/global', name: 'Global Network Observatory' },
+  { id: 'global-network-nodes', path: '/network/global/nodes', name: 'Global Network Nodes' },
+  { id: 'global-network-node-detail', path: '/network/global/node/node-ashburn-01', name: 'Global Network Node Detail' },
+  { id: 'global-network-snapshots', path: '/network/global/snapshots', name: 'Global Network Snapshots' },
+  { id: 'global-network-seeds', path: '/network/global/seeds', name: 'Global Network Seeds' },
+  { id: 'global-network-self-check', path: '/network/global/self-check', name: 'Global Network Self Check' },
+
+  // Product 2: Lightning Reliability, Liquidity, and Channel Lifecycle Center
+  { id: 'lightning-reliability', path: '/lightning/reliability', name: 'Lightning Reliability' },
+  { id: 'lightning-liquidity', path: '/lightning/liquidity', name: 'Lightning Liquidity' },
+  { id: 'lightning-lsp', path: '/lightning/lsp', name: 'Lightning LSP Directory' },
+  { id: 'lightning-node-reliability', path: '/lightning/node/0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798/reliability', name: 'Lightning Node Reliability' },
+  { id: 'lightning-channel-lifecycle', path: '/lightning/channel/860000x120x1/lifecycle', name: 'Lightning Channel Lifecycle' },
+  { id: 'lightning-closure-forensics', path: `/lightning/closure/${sampleIds.TXID_A}`, name: 'Lightning Closure Forensics' },
+
+  // Product 3: Silent Payments Center
+  { id: 'silent-payments', path: '/payments/silent', name: 'Silent Payments Center' },
+  { id: 'silent-payments-scan', path: '/payments/silent/scan', name: 'Silent Payments Scanner' },
+  { id: 'silent-payments-address', path: '/payments/silent/address', name: 'Silent Payments Address Tools' },
+  { id: 'silent-payments-psbt', path: '/payments/silent/psbt', name: 'Silent Payments PSBT Inspector' },
+  { id: 'silent-payments-coverage', path: '/payments/silent/coverage', name: 'Silent Payments Ecosystem Coverage' },
+
+  // Product 4: Collaborative Payments and Payjoin Center
+  { id: 'payjoin', path: '/payments/payjoin', name: 'Collaborative Payments Center' },
+  { id: 'payjoin-analyze', path: '/payments/payjoin/analyze', name: 'Payjoin Proposal Analyzer' },
+  { id: 'payjoin-directory', path: '/payments/payjoin/directory', name: 'Payjoin Server Directory' },
+  { id: 'payjoin-compatibility', path: '/payments/payjoin/compatibility', name: 'Payjoin Compatibility Matrix' },
+  { id: 'payjoin-playground', path: '/payments/payjoin/playground', name: 'Payjoin Regtest Playground' },
+
+  // Product 5: Ecash and Federation Observatory
+  { id: 'ecash', path: '/ecash', name: 'Ecash Observatory' },
+  { id: 'ecash-cashu', path: '/ecash/cashu', name: 'Cashu Mint Catalog' },
+  { id: 'ecash-cashu-detail', path: '/ecash/cashu/mint-cashu-legend', name: 'Cashu Mint Detail' },
+  { id: 'ecash-fedimint', path: '/ecash/fedimint', name: 'Fedimint Directory' },
+  { id: 'ecash-fedimint-detail', path: '/ecash/fedimint/fed-global-civic', name: 'Fedimint Federation Detail' },
+  { id: 'ecash-inspect', path: '/ecash/inspect', name: 'Ecash Token Inspector' },
+
+  // Product 6: Consensus Upgrade, Covenant, and Vault Lab
+  { id: 'consensus-proposals', path: '/labs/consensus', name: 'Consensus Proposals Lab' },
+  { id: 'consensus-proposal-detail', path: '/labs/consensus/bip-0119', name: 'Consensus Proposal Detail' },
+  { id: 'consensus-compare', path: '/labs/consensus/compare', name: 'Consensus Proposals Compare' },
+  { id: 'vaults-overview', path: '/labs/vaults', name: 'Vault Architecture Lab' },
+  { id: 'vaults-designer', path: '/labs/vaults/designer', name: 'Visual Vault Designer' },
+  { id: 'vaults-simulate', path: '/labs/vaults/simulate', name: 'Vault Transaction Simulator' },
+
+  // Product 7: Quantum Exposure and Migration Readiness Center
+  { id: 'quantum-overview', path: '/intelligence/quantum', name: 'Quantum Readiness Overview' },
+  { id: 'quantum-exposure', path: '/intelligence/quantum/exposure', name: 'Quantum Script Cohorts' },
+  { id: 'quantum-history', path: '/intelligence/quantum/history', name: 'Quantum Reveal Timeline' },
+  { id: 'quantum-audit', path: '/intelligence/quantum/audit', name: 'Quantum Public Key Audit' },
+  { id: 'quantum-migration', path: '/intelligence/quantum/migration', name: 'Quantum Migration Planner' },
+
+  // Product 8: Blockspace Demand and Transaction Semantics Terminal
+  { id: 'blockspace-overview', path: '/intelligence/blockspace', name: 'Blockspace Semantics Overview' },
+  { id: 'blockspace-composition', path: '/intelligence/blockspace/composition', name: 'Blockspace Composition Timeseries' },
+  { id: 'blockspace-regimes', path: '/intelligence/blockspace/regimes', name: 'Blockspace Fee Regimes' },
+  { id: 'blockspace-compare', path: '/intelligence/blockspace/compare', name: 'Blockspace Regime Compare' },
+  { id: 'blockspace-taxonomy', path: '/intelligence/blockspace/taxonomy', name: 'Blockspace Taxonomy Catalog' },
+
+  // Product 9: Reserves and Solvency Verification Center
+  { id: 'reserves-overview', path: '/intelligence/reserves', name: 'Proof of Reserves Overview' },
+  { id: 'reserves-providers', path: '/intelligence/reserves/providers', name: 'Reserve Providers Directory' },
+  { id: 'reserves-provider-detail', path: '/intelligence/reserves/provider/prov-bitreserve-custody', name: 'Reserve Provider Detail' },
+  { id: 'reserves-snapshot-detail', path: '/intelligence/reserves/snapshot/snap-860395-bitreserve', name: 'Reserve Snapshot Detail' },
+  { id: 'reserves-verify', path: '/intelligence/reserves/verify', name: 'Reserves & Solvency Verifier' },
+
   // The chain switcher, open. Nothing here had ever opened a menu, so the one
   // surface that decides which chain a visitor is looking at was measured only
   // while closed. It was collapsed: the header's own `.dropdown-item` rule,
