@@ -43,6 +43,13 @@ export const STABLE_DYNAMIC_SAMPLES = {
   ':sessionId': 'session-musig2-cold-01',
   ':shareId': 'share-datum-881290',
   ':delegationId': 'del-882001-allnodes',
+  ':vtxoId': 'vtxo-864190-001',
+  ':blockHash': '00000000000000000001a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3',
+  ':raceId': 'race-863920',
+  ':advisoryId': 'ADV-2026-001',
+  ':caseId': 'case-div-tapscript-sigops-01',
+  ':nodeId': 'node-prod-eu-01',
+  ':roundId': 'rnd-ws-864198-01',
 };
 
 /**
