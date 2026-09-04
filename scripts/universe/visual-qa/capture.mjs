@@ -208,6 +208,86 @@ export const ROUTES = [
   { id: 'reserves-snapshot-detail', path: '/intelligence/reserves/snapshot/snap-860395-bitreserve', name: 'Reserve Snapshot Detail' },
   { id: 'reserves-verify', path: '/intelligence/reserves/verify', name: 'Reserves & Solvency Verifier' },
 
+  // Emerging Product 1: Discreet Log Contract and Oracle Verification Center
+  { id: 'dlc-overview', path: '/contracts/dlc', name: 'DLC Overview' },
+  { id: 'dlc-oracles', path: '/contracts/dlc/oracles', name: 'DLC Oracles' },
+  { id: 'dlc-oracle-detail', path: '/contracts/dlc/oracle/oracle-kormir-rates', name: 'DLC Oracle Detail' },
+  { id: 'dlc-events', path: '/contracts/dlc/events', name: 'DLC Events' },
+  { id: 'dlc-event-detail', path: '/contracts/dlc/event/event-btc-usd-2026-q4', name: 'DLC Event Detail' },
+  { id: 'dlc-inspect', path: '/contracts/dlc/inspect', name: 'DLC Contract Inspector' },
+  { id: 'dlc-simulate', path: '/contracts/dlc/simulate', name: 'DLC Regtest Simulator' },
+
+  // Emerging Product 2: Simplicity Contract Explorer and Formal Verification Workbench
+  { id: 'simplicity-overview', path: '/liquid/simplicity', name: 'Simplicity Overview' },
+  { id: 'simplicity-contracts', path: '/liquid/simplicity/contracts', name: 'Simplicity Contracts' },
+  { id: 'simplicity-tx', path: `/liquid/simplicity/tx/${sampleIds.TXID_A}`, name: 'Simplicity Transaction Execution' },
+  { id: 'simplicity-program-detail', path: '/liquid/simplicity/program/sim-multisig-v1', name: 'Simplicity Program Detail' },
+  { id: 'simplicity-tools', path: '/tools/simplicity', name: 'Simplicity Compiler Workbench' },
+  { id: 'simplicity-verify', path: '/tools/simplicity/verify', name: 'Simplicity Formal Proof Verifier' },
+
+  // Emerging Product 3: Statechain, CoinSwap, and Off-Chain UTXO Recovery Center
+  { id: 'offchain-utxo', path: '/offchain/utxo', name: 'Off-Chain UTXO Overview' },
+  { id: 'offchain-statechains', path: '/offchain/statechains', name: 'Statechains Overview' },
+  { id: 'offchain-statechains-operators', path: '/offchain/statechains/operators', name: 'Statechain Operators' },
+  { id: 'offchain-statechain-operator-detail', path: '/offchain/statechains/operator/sc-mercury-alpha', name: 'Statechain Operator Detail' },
+  { id: 'offchain-statechains-verify', path: '/offchain/statechains/verify', name: 'Statechain Transfer Verifier' },
+  { id: 'offchain-coinswap', path: '/offchain/coinswap', name: 'CoinSwap Overview' },
+  { id: 'offchain-coinswap-inspect', path: '/offchain/coinswap/inspect', name: 'CoinSwap Package Inspector' },
+  { id: 'offchain-recovery', path: '/offchain/recovery', name: 'Off-Chain Recovery Planner' },
+
+  // Emerging Product 4: Compact Filter and Light-Client Verification Center
+  { id: 'light-client-overview', path: '/network/light-client', name: 'Light-Client Overview' },
+  { id: 'light-client-providers', path: '/network/light-client/providers', name: 'Light-Client Providers' },
+  { id: 'light-client-provider-detail', path: '/network/light-client/provider/node-ashburn-01', name: 'Light-Client Provider Detail' },
+  { id: 'light-client-filters', path: '/network/light-client/filters', name: 'BIP158 Filter Explorer' },
+  { id: 'light-client-verify', path: '/network/light-client/verify', name: 'Filter Header Verifier' },
+  { id: 'light-client-scan', path: '/network/light-client/scan', name: 'Local Descriptor Scanner' },
+  { id: 'light-client-privacy', path: '/network/light-client/privacy', name: 'Light-Client Privacy Controls' },
+
+  // Emerging Product 5: AssumeUTXO and Node Bootstrap Snapshot Center
+  { id: 'bootstrap-overview', path: '/node/bootstrap', name: 'AssumeUTXO Bootstrap Overview' },
+  { id: 'bootstrap-snapshots', path: '/node/bootstrap/snapshots', name: 'AssumeUTXO Snapshots' },
+  { id: 'bootstrap-snapshot-detail', path: '/node/bootstrap/snapshot/840000', name: 'AssumeUTXO Snapshot Detail' },
+  { id: 'bootstrap-verify', path: '/node/bootstrap/verify', name: 'AssumeUTXO Integrity Verifier' },
+  { id: 'bootstrap-planner', path: '/node/bootstrap/planner', name: 'AssumeUTXO Bootstrap Planner' },
+  { id: 'bootstrap-chainstates', path: '/node/bootstrap/chainstates', name: 'Dual-Chainstate Observatory' },
+
+  // Emerging Product 6: MuSig2, Multisig Setup, and Wallet Policy Interoperability Center
+  { id: 'multiparty-overview', path: '/tools/multiparty', name: 'Multiparty Coordination Overview' },
+  { id: 'multiparty-musig2', path: '/tools/multiparty/musig2', name: 'MuSig2 Coordinator' },
+  { id: 'multiparty-musig2-session', path: '/tools/multiparty/musig2/session/session-musig2-cold-01', name: 'MuSig2 Session Detail' },
+  { id: 'multiparty-bsms', path: '/tools/multiparty/bsms', name: 'BSMS Multisig Setup' },
+  { id: 'multiparty-policies', path: '/tools/multiparty/policies', name: 'Wallet Policy Interoperability' },
+  { id: 'multiparty-labels', path: '/tools/multiparty/labels', name: 'Wallet Labels Interoperability' },
+  { id: 'multiparty-compatibility', path: '/tools/multiparty/compatibility', name: 'Hardware Compatibility Matrix' },
+
+  // Emerging Product 7: Decentralized Mining Sharechain and Template-Autonomy Observatory
+  { id: 'mining-decentralized-overview', path: '/mining/decentralized', name: 'Decentralized Mining Overview' },
+  { id: 'mining-decentralized-datum', path: '/mining/decentralized/datum', name: 'DATUM Observatory' },
+  { id: 'mining-decentralized-p2pool', path: '/mining/decentralized/p2pool', name: 'P2Pool v2 Observatory' },
+  { id: 'mining-decentralized-braidpool', path: '/mining/decentralized/braidpool', name: 'Braidpool DAG Observatory' },
+  { id: 'mining-decentralized-share-detail', path: '/mining/decentralized/share/share-datum-881290', name: 'Sharechain Share Detail' },
+  { id: 'mining-decentralized-compare', path: '/mining/decentralized/compare', name: 'Template Autonomy Comparison' },
+
+  // Emerging Product 8: Nostr and Lightning Payment Connectivity Center
+  { id: 'payments-overview', path: '/payments', name: 'Payment Connectivity Overview' },
+  { id: 'payments-nwc', path: '/payments/nwc', name: 'NWC Relays Directory' },
+  { id: 'payments-nwc-inspect', path: '/payments/nwc/inspect', name: 'NWC URI Inspector' },
+  { id: 'payments-nwc-compatibility', path: '/payments/nwc/compatibility', name: 'NWC Protocol Standards' },
+  { id: 'payments-lnurl', path: '/payments/lnurl', name: 'LNURL Specifications' },
+  { id: 'payments-lightning-address', path: '/payments/lightning-address', name: 'Lightning Address Resolution' },
+  { id: 'payments-zaps', path: '/payments/zaps', name: 'NIP-57 Zap Verifier' },
+
+  // Emerging Product 9: Bitcoin Staking, Finality, and Slashing Evidence Observatory
+  { id: 'staking-overview', path: '/protocols/bitcoin-staking', name: 'Bitcoin Staking Overview' },
+  { id: 'staking-delegations', path: '/protocols/bitcoin-staking/delegations', name: 'Staking Delegations' },
+  { id: 'staking-delegation-detail', path: '/protocols/bitcoin-staking/delegation/del-882001-allnodes', name: 'Staking Delegation Detail' },
+  { id: 'staking-finality-providers', path: '/protocols/bitcoin-staking/finality-providers', name: 'Finality Providers Directory' },
+  { id: 'staking-finality-provider-detail', path: '/protocols/bitcoin-staking/finality-provider/fp-allnodes-01', name: 'Finality Provider Detail' },
+  { id: 'staking-parameters', path: '/protocols/bitcoin-staking/parameters', name: 'Staking Protocol Parameters' },
+  { id: 'staking-evidence', path: '/protocols/bitcoin-staking/evidence', name: 'EOTS Slashing Evidence' },
+  { id: 'staking-reconciliation', path: '/protocols/bitcoin-staking/reconciliation', name: 'Cross-Chain PoS Reconciliation' },
+
   // The chain switcher, open. Nothing here had ever opened a menu, so the one
   // surface that decides which chain a visitor is looking at was measured only
   // while closed. It was collapsed: the header's own `.dropdown-item` rule,
