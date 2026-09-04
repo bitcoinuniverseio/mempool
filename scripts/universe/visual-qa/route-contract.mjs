@@ -26,6 +26,15 @@ export const STABLE_DYNAMIC_SAMPLES = {
   ':inscriptionId': assetSampleIds.INSCRIPTION_ID,
   ':runeName': assetSampleIds.RUNE_NAME,
   ':satNumber': assetSampleIds.SAT_NUMBER,
+  ':endpointId': 'node-ashburn-01',
+  ':publicKey': '0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798',
+  ':shortId': '860000x120x1',
+  ':txid': sampleIds.TXID_A,
+  ':mintId': 'mint-cashu-legend',
+  ':federationId': 'fed-global-civic',
+  ':proposalId': 'bip-0119',
+  ':providerId': 'prov-bitreserve-custody',
+  ':snapshotId': 'snap-860395-bitreserve',
 };
 
 /**
@@ -112,8 +121,12 @@ export function discoverFrontendRoutes(repoRoot) {
  * Matches a registered scenario path against a route pattern.
  */
 export function routeMatchesPattern(scenarioPath, routePattern) {
+  if (routePattern === '/**' || routePattern === '**') {
+    return true;
+  }
   const cleanScenario = '/' + scenarioPath.replace(/^\/+/, '').split('?')[0];
   const regexPattern = '^' + routePattern
+    .replace(/\/\*\*$/, '(?:/.*)?')
     .replace(/:[A-Za-z0-9_]+/g, '[^/]+')
     .replace(/\/\*$/, '(?:/.*)?') + '$';
   return new RegExp(regexPattern).test(cleanScenario);
@@ -140,8 +153,8 @@ export function verifyRouteCoverageContract(declaredRoutes, visualScenarios, exe
 
   // Check each declared user-facing route has coverage or valid exemption
   for (const route of declaredRoutes) {
-    if (route.isRedirect) {
-      continue; // Pure redirects are tested by router tests, not screenshot scenarios
+    if (route.isRedirect || route.path === '**' || route.normalizedPath === '/**') {
+      continue; // Wildcards and pure redirects are not individual visual pages
     }
 
     const path = route.normalizedPath;
