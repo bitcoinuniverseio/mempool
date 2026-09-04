@@ -1,0 +1,41 @@
+@media (max-width: 767.98px) {
+  .propagation-table,
+  .propagation-table tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .propagation-table thead {
+    display: none;
+  }
+
+  .propagation-table tr {
+    display: grid;
+    grid-template-areas:
+      'node status'
+      'arrival status';
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 0.75rem;
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--u-divider);
+  }
+
+  .propagation-table td {
+    padding: 0;
+    border: 0;
+  }
+
+  .propagation-table td:nth-child(1) {
+    grid-area: node;
+  }
+
+  .propagation-table td:nth-child(2) {
+    grid-area: arrival;
+    margin-top: 0.25rem;
+  }
+
+  .propagation-table td:nth-child(3) {
+    grid-area: status;
+    align-self: center;
+  }
+}

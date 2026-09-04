@@ -259,6 +259,55 @@
   color: var(--transparent-fg);
 }
 
+// The widget can be rendered in narrow dashboard columns as well as the
+// regular two-column layout. Keep its controls and statistics in the normal
+// document flow there so neither overlaps the heading or each other.
+@media (max-width: 484px) {
+  .main-title {
+    margin-top: 0;
+    padding: 0 18px 8px;
+    text-align: left;
+  }
+
+  .widget-toggler {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding: 12px 18px 0;
+    position: static;
+  }
+
+  .widget-toggler span {
+    display: none;
+  }
+
+  .card-wrapper .card-body {
+    padding: 12px 18px 18px;
+  }
+
+  .epoch-progress,
+  .halving-progress {
+    margin-bottom: 8px;
+  }
+
+  .difficulty-stats {
+    gap: 8px;
+    height: auto;
+    justify-content: stretch;
+
+    .item {
+      min-width: 0;
+      padding: 0;
+    }
+  }
+
+  .symbol {
+    line-height: 1.25;
+    white-space: normal;
+  }
+}
+
 // What stands in for the epoch when the live feed has given up. It holds the
 // height the progress bar and the stats occupy, so the card does not collapse
 // when the placeholders are replaced by a sentence.
