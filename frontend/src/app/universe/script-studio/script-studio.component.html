@@ -29,7 +29,7 @@
   <ng-container *ngIf="result$ | async as res">
     <section class="panel">
       <h2>Opcode Execution Stack Trace</h2>
-      <table class="data-table">
+      <table class="data-table script-trace-table">
         <thead>
           <tr>
             <th>Step</th>
@@ -40,17 +40,17 @@
         </thead>
         <tbody>
           <tr *ngFor="let s of res.executionSteps; let i = index">
-            <td>#{{ i + 1 }}</td>
-            <td class="mono"><strong>{{ s.opcode }}</strong></td>
-            <td class="mono">[{{ s.stackBefore.join(', ') }}]</td>
-            <td class="mono">[{{ s.stackAfter.join(', ') }}]</td>
+            <td data-label="Step">#{{ i + 1 }}</td>
+            <td class="mono" data-label="Opcode"><strong>{{ s.opcode }}</strong></td>
+            <td class="mono" data-label="Stack before">[{{ s.stackBefore.join(', ') }}]</td>
+            <td class="mono" data-label="Stack after">[{{ s.stackAfter.join(', ') }}]</td>
           </tr>
         </tbody>
       </table>
 
       <div style="margin-top: 1rem;">
         <p><strong>Satisfaction State:</strong> <span class="badge" [ngClass]="res.satisfactionValid ? 'badge-success' : 'badge-warning'">{{ res.satisfactionValid ? 'SUCCESS (Top of Stack: 1)' : 'FAIL' }}</span></p>
-        <p *ngIf="res.derivedAddress"><strong>Derived Address:</strong> <span class="mono">{{ res.derivedAddress }}</span></p>
+        <p *ngIf="res.derivedAddress" class="derived-address"><strong>Derived Address:</strong> <span class="mono">{{ res.derivedAddress }}</span></p>
       </div>
     </section>
   </ng-container>

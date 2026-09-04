@@ -80,7 +80,7 @@
   <nav class="primary-nav" i18n-aria-label="master-page.primary-navigation" aria-label="Primary">
     <ul #navList class="nav-list {{ network.val }}">
       <li class="nav-item" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" id="btn-home">
-        <a class="nav-link" [routerLink]="chainRoute('dashboard')" (click)="collapse()">
+        <a class="nav-link mobile-primary" [routerLink]="chainRoute('dashboard')" (click)="collapse()">
           <span class="nav-icon"><app-svg-images name="nav-tachometer" width="21.59" height="100%"></app-svg-images></span>
           <span class="nav-label" i18n="master-page.nav-dashboard">Dashboard</span>
         </a>
