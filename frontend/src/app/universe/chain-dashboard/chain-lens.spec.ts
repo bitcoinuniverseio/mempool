@@ -1,5 +1,6 @@
 import {
   applyLensFilter,
+  chainAtomicUnit,
   lensFilters,
   readLensItems,
 } from '@app/universe/chain-dashboard/chain-lens';
@@ -74,6 +75,11 @@ describe('Chain lens reading', () => {
     expect(doge).not.toContain('shielded');
     expect(zec).toContain('shielded');
     expect(zec).toContain('transparent');
+  });
+
+  it('uses each chain native atomic unit in the graph tooltip', () => {
+    expect(chainAtomicUnit('dogecoin')).toBe('koinu');
+    expect(chainAtomicUnit('zcash')).toBe('zatoshi');
   });
 });
 
