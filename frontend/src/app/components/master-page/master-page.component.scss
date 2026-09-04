@@ -29,7 +29,7 @@
   // the row still needs its ordinary side padding. In landscape on a notched
   // phone the inset is the larger of the two and the row moves clear of it.
   padding: var(--u-space-2) max(var(--u-space-3), var(--u-safe-right))
-    var(--u-space-2) max(var(--u-space-3), var(--u-safe-left));
+           var(--u-space-2) max(var(--u-space-3), var(--u-safe-left));
   width: 100%;
 
   // Compact landscape. A phone on its side has about 320 to 430 pixels of
@@ -118,13 +118,8 @@
   max-width: 100%;
   overflow: clip;
 
-  &.rounded {
-    border-radius: var(--u-radius-md);
-  }
-  &.custom_logo {
-    max-height: 44px;
-    margin-right: 1em;
-  }
+  &.rounded { border-radius: var(--u-radius-md); }
+  &.custom_logo { max-height: 44px; margin-right: 1em; }
 }
 
 .subdomain_container {
@@ -158,9 +153,8 @@
   gap: var(--u-space-2);
   min-height: 38px;
   padding: 0 var(--u-space-2);
-  transition:
-    background-color var(--u-duration-fast) var(--u-ease-out),
-    border-color var(--u-duration-fast) var(--u-ease-out);
+  transition: background-color var(--u-duration-fast) var(--u-ease-out),
+              border-color var(--u-duration-fast) var(--u-ease-out);
 
   // Same reasoning as the chain toggle: a control sized for a cursor is not
   // sized for a thumb, and these two sit side by side.
@@ -240,9 +234,7 @@
   flex-shrink: 0;
   gap: var(--u-space-2);
 
-  &:empty {
-    display: none;
-  }
+  &:empty { display: none; }
 }
 
 .status-dot {
@@ -251,12 +243,8 @@
   height: 8px;
   width: 8px;
 
-  &.state-unavailable {
-    background: var(--u-state-unavailable);
-  }
-  &.state-partial {
-    background: var(--u-state-partial);
-  }
+  &.state-unavailable { background: var(--u-state-unavailable); }
+  &.state-partial { background: var(--u-state-partial); }
 }
 
 .status-text {
@@ -264,12 +252,8 @@
   font-weight: var(--u-weight-semibold);
   white-space: nowrap;
 
-  .state-unavailable + & {
-    color: var(--u-state-unavailable);
-  }
-  .state-partial + & {
-    color: var(--u-state-partial);
-  }
+  .state-unavailable + & { color: var(--u-state-unavailable); }
+  .state-partial + & { color: var(--u-state-partial); }
 }
 
 // --- Primary navigation ----------------------------------------------------
@@ -330,9 +314,7 @@
     // at full size and keeps all of them reachable.
     overflow-x: auto;
     scrollbar-width: none;
-    &::-webkit-scrollbar {
-      display: none;
-    }
+    &::-webkit-scrollbar { display: none; }
 
     // The scroller has to say that it scrolls.
     //
@@ -354,17 +336,9 @@
       linear-gradient(to left, var(--u-surface-raised) 60%, rgba(0, 0, 0, 0)),
       linear-gradient(to right, var(--u-nav-scroll-shadow), rgba(0, 0, 0, 0)),
       linear-gradient(to left, var(--u-nav-scroll-shadow), rgba(0, 0, 0, 0));
-    background-position:
-      left center,
-      right center,
-      left center,
-      right center;
+    background-position: left center, right center, left center, right center;
     background-repeat: no-repeat;
-    background-size:
-      28px 100%,
-      28px 100%,
-      12px 100%,
-      12px 100%;
+    background-size: 28px 100%, 28px 100%, 12px 100%, 12px 100%;
     background-attachment: local, local, scroll, scroll;
 
     // The shadow band gets padding of its own to sit in.
@@ -429,9 +403,8 @@
   padding: var(--u-space-1) var(--u-space-2);
   position: relative;
   text-decoration: none;
-  transition:
-    color var(--u-duration-fast) var(--u-ease-out),
-    background-color var(--u-duration-fast) var(--u-ease-out);
+  transition: color var(--u-duration-fast) var(--u-ease-out),
+              background-color var(--u-duration-fast) var(--u-ease-out);
 
   // Compact landscape. The bar keeps every destination and every target width,
   // and gives back the vertical room by putting the icon beside its label
@@ -509,7 +482,7 @@
   &::after {
     background: var(--u-brand);
     border-radius: 0 0 2px 2px;
-    content: "";
+    content: '';
     height: 3px;
     left: 50%;
     position: absolute;
@@ -548,6 +521,7 @@ main {
   min-width: 0;
   transition: max-width var(--u-duration-base) var(--u-ease-out);
   width: 100%;
+
 }
 
 .empty-sidenav {
@@ -619,9 +593,7 @@ main {
   // down. The bar is measured by --u-touch-target there, not by the taller
   // stacked link.
   @media (max-width: 991.98px) and (max-height: 479.98px) {
-    padding-bottom: calc(
-      var(--u-touch-target) + 1px + var(--u-safe-bottom) + var(--u-space-3)
-    );
+    padding-bottom: calc(var(--u-touch-target) + 1px + var(--u-safe-bottom) + var(--u-space-3));
   }
 
   > main {
