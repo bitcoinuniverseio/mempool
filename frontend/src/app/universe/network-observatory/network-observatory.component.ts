@@ -20,7 +20,7 @@ interface NetworkViewModel {
 @Component({
   selector: 'app-network-observatory',
   templateUrl: './network-observatory.component.html',
-  styleUrls: ['../product-page.scss'],
+  styleUrls: ['../product-page.scss', './network-observatory.component.scss'],
   standalone: true,
   imports: [CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,

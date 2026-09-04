@@ -671,6 +671,34 @@
   }
 }
 
+@media (max-width: 575px) {
+  .table-scroll > .lastest-replacements-table {
+    min-width: 0;
+
+    th,
+    td {
+      padding-right: 0.5rem;
+      padding-left: 0.5rem;
+    }
+
+    .table-cell-txid {
+      width: 48%;
+    }
+
+    .table-cell-new-fee {
+      width: 31%;
+      white-space: nowrap;
+    }
+
+    .table-cell-badges {
+      width: 21%;
+      padding-right: 0.5rem;
+      padding-left: 0.5rem;
+      white-space: nowrap;
+    }
+  }
+}
+
 // --- Components that arrive with their own box ------------------------------
 //
 // Difficulty and the protocol strip were written to sit inside a Bootstrap
