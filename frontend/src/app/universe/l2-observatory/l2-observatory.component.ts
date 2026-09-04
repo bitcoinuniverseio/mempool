@@ -18,7 +18,7 @@ interface L2ViewModel {
 @Component({
   selector: 'app-l2-observatory',
   templateUrl: './l2-observatory.component.html',
-  styleUrls: ['../product-page.scss'],
+  styleUrls: ['../product-page.scss', './l2-observatory.component.scss'],
   standalone: true,
   imports: [CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,

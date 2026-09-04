@@ -1,0 +1,39 @@
+.query-results-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+
+  .data-table {
+    min-width: 100%;
+    width: max-content;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .query-results-scroll .mcp-tools-table {
+    thead {
+      display: table-header-group;
+    }
+
+    tbody {
+      display: table-row-group;
+    }
+
+    tr {
+      display: table-row;
+      padding: 0;
+      border: 0;
+    }
+
+    td {
+      display: table-cell;
+      padding: 0.65rem 0.75rem;
+      border-bottom: 1px solid var(--u-divider);
+      overflow-wrap: normal;
+
+      &::before {
+        display: none;
+      }
+    }
+  }
+}

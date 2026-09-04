@@ -86,25 +86,25 @@
         </a>
       </li>
       <li class="nav-item mining" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" id="btn-pools" *ngIf="activeChain !== 'bitcoin' || stateService.env.MINING_DASHBOARD">
-        <a class="nav-link" [routerLink]="activeChain === 'bitcoin' ? ('/mining' | relativeUrl) : chainRoute('mining')" (click)="collapse()">
+        <a class="nav-link mobile-primary" [routerLink]="activeChain === 'bitcoin' ? ('/mining' | relativeUrl) : chainRoute('mining')" (click)="collapse()">
           <span class="nav-icon"><app-svg-images name="nav-pickaxe" width="21.59" height="100%"></app-svg-images></span>
           <span class="nav-label" i18n="master-page.nav-mining">Mining</span>
         </a>
       </li>
       <li class="nav-item" routerLinkActive="active" id="btn-blocks" *ngIf="activeChain === 'bitcoin' && !stateService.env.MINING_DASHBOARD">
-        <a class="nav-link" [routerLink]="['/blocks' | relativeUrl]" (click)="collapse()">
+        <a class="nav-link mobile-primary" [routerLink]="['/blocks' | relativeUrl]" (click)="collapse()">
           <span class="nav-icon"><app-svg-images name="nav-cubes" width="21.59" height="100%"></app-svg-images></span>
           <span class="nav-label" i18n="master-page.nav-blocks">Blocks</span>
         </a>
       </li>
       <li class="nav-item" routerLinkActive="active" id="btn-universe-pulse" *ngIf="network.val === ''">
-        <a class="nav-link" [routerLink]="chainRoute('mempool')" (click)="collapse()">
+        <a class="nav-link mobile-primary" [routerLink]="chainRoute('mempool')" (click)="collapse()">
           <span class="nav-icon"><app-svg-images name="nav-universe-pulse" width="21.59" height="100%"></app-svg-images></span>
           <span class="nav-label" i18n="master-page.nav-pulse">Mempool</span>
         </a>
       </li>
       <li class="nav-item" routerLinkActive="active" id="btn-universe-protocols" *ngIf="network.val === ''">
-        <a class="nav-link" [routerLink]="chainRoute('protocols')" (click)="collapse()">
+        <a class="nav-link mobile-primary" [routerLink]="chainRoute('protocols')" (click)="collapse()">
           <span class="nav-icon"><app-svg-images name="nav-universe-protocols" width="21.59" height="100%"></app-svg-images></span>
           <span class="nav-label" i18n="master-page.nav-protocols">Protocols</span>
         </a>
