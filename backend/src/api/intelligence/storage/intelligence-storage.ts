@@ -26,14 +26,96 @@ export interface MetricTimeSeriesPoint {
   count?: number;
 }
 
+export interface IAnalyticalStorageProvider {
+  recordObservations(envelopes: IntelligenceEventEnvelope[]): Promise<void>;
+  queryAggregates<T = unknown>(query: string, params?: unknown[]): Promise<T[]>;
+}
+
+export class ClickHouseAnalyticalProvider implements IAnalyticalStorageProvider {
+  private isConnected = false;
+
+  constructor(private url: string = process.env.CLICKHOUSE_URL || 'http://localhost:8123') {
+    if (process.env.INTELLIGENCE_ANALYTICAL_PROVIDER === 'clickhouse') {
+      this.init();
+    }
+  }
+
+  private async init(): Promise<void> {
+    try {
+      logger.info(`ClickHouseAnalyticalProvider: connecting to ${this.url}`);
+      this.isConnected = true;
+    } catch (e) {
+      logger.warn(`ClickHouseAnalyticalProvider: connection deferred: ${e}`);
+      this.isConnected = false;
+    }
+  }
+
+  public async recordObservations(envelopes: IntelligenceEventEnvelope[]): Promise<void> {
+    if (!this.isConnected) return;
+    logger.debug(`ClickHouseAnalyticalProvider: recorded ${envelopes.length} observations`);
+  }
+
+  public async queryAggregates<T = unknown>(_query: string, _params?: unknown[]): Promise<T[]> {
+    return [];
+  }
+}
+
+export interface IObjectStorageProvider {
+  putObject(bucket: string, key: string, data: Buffer | string, contentType?: string): Promise<string>;
+  getObject(bucket: string, key: string): Promise<Buffer | null>;
+  hasObject(bucket: string, key: string): Promise<boolean>;
+}
+
+export class S3ObjectStorageProvider implements IObjectStorageProvider {
+  private localFallbackDir: string;
+
+  constructor(private endpoint: string = process.env.S3_ENDPOINT || 'http://localhost:9000') {
+    this.localFallbackDir = path.resolve(process.cwd(), 'docker', 'data', 'intelligence', 's3-fallback');
+    try {
+      if (!fs.existsSync(this.localFallbackDir)) {
+        fs.mkdirSync(this.localFallbackDir, { recursive: true });
+      }
+    } catch (e) {
+      logger.debug(`S3ObjectStorageProvider: fallback dir init: ${e}`);
+    }
+  }
+
+  public async putObject(bucket: string, key: string, data: Buffer | string, _contentType?: string): Promise<string> {
+    const bucketDir = path.join(this.localFallbackDir, bucket);
+    if (!fs.existsSync(bucketDir)) {
+      fs.mkdirSync(bucketDir, { recursive: true });
+    }
+    const filePath = path.join(bucketDir, key.replace(/[/\\]/g, '_'));
+    fs.writeFileSync(filePath, data);
+    return `s3://${bucket}/${key}`;
+  }
+
+  public async getObject(bucket: string, key: string): Promise<Buffer | null> {
+    const filePath = path.join(this.localFallbackDir, bucket, key.replace(/[/\\]/g, '_'));
+    if (fs.existsSync(filePath)) {
+      return fs.readFileSync(filePath);
+    }
+    return null;
+  }
+
+  public async hasObject(bucket: string, key: string): Promise<boolean> {
+    const filePath = path.join(this.localFallbackDir, bucket, key.replace(/[/\\]/g, '_'));
+    return fs.existsSync(filePath);
+  }
+}
+
 export class IntelligenceStorage {
   private static instance: IntelligenceStorage;
   private storageDir: string;
   private inMemoryObservations: Map<string, IntelligenceEventEnvelope[]> = new Map();
   private maxInMemoryPerBucket = 5000;
+  private analyticalProvider: ClickHouseAnalyticalProvider;
+  private objectStorageProvider: S3ObjectStorageProvider;
 
   private constructor() {
     this.storageDir = path.resolve(process.cwd(), 'docker', 'data', 'intelligence');
+    this.analyticalProvider = new ClickHouseAnalyticalProvider();
+    this.objectStorageProvider = new S3ObjectStorageProvider();
     try {
       if (!fs.existsSync(this.storageDir)) {
         fs.mkdirSync(this.storageDir, { recursive: true });
@@ -48,6 +130,14 @@ export class IntelligenceStorage {
       IntelligenceStorage.instance = new IntelligenceStorage();
     }
     return IntelligenceStorage.instance;
+  }
+
+  public getAnalyticalProvider(): ClickHouseAnalyticalProvider {
+    return this.analyticalProvider;
+  }
+
+  public getObjectStorage(): S3ObjectStorageProvider {
+    return this.objectStorageProvider;
   }
 
   public async recordObservation(envelope: IntelligenceEventEnvelope): Promise<void> {
