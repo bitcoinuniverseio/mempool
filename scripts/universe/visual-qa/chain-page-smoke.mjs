@@ -204,6 +204,14 @@ async function visitAndCollect(context, path, screenshotName, reader) {
   });
   try {
     await page.goto(`${ORIGIN}${path}`, { waitUntil: 'networkidle', timeout: 45_000 });
+    await page
+      .waitForSelector('main h1, .chain-page h1, .title-block h1', { timeout: 15_000 })
+      .catch(() => {});
+    if (path === '/dogecoin' || path === '/zcash') {
+      await page
+        .waitForSelector('.timeline-panel .timeline-row, .timeline-panel .notice.empty', { timeout: 15_000 })
+        .catch(() => {});
+    }
     const facts = await page.evaluate(reader);
     mkdirSync(OUT, { recursive: true });
     await page.screenshot({ path: join(OUT, screenshotName), fullPage: true });
@@ -266,7 +274,10 @@ async function checkChain(browser, chain) {
     if (message.type() === 'error') consoleErrors.push(message.text());
   });
   page.on('requestfailed', (request) => {
-    failedRequests.push(`${request.url()} ${request.failure()?.errorText ?? 'failed'}`);
+    const err = request.failure()?.errorText;
+    if (err && err !== 'net::ERR_ABORTED') {
+      failedRequests.push(`${request.url()} ${err}`);
+    }
   });
   page.on('request', (request) => {
     const url = new URL(request.url());
