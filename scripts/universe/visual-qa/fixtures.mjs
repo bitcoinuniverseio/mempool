@@ -243,6 +243,20 @@ export const detailFixtures = {
   '/api/v1/mining/reward-stats/144': { startBlock: 887_268, endBlock: 887_412, totalReward: '46_800_000_000'.replace(/_/g, ''), totalFee: '1_400_000_000'.replace(/_/g, ''), totalTx: '412_004'.replace(/_/g, '') },
   '/api/v1/mining/blocks/fees/1w': [{ avgHeight: 887_000, timestamp: 1_772_000_000, avgFees: 12_884_901 }],
   '/api/v1/difficulty-adjustments/1m': [[1_772_000_000, 887_000, 1.1e14, 3.18]],
+  '/api/v1/capabilities': {
+    schemaVersion: 'capabilities-v1',
+    features: {
+      addressLookup: {
+        enabled: true,
+        routesRegistered: true,
+        state: 'ready',
+        indexedTip: 880000,
+        bitcoinCoreTip: 880000,
+        lagBlocks: 0,
+        degradedReason: null,
+      },
+    },
+  },
 };
 
 /** Address with history, and its transactions. */
@@ -256,6 +270,8 @@ export const detailFixtures = {
  * of the thirteen reviewed routes was never actually reviewed. Each sub-route
  * is pinned explicitly now, and each returns the shape its caller expects.
  */
+export const REPRESENTATIVE_LEGACY_ADDRESS = '1PuJjnF476W3zXfVYmJfGnouzFDAXakkL4';
+
 export const addressFixtures = {
   [`/api/address/${ADDRESS}`]: {
     address: ADDRESS,
@@ -272,6 +288,22 @@ export const addressFixtures = {
   [`/api/address/${ADDRESS}/utxo`]: [
     { txid: TXID_A, vout: 0, value: 1_500_000, status: { confirmed: true, block_height: 887_412, block_hash: BLOCK_HASH, block_time: 1_772_100_000 } },
     { txid: TXID_B, vout: 1, value: 220_000, status: { confirmed: false } },
+  ],
+
+  // Representative legacy address (1PuJjnF476W3zXfVYmJfGnouzFDAXakkL4)
+  [`/api/address/${REPRESENTATIVE_LEGACY_ADDRESS}`]: {
+    address: REPRESENTATIVE_LEGACY_ADDRESS,
+    chain_stats: { funded_txo_count: 12, funded_txo_sum: 50_000_000, spent_txo_count: 10, spent_txo_sum: 45_000_000, tx_count: 15 },
+    mempool_stats: { funded_txo_count: 0, funded_txo_sum: 0, spent_txo_count: 0, spent_txo_sum: 0, tx_count: 0 },
+  },
+  [`/api/address/${REPRESENTATIVE_LEGACY_ADDRESS}/txs`]: [buildTransaction()],
+  [`/api/address/${REPRESENTATIVE_LEGACY_ADDRESS}/txs/chain`]: [buildTransaction()],
+  [`/api/address/${REPRESENTATIVE_LEGACY_ADDRESS}/txs/mempool`]: [],
+  [`/api/address/${REPRESENTATIVE_LEGACY_ADDRESS}/txs/summary`]: [
+    { txid: TXID_A, height: 887_412, time: 1_772_100_000, value: 5_000_000 },
+  ],
+  [`/api/address/${REPRESENTATIVE_LEGACY_ADDRESS}/utxo`]: [
+    { txid: TXID_A, vout: 0, value: 5_000_000, status: { confirmed: true, block_height: 887_412, block_hash: BLOCK_HASH, block_time: 1_772_100_000 } },
   ],
 };
 

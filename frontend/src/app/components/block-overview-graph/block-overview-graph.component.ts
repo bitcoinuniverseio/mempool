@@ -57,6 +57,10 @@ export class BlockOverviewGraphComponent implements AfterViewInit, OnDestroy, On
   @Input() gradientMode: 'fee' | 'age' = 'fee';
   @Input() relativeTime: number | null;
   @Input() blockConversion: Price;
+  /** Optional non-Bitcoin denomination for a graph embedded in another chain. */
+  @Input() nativeTicker = '';
+  @Input() nativePrecision = 8;
+  @Input() nativeAtomicUnit = '';
   @Input() overrideColors: ((tx: TxView) => Color) | null = null;
   @Output() txClickEvent = new EventEmitter<{ tx: TransactionStripped, keyModifier: boolean}>();
   @Output() txHoverEvent = new EventEmitter<string>();

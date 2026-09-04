@@ -21,6 +21,7 @@ import {
   LensFilterId,
   LensItem,
   applyLensFilter,
+  chainAtomicUnit,
   lensFilters,
   readLensItems,
 } from '@app/universe/chain-dashboard/chain-lens';
@@ -56,6 +57,10 @@ export class ChainLensComponent implements OnChanges {
   /** Decimal places between atomic unit and ticker, for the tooltip. */
   @Input() precision = 8;
   @Input() ticker = '';
+
+  get atomicUnit(): string {
+    return chainAtomicUnit(this.chain);
+  }
 
   /**
    * The renderer mounts a change-detection cycle after the first data

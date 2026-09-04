@@ -28,6 +28,11 @@ export interface LensItem {
   readonly firstSeenAt: string | null;
 }
 
+/** Atomic units shown by the shared graph tooltip on non-Bitcoin chains. */
+export function chainAtomicUnit(chain: Exclude<ExplorerChain, 'bitcoin'>): string {
+  return chain === 'dogecoin' ? 'koinu' : 'zatoshi';
+}
+
 export type LensFilterId =
   | 'all'
   | 'protocol'
