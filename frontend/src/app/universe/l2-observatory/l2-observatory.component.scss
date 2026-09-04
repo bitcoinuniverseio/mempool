@@ -1,0 +1,51 @@
+@media (max-width: 575.98px) {
+  .l2-data-table {
+    margin-top: 0;
+
+    thead {
+      display: none;
+    }
+
+    tbody,
+    tr,
+    td {
+      display: block;
+    }
+
+    tr {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.7rem 1rem;
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--u-divider);
+
+      &:last-child {
+        border-bottom: 0;
+      }
+    }
+
+    td {
+      min-width: 0;
+      padding: 0;
+      border: 0;
+      overflow-wrap: anywhere;
+
+      &::before {
+        content: attr(data-label);
+        display: block;
+        margin-bottom: 0.2rem;
+        color: var(--u-text-muted);
+        font-family: inherit;
+        font-size: 0.72rem;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+    }
+
+    .l2-primary,
+    .l2-wide {
+      grid-column: 1 / -1;
+    }
+  }
+}

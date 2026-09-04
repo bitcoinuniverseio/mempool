@@ -21,8 +21,7 @@ import { PortfoliosStore } from '../stores/portfolios.store';
           <section class="panel">
             <h1 i18n="@@universe.portfolio.home.welcome">Portfolio Intelligence</h1>
             <p i18n="@@universe.portfolio.home.intro">
-              Track Bitcoin-native assets and UTXOs with exact values, honest coverage,
-              and a vault that never leaves this browser.
+              Track Bitcoin assets and UTXOs with exact values, kept private in this browser.
             </p>
             <div class="actions">
               <a class="primary" routerLink="/portfolio/new" i18n="@@universe.portfolio.home.get-started">Get started</a>
@@ -70,6 +69,12 @@ import { PortfoliosStore } from '../stores/portfolios.store';
       input { padding: 10px; border-radius: 8px; border: 1px solid var(--u-separator, rgba(0,0,0,0.16)); min-height: 44px; }
       .error { color: #a02020; font-size: 13px; }
       button.primary { background: var(--u-brand, #c40059); color: #fff; border: none; padding: 10px 16px; border-radius: 9px; font-weight: 600; min-height: 44px; cursor: pointer; }
+      @media (max-width: 599px) {
+        .home { padding-top: 24px; }
+        .panel { padding: 22px; }
+        .actions { gap: 8px; margin-top: 14px; }
+        a { padding-inline: 14px; }
+      }
     `,
   ],
 })
