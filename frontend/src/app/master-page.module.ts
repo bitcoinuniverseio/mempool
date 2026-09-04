@@ -626,6 +626,325 @@ const routes: Routes = [
         loadComponent: () => import('@app/universe/reserves/reserves-verify.component').then(m => m.ReservesVerifyComponent),
         data: { networks: ['bitcoin'] },
       },
+      // Product 1: Discreet Log Contract and Oracle Verification Center
+      {
+        path: 'contracts/dlc',
+        loadComponent: () => import('@app/universe/dlc/dlc-overview.component').then(m => m.DlcOverviewComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'contracts/dlc/oracles',
+        loadComponent: () => import('@app/universe/dlc/dlc-oracles.component').then(m => m.DlcOraclesComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'contracts/dlc/oracle/:oracleId',
+        loadComponent: () => import('@app/universe/dlc/dlc-oracle-detail.component').then(m => m.DlcOracleDetailComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'contracts/dlc/events',
+        loadComponent: () => import('@app/universe/dlc/dlc-events.component').then(m => m.DlcEventsComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'contracts/dlc/event/:eventId',
+        loadComponent: () => import('@app/universe/dlc/dlc-event-detail.component').then(m => m.DlcEventDetailComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'contracts/dlc/inspect',
+        loadComponent: () => import('@app/universe/dlc/dlc-inspect.component').then(m => m.DlcInspectComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'contracts/dlc/simulate',
+        loadComponent: () => import('@app/universe/dlc/dlc-simulate.component').then(m => m.DlcSimulateComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      // Product 2: Simplicity Contract Explorer and Formal Verification Workbench
+      {
+        path: 'liquid/simplicity',
+        loadComponent: () => import('@app/universe/simplicity/simplicity-overview.component').then(m => m.SimplicityOverviewComponent),
+        data: { networks: ['liquid'] },
+      },
+      {
+        path: 'liquid/simplicity/contracts',
+        loadComponent: () => import('@app/universe/simplicity/simplicity-contracts.component').then(m => m.SimplicityContractsComponent),
+        data: { networks: ['liquid'] },
+      },
+      {
+        path: 'liquid/simplicity/tx/:txid',
+        loadComponent: () => import('@app/universe/simplicity/simplicity-tx.component').then(m => m.SimplicityTxComponent),
+        data: { networks: ['liquid'] },
+      },
+      {
+        path: 'liquid/simplicity/program/:programId',
+        loadComponent: () => import('@app/universe/simplicity/simplicity-program-detail.component').then(m => m.SimplicityProgramDetailComponent),
+        data: { networks: ['liquid'] },
+      },
+      {
+        path: 'tools/simplicity',
+        loadComponent: () => import('@app/universe/simplicity/simplicity-tools.component').then(m => m.SimplicityToolsComponent),
+        data: { networks: ['liquid', 'bitcoin'] },
+      },
+      {
+        path: 'tools/simplicity/verify',
+        loadComponent: () => import('@app/universe/simplicity/simplicity-verify.component').then(m => m.SimplicityVerifyComponent),
+        data: { networks: ['liquid', 'bitcoin'] },
+      },
+      // Product 3: Statechain, CoinSwap, and Off-Chain UTXO Recovery Center
+      {
+        path: 'offchain/utxo',
+        loadComponent: () => import('@app/universe/offchain/offchain-utxo.component').then(m => m.OffchainUtxoComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'offchain/statechains',
+        loadComponent: () => import('@app/universe/offchain/statechain-operators.component').then(m => m.StatechainOperatorsComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'offchain/statechains/operators',
+        loadComponent: () => import('@app/universe/offchain/statechain-operators.component').then(m => m.StatechainOperatorsComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'offchain/statechains/operator/:operatorId',
+        loadComponent: () => import('@app/universe/offchain/statechain-operator-detail.component').then(m => m.StatechainOperatorDetailComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'offchain/statechains/verify',
+        loadComponent: () => import('@app/universe/offchain/statechain-verify.component').then(m => m.StatechainVerifyComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'offchain/coinswap',
+        loadComponent: () => import('@app/universe/offchain/coinswap-overview.component').then(m => m.CoinswapOverviewComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'offchain/coinswap/inspect',
+        loadComponent: () => import('@app/universe/offchain/coinswap-inspect.component').then(m => m.CoinswapInspectComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'offchain/recovery',
+        loadComponent: () => import('@app/universe/offchain/offchain-recovery.component').then(m => m.OffchainRecoveryComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      // Product 4: Compact Filter and Light-Client Verification Center
+      {
+        path: 'network/light-client',
+        loadComponent: () => import('@app/universe/compact-filters/light-client-overview.component').then(m => m.LightClientOverviewComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'network/light-client/providers',
+        loadComponent: () => import('@app/universe/compact-filters/light-client-providers.component').then(m => m.LightClientProvidersComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'network/light-client/provider/:providerId',
+        loadComponent: () => import('@app/universe/compact-filters/light-client-provider-detail.component').then(m => m.LightClientProviderDetailComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'network/light-client/filters',
+        loadComponent: () => import('@app/universe/compact-filters/light-client-filters.component').then(m => m.LightClientFiltersComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'network/light-client/verify',
+        loadComponent: () => import('@app/universe/compact-filters/light-client-verify.component').then(m => m.LightClientVerifyComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'network/light-client/scan',
+        loadComponent: () => import('@app/universe/compact-filters/light-client-scan.component').then(m => m.LightClientScanComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'network/light-client/privacy',
+        loadComponent: () => import('@app/universe/compact-filters/light-client-privacy.component').then(m => m.LightClientPrivacyComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      // Product 5: AssumeUTXO and Node Bootstrap Snapshot Center
+      {
+        path: 'node/bootstrap',
+        loadComponent: () => import('@app/universe/bootstrap/bootstrap-overview.component').then(m => m.BootstrapOverviewComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'node/bootstrap/snapshots',
+        loadComponent: () => import('@app/universe/bootstrap/bootstrap-snapshots.component').then(m => m.BootstrapSnapshotsComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'node/bootstrap/snapshot/:heightOrHash',
+        loadComponent: () => import('@app/universe/bootstrap/bootstrap-snapshot-detail.component').then(m => m.BootstrapSnapshotDetailComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'node/bootstrap/verify',
+        loadComponent: () => import('@app/universe/bootstrap/bootstrap-verify.component').then(m => m.BootstrapVerifyComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'node/bootstrap/planner',
+        loadComponent: () => import('@app/universe/bootstrap/bootstrap-planner.component').then(m => m.BootstrapPlannerComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'node/bootstrap/chainstates',
+        loadComponent: () => import('@app/universe/bootstrap/bootstrap-chainstates.component').then(m => m.BootstrapChainstatesComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      // Product 6: MuSig2, Multisig Setup, and Wallet Policy Interoperability Center
+      {
+        path: 'tools/multiparty',
+        loadComponent: () => import('@app/universe/multiparty/multiparty-overview.component').then(m => m.MultipartyOverviewComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'tools/multiparty/musig2',
+        loadComponent: () => import('@app/universe/multiparty/multiparty-musig2.component').then(m => m.MultipartyMusig2Component),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'tools/multiparty/musig2/session/:sessionId',
+        loadComponent: () => import('@app/universe/multiparty/multiparty-session.component').then(m => m.MultipartySessionComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'tools/multiparty/bsms',
+        loadComponent: () => import('@app/universe/multiparty/multiparty-bsms.component').then(m => m.MultipartyBsmsComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'tools/multiparty/policies',
+        loadComponent: () => import('@app/universe/multiparty/multiparty-policies.component').then(m => m.MultipartyPoliciesComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'tools/multiparty/labels',
+        loadComponent: () => import('@app/universe/multiparty/multiparty-labels.component').then(m => m.MultipartyLabelsComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'tools/multiparty/compatibility',
+        loadComponent: () => import('@app/universe/multiparty/multiparty-compatibility.component').then(m => m.MultipartyCompatibilityComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      // Product 7: Decentralized Mining Sharechain and Template-Autonomy Observatory
+      {
+        path: 'mining/decentralized',
+        loadComponent: () => import('@app/universe/mining-decentralized/decentralized-mining-overview.component').then(m => m.DecentralizedMiningOverviewComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'mining/decentralized/datum',
+        loadComponent: () => import('@app/universe/mining-decentralized/decentralized-mining-datum.component').then(m => m.DecentralizedMiningDatumComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'mining/decentralized/p2pool',
+        loadComponent: () => import('@app/universe/mining-decentralized/decentralized-mining-p2pool.component').then(m => m.DecentralizedMiningP2poolComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'mining/decentralized/braidpool',
+        loadComponent: () => import('@app/universe/mining-decentralized/decentralized-mining-braidpool.component').then(m => m.DecentralizedMiningBraidpoolComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'mining/decentralized/share/:shareId',
+        loadComponent: () => import('@app/universe/mining-decentralized/decentralized-mining-share-detail.component').then(m => m.DecentralizedMiningShareDetailComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'mining/decentralized/compare',
+        loadComponent: () => import('@app/universe/mining-decentralized/decentralized-mining-compare.component').then(m => m.DecentralizedMiningCompareComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      // Product 8: Nostr and Lightning Payment Connectivity Center
+      {
+        path: 'payments',
+        loadComponent: () => import('@app/universe/payment-connectivity/payment-connectivity-overview.component').then(m => m.PaymentConnectivityOverviewComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'payments/nwc',
+        loadComponent: () => import('@app/universe/payment-connectivity/payment-nwc.component').then(m => m.PaymentNwcComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'payments/nwc/inspect',
+        loadComponent: () => import('@app/universe/payment-connectivity/payment-nwc-inspect.component').then(m => m.PaymentNwcInspectComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'payments/nwc/compatibility',
+        loadComponent: () => import('@app/universe/payment-connectivity/payment-nwc-compatibility.component').then(m => m.PaymentNwcCompatibilityComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'payments/lnurl',
+        loadComponent: () => import('@app/universe/payment-connectivity/payment-lnurl.component').then(m => m.PaymentLnurlComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'payments/lightning-address',
+        loadComponent: () => import('@app/universe/payment-connectivity/payment-lightning-address.component').then(m => m.PaymentLightningAddressComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'payments/zaps',
+        loadComponent: () => import('@app/universe/payment-connectivity/payment-zaps.component').then(m => m.PaymentZapsComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      // Product 9: Bitcoin Staking, Finality, and Slashing Evidence Observatory
+      {
+        path: 'protocols/bitcoin-staking',
+        loadComponent: () => import('@app/universe/bitcoin-staking/staking-overview.component').then(m => m.StakingOverviewComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'protocols/bitcoin-staking/delegations',
+        loadComponent: () => import('@app/universe/bitcoin-staking/staking-delegations.component').then(m => m.StakingDelegationsComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'protocols/bitcoin-staking/delegation/:delegationId',
+        loadComponent: () => import('@app/universe/bitcoin-staking/staking-delegation-detail.component').then(m => m.StakingDelegationDetailComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'protocols/bitcoin-staking/finality-providers',
+        loadComponent: () => import('@app/universe/bitcoin-staking/staking-finality-providers.component').then(m => m.StakingFinalityProvidersComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'protocols/bitcoin-staking/finality-provider/:providerId',
+        loadComponent: () => import('@app/universe/bitcoin-staking/staking-finality-provider-detail.component').then(m => m.StakingFinalityProviderDetailComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'protocols/bitcoin-staking/parameters',
+        loadComponent: () => import('@app/universe/bitcoin-staking/staking-parameters.component').then(m => m.StakingParametersComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'protocols/bitcoin-staking/evidence',
+        loadComponent: () => import('@app/universe/bitcoin-staking/staking-evidence.component').then(m => m.StakingEvidenceComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'protocols/bitcoin-staking/reconciliation',
+        loadComponent: () => import('@app/universe/bitcoin-staking/staking-reconciliation.component').then(m => m.StakingReconciliationComponent),
+        data: { networks: ['bitcoin'] },
+      },
       {
         path: 'utxo-set',
         loadComponent: () => import('@app/universe/utxo-set/utxo-set.component').then(m => m.UtxoSetComponent),
