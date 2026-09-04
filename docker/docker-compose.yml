@@ -62,3 +62,38 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
+  nats:
+    profiles: ["intelligence-durable"]
+    image: nats:2.10-alpine
+    restart: on-failure
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    command: ["--jetstream"]
+
+  clickhouse:
+    profiles: ["intelligence-durable"]
+    image: clickhouse/clickhouse-server:24.3-alpine
+    restart: on-failure
+    ports:
+      - "8123:8123"
+      - "9009:9000"
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+
+  minio:
+    profiles: ["intelligence-durable"]
+    image: minio/minio:latest
+    restart: on-failure
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: "mempool"
+      MINIO_ROOT_PASSWORD: "mempoolpassword"
+    command: server /data --console-address ":9001"
+    volumes:
+      - ./data/minio:/data

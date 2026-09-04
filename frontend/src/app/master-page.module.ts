@@ -372,6 +372,260 @@ const routes: Routes = [
         loadComponent: () => import('@app/universe/intelligence-platform/protocol-explorer.component').then(m => m.ProtocolExplorerComponent),
         data: { networks: ['bitcoin'] },
       },
+      // Product 1: Global Bitcoin Network Observatory
+      {
+        path: 'network/global',
+        loadComponent: () => import('@app/universe/global-network/global-network-overview.component').then(m => m.GlobalNetworkOverviewComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'network/global/nodes',
+        loadComponent: () => import('@app/universe/global-network/global-network-nodes.component').then(m => m.GlobalNetworkNodesComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'network/global/node/:endpointId',
+        loadComponent: () => import('@app/universe/global-network/global-network-node-detail.component').then(m => m.GlobalNetworkNodeDetailComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'network/global/snapshots',
+        loadComponent: () => import('@app/universe/global-network/global-network-snapshots.component').then(m => m.GlobalNetworkSnapshotsComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'network/global/seeds',
+        loadComponent: () => import('@app/universe/global-network/global-network-seeds.component').then(m => m.GlobalNetworkSeedsComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'network/global/self-check',
+        loadComponent: () => import('@app/universe/global-network/global-network-self-check.component').then(m => m.GlobalNetworkSelfCheckComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      // Product 2: Lightning Reliability, Liquidity, and Channel Lifecycle Center
+      {
+        path: 'lightning/reliability',
+        loadComponent: () => import('@app/universe/lightning-reliability/lightning-reliability-overview.component').then(m => m.LightningReliabilityOverviewComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'lightning/liquidity',
+        loadComponent: () => import('@app/universe/lightning-reliability/lightning-liquidity.component').then(m => m.LightningLiquidityComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'lightning/lsp',
+        loadComponent: () => import('@app/universe/lightning-reliability/lightning-lsp.component').then(m => m.LightningLspComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'lightning/node/:publicKey/reliability',
+        loadComponent: () => import('@app/universe/lightning-reliability/lightning-node-reliability.component').then(m => m.LightningNodeReliabilityComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'lightning/channel/:shortId/lifecycle',
+        loadComponent: () => import('@app/universe/lightning-reliability/lightning-channel-lifecycle.component').then(m => m.LightningChannelLifecycleComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'lightning/closure/:txid',
+        loadComponent: () => import('@app/universe/lightning-reliability/lightning-closure-forensics.component').then(m => m.LightningClosureForensicsComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      // Product 3: Silent Payments Center
+      {
+        path: 'payments/silent',
+        loadComponent: () => import('@app/universe/silent-payments/silent-payments-overview.component').then(m => m.SilentPaymentsOverviewComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'payments/silent/scan',
+        loadComponent: () => import('@app/universe/silent-payments/silent-payments-scan.component').then(m => m.SilentPaymentsScanComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'payments/silent/address',
+        loadComponent: () => import('@app/universe/silent-payments/silent-payments-address.component').then(m => m.SilentPaymentsAddressComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'payments/silent/psbt',
+        loadComponent: () => import('@app/universe/silent-payments/silent-payments-psbt.component').then(m => m.SilentPaymentsPsbtComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'payments/silent/coverage',
+        loadComponent: () => import('@app/universe/silent-payments/silent-payments-coverage.component').then(m => m.SilentPaymentsCoverageComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      // Product 4: Collaborative Payments and Payjoin Center
+      {
+        path: 'payments/payjoin',
+        loadComponent: () => import('@app/universe/payjoin/payjoin-overview.component').then(m => m.PayjoinOverviewComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'payments/payjoin/analyze',
+        loadComponent: () => import('@app/universe/payjoin/payjoin-analyze.component').then(m => m.PayjoinAnalyzeComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'payments/payjoin/directory',
+        loadComponent: () => import('@app/universe/payjoin/payjoin-directory.component').then(m => m.PayjoinDirectoryComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'payments/payjoin/compatibility',
+        loadComponent: () => import('@app/universe/payjoin/payjoin-compatibility.component').then(m => m.PayjoinCompatibilityComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'payments/payjoin/playground',
+        loadComponent: () => import('@app/universe/payjoin/payjoin-playground.component').then(m => m.PayjoinPlaygroundComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      // Product 5: Ecash and Federation Observatory
+      {
+        path: 'ecash',
+        loadComponent: () => import('@app/universe/ecash/ecash-overview.component').then(m => m.EcashOverviewComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'ecash/cashu',
+        loadComponent: () => import('@app/universe/ecash/ecash-cashu.component').then(m => m.EcashCashuComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'ecash/cashu/:mintId',
+        loadComponent: () => import('@app/universe/ecash/ecash-cashu-detail.component').then(m => m.EcashCashuDetailComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'ecash/fedimint',
+        loadComponent: () => import('@app/universe/ecash/ecash-fedimint.component').then(m => m.EcashFedimintComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'ecash/fedimint/:federationId',
+        loadComponent: () => import('@app/universe/ecash/ecash-fedimint-detail.component').then(m => m.EcashFedimintDetailComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'ecash/inspect',
+        loadComponent: () => import('@app/universe/ecash/ecash-inspect.component').then(m => m.EcashInspectComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      // Product 6: Consensus Upgrade, Covenant, and Vault Lab
+      {
+        path: 'labs/consensus',
+        loadComponent: () => import('@app/universe/consensus/consensus-proposals.component').then(m => m.ConsensusProposalsComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'labs/consensus/:proposalId',
+        loadComponent: () => import('@app/universe/consensus/consensus-proposal-detail.component').then(m => m.ConsensusProposalDetailComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'labs/consensus/compare',
+        loadComponent: () => import('@app/universe/consensus/consensus-compare.component').then(m => m.ConsensusCompareComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'labs/vaults',
+        loadComponent: () => import('@app/universe/consensus/vaults-overview.component').then(m => m.VaultsOverviewComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'labs/vaults/designer',
+        loadComponent: () => import('@app/universe/consensus/vaults-designer.component').then(m => m.VaultsDesignerComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'labs/vaults/simulate',
+        loadComponent: () => import('@app/universe/consensus/vaults-simulate.component').then(m => m.VaultsSimulateComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      // Product 7: Quantum Exposure and Migration Readiness Center
+      {
+        path: 'intelligence/quantum',
+        loadComponent: () => import('@app/universe/quantum/quantum-overview.component').then(m => m.QuantumOverviewComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'intelligence/quantum/exposure',
+        loadComponent: () => import('@app/universe/quantum/quantum-exposure.component').then(m => m.QuantumExposureComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'intelligence/quantum/history',
+        loadComponent: () => import('@app/universe/quantum/quantum-history.component').then(m => m.QuantumHistoryComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'intelligence/quantum/audit',
+        loadComponent: () => import('@app/universe/quantum/quantum-audit.component').then(m => m.QuantumAuditComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'intelligence/quantum/migration',
+        loadComponent: () => import('@app/universe/quantum/quantum-migration.component').then(m => m.QuantumMigrationComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      // Product 8: Blockspace Demand and Transaction Semantics Terminal
+      {
+        path: 'intelligence/blockspace',
+        loadComponent: () => import('@app/universe/blockspace/blockspace-overview.component').then(m => m.BlockspaceOverviewComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'intelligence/blockspace/composition',
+        loadComponent: () => import('@app/universe/blockspace/blockspace-composition.component').then(m => m.BlockspaceCompositionComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'intelligence/blockspace/regimes',
+        loadComponent: () => import('@app/universe/blockspace/blockspace-regimes.component').then(m => m.BlockspaceRegimesComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'intelligence/blockspace/compare',
+        loadComponent: () => import('@app/universe/blockspace/blockspace-compare.component').then(m => m.BlockspaceCompareComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'intelligence/blockspace/taxonomy',
+        loadComponent: () => import('@app/universe/blockspace/blockspace-taxonomy.component').then(m => m.BlockspaceTaxonomyComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      // Product 9: Reserves and Solvency Verification Center
+      {
+        path: 'intelligence/reserves',
+        loadComponent: () => import('@app/universe/reserves/reserves-overview.component').then(m => m.ReservesOverviewComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'intelligence/reserves/providers',
+        loadComponent: () => import('@app/universe/reserves/reserves-providers.component').then(m => m.ReservesProvidersComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'intelligence/reserves/provider/:providerId',
+        loadComponent: () => import('@app/universe/reserves/reserves-provider-detail.component').then(m => m.ReservesProviderDetailComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'intelligence/reserves/snapshot/:snapshotId',
+        loadComponent: () => import('@app/universe/reserves/reserves-snapshot-detail.component').then(m => m.ReservesSnapshotDetailComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'intelligence/reserves/verify',
+        loadComponent: () => import('@app/universe/reserves/reserves-verify.component').then(m => m.ReservesVerifyComponent),
+        data: { networks: ['bitcoin'] },
+      },
       {
         path: 'utxo-set',
         loadComponent: () => import('@app/universe/utxo-set/utxo-set.component').then(m => m.UtxoSetComponent),
