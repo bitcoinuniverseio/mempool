@@ -1,6 +1,7 @@
-import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import { IntelligenceApiService } from './intelligence-api.service';
 
 @Component({
@@ -13,23 +14,32 @@ import { IntelligenceApiService } from './intelligence-api.service';
       <header class="page-header">
         <div class="title-row">
           <h1>Mining Template and Inclusion Observatory</h1>
-          <span class="badge badge-success">3 Template Sources Active</span>
+          <span class="badge badge-success" *ngIf="overview">
+            {{ overview.sources?.length || 0 }} Template Sources Active
+          </span>
+          <span class="badge badge-secondary" *ngIf="!overview && loadingOverview">
+            Querying Template Endpoints...
+          </span>
         </div>
         <p class="subtitle">
           Real-time candidate block templates captured across Bitcoin Core GBT, Stratum V2, and DATUM endpoints with objective divergence analytics.
         </p>
       </header>
 
+      <div *ngIf="overviewError" class="alert alert-danger mb-4">
+        {{ overviewError }}
+      </div>
+
       <!-- Sources Status Grid -->
-      <section *ngIf="overview" class="row g-3 mb-4">
+      <section *ngIf="overview?.sources" class="row g-3 mb-4">
         <div *ngFor="let source of overview.sources" class="col-md-4">
-          <div class="card p-3 bg-dark-subtle">
+          <div class="card p-3 bg-dark-subtle h-100">
             <div class="d-flex justify-content-between">
               <span class="badge badge-primary">{{ source.source_type | uppercase }}</span>
               <span class="badge badge-success">{{ source.status | uppercase }}</span>
             </div>
             <h5 class="mt-2 mb-1">{{ source.name }}</h5>
-            <div class="small text-muted font-monospace">{{ source.endpoint }}</div>
+            <div class="small text-muted font-monospace text-break">{{ source.endpoint }}</div>
             <div class="small text-muted mt-2">{{ source.software_version }}</div>
           </div>
         </div>
@@ -37,9 +47,16 @@ import { IntelligenceApiService } from './intelligence-api.service';
 
       <!-- Candidate Templates -->
       <section class="card mb-4" *ngIf="overview && overview.latest_templates">
-        <div class="card-header d-flex justify-content-between align-items-center">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
           <h4 class="mb-0">Candidate Block Templates at Tip</h4>
-          <button class="btn btn-sm btn-primary" (click)="compareActiveTemplates()">Diff Selected Templates</button>
+          <button
+            type="button"
+            class="btn btn-sm btn-primary"
+            [disabled]="loadingDiff || overview.latest_templates.length < 2"
+            (click)="compareActiveTemplates()"
+          >
+            {{ loadingDiff ? 'Analyzing Diff...' : 'Diff Selected Templates' }}
+          </button>
         </div>
         <div class="table-responsive">
           <table class="table table-hover mb-0">
@@ -77,28 +94,28 @@ import { IntelligenceApiService } from './intelligence-api.service';
         <div class="card-body">
           <div class="row text-center g-3 mb-3">
             <div class="col-md-4">
-              <div class="p-3 rounded bg-dark-subtle">
+              <div class="p-3 rounded bg-dark-subtle h-100">
                 <div class="small text-muted">Similarity Score</div>
                 <div class="h3 my-1 text-primary">{{ (activeDiff.similarity_score * 100).toFixed(1) }}%</div>
                 <div class="small text-muted">Set overlap</div>
               </div>
             </div>
             <div class="col-md-4">
-              <div class="p-3 rounded bg-dark-subtle">
+              <div class="p-3 rounded bg-dark-subtle h-100">
                 <div class="small text-muted">Fee Differential</div>
                 <div class="h3 my-1">{{ activeDiff.fee_delta_sats | number }} sats</div>
                 <div class="small text-muted">Variance between sources</div>
               </div>
             </div>
             <div class="col-md-4">
-              <div class="p-3 rounded bg-dark-subtle">
+              <div class="p-3 rounded bg-dark-subtle h-100">
                 <div class="small text-muted">Weight Differential</div>
                 <div class="h3 my-1">{{ activeDiff.weight_delta | number }} WU</div>
                 <div class="small text-muted">Block density variance</div>
               </div>
             </div>
           </div>
-          <div class="alert alert-secondary mb-0">
+          <div class="alert alert-secondary mb-0" *ngIf="activeDiff.explanation">
             <strong>Observatory Finding:</strong> {{ activeDiff.explanation }}
           </div>
         </div>
@@ -114,13 +131,19 @@ import { IntelligenceApiService } from './intelligence-api.service';
       font-weight: 700; line-height: 1; text-align: center; white-space: nowrap;
       vertical-align: baseline; border-radius: 0.25rem;
     }
-    .badge-primary { background-color: #0d6efd; color: #fff; }
-    .badge-success { background-color: #198754; color: #fff; }
+    .badge-primary { background-color: var(--primary, #0d6efd); color: #fff; }
+    .badge-success { background-color: var(--success, #198754); color: #fff; }
   `],
 })
-export class MiningTemplatesComponent implements OnInit {
+export class MiningTemplatesComponent implements OnInit, OnDestroy {
   overview: any = null;
+  loadingOverview = false;
+  overviewError: string | null = null;
+
   activeDiff: any = null;
+  loadingDiff = false;
+
+  private subs: Subscription[] = [];
 
   constructor(
     private api: IntelligenceApiService,
@@ -128,21 +151,48 @@ export class MiningTemplatesComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.api.getTemplateOverview$().subscribe((res) => {
-      this.overview = res;
-      this.compareActiveTemplates();
-      this.cdr.markForCheck();
-    });
+    this.loadingOverview = true;
+    this.subs.push(
+      this.api.getTemplateOverview$().subscribe({
+        next: (res) => {
+          this.overview = res;
+          this.loadingOverview = false;
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          this.overviewError = err?.message || 'Failed to fetch mining template overview';
+          this.loadingOverview = false;
+          this.cdr.markForCheck();
+        },
+      })
+    );
   }
 
   compareActiveTemplates(): void {
     if (this.overview && this.overview.latest_templates && this.overview.latest_templates.length >= 2) {
+      this.loadingDiff = true;
+      this.cdr.markForCheck();
       const tA = this.overview.latest_templates[0].template_id;
       const tB = this.overview.latest_templates[1].template_id;
-      this.api.diffTemplates$(tA, tB).subscribe((diff) => {
-        this.activeDiff = diff;
-        this.cdr.markForCheck();
-      });
+      this.subs.push(
+        this.api.diffTemplates$(tA, tB).subscribe({
+          next: (diff) => {
+            this.activeDiff = diff;
+            this.loadingDiff = false;
+            this.cdr.markForCheck();
+          },
+          error: () => {
+            this.loadingDiff = false;
+            this.cdr.markForCheck();
+          },
+        })
+      );
+    }
+  }
+
+  ngOnDestroy(): void {
+    for (const sub of this.subs) {
+      sub.unsubscribe();
     }
   }
 }

@@ -162,7 +162,7 @@ export class StateService {
   isBrowser: boolean = isPlatformBrowser(this.platformId);
   isMempoolSpaceBuild = window['isMempoolSpaceBuild'] ?? false;
   isProdDomain: boolean;
-  backend: 'esplora' | 'electrum' | 'none' = 'esplora';
+  backend: 'esplora' | 'electrum' | 'none' | null = null;
   network = '';
   lightningNetworks = ['', 'mainnet', 'bitcoin', 'testnet', 'signet'];
   lightning = false;
@@ -173,7 +173,7 @@ export class StateService {
   mempoolSequence: number;
   mempoolBlockState: { block: number, transactions: { [txid: string]: TransactionStripped} };
 
-  backend$ = new BehaviorSubject<'esplora' | 'electrum' | 'none'>('esplora');
+  backend$ = new BehaviorSubject<'esplora' | 'electrum' | 'none' | null>(null);
   networkChanged$ = new ReplaySubject<string>(1);
   lightningChanged$ = new ReplaySubject<boolean>(1);
   signaturesMode$: BehaviorSubject<SignaturesMode>;
