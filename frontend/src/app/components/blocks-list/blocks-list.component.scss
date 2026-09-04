@@ -309,6 +309,23 @@ tr, td, th {
 // built to hold a single line of a fixed-width column and have to stop doing
 // that once the column is gone.
 @media (max-width: 575.98px) {
+  // A block has a short, related set of readings. The shared stacked-table
+  // treatment gives every reading an entire line, which makes the recent
+  // blocks widget several screens tall. Keep the labels and values, but place
+  // independent readings beside each other on phones.
+  table.stacks-on-phone tbody tr {
+    display: grid;
+    gap: var(--u-space-1) var(--u-space-3);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: var(--u-space-2) 0;
+  }
+
+  table.stacks-on-phone td {
+    gap: var(--u-space-1);
+    min-width: 0;
+    padding: 0 !important;
+  }
+
   .pool,
   .pool-name,
   .reward,
@@ -323,6 +340,22 @@ tr, td, th {
 
   .pool-name {
     padding-left: var(--u-space-2);
+  }
+
+  .height,
+  .pool,
+  .reward,
+  .fees,
+  .health,
+  .txs,
+  .size {
+    grid-column: auto;
+  }
+
+  // The block height identifies its compact group. It should retain the
+  // shared type treatment without occupying the full row.
+  .height {
+    font-size: var(--u-text-lg);
   }
 
   // The size cell is a bar with its figure printed on top, which reads as a

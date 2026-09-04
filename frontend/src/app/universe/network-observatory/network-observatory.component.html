@@ -48,7 +48,7 @@
       <!-- Fleet Matrix -->
       <section class="panel">
         <h2>Universe Observer Fleet & Relay Policies</h2>
-        <table class="data-table" *ngIf="vm.nodes?.length">
+        <table class="data-table fleet-table" *ngIf="vm.nodes?.length">
           <thead>
             <tr>
               <th>Node Name</th>
@@ -63,14 +63,14 @@
           </thead>
           <tbody>
             <tr *ngFor="let n of vm.nodes">
-              <td><strong>{{ n.name }}</strong></td>
-              <td>{{ n.region }}</td>
-              <td class="mono">{{ n.clientVersion }}</td>
-              <td><span class="badge" [ngClass]="n.fullRbf ? 'badge-success' : 'badge-warning'">{{ n.fullRbf ? 'Active' : 'Opt-in' }}</span></td>
-              <td>{{ n.minRelayFeeRate }} sat/vB</td>
-              <td>{{ n.clockOffsetMs }} ms</td>
-              <td>{{ n.mempoolTxCount }} txs</td>
-              <td><span class="badge badge-success">{{ n.status }}</span></td>
+              <td data-label="Node Name"><strong>{{ n.name }}</strong></td>
+              <td data-label="Region">{{ n.region }}</td>
+              <td class="mono" data-label="Client Software">{{ n.clientVersion }}</td>
+              <td data-label="Full-RBF"><span class="badge" [ngClass]="n.fullRbf ? 'badge-success' : 'badge-warning'">{{ n.fullRbf ? 'Active' : 'Opt-in' }}</span></td>
+              <td data-label="Min Relay Fee">{{ n.minRelayFeeRate }} sat/vB</td>
+              <td data-label="Clock Drift">{{ n.clockOffsetMs }} ms</td>
+              <td data-label="Mempool Size">{{ n.mempoolTxCount }} txs</td>
+              <td data-label="Status"><span class="badge badge-success">{{ n.status }}</span></td>
             </tr>
           </tbody>
         </table>
@@ -100,7 +100,7 @@
       <!-- Block Template Observatory -->
       <section class="panel">
         <h2>Candidate Block Templates (Height #{{ vm.templates.blockHeight }})</h2>
-        <table class="data-table">
+        <table class="data-table candidate-template-table">
           <thead>
             <tr>
               <th>Template Source</th>
@@ -112,11 +112,11 @@
           </thead>
           <tbody>
             <tr *ngFor="let t of vm.templates.candidateTemplates">
-              <td><strong>{{ t.poolName }}</strong></td>
-              <td>{{ t.txCount }}</td>
-              <td>{{ t.totalWeight }} WU</td>
-              <td class="mono">{{ t.totalFeesSats }}</td>
-              <td>{{ t.expectedMedianFeeRate }} sat/vB</td>
+              <td data-label="Template source"><strong>{{ t.poolName }}</strong></td>
+              <td data-label="Transactions">{{ t.txCount }}</td>
+              <td data-label="Weight">{{ t.totalWeight }} WU</td>
+              <td class="mono" data-label="Fees">{{ t.totalFeesSats }}</td>
+              <td data-label="Fee rate">{{ t.expectedMedianFeeRate }} sat/vB</td>
             </tr>
           </tbody>
         </table>

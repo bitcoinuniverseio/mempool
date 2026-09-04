@@ -1,4 +1,44 @@
 @media (max-width: 767.98px) {
+  .fleet-table,
+  .fleet-table tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .fleet-table thead {
+    display: none;
+  }
+
+  .fleet-table tr {
+    border-bottom: 1px solid var(--u-divider);
+    display: block;
+    padding: 0.75rem 0;
+
+    &:last-child {
+      border-bottom: 0;
+    }
+  }
+
+  .fleet-table td {
+    align-items: start;
+    border: 0;
+    display: grid;
+    gap: var(--u-space-2);
+    grid-template-columns: minmax(7.25rem, 40%) minmax(0, 1fr);
+    min-width: 0;
+    overflow-wrap: anywhere;
+    padding: var(--u-space-1) 0;
+
+    &::before {
+      color: var(--u-text-muted);
+      content: attr(data-label);
+      font-size: var(--u-text-xs);
+      font-weight: var(--u-weight-semibold);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+  }
+
   .propagation-table,
   .propagation-table tbody {
     display: block;
@@ -37,5 +77,58 @@
   .propagation-table td:nth-child(3) {
     grid-area: status;
     align-self: center;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .candidate-template-table {
+    table-layout: fixed;
+
+    thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+
+    tbody {
+      display: block;
+    }
+
+    tr {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      padding: 0.4rem 0;
+      border-bottom: 1px solid var(--u-divider);
+    }
+
+    tr:last-child {
+      border-bottom: 0;
+    }
+
+    td {
+      min-width: 0;
+      padding: 0.3rem 0.45rem;
+      border: 0;
+      overflow-wrap: anywhere;
+    }
+
+    td::before {
+      content: attr(data-label);
+      display: block;
+      margin-bottom: 0.15rem;
+      color: var(--u-text-muted);
+      font-size: 0.65rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      line-height: 1.15;
+      text-transform: uppercase;
+    }
+
+    td:first-child {
+      grid-column: span 2;
+    }
   }
 }

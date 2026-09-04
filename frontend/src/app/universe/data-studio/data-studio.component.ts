@@ -25,7 +25,7 @@ interface DataStudioViewModel {
 @Component({
   selector: 'app-data-studio',
   templateUrl: './data-studio.component.html',
-  styleUrls: ['../product-page.scss'],
+  styleUrls: ['../product-page.scss', './data-studio.component.scss'],
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,

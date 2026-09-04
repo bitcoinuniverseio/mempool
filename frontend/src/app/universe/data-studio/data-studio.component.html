@@ -50,7 +50,8 @@
       <!-- Results Table -->
       <section class="panel" *ngIf="vm.queryResult">
         <h2>Query Results ({{ vm.queryResult.rowCount }} rows in {{ vm.queryResult.executionTimeMs }} ms)</h2>
-        <table class="data-table">
+        <div class="query-results-scroll" tabindex="0" aria-label="Query result table">
+        <table class="data-table mcp-tools-table">
           <thead>
             <tr>
               <th *ngFor="let col of vm.queryResult.columns">{{ col }}</th>
@@ -62,6 +63,7 @@
             </tr>
           </tbody>
         </table>
+        </div>
       </section>
 
       <!-- MCP Tool Declarations -->
@@ -78,9 +80,9 @@
           </thead>
           <tbody>
             <tr *ngFor="let t of vm.mcpTools">
-              <td class="mono"><strong>{{ t.name }}</strong></td>
-              <td>{{ t.description }}</td>
-              <td class="mono">{{ t.sampleCall }}</td>
+              <td class="mono" data-label="Tool name"><strong>{{ t.name }}</strong></td>
+              <td data-label="Description">{{ t.description }}</td>
+              <td class="mono" data-label="Sample request">{{ t.sampleCall }}</td>
             </tr>
           </tbody>
         </table>
