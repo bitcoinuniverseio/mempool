@@ -252,10 +252,12 @@
           </section>
 
           <section class="panel warnings-panel" *ngIf="summary.envelope.warnings.length > 0" aria-labelledby="portfolio-warnings-heading">
-            <h2 id="portfolio-warnings-heading" i18n="universe.portfolio.warnings-title">What could not be answered</h2>
-            <ul>
-              <li *ngFor="let warning of summary.envelope.warnings">{{ warning }}</li>
-            </ul>
+            <h2 id="portfolio-warnings-heading" i18n="universe.portfolio.warnings-title">Some portfolio details are unavailable</h2>
+            <p class="warning-copy" i18n="universe.portfolio.warnings-copy">
+              We could not load every optional protocol detail right now. Any
+              balances and holdings shown above are still available. Please try
+              again shortly for a more complete view.
+            </p>
           </section>
         </ng-container>
 
@@ -357,9 +359,9 @@
                 <span *ngIf="statement.checkpoint as checkpoint" i18n="universe.portfolio.statement-checkpoint">at block {{ checkpoint.heightAtomic }}</span>
                 <span *ngIf="statement.truncated" i18n="universe.portfolio.statement-truncated">more pages remain</span>
               </div>
-              <ul class="statement-warnings" *ngIf="statement.warnings.length > 0">
-                <li *ngFor="let warning of statement.warnings">{{ warning }}</li>
-              </ul>
+              <p class="statement-warning" *ngIf="statement.warnings.length > 0" i18n="universe.portfolio.statement-warnings">
+                Some details for this protocol are unavailable right now.
+              </p>
             </li>
           </ul>
         </section>
@@ -573,9 +575,9 @@
                   rather than counted at zero.
                 </p>
 
-                <ul class="statement-warnings" *ngIf="report.warnings?.length">
-                  <li *ngFor="let warning of report.warnings">{{ warning }}</li>
-                </ul>
+                <p class="statement-warning" *ngIf="report.warnings?.length" i18n="universe.portfolio.pnl-warnings">
+                  Some information used for this calculation is unavailable right now.
+                </p>
 
                 <h3 class="subsection" i18n="universe.portfolio.pnl-realizations-title">Every disposal behind the realized figure</h3>
                 <p class="empty" *ngIf="!report.realizations?.length" i18n="universe.portfolio.pnl-no-realizations">

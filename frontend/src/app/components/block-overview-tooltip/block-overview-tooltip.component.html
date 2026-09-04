@@ -36,16 +36,23 @@
       </tr>
       <tr>
         <td class="label" i18n="dashboard.latest-transactions.amount">Amount</td>
-        <td class="value"><app-amount [blockConversion]="blockConversion" [satoshis]="value" [noFiat]="true"></app-amount></td>
+        <td class="value">
+          <ng-container *ngIf="nativeTicker; else bitcoinAmount">{{ nativeAmount(value) }} {{ nativeTicker }}</ng-container>
+          <ng-template #bitcoinAmount><app-amount [blockConversion]="blockConversion" [satoshis]="value" [noFiat]="true"></app-amount></ng-template>
+        </td>
       </tr>
       <tr>
         <td class="label" i18n="transaction.fee|Transaction fee">Fee</td>
-        <td class="value">{{ fee | number }} <span class="symbol" i18n="shared.sats">sats</span> &nbsp; <span class="fiat"><app-fiat [blockConversion]="blockConversion" [value]="fee"></app-fiat></span>
+        <td class="value">
+          <ng-container *ngIf="nativeTicker; else bitcoinFee">{{ fee | number }} <span class="symbol">{{ nativeAtomicUnit }}</span></ng-container>
+          <ng-template #bitcoinFee>{{ fee | number }} <span class="symbol" i18n="shared.sats">sats</span> &nbsp; <span class="fiat"><app-fiat [blockConversion]="blockConversion" [value]="fee"></app-fiat></span></ng-template>
+        </td>
       </tr>
       <tr>
         <td class="label" i18n="transaction.fee-rate|Transaction fee rate">Fee rate</td>
         <td class="value">
-          <app-fee-rate [fee]="feeRate"></app-fee-rate>
+          <ng-container *ngIf="nativeTicker; else bitcoinFeeRate">{{ feeRate | number:'1.0-2' }} {{ nativeAtomicUnit }}/vB</ng-container>
+          <ng-template #bitcoinFeeRate><app-fee-rate [fee]="feeRate"></app-fee-rate></ng-template>
         </td>
       </tr>
       <tr *ngIf="hasEffectiveRate && effectiveRate != null">
