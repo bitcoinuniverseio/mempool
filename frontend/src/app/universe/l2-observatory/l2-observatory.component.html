@@ -20,7 +20,7 @@
       <!-- Systems Table -->
       <section class="panel" *ngIf="vm.systems?.length">
         <h2>Active Bitcoin Bridge Systems</h2>
-        <table class="data-table">
+        <table class="data-table l2-data-table">
           <thead>
             <tr>
               <th>System Name</th>
@@ -34,13 +34,13 @@
           </thead>
           <tbody>
             <tr *ngFor="let s of vm.systems">
-              <td><strong>{{ s.name }}</strong></td>
-              <td><span class="badge badge-info">{{ s.architecture }}</span></td>
-              <td>{{ s.trustModel }}</td>
-              <td class="mono"><strong>{{ (Number(s.lockedBtcSats) / 1e8).toFixed(2) }}</strong></td>
-              <td>{{ s.operatorCount }}</td>
-              <td>{{ s.challengePeriodBlocks }} blocks</td>
-              <td><span class="badge badge-success">{{ s.status }}</span></td>
+              <td class="l2-primary" data-label="System"><strong>{{ s.name }}</strong></td>
+              <td data-label="Architecture"><span class="badge badge-info">{{ s.architecture }}</span></td>
+              <td data-label="Trust model">{{ s.trustModel }}</td>
+              <td class="mono" data-label="Locked reserves"><strong>{{ (Number(s.lockedBtcSats) / 1e8).toFixed(2) }} BTC</strong></td>
+              <td data-label="Operators">{{ s.operatorCount }}</td>
+              <td data-label="Challenge period">{{ s.challengePeriodBlocks }} blocks</td>
+              <td data-label="Status"><span class="badge badge-success">{{ s.status }}</span></td>
             </tr>
           </tbody>
         </table>
@@ -49,7 +49,7 @@
       <!-- Active Challenges -->
       <section class="panel" *ngIf="vm.challenges?.length">
         <h2>Live Dispute & Challenge Windows</h2>
-        <table class="data-table">
+        <table class="data-table l2-data-table">
           <thead>
             <tr>
               <th>Challenge ID</th>
@@ -62,12 +62,12 @@
           </thead>
           <tbody>
             <tr *ngFor="let c of vm.challenges">
-              <td class="mono"><strong>{{ c.challengeId }}</strong></td>
-              <td>{{ c.systemId }}</td>
-              <td class="mono"><a [routerLink]="['/tx', c.assertionTxid]">{{ c.assertionTxid.slice(0, 14) }}...</a></td>
-              <td class="mono"><a [routerLink]="['/tx', c.challengeTxid]">{{ c.challengeTxid.slice(0, 14) }}...</a></td>
-              <td>Block #{{ c.timeoutBlockHeight }}</td>
-              <td><span class="badge badge-warning">{{ c.status }}</span></td>
+              <td class="mono l2-primary" data-label="Challenge"><strong>{{ c.challengeId }}</strong></td>
+              <td data-label="System">{{ c.systemId }}</td>
+              <td class="mono l2-wide" data-label="Assertion transaction"><a [routerLink]="['/tx', c.assertionTxid]">{{ c.assertionTxid.slice(0, 14) }}...</a></td>
+              <td class="mono l2-wide" data-label="Challenge transaction"><a [routerLink]="['/tx', c.challengeTxid]">{{ c.challengeTxid.slice(0, 14) }}...</a></td>
+              <td data-label="Timeout">Block #{{ c.timeoutBlockHeight }}</td>
+              <td data-label="Status"><span class="badge badge-warning">{{ c.status }}</span></td>
             </tr>
           </tbody>
         </table>

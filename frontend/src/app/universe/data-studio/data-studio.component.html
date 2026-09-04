@@ -50,6 +50,7 @@
       <!-- Results Table -->
       <section class="panel" *ngIf="vm.queryResult">
         <h2>Query Results ({{ vm.queryResult.rowCount }} rows in {{ vm.queryResult.executionTimeMs }} ms)</h2>
+        <div class="query-results-scroll" tabindex="0" aria-label="Query result table">
         <table class="data-table mcp-tools-table">
           <thead>
             <tr>
@@ -62,6 +63,7 @@
             </tr>
           </tbody>
         </table>
+        </div>
       </section>
 
       <!-- MCP Tool Declarations -->
