@@ -288,6 +288,96 @@ export const ROUTES = [
   { id: 'staking-evidence', path: '/protocols/bitcoin-staking/evidence', name: 'EOTS Slashing Evidence' },
   { id: 'staking-reconciliation', path: '/protocols/bitcoin-staking/reconciliation', name: 'Cross-Chain PoS Reconciliation' },
 
+  // Frontier Product 1: Cross-Layer Atomic Swap and Submarine Swap Verification Center
+  { id: 'swaps', path: '/swaps', name: 'Swaps Overview' },
+  { id: 'swaps-submarine', path: '/swaps/submarine', name: 'Submarine Swaps' },
+  { id: 'swaps-reverse', path: '/swaps/reverse', name: 'Reverse Swaps' },
+  { id: 'swaps-chain', path: '/swaps/chain', name: 'Chain Swaps' },
+  { id: 'swaps-providers', path: '/swaps/providers', name: 'Swap Providers' },
+  { id: 'swaps-provider-detail', path: '/swaps/provider/boltz-exchange', name: 'Swap Provider Detail' },
+  { id: 'swaps-inspect', path: '/swaps/inspect', name: 'Swap Script Inspector' },
+  { id: 'swaps-recover', path: '/swaps/recover', name: 'Swap Recovery' },
+  { id: 'swaps-simulate', path: '/swaps/simulate', name: 'Swap Simulator' },
+
+  // Frontier Product 2: Ark V-PACK, VTXO Portability, and Unilateral Exit Center
+  { id: 'ark-vpack', path: '/ark/vpack', name: 'Ark V-PACK Overview' },
+  { id: 'ark-vpack-verify', path: '/ark/vpack/verify', name: 'Ark V-PACK Verifier' },
+  { id: 'ark-vpack-translate', path: '/ark/vpack/translate', name: 'Ark V-PACK Translator' },
+  { id: 'ark-vtxo-detail', path: '/ark/vtxo/vtxo-864190-001', name: 'VTXO Detail' },
+  { id: 'ark-backups', path: '/ark/backups', name: 'Ark Backup Retention' },
+  { id: 'ark-exit', path: '/ark/exit', name: 'Ark Unilateral Exit' },
+  { id: 'ark-exit-simulate', path: '/ark/exit/simulate', name: 'Ark Exit Cost Simulator' },
+  { id: 'ark-providers', path: '/ark/providers', name: 'Ark ASP Directory' },
+
+  // Frontier Product 3: Lightning HTLC/PTLC Congestion and Jamming Resilience Center
+  { id: 'lightning-resilience', path: '/lightning/resilience', name: 'Lightning Resilience' },
+  { id: 'lightning-resilience-htlcs', path: '/lightning/resilience/htlcs', name: 'Lightning HTLC Slots' },
+  { id: 'lightning-resilience-onion', path: '/lightning/resilience/onion-messages', name: 'Lightning Onion Messages' },
+  { id: 'lightning-resilience-channel-detail', path: '/lightning/resilience/channel/864190x304x2', name: 'Lightning Resilience Channel Detail' },
+  { id: 'lightning-resilience-node-detail', path: '/lightning/resilience/node/0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798', name: 'Lightning Resilience Node Detail' },
+  { id: 'lightning-resilience-simulate', path: '/lightning/resilience/simulate', name: 'Lightning Jamming Simulator' },
+  { id: 'lightning-resilience-mitigations', path: '/lightning/resilience/mitigations', name: 'Lightning Anti-Jamming Mitigations' },
+
+  // Frontier Product 4: Block Propagation, Compact-Block Reconstruction, and Fork-Race Observatory
+  { id: 'block-propagation', path: '/network/blocks', name: 'Block Propagation Overview' },
+  { id: 'block-propagation-live', path: '/network/blocks/live', name: 'Block Propagation Live' },
+  { id: 'block-propagation-block-detail', path: '/network/blocks/00000000000000000001a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3', name: 'Block Propagation Detail' },
+  { id: 'block-propagation-compact-blocks', path: '/network/compact-blocks', name: 'BIP152 Compact Blocks' },
+  { id: 'block-propagation-fork-races', path: '/network/fork-races', name: 'Fork Races Observatory' },
+  { id: 'block-propagation-race-detail', path: '/network/fork-races/race-863920', name: 'Fork Race Detail' },
+  { id: 'block-propagation-stale-tips', path: '/network/stale-tips', name: 'Stale Tips Observatory' },
+  { id: 'block-propagation-fibre', path: '/network/fibre', name: 'FIBRE Relay Network' },
+
+  // Frontier Product 5: Private Transaction Submission, Accelerator, and Ordering Evidence Center
+  { id: 'private-submission', path: '/mempool/submission', name: 'Submission Overview' },
+  { id: 'private-submission-broadcast', path: '/mempool/private-broadcast', name: 'Private Miner Broadcast' },
+  { id: 'private-submission-accelerators', path: '/mempool/accelerators', name: 'Accelerator Directory' },
+  { id: 'private-submission-accelerator-detail', path: '/mempool/accelerator/mempool-accelerate', name: 'Accelerator Provider Detail' },
+  { id: 'private-submission-receipts', path: '/mempool/receipts', name: 'Accelerator Receipts Verifier' },
+  { id: 'private-submission-ordering', path: '/intelligence/ordering', name: 'Ordering Evidence' },
+  { id: 'private-submission-ordering-tx', path: '/intelligence/ordering/tx/9f8e7d6c5b4a392817263544fedcba09876543211234567890abcdef12345678', name: 'Ordering Transaction Proof' },
+  { id: 'private-submission-ordering-block', path: '/intelligence/ordering/block/00000000000000000001a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3', name: 'Ordering Block Audit' },
+
+  // Frontier Product 6: OpenTimestamps and Bitcoin Proof-of-Publication Center
+  { id: 'opentimestamps', path: '/tools/timestamp', name: 'OpenTimestamps Overview' },
+  { id: 'opentimestamps-stamp', path: '/tools/timestamp/stamp', name: 'OpenTimestamps Stamp Document' },
+  { id: 'opentimestamps-verify', path: '/tools/timestamp/verify', name: 'OpenTimestamps Verify Proof' },
+  { id: 'opentimestamps-inspect', path: '/tools/timestamp/inspect', name: 'OpenTimestamps Inspector' },
+  { id: 'opentimestamps-git', path: '/tools/timestamp/git', name: 'OpenTimestamps Git Attestation' },
+  { id: 'opentimestamps-intelligence', path: '/intelligence/timestamps', name: 'OpenTimestamps Intelligence' },
+  { id: 'opentimestamps-calendars', path: '/intelligence/timestamps/calendars', name: 'OpenTimestamps Calendar Servers' },
+  { id: 'opentimestamps-batches', path: '/intelligence/timestamps/batches', name: 'OpenTimestamps Anchored Batches' },
+
+  // Frontier Product 7: Bitcoin Consensus Conformance, Differential Validation, and Formal Verification Center
+  { id: 'consensus-conformance', path: '/labs/consensus/conformance', name: 'Consensus Conformance Overview' },
+  { id: 'consensus-conformance-differential', path: '/labs/consensus/differential', name: 'Differential Fuzzing Matrix' },
+  { id: 'consensus-conformance-cases', path: '/labs/consensus/cases', name: 'Consensus Discrepancy Cases' },
+  { id: 'consensus-conformance-case-detail', path: '/labs/consensus/case/case-div-tapscript-sigops-01', name: 'Consensus Discrepancy Detail' },
+  { id: 'consensus-conformance-formal', path: '/labs/consensus/formal', name: 'Formal Verification Proofs' },
+  { id: 'consensus-conformance-specifications', path: '/labs/consensus/specifications', name: 'Consensus BIP Specifications' },
+  { id: 'consensus-conformance-corpora', path: '/labs/consensus/corpora', name: 'Fuzzing Corpora Catalog' },
+
+  // Frontier Product 8: Node Software Security, Advisory, and Upgrade Readiness Center
+  { id: 'node-security', path: '/node/security', name: 'Node Security Overview' },
+  { id: 'node-security-fleet', path: '/node/security/fleet', name: 'Node Fleet Security' },
+  { id: 'node-security-node-detail', path: '/node/security/node/node-prod-eu-01', name: 'Node Security Detail' },
+  { id: 'node-security-advisories', path: '/node/security/advisories', name: 'Security Advisories Database' },
+  { id: 'node-security-advisory-detail', path: '/node/security/advisory/ADV-2026-001', name: 'Security Advisory Detail' },
+  { id: 'node-security-releases', path: '/node/security/releases', name: 'Node Release Lifecycle' },
+  { id: 'node-security-artifacts', path: '/node/security/artifacts', name: 'Guix Reproducible Artifacts' },
+  { id: 'node-security-upgrade', path: '/node/security/upgrade', name: 'Node Upgrade Planner' },
+  { id: 'node-security-configuration', path: '/node/security/configuration', name: 'Hardened Config Generator' },
+
+  // Frontier Product 9: Collaborative Transaction and CoinJoin Protocol Verification Center
+  { id: 'collaborative-privacy', path: '/privacy/collaborative', name: 'Collaborative Privacy Overview' },
+  { id: 'collaborative-privacy-inspect', path: '/privacy/collaborative/inspect', name: 'Collaborative Tx Inspector' },
+  { id: 'collaborative-privacy-wabisabi', path: '/privacy/collaborative/wabisabi', name: 'WabiSabi Protocol Intelligence' },
+  { id: 'collaborative-privacy-joinmarket', path: '/privacy/collaborative/joinmarket', name: 'JoinMarket Protocol Intelligence' },
+  { id: 'collaborative-privacy-whirlpool', path: '/privacy/collaborative/whirlpool', name: 'Whirlpool Protocol Intelligence' },
+  { id: 'collaborative-privacy-coordinators', path: '/privacy/collaborative/coordinators', name: 'CoinJoin Coordinator Registry' },
+  { id: 'collaborative-privacy-round-detail', path: '/privacy/collaborative/round/rnd-ws-864198-01', name: 'CoinJoin Round Detail' },
+  { id: 'collaborative-privacy-fidelity-bonds', path: '/privacy/collaborative/fidelity-bonds', name: 'Fidelity Bonds Observatory' },
+
   // The chain switcher, open. Nothing here had ever opened a menu, so the one
   // surface that decides which chain a visitor is looking at was measured only
   // while closed. It was collapsed: the header's own `.dropdown-item` rule,

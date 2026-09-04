@@ -97,6 +97,15 @@ import multipartyRoutes from './api/intelligence/multiparty/multiparty.routes';
 import decentralizedMiningRoutes from './api/intelligence/mining-decentralized/mining-decentralized.routes';
 import paymentConnectivityRoutes from './api/intelligence/payment-connectivity/payment-connectivity.routes';
 import bitcoinStakingRoutes from './api/intelligence/bitcoin-staking/bitcoin-staking.routes';
+import swapsRoutes from './api/intelligence/swaps/swaps.routes';
+import arkVpackRoutes from './api/intelligence/ark-vpack/ark-vpack.routes';
+import lightningResilienceRoutes from './api/intelligence/lightning-resilience/lightning-resilience.routes';
+import blockPropagationRoutes from './api/intelligence/block-propagation/block-propagation.routes';
+import privateSubmissionRoutes from './api/intelligence/private-submission/private-submission.routes';
+import openTimestampsRoutes from './api/intelligence/opentimestamps/opentimestamps.routes';
+import consensusConformanceRoutes from './api/intelligence/consensus-conformance/consensus-conformance.routes';
+import nodeSecurityRoutes from './api/intelligence/node-security/node-security.routes';
+import collaborativePrivacyRoutes from './api/intelligence/collaborative-privacy/collaborative-privacy.routes';
 
 class Server {
   private wss: WebSocket.Server | undefined;
@@ -531,6 +540,15 @@ class Server {
     decentralizedMiningRoutes.initRoutes(this.app);
     paymentConnectivityRoutes.initRoutes(this.app);
     bitcoinStakingRoutes.initRoutes(this.app);
+    swapsRoutes.initRoutes(this.app);
+    arkVpackRoutes.initRoutes(this.app);
+    lightningResilienceRoutes.initRoutes(this.app);
+    blockPropagationRoutes.initRoutes(this.app);
+    privateSubmissionRoutes.initRoutes(this.app);
+    openTimestampsRoutes.initRoutes(this.app);
+    consensusConformanceRoutes.initRoutes(this.app);
+    nodeSecurityRoutes.initRoutes(this.app);
+    collaborativePrivacyRoutes.initRoutes(this.app);
   }
 
   healthCheck(): void {
