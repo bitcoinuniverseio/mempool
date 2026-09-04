@@ -178,6 +178,14 @@ export class DeveloperIdentityService {
     return Array.from(this.inMemoryKeys.values()).filter((k) => k.owner_id === ownerId);
   }
 
+  public getUserKeys(ownerId: string): DeveloperApiKey[] {
+    return this.listKeys(ownerId);
+  }
+
+  public revokeApiKey(keyId: string): boolean {
+    return this.revokeKey(keyId);
+  }
+
   public registerWebhook(
     ownerId: string,
     targetUrl: string,
@@ -208,6 +216,10 @@ export class DeveloperIdentityService {
 
   public listWebhooks(ownerId: string): WebhookConfig[] {
     return Array.from(this.inMemoryWebhooks.values()).filter((w) => w.owner_id === ownerId);
+  }
+
+  public getUserWebhooks(ownerId: string): WebhookConfig[] {
+    return this.listWebhooks(ownerId);
   }
 
   public signWebhookPayload(payload: string, secret: string, timestamp: number): string {

@@ -2018,6 +2018,8 @@ h2.anchor {
   grid-template-columns: auto auto;
   min-height: 38px;
   padding: 0 var(--u-space-2);
+  padding-right: calc(var(--u-space-2) * 2 + 0.5rem);
+  position: relative;
 
   // A thumb, not a cursor. 38px is comfortable to click and awkward to tap,
   // and this is one of the three controls in the header that a phone user
@@ -2027,11 +2029,23 @@ h2.anchor {
   @media (pointer: coarse), (max-width: 991.98px) {
     min-height: var(--u-touch-target);
     padding-inline: var(--u-space-3);
+    padding-right: calc(var(--u-space-3) * 2 + 0.5rem);
   }
 
   &:focus-visible {
     outline: 2px solid var(--u-focus-ring);
     outline-offset: 2px;
+  }
+
+  // The current state occupies the second grid row. Bootstrap's generated
+  // dropdown caret otherwise becomes a third grid item below it, which leaves
+  // a detached triangle below the control on narrow screens.
+  &::after {
+    margin-left: var(--u-space-2);
+    position: absolute;
+    right: var(--u-space-3);
+    top: 50%;
+    transform: translateY(-50%);
   }
 }
 
