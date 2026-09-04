@@ -88,6 +88,15 @@ import consensusRoutes from './api/intelligence/consensus/consensus.routes';
 import quantumRoutes from './api/intelligence/quantum/quantum.routes';
 import blockspaceRoutes from './api/intelligence/blockspace/blockspace.routes';
 import reservesRoutes from './api/intelligence/reserves/reserves.routes';
+import dlcRoutes from './api/intelligence/dlc/dlc.routes';
+import simplicityRoutes from './api/intelligence/simplicity/simplicity.routes';
+import offchainRoutes from './api/intelligence/offchain/offchain.routes';
+import compactFiltersRoutes from './api/intelligence/compact-filters/compact-filters.routes';
+import bootstrapRoutes from './api/intelligence/bootstrap/bootstrap.routes';
+import multipartyRoutes from './api/intelligence/multiparty/multiparty.routes';
+import decentralizedMiningRoutes from './api/intelligence/mining-decentralized/mining-decentralized.routes';
+import paymentConnectivityRoutes from './api/intelligence/payment-connectivity/payment-connectivity.routes';
+import bitcoinStakingRoutes from './api/intelligence/bitcoin-staking/bitcoin-staking.routes';
 
 class Server {
   private wss: WebSocket.Server | undefined;
@@ -513,6 +522,15 @@ class Server {
     quantumRoutes.initRoutes(this.app);
     blockspaceRoutes.initRoutes(this.app);
     reservesRoutes.initRoutes(this.app);
+    dlcRoutes.initRoutes(this.app);
+    simplicityRoutes.initRoutes(this.app);
+    offchainRoutes.initRoutes(this.app);
+    compactFiltersRoutes.initRoutes(this.app);
+    bootstrapRoutes.initRoutes(this.app);
+    multipartyRoutes.initRoutes(this.app);
+    decentralizedMiningRoutes.initRoutes(this.app);
+    paymentConnectivityRoutes.initRoutes(this.app);
+    bitcoinStakingRoutes.initRoutes(this.app);
   }
 
   healthCheck(): void {
