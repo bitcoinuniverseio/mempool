@@ -149,6 +149,23 @@
 }
 
 .script-trace-table {
+  table-layout: fixed;
+
+  th:first-child,
+  td:first-child {
+    width: 4rem;
+  }
+
+  th:nth-child(2),
+  td:nth-child(2) {
+    width: 24%;
+  }
+
+  td {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
   @media (max-width: 575.98px) {
     thead {
       display: none;
