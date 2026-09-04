@@ -79,35 +79,51 @@
        becomes a thumb-reachable bar rather than a squeezed desktop navbar. -->
   <nav class="primary-nav" i18n-aria-label="master-page.primary-navigation" aria-label="Primary">
     <ul #navList class="nav-list {{ network.val }}">
-      <li class="nav-item" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" id="btn-home">
+      <li class="nav-item mobile-primary" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" id="btn-home">
         <a class="nav-link mobile-primary" [routerLink]="chainRoute('dashboard')" (click)="collapse()">
           <span class="nav-icon"><app-svg-images name="nav-tachometer" width="21.59" height="100%"></app-svg-images></span>
           <span class="nav-label" i18n="master-page.nav-dashboard">Dashboard</span>
         </a>
       </li>
-      <li class="nav-item mining" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" id="btn-pools" *ngIf="activeChain !== 'bitcoin' || stateService.env.MINING_DASHBOARD">
+      <li class="nav-item mining mobile-primary" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" id="btn-pools" *ngIf="activeChain !== 'bitcoin' || stateService.env.MINING_DASHBOARD">
         <a class="nav-link mobile-primary" [routerLink]="activeChain === 'bitcoin' ? ('/mining' | relativeUrl) : chainRoute('mining')" (click)="collapse()">
           <span class="nav-icon"><app-svg-images name="nav-pickaxe" width="21.59" height="100%"></app-svg-images></span>
           <span class="nav-label" i18n="master-page.nav-mining">Mining</span>
         </a>
       </li>
-      <li class="nav-item" routerLinkActive="active" id="btn-blocks" *ngIf="activeChain === 'bitcoin' && !stateService.env.MINING_DASHBOARD">
+      <li class="nav-item mobile-primary" routerLinkActive="active" id="btn-blocks" *ngIf="activeChain === 'bitcoin' && !stateService.env.MINING_DASHBOARD">
         <a class="nav-link mobile-primary" [routerLink]="['/blocks' | relativeUrl]" (click)="collapse()">
           <span class="nav-icon"><app-svg-images name="nav-cubes" width="21.59" height="100%"></app-svg-images></span>
           <span class="nav-label" i18n="master-page.nav-blocks">Blocks</span>
         </a>
       </li>
-      <li class="nav-item" routerLinkActive="active" id="btn-universe-pulse" *ngIf="network.val === ''">
+      <li class="nav-item mobile-primary" routerLinkActive="active" id="btn-universe-pulse" *ngIf="network.val === ''">
         <a class="nav-link mobile-primary" [routerLink]="chainRoute('mempool')" (click)="collapse()">
           <span class="nav-icon"><app-svg-images name="nav-universe-pulse" width="21.59" height="100%"></app-svg-images></span>
           <span class="nav-label" i18n="master-page.nav-pulse">Mempool</span>
         </a>
       </li>
-      <li class="nav-item" routerLinkActive="active" id="btn-universe-protocols" *ngIf="network.val === ''">
+      <li class="nav-item mobile-primary" routerLinkActive="active" id="btn-universe-protocols" *ngIf="network.val === ''">
         <a class="nav-link mobile-primary" [routerLink]="chainRoute('protocols')" (click)="collapse()">
           <span class="nav-icon"><app-svg-images name="nav-universe-protocols" width="21.59" height="100%"></app-svg-images></span>
           <span class="nav-label" i18n="master-page.nav-protocols">Protocols</span>
         </a>
+      </li>
+      <li class="nav-item nav-item-more" routerLinkActive="active" ngbDropdown placement="top-end">
+        <button type="button" class="nav-link" ngbDropdownToggle aria-label="More sections">
+          <span class="nav-icon"><app-svg-images name="nav-cubes" width="21.59" height="100%"></app-svg-images></span>
+          <span class="nav-label">More</span>
+        </button>
+        <div ngbDropdownMenu class="mobile-nav-more-menu">
+          <a ngbDropdownItem *ngIf="network.val === ''" routerLink="/network/propagation" (click)="collapse()">Network</a>
+          <a ngbDropdownItem *ngIf="network.val === ''" routerLink="/data" (click)="collapse()">Data</a>
+          <a ngbDropdownItem *ngIf="network.val === ''" routerLink="/tools/script" (click)="collapse()">Tools</a>
+          <a ngbDropdownItem *ngIf="network.val === ''" routerLink="/l2" (click)="collapse()">Labs</a>
+          <a ngbDropdownItem *ngIf="network.val === ''" routerLink="/portfolio" (click)="collapse()">Portfolio</a>
+          <a ngbDropdownItem *ngIf="activeChain === 'bitcoin' && stateService.networkSupportsLightning()" [routerLink]="['/lightning' | relativeUrl]" (click)="collapse()">Lightning</a>
+          <a ngbDropdownItem [routerLink]="activeChain === 'bitcoin' ? ('/graphs' | relativeUrl) : chainRoute('graphs')" (click)="collapse()" i18n="master-page.nav-graphs">Charts</a>
+          <a ngbDropdownItem [routerLink]="activeChain === 'bitcoin' ? ('/docs' | relativeUrl) : chainRoute('docs')" (click)="collapse()" i18n="master-page.nav-docs">Docs</a>
+        </div>
       </li>
       <li class="nav-item" routerLinkActive="active" id="btn-universe-network" *ngIf="network.val === ''">
         <a class="nav-link" [routerLink]="['/network/propagation']" (click)="collapse()">
