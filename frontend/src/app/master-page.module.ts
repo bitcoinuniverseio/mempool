@@ -297,6 +297,81 @@ const routes: Routes = [
         loadComponent: () => import('@app/universe/payment-studio/payment-studio.component').then(m => m.PaymentStudioComponent),
         data: { networks: ['bitcoin'] },
       },
+      // Intelligence Platform: Tools
+      {
+        path: 'tools/policy-lab',
+        loadComponent: () => import('@app/universe/intelligence-platform/policy-lab.component').then(m => m.PolicyLabComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'tools/workbench',
+        loadComponent: () => import('@app/universe/intelligence-platform/script-workbench.component').then(m => m.ScriptWorkbenchComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'tools/verify-proof',
+        loadComponent: () => import('@app/universe/intelligence-platform/verify-proof.component').then(m => m.VerifyProofComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      // Intelligence Platform: Intelligence
+      {
+        path: 'intelligence/relay',
+        loadComponent: () => import('@app/universe/intelligence-platform/relay-observatory.component').then(m => m.RelayObservatoryComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'intelligence/time-machine',
+        loadComponent: () => import('@app/universe/intelligence-platform/time-machine.component').then(m => m.TimeMachineComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'intelligence/mining-templates',
+        loadComponent: () => import('@app/universe/intelligence-platform/mining-templates.component').then(m => m.MiningTemplatesComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'intelligence/utxo-set',
+        loadComponent: () => import('@app/universe/intelligence-platform/utxo-intelligence.component').then(m => m.UtxoIntelligenceComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'intelligence/transaction-graph',
+        loadComponent: () => import('@app/universe/intelligence-platform/transaction-graph.component').then(m => m.TransactionGraphComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'intelligence/incidents',
+        loadComponent: () => import('@app/universe/intelligence-platform/incident-center.component').then(m => m.IncidentCenterComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'intelligence/knowledge',
+        loadComponent: () => import('@app/universe/intelligence-platform/knowledge-registry.component').then(m => m.KnowledgeRegistryComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      // Intelligence Platform: Developers
+      {
+        path: 'developers',
+        loadComponent: () => import('@app/universe/intelligence-platform/developer-platform.component').then(m => m.DeveloperPlatformComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'developers/query-studio',
+        loadComponent: () => import('@app/universe/intelligence-platform/query-studio.component').then(m => m.QueryStudioComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      // Intelligence Platform: User
+      {
+        path: 'user/watchlists',
+        loadComponent: () => import('@app/universe/intelligence-platform/watchlists.component').then(m => m.WatchlistsComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      // Intelligence Platform: Explore
+      {
+        path: 'explore/protocols',
+        loadComponent: () => import('@app/universe/intelligence-platform/protocol-explorer.component').then(m => m.ProtocolExplorerComponent),
+        data: { networks: ['bitcoin'] },
+      },
       {
         path: 'utxo-set',
         loadComponent: () => import('@app/universe/utxo-set/utxo-set.component').then(m => m.UtxoSetComponent),

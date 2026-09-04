@@ -721,6 +721,17 @@ class BitcoinRoutes {
       sendAddressError(req, res, 'address-backend-unavailable', 'Address summaries need the Esplora index.');
       return;
     }
+    if (!ADDRESS_REGEX.test(req.params.address)) {
+      sendAddressError(req, res, 'invalid-address');
+      return;
+    }
+
+    try {
+      const summary = await bitcoinApi.$getAddressTransactionSummary(req.params.address);
+      res.json(summary);
+    } catch (e) {
+      sendAddressError(req, res, classifyAddressError(e));
+    }
   }
 
   private async getScriptHash(req: Request, res: Response) {

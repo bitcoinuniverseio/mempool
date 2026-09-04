@@ -1,59 +1,104 @@
 <div class="container-xl chain-page" *ngIf="vm$ | async as vm">
+  <header class="title-block">
+    <span
+      class="chain-mark"
+      [ngClass]="'chain-mark-' + chain"
+      aria-hidden="true"
+    ></span>
+    <h1 i18n="universe.dash.heading">{{ profile.name }} dashboard</h1>
+  </header>
 
-  <!-- The block timeline is the dashboard's first content, matching Bitcoin. -->
+  <!-- The trust anchor keeps its place, compact, above everything. -->
+  <section
+    class="status-rail"
+    aria-label="Chain status"
+    i18n-aria-label="universe.dash.rail-label"
+  >
+    <div class="reading" *ngFor="let reading of vm.rail; trackBy: trackById">
+      <span class="reading-label">{{ reading.label }}</span>
+      <span
+        class="universe-chip"
+        [ngClass]="'state-' + reading.tone"
+        [attr.title]="reading.exact"
+        >{{ reading.value }}</span
+      >
+    </div>
+  </section>
+
+  <!-- Blocks are the first dashboard content. Status stays above them while a
+       degraded-chain explanation remains supporting context below. -->
   <section class="panel timeline-panel" aria-labelledby="dash-timeline-heading">
-    <h2 id="dash-timeline-heading" class="visually-hidden" i18n="universe.dash.timeline-title">Block timeline</h2>
+    <h2
+      id="dash-timeline-heading"
+      class="visually-hidden"
+      i18n="universe.dash.timeline-title"
+    >
+      Block timeline
+    </h2>
     <app-chain-timeline
       [chain]="chain"
       [ticker]="profile.ticker"
       [reading]="vm.timeline"
       [loading]="!vm.timeline && !vm.viewError"
     ></app-chain-timeline>
-    <p class="notice empty" *ngIf="!vm.timeline && vm.viewError" i18n="universe.dash.timeline-empty">
+    <p
+      class="notice empty"
+      *ngIf="!vm.timeline && vm.viewError"
+      i18n="universe.dash.timeline-empty"
+    >
       No timeline can be drawn until the block and pending sources answer.
     </p>
   </section>
 
-  <header class="title-block">
-    <span class="chain-mark" [ngClass]="'chain-mark-' + chain" aria-hidden="true"></span>
-    <h1 i18n="universe.dash.heading">{{ profile.name }} dashboard</h1>
-  </header>
-
-  <!-- The trust anchor keeps its place, compact, above everything. -->
-  <section class="status-rail" aria-label="Chain status" i18n-aria-label="universe.dash.rail-label">
-    <div class="reading" *ngFor="let reading of vm.rail; trackBy: trackById">
-      <span class="reading-label">{{ reading.label }}</span>
-      <span class="universe-chip" [ngClass]="'state-' + reading.tone" [attr.title]="reading.exact">{{ reading.value }}</span>
-    </div>
-  </section>
 
   <!-- A fault is an alert beside the page, never the page itself. -->
-  <section class="not-ready" *ngIf="vm.notReady as notReady" role="alert"
-           aria-labelledby="dash-not-ready-heading">
-    <h2 id="dash-not-ready-heading" i18n="universe.dash.not-ready-title">Why {{ profile.name }} is not ready</h2>
+  <section
+    class="not-ready"
+    *ngIf="vm.notReady as notReady"
+    role="alert"
+    aria-labelledby="dash-not-ready-heading"
+  >
+    <h2 id="dash-not-ready-heading" i18n="universe.dash.not-ready-title">
+      Why {{ profile.name }} is not ready
+    </h2>
     <ul>
       <li *ngFor="let reason of notReady">{{ reason.text }}</li>
     </ul>
   </section>
 
-  <p class="notice failure" role="alert" *ngIf="vm.viewError && !vm.timeline" i18n="universe.dash.view-error">
-    The {{ profile.name }} dashboard data cannot be read right now. Each panel below says what it is missing; nothing here is stale data presented as current.
+  <p
+    class="notice failure"
+    role="alert"
+    *ngIf="vm.viewError && !vm.timeline"
+    i18n="universe.dash.view-error"
+  >
+    The {{ profile.name }} dashboard data cannot be read right now. Each panel
+    below says what it is missing; nothing here is stale data presented as
+    current.
   </p>
 
   <div class="dash-grid">
-
     <!-- Transaction fees -->
     <section class="panel" aria-labelledby="dash-fees-heading">
-      <h2 id="dash-fees-heading" i18n="universe.dash.fees-title">Transaction fees</h2>
+      <h2 id="dash-fees-heading" i18n="universe.dash.fees-title">
+        Transaction fees
+      </h2>
       <ng-container *ngIf="vm.fees; else feesUnavailable">
         <ng-container *ngIf="vm.feeLevels.length">
           <p class="panel-lede" i18n="universe.dash.fees-lede-doge">
-            What it costs to get into the next few blocks, in {{ profile.ticker }} per kilobyte.
+            What it costs to get into the next few blocks, in
+            {{ profile.ticker }} per kilobyte.
           </p>
           <div class="figure-row fee-levels">
-            <div class="figure" *ngFor="let level of vm.feeLevels; trackBy: trackByIndex">
+            <div
+              class="figure"
+              *ngFor="let level of vm.feeLevels; trackBy: trackByIndex"
+            >
               <span class="figure-label">{{ level.label }}</span>
-              <span class="figure-value" [attr.title]="level.amount.exact + ' koinu/kB, ' + level.basis">
+              <span
+                class="figure-value"
+                [attr.title]="level.amount.exact + ' koinu/kB, ' + level.basis"
+              >
                 {{ level.amount.display }}
                 <span class="figure-unit">{{ profile.ticker }}/kB</span>
               </span>
@@ -62,42 +107,64 @@
         </ng-container>
         <ng-container *ngIf="vm.zcashFee as zf">
           <p class="panel-lede" i18n="universe.dash.fees-lede-zcash">
-            Zcash fees follow ZIP-317: a transaction pays for its logical actions, not its byte size.
+            Zcash fees follow ZIP-317: a transaction pays for its logical
+            actions, not its byte size.
           </p>
           <div class="figure-row fee-levels">
             <div class="figure" *ngIf="zf.typical">
-              <span class="figure-label" i18n="universe.dash.fee-typical">Typical transaction</span>
-              <span class="figure-value" [attr.title]="zf.typical.exact + ' zatoshi'">
+              <span class="figure-label" i18n="universe.dash.fee-typical"
+                >Typical transaction</span
+              >
+              <span
+                class="figure-value"
+                [attr.title]="zf.typical.exact + ' zatoshi'"
+              >
                 {{ zf.typical.display }}
                 <span class="figure-unit">{{ profile.ticker }}</span>
               </span>
             </div>
             <div class="figure" *ngIf="zf.marginal">
-              <span class="figure-label" i18n="universe.dash.fee-marginal">Per logical action</span>
-              <span class="figure-value" [attr.title]="zf.marginal.exact + ' zatoshi per action'">
+              <span class="figure-label" i18n="universe.dash.fee-marginal"
+                >Per logical action</span
+              >
+              <span
+                class="figure-value"
+                [attr.title]="zf.marginal.exact + ' zatoshi per action'"
+              >
                 {{ zf.marginal.display }}
-                <span class="figure-unit" i18n="universe.dash.fee-zat-action">zatoshi</span>
+                <span class="figure-unit" i18n="universe.dash.fee-zat-action"
+                  >zatoshi</span
+                >
               </span>
             </div>
             <div class="figure" *ngIf="zf.paidSharePercent !== null">
-              <span class="figure-label" i18n="universe.dash.fee-paid-share">Pending set paying it</span>
-              <span class="figure-value">{{ zf.paidSharePercent }}<span class="figure-unit">%</span></span>
+              <span class="figure-label" i18n="universe.dash.fee-paid-share"
+                >Pending set paying it</span
+              >
+              <span class="figure-value"
+                >{{ zf.paidSharePercent
+                }}<span class="figure-unit">%</span></span
+              >
             </div>
           </div>
         </ng-container>
       </ng-container>
       <ng-template #feesUnavailable>
         <p class="notice empty" i18n="universe.dash.fees-unavailable">
-          No fee guidance can be given right now: the sources that would back it are not answering.
+          No fee guidance can be given right now: the sources that would back it
+          are not answering.
         </p>
       </ng-template>
     </section>
 
     <!-- Universe Lens -->
     <section class="panel" aria-labelledby="dash-lens-heading">
-      <h2 id="dash-lens-heading" i18n="universe.dash.lens-title">Universe Lens</h2>
+      <h2 id="dash-lens-heading" i18n="universe.dash.lens-title">
+        Universe Lens
+      </h2>
       <p class="panel-lede" i18n="universe.dash.lens-lede">
-        Every rectangle is one transaction waiting to be mined, sized by the space it takes. Choose a lens to pick out a kind of activity.
+        Every rectangle is one transaction waiting to be mined, sized by the
+        space it takes. Choose a lens to pick out a kind of activity.
       </p>
       <app-chain-lens
         [chain]="chain"
@@ -115,68 +182,115 @@
         <dl class="facts">
           <div *ngIf="mining.difficulty">
             <dt i18n="universe.dash.mining-difficulty">Difficulty</dt>
-            <dd [attr.title]="mining.difficulty.exact">{{ mining.difficulty.display }}</dd>
+            <dd [attr.title]="mining.difficulty.exact">
+              {{ mining.difficulty.display }}
+            </dd>
           </div>
           <div *ngIf="mining.networkRate">
             <dt i18n="universe.dash.mining-rate">Network rate</dt>
-            <dd [attr.title]="mining.networkRate.exact">{{ mining.networkRate.display }}</dd>
+            <dd [attr.title]="mining.networkRate.exact">
+              {{ mining.networkRate.display }}
+            </dd>
           </div>
           <div>
             <dt i18n="universe.dash.mining-algorithm">Algorithm</dt>
-            <dd>{{ mining.algorithm }}<span class="secondary" *ngIf="mining.mergedMining" i18n="universe.dash.mining-merged"> merged mined</span></dd>
+            <dd>
+              {{ mining.algorithm
+              }}<span
+                class="secondary"
+                *ngIf="mining.mergedMining"
+                i18n="universe.dash.mining-merged"
+              >
+                merged mined</span
+              >
+            </dd>
           </div>
           <div *ngIf="mining.target">
             <dt i18n="universe.dash.mining-target">Target block time</dt>
-            <dd [attr.title]="mining.target.exact + ' seconds'">{{ mining.target.display }}</dd>
+            <dd [attr.title]="mining.target.exact + ' seconds'">
+              {{ mining.target.display }}
+            </dd>
           </div>
           <div *ngIf="mining.observed">
             <dt i18n="universe.dash.mining-observed">Observed recently</dt>
-            <dd [attr.title]="mining.observed.exact + ' seconds'">{{ mining.observed.display }}</dd>
+            <dd [attr.title]="mining.observed.exact + ' seconds'">
+              {{ mining.observed.display }}
+            </dd>
           </div>
           <div *ngIf="mining.subsidy">
             <dt i18n="universe.dash.mining-subsidy">Block subsidy</dt>
-            <dd [attr.title]="mining.subsidy.exact">{{ mining.subsidy.display }} {{ profile.ticker }}</dd>
+            <dd [attr.title]="mining.subsidy.exact">
+              {{ mining.subsidy.display }} {{ profile.ticker }}
+            </dd>
           </div>
           <div *ngIf="mining.meanFees">
             <dt i18n="universe.dash.mining-fees">Mean fees per block</dt>
-            <dd [attr.title]="mining.meanFees.exact">{{ mining.meanFees.display }} {{ profile.ticker }}</dd>
+            <dd [attr.title]="mining.meanFees.exact">
+              {{ mining.meanFees.display }} {{ profile.ticker }}
+            </dd>
           </div>
         </dl>
         <p class="panel-link">
-          <a [routerLink]="['/', chain, 'mining']" i18n="universe.dash.mining-link">Open the mining dashboard</a>
+          <a
+            [routerLink]="['/', chain, 'mining']"
+            i18n="universe.dash.mining-link"
+            >Open the mining dashboard</a
+          >
         </p>
       </ng-container>
       <ng-template #miningUnavailable>
         <p class="notice empty" i18n="universe.dash.mining-unavailable">
-          Mining readings are not available right now. The node that would report them is not answering.
+          Mining readings are not available right now. The node that would
+          report them is not answering.
         </p>
       </ng-template>
     </section>
 
     <!-- Waiting to confirm -->
     <section class="panel" aria-labelledby="dash-mempool-heading">
-      <h2 id="dash-mempool-heading" i18n="universe.dash.mempool-title">Waiting to confirm</h2>
+      <h2 id="dash-mempool-heading" i18n="universe.dash.mempool-title">
+        Waiting to confirm
+      </h2>
       <ng-container *ngIf="vm.mempool as pool; else mempoolUnavailable">
         <div class="figure-row">
           <div class="figure" *ngIf="pool.txCount">
-            <span class="figure-label" i18n="universe.dash.mempool-count">Transactions</span>
-            <span class="figure-value" [attr.title]="pool.txCount.exact">{{ pool.txCount.display }}</span>
+            <span class="figure-label" i18n="universe.dash.mempool-count"
+              >Transactions</span
+            >
+            <span class="figure-value" [attr.title]="pool.txCount.exact">{{
+              pool.txCount.display
+            }}</span>
           </div>
           <div class="figure" *ngIf="pool.totalSize">
-            <span class="figure-label" i18n="universe.dash.mempool-size">Bytes waiting</span>
-            <span class="figure-value" [attr.title]="pool.totalSize.exact">{{ pool.totalSize.display }}</span>
+            <span class="figure-label" i18n="universe.dash.mempool-size"
+              >Bytes waiting</span
+            >
+            <span class="figure-value" [attr.title]="pool.totalSize.exact">{{
+              pool.totalSize.display
+            }}</span>
           </div>
           <div class="figure" *ngIf="pool.totalFees">
-            <span class="figure-label" i18n="universe.dash.mempool-fees">Fees waiting</span>
-            <span class="figure-value" [attr.title]="pool.totalFees.exact">{{ pool.totalFees.display }} <span class="figure-unit">{{ profile.ticker }}</span></span>
+            <span class="figure-label" i18n="universe.dash.mempool-fees"
+              >Fees waiting</span
+            >
+            <span class="figure-value" [attr.title]="pool.totalFees.exact"
+              >{{ pool.totalFees.display }}
+              <span class="figure-unit">{{ profile.ticker }}</span></span
+            >
           </div>
           <div class="figure" *ngIf="pool.arrivalRate">
-            <span class="figure-label" i18n="universe.dash.mempool-rate">Arriving per second</span>
+            <span class="figure-label" i18n="universe.dash.mempool-rate"
+              >Arriving per second</span
+            >
             <span class="figure-value">{{ pool.arrivalRate }}</span>
           </div>
         </div>
         <p class="panel-link">
-          <a [routerLink]="['/', chain, 'mempool']" i18n="universe.dash.mempool-link">Open pending transactions</a>
+          <a
+            [routerLink]="['/', chain, 'mempool']"
+            i18n="universe.dash.mempool-link"
+            >Open pending transactions</a
+          >
         </p>
       </ng-container>
       <ng-template #mempoolUnavailable>
@@ -188,32 +302,67 @@
 
     <!-- Recent blocks -->
     <section class="panel" aria-labelledby="dash-blocks-heading">
-      <h2 id="dash-blocks-heading" i18n="universe.dash.blocks-title">Recent blocks</h2>
-      <div class="table-wrap" *ngIf="vm.recentBlocks.length; else blocksUnavailable"
-           tabindex="0" role="region" aria-labelledby="dash-blocks-heading">
+      <h2 id="dash-blocks-heading" i18n="universe.dash.blocks-title">
+        Recent blocks
+      </h2>
+      <div
+        class="table-wrap"
+        *ngIf="vm.recentBlocks.length; else blocksUnavailable"
+        tabindex="0"
+        role="region"
+        aria-labelledby="dash-blocks-heading"
+      >
         <table>
           <thead>
             <tr>
               <th scope="col" i18n="universe.dash.col-height">Height</th>
-              <th scope="col" class="numeric" i18n="universe.dash.col-txs">Transactions</th>
-              <th scope="col" class="numeric" i18n="universe.dash.col-fees">Fees</th>
+              <th scope="col" class="numeric" i18n="universe.dash.col-txs">
+                Transactions
+              </th>
+              <th scope="col" class="numeric" i18n="universe.dash.col-fees">
+                Fees
+              </th>
               <th scope="col" i18n="universe.dash.col-miner">Mined by</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let block of vm.recentBlocks; trackBy: trackByHash">
               <td>
-                <a class="identifier" [routerLink]="['/', chain, 'block', block.hash]"
-                   *ngIf="heightFormatted(block) as height" [attr.title]="block.hash">{{ height.display }}</a>
+                <a
+                  class="identifier"
+                  [routerLink]="['/', chain, 'block', block.hash]"
+                  *ngIf="heightFormatted(block) as height"
+                  [attr.title]="block.hash"
+                  >{{ height.display }}</a
+                >
               </td>
-              <td class="numeric" *ngIf="txCountFormatted(block) as count" [attr.title]="count.exact">{{ count.display }}</td>
+              <td
+                class="numeric"
+                *ngIf="txCountFormatted(block) as count"
+                [attr.title]="count.exact"
+              >
+                {{ count.display }}
+              </td>
               <td class="numeric" [class.secondary]="!feesFormatted(block)">
-                <ng-container *ngIf="feesFormatted(block) as fees; else feesUnknown">{{ fees.display }} {{ profile.ticker }}</ng-container>
-                <ng-template #feesUnknown><ng-container i18n="universe.dash.fees-unknown">not derived</ng-container></ng-template>
+                <ng-container
+                  *ngIf="feesFormatted(block) as fees; else feesUnknown"
+                  >{{ fees.display }} {{ profile.ticker }}</ng-container
+                >
+                <ng-template #feesUnknown
+                  ><ng-container i18n="universe.dash.fees-unknown"
+                    >not derived</ng-container
+                  ></ng-template
+                >
               </td>
               <td [class.secondary]="!block.miner.name">
-                <ng-container *ngIf="block.miner.name; else minerUnknown">{{ block.miner.name }}</ng-container>
-                <ng-template #minerUnknown><ng-container i18n="universe.dash.miner-unknown">Unknown</ng-container></ng-template>
+                <ng-container *ngIf="block.miner.name; else minerUnknown">{{
+                  block.miner.name
+                }}</ng-container>
+                <ng-template #minerUnknown
+                  ><ng-container i18n="universe.dash.miner-unknown"
+                    >Unknown</ng-container
+                  ></ng-template
+                >
               </td>
             </tr>
           </tbody>
@@ -221,31 +370,56 @@
       </div>
       <ng-template #blocksUnavailable>
         <p class="notice empty" i18n="universe.dash.blocks-unavailable">
-          No recent blocks are stored yet. They appear as the collector catches up.
+          No recent blocks are stored yet. They appear as the collector catches
+          up.
         </p>
       </ng-template>
     </section>
 
     <!-- Arriving now -->
     <section class="panel" aria-labelledby="dash-recent-heading">
-      <h2 id="dash-recent-heading" i18n="universe.dash.recent-title">Arriving now</h2>
-      <div class="table-wrap" *ngIf="vm.recent.length; else recentUnavailable"
-           tabindex="0" role="region" aria-labelledby="dash-recent-heading">
+      <h2 id="dash-recent-heading" i18n="universe.dash.recent-title">
+        Arriving now
+      </h2>
+      <div
+        class="table-wrap"
+        *ngIf="vm.recent.length; else recentUnavailable"
+        tabindex="0"
+        role="region"
+        aria-labelledby="dash-recent-heading"
+      >
         <table>
           <thead>
             <tr>
               <th scope="col" i18n="universe.dash.col-tx">Transaction</th>
-              <th scope="col" class="numeric" i18n="universe.dash.col-size">Bytes</th>
-              <th scope="col" class="numeric" i18n="universe.dash.col-fee">Fee</th>
+              <th scope="col" class="numeric" i18n="universe.dash.col-size">
+                Bytes
+              </th>
+              <th scope="col" class="numeric" i18n="universe.dash.col-fee">
+                Fee
+              </th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let item of vm.recent; trackBy: trackByTxid">
-              <td><a class="identifier" [routerLink]="['/', chain, 'tx', item.txid]">{{ item.txid.slice(0, 20) }}&#8230;</a></td>
+              <td>
+                <a
+                  class="identifier"
+                  [routerLink]="['/', chain, 'tx', item.txid]"
+                  >{{ item.txid.slice(0, 20) }}&#8230;</a
+                >
+              </td>
               <td class="numeric">{{ item.sizeBytes }}</td>
               <td class="numeric" [class.secondary]="!feeFormatted(item)">
-                <ng-container *ngIf="feeFormatted(item) as fee; else recentNoFee">{{ fee.display }} {{ profile.ticker }}</ng-container>
-                <ng-template #recentNoFee><ng-container i18n="universe.dash.fee-not-reported">not reported</ng-container></ng-template>
+                <ng-container
+                  *ngIf="feeFormatted(item) as fee; else recentNoFee"
+                  >{{ fee.display }} {{ profile.ticker }}</ng-container
+                >
+                <ng-template #recentNoFee
+                  ><ng-container i18n="universe.dash.fee-not-reported"
+                    >not reported</ng-container
+                  ></ng-template
+                >
               </td>
             </tr>
           </tbody>
@@ -260,13 +434,25 @@
 
     <!-- Protocol activity -->
     <section class="panel" aria-labelledby="dash-protocols-heading">
-      <h2 id="dash-protocols-heading" i18n="universe.dash.protocols-title">Protocol indexers</h2>
-      <ul class="protocol-strip-list" *ngIf="vm.protocols.length; else protocolsUnavailable">
+      <h2 id="dash-protocols-heading" i18n="universe.dash.protocols-title">
+        Protocol indexers
+      </h2>
+      <ul
+        class="protocol-strip-list"
+        *ngIf="vm.protocols.length; else protocolsUnavailable"
+      >
         <li *ngFor="let protocol of vm.protocols; trackBy: trackByProtocol">
-          <a *ngIf="protocol.routeId; else protocolNoPage"
-             [routerLink]="['/', chain, 'protocols', protocol.routeId]">{{ protocol.label }}</a>
-          <ng-template #protocolNoPage><span>{{ protocol.label }}</span></ng-template>
-          <span class="universe-chip" [ngClass]="'state-' + protocol.tone">{{ protocol.stateLabel }}</span>
+          <a
+            *ngIf="protocol.routeId; else protocolNoPage"
+            [routerLink]="['/', chain, 'protocols', protocol.routeId]"
+            >{{ protocol.label }}</a
+          >
+          <ng-template #protocolNoPage
+            ><span>{{ protocol.label }}</span></ng-template
+          >
+          <span class="universe-chip" [ngClass]="'state-' + protocol.tone">{{
+            protocol.stateLabel
+          }}</span>
         </li>
       </ul>
       <ng-template #protocolsUnavailable>
@@ -275,24 +461,37 @@
         </p>
       </ng-template>
       <p class="panel-link">
-        <a [routerLink]="['/', chain, 'protocols']" i18n="universe.dash.protocols-link">Open protocols</a>
+        <a
+          [routerLink]="['/', chain, 'protocols']"
+          i18n="universe.dash.protocols-link"
+          >Open protocols</a
+        >
       </p>
     </section>
-
   </div>
 
   <!-- Domain health, one row per subsystem, so a protocol outage never
        reads as a chain outage. -->
-  <section class="panel subsystems" *ngIf="vm.subsystems.length" aria-labelledby="dash-subsystems-heading">
-    <h2 id="dash-subsystems-heading" i18n="universe.dash.subsystems-title">Subsystem health</h2>
+  <section
+    class="panel subsystems"
+    *ngIf="vm.subsystems.length"
+    aria-labelledby="dash-subsystems-heading"
+  >
+    <h2 id="dash-subsystems-heading" i18n="universe.dash.subsystems-title">
+      Subsystem health
+    </h2>
     <ul class="subsystem-list">
       <li *ngFor="let subsystem of vm.subsystems; trackBy: trackById">
         <span class="subsystem-label">{{ subsystemLabel(subsystem.id) }}</span>
-        <span class="universe-chip" [ngClass]="{
-          'state-proven': subsystem.state === 'ready',
-          'state-partial': subsystem.state === 'degraded',
-          'state-unavailable': subsystem.state === 'unavailable'
-        }">{{ subsystem.state }}</span>
+        <span
+          class="universe-chip"
+          [ngClass]="{
+            'state-proven': subsystem.state === 'ready',
+            'state-partial': subsystem.state === 'degraded',
+            'state-unavailable': subsystem.state === 'unavailable',
+          }"
+          >{{ subsystem.state }}</span
+        >
       </li>
     </ul>
   </section>
@@ -300,39 +499,57 @@
   <!-- The capability report, kept whole, filed as the drawer it always
        should have been. -->
   <details class="panel status-drawer">
-    <summary i18n="universe.dash.drawer-summary">What this explorer can answer about {{ profile.name }}</summary>
+    <summary i18n="universe.dash.drawer-summary">
+      What this explorer can answer about {{ profile.name }}
+    </summary>
     <div class="drawer-body">
       <h3 i18n="universe.dash.drawer-reads">Questions this chain can answer</h3>
       <ul class="read-grid">
-        <li *ngFor="let read of vm.reads; trackBy: trackById" [class.off]="read.state !== 'offered'">
+        <li
+          *ngFor="let read of vm.reads; trackBy: trackById"
+          [class.off]="read.state !== 'offered'"
+        >
           <span class="read-label">{{ read.label }}</span>
-          <span class="universe-chip" [ngClass]="'state-' + read.tone">{{ read.stateLabel }}</span>
+          <span class="universe-chip" [ngClass]="'state-' + read.tone">{{
+            read.stateLabel
+          }}</span>
         </li>
       </ul>
-      <h3 i18n="universe.dash.drawer-coverage">How much history is readable now</h3>
+      <h3 i18n="universe.dash.drawer-coverage">
+        How much history is readable now
+      </h3>
       <ul class="coverage-drawer">
         <li *ngFor="let reading of vm.coverage; trackBy: trackById">
           <span class="coverage-label">{{ reading.label }}</span>
-          <span class="universe-chip" [ngClass]="'state-' + reading.tone">{{ reading.stateLabel }}</span>
+          <span class="universe-chip" [ngClass]="'state-' + reading.tone">{{
+            reading.stateLabel
+          }}</span>
           <span class="coverage-detail">{{ reading.detail }}</span>
         </li>
       </ul>
       <ng-container *ngIf="vm.sourceDetails.length">
-        <h3 i18n="universe.dash.drawer-sources">Where these readings came from</h3>
+        <h3 i18n="universe.dash.drawer-sources">
+          Where these readings came from
+        </h3>
         <dl class="source-list">
-          <ng-container *ngFor="let detail of vm.sourceDetails; trackBy: trackById">
+          <ng-container
+            *ngFor="let detail of vm.sourceDetails; trackBy: trackById"
+          >
             <dt>{{ detail.label }}</dt>
             <dd>
-              <span class="source-value" [attr.title]="detail.exact">{{ detail.display }}</span>
+              <span class="source-value" [attr.title]="detail.exact">{{
+                detail.display
+              }}</span>
               <!-- A shortened identifier that cannot be recovered is evidence
                    destroyed rather than filed, so the exact form travels with
                    it for screen readers and for copying. -->
-              <span class="visually-hidden" *ngIf="detail.truncated">{{ detail.exact }}</span>
+              <span class="visually-hidden" *ngIf="detail.truncated">{{
+                detail.exact
+              }}</span>
             </dd>
           </ng-container>
         </dl>
       </ng-container>
     </div>
   </details>
-
 </div>

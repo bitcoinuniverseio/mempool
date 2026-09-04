@@ -41,42 +41,176 @@ function originFromArguments(argv) {
   return positional[0];
 }
 
+import path from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+
 let requestedOrigin;
-try {
-  requestedOrigin = originFromArguments(process.argv);
-} catch (error) {
-  process.stderr.write(`${error.message}
-`);
-  process.exit(2);
+const isDirectExecution = process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href;
+
+if (isDirectExecution) {
+  try {
+    requestedOrigin = originFromArguments(process.argv);
+  } catch (error) {
+    process.stderr.write(`${error.message}\n`);
+    process.exit(2);
+  }
 }
 
-const ORIGIN = (requestedOrigin || process.env.UNIVERSE_ORIGIN || 'https://explorer.bitcoinuniverse.io').replace(/\/+$/, '');
-const REQUEST_TIMEOUT_MS = 20_000;
+export const ORIGIN = (requestedOrigin || process.env.UNIVERSE_ORIGIN || 'https://explorer.bitcoinuniverse.io').replace(/\/+$/, '');
+export const REQUEST_TIMEOUT_MS = 10_000;
 
-const failures = [];
-const notes = [];
+export const failures = [];
+export const notes = [];
+export const operationLog = [];
 
-function fail(check, detail) {
+let currentPhase = 'initialization';
+let lastSuccessfulPhase = 'none';
+let releaseIdentitySeen = null;
+
+export function setPhase(phase) {
+  currentPhase = phase;
+}
+
+export function markPhaseSuccessful(phase) {
+  lastSuccessfulPhase = phase;
+}
+
+export function getLastSuccessfulPhase() {
+  return lastSuccessfulPhase;
+}
+
+export function getReleaseIdentitySeen() {
+  return releaseIdentitySeen;
+}
+
+export function setReleaseIdentitySeen(id) {
+  releaseIdentitySeen = id;
+}
+
+export function fail(check, detail) {
   failures.push(`${check}: ${detail}`);
 }
 
-function pass(check, detail) {
+export function pass(check, detail) {
   notes.push(`${check}: ${detail}`);
 }
 
-async function get(path) {
-  const response = await fetch(`${ORIGIN}${path}`, {
-    headers: { accept: 'application/json' },
-    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-  });
-  const text = await response.text();
-  let body = null;
-  try {
-    body = JSON.parse(text);
-  } catch {
-    body = null;
+export async function executeSyntheticRequest({
+  origin = ORIGIN,
+  path: reqPath,
+  method = 'GET',
+  checkName = currentPhase,
+  timeoutMs = REQUEST_TIMEOUT_MS,
+  maxRetries = 1,
+  headers = { accept: 'application/json' },
+  fetchFn = globalThis.fetch,
+} = {}) {
+  const url = `${origin}${reqPath}`;
+  const safeUrl = url.replace(/([?&]token=)[^&]+/g, '$1[REDACTED]');
+  let attempt = 0;
+  let lastError = null;
+
+  while (attempt <= maxRetries) {
+    attempt++;
+    const startTime = new Date().toISOString();
+    const t0 = performance.now();
+    let responseStatus = null;
+    let safeExcerpt = '';
+
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => {
+        controller.abort(new Error(`Timeout of ${timeoutMs}ms exceeded`));
+      }, timeoutMs);
+
+      const response = await fetchFn(url, {
+        method,
+        headers,
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+
+      const totalMs = Math.round(performance.now() - t0);
+      responseStatus = response.status;
+      const text = await response.text();
+      safeExcerpt = text.slice(0, 150).replace(/[\r\n\t]+/g, ' ');
+
+      let body = null;
+      try {
+        body = JSON.parse(text);
+      } catch {
+        body = null;
+      }
+
+      operationLog.push({
+        checkName,
+        method,
+        url: safeUrl,
+        startTime,
+        durationMs: totalMs,
+        deadlineMs: timeoutMs,
+        attempt,
+        status: responseStatus,
+        safeExcerpt,
+        releaseIdentitySeen,
+        lastSuccessfulPhase,
+        error: null,
+      });
+
+      // Deterministic 4xx or 2xx responses are NEVER retried
+      if (responseStatus < 500 || method !== 'GET' || attempt > maxRetries) {
+        return { status: responseStatus, body, text };
+      }
+
+      // Retry transient 5xx on GET if attempts remain
+      await new Promise((r) => setTimeout(r, 100 * attempt));
+    } catch (err) {
+      const totalMs = Math.round(performance.now() - t0);
+      const isTimeout = err.name === 'TimeoutError' || err.name === 'AbortError' || (err.message && err.message.includes('Timeout'));
+      lastError = err;
+
+      operationLog.push({
+        checkName,
+        method,
+        url: safeUrl,
+        startTime,
+        durationMs: totalMs,
+        deadlineMs: timeoutMs,
+        attempt,
+        status: null,
+        safeExcerpt: null,
+        releaseIdentitySeen,
+        lastSuccessfulPhase,
+        error: {
+          name: err.name,
+          message: err.message,
+          isTimeout,
+        },
+      });
+
+      // Deterministic failure or non-timeout network errors without retries
+      if (!isTimeout || attempt > maxRetries) {
+        const failureReason = isTimeout
+          ? `TIMEOUT on ${method} ${safeUrl} after ${totalMs}ms (deadline: ${timeoutMs}ms, attempt ${attempt}/${maxRetries + 1}). Phase: "${checkName}". Last successful phase: "${lastSuccessfulPhase}". Reason: ${err.message}`
+          : `NETWORK FAILURE on ${method} ${safeUrl} after ${totalMs}ms (attempt ${attempt}/${maxRetries + 1}). Phase: "${checkName}". Reason: ${err.message}`;
+
+        fail(checkName, failureReason);
+        return { status: isTimeout ? 504 : 502, body: null, text: '', error: err };
+      }
+
+      // Transient timeout retry backoff
+      await new Promise((r) => setTimeout(r, 150 * attempt));
+    }
   }
-  return { status: response.status, body, text };
+
+  return { status: 504, body: null, text: '', error: lastError };
+}
+
+export async function get(path, customTimeoutMs) {
+  return executeSyntheticRequest({
+    path,
+    timeoutMs: customTimeoutMs || REQUEST_TIMEOUT_MS,
+  });
 }
 
 /**
@@ -471,10 +605,10 @@ async function checkReleaseAgreement() {
     fail('release', `the backend did not report its commit (HTTP ${info.status})`);
     return;
   }
-  const config = await fetch(`${ORIGIN}/resources/config.js`, {
-    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-  }).then((response) => response.text());
-  const match = config.match(/GIT_COMMIT_HASH\s*=\s*'([^']+)'/);
+  setReleaseIdentitySeen(info.body.gitCommit);
+  const configRes = await get('/resources/config.js');
+  const config = configRes.text;
+  const match = config ? config.match(/GIT_COMMIT_HASH\s*=\s*'([^']+)'/) : null;
   if (!match) {
     fail('release', 'the frontend did not publish a commit');
     return;
@@ -913,13 +1047,22 @@ async function checkLiveSocketAcceptsABrowser() {
   }
 }
 
-async function main() {
+export async function main() {
   console.log(`Synthetic check against ${ORIGIN}`);
 
+  setPhase('capabilities');
   const capabilities = await checkCapabilities();
-  await checkReleaseAgreement();
-  await checkProtocolsAreTruthful();
+  if (capabilities) markPhaseSuccessful('capabilities');
 
+  setPhase('release');
+  await checkReleaseAgreement();
+  markPhaseSuccessful('release');
+
+  setPhase('protocols');
+  await checkProtocolsAreTruthful();
+  markPhaseSuccessful('protocols');
+
+  setPhase('chains');
   const chains = await checkChainDirectory();
   if (chains) {
     const envelopes = [];
@@ -938,21 +1081,31 @@ async function main() {
     }
     checkChainReleaseIdentity(envelopes);
   }
+  markPhaseSuccessful('chains');
+
+  setPhase('live-socket');
   await checkLiveSocketAcceptsABrowser();
+  markPhaseSuccessful('live-socket');
+
+  setPhase('address');
   await checkAddressLookup(capabilities);
+  markPhaseSuccessful('address');
 
   if (capabilities?.features?.statistics?.enabled) {
+    setPhase('charts');
     await checkRoutesExist('charts', [
       '/api/v1/statistics/2h',
       '/api/v1/statistics/24h',
       '/api/v1/statistics/1w',
     ]);
     await checkStatisticsHaveContent();
+    markPhaseSuccessful('charts');
   } else {
     notes.push('charts: statistics are switched off in this deployment, skipping');
   }
 
   if (capabilities?.features?.mining?.enabled) {
+    setPhase('mining');
     await checkRoutesExist('mining', [
       '/api/v1/mining/reward-stats/144',
       '/api/v1/mining/pools/1w',
@@ -960,6 +1113,7 @@ async function main() {
       '/api/v1/mining/difficulty-adjustments',
     ]);
     await checkMiningHasContent();
+    markPhaseSuccessful('mining');
   } else {
     notes.push('mining: block indexing is switched off in this deployment, skipping');
   }
@@ -969,12 +1123,16 @@ async function main() {
 
   if (failures.length > 0) {
     console.error(`\n${failures.length} synthetic check(s) failed against ${ORIGIN}`);
-    process.exit(1);
+    if (isDirectExecution) process.exit(1);
+    return false;
   }
   console.log(`\nAll synthetic checks passed against ${ORIGIN}`);
+  return true;
 }
 
-main().catch((error) => {
-  console.error(`Synthetic check could not run: ${error instanceof Error ? error.message : error}`);
-  process.exit(1);
-});
+if (isDirectExecution) {
+  main().catch((error) => {
+    console.error(`Synthetic check could not run: ${error instanceof Error ? error.message : error}`);
+    process.exit(1);
+  });
+}
