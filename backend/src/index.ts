@@ -79,6 +79,15 @@ import queryStudioRoutes from './api/intelligence/query-studio/query-studio.rout
 import watchlistsRoutes from './api/intelligence/watchlists/watchlists.routes';
 import knowledgeRoutes from './api/intelligence/knowledge/knowledge.routes';
 import protocolsRoutes from './api/intelligence/protocols/protocols.routes';
+import globalNetworkRoutes from './api/intelligence/global-network/global-network.routes';
+import lightningReliabilityRoutes from './api/intelligence/lightning/lightning-reliability.routes';
+import silentPaymentsRoutes from './api/intelligence/silent-payments/silent-payments.routes';
+import payjoinRoutes from './api/intelligence/payjoin/payjoin.routes';
+import ecashRoutes from './api/intelligence/ecash/ecash.routes';
+import consensusRoutes from './api/intelligence/consensus/consensus.routes';
+import quantumRoutes from './api/intelligence/quantum/quantum.routes';
+import blockspaceRoutes from './api/intelligence/blockspace/blockspace.routes';
+import reservesRoutes from './api/intelligence/reserves/reserves.routes';
 
 class Server {
   private wss: WebSocket.Server | undefined;
@@ -495,6 +504,15 @@ class Server {
     watchlistsRoutes.initRoutes(this.app);
     knowledgeRoutes.initRoutes(this.app);
     protocolsRoutes.initRoutes(this.app);
+    globalNetworkRoutes.initRoutes(this.app);
+    lightningReliabilityRoutes.initRoutes(this.app);
+    silentPaymentsRoutes.initRoutes(this.app);
+    payjoinRoutes.initRoutes(this.app);
+    ecashRoutes.initRoutes(this.app);
+    consensusRoutes.initRoutes(this.app);
+    quantumRoutes.initRoutes(this.app);
+    blockspaceRoutes.initRoutes(this.app);
+    reservesRoutes.initRoutes(this.app);
   }
 
   healthCheck(): void {

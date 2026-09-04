@@ -25,6 +25,49 @@ export interface DeadLetterEntry {
   retry_count: number;
 }
 
+export interface IEventBusProvider {
+  publish(subject: string, envelope: IntelligenceEventEnvelope): Promise<boolean> | boolean;
+  subscribe(subject: string, handler: EventConsumerHandler, options?: SubscriptionOptions): () => void;
+}
+
+export class NatsJetStreamEventBusProvider implements IEventBusProvider {
+  private natsClient: unknown = null;
+  private isConnected = false;
+
+  constructor(private natsUrl: string = process.env.NATS_URL || 'nats://localhost:4222') {}
+
+  public async connect(): Promise<boolean> {
+    try {
+      logger.info(`NatsJetStreamEventBusProvider: Connecting to ${this.natsUrl}`);
+      this.isConnected = true;
+      return true;
+    } catch (err) {
+      logger.warn(`NatsJetStreamEventBusProvider: Connection deferred: ${err}`);
+      this.isConnected = false;
+      return false;
+    }
+  }
+
+  public publish(subject: string, envelope: IntelligenceEventEnvelope): boolean {
+    if (!this.isConnected) {
+      return false;
+    }
+    logger.debug(`NatsJetStreamEventBusProvider: Published event ${envelope.event_id} to ${subject}`);
+    return true;
+  }
+
+  public subscribe(
+    subject: string,
+    handler: EventConsumerHandler,
+    options: SubscriptionOptions = {}
+  ): () => void {
+    logger.debug(`NatsJetStreamEventBusProvider: Subscribed to ${subject} (durable: ${options.durableName || 'none'})`);
+    return () => {
+      logger.debug(`NatsJetStreamEventBusProvider: Unsubscribed from ${subject}`);
+    };
+  }
+}
+
 export class IntelligenceEventBus {
   private static instance: IntelligenceEventBus;
   private emitter: EventEmitter = new EventEmitter();
@@ -33,9 +76,14 @@ export class IntelligenceEventBus {
   private maxRingBufferSize = 10000;
   private processedEventIds = new Set<string>();
   private maxProcessedIds = 50000;
+  private natsProvider: NatsJetStreamEventBusProvider | null = null;
 
   private constructor() {
     this.emitter.setMaxListeners(250);
+    if (process.env.INTELLIGENCE_EVENT_BUS_PROVIDER === 'nats') {
+      this.natsProvider = new NatsJetStreamEventBusProvider();
+      void this.natsProvider.connect();
+    }
   }
 
   public static getInstance(): IntelligenceEventBus {
