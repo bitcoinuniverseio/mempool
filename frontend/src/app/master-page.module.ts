@@ -1139,6 +1139,383 @@ loadChildren: () => import('@app/universe/portfolio/portfolio.routes').then(m =>
         path: 'tools/transaction',
         redirectTo: 'tx/preview',
         pathMatch: 'full',
+      },
+      // Frontier Product 1: Cross-Layer Atomic Swap and Submarine Swap Verification Center
+      {
+        path: 'swaps',
+        loadComponent: () => import('@app/universe/swaps/swaps-overview.component').then(m => m.SwapsOverviewComponent),
+        data: { networks: ['bitcoin', 'liquid'] },
+      },
+      {
+        path: 'swaps/submarine',
+        loadComponent: () => import('@app/universe/swaps/swaps-submarine.component').then(m => m.SwapsSubmarineComponent),
+        data: { networks: ['bitcoin', 'liquid'] },
+      },
+      {
+        path: 'swaps/reverse',
+        loadComponent: () => import('@app/universe/swaps/swaps-reverse.component').then(m => m.SwapsReverseComponent),
+        data: { networks: ['bitcoin', 'liquid'] },
+      },
+      {
+        path: 'swaps/chain',
+        loadComponent: () => import('@app/universe/swaps/swaps-chain.component').then(m => m.SwapsChainComponent),
+        data: { networks: ['bitcoin', 'liquid'] },
+      },
+      {
+        path: 'swaps/providers',
+        loadComponent: () => import('@app/universe/swaps/swaps-providers.component').then(m => m.SwapsProvidersComponent),
+        data: { networks: ['bitcoin', 'liquid'] },
+      },
+      {
+        path: 'swaps/provider/:providerId',
+        loadComponent: () => import('@app/universe/swaps/swaps-provider-detail.component').then(m => m.SwapsProviderDetailComponent),
+        data: { networks: ['bitcoin', 'liquid'] },
+      },
+      {
+        path: 'swaps/inspect',
+        loadComponent: () => import('@app/universe/swaps/swaps-inspect.component').then(m => m.SwapsInspectComponent),
+        data: { networks: ['bitcoin', 'liquid'] },
+      },
+      {
+        path: 'swaps/recover',
+        loadComponent: () => import('@app/universe/swaps/swaps-recover.component').then(m => m.SwapsRecoverComponent),
+        data: { networks: ['bitcoin', 'liquid'] },
+      },
+      {
+        path: 'swaps/simulate',
+        loadComponent: () => import('@app/universe/swaps/swaps-simulate.component').then(m => m.SwapsSimulateComponent),
+        data: { networks: ['bitcoin', 'liquid'] },
+      },
+
+      // Frontier Product 2: Ark V-PACK, VTXO Portability, and Unilateral Exit Center
+      {
+        path: 'ark/vpack',
+        loadComponent: () => import('@app/universe/ark-vpack/ark-vpack-overview.component').then(m => m.ArkVpackOverviewComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'ark/vpack/verify',
+        loadComponent: () => import('@app/universe/ark-vpack/ark-vpack-verify.component').then(m => m.ArkVpackVerifyComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'ark/vpack/translate',
+        loadComponent: () => import('@app/universe/ark-vpack/ark-vpack-translate.component').then(m => m.ArkVpackTranslateComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'ark/vtxo/:vtxoId',
+        loadComponent: () => import('@app/universe/ark-vpack/ark-vtxo-detail.component').then(m => m.ArkVtxoDetailComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'ark/backups',
+        loadComponent: () => import('@app/universe/ark-vpack/ark-backups.component').then(m => m.ArkBackupsComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'ark/exit',
+        loadComponent: () => import('@app/universe/ark-vpack/ark-exit.component').then(m => m.ArkExitComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'ark/exit/simulate',
+        loadComponent: () => import('@app/universe/ark-vpack/ark-exit-simulate.component').then(m => m.ArkExitSimulateComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'ark/providers',
+        loadComponent: () => import('@app/universe/ark-vpack/ark-providers.component').then(m => m.ArkProvidersComponent),
+        data: { networks: ['bitcoin'] },
+      },
+
+      // Frontier Product 3: Lightning HTLC/PTLC Congestion and Jamming Resilience Center
+      {
+        path: 'lightning/resilience',
+        loadComponent: () => import('@app/universe/lightning-resilience/lightning-resilience-overview.component').then(m => m.LightningResilienceOverviewComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'lightning/resilience/htlcs',
+        loadComponent: () => import('@app/universe/lightning-resilience/lightning-resilience-htlcs.component').then(m => m.LightningResilienceHtlcsComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'lightning/resilience/onion-messages',
+        loadComponent: () => import('@app/universe/lightning-resilience/lightning-resilience-onion.component').then(m => m.LightningResilienceOnionComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'lightning/resilience/channel/:shortId',
+        loadComponent: () => import('@app/universe/lightning-resilience/lightning-resilience-channel-detail.component').then(m => m.LightningResilienceChannelDetailComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'lightning/resilience/node/:publicKey',
+        loadComponent: () => import('@app/universe/lightning-resilience/lightning-resilience-node-detail.component').then(m => m.LightningResilienceNodeDetailComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'lightning/resilience/simulate',
+        loadComponent: () => import('@app/universe/lightning-resilience/lightning-resilience-simulate.component').then(m => m.LightningResilienceSimulateComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'lightning/resilience/mitigations',
+        loadComponent: () => import('@app/universe/lightning-resilience/lightning-resilience-mitigations.component').then(m => m.LightningResilienceMitigationsComponent),
+        data: { networks: ['bitcoin'] },
+      },
+
+      // Frontier Product 4: Block Propagation, Compact-Block Reconstruction, and Fork-Race Observatory
+      {
+        path: 'network/blocks',
+        loadComponent: () => import('@app/universe/block-propagation/block-propagation-overview.component').then(m => m.BlockPropagationOverviewComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'network/blocks/live',
+        loadComponent: () => import('@app/universe/block-propagation/block-propagation-live.component').then(m => m.BlockPropagationLiveComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'network/blocks/:blockHash',
+        loadComponent: () => import('@app/universe/block-propagation/block-propagation-block-detail.component').then(m => m.BlockPropagationBlockDetailComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'network/compact-blocks',
+        loadComponent: () => import('@app/universe/block-propagation/block-propagation-compact-blocks.component').then(m => m.BlockPropagationCompactBlocksComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'network/fork-races',
+        loadComponent: () => import('@app/universe/block-propagation/block-propagation-fork-races.component').then(m => m.BlockPropagationForkRacesComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'network/fork-races/:raceId',
+        loadComponent: () => import('@app/universe/block-propagation/block-propagation-race-detail.component').then(m => m.BlockPropagationRaceDetailComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'network/stale-tips',
+        loadComponent: () => import('@app/universe/block-propagation/block-propagation-stale-tips.component').then(m => m.BlockPropagationStaleTipsComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'network/fibre',
+        loadComponent: () => import('@app/universe/block-propagation/block-propagation-fibre.component').then(m => m.BlockPropagationFibreComponent),
+        data: { networks: ['bitcoin'] },
+      },
+
+      // Frontier Product 5: Private Transaction Submission, Accelerator, and Ordering Evidence Center
+      {
+        path: 'mempool/submission',
+        loadComponent: () => import('@app/universe/private-submission/private-submission-overview.component').then(m => m.PrivateSubmissionOverviewComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'mempool/private-broadcast',
+        loadComponent: () => import('@app/universe/private-submission/private-submission-broadcast.component').then(m => m.PrivateSubmissionBroadcastComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'mempool/accelerators',
+        loadComponent: () => import('@app/universe/private-submission/private-submission-accelerators.component').then(m => m.PrivateSubmissionAcceleratorsComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'mempool/accelerator/:providerId',
+        loadComponent: () => import('@app/universe/private-submission/private-submission-accelerator-detail.component').then(m => m.PrivateSubmissionAcceleratorDetailComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'mempool/receipts',
+        loadComponent: () => import('@app/universe/private-submission/private-submission-receipts.component').then(m => m.PrivateSubmissionReceiptsComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'intelligence/ordering',
+        loadComponent: () => import('@app/universe/private-submission/private-submission-ordering.component').then(m => m.PrivateSubmissionOrderingComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'intelligence/ordering/tx/:txid',
+        loadComponent: () => import('@app/universe/private-submission/private-submission-ordering-tx.component').then(m => m.PrivateSubmissionOrderingTxComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'intelligence/ordering/block/:blockHash',
+        loadComponent: () => import('@app/universe/private-submission/private-submission-ordering-block.component').then(m => m.PrivateSubmissionOrderingBlockComponent),
+        data: { networks: ['bitcoin'] },
+      },
+
+      // Frontier Product 6: OpenTimestamps and Bitcoin Proof-of-Publication Center
+      {
+        path: 'tools/timestamp',
+        loadComponent: () => import('@app/universe/opentimestamps/opentimestamps-overview.component').then(m => m.OpenTimestampsOverviewComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'tools/timestamp/stamp',
+        loadComponent: () => import('@app/universe/opentimestamps/opentimestamps-stamp.component').then(m => m.OpenTimestampsStampComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'tools/timestamp/verify',
+        loadComponent: () => import('@app/universe/opentimestamps/opentimestamps-verify.component').then(m => m.OpenTimestampsVerifyComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'tools/timestamp/inspect',
+        loadComponent: () => import('@app/universe/opentimestamps/opentimestamps-inspect.component').then(m => m.OpenTimestampsInspectComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'tools/timestamp/git',
+        loadComponent: () => import('@app/universe/opentimestamps/opentimestamps-git.component').then(m => m.OpenTimestampsGitComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'intelligence/timestamps',
+        loadComponent: () => import('@app/universe/opentimestamps/opentimestamps-overview.component').then(m => m.OpenTimestampsOverviewComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'intelligence/timestamps/calendars',
+        loadComponent: () => import('@app/universe/opentimestamps/opentimestamps-calendars.component').then(m => m.OpenTimestampsCalendarsComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'intelligence/timestamps/batches',
+        loadComponent: () => import('@app/universe/opentimestamps/opentimestamps-batches.component').then(m => m.OpenTimestampsBatchesComponent),
+        data: { networks: ['bitcoin'] },
+      },
+
+      // Frontier Product 7: Bitcoin Consensus Conformance, Differential Validation, and Formal Verification Center
+      {
+        path: 'labs/consensus/conformance',
+        loadComponent: () => import('@app/universe/consensus-conformance/consensus-conformance-overview.component').then(m => m.ConsensusConformanceOverviewComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'labs/consensus/differential',
+        loadComponent: () => import('@app/universe/consensus-conformance/consensus-conformance-differential.component').then(m => m.ConsensusConformanceDifferentialComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'labs/consensus/cases',
+        loadComponent: () => import('@app/universe/consensus-conformance/consensus-conformance-cases.component').then(m => m.ConsensusConformanceCasesComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'labs/consensus/case/:caseId',
+        loadComponent: () => import('@app/universe/consensus-conformance/consensus-conformance-case-detail.component').then(m => m.ConsensusConformanceCaseDetailComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'labs/consensus/formal',
+        loadComponent: () => import('@app/universe/consensus-conformance/consensus-conformance-formal.component').then(m => m.ConsensusConformanceFormalComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'labs/consensus/specifications',
+        loadComponent: () => import('@app/universe/consensus-conformance/consensus-conformance-specifications.component').then(m => m.ConsensusConformanceSpecificationsComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'labs/consensus/corpora',
+        loadComponent: () => import('@app/universe/consensus-conformance/consensus-conformance-corpora.component').then(m => m.ConsensusConformanceCorporaComponent),
+        data: { networks: ['bitcoin'] },
+      },
+
+      // Frontier Product 8: Node Software Security, Advisory, and Upgrade Readiness Center
+      {
+        path: 'node/security',
+        loadComponent: () => import('@app/universe/node-security/node-security-overview.component').then(m => m.NodeSecurityOverviewComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'node/security/fleet',
+        loadComponent: () => import('@app/universe/node-security/node-security-fleet.component').then(m => m.NodeSecurityFleetComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'node/security/node/:nodeId',
+        loadComponent: () => import('@app/universe/node-security/node-security-node-detail.component').then(m => m.NodeSecurityNodeDetailComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'node/security/advisories',
+        loadComponent: () => import('@app/universe/node-security/node-security-advisories.component').then(m => m.NodeSecurityAdvisoriesComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'node/security/advisory/:advisoryId',
+        loadComponent: () => import('@app/universe/node-security/node-security-advisory-detail.component').then(m => m.NodeSecurityAdvisoryDetailComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'node/security/releases',
+        loadComponent: () => import('@app/universe/node-security/node-security-releases.component').then(m => m.NodeSecurityReleasesComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'node/security/artifacts',
+        loadComponent: () => import('@app/universe/node-security/node-security-artifacts.component').then(m => m.NodeSecurityArtifactsComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'node/security/upgrade',
+        loadComponent: () => import('@app/universe/node-security/node-security-upgrade.component').then(m => m.NodeSecurityUpgradeComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'node/security/configuration',
+        loadComponent: () => import('@app/universe/node-security/node-security-configuration.component').then(m => m.NodeSecurityConfigurationComponent),
+        data: { networks: ['bitcoin'] },
+      },
+
+      // Frontier Product 9: Collaborative Transaction and CoinJoin Protocol Verification Center
+      {
+        path: 'privacy/collaborative',
+        loadComponent: () => import('@app/universe/collaborative-privacy/collaborative-privacy-overview.component').then(m => m.CollaborativePrivacyOverviewComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'privacy/collaborative/inspect',
+        loadComponent: () => import('@app/universe/collaborative-privacy/collaborative-privacy-inspect.component').then(m => m.CollaborativePrivacyInspectComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'privacy/collaborative/wabisabi',
+        loadComponent: () => import('@app/universe/collaborative-privacy/collaborative-privacy-wabisabi.component').then(m => m.CollaborativePrivacyWabisabiComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'privacy/collaborative/joinmarket',
+        loadComponent: () => import('@app/universe/collaborative-privacy/collaborative-privacy-joinmarket.component').then(m => m.CollaborativePrivacyJoinmarketComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'privacy/collaborative/whirlpool',
+        loadComponent: () => import('@app/universe/collaborative-privacy/collaborative-privacy-whirlpool.component').then(m => m.CollaborativePrivacyWhirlpoolComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'privacy/collaborative/coordinators',
+        loadComponent: () => import('@app/universe/collaborative-privacy/collaborative-privacy-coordinators.component').then(m => m.CollaborativePrivacyCoordinatorsComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'privacy/collaborative/round/:roundId',
+        loadComponent: () => import('@app/universe/collaborative-privacy/collaborative-privacy-round-detail.component').then(m => m.CollaborativePrivacyRoundDetailComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'privacy/collaborative/fidelity-bonds',
+        loadComponent: () => import('@app/universe/collaborative-privacy/collaborative-privacy-fidelity-bonds.component').then(m => m.CollaborativePrivacyFidelityBondsComponent),
+        data: { networks: ['bitcoin'] },
       }
     ],
   }
