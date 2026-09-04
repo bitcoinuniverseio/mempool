@@ -51,7 +51,7 @@
       <section class="panel" *ngIf="vm.queryResult">
         <h2>Query Results ({{ vm.queryResult.rowCount }} rows in {{ vm.queryResult.executionTimeMs }} ms)</h2>
         <div class="query-results-scroll" tabindex="0" aria-label="Query result table">
-        <table class="data-table">
+        <table class="data-table mcp-tools-table">
           <thead>
             <tr>
               <th *ngFor="let col of vm.queryResult.columns">{{ col }}</th>
@@ -70,7 +70,7 @@
       <section class="panel" *ngIf="vm.mcpTools?.length">
         <h2>Model Context Protocol (MCP) Tools</h2>
         <p>Read-only MCP server definitions allowing autonomous AI coding agents to query the Universe platform.</p>
-        <table class="data-table mcp-tools-table">
+        <table class="data-table">
           <thead>
             <tr>
               <th>Tool Name</th>
