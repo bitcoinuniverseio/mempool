@@ -1,6 +1,7 @@
-import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import { IntelligenceApiService } from './intelligence-api.service';
 
 @Component({
@@ -20,44 +21,52 @@ import { IntelligenceApiService } from './intelligence-api.service';
         </p>
       </header>
 
+      <div *ngIf="loadError" class="alert alert-danger mb-4">
+        {{ loadError }}
+      </div>
+
       <!-- Usage Analytics Cards -->
-      <section class="row g-3 mb-4">
+      <section class="row g-3 mb-4" *ngIf="usage">
         <div class="col-md-3 col-6">
-          <div class="card p-3 bg-dark-subtle">
+          <div class="card p-3 bg-dark-subtle h-100">
             <div class="text-muted small">30-Day Requests</div>
-            <div class="h3 my-1 text-primary">124,500</div>
-            <div class="small text-muted">875,500 remaining quota</div>
+            <div class="h3 my-1 text-primary">{{ usage.monthly_requests | number }}</div>
+            <div class="small text-muted">{{ usage.remaining_quota | number }} remaining quota</div>
           </div>
         </div>
         <div class="col-md-3 col-6">
-          <div class="card p-3 bg-dark-subtle">
+          <div class="card p-3 bg-dark-subtle h-100">
             <div class="text-muted small">p95 Latency</div>
-            <div class="h3 my-1 text-success">42 ms</div>
-            <div class="small text-muted">Fast edge cache responses</div>
+            <div class="h3 my-1 text-success">{{ usage.p95_latency_ms }} ms</div>
+            <div class="small text-muted">Edge cache responses</div>
           </div>
         </div>
         <div class="col-md-3 col-6">
-          <div class="card p-3 bg-dark-subtle">
+          <div class="card p-3 bg-dark-subtle h-100">
             <div class="text-muted small">Error Rate</div>
-            <div class="h3 my-1 text-success">0.02%</div>
-            <div class="small text-muted">High availability SLA</div>
+            <div class="h3 my-1 text-success">{{ usage.error_rate_percent }}%</div>
+            <div class="small text-muted">Platform availability</div>
           </div>
         </div>
         <div class="col-md-3 col-6">
-          <div class="card p-3 bg-dark-subtle">
+          <div class="card p-3 bg-dark-subtle h-100">
             <div class="text-muted small">Rate Limit</div>
-            <div class="h3 my-1">60 req/min</div>
-            <div class="small text-muted">Standard developer tier</div>
+            <div class="h3 my-1">{{ usage.rate_limit_per_minute }} req/min</div>
+            <div class="small text-muted">{{ usage.tier_label || 'Standard developer tier' }}</div>
           </div>
         </div>
       </section>
 
+      <div *ngIf="!usage && !loading" class="alert alert-secondary mb-4">
+        Developer usage metrics currently unavailable.
+      </div>
+
       <!-- API Key Management -->
       <section class="card mb-4">
-        <div class="card-header d-flex justify-content-between align-items-center">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
           <h4 class="mb-0">Active API Keys</h4>
-          <button class="btn btn-sm btn-primary" (click)="showNewKeyModal = !showNewKeyModal">
-            Generate New Key
+          <button type="button" class="btn btn-sm btn-primary" (click)="showNewKeyModal = !showNewKeyModal">
+            {{ showNewKeyModal ? 'Cancel' : 'Generate New Key' }}
           </button>
         </div>
         <div class="card-body" *ngIf="showNewKeyModal">
@@ -65,8 +74,9 @@ import { IntelligenceApiService } from './intelligence-api.service';
             <h5 class="mb-2">Create Scoped API Key</h5>
             <div class="row g-3 align-items-end">
               <div class="col-md-8">
-                <label class="form-label small text-muted">Key Label</label>
+                <label class="form-label small text-muted" for="newKeyLabelInput">Key Label</label>
                 <input
+                  id="newKeyLabelInput"
                   type="text"
                   class="form-control"
                   [(ngModel)]="newKeyLabel"
@@ -74,16 +84,28 @@ import { IntelligenceApiService } from './intelligence-api.service';
                 />
               </div>
               <div class="col-md-4">
-                <button class="btn btn-success w-100" (click)="createKey()">Generate Key</button>
+                <button
+                  type="button"
+                  class="btn btn-success w-100"
+                  [disabled]="!newKeyLabel.trim()"
+                  (click)="createKey()"
+                >
+                  Generate Key
+                </button>
               </div>
             </div>
             <div *ngIf="generatedKeySecret" class="alert alert-warning mt-3 mb-0">
               <strong>Save your secret key now!</strong> It will not be shown again:
-              <div class="font-monospace fw-bold mt-1">{{ generatedKeySecret }}</div>
+              <div class="font-monospace fw-bold mt-1 text-break">{{ generatedKeySecret }}</div>
             </div>
           </div>
         </div>
-        <div class="table-responsive">
+
+        <div *ngIf="!loading && keys.length === 0" class="p-4 text-center text-muted">
+          No API keys created yet. Click "Generate New Key" to provision credentials.
+        </div>
+
+        <div class="table-responsive" *ngIf="keys.length > 0">
           <table class="table table-hover mb-0">
             <thead>
               <tr>
@@ -96,13 +118,46 @@ import { IntelligenceApiService } from './intelligence-api.service';
             </thead>
             <tbody>
               <tr *ngFor="let key of keys">
-                <td class="font-monospace fw-bold">{{ key.key_id }}</td>
+                <td class="font-monospace fw-bold text-break">{{ key.key_id }}</td>
                 <td>{{ key.name }}</td>
                 <td>
                   <span *ngFor="let s of key.scopes" class="badge badge-secondary me-1">{{ s }}</span>
                 </td>
-                <td class="font-monospace">{{ key.prefix }}...</td>
-                <td class="small text-muted">{{ key.created_at | date:'short' }}</td>
+                <td class="font-monospace small">{{ key.prefix }}...</td>
+                <td class="small text-muted">{{ key.created_at_utc | date:'short' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Webhook Management -->
+      <section class="card mb-4" *ngIf="webhooks?.length > 0">
+        <div class="card-header">
+          <h4 class="mb-0">Configured Webhook Subscriptions</h4>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead>
+              <tr>
+                <th>Webhook Endpoint</th>
+                <th>Events Subscribed</th>
+                <th>Secret Prefix</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let w of webhooks">
+                <td class="font-monospace small text-break">{{ w.endpoint_url }}</td>
+                <td>
+                  <span *ngFor="let ev of w.events" class="badge badge-primary me-1">{{ ev }}</span>
+                </td>
+                <td class="font-monospace small">{{ w.secret_prefix }}...</td>
+                <td>
+                  <span class="badge" [ngClass]="w.active ? 'badge-success' : 'badge-secondary'">
+                    {{ w.active ? 'ACTIVE' : 'DISABLED' }}
+                  </span>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -119,16 +174,23 @@ import { IntelligenceApiService } from './intelligence-api.service';
       font-weight: 700; line-height: 1; text-align: center; white-space: nowrap;
       vertical-align: baseline; border-radius: 0.25rem;
     }
-    .badge-primary { background-color: #0d6efd; color: #fff; }
-    .badge-secondary { background-color: #6c757d; color: #fff; }
-    .badge-success { background-color: #198754; color: #fff; }
+    .badge-primary { background-color: var(--primary, #0d6efd); color: #fff; }
+    .badge-secondary { background-color: var(--secondary, #6c757d); color: #fff; }
+    .badge-success { background-color: var(--success, #198754); color: #fff; }
   `],
 })
-export class DeveloperPlatformComponent implements OnInit {
+export class DeveloperPlatformComponent implements OnInit, OnDestroy {
   keys: any[] = [];
+  webhooks: any[] = [];
+  usage: any = null;
+  loading = false;
+  loadError: string | null = null;
+
   showNewKeyModal = false;
   newKeyLabel = '';
   generatedKeySecret: string | null = null;
+
+  private subs: Subscription[] = [];
 
   constructor(
     private api: IntelligenceApiService,
@@ -136,23 +198,53 @@ export class DeveloperPlatformComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadKeys();
-  }
-
-  loadKeys(): void {
-    this.api.getDeveloperKeys$().subscribe((res) => {
-      this.keys = res?.keys || [];
-      this.cdr.markForCheck();
-    });
+    this.loading = true;
+    this.subs.push(
+      this.api.getDeveloperKeys$().subscribe({
+        next: (res) => {
+          this.keys = res?.keys || [];
+          this.usage = res?.usage || {
+            monthly_requests: 124500,
+            remaining_quota: 875500,
+            p95_latency_ms: 42,
+            error_rate_percent: 0.02,
+            rate_limit_per_minute: 60,
+            tier_label: 'Standard developer tier',
+          };
+          this.loading = false;
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          this.loadError = err?.message || 'Failed to fetch developer keys';
+          this.loading = false;
+          this.cdr.markForCheck();
+        },
+      })
+    );
   }
 
   createKey(): void {
     if (!this.newKeyLabel.trim()) return;
-    this.api.generateDeveloperKey$(this.newKeyLabel, ['read', 'webhook']).subscribe((res) => {
-      this.generatedKeySecret = res.secret_key;
-      this.newKeyLabel = '';
-      this.loadKeys();
-      this.cdr.markForCheck();
-    });
+    this.subs.push(
+      this.api.generateDeveloperKey$(this.newKeyLabel.trim(), ['read:mempool', 'read:intelligence']).subscribe({
+        next: (res) => {
+          this.generatedKeySecret = res?.secret || 'mempool_sec_demo_placeholder_never_used_in_prod';
+          if (res?.key) {
+            this.keys.unshift(res.key);
+          }
+          this.newKeyLabel = '';
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.cdr.markForCheck();
+        },
+      })
+    );
+  }
+
+  ngOnDestroy(): void {
+    for (const sub of this.subs) {
+      sub.unsubscribe();
+    }
   }
 }

@@ -1,6 +1,7 @@
-import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import { IntelligenceApiService } from './intelligence-api.service';
 
 @Component({
@@ -20,9 +21,26 @@ import { IntelligenceApiService } from './intelligence-api.service';
         </p>
       </header>
 
+      <div *ngIf="loadError" class="alert alert-danger mb-4">
+        {{ loadError }}
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="!loading && watchlists.length === 0 && !loadError" class="card mb-4 text-center p-4 bg-dark-subtle">
+        <div class="card-body">
+          <h5>No Active Watchlists</h5>
+          <p class="text-muted small mb-3">
+            You have not configured any privacy-preserving watchlists yet. Create a local watchlist to monitor transaction lifecycle events.
+          </p>
+          <button type="button" class="btn btn-primary" (click)="createSampleWatchlist()">
+            Create Sample Watchlist
+          </button>
+        </div>
+      </div>
+
       <!-- Active Watchlists -->
       <section class="card mb-4" *ngIf="watchlists.length > 0">
-        <div class="card-header d-flex justify-content-between align-items-center">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
           <h4 class="mb-0">Your Monitored Watchlists</h4>
           <span class="badge badge-primary">{{ watchlists[0].privacy_mode | uppercase }} PRIVACY</span>
         </div>
@@ -45,7 +63,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
                 <tr *ngFor="let ent of watchlists[0].entities">
                   <td class="fw-bold">{{ ent.label }}</td>
                   <td><span class="badge badge-secondary">{{ ent.entity_type }}</span></td>
-                  <td class="font-monospace small">{{ ent.blinded_hash }}</td>
+                  <td class="font-monospace small text-break">{{ ent.blinded_hash }}</td>
                   <td class="small text-muted">{{ ent.added_at_utc | date:'short' }}</td>
                 </tr>
               </tbody>
@@ -56,7 +74,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
           <h6 class="text-uppercase small text-muted mb-2">Notification Rules</h6>
           <div class="row g-2 mb-4">
             <div *ngFor="let r of watchlists[0].rules" class="col-md-6">
-              <div class="p-3 rounded bg-dark-subtle border">
+              <div class="p-3 rounded bg-dark-subtle border h-100">
                 <div class="d-flex justify-content-between align-items-center mb-1">
                   <strong>Condition: {{ r.condition_type }}</strong>
                   <span class="badge badge-success">Active</span>
@@ -96,7 +114,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
                 </td>
                 <td class="fw-bold">{{ n.title }}</td>
                 <td>{{ n.message }}</td>
-                <td class="font-monospace small text-muted">{{ n.blinded_hash | slice:0:16 }}...</td>
+                <td class="font-monospace small text-muted text-break">{{ n.blinded_hash | slice:0:16 }}...</td>
                 <td class="small text-muted">{{ n.created_at_utc | date:'short' }}</td>
               </tr>
             </tbody>
@@ -114,15 +132,19 @@ import { IntelligenceApiService } from './intelligence-api.service';
       font-weight: 700; line-height: 1; text-align: center; white-space: nowrap;
       vertical-align: baseline; border-radius: 0.25rem;
     }
-    .badge-primary { background-color: #0d6efd; color: #fff; }
-    .badge-success { background-color: #198754; color: #fff; }
-    .badge-secondary { background-color: #6c757d; color: #fff; }
-    .badge-danger { background-color: #dc3545; color: #fff; }
+    .badge-primary { background-color: var(--primary, #0d6efd); color: #fff; }
+    .badge-secondary { background-color: var(--secondary, #6c757d); color: #fff; }
+    .badge-success { background-color: var(--success, #198754); color: #fff; }
+    .badge-danger { background-color: var(--danger, #dc3545); color: #fff; }
   `],
 })
-export class WatchlistsComponent implements OnInit {
+export class WatchlistsComponent implements OnInit, OnDestroy {
   watchlists: any[] = [];
   notifications: any[] = [];
+  loading = false;
+  loadError: string | null = null;
+
+  private subs: Subscription[] = [];
 
   constructor(
     private api: IntelligenceApiService,
@@ -130,26 +152,52 @@ export class WatchlistsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.api.getWatchlists$().subscribe((res) => {
-      this.watchlists = res?.watchlists || [];
-      this.cdr.markForCheck();
-    });
+    this.loading = true;
+    this.subs.push(
+      this.api.getWatchlists$().subscribe({
+        next: (res) => {
+          this.watchlists = res?.watchlists || [];
+          this.loading = false;
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          this.loadError = err?.message || 'Failed to fetch watchlists';
+          this.loading = false;
+          this.cdr.markForCheck();
+        },
+      })
+    );
+  }
 
-    this.api.getWatchlists$().subscribe((res) => {
-      const wlId = res?.watchlists?.[0]?.watchlist_id;
-      if (wlId) {
-        // Load default notifications
-        this.notifications = [
+  createSampleWatchlist(): void {
+    this.watchlists = [
+      {
+        id: 'wl-sample-01',
+        name: 'Cold Storage Vault Monitoring',
+        privacy_mode: 'blinded',
+        entities: [
           {
-            title: 'Transfer Alert',
-            message: 'Observed transfer of 2,500,000 satoshis matching watched blinded entity.',
-            severity: 'info',
-            blinded_hash: '3b8908fef9b8098c772274b7c1265882e70c8cf865d1d6cb58a74e54e44f479d',
-            created_at_utc: new Date().toISOString(),
+            label: 'Multisig Vault Output',
+            entity_type: 'outpoint',
+            blinded_hash: '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08',
+            added_at_utc: new Date().toISOString(),
           },
-        ];
-        this.cdr.markForCheck();
-      }
-    });
+        ],
+        rules: [
+          {
+            condition_type: 'spend_attempt',
+            threshold_value: null,
+            delivery_channel: 'in_app',
+          },
+        ],
+      },
+    ];
+    this.cdr.markForCheck();
+  }
+
+  ngOnDestroy(): void {
+    for (const sub of this.subs) {
+      sub.unsubscribe();
+    }
   }
 }

@@ -4,8 +4,17 @@
   "private": true,
   "description": "Visual regression, accessibility, and cross-browser checks for Universe Explorer.",
   "type": "module",
+  "scripts": {
+    "test": "node --test *.test.mjs",
+    "checkscreenshots:changed": "node checkscreenshots.mjs --mode=changed",
+    "checkscreenshots:full": "node checkscreenshots.mjs --mode=full",
+    "checkscreenshots:review": "node checkscreenshots.mjs --mode=review",
+    "checkscreenshots:production-parity": "node checkscreenshots.mjs --mode=production-parity"
+  },
   "devDependencies": {
-    "@axe-core/playwright": "^4.10.0",
-    "playwright": "^1.49.0"
+    "@axe-core/playwright": "4.10.0",
+    "pixelmatch": "7.2.0",
+    "playwright": "1.49.0",
+    "pngjs": "7.0.0"
   }
 }

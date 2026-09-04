@@ -1,6 +1,11 @@
 <div class="container-xl chain-page" *ngIf="vm$ | async as vm">
 
-  <!-- The block timeline is the dashboard's first content, matching Bitcoin. -->
+  <header class="title-block">
+    <span class="chain-mark" [ngClass]="'chain-mark-' + chain" aria-hidden="true"></span>
+    <h1 i18n="universe.dash.heading">{{ profile.name }} dashboard</h1>
+  </header>
+
+  <!-- The block timeline follows the primary page title. -->
   <section class="panel timeline-panel" aria-labelledby="dash-timeline-heading">
     <h2 id="dash-timeline-heading" class="visually-hidden" i18n="universe.dash.timeline-title">Block timeline</h2>
     <app-chain-timeline
@@ -13,11 +18,6 @@
       No timeline can be drawn until the block and pending sources answer.
     </p>
   </section>
-
-  <header class="title-block">
-    <span class="chain-mark" [ngClass]="'chain-mark-' + chain" aria-hidden="true"></span>
-    <h1 i18n="universe.dash.heading">{{ profile.name }} dashboard</h1>
-  </header>
 
   <!-- The trust anchor keeps its place, compact, above everything. -->
   <section class="status-rail" aria-label="Chain status" i18n-aria-label="universe.dash.rail-label">

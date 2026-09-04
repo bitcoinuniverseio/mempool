@@ -1,6 +1,7 @@
-import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import { IntelligenceApiService } from './intelligence-api.service';
 
 @Component({
@@ -45,33 +46,51 @@ import { IntelligenceApiService } from './intelligence-api.service';
         <!-- SQL Editor and Execution -->
         <div class="col-md-8">
           <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
               <h5 class="mb-0">SQL Query Editor</h5>
-              <span class="small text-muted">SELECT only • 5000ms max timeout</span>
+              <div class="d-flex gap-2 align-items-center">
+                <button type="button" class="btn btn-sm btn-outline-secondary" (click)="loadSampleQuery()">
+                  Load Sample Query
+                </button>
+                <span class="small text-muted">SELECT only • 5000ms limit</span>
+              </div>
             </div>
             <div class="card-body">
+              <label class="form-label small text-muted" for="sqlQueryInput">Analytical SQL Query</label>
               <textarea
+                id="sqlQueryInput"
                 class="form-control font-monospace mb-3"
-                rows="6"
+                rows="5"
                 [(ngModel)]="sqlQuery"
                 placeholder="SELECT txid, fee_sats, feerate FROM mempool_transactions LIMIT 20"
               ></textarea>
-              <div class="d-flex justify-content-between align-items-center">
+              <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <span *ngIf="queryError" class="text-danger small">{{ queryError }}</span>
                 <span *ngIf="!queryError && queryResult" class="text-success small">
                   {{ queryResult.row_count }} rows returned in {{ queryResult.execution_time_ms }} ms
                 </span>
-                <button class="btn btn-primary ms-auto" [disabled]="loading || !sqlQuery.trim()" (click)="executeQuery()">
+                <button
+                  type="button"
+                  class="btn btn-primary ms-auto"
+                  [disabled]="loading || !sqlQuery.trim()"
+                  (click)="executeQuery()"
+                >
                   {{ loading ? 'Executing...' : 'Run Query' }}
                 </button>
               </div>
             </div>
           </div>
 
+          <!-- Empty Initial State -->
+          <div *ngIf="!queryResult && !loading && !queryError" class="p-4 rounded bg-dark-subtle text-muted text-center">
+            Write an analytical SELECT query or click "Load Sample Query" above to inspect execution results.
+          </div>
+
           <!-- Query Results -->
           <div *ngIf="queryResult" class="card">
-            <div class="card-header">
+            <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
               <h5 class="mb-0">Execution Results</h5>
+              <span class="badge badge-secondary">{{ queryResult.rows?.length || 0 }} rows</span>
             </div>
             <div class="table-responsive">
               <table class="table table-sm table-hover mb-0">
@@ -82,7 +101,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
                 </thead>
                 <tbody>
                   <tr *ngFor="let row of queryResult.rows">
-                    <td *ngFor="let col of queryResult.columns" class="font-monospace small">
+                    <td *ngFor="let col of queryResult.columns" class="font-monospace small text-break">
                       {{ row[col] }}
                     </td>
                   </tr>
@@ -103,15 +122,19 @@ import { IntelligenceApiService } from './intelligence-api.service';
       font-weight: 700; line-height: 1; text-align: center; white-space: nowrap;
       vertical-align: baseline; border-radius: 0.25rem;
     }
-    .badge-success { background-color: #198754; color: #fff; }
+    .badge-primary { background-color: var(--primary, #0d6efd); color: #fff; }
+    .badge-secondary { background-color: var(--secondary, #6c757d); color: #fff; }
+    .badge-success { background-color: var(--success, #198754); color: #fff; }
   `],
 })
-export class QueryStudioComponent implements OnInit {
+export class QueryStudioComponent implements OnInit, OnDestroy {
   schema: any[] = [];
-  sqlQuery = 'SELECT txid, fee_sats, vsize, feerate FROM mempool_transactions ORDER BY feerate DESC LIMIT 10';
+  sqlQuery = '';
   loading = false;
-  queryResult: any = null;
   queryError: string | null = null;
+  queryResult: any = null;
+
+  private sub?: Subscription;
 
   constructor(
     private api: IntelligenceApiService,
@@ -123,25 +146,35 @@ export class QueryStudioComponent implements OnInit {
       this.schema = res?.tables || [];
       this.cdr.markForCheck();
     });
+  }
+
+  loadSampleQuery(): void {
+    this.sqlQuery = 'SELECT txid, fee_sats, feerate FROM mempool_transactions LIMIT 10';
     this.executeQuery();
   }
 
   executeQuery(): void {
+    if (!this.sqlQuery.trim()) return;
     this.loading = true;
     this.queryError = null;
     this.cdr.markForCheck();
 
-    this.api.executeDevQuery$(this.sqlQuery).subscribe({
+    this.sub?.unsubscribe();
+    this.sub = this.api.executeDevQuery$(this.sqlQuery.trim()).subscribe({
       next: (res) => {
         this.queryResult = res;
         this.loading = false;
         this.cdr.markForCheck();
       },
       error: (err) => {
-        this.queryError = err?.error?.error || err?.message || 'Query failed';
+        this.queryError = err?.error?.error || err?.message || 'Query execution failed';
         this.loading = false;
         this.cdr.markForCheck();
       },
     });
+  }
+
+  ngOnDestroy(): void {
+    this.sub?.unsubscribe();
   }
 }

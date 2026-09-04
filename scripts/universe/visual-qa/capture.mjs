@@ -39,6 +39,7 @@ import { chainFixtures, chainSampleIds, chainStateOverrides, chainStateScope } f
 import { assetFixtures, assetSampleIds, savedStorageSeed } from './asset-fixtures.mjs';
 import { contrastProbe } from './contrast-probe.mjs';
 import { progressProbe } from './progress-probe.mjs';
+import { FixtureRouter } from './fixture-router.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
@@ -124,6 +125,22 @@ export const ROUTES = [
   { id: 'anima-transitions', path: '/anima/transitions', name: 'ANIMA transitions' },
   { id: 'anima-items', path: '/anima/items', name: 'ANIMA organisms' },
 
+  // Fourteen Intelligence Platform routes
+  { id: 'intelligence-policy-lab', path: '/tools/policy-lab', name: 'Policy Lab' },
+  { id: 'intelligence-workbench', path: '/tools/workbench', name: 'Bitcoin Workbench' },
+  { id: 'intelligence-verify-proof', path: '/tools/verify-proof', name: 'Verify Proof' },
+  { id: 'intelligence-relay', path: '/intelligence/relay', name: 'Relay Observatory' },
+  { id: 'intelligence-time-machine', path: '/intelligence/time-machine', name: 'Historical Time Machine' },
+  { id: 'intelligence-mining-templates', path: '/intelligence/mining-templates', name: 'Mining Templates' },
+  { id: 'intelligence-utxo-set', path: '/intelligence/utxo-set', name: 'UTXO Set' },
+  { id: 'intelligence-transaction-graph', path: '/intelligence/transaction-graph', name: 'Transaction Graph' },
+  { id: 'intelligence-incidents', path: '/intelligence/incidents', name: 'Network Incidents' },
+  { id: 'intelligence-knowledge', path: '/intelligence/knowledge', name: 'Knowledge Registry' },
+  { id: 'intelligence-developers', path: '/developers', name: 'Developer Platform' },
+  { id: 'intelligence-query-studio', path: '/developers/query-studio', name: 'Query Studio' },
+  { id: 'intelligence-watchlists', path: '/user/watchlists', name: 'Privacy Watchlists' },
+  { id: 'intelligence-protocols', path: '/explore/protocols', name: 'Protocol Intelligence' },
+
   // The chain switcher, open. Nothing here had ever opened a menu, so the one
   // surface that decides which chain a visitor is looking at was measured only
   // while closed. It was collapsed: the header's own `.dropdown-item` rule,
@@ -193,49 +210,51 @@ function pick(list, key, idKey = 'id') {
   return list.filter((entry) => wanted.includes(typeof entry === 'string' ? entry : entry[idKey]));
 }
 
-/** Answer every API call from fixtures, applying the state's overrides. */
-export async function installFixtures(context, state) {
-  const overrides = ALL_OVERRIDES[state] || {};
-  const table = { ...fixtures, ...detailFixtures, ...addressFixtures, ...chainFixtures, ...assetFixtures };
+export async function installFixtures(context, state, routeId = 'unknown', scenarioId = 'default') {
+  const router = new FixtureRouter({ routeId, scenarioId, state });
+  context._fixtureRouter = router;
+  context._unmatchedFixtureErrors = [];
 
   await context.route('**/api/**', async (route) => {
-    const url = new URL(route.request().url());
-    const path = url.pathname;
+    const req = route.request();
+    const url = new URL(req.url());
+    const query = Object.fromEntries(url.searchParams.entries());
+    const method = req.method();
+    const body = req.postData();
 
-    if (overrides['**']?.hang) return; // never fulfil: hold the loading state
+    const handled = router.handle({
+      method,
+      pathname: url.pathname,
+      query,
+      body,
+    });
 
-    const override =
-      overrides[path] ??
-      Object.entries(overrides).find(([k]) => k !== '**' && path.startsWith(k))?.[1];
-
-    if (override) {
-      if (override.hang) return;
-      if (override.status) {
-        return route.fulfill({ status: override.status, contentType: 'text/plain', body: 'fixture error' });
-      }
-      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(override.body) });
+    if (handled.action === 'hang') {
+      return; // never fulfil: hold loading state
     }
 
-    const exact = table[path];
-    if (exact !== undefined) {
-      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(exact) });
+    if (handled.action === 'fulfill') {
+      return route.fulfill({
+        status: handled.status,
+        contentType: handled.contentType,
+        body: typeof handled.response === 'string' ? handled.response : JSON.stringify(handled.response),
+      });
     }
 
-    const prefix = Object.keys(table).find((k) => path.startsWith(k));
-    if (prefix) {
-      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(table[prefix]) });
-    }
-
-    // Anything not pinned returns an empty list rather than reaching the
-    // network, so a run is never at the mercy of a live backend.
-    if (process.env.LOG_UNMATCHED) console.log('unmatched: ' + path);
-    return route.fulfill({ status: 200, contentType: 'application/json', body: '[]' });
+    // Fail closed: record failure prominently and return 500 fixture-missing error
+    context._unmatchedFixtureErrors.push(`Unmatched ${method} ${url.pathname} for route ${router.currentRouteId}`);
+    return route.fulfill({
+      status: 500,
+      contentType: 'application/json',
+      body: JSON.stringify(handled.response),
+    });
   });
 
   // Most live surfaces on this product are fed by the socket, not by REST, so
   // a screenshot with the socket cut is a screenshot of skeletons. Answer it
   // from the same fixtures instead: the client sends {action:'want'}, and one
   // push carries the whole initial state.
+  const overrides = ALL_OVERRIDES[state] ?? {};
   const down = state === 'chain-down' || overrides['**']?.hang;
   await context.routeWebSocket('**/api/v1/ws', (ws) => {
     if (down) return; // connected but silent: the reconnecting and loading states
@@ -448,6 +467,10 @@ async function run() {
 
         for (const route of routes) {
           if (!stateApplies(state, route.id)) continue;
+          if (context._fixtureRouter) {
+            context._fixtureRouter.currentRouteId = route.id;
+          }
+          context._unmatchedFixtureErrors = [];
           const page = await context.newPage();
           const consoleErrors = [];
           const expectedFetchErrors = [];
@@ -626,9 +649,11 @@ async function run() {
             await page.screenshot({ path: join(OUT, `${label}.png`), fullPage: Boolean(args.fullPage) });
             shots++;
 
+            const unmatchedFixtures = [...(context._unmatchedFixtureErrors || [])];
             findings.push({
               route: route.id, routeName: route.name, state, theme, viewport: viewport.id,
               overflowBy, consoleErrors, expectedFetchErrors, brokenImages, violations, obscured, contrast, progress, settledAfterMs,
+              unmatchedFixtures,
             });
           } catch (error) {
             // A server that has gone away is not a page that failed. Reporting
@@ -645,9 +670,11 @@ async function run() {
               );
               process.exit(2);
             }
+            const unmatchedFixtures = [...(context._unmatchedFixtureErrors || [])];
             findings.push({
               route: route.id, routeName: route.name, state, theme, viewport: viewport.id,
               error: String(error).slice(0, 400),
+              unmatchedFixtures,
             });
           } finally {
             await page.close();
@@ -699,7 +726,7 @@ async function run() {
 
   const report = { browser: BROWSER, base: BASE, screenshots: shots, findings };
   writeFileSync(join(OUT, `report-${BROWSER}.json`), JSON.stringify(report, null, 2));
-  const { blocking: stuck, contrastNotMeasured } = summarise(report);
+  const { blocking: stuck, contrastNotMeasured, unmatched } = summarise(report);
   if (stuck.length > 0) {
     console.error(`${stuck.length} page(s) never finished loading. This is the failure that shipped last time, so it fails the run.`);
     process.exitCode = 1;
@@ -707,6 +734,12 @@ async function run() {
   if (contrastNotMeasured.length > 0) {
     console.error(
       `${contrastNotMeasured.length} page(s) had no contrast measurement taken, so this run cannot claim their contrast is correct.`,
+    );
+    process.exitCode = 1;
+  }
+  if (unmatched && unmatched.length > 0) {
+    console.error(
+      `${unmatched.length} page(s) had unmatched fixture requests that failed closed.`,
     );
     process.exitCode = 1;
   }
@@ -748,6 +781,12 @@ export const GATED_ROUTES = new Set([
   'zcash-mining', 'zcash-graphs', 'zcash-graphs-hashrate', 'zcash-docs',
   // The single-asset pages and the local-state page, for the same reason.
   'outpoint', 'inscription', 'rune', 'sat', 'saved',
+  // Intelligence Platform routes
+  'intelligence-policy-lab', 'intelligence-workbench', 'intelligence-verify-proof',
+  'intelligence-relay', 'intelligence-time-machine', 'intelligence-mining-templates',
+  'intelligence-utxo-set', 'intelligence-transaction-graph', 'intelligence-incidents',
+  'intelligence-knowledge', 'intelligence-developers', 'intelligence-query-studio',
+  'intelligence-watchlists', 'intelligence-protocols',
 ]);
 
 /**
@@ -820,6 +859,7 @@ function summarise(report) {
   const images = report.findings.filter((f) => f.brokenImages?.length);
   const failed = report.findings.filter((f) => f.error);
   const a11y = report.findings.filter((f) => f.violations?.length);
+  const unmatched = report.findings.filter((f) => f.unmatchedFixtures?.length);
 
   const contrastFailures = [];
   const blankCanvases = [];
@@ -878,6 +918,7 @@ function summarise(report) {
   console.log(`broken images       : ${images.length}`);
   console.log(`navigation failures : ${failed.length}`);
   console.log(`a11y rules violated : ${byRule.size}`);
+  console.log(`unmatched fixtures  : ${unmatched.length}`);
 
   // Reported, never counted, and never silent. A route that opens a menu is
   // measured with the menu open, so the controls beneath it read as obscured.
@@ -964,6 +1005,14 @@ function summarise(report) {
     console.log('\n-- navigation --');
     for (const f of failed.slice(0, 15)) console.log(`  ${f.route} ${f.state} ${f.theme} @${f.viewport}: ${f.error}`);
   }
+  if (unmatched.length) {
+    console.log('\n-- unmatched fixtures (failed closed) --');
+    for (const f of unmatched.slice(0, 20)) {
+      for (const err of f.unmatchedFixtures) {
+        console.log(`  [${f.route}/${f.state}] ${err}`);
+      }
+    }
+  }
 
   const stuck = progressFailures(report);
   const blocking = stuck.filter((line) => GATED_ROUTES.has(line.split('/')[0]));
@@ -984,7 +1033,7 @@ function summarise(report) {
     if (known.length > 40) console.log(`  ... and ${known.length - 40} more, see the report`);
   }
   console.log('');
-  return { blocking, contrastNotMeasured };
+  return { blocking, contrastNotMeasured, unmatched };
 }
 
 // Only drive browsers when this file is the program. Importing it, as the

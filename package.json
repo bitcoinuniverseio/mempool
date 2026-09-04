@@ -1,0 +1,10 @@
+{
+  "name": "mempool-workspace",
+  "private": true,
+  "scripts": {
+    "checkscreenshots:changed": "node scripts/universe/visual-qa/checkscreenshots.mjs --mode=changed",
+    "checkscreenshots:full": "node scripts/universe/visual-qa/checkscreenshots.mjs --mode=full",
+    "checkscreenshots:review": "node scripts/universe/visual-qa/checkscreenshots.mjs --mode=review",
+    "checkscreenshots:production-parity": "node scripts/universe/visual-qa/checkscreenshots.mjs --mode=production-parity"
+  }
+}
