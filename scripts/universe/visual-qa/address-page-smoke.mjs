@@ -97,11 +97,15 @@ async function openAddress(context, address) {
     // the error state rather than for a fixed time, so a slow index is not
     // reported as an empty page.
     await page
-      .waitForFunction(
-        () => !document.querySelector('.skeleton-loader'),
-        undefined,
-        { timeout: REQUEST_TIMEOUT_MS },
-      )
+      .waitForSelector('.skeleton-loader', {
+        state: 'detached',
+        timeout: REQUEST_TIMEOUT_MS,
+      })
+      .catch(() => undefined);
+    await page
+      .waitForSelector('app-transactions-list [data-cy^="tx-"], .alert-danger, .error-wrapper, .empty-transactions', {
+        timeout: REQUEST_TIMEOUT_MS,
+      })
       .catch(() => undefined);
 
     const text = await page.evaluate(() => document.body.innerText.replace(/\s+/g, ' ').trim());
