@@ -295,6 +295,20 @@
   padding: 0;
 
   @media (max-width: 991.98px) {
+    // Keep the six primary destinations completely visible before the
+    // secondary destinations continue in the horizontal scroller. The fixed
+    // link floor plus the scroller inset previously pushed the sixth item past
+    // the viewport edge on common phone widths.
+    .nav-item {
+      flex: 0 0 clamp(56px, calc((100% - 24px) / 6), 76px);
+    }
+
+    .nav-link {
+      min-width: 0;
+      padding-inline: var(--u-space-1);
+      width: 100%;
+    }
+
     // Six or more destinations will not fit at 320px without either shrinking
     // targets below a usable size or hiding some. Scrolling keeps every target
     // at full size and keeps all of them reachable.
