@@ -65,9 +65,9 @@ cmd_install() {
 
   if [ ! -d "$dir/backend/node_modules" ] && [ "$reuse_previous" = true ]; then
     cp -al "$previous/backend/node_modules" "$dir/backend/node_modules"
-    [ -d "$dir/backend/rust-gbt" ]     || cp -al "$previous/backend/rust-gbt" "$dir/backend/rust-gbt"
+    [ -d "$dir/backend/rust-gbt" ]     || { [ -d "$previous/backend/rust-gbt" ] && cp -al "$previous/backend/rust-gbt" "$dir/backend/rust-gbt"; } || true
     [ -f "$dir/backend/package.json" ] || cp -a  "$previous/backend/package.json" "$dir/backend/package.json"
-    [ -d "$dir/rust" ]                 || cp -al "$previous/rust" "$dir/rust"
+    [ -d "$dir/rust" ]                 || { [ -d "$previous/rust" ] && cp -al "$previous/rust" "$dir/rust"; } || true
   fi
 
   if [ ! -d "$dir/backend/node_modules" ]; then
