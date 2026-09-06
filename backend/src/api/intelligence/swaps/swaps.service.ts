@@ -1,18 +1,11 @@
-import {
-  SwapPackage,
-  SwapProtocolDefinition,
-  SwapProvider,
-  SwapLockupVerification,
-  SwapClaimVerification,
-  SwapRefundVerification,
-  SwapRecoveryPlan,
-  SwapsOverview,
-  ReconciliationState,
-  RecoveryAction,
-} from './swaps.models';
+import { SwapPackage, SwapProtocolDefinition, SwapProvider, SwapLockupVerification, SwapClaimVerification, SwapRefundVerification, SwapRecoveryPlan, SwapsOverview, SwapContext } from './swaps.models';
+import { BitcoinSwapAuthority, LockupEvidence, SwapAuthority, SwapEvidenceError, swapContext } from './swaps-evidence';
+import { boltzContract, refundPsbt, verifyBoltzSpend } from './boltz-taproot';
+import { DatabaseSwapObservations, SwapObservationStore } from './swaps-observations';
+import * as ecc from 'tiny-secp256k1';
 
 export class SwapsService {
-  private protocols: SwapProtocolDefinition[] = [
+  private readonly protocols: SwapProtocolDefinition[] = [
     {
       protocol_id: 'boltz_submarine_v2',
       protocol_name: 'Boltz Submarine Swap V2',
@@ -59,306 +52,172 @@ export class SwapsService {
     },
   ];
 
-  private providers: SwapProvider[] = [
-    {
-      provider_id: 'boltz-exchange',
-      identity_key: '026165854b34e203a96812b67fa17e754dfebf0dfb39d677fa8f601a97e20556f8',
-      name: 'Boltz Exchange',
-      protocols: ['boltz_submarine_v2', 'boltz_chain_v1'],
-      protocol_versions: ['2.3.4', '1.2.0'],
-      networks: ['bitcoin', 'liquid'],
-      swap_types: ['submarine', 'reverse', 'chain'],
-      minimum_amount_sats: 25000,
-      maximum_amount_sats: 25000000,
-      fee_percentage: 0.5,
-      miner_fee_estimate_sats: 1500,
-      timeout_policy_blocks: 144,
-      cooperative_claim_support: true,
-      cooperative_refund_support: true,
-      taproot_support: true,
-      liquid_support: true,
-      ark_support: false,
-      status_endpoint: 'https://api.boltz.exchange/v2/health',
-      health_status: 'online',
-      effective_from: '2026-01-01T00:00:00Z',
-      expires_at: '2027-01-01T00:00:00Z',
-      provider_signature: '304402206ef429b9f7a7bf30965d8c6b7538b975e533d3ab2e88a3b836ab8cf95a1a1db9022003c27e462615467e27303e9441fa3793df601b3a3c9e6bb076e06a38618e9d6d',
-    },
-    {
-      provider_id: 'loop-in-out',
-      identity_key: '0289be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81799',
-      name: 'Lightning Labs Loop',
-      protocols: ['lightning_loop_v1'],
-      protocol_versions: ['0.28.0'],
-      networks: ['bitcoin'],
-      swap_types: ['submarine', 'reverse'],
-      minimum_amount_sats: 50000,
-      maximum_amount_sats: 50000000,
-      fee_percentage: 0.25,
-      miner_fee_estimate_sats: 2200,
-      timeout_policy_blocks: 288,
-      cooperative_claim_support: true,
-      cooperative_refund_support: true,
-      taproot_support: true,
-      liquid_support: false,
-      ark_support: false,
-      status_endpoint: 'https://api.loop.lightning.finance/health',
-      health_status: 'online',
-      effective_from: '2026-01-01T00:00:00Z',
-      expires_at: '2027-01-01T00:00:00Z',
-      provider_signature: '30450221008d519b788a8d11d95c249a5b3e20e8b826f63450257ad8da1e2049e386ab54ff022026c043e0d86927bf457788be4bdfca8e040409a4569f64bf38ab511ecf33878b',
-    },
-  ];
-
-  private referenceSwaps: SwapPackage[] = [
-    {
-      schema_version: '1.0.0',
-      swap_type: 'submarine',
-      protocol_id: 'boltz_submarine_v2',
-      protocol_revision: '2.3.4',
-      network: 'bitcoin',
-      swap_id: 'swp-boltz-887412-001',
-      provider_id: 'boltz-exchange',
-      created_at: '2026-09-04T12:00:00Z',
-      expires_at: '2026-09-05T12:00:00Z',
-      invoice_hash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
-      preimage_hash: '2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae',
-      timeout_height: 864200,
-      expected_amount_sats: 100000,
-      provider_fee_sats: 500,
-      miner_fee_sats: 1200,
-      lockup_address: 'bc1q9w7y723n0h57n675n8l9e8790vj9642swp001',
-      lockup_transaction: '4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b',
-      status: 'claimable',
-    },
-    {
-      schema_version: '1.0.0',
-      swap_type: 'reverse',
-      protocol_id: 'boltz_submarine_v2',
-      protocol_revision: '2.3.4',
-      network: 'bitcoin',
-      secondary_network: 'lightning',
-      swap_id: 'swp-boltz-887412-002',
-      provider_id: 'boltz-exchange',
-      created_at: '2026-09-04T14:30:00Z',
-      expires_at: '2026-09-05T14:30:00Z',
-      preimage_hash: 'fcde2b2edba56bf408601fb721fe9b5c338d10ee429ea04fae5511b68fbf8fb9',
-      timeout_height: 864250,
-      expected_amount_sats: 250000,
-      provider_fee_sats: 1250,
-      miner_fee_sats: 1500,
-      lockup_address: 'bc1qrevswp77488921190477123985721839074839',
-      lockup_transaction: '0e3e2357e806b6cdb1f70b54c3a3a17b6714ee1f0e249fa23d8a969e1c911e22',
-      claim_transaction: '9b71d224bd62f3785d96d46ad3ea3d73319bfbc2770d3d5f7cc9a4744d91aafb',
-      status: 'claimed',
-    },
-    {
-      schema_version: '1.0.0',
-      swap_type: 'chain',
-      protocol_id: 'boltz_chain_v1',
-      protocol_revision: '1.2.0',
-      network: 'bitcoin',
-      secondary_network: 'liquid',
-      swap_id: 'swp-chain-887412-003',
-      provider_id: 'boltz-exchange',
-      created_at: '2026-09-04T16:00:00Z',
-      expires_at: '2026-09-05T16:00:00Z',
-      preimage_hash: 'a1b2c3d4e5f60718293a4b5c6d7e8f90123456789abcdef0123456789abcdef0',
-      timeout_height: 864300,
-      expected_amount_sats: 500000,
-      expected_secondary_amount: '0.00500000 L-BTC',
-      provider_fee_sats: 2500,
-      miner_fee_sats: 1800,
-      lockup_address: 'bc1qchainswap99182374981729384719283749182',
-      lockup_transaction: '5566778899aabbccddeeff00112233445566778899aabbccddeeff0011223344',
-      status: 'awaiting_lockup',
-    },
-  ];
-
-  public getOverview(): SwapsOverview {
-    return {
-      total_swaps_observed: 1420,
-      active_providers_count: this.providers.length,
-      total_volume_sats: 285400000,
-      supported_protocols_count: this.protocols.length,
-      recent_swaps: this.referenceSwaps,
-      active_providers: this.providers,
-      protocols: this.protocols,
-    };
-  }
+  constructor(private authority: SwapAuthority = new BitcoinSwapAuthority(), private observations: SwapObservationStore = new DatabaseSwapObservations()) {}
 
   public listProtocols(): SwapProtocolDefinition[] {
-    return this.protocols;
+    return this.protocols.map(p => ({ ...p, verification_status: 'catalog-only',
+      verification_scope: p.protocol_id === 'boltz_submarine_v2'
+        ? 'Bitcoin two-leaf Taproot script evidence and unsigned refunds; provider identity and release revision unverified.'
+        : 'Protocol-specific proof adapter and owned integration unavailable. Catalog declarations are not verified support.' }));
+  }
+  public listProviders(): SwapProvider[] { return []; }
+  public getProvider(_id: string): SwapProvider | undefined { return undefined; }
+  public getProviderHistory(_id: string): null { return null; }
+
+  /** @asyncSafe Storage failures become explicit unavailable-storage diagnostics. */
+  public async getOverview(context = swapContext()): Promise<SwapsOverview> {
+    const result: SwapsOverview = { total_swaps_observed: null, active_providers_count: null, total_volume_sats: null,
+      supported_protocols_count: 0, recent_swaps: [], active_providers: [], protocols: this.listProtocols(),
+      notes: ['Provider health, settlement volume and provider revision support have no authenticated observation source.'] };
+    try {
+      result.recent_observations = await this.observations.recent(context);
+      result.observation_status = 'historical-observations';
+      result.notes!.push('Stored checks describe their recorded checkpoint only. Recheck before recovery; no current spend state is inferred after a restart or reorg.');
+    } catch {
+      result.observation_status = 'unavailable-storage';
+      result.recent_observations = [];
+      result.notes!.push('Durable swap observations are unavailable. No totals or health values have been substituted.');
+    }
+    return result;
   }
 
-  public listProviders(): SwapProvider[] {
-    return this.providers;
+  private validatePackage(pkg: Partial<SwapPackage>, context: SwapContext): void {
+    if (!pkg || typeof pkg !== 'object' || Array.isArray(pkg)) throw new SwapEvidenceError('invalid', 'A public swap package object is required.');
+    if (pkg.network !== context.network || (pkg.chain !== undefined && pkg.chain !== context.chain)) throw new SwapEvidenceError('wrong-network', 'Package chain/network must match the selected request context.');
+    if (typeof pkg.lockup_transaction !== 'string' || !/^[0-9a-f]{64}$/.test(pkg.lockup_transaction)) throw new SwapEvidenceError('invalid', 'Lockup transaction must be a 32-byte lowercase hexadecimal transaction ID.');
+    if (!Number.isSafeInteger(pkg.lockup_vout) || pkg.lockup_vout! < 0 || pkg.lockup_vout! > 0xffffffff) throw new SwapEvidenceError('invalid', 'An explicit lockup output index is required.');
+    if (!Number.isSafeInteger(pkg.expected_amount_sats) || pkg.expected_amount_sats! <= 0 || pkg.expected_amount_sats! > 2_100_000_000_000_000) throw new SwapEvidenceError('invalid', 'Expected amount must be a positive integer number of satoshis.');
   }
 
-  public getProvider(providerId: string): SwapProvider | undefined {
-    return this.providers.find((p) => p.provider_id === providerId);
+  private error(err: unknown): { stage: string; message: string } {
+    return err instanceof SwapEvidenceError ? { stage: err.code, message: err.message } : { stage: 'invalid', message: 'The supplied transaction or script evidence could not be verified.' };
   }
 
-  public getProviderHistory(providerId: string): any {
-    const provider = this.getProvider(providerId);
-    if (!provider) return null;
-    return {
-      provider_id: providerId,
-      uptime_pct_30d: 99.98,
-      completed_swaps_count: 854,
-      failed_swaps_count: 3,
-      refunded_swaps_count: 14,
-      average_claim_time_seconds: 42,
-      last_health_check: new Date().toISOString(),
-      recent_observations: [
-        { height: 864190, status: 'healthy', latency_ms: 65 },
-        { height: 864185, status: 'healthy', latency_ms: 58 },
-      ],
-    };
+  /** @asyncSafe Invalid packages and source/storage errors become per-stage diagnostics. */
+  private async lockup(pkg: Partial<SwapPackage>, context: SwapContext): Promise<{ evidence?: LockupEvidence; result: SwapLockupVerification }> {
+    const result: SwapLockupVerification = { verified: false, script_matches: false, amount_matches: false,
+      timeout_valid: false, preimage_hash_committed: false, current_confirmations: 0, required_confirmations: 1, errors: [], stage: 'unverified' };
+    try {
+      this.validatePackage(pkg, context);
+      const contract = boltzContract(pkg, context);
+      const evidence = await this.authority.lockup(context, pkg.lockup_transaction!, pkg.lockup_vout!);
+      const output = evidence.transaction.outs[pkg.lockup_vout!];
+      result.source_context = evidence.context;
+      result.lockup_txid = evidence.transaction.getId();
+      result.output_index = pkg.lockup_vout;
+      result.current_confirmations = evidence.confirmations;
+      result.outpoint_unspent = evidence.unspent;
+      result.script_matches = !!output && output.script.equals(contract.output);
+      result.amount_matches = !!output && output.value === pkg.expected_amount_sats;
+      result.preimage_hash_committed = result.script_matches;
+      result.timeout_valid = result.script_matches;
+      if (!result.script_matches) result.errors.push('Trusted lockup output does not match the protocol script commitment.');
+      if (!result.amount_matches) result.errors.push('Trusted lockup output value does not match the expected amount.');
+      if (evidence.confirmations < 1) result.errors.push('Lockup is unconfirmed at the selected node checkpoint.');
+      result.verified = result.errors.length === 0;
+      result.stage = result.verified ? 'lockup-script-verified' : 'invalid';
+      try { await this.observations.save(evidence.context, result.lockup_txid, pkg.lockup_vout!, output?.value || 0, result.stage); }
+      catch { result.errors.push('Observation persistence unavailable; this response is an on-demand check only.'); }
+      return { evidence, result };
+    } catch (err) {
+      const failure = this.error(err); result.stage = failure.stage; result.errors.push(failure.message);
+      return { result };
+    }
   }
 
-  public verifyLockup(pkg: Partial<SwapPackage>, chainContext?: { currentHeight: number }): SwapLockupVerification {
+  /** @asyncSafe Delegates to the lockup error boundary. */
+  public async verifyLockup(pkg: Partial<SwapPackage>, context = swapContext()): Promise<SwapLockupVerification> {
+    return (await this.lockup(pkg, context)).result;
+  }
+
+  /** @asyncSafe Spend failures become per-stage diagnostics. */
+  private async spend(pkg: Partial<SwapPackage>, context: SwapContext, refund: boolean, checked?: { evidence?: LockupEvidence; result: SwapLockupVerification }): Promise<any> {
+    const result: any = refund
+      ? { verified: false, timeout_matured: false, blocks_remaining: null, sequence_valid: false, locktime_valid: false, witness_valid: false, stage: 'unverified', errors: [] }
+      : { verified: false, claim_path_valid: false, preimage_matches: false, witness_valid: false, destinations_valid: false, fee_sats: null, stage: 'unverified', errors: [] };
+    try {
+      const check = checked || await this.lockup(pkg, context);
+      if (!check.result.verified || !check.evidence) throw new SwapEvidenceError(check.result.stage!, check.result.errors.join(' '));
+      const evidence = check.evidence;
+      result.source_context = evidence.context;
+      if (refund) {
+        result.blocks_remaining = Math.max(0, pkg.timeout_height! - evidence.context.block_height);
+        result.timeout_matured = evidence.context.block_height >= pkg.timeout_height!;
+      }
+      const txid = refund ? pkg.refund_transaction : pkg.claim_transaction;
+      if (!txid) throw new SwapEvidenceError('not-observable', 'No actual spending transaction was supplied. Maturity and caller status cannot prove a completed spend.');
+      if (!/^[0-9a-f]{64}$/.test(txid)) throw new SwapEvidenceError('invalid', 'Spending transaction ID must be 32-byte lowercase hexadecimal.');
+      const spend = await this.authority.transaction(evidence.context, txid);
+      if (spend.confirmations < 1) throw new SwapEvidenceError('unconfirmed', 'Spending transaction is not confirmed in the selected active chain.');
+      if (refund && !result.timeout_matured) throw new SwapEvidenceError('premature-refund', 'Refund height is not mature at the selected node checkpoint.');
+      if (evidence.unspent) throw new SwapEvidenceError('source-disagreement', 'Node still reports this outpoint unspent.');
+      const proof = verifyBoltzSpend(pkg, context, evidence.transaction, spend.transaction, refund);
+      Object.assign(result, refund
+        ? { sequence_valid: true, locktime_valid: true, witness_valid: true }
+        : { claim_path_valid: true, preimage_matches: true, witness_valid: true, destinations_valid: true, fee_sats: proof.fee_sats });
+      result.verified = true; result.stage = refund ? 'confirmed-refund-verified' : 'confirmed-claim-verified';
+    } catch (err) { const failure = this.error(err); result.stage = failure.stage; result.errors.push(failure.message); }
+    return result;
+  }
+
+  public verifyClaim(pkg: Partial<SwapPackage>, context = swapContext()): Promise<SwapClaimVerification> { return this.spend(pkg, context, false); }
+  public verifyRefund(pkg: Partial<SwapPackage>, context = swapContext()): Promise<SwapRefundVerification> { return this.spend(pkg, context, true); }
+  /** @asyncSafe Every stage uses its own structured-error boundary. */
+  public async verifyReceipts(pkg: Partial<SwapPackage>, context = swapContext()) {
+    const checked = await this.lockup(pkg, context);
+    const claim = await this.spend(pkg, context, false, checked);
+    const refund = await this.spend(pkg, context, true, checked);
+    return { lockup: checked.result, claim, refund };
+  }
+
+  /** @asyncSafe Source and artifact failures become explicit plan diagnostics. */
+  public async planRecovery(pkg: Partial<SwapPackage>, context = swapContext()): Promise<SwapRecoveryPlan> {
+    const plan: SwapRecoveryPlan = { swap_id: typeof pkg?.swap_id === 'string' ? pkg.swap_id : '', current_state: 'unknown',
+      recommended_action: 'insufficient_artifacts', recoverable_value_sats: 0, estimated_miner_fee_sats: 0,
+      timeout_height: Number.isSafeInteger(pkg?.timeout_height) ? pkg.timeout_height! : 0,
+      current_block_height: null, blocks_until_refund: null, stage: 'unverified', notes: [] };
+    try {
+      const { evidence, result } = await this.lockup(pkg, context);
+      if (!result.verified || !evidence) throw new SwapEvidenceError(result.stage!, result.errors.join(' '));
+      plan.source_context = evidence.context;
+      plan.current_block_height = evidence.context.block_height;
+      plan.blocks_until_refund = Math.max(0, pkg.timeout_height! - evidence.context.block_height);
+      if (!evidence.unspent) throw new SwapEvidenceError('already-spent', 'The trusted outpoint is spent. This does not establish whether it was claimed or refunded.');
+      // Validate destination and fee even while waiting, so malformed plans never look usable.
+      const artifact = refundPsbt(pkg, context, evidence.transaction);
+      plan.recoverable_value_sats = artifact.decoded.output_value_sats;
+      plan.estimated_miner_fee_sats = artifact.decoded.fee_sats;
+      if (plan.blocks_until_refund > 0) {
+        plan.stage = 'not-yet-mature'; plan.recommended_action = 'refundable_after_height';
+        plan.notes.push(`Refund can be included after block height ${pkg.timeout_height}. Wait ${plan.blocks_until_refund} blocks.`);
+      } else {
+        plan.stage = 'unsigned-plan-ready'; plan.recommended_action = 'refundable_now';
+        plan.unsigned_recovery_psbt = artifact.encoded; plan.decoded = artifact.decoded;
+        plan.notes.push('Unsigned refund plan only. No signature, broadcast or refund completion is implied. Recheck the outpoint and checkpoint before signing.');
+      }
+      plan.notes.push('Only the Bitcoin two-leaf script contract is checked. Provider identity, release revision, Lightning settlement and cooperative cancellation are unverified.');
+      plan.notes.push(...result.errors);
+    } catch (err) {
+      const failure = this.error(err); plan.stage = failure.stage; plan.notes.push(failure.message);
+      if (['already-spent', 'invalid', 'wrong-network', 'reorged'].includes(failure.stage)) plan.recommended_action = 'unsafe';
+    }
+    return plan;
+  }
+
+  public verifyProviderManifest(manifest: Partial<SwapProvider>): { valid: boolean; stage: string; errors: string[] } {
     const errors: string[] = [];
-    const currentHeight = chainContext?.currentHeight ?? 864195;
-
-    if (!pkg.lockup_address) {
-      errors.push('Lockup address is missing');
+    if (!manifest || typeof manifest !== 'object' || Array.isArray(manifest)) errors.push('Manifest must be an object.');
+    else {
+      if (!manifest.provider_id) errors.push('provider_id is required');
+      if (typeof manifest.identity_key !== 'string' || !/^(02|03)[0-9a-fA-F]{64}$/.test(manifest.identity_key) || !ecc.isPoint(Buffer.from(manifest.identity_key, 'hex'))) errors.push('A valid compressed identity key is required.');
+      if (typeof manifest.provider_signature !== 'string' || !/^[0-9a-fA-F]{128}$/.test(manifest.provider_signature)) errors.push('No accepted provider signature was supplied.');
     }
-    if (!pkg.expected_amount_sats || pkg.expected_amount_sats <= 0) {
-      errors.push('Invalid expected satoshi amount');
-    }
-    if (!pkg.preimage_hash || pkg.preimage_hash.length !== 64) {
-      errors.push('Preimage hash must be 32 bytes hex');
-    }
-    if (!pkg.timeout_height || pkg.timeout_height <= currentHeight) {
-      errors.push(`Lockup timeout height (${pkg.timeout_height}) has already matured or is invalid`);
-    }
-
-    const verified = errors.length === 0;
-    return {
-      verified,
-      script_matches: verified,
-      amount_matches: verified,
-      timeout_valid: (pkg.timeout_height ?? 0) > currentHeight,
-      preimage_hash_committed: verified,
-      current_confirmations: pkg.lockup_transaction ? 6 : 0,
-      required_confirmations: 1,
-      lockup_txid: pkg.lockup_transaction,
-      output_index: 0,
-      errors,
-    };
+    errors.push('No authenticated provider identity registry or protocol-defined signed manifest representation is configured. Signature, identity, domain, validity and protocol revision remain unverified.');
+    return { valid: false, stage: errors.length > 1 ? 'invalid' : 'unverified', errors };
   }
 
-  public verifyClaim(pkg: Partial<SwapPackage>): SwapClaimVerification {
-    const errors: string[] = [];
-    if (!pkg.claim_transaction && !pkg.lockup_transaction) {
-      errors.push('No transaction evidence provided for claim verification');
-    }
-    if (pkg.status !== 'claimable' && pkg.status !== 'claimed') {
-      errors.push(`Swap state '${pkg.status}' is not eligible for claim verification`);
-    }
-
-    const verified = errors.length === 0;
-    return {
-      verified,
-      claim_path_valid: verified,
-      preimage_matches: verified,
-      witness_valid: verified,
-      destinations_valid: verified,
-      fee_sats: pkg.miner_fee_sats || 1200,
-      errors,
-    };
-  }
-
-  public verifyRefund(pkg: Partial<SwapPackage>, chainContext?: { currentHeight: number }): SwapRefundVerification {
-    const errors: string[] = [];
-    const currentHeight = chainContext?.currentHeight ?? 864195;
-    const timeoutHeight = pkg.timeout_height ?? 864200;
-    const timeoutMatured = currentHeight >= timeoutHeight;
-
-    if (!timeoutMatured) {
-      errors.push(`Refund locktime has not matured. Remaining blocks: ${timeoutHeight - currentHeight}`);
-    }
-
-    return {
-      verified: timeoutMatured && errors.length === 0,
-      timeout_matured: timeoutMatured,
-      blocks_remaining: Math.max(0, timeoutHeight - currentHeight),
-      sequence_valid: true,
-      locktime_valid: timeoutMatured,
-      witness_valid: timeoutMatured,
-      errors,
-    };
-  }
-
-  public planRecovery(pkg: Partial<SwapPackage>, chainContext?: { currentHeight: number }): SwapRecoveryPlan {
-    const currentHeight = chainContext?.currentHeight ?? 864195;
-    const timeoutHeight = pkg.timeout_height ?? 864200;
-    const blocksRemaining = timeoutHeight - currentHeight;
-
-    let action: RecoveryAction = 'unknown';
-    const notes: string[] = [];
-
-    if (pkg.status === 'claimed') {
-      action = 'already_claimed';
-      notes.push('Swap has already been successfully claimed on-chain.');
-    } else if (pkg.status === 'refunded') {
-      action = 'already_refunded';
-      notes.push('Swap funds have already been refunded to user.');
-    } else if (blocksRemaining <= 0) {
-      action = 'refundable_now';
-      notes.push(`Timeout block height ${timeoutHeight} has passed. Unsigned refund PSBT is available.`);
-    } else {
-      action = 'refundable_after_height';
-      notes.push(`Refund matures at block height ${timeoutHeight}. Wait ${blocksRemaining} more blocks.`);
-    }
-
-    const recoverable = Math.max(0, (pkg.expected_amount_sats || 0) - (pkg.miner_fee_sats || 1500));
-
-    return {
-      swap_id: pkg.swap_id || 'swp-unknown',
-      current_state: pkg.status || 'unknown',
-      recommended_action: action,
-      recoverable_value_sats: recoverable,
-      estimated_miner_fee_sats: pkg.miner_fee_sats || 1500,
-      timeout_height: timeoutHeight,
-      current_block_height: currentHeight,
-      blocks_until_refund: Math.max(0, blocksRemaining),
-      unsigned_recovery_psbt: action === 'refundable_now' ? 'cHNidP8BAFICAAAAAf...' : undefined,
-      notes,
-    };
-  }
-
-  public verifyProviderManifest(manifest: Partial<SwapProvider>): { valid: boolean; errors: string[] } {
-    const errors: string[] = [];
-    if (!manifest.provider_id) errors.push('provider_id is required');
-    if (!manifest.identity_key) errors.push('identity_key is required');
-    if (!manifest.provider_signature) errors.push('provider_signature is required');
-    if (!manifest.protocols || manifest.protocols.length === 0) errors.push('At least one protocol must be declared');
-    return {
-      valid: errors.length === 0,
-      errors,
-    };
-  }
-
-  public reconcileCrossLayer(swapId: string): { reconciliation_state: ReconciliationState; details: string } {
-    const swap = this.referenceSwaps.find((s) => s.swap_id === swapId);
-    if (!swap) {
-      return {
-        reconciliation_state: 'unknown',
-        details: 'Swap record not observed',
-      };
-    }
-    if (swap.status === 'claimed') {
-      return {
-        reconciliation_state: 'fully_reconciled',
-        details: 'On-chain lockup, Lightning settlement receipt, and claim transaction fully reconciled.',
-      };
-    }
-    return {
-      reconciliation_state: 'waiting_on_lightning',
-      details: 'On-chain lockup verified. Awaiting preimage revelation or settlement confirmation.',
-    };
+  public reconcileCrossLayer(_swapId: string) {
+    return { reconciliation_state: 'insufficient_private_evidence', details: 'No authenticated offchain settlement receipt is available. Public chain evidence cannot establish full cross-layer reconciliation.' };
   }
 }
 

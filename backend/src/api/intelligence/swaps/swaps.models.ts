@@ -55,6 +55,8 @@ export interface SwapProtocolDefinition {
   liquid_support: boolean;
   ark_support: boolean;
   specification_url: string;
+  verification_status?: string;
+  verification_scope?: string;
 }
 
 export interface SwapProvider {
@@ -116,6 +118,13 @@ export interface SwapPackage {
   blinding_data?: string;
   provider_signature?: string;
   status: SwapState;
+  chain?: string;
+  lockup_vout?: number;
+  claim_public_key?: string;
+  refund_public_key?: string;
+  internal_key?: string;
+  destination_address?: string;
+  fee_sats?: number;
 }
 
 export interface SwapLockupVerification {
@@ -129,6 +138,9 @@ export interface SwapLockupVerification {
   lockup_txid?: string;
   output_index?: number;
   errors: string[];
+  stage?: string;
+  source_context?: SwapSourceContext;
+  outpoint_unspent?: boolean | null;
 }
 
 export interface SwapClaimVerification {
@@ -137,14 +149,14 @@ export interface SwapClaimVerification {
   preimage_matches: boolean;
   witness_valid: boolean;
   destinations_valid: boolean;
-  fee_sats: number;
+  fee_sats: number | null;
   errors: string[];
 }
 
 export interface SwapRefundVerification {
   verified: boolean;
   timeout_matured: boolean;
-  blocks_remaining: number;
+  blocks_remaining: number | null;
   sequence_valid: boolean;
   locktime_valid: boolean;
   witness_valid: boolean;
@@ -158,18 +170,32 @@ export interface SwapRecoveryPlan {
   recoverable_value_sats: number;
   estimated_miner_fee_sats: number;
   timeout_height: number;
-  current_block_height: number;
-  blocks_until_refund: number;
+  current_block_height: number | null;
+  blocks_until_refund: number | null;
   unsigned_recovery_psbt?: string;
   notes: string[];
+  stage?: string;
+  source_context?: SwapSourceContext;
+  decoded?: { txid: string; vout: number; destination: string; output_value_sats: number; fee_sats: number; locktime: number; sequence: number; input_count: number; output_count: number };
 }
 
 export interface SwapsOverview {
-  total_swaps_observed: number;
-  active_providers_count: number;
-  total_volume_sats: number;
+  total_swaps_observed: number | null;
+  active_providers_count: number | null;
+  total_volume_sats: number | null;
   supported_protocols_count: number;
   recent_swaps: SwapPackage[];
   active_providers: SwapProvider[];
   protocols: SwapProtocolDefinition[];
+  observation_status?: string;
+  recent_observations?: unknown[];
+  notes?: string[];
+}
+
+export interface SwapContext { chain: 'bitcoin'; network: 'mainnet' | 'signet' | 'testnet' | 'testnet4' | 'regtest'; }
+export interface SwapSourceContext extends SwapContext {
+  source_id: string;
+  block_height: number;
+  block_hash: string;
+  observed_at: string;
 }
