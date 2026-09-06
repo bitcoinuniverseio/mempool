@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { LightningResilienceApiService } from './lightning-resilience.service';
 
 @Component({
@@ -8,6 +9,9 @@ import { LightningResilienceApiService } from './lightning-resilience.service';
   standalone: true,
   imports: [CommonModule, RouterModule],
   template: `
+    <div class="container-xl py-4" *ngIf="loadError">
+      <div class="alert alert-warning" role="alert">{{ loadError }}</div>
+    </div>
     <div class="container-xl py-4" *ngIf="channel">
       <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
@@ -85,6 +89,8 @@ import { LightningResilienceApiService } from './lightning-resilience.service';
 export class LightningResilienceChannelDetailComponent implements OnInit {
   public channel: any = null;
 
+  public loadError: string | null = null;
+
   constructor(
     private route: ActivatedRoute,
     private api: LightningResilienceApiService
@@ -92,9 +98,24 @@ export class LightningResilienceChannelDetailComponent implements OnInit {
 
   public ngOnInit(): void {
     this.route.paramMap.subscribe(params => {
-      const shortId = params.get('shortId') || '864190x304x2';
-      this.api.getChannel$(shortId).subscribe(ch => {
-        this.channel = ch;
+      const reference = params.get('shortId');
+      this.channel = null;
+      if (!reference) {
+        // An earlier revision substituted a fixed reference here, so the
+        // page reported on that channel whatever address opened it.
+        this.loadError = $localize`:@@lightning.channel.missing:This address does not name a channel.`;
+        return;
+      }
+      this.loadError = null;
+      this.api.getChannel$(reference).subscribe({
+        next: value => {
+          this.channel = value;
+          this.loadError = null;
+        },
+        error: err => {
+          this.channel = null;
+          this.loadError = loadFailureMessage(classifyLoadFailure(err));
+        },
       });
     });
   }

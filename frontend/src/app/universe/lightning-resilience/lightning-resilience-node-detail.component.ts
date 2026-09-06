@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { LightningResilienceApiService } from './lightning-resilience.service';
 
 @Component({
@@ -8,6 +9,9 @@ import { LightningResilienceApiService } from './lightning-resilience.service';
   standalone: true,
   imports: [CommonModule, RouterModule],
   template: `
+    <div class="container-xl py-4" *ngIf="loadError">
+      <div class="alert alert-warning" role="alert">{{ loadError }}</div>
+    </div>
     <div class="container-xl py-4" *ngIf="node">
       <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
@@ -68,6 +72,8 @@ import { LightningResilienceApiService } from './lightning-resilience.service';
 export class LightningResilienceNodeDetailComponent implements OnInit {
   public node: any = null;
 
+  public loadError: string | null = null;
+
   constructor(
     private route: ActivatedRoute,
     private api: LightningResilienceApiService
@@ -75,9 +81,24 @@ export class LightningResilienceNodeDetailComponent implements OnInit {
 
   public ngOnInit(): void {
     this.route.paramMap.subscribe(params => {
-      const pubkey = params.get('publicKey') || '028b9c2a4f6d8e0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b';
-      this.api.getNode$(pubkey).subscribe(node => {
-        this.node = node;
+      const reference = params.get('publicKey');
+      this.node = null;
+      if (!reference) {
+        // An earlier revision substituted a fixed reference here, so the
+        // page reported on that node whatever address opened it.
+        this.loadError = $localize`:@@lightning.node.missing:This address does not name a node.`;
+        return;
+      }
+      this.loadError = null;
+      this.api.getNode$(reference).subscribe({
+        next: value => {
+          this.node = value;
+          this.loadError = null;
+        },
+        error: err => {
+          this.node = null;
+          this.loadError = loadFailureMessage(classifyLoadFailure(err));
+        },
       });
     });
   }
