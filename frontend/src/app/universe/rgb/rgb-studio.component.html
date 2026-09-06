@@ -22,7 +22,7 @@
       <textarea id="consignmentInput" [(ngModel)]="consignmentHex" rows="4" placeholder="rgb:consignment:... or hex data"></textarea>
     </div>
 
-    <button type="button" class="btn-primary" (click)="validate()" [disabled]="validating || !consignmentHex.trim()">
+    <button type="button" class="btn-primary" (click)="validate()" [disabled]="!consignmentHex.trim()">
       Validate Consignment
     </button>
   </section>

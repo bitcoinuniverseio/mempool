@@ -31,7 +31,6 @@ interface RgbValidationOutcome {
 })
 export class RgbStudioComponent {
   consignmentHex = '';
-  validating = false;
 
   private readonly resultSubject = new BehaviorSubject<RgbValidationOutcome | null>(null);
   readonly result$: Observable<RgbValidationOutcome | null> = this.resultSubject.asObservable();
