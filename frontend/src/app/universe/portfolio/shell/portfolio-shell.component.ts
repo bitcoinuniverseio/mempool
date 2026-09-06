@@ -4,9 +4,10 @@
  * while data refreshes and keeps technical details out of the header.
  */
 
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked } from '@angular/core';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
-import { filter, map } from 'rxjs';
+import { combineLatest, filter, map } from 'rxjs';
 import { PortfoliosStore } from '../stores/portfolios.store';
 import { PortfolioSessionService } from '../stores/session.service';
 import { PortfolioDataService } from '../data/portfolio-data.service';
@@ -30,7 +31,7 @@ import { PortfolioDataStateComponent } from '../shared/data-state.component';
             i18n="@@universe.portfolio.shell.select-portfolio"
           >
             <span class="accent" aria-hidden="true">◆</span>
-            <strong>{{ store.activePortfolio()?.name || 'Portfolio' }}</strong>
+            <strong>{{ selectedPortfolio()?.name || 'Portfolio' }}</strong>
             <span class="caret" aria-hidden="true">▾</span>
           </button>
           @if (selectorOpen()) {
@@ -80,7 +81,7 @@ import { PortfolioDataStateComponent } from '../shared/data-state.component';
             type="button"
             class="control"
             (click)="refresh()"
-            [disabled]="data().loading"
+            [disabled]="data().loading || !selectedPortfolio()"
             i18n="@@universe.portfolio.shell.refresh"
           >
             {{ data().loading ? 'Refreshing…' : 'Refresh' }}
@@ -96,7 +97,12 @@ import { PortfolioDataStateComponent } from '../shared/data-state.component';
       }
 
       <main class="shell-main">
-        <router-outlet />
+        @if (selectedPortfolio()) {
+          <router-outlet />
+        } @else {
+          <p role="status">{{ store.vaultKind() === 'unlocked' ? 'This portfolio is not available in this vault.' : 'Unlock the portfolio vault to open this portfolio.' }}</p>
+          <a routerLink="/portfolio" [queryParams]="{ portfolioId: portfolioId() }">Open portfolios</a>
+        }
       </main>
     </div>
   `,
@@ -163,10 +169,11 @@ export class PortfolioShellComponent {
   private readonly dataService = inject(PortfolioDataService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly portfolioIdSignal = signal<string>('');
 
   readonly selectorOpen = signal(false);
-  readonly portfolioId = this.portfolioIdSignal.asReadonly();
+  readonly portfolioId = toSignal(combineLatest(this.route.pathFromRoot.map((route) => route.paramMap))
+    .pipe(map((params) => params.map((value) => value.get('portfolioId')).find(Boolean) ?? '')), { initialValue: '' });
+  readonly selectedPortfolio = computed(() => this.store.livePortfolios().find((portfolio) => portfolio.id === this.portfolioId()) ?? null);
   readonly data = this.dataService.state;
   readonly completedAtLabel = computed(() => {
     const at = this.data().completedAt;
@@ -178,18 +185,29 @@ export class PortfolioShellComponent {
     { path: 'holdings', label: $localize`:@@universe.portfolio.section.holdings:Holdings` },
     { path: 'activity', label: $localize`:@@universe.portfolio.section.activity:Activity` },
     { path: 'performance', label: $localize`:@@universe.portfolio.section.performance:Performance` },
+    { path: 'time-machine', label: $localize`:@@universe.portfolio.section.time-machine:Time machine` },
     { path: 'utxos', label: $localize`:@@universe.portfolio.section.utxos:UTXOs` },
     { path: 'insights', label: $localize`:@@universe.portfolio.section.insights:Insights` },
+    { path: 'sources', label: $localize`:@@universe.portfolio.section.sources:Sources` },
+    { path: 'reports', label: $localize`:@@universe.portfolio.section.reports:Reports` },
   ];
 
   constructor() {
-    this.portfolioIdSignal.set(
-      this.route.snapshot.parent?.paramMap.get('portfolioId') ??
-        this.route.snapshot.paramMap.get('portfolioId') ??
-        '',
-    );
+    effect(() => {
+      const portfolio = this.selectedPortfolio();
+      const portfolioId = this.portfolioId();
+      untracked(() => {
+        this.dataService.reset();
+        this.store.selectPortfolio(portfolioId);
+        if (portfolio !== null) {
+          this.session.adoptPortfolioPrivacy(portfolio.privacy.hideIdentifiers);
+          void this.dataService.loadPortfolio(portfolio);
+        }
+      });
+    });
     this.router.events
       .pipe(
+        takeUntilDestroyed(),
         filter((event) => event instanceof NavigationEnd),
         map(() => {
           const segments = this.router.url.split('?')[0].split('/');
@@ -198,14 +216,10 @@ export class PortfolioShellComponent {
         }),
       )
       .subscribe((section) => this.session.setSection(section));
-    const portfolio = this.store.activePortfolio();
-    if (portfolio !== null) {
-      void this.dataService.loadPortfolio(portfolio);
-    }
   }
 
   refresh(): void {
-    const portfolio = this.store.activePortfolio();
+    const portfolio = this.selectedPortfolio();
     if (portfolio === null) return;
     void this.dataService.loadPortfolio(portfolio);
   }

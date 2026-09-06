@@ -84,7 +84,10 @@ export class PortfolioHomeComponent implements OnInit {
 
   private readonly unlockErrorSignal = signal('');
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
+    if (this.store.vaultKind() === 'absent' && this.store.portfolios().length === 0) {
+      await this.store.initialize();
+    }
     if (this.store.vaultKind() === 'unlocked') {
       this.openActive();
     }
@@ -108,6 +111,11 @@ export class PortfolioHomeComponent implements OnInit {
   }
 
   private openActive(): void {
+    const requested = this.router.parseUrl(this.router.url).queryParams['portfolioId'];
+    if (typeof requested === 'string' && requested.length > 0) {
+      void this.router.navigate(['/portfolio/p', requested, 'overview']);
+      return;
+    }
     const active = this.store.activePortfolio();
     if (active !== null) {
       void this.router.navigate(['/portfolio/p', active.id, 'overview']);

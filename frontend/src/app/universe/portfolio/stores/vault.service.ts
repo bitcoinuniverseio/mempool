@@ -29,6 +29,7 @@ const ARGON2ID_MEMORY_KIB = 65536;
 const ARGON2ID_TIME_COST = 3;
 const ARGON2ID_PARALLELISM = 4;
 const PBKDF2_ITERATIONS = 600_000;
+const KDF_TIMEOUT_MS = 30_000;
 const VERIFIER_PLAINTEXT = 'universe-portfolio-vault-verifier-v1';
 
 export type VaultKdfKind = 'argon2id' | 'pbkdf2';
@@ -83,7 +84,7 @@ export type VaultState =
 @Injectable({ providedIn: 'root' })
 export class PortfolioVaultService implements OnDestroy {
   private worker: Worker | null = null;
-  private workerRequests = new Map<number, { resolve: (value: KdfOk) => void; reject: (error: Error) => void }>();
+  private workerRequests = new Map<number, { resolve: (value: KdfOk) => void; reject: (error: Error) => void; timeout: ReturnType<typeof setTimeout> }>();
   private workerNextId = 1;
   private key: CryptoKey | null = null;
   private meta: VaultMeta | null = null;
@@ -396,7 +397,7 @@ export class PortfolioVaultService implements OnDestroy {
 
   ngOnDestroy(): void {
     this.lock();
-    this.worker?.terminate();
+    this.failWorker(new Error('The vault key derivation was closed.'));
     document.removeEventListener('visibilitychange', this.visibilityListener);
     if (this.lockTimer !== null) clearTimeout(this.lockTimer);
   }
@@ -441,12 +442,15 @@ export class PortfolioVaultService implements OnDestroy {
         const pending = this.workerRequests.get(data.id);
         if (pending === undefined) return;
         this.workerRequests.delete(data.id);
+        clearTimeout(pending.timeout);
         if (data.ok) {
           pending.resolve(data);
         } else {
           pending.reject(new Error((data as KdfError).error));
         }
       });
+      this.worker.addEventListener('error', () => this.failWorker(new Error('The vault key derivation worker could not run.')));
+      this.worker.addEventListener('messageerror', () => this.failWorker(new Error('The vault key derivation worker returned unreadable data.')));
     }
     return this.worker;
   }
@@ -454,9 +458,23 @@ export class PortfolioVaultService implements OnDestroy {
   private runKdf(request: KdfRequest): Promise<KdfOk> {
     const worker = this.ensureWorker();
     return new Promise<KdfOk>((resolve, reject) => {
-      this.workerRequests.set(request.id, { resolve, reject });
-      worker.postMessage(request);
+      const timeout = setTimeout(() => this.failWorker(new Error('The vault key derivation timed out. Retry the operation.')), KDF_TIMEOUT_MS);
+      this.workerRequests.set(request.id, { resolve, reject, timeout });
+      try { worker.postMessage(request); }
+      catch {
+        this.failWorker(new Error('The vault key derivation worker could not receive the request.'));
+      }
     });
+  }
+
+  private failWorker(error: Error): void {
+    this.worker?.terminate();
+    this.worker = null;
+    for (const pending of this.workerRequests.values()) {
+      clearTimeout(pending.timeout);
+      pending.reject(error);
+    }
+    this.workerRequests.clear();
   }
 
   private async deriveKey(
@@ -465,30 +483,19 @@ export class PortfolioVaultService implements OnDestroy {
     saltB64: string,
     params: VaultMeta['kdfParams'],
   ): Promise<CryptoKey> {
-    let bits: Uint8Array;
-    try {
-      const result = await this.runKdf({
-        id: this.workerNextId++,
-        op: kdf === 'argon2id' ? 'argon2id' : 'pbkdf2',
-        passphrase,
-        saltB64,
-        memoryKiB: params.memoryKiB,
-        timeCost: params.timeCost,
-        parallelism: params.parallelism,
-        iterations: params.iterations,
-      });
-      bits = Uint8Array.from(atob(result.bitsB64), (character) => character.charCodeAt(0));
-    } catch {
-      // Environment refused the primary KDF: fall back rather than fail.
-      const result = await this.runKdf({
-        id: this.workerNextId++,
-        op: 'pbkdf2',
-        passphrase,
-        saltB64,
-        iterations: PBKDF2_ITERATIONS,
-      });
-      bits = Uint8Array.from(atob(result.bitsB64), (character) => character.charCodeAt(0));
-    }
+    // The selected KDF is part of the persisted format. Never derive different
+    // key material while saving or reopening metadata that names this KDF.
+    const result = await this.runKdf({
+      id: this.workerNextId++,
+      op: kdf === 'argon2id' ? 'argon2id' : 'pbkdf2',
+      passphrase,
+      saltB64,
+      memoryKiB: params.memoryKiB,
+      timeCost: params.timeCost,
+      parallelism: params.parallelism,
+      iterations: params.iterations,
+    });
+    const bits = Uint8Array.from(atob(result.bitsB64), (character) => character.charCodeAt(0));
     const key = await crypto.subtle.importKey('raw', bits as BufferSource, 'AES-GCM', false, [
       'encrypt',
       'decrypt',

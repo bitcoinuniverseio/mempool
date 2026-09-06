@@ -94,8 +94,11 @@ const ADDRESS_PATTERNS: readonly { chain: string; network: string; pattern: RegE
             </label>
             @if (error(); as message) { <p class="error" role="alert">{{ message }}</p> }
             <div class="actions">
-              <button type="button" class="primary" (click)="createVault(passInput.value, repeatInput.value)" i18n="@@universe.portfolio.onboarding.vault-create">Create encrypted vault</button>
-              <button type="button" (click)="step.set('choose')" i18n="@@universe.portfolio.onboarding.back">Back</button>
+              <button type="button" class="primary" [disabled]="creatingVault()" (click)="createVault(passInput.value, repeatInput.value)">
+                @if (creatingVault()) { <span i18n="@@universe.portfolio.onboarding.vault-creating">Creating encrypted vault…</span> }
+                @else { <span i18n="@@universe.portfolio.onboarding.vault-create">Create encrypted vault</span> }
+              </button>
+              <button type="button" [disabled]="creatingVault()" (click)="step.set('choose')" i18n="@@universe.portfolio.onboarding.back">Back</button>
             </div>
           </section>
         }
@@ -160,6 +163,7 @@ export class OnboardingComponent {
   readonly step = signal<'choose' | 'vault' | 'input' | 'done'>('choose');
   readonly stepChoice = signal<EntryChoice>('address');
   readonly error = signal('');
+  readonly creatingVault = signal(false);
   readonly rejection = signal('');
   readonly validation = signal('');
   readonly valid = signal(false);
@@ -201,7 +205,8 @@ export class OnboardingComponent {
     }
   }
 
-  protected createVault(passphrase: string, repeat: string): void {
+  protected async createVault(passphrase: string, repeat: string): Promise<void> {
+    if (this.creatingVault()) return;
     if (passphrase.length < 8) {
       this.error.set($localize`:@@universe.portfolio.onboarding.passphrase-short:Use at least 8 characters.`);
       return;
@@ -211,7 +216,15 @@ export class OnboardingComponent {
       return;
     }
     this.error.set('');
-    void this.store.createVault(passphrase).then(() => this.step.set('input'));
+    this.creatingVault.set(true);
+    try {
+      await this.store.createVault(passphrase);
+      this.step.set('input');
+    } catch {
+      this.error.set('The encrypted vault could not be created. Check browser storage availability and retry.');
+    } finally {
+      this.creatingVault.set(false);
+    }
   }
 
   /**
