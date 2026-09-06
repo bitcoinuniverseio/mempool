@@ -1,0 +1,2748 @@
+{
+  "startedAt": "2026-09-06T14:58:37.527Z",
+  "scope": "Same 80 planned route/viewport cases and unchanged mobile gate, each run in one isolated browser process. Fixtures are layout regression inputs only, not authority acceptance. No retries or omitted failures.",
+  "parentPid": 25672,
+  "planned": [
+    {
+      "route": "docs",
+      "viewport": "phone-320"
+    },
+    {
+      "route": "global-network",
+      "viewport": "phone-320"
+    },
+    {
+      "route": "consensus-proposals",
+      "viewport": "phone-320"
+    },
+    {
+      "route": "vaults-designer",
+      "viewport": "phone-320"
+    },
+    {
+      "route": "dlc-simulate",
+      "viewport": "phone-320"
+    },
+    {
+      "route": "light-client-provider-detail",
+      "viewport": "phone-320"
+    },
+    {
+      "route": "light-client-privacy",
+      "viewport": "phone-320"
+    },
+    {
+      "route": "multiparty-musig2",
+      "viewport": "phone-320"
+    },
+    {
+      "route": "multiparty-bsms",
+      "viewport": "phone-320"
+    },
+    {
+      "route": "staking-delegation-detail",
+      "viewport": "phone-320"
+    },
+    {
+      "route": "lightning-resilience",
+      "viewport": "phone-320"
+    },
+    {
+      "route": "lightning-resilience-channel-detail",
+      "viewport": "phone-320"
+    },
+    {
+      "route": "lightning-resilience-simulate",
+      "viewport": "phone-320"
+    },
+    {
+      "route": "block-propagation-block-detail",
+      "viewport": "phone-320"
+    },
+    {
+      "route": "private-submission",
+      "viewport": "phone-320"
+    },
+    {
+      "route": "private-submission-broadcast",
+      "viewport": "phone-320"
+    },
+    {
+      "route": "private-submission-ordering-tx",
+      "viewport": "phone-320"
+    },
+    {
+      "route": "private-submission-ordering-block",
+      "viewport": "phone-320"
+    },
+    {
+      "route": "opentimestamps",
+      "viewport": "phone-320"
+    },
+    {
+      "route": "opentimestamps-verify",
+      "viewport": "phone-320"
+    },
+    {
+      "route": "opentimestamps-intelligence",
+      "viewport": "phone-320"
+    },
+    {
+      "route": "consensus-conformance",
+      "viewport": "phone-320"
+    },
+    {
+      "route": "collaborative-privacy",
+      "viewport": "phone-320"
+    },
+    {
+      "route": "chain-menu",
+      "viewport": "phone-320"
+    },
+    {
+      "route": "docs",
+      "viewport": "phone-360"
+    },
+    {
+      "route": "chain-menu",
+      "viewport": "phone-360"
+    },
+    {
+      "route": "docs",
+      "viewport": "phone-390"
+    },
+    {
+      "route": "global-network",
+      "viewport": "phone-390"
+    },
+    {
+      "route": "consensus-proposals",
+      "viewport": "phone-390"
+    },
+    {
+      "route": "vaults-designer",
+      "viewport": "phone-390"
+    },
+    {
+      "route": "dlc-simulate",
+      "viewport": "phone-390"
+    },
+    {
+      "route": "light-client-provider-detail",
+      "viewport": "phone-390"
+    },
+    {
+      "route": "light-client-privacy",
+      "viewport": "phone-390"
+    },
+    {
+      "route": "multiparty-musig2",
+      "viewport": "phone-390"
+    },
+    {
+      "route": "multiparty-bsms",
+      "viewport": "phone-390"
+    },
+    {
+      "route": "staking-delegation-detail",
+      "viewport": "phone-390"
+    },
+    {
+      "route": "lightning-resilience",
+      "viewport": "phone-390"
+    },
+    {
+      "route": "lightning-resilience-channel-detail",
+      "viewport": "phone-390"
+    },
+    {
+      "route": "lightning-resilience-simulate",
+      "viewport": "phone-390"
+    },
+    {
+      "route": "block-propagation-block-detail",
+      "viewport": "phone-390"
+    },
+    {
+      "route": "private-submission",
+      "viewport": "phone-390"
+    },
+    {
+      "route": "private-submission-broadcast",
+      "viewport": "phone-390"
+    },
+    {
+      "route": "private-submission-ordering-tx",
+      "viewport": "phone-390"
+    },
+    {
+      "route": "private-submission-ordering-block",
+      "viewport": "phone-390"
+    },
+    {
+      "route": "opentimestamps",
+      "viewport": "phone-390"
+    },
+    {
+      "route": "opentimestamps-verify",
+      "viewport": "phone-390"
+    },
+    {
+      "route": "opentimestamps-intelligence",
+      "viewport": "phone-390"
+    },
+    {
+      "route": "consensus-conformance",
+      "viewport": "phone-390"
+    },
+    {
+      "route": "collaborative-privacy",
+      "viewport": "phone-390"
+    },
+    {
+      "route": "chain-menu",
+      "viewport": "phone-390"
+    },
+    {
+      "route": "docs",
+      "viewport": "phone-430"
+    },
+    {
+      "route": "chain-menu",
+      "viewport": "phone-430"
+    },
+    {
+      "route": "docs",
+      "viewport": "phone-landscape"
+    },
+    {
+      "route": "global-network",
+      "viewport": "phone-landscape"
+    },
+    {
+      "route": "consensus-proposals",
+      "viewport": "phone-landscape"
+    },
+    {
+      "route": "vaults-designer",
+      "viewport": "phone-landscape"
+    },
+    {
+      "route": "dlc-simulate",
+      "viewport": "phone-landscape"
+    },
+    {
+      "route": "light-client-provider-detail",
+      "viewport": "phone-landscape"
+    },
+    {
+      "route": "light-client-privacy",
+      "viewport": "phone-landscape"
+    },
+    {
+      "route": "multiparty-musig2",
+      "viewport": "phone-landscape"
+    },
+    {
+      "route": "multiparty-bsms",
+      "viewport": "phone-landscape"
+    },
+    {
+      "route": "staking-delegation-detail",
+      "viewport": "phone-landscape"
+    },
+    {
+      "route": "lightning-resilience",
+      "viewport": "phone-landscape"
+    },
+    {
+      "route": "lightning-resilience-channel-detail",
+      "viewport": "phone-landscape"
+    },
+    {
+      "route": "lightning-resilience-simulate",
+      "viewport": "phone-landscape"
+    },
+    {
+      "route": "block-propagation-block-detail",
+      "viewport": "phone-landscape"
+    },
+    {
+      "route": "private-submission",
+      "viewport": "phone-landscape"
+    },
+    {
+      "route": "private-submission-broadcast",
+      "viewport": "phone-landscape"
+    },
+    {
+      "route": "private-submission-ordering-tx",
+      "viewport": "phone-landscape"
+    },
+    {
+      "route": "private-submission-ordering-block",
+      "viewport": "phone-landscape"
+    },
+    {
+      "route": "opentimestamps",
+      "viewport": "phone-landscape"
+    },
+    {
+      "route": "opentimestamps-verify",
+      "viewport": "phone-landscape"
+    },
+    {
+      "route": "opentimestamps-intelligence",
+      "viewport": "phone-landscape"
+    },
+    {
+      "route": "consensus-conformance",
+      "viewport": "phone-landscape"
+    },
+    {
+      "route": "collaborative-privacy",
+      "viewport": "phone-landscape"
+    },
+    {
+      "route": "chain-menu",
+      "viewport": "phone-landscape"
+    },
+    {
+      "route": "docs",
+      "viewport": "tablet-768"
+    },
+    {
+      "route": "chain-menu",
+      "viewport": "tablet-768"
+    },
+    {
+      "route": "docs",
+      "viewport": "desktop-1024"
+    },
+    {
+      "route": "chain-menu",
+      "viewport": "desktop-1024"
+    }
+  ],
+  "cases": [
+    {
+      "route": "docs",
+      "viewport": "phone-320",
+      "startedAt": "2026-09-06T14:58:37.529Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=docs",
+        "--viewports=phone-320",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\docs@phone-320"
+      ],
+      "pid": 54048,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T14:58:41.209Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "docs",
+          "viewport": "phone-320",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "global-network",
+      "viewport": "phone-320",
+      "startedAt": "2026-09-06T14:58:41.210Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=global-network",
+        "--viewports=phone-320",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\global-network@phone-320"
+      ],
+      "pid": 40348,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T14:58:44.884Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "global-network",
+          "viewport": "phone-320",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "consensus-proposals",
+      "viewport": "phone-320",
+      "startedAt": "2026-09-06T14:58:44.885Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=consensus-proposals",
+        "--viewports=phone-320",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\consensus-proposals@phone-320"
+      ],
+      "pid": 38936,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T14:58:48.570Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "consensus-proposals",
+          "viewport": "phone-320",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "vaults-designer",
+      "viewport": "phone-320",
+      "startedAt": "2026-09-06T14:58:48.571Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=vaults-designer",
+        "--viewports=phone-320",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\vaults-designer@phone-320"
+      ],
+      "pid": 89048,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T14:58:52.435Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "vaults-designer",
+          "viewport": "phone-320",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "dlc-simulate",
+      "viewport": "phone-320",
+      "startedAt": "2026-09-06T14:58:52.437Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=dlc-simulate",
+        "--viewports=phone-320",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\dlc-simulate@phone-320"
+      ],
+      "pid": 52288,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T14:58:56.448Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "dlc-simulate",
+          "viewport": "phone-320",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "light-client-provider-detail",
+      "viewport": "phone-320",
+      "startedAt": "2026-09-06T14:58:56.451Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=light-client-provider-detail",
+        "--viewports=phone-320",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\light-client-provider-detail@phone-320"
+      ],
+      "pid": 53048,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T14:59:00.259Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "light-client-provider-detail",
+          "viewport": "phone-320",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "light-client-privacy",
+      "viewport": "phone-320",
+      "startedAt": "2026-09-06T14:59:00.260Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=light-client-privacy",
+        "--viewports=phone-320",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\light-client-privacy@phone-320"
+      ],
+      "pid": 53692,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T14:59:04.336Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "light-client-privacy",
+          "viewport": "phone-320",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "multiparty-musig2",
+      "viewport": "phone-320",
+      "startedAt": "2026-09-06T14:59:04.338Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=multiparty-musig2",
+        "--viewports=phone-320",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\multiparty-musig2@phone-320"
+      ],
+      "pid": 14732,
+      "code": 1,
+      "signal": null,
+      "finishedAt": "2026-09-06T14:59:08.153Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": false,
+      "findings": [
+        "multiparty-musig2@phone-320: could not be measured: Error: page.waitForTimeout: Target page, context or browser has been closed",
+        "runner: run incomplete: Error: page.waitForTimeout: Target page, context or browser has been closed"
+      ],
+      "reportCases": [
+        {
+          "route": "multiparty-musig2",
+          "viewport": "phone-320",
+          "status": "incomplete",
+          "phase": "navigation",
+          "error": "Error: page.waitForTimeout: Target page, context or browser has been closed"
+        }
+      ],
+      "measured": 0,
+      "pass": false
+    },
+    {
+      "route": "multiparty-bsms",
+      "viewport": "phone-320",
+      "startedAt": "2026-09-06T14:59:08.154Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=multiparty-bsms",
+        "--viewports=phone-320",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\multiparty-bsms@phone-320"
+      ],
+      "pid": 74780,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T14:59:12.050Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "multiparty-bsms",
+          "viewport": "phone-320",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "staking-delegation-detail",
+      "viewport": "phone-320",
+      "startedAt": "2026-09-06T14:59:12.051Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=staking-delegation-detail",
+        "--viewports=phone-320",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\staking-delegation-detail@phone-320"
+      ],
+      "pid": 26540,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T14:59:15.943Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "staking-delegation-detail",
+          "viewport": "phone-320",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "lightning-resilience",
+      "viewport": "phone-320",
+      "startedAt": "2026-09-06T14:59:15.945Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=lightning-resilience",
+        "--viewports=phone-320",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\lightning-resilience@phone-320"
+      ],
+      "pid": 56520,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T14:59:19.747Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "lightning-resilience",
+          "viewport": "phone-320",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "lightning-resilience-channel-detail",
+      "viewport": "phone-320",
+      "startedAt": "2026-09-06T14:59:19.751Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=lightning-resilience-channel-detail",
+        "--viewports=phone-320",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\lightning-resilience-channel-detail@phone-320"
+      ],
+      "pid": 25576,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T14:59:23.571Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "lightning-resilience-channel-detail",
+          "viewport": "phone-320",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "lightning-resilience-simulate",
+      "viewport": "phone-320",
+      "startedAt": "2026-09-06T14:59:23.572Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=lightning-resilience-simulate",
+        "--viewports=phone-320",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\lightning-resilience-simulate@phone-320"
+      ],
+      "pid": 71796,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T14:59:27.287Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "lightning-resilience-simulate",
+          "viewport": "phone-320",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "block-propagation-block-detail",
+      "viewport": "phone-320",
+      "startedAt": "2026-09-06T14:59:27.288Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=block-propagation-block-detail",
+        "--viewports=phone-320",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\block-propagation-block-detail@phone-320"
+      ],
+      "pid": 10868,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T14:59:31.145Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "block-propagation-block-detail",
+          "viewport": "phone-320",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "private-submission",
+      "viewport": "phone-320",
+      "startedAt": "2026-09-06T14:59:31.147Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=private-submission",
+        "--viewports=phone-320",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\private-submission@phone-320"
+      ],
+      "pid": 52600,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T14:59:35.139Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "private-submission",
+          "viewport": "phone-320",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "private-submission-broadcast",
+      "viewport": "phone-320",
+      "startedAt": "2026-09-06T14:59:35.140Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=private-submission-broadcast",
+        "--viewports=phone-320",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\private-submission-broadcast@phone-320"
+      ],
+      "pid": 86232,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T14:59:39.067Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "private-submission-broadcast",
+          "viewport": "phone-320",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "private-submission-ordering-tx",
+      "viewport": "phone-320",
+      "startedAt": "2026-09-06T14:59:39.069Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=private-submission-ordering-tx",
+        "--viewports=phone-320",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\private-submission-ordering-tx@phone-320"
+      ],
+      "pid": 87640,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T14:59:43.135Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "private-submission-ordering-tx",
+          "viewport": "phone-320",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "private-submission-ordering-block",
+      "viewport": "phone-320",
+      "startedAt": "2026-09-06T14:59:43.137Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=private-submission-ordering-block",
+        "--viewports=phone-320",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\private-submission-ordering-block@phone-320"
+      ],
+      "pid": 67180,
+      "code": 1,
+      "signal": null,
+      "finishedAt": "2026-09-06T14:59:47.249Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [
+        "private-submission-ordering-block@phone-320: 1 shell or repeated controls under 44px: app-private-submission-ordering-block a@28.41x477.8 (repeated)"
+      ],
+      "reportCases": [
+        {
+          "route": "private-submission-ordering-block",
+          "viewport": "phone-320",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": false
+    },
+    {
+      "route": "opentimestamps",
+      "viewport": "phone-320",
+      "startedAt": "2026-09-06T14:59:47.256Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=opentimestamps",
+        "--viewports=phone-320",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\opentimestamps@phone-320"
+      ],
+      "pid": 65164,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T14:59:51.106Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "opentimestamps",
+          "viewport": "phone-320",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "opentimestamps-verify",
+      "viewport": "phone-320",
+      "startedAt": "2026-09-06T14:59:51.108Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=opentimestamps-verify",
+        "--viewports=phone-320",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\opentimestamps-verify@phone-320"
+      ],
+      "pid": 70892,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T14:59:54.982Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "opentimestamps-verify",
+          "viewport": "phone-320",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "opentimestamps-intelligence",
+      "viewport": "phone-320",
+      "startedAt": "2026-09-06T14:59:54.984Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=opentimestamps-intelligence",
+        "--viewports=phone-320",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\opentimestamps-intelligence@phone-320"
+      ],
+      "pid": 23704,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T14:59:58.827Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "opentimestamps-intelligence",
+          "viewport": "phone-320",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "consensus-conformance",
+      "viewport": "phone-320",
+      "startedAt": "2026-09-06T14:59:58.829Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=consensus-conformance",
+        "--viewports=phone-320",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\consensus-conformance@phone-320"
+      ],
+      "pid": 80900,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:00:02.622Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "consensus-conformance",
+          "viewport": "phone-320",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "collaborative-privacy",
+      "viewport": "phone-320",
+      "startedAt": "2026-09-06T15:00:02.624Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=collaborative-privacy",
+        "--viewports=phone-320",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\collaborative-privacy@phone-320"
+      ],
+      "pid": 29208,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:00:06.474Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "collaborative-privacy",
+          "viewport": "phone-320",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "chain-menu",
+      "viewport": "phone-320",
+      "startedAt": "2026-09-06T15:00:06.476Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=chain-menu",
+        "--viewports=phone-320",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\chain-menu@phone-320"
+      ],
+      "pid": 18508,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:00:10.826Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "chain-menu",
+          "viewport": "phone-320",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "docs",
+      "viewport": "phone-360",
+      "startedAt": "2026-09-06T15:00:10.831Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=docs",
+        "--viewports=phone-360",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\docs@phone-360"
+      ],
+      "pid": 58504,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:00:14.919Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "docs",
+          "viewport": "phone-360",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "chain-menu",
+      "viewport": "phone-360",
+      "startedAt": "2026-09-06T15:00:14.920Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=chain-menu",
+        "--viewports=phone-360",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\chain-menu@phone-360"
+      ],
+      "pid": 38120,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:00:19.305Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "chain-menu",
+          "viewport": "phone-360",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "docs",
+      "viewport": "phone-390",
+      "startedAt": "2026-09-06T15:00:19.309Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=docs",
+        "--viewports=phone-390",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\docs@phone-390"
+      ],
+      "pid": 66428,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:00:23.280Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "docs",
+          "viewport": "phone-390",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "global-network",
+      "viewport": "phone-390",
+      "startedAt": "2026-09-06T15:00:23.282Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=global-network",
+        "--viewports=phone-390",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\global-network@phone-390"
+      ],
+      "pid": 57260,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:00:27.119Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "global-network",
+          "viewport": "phone-390",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "consensus-proposals",
+      "viewport": "phone-390",
+      "startedAt": "2026-09-06T15:00:27.120Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=consensus-proposals",
+        "--viewports=phone-390",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\consensus-proposals@phone-390"
+      ],
+      "pid": 37436,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:00:30.836Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "consensus-proposals",
+          "viewport": "phone-390",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "vaults-designer",
+      "viewport": "phone-390",
+      "startedAt": "2026-09-06T15:00:30.838Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=vaults-designer",
+        "--viewports=phone-390",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\vaults-designer@phone-390"
+      ],
+      "pid": 81616,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:00:34.614Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "vaults-designer",
+          "viewport": "phone-390",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "dlc-simulate",
+      "viewport": "phone-390",
+      "startedAt": "2026-09-06T15:00:34.615Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=dlc-simulate",
+        "--viewports=phone-390",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\dlc-simulate@phone-390"
+      ],
+      "pid": 81604,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:00:38.439Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "dlc-simulate",
+          "viewport": "phone-390",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "light-client-provider-detail",
+      "viewport": "phone-390",
+      "startedAt": "2026-09-06T15:00:38.444Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=light-client-provider-detail",
+        "--viewports=phone-390",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\light-client-provider-detail@phone-390"
+      ],
+      "pid": 16360,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:00:42.182Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "light-client-provider-detail",
+          "viewport": "phone-390",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "light-client-privacy",
+      "viewport": "phone-390",
+      "startedAt": "2026-09-06T15:00:42.184Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=light-client-privacy",
+        "--viewports=phone-390",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\light-client-privacy@phone-390"
+      ],
+      "pid": 83080,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:00:45.794Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "light-client-privacy",
+          "viewport": "phone-390",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "multiparty-musig2",
+      "viewport": "phone-390",
+      "startedAt": "2026-09-06T15:00:45.797Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=multiparty-musig2",
+        "--viewports=phone-390",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\multiparty-musig2@phone-390"
+      ],
+      "pid": 21548,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:00:49.581Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "multiparty-musig2",
+          "viewport": "phone-390",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "multiparty-bsms",
+      "viewport": "phone-390",
+      "startedAt": "2026-09-06T15:00:49.583Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=multiparty-bsms",
+        "--viewports=phone-390",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\multiparty-bsms@phone-390"
+      ],
+      "pid": 57668,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:00:53.663Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "multiparty-bsms",
+          "viewport": "phone-390",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "staking-delegation-detail",
+      "viewport": "phone-390",
+      "startedAt": "2026-09-06T15:00:53.666Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=staking-delegation-detail",
+        "--viewports=phone-390",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\staking-delegation-detail@phone-390"
+      ],
+      "pid": 33424,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:00:57.579Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "staking-delegation-detail",
+          "viewport": "phone-390",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "lightning-resilience",
+      "viewport": "phone-390",
+      "startedAt": "2026-09-06T15:00:57.581Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=lightning-resilience",
+        "--viewports=phone-390",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\lightning-resilience@phone-390"
+      ],
+      "pid": 65732,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:01:01.530Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "lightning-resilience",
+          "viewport": "phone-390",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "lightning-resilience-channel-detail",
+      "viewport": "phone-390",
+      "startedAt": "2026-09-06T15:01:01.531Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=lightning-resilience-channel-detail",
+        "--viewports=phone-390",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\lightning-resilience-channel-detail@phone-390"
+      ],
+      "pid": 34244,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:01:05.372Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "lightning-resilience-channel-detail",
+          "viewport": "phone-390",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "lightning-resilience-simulate",
+      "viewport": "phone-390",
+      "startedAt": "2026-09-06T15:01:05.373Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=lightning-resilience-simulate",
+        "--viewports=phone-390",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\lightning-resilience-simulate@phone-390"
+      ],
+      "pid": 71628,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:01:09.394Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "lightning-resilience-simulate",
+          "viewport": "phone-390",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "block-propagation-block-detail",
+      "viewport": "phone-390",
+      "startedAt": "2026-09-06T15:01:09.396Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=block-propagation-block-detail",
+        "--viewports=phone-390",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\block-propagation-block-detail@phone-390"
+      ],
+      "pid": 59564,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:01:13.354Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "block-propagation-block-detail",
+          "viewport": "phone-390",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "private-submission",
+      "viewport": "phone-390",
+      "startedAt": "2026-09-06T15:01:13.356Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=private-submission",
+        "--viewports=phone-390",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\private-submission@phone-390"
+      ],
+      "pid": 80420,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:01:17.575Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "private-submission",
+          "viewport": "phone-390",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "private-submission-broadcast",
+      "viewport": "phone-390",
+      "startedAt": "2026-09-06T15:01:17.579Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=private-submission-broadcast",
+        "--viewports=phone-390",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\private-submission-broadcast@phone-390"
+      ],
+      "pid": 62056,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:01:21.849Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "private-submission-broadcast",
+          "viewport": "phone-390",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "private-submission-ordering-tx",
+      "viewport": "phone-390",
+      "startedAt": "2026-09-06T15:01:21.852Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=private-submission-ordering-tx",
+        "--viewports=phone-390",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\private-submission-ordering-tx@phone-390"
+      ],
+      "pid": 47224,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:01:25.893Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "private-submission-ordering-tx",
+          "viewport": "phone-390",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "private-submission-ordering-block",
+      "viewport": "phone-390",
+      "startedAt": "2026-09-06T15:01:25.896Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=private-submission-ordering-block",
+        "--viewports=phone-390",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\private-submission-ordering-block@phone-390"
+      ],
+      "pid": 32648,
+      "code": 1,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:01:29.779Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [
+        "private-submission-ordering-block@phone-390: 1 shell or repeated controls under 44px: app-private-submission-ordering-block a@28.41x477.8 (repeated)"
+      ],
+      "reportCases": [
+        {
+          "route": "private-submission-ordering-block",
+          "viewport": "phone-390",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": false
+    },
+    {
+      "route": "opentimestamps",
+      "viewport": "phone-390",
+      "startedAt": "2026-09-06T15:01:29.781Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=opentimestamps",
+        "--viewports=phone-390",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\opentimestamps@phone-390"
+      ],
+      "pid": 59988,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:01:33.712Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "opentimestamps",
+          "viewport": "phone-390",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "opentimestamps-verify",
+      "viewport": "phone-390",
+      "startedAt": "2026-09-06T15:01:33.715Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=opentimestamps-verify",
+        "--viewports=phone-390",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\opentimestamps-verify@phone-390"
+      ],
+      "pid": 64432,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:01:37.508Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "opentimestamps-verify",
+          "viewport": "phone-390",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "opentimestamps-intelligence",
+      "viewport": "phone-390",
+      "startedAt": "2026-09-06T15:01:37.510Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=opentimestamps-intelligence",
+        "--viewports=phone-390",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\opentimestamps-intelligence@phone-390"
+      ],
+      "pid": 27404,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:01:41.323Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "opentimestamps-intelligence",
+          "viewport": "phone-390",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "consensus-conformance",
+      "viewport": "phone-390",
+      "startedAt": "2026-09-06T15:01:41.325Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=consensus-conformance",
+        "--viewports=phone-390",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\consensus-conformance@phone-390"
+      ],
+      "pid": 42448,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:01:45.105Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "consensus-conformance",
+          "viewport": "phone-390",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "collaborative-privacy",
+      "viewport": "phone-390",
+      "startedAt": "2026-09-06T15:01:45.107Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=collaborative-privacy",
+        "--viewports=phone-390",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\collaborative-privacy@phone-390"
+      ],
+      "pid": 73448,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:01:49.107Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "collaborative-privacy",
+          "viewport": "phone-390",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "chain-menu",
+      "viewport": "phone-390",
+      "startedAt": "2026-09-06T15:01:49.111Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=chain-menu",
+        "--viewports=phone-390",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\chain-menu@phone-390"
+      ],
+      "pid": 54112,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:01:53.782Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "chain-menu",
+          "viewport": "phone-390",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "docs",
+      "viewport": "phone-430",
+      "startedAt": "2026-09-06T15:01:53.784Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=docs",
+        "--viewports=phone-430",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\docs@phone-430"
+      ],
+      "pid": 42672,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:01:57.853Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "docs",
+          "viewport": "phone-430",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "chain-menu",
+      "viewport": "phone-430",
+      "startedAt": "2026-09-06T15:01:57.855Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=chain-menu",
+        "--viewports=phone-430",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\chain-menu@phone-430"
+      ],
+      "pid": 5380,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:02:02.344Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "chain-menu",
+          "viewport": "phone-430",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "docs",
+      "viewport": "phone-landscape",
+      "startedAt": "2026-09-06T15:02:02.346Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=docs",
+        "--viewports=phone-landscape",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\docs@phone-landscape"
+      ],
+      "pid": 42220,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:02:06.606Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "docs",
+          "viewport": "phone-landscape",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "global-network",
+      "viewport": "phone-landscape",
+      "startedAt": "2026-09-06T15:02:06.609Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=global-network",
+        "--viewports=phone-landscape",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\global-network@phone-landscape"
+      ],
+      "pid": 29944,
+      "code": 1,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:02:07.983Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": false,
+      "findings": [
+        "global-network@phone-landscape: could not be measured: Error: browserContext.newPage: Target page, context or browser has been closed\nBrowser logs:\n\n<launching> C:/Program Files/Google/Chrome/Application/chrome.exe --disable-field-trial-config --disable-b",
+        "runner: run incomplete: Error: browserContext.newPage: Target page, context or browser has been closed\nBrowser logs:\n\n<launching> C:/Program Files/Google/Chrome/Application/chrome.exe --disable-field-trial-config --disable-b"
+      ],
+      "reportCases": [
+        {
+          "route": "global-network",
+          "viewport": "phone-landscape",
+          "status": "incomplete",
+          "phase": "page-creation",
+          "error": "Error: browserContext.newPage: Target page, context or browser has been closed\nBrowser logs:\n\n<launching> C:/Program Files/Google/Chrome/Application/chrome.exe --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --di"
+        }
+      ],
+      "measured": 0,
+      "pass": false
+    },
+    {
+      "route": "consensus-proposals",
+      "viewport": "phone-landscape",
+      "startedAt": "2026-09-06T15:02:07.985Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=consensus-proposals",
+        "--viewports=phone-landscape",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\consensus-proposals@phone-landscape"
+      ],
+      "pid": 54276,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:02:11.828Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "consensus-proposals",
+          "viewport": "phone-landscape",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "vaults-designer",
+      "viewport": "phone-landscape",
+      "startedAt": "2026-09-06T15:02:11.831Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=vaults-designer",
+        "--viewports=phone-landscape",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\vaults-designer@phone-landscape"
+      ],
+      "pid": 54952,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:02:15.661Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "vaults-designer",
+          "viewport": "phone-landscape",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "dlc-simulate",
+      "viewport": "phone-landscape",
+      "startedAt": "2026-09-06T15:02:15.663Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=dlc-simulate",
+        "--viewports=phone-landscape",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\dlc-simulate@phone-landscape"
+      ],
+      "pid": 62216,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:02:19.337Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "dlc-simulate",
+          "viewport": "phone-landscape",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "light-client-provider-detail",
+      "viewport": "phone-landscape",
+      "startedAt": "2026-09-06T15:02:19.344Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=light-client-provider-detail",
+        "--viewports=phone-landscape",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\light-client-provider-detail@phone-landscape"
+      ],
+      "pid": 18960,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:02:23.169Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "light-client-provider-detail",
+          "viewport": "phone-landscape",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "light-client-privacy",
+      "viewport": "phone-landscape",
+      "startedAt": "2026-09-06T15:02:23.171Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=light-client-privacy",
+        "--viewports=phone-landscape",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\light-client-privacy@phone-landscape"
+      ],
+      "pid": 51348,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:02:27.163Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "light-client-privacy",
+          "viewport": "phone-landscape",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "multiparty-musig2",
+      "viewport": "phone-landscape",
+      "startedAt": "2026-09-06T15:02:27.165Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=multiparty-musig2",
+        "--viewports=phone-landscape",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\multiparty-musig2@phone-landscape"
+      ],
+      "pid": 50912,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:02:31.262Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "multiparty-musig2",
+          "viewport": "phone-landscape",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "multiparty-bsms",
+      "viewport": "phone-landscape",
+      "startedAt": "2026-09-06T15:02:31.265Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=multiparty-bsms",
+        "--viewports=phone-landscape",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\multiparty-bsms@phone-landscape"
+      ],
+      "pid": 67120,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:02:35.166Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "multiparty-bsms",
+          "viewport": "phone-landscape",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "staking-delegation-detail",
+      "viewport": "phone-landscape",
+      "startedAt": "2026-09-06T15:02:35.167Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=staking-delegation-detail",
+        "--viewports=phone-landscape",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\staking-delegation-detail@phone-landscape"
+      ],
+      "pid": 10468,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:02:39.108Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "staking-delegation-detail",
+          "viewport": "phone-landscape",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "lightning-resilience",
+      "viewport": "phone-landscape",
+      "startedAt": "2026-09-06T15:02:39.111Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=lightning-resilience",
+        "--viewports=phone-landscape",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\lightning-resilience@phone-landscape"
+      ],
+      "pid": 85812,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:02:43.078Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "lightning-resilience",
+          "viewport": "phone-landscape",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "lightning-resilience-channel-detail",
+      "viewport": "phone-landscape",
+      "startedAt": "2026-09-06T15:02:43.080Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=lightning-resilience-channel-detail",
+        "--viewports=phone-landscape",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\lightning-resilience-channel-detail@phone-landscape"
+      ],
+      "pid": 58188,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:02:46.899Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "lightning-resilience-channel-detail",
+          "viewport": "phone-landscape",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "lightning-resilience-simulate",
+      "viewport": "phone-landscape",
+      "startedAt": "2026-09-06T15:02:46.902Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=lightning-resilience-simulate",
+        "--viewports=phone-landscape",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\lightning-resilience-simulate@phone-landscape"
+      ],
+      "pid": 88484,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:02:50.508Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "lightning-resilience-simulate",
+          "viewport": "phone-landscape",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "block-propagation-block-detail",
+      "viewport": "phone-landscape",
+      "startedAt": "2026-09-06T15:02:50.510Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=block-propagation-block-detail",
+        "--viewports=phone-landscape",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\block-propagation-block-detail@phone-landscape"
+      ],
+      "pid": 72916,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:02:54.237Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "block-propagation-block-detail",
+          "viewport": "phone-landscape",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "private-submission",
+      "viewport": "phone-landscape",
+      "startedAt": "2026-09-06T15:02:54.240Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=private-submission",
+        "--viewports=phone-landscape",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\private-submission@phone-landscape"
+      ],
+      "pid": 33900,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:02:58.098Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "private-submission",
+          "viewport": "phone-landscape",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "private-submission-broadcast",
+      "viewport": "phone-landscape",
+      "startedAt": "2026-09-06T15:02:58.101Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=private-submission-broadcast",
+        "--viewports=phone-landscape",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\private-submission-broadcast@phone-landscape"
+      ],
+      "pid": 54124,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:03:01.969Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "private-submission-broadcast",
+          "viewport": "phone-landscape",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "private-submission-ordering-tx",
+      "viewport": "phone-landscape",
+      "startedAt": "2026-09-06T15:03:01.971Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=private-submission-ordering-tx",
+        "--viewports=phone-landscape",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\private-submission-ordering-tx@phone-landscape"
+      ],
+      "pid": 78624,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:03:05.830Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "private-submission-ordering-tx",
+          "viewport": "phone-landscape",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "private-submission-ordering-block",
+      "viewport": "phone-landscape",
+      "startedAt": "2026-09-06T15:03:05.833Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=private-submission-ordering-block",
+        "--viewports=phone-landscape",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\private-submission-ordering-block@phone-landscape"
+      ],
+      "pid": 18960,
+      "code": 1,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:03:07.921Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": false,
+      "findings": [
+        "private-submission-ordering-block@phone-landscape: could not be measured: Error: page.waitForTimeout: Target page, context or browser has been closed",
+        "runner: run incomplete: Error: page.waitForTimeout: Target page, context or browser has been closed"
+      ],
+      "reportCases": [
+        {
+          "route": "private-submission-ordering-block",
+          "viewport": "phone-landscape",
+          "status": "incomplete",
+          "phase": "navigation",
+          "error": "Error: page.waitForTimeout: Target page, context or browser has been closed"
+        }
+      ],
+      "measured": 0,
+      "pass": false
+    },
+    {
+      "route": "opentimestamps",
+      "viewport": "phone-landscape",
+      "startedAt": "2026-09-06T15:03:07.924Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=opentimestamps",
+        "--viewports=phone-landscape",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\opentimestamps@phone-landscape"
+      ],
+      "pid": 54920,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:03:11.933Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "opentimestamps",
+          "viewport": "phone-landscape",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "opentimestamps-verify",
+      "viewport": "phone-landscape",
+      "startedAt": "2026-09-06T15:03:11.936Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=opentimestamps-verify",
+        "--viewports=phone-landscape",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\opentimestamps-verify@phone-landscape"
+      ],
+      "pid": 55364,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:03:15.826Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "opentimestamps-verify",
+          "viewport": "phone-landscape",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "opentimestamps-intelligence",
+      "viewport": "phone-landscape",
+      "startedAt": "2026-09-06T15:03:15.832Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=opentimestamps-intelligence",
+        "--viewports=phone-landscape",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\opentimestamps-intelligence@phone-landscape"
+      ],
+      "pid": 50620,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:03:19.693Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "opentimestamps-intelligence",
+          "viewport": "phone-landscape",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "consensus-conformance",
+      "viewport": "phone-landscape",
+      "startedAt": "2026-09-06T15:03:19.695Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=consensus-conformance",
+        "--viewports=phone-landscape",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\consensus-conformance@phone-landscape"
+      ],
+      "pid": 50104,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:03:23.668Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "consensus-conformance",
+          "viewport": "phone-landscape",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "collaborative-privacy",
+      "viewport": "phone-landscape",
+      "startedAt": "2026-09-06T15:03:23.670Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=collaborative-privacy",
+        "--viewports=phone-landscape",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\collaborative-privacy@phone-landscape"
+      ],
+      "pid": 74572,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:03:27.455Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "collaborative-privacy",
+          "viewport": "phone-landscape",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "chain-menu",
+      "viewport": "phone-landscape",
+      "startedAt": "2026-09-06T15:03:27.457Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=chain-menu",
+        "--viewports=phone-landscape",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\chain-menu@phone-landscape"
+      ],
+      "pid": 9208,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:03:31.739Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "chain-menu",
+          "viewport": "phone-landscape",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "docs",
+      "viewport": "tablet-768",
+      "startedAt": "2026-09-06T15:03:31.741Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=docs",
+        "--viewports=tablet-768",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\docs@tablet-768"
+      ],
+      "pid": 85140,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:03:35.618Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "docs",
+          "viewport": "tablet-768",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "chain-menu",
+      "viewport": "tablet-768",
+      "startedAt": "2026-09-06T15:03:35.621Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=chain-menu",
+        "--viewports=tablet-768",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\chain-menu@tablet-768"
+      ],
+      "pid": 52448,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:03:39.993Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "chain-menu",
+          "viewport": "tablet-768",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "docs",
+      "viewport": "desktop-1024",
+      "startedAt": "2026-09-06T15:03:39.995Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=docs",
+        "--viewports=desktop-1024",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\docs@desktop-1024"
+      ],
+      "pid": 30744,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:03:43.924Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "docs",
+          "viewport": "desktop-1024",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    },
+    {
+      "route": "chain-menu",
+      "viewport": "desktop-1024",
+      "startedAt": "2026-09-06T15:03:43.926Z",
+      "args": [
+        "mobile-check.mjs",
+        "--base=http://127.0.0.1:4310",
+        "--executable=C:/Program Files/Google/Chrome/Application/chrome.exe",
+        "--routes=chain-menu",
+        "--viewports=desktop-1024",
+        "--out=C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-integrated\\chain-menu@desktop-1024"
+      ],
+      "pid": 796,
+      "code": 0,
+      "signal": null,
+      "finishedAt": "2026-09-06T15:03:48.250Z",
+      "build": "066715fdfa45a1f7",
+      "executionComplete": true,
+      "findings": [],
+      "reportCases": [
+        {
+          "route": "chain-menu",
+          "viewport": "desktop-1024",
+          "status": "measured",
+          "phase": "complete"
+        }
+      ],
+      "measured": 1,
+      "pass": true
+    }
+  ],
+  "finishedAt": "2026-09-06T15:03:48.252Z",
+  "executionComplete": false,
+  "pass": false
+}

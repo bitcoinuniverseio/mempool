@@ -1,0 +1,67 @@
+{
+  "base": "http://127.0.0.1:4310",
+  "browser": "chromium",
+  "build": "066715fdfa45a1f7",
+  "report": [
+    {
+      "route": "chain-menu",
+      "viewport": "tablet-768",
+      "overflowBy": 0,
+      "viewportWidth": 768,
+      "culprits": [],
+      "scrollers": [
+        {
+          "el": "app-start div#blockchain-container",
+          "declared": true,
+          "keyboardReachable": true
+        }
+      ],
+      "clippers": [],
+      "smallFields": [],
+      "targetsBelowWcag": [],
+      "targetsBelowPlatform": [],
+      "atBottom": {
+        "hidden": [],
+        "barTop": 971
+      },
+      "insets": {
+        "top": "0px",
+        "bottom": "0px",
+        "left": "0px",
+        "right": "0px"
+      },
+      "chrome": {
+        "headerPadTop": 0,
+        "barPadBottom": 0,
+        "barPadLeft": 0,
+        "barPadRight": 0,
+        "headerBottom": 65
+      },
+      "overflowingSurfaces": [],
+      "nav": {
+        "scrolls": false,
+        "scrollLeft": 0,
+        "activeVisible": true,
+        "hasActive": true,
+        "affordance": false
+      },
+      "innerHeight": 1024,
+      "docHeight": 3785
+    }
+  ],
+  "findings": [],
+  "grazes": [],
+  "passes": [
+    "viewport: viewport-fit=cover is asked for",
+    "viewport: zoom is not restricted"
+  ],
+  "executionComplete": true,
+  "cases": [
+    {
+      "route": "chain-menu",
+      "viewport": "tablet-768",
+      "status": "measured",
+      "phase": "complete"
+    }
+  ]
+}

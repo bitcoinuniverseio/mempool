@@ -1,0 +1,1804 @@
+
+> mempool-backend@3.3.1 lint
+> eslint . --ext .ts
+
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\__integration_tests__\blocks-repository.test.ts
+  45:12  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  46:12  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  63:12  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  64:12  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\__integration_tests__\database-connection.test.ts
+   3:10  warning  'setupTestDatabase' is defined but never used  @typescript-eslint/no-unused-vars
+  24:37  warning  Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  30:37  warning  Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\__integration_tests__\database-migration.test.ts
+  11:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  21:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  27:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  37:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  47:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  57:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  67:38  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  74:43  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  84:38  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  91:43  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\__integration_tests__\pools-repository.test.ts
+   48:12  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+   49:12  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+   82:38  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+   98:36  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  119:12  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\__integration_tests__\test-helpers.ts
+   93:8   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  106:8   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  114:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  132:8   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\about.routes.ts
+  7:3  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\acceleration\acceleration.ts
+  64:42  warning  Expected '!==' and instead saw '!='  eqeqeq
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\admin-adapter\admin-adapter.operations.ts
+   73:1  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+   77:1  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  120:1  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  130:1  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\admin-adapter\admin-adapter.routes.ts
+   26:3   warning  'capabilityState' is defined but never used        @typescript-eslint/no-unused-vars
+  307:17  warning  'buildPreview' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  307:31  warning  'execute' is assigned a value but never used       @typescript-eslint/no-unused-vars
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\admin-adapter\admin-adapter.runs.ts
+   56:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  159:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  173:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  191:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  242:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  260:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  276:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  277:9   warning  Strings must use singlequote              quotes
+  282:11  warning  Strings must use singlequote              quotes
+  305:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  309:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  320:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  324:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\admin-adapter\admin-adapter.security.ts
+  115:10  warning  'header' is defined but never used  @typescript-eslint/no-unused-vars
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\audit.ts
+   52:45  warning  Expected '!==' and instead saw '!='                 eqeqeq
+   55:47  warning  Expected '!==' and instead saw '!='                 eqeqeq
+   95:28  warning  Expected '===' and instead saw '=='                 eqeqeq
+  138:21  warning  'deprioritized' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\bitcoin\bitcoin-api-abstract-factory.ts
+  1:10  warning  'IBitcoinApi' is defined but never used  @typescript-eslint/no-unused-vars
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\bitcoin\bitcoin-api.interface.ts
+  1:8  warning  ES2015 module syntax is preferred over namespaces  @typescript-eslint/no-namespace
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\bitcoin\bitcoin-api.ts
+    1:13  warning  'bitcoinjs' is defined but never used                @typescript-eslint/no-unused-vars
+    2:30  warning  'HealthCheckHost' is defined but never used          @typescript-eslint/no-unused-vars
+   13:29  warning  Unexpected any. Specify a different type             @typescript-eslint/no-explicit-any
+   15:30  warning  Unexpected any. Specify a different type             @typescript-eslint/no-explicit-any
+   77:27  warning  'txids' is defined but never used                    @typescript-eslint/no-unused-vars
+   81:30  warning  'lastTxid' is defined but never used                 @typescript-eslint/no-unused-vars
+   81:49  warning  'max_txs' is defined but never used                  @typescript-eslint/no-unused-vars
+   98:30  warning  'txId' is defined but never used                     @typescript-eslint/no-unused-vars
+  110:35  warning  'fallbackToCore' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  116:39  warning  'fallbackToCore' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  154:15  warning  'address' is defined but never used                  @typescript-eslint/no-unused-vars
+  158:27  warning  'address' is defined but never used                  @typescript-eslint/no-unused-vars
+  158:44  warning  'lastSeenTxId' is defined but never used             @typescript-eslint/no-unused-vars
+  162:20  warning  'address' is defined but never used                  @typescript-eslint/no-unused-vars
+  166:18  warning  'scripthash' is defined but never used               @typescript-eslint/no-unused-vars
+  170:30  warning  'scripthash' is defined but never used               @typescript-eslint/no-unused-vars
+  170:50  warning  'lastSeenTxId' is defined but never used             @typescript-eslint/no-unused-vars
+  174:23  warning  'scripthash' is defined but never used               @typescript-eslint/no-unused-vars
+  282:39  warning  'address' is defined but never used                  @typescript-eslint/no-unused-vars
+  476:36  warning  Unexpected empty method 'startHealthChecks'          @typescript-eslint/no-empty-function
+  478:3   warning  Missing return type on function                      @typescript-eslint/explicit-function-return-type
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\bitcoin\bitcoin-client.ts
+  2:17  warning  Require statement not part of import statement  @typescript-eslint/no-var-requires
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\bitcoin\bitcoin-core.routes.ts
+   52:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   75:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   93:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  122:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  140:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  158:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  182:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  211:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  235:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  248:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\bitcoin\bitcoin-second-client.ts
+  2:17  warning  Require statement not part of import statement  @typescript-eslint/no-var-requires
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\bitcoin\bitcoin.routes.ts
+     2:8   warning  'axios' is defined but never used         @typescript-eslint/no-unused-vars
+    35:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   108:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   118:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   128:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   138:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   147:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   187:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   238:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   246:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   265:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   344:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   353:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   372:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   386:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   408:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   429:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   441:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   455:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   474:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   497:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   511:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   553:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   573:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   593:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   628:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   657:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   666:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   742:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   813:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   822:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   830:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   840:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   895:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   909:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   919:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   933:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   946:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   959:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   976:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   985:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   994:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  1011:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  1037:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  1050:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  1056:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  1062:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  1068:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  1074:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  1080:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  1086:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  1093:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  1099:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  1156:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\bitcoin\electrum-api.interface.ts
+  1:8  warning  ES2015 module syntax is preferred over namespaces  @typescript-eslint/no-namespace
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\bitcoin\electrum-api.ts
+   15:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   17:30  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   24:18  warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   25:16  warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   25:17  warning  'client' is defined but never used        @typescript-eslint/no-unused-vars
+   26:16  warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   27:14  warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   39:19  warning  Unexpected empty arrow function           @typescript-eslint/no-empty-function
+   40:15  warning  'err' is defined but never used           @typescript-eslint/no-unused-vars
+   92:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  125:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  160:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  204:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  273:12  warning  Forbidden non-null assertion              @typescript-eslint/no-non-null-assertion
+  273:12  warning  Forbidden non-null assertion              @typescript-eslint/no-non-null-assertion
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\bitcoin\esplora-api.interface.ts
+   1:8   warning  ES2015 module syntax is preferred over namespaces  @typescript-eslint/no-namespace
+  31:15  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\bitcoin\esplora-api.ts
+  132:22  warning  Expected '===' and instead saw '=='          eqeqeq
+  319:54  warning  Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+  342:54  warning  Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+  371:62  warning  Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+  404:61  warning  Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+  408:37  warning  Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+  499:37  warning  Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+  507:27  warning  'address' is defined but never used          @typescript-eslint/no-unused-vars
+  507:44  warning  'txId' is defined but never used             @typescript-eslint/no-unused-vars
+  515:18  warning  'scripthash' is defined but never used       @typescript-eslint/no-unused-vars
+  519:30  warning  'scripthash' is defined but never used       @typescript-eslint/no-unused-vars
+  519:50  warning  'txId' is defined but never used             @typescript-eslint/no-unused-vars
+  523:23  warning  'scripthash' is defined but never used       @typescript-eslint/no-unused-vars
+  527:21  warning  'prefix' is defined but never used           @typescript-eslint/no-unused-vars
+  531:23  warning  'rawTransaction' is defined but never used   @typescript-eslint/no-unused-vars
+  535:22  warning  'rawTransactions' is defined but never used  @typescript-eslint/no-unused-vars
+  535:49  warning  'maxfeerate' is defined but never used       @typescript-eslint/no-unused-vars
+  539:18  warning  'rawTransactions' is defined but never used  @typescript-eslint/no-unused-vars
+  551:30  warning  'txids' is defined but never used            @typescript-eslint/no-unused-vars
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\blocks.ts
+    55:17   warning  Unexpected empty constructor                  @typescript-eslint/no-empty-function
+    61:3    warning  Missing return type on function               @typescript-eslint/explicit-function-return-type
+    69:3    warning  Missing return type on function               @typescript-eslint/explicit-function-return-type
+    73:3    warning  Missing return type on function               @typescript-eslint/explicit-function-return-type
+    77:3    warning  Missing return type on function               @typescript-eslint/explicit-function-return-type
+   113:11   warning  'missing' is assigned a value but never used  @typescript-eslint/no-unused-vars
+   369:24   warning  Expected '!==' and instead saw '!='           eqeqeq
+   767:117  warning  Expected '!==' and instead saw '!='           eqeqeq
+   933:5    warning  Trailing spaces not allowed                   no-trailing-spaces
+  1028:99   warning  Expected '===' and instead saw '=='           eqeqeq
+  1188:3    warning  Missing return type on function               @typescript-eslint/explicit-function-return-type
+  1189:18   warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  1241:68   warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  1413:16   warning  Expected '===' and instead saw '=='           eqeqeq
+  1486:87   warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  1491:19   warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  1504:25   warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  1649:30   warning  Expected '!==' and instead saw '!='           eqeqeq
+  1680:21   warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  1695:21   warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\capabilities.optional.ts
+  79:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\capabilities.ts
+  253:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  416:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  428:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\common.ts
+    19:7   warning  'MAX_STANDARD_P2WSH_STACK_ITEMS' is assigned a value but never used          @typescript-eslint/no-unused-vars
+    20:7   warning  'MAX_STANDARD_P2WSH_STACK_ITEM_SIZE' is assigned a value but never used      @typescript-eslint/no-unused-vars
+    21:7   warning  'MAX_STANDARD_TAPSCRIPT_STACK_ITEM_SIZE' is assigned a value but never used  @typescript-eslint/no-unused-vars
+    22:7   warning  'MAX_STANDARD_P2WSH_SCRIPT_SIZE' is assigned a value but never used          @typescript-eslint/no-unused-vars
+    25:7   warning  'MAX_OP_RETURN_RELAY' is assigned a value but never used                     @typescript-eslint/no-unused-vars
+    38:3   warning  Missing return type on function                                              @typescript-eslint/explicit-function-return-type
+    49:3   warning  Missing return type on function                                              @typescript-eslint/explicit-function-return-type
+    60:3   warning  Missing return type on function                                              @typescript-eslint/explicit-function-return-type
+   385:14  warning  Expected '!==' and instead saw '!='                                          eqeqeq
+   408:14  warning  Expected '!==' and instead saw '!='                                          eqeqeq
+   430:18  warning  Expected '===' and instead saw '=='                                          eqeqeq
+   451:15  warning  Expected '===' and instead saw '=='                                          eqeqeq
+   473:14  warning  Expected '===' and instead saw '=='                                          eqeqeq
+   814:3   warning  Missing return type on function                                              @typescript-eslint/explicit-function-return-type
+   814:30  warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+  1095:58  warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+  1095:66  warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+  1103:18  warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+  1104:39  warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+  1275:29  warning  Expected '!==' and instead saw '!='                                          eqeqeq
+  1322:24  warning  Expected '!==' and instead saw '!='                                          eqeqeq
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\database-migration.ts
+    21:3    warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+    21:37   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   106:3    warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   271:49   warning  Expected '===' and instead saw '=='       eqeqeq
+   333:49   warning  Expected '===' and instead saw '=='       eqeqeq
+   340:49   warning  Expected '===' and instead saw '=='       eqeqeq
+   345:49   warning  Expected '===' and instead saw '=='       eqeqeq
+   350:49   warning  Expected '===' and instead saw '=='       eqeqeq
+   355:49   warning  Expected '===' and instead saw '=='       eqeqeq
+   361:49   warning  Expected '===' and instead saw '=='       eqeqeq
+   366:49   warning  Expected '===' and instead saw '=='       eqeqeq
+   371:49   warning  Expected '===' and instead saw '=='       eqeqeq
+  1127:30   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  1144:30   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  1192:26   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  1193:62   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  1194:59   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  1251:121  warning  Trailing spaces not allowed               no-trailing-spaces
+  1253:26   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  1254:62   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  1255:59   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  1274:3    warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  1303:71   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  1431:3    warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  1859:30   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  1860:77   warning  Expected '!==' and instead saw '!='       eqeqeq
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\disk-cache.ts
+   35:27  warning  'e' is defined but never used             @typescript-eslint/no-unused-vars
+  148:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  158:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  166:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  171:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  185:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  241:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  258:38  warning  'txid' is defined but never used          @typescript-eslint/no-unused-vars
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\explorer\channels.api.ts
+    9:43   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   12:21   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   20:80   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   59:21   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   81:61   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   91:21   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   99:73   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  107:21   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  115:59   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  118:21   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  126:53   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  138:21   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  146:56   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  149:21   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  157:60   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  164:21   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  172:58   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  175:21   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  183:49   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  210:21   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  220:45   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  229:28   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  232:23   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  238:24   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  241:24   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  254:24   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  257:24   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  283:79   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  292:21   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  302:71   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  310:21   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  321:72   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  329:21   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  406:112  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  429:33   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  441:31   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  462:23   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  466:38   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  504:86   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  518:21   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  526:35   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  526:41   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  732:21   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\explorer\channels.routes.ts
+    9:17  warning  Unexpected empty constructor              @typescript-eslint/no-empty-function
+   11:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   23:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   32:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   48:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   92:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   94:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   95:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  129:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\explorer\general.routes.ts
+   9:17  warning  Unexpected empty constructor     @typescript-eslint/no-empty-function
+  11:3   warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  19:3   warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  36:3   warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  50:3   warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\explorer\nodes.api.ts
+    9:42  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   24:22  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   36:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   52:54  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   70:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   99:34  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  153:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  183:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  202:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  214:40  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  217:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  225:59  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  233:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  243:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  288:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  345:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  394:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  405:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  413:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  430:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  468:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  481:30  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  496:33  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  513:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  531:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  549:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  563:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  578:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  614:22  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  628:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  637:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  640:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  642:30  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\explorer\nodes.routes.ts
+    9:17  warning  Unexpected empty constructor              @typescript-eslint/no-empty-function
+   11:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   30:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   39:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   42:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  183:21  warning  Empty block statement                     no-empty
+  195:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  211:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  223:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  303:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  315:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  317:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  343:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  345:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  370:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\explorer\statistics.api.ts
+   6:72  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  20:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  28:48  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  30:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  31:22  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  44:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\fee-api.ts
+  18:17  warning  Unexpected empty constructor  @typescript-eslint/no-empty-function
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\fetch-version.ts
+   3:23  warning  Require statement not part of import statement  @typescript-eslint/no-var-requires
+  20:9   warning  Unexpected console statement                    no-console
+  23:7   warning  Unexpected console statement                    no-console
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\ark-vpack\ark-vpack.routes.ts
+  10:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  19:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  28:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  37:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  49:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  62:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  71:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\ark-vpack\ark-vpack.service.ts
+  150:32  warning  Expected { after 'if' condition                     curly
+  151:33  warning  Expected { after 'if' condition                     curly
+  152:43  warning  Expected { after 'if' condition                     curly
+  153:34  warning  Expected { after 'if' condition                     curly
+  160:32  warning  Unexpected any. Specify a different type            @typescript-eslint/no-explicit-any
+  160:61  warning  Unexpected any. Specify a different type            @typescript-eslint/no-explicit-any
+  199:45  warning  'currentHeight' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\bitcoin-staking\bitcoin-staking.routes.ts
+   11:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   20:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   32:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   42:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   54:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   63:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   75:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   84:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   93:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  102:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  111:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\bitcoin-staking\bitcoin-staking.service.ts
+  233:26  warning  Expected { after 'if' condition  curly
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\block-propagation\block-propagation.routes.ts
+  10:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  19:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  31:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  40:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  49:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  61:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  70:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  79:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  88:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\block-propagation\block-propagation.service.ts
+  228:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  254:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\blockspace\blockspace.service.ts
+  1:8  warning  'crypto' is defined but never used  @typescript-eslint/no-unused-vars
+  2:8  warning  'logger' is defined but never used  @typescript-eslint/no-unused-vars
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\bootstrap\bootstrap.routes.ts
+    5:46  warning  Expected { after 'if' condition           curly
+   15:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   24:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   35:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   47:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   56:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   68:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   80:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   89:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  101:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  110:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  122:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  135:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  147:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\bootstrap\bootstrap.service.ts
+  31:29  warning  '_nodeId' is defined but never used          @typescript-eslint/no-unused-vars
+  39:22  warning  '_snapshotId' is defined but never used      @typescript-eslint/no-unused-vars
+  58:26  warning  '_verificationId' is defined but never used  @typescript-eslint/no-unused-vars
+  62:30  warning  '_params' is defined but never used          @typescript-eslint/no-unused-vars
+  66:28  warning  '_params' is defined but never used          @typescript-eslint/no-unused-vars
+  72:17  warning  '_jobId' is defined but never used           @typescript-eslint/no-unused-vars
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\bootstrap\bootstrap.test.ts
+   6:7   warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+   6:45  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+   7:7   warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+   7:53  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+   8:7   warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+   8:47  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+   9:7   warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  10:8   warning  Expected { after 'for-of'        curly
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\collaborative-privacy\collaborative-privacy.routes.ts
+  10:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  19:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  28:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  40:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  49:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  61:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  70:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  79:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\collaborative-privacy\collaborative-privacy.service.ts
+  166:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  166:41  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\compact-filters\compact-filters.routes.ts
+  10:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  19:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  31:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  40:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  49:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  61:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  70:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  79:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  91:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\compact-filters\compact-filters.service.ts
+  141:50  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  143:16  warning  Expected { after 'if' condition           curly
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\consensus-conformance\consensus-conformance.routes.ts
+  10:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  19:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  28:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  37:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  46:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  58:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  69:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  78:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  87:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\consensus-conformance\consensus-conformance.service.ts
+  268:38  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\consensus\consensus.service.ts
+  2:8  warning  'logger' is defined but never used  @typescript-eslint/no-unused-vars
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\dlc\dlc.routes.ts
+   10:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   19:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   31:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   40:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   49:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   61:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   70:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   79:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   88:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   97:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  106:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  115:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  127:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\dlc\dlc.service.ts
+  218:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\events\event-envelope.test.ts
+  85:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\events\intelligence-event-bus.ts
+  117:24  warning  Expected { after 'if' condition  curly
+  146:22  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  148:23  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\graph\tx-graph.service.ts
+    3:8   warning  'mempool' is defined but never used  @typescript-eslint/no-unused-vars
+  110:21  warning  Missing return type on function      @typescript-eslint/explicit-function-return-type
+  111:47  warning  Expected { after 'if' condition      curly
+  249:20  warning  Expected { after 'if' condition      curly
+  251:24  warning  Expected { after 'if' condition      curly
+  252:24  warning  Expected { after 'if' condition      curly
+  253:25  warning  Expected { after 'if' condition      curly
+  254:26  warning  Expected { after 'if' condition      curly
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\identity\developer-identity.ts
+    2:13  warning  'http' is defined but never used                @typescript-eslint/no-unused-vars
+    3:13  warning  'https' is defined but never used               @typescript-eslint/no-unused-vars
+    5:8   warning  'logger' is defined but never used              @typescript-eslint/no-unused-vars
+    6:8   warning  'DB' is defined but never used                  @typescript-eslint/no-unused-vars
+    7:8   warning  'config' is defined but never used              @typescript-eslint/no-unused-vars
+  253:24  warning  Expected { after 'if' condition                 curly
+  254:25  warning  Expected { after 'if' condition                 curly
+  255:39  warning  Expected { after 'if' condition                 curly
+  256:49  warning  Expected { after 'if' condition                 curly
+  257:39  warning  Expected { after 'if' condition                 curly
+  258:23  warning  Expected { after 'if' condition                 curly
+  275:11  warning  'signature' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\knowledge\knowledge-registry.service.ts
+  183:17  warning  Expected { after 'if' condition  curly
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\lightning-resilience\lightning-resilience.routes.ts
+  10:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  19:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  31:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  40:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  49:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  58:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  67:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  76:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\lightning-resilience\lightning-resilience.service.ts
+  166:48  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\lightning\lightning-reliability.service.ts
+    2:8   warning  'logger' is defined but never used  @typescript-eslint/no-unused-vars
+  143:23  warning  Forbidden non-null assertion        @typescript-eslint/no-non-null-assertion
+  144:21  warning  Forbidden non-null assertion        @typescript-eslint/no-non-null-assertion
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\mining-decentralized\mining-decentralized.routes.ts
+  10:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  19:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  28:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  37:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  49:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  58:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  70:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  79:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  88:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\multiparty\multiparty.routes.ts
+   5:47  warning  Expected { after 'if' condition           curly
+  15:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  24:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  36:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  45:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  54:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  63:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  72:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\multiparty\multiparty.service.ts
+   27:21  warning  '_productId' is defined but never used  @typescript-eslint/no-unused-vars
+   54:33  warning  Expected { after 'if' condition         curly
+   55:12  warning  Expected { after 'else'                 curly
+   69:29  warning  Expected { after 'if' condition         curly
+   72:64  warning  Expected { after 'if' condition         curly
+   78:32  warning  Expected { after 'if' condition         curly
+   80:65  warning  Expected { after 'if' condition         curly
+   87:38  warning  Expected { after 'if' condition         curly
+   88:49  warning  Expected { after 'if' condition         curly
+   89:59  warning  Expected { after 'if' condition         curly
+   90:44  warning  Expected { after 'if' condition         curly
+   91:79  warning  Expected { after 'if' condition         curly
+   95:85  warning  Expected { after 'if' condition         curly
+   97:51  warning  Expected { after 'if' condition         curly
+   98:12  warning  Expected { after 'else'                 curly
+  100:85  warning  Expected { after 'if' condition         curly
+  101:24  warning  Expected { after 'if' condition         curly
+  112:85  warning  Expected { after 'if' condition         curly
+  124:21  warning  Forbidden non-null assertion            @typescript-eslint/no-non-null-assertion
+  127:41  warning  Expected { after 'if' condition         curly
+  130:71  warning  Forbidden non-null assertion            @typescript-eslint/no-non-null-assertion
+  134:23  warning  Expected { after 'if' condition         curly
+  140:43  warning  Expected { after 'if' condition         curly
+  158:75  warning  Expected { after 'if' condition         curly
+  159:73  warning  Expected { after 'if' condition         curly
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\multiparty\multiparty.test.ts
+  10:25  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  10:64  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  11:7   warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  11:61  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  12:7   warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  12:50  warning  Expected { after 'for-of'        curly
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\multiparty\musig2.test.ts
+   5:17  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  21:36  warning  Expected { after 'if' condition  curly
+  59:36  warning  Expected { after 'if' condition  curly
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\multiparty\musig2.ts
+   18:23  warning  Expected { after 'if' condition  curly
+   26:29  warning  Expected { after 'for-of'        curly
+   30:67  warning  Expected { after 'if' condition  curly
+   34:50  warning  Expected { after 'if' condition  curly
+   37:28  warning  Expected { after 'if' condition  curly
+   39:29  warning  Expected { after 'if' condition  curly
+   59:27  warning  Expected { after 'if' condition  curly
+   68:30  warning  Expected { after 'if' condition  curly
+   87:51  warning  Expected { after 'if' condition  curly
+  105:69  warning  Expected { after 'if' condition  curly
+  116:63  warning  Expected { after 'if' condition  curly
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\multiparty\public-session.test.ts
+  77:22  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  83:26  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\node-security\node-security.routes.ts
+   10:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   19:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   28:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   40:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   49:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   61:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   73:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   82:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   91:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  100:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\node-security\node-security.service.ts
+  180:44  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  182:16  warning  Expected { after 'if' condition           curly
+  201:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\offchain\offchain.routes.ts
+  10:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  19:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  28:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  40:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  49:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  58:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  67:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  76:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\offchain\offchain.service.ts
+  129:50  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  131:14  warning  Expected { after 'if' condition           curly
+  222:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  252:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  267:42  warning  Expected { after 'if' condition           curly
+  268:43  warning  Expected { after 'if' condition           curly
+  299:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\opentimestamps\opentimestamps-proof.test.ts
+   24:25  warning  Expected { after 'if' condition  curly
+   25:37  warning  Expected { after 'if' condition  curly
+  113:25  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  121:25  warning  Expected { after 'if' condition  curly
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\opentimestamps\opentimestamps-proof.ts
+  195:23  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  208:20  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\opentimestamps\opentimestamps.routes.ts
+   5:46  warning  Expected { after 'if' condition           curly
+  15:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  24:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  36:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  45:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  57:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  67:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  76:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  85:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\opentimestamps\opentimestamps.service.ts
+  23:22  warning  '_calendarId' is defined but never used  @typescript-eslint/no-unused-vars
+  31:19  warning  '_batchId' is defined but never used     @typescript-eslint/no-unused-vars
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\opentimestamps\opentimestamps.test.ts
+  5:25  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  5:68  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  6:7   warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  6:66  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  7:7   warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  7:65  warning  Expected { after 'for-of'        curly
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\payjoin\payjoin.service.ts
+  2:8  warning  'logger' is defined but never used  @typescript-eslint/no-unused-vars
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\payment-connectivity\payment-connectivity.routes.ts
+  10:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  19:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  28:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  37:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  49:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  58:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  70:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  79:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  88:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\payment-connectivity\payment-connectivity.service.ts
+  138:30  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  248:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  300:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\payment-connectivity\payment-connectivity.test.ts
+  53:20  warning  Require statement not part of import statement  @typescript-eslint/no-var-requires
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\policy-lab\bitcoin-core-policy-adapter.ts
+  108:22   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  108:74   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  121:22   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  121:74   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  172:21   warning  Expected { after 'if' condition           curly
+  203:100  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\policy-lab\inclusion-forecast.ts
+  70:5   warning  'vsize' is assigned a value but never used               @typescript-eslint/no-unused-vars
+  83:11  warning  'mempoolTotalWeight' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\policy-lab\policy-lab.service.ts
+  73:21  warning  Expected { after 'if' condition  curly
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\private-submission\private-submission.service.ts
+   63:30  warning  '_rawTxOrTxid' is defined but never used  @typescript-eslint/no-unused-vars
+   67:24  warning  '_submission' is defined but never used   @typescript-eslint/no-unused-vars
+   71:31  warning  '_token' is defined but never used        @typescript-eslint/no-unused-vars
+   75:33  warning  '_token' is defined but never used        @typescript-eslint/no-unused-vars
+   83:33  warning  '_providerId' is defined but never used   @typescript-eslint/no-unused-vars
+  102:82  warning  Expected { after 'if' condition           curly
+  103:80  warning  Expected { after 'if' condition           curly
+  104:96  warning  Expected { after 'if' condition           curly
+  105:85  warning  Expected { after 'if' condition           curly
+  113:33  warning  '_txid' is defined but never used         @typescript-eslint/no-unused-vars
+  117:27  warning  '_blockHash' is defined but never used    @typescript-eslint/no-unused-vars
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\private-submission\private-submission.test.ts
+  11:23  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\quantum\quantum.service.ts
+  2:8  warning  'logger' is defined but never used  @typescript-eslint/no-unused-vars
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\query-studio\query-studio.service.ts
+    1:13  warning  'crypto' is defined but never used                    @typescript-eslint/no-unused-vars
+    3:10  warning  'DeveloperIdentityManager' is defined but never used  @typescript-eslint/no-unused-vars
+    3:36  warning  'DeveloperApiKeyRecord' is defined but never used     @typescript-eslint/no-unused-vars
+  162:40  warning  Expected { after 'if' condition                       curly
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\relay\relay-collector.service.ts
+    1:8   warning  'logger' is defined but never used                  @typescript-eslint/no-unused-vars
+    2:10  warning  'EventEnvelopeValidator' is defined but never used  @typescript-eslint/no-unused-vars
+    3:10  warning  'eventBus' is defined but never used                @typescript-eslint/no-unused-vars
+    4:8   warning  'mempool' is defined but never used                 @typescript-eslint/no-unused-vars
+  207:27  warning  Missing return type on function                     @typescript-eslint/explicit-function-return-type
+  208:32  warning  Expected { after 'if' condition                     curly
+  237:14  warning  Forbidden non-null assertion                        @typescript-eslint/no-non-null-assertion
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\reserves\reserves.service.ts
+  2:8  warning  'logger' is defined but never used  @typescript-eslint/no-unused-vars
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\silent-payments\silent-payments-ingestion.ts
+  31:13  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  88:24  warning  Forbidden non-null assertion     @typescript-eslint/no-non-null-assertion
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\silent-payments\silent-payments-parsers.ts
+   38:8   warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+   83:12  warning  Unexpected constant condition    no-constant-condition
+  119:16  warning  Forbidden non-null assertion     @typescript-eslint/no-non-null-assertion
+  121:37  warning  Forbidden non-null assertion     @typescript-eslint/no-non-null-assertion
+  121:53  warning  Forbidden non-null assertion     @typescript-eslint/no-non-null-assertion
+  124:80  warning  Forbidden non-null assertion     @typescript-eslint/no-non-null-assertion
+  131:8   warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  155:21  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  174:30  warning  Forbidden non-null assertion     @typescript-eslint/no-non-null-assertion
+  175:30  warning  Forbidden non-null assertion     @typescript-eslint/no-non-null-assertion
+  184:19  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\silent-payments\silent-payments-runtime.test.ts
+   14:14   warning  Missing return type on function                  @typescript-eslint/explicit-function-return-type
+   15:38   warning  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+   16:33   warning  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+   17:19   warning  Missing return type on function                  @typescript-eslint/explicit-function-return-type
+   28:143  warning  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+   38:12   warning  'chain' is assigned a value but never used       @typescript-eslint/no-unused-vars
+   38:18   warning  'network' is assigned a value but never used     @typescript-eslint/no-unused-vars
+   38:33   warning  'id' is assigned a value but never used          @typescript-eslint/no-unused-vars
+   38:36   warning  'previous' is assigned a value but never used    @typescript-eslint/no-unused-vars
+   38:45   warning  'bundleHash' is assigned a value but never used  @typescript-eslint/no-unused-vars
+   52:60   warning  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+   54:60   warning  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+   72:23   warning  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+   83:23   warning  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+  113:36   warning  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+  114:88   warning  Missing return type on function                  @typescript-eslint/explicit-function-return-type
+  114:111  warning  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+  114:121  warning  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+  114:167  warning  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+  115:15   warning  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+  119:15   warning  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\silent-payments\silent-payments.service.ts
+   55:15  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   70:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  114:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  117:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  129:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  147:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  159:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  160:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\silent-payments\silent-payments.test.ts
+   5:119  warning  Require statement not part of import statement  @typescript-eslint/no-var-requires
+  10:15   warning  Missing return type on function                 @typescript-eslint/explicit-function-return-type
+  12:1    warning  Missing return type on function                 @typescript-eslint/explicit-function-return-type
+  88:15   warning  Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+  89:15   warning  Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+  90:12   warning  Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\simplicity\simplicity.routes.ts
+  10:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  19:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  31:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  40:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  49:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  58:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  68:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  77:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  86:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\simplicity\simplicity.service.ts
+  159:32  warning  'programId' is defined but never used     @typescript-eslint/no-unused-vars
+  234:22  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\simplicity\simplicity.test.ts
+  61:40  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\storage\intelligence-storage.ts
+   3:13  warning  'crypto' is defined but never used        @typescript-eslint/no-unused-vars
+  55:28  warning  Expected { after 'if' condition           curly
+  59:45  warning  '_query' is defined but never used        @typescript-eslint/no-unused-vars
+  59:61  warning  '_params' is defined but never used       @typescript-eslint/no-unused-vars
+  84:78  warning  '_contentType' is defined but never used  @typescript-eslint/no-unused-vars
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\swaps\boltz-taproot.ts
+   9:31   warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  12:70   warning  Expected { after 'if' condition  curly
+  14:33   warning  Expected { after 'if' condition  curly
+  22:8    warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  26:94   warning  Expected { after 'if' condition  curly
+  27:52   warning  Forbidden non-null assertion     @typescript-eslint/no-non-null-assertion
+  27:79   warning  Forbidden non-null assertion     @typescript-eslint/no-non-null-assertion
+  27:115  warning  Expected { after 'if' condition  curly
+  35:88   warning  Forbidden non-null assertion     @typescript-eslint/no-non-null-assertion
+  38:47   warning  Expected { after 'if' condition  curly
+  39:69   warning  Forbidden non-null assertion     @typescript-eslint/no-non-null-assertion
+  39:100  warning  Forbidden non-null assertion     @typescript-eslint/no-non-null-assertion
+  39:133  warning  Forbidden non-null assertion     @typescript-eslint/no-non-null-assertion
+  42:8    warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  45:46   warning  Forbidden non-null assertion     @typescript-eslint/no-non-null-assertion
+  48:30   warning  Forbidden non-null assertion     @typescript-eslint/no-non-null-assertion
+  49:37   warning  Forbidden non-null assertion     @typescript-eslint/no-non-null-assertion
+  49:49   warning  Forbidden non-null assertion     @typescript-eslint/no-non-null-assertion
+  49:64   warning  Expected { after 'if' condition  curly
+  51:15   warning  Forbidden non-null assertion     @typescript-eslint/no-non-null-assertion
+  51:27   warning  Expected { after 'if' condition  curly
+  53:34   warning  Forbidden non-null assertion     @typescript-eslint/no-non-null-assertion
+  54:49   warning  Forbidden non-null assertion     @typescript-eslint/no-non-null-assertion
+  55:67   warning  Forbidden non-null assertion     @typescript-eslint/no-non-null-assertion
+  59:56   warning  Forbidden non-null assertion     @typescript-eslint/no-non-null-assertion
+  63:113  warning  Forbidden non-null assertion     @typescript-eslint/no-non-null-assertion
+  63:119  warning  Expected { after 'if' condition  curly
+  64:61   warning  Forbidden non-null assertion     @typescript-eslint/no-non-null-assertion
+  64:92   warning  Forbidden non-null assertion     @typescript-eslint/no-non-null-assertion
+  64:145  warning  Forbidden non-null assertion     @typescript-eslint/no-non-null-assertion
+  64:161  warning  Forbidden non-null assertion     @typescript-eslint/no-non-null-assertion
+  64:205  warning  Forbidden non-null assertion     @typescript-eslint/no-non-null-assertion
+  67:8    warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  70:58   warning  Expected { after 'if' condition  curly
+  72:112  warning  Expected { after 'if' condition  curly
+  74:44   warning  Expected { after 'if' condition  curly
+  76:64   warning  Expected { after 'if' condition  curly
+  78:93   warning  Forbidden non-null assertion     @typescript-eslint/no-non-null-assertion
+  78:123  warning  Expected { after 'if' condition  curly
+  79:35   warning  Forbidden non-null assertion     @typescript-eslint/no-non-null-assertion
+  79:123  warning  Expected { after 'if' condition  curly
+  81:46   warning  Forbidden non-null assertion     @typescript-eslint/no-non-null-assertion
+  83:50   warning  Expected { after 'if' condition  curly
+  84:30   warning  Forbidden non-null assertion     @typescript-eslint/no-non-null-assertion
+  86:79   warning  Expected { after 'if' condition  curly
+  88:59   warning  Expected { after 'if' condition  curly
+  90:130  warning  Expected { after 'if' condition  curly
+  94:111  warning  Expected { after 'if' condition  curly
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\swaps\swaps-evidence.ts
+  11:53   warning  Expected { after 'if' condition           curly
+  39:33   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  41:34   warning  Expected { after 'if' condition           curly
+  50:32   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  53:109  warning  Expected { after 'if' condition           curly
+  55:41   warning  Expected { after 'if' condition           curly
+  59:37   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  70:20   warning  Expected { after 'if' condition           curly
+  76:20   warning  Expected { after 'if' condition           curly
+  77:35   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  92:20   warning  Expected { after 'if' condition           curly
+  96:79   warning  Expected { after 'if' condition           curly
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\swaps\swaps-observations.ts
+  23:35  warning  Expected { after 'if' condition           curly
+  41:35  warning  Expected { after 'if' condition           curly
+  42:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\swaps\swaps.service.ts
+   65:22   warning  '_id' is defined but never used           @typescript-eslint/no-unused-vars
+   66:29   warning  '_id' is defined but never used           @typescript-eslint/no-unused-vars
+   76:7    warning  Forbidden non-null assertion              @typescript-eslint/no-non-null-assertion
+   80:7    warning  Forbidden non-null assertion              @typescript-eslint/no-non-null-assertion
+   86:64   warning  Expected { after 'if' condition           curly
+   87:102  warning  Expected { after 'if' condition           curly
+   88:103  warning  Expected { after 'if' condition           curly
+   89:51   warning  Forbidden non-null assertion              @typescript-eslint/no-non-null-assertion
+   89:75   warning  Forbidden non-null assertion              @typescript-eslint/no-non-null-assertion
+   89:106  warning  Expected { after 'if' condition           curly
+   90:60   warning  Forbidden non-null assertion              @typescript-eslint/no-non-null-assertion
+   90:94   warning  Forbidden non-null assertion              @typescript-eslint/no-non-null-assertion
+   90:145  warning  Expected { after 'if' condition           curly
+  104:61   warning  Forbidden non-null assertion              @typescript-eslint/no-non-null-assertion
+  104:86   warning  Forbidden non-null assertion              @typescript-eslint/no-non-null-assertion
+  105:48   warning  Forbidden non-null assertion              @typescript-eslint/no-non-null-assertion
+  115:35   warning  Expected { after 'if' condition           curly
+  116:35   warning  Expected { after 'if' condition           curly
+  117:39   warning  Expected { after 'if' condition           curly
+  120:80   warning  Forbidden non-null assertion              @typescript-eslint/no-non-null-assertion
+  135:171  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  136:19   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  141:54   warning  Expected { after 'if' condition           curly
+  141:82   warning  Forbidden non-null assertion              @typescript-eslint/no-non-null-assertion
+  145:47   warning  Forbidden non-null assertion              @typescript-eslint/no-non-null-assertion
+  146:67   warning  Forbidden non-null assertion              @typescript-eslint/no-non-null-assertion
+  149:18   warning  Expected { after 'if' condition           curly
+  150:41   warning  Expected { after 'if' condition           curly
+  152:36   warning  Expected { after 'if' condition           curly
+  153:46   warning  Expected { after 'if' condition           curly
+  154:29   warning  Expected { after 'if' condition           curly
+  167:3    warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  178:67   warning  Forbidden non-null assertion              @typescript-eslint/no-non-null-assertion
+  182:42   warning  Expected { after 'if' condition           curly
+  182:70   warning  Forbidden non-null assertion              @typescript-eslint/no-non-null-assertion
+  185:46   warning  Forbidden non-null assertion              @typescript-eslint/no-non-null-assertion
+  186:30   warning  Expected { after 'if' condition           curly
+  203:93   warning  Expected { after 'if' condition           curly
+  217:3    warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  217:30   warning  '_swapId' is defined but never used       @typescript-eslint/no-unused-vars
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\swaps\swaps.test.ts
+   23:21   warning  Forbidden non-null assertion              @typescript-eslint/no-non-null-assertion
+   23:86   warning  Forbidden non-null assertion              @typescript-eslint/no-non-null-assertion
+   24:140  warning  Forbidden non-null assertion              @typescript-eslint/no-non-null-assertion
+   35:16   warning  Forbidden non-null assertion              @typescript-eslint/no-non-null-assertion
+   38:67   warning  Forbidden non-null assertion              @typescript-eslint/no-non-null-assertion
+   39:19   warning  Forbidden non-null assertion              @typescript-eslint/no-non-null-assertion
+   63:82   warning  Forbidden non-null assertion              @typescript-eslint/no-non-null-assertion
+   71:74   warning  Forbidden non-null assertion              @typescript-eslint/no-non-null-assertion
+   76:28   warning  Forbidden non-null assertion              @typescript-eslint/no-non-null-assertion
+   76:114  warning  Forbidden non-null assertion              @typescript-eslint/no-non-null-assertion
+   79:110  warning  Forbidden non-null assertion              @typescript-eslint/no-non-null-assertion
+   80:48   warning  Forbidden non-null assertion              @typescript-eslint/no-non-null-assertion
+   83:131  warning  Forbidden non-null assertion              @typescript-eslint/no-non-null-assertion
+   97:32   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   98:529  warning  Forbidden non-null assertion              @typescript-eslint/no-non-null-assertion
+  108:36   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  109:169  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  111:24   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  112:16   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  145:189  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\templates\template-collector.service.ts
+  2:8  warning  'logger' is defined but never used   @typescript-eslint/no-unused-vars
+  3:8  warning  'blocks' is defined but never used   @typescript-eslint/no-unused-vars
+  4:8  warning  'mempool' is defined but never used  @typescript-eslint/no-unused-vars
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\time-machine\time-machine.service.ts
+  3:37  warning  'intelligenceStorage' is defined but never used  @typescript-eslint/no-unused-vars
+  5:8   warning  'mempool' is defined but never used              @typescript-eslint/no-unused-vars
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\utxo\utxo-intelligence.service.ts
+  62:25  warning  Unexpected empty constructor  @typescript-eslint/no-empty-function
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\verification-integrity.test.ts
+  78:50  warning  Expected { after 'if' condition  curly
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\verification\verification.service.ts
+  2:10  warning  'EventEnvelopeValidator' is defined but never used  @typescript-eslint/no-unused-vars
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\watchlists\watchlists.service.ts
+    3:10  warning  'eventBus' is defined but never used  @typescript-eslint/no-unused-vars
+  155:14  warning  Expected { after 'if' condition       curly
+  184:14  warning  Expected { after 'if' condition       curly
+  212:13  warning  Expected { after 'if' condition       curly
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\watchlists\watchlists.test.ts
+  43:11  warning  'initialAck' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\intelligence\workbench\workbench.service.ts
+   57:25  warning  Unexpected empty constructor        @typescript-eslint/no-empty-function
+  128:28  warning  'policy' is defined but never used  @typescript-eslint/no-unused-vars
+  152:37  warning  Expected { after 'if' condition     curly
+  153:43  warning  Expected { after 'if' condition     curly
+  154:42  warning  Expected { after 'if' condition     curly
+  155:45  warning  Expected { after 'if' condition     curly
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\lightning\clightning\clightning-client.ts
+  118:13  warning  Missing return type on function                  @typescript-eslint/explicit-function-return-type
+  119:15  warning  Missing return type on function                  @typescript-eslint/explicit-function-return-type
+  158:11  warning  Unexpected aliasing of 'this' to local variable  @typescript-eslint/no-this-alias
+  212:11  warning  Unexpected aliasing of 'this' to local variable  @typescript-eslint/no-this-alias
+  226:36  warning  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+  227:11  warning  Unexpected aliasing of 'this' to local variable  @typescript-eslint/no-this-alias
+  242:54  warning  Expected '===' and instead saw '=='              eqeqeq
+  254:22  warning  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+  255:25  warning  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+  265:17  warning  Missing return type on function                  @typescript-eslint/explicit-function-return-type
+  268:44  warning  Missing return type on function                  @typescript-eslint/explicit-function-return-type
+  268:63  warning  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\lightning\clightning\clightning-convert.ts
+  101:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  161:72  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  218:45  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  218:62  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  245:50  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  268:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\lightning\lightning-api.interface.ts
+  1:8  warning  ES2015 module syntax is preferred over namespaces  @typescript-eslint/no-namespace
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\liquid\elements-parser.ts
+   15:17   warning  Unexpected empty constructor              @typescript-eslint/no-empty-function
+   17:3    warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   40:3    warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   48:3    warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   57:3    warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   67:3    warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  118:3    warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  125:3    warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  166:25   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  167:27   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  216:3    warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  219:20   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  224:53   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  224:69   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  225:23   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  226:25   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  237:3    warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  237:76   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  237:97   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  237:147  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  266:138  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  287:34   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  329:3    warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  336:48   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  347:57   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  363:56   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  365:19   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  376:43   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  388:46   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  395:57   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  412:49   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  425:57   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  438:51   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  446:47   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  454:44   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  456:19   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  466:53   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  474:57   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  482:53   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  490:56   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  498:57   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  506:47   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  517:41   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\liquid\icons.ts
+   9:17  warning  Unexpected empty constructor     @typescript-eslint/no-empty-function
+  11:3   warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  32:3   warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\liquid\liquid.routes.ts
+   10:3  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+   41:3  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+   52:3  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+   61:3  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+   70:3  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+   80:3  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+   92:3  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  104:3  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  116:3  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  128:3  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  140:3  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  152:3  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  164:3  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  176:3  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  188:3  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  200:3  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  212:3  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  224:3  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  236:3  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  248:3  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\loading-indicators.ts
+   9:17  warning  Unexpected empty constructor     @typescript-eslint/no-empty-function
+  11:3   warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  15:3   warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  27:3   warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\memory-cache.ts
+   5:9   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  14:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  14:46  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  33:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\mempool-blocks.ts
+  188:142  warning  Expected '!==' and instead saw '!='  eqeqeq
+  193:52   warning  Expected '!==' and instead saw '!='  eqeqeq
+  197:97   warning  Expected '!==' and instead saw '!='  eqeqeq
+  249:78   warning  Expected '!==' and instead saw '!='  eqeqeq
+  320:52   warning  Expected '!==' and instead saw '!='  eqeqeq
+  407:17   warning  Unexpected console statement         no-console
+  596:15   warning  Expected '!==' and instead saw '!='  eqeqeq
+  791:50   warning  Expected '===' and instead saw '=='  eqeqeq
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\mempool-intelligence\bump-service.ts
+   70:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   96:60  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  121:32  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\mempool-intelligence\mempool-intelligence.routes.ts
+  162:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\mempool-intelligence\package-service.ts
+  138:14  warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  186:54  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  192:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  193:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  194:50  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  214:15  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\mempool.ts
+   39:31   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   90:37   warning  Expected '===' and instead saw '=='       eqeqeq
+  103:3    warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  131:3    warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  139:84   warning  Expected '===' and instead saw '=='       eqeqeq
+  139:140  warning  Expected '===' and instead saw '=='       eqeqeq
+  142:41   warning  Expected '===' and instead saw '=='       eqeqeq
+  213:3    warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  268:27   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  395:45   warning  Expected '!==' and instead saw '!='       eqeqeq
+  447:17   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  519:3    warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  520:18   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  531:3    warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  535:3    warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  569:3    warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  582:3    warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\mining\mining-routes.ts
+   16:3   warning  Missing return type on function      @typescript-eslint/explicit-function-return-type
+   95:3   warning  Missing return type on function      @typescript-eslint/explicit-function-return-type
+  137:3   warning  Missing return type on function      @typescript-eslint/explicit-function-return-type
+  151:3   warning  Missing return type on function      @typescript-eslint/explicit-function-return-type
+  165:3   warning  Missing return type on function      @typescript-eslint/explicit-function-return-type
+  183:3   warning  Missing return type on function      @typescript-eslint/explicit-function-return-type
+  211:3   warning  Missing return type on function      @typescript-eslint/explicit-function-return-type
+  225:3   warning  Missing return type on function      @typescript-eslint/explicit-function-return-type
+  243:3   warning  Missing return type on function      @typescript-eslint/explicit-function-return-type
+  257:3   warning  Missing return type on function      @typescript-eslint/explicit-function-return-type
+  271:3   warning  Missing return type on function      @typescript-eslint/explicit-function-return-type
+  289:3   warning  Missing return type on function      @typescript-eslint/explicit-function-return-type
+  301:3   warning  Missing return type on function      @typescript-eslint/explicit-function-return-type
+  311:3   warning  Missing return type on function      @typescript-eslint/explicit-function-return-type
+  325:3   warning  Missing return type on function      @typescript-eslint/explicit-function-return-type
+  343:3   warning  Missing return type on function      @typescript-eslint/explicit-function-return-type
+  366:3   warning  Missing return type on function      @typescript-eslint/explicit-function-return-type
+  369:18  warning  Expected '===' and instead saw '=='  eqeqeq
+  379:3   warning  Missing return type on function      @typescript-eslint/explicit-function-return-type
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\mining\mining.ts
+    9:10  warning  'escape' is defined but never used        @typescript-eslint/no-unused-vars
+   42:81  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   52:81  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   73:84  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   83:85  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   93:82  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  103:84  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  117:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  237:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  263:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  275:38  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  356:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  378:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  461:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  545:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  546:34  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  714:26  warning  Expected '===' and instead saw '=='       eqeqeq
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\node-console\node-console.routes.ts
+  156:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\node-console\node-console.ts
+  145:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  171:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  174:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  175:38  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  185:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  207:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  208:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  235:42  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\pools-parser.ts
+   14:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   15:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  171:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  205:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\rbf-cache.ts
+   44:11  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  390:21  warning  Expected '!==' and instead saw '!='       eqeqeq
+  400:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  467:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  467:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\redis-cache.ts
+   22:24  warning  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+   27:63  warning  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+  163:25  warning  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+  200:11  warning  'numRemoved' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  215:57  warning  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+  335:47  warning  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\services\acceleration.ts
+   58:24  warning  Unexpected empty constructor              @typescript-eslint/no-empty-function
+  191:49  warning  Expected '===' and instead saw '=='       eqeqeq
+  232:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\services\stratum.ts
+  28:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  49:24  warning  Unexpected empty constructor              @typescript-eslint/no-empty-function
+  55:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\services\wallets.ts
+  128:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\statistics\statistics-api.ts
+   61:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  170:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  177:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  228:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\statistics\statistics.routes.ts
+   6:3  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+  22:3  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\statistics\statistics.ts
+  12:3   warning  Missing return type on function                                            @typescript-eslint/explicit-function-return-type
+  51:26  warning  Do not access Object.prototype method 'hasOwnProperty' from target object  no-prototype-builtins
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\transaction-utils.ts
+   11:17  warning  Unexpected empty constructor                                  @typescript-eslint/no-empty-function
+  102:5   warning  Do not use "@ts-ignore" because it alters compilation errors  @typescript-eslint/ban-ts-comment
+  104:7   warning  Do not use "@ts-ignore" because it alters compilation errors  @typescript-eslint/ban-ts-comment
+  122:64  warning  Expected '!==' and instead saw '!='                           eqeqeq
+  143:3   warning  Missing return type on function                               @typescript-eslint/explicit-function-return-type
+  388:56  warning  Unexpected any. Specify a different type                      @typescript-eslint/no-explicit-any
+  435:16  warning  Unexpected any. Specify a different type                      @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\api\websocket-handler.ts
+    70:17  warning  Unexpected empty constructor              @typescript-eslint/no-empty-function
+    72:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+    76:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+    76:45  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+    81:62  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+    83:26  warning  Expected '!==' and instead saw '!='       eqeqeq
+   116:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   358:67  warning  Expected '!==' and instead saw '!='       eqeqeq
+   361:49  warning  Expected '!==' and instead saw '!='       eqeqeq
+   369:69  warning  Expected '!==' and instead saw '!='       eqeqeq
+   410:63  warning  Expected '!==' and instead saw '!='       eqeqeq
+   432:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   450:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   469:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   488:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   529:92  warning  Expected '!==' and instead saw '!='       eqeqeq
+   740:92  warning  Expected '!==' and instead saw '!='       eqeqeq
+  1421:61  warning  Expected '!==' and instead saw '!='       eqeqeq
+  1510:43  warning  Expected '!==' and instead saw '!='       eqeqeq
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\config.ts
+    1:24  warning  Require statement not part of import statement                @typescript-eslint/no-var-requires
+  402:5   warning  Do not use "@ts-ignore" because it alters compilation errors  @typescript-eslint/ban-ts-comment
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\database.ts
+   32:3   warning  Missing return type on function      @typescript-eslint/explicit-function-return-type
+   45:24  warning  Expected '!==' and instead saw '!='  eqeqeq
+  128:3   warning  Missing return type on function      @typescript-eslint/explicit-function-return-type
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\index.ts
+  170:7   warning  Unexpected console statement              no-console
+  174:7   warning  Unexpected console statement              no-console
+  261:28  warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  355:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  578:14  warning  Expected '!==' and instead saw '!='       eqeqeq
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\indexer.ts
+  38:5   warning  Trailing spaces not allowed                         no-trailing-spaces
+  44:20  warning  Unexpected any. Specify a different type            @typescript-eslint/no-explicit-any
+  55:15  warning  'previousState' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\logger.ts
+   41:3    warning  Do not use "@ts-ignore" because it alters compilation errors  @typescript-eslint/ban-ts-comment
+   43:3    warning  Do not use "@ts-ignore" because it alters compilation errors  @typescript-eslint/ban-ts-comment
+   45:3    warning  Do not use "@ts-ignore" because it alters compilation errors  @typescript-eslint/ban-ts-comment
+   47:3    warning  Do not use "@ts-ignore" because it alters compilation errors  @typescript-eslint/ban-ts-comment
+   49:3    warning  Do not use "@ts-ignore" because it alters compilation errors  @typescript-eslint/ban-ts-comment
+   51:3    warning  Do not use "@ts-ignore" because it alters compilation errors  @typescript-eslint/ban-ts-comment
+   53:3    warning  Do not use "@ts-ignore" because it alters compilation errors  @typescript-eslint/ban-ts-comment
+   55:3    warning  Do not use "@ts-ignore" because it alters compilation errors  @typescript-eslint/ban-ts-comment
+   65:11   warning  Unexpected constant condition                                 no-constant-condition
+   97:3    warning  Missing return type on function                               @typescript-eslint/explicit-function-return-type
+  105:5    warning  'prionum' is never reassigned. Use 'const' instead            prefer-const
+  106:5    warning  'consolemsg' is never reassigned. Use 'const' instead         prefer-const
+  124:13   warning  Unexpected console statement                                  no-console
+  124:34   warning  Unexpected console statement                                  no-console
+  127:3    warning  Missing return type on function                               @typescript-eslint/explicit-function-return-type
+  129:5    warning  'msgbuf' is never reassigned. Use 'const' instead             prefer-const
+  130:102  warning  'bytes' is defined but never used                             @typescript-eslint/no-unused-vars
+  132:9    warning  Unexpected console statement                                  no-console
+  144:3    warning  Missing return type on function                               @typescript-eslint/explicit-function-return-type
+  146:5    warning  'dt' is never reassigned. Use 'const' instead                 prefer-const
+  147:5    warning  'hours' is never reassigned. Use 'const' instead              prefer-const
+  148:5    warning  'minutes' is never reassigned. Use 'const' instead            prefer-const
+  149:5    warning  'seconds' is never reassigned. Use 'const' instead            prefer-const
+  150:5    warning  'month' is never reassigned. Use 'const' instead              prefer-const
+  155:5    warning  'months' is never reassigned. Use 'const' instead             prefer-const
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\mempool.interfaces.ts
+   47:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  598:10  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  599:13  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  609:10  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  610:13  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  625:10  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  626:13  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\replication\AuditReplication.ts
+  82:1   warning  Trailing spaces not allowed               no-trailing-spaces
+  87:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  99:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\replication\StatisticsReplication.ts
+   79:87  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   97:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  110:1   warning  Trailing spaces not allowed               no-trailing-spaces
+  147:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  154:57  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  160:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  196:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\replication\replicator.ts
+   8:53  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  24:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\repositories\AccelerationRepository.ts
+   58:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   89:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  102:61  warning  Expected '===' and instead saw '=='       eqeqeq
+  102:81  warning  Expected '===' and instead saw '=='       eqeqeq
+  102:99  warning  Expected '===' and instead saw '=='       eqeqeq
+  110:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  118:16  warning  Expected '!==' and instead saw '!='       eqeqeq
+  125:25  warning  Expected '!==' and instead saw '!='       eqeqeq
+  173:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  180:18  warning  Expected '!==' and instead saw '!='       eqeqeq
+  211:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  225:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\repositories\BlocksAuditsRepository.ts
+    3:8   warning  'bitcoinApi' is defined but never used    @typescript-eslint/no-unused-vars
+   24:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   34:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   42:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   48:87  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   60:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   71:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   80:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  117:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  154:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  163:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  169:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  178:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  184:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  193:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  204:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  211:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  243:15  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  255:66  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  256:58  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  303:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\repositories\BlocksRepository.ts
+     1:22   warning  'bitcoinCoreApi' is defined but never used  @typescript-eslint/no-unused-vars
+   119:3    warning  Missing return type on function             @typescript-eslint/explicit-function-return-type
+   155:21   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+   201:17   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+   207:23   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+   236:21   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+   242:17   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+   263:21   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+   269:17   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+   289:21   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+   297:26   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+   312:98   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+   315:19   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+   362:19   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+   394:19   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+   422:19   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+   441:19   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+   452:46   warning  Expected '===' and instead saw '=='         eqeqeq
+   467:19   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+   499:21   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+   522:19   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+   539:21   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+   559:21   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+   583:21   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+   608:21   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+   632:21   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+   651:60   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+   662:21   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+   680:23   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+   742:31   warning  Expected '!==' and instead saw '!='         eqeqeq
+   761:126  warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+   782:21   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+   794:90   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+   813:21   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+   825:92   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+   846:21   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+   858:89   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+   873:21   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+   885:91   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+   900:21   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+   961:54   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+   963:21   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+   982:21   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+  1011:17   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+  1024:95   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+  1044:62   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+  1176:5    warning  Trailing spaces not allowed                 no-trailing-spaces
+  1181:21   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+  1188:17   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+  1299:22   warning  Expected '!==' and instead saw '!='         eqeqeq
+  1361:21   warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\repositories\BlocksSummariesRepository.ts
+   11:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   32:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   50:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   62:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   91:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  109:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  128:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  147:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  172:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  188:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  188:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  189:41  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  212:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\repositories\CpfpRepository.ts
+   48:28  warning  'chunk' is defined but never used         @typescript-eslint/no-unused-vars
+   70:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   79:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   98:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  142:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  173:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  182:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  201:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\repositories\DifficultyAdjustmentsRepository.ts
+   14:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   21:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   93:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   95:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  105:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  115:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\repositories\HashratesRepository.ts
+    1:10  warning  'escape' is defined but never used        @typescript-eslint/no-unused-vars
+   12:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   12:42  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   27:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   33:78  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   51:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   59:75  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   78:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   93:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  104:74  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  128:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  139:62  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  158:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  173:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  188:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  203:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  207:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  222:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\repositories\NodeRecordsRepository.ts
+  22:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  31:60  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\repositories\NodesSocketsRepository.ts
+  19:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\repositories\PoolsRepository.ts
+   23:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  101:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  134:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  162:43  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  169:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  190:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  210:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  232:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\repositories\PricesRepository.ts
+  409:48  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  508:48  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\repositories\TransactionRepository.ts
+  22:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  37:22  warning  'tx' is defined but never used            @typescript-eslint/no-unused-vars
+  54:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  62:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  70:43  warning  Expected '!==' and instead saw '!='       eqeqeq
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\rpc-api\index.ts
+   1:18  warning  Require statement not part of import statement                @typescript-eslint/no-var-requires
+   2:13  warning  Require statement not part of import statement                @typescript-eslint/no-var-requires
+   7:1   warning  Missing return type on function                               @typescript-eslint/explicit-function-return-type
+   8:3   warning  Do not use "@ts-ignore" because it alters compilation errors  @typescript-eslint/ban-ts-comment
+  15:24  warning  Missing return type on function                               @typescript-eslint/explicit-function-return-type
+  16:30  warning  Use the rest parameters instead of 'arguments'                prefer-rest-params
+  25:1   warning  Missing return type on function                               @typescript-eslint/explicit-function-return-type
+  32:10  warning  Missing return type on function                               @typescript-eslint/explicit-function-return-type
+  32:22  warning  Unexpected empty function                                     @typescript-eslint/no-empty-function
+  36:32  warning  Use the rest parameters instead of 'arguments'                prefer-rest-params
+  37:7   warning  Do not use "@ts-ignore" because it alters compilation errors  @typescript-eslint/ban-ts-comment
+  39:7   warning  Do not use "@ts-ignore" because it alters compilation errors  @typescript-eslint/ban-ts-comment
+  49:2   warning  Missing return type on function                               @typescript-eslint/explicit-function-return-type
+  51:6   warning  Missing return type on function                               @typescript-eslint/explicit-function-return-type
+  52:35  warning  Missing return type on function                               @typescript-eslint/explicit-function-return-type
+  53:36  warning  Use the rest parameters instead of 'arguments'                prefer-rest-params
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\rpc-api\jsonrpc.ts
+    1:14  warning  Require statement not part of import statement                             @typescript-eslint/no-var-requires
+    2:15  warning  Require statement not part of import statement                             @typescript-eslint/no-var-requires
+    5:17  warning  Missing return type on function                                            @typescript-eslint/explicit-function-return-type
+    6:3   warning  Do not use "@ts-ignore" because it alters compilation errors               @typescript-eslint/ban-ts-comment
+    8:3   warning  Do not use "@ts-ignore" because it alters compilation errors               @typescript-eslint/ban-ts-comment
+   12:26  warning  Missing return type on function                                            @typescript-eslint/explicit-function-return-type
+   54:5   warning  Do not use "@ts-ignore" because it alters compilation errors               @typescript-eslint/ban-ts-comment
+   63:7   warning  Do not use "@ts-ignore" because it alters compilation errors               @typescript-eslint/ban-ts-comment
+   66:7   warning  Do not use "@ts-ignore" because it alters compilation errors               @typescript-eslint/ban-ts-comment
+   80:7   warning  Do not use "@ts-ignore" because it alters compilation errors               @typescript-eslint/ban-ts-comment
+   91:7   warning  Do not use "@ts-ignore" because it alters compilation errors               @typescript-eslint/ban-ts-comment
+  121:11  warning  Unexpected var, use let or const instead                                   no-var
+  149:52  warning  'i' is defined but never used                                              @typescript-eslint/no-unused-vars
+  150:31  warning  Do not access Object.prototype method 'hasOwnProperty' from target object  no-prototype-builtins
+  150:80  warning  Expected '!==' and instead saw '!='                                        eqeqeq
+  158:38  warning  Do not access Object.prototype method 'hasOwnProperty' from target object  no-prototype-builtins
+  159:13  warning  Do not use "@ts-ignore" because it alters compilation errors               @typescript-eslint/ban-ts-comment
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\sync-assets.ts
+   1:17  warning  'AxiosResponse' is defined but never used  @typescript-eslint/no-unused-vars
+  11:17  warning  Unexpected empty constructor               @typescript-eslint/no-empty-function
+  14:3   warning  Missing return type on function            @typescript-eslint/explicit-function-return-type
+  24:3   warning  Missing return type on function            @typescript-eslint/explicit-function-return-type
+  30:31  warning  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  79:19  warning  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\tasks\lightning\forensics.service.ts
+  89:47  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\tasks\lightning\network-sync.service.ts
+   22:17  warning  Unexpected empty constructor              @typescript-eslint/no-empty-function
+  126:34  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  165:22  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\tasks\lightning\sync-tasks\node-locations.ts
+  26:17  warning  Empty block statement                     no-empty
+  42:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\tasks\lightning\sync-tasks\stats-importer.ts
+   20:25  warning  Unexpected any. Specify a different type                      @typescript-eslint/no-explicit-any
+   47:27  warning  Unexpected any. Specify a different type                      @typescript-eslint/no-explicit-any
+  105:30  warning  Unexpected any. Specify a different type                      @typescript-eslint/no-explicit-any
+  174:9   warning  Do not use "@ts-ignore" because it alters compilation errors  @typescript-eslint/ban-ts-comment
+  176:11  warning  Do not use "@ts-ignore" because it alters compilation errors  @typescript-eslint/ban-ts-comment
+  178:11  warning  Do not use "@ts-ignore" because it alters compilation errors  @typescript-eslint/ban-ts-comment
+  181:9   warning  Do not use "@ts-ignore" because it alters compilation errors  @typescript-eslint/ban-ts-comment
+  183:11  warning  Do not use "@ts-ignore" because it alters compilation errors  @typescript-eslint/ban-ts-comment
+  185:11  warning  Do not use "@ts-ignore" because it alters compilation errors  @typescript-eslint/ban-ts-comment
+  339:21  warning  Unexpected any. Specify a different type                      @typescript-eslint/no-explicit-any
+  374:21  warning  Unexpected any. Specify a different type                      @typescript-eslint/no-explicit-any
+  375:23  warning  Expected '===' and instead saw '=='                           eqeqeq
+  438:24  warning  Unexpected any. Specify a different type                      @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\tasks\pools-updater.ts
+   28:12  warning  Unexpected constant condition             no-constant-condition
+   31:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   66:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  224:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  255:38  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  275:31  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\tasks\price-feeds\bitfinex-api.ts
+  33:40  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\tasks\price-feeds\bitflyer-api.ts
+  11:17  warning  Unexpected empty constructor            @typescript-eslint/no-empty-function
+  24:34  warning  'currencies' is defined but never used  @typescript-eslint/no-unused-vars
+  24:56  warning  'type' is defined but never used        @typescript-eslint/no-unused-vars
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\tasks\price-feeds\coinbase-api.ts
+  11:17  warning  Unexpected empty constructor              @typescript-eslint/no-empty-function
+  36:40  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\tasks\price-feeds\free-currency-api.ts
+  57:17  warning  Unexpected empty constructor              @typescript-eslint/no-empty-function
+  60:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\tasks\price-feeds\gemini-api.ts
+  11:17  warning  Unexpected empty constructor              @typescript-eslint/no-empty-function
+  36:40  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\tasks\price-feeds\kraken-api.ts
+  13:17  warning  Unexpected empty constructor              @typescript-eslint/no-empty-function
+  16:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  38:56  warning  'type' is defined but never used          @typescript-eslint/no-unused-vars
+  75:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\tasks\price-updater.ts
+   28:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  181:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  317:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  500:49  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\utils\axios-query.ts
+  25:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  30:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\utils\bitcoin-script.ts
+  216:18  warning  Expected '===' and instead saw '=='  eqeqeq
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\utils\clone.ts
+  5:32  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  5:80  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\utils\file-read.ts
+  155:4  warning  Trailing spaces not allowed  no-trailing-spaces
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\backend\src\utils\p-limit.ts
+   24:20  warning  Strings must use singlequote              quotes
+   54:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   68:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   79:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   85:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+   89:3   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  123:16  warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  131:15  warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  134:21  warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  140:13  warning  Empty block statement                     no-empty
+  145:19  warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  150:7   warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  165:21  warning  Missing return type on function           @typescript-eslint/explicit-function-return-type
+  184:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+✖ 1428 problems (0 errors, 1428 warnings)
+  0 errors and 141 warnings potentially fixable with the `--fix` option.
+

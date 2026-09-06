@@ -1,0 +1,202 @@
+{
+  "passed": true,
+  "checks": [
+    {
+      "name": "bare-table: declaration and keyboard access",
+      "passed": true,
+      "actual": {
+        "el": "div#bare-table.scroll.table-responsive",
+        "declared": false,
+        "keyboardReachable": false
+      }
+    },
+    {
+      "name": "bare-pre: declaration and keyboard access",
+      "passed": true,
+      "actual": {
+        "el": "pre#bare-pre.scroll",
+        "declared": false,
+        "keyboardReachable": false
+      }
+    },
+    {
+      "name": "nested-scroll: declaration and keyboard access",
+      "passed": true,
+      "actual": {
+        "el": "div#nested-scroll.scroll",
+        "declared": false,
+        "keyboardReachable": false
+      }
+    },
+    {
+      "name": "role-only: declaration and keyboard access",
+      "passed": true,
+      "actual": {
+        "el": "div#role-only.scroll",
+        "declared": true,
+        "keyboardReachable": false
+      }
+    },
+    {
+      "name": "named-table: declaration and keyboard access",
+      "passed": true,
+      "actual": {
+        "el": "div#named-table.scroll.table-responsive",
+        "declared": true,
+        "keyboardReachable": true
+      }
+    },
+    {
+      "name": "named-pre: declaration and keyboard access",
+      "passed": true,
+      "actual": {
+        "el": "pre#named-pre.scroll",
+        "declared": true,
+        "keyboardReachable": true
+      }
+    },
+    {
+      "name": "no-label: missing or unusable label cannot enlarge target",
+      "passed": true,
+      "actual": [
+        "input#no-label.probe-checkbox@28x28 (repeated)"
+      ]
+    },
+    {
+      "name": "display-none-label: missing or unusable label cannot enlarge target",
+      "passed": true,
+      "actual": [
+        "input#display-none-label.probe-checkbox@28x28 (repeated)"
+      ]
+    },
+    {
+      "name": "visibility-hidden-label: missing or unusable label cannot enlarge target",
+      "passed": true,
+      "actual": [
+        "input#visibility-hidden-label.probe-checkbox@28x28 (repeated)"
+      ]
+    },
+    {
+      "name": "opacity-zero-label: missing or unusable label cannot enlarge target",
+      "passed": true,
+      "actual": [
+        "input#opacity-zero-label.probe-checkbox@28x28 (repeated)"
+      ]
+    },
+    {
+      "name": "hidden-parent-label: missing or unusable label cannot enlarge target",
+      "passed": true,
+      "actual": [
+        "input#hidden-parent-label.probe-checkbox@28x28 (repeated)"
+      ]
+    },
+    {
+      "name": "inert-label: missing or unusable label cannot enlarge target",
+      "passed": true,
+      "actual": [
+        "input#inert-label.probe-checkbox@28x28 (repeated)"
+      ]
+    },
+    {
+      "name": "pointer-none-label: missing or unusable label cannot enlarge target",
+      "passed": true,
+      "actual": [
+        "input#pointer-none-label.probe-checkbox@28x28 (repeated)"
+      ]
+    },
+    {
+      "name": "zero-size-label: missing or unusable label cannot enlarge target",
+      "passed": true,
+      "actual": [
+        "input#zero-size-label.probe-checkbox@28x28 (repeated)"
+      ]
+    },
+    {
+      "name": "unassociated-label: missing or unusable label cannot enlarge target",
+      "passed": true,
+      "actual": [
+        "input#unassociated-label.probe-checkbox@28x28 (repeated)"
+      ]
+    },
+    {
+      "name": "explicit-label: usable target retains its full size",
+      "passed": true,
+      "actual": []
+    },
+    {
+      "name": "implicit-label: usable target retains its full size",
+      "passed": true,
+      "actual": []
+    },
+    {
+      "name": "multiple-labels: usable target retains its full size",
+      "passed": true,
+      "actual": []
+    },
+    {
+      "name": "large-input: usable target retains its full size",
+      "passed": true,
+      "actual": []
+    },
+    {
+      "name": "named-table: ArrowRight pans the focused region",
+      "passed": true,
+      "actual": {
+        "focused": true,
+        "scrollLeft": 40
+      }
+    },
+    {
+      "name": "named-pre: ArrowRight pans the focused region",
+      "passed": true,
+      "actual": {
+        "focused": true,
+        "scrollLeft": 40
+      }
+    }
+  ],
+  "scrollers": [
+    {
+      "el": "div#bare-table.scroll.table-responsive",
+      "declared": false,
+      "keyboardReachable": false
+    },
+    {
+      "el": "pre#bare-pre.scroll",
+      "declared": false,
+      "keyboardReachable": false
+    },
+    {
+      "el": "div#nested-scroll.scroll",
+      "declared": false,
+      "keyboardReachable": false
+    },
+    {
+      "el": "div#role-only.scroll",
+      "declared": true,
+      "keyboardReachable": false
+    },
+    {
+      "el": "div#named-table.scroll.table-responsive",
+      "declared": true,
+      "keyboardReachable": true
+    },
+    {
+      "el": "pre#named-pre.scroll",
+      "declared": true,
+      "keyboardReachable": true
+    }
+  ],
+  "targetsBelowPlatform": [
+    "input#no-label.probe-checkbox@28x28 (repeated)",
+    "input#display-none-label.probe-checkbox@28x28 (repeated)",
+    "input#visibility-hidden-label.probe-checkbox@28x28 (repeated)",
+    "input#opacity-zero-label.probe-checkbox@28x28 (repeated)",
+    "input#hidden-parent-label.probe-checkbox@28x28 (repeated)",
+    "input#inert-label.probe-checkbox@28x28 (repeated)",
+    "input#pointer-none-label.probe-checkbox@28x28 (repeated)",
+    "input#zero-size-label.probe-checkbox@28x28 (repeated)",
+    "input#unassociated-label.probe-checkbox@28x28 (repeated)"
+  ],
+  "targetsBelowWcag": []
+}

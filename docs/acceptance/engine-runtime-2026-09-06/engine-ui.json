@@ -1,0 +1,198 @@
+{
+  "startedAt": "2026-09-06T14:30:21.019Z",
+  "scope": "Actual browser -> existing gateway4310 -> candidate monolith -> configured owned Bitcoin source. No fixtures or intercepted responses in the browser. One fresh-profile background tab.",
+  "observations": [
+    {
+      "path": "/api/v1/intelligence/multiparty/public-sessions/verify",
+      "status": 200,
+      "body": {
+        "verified": true,
+        "stage": "verified-session",
+        "scope": "bip327-untweaked-public-transcript",
+        "error": "",
+        "participant_count": 2,
+        "has_duplicate_nonces": false,
+        "aggregate_public_key": "f68803d6235df99eb72f251d832b52029a64ae2c195a15823bd85f9577478408",
+        "provided_aggregate_public_key": null,
+        "key_aggregation_verified": true,
+        "aggregate_nonce": "0341432722c5cd0268d829c702cf0d1cbce57033eed201fd335191385227c3210c03d377f2d258b64aadc0e16f26462323d701d286046a2ea93365656afd9875982b",
+        "nonce_aggregation_verified": true,
+        "partial_signature_validity": [
+          true,
+          true
+        ],
+        "final_bip340_valid": true,
+        "final_signature": "041da22223ce65c92c9a0d6c2cac828aaf1eee56304fec371ddf91ebb2b9ef0912f1038025857fedeb3ff696f8b99fa4bb2c5812f6095a2e0004ec99ce18de1e",
+        "final_signature_scope": "BIP340 over the BIP327-computed untweaked participant aggregate and supplied 32-byte message hash. No transaction sighash derivation, participant identity authentication, nonce-generation or cross-session nonce-reuse verification.",
+        "errors": [],
+        "warnings": []
+      }
+    },
+    {
+      "path": "/api/v1/intelligence/multiparty/public-sessions/verify",
+      "status": 400,
+      "body": {
+        "verified": false,
+        "stage": "invalid-input",
+        "scope": "bip327-untweaked-public-transcript",
+        "error": "Invalid partial signature at participant index 0.",
+        "participant_count": 2,
+        "has_duplicate_nonces": false,
+        "aggregate_public_key": "f68803d6235df99eb72f251d832b52029a64ae2c195a15823bd85f9577478408",
+        "provided_aggregate_public_key": null,
+        "key_aggregation_verified": true,
+        "aggregate_nonce": "0341432722c5cd0268d829c702cf0d1cbce57033eed201fd335191385227c3210c03d377f2d258b64aadc0e16f26462323d701d286046a2ea93365656afd9875982b",
+        "nonce_aggregation_verified": true,
+        "partial_signature_validity": [
+          false,
+          true
+        ],
+        "final_bip340_valid": true,
+        "final_signature": null,
+        "final_signature_scope": "BIP340 over the BIP327-computed untweaked participant aggregate and supplied 32-byte message hash. No transaction sighash derivation, participant identity authentication, nonce-generation or cross-session nonce-reuse verification.",
+        "errors": [
+          "Invalid partial signature at participant index 0."
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "path": "/api/v1/intelligence/multiparty/public-sessions/verify",
+      "status": 200,
+      "body": {
+        "verified": false,
+        "stage": "partial-session",
+        "scope": "bip327-untweaked-public-transcript",
+        "error": "",
+        "participant_count": 2,
+        "has_duplicate_nonces": false,
+        "aggregate_public_key": "3b46d262d2f610e9038b44beabdfe97ab5a0feb89870acc2264edfb7f63ec2ec",
+        "provided_aggregate_public_key": null,
+        "key_aggregation_verified": true,
+        "aggregate_nonce": null,
+        "nonce_aggregation_verified": false,
+        "partial_signature_validity": [],
+        "final_bip340_valid": null,
+        "final_signature": null,
+        "final_signature_scope": "BIP340 over the BIP327-computed untweaked participant aggregate and supplied 32-byte message hash. No transaction sighash derivation, participant identity authentication, nonce-generation or cross-session nonce-reuse verification.",
+        "errors": [],
+        "warnings": [
+          "The supplied public transcript is incomplete; only the reported individual checks were performed."
+        ]
+      }
+    },
+    {
+      "path": "/api/v1/intelligence/timestamps/proofs/verify",
+      "status": 200,
+      "body": {
+        "status": "bitcoin_attestation_verified",
+        "verified": true,
+        "digest_matches": true,
+        "file_digest": "03ba204e50d126e4674c005e04d82e84c21366780af1f43bd54a37816b6ab340",
+        "file_hash_algorithm": "sha256",
+        "network": "mainnet",
+        "calendar_attestations": [],
+        "operation_count": 38,
+        "notices": [],
+        "errors": [],
+        "attestation_type": "bitcoin",
+        "earliest_proven_block_height": 358391,
+        "earliest_proven_time_utc": "2015-05-28T15:41:18.000Z",
+        "bitcoin_block_hash": "000000000000000003e892881a8cdcdc117c06d444057c98b6f04a9ee75a2319"
+      }
+    },
+    {
+      "path": "/api/v1/intelligence/timestamps/proofs/verify",
+      "status": 200,
+      "body": {
+        "status": "file_mismatch",
+        "verified": false,
+        "digest_matches": false,
+        "file_digest": "03ba204e50d126e4674c005e04d82e84c21366780af1f43bd54a37816b6ab340",
+        "file_hash_algorithm": "sha256",
+        "network": "mainnet",
+        "calendar_attestations": [],
+        "operation_count": 38,
+        "notices": [],
+        "errors": [
+          "The supplied digest does not match the detached proof."
+        ]
+      }
+    },
+    {
+      "path": "/api/v1/intelligence/timestamps/proofs/verify",
+      "status": 200,
+      "body": {
+        "status": "pending_calendar_attestation",
+        "verified": false,
+        "digest_matches": null,
+        "file_digest": "05c4f616a8e5310d19d938cfd769864d7f4ccdc2ca8b479b10af83564b097af9",
+        "file_hash_algorithm": "sha256",
+        "network": "mainnet",
+        "calendar_attestations": [
+          {
+            "calendar_url": "https://alice.btc.calendar.opentimestamps.org",
+            "status": "pending"
+          }
+        ],
+        "operation_count": 6,
+        "notices": [
+          "No separate file digest was supplied. Only the digest embedded in this proof can be checked for anchoring."
+        ],
+        "errors": []
+      }
+    },
+    {
+      "path": "/api/v1/intelligence/timestamps/proofs/verify",
+      "status": 200,
+      "body": {
+        "status": "bitcoin_attestation_invalid",
+        "verified": false,
+        "digest_matches": true,
+        "file_digest": "7e3717bbe020f53cdc6c40154a1a8e55bddc13a28c8bb3c82e9ee64b81b44872",
+        "file_hash_algorithm": "sha256",
+        "network": "mainnet",
+        "calendar_attestations": [],
+        "operation_count": 38,
+        "notices": [],
+        "errors": [
+          "The proof commitment does not match the Bitcoin Merkle root at height 358391."
+        ]
+      }
+    },
+    {
+      "path": "/api/v1/intelligence/timestamps/proofs/verify",
+      "status": 200,
+      "body": {
+        "status": "bitcoin_attestation_verified",
+        "verified": true,
+        "digest_matches": true,
+        "file_digest": "03ba204e50d126e4674c005e04d82e84c21366780af1f43bd54a37816b6ab340",
+        "file_hash_algorithm": "sha256",
+        "network": "mainnet",
+        "calendar_attestations": [],
+        "operation_count": 38,
+        "notices": [],
+        "errors": [],
+        "attestation_type": "bitcoin",
+        "earliest_proven_block_height": 358391,
+        "earliest_proven_time_utc": "2015-05-28T15:41:18.000Z",
+        "bitcoin_block_hash": "000000000000000003e892881a8cdcdc117c06d444057c98b6f04a9ee75a2319"
+      }
+    }
+  ],
+  "assertions": [
+    "Complete public transcript and exact computed signature rendered",
+    "Changing transcript clears prior verdict; corrupt partial is visibly rejected",
+    "Reload and key-only request show partial scope, not completed signing rounds",
+    "Exact mainnet proof digest, block hash, height and timestamp rendered from owned header verification",
+    "Wrong document digest cannot retain confirmed verdict",
+    "Pending calendar receipt renders pending, without a confirmed badge",
+    "Invalid real proof commitment is rejected despite matching document digest",
+    "Reload clears old proof and fresh resubmission recovers verified result at390px"
+  ],
+  "browser": "152.0.7977.64",
+  "frontendRevision": "0a8e15750",
+  "status": "PASS SCOPED CONSUMER JOURNEYS",
+  "finishedAt": "2026-09-06T14:30:27.018Z"
+}

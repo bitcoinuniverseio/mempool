@@ -1,0 +1,64 @@
+FAIL src/api/intelligence/opentimestamps/opentimestamps-proof.test.ts
+  official OpenTimestamps detached proof vectors
+    × rechecks an earlier anchor after reading the other branches (10 ms)
+    ○ skipped verifies the official hello-world proof against the captured owned Bitcoin header
+    ○ skipped rejects the official bad-stamp Bitcoin commitment even though its embedded digest matches the document
+    ○ skipped does not confuse a supplied document digest mismatch with a bad Bitcoin commitment
+    ○ skipped reports the official incomplete proof as pending without fetching its calendar URL
+    ○ skipped reports the official unknown-notary proof as unsupported
+    ○ skipped verifies embedded-digest anchoring without claiming a separate file was checked
+    ○ skipped binds the requested network to the configured reader before reading any headers
+    ○ skipped checks the owned reader genesis rather than trusting its configured network name
+    ○ skipped reports a reader failure as unavailable and does not reuse an earlier verified anchor
+    ○ skipped rejects malformed or mismatched owned headers rather than marking the proof invalid
+    ○ skipped rejects malformed or mismatched owned headers rather than marking the proof invalid
+    ○ skipped rejects malformed or mismatched owned headers rather than marking the proof invalid
+    ○ skipped reports an active-chain change between the header reads as a reorg
+    ○ skipped rejects malformed block-hash responses with a typed unavailable state
+  bounded .ots parsing
+    ○ skipped rejects invalid base64 ""
+    ○ skipped rejects invalid base64 "not base64!"
+    ○ skipped rejects invalid base64 "AAAA="
+    ○ skipped rejects invalid base64 "A==="
+    ○ skipped rejects trailing bytes after an otherwise valid official proof
+    ○ skipped rejects truncated official proof bytes at every offset
+    ○ skipped rejects oversized files before traversing their operations
+    ○ skipped rejects excessive operation depth
+    ○ skipped rejects a shallow tree that exceeds the total operation budget
+    ○ skipped rejects too many attestations even when no operations are required
+    ○ skipped rejects append or hexlify results larger than the protocol message bound
+    ○ skipped rejects empty binary operation arguments and nonminimal integers
+    ○ skipped reports an unknown operation explicitly instead of treating its bytes as a known proof
+    ○ skipped consumes the complete known attestation payload
+    ○ skipped preserves independent messages when parsing branched operations
+
+  ● official OpenTimestamps detached proof vectors › rechecks an earlier anchor after reading the other branches
+
+    expect(received).resolves.toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+    -   "status": "bitcoin_attestation_reorg",
+    -   "verified": false,
+    +   "status": "bitcoin_attestation_verified",
+    +   "verified": true,
+      }
+
+      142 | const uint = (value: number): Buffer => {
+      143 |   const bytes: number[] = [];
+    > 144 |   do { bytes.push(value % 128 | (value >= 128 ? 128 : 0)); value = Math.floor(value / 128); } while (value);
+          |                       ^
+      145 |   return Buffer.from(bytes);
+      146 | };
+      147 | const detached = (tree: Buffer): string => Buffer.concat([PREFIX, tree]).toString('base64');
+
+      at Object.toMatchObject (../../../mempool/backend/node_modules/expect/build/index.js:2140:20)
+      at Object.<anonymous> (src/api/intelligence/opentimestamps/opentimestamps-proof.test.ts:144:23)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 29 skipped, 30 total
+Snapshots:   0 total
+Time:        3.844 s, estimated 4 s
+Ran all test suites matching src/api/intelligence/opentimestamps/opentimestamps-proof.test.ts with tests matching "rechecks an earlier anchor".

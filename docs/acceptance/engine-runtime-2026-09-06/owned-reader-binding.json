@@ -1,0 +1,14 @@
+{
+  "recordedAt": "2026-09-06T14:45:42.247Z",
+  "sourceConfiguration": {
+    "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\final-runtime\\monolith-config.json",
+    "sha256": "dbaab3e054d3652d7a3f926556b06f65e990106d0ff8354d027607ecd2a60940"
+  },
+  "includedFieldsOnly": {
+    "network": "mainnet",
+    "backend": "esplora",
+    "ownedBitcoinRestApiUrl": "https://explorer.bitcoinuniverse.io/api",
+    "requestTimeoutMilliseconds": 10000
+  },
+  "note": "Allowlisted authority fields only. Full configuration and credentials are not copied. Proof calendar URLs are data and are not contacted by verification."
+}

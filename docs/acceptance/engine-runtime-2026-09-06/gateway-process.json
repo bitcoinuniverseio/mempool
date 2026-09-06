@@ -1,0 +1,7 @@
+{
+  "pid": 40316,
+  "script": "D:/universe/mempool/.tmp/explorer-health-cc524f6d97b5/scripts/universe/gateway.mjs",
+  "port": 4310,
+  "startedAt": "2026-09-06T14:28:00.480Z",
+  "scope": "local candidate; first-party read-only public Bitcoin upstream; no DOGE/ZEC private authority configured"
+}

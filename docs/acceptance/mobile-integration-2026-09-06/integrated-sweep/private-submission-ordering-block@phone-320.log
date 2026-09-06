@@ -1,0 +1,20 @@
+[chromium] Starting viewport phone-320
+2026-09-06T14:59:43.628Z pw:browser <launching> C:/Program Files/Google/Chrome/Application/chrome.exe --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-extensions --disable-features=ImprovedCookieControls,LazyFrameLoading,GlobalMediaControls,DestroyProfileOnBrowserClose,MediaRouter,DialMediaRouteProvider,AcceptCHFrame,AutoExpandDetailsElement,CertificateTransparencyComponentUpdater,AvoidUnnecessaryBeforeUnloadCheckSync,Translate,HttpsUpgrades,PaintHolding,ThirdPartyStoragePartitioning,LensOverlay,PlzDedicatedWorker --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run --enable-automation --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --headless --hide-scrollbars --mute-audio --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --no-sandbox --window-size=1440,1000 --window-position=0,0 --use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader --user-data-dir=C:\WINDOWS\TEMP\playwright_chromiumdev_profile-IHO76C --remote-debugging-pipe --no-startup-window
+2026-09-06T14:59:43.638Z pw:browser <launched> pid=70820
+[chromium] Measuring private-submission-ordering-block@phone-320
+2026-09-06T14:59:47.127Z pw:browser [pid=70820] <gracefully close start>
+2026-09-06T14:59:47.202Z pw:browser [pid=70820] <process did exit: exitCode=0, signal=null>
+2026-09-06T14:59:47.202Z pw:browser [pid=70820] starting temporary directories cleanup
+2026-09-06T14:59:47.233Z pw:browser [pid=70820] finished temporary directories cleanup
+2026-09-06T14:59:47.233Z pw:browser [pid=70820] <gracefully close end>
+
+Mobile gate, build 066715fdfa45a1f7
+1 routes across 1 window sizes, 1 measured pages
+
+-- 2 checks with something to say that passed --
+  viewport: viewport-fit=cover is asked for
+  viewport: zoom is not restricted
+
+-- 1 failures --
+  private-submission-ordering-block@phone-320: 1 shell or repeated controls under 44px: app-private-submission-ordering-block a@28.41x477.8 (repeated)
+

@@ -1,0 +1,168 @@
+UNIVERSE
+EXPLORER
+BTC
+Bitcoin
+Status unknown
+Search the chain
+All chains
+Dashboard
+Mining
+Mempool
+Protocols
+Network
+Data
+Tools
+Labs
+Portfolio
+Charts
+Docs
+Bitcoin · Status unknown
+
+Current node synchronization could not be confirmed. Individual services report their own availability.
+
+Refresh status
+MuSig2 Session Coordinator (BIP327)
+Public Transcript Verification
+
+Verify an untweaked BIP327 public transcript. Keep participants, public nonces and partial signatures in the same order. Enter public data only.
+
+Overview
+MuSig2 Coordinator
+BSMS Setup (BIP129)
+Wallet Policies (BIP388)
+Labels (BIP329)
+Hardware Matrix
+Session Public Data
+Cosigner Public Keys (33-byte compressed hex, one per line)
+Message Digest (32-byte hex)
+Add public nonces and partial signatures
+Public Nonces (66-byte hex, one per participant)
+Partial Signatures (32-byte hex, in participant order)
+Final Signature (optional 64-byte hex consistency check)
+Verify Public Data
+Load Key Aggregation Sample
+Aggregated Key & Verification Result
+Invalid partial signature at participant index 0.
+UNIVERSE
+EXPLORER
+
+Live Bitcoin, Dogecoin, and Zcash activity.
+
+Language
+العربية
+Čeština
+Dansk
+Deutsch
+English
+Español
+فارسی
+Français
+한국어
+Hrvatski
+हिन्दी
+नेपाली
+Italiano
+עברית
+ქართული
+Lietuvių
+Magyar
+Македонски
+Nederlands
+日本語
+Norsk
+Polski
+Português
+Română
+Русский
+Slovenščina
+Suomi
+Svenska
+ไทย
+Türkçe
+Українська
+Tiếng Việt
+中文
+Fiat currency
+AUD
+CAD
+CHF
+EUR
+GBP
+JPY
+USD
+Time zone
+UTC - Greenwich Mean Time (GMT)
+────
+UTC-12 - Anywhere on Earth (AoE)
+UTC-11 - Samoa Standard Time (SST)
+UTC-10 - Hawaii Standard Time (HST)
+UTC-9 - Alaska Standard Time (AKST)
+UTC-8 - Pacific Standard Time (PST)
+UTC-7 - Mountain Standard Time (MST)
+UTC-6 - Central Standard Time (CST)
+UTC-5 - Eastern Standard Time (EST)
+UTC-4 - Atlantic Standard Time (AST)
+UTC-3 - Argentina Time (ART)
+UTC-2 - Fernando de Noronha Time (FNT)
+UTC-1 - Azores Time (AZOT)
+UTC+1 - Central European Time (CET)
+UTC+2 - Eastern European Time (EET)
+UTC+3 - Moscow Standard Time (MSK)
+UTC+4 - Armenia Time (AMT)
+UTC+5 - Pakistan Standard Time (PKT)
+UTC+6 - Xinjiang Time (XJT)
+UTC+7 - Indochina Time (ICT)
+UTC+8 - Hong Kong Time (HKT)
+UTC+9 - Japan Standard Time (JST)
+UTC+10 - Australian Eastern Standard Time (AEST)
+UTC+11 - Norfolk Time (NFT)
+UTC+12 - New Zealand Standard Time (NZST)
+UTC+13 - Tonga Time (TOT)
+UTC+14 - Line Islands Time (LINT)
+Amount units
+BTC
+sats
+Fiat
+Theme
+Light
+Dark
+High contrast
+EXPLORE
+
+Recent blocks
+
+Mining
+
+Charts
+
+Replacements
+
+UNIVERSE
+
+Protocols
+
+Live protocol activity
+
+How this explorer reads assets
+
+TOOLS
+
+API documentation
+
+Broadcast a transaction
+
+Test a transaction
+
+Fee calculator
+
+LEGAL
+
+Source and licenses
+
+Terms of service
+
+Privacy policy
+
+Third-party licenses
+
+Running v3.3.1 0a8e15750

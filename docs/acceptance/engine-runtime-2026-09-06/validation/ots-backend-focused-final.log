@@ -1,0 +1,69 @@
+PASS src/api/intelligence/opentimestamps/opentimestamps-proof.test.ts (7.388 s)
+  official OpenTimestamps detached proof vectors
+    √ verifies the official hello-world proof against the captured owned Bitcoin header (20 ms)
+    √ rejects the official bad-stamp Bitcoin commitment even though its embedded digest matches the document (6 ms)
+    √ does not confuse a supplied document digest mismatch with a bad Bitcoin commitment (1 ms)
+    √ reports the official incomplete proof as pending without fetching its calendar URL (6 ms)
+    √ reports the official unknown-notary proof as unsupported (1 ms)
+    √ verifies embedded-digest anchoring without claiming a separate file was checked (5 ms)
+    √ binds the requested network to the configured reader before reading any headers (1 ms)
+    √ checks the owned reader genesis rather than trusting its configured network name (2 ms)
+    √ reports a reader failure as unavailable and does not reuse an earlier verified anchor (2 ms)
+    √ rejects malformed or mismatched owned headers rather than marking the proof invalid (1 ms)
+    √ rejects malformed or mismatched owned headers rather than marking the proof invalid
+    √ rejects malformed or mismatched owned headers rather than marking the proof invalid (1 ms)
+    √ reports an active-chain change between the header reads as a reorg (1 ms)
+    √ rechecks an earlier anchor after reading the other branches
+    √ rejects malformed block-hash responses with a typed unavailable state (1 ms)
+  bounded .ots parsing
+    √ rejects invalid base64 "" (4 ms)
+    √ rejects invalid base64 "not base64!" (1 ms)
+    √ rejects invalid base64 "AAAA=" (1 ms)
+    √ rejects invalid base64 "A==="
+    √ rejects trailing bytes after an otherwise valid official proof (1 ms)
+    √ rejects truncated official proof bytes at every offset (845 ms)
+    √ rejects oversized files before traversing their operations (76 ms)
+    √ rejects excessive operation depth (16 ms)
+    √ rejects a shallow tree that exceeds the total operation budget (75 ms)
+    √ rejects too many attestations even when no operations are required (11 ms)
+    √ rejects append or hexlify results larger than the protocol message bound (3 ms)
+    √ rejects empty binary operation arguments and nonminimal integers (1 ms)
+    √ reports an unknown operation explicitly instead of treating its bytes as a known proof (1 ms)
+    √ consumes the complete known attestation payload
+    √ preserves independent messages when parsing branched operations (1 ms)
+
+PASS src/api/intelligence/verification-integrity.test.ts
+  verification evidence integrity
+    √ cannot verify an unknown snapshot without a trusted manifest or snapshot bytes (5 ms)
+    √ cannot start a node job when no authorized executor or durable job store exists (1 ms)
+    √ does not manufacture calendar receipts, proof upgrades or Bitcoin attestations (2 ms)
+    √ rejects malformed successful proof inputs instead of verifying an empty object (1 ms)
+    √ does not certify a final signature by its length and computes the participant aggregate independently (16 ms)
+    √ rejects a valid unrelated BIP340 signature whose key is not the participant aggregate (9 ms)
+    √ does not verify a vendor manifest merely because it contains a signature string
+  verification HTTP contracts
+    √ keeps /bootstrap/overview offered and returns source unavailability rather than invented records (54 ms)
+    √ keeps /timestamps/overview offered and returns source unavailability rather than invented records (8 ms)
+    √ keeps /multiparty/overview offered and returns source unavailability rather than invented records (5 ms)
+    √ classifies the actual /bootstrap/verifications request (44 ms)
+    √ classifies the actual /timestamps/proofs/verify request (7 ms)
+    √ classifies the actual /timestamps/proofs/verify request (10 ms)
+    √ classifies the actual /multiparty/public-sessions/verify request (8 ms)
+    √ classifies the actual /multiparty/manifests/verify request (15 ms)
+    √ does not convert an unrelated valid BIP340 signature into successful transcript verification (9 ms)
+    √ verifies an official complete BIP327 public transcript over HTTP and rejects a corrupted contribution (30 ms)
+
+PASS src/api/intelligence/opentimestamps/opentimestamps.test.ts
+  OpenTimestampsService
+    √ does not report invented calendar health, batches or confirmed anchors (6 ms)
+    √ validates digest syntax and requires an actual calendar response (2 ms)
+    √ does not classify a proof from the text verified-proof-data (1 ms)
+    √ does not classify a proof from the text pending-proof-data (1 ms)
+    √ validates the actual browser proof field without inventing a verdict (1 ms)
+    √ cannot upgrade a pending proof without a verified calendar response (1 ms)
+
+Test Suites: 3 passed, 3 total
+Tests:       53 passed, 53 total
+Snapshots:   0 total
+Time:        9.934 s
+Ran all test suites matching src/api/intelligence/opentimestamps/opentimestamps-proof.test.ts|src/api/intelligence/opentimestamps/opentimestamps.test.ts|src/api/intelligence/verification-integrity.test.ts.

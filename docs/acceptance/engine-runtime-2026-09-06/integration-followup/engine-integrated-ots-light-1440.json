@@ -1,0 +1,73 @@
+{
+  "startedAt": "2026-09-06T14:57:17.792Z",
+  "tool": "ots",
+  "theme": "light",
+  "width": 1440,
+  "scope": "Actual frontend and gateway with candidate monolith and owned Bitcoin header reads; no intercepted responses; fresh headless profile; theme contrast and rendered provided-proof result.",
+  "responses": [
+    {
+      "url": "http://127.0.0.1:4310/api/v1/intelligence/timestamps/proofs/verify",
+      "status": 200,
+      "body": {
+        "status": "bitcoin_attestation_verified",
+        "verified": true,
+        "digest_matches": true,
+        "file_digest": "03ba204e50d126e4674c005e04d82e84c21366780af1f43bd54a37816b6ab340",
+        "file_hash_algorithm": "sha256",
+        "network": "mainnet",
+        "calendar_attestations": [],
+        "operation_count": 38,
+        "notices": [],
+        "errors": [],
+        "attestation_type": "bitcoin",
+        "earliest_proven_block_height": 358391,
+        "earliest_proven_time_utc": "2015-05-28T15:41:18.000Z",
+        "bitcoin_block_hash": "000000000000000003e892881a8cdcdc117c06d444057c98b6f04a9ee75a2319"
+      }
+    }
+  ],
+  "frontendRevision": "bbca7f468",
+  "backendInfo": {
+    "hostname": "SERVER",
+    "version": "3.3.1",
+    "gitCommit": "0a8e15750",
+    "lightning": false,
+    "backend": "esplora",
+    "coreVersion": "?",
+    "osVersion": "Windows_NT 10.0.26100",
+    "chainSync": null,
+    "checkpoint": null
+  },
+  "bodyText": "Verify OpenTimestamps Proof (.ots)\n\nCryptographically evaluate Merkle branching operations up to the Bitcoin Block Header Merkle Root.\n\nBack to Overview\nPaste .ots Proof as Base64\nPROOF BASE64 DATA\nExpected file digest (optional)\n\nUse the same hash algorithm as the proof. Without a digest, verification checks only the proof's embedded digest.\n\nVerify Cryptographic Proof\nBitcoin anchoring verified\nBITCOIN CONFIRMED\n\nProvided file digest matches the proof.\n\nBitcoin Network\nmainnet\nBitcoin Block Height\n358391\nBlock Hash\n000000000000000003e892881a8cdcdc117c06d444057c98b6f04a9ee75a2319\nBlock Timestamp\n2015-05-28T15:41:18.000Z\nAttestation Type\nbitcoin\nEmbedded File Digest\nsha256: 03ba204e50d126e4674c005e04d82e84c21366780af1f43bd54a37816b6ab340\nOperations Executed\n38 step(s)",
+  "contrast": {
+    "text": [],
+    "painted": [],
+    "canvas": [],
+    "sampled": 72
+  },
+  "fields": [
+    {
+      "id": "ots-proof",
+      "color": "rgb(36, 26, 43)",
+      "background": "rgb(255, 255, 255)",
+      "fontSize": "16px",
+      "valueLength": 920
+    },
+    {
+      "id": "ots-digest",
+      "color": "rgb(36, 26, 43)",
+      "background": "rgb(255, 255, 255)",
+      "fontSize": "16px",
+      "valueLength": 64
+    }
+  ],
+  "geometry": {
+    "width": 1440,
+    "scrollWidth": 1440,
+    "theme": null,
+    "bodyClass": ""
+  },
+  "status": "PASS",
+  "finishedAt": "2026-09-06T14:57:20.039Z",
+  "browser": "152.0.7977.64"
+}

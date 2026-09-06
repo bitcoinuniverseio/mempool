@@ -1,0 +1,355 @@
+{
+  "incoming": "ff2a108247a47a214db471850078ef8fcd98bf88",
+  "ours": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+  "files": [
+    {
+      "file": "docs/acceptance/operation-matrix-2026-09-06.json",
+      "resolution": "Preserve current source ledger pending regeneration with the complete evidence overlay."
+    },
+    {
+      "file": "frontend/src/app/universe/ark-vpack/ark-exit.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/block-propagation/block-propagation-block-detail.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/block-propagation/block-propagation-compact-blocks.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/block-propagation/block-propagation-fibre.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/block-propagation/block-propagation-fork-races.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/block-propagation/block-propagation-live.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/block-propagation/block-propagation-overview.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/block-propagation/block-propagation-stale-tips.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/blockspace/blockspace-composition.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/blockspace/blockspace-overview.component.ts",
+      "hunks": 2,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/blockspace/blockspace-regimes.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/bootstrap/bootstrap-overview.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/collaborative-privacy/collaborative-privacy-coordinators.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/collaborative-privacy/collaborative-privacy-fidelity-bonds.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/collaborative-privacy/collaborative-privacy-overview.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/compact-filters/light-client-overview.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/compact-filters/light-client-privacy.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/consensus-conformance/consensus-conformance-case-detail.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/consensus-conformance/consensus-conformance-cases.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/consensus-conformance/consensus-conformance-corpora.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/consensus-conformance/consensus-conformance-differential.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/consensus-conformance/consensus-conformance-formal.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/consensus-conformance/consensus-conformance-overview.component.ts",
+      "hunks": 2,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/consensus-conformance/consensus-conformance-specifications.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/consensus/consensus-compare.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/dlc/dlc-overview.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/ecash/ecash-cashu-detail.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/ecash/ecash-overview.component.ts",
+      "hunks": 2,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/global-network/global-network-nodes.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/global-network/global-network-overview.component.ts",
+      "hunks": 3,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/global-network/global-network-seeds.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/intelligence-platform/developer-platform.component.ts",
+      "hunks": 2,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/intelligence-platform/knowledge-registry.component.ts",
+      "hunks": 2,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/intelligence-platform/protocol-explorer.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/intelligence-platform/utxo-intelligence.component.ts",
+      "hunks": 2,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/intelligence-platform/watchlists.component.ts",
+      "hunks": 2,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/lightning-reliability/lightning-node-reliability.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/lightning-reliability/lightning-reliability-overview.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/lightning-resilience/lightning-resilience-htlcs.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/lightning-resilience/lightning-resilience-mitigations.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/lightning-resilience/lightning-resilience-overview.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/mining-decentralized/decentralized-mining-compare.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/mining-decentralized/decentralized-mining-overview.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/multiparty/multiparty-compatibility.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/node-security/node-security-advisories.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/node-security/node-security-artifacts.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/node-security/node-security-fleet.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/node-security/node-security-overview.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/node-security/node-security-releases.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/offchain/offchain-utxo.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/opentimestamps/opentimestamps-batches.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/opentimestamps/opentimestamps-calendars.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/opentimestamps/opentimestamps-overview.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/payjoin/payjoin-compatibility.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/payjoin/payjoin-directory.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/payment-connectivity/payment-connectivity-overview.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/payment-connectivity/payment-lnurl.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/private-submission/private-submission-accelerators.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/private-submission/private-submission-ordering-block.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/private-submission/private-submission-ordering.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/quantum/quantum-history.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/quantum/quantum-overview.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/reserves/reserves-overview.component.ts",
+      "hunks": 2,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/reserves/reserves-provider-detail.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/silent-payments/silent-payments-coverage.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/silent-payments/silent-payments-overview.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/swaps/swaps-chain.component.ts",
+      "hunks": 1,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/app/universe/swaps/swaps-overview.component.ts",
+      "hunks": 2,
+      "resolution": "Preserve keyboard focus plus the existing named region; conflict content is otherwise identical."
+    },
+    {
+      "file": "frontend/src/styles.scss",
+      "hunks": 1,
+      "resolution": "Preserve both narrow-layout partials."
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+
+> mempool-frontend@3.3.1 test
+> vitest run --run src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts src/app/universe/multiparty/multiparty-musig2.component.spec.ts
+
+
+ RUN  v3.2.7 D:/universe/mempool/.tmp/explorer-health-cc524f6d97b5/frontend
+
+ ✓ src/app/universe/multiparty/multiparty-musig2.component.spec.ts (9 tests) 267ms
+ ✓ src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts (23 tests) 328ms
+
+ Test Files  2 passed (2)
+      Tests  32 passed (32)
+   Start at  14:38:29
+   Duration  2.75s (transform 197ms, setup 146ms, collect 1.03s, tests 594ms, environment 2.10s, prepare 395ms)
+

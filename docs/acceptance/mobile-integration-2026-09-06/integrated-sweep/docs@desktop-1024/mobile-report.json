@@ -1,0 +1,87 @@
+{
+  "base": "http://127.0.0.1:4310",
+  "browser": "chromium",
+  "build": "066715fdfa45a1f7",
+  "report": [
+    {
+      "route": "docs",
+      "viewport": "desktop-1024",
+      "overflowBy": 0,
+      "viewportWidth": 1024,
+      "culprits": [],
+      "scrollers": [],
+      "clippers": [],
+      "smallFields": [],
+      "targetsBelowWcag": [],
+      "targetsBelowPlatform": [
+        "app-master-page button.dropdown-toggle.chain-toggle@111.22x38 (shell)",
+        "app-search-form button.search-submit@46x40 (shell)",
+        "app-search-form input@18x18 (shell)",
+        "app-master-page a.nav-link.mobile-primary@119.22x40 (shell)",
+        "app-master-page a.nav-link.mobile-primary@96.59x40 (shell)",
+        "app-master-page a.nav-link.mobile-primary@112.11x40 (shell)",
+        "app-master-page a.nav-link.mobile-primary@110.5x40 (shell)",
+        "app-master-page a.nav-link@105.67x40 (shell)",
+        "app-master-page a.nav-link@82.13x40 (shell)",
+        "app-master-page a.nav-link@85.09x40 (shell)",
+        "app-master-page a.nav-link@81.11x40 (shell)",
+        "app-master-page a.nav-link@106.78x40 (shell)",
+        "app-master-page a.nav-link@92.7x40 (shell)",
+        "app-master-page a.nav-link@83.33x40 (shell)",
+        "app-docs a#ngb-nav-1.nav-link@63.27x42 (repeated)",
+        "app-docs a#ngb-nav-0.nav-link.active@107.25x42 (repeated)",
+        "app-docs a#ngb-nav-2.nav-link@151.81x42 (repeated)",
+        "app-code-template a#ngb-nav-3.nav-link.active@69.48x42 (repeated)",
+        "app-code-template a#ngb-nav-4.nav-link@113.48x42 (repeated)",
+        "app-code-template a#ngb-nav-5.nav-link@109.44x42 (repeated)",
+        "app-code-template a#ngb-nav-6.nav-link.active@69.48x42 (repeated)",
+        "app-code-template a#ngb-nav-7.nav-link.active@69.48x42 (repeated)",
+        "app-code-template a#ngb-nav-8.nav-link.active@69.48x42 (repeated)",
+        "app-code-template a#ngb-nav-9.nav-link@113.48x42 (repeated)",
+        "app-code-template a#ngb-nav-10.nav-link@109.44x42 (repeated)"
+      ],
+      "atBottom": {
+        "hidden": [],
+        "barTop": null
+      },
+      "insets": {
+        "top": "0px",
+        "bottom": "0px",
+        "left": "0px",
+        "right": "0px"
+      },
+      "chrome": {
+        "headerPadTop": 0,
+        "barPadBottom": 0,
+        "barPadLeft": 24,
+        "barPadRight": 24,
+        "headerBottom": 145
+      },
+      "overflowingSurfaces": [],
+      "nav": {
+        "scrolls": false,
+        "scrollLeft": 0,
+        "activeVisible": false,
+        "hasActive": true,
+        "affordance": false
+      },
+      "innerHeight": 900,
+      "docHeight": 81051
+    }
+  ],
+  "findings": [],
+  "grazes": [],
+  "passes": [
+    "viewport: viewport-fit=cover is asked for",
+    "viewport: zoom is not restricted"
+  ],
+  "executionComplete": true,
+  "cases": [
+    {
+      "route": "docs",
+      "viewport": "desktop-1024",
+      "status": "measured",
+      "phase": "complete"
+    }
+  ]
+}

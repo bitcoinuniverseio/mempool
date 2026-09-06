@@ -1,0 +1,12 @@
+
+> mempool-backend@3.3.1 build
+> npm run tsc && npm run create-resources
+
+
+> mempool-backend@3.3.1 tsc
+> tsc -p tsconfig.build.json
+
+
+> mempool-backend@3.3.1 create-resources
+> node scripts/create-resources.mjs
+

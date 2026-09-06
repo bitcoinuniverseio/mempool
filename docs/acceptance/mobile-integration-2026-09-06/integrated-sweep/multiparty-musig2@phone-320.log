@@ -1,0 +1,14 @@
+[chromium] Starting viewport phone-320
+2026-09-06T14:59:05.138Z pw:browser <launching> C:/Program Files/Google/Chrome/Application/chrome.exe --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-extensions --disable-features=ImprovedCookieControls,LazyFrameLoading,GlobalMediaControls,DestroyProfileOnBrowserClose,MediaRouter,DialMediaRouteProvider,AcceptCHFrame,AutoExpandDetailsElement,CertificateTransparencyComponentUpdater,AvoidUnnecessaryBeforeUnloadCheckSync,Translate,HttpsUpgrades,PaintHolding,ThirdPartyStoragePartitioning,LensOverlay,PlzDedicatedWorker --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run --enable-automation --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --headless --hide-scrollbars --mute-audio --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --no-sandbox --window-size=1440,1000 --window-position=0,0 --use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader --user-data-dir=C:\WINDOWS\TEMP\playwright_chromiumdev_profile-8DtFru --remote-debugging-pipe --no-startup-window
+2026-09-06T14:59:05.155Z pw:browser <launched> pid=56260
+[chromium] Measuring multiparty-musig2@phone-320
+
+Measurement stopped at multiparty-musig2@phone-320. The report preserves prior results and identifies all unfinished cases.
+page.waitForTimeout: Target page, context or browser has been closed
+    at run (D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\scripts\universe\visual-qa\mobile-check.mjs:890:24)
+2026-09-06T14:59:07.583Z pw:browser [pid=56260] <kill>
+2026-09-06T14:59:07.583Z pw:browser [pid=56260] <will force kill>
+2026-09-06T14:59:08.099Z pw:browser [pid=56260] taskkill stderr: ERROR: The process "56260" not found.
+
+2026-09-06T14:59:08.099Z pw:browser [pid=56260] starting temporary directories cleanup
+2026-09-06T14:59:08.136Z pw:browser [pid=56260] finished temporary directories cleanup

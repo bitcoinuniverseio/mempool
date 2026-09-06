@@ -1,0 +1,25 @@
+{
+  "base": "http://127.0.0.1:4310",
+  "browser": "chromium",
+  "build": "066715fdfa45a1f7",
+  "report": [],
+  "findings": [
+    "private-submission-ordering-block@phone-landscape: could not be measured: Error: page.waitForTimeout: Target page, context or browser has been closed",
+    "runner: run incomplete: Error: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
+  "grazes": [],
+  "passes": [
+    "viewport: viewport-fit=cover is asked for",
+    "viewport: zoom is not restricted"
+  ],
+  "executionComplete": false,
+  "cases": [
+    {
+      "route": "private-submission-ordering-block",
+      "viewport": "phone-landscape",
+      "status": "incomplete",
+      "phase": "navigation",
+      "error": "Error: page.waitForTimeout: Target page, context or browser has been closed"
+    }
+  ]
+}
