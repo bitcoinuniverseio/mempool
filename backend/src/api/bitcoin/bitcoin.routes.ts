@@ -9,6 +9,7 @@ import mempoolBlocks from '../mempool-blocks';
 import bitcoinApi from './bitcoin-api-factory';
 import { Common } from '../common';
 import backendInfo from '../backend-info';
+import { indexedCheckpoint } from '../backend-info-checkpoint';
 import transactionUtils from '../transaction-utils';
 import { IEsploraApi } from './esplora-api.interface';
 import loadingIndicators from '../loading-indicators';
@@ -235,7 +236,11 @@ class BitcoinRoutes {
   }
 
   private getBackendInfo(req: Request, res: Response) {
-    res.json(backendInfo.getBackendInfo());
+    res.setHeader('Cache-Control', 'no-store');
+    res.json({
+      ...backendInfo.getBackendInfo(),
+      checkpoint: indexedCheckpoint(blocks.getBlocks(), config.MEMPOOL.NETWORK),
+    });
   }
 
   private async getTransaction(req: Request, res: Response) {
