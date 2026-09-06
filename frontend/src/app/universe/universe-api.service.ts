@@ -303,14 +303,36 @@ export class UniverseApiService {
   }
 
   getChains$(): Observable<ChainCapabilityEnvelope[]> {
-    return this.httpClient.get<ChainCapabilityEnvelope[]>(
-      this.apiBaseUrl + '/api/v1/chains?network=mainnet'
-    );
+    return this.selectedNetwork$().pipe(switchMap(network =>
+      this.httpClient.get<ChainCapabilityEnvelope[]>(this.apiBaseUrl + '/api/v1/chains?network=' + network).pipe(
+        map(rows => {
+          if (!Array.isArray(rows)) {throw new Error('invalid-chain-capabilities');}
+          const seen = new Set<string>();
+          for (const row of rows) {
+            if (!row || !['bitcoin', 'dogecoin', 'zcash'].includes(row.chain) || seen.has(row.chain)) {
+              throw new Error('invalid-chain-capabilities');
+            }
+            seen.add(row.chain);
+            const expected = row.chain === 'bitcoin' ? network : 'mainnet';
+            if (row.network !== expected) {throw new Error('authority-network-mismatch');}
+            this.assertResponseContext(row, expected, row.chain);
+          }
+          return rows;
+        }),
+      ),
+    ));
   }
 
   getChainStatus$(chain: ExplorerChain): Observable<ChainCapabilityEnvelope> {
-    return this.httpClient.get<ChainCapabilityEnvelope>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/status?network=mainnet'
+    return this.selectedNetwork$().pipe(
+      map(network => chain === 'bitcoin' ? network : 'mainnet' as ExplorerNetwork),
+      distinctUntilChanged(),
+      switchMap(network => this.httpClient.get<ChainCapabilityEnvelope>(
+        this.apiBaseUrl + '/api/v1/' + chain + '/status?network=' + network,
+      ).pipe(map(row => {
+        this.assertResponseContext(row, network, chain);
+        return row;
+      }))),
     );
   }
 

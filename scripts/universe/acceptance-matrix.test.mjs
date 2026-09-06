@@ -39,6 +39,16 @@ test('actual source matrix preserves named inventories and required distinct var
   assert.deepEqual(matrix.sourceCounts, { navigation: 351, namedOperations: 37, protocolIdentities: 39,
     uiCandidates: 304, apiCandidates: 546, additionalRouteDeclarations: 55, components: 302, controls: 1569, handlerBindings: 344 });
   assert.equal(matrix.sourceGroups['protocol-operation'].length, 119);
+  assert.equal(matrix.sourceGroups['health-verification'].length, 40);
+  assert.equal(matrix.healthHandoff.protocolOperationBindings, 119);
+  assert.equal(byId.get('H-01').priorAssertion.status, 'FAIL');
+  assert.equal(byId.get('H-01').status, 'NOT TESTED');
+  assert.equal(byId.get('R-04-TX').route, '/api/v1/dogecoin/tx/:txid');
+  assert.equal(byId.get('R-04-TX').entry, '/dogecoin/tx/:txid');
+  assert.equal(byId.get('R-04-SPENT').entry, '/dogecoin/outpoint/:txid/:vout');
+  assert.equal(byId.get('PRO-01/registry').handoffBinding.coverageId, 'PRO-01.registry');
+  assert(!byId.has('PRO-01.registry'), 'A second handoff name must not duplicate the existing operation row');
+  assert.equal(byId.get('R-07').links.length, 119);
   for (let n = 1; n <= 36; n++) assert(byId.has(`Q05-P${String(n).padStart(2, '0')}`));
   for (let n = 1; n <= 12; n++) assert(byId.has(`Q07-A${String(n).padStart(2, '0')}`));
   assert.equal(matrix.sourceGroups['admin-resource-variant'].length, 14);
@@ -60,6 +70,12 @@ test('actual source matrix preserves named inventories and required distinct var
   assert.throws(() => validateMatrix(duplicate), /duplicate IDs/);
   const corrupted = structuredClone(matrix); corrupted.rows[0].sources[0].sha256 = '0'.repeat(64);
   assert.throws(() => validateMatrix(corrupted), /source hash lineage/);
+  const lostBinding = structuredClone(matrix);
+  delete lostBinding.rows.find(row => row.id === 'PRO-01/registry').handoffBinding;
+  assert.throws(() => validateMatrix(lostBinding), /Lost handoff operation binding/);
+  const replacedBinding = structuredClone(matrix);
+  replacedBinding.rows.find(row => row.id === 'PRO-01/registry').handoffBinding.ledgerId = 'PRO-01.registry';
+  assert.throws(() => validateMatrix(replacedBinding), /changed the original ledger ID/);
   const falsePass = structuredClone(matrix); falsePass.rows[0].status = 'PASS LOCAL';
   assert.throws(() => validateMatrix(falsePass), /unsupported acceptance/);
 });

@@ -11,7 +11,8 @@ interface Recorder {
 
 function build(
   isBrowser: boolean,
-  respond: (url: string) => Observable<unknown> = () => of({}),
+  respond: (url: string) => Observable<unknown> = (url: string) =>
+    of(url.includes('/api/v1/chains') ? [] : {}),
 ): Recorder {
   const urls: string[] = [];
   const httpClient = {

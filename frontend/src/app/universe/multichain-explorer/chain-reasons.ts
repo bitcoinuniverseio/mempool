@@ -104,6 +104,22 @@ const REASON_COPY: Record<string, ReasonCopy> = {
     text: $localize`:@@universe.reason.reorg-evidence-tail-only:This authority keeps reorganisation evidence for recent blocks only, not for the whole chain.`,
     kind: 'limit',
   },
+  'protocol-qualification-pending': {
+    text: $localize`:@@universe.reason.protocol-qualification-pending:Protocol qualification is pending initial historical scan.`,
+    kind: 'limit',
+  },
+  'confirmed-history-partial': {
+    text: $localize`:@@universe.reason.confirmed-history-partial:Confirmed history is readable but does not yet cover the whole chain.`,
+    kind: 'fault',
+  },
+  'address-history-partial': {
+    text: $localize`:@@universe.reason.address-history-partial:Address history is readable but does not yet cover the whole chain.`,
+    kind: 'fault',
+  },
+  'confirmed-history-unconfigured': {
+    text: $localize`:@@universe.reason.confirmed-history-unconfigured:Historical indexer for confirmed transactions is not configured for this chain.`,
+    kind: 'limit',
+  },
 };
 
 /**
