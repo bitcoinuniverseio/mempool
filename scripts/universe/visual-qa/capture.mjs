@@ -332,7 +332,7 @@ export const ROUTES = [
   { id: 'private-submission', path: '/mempool/submission', name: 'Submission Overview' },
   { id: 'private-submission-broadcast', path: '/mempool/private-broadcast', name: 'Private Miner Broadcast' },
   { id: 'private-submission-accelerators', path: '/mempool/accelerators', name: 'Accelerator Directory' },
-  { id: 'private-submission-accelerator-detail', path: '/mempool/accelerator/mempool-accelerate', name: 'Accelerator Provider Detail' },
+  { id: 'private-submission-accelerator-detail', path: '/mempool/accelerator/accelerator-under-test', name: 'Accelerator Provider Detail' },
   { id: 'private-submission-receipts', path: '/mempool/receipts', name: 'Accelerator Receipts Verifier' },
   { id: 'private-submission-ordering', path: '/intelligence/ordering', name: 'Ordering Evidence' },
   { id: 'private-submission-ordering-tx', path: '/intelligence/ordering/tx/9f8e7d6c5b4a392817263544fedcba09876543211234567890abcdef12345678', name: 'Ordering Transaction Proof' },
