@@ -1,0 +1,23 @@
+{
+  "checkedAt": "2026-09-06T04:07:10.282Z",
+  "scope": "Independent PDF text and rendered-page inspection preparation",
+  "pdf": "D:\\universe\\mempool\\mempool\\docs\\acceptance\\codex-2026-09-06\\manual-report-558e6132.pdf",
+  "pdfSha256": "c519d9947917847c48f6e6960b4c45140185762c3bd6942e065f9e4b0753deea",
+  "expectedRows": 3,
+  "textAssertions": "PASS LOCAL",
+  "visualInspection": "PENDING",
+  "pages": [
+    {
+      "page": 1,
+      "width": 1262.87997,
+      "height": 1786.6799999999998,
+      "image": "D:\\universe\\mempool\\mempool\\docs\\acceptance\\codex-2026-09-06\\manual-report-pdf-page-1.png"
+    },
+    {
+      "page": 2,
+      "width": 1262.87997,
+      "height": 1786.6799999999998,
+      "image": "D:\\universe\\mempool\\mempool\\docs\\acceptance\\codex-2026-09-06\\manual-report-pdf-page-2.png"
+    }
+  ]
+}

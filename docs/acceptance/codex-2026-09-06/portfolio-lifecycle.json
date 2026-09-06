@@ -1,0 +1,78 @@
+{
+  "checkedAt": "2026-09-06T04:02:10.403Z",
+  "origin": "http://localhost:4310",
+  "scope": "Actual disposable local vault/UI/download lifecycle; no chain data, durable shares or independent browser identity acceptance",
+  "portfolioPath": "/portfolio/p/33420a3f82b6ae868f4ea8be/overview",
+  "atomicEvidence": "D:\\universe\\mempool\\mempool\\docs\\acceptance\\codex-2026-09-06\\portfolio-lifecycle-atomic-0e65dba9.json",
+  "checks": [
+    {
+      "id": "Q05-P14-P16-ATOMIC",
+      "status": "PASS LOCAL",
+      "scope": "Actual IndexedDB failure/corruption checks through the built worker and settings UI",
+      "localChecks": 7
+    },
+    {
+      "id": "Q05-P14",
+      "status": "PASS LOCAL",
+      "scope": "Successful UI passphrase change; reload rejects old passphrase, accepts replacement and restores the exact requested portfolio"
+    },
+    {
+      "id": "Q05-P06-RELOAD",
+      "status": "PASS LOCAL",
+      "scope": "The existing UI-created empty manual portfolio survives encrypted-vault reload without manufacturing chain holdings"
+    },
+    {
+      "id": "Q05-P13-LOCK-UNLOCK",
+      "status": "PASS LOCAL",
+      "scope": "Actual Lock action removes child content and unlock restores the requested local record; independent identity isolation is checked separately"
+    },
+    {
+      "id": "Q05-P08",
+      "status": "PASS LOCAL",
+      "scope": "Rename through Manage portfolios persists after a full reload and vault unlock"
+    },
+    {
+      "id": "Q05-P10",
+      "status": "PASS LOCAL",
+      "scope": "Archive persists after reload; the archived record is unavailable at its direct route and absent from open actions"
+    },
+    {
+      "id": "Q05-P11",
+      "status": "PASS LOCAL",
+      "scope": "Restoring the archived record persists through reload and opens the same portfolio ID"
+    },
+    {
+      "id": "Q05-P09",
+      "status": "PASS LOCAL",
+      "scope": "Duplicate has its own persistent ID and zero accounts; independent decryption of the downloaded backup confirms all copied settings",
+      "comparedFields": [
+        "groups",
+        "tags",
+        "quoteCurrency",
+        "privacy",
+        "snapshotPolicy"
+      ]
+    },
+    {
+      "id": "Q05-P15",
+      "status": "PASS LOCAL",
+      "scope": "Actual encrypted download passes its checksum and independent Argon2id/AES-GCM decoding; both saved definitions and restored archive state match",
+      "artifact": "D:\\universe\\mempool\\audits\\codex-acceptance-20260906\\portfolio-local-lifecycle-0e65dba9.universe-portfolio",
+      "bytes": 2594,
+      "sha256": "a92ff527e0c0bd8802621c81ffd21974f589e9301451aac53fa6f37808eabd8a",
+      "recordCount": 3
+    },
+    {
+      "id": "Q05-P12",
+      "status": "PASS LOCAL",
+      "scope": "Two-step deletion removes only the disposable copy; reload refuses its ID and the original definition remains available"
+    },
+    {
+      "id": "Q05-P16",
+      "status": "PASS LOCAL",
+      "scope": "Importing the actual encrypted backup restores the deleted copy and preserves the source; the restored route and records survive full reload/unlock",
+      "importedRecordCount": 3,
+      "inputArtifactSha256": "a92ff527e0c0bd8802621c81ffd21974f589e9301451aac53fa6f37808eabd8a"
+    }
+  ]
+}

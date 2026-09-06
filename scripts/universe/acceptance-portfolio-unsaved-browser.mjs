@@ -26,7 +26,7 @@ export async function checkUnsavedPortfolioEntry(page, output, screenshots) {
     await page.goto(origin + '/portfolio/new?mode=ephemeral', { waitUntil: 'domcontentloaded' });
     const form = page.locator('app-onboarding');
     await form.getByRole('heading', { name: 'Look up one public address', exact: true, level: 1 }).waitFor();
-    await form.getByLabel('Chain and network', { exact: true }).selectOption(chain + ':mainnet');
+    await form.getByLabel(/^Chain and network/).selectOption(chain + ':mainnet');
     const input = form.locator('textarea');
     const open = form.getByRole('button', { name: 'Open without saving', exact: true });
     await input.fill(address.slice(0, -1) + (address.endsWith('1') ? '2' : '1'));

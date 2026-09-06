@@ -1,0 +1,4 @@
+"asset","holding","share","value","source","kind","quantity","unit_price","quote_currency","effective_at"
+"Local report 558e6132 exact lot","","Not combined","Hidden","User-entered","asset","Hidden","Hidden","USD","2026-09-06"
+"Local report 558e6132 liability","","Not combined","Hidden","User-entered","liability","Hidden","Hidden","EUR","2026-09-06"
+"'=Local_report_558e6132","","Not combined","Hidden","User-entered","asset","Hidden","Hidden","","2026-09-06"

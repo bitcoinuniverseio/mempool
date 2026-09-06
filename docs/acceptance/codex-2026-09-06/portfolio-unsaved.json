@@ -1,0 +1,61 @@
+{
+  "checkedAt": "2026-09-06T04:08:54.064Z",
+  "origin": "http://localhost:4310",
+  "scope": "Local entry only; no authority or network acceptance",
+  "checks": [
+    {
+      "id": "Q05-P07-BITCOIN-LOCAL",
+      "status": "PASS LOCAL",
+      "scope": "Checksum/version validation and real unsaved route selection preserve all encrypted bytes. Public authority readback remains BLOCKED PRE-03.",
+      "entry": "/portfolio/new?mode=ephemeral",
+      "actualPath": "/portfolio/bitcoin/mainnet/BC1QCR8TE4KR609GCAWUTMRZA0J4XV80JY8Z306FYU",
+      "invalidChecksumRejected": true,
+      "vaultBefore": {
+        "count": 10,
+        "sha256": "5bc12f04363244844c2946fdd5b11afbd7a1d1d746bdebe7ef59c72ed03c6dc8"
+      },
+      "vaultAfter": {
+        "count": 10,
+        "sha256": "5bc12f04363244844c2946fdd5b11afbd7a1d1d746bdebe7ef59c72ed03c6dc8"
+      }
+    },
+    {
+      "id": "Q05-P07-DOGECOIN-LOCAL",
+      "status": "PASS LOCAL",
+      "scope": "Checksum/version validation and real unsaved route selection preserve all encrypted bytes. Public authority readback remains BLOCKED PRE-03.",
+      "entry": "/portfolio/new?mode=ephemeral",
+      "actualPath": "/portfolio/dogecoin/mainnet/DH5yaieqoZN36fDVciNyRueRGvGLR3mr7L",
+      "invalidChecksumRejected": true,
+      "vaultBefore": {
+        "count": 10,
+        "sha256": "5bc12f04363244844c2946fdd5b11afbd7a1d1d746bdebe7ef59c72ed03c6dc8"
+      },
+      "vaultAfter": {
+        "count": 10,
+        "sha256": "5bc12f04363244844c2946fdd5b11afbd7a1d1d746bdebe7ef59c72ed03c6dc8"
+      }
+    },
+    {
+      "id": "Q05-P07-ZCASH-LOCAL",
+      "status": "PASS LOCAL",
+      "scope": "Checksum/version validation and real unsaved route selection preserve all encrypted bytes. Public authority readback remains BLOCKED PRE-03.",
+      "entry": "/portfolio/new?mode=ephemeral",
+      "actualPath": "/portfolio/zcash/mainnet/t1SEgZvXCu3ceE42qrq5pCeSq7HbLjX8NJv",
+      "invalidChecksumRejected": true,
+      "vaultBefore": {
+        "count": 10,
+        "sha256": "5bc12f04363244844c2946fdd5b11afbd7a1d1d746bdebe7ef59c72ed03c6dc8"
+      },
+      "vaultAfter": {
+        "count": 10,
+        "sha256": "5bc12f04363244844c2946fdd5b11afbd7a1d1d746bdebe7ef59c72ed03c6dc8"
+      }
+    },
+    {
+      "id": "Q05-P07-PRIVATE-REJECTION",
+      "status": "PASS LOCAL",
+      "scope": "Public test mnemonic rejected and erased in the real form before transmission or persistence",
+      "outboundWriteRequests": 0
+    }
+  ]
+}

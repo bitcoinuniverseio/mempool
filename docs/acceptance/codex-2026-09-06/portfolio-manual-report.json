@@ -1,0 +1,81 @@
+{
+  "checkedAt": "2026-09-06T04:05:53.524Z",
+  "origin": "http://localhost:4310",
+  "portfolioPath": "/portfolio/p/33420a3f82b6ae868f4ea8be/overview",
+  "scope": "Actual local manual-entry UI, encrypted reload, privacy, populated manual-only preview and CSV. No authoritative holdings, prices, shares, network or chain acceptance.",
+  "checks": [
+    {
+      "id": "Q05-manual-entry",
+      "status": "PASS LOCAL",
+      "scope": "Real form saves exact user-entered asset/liability/unpriced records, edits one ID and removes a temporary row",
+      "testPositions": 3
+    },
+    {
+      "id": "Q05-manual-persistence",
+      "status": "PASS LOCAL",
+      "scope": "All saved manual entries and edited exact quantities survive a full reload and actual vault unlock; removed row stays absent"
+    },
+    {
+      "id": "Q05-manual-privacy",
+      "status": "PASS LOCAL",
+      "scope": "Turning privacy on while editing removes input values and absolute table values; showing values returns an empty draft"
+    },
+    {
+      "id": "Q05-P28-manual-preview",
+      "status": "PASS LOCAL",
+      "scope": "Populated manual-only preview retains exact quantities and separate USD/EUR estimates, identifies unpriced entries and user-entered authority; encrypted share stays disabled"
+    },
+    {
+      "id": "Q05-P29-manual-csv",
+      "status": "PASS LOCAL",
+      "scope": "Actual downloaded CSV independently parses to exact amounts and dates; mixed currencies and liability remain separate, unpriced has no invented price and formula-leading name is literal spreadsheet text",
+      "artifact": "D:\\universe\\mempool\\mempool\\docs\\acceptance\\codex-2026-09-06\\manual-report-558e6132.csv",
+      "sha256": "4fab23b9069a9d5d37f02b8812f0cece7f66cbe0ed634eaa0165fcdead6df0b8",
+      "manualRows": 3
+    },
+    {
+      "id": "Q05-P29-manual-redaction",
+      "status": "PASS LOCAL",
+      "scope": "Actual redacted CSV hides quantity, unit price and value without inventing manual allocation percentages",
+      "artifact": "D:\\universe\\mempool\\mempool\\docs\\acceptance\\codex-2026-09-06\\manual-report-redacted-558e6132.csv",
+      "sha256": "24d6982ee6ccf8e91860effc54106ad988d14bb495fb73f21e67e1b4f4823579"
+    },
+    {
+      "id": "Q05-P28-manual-print",
+      "status": "PASS LOCAL",
+      "scope": "Actual Print / save PDF button invokes the browser beforeprint lifecycle for the populated manual report"
+    },
+    {
+      "id": "Q05-P28-manual-pdf",
+      "status": "ARTIFACT GENERATED; INSPECTION REQUIRED",
+      "scope": "Native Chromium PDF artifact from the populated report. Independent text/layout inspection must verify the expected exact rows and disclosures before PDF acceptance.",
+      "artifact": "D:\\universe\\mempool\\mempool\\docs\\acceptance\\codex-2026-09-06\\manual-report-558e6132.pdf",
+      "sha256": "c519d9947917847c48f6e6960b4c45140185762c3bd6942e065f9e4b0753deea",
+      "bytes": 238246,
+      "expected": [
+        {
+          "name": "Local report 558e6132 exact lot",
+          "quantity": "9007199254740993.12345678",
+          "unitPrice": "0.00000003",
+          "currency": "USD",
+          "value": "270215977.6422297937037034"
+        },
+        {
+          "name": "Local report 558e6132 liability",
+          "quantity": "2.5000",
+          "unitPrice": "4",
+          "currency": "EUR",
+          "value": "10"
+        },
+        {
+          "name": "=Local_report_558e6132",
+          "quantity": "0.00000001",
+          "unitPrice": "Not supplied",
+          "currency": "",
+          "value": "Unpriced"
+        }
+      ],
+      "expectedDisclosure": "User-entered quantities and unit prices; not verified balances or market prices; no combined total or allocation is claimed"
+    }
+  ]
+}

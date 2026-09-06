@@ -46,5 +46,5 @@ const report = {
     'PRE-06': 'Universe CI triggers self-hosted jobs on develop/main push and pull requests. No push, PR, workflow or deployment invoked.',
   },
 };
-writeFileSync(resolve(root, 'docs/acceptance/preflight-2026-09-06.json'), JSON.stringify(report, null, 2) + '\n');
+writeFileSync(resolve(root, process.argv[2] || 'docs/acceptance/preflight-2026-09-06.json'), JSON.stringify(report, null, 2) + '\n');
 console.log(JSON.stringify({ origin, probes: probes.map(({path,status,contract}) => ({path,status,contract})), realNetworkE2ePasses: 0 }));

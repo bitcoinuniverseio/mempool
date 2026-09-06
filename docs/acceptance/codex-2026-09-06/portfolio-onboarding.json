@@ -1,0 +1,200 @@
+{
+  "schemaVersion": "universe-portfolio-onboarding-local-v1",
+  "origin": "http://localhost:4310",
+  "portfolioPath": "/portfolio/p/33420a3f82b6ae868f4ea8be/overview",
+  "startedAt": "2026-09-06T04:02:56.547Z",
+  "realNetworkE2ePasses": 0,
+  "fixtureSources": [
+    "frontend/src/app/universe/portfolio/onboarding/onboarding.component.spec.ts",
+    "frontend/src/app/universe/portfolio/shared/derivation.spec.ts",
+    "frontend/src/app/universe/portfolio/workspace/workspace-import.spec.ts"
+  ],
+  "scope": "Actual UI entry, encrypted local persistence, full reload/unlock and independently decoded downloaded definitions. CSV/JSON are pasted into the offered list input.",
+  "authorityReadback": {
+    "status": "BLOCKED",
+    "reason": "Local definitions do not establish address discovery, chain balances, holdings, transaction history or authority consistency."
+  },
+  "checks": [
+    {
+      "id": "P01-LOCAL-INPUT",
+      "status": "PASS LOCAL",
+      "name": "Local P01 7d0ff238",
+      "inputSha256": "3893794d2870f0abbe0093dcbf6a9c6b48cf209cd1ab61064d887e72b4481694",
+      "authorityStatus": "BLOCKED",
+      "validation": "1 address(es) recognized.",
+      "inputScreenshot": "D:\\universe\\mempool\\audits\\codex-acceptance-20260906\\portfolio-p01-input-7d0ff238.png",
+      "path": "/portfolio/p/9e7b01669dc5d89136c76c51/overview",
+      "portfolioId": "9e7b01669dc5d89136c76c51",
+      "reloadUnlocked": true,
+      "accountCountText": "1 account(s)",
+      "reloadScreenshot": "D:\\universe\\mempool\\audits\\codex-acceptance-20260906\\portfolio-p01-reload-7d0ff238.png",
+      "persistence": {
+        "accountCount": 1,
+        "kinds": [
+          "address"
+        ],
+        "contexts": [
+          "bitcoin:mainnet"
+        ],
+        "definitionsSha256": "2cfba4a05757a92ad56df59316d7e8b2ed7047fae94d803778f7ce9f4967091c"
+      }
+    },
+    {
+      "id": "P02-XPUB-LOCAL-INPUT",
+      "status": "PASS LOCAL",
+      "name": "Local P02-XPUB 7d0ff238",
+      "inputSha256": "0d354e30f0cbd6fa95c3ccac82853c7e44df76f817c335decf603b663a79e760",
+      "authorityStatus": "BLOCKED",
+      "validation": "Extended public key accepted (p2pkh).",
+      "inputScreenshot": "D:\\universe\\mempool\\audits\\codex-acceptance-20260906\\portfolio-p02-xpub-input-7d0ff238.png",
+      "path": "/portfolio/p/4aa5884af2d80d2b3eb69ca6/overview",
+      "portfolioId": "4aa5884af2d80d2b3eb69ca6",
+      "reloadUnlocked": true,
+      "accountCountText": "1 account(s)",
+      "reloadScreenshot": "D:\\universe\\mempool\\audits\\codex-acceptance-20260906\\portfolio-p02-xpub-reload-7d0ff238.png",
+      "persistence": {
+        "accountCount": 1,
+        "kinds": [
+          "xpub"
+        ],
+        "contexts": [
+          "bitcoin:mainnet"
+        ],
+        "definitionsSha256": "3a5d4ed26ef9a4a5ef83699d0204902ed87858d7501e8eeef5cf4be856b358df"
+      }
+    },
+    {
+      "id": "P02-YPUB-LOCAL-INPUT",
+      "status": "PASS LOCAL",
+      "name": "Local P02-YPUB 7d0ff238",
+      "inputSha256": "faf1cd20230857ba9f9686d9e77eb2051320617f0e97bb2654438e9d0c3f4be4",
+      "authorityStatus": "BLOCKED",
+      "validation": "Extended public key accepted (p2sh-p2wpkh).",
+      "inputScreenshot": "D:\\universe\\mempool\\audits\\codex-acceptance-20260906\\portfolio-p02-ypub-input-7d0ff238.png",
+      "path": "/portfolio/p/4798bc3013bc7d7229294131/overview",
+      "portfolioId": "4798bc3013bc7d7229294131",
+      "reloadUnlocked": true,
+      "accountCountText": "1 account(s)",
+      "reloadScreenshot": "D:\\universe\\mempool\\audits\\codex-acceptance-20260906\\portfolio-p02-ypub-reload-7d0ff238.png",
+      "persistence": {
+        "accountCount": 1,
+        "kinds": [
+          "xpub"
+        ],
+        "contexts": [
+          "bitcoin:mainnet"
+        ],
+        "definitionsSha256": "ec601e2d02b27c8a0d30d5c92bb86dfc254ed96bce7798510963930d530328f8"
+      }
+    },
+    {
+      "id": "P02-ZPUB-LOCAL-INPUT",
+      "status": "PASS LOCAL",
+      "name": "Local P02-ZPUB 7d0ff238",
+      "inputSha256": "e5eaf293f307d0d777657978cfd8322fb179998ebc925833430e002c1550421f",
+      "authorityStatus": "BLOCKED",
+      "validation": "Extended public key accepted (p2wpkh).",
+      "inputScreenshot": "D:\\universe\\mempool\\audits\\codex-acceptance-20260906\\portfolio-p02-zpub-input-7d0ff238.png",
+      "path": "/portfolio/p/4c31c5f19c88829402856fad/overview",
+      "portfolioId": "4c31c5f19c88829402856fad",
+      "reloadUnlocked": true,
+      "accountCountText": "1 account(s)",
+      "reloadScreenshot": "D:\\universe\\mempool\\audits\\codex-acceptance-20260906\\portfolio-p02-zpub-reload-7d0ff238.png",
+      "persistence": {
+        "accountCount": 1,
+        "kinds": [
+          "xpub"
+        ],
+        "contexts": [
+          "bitcoin:mainnet"
+        ],
+        "definitionsSha256": "488d8cccbe3a64c5958840f67075d3a85bfd8ad729a4dc706e35a16ec743714c"
+      }
+    },
+    {
+      "id": "P03-LOCAL-INPUT",
+      "status": "PASS LOCAL",
+      "name": "Local P03 7d0ff238",
+      "inputSha256": "0beefa23371cb7152e9f0ce1d410d6770de8ce11ecfb64d4a31e02a81feb52ed",
+      "authorityStatus": "BLOCKED",
+      "validation": "Descriptor accepted.",
+      "inputScreenshot": "D:\\universe\\mempool\\audits\\codex-acceptance-20260906\\portfolio-p03-input-7d0ff238.png",
+      "path": "/portfolio/p/b23f322acea4f80ba99c035d/overview",
+      "portfolioId": "b23f322acea4f80ba99c035d",
+      "reloadUnlocked": true,
+      "accountCountText": "1 account(s)",
+      "reloadScreenshot": "D:\\universe\\mempool\\audits\\codex-acceptance-20260906\\portfolio-p03-reload-7d0ff238.png",
+      "persistence": {
+        "accountCount": 1,
+        "kinds": [
+          "descriptor"
+        ],
+        "contexts": [
+          "bitcoin:mainnet"
+        ],
+        "definitionsSha256": "80875b675f8dd21ecffccfea27f049529c42718fe7452f92c7189060dee5b052"
+      }
+    },
+    {
+      "id": "P04-LOCAL-INPUT",
+      "status": "PASS LOCAL",
+      "name": "Local P04 7d0ff238",
+      "inputSha256": "b7671228247a3af08d135ae56dc2893889e9e9697abf7d4a0e331d5b00dcaaf7",
+      "authorityStatus": "BLOCKED",
+      "validation": "2 address(es) recognized.",
+      "inputScreenshot": "D:\\universe\\mempool\\audits\\codex-acceptance-20260906\\portfolio-p04-input-7d0ff238.png",
+      "path": "/portfolio/p/c7ed593b81d1d93f7d5f185f/overview",
+      "portfolioId": "c7ed593b81d1d93f7d5f185f",
+      "reloadUnlocked": true,
+      "accountCountText": "2 account(s)",
+      "reloadScreenshot": "D:\\universe\\mempool\\audits\\codex-acceptance-20260906\\portfolio-p04-reload-7d0ff238.png",
+      "persistence": {
+        "accountCount": 2,
+        "kinds": [
+          "addresses",
+          "addresses"
+        ],
+        "contexts": [
+          "bitcoin:mainnet",
+          "bitcoin:mainnet"
+        ],
+        "definitionsSha256": "f5953552a435ccf3af71784ddbfbc1fdc45ad7768afbbcfa2f4d0d8d52972400"
+      }
+    },
+    {
+      "id": "P05-LOCAL-INPUT",
+      "status": "PASS LOCAL",
+      "name": "Local P05 7d0ff238",
+      "inputSha256": "cf84a13b58abb34821ef564da296dd28686b0a5230027e54c1f0a32a3526d108",
+      "authorityStatus": "BLOCKED",
+      "validation": "2 address(es) recognized.",
+      "inputScreenshot": "D:\\universe\\mempool\\audits\\codex-acceptance-20260906\\portfolio-p05-input-7d0ff238.png",
+      "path": "/portfolio/p/42715a43f6ca738d0a5866a0/overview",
+      "portfolioId": "42715a43f6ca738d0a5866a0",
+      "reloadUnlocked": true,
+      "accountCountText": "2 account(s)",
+      "reloadScreenshot": "D:\\universe\\mempool\\audits\\codex-acceptance-20260906\\portfolio-p05-reload-7d0ff238.png",
+      "persistence": {
+        "accountCount": 2,
+        "kinds": [
+          "addresses",
+          "addresses"
+        ],
+        "contexts": [
+          "bitcoin:mainnet",
+          "bitcoin:mainnet"
+        ],
+        "definitionsSha256": "f5953552a435ccf3af71784ddbfbc1fdc45ad7768afbbcfa2f4d0d8d52972400"
+      }
+    }
+  ],
+  "encryptedBackup": {
+    "bytes": 12242,
+    "sha256": "54c1ccb1007b97a205b7242c7426656fbe949d9cb53e32b13735402d19b494db",
+    "recordCount": 10,
+    "plaintextWritten": false,
+    "source": "Actual settings download after every successful reload/unlock"
+  },
+  "restoredOriginalPortfolio": true,
+  "completedAt": "2026-09-06T04:03:18.594Z"
+}

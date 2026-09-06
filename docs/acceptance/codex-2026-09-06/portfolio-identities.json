@@ -1,0 +1,31 @@
+{
+  "checkedAt": "2026-09-06T04:07:16.430Z",
+  "origin": "http://localhost:4310",
+  "scope": "Independent disposable browser vaults with one existing browser and at most one open page; no account/session server or chain acceptance",
+  "checks": [
+    {
+      "id": "Q05-P13-INDEPENDENT-VAULT-B",
+      "status": "PASS LOCAL",
+      "scope": "Direct manual entry in a fresh context created its own real Argon2id vault and durable definition using actual controls",
+      "recordCount": 2,
+      "distinctEncryptedVault": true
+    },
+    {
+      "id": "Q05-P13-B-REFUSES-A",
+      "status": "PASS LOCAL",
+      "scope": "A passphrase fails in B; B unlocks with its own passphrase, refuses A route ID and exposes only its own definition/actions"
+    },
+    {
+      "id": "Q05-P13-A-UNCHANGED-AFTER-B",
+      "status": "PASS LOCAL",
+      "scope": "After closing B, A reopens in its original context with its own passphrase and requested ID; all encrypted bytes remain unchanged",
+      "beforeSha256": "4e8d005f26f02b4aed6fa800a4214ce08cd1c68ca21189640a782d0f7f9c8443",
+      "afterSha256": "4e8d005f26f02b4aed6fa800a4214ce08cd1c68ca21189640a782d0f7f9c8443",
+      "recordCount": 10,
+      "maximumOpenPages": 1,
+      "secretsInObservedRequests": false
+    }
+  ],
+  "failure": null,
+  "runtimeErrors": []
+}
