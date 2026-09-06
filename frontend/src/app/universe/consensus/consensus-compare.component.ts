@@ -94,6 +94,8 @@ import { ConsensusApiService, ConsensusProposal } from './consensus.service';
     </div>
   `,
   styles: [`
+    .alert { overflow-wrap: anywhere; }
+    .text-muted { color: var(--u-text-muted) !important; }
     .nav-link {
       color: inherit;
       padding: 0.4rem 0.8rem;
@@ -124,8 +126,8 @@ export class ConsensusCompareComponent implements OnInit, OnDestroy {
           this.loading = false;
           this.cd.markForCheck();
         },
-        error: err => {
-          this.error = err?.message || 'Failed to load proposals for comparison';
+        error: () => {
+          this.error = 'Proposal data is unavailable. Reload to try again.';
           this.loading = false;
           this.cd.markForCheck();
         },

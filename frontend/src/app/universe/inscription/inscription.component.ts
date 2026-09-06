@@ -47,7 +47,7 @@ export class InscriptionComponent implements OnInit, OnDestroy {
 
   constructor(
     private route: ActivatedRoute,
-    private api: UniverseApiService,
+    public api: UniverseApiService,
     private local: UniverseLocalService,
     private seo: SeoService,
   ) {}
@@ -68,9 +68,11 @@ export class InscriptionComponent implements OnInit, OnDestroy {
       if (state.kind !== 'ready' || !state.result?.value) {return;}
       const inscription = state.result.value;
       this.local.recordVisit({
+        chain: 'bitcoin',
+        network: this.api.network,
         kind: 'inscription',
         value: inscription.id,
-        path: `/inscription/${inscription.id}`,
+        path: this.networkPath(`/inscription/${inscription.id}`),
         label: `Inscription ${inscription.numberAtomic}`,
       });
     });
@@ -91,12 +93,16 @@ export class InscriptionComponent implements OnInit, OnDestroy {
     if (parts.length !== 3) {return null;}
     const [txid, vout] = parts;
     if (!/^[0-9a-f]{64}$/.test(txid) || !/^(0|[1-9][0-9]{0,9})$/.test(vout)) {return null;}
-    return ['/outpoint', txid, vout];
+    return [this.networkPath('/outpoint'), txid, vout];
   }
 
   /** The transaction that revealed this inscription, taken from its own id. */
   revealTxid(id: string): string | null {
     return INSCRIPTION_ID.test(id) ? id.slice(0, 64) : null;
+  }
+
+  networkPath(path: string): string {
+    return (this.api.network === 'mainnet' ? '' : '/' + this.api.network) + path;
   }
 
   charmLabel(charm: string): string {

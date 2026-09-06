@@ -9,7 +9,8 @@
       *ngIf="state.kind === 'ready'"
       kind="inscription"
       [value]="state.result.value.id"
-      [path]="'/inscription/' + state.result.value.id"
+      [path]="networkPath('/inscription/' + state.result.value.id)"
+      [network]="api.network"
       [label]="'Inscription ' + state.result.value.numberAtomic"
     ></app-universe-bookmark-button>
   </header>
@@ -53,12 +54,12 @@
 
           <ng-container *ngIf="revealTxid(state.result.value.id) as txid">
             <dt i18n="universe.inscription.field-reveal">Revealed by</dt>
-            <dd><a class="identifier" [routerLink]="['/tx', txid]">{{ txid }}</a></dd>
+            <dd><a class="identifier" [routerLink]="[networkPath('/tx'), txid]">{{ txid }}</a></dd>
           </ng-container>
 
           <ng-container *ngIf="state.result.value.heightAtomic as height">
             <dt i18n="universe.inscription.field-height">Inscribed in block</dt>
-            <dd><a [routerLink]="['/block', height]">{{ height }}</a></dd>
+            <dd><a [routerLink]="[networkPath('/block'), height]">{{ height }}</a></dd>
           </ng-container>
 
           <ng-container *ngIf="state.result.value.timestampAtomic as timestamp">
@@ -93,12 +94,12 @@
 
           <ng-container *ngIf="state.result.value.address as address">
             <dt i18n="universe.inscription.field-address">Address</dt>
-            <dd><a class="identifier" [routerLink]="['/address', address]">{{ address }}</a></dd>
+            <dd><a class="identifier" [routerLink]="[networkPath('/address'), address]">{{ address }}</a></dd>
           </ng-container>
 
           <ng-container *ngIf="state.result.value.satAtomic as sat">
             <dt i18n="universe.inscription.field-sat">Satoshi</dt>
-            <dd><a [routerLink]="['/sat', sat]">{{ amount(sat) }}</a></dd>
+            <dd><a [routerLink]="[networkPath('/sat'), sat]">{{ amount(sat) }}</a></dd>
           </ng-container>
 
           <ng-container *ngIf="state.result.value.valueAtomic as value">
@@ -121,13 +122,13 @@
             <dt i18n="universe.inscription.field-parents">Parents</dt>
             <dd>
               <a class="identifier" *ngFor="let parent of state.result.value.parents"
-                 [routerLink]="['/inscription', parent]">{{ shorten(parent, 10) }}</a>
+                 [routerLink]="[networkPath('/inscription'), parent]">{{ shorten(parent, 10) }}</a>
             </dd>
           </ng-container>
 
           <ng-container *ngIf="state.result.value.rune as rune">
             <dt i18n="universe.inscription.field-rune">Etches rune</dt>
-            <dd><a [routerLink]="['/rune', rune]">{{ rune }}</a></dd>
+            <dd><a [routerLink]="[networkPath('/rune'), rune]">{{ rune }}</a></dd>
           </ng-container>
         </dl>
       </section>

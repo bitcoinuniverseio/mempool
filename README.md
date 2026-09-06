@@ -131,7 +131,7 @@ explorer states plainly which ones it can actually read.
 
 <!-- protocol-coverage:readable -->
 
-7 of the 38 protocols in the registry are readable today:
+7 of the 39 protocols carry historical readable declarations (not current E2E acceptance):
 
 - On bitcoin: **Ordinals**, **Rare Sats**, **Runes**, **OP Inscriptions**, from ord and index-opinscriptions.
 - On zcash: **Zerdinals**, **ZRunes**, **ZRC-20**, from index-zcash-metaprotocols.

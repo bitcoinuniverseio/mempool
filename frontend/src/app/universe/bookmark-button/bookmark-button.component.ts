@@ -24,7 +24,7 @@ export class BookmarkButtonComponent implements OnInit, OnDestroy {
   @Input() label: string;
   /** The chain and network the entry belongs to. Defaults match the service. */
   @Input() chain: ExplorerChain = 'bitcoin';
-  @Input() network: ExplorerNetwork = 'mainnet';
+  @Input() network?: ExplorerNetwork;
 
   saved = false;
   private subscription?: Subscription;

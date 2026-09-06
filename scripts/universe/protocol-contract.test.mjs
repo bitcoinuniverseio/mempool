@@ -221,7 +221,7 @@ test('the README block states the roster it was generated from', async () => {
   assert.match(
     block,
     new RegExp(
-      `${readable} of the ${pinned.protocols.length} protocols in the registry are readable`,
+      `${readable} of the ${pinned.protocols.length} protocols carry historical readable declarations`,
     ),
   );
 });
@@ -298,7 +298,7 @@ test('a value carrying a pipe or a backslash cannot split a table row', () => {
   const row = rendered
     .split('\n')
     .find((line) => line.startsWith('| trick '));
-  assert.equal(row.split(/(?<!\\)\|/).length - 1, 7);
+  assert.equal(row.split(/(?<!\\)\|/).length - 1, 8);
 });
 
 test('a served roster identical to the pin reports nothing', () => {

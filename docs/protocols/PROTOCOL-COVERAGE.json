@@ -1,9 +1,9 @@
 {
   "schemaVersion": "universe-explorer-protocol-manifest-v1",
-  "registryVersion": "1.0.0",
+  "registryVersion": "1.1.0",
   "sourceRepository": "bitcoinuniverseio/backend-apis",
-  "sourceSha": "17118a01b466596996e81a05e129994e13045864",
-  "generatedAt": "2026-09-01T09:04:49.162Z",
+  "sourceSha": "04ff6efd3ea2dd841742ecf48932f0b10a8b5dd0",
+  "generatedAt": "2026-09-05T22:45:43.323Z",
   "primaryStrip": [
     "ORDINALS",
     "RUNES",
@@ -30,8 +30,92 @@
       ],
       "icon": "protocol-ordinals",
       "visualToken": "protocol-ordinals",
-      "implementedReadOperations": [],
-      "authorizedReadOperations": [],
+      "implementedReadOperations": [
+        "registry",
+        "outpoint",
+        "outpoints-batch",
+        "transaction-flow",
+        "transactions-batch",
+        "address-holdings",
+        "inscription",
+        "block-inscriptions"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "outpoint",
+          "method": "GET",
+          "route": "/api/v1/universe/outpoints/:txid/:vout",
+          "authorityPath": "/output/:outpoint",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "outpoints-batch",
+          "method": "POST",
+          "route": "/api/v1/universe/outpoints/batch",
+          "authorityPath": "/output/:outpoint",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "transaction-flow",
+          "method": "GET",
+          "route": "/api/v1/universe/transactions/:txid",
+          "authorityPath": "/output/:outpoint",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "transactions-batch",
+          "method": "POST",
+          "route": "/api/v1/universe/transactions/batch",
+          "authorityPath": "/output/:outpoint",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "address-holdings",
+          "method": "GET",
+          "route": "/api/v1/universe/addresses/:address/holdings",
+          "authorityPath": "/output/:outpoint",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "inscription",
+          "method": "GET",
+          "route": "/api/v1/universe/inscriptions/:reference",
+          "authorityPath": "/inscription/:reference",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "block-inscriptions",
+          "method": "GET",
+          "route": "/api/v1/universe/blocks/:height/inscriptions",
+          "authorityPath": "/inscriptions/block/:height/:page",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "authorizedReadOperations": [
+        "registry",
+        "outpoint",
+        "outpoints-batch",
+        "transaction-flow",
+        "transactions-batch",
+        "address-holdings",
+        "inscription",
+        "block-inscriptions"
+      ],
       "releaseStatus": "VERIFIED READ ONLY",
       "indexerAuthority": "ord",
       "coverage": "complete"
@@ -52,8 +136,82 @@
       ],
       "icon": "protocol-rare-sats",
       "visualToken": "protocol-rare-sats",
-      "implementedReadOperations": [],
-      "authorizedReadOperations": [],
+      "implementedReadOperations": [
+        "registry",
+        "outpoint",
+        "outpoints-batch",
+        "transaction-flow",
+        "transactions-batch",
+        "address-holdings",
+        "sat"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "outpoint",
+          "method": "GET",
+          "route": "/api/v1/universe/outpoints/:txid/:vout",
+          "authorityPath": "/output/:outpoint",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "outpoints-batch",
+          "method": "POST",
+          "route": "/api/v1/universe/outpoints/batch",
+          "authorityPath": "/output/:outpoint",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "transaction-flow",
+          "method": "GET",
+          "route": "/api/v1/universe/transactions/:txid",
+          "authorityPath": "/output/:outpoint",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "transactions-batch",
+          "method": "POST",
+          "route": "/api/v1/universe/transactions/batch",
+          "authorityPath": "/output/:outpoint",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "address-holdings",
+          "method": "GET",
+          "route": "/api/v1/universe/addresses/:address/holdings",
+          "authorityPath": "/output/:outpoint",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "sat",
+          "method": "GET",
+          "route": "/api/v1/universe/sats/:reference",
+          "authorityPath": "/sat/:reference",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "authorizedReadOperations": [
+        "registry",
+        "outpoint",
+        "outpoints-batch",
+        "transaction-flow",
+        "transactions-batch",
+        "address-holdings",
+        "sat"
+      ],
       "releaseStatus": "VERIFIED READ ONLY",
       "indexerAuthority": "ord",
       "coverage": "complete"
@@ -74,8 +232,32 @@
       ],
       "icon": "protocol-names",
       "visualToken": "protocol-names",
-      "implementedReadOperations": [],
-      "authorizedReadOperations": [],
+      "implementedReadOperations": [
+        "registry",
+        "objects"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "objects",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/names/objects",
+          "authorityPath": "/v1/marketplace/protocols/names/assets",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "authorizedReadOperations": [
+        "registry",
+        "objects"
+      ],
       "releaseStatus": "BLOCKED",
       "indexerAuthority": "index-names",
       "coverage": "unknown"
@@ -95,8 +277,32 @@
       ],
       "icon": "protocol-bitmap",
       "visualToken": "protocol-bitmap",
-      "implementedReadOperations": [],
-      "authorizedReadOperations": [],
+      "implementedReadOperations": [
+        "registry",
+        "objects"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "objects",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/bitmap/objects",
+          "authorityPath": "/v1/marketplace/protocols/bitmap/assets",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "authorizedReadOperations": [
+        "registry",
+        "objects"
+      ],
       "releaseStatus": "BLOCKED",
       "indexerAuthority": "index-bitmap",
       "coverage": "unknown"
@@ -117,8 +323,32 @@
       ],
       "icon": "protocol-unat",
       "visualToken": "protocol-unat",
-      "implementedReadOperations": [],
-      "authorizedReadOperations": [],
+      "implementedReadOperations": [
+        "registry",
+        "objects"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "objects",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/unat/objects",
+          "authorityPath": "/v1/marketplace/protocols/unat/assets",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "authorizedReadOperations": [
+        "registry",
+        "objects"
+      ],
       "releaseStatus": "BLOCKED",
       "indexerAuthority": "index-unat",
       "coverage": "unknown"
@@ -140,8 +370,82 @@
       ],
       "icon": "protocol-runes",
       "visualToken": "protocol-runes",
-      "implementedReadOperations": [],
-      "authorizedReadOperations": [],
+      "implementedReadOperations": [
+        "registry",
+        "outpoint",
+        "outpoints-batch",
+        "transaction-flow",
+        "transactions-batch",
+        "address-holdings",
+        "rune"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "outpoint",
+          "method": "GET",
+          "route": "/api/v1/universe/outpoints/:txid/:vout",
+          "authorityPath": "/output/:outpoint",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "outpoints-batch",
+          "method": "POST",
+          "route": "/api/v1/universe/outpoints/batch",
+          "authorityPath": "/output/:outpoint",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "transaction-flow",
+          "method": "GET",
+          "route": "/api/v1/universe/transactions/:txid",
+          "authorityPath": "/output/:outpoint",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "transactions-batch",
+          "method": "POST",
+          "route": "/api/v1/universe/transactions/batch",
+          "authorityPath": "/output/:outpoint",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "address-holdings",
+          "method": "GET",
+          "route": "/api/v1/universe/addresses/:address/holdings",
+          "authorityPath": "/output/:outpoint",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "rune",
+          "method": "GET",
+          "route": "/api/v1/universe/runes/:reference",
+          "authorityPath": "/rune/:reference",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "authorizedReadOperations": [
+        "registry",
+        "outpoint",
+        "outpoints-batch",
+        "transaction-flow",
+        "transactions-batch",
+        "address-holdings",
+        "rune"
+      ],
       "releaseStatus": "VERIFIED READ ONLY",
       "indexerAuthority": "ord",
       "coverage": "complete"
@@ -161,8 +465,32 @@
       ],
       "icon": "protocol-alkanes",
       "visualToken": "protocol-alkanes",
-      "implementedReadOperations": [],
-      "authorizedReadOperations": [],
+      "implementedReadOperations": [
+        "registry",
+        "activity"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "activity",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/alkanes/activity",
+          "authorityPath": "/token-explorer/alkanes",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "authorizedReadOperations": [
+        "registry",
+        "activity"
+      ],
       "releaseStatus": "BLOCKED",
       "indexerAuthority": "index-alkanes",
       "coverage": "unknown"
@@ -180,8 +508,32 @@
       ],
       "icon": "protocol-mezcal",
       "visualToken": "protocol-mezcal",
-      "implementedReadOperations": [],
-      "authorizedReadOperations": [],
+      "implementedReadOperations": [
+        "registry",
+        "activity"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "activity",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/mezcal/activity",
+          "authorityPath": "/token-explorer/mezcal",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "authorizedReadOperations": [
+        "registry",
+        "activity"
+      ],
       "releaseStatus": "BLOCKED",
       "indexerAuthority": "index-mezcal",
       "coverage": "unknown"
@@ -202,8 +554,32 @@
       ],
       "icon": "protocol-stamps",
       "visualToken": "protocol-stamps",
-      "implementedReadOperations": [],
-      "authorizedReadOperations": [],
+      "implementedReadOperations": [
+        "registry",
+        "activity"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "activity",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/stamps/activity",
+          "authorityPath": "/token-explorer/stamps",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "authorizedReadOperations": [
+        "registry",
+        "activity"
+      ],
       "releaseStatus": "BLOCKED",
       "indexerAuthority": "index-stamps",
       "coverage": "unknown"
@@ -223,8 +599,32 @@
       ],
       "icon": "protocol-src20",
       "visualToken": "protocol-src20",
-      "implementedReadOperations": [],
-      "authorizedReadOperations": [],
+      "implementedReadOperations": [
+        "registry",
+        "activity"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "activity",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/src20/activity",
+          "authorityPath": "/token-explorer/src20",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "authorizedReadOperations": [
+        "registry",
+        "activity"
+      ],
       "releaseStatus": "BLOCKED",
       "indexerAuthority": "index-stamps",
       "coverage": "unknown"
@@ -244,8 +644,32 @@
       ],
       "icon": "protocol-src101",
       "visualToken": "protocol-src101",
-      "implementedReadOperations": [],
-      "authorizedReadOperations": [],
+      "implementedReadOperations": [
+        "registry",
+        "activity"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "activity",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/src101/activity",
+          "authorityPath": "/token-explorer/src101",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "authorizedReadOperations": [
+        "registry",
+        "activity"
+      ],
       "releaseStatus": "BLOCKED",
       "indexerAuthority": "index-stamps",
       "coverage": "unknown"
@@ -266,8 +690,82 @@
       ],
       "icon": "protocol-atomicals-nft",
       "visualToken": "protocol-atomicals-nft",
-      "implementedReadOperations": [],
-      "authorizedReadOperations": [],
+      "implementedReadOperations": [
+        "registry",
+        "activity",
+        "outpoint",
+        "outpoints-batch",
+        "transaction-flow",
+        "transactions-batch",
+        "address-holdings"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "activity",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/atomicals_nft/activity",
+          "authorityPath": "/token-explorer/atomicals",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "outpoint",
+          "method": "GET",
+          "route": "/api/v1/universe/outpoints/:txid/:vout",
+          "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "outpoints-batch",
+          "method": "POST",
+          "route": "/api/v1/universe/outpoints/batch",
+          "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "transaction-flow",
+          "method": "GET",
+          "route": "/api/v1/universe/transactions/:txid",
+          "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "transactions-batch",
+          "method": "POST",
+          "route": "/api/v1/universe/transactions/batch",
+          "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "address-holdings",
+          "method": "GET",
+          "route": "/api/v1/universe/addresses/:address/holdings",
+          "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "authorizedReadOperations": [
+        "registry",
+        "activity",
+        "outpoint",
+        "outpoints-batch",
+        "transaction-flow",
+        "transactions-batch",
+        "address-holdings"
+      ],
       "releaseStatus": "BLOCKED",
       "indexerAuthority": "index-atomicals-nfts-and-realms",
       "coverage": "unknown"
@@ -288,8 +786,82 @@
       ],
       "icon": "protocol-realms",
       "visualToken": "protocol-realms",
-      "implementedReadOperations": [],
-      "authorizedReadOperations": [],
+      "implementedReadOperations": [
+        "registry",
+        "activity",
+        "outpoint",
+        "outpoints-batch",
+        "transaction-flow",
+        "transactions-batch",
+        "address-holdings"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "activity",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/realms/activity",
+          "authorityPath": "/token-explorer/realms",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "outpoint",
+          "method": "GET",
+          "route": "/api/v1/universe/outpoints/:txid/:vout",
+          "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "outpoints-batch",
+          "method": "POST",
+          "route": "/api/v1/universe/outpoints/batch",
+          "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "transaction-flow",
+          "method": "GET",
+          "route": "/api/v1/universe/transactions/:txid",
+          "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "transactions-batch",
+          "method": "POST",
+          "route": "/api/v1/universe/transactions/batch",
+          "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "address-holdings",
+          "method": "GET",
+          "route": "/api/v1/universe/addresses/:address/holdings",
+          "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "authorizedReadOperations": [
+        "registry",
+        "activity",
+        "outpoint",
+        "outpoints-batch",
+        "transaction-flow",
+        "transactions-batch",
+        "address-holdings"
+      ],
       "releaseStatus": "BLOCKED",
       "indexerAuthority": "index-atomicals-nfts-and-realms",
       "coverage": "unknown"
@@ -310,8 +882,72 @@
       ],
       "icon": "protocol-subrealms",
       "visualToken": "protocol-subrealms",
-      "implementedReadOperations": [],
-      "authorizedReadOperations": [],
+      "implementedReadOperations": [
+        "registry",
+        "outpoint",
+        "outpoints-batch",
+        "transaction-flow",
+        "transactions-batch",
+        "address-holdings"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "outpoint",
+          "method": "GET",
+          "route": "/api/v1/universe/outpoints/:txid/:vout",
+          "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "outpoints-batch",
+          "method": "POST",
+          "route": "/api/v1/universe/outpoints/batch",
+          "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "transaction-flow",
+          "method": "GET",
+          "route": "/api/v1/universe/transactions/:txid",
+          "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "transactions-batch",
+          "method": "POST",
+          "route": "/api/v1/universe/transactions/batch",
+          "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "address-holdings",
+          "method": "GET",
+          "route": "/api/v1/universe/addresses/:address/holdings",
+          "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "authorizedReadOperations": [
+        "registry",
+        "outpoint",
+        "outpoints-batch",
+        "transaction-flow",
+        "transactions-batch",
+        "address-holdings"
+      ],
       "releaseStatus": "BLOCKED",
       "indexerAuthority": "index-atomicals-nfts-and-realms",
       "coverage": "unknown"
@@ -331,8 +967,32 @@
       ],
       "icon": "protocol-arc20",
       "visualToken": "protocol-arc20",
-      "implementedReadOperations": [],
-      "authorizedReadOperations": [],
+      "implementedReadOperations": [
+        "registry",
+        "activity"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "activity",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/arc20/activity",
+          "authorityPath": "/token-explorer/arc20",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "authorizedReadOperations": [
+        "registry",
+        "activity"
+      ],
       "releaseStatus": "BLOCKED",
       "indexerAuthority": "index-atomicals",
       "coverage": "unknown"
@@ -354,8 +1014,32 @@
       ],
       "icon": "protocol-op-return",
       "visualToken": "protocol-op-return",
-      "implementedReadOperations": [],
-      "authorizedReadOperations": [],
+      "implementedReadOperations": [
+        "registry",
+        "activity"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "activity",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/op_return/activity",
+          "authorityPath": "/token-explorer/op20",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "authorizedReadOperations": [
+        "registry",
+        "activity"
+      ],
       "releaseStatus": "BLOCKED",
       "indexerAuthority": "index-op20",
       "coverage": "unknown"
@@ -376,8 +1060,32 @@
       ],
       "icon": "protocol-op-names",
       "visualToken": "protocol-op-names",
-      "implementedReadOperations": [],
-      "authorizedReadOperations": [],
+      "implementedReadOperations": [
+        "registry",
+        "activity"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "activity",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/op_names/activity",
+          "authorityPath": "/token-explorer/op20",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "authorizedReadOperations": [
+        "registry",
+        "activity"
+      ],
       "releaseStatus": "BLOCKED",
       "indexerAuthority": "index-op20",
       "coverage": "unknown"
@@ -398,8 +1106,32 @@
       ],
       "icon": "protocol-op-inscriptions",
       "visualToken": "protocol-op-inscriptions",
-      "implementedReadOperations": [],
-      "authorizedReadOperations": [],
+      "implementedReadOperations": [
+        "registry",
+        "objects"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "objects",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/op_inscriptions/objects",
+          "authorityPath": "/api/op-inscriptions/inscriptions",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "authorizedReadOperations": [
+        "registry",
+        "objects"
+      ],
       "releaseStatus": "VERIFIED READ ONLY",
       "indexerAuthority": "index-opinscriptions",
       "coverage": "complete"
@@ -420,8 +1152,32 @@
       ],
       "icon": "protocol-op-drop",
       "visualToken": "protocol-op-drop",
-      "implementedReadOperations": [],
-      "authorizedReadOperations": [],
+      "implementedReadOperations": [
+        "registry",
+        "activity"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "activity",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/op_drop/activity",
+          "authorityPath": "/op-drop/token-explorer",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "authorizedReadOperations": [
+        "registry",
+        "activity"
+      ],
       "releaseStatus": "BLOCKED",
       "indexerAuthority": "index-drops-and-opdrop",
       "coverage": "unknown"
@@ -441,8 +1197,32 @@
       ],
       "icon": "protocol-drops",
       "visualToken": "protocol-drops",
-      "implementedReadOperations": [],
-      "authorizedReadOperations": [],
+      "implementedReadOperations": [
+        "registry",
+        "activity"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "activity",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/drops/activity",
+          "authorityPath": "/drops/token-explorer",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "authorizedReadOperations": [
+        "registry",
+        "activity"
+      ],
       "releaseStatus": "BLOCKED",
       "indexerAuthority": "index-drops-and-opdrop",
       "coverage": "unknown"
@@ -462,8 +1242,32 @@
       ],
       "icon": "protocol-brc20",
       "visualToken": "protocol-brc20",
-      "implementedReadOperations": [],
-      "authorizedReadOperations": [],
+      "implementedReadOperations": [
+        "registry",
+        "activity"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "activity",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/brc20/activity",
+          "authorityPath": "/token-explorer/brc20",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "authorizedReadOperations": [
+        "registry",
+        "activity"
+      ],
       "releaseStatus": "BLOCKED",
       "indexerAuthority": "index-brc20",
       "coverage": "unknown"
@@ -483,8 +1287,32 @@
       ],
       "icon": "protocol-tap",
       "visualToken": "protocol-tap",
-      "implementedReadOperations": [],
-      "authorizedReadOperations": [],
+      "implementedReadOperations": [
+        "registry",
+        "activity"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "activity",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/tap/activity",
+          "authorityPath": "/token-explorer/tap",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "authorizedReadOperations": [
+        "registry",
+        "activity"
+      ],
       "releaseStatus": "BLOCKED",
       "indexerAuthority": "index-tap",
       "coverage": "unknown"
@@ -505,8 +1333,32 @@
       ],
       "icon": "protocol-dmt",
       "visualToken": "protocol-dmt",
-      "implementedReadOperations": [],
-      "authorizedReadOperations": [],
+      "implementedReadOperations": [
+        "registry",
+        "activity"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "activity",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/dmt/activity",
+          "authorityPath": "/token-explorer/dmt",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "authorizedReadOperations": [
+        "registry",
+        "activity"
+      ],
       "releaseStatus": "BLOCKED",
       "indexerAuthority": "index-dmt",
       "coverage": "unknown"
@@ -526,8 +1378,32 @@
       ],
       "icon": "protocol-dust20",
       "visualToken": "protocol-dust20",
-      "implementedReadOperations": [],
-      "authorizedReadOperations": [],
+      "implementedReadOperations": [
+        "registry",
+        "activity"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "activity",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/dust20/activity",
+          "authorityPath": "/token-explorer/dust20",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "authorizedReadOperations": [
+        "registry",
+        "activity"
+      ],
       "releaseStatus": "BLOCKED",
       "indexerAuthority": "index-dust20",
       "coverage": "unknown"
@@ -547,8 +1423,32 @@
       ],
       "icon": "protocol-block20",
       "visualToken": "protocol-block20",
-      "implementedReadOperations": [],
-      "authorizedReadOperations": [],
+      "implementedReadOperations": [
+        "registry",
+        "activity"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "activity",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/block20/activity",
+          "authorityPath": "/token-explorer/block20",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "authorizedReadOperations": [
+        "registry",
+        "activity"
+      ],
       "releaseStatus": "BLOCKED",
       "indexerAuthority": "index-block20",
       "coverage": "unknown"
@@ -568,8 +1468,32 @@
       ],
       "icon": "protocol-chainbloom",
       "visualToken": "protocol-chainbloom",
-      "implementedReadOperations": [],
-      "authorizedReadOperations": [],
+      "implementedReadOperations": [
+        "registry",
+        "objects"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "objects",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/chainbloom/objects",
+          "authorityPath": "/v1/chainbloom/worlds",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "authorizedReadOperations": [
+        "registry",
+        "objects"
+      ],
       "releaseStatus": "BLOCKED",
       "indexerAuthority": "index-chainbloom",
       "coverage": "unknown"
@@ -587,8 +1511,32 @@
       ],
       "icon": "protocol-patina",
       "visualToken": "protocol-patina",
-      "implementedReadOperations": [],
-      "authorizedReadOperations": [],
+      "implementedReadOperations": [
+        "registry",
+        "objects"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "objects",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/patina/objects",
+          "authorityPath": "/patina/artifacts",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "authorizedReadOperations": [
+        "registry",
+        "objects"
+      ],
       "releaseStatus": "BLOCKED",
       "indexerAuthority": "index-patina",
       "coverage": "unknown"
@@ -608,8 +1556,32 @@
       ],
       "icon": "protocol-witness-circles",
       "visualToken": "protocol-witness-circles",
-      "implementedReadOperations": [],
-      "authorizedReadOperations": [],
+      "implementedReadOperations": [
+        "registry",
+        "objects"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "objects",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/witness_circles/objects",
+          "authorityPath": "/v1/witness/circles",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "authorizedReadOperations": [
+        "registry",
+        "objects"
+      ],
       "releaseStatus": "BLOCKED",
       "indexerAuthority": "index-witness-circles",
       "coverage": "unknown"
@@ -627,8 +1599,32 @@
       ],
       "icon": "protocol-tandem",
       "visualToken": "protocol-tandem",
-      "implementedReadOperations": [],
-      "authorizedReadOperations": [],
+      "implementedReadOperations": [
+        "registry",
+        "objects"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "objects",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/tandem/objects",
+          "authorityPath": "/tandem/verified/objects",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "authorizedReadOperations": [
+        "registry",
+        "objects"
+      ],
       "releaseStatus": "BLOCKED",
       "indexerAuthority": "index-tandem",
       "coverage": "unknown"
@@ -650,8 +1646,32 @@
       ],
       "icon": "protocol-cat20",
       "visualToken": "protocol-cat20",
-      "implementedReadOperations": [],
-      "authorizedReadOperations": [],
+      "implementedReadOperations": [
+        "registry",
+        "activity"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "activity",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/cat20/activity",
+          "authorityPath": "/token-explorer/cat20",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "authorizedReadOperations": [
+        "registry",
+        "activity"
+      ],
       "releaseStatus": "BLOCKED",
       "indexerAuthority": "index-cat20",
       "coverage": "unknown"
@@ -671,10 +1691,117 @@
       ],
       "icon": "protocol-ordex",
       "visualToken": "protocol-ordex",
-      "implementedReadOperations": [],
-      "authorizedReadOperations": [],
+      "implementedReadOperations": [
+        "registry"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "authorizedReadOperations": [
+        "registry"
+      ],
       "releaseStatus": "BLOCKED",
       "indexerAuthority": "index-ordinals",
+      "coverage": "unknown"
+    },
+    {
+      "schemaVersion": "universe-explorer-protocol-v1",
+      "id": "anima",
+      "aliases": [],
+      "displayName": "ANIMA",
+      "shortName": "ANIMA",
+      "family": "OTHER",
+      "chain": "bitcoin",
+      "networks": [
+        "mainnet"
+      ],
+      "icon": "protocol-anima",
+      "visualToken": "protocol-anima",
+      "implementedReadOperations": [
+        "registry",
+        "status",
+        "transitions",
+        "transition",
+        "items",
+        "item",
+        "item-history"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "status",
+          "method": "GET",
+          "route": "/api/v1/anima/status",
+          "authorityPath": "/anima/status",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "transitions",
+          "method": "GET",
+          "route": "/api/v1/anima/events",
+          "authorityPath": "/anima/events",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "transition",
+          "method": "GET",
+          "route": "/api/v1/anima/events/:eventId",
+          "authorityPath": "/anima/events",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "items",
+          "method": "GET",
+          "route": "/api/v1/anima/organisms",
+          "authorityPath": "/anima/organisms",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "item",
+          "method": "GET",
+          "route": "/api/v1/anima/organisms/:organismId",
+          "authorityPath": "/anima/organism/:organismId",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "item-history",
+          "method": "GET",
+          "route": "/api/v1/anima/organisms/:organismId/history",
+          "authorityPath": "/anima/lineage/:organismId",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "authorizedReadOperations": [
+        "registry",
+        "status",
+        "transitions",
+        "transition",
+        "items",
+        "item",
+        "item-history"
+      ],
+      "releaseStatus": "BLOCKED",
+      "indexerAuthority": "index-anima",
       "coverage": "unknown"
     },
     {
@@ -692,8 +1819,42 @@
       ],
       "icon": "protocol-doginals",
       "visualToken": "protocol-doginals",
-      "implementedReadOperations": [],
-      "authorizedReadOperations": [],
+      "implementedReadOperations": [
+        "registry",
+        "chain-list",
+        "chain-detail"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "chain-list",
+          "method": "GET",
+          "route": "/api/v1/dogecoin/protocols/doginals",
+          "authorityPath": "/api/v1/inscriptions",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "chain-detail",
+          "method": "GET",
+          "route": "/api/v1/dogecoin/protocols/doginals/:reference",
+          "authorityPath": "/inscription/:reference",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "authorizedReadOperations": [
+        "registry",
+        "chain-list",
+        "chain-detail"
+      ],
       "releaseStatus": "BLOCKED",
       "indexerAuthority": "ord-dogecoin",
       "coverage": "unknown"
@@ -713,8 +1874,52 @@
       ],
       "icon": "protocol-drc20",
       "visualToken": "protocol-drc20",
-      "implementedReadOperations": [],
-      "authorizedReadOperations": [],
+      "implementedReadOperations": [
+        "registry",
+        "chain-list",
+        "chain-detail",
+        "holders"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "chain-list",
+          "method": "GET",
+          "route": "/api/v1/dogecoin/protocols/drc20",
+          "authorityPath": "/api/v1/drc20/tokens",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "chain-detail",
+          "method": "GET",
+          "route": "/api/v1/dogecoin/protocols/drc20/:reference",
+          "authorityPath": "/api/v1/drc20/tokens/:reference",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "holders",
+          "method": "GET",
+          "route": "/api/v1/dogecoin/protocols/drc20/:reference/holders",
+          "authorityPath": "/api/v1/drc20/tokens/:reference/holders",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "authorizedReadOperations": [
+        "registry",
+        "chain-list",
+        "chain-detail",
+        "holders"
+      ],
       "releaseStatus": "BLOCKED",
       "indexerAuthority": "ord-dogecoin",
       "coverage": "unknown"
@@ -736,8 +1941,32 @@
       ],
       "icon": "protocol-tap-doge",
       "visualToken": "protocol-tap-doge",
-      "implementedReadOperations": [],
-      "authorizedReadOperations": [],
+      "implementedReadOperations": [
+        "registry",
+        "activity"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "activity",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/tap_doge/activity",
+          "authorityPath": "/token-explorer/doge-tap",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "authorizedReadOperations": [
+        "registry",
+        "activity"
+      ],
       "releaseStatus": "BLOCKED",
       "indexerAuthority": "index-doge-tap",
       "coverage": "unknown"
@@ -755,8 +1984,42 @@
       ],
       "icon": "protocol-dunes",
       "visualToken": "protocol-dunes",
-      "implementedReadOperations": [],
-      "authorizedReadOperations": [],
+      "implementedReadOperations": [
+        "registry",
+        "chain-list",
+        "chain-detail"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "chain-list",
+          "method": "GET",
+          "route": "/api/v1/dogecoin/protocols/dunes",
+          "authorityPath": "/api/v1/dunes/tokens",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "chain-detail",
+          "method": "GET",
+          "route": "/api/v1/dogecoin/protocols/dunes/:reference",
+          "authorityPath": "/api/v1/dunes/tokens/:reference",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "authorizedReadOperations": [
+        "registry",
+        "chain-list",
+        "chain-detail"
+      ],
       "releaseStatus": "BLOCKED",
       "indexerAuthority": "ord-dogecoin",
       "coverage": "unknown"
@@ -776,8 +2039,42 @@
       ],
       "icon": "protocol-zerdinals",
       "visualToken": "protocol-zerdinals",
-      "implementedReadOperations": [],
-      "authorizedReadOperations": [],
+      "implementedReadOperations": [
+        "registry",
+        "chain-list",
+        "chain-detail"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "chain-list",
+          "method": "GET",
+          "route": "/api/v1/zcash/protocols/zerdinals",
+          "authorityPath": "/zcash-metaprotocols/inscriptions",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "chain-detail",
+          "method": "GET",
+          "route": "/api/v1/zcash/protocols/zerdinals/:reference",
+          "authorityPath": "/zcash-metaprotocols/inscriptions/:reference",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "authorizedReadOperations": [
+        "registry",
+        "chain-list",
+        "chain-detail"
+      ],
       "releaseStatus": "VERIFIED READ ONLY",
       "indexerAuthority": "index-zcash-metaprotocols",
       "coverage": "complete"
@@ -795,8 +2092,42 @@
       ],
       "icon": "protocol-zrunes",
       "visualToken": "protocol-zrunes",
-      "implementedReadOperations": [],
-      "authorizedReadOperations": [],
+      "implementedReadOperations": [
+        "registry",
+        "chain-list",
+        "chain-detail"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "chain-list",
+          "method": "GET",
+          "route": "/api/v1/zcash/protocols/zrunes",
+          "authorityPath": "/zcash-metaprotocols/zrunes",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "chain-detail",
+          "method": "GET",
+          "route": "/api/v1/zcash/protocols/zrunes/:reference",
+          "authorityPath": "/zcash-metaprotocols/zrunes/:reference",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "authorizedReadOperations": [
+        "registry",
+        "chain-list",
+        "chain-detail"
+      ],
       "releaseStatus": "VERIFIED READ ONLY",
       "indexerAuthority": "index-zcash-metaprotocols",
       "coverage": "complete"
@@ -814,8 +2145,42 @@
       ],
       "icon": "protocol-zrc20",
       "visualToken": "protocol-zrc20",
-      "implementedReadOperations": [],
-      "authorizedReadOperations": [],
+      "implementedReadOperations": [
+        "registry",
+        "chain-list",
+        "chain-detail"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "chain-list",
+          "method": "GET",
+          "route": "/api/v1/zcash/protocols/zrc20",
+          "authorityPath": "/zcash-metaprotocols/tokens",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "chain-detail",
+          "method": "GET",
+          "route": "/api/v1/zcash/protocols/zrc20/:reference",
+          "authorityPath": "/zcash-metaprotocols/tokens/:reference",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "authorizedReadOperations": [
+        "registry",
+        "chain-list",
+        "chain-detail"
+      ],
       "releaseStatus": "VERIFIED READ ONLY",
       "indexerAuthority": "index-zcash-metaprotocols",
       "coverage": "complete"
