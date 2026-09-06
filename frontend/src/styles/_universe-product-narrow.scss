@@ -27,7 +27,13 @@
     // below its content however that content wraps. That is the other half of
     // the header overflow: the title block simply would not narrow, so the
     // heading and the key under it reached past the edge together.
-    .d-flex > * {
+    // `.row` is a flex container as well, and below the sm breakpoint a
+    // `.col-sm-*` carries no width of its own, so it is a plain flex item that
+    // will not shrink either. That is what kept a 64 character key inside a
+    // definition list reaching 294px past the edge after the rule above was
+    // already in place.
+    .d-flex > *,
+    .row > * {
       min-width: 0;
     }
 

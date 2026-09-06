@@ -274,7 +274,15 @@
           "The checkbox floor now applies in landscape as well, which the gate measures separately.",
           "The docs page ends inside .doc-content, its own scrolling region, so the shell bottom reservation never reached the last section and the final heading sat under the bar."
         ]
-      }
+      },
+      "thirdPass": {
+        "run": 34042772071,
+        "remaining": 4,
+        "from": 22,
+        "finding": "Two pages, one cause. A 64 character key inside a definition list still reached up to 294px past the edge, because .row is a flex container too and a .col-sm-* carries no width of its own below the sm breakpoint, so it is a plain flex item that will not shrink. The min-width rule covered .d-flex only.",
+        "repair": "Both .d-flex and .row children can shrink now, so the inherited break-word can do its work inside them."
+      },
+      "runnerNote": "Run 34042772071 was cancelled once mid-job with Complete runner reporting failure on universe-linux-super-02. The fleet reclaims a workspace under its disk floor, so the runner went away under the job. Everything up to and including the serial broad route pass had already passed on that SHA; the job was re-run rather than the commit rebuilt."
     }
   ],
   "findings": [
