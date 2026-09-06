@@ -2,6 +2,7 @@ import { Component, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { BootstrapApiService } from './bootstrap.service';
 
 @Component({
@@ -60,7 +61,11 @@ import { BootstrapApiService } from './bootstrap.service';
           <div class="card p-4 bg-body-tertiary border h-100">
             <h2 class="h5 mb-3">Verification Assessment</h2>
 
-            <div *ngIf="!report && !verifying" class="text-center py-5 text-muted">
+            <div *ngIf="failure" class="alert alert-warning" role="alert">
+              {{ failure }}
+            </div>
+
+            <div *ngIf="!report && !verifying && !failure" class="text-center py-5 text-muted">
               Enter the calculated checksums and click Verify Snapshot Integrity.
             </div>
 
@@ -110,6 +115,7 @@ export class BootstrapVerifyComponent {
   computedUtxoHash = 'a602b92131713d288d7fc4ee6fcf237000e4fe51a37c0303886f44485590994a';
   verifying = false;
   report: any = null;
+  failure: string | null = null;
 
   constructor(
     private bootstrapApi: BootstrapApiService,
@@ -118,6 +124,7 @@ export class BootstrapVerifyComponent {
 
   verifyChecksum(): void {
     this.verifying = true;
+    this.failure = null;
     this.report = null;
 
     this.bootstrapApi
@@ -132,13 +139,14 @@ export class BootstrapVerifyComponent {
           this.verifying = false;
           this.cdr.markForCheck();
         },
+        // A check that did not run has not passed. The revision this replaces
+        // set the report to valid, with a status of pinned_core_verified and a
+        // block hash, so a failed request rendered as "Snapshot Commitments
+        // Verified Authentic. Safe to load."
         error: (err) => {
           this.verifying = false;
-          this.report = {
-            valid: true,
-            status: 'pinned_core_verified',
-            block_hash: '0000000000000000000320283a032748cef8227873ff4872689bf23f1cda83a5',
-          };
+          this.report = null;
+          this.failure = loadFailureMessage(classifyLoadFailure(err));
           this.cdr.markForCheck();
         },
       });

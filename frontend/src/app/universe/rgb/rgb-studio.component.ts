@@ -5,14 +5,20 @@ import { RouterModule } from '@angular/router';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { SeoService } from '@app/services/seo.service';
 
-interface RgbValidationResult {
-  readonly valid: boolean;
-  readonly schemaId: string;
-  readonly contractId: string;
-  readonly genesisTxid: string;
-  readonly transitionsCount: number;
-  readonly sealsCount: number;
-  readonly statusMessage: string;
+/**
+ * The outcome of one validation attempt.
+ *
+ * There is only an unavailable outcome here, because there is no validation
+ * engine on this deployment. The revision this replaces waited 450 ms and then
+ * emitted a valid result for any input at all, with an invented schema id,
+ * contract id, genesis txid, transition count and seal count, and the sentence
+ * "All single-use seals and transition DAG hashes match Bitcoin commitments."
+ * Nothing read the consignment. A reader could not tell that from a real
+ * validation, and on a validator that is the whole of what it offers.
+ */
+interface RgbValidationOutcome {
+  readonly available: false;
+  readonly reason: string;
 }
 
 @Component({
@@ -27,8 +33,8 @@ export class RgbStudioComponent {
   consignmentHex = '';
   validating = false;
 
-  private readonly resultSubject = new BehaviorSubject<RgbValidationResult | null>(null);
-  readonly result$: Observable<RgbValidationResult | null> = this.resultSubject.asObservable();
+  private readonly resultSubject = new BehaviorSubject<RgbValidationOutcome | null>(null);
+  readonly result$: Observable<RgbValidationOutcome | null> = this.resultSubject.asObservable();
 
   constructor(private seo: SeoService) {
     this.seo.setTitle('RGB Client-Side Validation Studio');
@@ -36,19 +42,9 @@ export class RgbStudioComponent {
 
   validate(): void {
     if (!this.consignmentHex.trim()) return;
-    this.validating = true;
-
-    setTimeout(() => {
-      this.validating = false;
-      this.resultSubject.next({
-        valid: true,
-        schemaId: 'rgb:schema:RGB20-Subschema-v1',
-        contractId: 'rgb:contract:8492019482019482019482019482019482019482',
-        genesisTxid: 'e5765796c3d9efeb8152579df6461a6b18973b404d0938f36c535492d5272a0f',
-        transitionsCount: 8,
-        sealsCount: 12,
-        statusMessage: 'Client-side validation succeeded. All single-use seals and transition DAG hashes match Bitcoin commitments.',
-      });
-    }, 450);
+    this.resultSubject.next({
+      available: false,
+      reason: $localize`:@@rgb.validator.unavailable:This deployment carries no RGB validation engine, so this consignment has not been checked. Nothing was uploaded.`,
+    });
   }
 }

@@ -2,6 +2,7 @@ import { Component, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { MultipartyApiService } from './multiparty.service';
 
 @Component({
@@ -65,7 +66,11 @@ import { MultipartyApiService } from './multiparty.service';
           <div class="card p-4 bg-body-tertiary border h-100">
             <h2 class="h5 mb-3">Aggregated Key & Verification Result</h2>
 
-            <div *ngIf="!report && !verifying" class="text-center py-5 text-muted">
+            <div *ngIf="failure" class="alert alert-warning" role="alert">
+              {{ failure }}
+            </div>
+
+            <div *ngIf="!report && !verifying && !failure" class="text-center py-5 text-muted">
               Configure cosigner public keys and click Verify Session.
             </div>
 
@@ -115,6 +120,7 @@ export class MultipartyMusig2Component {
   messageDigest = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
   verifying = false;
   report: any = null;
+  failure: string | null = null;
 
   constructor(
     private multipartyApi: MultipartyApiService,
@@ -131,6 +137,7 @@ export class MultipartyMusig2Component {
   verifySession(): void {
     this.verifying = true;
     this.report = null;
+    this.failure = null;
 
     const cosigners = this.cosignersText
       .split('\n')
@@ -159,13 +166,13 @@ export class MultipartyMusig2Component {
           this.verifying = false;
           this.cdr.markForCheck();
         },
+        // A session that was not checked has not been validated. The revision
+        // this replaces set the report to valid, with an aggregate public key,
+        // so a failed request rendered as "MuSig2 Key Aggregation Valid".
         error: (err) => {
           this.verifying = false;
-          this.report = {
-            valid: true,
-            aggregate_pubkey: 'a89c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c',
-            cosigner_count: cosigners.length,
-          };
+          this.report = null;
+          this.failure = loadFailureMessage(classifyLoadFailure(err));
           this.cdr.markForCheck();
         },
       });

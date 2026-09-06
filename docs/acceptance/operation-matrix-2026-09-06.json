@@ -2021,13 +2021,13 @@
     },
     {
       "path": "docs/acceptance/ci-repair-2026-09-06.json",
-      "sha256": "ca8c21588d57600a3b454a890312eb47eecd1c5dbd5ac5479768023ca4516115",
-      "bytes": 15520
+      "sha256": "f26ec1c39eb0bf5976d2fd4d3ce25c724db28ba3a47394c6bd3831335f626f39",
+      "bytes": 19588
     },
     {
       "path": "docs/acceptance/current-execution-evidence.json",
-      "sha256": "e7015319ac7fb8e83de0e034abe97bb757b5c9cc0061c8d8c8f2da66f6330084",
-      "bytes": 14063
+      "sha256": "4996123314054724cff8fd13f297e32cdee33b13cfb5f33bf32f3a0e20af0368",
+      "bytes": 14297
     },
     {
       "path": "docs/acceptance/durable-portfolio-2026-09-06.md",
@@ -2066,8 +2066,8 @@
     },
     {
       "path": "docs/acceptance/STATUS-2026-09-06.md",
-      "sha256": "a160b888f52318ade934204c1c16e8b0c11b66b8698fc4256987aca87aa70869",
-      "bytes": 8725
+      "sha256": "9a0091856a83812ef364173205df2ccfc00a5346dd4ae6154629750ec11bca6b",
+      "bytes": 10711
     },
     {
       "path": "docs/acceptance/swaps-2026-09-05.md",
@@ -2451,8 +2451,8 @@
     },
     {
       "path": "frontend/src/app/universe/bootstrap/bootstrap-verify.component.ts",
-      "sha256": "7351287ecf8cae6cd91a067721bd411ab1e245104d1f6d7bcec9747cd6bcac8c",
-      "bytes": 6247
+      "sha256": "1e86d43f301c704baec2d15f4867e0da5f35406269388c5bb7acc3d58340263f",
+      "bytes": 6713
     },
     {
       "path": "frontend/src/app/universe/chain-dashboard/chain-dashboard.component.ts",
@@ -2991,8 +2991,8 @@
     },
     {
       "path": "frontend/src/app/universe/multiparty/multiparty-musig2.component.ts",
-      "sha256": "1cfdda3a86785fe20138f3326152c3493e80712ca6fe746f79e9c9111411b918",
-      "bytes": 7287
+      "sha256": "139ff2a0439fdb48c7e15c484b7a509cbdc375083d5cc515120695257972f179",
+      "bytes": 7696
     },
     {
       "path": "frontend/src/app/universe/multiparty/multiparty-overview.component.ts",
@@ -3106,38 +3106,38 @@
     },
     {
       "path": "frontend/src/app/universe/opentimestamps/opentimestamps-batches.component.ts",
-      "sha256": "72a92b5b58be43d66d317471e1aab1bf5d0167d620f26250b3b6f7494a020f28",
-      "bytes": 2355
+      "sha256": "1c966d22a0699412900246e35e8e255590a1689e8d7d41939dd5670c47aa8a7e",
+      "bytes": 2790
     },
     {
       "path": "frontend/src/app/universe/opentimestamps/opentimestamps-calendars.component.ts",
-      "sha256": "0bf407181292e890a7343879adddbad0a08d3fe46b8342b3d40fbbefab1a2345",
-      "bytes": 2378
+      "sha256": "072ca17ae48fae1954593fb9994b08a74911c1d89daae62a6c573361071a457d",
+      "bytes": 2815
     },
     {
       "path": "frontend/src/app/universe/opentimestamps/opentimestamps-git.component.ts",
-      "sha256": "5a5f0a81bb521e55d495e6619497558f14f932f281cae9581e703cf027ab353e",
-      "bytes": 2201
+      "sha256": "5ec1b6b7f9ad76a5009633baa86c95bece381b552ae6d706a2dc827d3b479cc0",
+      "bytes": 1472
     },
     {
       "path": "frontend/src/app/universe/opentimestamps/opentimestamps-inspect.component.ts",
-      "sha256": "4269ae2d69191d811b4966af803f0044802f88da83421bde708cdecde91f9c08",
-      "bytes": 2457
+      "sha256": "dd86b1564d64692a01f2769b9d78b7336d91d9f9e4973dc0ff21f3b1fc8cfb52",
+      "bytes": 1442
     },
     {
       "path": "frontend/src/app/universe/opentimestamps/opentimestamps-overview.component.ts",
-      "sha256": "3112912aa5ee9ad8c88d2b8cb3f184cd08f24839392f40fc1e5922dd78cce191",
-      "bytes": 5477
+      "sha256": "3e690b7aeaac3c43e3cc33c622c08368ac1efda0796017f45a48418a2663dec9",
+      "bytes": 5909
     },
     {
       "path": "frontend/src/app/universe/opentimestamps/opentimestamps-stamp.component.ts",
-      "sha256": "6565e8ee96fde45b17e04a7df816e3c1687ff8032254c180900faf15abf40e74",
-      "bytes": 3736
+      "sha256": "2d2dda6fdbb8fb5ebcf94252a2d67973d8ad804e7493e561212ee2b9ad83a928",
+      "bytes": 4457
     },
     {
       "path": "frontend/src/app/universe/opentimestamps/opentimestamps-verify.component.ts",
-      "sha256": "dda9d97243524fb0af5573f86fecb22988cf67435c507fd1baf30dd6299bef55",
-      "bytes": 3901
+      "sha256": "efdf9709fea38687f970bc36e582c4c7b49c22dfcc308cb00b2d5070e3a89428",
+      "bytes": 4604
     },
     {
       "path": "frontend/src/app/universe/outpoint/outpoint.component.ts",
@@ -3421,8 +3421,8 @@
     },
     {
       "path": "frontend/src/app/universe/rgb/rgb-studio.component.ts",
-      "sha256": "5e9b1c4797dc99735631b66b1a2b8e49c5945119988ac5bf6a4cb3d09af3ad76",
-      "bytes": 1893
+      "sha256": "e60b64fc593792cd10e1e0f6ecb005ba6aba7cfa0dc0b2af2c93d19a3d9572f2",
+      "bytes": 1935
     },
     {
       "path": "frontend/src/app/universe/rune/rune.component.ts",
@@ -6580,7 +6580,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/rgb/rgb-studio.component.ts",
-          "sha256": "5e9b1c4797dc99735631b66b1a2b8e49c5945119988ac5bf6a4cb3d09af3ad76"
+          "sha256": "e60b64fc593792cd10e1e0f6ecb005ba6aba7cfa0dc0b2af2c93d19a3d9572f2"
         }
       },
       {
@@ -13094,7 +13094,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/bootstrap/bootstrap-verify.component.ts",
-          "sha256": "7351287ecf8cae6cd91a067721bd411ab1e245104d1f6d7bcec9747cd6bcac8c"
+          "sha256": "1e86d43f301c704baec2d15f4867e0da5f35406269388c5bb7acc3d58340263f"
         }
       },
       {
@@ -13348,7 +13348,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/multiparty/multiparty-musig2.component.ts",
-          "sha256": "1cfdda3a86785fe20138f3326152c3493e80712ca6fe746f79e9c9111411b918"
+          "sha256": "139ff2a0439fdb48c7e15c484b7a509cbdc375083d5cc515120695257972f179"
         }
       },
       {
@@ -17954,7 +17954,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/opentimestamps/opentimestamps-overview.component.ts",
-          "sha256": "3112912aa5ee9ad8c88d2b8cb3f184cd08f24839392f40fc1e5922dd78cce191"
+          "sha256": "3e690b7aeaac3c43e3cc33c622c08368ac1efda0796017f45a48418a2663dec9"
         }
       },
       {
@@ -17997,7 +17997,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/opentimestamps/opentimestamps-stamp.component.ts",
-          "sha256": "6565e8ee96fde45b17e04a7df816e3c1687ff8032254c180900faf15abf40e74"
+          "sha256": "2d2dda6fdbb8fb5ebcf94252a2d67973d8ad804e7493e561212ee2b9ad83a928"
         }
       },
       {
@@ -18036,7 +18036,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/opentimestamps/opentimestamps-verify.component.ts",
-          "sha256": "dda9d97243524fb0af5573f86fecb22988cf67435c507fd1baf30dd6299bef55"
+          "sha256": "efdf9709fea38687f970bc36e582c4c7b49c22dfcc308cb00b2d5070e3a89428"
         }
       },
       {
@@ -18053,7 +18053,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/opentimestamps/opentimestamps-inspect.component.ts",
-          "sha256": "4269ae2d69191d811b4966af803f0044802f88da83421bde708cdecde91f9c08"
+          "sha256": "dd86b1564d64692a01f2769b9d78b7336d91d9f9e4973dc0ff21f3b1fc8cfb52"
         }
       },
       {
@@ -18070,7 +18070,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/opentimestamps/opentimestamps-git.component.ts",
-          "sha256": "5a5f0a81bb521e55d495e6619497558f14f932f281cae9581e703cf027ab353e"
+          "sha256": "5ec1b6b7f9ad76a5009633baa86c95bece381b552ae6d706a2dc827d3b479cc0"
         }
       },
       {
@@ -18096,7 +18096,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/opentimestamps/opentimestamps-calendars.component.ts",
-          "sha256": "0bf407181292e890a7343879adddbad0a08d3fe46b8342b3d40fbbefab1a2345"
+          "sha256": "072ca17ae48fae1954593fb9994b08a74911c1d89daae62a6c573361071a457d"
         }
       },
       {
@@ -18122,7 +18122,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/opentimestamps/opentimestamps-batches.component.ts",
-          "sha256": "72a92b5b58be43d66d317471e1aab1bf5d0167d620f26250b3b6f7494a020f28"
+          "sha256": "1c966d22a0699412900246e35e8e255590a1689e8d7d41939dd5670c47aa8a7e"
         }
       },
       {
@@ -37299,7 +37299,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01",
-          "sha256": "ca8c21588d57600a3b454a890312eb47eecd1c5dbd5ac5479768023ca4516115"
+          "sha256": "f26ec1c39eb0bf5976d2fd4d3ce25c724db28ba3a47394c6bd3831335f626f39"
         }
       ],
       "blockers": [
@@ -37314,7 +37314,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "e7015319ac7fb8e83de0e034abe97bb757b5c9cc0061c8d8c8f2da66f6330084",
+          "sha256": "4996123314054724cff8fd13f297e32cdee33b13cfb5f33bf32f3a0e20af0368",
           "rowId": "NAV-249"
         }
       ],
@@ -37365,7 +37365,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01",
-          "sha256": "ca8c21588d57600a3b454a890312eb47eecd1c5dbd5ac5479768023ca4516115"
+          "sha256": "f26ec1c39eb0bf5976d2fd4d3ce25c724db28ba3a47394c6bd3831335f626f39"
         }
       ],
       "blockers": [
@@ -37380,7 +37380,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "e7015319ac7fb8e83de0e034abe97bb757b5c9cc0061c8d8c8f2da66f6330084",
+          "sha256": "4996123314054724cff8fd13f297e32cdee33b13cfb5f33bf32f3a0e20af0368",
           "rowId": "NAV-250"
         }
       ],
@@ -37431,7 +37431,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01",
-          "sha256": "ca8c21588d57600a3b454a890312eb47eecd1c5dbd5ac5479768023ca4516115"
+          "sha256": "f26ec1c39eb0bf5976d2fd4d3ce25c724db28ba3a47394c6bd3831335f626f39"
         }
       ],
       "blockers": [
@@ -37446,7 +37446,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "e7015319ac7fb8e83de0e034abe97bb757b5c9cc0061c8d8c8f2da66f6330084",
+          "sha256": "4996123314054724cff8fd13f297e32cdee33b13cfb5f33bf32f3a0e20af0368",
           "rowId": "NAV-251"
         }
       ],
@@ -50930,7 +50930,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/rgb/rgb-studio.component.ts",
-          "sha256": "5e9b1c4797dc99735631b66b1a2b8e49c5945119988ac5bf6a4cb3d09af3ad76"
+          "sha256": "e60b64fc593792cd10e1e0f6ecb005ba6aba7cfa0dc0b2af2c93d19a3d9572f2"
         }
       ],
       "entry": null,
@@ -59828,7 +59828,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/bootstrap/bootstrap-verify.component.ts",
-          "sha256": "7351287ecf8cae6cd91a067721bd411ab1e245104d1f6d7bcec9747cd6bcac8c"
+          "sha256": "1e86d43f301c704baec2d15f4867e0da5f35406269388c5bb7acc3d58340263f"
         }
       ],
       "entry": null,
@@ -59970,7 +59970,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/multiparty/multiparty-musig2.component.ts",
-          "sha256": "1cfdda3a86785fe20138f3326152c3493e80712ca6fe746f79e9c9111411b918"
+          "sha256": "139ff2a0439fdb48c7e15c484b7a509cbdc375083d5cc515120695257972f179"
         }
       ],
       "entry": null,
@@ -60049,7 +60049,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/multiparty/multiparty-musig2.component.ts",
-          "sha256": "1cfdda3a86785fe20138f3326152c3493e80712ca6fe746f79e9c9111411b918"
+          "sha256": "139ff2a0439fdb48c7e15c484b7a509cbdc375083d5cc515120695257972f179"
         }
       ],
       "entry": null,
@@ -67122,7 +67122,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/opentimestamps/opentimestamps-stamp.component.ts",
-          "sha256": "6565e8ee96fde45b17e04a7df816e3c1687ff8032254c180900faf15abf40e74"
+          "sha256": "2d2dda6fdbb8fb5ebcf94252a2d67973d8ad804e7493e561212ee2b9ad83a928"
         }
       ],
       "entry": null,
@@ -67193,7 +67193,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/opentimestamps/opentimestamps-verify.component.ts",
-          "sha256": "dda9d97243524fb0af5573f86fecb22988cf67435c507fd1baf30dd6299bef55"
+          "sha256": "efdf9709fea38687f970bc36e582c4c7b49c22dfcc308cb00b2d5070e3a89428"
         }
       ],
       "entry": null,
@@ -118276,7 +118276,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "ca8c21588d57600a3b454a890312eb47eecd1c5dbd5ac5479768023ca4516115"
+          "sha256": "f26ec1c39eb0bf5976d2fd4d3ce25c724db28ba3a47394c6bd3831335f626f39"
         }
       ],
       "blockers": [
@@ -118295,7 +118295,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "e7015319ac7fb8e83de0e034abe97bb757b5c9cc0061c8d8c8f2da66f6330084",
+          "sha256": "4996123314054724cff8fd13f297e32cdee33b13cfb5f33bf32f3a0e20af0368",
           "rowId": "API-0b1262738a26"
         }
       ],
@@ -118350,7 +118350,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "ca8c21588d57600a3b454a890312eb47eecd1c5dbd5ac5479768023ca4516115"
+          "sha256": "f26ec1c39eb0bf5976d2fd4d3ce25c724db28ba3a47394c6bd3831335f626f39"
         }
       ],
       "blockers": [
@@ -118369,7 +118369,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "e7015319ac7fb8e83de0e034abe97bb757b5c9cc0061c8d8c8f2da66f6330084",
+          "sha256": "4996123314054724cff8fd13f297e32cdee33b13cfb5f33bf32f3a0e20af0368",
           "rowId": "API-21b73dc215f0"
         }
       ],
@@ -118424,7 +118424,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "ca8c21588d57600a3b454a890312eb47eecd1c5dbd5ac5479768023ca4516115"
+          "sha256": "f26ec1c39eb0bf5976d2fd4d3ce25c724db28ba3a47394c6bd3831335f626f39"
         }
       ],
       "blockers": [
@@ -118443,7 +118443,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "e7015319ac7fb8e83de0e034abe97bb757b5c9cc0061c8d8c8f2da66f6330084",
+          "sha256": "4996123314054724cff8fd13f297e32cdee33b13cfb5f33bf32f3a0e20af0368",
           "rowId": "API-b890c5b18aa9"
         }
       ],
@@ -118498,7 +118498,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "ca8c21588d57600a3b454a890312eb47eecd1c5dbd5ac5479768023ca4516115"
+          "sha256": "f26ec1c39eb0bf5976d2fd4d3ce25c724db28ba3a47394c6bd3831335f626f39"
         }
       ],
       "blockers": [
@@ -118517,7 +118517,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "e7015319ac7fb8e83de0e034abe97bb757b5c9cc0061c8d8c8f2da66f6330084",
+          "sha256": "4996123314054724cff8fd13f297e32cdee33b13cfb5f33bf32f3a0e20af0368",
           "rowId": "API-501ebd9a571e"
         }
       ],
@@ -118572,7 +118572,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "ca8c21588d57600a3b454a890312eb47eecd1c5dbd5ac5479768023ca4516115"
+          "sha256": "f26ec1c39eb0bf5976d2fd4d3ce25c724db28ba3a47394c6bd3831335f626f39"
         }
       ],
       "blockers": [
@@ -118591,7 +118591,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "e7015319ac7fb8e83de0e034abe97bb757b5c9cc0061c8d8c8f2da66f6330084",
+          "sha256": "4996123314054724cff8fd13f297e32cdee33b13cfb5f33bf32f3a0e20af0368",
           "rowId": "API-fc5873a9e610"
         }
       ],
@@ -118646,7 +118646,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "ca8c21588d57600a3b454a890312eb47eecd1c5dbd5ac5479768023ca4516115"
+          "sha256": "f26ec1c39eb0bf5976d2fd4d3ce25c724db28ba3a47394c6bd3831335f626f39"
         }
       ],
       "blockers": [
@@ -118665,7 +118665,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "e7015319ac7fb8e83de0e034abe97bb757b5c9cc0061c8d8c8f2da66f6330084",
+          "sha256": "4996123314054724cff8fd13f297e32cdee33b13cfb5f33bf32f3a0e20af0368",
           "rowId": "API-55036967e3c6"
         }
       ],
@@ -118720,7 +118720,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "ca8c21588d57600a3b454a890312eb47eecd1c5dbd5ac5479768023ca4516115"
+          "sha256": "f26ec1c39eb0bf5976d2fd4d3ce25c724db28ba3a47394c6bd3831335f626f39"
         }
       ],
       "blockers": [
@@ -118739,7 +118739,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "e7015319ac7fb8e83de0e034abe97bb757b5c9cc0061c8d8c8f2da66f6330084",
+          "sha256": "4996123314054724cff8fd13f297e32cdee33b13cfb5f33bf32f3a0e20af0368",
           "rowId": "API-e0f0abac5d30"
         }
       ],
@@ -118794,7 +118794,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "ca8c21588d57600a3b454a890312eb47eecd1c5dbd5ac5479768023ca4516115"
+          "sha256": "f26ec1c39eb0bf5976d2fd4d3ce25c724db28ba3a47394c6bd3831335f626f39"
         }
       ],
       "blockers": [
@@ -118813,7 +118813,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "e7015319ac7fb8e83de0e034abe97bb757b5c9cc0061c8d8c8f2da66f6330084",
+          "sha256": "4996123314054724cff8fd13f297e32cdee33b13cfb5f33bf32f3a0e20af0368",
           "rowId": "API-701fd1e7a970"
         }
       ],
@@ -118868,7 +118868,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "ca8c21588d57600a3b454a890312eb47eecd1c5dbd5ac5479768023ca4516115"
+          "sha256": "f26ec1c39eb0bf5976d2fd4d3ce25c724db28ba3a47394c6bd3831335f626f39"
         }
       ],
       "blockers": [
@@ -118887,7 +118887,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "e7015319ac7fb8e83de0e034abe97bb757b5c9cc0061c8d8c8f2da66f6330084",
+          "sha256": "4996123314054724cff8fd13f297e32cdee33b13cfb5f33bf32f3a0e20af0368",
           "rowId": "API-ce2c51a268a0"
         }
       ],
@@ -118942,7 +118942,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "ca8c21588d57600a3b454a890312eb47eecd1c5dbd5ac5479768023ca4516115"
+          "sha256": "f26ec1c39eb0bf5976d2fd4d3ce25c724db28ba3a47394c6bd3831335f626f39"
         }
       ],
       "blockers": [
@@ -118961,7 +118961,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "e7015319ac7fb8e83de0e034abe97bb757b5c9cc0061c8d8c8f2da66f6330084",
+          "sha256": "4996123314054724cff8fd13f297e32cdee33b13cfb5f33bf32f3a0e20af0368",
           "rowId": "API-fdb340196a39"
         }
       ],
@@ -119016,7 +119016,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "ca8c21588d57600a3b454a890312eb47eecd1c5dbd5ac5479768023ca4516115"
+          "sha256": "f26ec1c39eb0bf5976d2fd4d3ce25c724db28ba3a47394c6bd3831335f626f39"
         }
       ],
       "blockers": [
@@ -119035,7 +119035,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "e7015319ac7fb8e83de0e034abe97bb757b5c9cc0061c8d8c8f2da66f6330084",
+          "sha256": "4996123314054724cff8fd13f297e32cdee33b13cfb5f33bf32f3a0e20af0368",
           "rowId": "API-f2fe08ad257d"
         }
       ],
@@ -119090,7 +119090,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "ca8c21588d57600a3b454a890312eb47eecd1c5dbd5ac5479768023ca4516115"
+          "sha256": "f26ec1c39eb0bf5976d2fd4d3ce25c724db28ba3a47394c6bd3831335f626f39"
         }
       ],
       "blockers": [
@@ -119109,7 +119109,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "e7015319ac7fb8e83de0e034abe97bb757b5c9cc0061c8d8c8f2da66f6330084",
+          "sha256": "4996123314054724cff8fd13f297e32cdee33b13cfb5f33bf32f3a0e20af0368",
           "rowId": "API-9de0ce16ccad"
         }
       ],
