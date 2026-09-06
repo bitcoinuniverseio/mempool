@@ -2021,8 +2021,8 @@
     },
     {
       "path": "docs/acceptance/ci-repair-2026-09-06.json",
-      "sha256": "1729cfbc21a973df9cfaef861a4c1813d6f2e362c11f59e52b3f90fde04f0173",
-      "bytes": 31436
+      "sha256": "f246f02818ff277d37bf53bd275106541142c0a38bf27f0ceb3dc9c48d988734",
+      "bytes": 32759
     },
     {
       "path": "docs/acceptance/current-execution-evidence.json",
@@ -2541,7 +2541,7 @@
     },
     {
       "path": "frontend/src/app/universe/compact-filters/light-client-scan.component.ts",
-      "sha256": "36aa6a14cd3ae35d69c5b45428a0c4f43f31b45bb3b2bbb020ff3c2032116908",
+      "sha256": "ac3a4ffe76e7b9f91a2b57ccf4d2b3cbd8e5865a8b95cd953a98c3957f3ef08b",
       "bytes": 8208
     },
     {
@@ -2736,7 +2736,7 @@
     },
     {
       "path": "frontend/src/app/universe/intelligence-platform/developer-platform.component.ts",
-      "sha256": "eff629781405e435e7d9a91f0b68ee4a109167a305a79331359c8c15a619d342",
+      "sha256": "8d2de1294e808b4ae0dbc9b7cc6af6c3710d5632eaae0b72d8a8b6252fb4c657",
       "bytes": 9576
     },
     {
@@ -2746,7 +2746,7 @@
     },
     {
       "path": "frontend/src/app/universe/intelligence-platform/knowledge-registry.component.ts",
-      "sha256": "351fd41258348f466792009370cb8bc9b1cf545ea0793166fefe6ffc5038e463",
+      "sha256": "d555689b55f8044759a935816e5cd274fe30e71283c95e1350f2476bd0be44a6",
       "bytes": 8936
     },
     {
@@ -2976,8 +2976,8 @@
     },
     {
       "path": "frontend/src/app/universe/multiparty/multiparty-bsms.component.ts",
-      "sha256": "80b0cc5444f3bfd690affed82952f3c9e1eec837082f80068e726552c0b8ca2e",
-      "bytes": 4074
+      "sha256": "5d5dd3bf57b896747e9db6f51322be3f2d862418c8330a8b399301a25d6ead50",
+      "bytes": 4087
     },
     {
       "path": "frontend/src/app/universe/multiparty/multiparty-compatibility.component.ts",
@@ -2986,8 +2986,8 @@
     },
     {
       "path": "frontend/src/app/universe/multiparty/multiparty-labels.component.ts",
-      "sha256": "b91684a2edea8b7a3924b5f0978b5d4b538aca38d0063a6388eead812b679d06",
-      "bytes": 3662
+      "sha256": "d2bb52cd1b9bc42ba0fc512783d46db42f75297db4dd30e3bed9a73d34c580ea",
+      "bytes": 3675
     },
     {
       "path": "frontend/src/app/universe/multiparty/multiparty-musig2.component.ts",
@@ -3041,8 +3041,8 @@
     },
     {
       "path": "frontend/src/app/universe/node-security/node-security-configuration.component.ts",
-      "sha256": "eedeecf80c4ccdbf2591af7740c7f1f018b3351204c55c10eb9ea654e0ed75c0",
-      "bytes": 1814
+      "sha256": "ab42568b55b4e0b38125111b136085a026ca48b5d33267a8823f8c616a6abce4",
+      "bytes": 1827
     },
     {
       "path": "frontend/src/app/universe/node-security/node-security-fleet.component.ts",
@@ -7772,7 +7772,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/intelligence-platform/knowledge-registry.component.ts",
-          "sha256": "351fd41258348f466792009370cb8bc9b1cf545ea0793166fefe6ffc5038e463"
+          "sha256": "d555689b55f8044759a935816e5cd274fe30e71283c95e1350f2476bd0be44a6"
         }
       },
       {
@@ -7859,7 +7859,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/intelligence-platform/developer-platform.component.ts",
-          "sha256": "eff629781405e435e7d9a91f0b68ee4a109167a305a79331359c8c15a619d342"
+          "sha256": "8d2de1294e808b4ae0dbc9b7cc6af6c3710d5632eaae0b72d8a8b6252fb4c657"
         }
       },
       {
@@ -12820,7 +12820,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/compact-filters/light-client-scan.component.ts",
-          "sha256": "36aa6a14cd3ae35d69c5b45428a0c4f43f31b45bb3b2bbb020ff3c2032116908"
+          "sha256": "ac3a4ffe76e7b9f91a2b57ccf4d2b3cbd8e5865a8b95cd953a98c3957f3ef08b"
         }
       },
       {
@@ -13407,7 +13407,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/multiparty/multiparty-bsms.component.ts",
-          "sha256": "80b0cc5444f3bfd690affed82952f3c9e1eec837082f80068e726552c0b8ca2e"
+          "sha256": "5d5dd3bf57b896747e9db6f51322be3f2d862418c8330a8b399301a25d6ead50"
         }
       },
       {
@@ -13481,7 +13481,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/multiparty/multiparty-labels.component.ts",
-          "sha256": "b91684a2edea8b7a3924b5f0978b5d4b538aca38d0063a6388eead812b679d06"
+          "sha256": "d2bb52cd1b9bc42ba0fc512783d46db42f75297db4dd30e3bed9a73d34c580ea"
         }
       },
       {
@@ -18694,7 +18694,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/node-security/node-security-configuration.component.ts",
-          "sha256": "eedeecf80c4ccdbf2591af7740c7f1f018b3351204c55c10eb9ea654e0ed75c0"
+          "sha256": "ab42568b55b4e0b38125111b136085a026ca48b5d33267a8823f8c616a6abce4"
         }
       },
       {
@@ -37299,7 +37299,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01",
-          "sha256": "1729cfbc21a973df9cfaef861a4c1813d6f2e362c11f59e52b3f90fde04f0173"
+          "sha256": "f246f02818ff277d37bf53bd275106541142c0a38bf27f0ceb3dc9c48d988734"
         }
       ],
       "blockers": [
@@ -37365,7 +37365,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01",
-          "sha256": "1729cfbc21a973df9cfaef861a4c1813d6f2e362c11f59e52b3f90fde04f0173"
+          "sha256": "f246f02818ff277d37bf53bd275106541142c0a38bf27f0ceb3dc9c48d988734"
         }
       ],
       "blockers": [
@@ -37431,7 +37431,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01",
-          "sha256": "1729cfbc21a973df9cfaef861a4c1813d6f2e362c11f59e52b3f90fde04f0173"
+          "sha256": "f246f02818ff277d37bf53bd275106541142c0a38bf27f0ceb3dc9c48d988734"
         }
       ],
       "blockers": [
@@ -54656,7 +54656,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/knowledge-registry.component.ts",
-          "sha256": "351fd41258348f466792009370cb8bc9b1cf545ea0793166fefe6ffc5038e463"
+          "sha256": "d555689b55f8044759a935816e5cd274fe30e71283c95e1350f2476bd0be44a6"
         }
       ],
       "entry": null,
@@ -54775,7 +54775,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/knowledge-registry.component.ts",
-          "sha256": "351fd41258348f466792009370cb8bc9b1cf545ea0793166fefe6ffc5038e463"
+          "sha256": "d555689b55f8044759a935816e5cd274fe30e71283c95e1350f2476bd0be44a6"
         }
       ],
       "entry": null,
@@ -54894,7 +54894,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/developer-platform.component.ts",
-          "sha256": "eff629781405e435e7d9a91f0b68ee4a109167a305a79331359c8c15a619d342"
+          "sha256": "8d2de1294e808b4ae0dbc9b7cc6af6c3710d5632eaae0b72d8a8b6252fb4c657"
         }
       ],
       "entry": null,
@@ -55009,7 +55009,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/developer-platform.component.ts",
-          "sha256": "eff629781405e435e7d9a91f0b68ee4a109167a305a79331359c8c15a619d342"
+          "sha256": "8d2de1294e808b4ae0dbc9b7cc6af6c3710d5632eaae0b72d8a8b6252fb4c657"
         }
       ],
       "entry": null,
@@ -59686,7 +59686,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/compact-filters/light-client-scan.component.ts",
-          "sha256": "36aa6a14cd3ae35d69c5b45428a0c4f43f31b45bb3b2bbb020ff3c2032116908"
+          "sha256": "ac3a4ffe76e7b9f91a2b57ccf4d2b3cbd8e5865a8b95cd953a98c3957f3ef08b"
         }
       ],
       "entry": null,
@@ -59757,7 +59757,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/compact-filters/light-client-scan.component.ts",
-          "sha256": "36aa6a14cd3ae35d69c5b45428a0c4f43f31b45bb3b2bbb020ff3c2032116908"
+          "sha256": "ac3a4ffe76e7b9f91a2b57ccf4d2b3cbd8e5865a8b95cd953a98c3957f3ef08b"
         }
       ],
       "entry": null,
@@ -118276,7 +118276,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "1729cfbc21a973df9cfaef861a4c1813d6f2e362c11f59e52b3f90fde04f0173"
+          "sha256": "f246f02818ff277d37bf53bd275106541142c0a38bf27f0ceb3dc9c48d988734"
         }
       ],
       "blockers": [
@@ -118350,7 +118350,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "1729cfbc21a973df9cfaef861a4c1813d6f2e362c11f59e52b3f90fde04f0173"
+          "sha256": "f246f02818ff277d37bf53bd275106541142c0a38bf27f0ceb3dc9c48d988734"
         }
       ],
       "blockers": [
@@ -118424,7 +118424,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "1729cfbc21a973df9cfaef861a4c1813d6f2e362c11f59e52b3f90fde04f0173"
+          "sha256": "f246f02818ff277d37bf53bd275106541142c0a38bf27f0ceb3dc9c48d988734"
         }
       ],
       "blockers": [
@@ -118498,7 +118498,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "1729cfbc21a973df9cfaef861a4c1813d6f2e362c11f59e52b3f90fde04f0173"
+          "sha256": "f246f02818ff277d37bf53bd275106541142c0a38bf27f0ceb3dc9c48d988734"
         }
       ],
       "blockers": [
@@ -118572,7 +118572,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "1729cfbc21a973df9cfaef861a4c1813d6f2e362c11f59e52b3f90fde04f0173"
+          "sha256": "f246f02818ff277d37bf53bd275106541142c0a38bf27f0ceb3dc9c48d988734"
         }
       ],
       "blockers": [
@@ -118646,7 +118646,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "1729cfbc21a973df9cfaef861a4c1813d6f2e362c11f59e52b3f90fde04f0173"
+          "sha256": "f246f02818ff277d37bf53bd275106541142c0a38bf27f0ceb3dc9c48d988734"
         }
       ],
       "blockers": [
@@ -118720,7 +118720,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "1729cfbc21a973df9cfaef861a4c1813d6f2e362c11f59e52b3f90fde04f0173"
+          "sha256": "f246f02818ff277d37bf53bd275106541142c0a38bf27f0ceb3dc9c48d988734"
         }
       ],
       "blockers": [
@@ -118794,7 +118794,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "1729cfbc21a973df9cfaef861a4c1813d6f2e362c11f59e52b3f90fde04f0173"
+          "sha256": "f246f02818ff277d37bf53bd275106541142c0a38bf27f0ceb3dc9c48d988734"
         }
       ],
       "blockers": [
@@ -118868,7 +118868,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "1729cfbc21a973df9cfaef861a4c1813d6f2e362c11f59e52b3f90fde04f0173"
+          "sha256": "f246f02818ff277d37bf53bd275106541142c0a38bf27f0ceb3dc9c48d988734"
         }
       ],
       "blockers": [
@@ -118942,7 +118942,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "1729cfbc21a973df9cfaef861a4c1813d6f2e362c11f59e52b3f90fde04f0173"
+          "sha256": "f246f02818ff277d37bf53bd275106541142c0a38bf27f0ceb3dc9c48d988734"
         }
       ],
       "blockers": [
@@ -119016,7 +119016,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "1729cfbc21a973df9cfaef861a4c1813d6f2e362c11f59e52b3f90fde04f0173"
+          "sha256": "f246f02818ff277d37bf53bd275106541142c0a38bf27f0ceb3dc9c48d988734"
         }
       ],
       "blockers": [
@@ -119090,7 +119090,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "1729cfbc21a973df9cfaef861a4c1813d6f2e362c11f59e52b3f90fde04f0173"
+          "sha256": "f246f02818ff277d37bf53bd275106541142c0a38bf27f0ceb3dc9c48d988734"
         }
       ],
       "blockers": [

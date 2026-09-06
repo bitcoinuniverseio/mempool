@@ -22,7 +22,7 @@ import { RouterModule } from '@angular/router';
           <span class="badge bg-success">HARDENED</span>
         </div>
         <div class="card-body">
-          <pre class="bg-black text-light p-3 rounded font-monospace small mb-0"><code># Bitcoin Core Hardened Production Configuration
+          <pre class="bg-black text-light p-3 rounded font-monospace small mb-0" tabindex="0"><code># Bitcoin Core Hardened Production Configuration
 # Network & Bindings
 server=1
 daemon=1

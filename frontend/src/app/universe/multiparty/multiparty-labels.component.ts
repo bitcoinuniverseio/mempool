@@ -49,7 +49,7 @@ import { RouterModule } from '@angular/router';
         <div class="col-12 col-lg-6">
           <div class="card p-4 bg-body-tertiary border h-100">
             <h2 class="h5 mb-3">Sample BIP329 Export Stream</h2>
-            <pre class="p-3 bg-body border rounded font-monospace small text-break mb-0">
+            <pre class="p-3 bg-body border rounded font-monospace small text-break mb-0" tabindex="0">
 &#123;&quot;type&quot;:&quot;tx&quot;,&quot;ref&quot;:&quot;d9e0f1a2...&quot;,&quot;label&quot;:&quot;Vault funding deposit&quot;&#125;
 &#123;&quot;type&quot;:&quot;addr&quot;,&quot;ref&quot;:&quot;bc1q...&quot;,&quot;label&quot;:&quot;Coldcard Primary Receive&quot;&#125;
 &#123;&quot;type&quot;:&quot;output&quot;,&quot;ref&quot;:&quot;d9e0f1a2...:0&quot;,&quot;spendable&quot;:true&#125;
