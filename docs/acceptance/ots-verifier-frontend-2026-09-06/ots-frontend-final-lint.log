@@ -1,0 +1,23 @@
+(node:58584) ESLintIgnoreWarning: The ".eslintignore" file is no longer supported. Switch to using the "ignores" property in "eslint.config.js": https://eslint.org/docs/latest/use/configure/migration-guide#ignoring-files
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:58584) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/universe/mempool/.tmp/explorer-health-cc524f6d97b5/frontend/eslint.config.js?mtime=1788696990196 is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\frontend\package.json.
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\frontend\src\app\universe\opentimestamps\opentimestamps-verify.component.spec.ts
+  31:3  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\frontend\src\app\universe\opentimestamps\opentimestamps.service.ts
+  11:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  67:38  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  68:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  71:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  72:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  75:51  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  76:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  83:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  83:52  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  84:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+✖ 11 problems (0 errors, 11 warnings)
+

@@ -1,9 +1,10 @@
-import { Component, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectionStrategy, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
-import { MultipartyApiService } from './multiparty.service';
+import { MultipartyApiService, Musig2VerificationResult } from './multiparty.service';
 
 @Component({
   selector: 'app-multiparty-musig2',
@@ -15,10 +16,10 @@ import { MultipartyApiService } from './multiparty.service';
       <header class="page-header mb-4">
         <div class="title-row d-flex flex-wrap align-items-center justify-content-between gap-2">
           <h1 class="m-0">MuSig2 Session Coordinator (BIP327)</h1>
-          <span class="badge bg-success">Key & Nonce Aggregation</span>
+          <span class="badge bg-secondary">Public Transcript Verification</span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
-          Coordinate n-of-n Schnorr signature aggregation without on-chain multisig footprint. Verifies cosigner public keys, aggregated nonces, and partial signatures.
+          Verify an untweaked BIP327 public transcript. Keep participants, public nonces and partial signatures in the same order. Enter public data only.
         </p>
 
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
@@ -37,26 +38,44 @@ import { MultipartyApiService } from './multiparty.service';
             <h2 class="h5 mb-3">Session Public Data</h2>
 
             <div class="mb-3">
-              <label class="form-label small text-muted">Cosigner Public Keys (one per line, hex)</label>
+              <label for="musig2-keys" class="form-label small text-muted">Cosigner Public Keys (33-byte compressed hex, one per line)</label>
               <textarea
+                id="musig2-keys"
                 class="form-control font-monospace small"
                 rows="4"
                 [(ngModel)]="cosignersText"
+                (ngModelChange)="clearVerification()"
               ></textarea>
             </div>
 
             <div class="mb-3">
-              <label class="form-label small text-muted">Message Digest to Sign (32-byte SHA-256)</label>
-              <input type="text" class="form-control font-monospace small" [(ngModel)]="messageDigest" />
+              <label for="musig2-message" class="form-label small text-muted">Message Digest (32-byte hex)</label>
+              <input id="musig2-message" type="text" class="form-control font-monospace small" [(ngModel)]="messageDigest" (ngModelChange)="clearVerification()" />
             </div>
 
-            <div class="d-flex gap-2">
+            <details class="mb-3">
+              <summary class="py-2">Add public nonces and partial signatures</summary>
+              <div class="mt-3">
+                <label for="musig2-nonces" class="form-label small text-muted">Public Nonces (66-byte hex, one per participant)</label>
+                <textarea id="musig2-nonces" class="form-control font-monospace small" rows="4" [(ngModel)]="publicNoncesText" (ngModelChange)="clearVerification()"></textarea>
+              </div>
+              <div class="mt-3">
+                <label for="musig2-partials" class="form-label small text-muted">Partial Signatures (32-byte hex, in participant order)</label>
+                <textarea id="musig2-partials" class="form-control font-monospace small" rows="4" [(ngModel)]="partialSignaturesText" (ngModelChange)="clearVerification()"></textarea>
+              </div>
+              <div class="mt-3">
+                <label for="musig2-final" class="form-label small text-muted">Final Signature (optional 64-byte hex consistency check)</label>
+                <textarea id="musig2-final" class="form-control font-monospace small" rows="2" [(ngModel)]="finalSignature" (ngModelChange)="clearVerification()"></textarea>
+              </div>
+            </details>
+
+            <div class="d-flex flex-wrap gap-2">
               <button class="btn btn-primary" (click)="verifySession()" [disabled]="verifying">
                 <span *ngIf="verifying" class="spinner-border spinner-border-sm me-1"></span>
-                Verify Session & Aggregate Key
+                Verify Public Data
               </button>
               <button class="btn btn-outline-secondary" (click)="loadSample()">
-                Load 2-of-2 Sample
+                Load Key Aggregation Sample
               </button>
             </div>
           </div>
@@ -76,32 +95,28 @@ import { MultipartyApiService } from './multiparty.service';
 
             <div *ngIf="verifying" class="text-center py-5 text-muted">
               <div class="spinner-border text-primary mb-2"></div>
-              <div>Computing MuSig2 key aggregation weights and checking nonce uniqueness...</div>
+              <div>Checking the supplied public transcript...</div>
             </div>
 
             <div *ngIf="report">
-              <div class="alert" [ngClass]="report.valid ? 'alert-success' : 'alert-danger'">
-                <div class="fw-bold">{{ report.valid ? 'MuSig2 Key Aggregation Valid' : 'Session Validation Failed' }}</div>
-                <div class="small mt-1" *ngIf="report.valid">
-                  Aggregate x-only public key successfully computed. Taproot spend is indistinguishable from single-key spend.
-                </div>
-                <div class="small mt-1" *ngIf="!report.valid">
-                  {{ report.error }}
-                </div>
+              <div class="alert" role="status" [ngClass]="report.verified ? 'alert-success' : 'alert-info'">
+                <div class="fw-bold">{{ report.verified ? 'Public transcript verified' : 'Key aggregation verified. Session incomplete.' }}</div>
+                <div class="small mt-1" *ngFor="let warning of report.warnings">{{ warning }}</div>
               </div>
 
-              <div class="p-3 border rounded bg-body mb-3">
-                <div class="text-muted small">Aggregated Taproot Output Key (Q)</div>
-                <div class="font-monospace small text-break mt-1">{{ report.aggregate_pubkey }}</div>
+              <div class="p-3 border rounded bg-body mb-3" *ngIf="report.aggregate_public_key">
+                <div class="text-muted small">Untweaked Aggregate Public Key</div>
+                <div class="font-monospace small text-break mt-1">{{ report.aggregate_public_key }}</div>
               </div>
 
               <div class="p-3 border rounded bg-body mb-3">
                 <div class="text-muted small">Cosigners Count</div>
-                <div class="fs-5 fw-bold">{{ report.cosigner_count }} participants</div>
+                <div class="fs-5 fw-bold">{{ report.participant_count }} participants</div>
               </div>
 
-              <div class="alert alert-warning py-2 px-3 small m-0">
-                Security Policy: Each signing round requires fresh nonces. Never reuse a previously published public nonce.
+              <div class="p-3 border rounded bg-body mb-3" *ngIf="report.verified && report.final_signature">
+                <div class="text-muted small">Verified Final Signature</div>
+                <div class="font-monospace small text-break mt-1">{{ report.final_signature }}</div>
               </div>
             </div>
           </div>
@@ -114,13 +129,17 @@ import { MultipartyApiService } from './multiparty.service';
     .nav-link.active { background-color: var(--bs-primary); color: #fff; }
   `],
 })
-export class MultipartyMusig2Component {
+export class MultipartyMusig2Component implements OnDestroy {
   cosignersText = `0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798
 02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5`;
   messageDigest = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
+  publicNoncesText = '';
+  partialSignaturesText = '';
+  finalSignature = '';
   verifying = false;
-  report: any = null;
+  report: Musig2VerificationResult | null = null;
   failure: string | null = null;
+  private verificationSubscription?: Subscription;
 
   constructor(
     private multipartyApi: MultipartyApiService,
@@ -128,13 +147,20 @@ export class MultipartyMusig2Component {
   ) {}
 
   loadSample(): void {
+    this.clearVerification();
     this.cosignersText = `0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798
 02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5`;
     this.messageDigest = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
+    this.publicNoncesText = '';
+    this.partialSignaturesText = '';
+    this.finalSignature = '';
+    this.report = null;
+    this.failure = null;
     this.cdr.markForCheck();
   }
 
   verifySession(): void {
+    this.clearVerification();
     this.verifying = true;
     this.report = null;
     this.failure = null;
@@ -144,37 +170,57 @@ export class MultipartyMusig2Component {
       .map((s) => s.trim())
       .filter((s) => s.length > 0);
 
-    const hasDuplicate = new Set(cosigners).size !== cosigners.length;
-    if (hasDuplicate) {
-      this.verifying = false;
-      this.report = {
-        valid: false,
-        error: 'Duplicate cosigner public key detected. MuSig2 requires distinct cosigners to prevent key cancellation attacks.',
-      };
-      this.cdr.markForCheck();
-      return;
-    }
+    const lines = (value: string) => value.split('\n').map(line => line.trim()).filter(Boolean);
 
-    this.multipartyApi
+    this.verificationSubscription = this.multipartyApi
       .verifyMusig2Session$({
-        cosigners,
-        message_digest: this.messageDigest,
+        participant_public_keys: cosigners,
+        message_hash: this.messageDigest.trim(),
+        ...(this.publicNoncesText.trim() ? { public_nonces: lines(this.publicNoncesText) } : {}),
+        ...(this.partialSignaturesText.trim() ? { partial_signatures: lines(this.partialSignaturesText) } : {}),
+        ...(this.finalSignature.trim() ? { final_signature: this.finalSignature.trim() } : {}),
       })
       .subscribe({
         next: (res) => {
-          this.report = res;
+          const complete = res?.verified === true && res.stage === 'verified-session'
+            && res.nonce_aggregation_verified === true && res.final_bip340_valid === true
+            && res.participant_count === cosigners.length
+            && Array.isArray(res.partial_signature_validity) && res.partial_signature_validity.length === cosigners.length
+            && res.partial_signature_validity.every(value => value === true)
+            && /^[0-9a-f]{128}$/i.test(res.final_signature || '');
+          const partial = res?.verified === false && res.stage === 'partial-session';
+          if ((complete || partial) && res.scope === 'bip327-untweaked-public-transcript'
+            && res.key_aggregation_verified === true && /^[0-9a-f]{64}$/i.test(res.aggregate_public_key || '')
+            && res.participant_count === cosigners.length
+            && Array.isArray(res.errors) && res.errors.length === 0
+            && Array.isArray(res.warnings) && res.warnings.every(value => typeof value === 'string')) {
+            this.report = res;
+          } else {
+            this.failure = 'The response did not establish a valid public verification result.';
+          }
           this.verifying = false;
           this.cdr.markForCheck();
         },
-        // A session that was not checked has not been validated. The revision
-        // this replaces set the report to valid, with an aggregate public key,
-        // so a failed request rendered as "MuSig2 Key Aggregation Valid".
         error: (err) => {
           this.verifying = false;
           this.report = null;
-          this.failure = loadFailureMessage(classifyLoadFailure(err));
+          const errors = err?.status === 400 && Array.isArray(err?.error?.errors)
+            ? err.error.errors.filter((value: unknown) => typeof value === 'string').slice(0, 8) : [];
+          this.failure = errors.length ? errors.join(' ') : loadFailureMessage(classifyLoadFailure(err));
           this.cdr.markForCheck();
         },
       });
+  }
+
+  clearVerification(): void {
+    this.verificationSubscription?.unsubscribe();
+    this.verifying = false;
+    this.report = null;
+    this.failure = null;
+    this.cdr.markForCheck();
+  }
+
+  ngOnDestroy(): void {
+    this.verificationSubscription?.unsubscribe();
   }
 }

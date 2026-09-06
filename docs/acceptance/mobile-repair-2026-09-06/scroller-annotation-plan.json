@@ -1,0 +1,919 @@
+[
+  {
+    "file": "frontend/src/app/universe/ark-vpack/ark-exit.component.ts",
+    "selector": "app-ark-exit",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Exit Path Verification Matrix",
+        "next": " <table class=\"table table-hover align-middle mb-0\"> <thead> <tr> <th>Stage</th> <th>Transaction</th> <th>Delay Requirement</th> "
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/block-propagation/block-propagation-block-detail.component.ts",
+    "selector": "app-block-propagation-block-detail",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Regional Sensor First-Arrival Latencies",
+        "next": " <table class=\"table table-dark table-hover mb-0\"> <thead> <tr> <th>Sensor Location</th> <th>Arrival Delta</th> <th>Status</th> "
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/block-propagation/block-propagation-compact-blocks.component.ts",
+    "selector": "app-block-propagation-compact-blocks",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Compact Block Reconstruction History",
+        "next": " <table class=\"table table-dark table-hover mb-0\"> <thead> <tr> <th>Height</th> <th>Block Hash</th> <th>Matched Short IDs</th> "
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/block-propagation/block-propagation-fibre.component.ts",
+    "selector": "app-block-propagation-fibre",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "FIBRE Node Mesh Status",
+        "next": " <table class=\"table table-dark table-hover mb-0\"> <thead> <tr> <th>Location Hub</th> <th>Ping Latency</th> <th>Sync Status</th> "
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/block-propagation/block-propagation-fork-races.component.ts",
+    "selector": "app-block-propagation-fork-races",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Detected Simultaneous Block Races",
+        "next": " <table class=\"table table-dark table-hover mb-0\"> <thead> <tr> <th>Race ID</th> <th>Height</th> <th>Observed At</th> <th>B"
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/block-propagation/block-propagation-live.component.ts",
+    "selector": "app-block-propagation-live",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Live Propagation Queue",
+        "next": " <table class=\"table table-dark table-hover mb-0\"> <thead> <tr> <th>Height</th> <th>Hash</th> <th>First Seen Sensor</th> <t"
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/block-propagation/block-propagation-overview.component.ts",
+    "selector": "app-block-propagation-overview",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Recent Block Propagation Events",
+        "next": " <table class=\"table table-dark table-hover mb-0\"> <thead> <tr> <th>Height</th> <th>Hash</th> <th>Miner</th> <th>Txs</th> "
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/block-propagation/block-propagation-stale-tips.component.ts",
+    "selector": "app-block-propagation-stale-tips",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Stale Tip History",
+        "next": " <table class=\"table table-dark table-hover mb-0\"> <thead> <tr> <th>Height</th> <th>Date</th> <th>Miner</th> <th>Stale Hash"
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/blockspace/blockspace-composition.component.ts",
+    "selector": "app-blockspace-composition",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Historical Block Breakdown",
+        "next": " <table class=\"table table-hover align-middle mb-0\"> <thead> <tr> <th>Height</th> <th>Timestamp</th> <th class=\"text-end\">Total "
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/blockspace/blockspace-overview.component.ts",
+    "selector": "app-blockspace-overview",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Semantic Blockspace Consumption (24h)",
+        "next": " <table class=\"table table-hover align-middle mb-0\"> <thead> <tr> <th>Class Name</th> <th>Category</th> <th class=\"text-end\">Wei"
+      },
+      {
+        "index": 1,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Recent Block Composition",
+        "next": " <table class=\"table table-sm table-hover align-middle mb-0\"> <thead> <tr> <th>Block Height</th> <th>Timestamp</th> <th class=\"t"
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/blockspace/blockspace-regimes.component.ts",
+    "selector": "app-blockspace-regimes",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Detected Regime History",
+        "next": " <table class=\"table table-hover align-middle mb-0\"> <thead> <tr> <th>Regime Type</th> <th>Height Range</th> <th class=\"text-end"
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/bootstrap/bootstrap-overview.component.ts",
+    "selector": "app-bootstrap-overview",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Pinned AssumeUTXO Snapshots",
+        "next": " <table class=\"table table-sm table-hover align-middle\"> <thead> <tr> <th>Height</th> <th>UTXO Coins Count</th> <th>"
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/collaborative-privacy/collaborative-privacy-coordinators.component.ts",
+    "selector": "app-collaborative-privacy-coordinators",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Active Coordinators",
+        "next": " <table class=\"table table-dark table-hover mb-0\"> <thead> <tr> <th>Coordinator ID</th> <th>Name</th> <th>Protocol</th> <th"
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/collaborative-privacy/collaborative-privacy-fidelity-bonds.component.ts",
+    "selector": "app-collaborative-privacy-fidelity-bonds",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Active Timelocked Fidelity Bonds",
+        "next": " <table class=\"table table-dark table-hover mb-0\"> <thead> <tr> <th>Bond Identifier</th> <th>Maker Public Key</th> <th>Locked Amount</th> "
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/collaborative-privacy/collaborative-privacy-overview.component.ts",
+    "selector": "app-collaborative-privacy-overview",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Recent CoinJoin & Collaborative Transactions",
+        "next": " <table class=\"table table-dark table-hover mb-0\"> <thead> <tr> <th>Round ID</th> <th>Protocol</th> <th>Coordinator</th> <t"
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/compact-filters/light-client-overview.component.ts",
+    "selector": "app-light-client-overview",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Observed Compact Filter Peers",
+        "next": " <table class=\"table table-sm table-hover align-middle\"> <thead> <tr> <th>Peer Address</th> <th>Subversion</th> <th>"
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/compact-filters/light-client-privacy.component.ts",
+    "selector": "app-light-client-privacy",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Comparison: Bloom Filters vs Compact Filters",
+        "next": " <table class=\"table table-sm table-bordered\"> <thead class=\"table-light\"> <tr> <th>Feature</th> <th>BIP37 (Bloom Filters)</th> "
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/consensus/consensus-compare.component.ts",
+    "selector": "app-consensus-compare",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Covenant Proposal Comparison Matrix",
+        "next": " <table class=\"table table-hover align-middle mb-0\"> <thead> <tr> <th>Proposal</th> <th>Covenant Classification</th> <th>Expressiveness</th>"
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/consensus-conformance/consensus-conformance-case-detail.component.ts",
+    "selector": "app-consensus-conformance-case-detail",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Multi-Engine Execution Results",
+        "next": " <table class=\"table table-dark table-hover mb-0\"> <thead> <tr> <th>Engine Implementation</th> <th>Validation Result</th> <th>Exit Code</th>"
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/consensus-conformance/consensus-conformance-cases.component.ts",
+    "selector": "app-consensus-conformance-cases",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Catalog of Identified Divergences",
+        "next": " <table class=\"table table-dark table-hover mb-0\"> <thead> <tr> <th>Case Identifier</th> <th>Title</th> <th>BIP Reference</th> "
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/consensus-conformance/consensus-conformance-corpora.component.ts",
+    "selector": "app-consensus-conformance-corpora",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Corpora Catalogs",
+        "next": " <table class=\"table table-dark table-hover mb-0\"> <thead> <tr> <th>Corpus Dataset</th> <th>File Count</th> <th>Branch Coverage</th> "
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/consensus-conformance/consensus-conformance-differential.component.ts",
+    "selector": "app-consensus-conformance-differential",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Consensus Verification Targets",
+        "next": " <table class=\"table table-dark table-hover mb-0\"> <thead> <tr> <th>Subsystem Target</th> <th>Core v28</th> <th>btcd (Go)</th> "
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/consensus-conformance/consensus-conformance-formal.component.ts",
+    "selector": "app-consensus-conformance-formal",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Formally Verified Bitcoin Specifications",
+        "next": " <table class=\"table table-dark table-hover mb-0\"> <thead> <tr> <th>Specification</th> <th>Proof Assistant</th> <th>Theorems Proven</th> "
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/consensus-conformance/consensus-conformance-overview.component.ts",
+    "selector": "app-consensus-conformance-overview",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Consensus Engine Conformance Ratings",
+        "next": " <table class=\"table table-dark table-hover mb-0\"> <thead> <tr> <th>Engine Implementation</th> <th>Language</th> <th>Conformance Rate</th> "
+      },
+      {
+        "index": 1,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Active Discrepancy Findings",
+        "next": " <table class=\"table table-dark table-hover mb-0\"> <thead> <tr> <th>Case ID</th> <th>Description</th> <th>BIP Reference</th> "
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/consensus-conformance/consensus-conformance-specifications.component.ts",
+    "selector": "app-consensus-conformance-specifications",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Target BIP Standards",
+        "next": " <table class=\"table table-dark table-hover mb-0\"> <thead> <tr> <th>BIP Number</th> <th>Title</th> <th>Layer</th> <th>Forma"
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/dlc/dlc-overview.component.ts",
+    "selector": "app-dlc-overview",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Recent Oracle Announcements",
+        "next": " <table class=\"table table-sm table-hover align-middle\"> <thead> <tr> <th>Event ID</th> <th>Oracle</th> <th>Descript"
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/ecash/ecash-cashu-detail.component.ts",
+    "selector": "app-ecash-cashu-detail",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Cryptographic Keysets",
+        "next": " <table class=\"table table-hover align-middle mb-0\"> <thead> <tr> <th>Keyset ID</th> <th>Unit</th> <th>Status</th> "
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/ecash/ecash-overview.component.ts",
+    "selector": "app-ecash-overview",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Cashu Mints",
+        "next": " <table class=\"table table-hover align-middle mb-0\"> <thead> <tr> <th>Mint Name</th> <th>Endpoint URL</th> <th>NUTs Supported</t"
+      },
+      {
+        "index": 1,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Fedimint Federations",
+        "next": " <table class=\"table table-hover align-middle mb-0\"> <thead> <tr> <th>Federation Name</th> <th>Quorum Threshold</th> <th>Enabled"
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/global-network/global-network-nodes.component.ts",
+    "selector": "app-global-network-nodes",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Global Reachable Bitcoin Nodes",
+        "next": " <table class=\"table table-hover align-middle mb-0\"> <thead> <tr> <th>Endpoint</th> <th>Transport</th> <th>User Agent</th> "
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/global-network/global-network-overview.component.ts",
+    "selector": "app-global-network-overview",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Transport Protocol Breakdown",
+        "next": " <table class=\"table table-sm table-hover align-middle mb-0\"> <thead> <tr> <th>Protocol Transport</th> <th class=\"text-end\">Nod"
+      },
+      {
+        "index": 1,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Top Geographic Regions",
+        "next": " <table class=\"table table-sm table-hover align-middle mb-0\"> <thead> <tr> <th>Country Code</th> <th class=\"text-end\">Reachable"
+      },
+      {
+        "index": 2,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Client Software Diversity",
+        "next": " <table class=\"table table-sm table-hover align-middle mb-0\"> <thead> <tr> <th>User Agent</th> <th class=\"text-end\">Node Count</th> "
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/global-network/global-network-seeds.component.ts",
+    "selector": "app-global-network-seeds",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Bitcoin DNS Seed Observatory",
+        "next": " <table class=\"table table-hover align-middle mb-0\"> <thead> <tr> <th>Seed Hostname</th> <th>Maintainer</th> <th>Status</th> "
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/intelligence-platform/developer-platform.component.ts",
+    "selector": "app-developer-platform",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\" *ngIf=\"keys.length >",
+        "heading": "Create Scoped API Key",
+        "next": " 0\"> <table class=\"table table-hover mb-0\"> <thead> <tr> <th>Key ID</th> <th>Label</th> <th>Scopes</th> <th>Prefix</th> "
+      },
+      {
+        "index": 1,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Configured Webhook Subscriptions",
+        "next": " <table class=\"table table-hover mb-0\"> <thead> <tr> <th>Webhook Endpoint</th> <th>Events Subscribed</th> <th>Secret Prefix</th> "
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/intelligence-platform/knowledge-registry.component.ts",
+    "selector": "app-knowledge-registry",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\" *ngIf=\"filteredLabels.length >",
+        "heading": "Entity Labels",
+        "next": " 0\"> <table class=\"table table-hover mb-0\"> <thead> <tr> <th>Entity Label</th> <th>Target Identifier</th> <th>Category</th> "
+      },
+      {
+        "index": 1,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Public Attribution Audit Trail",
+        "next": " <table class=\"table table-sm table-hover mb-0\"> <thead> <tr> <th>Action</th> <th>Actor</th> <th>Evidence Summary</th> <th>"
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/intelligence-platform/protocol-explorer.component.ts",
+    "selector": "app-protocol-explorer",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<pre class=\"mb-0 font-monospace small bg-black p-2 rounded text-break\">",
+        "heading": "Decoded Operations:",
+        "next": "{{ dec.parameters | json }}</pre> </div> </div> </div> </section> <!-- Protocol Adapters Catalog --> <section class=\"card mb-4\" *ngIf=\"protocols.length > 0\"> <div cl"
+      },
+      {
+        "index": 1,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Registered Protocol Adapters",
+        "next": " <table class=\"table table-hover mb-0\"> <thead> <tr> <th>Protocol</th> <th>Category</th> <th>Introduced At Height</th> <th>"
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/intelligence-platform/utxo-intelligence.component.ts",
+    "selector": "app-utxo-intelligence",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Supply Distribution by Script Type",
+        "next": " <table class=\"table table-hover mb-0\"> <thead> <tr> <th>Script Type</th> <th>UTXO Count</th> <th>Total Satoshis</th> <th>T"
+      },
+      {
+        "index": 1,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Economically Unspendable Outputs Across Feerates",
+        "next": " <table class=\"table table-hover mb-0\"> <thead> <tr> <th>Prevailing Feerate</th> <th>Uneconomical Outputs</th> <th>Locked Satoshis</th> "
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/intelligence-platform/watchlists.component.ts",
+    "selector": "app-watchlists",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive mb-4\">",
+        "heading": "Blinded Monitored Entities",
+        "next": " <table class=\"table table-sm table-hover mb-0\"> <thead> <tr> <th>Label</th> <th>Type</th> <th>Blinded SHA-256 Hash</th> "
+      },
+      {
+        "index": 1,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Recent In-App Alert Notifications",
+        "next": " <table class=\"table table-hover mb-0\"> <thead> <tr> <th>Severity</th> <th>Alert Title</th> <th>Message</th> <th>Blinded Ha"
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/lightning-reliability/lightning-node-reliability.component.ts",
+    "selector": "app-lightning-node-reliability",
+    "tags": []
+  },
+  {
+    "file": "frontend/src/app/universe/lightning-reliability/lightning-reliability-overview.component.ts",
+    "selector": "app-lightning-reliability-overview",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Top Performing Routing Nodes",
+        "next": " <table class=\"table table-hover align-middle mb-0\"> <thead> <tr> <th>Node Alias</th> <th>Public Key</th> <th class=\"text-end\">R"
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/lightning-resilience/lightning-resilience-htlcs.component.ts",
+    "selector": "app-lightning-resilience-htlcs",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Commitment Slot Allocations Across Monitored Channels",
+        "next": " <table class=\"table table-dark table-hover mb-0\"> <thead> <tr> <th>Short Channel ID</th> <th>Capacity</th> <th>HTLC Max Slots</th> "
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/lightning-resilience/lightning-resilience-mitigations.component.ts",
+    "selector": "app-lightning-resilience-mitigations",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Active Defense Strategies",
+        "next": " <table class=\"table table-dark table-hover mb-0\"> <thead> <tr> <th>Mitigation ID</th> <th>Strategy Name</th> <th>Layer</th> "
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/lightning-resilience/lightning-resilience-overview.component.ts",
+    "selector": "app-lightning-resilience-overview",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "High-Pressure & Congested Channels",
+        "next": " <table class=\"table table-dark table-hover mb-0\"> <thead> <tr> <th>Short Channel ID</th> <th>Capacity (sats)</th> <th>HTLC Slots (Used / Ca"
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/mining-decentralized/decentralized-mining-compare.component.ts",
+    "selector": "app-decentralized-mining-compare",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Protocol Feature Comparison",
+        "next": " <table class=\"table table-hover align-middle\"> <thead> <tr> <th>Protocol</th> <th>Template Origin</th> <th>Coinbase"
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/mining-decentralized/decentralized-mining-overview.component.ts",
+    "selector": "app-decentralized-mining-overview",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Recent Validated Sharechain Submissions",
+        "next": " <table class=\"table table-sm table-hover align-middle\"> <thead> <tr> <th>Share ID</th> <th>Protocol</th> <th>Height"
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/multiparty/multiparty-bsms.component.ts",
+    "selector": "app-multiparty-bsms",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<pre class=\"p-3 bg-body border rounded font-monospace small text-break mb-3\">",
+        "heading": "Sample BSMS Descriptor Template",
+        "next": " wsh(sortedmulti(2, [73c5da0a/48'/0'/0'/2']xpub6E.../0/*, [f54c9d21/48'/0'/0'/2']xpub6F.../0/* ))#a89c7d8e </pre> <div class=\"alert alert-info py-2 px-3 small m-0\"> Coordinators i"
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/multiparty/multiparty-compatibility.component.ts",
+    "selector": "app-multiparty-compatibility",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Hardware Vendor Compatibility Matrix",
+        "next": " <table class=\"table table-hover align-middle\"> <thead> <tr> <th>Hardware Device</th> <th>MuSig2 (BIP327)</th> <th>BSMS (BIP129)</th> "
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/multiparty/multiparty-labels.component.ts",
+    "selector": "app-multiparty-labels",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<pre class=\"p-3 bg-body border rounded font-monospace small text-break mb-0\">",
+        "heading": "Sample BIP329 Export Stream",
+        "next": " &#123;&quot;type&quot;:&quot;tx&quot;,&quot;ref&quot;:&quot;d9e0f1a2...&quot;,&quot;label&quot;:&quot;Vault funding deposit&quot;&#125; &#123;&quot;type&quot;:&quot;addr&quot;,&quot;ref&quot;:&quot;bc1q...&quot;,&quot;label&quo"
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/node-security/node-security-advisories.component.ts",
+    "selector": "app-node-security-advisories",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Tracked Security Disclosures",
+        "next": " <table class=\"table table-dark table-hover mb-0\"> <thead> <tr> <th>Advisory ID</th> <th>CVE ID</th> <th>Vulnerability Title</th> "
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/node-security/node-security-artifacts.component.ts",
+    "selector": "app-node-security-artifacts",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Verified Release Binaries",
+        "next": " <table class=\"table table-dark table-hover mb-0\"> <thead> <tr> <th>Release</th> <th>Artifact Filename</th> <th>SHA256 Checksum</th> "
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/node-security/node-security-configuration.component.ts",
+    "selector": "app-node-security-configuration",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<pre class=\"bg-black text-light p-3 rounded font-monospace small mb-0\">",
+        "heading": "Recommended Production Configuration",
+        "next": "<code># Bitcoin Core Hardened Production Configuration # Network & Bindings server=1 daemon=1 listen=1 maxconnections=64 listenonion=1 # Memory & Resource Limits dbcache=4096 maxmempool=300 mempoolexpiry=72 # Securi"
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/node-security/node-security-fleet.component.ts",
+    "selector": "app-node-security-fleet",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Fleet Node Inventory",
+        "next": " <table class=\"table table-dark table-hover mb-0\"> <thead> <tr> <th>Node ID</th> <th>Client</th> <th>Version</th> <th>Netwo"
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/node-security/node-security-overview.component.ts",
+    "selector": "app-node-security-overview",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Active Critical Advisories",
+        "next": " <table class=\"table table-dark table-hover mb-0\"> <thead> <tr> <th>Advisory ID</th> <th>CVE</th> <th>Title</th> <th>Affect"
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/node-security/node-security-releases.component.ts",
+    "selector": "app-node-security-releases",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Official Release Matrix",
+        "next": " <table class=\"table table-dark table-hover mb-0\"> <thead> <tr> <th>Version</th> <th>Release Date</th> <th>Lifecycle Status</th> "
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/offchain/offchain-utxo.component.ts",
+    "selector": "app-offchain-utxo",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Observed Protocol Operators",
+        "next": " <table class=\"table table-sm table-hover align-middle\"> <thead> <tr> <th>Entity</th> <th>Protocol</th> <th>Endpoint"
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/opentimestamps/opentimestamps-batches.component.ts",
+    "selector": "app-opentimestamps-batches",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Confirmed Anchor Batches",
+        "next": " <table class=\"table table-dark table-hover mb-0\"> <thead> <tr> <th>Batch Identifier</th> <th>Block Height</th> <th>Block Hash</th> "
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/opentimestamps/opentimestamps-calendars.component.ts",
+    "selector": "app-opentimestamps-calendars",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Active Public Calendar Servers",
+        "next": " <table class=\"table table-dark table-hover mb-0\"> <thead> <tr> <th>Calendar ID</th> <th>Endpoint URL</th> <th>Pending Commitments</th> "
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/opentimestamps/opentimestamps-overview.component.ts",
+    "selector": "app-opentimestamps-overview",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Recent Bitcoin Merkle Tree Anchors",
+        "next": " <table class=\"table table-dark table-hover mb-0\"> <thead> <tr> <th>Batch ID</th> <th>Block Height</th> <th>Leaf Count</th> "
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/payjoin/payjoin-compatibility.component.ts",
+    "selector": "app-payjoin-compatibility",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Payjoin Ecosystem Compatibility Matrix",
+        "next": " <table class=\"table table-hover align-middle mb-0\"> <thead> <tr> <th>Software Application</th> <th>Role Capability</th> <th>BIP78 (v1 HTTP)"
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/payjoin/payjoin-directory.component.ts",
+    "selector": "app-payjoin-directory",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Payjoin Directory Observatory",
+        "next": " <table class=\"table table-hover align-middle mb-0\"> <thead> <tr> <th>Directory Relay</th> <th>BIP77 OHTTP</th> <th>BIP78 HTTP</th> "
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/payment-connectivity/payment-connectivity-overview.component.ts",
+    "selector": "app-payment-connectivity-overview",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Verified Client & Wallet Applications",
+        "next": " <table class=\"table table-sm table-hover align-middle\"> <thead> <tr> <th>Application</th> <th>Vendor</th> <th>NWC C"
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/payment-connectivity/payment-lnurl.component.ts",
+    "selector": "app-payment-lnurl",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "LNURL Specifications & Providers",
+        "next": " <table class=\"table table-hover align-middle\"> <thead> <tr> <th>Domain</th> <th>Sample Address</th> <th>LUD-06 (Pay)</th> "
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/private-submission/private-submission-accelerators.component.ts",
+    "selector": "app-private-submission-accelerators",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Available Acceleration Services",
+        "next": " <table class=\"table table-dark table-hover mb-0\"> <thead> <tr> <th>Provider Name</th> <th>Hashrate Reach</th> <th>Supported Pools</th> "
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/private-submission/private-submission-ordering-block.component.ts",
+    "selector": "app-private-submission-ordering-block",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Detected Anomalous Transactions",
+        "next": " <table class=\"table table-dark table-hover mb-0\"> <thead> <tr> <th>Txid</th> <th>Actual Index</th> <th>Declared Fee Rate</th> "
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/private-submission/private-submission-ordering.component.ts",
+    "selector": "app-private-submission-ordering",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Detected Ordering Discrepancies & Private Inclusions",
+        "next": " <table class=\"table table-dark table-hover mb-0\"> <thead> <tr> <th>Txid</th> <th>Block Height</th> <th>Fee Rate</th> <th>B"
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/quantum/quantum-history.component.ts",
+    "selector": "app-quantum-history",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Public Key Reveal Timeline",
+        "next": " <table class=\"table table-hover align-middle mb-0\"> <thead> <tr> <th>Block Height</th> <th>Revealing Transaction</th> <th>Revealed Public K"
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/quantum/quantum-overview.component.ts",
+    "selector": "app-quantum-overview",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Vulnerability Exposure by Script Standard",
+        "next": " <table class=\"table table-hover align-middle mb-0\"> <thead> <tr> <th>Script Standard</th> <th class=\"text-end\">Total UTXOs</th> "
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/reserves/reserves-overview.component.ts",
+    "selector": "app-reserves-overview",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Custodial and Exchange Attestations",
+        "next": " <table class=\"table table-hover align-middle mb-0\"> <thead> <tr> <th>Entity Name</th> <th>Category</th> <th>Standard</th> "
+      },
+      {
+        "index": 1,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Recent Onchain Attestation Snapshots",
+        "next": " <table class=\"table table-sm table-hover align-middle mb-0\"> <thead> <tr> <th>Snapshot ID</th> <th>Block Height</th> <th>UTXO C"
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/reserves/reserves-provider-detail.component.ts",
+    "selector": "app-reserves-provider-detail",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Published Snapshots",
+        "next": " <table class=\"table table-hover align-middle mb-0\"> <thead> <tr> <th>Snapshot ID</th> <th>Block Height</th> <th>Timestamp</th> "
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/silent-payments/silent-payments-coverage.component.ts",
+    "selector": "app-silent-payments-coverage",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Recent Block Manifests",
+        "next": " <table class=\"table table-hover align-middle mb-0\"> <thead> <tr> <th>Block Height</th> <th>Candidate Outputs</th> <th>Total Spe"
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/silent-payments/silent-payments-overview.component.ts",
+    "selector": "app-silent-payments-overview",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Wallet Support Evidence",
+        "next": " <table class=\"table table-hover align-middle mb-0\"> <thead> <tr> <th>Wallet / Software</th> <th>Sending (BIP352)</th> <th>Recei"
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/swaps/swaps-chain.component.ts",
+    "selector": "app-swaps-chain",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Atomic HTLC & PTLC Cross-Chain Invariants",
+        "next": " <table class=\"table table-hover align-middle mb-0\"> <thead> <tr> <th>Origin Network</th> <th>Target Network</th> <th>Primitive</th> "
+      }
+    ]
+  },
+  {
+    "file": "frontend/src/app/universe/swaps/swaps-overview.component.ts",
+    "selector": "app-swaps-overview",
+    "tags": [
+      {
+        "index": 0,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Historical public lockup checks",
+        "next": "<table class=\"table table-hover small\"> <thead><tr><th>Outpoint</th><th>Value (sats)</th><th>Stage at check</th><th>Checkpoint</th><th>Observed</th></tr></thead> <tbody><tr *ngFor=\"let observation of "
+      },
+      {
+        "index": 1,
+        "tag": "<div class=\"table-responsive\">",
+        "heading": "Recent Verified Swap Records",
+        "next": " <table class=\"table table-hover align-middle mb-0\"> <thead> <tr> <th>Swap ID</th> <th>Type</th> <th>Network</th> "
+      }
+    ]
+  }
+]

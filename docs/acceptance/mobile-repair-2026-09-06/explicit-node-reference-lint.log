@@ -1,0 +1,15 @@
+
+D:\universe\backend-apis\.tmp\explorer-health-cc524f6d97b5\src\universe-explorer\sources\explorer-source-health-repair.spec.ts
+  97:45  error  Replace `⏎······················?·'2026-09-05T12:00:00.000Z'⏎·····················` with `·?·'2026-09-05T12:00:00.000Z'`  prettier/prettier
+
+D:\universe\backend-apis\.tmp\explorer-health-cc524f6d97b5\src\universe-explorer\sources\explorer-sources.service.ts
+  492:22  error  Insert `␍`  prettier/prettier
+  493:82  error  Insert `␍`  prettier/prettier
+  494:78  error  Insert `␍`  prettier/prettier
+  495:86  error  Insert `␍`  prettier/prettier
+  496:78  error  Insert `␍`  prettier/prettier
+  497:36  error  Insert `␍`  prettier/prettier
+
+✖ 7 problems (7 errors, 0 warnings)
+  7 errors and 0 warnings potentially fixable with the `--fix` option.
+

@@ -1,0 +1,76 @@
+
+> mempool-frontend@3.3.1 test
+> vitest run --run src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts
+
+
+ RUN  v3.2.7 D:/universe/mempool/.tmp/explorer-health-cc524f6d97b5/frontend
+
+ ❯ src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts (23 tests | 2 failed) 532ms
+   ✓ OpenTimestamps verification presentation > never treats an incomplete or conflicting HTTP 200 as verified 162ms
+   ✓ OpenTimestamps verification presentation > never treats an incomplete or conflicting HTTP 200 as verified 12ms
+   ✓ OpenTimestamps verification presentation > never treats an incomplete or conflicting HTTP 200 as verified 16ms
+   ✓ OpenTimestamps verification presentation > never treats an incomplete or conflicting HTTP 200 as verified 12ms
+   ✓ OpenTimestamps verification presentation > never treats an incomplete or conflicting HTTP 200 as verified 20ms
+   ✓ OpenTimestamps verification presentation > never treats an incomplete or conflicting HTTP 200 as verified 13ms
+   ✓ OpenTimestamps verification presentation > renders pending_calendar_attestation without a confirmed badge 18ms
+   ✓ OpenTimestamps verification presentation > renders bitcoin_attestation_invalid without a confirmed badge 13ms
+   ✓ OpenTimestamps verification presentation > renders file_mismatch without a confirmed badge 14ms
+   ✓ OpenTimestamps verification presentation > renders bitcoin_attestation_reorg without a confirmed badge 12ms
+   ✓ OpenTimestamps verification presentation > renders unsupported_attestation without a confirmed badge 12ms
+   ✓ OpenTimestamps verification presentation > renders standard anchor fields without claiming file identity when no digest was supplied 22ms
+   ✓ OpenTimestamps verification presentation > sends and requires the exact optional digest and selected network 15ms
+   ✓ OpenTimestamps verification presentation > does not certify an unchecked or different requested file digest 21ms
+   ✓ OpenTimestamps verification presentation > does not certify an unchecked or different requested file digest 14ms
+   ✓ OpenTimestamps verification presentation > does not certify an unchecked or different requested file digest 8ms
+   ✓ OpenTimestamps verification presentation > rejects malformed expected digests before sending a request 11ms
+   × OpenTimestamps verification presentation > preserves a negative network mismatch verdict from a reader configured for a different network 27ms
+     → expected ' The verifier returned an incomplete …' to contain 'Proof verification failed'
+   ✓ OpenTimestamps verification presentation > distinguishes HTTP 400 failures without preserving an old positive verdict 24ms
+   × OpenTimestamps verification presentation > distinguishes HTTP 400 failures without preserving an old positive verdict 22ms
+     → expected ' Specific verifier reason Verify Open…' to contain 'Verification unavailable'
+   ✓ OpenTimestamps verification presentation > distinguishes HTTP 503 failures without preserving an old positive verdict 15ms
+   ✓ OpenTimestamps verification presentation > clears an old result when the proof input changes 31ms
+   ✓ OpenTimestamps verification presentation > clears and cancels verification on a network change, including a late old-network response 13ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > preserves a negative network mismatch verdict from a reader configured for a different network
+AssertionError: expected ' The verifier returned an incomplete …' to contain 'Proof verification failed'
+
+Expected: "Proof verification failed"
+Received: " The verifier returned an incomplete or inconsistent result. No proof was verified. Verify OpenTimestamps Proof (.ots)Cryptographically evaluate Merkle branching operations up to the Bitcoin Block Header Merkle Root.Back to OverviewPaste .ots Proof as Base64Proof Base64 DataExpected file digest (optional)Use the same hash algorithm as the proof. Without a digest, verification checks only the proof's embedded digest. Verify Cryptographic Proof Verification unavailable"
+
+ ❯ src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts:103:44
+    101|     const { component, view, state } = create({ ...anchored, verified:…
+    102|     state.network = 'signet'; component.verifyProof(); view.detectChan…
+    103|     expect(view.nativeElement.textContent).toContain('Proof verificati…
+       |                                            ^
+    104|     expect(view.nativeElement.textContent).toContain('Reader is config…
+    105|     expect(view.nativeElement.textContent).not.toContain('BITCOIN CONF…
+ ❯ new ZoneAwarePromise ../../../mempool/frontend/node_modules/zone.js/fesm2015/zone.js:2701:25
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > distinguishes HTTP 400 failures without preserving an old positive verdict
+AssertionError: expected ' Specific verifier reason Verify Open…' to contain 'Verification unavailable'
+
+Expected: "Verification unavailable"
+Received: " Specific verifier reason Verify OpenTimestamps Proof (.ots)Cryptographically evaluate Merkle branching operations up to the Bitcoin Block Header Merkle Root.Back to OverviewPaste .ots Proof as Base64Proof Base64 DataExpected file digest (optional)Use the same hash algorithm as the proof. Without a digest, verification checks only the proof's embedded digest. Verify Cryptographic Proof Invalid proof"
+
+ ❯ src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts:117:44
+    115|     api.verifyProof$.mockReturnValue(throwError(() => new HttpErrorRes…
+    116|     component.verifyProof(); view.detectChanges();
+    117|     expect(view.nativeElement.textContent).toContain(heading);
+       |                                            ^
+    118|     expect(view.nativeElement.textContent).toContain('Specific verifie…
+    119|     expect(view.nativeElement.textContent).not.toContain('BITCOIN CONF…
+ ❯ new ZoneAwarePromise ../../../mempool/frontend/node_modules/zone.js/fesm2015/zone.js:2701:25
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 21 passed (23)
+   Start at  13:57:58
+   Duration  3.47s (transform 215ms, setup 124ms, collect 835ms, tests 532ms, environment 1.20s, prepare 188ms)
+

@@ -12,16 +12,17 @@ describe('MultipartyService', () => {
       () => multipartyService.getTestVectors()]) expect(read).toThrow(MultipartyEvidenceError);
   });
 
-  it('keeps missing key-aggregation and nonce-verification engines explicit', () => {
+  it('computes key aggregation while keeping absent signing rounds explicit', () => {
     expect(multipartyService.verifyPublicSession({ participant_public_keys: participants })).toMatchObject({
-      verified: false, stage: 'unavailable-musig2-engine', aggregate_public_key: null, final_bip340_valid: null,
+      verified: false, stage: 'partial-session', key_aggregation_verified: true, final_bip340_valid: null,
     });
   });
 
-  it('retains the application duplicate-cosigner check, including hexadecimal case aliases', () => {
+  it('accepts BIP327 duplicate keys and normalizes hexadecimal case aliases', () => {
     const result = multipartyService.verifyPublicSession({ participant_public_keys: [participants[0], participants[0].toUpperCase()] });
-    expect(result.stage).toBe('invalid-input');
-    expect(result.errors).toContain('Duplicate participant public keys are prohibited in this application.');
+    expect(result.stage).toBe('partial-session');
+    expect(result.key_aggregation_verified).toBe(true);
+    expect(result.errors).toEqual([]);
   });
 
   it('checks participant encodings instead of hashing arbitrary strings into an aggregate', () => {

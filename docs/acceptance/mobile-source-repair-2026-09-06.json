@@ -1,0 +1,594 @@
+{
+  "schemaVersion": "universe-mobile-source-repair-evidence-v1",
+  "recordedAt": "2026-09-06T13:38:36.564Z",
+  "scope": "Historical mobile CI failures and subsequent source/test evidence. No new mobile runtime pass or operation acceptance established by this record.",
+  "historicalCi": {
+    "runId": 34032083836,
+    "headSha": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+    "mobileJobId": 101490607310,
+    "mobileJobUrl": "https://github.com/bitcoinuniverseio/mempool/actions/runs/34032083836/job/101490607310",
+    "mobileJobConclusion": "failure",
+    "mobileJobFinishedAt": "2026-09-06T13:15:28Z",
+    "wholeRunStateAtInspection": "queued",
+    "wholeRunConclusionAtInspection": "",
+    "note": "Other jobs were still queued; a failed mobile job is not a fabricated final whole-run result.",
+    "browser": "chromium",
+    "buildFingerprint": "f533f540d0b3481b",
+    "routeViewportRecords": 792,
+    "findingCount": 226,
+    "findingCounts": {
+      "undeclaredHorizontalScroll": 197,
+      "clippedContent": 22,
+      "smallCheckboxGroups": 6,
+      "docsScrollTiming": 1
+    },
+    "shardCounts": [
+      {
+        "shard": 1,
+        "reportRows": 278,
+        "findings": 76
+      },
+      {
+        "shard": 2,
+        "reportRows": 259,
+        "findings": 90
+      },
+      {
+        "shard": 3,
+        "reportRows": 255,
+        "findings": 60
+      }
+    ]
+  },
+  "sourceRepair": {
+    "commit": "36ca74f9d7eb94101dd526bc7b85bec6ae0ed75b",
+    "filesChanged": 76,
+    "sourceFiles": [
+      {
+        "path": "frontend/src/app/docs/api-docs/api-docs.component.ts",
+        "sha256": "65db6cc63de703ed9aa31495ecc75eee3a75cc4db5cb0ad662f5cc55bc4d8a85"
+      },
+      {
+        "path": "frontend/src/app/docs/docs/docs.component.ts",
+        "sha256": "57331bd23a9a20534977930e80c2deca4764efd896063314d483ab54e58da816"
+      },
+      {
+        "path": "frontend/src/app/universe/ark-vpack/ark-exit.component.ts",
+        "sha256": "8e4a70261506011afb108d63f419f8867138027715728dde63cf295dc0f16e71"
+      },
+      {
+        "path": "frontend/src/app/universe/block-propagation/block-propagation-block-detail.component.ts",
+        "sha256": "9b4268c5961095e93b6f4b890ccbc18009500f5081edd113e936b52c43dae5af"
+      },
+      {
+        "path": "frontend/src/app/universe/block-propagation/block-propagation-compact-blocks.component.ts",
+        "sha256": "fe8ed4800caaf9b443270d031bb1b5b6138e2619d5a81ab9ee715c21a55e52ce"
+      },
+      {
+        "path": "frontend/src/app/universe/block-propagation/block-propagation-fibre.component.ts",
+        "sha256": "a30bfbbd51d06dee1d0a7667122a8136cffbbacdb1927931d4278413f41a39a4"
+      },
+      {
+        "path": "frontend/src/app/universe/block-propagation/block-propagation-fork-races.component.ts",
+        "sha256": "b7b9442fb80735ef93ab871ba43870f9c36e16f35f1cbab27ba4a90f4d223542"
+      },
+      {
+        "path": "frontend/src/app/universe/block-propagation/block-propagation-live.component.ts",
+        "sha256": "dbe9fa63f9e46b5a09ba90c329e2365274488992d6e756e10456153070169aa0"
+      },
+      {
+        "path": "frontend/src/app/universe/block-propagation/block-propagation-overview.component.ts",
+        "sha256": "dbe3b479b4d85c9b4cc61107e8abb34af6211c299279de79c9c749511173b182"
+      },
+      {
+        "path": "frontend/src/app/universe/block-propagation/block-propagation-stale-tips.component.ts",
+        "sha256": "0d2f211534d1f102498700267ef9f44c5abb5a98c843f756ee85685e2a294114"
+      },
+      {
+        "path": "frontend/src/app/universe/blockspace/blockspace-composition.component.ts",
+        "sha256": "127a973150ed4bed601050fc7bcb205324ea92d50bcf8ea973d741420b7444b6"
+      },
+      {
+        "path": "frontend/src/app/universe/blockspace/blockspace-overview.component.ts",
+        "sha256": "d6931ce92fdb79afa2c2a853b3819d141cbbd95a7ecbffc0c7c454e5dbef9673"
+      },
+      {
+        "path": "frontend/src/app/universe/blockspace/blockspace-regimes.component.ts",
+        "sha256": "08d42dbe55f4e6d7006967997e72c6547e44403d37718cd1a9835ddee95f9497"
+      },
+      {
+        "path": "frontend/src/app/universe/bootstrap/bootstrap-overview.component.ts",
+        "sha256": "0ae003aaff083e383d14b60883b5d4b978048c7d6e1670161e83fc8244aa9b28"
+      },
+      {
+        "path": "frontend/src/app/universe/collaborative-privacy/collaborative-privacy-coordinators.component.ts",
+        "sha256": "36c03cdff180c6a433dfdb20c9066175a999277b1a9cd9810944f4a6cd87efbe"
+      },
+      {
+        "path": "frontend/src/app/universe/collaborative-privacy/collaborative-privacy-fidelity-bonds.component.ts",
+        "sha256": "809d074f6e436dd98d39190fb02c3f5c8b245881dba826bb2ea16ed0f35f8b5a"
+      },
+      {
+        "path": "frontend/src/app/universe/collaborative-privacy/collaborative-privacy-overview.component.ts",
+        "sha256": "71d0fc93ab2ea4ee4cc9906f8d2103c23e76ad783b2f3425eb1f876a67fbec8d"
+      },
+      {
+        "path": "frontend/src/app/universe/compact-filters/light-client-overview.component.ts",
+        "sha256": "9da5500ce44ce0d8e49e84edc13e04d191a9eba5fdf6b0e11fe69e06d8db9aa5"
+      },
+      {
+        "path": "frontend/src/app/universe/compact-filters/light-client-privacy.component.ts",
+        "sha256": "54d11994ac64e1753fe1d0a2f7febefed658f57dd5d0212ec35fe245109a1b87"
+      },
+      {
+        "path": "frontend/src/app/universe/consensus-conformance/consensus-conformance-case-detail.component.ts",
+        "sha256": "9b1084167f53f2538941ef09ca7f22a831af39a3ab38b71c2841a78da7ff4498"
+      },
+      {
+        "path": "frontend/src/app/universe/consensus-conformance/consensus-conformance-cases.component.ts",
+        "sha256": "5b65bcf5b06a3e38110bf1ee68c7005856780d71cb2c42d725cbba77afcd0c8a"
+      },
+      {
+        "path": "frontend/src/app/universe/consensus-conformance/consensus-conformance-corpora.component.ts",
+        "sha256": "c301a864d58e40075f681668b20a1384b0b9bbac0bc9f1d36450ec7f7d5c13f8"
+      },
+      {
+        "path": "frontend/src/app/universe/consensus-conformance/consensus-conformance-differential.component.ts",
+        "sha256": "52d94177e1be7c54d358e290b754b3ee4239ce6303881d3db84dc0bed8abcfa2"
+      },
+      {
+        "path": "frontend/src/app/universe/consensus-conformance/consensus-conformance-formal.component.ts",
+        "sha256": "03ff5b4933730185d70d6f4dd9682b0d7c5991a1cfeb71795f89bcaec68e793a"
+      },
+      {
+        "path": "frontend/src/app/universe/consensus-conformance/consensus-conformance-overview.component.ts",
+        "sha256": "fc25797fc3a155ae07b577ec9f666853dc2824fb237e68c5dd8828d7668c19f1"
+      },
+      {
+        "path": "frontend/src/app/universe/consensus-conformance/consensus-conformance-specifications.component.ts",
+        "sha256": "08115d3439e410d033361f478a40d045defc2a8720aaa4da233568b322f72735"
+      },
+      {
+        "path": "frontend/src/app/universe/consensus/consensus-compare.component.ts",
+        "sha256": "f71e16a7f40e53b5cef9c0f54553f34f07edd9188b8ffdb791092965aee3f0c3"
+      },
+      {
+        "path": "frontend/src/app/universe/dlc/dlc-overview.component.ts",
+        "sha256": "40f52c86169a375babcb15c2d3ed3699ebb76d4da27fbda41ed9882f92c4ef91"
+      },
+      {
+        "path": "frontend/src/app/universe/ecash/ecash-cashu-detail.component.ts",
+        "sha256": "d88ad8b0c2e30e5e929383311911a7f3fe978929cb28afabc4a0ec6dc22891e1"
+      },
+      {
+        "path": "frontend/src/app/universe/ecash/ecash-overview.component.ts",
+        "sha256": "79f8b81b522896d12057a91fbfbc21bcc73a842a6b6960620bd5988cacb13ff0"
+      },
+      {
+        "path": "frontend/src/app/universe/global-network/global-network-nodes.component.ts",
+        "sha256": "408d359b01152cca5d8cea19f74a55d68c83d421b6db71c9fb64277b3efd0910"
+      },
+      {
+        "path": "frontend/src/app/universe/global-network/global-network-overview.component.ts",
+        "sha256": "4a0bc716d6094ddcb956c8ffefd63c997e43ba363d581aabaef6d9d9d983cdf5"
+      },
+      {
+        "path": "frontend/src/app/universe/global-network/global-network-seeds.component.ts",
+        "sha256": "e7026fa8feb6c1e8b1c16222966dc50cb611d0740309948a42542bd48b186bc1"
+      },
+      {
+        "path": "frontend/src/app/universe/intelligence-platform/developer-platform.component.ts",
+        "sha256": "93196cff99aa60264d31d81b59b33ef4c237470abb35dc46090d73aef9ef044f"
+      },
+      {
+        "path": "frontend/src/app/universe/intelligence-platform/knowledge-registry.component.ts",
+        "sha256": "75eb88dc3aad45c28442475f9303627e2f16acba194d4dfe93f3dd57d6ddc3ff"
+      },
+      {
+        "path": "frontend/src/app/universe/intelligence-platform/protocol-explorer.component.ts",
+        "sha256": "d56f2bf82ac0e39c43c66eda0503f9b457f56579daaaf97817c6c9d045ec207d"
+      },
+      {
+        "path": "frontend/src/app/universe/intelligence-platform/utxo-intelligence.component.ts",
+        "sha256": "631c30691c2913a35c4deea77a0d30ad355d6f3e9b7a04e209999f658bda8351"
+      },
+      {
+        "path": "frontend/src/app/universe/intelligence-platform/watchlists.component.ts",
+        "sha256": "53a85ba83ae5fb61aa80870bd27b104eeeab118df083c5cd8e0d13c3710344c6"
+      },
+      {
+        "path": "frontend/src/app/universe/lightning-reliability/lightning-node-reliability.component.ts",
+        "sha256": "91ed6501a628066a100c5ad9ecb98feccea33c554fa214dc011f4dbc903f0328"
+      },
+      {
+        "path": "frontend/src/app/universe/lightning-reliability/lightning-reliability-overview.component.ts",
+        "sha256": "7998815c1235d2b358c8b9ce3bcfa249372c5f840de6b4565aefc63bf3359437"
+      },
+      {
+        "path": "frontend/src/app/universe/lightning-resilience/lightning-resilience-htlcs.component.ts",
+        "sha256": "54ead409e1402c545b51edd8cca72f7f5a2d7d1db666f042e328223951e7b36b"
+      },
+      {
+        "path": "frontend/src/app/universe/lightning-resilience/lightning-resilience-mitigations.component.ts",
+        "sha256": "2474502843bc1e1fbd3b3d7e982572a232e9781d858798e149b42d19572dde90"
+      },
+      {
+        "path": "frontend/src/app/universe/lightning-resilience/lightning-resilience-overview.component.ts",
+        "sha256": "81ed7ea3bad2b930e7044c8fa94f3f12ed7222a6368d90116baec83fb8036110"
+      },
+      {
+        "path": "frontend/src/app/universe/mining-decentralized/decentralized-mining-compare.component.ts",
+        "sha256": "dfc71f2ef66b9eaa1b729ce2bde1b8989a5e57efc84990d167e96c47e0361f3a"
+      },
+      {
+        "path": "frontend/src/app/universe/mining-decentralized/decentralized-mining-overview.component.ts",
+        "sha256": "a98810ee2e673721a5654c0ab03e041f6e0211b30cd97eb59b86327ecfeac15e"
+      },
+      {
+        "path": "frontend/src/app/universe/multiparty/multiparty-bsms.component.ts",
+        "sha256": "935a72509856b5178b354213b8e579300cbc478077f84cb64ef93f4a7fb195f5"
+      },
+      {
+        "path": "frontend/src/app/universe/multiparty/multiparty-compatibility.component.ts",
+        "sha256": "ee0b46264b670fa654305b974466dc196bc5bdfa60aa4880e5b732fd065bfcc9"
+      },
+      {
+        "path": "frontend/src/app/universe/multiparty/multiparty-labels.component.ts",
+        "sha256": "4a98ae067ba408ed1ed30a4a95c255d75975266ad62e7ef2c0f178f1b1352f92"
+      },
+      {
+        "path": "frontend/src/app/universe/node-security/node-security-advisories.component.ts",
+        "sha256": "f4b13f770f8da5be642690dfa91b2527062635d0b0660b8ac68751b7d0b91aae"
+      },
+      {
+        "path": "frontend/src/app/universe/node-security/node-security-artifacts.component.ts",
+        "sha256": "9b74fb4f8576115295f67cca2e38ae1bd9a6c1a732e3dc233aca58cb5becdef0"
+      },
+      {
+        "path": "frontend/src/app/universe/node-security/node-security-configuration.component.ts",
+        "sha256": "fab80239d9924141ceb6b48e2817ca18cf9900052666d92e63216fe8250522f7"
+      },
+      {
+        "path": "frontend/src/app/universe/node-security/node-security-fleet.component.ts",
+        "sha256": "5442179c15c4a0a88507ee85a6c493697246853a8dcbbe389467a0e5c13f8ba4"
+      },
+      {
+        "path": "frontend/src/app/universe/node-security/node-security-overview.component.ts",
+        "sha256": "3e86bb37a8d265e61cb7c8b6f9ca5df9964fa0e404bc98d58331a1bc5e28072c"
+      },
+      {
+        "path": "frontend/src/app/universe/node-security/node-security-releases.component.ts",
+        "sha256": "dde423e4745224f4cd1ddcc2f94085bf457f45e878ad772a8b21c3ffebe76f43"
+      },
+      {
+        "path": "frontend/src/app/universe/offchain/offchain-utxo.component.ts",
+        "sha256": "533bcedc05fd2d3aef5f39e4e315a60bce566de18a8d3c353b111da6d99f3d01"
+      },
+      {
+        "path": "frontend/src/app/universe/opentimestamps/opentimestamps-batches.component.ts",
+        "sha256": "9ea6970c612d28df8752d96e5ffba4eeeb995920c5df0dee8b1c2e6bde2d43ce"
+      },
+      {
+        "path": "frontend/src/app/universe/opentimestamps/opentimestamps-calendars.component.ts",
+        "sha256": "46ee29cc533363965286540fdebf4afc98d921f5a21890d072587c268eae7c11"
+      },
+      {
+        "path": "frontend/src/app/universe/opentimestamps/opentimestamps-overview.component.ts",
+        "sha256": "454421d88fcb17e7358db91ee34dcb1ab0dd8d0628d97f0b38dd37a342737388"
+      },
+      {
+        "path": "frontend/src/app/universe/payjoin/payjoin-compatibility.component.ts",
+        "sha256": "8154a1a07d3cf0a87cae7796be4f6eaab71f21abf4dc945cdd4db6025d41daf9"
+      },
+      {
+        "path": "frontend/src/app/universe/payjoin/payjoin-directory.component.ts",
+        "sha256": "58bb0621f6bb296b2a56d0665e6a41e0dbdd726a7e7a3f20e46d1aff543b97c1"
+      },
+      {
+        "path": "frontend/src/app/universe/payment-connectivity/payment-connectivity-overview.component.ts",
+        "sha256": "8144dd64ecc5e70039d6a9539bfa0f5e72a2b72299a4440bba6656ad70dcb7c3"
+      },
+      {
+        "path": "frontend/src/app/universe/payment-connectivity/payment-lnurl.component.ts",
+        "sha256": "9a9634e8f336e1f4e6bc1f3ba5bf472e77df0add6674425020a5faab826b3c38"
+      },
+      {
+        "path": "frontend/src/app/universe/private-submission/private-submission-accelerators.component.ts",
+        "sha256": "d9069bd72ee745225ef156239e5cec65a19d42043effcfdc6f283fb93df00693"
+      },
+      {
+        "path": "frontend/src/app/universe/private-submission/private-submission-broadcast.component.ts",
+        "sha256": "1883086ad15f2075b793ff9ccb73dff58a3dceef35be7e0f4f057221b9d56d51"
+      },
+      {
+        "path": "frontend/src/app/universe/private-submission/private-submission-ordering-block.component.ts",
+        "sha256": "9081697a5ec197ff9b84b1c5b8112e4ec597fe07cf9d9c42a3db18aa29d62236"
+      },
+      {
+        "path": "frontend/src/app/universe/private-submission/private-submission-ordering.component.ts",
+        "sha256": "49b4a74a4cabe2be69ac2e83186b61722886e32463605f5ab44a33d62652fe0f"
+      },
+      {
+        "path": "frontend/src/app/universe/quantum/quantum-history.component.ts",
+        "sha256": "32c07cfd55c2ae02a938c8c940f8ca29ec2378311a1bcc1620180e258f28e56b"
+      },
+      {
+        "path": "frontend/src/app/universe/quantum/quantum-overview.component.ts",
+        "sha256": "a97f986919db46a0ca6c6ca3c6634aa2a365602d3c258dae44ad8c2aa6fb118a"
+      },
+      {
+        "path": "frontend/src/app/universe/reserves/reserves-overview.component.ts",
+        "sha256": "17b0ffa03c3f1161cca97bc47e7486f0f83780dd4a96687a71deff02277bd8f8"
+      },
+      {
+        "path": "frontend/src/app/universe/reserves/reserves-provider-detail.component.ts",
+        "sha256": "bd3783c3b2a7e748d2f40bd1461897dd66f94b7f4a928916c08a2881ef97c501"
+      },
+      {
+        "path": "frontend/src/app/universe/silent-payments/silent-payments-coverage.component.ts",
+        "sha256": "64a10f4f530413c369ad3746f5ba3484a840304017b1924a9e293d4c13749fc6"
+      },
+      {
+        "path": "frontend/src/app/universe/silent-payments/silent-payments-overview.component.ts",
+        "sha256": "246b2a6d48f66b9fd8a7d914db62f9c32d11c938d7c3cf427b21b0d1405e5f5a"
+      },
+      {
+        "path": "frontend/src/app/universe/swaps/swaps-chain.component.ts",
+        "sha256": "974cf3dce193a94ec7cc2e60cb86776e2dc00880d415ff3e9c829648b5d1ab49"
+      },
+      {
+        "path": "frontend/src/app/universe/swaps/swaps-overview.component.ts",
+        "sha256": "7cf77bc318f3c26bfd4752effeb136cb3e052411613e1ab6582834517e9b4206"
+      },
+      {
+        "path": "frontend/src/styles.scss",
+        "sha256": "ed18bc06b721a8645af00c441a6c9db79333b6364dea9eb680941f41649f0139"
+      },
+      {
+        "path": "frontend/src/styles/_universe-responsive.scss",
+        "sha256": "4db65b413d0e3f873a8a62ea8b489ddb1ba4e22108470e80d8d615ae473ca9a6"
+      }
+    ],
+    "sourceOnlyChecks": {
+      "before": {
+        "recordedAt": "2026-09-06T13:26:17.788Z",
+        "passed": false,
+        "failingFiles": 71
+      },
+      "after": {
+        "recordedAt": "2026-09-06T13:26:30.739Z",
+        "passed": true,
+        "failingFiles": 0
+      },
+      "runtimeOccurrences": 197,
+      "distinctContainers": 82,
+      "componentFiles": 71,
+      "scope": "source annotations and Angular template parsing only; browser audit remains required",
+      "lint": {
+        "files": 71,
+        "errors": 0,
+        "warnings": 46,
+        "original": "C:\\WINDOWS\\TEMP\\explorer-pr101-mobile-9990031283\\scroller-source-lint.json",
+        "sha256": "347f94ed8dc4c9f4b4d9b9cd235e32a74bc5b6b0b6c4b667012050c7c21a47b4"
+      }
+    },
+    "changes": [
+      "Give audited horizontal table/code regions names and keyboard focus.",
+      "Constrain and wrap the specific narrow identifiers, action groups and selectors identified by clipping findings.",
+      "Make the label row the touch target for the six reported checkbox-group occurrences.",
+      "Apply smooth scrolling only to explicit API-documentation anchor navigation, respecting reduced motion, instead of changing global route scrolling."
+    ],
+    "unitTests": {
+      "filesPassed": 97,
+      "testsPassed": 1543,
+      "startedAt": "2026-09-06T13:28:51Z",
+      "durationSeconds": 113.68,
+      "artifact": "docs/acceptance/mobile-repair-2026-09-06/frontend-mobile-all-tests.log"
+    },
+    "productionBuild": {
+      "status": "PASS LOCAL",
+      "sourceRevision": "36ca74f9d7eb94101dd526bc7b85bec6ae0ed75b",
+      "command": "npm run build:universe",
+      "builtAt": "2026-09-06T13:31:56.512Z",
+      "angularBuildHash": "e6ec4e6f8ae5c658",
+      "angularBuildDurationMilliseconds": 173560,
+      "themeCopyCompleted": true,
+      "artifact": "docs/acceptance/mobile-repair-2026-09-06/frontend-mobile-build.log",
+      "limitation": "Source build evidence only; existing bundle-budget and unused-source warnings remain in the complete log."
+    },
+    "mobileAudit": {
+      "status": "NOT ACCEPTED",
+      "realNetworkE2ePassesAdded": 0,
+      "attempts": [
+        {
+          "kind": "initial headless launch",
+          "status": "FAILED BEFORE MEASUREMENT",
+          "measuredPages": 0,
+          "reportProduced": false,
+          "artifact": "docs/acceptance/mobile-repair-2026-09-06/mobile-candidate-check.log",
+          "failure": "browserContext.newPage: Target page, context or browser has been closed"
+        },
+        {
+          "kind": "preliminary full-Chromium smoke",
+          "status": "NOT ACCEPTED",
+          "artifact": "docs/acceptance/mobile-repair-2026-09-06/mobile-launcher-check.log",
+          "reportedPages": 4,
+          "reportedWindowSizes": 1,
+          "buildFingerprint": "066715fdfa45a1f7",
+          "limitation": "The preliminary tool reported no failures, but the revised visual gate had not passed independent strength review. This result grants no mobile acceptance."
+        }
+      ],
+      "requiredNextEvidence": "Root-owned audit using the reviewed strong gate across 22 routes, bound to final source and actual served build."
+    }
+  },
+  "backendFollowup": {
+    "commit": "b9ddc216c1fd4dd0a478f2fc44f929d4195dbe9b",
+    "pullRequest": "https://github.com/bitcoinuniverseio/backend-apis/pull/179",
+    "mergedAt": "2026-09-06T13:31:57Z",
+    "developMergeCommit": "7bf6ffc16d48f4f0c11e122d02385138f9b5de2e",
+    "behavior": "A stale, missing or failed explicitly separate node observation cannot be replaced with a fresh indexed checkpoint. Lag remains unknown with historical lag retained until a valid reference returns.",
+    "isolatedRegression": {
+      "suitesPassed": 6,
+      "testsPassed": 107,
+      "durationSeconds": 3.066
+    },
+    "lint": {
+      "earlierAttempt": "7 CRLF Prettier errors preserved in explicit-node-reference-lint.log",
+      "currentScopedExitCode": 0,
+      "ci": "PASS at exact b9ddc216 source"
+    },
+    "ci": {
+      "runId": 34035830452,
+      "source": "b9ddc216c1fd4dd0a478f2fc44f929d4195dbe9b",
+      "conclusion": "success",
+      "unitSuitesPassed": 423,
+      "unitTestsPassed": 4574,
+      "integrationFrameworkSuitesPassed": 4,
+      "integrationFrameworkTestsPassed": 27,
+      "rawLog": {
+        "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\backend-apis-reference-ci-tests.log",
+        "sha256": "f07b668ab5c03cd0b6a607af3f8df08c2302a2bce4ea31920173d054bd38b99d",
+        "bytes": 157536
+      },
+      "summaryArtifact": "docs/acceptance/mobile-repair-2026-09-06/backend-reference-ci-tests-summary.txt"
+    },
+    "runtime": "NOT TESTED at b9ddc216; previous observed runtime remains 8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+  },
+  "preservedEarlierRuntime": {
+    "frontendAndGateway": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+    "overlay": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+    "artifact": "docs/acceptance/health-runtime-2026-09-06/review.json",
+    "note": "Existing pass scopes and observations remain unchanged. New source or CI success does not relabel the earlier serving revisions."
+  },
+  "artifacts": [
+    {
+      "artifact": "docs/acceptance/mobile-repair-2026-09-06/check-scroller-annotations.mjs",
+      "sha256": "998f3991794968019009fffc6d770022b28d02ba02ac0b15b0d3775b12006ab9",
+      "bytes": 5542,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-pr101-mobile-9990031283\\check-scroller-annotations.mjs"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-repair-2026-09-06/scroller-annotation-plan.json",
+      "sha256": "ff7b4f5bc0758fa8c8ad8f8027cebf8d4f86e8e823b188737759e38fb6a34001",
+      "bytes": 36238,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-pr101-mobile-9990031283\\scroller-annotation-plan.json"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-repair-2026-09-06/scroller-source-failing-first.json",
+      "sha256": "03ba178e3dd8e39fbfef02d3b125a994e433e8e9b3c23da74a720e02399ad084",
+      "bytes": 45996,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-pr101-mobile-9990031283\\scroller-source-failing-first.json"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-repair-2026-09-06/scroller-source-failing-first.log",
+      "sha256": "7eccdbba8fc84ff8745c53458e48a4f818b82d729ddfda99a101969ca650dd3c",
+      "bytes": 3975,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-pr101-mobile-9990031283\\scroller-source-failing-first.log"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-repair-2026-09-06/scroller-source-passing.json",
+      "sha256": "5713fd96c4f531c43bd027adcaf7fadc43089c2b4130b344dd95e6a04f99449c",
+      "bytes": 21422,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-pr101-mobile-9990031283\\scroller-source-passing.json"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-repair-2026-09-06/scroller-source-passing.log",
+      "sha256": "b7b0d0c7c11475215f40f2ff86b171228ee83bfd78d3201fb833c326cba0e9c7",
+      "bytes": 260,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-pr101-mobile-9990031283\\scroller-source-passing.log"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-repair-2026-09-06/historical-mobile-ci-metadata.json",
+      "sha256": "3beee358fe4aa66f6a22c9c2e7d7cfe3617fbbee4c08db8d2a40534e6ef0b8ff",
+      "bytes": 2467,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-pr101-mobile-9990031283\\historical-mobile-ci-metadata.json"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-repair-2026-09-06/backend-reference-ci-metadata.json",
+      "sha256": "9ceba99da9feed584cf80c0b79cc25ec7fe95a7788e9888632448c58f89c488b",
+      "bytes": 2125,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-pr101-mobile-9990031283\\backend-reference-ci-metadata.json"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-repair-2026-09-06/backend-reference-pr179.json",
+      "sha256": "0cfeebf82b00af9ea5c249722685e858aad894044882d8cf84482d29aa3fb34b",
+      "bytes": 254,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-pr101-mobile-9990031283\\backend-reference-pr179.json"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-repair-2026-09-06/explicit-node-reference-current-lint.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-pr101-mobile-9990031283\\explicit-node-reference-current-lint.log"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-repair-2026-09-06/historical-mobile-report-shard-1.json",
+      "sha256": "3a9a9edef8b81dc0e3bbac137fa52560ea049daff7abc01e8c0db4070b85c1bc",
+      "bytes": 302353,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-pr101-mobile-9990031283\\artifacts-mobile-1\\mobile-report.json"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-repair-2026-09-06/historical-mobile-report-shard-2.json",
+      "sha256": "80a993f2de240763f5a37810ee3e6faec372368fcd1265d3ca4f50a62e0a76c1",
+      "bytes": 274665,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-pr101-mobile-9990031283\\artifacts-mobile-2\\mobile-report.json"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-repair-2026-09-06/historical-mobile-report-shard-3.json",
+      "sha256": "50cfa988a0c68aeebfc8705c01c094f14e975e32ef9d0a8a57052e5b2d04cacc",
+      "bytes": 260649,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-pr101-mobile-9990031283\\artifacts-mobile-3\\mobile-report.json"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-repair-2026-09-06/explicit-node-reference-failing-first.log",
+      "sha256": "ce1b2917b03461122a0b29912fb8d389f037d75ec77c83b69e5440c1c4535b35",
+      "bytes": 1633,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\explicit-node-reference-failing-first.log"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-repair-2026-09-06/explicit-node-reference-passing.log",
+      "sha256": "4a0ad3434d35c52e34658f9809c65abb6020d0d04c0bb56d1c494d0060d20b87",
+      "bytes": 667,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\explicit-node-reference-passing.log"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-repair-2026-09-06/explicit-node-reference-lint.log",
+      "sha256": "1c2f7c57201d55a2e3118089610444920b610e8b0fa3879404cf97b90f74380d",
+      "bytes": 872,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\explicit-node-reference-lint.log"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-repair-2026-09-06/frontend-mobile-all-tests.log",
+      "sha256": "9bfa9093ef35e6e4a810614b6ccc3bf9367fe288174bbd1fd761fa5b85959d06",
+      "bytes": 8757,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\frontend-mobile-all-tests.log"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-repair-2026-09-06/frontend-mobile-build.log",
+      "sha256": "45d73c93311b40737975343506c31a7fc3afe69c5e654b931a57a0dc89663bcd",
+      "bytes": 56049,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\frontend-mobile-build.log"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-repair-2026-09-06/mobile-candidate-check.log",
+      "sha256": "428bc929b4c796a56f172aa9b2b956597409f0b24df87de16bcd5ac6513e74e5",
+      "bytes": 192,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-candidate-check.log"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-repair-2026-09-06/mobile-launcher-check.log",
+      "sha256": "91aa9ca6f20d67a69ffccdcfa385f10af1ea3308a97cab08ad47a62356754d6c",
+      "bytes": 247,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mobile-launcher-check.log"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-repair-2026-09-06/backend-reference-ci-tests-summary.txt",
+      "sha256": "10eeb136a33fd9270878c5894bb71628bd81881a2e751814c7a609340b654fb5",
+      "bytes": 1571,
+      "provenance": "Selected exact test-summary lines from the raw backend follow-up CI log identified under backendFollowup.ci.rawLog."
+    }
+  ],
+  "realNetworkE2ePassesAdded": 0,
+  "functionalGo": false,
+  "updatedAt": "2026-09-06T13:45:22.953Z"
+}

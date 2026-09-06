@@ -1,0 +1,7 @@
+[Nest] 32480  - 09/06/2026, 1:17:36 PM    WARN [ExplorerSourcesService] Explorer source configuration rejected: source[0] must be an object.
+
+Test Suites: 6 passed, 6 total
+Tests:       107 passed, 107 total
+Snapshots:   0 total
+Time:        3.066 s
+Ran all test suites matching src/universe-explorer/sources/explorer-sources.service.spec.ts|src/universe-explorer/sources/explorer-source.client.spec.ts|src/universe-explorer/sources/explorer-source-health-repair.spec.ts|src/universe-explorer/sources/explorer-source-freshness.spec.ts|src/universe-explorer/chains/chain-health-repair.spec.ts|src/universe-explorer/chains/authority-health-observations.spec.ts.

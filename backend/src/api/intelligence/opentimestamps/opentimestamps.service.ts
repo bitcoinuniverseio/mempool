@@ -1,18 +1,17 @@
 import {
   TimestampOverview, TimestampCalendar, TimestampBatch, TimestampAnchorTransaction, TimestampVerificationResult,
 } from './opentimestamps.models';
-
-export class TimestampEvidenceError extends Error {
-  constructor(public readonly code: string, message: string, public readonly status = 503) {
-    super(message);
-  }
-}
+import config from '../../../config';
+import { TimestampEvidenceError } from './opentimestamps-errors';
+import { TimestampBitcoinReader, TimestampProofRequest, verifyDetachedProof } from './opentimestamps-proof';
+export { TimestampEvidenceError } from './opentimestamps-errors';
 
 const unavailable = (code: string, prerequisite: string): never => {
   throw new TimestampEvidenceError(code, 'Timestamp evidence is unavailable. ' + prerequisite);
 };
 
 export class OpenTimestampsService {
+  constructor(private readonly options: { reader?: TimestampBitcoinReader; network?: string } = {}) {}
   public getOverview(): TimestampOverview {
     return unavailable('unavailable-calendar-source', 'The owned calendar, batch and Bitcoin anchor sources are not connected.');
   }
@@ -40,12 +39,13 @@ export class OpenTimestampsService {
     return unavailable('unavailable-calendar', 'An owned calendar submission client and its actual returned attestation are required. No digest was submitted and no proof was created.');
   }
 
-  public verifyProof(proofPayload: { digest?: string; ots_proof?: string; proof?: string }): TimestampVerificationResult {
+  public async verifyProof(proofPayload: TimestampProofRequest): Promise<TimestampVerificationResult> {
     this.requireProof(proofPayload);
-    if (proofPayload.digest !== undefined && (typeof proofPayload.digest !== 'string' || !/^[0-9a-f]{64}$/i.test(proofPayload.digest))) {
-      throw new TimestampEvidenceError('invalid-input', 'A 32-byte SHA256 digest in hexadecimal is required.', 400);
-    }
-    return unavailable('unavailable-proof-verifier', 'The .ots operation/attestation verifier and owned Bitcoin header reader are not connected. No digest match, calendar receipt or Bitcoin commitment was verified.');
+    const reader = this.options.reader ?? {
+      $getBlockHash: (height: number) => import('../../bitcoin/bitcoin-api-factory').then(module => module.default.$getBlockHash(height)),
+      $getBlockHeader: (hash: string) => import('../../bitcoin/bitcoin-api-factory').then(module => module.default.$getBlockHeader(hash)),
+    };
+    return verifyDetachedProof(proofPayload, reader, this.options.network ?? config.MEMPOOL.NETWORK);
   }
 
   public upgradeProof(proofData: { ots_proof?: string; proof?: string }): never {

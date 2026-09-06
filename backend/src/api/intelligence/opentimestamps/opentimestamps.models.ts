@@ -7,6 +7,8 @@ export type TimestampProofStatus =
   | 'file_mismatch'
   | 'proof_incomplete'
   | 'unsupported_operation'
+  | 'unsupported_attestation'
+  | 'bitcoin_attestation_reorg'
   | 'calendar_unavailable'
   | 'network_mismatch'
   | 'conflicting_attestations';
@@ -48,7 +50,12 @@ export interface TimestampAnchorTransaction {
 export interface TimestampVerificationResult {
   status: TimestampProofStatus;
   verified: boolean;
-  digest_matches: boolean;
+  digest_matches: boolean | null;
+  file_digest: string;
+  file_hash_algorithm: 'sha1' | 'ripemd160' | 'sha256' | 'keccak256';
+  network: string;
+  attestation_type?: 'bitcoin';
+  bitcoin_block_hash?: string;
   earliest_proven_block_height?: number;
   earliest_proven_time_utc?: string;
   bitcoin_txid?: string;

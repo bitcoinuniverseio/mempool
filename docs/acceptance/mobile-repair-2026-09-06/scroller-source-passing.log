@@ -1,0 +1,9 @@
+{
+  "scope": "source annotations and Angular template parsing only; browser audit remains required",
+  "recordedAt": "2026-09-06T13:26:30.739Z",
+  "occurrences": 197,
+  "componentFiles": 71,
+  "containers": 82,
+  "passed": true,
+  "failingFiles": 0
+}

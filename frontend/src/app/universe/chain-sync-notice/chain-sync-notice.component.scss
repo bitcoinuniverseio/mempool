@@ -101,10 +101,18 @@
 }
 
 .status-link {
+  align-items: center;
+  background: transparent;
+  border: 0;
   color: var(--u-brand);
+  display: inline-flex;
   flex: none;
   font-size: var(--u-text-sm);
   font-weight: var(--u-weight-medium);
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: var(--u-space-2);
   white-space: nowrap;
 
   &:hover {

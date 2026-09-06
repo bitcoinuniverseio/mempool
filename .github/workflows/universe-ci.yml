@@ -676,6 +676,10 @@ jobs:
       # Three parallel shards over the shared route list, which grew from
       # thirty-two entries to two hundred and forty-four when the frontier
       # products shipped. One serial pass over that no longer fits the job.
+      - name: The mobile gate rejects inaccessible scroll regions and hidden labels
+        working-directory: scripts/universe/visual-qa
+        run: node mobile-probe-regression.mjs
+
       - name: Every window a phone can be, measured with a thumb
         working-directory: scripts/universe/visual-qa
         run: |

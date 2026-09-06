@@ -75,6 +75,19 @@ if (!BROWSER) {
  */
 const CAN_EMULATE_MOBILE = ENGINE_NAME !== 'firefox';
 
+function mobileBrowserLaunchOptions(browser, engineName = 'chromium') {
+  const windowsChromium = process.platform === 'win32' && engineName === 'chromium';
+  return {
+    // Explicit bounds keep Windows headless Chromium from creating a window
+    // against an empty desktop work area. Page viewports remain set below.
+    ...(windowsChromium ? { executablePath: browser.executablePath() } : {}),
+    args: engineName === 'chromium' ? [
+      ...(windowsChromium ? ['--window-size=1440,1000', '--window-position=0,0'] : []),
+      '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader',
+    ] : [],
+  };
+}
+
 /**
  * The window sizes that change the answer, not the phones that are popular.
  *
@@ -262,14 +275,12 @@ async function mobileProbe(floors) {
       // own affordance class, or by a role that says it is a scrollable
       // region to a screen reader.
       declared: Boolean(
-        el.closest('[data-scroll-region], .table-responsive')
-        || el.matches('.nav-list, .table-responsive, pre')
+        el.closest('[data-scroll-region]')
+        || el.matches('.nav-list')
         || el.getAttribute('tabindex') !== null
         || el.getAttribute('role') === 'region',
       ),
       keyboardReachable: el.getAttribute('tabindex') !== null
-        || el.closest('.table-responsive') !== null
-        || el.matches('pre')
         || Boolean(el.querySelector('a, button, input, select, textarea, [tabindex]')),
     });
   }
@@ -425,15 +436,23 @@ async function mobileProbe(floors) {
       && (parent.textContent || '').trim().length > (el.textContent || '').trim().length + 12;
     if (inSentence) continue;
 
-    // A checkbox inside its own label is as large as the label, because
-    // pressing the words activates it. Measuring the 18px box and calling it
+    // A checkbox's associated labels also activate it, whether wrapping the
+    // input or naming it with `for`. Measuring the 18px box and calling it
     // too small describes markup rather than the target, and the fix it asks
     // for, a giant checkbox beside its text, is worse than what is there.
-    const label = el.closest('label')
-      || (el.id ? document.querySelector(`label[for="${CSS.escape(el.id)}"]`) : null);
-    const effective = label && (el.type === 'checkbox' || el.type === 'radio')
-      ? (() => { const lr = label.getBoundingClientRect(); return Math.min(lr.width, lr.height); })()
-      : min;
+    const labels = el.type === 'checkbox' || el.type === 'radio' ? Array.from(el.labels || []) : [];
+    const effective = labels.reduce((largest, label) => {
+      const lr = label.getBoundingClientRect();
+      if (lr.width === 0 || lr.height === 0) return largest;
+      // Invisible or inert label boxes do not enlarge the actual tap target.
+      for (let ancestor = label; ancestor; ancestor = ancestor.parentElement) {
+        const style = getComputedStyle(ancestor);
+        if (style.display === 'none' || style.visibility === 'hidden' || style.visibility === 'collapse'
+          || style.opacity === '0' || ancestor.hasAttribute('inert')) return largest;
+      }
+      if (getComputedStyle(label).pointerEvents === 'none') return largest;
+      return Math.max(largest, Math.min(lr.width, lr.height));
+    }, min);
 
     const key = `${describe(el)}@${round(rect.width)}x${round(rect.height)}`;
 
@@ -773,11 +792,7 @@ async function run() {
     pass('viewport', 'zoom is not restricted');
   }
 
-  const browser = await BROWSER.launch({
-    args: ENGINE_NAME === 'chromium'
-      ? ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader']
-      : [],
-  });
+  const browser = await BROWSER.launch(mobileBrowserLaunchOptions(BROWSER, ENGINE_NAME));
 
   const report = [];
 
@@ -1012,4 +1027,4 @@ if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import
   run().catch((e) => { console.error(e); process.exit(1); });
 }
 
-export { VIEWPORTS, TOUCH_FLOOR, FIELD_FLOOR, mobileProbe };
+export { VIEWPORTS, TOUCH_FLOOR, FIELD_FLOOR, mobileProbe, mobileBrowserLaunchOptions };

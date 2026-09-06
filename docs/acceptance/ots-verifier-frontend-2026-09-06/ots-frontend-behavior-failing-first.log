@@ -1,0 +1,387 @@
+
+> mempool-frontend@3.3.1 test
+> vitest run --run src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts src/app/universe/opentimestamps/opentimestamps.service.spec.ts
+
+
+ RUN  v3.2.7 D:/universe/mempool/.tmp/explorer-health-cc524f6d97b5/frontend
+
+ ✓ src/app/universe/opentimestamps/opentimestamps.service.spec.ts (2 tests) 5ms
+ ❯ src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts (21 tests | 21 failed) 254ms
+   × OpenTimestamps verification presentation > never treats an incomplete or conflicting HTTP 200 as verified 103ms
+     → expected 'Verify OpenTimestamps Proof (.ots)Cry…' not to contain 'BITCOIN CONFIRMED'
+   × OpenTimestamps verification presentation > never treats an incomplete or conflicting HTTP 200 as verified 11ms
+     → expected 'Verify OpenTimestamps Proof (.ots)Cry…' not to contain 'BITCOIN CONFIRMED'
+   × OpenTimestamps verification presentation > never treats an incomplete or conflicting HTTP 200 as verified 8ms
+     → expected 'Verify OpenTimestamps Proof (.ots)Cry…' not to contain 'BITCOIN CONFIRMED'
+   × OpenTimestamps verification presentation > never treats an incomplete or conflicting HTTP 200 as verified 7ms
+     → expected 'Verify OpenTimestamps Proof (.ots)Cry…' not to contain 'BITCOIN CONFIRMED'
+   × OpenTimestamps verification presentation > never treats an incomplete or conflicting HTTP 200 as verified 7ms
+     → expected 'Verify OpenTimestamps Proof (.ots)Cry…' not to contain 'BITCOIN CONFIRMED'
+   × OpenTimestamps verification presentation > never treats an incomplete or conflicting HTTP 200 as verified 6ms
+     → expected 'Verify OpenTimestamps Proof (.ots)Cry…' not to contain 'BITCOIN CONFIRMED'
+   × OpenTimestamps verification presentation > renders pending_calendar_attestation without a confirmed badge 7ms
+     → expected 'Verify OpenTimestamps Proof (.ots)Cry…' to contain 'Pending calendar attestation'
+   × OpenTimestamps verification presentation > renders bitcoin_attestation_invalid without a confirmed badge 12ms
+     → expected 'Verify OpenTimestamps Proof (.ots)Cry…' to contain 'Proof verification failed'
+   × OpenTimestamps verification presentation > renders file_mismatch without a confirmed badge 8ms
+     → expected 'Verify OpenTimestamps Proof (.ots)Cry…' to contain 'Proof verification failed'
+   × OpenTimestamps verification presentation > renders bitcoin_attestation_reorg without a confirmed badge 8ms
+     → expected 'Verify OpenTimestamps Proof (.ots)Cry…' to contain 'Proof verification failed'
+   × OpenTimestamps verification presentation > renders unsupported_attestation without a confirmed badge 6ms
+     → expected 'Verify OpenTimestamps Proof (.ots)Cry…' to contain 'Verification unavailable'
+   × OpenTimestamps verification presentation > renders standard anchor fields without claiming file identity when no digest was supplied 9ms
+     → expected "spy" to be called with arguments: [ Array(1) ]
+
+Received: 
+
+  1st spy call:
+
+  [
+    {
+-     "network": "mainnet",
+      "proof": "public-test-proof",
+    },
+  ]
+
+
+Number of calls: 1
+
+   × OpenTimestamps verification presentation > sends and requires the exact optional digest and selected network 6ms
+     → expected "spy" to be called with arguments: [ Array(1) ]
+
+Received: 
+
+  1st spy call:
+
+  [
+    {
+-     "digest": "abababababababababababababababababababababababababababababababab",
+-     "network": "signet",
+      "proof": "public-test-proof",
+    },
+  ]
+
+
+Number of calls: 1
+
+   × OpenTimestamps verification presentation > does not certify an unchecked or different requested file digest 8ms
+     → expected 'Verify OpenTimestamps Proof (.ots)Cry…' not to contain 'BITCOIN CONFIRMED'
+   × OpenTimestamps verification presentation > does not certify an unchecked or different requested file digest 6ms
+     → expected 'Verify OpenTimestamps Proof (.ots)Cry…' not to contain 'BITCOIN CONFIRMED'
+   × OpenTimestamps verification presentation > does not certify an unchecked or different requested file digest 7ms
+     → expected 'Verify OpenTimestamps Proof (.ots)Cry…' not to contain 'BITCOIN CONFIRMED'
+   × OpenTimestamps verification presentation > rejects malformed expected digests before sending a request 6ms
+     → expected "spy" to not be called at all, but actually been called 1 times
+
+Received: 
+
+  1st spy call:
+
+    Array [
+      Object {
+        "proof": "public-test-proof",
+      },
+    ]
+
+
+Number of calls: 1
+
+   × OpenTimestamps verification presentation > distinguishes HTTP 400 failures without preserving an old positive verdict 6ms
+     → expected ' This deployment does not serve this …' to contain 'Invalid proof'
+   × OpenTimestamps verification presentation > distinguishes HTTP 503 failures without preserving an old positive verdict 5ms
+     → expected ' The service behind this panel is una…' to contain 'Verification unavailable'
+   × OpenTimestamps verification presentation > clears an old result when the proof input changes 8ms
+     → expected { …(14) } to be null
+   × OpenTimestamps verification presentation > clears and cancels verification on a network change, including a late old-network response 6ms
+     → expected { …(14) } to be null
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 21 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > never treats an incomplete or conflicting HTTP 200 as verified
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > never treats an incomplete or conflicting HTTP 200 as verified
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > never treats an incomplete or conflicting HTTP 200 as verified
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > never treats an incomplete or conflicting HTTP 200 as verified
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > never treats an incomplete or conflicting HTTP 200 as verified
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > never treats an incomplete or conflicting HTTP 200 as verified
+AssertionError: expected 'Verify OpenTimestamps Proof (.ots)Cry…' not to contain 'BITCOIN CONFIRMED'
+
+Expected: "BITCOIN CONFIRMED"
+Received: "Verify OpenTimestamps Proof (.ots)Cryptographically evaluate Merkle branching operations up to the Bitcoin Block Header Merkle Root.Back to OverviewUpload or Paste .ots File / Base64Proof Base64 Data Verify Cryptographic Proof Proof Verified SuccessfullyBITCOIN CONFIRMEDBitcoin Block HeightBlock HashBlock TimestampAttestation TypeOperations Executed step(s)"
+
+ ❯ src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts:48:48
+     46|     const { view, component } = create(response);
+     47|     component.verifyProof(); view.detectChanges();
+     48|     expect(view.nativeElement.textContent).not.toContain('BITCOIN CONF…
+       |                                                ^
+     49|     expect(component.verificationResult).toBeNull();
+     50|     expect(component.loadError).toContain('No proof was verified');
+ ❯ new ZoneAwarePromise ../../../mempool/frontend/node_modules/zone.js/fesm2015/zone.js:2701:25
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/21]⎯
+
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > renders pending_calendar_attestation without a confirmed badge
+AssertionError: expected 'Verify OpenTimestamps Proof (.ots)Cry…' to contain 'Pending calendar attestation'
+
+Expected: "Pending calendar attestation"
+Received: "Verify OpenTimestamps Proof (.ots)Cryptographically evaluate Merkle branching operations up to the Bitcoin Block Header Merkle Root.Back to OverviewUpload or Paste .ots File / Base64Proof Base64 Data Verify Cryptographic Proof Proof Verified SuccessfullyBITCOIN CONFIRMEDBitcoin Block HeightBlock HashcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdBlock TimestampAttestation TypebitcoinOperations Executed step(s)"
+
+ ❯ src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts:62:44
+     60|     const { view, component } = create({ ...anchored, status, verified…
+     61|     component.verifyProof(); view.detectChanges();
+     62|     expect(view.nativeElement.textContent).toContain(heading);
+       |                                            ^
+     63|     expect(view.nativeElement.textContent).not.toContain('BITCOIN CONF…
+     64|   });
+ ❯ new ZoneAwarePromise ../../../mempool/frontend/node_modules/zone.js/fesm2015/zone.js:2701:25
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/21]⎯
+
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > renders bitcoin_attestation_invalid without a confirmed badge
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > renders file_mismatch without a confirmed badge
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > renders bitcoin_attestation_reorg without a confirmed badge
+AssertionError: expected 'Verify OpenTimestamps Proof (.ots)Cry…' to contain 'Proof verification failed'
+
+Expected: "Proof verification failed"
+Received: "Verify OpenTimestamps Proof (.ots)Cryptographically evaluate Merkle branching operations up to the Bitcoin Block Header Merkle Root.Back to OverviewUpload or Paste .ots File / Base64Proof Base64 Data Verify Cryptographic Proof Proof Verified SuccessfullyBITCOIN CONFIRMEDBitcoin Block HeightBlock HashcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdBlock TimestampAttestation TypebitcoinOperations Executed step(s)"
+
+ ❯ src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts:62:44
+     60|     const { view, component } = create({ ...anchored, status, verified…
+     61|     component.verifyProof(); view.detectChanges();
+     62|     expect(view.nativeElement.textContent).toContain(heading);
+       |                                            ^
+     63|     expect(view.nativeElement.textContent).not.toContain('BITCOIN CONF…
+     64|   });
+ ❯ new ZoneAwarePromise ../../../mempool/frontend/node_modules/zone.js/fesm2015/zone.js:2701:25
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/21]⎯
+
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > renders unsupported_attestation without a confirmed badge
+AssertionError: expected 'Verify OpenTimestamps Proof (.ots)Cry…' to contain 'Verification unavailable'
+
+Expected: "Verification unavailable"
+Received: "Verify OpenTimestamps Proof (.ots)Cryptographically evaluate Merkle branching operations up to the Bitcoin Block Header Merkle Root.Back to OverviewUpload or Paste .ots File / Base64Proof Base64 Data Verify Cryptographic Proof Proof Verified SuccessfullyBITCOIN CONFIRMEDBitcoin Block HeightBlock HashcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdBlock TimestampAttestation TypebitcoinOperations Executed step(s)"
+
+ ❯ src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts:62:44
+     60|     const { view, component } = create({ ...anchored, status, verified…
+     61|     component.verifyProof(); view.detectChanges();
+     62|     expect(view.nativeElement.textContent).toContain(heading);
+       |                                            ^
+     63|     expect(view.nativeElement.textContent).not.toContain('BITCOIN CONF…
+     64|   });
+ ❯ new ZoneAwarePromise ../../../mempool/frontend/node_modules/zone.js/fesm2015/zone.js:2701:25
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/21]⎯
+
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > renders standard anchor fields without claiming file identity when no digest was supplied
+AssertionError: expected "spy" to be called with arguments: [ Array(1) ]
+
+Received: 
+
+  1st spy call:
+
+  [
+    {
+-     "network": "mainnet",
+      "proof": "public-test-proof",
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts:69:30
+     67|     const { view, component, api } = create();
+     68|     component.verifyProof(); view.detectChanges();
+     69|     expect(api.verifyProof$).toHaveBeenCalledWith({ proof: 'public-tes…
+       |                              ^
+     70|     expect(view.nativeElement.textContent).toContain('BITCOIN CONFIRME…
+     71|     expect(view.nativeElement.textContent).toContain('123');
+ ❯ new ZoneAwarePromise ../../../mempool/frontend/node_modules/zone.js/fesm2015/zone.js:2701:25
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/21]⎯
+
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > sends and requires the exact optional digest and selected network
+AssertionError: expected "spy" to be called with arguments: [ Array(1) ]
+
+Received: 
+
+  1st spy call:
+
+  [
+    {
+-     "digest": "abababababababababababababababababababababababababababababababab",
+-     "network": "signet",
+      "proof": "public-test-proof",
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts:82:30
+     80|     state.network = 'signet'; component.expectedDigest = digest.toUppe…
+     81|     component.verifyProof(); view.detectChanges();
+     82|     expect(api.verifyProof$).toHaveBeenCalledWith({ proof: 'public-tes…
+       |                              ^
+     83|     expect(view.nativeElement.textContent).toContain('Provided file di…
+     84|   });
+ ❯ new ZoneAwarePromise ../../../mempool/frontend/node_modules/zone.js/fesm2015/zone.js:2701:25
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/21]⎯
+
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > does not certify an unchecked or different requested file digest
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > does not certify an unchecked or different requested file digest
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > does not certify an unchecked or different requested file digest
+AssertionError: expected 'Verify OpenTimestamps Proof (.ots)Cry…' not to contain 'BITCOIN CONFIRMED'
+
+Expected: "BITCOIN CONFIRMED"
+Received: "Verify OpenTimestamps Proof (.ots)Cryptographically evaluate Merkle branching operations up to the Bitcoin Block Header Merkle Root.Back to OverviewUpload or Paste .ots File / Base64Proof Base64 Data Verify Cryptographic Proof Proof Verified SuccessfullyBITCOIN CONFIRMEDBitcoin Block HeightBlock HashcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdBlock TimestampAttestation TypebitcoinOperations Executed step(s)"
+
+ ❯ src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts:89:48
+     87|     const { component, view } = create({ ...anchored, ...mismatch });
+     88|     component.expectedDigest = digest; component.verifyProof(); view.d…
+     89|     expect(view.nativeElement.textContent).not.toContain('BITCOIN CONF…
+       |                                                ^
+     90|     expect(component.loadError).toContain('No proof was verified');
+     91|   });
+ ❯ new ZoneAwarePromise ../../../mempool/frontend/node_modules/zone.js/fesm2015/zone.js:2701:25
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/21]⎯
+
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > rejects malformed expected digests before sending a request
+AssertionError: expected "spy" to not be called at all, but actually been called 1 times
+
+Received: 
+
+  1st spy call:
+
+    Array [
+      Object {
+        "proof": "public-test-proof",
+      },
+    ]
+
+
+Number of calls: 1
+
+ ❯ src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts:96:34
+     94|     const { component, api, view } = create();
+     95|     component.expectedDigest = 'not a digest'; component.verifyProof()…
+     96|     expect(api.verifyProof$).not.toHaveBeenCalled();
+       |                                  ^
+     97|     expect(component.loadError).toContain('hexadecimal');
+     98|   });
+ ❯ new ZoneAwarePromise ../../../mempool/frontend/node_modules/zone.js/fesm2015/zone.js:2701:25
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/21]⎯
+
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > distinguishes HTTP 400 failures without preserving an old positive verdict
+AssertionError: expected ' This deployment does not serve this …' to contain 'Invalid proof'
+
+Expected: "Invalid proof"
+Received: " This deployment does not serve this data yet. Verify OpenTimestamps Proof (.ots)Cryptographically evaluate Merkle branching operations up to the Bitcoin Block Header Merkle Root.Back to OverviewUpload or Paste .ots File / Base64Proof Base64 Data Verify Cryptographic Proof Paste proof base64 to execute cryptographic verification against Bitcoin block headers."
+
+ ❯ src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts:108:44
+    106|     api.verifyProof$.mockReturnValue(throwError(() => new HttpErrorRes…
+    107|     component.verifyProof(); view.detectChanges();
+    108|     expect(view.nativeElement.textContent).toContain(heading);
+       |                                            ^
+    109|     expect(view.nativeElement.textContent).toContain('Specific verifie…
+    110|     expect(view.nativeElement.textContent).not.toContain('BITCOIN CONF…
+ ❯ new ZoneAwarePromise ../../../mempool/frontend/node_modules/zone.js/fesm2015/zone.js:2701:25
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/21]⎯
+
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > distinguishes HTTP 503 failures without preserving an old positive verdict
+AssertionError: expected ' The service behind this panel is una…' to contain 'Verification unavailable'
+
+Expected: "Verification unavailable"
+Received: " The service behind this panel is unavailable. Verify OpenTimestamps Proof (.ots)Cryptographically evaluate Merkle branching operations up to the Bitcoin Block Header Merkle Root.Back to OverviewUpload or Paste .ots File / Base64Proof Base64 Data Verify Cryptographic Proof Paste proof base64 to execute cryptographic verification against Bitcoin block headers."
+
+ ❯ src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts:108:44
+    106|     api.verifyProof$.mockReturnValue(throwError(() => new HttpErrorRes…
+    107|     component.verifyProof(); view.detectChanges();
+    108|     expect(view.nativeElement.textContent).toContain(heading);
+       |                                            ^
+    109|     expect(view.nativeElement.textContent).toContain('Specific verifie…
+    110|     expect(view.nativeElement.textContent).not.toContain('BITCOIN CONF…
+ ❯ new ZoneAwarePromise ../../../mempool/frontend/node_modules/zone.js/fesm2015/zone.js:2701:25
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/21]⎯
+
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > clears an old result when the proof input changes
+AssertionError: expected { …(14) } to be null
+
+- Expected: 
+null
+
++ Received: 
+{
+  "attestation_type": "bitcoin",
+  "bitcoin_block_hash": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+  "calendar_attestations": [],
+  "digest_matches": null,
+  "earliest_proven_block_height": 123,
+  "earliest_proven_time_utc": "2026-09-06T00:00:00Z",
+  "errors": [],
+  "file_digest": "abababababababababababababababababababababababababababababababab",
+  "file_hash_algorithm": "sha256",
+  "network": "mainnet",
+  "notices": [],
+  "operation_count": 4,
+  "status": "bitcoin_attestation_verified",
+  "verified": true,
+}
+
+ ❯ src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts:118:42
+    116|     const proof = view.nativeElement.querySelector('textarea');
+    117|     proof.value = 'different-proof'; proof.dispatchEvent(new Event('in…
+    118|     expect(component.verificationResult).toBeNull();
+       |                                          ^
+    119|     expect(view.nativeElement.textContent).not.toContain('BITCOIN CONF…
+    120|   });
+ ❯ new ZoneAwarePromise ../../../mempool/frontend/node_modules/zone.js/fesm2015/zone.js:2701:25
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/21]⎯
+
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > clears and cancels verification on a network change, including a late old-network response
+AssertionError: expected { …(14) } to be null
+
+- Expected: 
+null
+
++ Received: 
+{
+  "attestation_type": "bitcoin",
+  "bitcoin_block_hash": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+  "calendar_attestations": [],
+  "digest_matches": null,
+  "earliest_proven_block_height": 123,
+  "earliest_proven_time_utc": "2026-09-06T00:00:00Z",
+  "errors": [],
+  "file_digest": "abababababababababababababababababababababababababababababababab",
+  "file_hash_algorithm": "sha256",
+  "network": "mainnet",
+  "notices": [],
+  "operation_count": 4,
+  "status": "bitcoin_attestation_verified",
+  "verified": true,
+}
+
+
+ ❯ src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts:127:42
+    125|     component.verifyProof(); state.network = 'signet'; networkChanged$…
+    126|     response$.next(anchored); view.detectChanges();
+    127|     expect(component.verificationResult).toBeNull();
+       |                                          ^
+    128|     expect(component.verifying).toBe(false);
+    129|     expect(view.nativeElement.textContent).not.toContain('BITCOIN CONF…
+ ❯ new ZoneAwarePromise ../../../mempool/frontend/node_modules/zone.js/fesm2015/zone.js:2701:25
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/21]⎯
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  21 failed | 2 passed (23)
+   Start at  13:53:31
+   Duration  2.41s (transform 186ms, setup 137ms, collect 685ms, tests 259ms, environment 901ms, prepare 328ms)
+

@@ -32,6 +32,29 @@ export interface Musig2Session {
   is_valid: boolean;
 }
 
+export interface Musig2VerificationRequest {
+  participant_public_keys: string[];
+  message_hash: string;
+  public_nonces?: string[];
+  partial_signatures?: string[];
+  final_signature?: string;
+}
+
+export interface Musig2VerificationResult {
+  verified: boolean;
+  stage: 'invalid-input' | 'partial-session' | 'verified-session';
+  scope: 'bip327-untweaked-public-transcript';
+  participant_count: number;
+  aggregate_public_key: string | null;
+  key_aggregation_verified: boolean;
+  nonce_aggregation_verified: boolean;
+  partial_signature_validity: boolean[];
+  final_bip340_valid: boolean | null;
+  final_signature: string | null;
+  errors: string[];
+  warnings: string[];
+}
+
 export interface MultipartyOverview {
   total_products: number;
   supported_protocols: string[];
@@ -79,14 +102,13 @@ export class MultipartyApiService {
     );
   }
 
-  verifyMusig2Session$(session: any): Observable<any> {
-    return this.httpClient.post<any>(
+  verifyMusig2Session$(session: Musig2VerificationRequest | { cosigners: string[]; message_digest: string }): Observable<Musig2VerificationResult> {
+    const request = 'participant_public_keys' in session ? session : {
+      participant_public_keys: session.cosigners, message_hash: session.message_digest,
+    };
+    return this.httpClient.post<Musig2VerificationResult>(
       `${this.apiBaseUrl}/api/v1/intelligence/multiparty/public-sessions/verify`,
-      {
-        ...session,
-        participant_public_keys: session.participant_public_keys ?? session.cosigners,
-        message_hash: session.message_hash ?? session.message_digest,
-      }
+      request
     );
   }
 
