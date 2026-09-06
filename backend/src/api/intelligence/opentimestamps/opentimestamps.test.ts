@@ -13,12 +13,12 @@ describe('OpenTimestampsService', () => {
       .toThrow(expect.objectContaining({ code: 'unavailable-calendar', status: 503 }));
   });
 
-  it.each(['verified-proof-data', 'pending-proof-data'])('does not classify a proof from the text %s', async ots_proof => {
+  it.each(['verified-proof-data', 'pending-proof-data'])('does not classify a proof from the text %s', /** @asyncUnsafe Jest awaits this test and reports its rejection. */ async ots_proof => {
     await expect(openTimestampsService.verifyProof({ digest: 'ab'.repeat(32), ots_proof }))
       .rejects.toMatchObject({ code: 'invalid-proof', status: 400 });
   });
 
-  it('validates the actual browser proof field without inventing a verdict', async () => {
+  it('validates the actual browser proof field without inventing a verdict', /** @asyncUnsafe Jest awaits this test and reports its rejection. */ async () => {
     await expect(openTimestampsService.verifyProof({ proof: 'BAAAAAAAb3Rz' }))
       .rejects.toMatchObject({ code: 'invalid-proof', status: 400 });
     await expect(openTimestampsService.verifyProof({})).rejects.toMatchObject({ status: 400 });

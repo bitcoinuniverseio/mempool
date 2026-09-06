@@ -35,7 +35,7 @@ describe('verification evidence integrity', () => {
     expect(() => timestampsService.upgradeProof({ ots_proof: 'pending-proof-data' })).toThrow(/unavailable/i);
   });
 
-  it('rejects malformed successful proof inputs instead of verifying an empty object', async () => {
+  it('rejects malformed successful proof inputs instead of verifying an empty object', /** @asyncUnsafe Jest awaits this test and reports its rejection. */ async () => {
     await expect(timestampsService.verifyProof({})).rejects.toThrow(/proof/i);
     expect(() => timestampsService.stampDigest('z'.repeat(64))).toThrow(/digest/i);
   });

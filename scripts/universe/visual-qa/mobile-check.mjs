@@ -75,12 +75,15 @@ if (!BROWSER) {
  */
 const CAN_EMULATE_MOBILE = ENGINE_NAME !== 'firefox';
 
-function mobileBrowserLaunchOptions(browser, engineName = 'chromium') {
+function mobileBrowserLaunchOptions(browser, engineName = 'chromium', executablePath) {
+  if (executablePath !== undefined && (engineName !== 'chromium' || typeof executablePath !== 'string' || !executablePath.trim())) {
+    throw new Error('--executable requires a nonempty Chromium executable path and --browser=chromium');
+  }
   const windowsChromium = process.platform === 'win32' && engineName === 'chromium';
   return {
     // Explicit bounds keep Windows headless Chromium from creating a window
     // against an empty desktop work area. Page viewports remain set below.
-    ...(windowsChromium ? { executablePath: browser.executablePath() } : {}),
+    ...(executablePath ? { executablePath } : windowsChromium ? { executablePath: browser.executablePath() } : {}),
     args: engineName === 'chromium' ? [
       ...(windowsChromium ? ['--window-size=1440,1000', '--window-position=0,0'] : []),
       '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader',
@@ -792,209 +795,253 @@ async function run() {
     pass('viewport', 'zoom is not restricted');
   }
 
-  const browser = await BROWSER.launch(mobileBrowserLaunchOptions(BROWSER, ENGINE_NAME));
-
   const report = [];
+  const cases = viewports.flatMap((viewport) => routes
+    .filter((route) => args.viewports || FULL_SWEEP_ROUTE_IDS.has(route.id) || NARROW_VIEWPORT_IDS.has(viewport.id))
+    .map((route) => ({ route: route.id, viewport: viewport.id, status: 'not-measured' })));
+  const casesByScope = new Map(cases.map((entry) => [`${entry.route}@${entry.viewport}`, entry]));
+  const writeReport = () => writeFileSync(join(OUT, 'mobile-report.json'), JSON.stringify({
+    base: BASE, browser: ENGINE_NAME, build, report, findings, grazes, passes,
+    executionComplete: cases.every((entry) => entry.status === 'measured'), cases,
+  }, null, 2));
+  writeReport();
 
-  for (const viewport of viewports) {
-    const context = await browser.newContext({
-      viewport: { width: viewport.width, height: viewport.height },
-      deviceScaleFactor: 1,
-      serviceWorkers: 'block',
-      // Emulate the device, not just its size.
-      //
-      // `hasTouch` alone delivers touch events and leaves the CSS pointer
-      // reporting `fine`, so every `@media (pointer: coarse)` rule in the
-      // product went unexercised here while appearing to be covered. That is
-      // the worst kind of gap: a run that is green about rules it never ran.
-      // `isMobile` is what makes Chromium report a coarse pointer and no hover,
-      // which is the environment those rules are written for.
-      hasTouch: viewport.compact && CAN_EMULATE_MOBILE,
-      ...(CAN_EMULATE_MOBILE ? { isMobile: viewport.compact } : {}),
-      ...(viewport.compact && CAN_EMULATE_MOBILE ? { userAgent: devices['Pixel 7']?.userAgent } : {}),
-    });
-    await installFixtures(context, 'populated');
-
-    // A cutout the browser cannot supply.
-    //
-    // Headless Chromium has no notch, so env(safe-area-inset-*) is zero
-    // everywhere and every safe-area rule in the product is exercised with the
-    // one value that makes it a no-op. Overriding the four custom properties
-    // gives the layout real numbers to reserve room for, which is the thing
-    // worth testing: whether the bar moves clear of a home indicator, not
-    // whether env() parses.
-    if (viewport.insets) {
-      const { top, bottom, left, right } = viewport.insets;
-      await context.addInitScript(([t, b, l, r]) => {
-        const style = document.createElement('style');
-        style.textContent = `:root{--u-safe-top:${t}px;--u-safe-bottom:${b}px;--u-safe-left:${l}px;--u-safe-right:${r}px;}`;
-        const attach = () => document.head?.appendChild(style);
-        if (document.head) attach();
-        else document.addEventListener('DOMContentLoaded', attach, { once: true });
-      }, [top, bottom, left, right]);
-    }
-
-    for (const route of routes) {
-      // The second tier. A route outside the full sweep is measured at the
-      // three narrow windows only; asking for a viewport explicitly overrides
-      // the tiering, because a run with --viewports is someone chasing one
-      // thing and it should measure exactly what was asked for.
-      if (!args.viewports && !FULL_SWEEP_ROUTE_IDS.has(route.id) && !NARROW_VIEWPORT_IDS.has(viewport.id)) {
-        continue;
-      }
-      const page = await context.newPage();
-      const scope = `${route.id}@${viewport.id}`;
+  try {
+    for (const viewport of viewports) {
+      // Contexts were already independent between viewports. Bound the engine's
+      // lifetime to the same interval, with one browser and one page at a time.
+      let browser;
+      let context;
+      let page;
+      console.log(`[${ENGINE_NAME}] Starting viewport ${viewport.id}`);
       try {
-        // One retry, at the same budget, before a navigation is called a failure.
+        browser = await BROWSER.launch(mobileBrowserLaunchOptions(BROWSER, ENGINE_NAME, args.executable));
+        context = await browser.newContext({
+          viewport: { width: viewport.width, height: viewport.height },
+          deviceScaleFactor: 1,
+          serviceWorkers: 'block',
+          // Emulate the device, not just its size.
+          //
+          // `hasTouch` alone delivers touch events and leaves the CSS pointer
+          // reporting `fine`, so every `@media (pointer: coarse)` rule in the
+          // product went unexercised here while appearing to be covered. That is
+          // the worst kind of gap: a run that is green about rules it never ran.
+          // `isMobile` is what makes Chromium report a coarse pointer and no hover,
+          // which is the environment those rules are written for.
+          hasTouch: viewport.compact && CAN_EMULATE_MOBILE,
+          ...(CAN_EMULATE_MOBILE ? { isMobile: viewport.compact } : {}),
+          ...(viewport.compact && CAN_EMULATE_MOBILE ? { userAgent: devices['Pixel 7']?.userAgent } : {}),
+        });
+        await installFixtures(context, 'populated');
+
+        // A cutout the browser cannot supply.
         //
-        // A single timeout here is not evidence about the page. Firefox timed out
-        // once on home at tablet-768 and, on the next run of the same commit
-        // range, once on tx in landscape: different route, different window, same
-        // budget. That is the harness, not the product, and it runs after three
-        // WebKit shards have had the machine. A page that genuinely never loads
-        // still fails, because it fails twice.
-        await gotoWithOneRetry(page, BASE + route.path);
-        await page.waitForTimeout(2_400);
-
-        if (route.open) {
-          const control = page.locator(route.open).first();
-          if (await control.count()) {
-            await control.click();
-            await page.waitForTimeout(400);
-          }
-        }
-
-        const m = await page.evaluate(mobileProbe, { touchFloor: TOUCH_FLOOR, fieldFloor: FIELD_FLOOR });
-        report.push({ route: route.id, viewport: viewport.id, ...m });
-
-        // --- overflow ---
-        if (m.overflowBy > 0) {
-          fail(scope, `the page scrolls sideways by ${m.overflowBy}px at ${m.viewportWidth}px`
-            + (m.culprits.length ? ` (${m.culprits.join('; ')})` : ''));
-        }
-        for (const c of m.clippers) {
-          fail(scope, c);
-        }
-        for (const s of m.scrollers) {
-          if (!s.declared) {
-            fail(scope, `${s.el} scrolls sideways without saying so, so whatever is past its edge is present and unreachable`);
-          } else if (!s.keyboardReachable) {
-            fail(scope, `${s.el} scrolls sideways and holds nothing focusable, so a keyboard cannot reach past its edge`);
-          }
-        }
-
-        // --- fields ---
-        //
-        // Only where a software keyboard is what opens. The desktop control
-        // window is here to prove the mobile work did not regress the wide
-        // layout, and a 14px field on a desktop with a mouse zooms nothing.
-        if (viewport.compact) {
-          for (const f of m.smallFields) {
-            fail(scope, `${f}, under the ${FIELD_FLOOR}px at which iOS Safari zooms the page in on focus and leaves it zoomed`);
-          }
-        }
-
-        // --- targets ---
-        if (viewport.compact && m.targetsBelowWcag.length) {
-          fail(scope, `${m.targetsBelowWcag.length} targets under 24px with another target inside the 24px circle around them, which is a WCAG 2.2 target-size failure: ${m.targetsBelowWcag.slice(0, 8).join(', ')}`);
-        }
-        if (viewport.compact && m.targetsBelowPlatform.length) {
-          fail(scope, `${m.targetsBelowPlatform.length} shell or repeated controls under ${TOUCH_FLOOR}px: ${m.targetsBelowPlatform.slice(0, 8).join(', ')}`);
-        }
-
-        // --- fixed layers ---
-        for (const h of m.atBottom.hidden) {
-          fail(scope, `at the bottom of the page, ${h}`);
-        }
-
-        // --- open surfaces ---
-        for (const s of m.overflowingSurfaces) {
-          fail(scope, s);
-        }
-
-        // --- the bar ---
-        if (viewport.compact && m.nav) {
-          if (m.nav.scrolls && !m.nav.affordance) {
-            fail(scope, 'the bottom bar scrolls sideways with nothing to say that it does');
-          }
-          if (m.nav.hasActive && m.nav.activeVisible === false) {
-            fail(scope, 'the current destination is scrolled out of sight in the bottom bar, so the bar disagrees with the page about where the visitor is');
-          }
-        }
-
-        // --- safe areas ---
+        // Headless Chromium has no notch, so env(safe-area-inset-*) is zero
+        // everywhere and every safe-area rule in the product is exercised with the
+        // one value that makes it a no-op. Overriding the four custom properties
+        // gives the layout real numbers to reserve room for, which is the thing
+        // worth testing: whether the bar moves clear of a home indicator, not
+        // whether env() parses.
         if (viewport.insets) {
           const { top, bottom, left, right } = viewport.insets;
-          if (bottom > 0 && m.chrome.barPadBottom !== null && m.chrome.barPadBottom < bottom) {
-            fail(scope, `the bottom bar reserves ${m.chrome.barPadBottom}px for a ${bottom}px home indicator, so its targets are in the gesture area`);
-          }
-          if (top > 0 && m.chrome.headerPadTop !== null && m.chrome.headerPadTop < top) {
-            fail(scope, `the header reserves ${m.chrome.headerPadTop}px for a ${top}px cutout, so it renders underneath it`);
-          }
-          const side = Math.max(left, right);
-          if (side > 0 && m.chrome.barPadLeft !== null && Math.max(m.chrome.barPadLeft, m.chrome.barPadRight) < side) {
-            fail(scope, `the bottom bar reserves ${m.chrome.barPadLeft}px at the sides for a ${side}px cutout, so a destination sits under it in landscape`);
-          }
+          await context.addInitScript(([t, b, l, r]) => {
+            const style = document.createElement('style');
+            style.textContent = `:root{--u-safe-top:${t}px;--u-safe-bottom:${b}px;--u-safe-left:${l}px;--u-safe-right:${r}px;}`;
+            const attach = () => document.head?.appendChild(style);
+            if (document.head) attach();
+            else document.addEventListener('DOMContentLoaded', attach, { once: true });
+          }, [top, bottom, left, right]);
         }
 
-        // --- focus, on the shell routes only ---
-        //
-        // Walking every focusable control on a table page is hundreds of
-        // focus moves and a frame apiece. The fault it looks for belongs to
-        // the shell rather than to any one page, so it is measured on the
-        // routes where the shell is all there is, and on the tallest and
-        // shortest windows where it actually bites.
-        if (viewport.compact && (route.id === 'home' || route.id === 'tx')) {
-          const focus = await focusWalk(page, 60);
-          for (const o of focus.hidden) {
-            fail(scope, `${o}, which is a WCAG 2.2 AA focus-obscured failure`);
+        for (const route of routes) {
+          // The second tier. A route outside the full sweep is measured at the
+          // three narrow windows only; asking for a viewport explicitly overrides
+          // the tiering, because a run with --viewports is someone chasing one
+          // thing and it should measure exactly what was asked for.
+          if (!args.viewports && !FULL_SWEEP_ROUTE_IDS.has(route.id) && !NARROW_VIEWPORT_IDS.has(viewport.id)) {
+            continue;
           }
-          for (const o of focus.grazed) {
-            grazes.push(`${scope}: ${o}`);
-          }
-        }
+          const scope = `${route.id}@${viewport.id}`;
+          const measurement = casesByScope.get(scope);
+          measurement.status = 'incomplete';
+          measurement.phase = page ? 'session-reset' : 'page-creation';
+          console.log(`[${ENGINE_NAME}] Measuring ${scope}`);
+          try {
+            if (page) {
+              // A fresh tab had empty session storage, while local storage and
+              // cookies already belonged to the shared viewport context.
+              if (page.url() !== 'about:blank') await page.evaluate(() => sessionStorage.clear());
+              // Force a new document even when two route URLs differ only by
+              // their hash. Keep the single tab and its viewport alive.
+              await page.goto('about:blank', { waitUntil: 'domcontentloaded', timeout: 45_000 });
+            } else {
+              page = await context.newPage();
+            }
+            measurement.phase = 'navigation';
+            // One retry, at the same budget, before a navigation is called a failure.
+            //
+            // A single timeout here is not evidence about the page. Firefox timed out
+            // once on home at tablet-768 and, on the next run of the same commit
+            // range, once on tx in landscape: different route, different window, same
+            // budget. That is the harness, not the product, and it runs after three
+            // WebKit shards have had the machine. A page that genuinely never loads
+            // still fails, because it fails twice.
+            await gotoWithOneRetry(page, BASE + route.path);
+            await page.waitForTimeout(2_400);
 
-        // --- continuity across a rotation ---
-        //
-        // Rotating a phone must not be a navigation. This turns the window on
-        // its side, then back, and checks that the route, the query string and
-        // the reading position all survived. A shell that rebuilds itself on
-        // resize loses all three, and it is invisible in a screenshot because
-        // every individual frame looks correct.
-        if (viewport.compact && route.id === 'tx') {
-          await page.evaluate(() => window.scrollTo(0, Math.min(600, document.body.scrollHeight)));
-          await page.waitForTimeout(250);
-          const before = await page.evaluate(() => ({ url: location.pathname + location.search, y: window.scrollY }));
-          await page.setViewportSize({ width: viewport.height, height: viewport.width });
-          await page.waitForTimeout(500);
-          await page.setViewportSize({ width: viewport.width, height: viewport.height });
-          await page.waitForTimeout(500);
-          const after = await page.evaluate(() => ({ url: location.pathname + location.search, y: window.scrollY }));
-          if (before.url !== after.url) {
-            fail(scope, `rotating the device navigated from ${before.url} to ${after.url}`);
-          } else if (Math.abs(before.y - after.y) > Math.max(200, viewport.height * 0.5)) {
-            fail(scope, `rotating the device moved the reading position from ${before.y} to ${after.y}`);
-          } else {
-            pass(scope, 'a rotation and a rotation back keep the route and the reading position');
+            if (route.open) {
+              const control = page.locator(route.open).first();
+              if (await control.count()) {
+                await control.click();
+                await page.waitForTimeout(400);
+              }
+            }
+
+            measurement.phase = 'probe';
+            const m = await page.evaluate(mobileProbe, { touchFloor: TOUCH_FLOOR, fieldFloor: FIELD_FLOOR });
+            report.push({ route: route.id, viewport: viewport.id, ...m });
+            measurement.phase = 'assertions';
+
+            // --- overflow ---
+            if (m.overflowBy > 0) {
+              fail(scope, `the page scrolls sideways by ${m.overflowBy}px at ${m.viewportWidth}px`
+                + (m.culprits.length ? ` (${m.culprits.join('; ')})` : ''));
+            }
+            for (const c of m.clippers) {
+              fail(scope, c);
+            }
+            for (const s of m.scrollers) {
+              if (!s.declared) {
+                fail(scope, `${s.el} scrolls sideways without saying so, so whatever is past its edge is present and unreachable`);
+              } else if (!s.keyboardReachable) {
+                fail(scope, `${s.el} scrolls sideways and holds nothing focusable, so a keyboard cannot reach past its edge`);
+              }
+            }
+
+            // --- fields ---
+            //
+            // Only where a software keyboard is what opens. The desktop control
+            // window is here to prove the mobile work did not regress the wide
+            // layout, and a 14px field on a desktop with a mouse zooms nothing.
+            if (viewport.compact) {
+              for (const f of m.smallFields) {
+                fail(scope, `${f}, under the ${FIELD_FLOOR}px at which iOS Safari zooms the page in on focus and leaves it zoomed`);
+              }
+            }
+
+            // --- targets ---
+            if (viewport.compact && m.targetsBelowWcag.length) {
+              fail(scope, `${m.targetsBelowWcag.length} targets under 24px with another target inside the 24px circle around them, which is a WCAG 2.2 target-size failure: ${m.targetsBelowWcag.slice(0, 8).join(', ')}`);
+            }
+            if (viewport.compact && m.targetsBelowPlatform.length) {
+              fail(scope, `${m.targetsBelowPlatform.length} shell or repeated controls under ${TOUCH_FLOOR}px: ${m.targetsBelowPlatform.slice(0, 8).join(', ')}`);
+            }
+
+            // --- fixed layers ---
+            for (const h of m.atBottom.hidden) {
+              fail(scope, `at the bottom of the page, ${h}`);
+            }
+
+            // --- open surfaces ---
+            for (const s of m.overflowingSurfaces) {
+              fail(scope, s);
+            }
+
+            // --- the bar ---
+            if (viewport.compact && m.nav) {
+              if (m.nav.scrolls && !m.nav.affordance) {
+                fail(scope, 'the bottom bar scrolls sideways with nothing to say that it does');
+              }
+              if (m.nav.hasActive && m.nav.activeVisible === false) {
+                fail(scope, 'the current destination is scrolled out of sight in the bottom bar, so the bar disagrees with the page about where the visitor is');
+              }
+            }
+
+            // --- safe areas ---
+            if (viewport.insets) {
+              const { top, bottom, left, right } = viewport.insets;
+              if (bottom > 0 && m.chrome.barPadBottom !== null && m.chrome.barPadBottom < bottom) {
+                fail(scope, `the bottom bar reserves ${m.chrome.barPadBottom}px for a ${bottom}px home indicator, so its targets are in the gesture area`);
+              }
+              if (top > 0 && m.chrome.headerPadTop !== null && m.chrome.headerPadTop < top) {
+                fail(scope, `the header reserves ${m.chrome.headerPadTop}px for a ${top}px cutout, so it renders underneath it`);
+              }
+              const side = Math.max(left, right);
+              if (side > 0 && m.chrome.barPadLeft !== null && Math.max(m.chrome.barPadLeft, m.chrome.barPadRight) < side) {
+                fail(scope, `the bottom bar reserves ${m.chrome.barPadLeft}px at the sides for a ${side}px cutout, so a destination sits under it in landscape`);
+              }
+            }
+
+            // --- focus, on the shell routes only ---
+            //
+            // Walking every focusable control on a table page is hundreds of
+            // focus moves and a frame apiece. The fault it looks for belongs to
+            // the shell rather than to any one page, so it is measured on the
+            // routes where the shell is all there is, and on the tallest and
+            // shortest windows where it actually bites.
+            if (viewport.compact && (route.id === 'home' || route.id === 'tx')) {
+              const focus = await focusWalk(page, 60);
+              for (const o of focus.hidden) {
+                fail(scope, `${o}, which is a WCAG 2.2 AA focus-obscured failure`);
+              }
+              for (const o of focus.grazed) {
+                grazes.push(`${scope}: ${o}`);
+              }
+            }
+
+            // --- continuity across a rotation ---
+            //
+            // Rotating a phone must not be a navigation. This turns the window on
+            // its side, then back, and checks that the route, the query string and
+            // the reading position all survived. A shell that rebuilds itself on
+            // resize loses all three, and it is invisible in a screenshot because
+            // every individual frame looks correct.
+            if (viewport.compact && route.id === 'tx') {
+              await page.evaluate(() => window.scrollTo(0, Math.min(600, document.body.scrollHeight)));
+              await page.waitForTimeout(250);
+              const before = await page.evaluate(() => ({ url: location.pathname + location.search, y: window.scrollY }));
+              await page.setViewportSize({ width: viewport.height, height: viewport.width });
+              await page.waitForTimeout(500);
+              await page.setViewportSize({ width: viewport.width, height: viewport.height });
+              await page.waitForTimeout(500);
+              const after = await page.evaluate(() => ({ url: location.pathname + location.search, y: window.scrollY }));
+              if (before.url !== after.url) {
+                fail(scope, `rotating the device navigated from ${before.url} to ${after.url}`);
+              } else if (Math.abs(before.y - after.y) > Math.max(200, viewport.height * 0.5)) {
+                fail(scope, `rotating the device moved the reading position from ${before.y} to ${after.y}`);
+              } else {
+                pass(scope, 'a rotation and a rotation back keep the route and the reading position');
+              }
+            }
+            measurement.status = 'measured';
+            measurement.phase = 'complete';
+          } catch (error) {
+            measurement.error = String(error).slice(0, 500);
+            fail(scope, `could not be measured: ${String(error).slice(0, 200)}`);
+            if (!browser.isConnected() || /ERR_CONNECTION_REFUSED|ECONNREFUSED|Target page, context or browser has been closed/.test(String(error))) {
+              console.error(`\nMeasurement stopped at ${scope}. The report preserves prior results and identifies all unfinished cases.`);
+              throw error;
+            }
+          } finally {
+            writeReport();
           }
         }
-      } catch (error) {
-        if (/ERR_CONNECTION_REFUSED|ECONNREFUSED/.test(String(error))) {
-          await browser.close().catch(() => undefined);
-          console.error(`\nThe server at ${BASE} stopped answering at ${scope}. Nothing after that point was measured, so this run proves nothing.`);
-          process.exit(1);
-        }
-        fail(scope, `could not be measured: ${String(error).slice(0, 200)}`);
       } finally {
-        await page.close().catch(() => undefined);
+        try {
+          await page?.close();
+        } finally {
+          await context?.close().catch(() => undefined);
+          await browser?.close();
+          writeReport();
+        }
       }
     }
-    await context.close();
+  } catch (error) {
+    fail('runner', `run incomplete: ${String(error).slice(0, 200)}`);
+    throw error;
+  } finally {
+    writeReport();
   }
-
-  await browser.close();
-
-  writeFileSync(join(OUT, 'mobile-report.json'), JSON.stringify({ base: BASE, browser: ENGINE_NAME, build, report, findings, grazes, passes }, null, 2));
 
   console.log(`\nMobile gate, build ${build}`);
   console.log(`${routes.length} routes across ${viewports.length} window sizes, ${report.length} measured pages\n`);
