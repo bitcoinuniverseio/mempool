@@ -2224,8 +2224,8 @@
     },
     {
       "path": "docs/acceptance/ci-repair-2026-09-06.json",
-      "sha256": "db87e2e0b8611144cdbcd3ff0d7b6fbe43d5c9df5191e6b3ad9d20572683d752",
-      "bytes": 33198
+      "sha256": "f0565b881cf02653b2e341d3c7790019e486eba0c3db3d1e27b7b9e193e21bc8",
+      "bytes": 34124
     },
     {
       "path": "docs/acceptance/current-execution-evidence.json",
@@ -37650,7 +37650,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01",
-          "sha256": "db87e2e0b8611144cdbcd3ff0d7b6fbe43d5c9df5191e6b3ad9d20572683d752"
+          "sha256": "f0565b881cf02653b2e341d3c7790019e486eba0c3db3d1e27b7b9e193e21bc8"
         }
       ],
       "blockers": [
@@ -37721,7 +37721,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01",
-          "sha256": "db87e2e0b8611144cdbcd3ff0d7b6fbe43d5c9df5191e6b3ad9d20572683d752"
+          "sha256": "f0565b881cf02653b2e341d3c7790019e486eba0c3db3d1e27b7b9e193e21bc8"
         }
       ],
       "blockers": [
@@ -37792,7 +37792,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01",
-          "sha256": "db87e2e0b8611144cdbcd3ff0d7b6fbe43d5c9df5191e6b3ad9d20572683d752"
+          "sha256": "f0565b881cf02653b2e341d3c7790019e486eba0c3db3d1e27b7b9e193e21bc8"
         }
       ],
       "blockers": [
