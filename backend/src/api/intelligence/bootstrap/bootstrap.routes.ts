@@ -21,6 +21,17 @@ class BootstrapRoutes {
       }
     });
 
+    // Every observed node, which is what the chainstates page asks for. It
+    // was calling this path already; only the per-node read existed, so the
+    // page received a 404 and rendered nothing.
+    app.get('/api/v1/intelligence/bootstrap/chainstates', (_req: Request, res: Response) => {
+      try {
+        res.json(bootstrapService.listNodeChainstates());
+      } catch (err: any) {
+        res.status(500).json({ error: err.message || 'Internal error' });
+      }
+    });
+
     app.get('/api/v1/intelligence/bootstrap/nodes/:nodeId/chainstates', (req: Request, res: Response) => {
       try {
         const chainstates = bootstrapService.getNodeChainstates(req.params.nodeId);

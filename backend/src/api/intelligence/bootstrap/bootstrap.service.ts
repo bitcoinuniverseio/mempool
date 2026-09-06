@@ -125,6 +125,10 @@ export class BootstrapService {
     return Array.from(this.nodes.values());
   }
 
+  public listNodeChainstates(): NodeBootstrapChainstateObservation[] {
+    return Array.from(this.chainstates.values());
+  }
+
   public getNodeChainstates(nodeId: string): NodeBootstrapChainstateObservation | undefined {
     return this.chainstates.get(nodeId);
   }

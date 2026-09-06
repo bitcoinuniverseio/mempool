@@ -74,16 +74,19 @@ export class BootstrapApiService {
     );
   }
 
+  // The backend mounts this as /verifications. The path this used to name
+  // has no route at all, so every verification request was a 404 and the page
+  // rendered its error branch, which used to report the snapshot as valid.
   verifySnapshotChecksum$(req: any): Observable<any> {
     return this.httpClient.post<any>(
-      `${this.apiBaseUrl}/api/v1/intelligence/bootstrap/snapshots/verify`,
+      `${this.apiBaseUrl}/api/v1/intelligence/bootstrap/verifications`,
       req
     );
   }
 
   generateBootstrapPlan$(req: any): Observable<any> {
     return this.httpClient.post<any>(
-      `${this.apiBaseUrl}/api/v1/intelligence/bootstrap/planner`,
+      `${this.apiBaseUrl}/api/v1/intelligence/bootstrap/plans`,
       req
     );
   }
