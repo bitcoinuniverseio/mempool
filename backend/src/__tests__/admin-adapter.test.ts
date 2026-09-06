@@ -1,7 +1,14 @@
 import { createHash, createHmac, randomBytes } from 'crypto';
+import express, { RequestHandler } from 'express';
+import { readFileSync } from 'fs';
+import { join } from 'path';
+import { Readable } from 'stream';
 import adminControl from '@bitcoinuniverse/ecosystem-contracts/admin-control';
 import {
   AdminAdapterNonceStore,
+  adminAdapterGuard,
+  adminAdapterJsonParser,
+  hasSignedAdminElevation,
   isPrivateRemoteAddress,
   parseAdminAdapterKeys,
   verifyAdminAdapterRequest,
@@ -30,7 +37,7 @@ const KEY_ID = 'control-center';
 const KEYS = [{ keyId: KEY_ID, secret: SECRET }];
 
 function signed(overrides: Record<string, any> = {}) {
-  const rawBody = Buffer.from(JSON.stringify({ input: {} }), 'utf8');
+  const rawBody = overrides.rawBody ?? Buffer.from(JSON.stringify({ input: {} }), 'utf8');
   const bodyDigest = createHash('sha256').update(rawBody).digest('hex');
   const timestamp = new Date().toISOString();
   const nonce = randomBytes(12).toString('base64url');
@@ -89,6 +96,79 @@ describe('parseAdminAdapterKeys', () => {
     expect(parseAdminAdapterKeys(`${KEY_ID}:${randomBytes(8).toString('base64')}`)).toHaveLength(0);
     expect(parseAdminAdapterKeys('nokeyid')).toHaveLength(0);
     expect(parseAdminAdapterKeys(undefined)).toHaveLength(0);
+  });
+});
+
+describe('Admin parser and signed elevation through actual middleware', () => {
+  const previousKeys = process.env.EXPLORER_ADMIN_ADAPTER_KEYS;
+  beforeAll(() => { process.env.EXPLORER_ADMIN_ADAPTER_KEYS = `${KEY_ID}:${SECRET.toString('base64')}`; });
+  afterAll(() => {
+    if (previousKeys === undefined) delete process.env.EXPLORER_ADMIN_ADAPTER_KEYS;
+    else process.env.EXPLORER_ADMIN_ADAPTER_KEYS = previousKeys;
+  });
+
+  function invoke(signedRequest: ReturnType<typeof signed>, captureBeforeGeneralParser = true): Promise<{ request: any; response: any; reached: boolean }> {
+    return new Promise((resolve, reject) => {
+      const request = Object.assign(Readable.from([signedRequest.rawBody]), {
+        method: signedRequest.method, originalUrl: signedRequest.originalUrl, url: signedRequest.originalUrl,
+        socket: { remoteAddress: '127.0.0.1' },
+        headers: { ...signedRequest.headers, 'content-type': 'application/json', 'content-length': String(signedRequest.rawBody.length) },
+      });
+      const response: any = { locals: {}, setHeader: jest.fn(), removeHeader: jest.fn(), status: jest.fn() };
+      response.status.mockReturnValue(response);
+      response.json = jest.fn(() => { resolve({ request, response, reached: false }); return response; });
+      const middleware: RequestHandler[] = [
+        ...(captureBeforeGeneralParser ? [adminAdapterJsonParser()] : []),
+        express.urlencoded({ extended: true, limit: '10mb' }), express.text({ type: ['text/plain', 'application/base64'], limit: '10mb' }),
+        express.json({ limit: '10mb' }), adminAdapterJsonParser(), adminAdapterGuard(),
+      ];
+      const next = (index: number): void => {
+        if (index === middleware.length) { resolve({ request, response, reached: true }); return; }
+        middleware[index](request as any, response, error => { if (error) reject(error); else next(index + 1); });
+      };
+      next(0);
+    });
+  }
+
+  it('mounts exact-body capture before the general parser in application startup', () => {
+    const startup = readFileSync(join(__dirname, '..', 'index.ts'), 'utf8');
+    const capture = startup.indexOf(".use('/internal/admin/v1', adminAdapterJsonParser())");
+    expect(capture).toBeGreaterThan(-1);
+    expect(capture).toBeLessThan(startup.indexOf('.use(express.urlencoded('));
+    expect(capture).toBeLessThan(startup.indexOf('.use(express.json('));
+  });
+  it('reproduces rejected signed POSTs without early capture', /** @asyncUnsafe Jest owns the test promise. */ async () => {
+    const result = await invoke(signed(), false);
+    expect(result.reached).toBe(false); expect(result.response.status).toHaveBeenCalledWith(401);
+  });
+  it('preserves exact signed whitespace through general parsers to the protected handler', /** @asyncUnsafe Jest owns the test promise. */ async () => {
+    const rawBody = Buffer.from('{ "input": { } }\n');
+    const result = await invoke(signed({ rawBody }));
+    expect(result.reached).toBe(true); expect(result.request.rawBody.equals(rawBody)).toBe(true);
+    expect(result.request.body).toEqual({ input: {} });
+  });
+  it('enforces the admin body limit before the larger public parser limit', /** @asyncUnsafe Jest owns the test promise. */ async () => {
+    await expect(invoke(signed({ rawBody: Buffer.alloc(256 * 1024 + 1, 32) }))).rejects.toMatchObject({ status: 413 });
+  });
+  it('does not promote an unsigned elevation header', /** @asyncUnsafe Jest owns the test promise. */ async () => {
+    const request = signed(); request.headers['x-bu-admin-elevated'] = '1';
+    const result = await invoke(request);
+    expect(result.reached).toBe(true); expect(hasSignedAdminElevation(result.response)).toBe(false);
+  });
+  it('accepts elevation only from the authenticated JSON claim', /** @asyncUnsafe Jest owns the test promise. */ async () => {
+    const result = await invoke(signed({ rawBody: Buffer.from(JSON.stringify({ input: {}, adminAuthorization: { elevated: true } })) }));
+    expect(result.reached).toBe(true); expect(hasSignedAdminElevation(result.response)).toBe(true);
+    expect(result.response.locals.adminAdapterAuthorization.keyId).toBe(KEY_ID);
+  });
+  it('rejects a changed elevation claim after signing', /** @asyncUnsafe Jest owns the test promise. */ async () => {
+    const request = signed({ rawBody: Buffer.from(JSON.stringify({ input: {}, adminAuthorization: { elevated: false } })) });
+    request.rawBody = Buffer.from(JSON.stringify({ input: {}, adminAuthorization: { elevated: true } }));
+    const result = await invoke(request);
+    expect(result.reached).toBe(false); expect(result.response.status).toHaveBeenCalledWith(401);
+  });
+  it('requires literal true rather than a truthy signed elevation value', /** @asyncUnsafe Jest owns the test promise. */ async () => {
+    const result = await invoke(signed({ rawBody: Buffer.from(JSON.stringify({ input: {}, adminAuthorization: { elevated: 'true' } })) }));
+    expect(result.reached).toBe(true); expect(hasSignedAdminElevation(result.response)).toBe(false);
   });
 });
 

@@ -4,6 +4,10 @@ import {
   DifficultyAdjustment,
 } from '../../api/difficulty-adjustment';
 
+// These calculation tests do not use the RPC poller or native block generator.
+jest.mock('../../api/backend-info', () => ({}));
+jest.mock('rust-gbt', () => ({ GbtGenerator: jest.fn() }));
+
 describe('Mempool Difficulty Adjustment', () => {
   test('should calculate Difficulty Adjustments properly', () => {
     const dt = (dtString) => {

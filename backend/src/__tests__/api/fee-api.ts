@@ -1,5 +1,10 @@
 import feeApi from '../../api/fee-api';
 import { IBitcoinApi } from '../../api/bitcoin/bitcoin-api.interface';
+
+// These calculation tests do not use the RPC poller or native block generator.
+jest.mock('../../api/backend-info', () => ({}));
+jest.mock('rust-gbt', () => ({ GbtGenerator: jest.fn() }));
+
 const feeMempoolBlocks = require('./test-data/fee-mempool-blocks.json');
 
 

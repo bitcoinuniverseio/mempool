@@ -105,8 +105,18 @@ instant and one that feels frozen, and it is invisible in every other number.
 | `explorer.release.rollback` | IRREVERSIBLE | Puts the previous verified release back in service |
 
 `HIGH_RISK` and `IRREVERSIBLE` operations need a typed confirmation, refuse
-retries, and are rejected without an elevated action header even when the
-service signature verifies. A leaked service key cannot reach them.
+retries, and require `adminAuthorization.elevated: true` in the signed JSON
+body alongside `input`. An unsigned `x-bu-admin-elevated` header grants no
+authority. The existing HMAC signing representation remains unchanged because
+its body digest now authenticates the elevation declaration. The Control Center
+must check user permissions, typed confirmation and reauthentication before
+signing that declaration; possession of its service key remains a trusted
+capability, not independent proof of a user's identity.
+
+Admin JSON requests are limited to 256 KiB. Their exact bytes are captured
+before the application's general parsers run, so whitespace and key ordering
+remain covered by the signature. Existing non-elevated signed requests keep
+their contract; elevated callers must include the signed body declaration.
 
 `explorer.service.restart` and `explorer.release.rollback` report
 `not_configured` with the exact reason until an operator wires a deployment

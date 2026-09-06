@@ -54,6 +54,7 @@ import mempoolBlocks from './api/mempool-blocks';
 import walletApi from './api/services/wallets';
 import stratumApi from './api/services/stratum';
 import adminAdapterRoutes from './api/admin-adapter/admin-adapter.routes';
+import { adminAdapterJsonParser } from './api/admin-adapter/admin-adapter.security';
 import adminAdapterRunStore from './api/admin-adapter/admin-adapter.runs';
 import { runtimeMetrics, runtimeMetricsMiddleware } from './api/admin-adapter/admin-adapter.runtime';
 import fractalRoutes from './api/fractal/fractal.routes';
@@ -211,6 +212,7 @@ class Server {
         res.setHeader('Access-Control-Expose-Headers', 'X-Total-Count,X-Mempool-Auth');
         next();
       })
+      .use('/internal/admin/v1', adminAdapterJsonParser())
       .use(express.urlencoded({ extended: true, limit: '10mb' }))
       .use(express.text({ type: ['text/plain', 'application/base64'], limit: '10mb' }))
       .use(express.json({ limit: '10mb' }))
