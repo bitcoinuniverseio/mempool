@@ -1,3 +1,5 @@
+import { ChainHealthService } from '../chain-health.service';
+import { ChainHealthDetailsComponent } from './chain-health-details.component';
 import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
@@ -218,7 +220,7 @@ const PRESENTED_FIELDS: Partial<Record<ChainShape, readonly string[]>> = {
 @Component({
   selector: 'app-multichain-explorer',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, ChainHealthDetailsComponent],
   templateUrl: './multichain-explorer.component.html',
   styleUrls: ['./multichain-explorer.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -241,6 +243,7 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
     private readonly route: ActivatedRoute,
     private readonly router: Router,
     private readonly api: UniverseApiService,
+    private readonly health: ChainHealthService,
     private readonly live: UniverseWebsocketService,
     private readonly local: UniverseLocalService,
     private readonly seo: SeoService,
@@ -282,12 +285,10 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
           auditTime(100),
           switchMap(() =>
             combineLatest([
-              this.api.getChainStatus$(this.chain).pipe(
-                map((capability) => ({ capability, error: null })),
-                catchError((error) =>
-                  of({ capability: null, error: this.errorMessage(error) })
-                )
-              ),
+              this.health.state$.pipe(map(status => ({
+                capability: status.capabilities.find(row => row.chain === this.chain) ?? null,
+                error: status.error,
+              }))),
               this.pageRequest$(context).pipe(
                 map((payload) => ({ payload, error: null })),
                 catchError((error) =>

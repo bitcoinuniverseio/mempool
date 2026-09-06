@@ -1,5 +1,10 @@
 import { Application, Request, Response } from 'express';
-import bootstrapService from './bootstrap.service';
+import bootstrapService, { BootstrapEvidenceError } from './bootstrap.service';
+
+function fail(res: Response, err: unknown): Response {
+  if (err instanceof BootstrapEvidenceError) return res.status(err.status).json({ stage: err.code, error: err.message });
+  return res.status(500).json({ error: 'Internal error' });
+}
 
 class BootstrapRoutes {
   public initRoutes(app: Application): void {
@@ -8,7 +13,7 @@ class BootstrapRoutes {
         const overview = bootstrapService.getOverview();
         res.json(overview);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -17,7 +22,7 @@ class BootstrapRoutes {
         const nodes = bootstrapService.listNodes();
         res.json(nodes);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -28,7 +33,7 @@ class BootstrapRoutes {
       try {
         res.json(bootstrapService.listNodeChainstates());
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -40,7 +45,7 @@ class BootstrapRoutes {
         }
         res.json(chainstates);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -49,7 +54,7 @@ class BootstrapRoutes {
         const snapshots = bootstrapService.listSnapshots();
         res.json(snapshots);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -61,7 +66,7 @@ class BootstrapRoutes {
         }
         res.json(snapshot);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -73,7 +78,7 @@ class BootstrapRoutes {
         }
         res.json(snapshot.manifest);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -82,7 +87,7 @@ class BootstrapRoutes {
         const verification = bootstrapService.verifySnapshot(req.body);
         res.json(verification);
       } catch (err: any) {
-        res.status(400).json({ error: err.message || 'Verification error' });
+        fail(res, err);
       }
     });
 
@@ -94,7 +99,7 @@ class BootstrapRoutes {
         }
         res.json(verification);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -103,7 +108,7 @@ class BootstrapRoutes {
         const plan = bootstrapService.createBootstrapPlan(req.body);
         res.json(plan);
       } catch (err: any) {
-        res.status(400).json({ error: err.message || 'Plan generation failed' });
+        fail(res, err);
       }
     });
 
@@ -115,7 +120,7 @@ class BootstrapRoutes {
         });
         res.json(job);
       } catch (err: any) {
-        res.status(400).json({ error: err.message || 'Snapshot generation job failed' });
+        fail(res, err);
       }
     });
 
@@ -128,7 +133,7 @@ class BootstrapRoutes {
         });
         res.json(job);
       } catch (err: any) {
-        res.status(400).json({ error: err.message || 'Snapshot load job failed' });
+        fail(res, err);
       }
     });
 
@@ -140,7 +145,7 @@ class BootstrapRoutes {
         }
         res.json(job);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
   }

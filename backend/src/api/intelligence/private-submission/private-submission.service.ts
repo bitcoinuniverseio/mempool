@@ -99,10 +99,10 @@ export class PrivateSubmissionService {
     errors: string[];
   } {
     const errors: string[] = [];
-    if (!receipt.provider_id) errors.push('provider_id is required');
-    if (!receipt.receipt_id) errors.push('receipt_id is required');
-    if (!receipt.provider_signature) errors.push('provider_signature is required');
-    if (!receipt.txid || receipt.txid.length !== 64) errors.push('Valid 32-byte txid is required');
+    if (typeof receipt?.provider_id !== 'string' || !receipt.provider_id.trim()) errors.push('provider_id is required');
+    if (typeof receipt?.receipt_id !== 'string' || !receipt.receipt_id.trim()) errors.push('receipt_id is required');
+    if (typeof receipt?.provider_signature !== 'string' || !receipt.provider_signature.trim()) errors.push('provider_signature is required');
+    if (typeof receipt?.txid !== 'string' || !/^[0-9a-f]{64}$/i.test(receipt.txid)) errors.push('Valid 32-byte txid is required');
 
     if (errors.length > 0) {
       return { verified: false, stage: 'invalid', errors };

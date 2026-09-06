@@ -1,258 +1,124 @@
-import crypto from 'crypto';
-import {
-  SigningProduct,
-  MuSig2PublicSessionSchema,
-  WalletPolicyFixture,
-  BsmsFixture,
-  MultipartyOverviewResponse,
-} from './multiparty.models';
+import * as secp256k1 from 'tiny-secp256k1';
+import { SigningProduct, MuSig2PublicSessionSchema, MultipartyOverviewResponse } from './multiparty.models';
+
+export class MultipartyEvidenceError extends Error {
+  constructor(public readonly code: string, message: string, public readonly status = 503) {
+    super(message);
+  }
+}
+
+const missingEngine = 'MuSig2 verification is unavailable. BIP327 participant-key aggregation, public-nonce and partial-signature verification are not connected. A final BIP340 check alone cannot verify this session.';
+const sourceUnavailable = (): never => {
+  throw new MultipartyEvidenceError('unavailable-signing-source',
+    'Signing capability evidence is unavailable. A trusted product directory and actual version-specific test results are required.');
+};
+const hex = (value: unknown, bytes: number): value is string =>
+  typeof value === 'string' && value.length === bytes * 2 && /^[0-9a-f]+$/i.test(value);
 
 export class MultipartyService {
-  private products: Map<string, SigningProduct> = new Map();
-  private policies: Map<string, WalletPolicyFixture> = new Map();
-  private bsmsFixtures: Map<string, BsmsFixture> = new Map();
-
-  constructor() {
-    this.seedReferenceFixtures();
-  }
-
-  private seedReferenceFixtures(): void {
-    const product1: SigningProduct = {
-      product_id: 'coldcard-mk4-q',
-      vendor_name: 'Coinkite',
-      product_name: 'COLDCARD Q',
-      firmware_version: '1.2.0Q',
-      capabilities: {
-        psbt_v0: true,
-        psbt_v2: true,
-        musig2_bip327: true,
-        musig2_psbt_bip373: true,
-        musig_descriptor_bip390: true,
-        wallet_policy_bip388: true,
-        bsms_bip129: true,
-        labels_bip329: true,
-        frost_rfc9591_compatible: false,
-        frost_bip340_ready: false,
-      },
-      test_vector_results: {
-        passed_count: 48,
-        failed_count: 0,
-        total_count: 48,
-      },
-      last_verified_at: '2026-08-20T00:00:00Z',
-    };
-
-    const product2: SigningProduct = {
-      product_id: 'bitbox02-btc',
-      vendor_name: 'Shift Crypto',
-      product_name: 'BitBox02 Bitcoin-only',
-      firmware_version: '9.18.0',
-      capabilities: {
-        psbt_v0: true,
-        psbt_v2: true,
-        musig2_bip327: true,
-        musig2_psbt_bip373: true,
-        musig_descriptor_bip390: false,
-        wallet_policy_bip388: true,
-        bsms_bip129: true,
-        labels_bip329: true,
-        frost_rfc9591_compatible: false,
-        frost_bip340_ready: false,
-      },
-      test_vector_results: {
-        passed_count: 42,
-        failed_count: 0,
-        total_count: 42,
-      },
-      last_verified_at: '2026-08-22T00:00:00Z',
-    };
-
-    const product3: SigningProduct = {
-      product_id: 'sparrow-desktop',
-      vendor_name: 'Sparrow Wallet',
-      product_name: 'Sparrow Wallet Desktop',
-      firmware_version: '2.1.0',
-      capabilities: {
-        psbt_v0: true,
-        psbt_v2: true,
-        musig2_bip327: true,
-        musig2_psbt_bip373: true,
-        musig_descriptor_bip390: true,
-        wallet_policy_bip388: true,
-        bsms_bip129: true,
-        labels_bip329: true,
-        frost_rfc9591_compatible: true,
-        frost_bip340_ready: false, // RFC9591 is not automatically BIP340 Bitcoin ready
-      },
-      test_vector_results: {
-        passed_count: 52,
-        failed_count: 0,
-        total_count: 52,
-      },
-      last_verified_at: '2026-08-25T00:00:00Z',
-    };
-
-    this.products.set(product1.product_id, product1);
-    this.products.set(product2.product_id, product2);
-    this.products.set(product3.product_id, product3);
-
-    const pol1: WalletPolicyFixture = {
-      policy_id: 'policy-2of3-multisig',
-      name: 'Standard 2-of-3 Multisig Policy',
-      policy_template: 'wsh(sortedmulti(2,@0/**,@1/**,@2/**))',
-      keys_vector: [
-        "[d34db33f/48'/0'/0'/2']xpub6E.../0/*",
-        "[e45fc21a/48'/0'/0'/2']xpub6F.../0/*",
-        "[f56da10b/48'/0'/0'/2']xpub6G.../0/*",
-      ],
-      descriptor_checksum: 'h78g49d2',
-      first_receive_address: 'bc1q...',
-      first_change_address: 'bc1q...',
-      is_valid: true,
-    };
-    this.policies.set(pol1.policy_id, pol1);
-
-    const bsms1: BsmsFixture = {
-      record_id: 'bsms-setup-2of3-demo',
-      bip_version: 'BIP129-v1',
-      token_mode: 'plain',
-      descriptor_record: 'wsh(sortedmulti(2,[d34db33f/48h/0h/0h/2h]xpub.../0/*,...))',
-      participants_count: 3,
-      threshold_m: 2,
-      total_n: 3,
-      first_address_verified: true,
-      mac_valid: true,
-    };
-    this.bsmsFixtures.set(bsms1.record_id, bsms1);
-  }
-
   public getOverview(): MultipartyOverviewResponse {
-    const prods = Array.from(this.products.values());
-    const bip373Count = prods.filter((p) => p.capabilities.musig2_psbt_bip373).length;
-    const bip388Count = prods.filter((p) => p.capabilities.wallet_policy_bip388).length;
-    const bsmsCount = prods.filter((p) => p.capabilities.bsms_bip129).length;
-
-    return {
-      total_products: prods.length,
-      bip373_ready_count: bip373Count,
-      bip388_ready_count: bip388Count,
-      bsms_ready_count: bsmsCount,
-      active_sessions_count: 14,
-      products: prods,
-      sample_policies: Array.from(this.policies.values()),
-    };
+    return sourceUnavailable();
   }
 
   public listProducts(): SigningProduct[] {
-    return Array.from(this.products.values());
+    return sourceUnavailable();
   }
 
-  public getProduct(productId: string): SigningProduct | undefined {
-    return this.products.get(productId);
+  public getProduct(_productId: string): SigningProduct | undefined {
+    return sourceUnavailable();
   }
 
-  public getCompatibility(): any {
-    return {
-      matrix: Array.from(this.products.values()).map((p) => ({
-        product_id: p.product_id,
-        vendor: p.vendor_name,
-        name: p.product_name,
-        capabilities: p.capabilities,
-      })),
-      protocols: {
-        musig2: 'BIP-327 & BIP-373 (n-of-n Schnorr)',
-        wallet_policies: 'BIP-388 (Signer descriptor templates)',
-        bsms: 'BIP-129 (Secure multisig setup coordinator)',
-        labels: 'BIP-329 (Wallet labels streaming)',
-        frost: 'RFC-9591 (Threshold Schnorr, explicit BIP-340 compatibility distinction)',
-      },
-    };
+  public getCompatibility(): never {
+    return sourceUnavailable();
   }
 
-  public getTestVectors(): any {
-    return {
-      bip327_key_aggregation: [
-        {
-          pubkeys: [
-            '0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798',
-            '03c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5',
-          ],
-          aggregate_xonly_pubkey: 'd6840fb25c2491f6e22e224869761fa62e87d21ea5ac30f8d2039ecb615d920b',
-          valid: true,
-        },
-      ],
-      bip388_wallet_policy: [
-        {
-          template: 'wsh(sortedmulti(2,@0/**,@1/**))',
-          valid: true,
-        },
-        {
-          template: 'wsh(multi(2,@0/**,@0/**))', // Duplicate key placeholder
-          valid: false,
-          error: 'Duplicate key placeholder detected',
-        },
-      ],
-    };
+  public getTestVectors(): never {
+    throw new MultipartyEvidenceError('unavailable-vector-source',
+      'Published MuSig2 and wallet-policy vector results are unavailable. The previous generated examples were not executed conformance tests.');
   }
 
   public verifyPublicSession(session: Partial<MuSig2PublicSessionSchema>): {
-    verified: boolean;
+    verified: false;
+    stage: 'invalid-input' | 'unavailable-musig2-engine';
+    error: string;
     has_duplicate_nonces: boolean;
-    aggregate_public_key: string;
-    final_bip340_valid: boolean;
+    aggregate_public_key: null;
+    provided_aggregate_public_key: string | null;
+    key_aggregation_verified: false;
+    final_bip340_valid: boolean | null;
+    final_signature_scope: string;
     errors: string[];
     warnings: string[];
   } {
     const errors: string[] = [];
     const warnings: string[] = [];
-
-    if (!session.participant_public_keys || session.participant_public_keys.length < 2) {
-      errors.push('MuSig2 session requires at least 2 participant public keys');
+    const object = session && typeof session === 'object' && !Array.isArray(session);
+    const participants = object && Array.isArray(session.participant_public_keys) ? session.participant_public_keys : [];
+    if (participants.length < 2 || participants.length > 1000) {
+      errors.push('A session must contain between 2 and 1000 participant public keys.');
     }
-
-    // Check duplicate participants
-    const pubkeySet = new Set(session.participant_public_keys);
-    if (pubkeySet.size !== (session.participant_public_keys || []).length) {
-      errors.push('Duplicate participant public keys are prohibited in key aggregation');
+    if (!participants.every(key => hex(key, 33) && secp256k1.isPoint(Buffer.from(key, 'hex')))) {
+      errors.push('Participant public keys must encode compressed secp256k1 points.');
     }
-
-    // Check public nonces
-    const nonces = session.public_nonces || [];
-    const nonceSet = new Set(nonces);
-    const hasDuplicateNonces = nonceSet.size !== nonces.length;
-    if (hasDuplicateNonces) {
-      warnings.push('CRITICAL WARNING: Reused public nonce detected! Danger of secret nonce reuse.');
+    const participantKeys = participants.filter(key => typeof key === 'string').map(key => key.toLowerCase());
+    if (new Set(participantKeys).size !== participants.length) {
+      errors.push('Duplicate participant public keys are prohibited in this application.');
     }
+    const nonces = object && Array.isArray(session.public_nonces) ? session.public_nonces : [];
+    if (object && session.public_nonces !== undefined && !Array.isArray(session.public_nonces)) {
+      errors.push('Public nonces must be an array.');
+    }
+    if (nonces.some(nonce => typeof nonce !== 'string')) errors.push('Each public nonce must be a string.');
+    const nonceStrings = nonces.filter(nonce => typeof nonce === 'string').map(nonce => nonce.toLowerCase());
+    const hasDuplicateNonces = new Set(nonceStrings).size !== nonceStrings.length;
+    if (hasDuplicateNonces) warnings.push('Repeated public nonce detected. This is a local duplicate check, not verification of nonce generation or reuse across other sessions.');
 
-    // Compute deterministic aggregate key
-    const aggPubkey = crypto
-      .createHash('sha256')
-      .update((session.participant_public_keys || []).join(':'))
-      .digest('hex');
-
-    const finalSigValid = Boolean(session.final_signature && session.final_signature.length === 128);
+    let finalSigValid: boolean | null = null;
+    const providedKey = object && hex(session.aggregate_public_key, 32) ? session.aggregate_public_key : null;
+    if (object && session.final_signature !== undefined) {
+      if (!providedKey || !secp256k1.isXOnlyPoint(Buffer.from(providedKey, 'hex')) ||
+          !hex(session.message_hash, 32) || !hex(session.final_signature, 64)) {
+        errors.push('Final signature verification requires a 32-byte x-only public key, 32-byte message hash and 64-byte signature in hexadecimal.');
+      } else {
+        // The pinned dependency executes BIP340. This key is caller supplied;
+        // its relationship to the participant list has not been established.
+        try {
+          finalSigValid = secp256k1.verifySchnorr(Buffer.from(session.message_hash, 'hex'),
+            Buffer.from(providedKey, 'hex'), Buffer.from(session.final_signature, 'hex'));
+        } catch {
+          finalSigValid = false;
+        }
+        if (!finalSigValid) errors.push('The final BIP340 signature is invalid for the supplied public key and message hash.');
+      }
+    }
 
     return {
-      verified: errors.length === 0,
+      verified: false,
+      stage: errors.length ? 'invalid-input' : 'unavailable-musig2-engine',
+      error: errors.length ? errors.join(' ') : missingEngine,
       has_duplicate_nonces: hasDuplicateNonces,
-      aggregate_public_key: aggPubkey,
+      aggregate_public_key: null,
+      provided_aggregate_public_key: providedKey,
+      key_aggregation_verified: false,
       final_bip340_valid: finalSigValid,
+      final_signature_scope: 'BIP340 over the supplied aggregate public key and 32-byte message hash only; no participant aggregation, nonce or partial-signature verification.',
       errors,
-      warnings,
+      warnings: [...warnings, missingEngine],
     };
   }
 
-  public verifyManifest(manifest: any): { verified: boolean; product_id: string; errors: string[] } {
+  public verifyManifest(manifest: unknown): {
+    verified: false; stage: 'invalid-input' | 'unavailable-vendor-trust'; product_id: string; error: string; errors: string[];
+  } {
+    const value = manifest && typeof manifest === 'object' && !Array.isArray(manifest) ? manifest as Record<string, unknown> : {};
     const errors: string[] = [];
-    if (!manifest.product_id) {
-      errors.push('Product ID is required');
-    }
-    if (!manifest.signature) {
-      errors.push('Vendor signature is required');
-    }
+    if (typeof value.product_id !== 'string' || !value.product_id.trim()) errors.push('Product ID is required.');
+    if (typeof value.signature !== 'string' || !value.signature.trim()) errors.push('Vendor signature is required.');
     return {
-      verified: errors.length === 0,
-      product_id: manifest.product_id || '',
+      verified: false,
+      stage: errors.length ? 'invalid-input' : 'unavailable-vendor-trust',
+      product_id: typeof value.product_id === 'string' ? value.product_id : '',
+      error: errors.length ? errors.join(' ') : 'Manifest verification is unavailable. A trusted vendor-key directory, exact signed payload encoding and signature algorithm are required.',
       errors,
     };
   }

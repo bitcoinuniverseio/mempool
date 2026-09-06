@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { Observable, of, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, of, throwError } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { StateService } from '@app/services/state.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
@@ -11,7 +11,8 @@ interface Recorder {
 
 function build(
   isBrowser: boolean,
-  respond: (url: string) => Observable<unknown> = () => of({}),
+  respond: (url: string) => Observable<unknown> = (url: string) =>
+    of(url.includes('/api/v1/chains') ? [] : {}),
 ): Recorder {
   const urls: string[] = [];
   const httpClient = {
@@ -36,6 +37,45 @@ function build(
 }
 
 describe('UniverseApiService addressing', () => {
+  it('cancels prior Bitcoin health and keeps the other picker rows on mainnet', () => {
+    const changed = new BehaviorSubject('');
+    const state = { isBrowser: true, env: {}, network: '', networkChanged$: changed } as unknown as StateService;
+    const pending = new Map<string, Subject<unknown>>();
+    const get = vi.fn((url: string) => {
+      const response = new Subject<unknown>();
+      pending.set(url, response);
+      return response;
+    });
+    const service = new UniverseApiService({ get } as unknown as HttpClient, state);
+    const received: unknown[] = [];
+    const subscription = service.getChains$().subscribe(value => received.push(value));
+    state.network = 'signet'; changed.next('signet');
+    expect(pending.has('/api/v1/chains?network=signet')).toBe(true);
+    pending.get('/api/v1/chains?network=mainnet')?.next([{ chain: 'bitcoin', network: 'mainnet' }]);
+    expect(received).toEqual([]);
+    const rows = ['bitcoin', 'dogecoin', 'zcash'].map(chain => ({ chain, network: chain === 'bitcoin' ? 'signet' : 'mainnet' }));
+    pending.get('/api/v1/chains?network=signet')?.next(rows);
+    expect(received).toEqual([rows]);
+    subscription.unsubscribe();
+  });
+
+  it('rejects a capability row from another network', () => {
+    const state = { isBrowser: true, env: {}, network: 'signet' } as unknown as StateService;
+    const service = new UniverseApiService({ get: () => of([{ chain: 'bitcoin', network: 'mainnet' }]) } as unknown as HttpClient, state);
+    let failure: Error | undefined;
+    service.getChains$().subscribe({ error: error => failure = error });
+    expect(failure?.message).toBe('authority-network-mismatch');
+  });
+
+  it('requests selected Bitcoin health and mainnet Dogecoin health separately', () => {
+    const urls: string[] = [];
+    const state = { isBrowser: true, env: {}, network: 'testnet4' } as unknown as StateService;
+    const service = new UniverseApiService({ get: (url: string) => { urls.push(url); return of({}); } } as unknown as HttpClient, state);
+    service.getChainStatus$('bitcoin').subscribe();
+    service.getChainStatus$('dogecoin').subscribe();
+    expect(urls).toEqual(['/api/v1/bitcoin/status?network=testnet4', '/api/v1/dogecoin/status?network=mainnet']);
+  });
+
   it('stays same-origin in the browser', () => {
     const { service, urls } = build(true);
     service.getProtocols$().subscribe();

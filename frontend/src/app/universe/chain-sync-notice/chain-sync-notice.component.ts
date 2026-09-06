@@ -1,8 +1,11 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
-import { Observable, map } from 'rxjs';
-import { StateService } from '@app/services/state.service';
+import { NavigationEnd, Router, RouterModule } from '@angular/router';
+import { Observable, combineLatest, filter, map, startWith } from 'rxjs';
+import { ChainHealthService } from '../chain-health.service';
+import { ChainCapabilityEnvelope, ExplorerChain } from '../universe.types';
+import { nodeHealthLabel, readHealth } from '../multichain-explorer/chain-health';
+import { explorerChainFromUrl, explorerChainName } from '../universe-chain-routing';
 import { IBackendInfo } from '@interfaces/websocket.interface';
 
 export interface ChainSyncNotice {
@@ -32,11 +35,19 @@ export interface ChainSyncNotice {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChainSyncNoticeComponent {
-  notice$: Observable<ChainSyncNotice>;
+  notice$: Observable<IndependentChainNotice>;
 
-  constructor(private stateService: StateService) {
-    this.notice$ = this.stateService.backendInfo$.pipe(map(chainSyncNotice));
+  constructor(public health: ChainHealthService, router: Router) {
+    const chain$ = router.events.pipe(
+      filter(event => event instanceof NavigationEnd),
+      startWith(null),
+      map(() => explorerChainFromUrl(router.url)),
+    );
+    this.notice$ = combineLatest([chain$, health.state$]).pipe(map(([chain, state]) =>
+      chainHealthNotice(state.capabilities.find(row => row.chain === chain) ?? null, chain, state.loading),
+    ));
   }
+
 }
 
 /**
@@ -62,5 +73,23 @@ export function chainSyncNotice(info: IBackendInfo | null): ChainSyncNotice {
     headers: sync.headers,
     percent,
     initial: !!sync.initialBlockDownload,
+  };
+}
+
+export interface IndependentChainNotice {
+  show: boolean;
+  title: string;
+  detail: string;
+}
+
+export function chainHealthNotice(capability: ChainCapabilityEnvelope | null, chain: ExplorerChain, loading = false, now = Date.now()): IndependentChainNotice {
+  const node = readHealth(capability)?.node;
+  const label = nodeHealthLabel(capability, now);
+  return {
+    show: !loading && label !== 'Synced',
+    title: explorerChainName(chain) + ' · ' + label,
+    detail: label === 'Syncing'
+      ? 'The node is catching up.' + (node?.heightAtomic ? ' Node block ' + node.heightAtomic + '.' : '') + (node?.blocksBehindNetworkAtomic !== null && node?.blocksBehindNetworkAtomic !== undefined ? ' Reported gap: ' + node.blocksBehindNetworkAtomic + ' blocks.' : ' The remaining gap is unknown.')
+      : 'Current node synchronization could not be confirmed. Individual services report their own availability.',
   };
 }

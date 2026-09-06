@@ -1,3 +1,4 @@
+import { ChainHealthService } from '../chain-health.service';
 import { Injectable } from '@angular/core';
 import {
   Observable,
@@ -42,14 +43,12 @@ const POLL_MS = 15_000;
 export class ChainDashboardService {
   private readonly dashboards = new Map<string, Observable<ChainDashboardState>>();
   private readonly pending = new Map<string, Observable<ChainPendingState>>();
-  private readonly capabilities = new Map<
-    string,
-    Observable<ChainCapabilityEnvelope | null>
-  >();
+
 
   constructor(
     private readonly api: UniverseApiService,
-    private readonly live: UniverseWebsocketService
+    private readonly live: UniverseWebsocketService,
+    private readonly health: ChainHealthService
   ) {}
 
   dashboard$(
@@ -76,16 +75,7 @@ export class ChainDashboardService {
   capability$(
     chain: Exclude<ExplorerChain, 'bitcoin'>
   ): Observable<ChainCapabilityEnvelope | null> {
-    let stream = this.capabilities.get(chain);
-    if (!stream) {
-      stream = this.refreshing$(chain, () =>
-        this.api.getChainStatus$(chain).pipe(
-          catchError(() => of<ChainCapabilityEnvelope | null>(null))
-        )
-      );
-      this.capabilities.set(chain, stream);
-    }
-    return stream;
+    return this.health.capability$(chain);
   }
 
   pending$(

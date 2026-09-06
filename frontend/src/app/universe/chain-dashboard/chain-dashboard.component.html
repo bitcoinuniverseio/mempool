@@ -25,6 +25,8 @@
     </div>
   </section>
 
+  <app-chain-health-details [capability]="vm.capability"></app-chain-health-details>
+
   <!-- Blocks are the first dashboard content. Status stays above them while a
        degraded-chain explanation remains supporting context below. -->
   <section class="panel timeline-panel" aria-labelledby="dash-timeline-heading">
@@ -59,7 +61,7 @@
     aria-labelledby="dash-not-ready-heading"
   >
     <h2 id="dash-not-ready-heading" i18n="universe.dash.not-ready-title">
-      Why {{ profile.name }} is not ready
+      Services needing attention
     </h2>
     <ul>
       <li *ngFor="let reason of notReady">{{ reason.text }}</li>

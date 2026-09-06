@@ -48,6 +48,25 @@ interface ReasonCopy {
  * that derivation rather than paraphrasing the code name.
  */
 const REASON_COPY: Record<string, ReasonCopy> = {
+  'authority-unconfigured': { text: 'This service is not configured.', kind: 'fault' },
+  'authority-context-mismatch': { text: 'The source reported a different chain or network. Its evidence cannot be used here.', kind: 'fault' },
+  'source-refresh-failed': { text: 'The latest source refresh failed. Retained observations are last-known data.', kind: 'fault' },
+  'authority-observation-stale': { text: 'The source observation is too old to establish current availability.', kind: 'fault' },
+  'node-sync-unknown': { text: 'The node has not supplied current synchronization evidence.', kind: 'fault' },
+  'confirmed-history-coverage-unknown': { text: 'Confirmed history coverage has not been established.', kind: 'fault' },
+  'address-history-unverified': { text: 'Address-history reads have not been independently verified.', kind: 'fault' },
+  'mempool-collection-unverified': { text: 'Collection of the current pending set has not been verified.', kind: 'fault' },
+  'checkpoint-observation-stale': { text: 'This checkpoint is too old to establish current synchronization.', kind: 'fault' },
+  'checkpoint-malformed': { text: 'The source checkpoint could not be read.', kind: 'fault' },
+  'checkpoint-ahead-of-reference': { text: 'The source is ahead of the observed reference. Synchronization is not yet established.', kind: 'fault' },
+  'checkpoint-hash-mismatch': { text: 'The checkpoint and reference disagree at the same height. Consistency needs attention.', kind: 'fault' },
+  'confirmed-history-checkpoint-unknown': { text: 'The confirmed-history checkpoint has not been reported.', kind: 'fault' },
+  'confirmed-history-stale': { text: 'Confirmed-history observations are stale.', kind: 'fault' },
+  'address-history-stale': { text: 'Address-history observations are stale.', kind: 'fault' },
+  'mempool-collector-stale': { text: 'The pending-transaction observation is stale.', kind: 'fault' },
+  'protocol-qualification-unknown': { text: 'This protocol has not established semantic qualification. Confirmed scan coverage is a separate reading.', kind: 'fault' },
+  'protocol-unqualified': { text: 'This protocol reports that its current history is not semantically qualified.', kind: 'fault' },
+  'confirmed-scan-incomplete': { text: 'The confirmed-history scan is still catching up.', kind: 'fault' },
   'base-chain-authority-unavailable': {
     text: $localize`:@@universe.reason.base-chain-authority-unavailable:The node that serves this chain's own blocks and transactions did not answer.`,
     kind: 'fault',
@@ -77,7 +96,7 @@ const REASON_COPY: Record<string, ReasonCopy> = {
     kind: 'fault',
   },
   'protocol-history-unavailable': {
-    text: $localize`:@@universe.reason.protocol-history-unavailable:At least one protocol indexer this chain needs is not answering, so protocol history cannot be read. Blocks, transactions and addresses are unaffected.`,
+    text: $localize`:@@universe.reason.protocol-history-unavailable:At least one protocol service cannot provide its offered history. Base reads have their own availability.`,
     kind: 'fault',
   },
   'protocol-history-partial': {
@@ -103,6 +122,22 @@ const REASON_COPY: Record<string, ReasonCopy> = {
   'reorg-evidence-tail-only': {
     text: $localize`:@@universe.reason.reorg-evidence-tail-only:This authority keeps reorganisation evidence for recent blocks only, not for the whole chain.`,
     kind: 'limit',
+  },
+  'protocol-qualification-pending': {
+    text: $localize`:@@universe.reason.protocol-qualification-pending:Protocol qualification has not been established.`,
+    kind: 'fault',
+  },
+  'confirmed-history-partial': {
+    text: $localize`:@@universe.reason.confirmed-history-partial:Confirmed history is readable but does not yet cover the whole chain.`,
+    kind: 'fault',
+  },
+  'address-history-partial': {
+    text: $localize`:@@universe.reason.address-history-partial:Address history is readable but does not yet cover the whole chain.`,
+    kind: 'fault',
+  },
+  'confirmed-history-unconfigured': {
+    text: $localize`:@@universe.reason.confirmed-history-unconfigured:Historical indexer for confirmed transactions is not configured for this chain.`,
+    kind: 'fault',
   },
 };
 

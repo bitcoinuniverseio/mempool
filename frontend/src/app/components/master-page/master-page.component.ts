@@ -1,19 +1,17 @@
 import { AfterViewInit, Component, ElementRef, OnInit, OnDestroy, Input, ViewChild } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { Env, StateService } from '@app/services/state.service';
-import { Observable, catchError, filter, merge, of, shareReplay, Subscription, switchMap, timer } from 'rxjs';
+import { Observable, filter, map, merge, of, Subscription } from 'rxjs';
 import { LanguageService } from '@app/services/language.service';
 import { EnterpriseService } from '@app/services/enterprise.service';
 import { NavigationService } from '@app/services/navigation.service';
 import { StorageService } from '@app/services/storage.service';
-import { UniverseApiService } from '@app/universe/universe-api.service';
+import { ChainHealthService, ChainHealthState } from '@app/universe/chain-health.service';
+import { healthServiceSummary, nodeHealthLabel, readHealth } from '@app/universe/multichain-explorer/chain-health';
 import { UniverseLocalService } from '@app/universe/universe-local.service';
 import { UniverseViewportService } from '@app/universe/universe-viewport.service';
 import { ChainCapabilityEnvelope, ExplorerChain } from '@app/universe/universe.types';
-import { describeChainReasons } from '@app/universe/multichain-explorer/chain-reasons';
 import {
-  availabilityLabel,
-  completenessLabel,
   formatExactInteger,
 } from '@app/universe/multichain-explorer/multichain-view';
 import {
@@ -51,6 +49,7 @@ export class MasterPageComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly explorerChains: readonly ExplorerChain[] = ['bitcoin', 'dogecoin', 'zcash'];
   activeChain: ExplorerChain = 'bitcoin';
   chainCapabilities$: Observable<ChainCapabilityEnvelope[]>;
+  chainHealth$: Observable<ChainHealthState>;
 
   enterpriseInfo: any;
   enterpriseInfo$: Subscription;
@@ -63,7 +62,7 @@ export class MasterPageComponent implements OnInit, AfterViewInit, OnDestroy {
     private navigationService: NavigationService,
     private storageService: StorageService,
     private router: Router,
-    private universeApi: UniverseApiService,
+    public health: ChainHealthService,
     private universeLocal: UniverseLocalService,
     private viewport: UniverseViewportService,
   ) { }
@@ -71,7 +70,7 @@ export class MasterPageComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnInit(): void {
     this.env = this.stateService.env;
     this.connectionState$ = this.stateService.connectionState$;
-    this.network$ = merge(of(''), this.stateService.networkChanged$);
+    this.network$ = merge(of(this.stateService.network || ''), this.stateService.networkChanged$);
     this.urlLanguage = this.languageService.getLanguageForUrl();
     this.subdomain = this.enterpriseService.getSubdomain();
     this.navigationService.subnetPaths.subscribe((paths) => {
@@ -104,12 +103,8 @@ export class MasterPageComponent implements OnInit, AfterViewInit, OnDestroy {
     // UniverseViewportService: on iOS the software keyboard covers the page
     // rather than shortening it, so no viewport unit knows it is there.
     this.viewport.track();
-    this.chainCapabilities$ = this.stateService.isBrowser
-      ? timer(0, 15_000).pipe(
-          switchMap(() => this.universeApi.getChains$().pipe(catchError(() => of([])))),
-          shareReplay({ bufferSize: 1, refCount: true }),
-        )
-      : of([]);
+    this.chainHealth$ = this.health.state$;
+    this.chainCapabilities$ = this.chainHealth$.pipe(map(state => state.capabilities));
   }
 
   setDropdownVisibility(): void {
@@ -135,6 +130,7 @@ export class MasterPageComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   networkLabel(network: string): string {
     switch (network) {
+      case 'mainnet':
       case '': return $localize`:@@master-page.network-mainnet:Mainnet`;
       case 'testnet': return $localize`:@@master-page.network-testnet3:Testnet3`;
       case 'testnet4': return $localize`:@@master-page.network-testnet4:Testnet4`;
@@ -243,49 +239,30 @@ export class MasterPageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   chainCapability(capabilities: ChainCapabilityEnvelope[], chain: ExplorerChain): ChainCapabilityEnvelope | undefined {
-    return capabilities.find((capability) => capability.chain === chain);
+    return capabilities.find((capability) => capability.chain === chain && capability.network === (chain === 'bitcoin' ? (this.stateService.network || 'mainnet') : 'mainnet'));
   }
 
   chainState(capability: ChainCapabilityEnvelope | undefined): string {
-    if (!capability) {return availabilityLabel(null);}
-    return capability.ready ? availabilityLabel('ready') : availabilityLabel('degraded');
+    return nodeHealthLabel(capability);
   }
 
-  /**
-   * The line under a chain's name in the switcher.
-   *
-   * It used to read "Tip 964557; mempool ready, complete" whether the chain
-   * said it was ready or not, so a chain marked degraded sat beside a sentence
-   * in which nothing was wrong, in the wire's words rather than in English.
-   * The reason is in the same document the verdict came from, so a degraded
-   * chain leads with it and a ready one keeps the tip and pending reading.
-   */
+  chainNetwork(chain: ExplorerChain): string {
+    return this.networkLabel(chain === 'bitcoin' ? (this.stateService.network || 'mainnet') : 'mainnet');
+  }
+
   chainDetail(capability: ChainCapabilityEnvelope | undefined): string {
-    if (!capability) {
-      return $localize`:@@master-page.chain-status-unavailable:This chain did not report its status.`;
-    }
-    // Grouped the way the status rail groups it. A block height printed as a
-    // bare run of digits in one place and as 2,884,120 in another is the same
-    // fact in two voices, and the long one is where it is hardest to read.
-    const tip = formatExactInteger(capability.tip?.heightAtomic ?? null);
-    const height = tip
-      ? $localize`:@@master-page.chain-tip:Block ${tip.display}:HEIGHT:`
-      : $localize`:@@master-page.chain-tip-none:No tip reported`;
-    if (!capability.ready) {
-      const [first] = describeChainReasons(capability.degradedReasons ?? []);
-      return first ? `${height}. ${first.text}` : height;
-    }
-    if (!capability.mempool.supported) {
-      return height;
-    }
-    const coverage = completenessLabel(capability.mempool.completeness);
-    return $localize`:@@master-page.chain-ready-detail:${height}:BLOCK:. Pending coverage ${coverage}:COVERAGE:.`;
+    const tip = formatExactInteger(readHealth(capability)?.node.heightAtomic ?? null);
+    return (tip ? 'Block ' + tip.display + ' · ' : '') + healthServiceSummary(capability);
   }
 
   chainRoute(
     kind: 'dashboard' | 'mining' | 'mempool' | 'protocols' | 'graphs' | 'docs'
   ): string {
-    return explorerSectionRoute(this.activeChain, kind);
+    const route = explorerSectionRoute(this.activeChain, kind);
+    const network = this.stateService.network;
+    return this.activeChain === 'bitcoin' && ['signet', 'testnet', 'testnet4', 'regtest'].includes(network)
+      ? '/' + network + (route === '/' ? '' : route)
+      : route;
   }
 
   switchChain(chain: ExplorerChain): void {

@@ -1,3 +1,4 @@
+import { healthServiceSummary, nodeHealthLabel, observationCurrent, readHealth } from './chain-health';
 /**
  * Presentation model for the Dogecoin and Zcash explorer pages.
  *
@@ -629,87 +630,21 @@ export function readStatusRail(
   profile: ChainProfile,
   now: number
 ): readonly StatusReading[] {
-  if (!capability) {
-    const unknown = $localize`:@@universe.chain.rail-unknown:Not available`;
-    return [
-      { id: 'state', label: $localize`:@@universe.chain.rail-state:Chain`, value: $localize`:@@universe.chain.rail-no-status:Status unavailable`, tone: 'unavailable', exact: null },
-      { id: 'tip', label: $localize`:@@universe.chain.rail-tip:Chain tip`, value: unknown, tone: 'neutral', exact: null },
-      { id: 'lag', label: $localize`:@@universe.chain.rail-lag:Behind tip`, value: unknown, tone: 'neutral', exact: null },
-      { id: 'freshness', label: $localize`:@@universe.chain.rail-observed:Last observed`, value: unknown, tone: 'neutral', exact: null },
-      { id: 'mempool', label: $localize`:@@universe.chain.rail-pending:Pending coverage`, value: unknown, tone: 'neutral', exact: null },
-    ];
-  }
-
-  const tip = formatExactInteger(capability.tip?.heightAtomic ?? null);
-  const lag = formatExactInteger(capability.lagBlocksAtomic);
-  const elapsed = formatElapsed(capability.updatedAt, now);
-
+  const health = readHealth(capability);
+  const state = nodeHealthLabel(capability, now);
+  const tip = formatExactInteger(health?.node.heightAtomic ?? null);
+  const lag = formatExactInteger(health?.node.blocksBehindNetworkAtomic ?? null);
+  const observed = health?.node.observedAt ?? null;
+  const current = !!health && observationCurrent(health.node, now);
+  const pending = health?.mempool;
+  const services = healthServiceSummary(capability, now);
   return [
-    {
-      id: 'state',
-      label: $localize`:@@universe.chain.rail-state:Chain`,
-      // `sync` is the node's own view of its blocks. `ready` is the chain's
-      // verdict on everything the explorer needs, and it is the stricter of
-      // the two: a chain whose node is caught up while a protocol indexer is
-      // not answering publishes sync.state ready and ready false. Reading the
-      // sync state alone therefore printed Ready, in the proven tone, on the
-      // one reading a visitor trusts most, for a chain that had just said it
-      // was not. When the two disagree the verdict wins, and the reasons
-      // beneath the rail say which part is missing.
-      value: capability.ready
-        ? availabilityLabel('ready')
-        : capability.sync.state === 'ready'
-          ? availabilityLabel('degraded')
-          : availabilityLabel(capability.sync.state),
-      tone: capability.ready
-        ? 'proven'
-        : capability.sync.state === 'ready'
-          ? availabilityTone('degraded')
-          : availabilityTone(capability.sync.state),
-      exact: null,
-    },
-    {
-      id: 'tip',
-      label: $localize`:@@universe.chain.rail-tip:Chain tip`,
-      value: tip
-        ? $localize`:@@universe.chain.rail-tip-block:Block ${tip.display}:HEIGHT:`
-        : $localize`:@@universe.chain.rail-tip-none:No tip reported`,
-      tone: tip ? 'proven' : 'unavailable',
-      exact: tip?.exact ?? null,
-    },
-    {
-      id: 'lag',
-      label: $localize`:@@universe.chain.rail-lag:Behind tip`,
-      value: lag
-        ? $localize`:@@universe.chain.rail-lag-blocks:${lag.display}:BLOCKS: blocks`
-        : $localize`:@@universe.chain.rail-lag-none:Not stated`,
-      // Any lag at all means the page is describing a past state of the chain,
-      // so it never reads as proven. Zero is the only reading that does.
-      tone: !lag ? 'neutral' : lag.exact === '0' ? 'proven' : 'partial',
-      exact: lag?.exact ?? null,
-    },
-    {
-      id: 'freshness',
-      label: $localize`:@@universe.chain.rail-observed:Last observed`,
-      value: elapsed ?? $localize`:@@universe.chain.rail-observed-unknown:Time not stated`,
-      tone: elapsed ? 'neutral' : 'partial',
-      // "3 seconds ago" is the reading, and it is the one that changes while
-      // nobody is looking. The instant it was measured from is the fact behind
-      // it, and it was dropped: the rail carried a relative time with no way to
-      // recover the absolute one it was derived from.
-      exact: capability.updatedAt ?? null,
-    },
-    {
-      id: 'mempool',
-      label: $localize`:@@universe.chain.rail-pending:Pending coverage`,
-      value: capability.mempool.supported
-        ? completenessLabel(capability.mempool.completeness)
-        : $localize`:@@universe.chain.rail-pending-unsupported:Not offered for ${profile.name}:CHAIN:`,
-      tone: capability.mempool.supported
-        ? completenessTone(capability.mempool.completeness)
-        : 'neutral',
-      exact: null,
-    },
+    { id: 'state', label: 'Node', value: state, tone: state === 'Synced' ? 'proven' : state === 'Syncing' ? 'partial' : 'unavailable', exact: null },
+    { id: 'services', label: 'Services', value: services, tone: services === 'Services ready' ? 'proven' : 'partial', exact: null },
+    { id: 'tip', label: 'Node tip', value: tip ? 'Block ' + tip.display + (current ? '' : ' (last known)') : 'No node tip reported', tone: current && tip ? 'proven' : 'neutral', exact: tip?.exact ?? null },
+    { id: 'lag', label: 'Node behind network', value: lag ? lag.display + ' blocks' + (current ? '' : ' (last known)') : 'Not stated', tone: current && lag ? (lag.exact === '0' ? 'proven' : 'partial') : 'neutral', exact: lag?.exact ?? null },
+    { id: 'freshness', label: 'Node last observed', value: formatElapsed(observed, now) ?? 'Time not stated', tone: 'neutral', exact: observed },
+    { id: 'mempool', label: 'Pending coverage', value: !pending ? 'Not stated' : !pending.supported ? 'Not offered for ' + profile.name : availabilityLabel(pending.state) + ' · ' + completenessLabel(pending.completeness) + (observationCurrent(pending, now) ? '' : ' (last known or unavailable)'), tone: pending?.supported && observationCurrent(pending, now) ? availabilityTone(pending.state) : 'neutral', exact: null },
   ];
 }
 
@@ -725,20 +660,18 @@ export function readStatusRail(
 export function readNotReadyReasons(
   capability: ChainCapabilityEnvelope | null
 ): readonly ChainReasonReading[] | null {
-  if (!capability || capability.ready) {
-    return null;
+  if (!capability) {return null;}
+  const health = readHealth(capability);
+  const codes = new Set(capability.degradedReasons ?? []);
+  if (health) {
+    for (const component of [health.node, health.confirmed, health.address, health.mempool, ...health.protocols, health.summary]) {
+      for (const code of component.degradedReasons ?? []) {codes.add(code);}
+    }
   }
-  const reasons = describeChainReasons(capability.degradedReasons ?? []);
-  if (reasons.length) {
-    return reasons;
-  }
-  return [
-    {
-      code: '',
-      text: $localize`:@@universe.chain.not-ready-no-reason:This chain reports that it is not ready and states no reason for it.`,
-      kind: 'unstated',
-    },
-  ];
+  const readings = describeChainReasons([...codes]);
+  if (readings.length) {return readings;}
+  if (health?.summary.allOfferedReady || (!capability.health && capability.ready)) {return null;}
+  return [{ code: '', text: 'The service report states no reason for its incomplete readiness.', kind: 'unstated' }];
 }
 
 /**
@@ -787,19 +720,19 @@ const COVERAGE_LABELS: readonly {
 ];
 
 export function readHistoryCoverage(
-  capability: ChainCapabilityEnvelope | null
+  capability: ChainCapabilityEnvelope | null,
+  now = Date.now()
 ): readonly CoverageReading[] {
+  const health = readHealth(capability);
   return COVERAGE_LABELS.map(({ id, label, detail }) => {
-    const state = capability?.coverage?.[id];
-    return {
-      id,
-      label,
-      stateLabel: capability
-        ? completenessLabel(state)
-        : $localize`:@@universe.chain.coverage-unknown:Not stated`,
-      tone: capability ? completenessTone(state) : ('neutral' as EvidenceTone),
-      detail,
-    };
+    // Legacy coverage remains reported coverage, without inferring node health.
+    const row = id === 'confirmedHistory' ? health?.confirmed : id === 'addressHistory' ? health?.address : null;
+    const state = row ? row.coverage : health && id === 'protocolHistory'
+      ? (health.protocols.length && health.protocols.every(item => item.qualification === 'qualified' && item.availability === 'ready' && observationCurrent(item, now))
+        ? (health.protocols.every(item => item.coverage === 'complete') ? 'complete' : 'partial') : 'unknown')
+      : capability?.health ? 'unknown' : capability?.coverage?.[id];
+    const available = !row || (row.availability === 'ready' && observationCurrent(row, now));
+    return { id, label, stateLabel: completenessLabel(state) + (available ? '' : ' (last known coverage)'), tone: available ? completenessTone(state) : 'neutral', detail };
   });
 }
 
@@ -985,7 +918,11 @@ export function readProtocolCoverage(
   capability: ChainCapabilityEnvelope | null,
   profile: ChainProfile
 ): readonly ProtocolReading[] {
-  const declared = capability?.protocols ?? [];
+  const health = readHealth(capability);
+  const declared: readonly { protocolId: string; state: string; coverage: string; lagBlocksAtomic: string | null; degradedReasons: string[] }[] = health ? health.protocols.map(row => ({
+    ...row,
+    state: observationCurrent(row) && row.qualification === 'qualified' ? row.availability : 'unknown',
+  })) : capability?.health ? [] : capability?.protocols ?? [];
   const byId = new Map(declared.map((entry) => [entry.protocolId, entry]));
   const claimed = new Set<string>();
 

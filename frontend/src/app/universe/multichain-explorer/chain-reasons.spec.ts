@@ -39,4 +39,11 @@ describe('describeChainReason', () => {
       describeChainReasons(['protocol-history-unavailable', 'reorg-evidence-tail-only']).map((r) => r.kind)
     ).toEqual(['fault', 'limit']);
   });
+
+  it('identifies new health v2 reasons accurately', () => {
+    expect(describeChainReason('protocol-qualification-pending').kind).toBe('fault');
+    expect(describeChainReason('confirmed-history-unconfigured').kind).toBe('fault');
+    expect(describeChainReason('confirmed-history-partial').kind).toBe('fault');
+    expect(describeChainReason('address-history-partial').kind).toBe('fault');
+  });
 });

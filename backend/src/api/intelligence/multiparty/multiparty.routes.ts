@@ -1,5 +1,10 @@
 import { Application, Request, Response } from 'express';
-import multipartyService from './multiparty.service';
+import multipartyService, { MultipartyEvidenceError } from './multiparty.service';
+
+function fail(res: Response, err: unknown): Response {
+  if (err instanceof MultipartyEvidenceError) return res.status(err.status).json({ stage: err.code, error: err.message });
+  return res.status(500).json({ error: 'Internal error' });
+}
 
 class MultipartyRoutes {
   public initRoutes(app: Application): void {
@@ -8,7 +13,7 @@ class MultipartyRoutes {
         const overview = multipartyService.getOverview();
         res.json(overview);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -17,7 +22,7 @@ class MultipartyRoutes {
         const products = multipartyService.listProducts();
         res.json(products);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -29,7 +34,7 @@ class MultipartyRoutes {
         }
         res.json(product);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -38,7 +43,7 @@ class MultipartyRoutes {
         const compatibility = multipartyService.getCompatibility();
         res.json(compatibility);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -47,25 +52,25 @@ class MultipartyRoutes {
         const vectors = multipartyService.getTestVectors();
         res.json(vectors);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
     app.post('/api/v1/intelligence/multiparty/manifests/verify', (req: Request, res: Response) => {
       try {
         const result = multipartyService.verifyManifest(req.body);
-        res.json(result);
+        res.status(result.stage === 'invalid-input' ? 400 : 503).json(result);
       } catch (err: any) {
-        res.status(400).json({ error: err.message || 'Manifest verification failed' });
+        fail(res, err);
       }
     });
 
     app.post('/api/v1/intelligence/multiparty/public-sessions/verify', (req: Request, res: Response) => {
       try {
         const result = multipartyService.verifyPublicSession(req.body);
-        res.json(result);
+        res.status(result.stage === 'invalid-input' ? 400 : 503).json(result);
       } catch (err: any) {
-        res.status(400).json({ error: err.message || 'Public session verification failed' });
+        fail(res, err);
       }
     });
   }

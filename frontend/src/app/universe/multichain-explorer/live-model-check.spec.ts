@@ -43,9 +43,9 @@ const NOW = Date.parse('2026-08-29T08:30:00.000Z');
 describe('live dogecoin status', () => {
   const status = load('dogecoin_status');
 
-  it('fills all five rail readings from the real envelope', () => {
+  it('keeps all six readings visible when reading a captured legacy envelope', () => {
     const rail = readStatusRail(status, DOGE, NOW);
-    expect(rail.map((r) => r.id)).toEqual(['state', 'tip', 'lag', 'freshness', 'mempool']);
+    expect(rail.map((r) => r.id)).toEqual(['state', 'services', 'tip', 'lag', 'freshness', 'mempool']);
     expect(rail.every((r) => r.value && r.value.length > 0)).toBe(true);
   });
 
@@ -76,11 +76,11 @@ describe('live dogecoin status', () => {
 });
 
 describe('live zcash status', () => {
-  it('reads any non-zero lag as partly proven, not as proven', () => {
+  it('does not reinterpret an aggregate legacy lag as independent node lag', () => {
     const status = load('zcash_status');
     const lag = readStatusRail(status, ZEC, NOW).find((r) => r.id === 'lag');
-    expect(lag?.exact).toBe(status.lagBlocksAtomic);
-    expect(lag?.tone).toBe(status.lagBlocksAtomic === '0' ? 'proven' : 'partial');
+    expect(lag?.exact).toBeNull();
+    expect(lag?.tone).toBe('neutral');
   });
 });
 

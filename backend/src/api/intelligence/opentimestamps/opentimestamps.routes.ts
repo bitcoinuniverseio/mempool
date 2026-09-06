@@ -1,5 +1,10 @@
 import { Application, Request, Response } from 'express';
-import openTimestampsService from './opentimestamps.service';
+import openTimestampsService, { TimestampEvidenceError } from './opentimestamps.service';
+
+function fail(res: Response, err: unknown): Response {
+  if (err instanceof TimestampEvidenceError) return res.status(err.status).json({ stage: err.code, error: err.message });
+  return res.status(500).json({ error: 'Internal error' });
+}
 
 class OpenTimestampsRoutes {
   public initRoutes(app: Application): void {
@@ -8,7 +13,7 @@ class OpenTimestampsRoutes {
         const overview = openTimestampsService.getOverview();
         res.json(overview);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -17,7 +22,7 @@ class OpenTimestampsRoutes {
         const calendars = openTimestampsService.listCalendars();
         res.json(calendars);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -29,7 +34,7 @@ class OpenTimestampsRoutes {
         }
         res.json(calendar);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -38,7 +43,7 @@ class OpenTimestampsRoutes {
         const anchors = openTimestampsService.listAnchors();
         res.json(anchors);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -50,17 +55,17 @@ class OpenTimestampsRoutes {
         }
         res.json(batch);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
     app.post('/api/v1/intelligence/timestamps/digests/stamp', (req: Request, res: Response) => {
       try {
-        const digest = req.body.digest || req.body.hash;
+        const digest = req.body?.digest ?? req.body?.hash;
         const result = openTimestampsService.stampDigest(digest);
         res.json(result);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -69,7 +74,7 @@ class OpenTimestampsRoutes {
         const result = openTimestampsService.verifyProof(req.body);
         res.json(result);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -78,7 +83,7 @@ class OpenTimestampsRoutes {
         const result = openTimestampsService.upgradeProof(req.body);
         res.json(result);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
   }
