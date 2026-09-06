@@ -1,4 +1,6 @@
-import { Component, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { SILENT_PAYMENT_SAMPLE_ADDRESS } from './silent-payments-samples';
+import { Component, ChangeDetectionStrategy, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -17,16 +19,16 @@ import { SilentPaymentsApiService } from './silent-payments.service';
           <span class="badge bg-primary">Bech32m Stealth Standard</span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
-          Decode and verify BIP352 Silent Payment addresses (sp1 / tsp1) and BIP321 payment request URIs.
+          Decode BIP352 Silent Payment addresses (sp1 / tsp1), directly or from a BIP321 URI's sp instruction. Other payment methods in the URI are not inspected.
         </p>
 
         <!-- Navigation Tabs -->
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/payments/silent">Overview</a>
-          <a class="nav-link" routerLink="/payments/silent/scan">In-Browser Scanner</a>
-          <a class="nav-link active" routerLink="/payments/silent/address">Address Validator</a>
-          <a class="nav-link" routerLink="/payments/silent/psbt">PSBT Inspector</a>
-          <a class="nav-link" routerLink="/payments/silent/coverage">Indexing Coverage</a>
+          <a class="nav-link" [routerLink]="api.path('/payments/silent')">Overview</a>
+          <a class="nav-link" [routerLink]="api.path('/payments/silent/scan')">In-Browser Scanner</a>
+          <a class="nav-link active" [routerLink]="api.path('/payments/silent/address')">Address Validator</a>
+          <a class="nav-link" [routerLink]="api.path('/payments/silent/psbt')">PSBT Inspector</a>
+          <a class="nav-link" [routerLink]="api.path('/payments/silent/coverage')">Indexing Coverage</a>
         </nav>
       </header>
 
@@ -40,8 +42,8 @@ import { SilentPaymentsApiService } from './silent-payments.service';
               id="addressInput"
               class="form-control font-monospace"
               rows="3"
-              placeholder="e.g. sp1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq"
-              [(ngModel)]="rawInput"
+              placeholder="Paste a Bech32m Silent Payment address"
+              [(ngModel)]="rawInput" (ngModelChange)="resetResult()" maxlength="4096"
               name="rawInput"
               required
             ></textarea>
@@ -53,7 +55,7 @@ import { SilentPaymentsApiService } from './silent-payments.service';
               class="btn btn-outline-secondary"
               (click)="loadDemoAddress()"
             >
-              Load Sample Address
+              Load Official Mainnet Sample
             </button>
             <button
               type="submit"
@@ -83,7 +85,7 @@ import { SilentPaymentsApiService } from './silent-payments.service';
             <div class="p-3 border rounded bg-body">
               <div class="text-muted small">Scan Public Key (B_scan)</div>
               <code class="text-break small fw-bold">{{ result.scan_pubkey }}</code>
-              <div class="small text-muted mt-1">Used by recipients to detect payments in block scan bundles</div>
+              <div class="small text-muted mt-1">Public address component; receiving scans require its private scan capability</div>
             </div>
           </div>
           <div class="col-12 col-md-6">
@@ -98,6 +100,11 @@ import { SilentPaymentsApiService } from './silent-payments.service';
     </div>
   `,
   styles: [`
+    .btn-outline-secondary { color: var(--u-text-muted); border-color: var(--u-text-muted); }
+    :host .text-muted, :host .form-control::placeholder {
+      color: var(--u-text-muted, #a99cb5) !important;
+      opacity: 1;
+    }
     .nav-link {
       color: inherit;
       padding: 0.4rem 0.8rem;
@@ -109,19 +116,24 @@ import { SilentPaymentsApiService } from './silent-payments.service';
     }
   `],
 })
-export class SilentPaymentsAddressComponent {
+export class SilentPaymentsAddressComponent implements OnDestroy {
+  private request?: Subscription;
+  private networkSub: Subscription;
+  ngOnDestroy(): void { this.request?.unsubscribe(); this.networkSub.unsubscribe(); }
+  resetResult(): void { this.request?.unsubscribe(); this.result = null; this.errorMessage = null; this.validating = false; }
+
   rawInput = '';
   validating = false;
   errorMessage: string | null = null;
   result: { valid: boolean; network?: string; scan_pubkey?: string; spend_pubkey?: string } | null = null;
 
   constructor(
-    private api: SilentPaymentsApiService,
+    public api: SilentPaymentsApiService,
     private cd: ChangeDetectorRef
-  ) {}
+  ) { this.networkSub = this.api.networkChanges$.subscribe(() => { this.resetResult(); this.cd.markForCheck(); }); }
 
   loadDemoAddress(): void {
-    this.rawInput = 'sp1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq';
+    this.rawInput = SILENT_PAYMENT_SAMPLE_ADDRESS;
     this.validate();
   }
 
@@ -131,13 +143,8 @@ export class SilentPaymentsAddressComponent {
     this.errorMessage = null;
     this.result = null;
 
-    let address = this.rawInput.trim();
-    if (address.startsWith('bitcoin:')) {
-      const parts = address.slice(8).split('?');
-      address = parts[0];
-    }
-
-    this.api.validateAddress$(address).subscribe({
+    this.request?.unsubscribe();
+    this.request = this.api.validateAddress$(this.rawInput.trim()).subscribe({
       next: res => {
         if (res.valid) {
           this.result = res;

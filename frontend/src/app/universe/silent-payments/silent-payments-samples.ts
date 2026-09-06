@@ -1,0 +1,3 @@
+// Public BIP375 example from bitcoin/bips; this sample is not chain acceptance evidence.
+export const SILENT_PAYMENT_SAMPLE_PSBT = 'cHNidP8B+wQCAAAAAQIEAgAAAAEEAQEBBQEBAQYBAAABDiAT8Qa2S1e1sTdvn2xHGQ9AzAazvty4qrqXhQqz1/Z9AgEPBAAAAAABASughgEAAAAAACJRIMgXu3Uhr8NeqW87+ycObrUN3/pVYGJ7lh/sAPKZZQi/ARAE/v///wEXIMgXu3Uhr8NeqW87+ycObrUN3/pVYGJ7lh/sAPKZZQi/AAEDCBhzAQAAAAAAAQlCAnpIf8Gft2mHe4dC1uoYEY88TnKx6oxt5gKnrUpB2+BoA2HhseneXkLLIAf3ylS54NV+0Tk4+tVtPxnldROo/OA5AA==';
+export const SILENT_PAYMENT_SAMPLE_ADDRESS = 'sp1qqgste7k9hx0qftg6qmwlkqtwuy6cycyavzmzj85c6qdfhjdpdjtdgqjuexzk6murw56suy3e0rd2cgqvycxttddwsvgxe2usfpxumr70xc9pkqwv';

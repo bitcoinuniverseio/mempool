@@ -1,4 +1,6 @@
-import { Component, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { SILENT_PAYMENT_SAMPLE_PSBT } from './silent-payments-samples';
+import { Component, ChangeDetectionStrategy, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -22,11 +24,11 @@ import { SilentPaymentsApiService } from './silent-payments.service';
 
         <!-- Navigation Tabs -->
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/payments/silent">Overview</a>
-          <a class="nav-link" routerLink="/payments/silent/scan">In-Browser Scanner</a>
-          <a class="nav-link" routerLink="/payments/silent/address">Address Validator</a>
-          <a class="nav-link active" routerLink="/payments/silent/psbt">PSBT Inspector</a>
-          <a class="nav-link" routerLink="/payments/silent/coverage">Indexing Coverage</a>
+          <a class="nav-link" [routerLink]="api.path('/payments/silent')">Overview</a>
+          <a class="nav-link" [routerLink]="api.path('/payments/silent/scan')">In-Browser Scanner</a>
+          <a class="nav-link" [routerLink]="api.path('/payments/silent/address')">Address Validator</a>
+          <a class="nav-link active" [routerLink]="api.path('/payments/silent/psbt')">PSBT Inspector</a>
+          <a class="nav-link" [routerLink]="api.path('/payments/silent/coverage')">Indexing Coverage</a>
         </nav>
       </header>
 
@@ -41,7 +43,7 @@ import { SilentPaymentsApiService } from './silent-payments.service';
               class="form-control font-monospace"
               rows="4"
               placeholder="Paste base64 PSBT here (starts with cHNidP8...)"
-              [(ngModel)]="rawPsbt"
+              [(ngModel)]="rawPsbt" (ngModelChange)="resetResult()" maxlength="1398104"
               name="rawPsbt"
               required
             ></textarea>
@@ -53,7 +55,7 @@ import { SilentPaymentsApiService } from './silent-payments.service';
               class="btn btn-outline-secondary"
               (click)="loadDemoPsbt()"
             >
-              Load Sample PSBT
+              Load BIP375 Sample (unsigned)
             </button>
             <button
               type="submit"
@@ -73,7 +75,7 @@ import { SilentPaymentsApiService } from './silent-payments.service';
 
       <!-- Results -->
       <div *ngIf="result" class="card p-4 bg-body-tertiary border">
-        <h2 class="h5 mb-3">PSBT Standards Inspection Result</h2>
+        <h2 class="h5 mb-3">PSBT Structure Inspection Result</h2><p class="small text-muted">Field structure only. Signatures, DLEQ proofs and derived payment outputs have not been cryptographically verified.</p>
         <div class="row g-3">
           <div class="col-12 col-md-6">
             <div class="p-3 border rounded bg-body">
@@ -84,7 +86,7 @@ import { SilentPaymentsApiService } from './silent-payments.service';
                 </span>
               </div>
               <div class="small text-muted">
-                Proprietary key-value pairs specifying Silent Payment recipient addresses and output index mappings for signer verification.
+                Standard BIP375 fields describing recipient keys, ECDH shares and DLEQ proof bytes.
               </div>
             </div>
           </div>
@@ -107,6 +109,11 @@ import { SilentPaymentsApiService } from './silent-payments.service';
     </div>
   `,
   styles: [`
+    .btn-outline-secondary { color: var(--u-text-muted); border-color: var(--u-text-muted); }
+    :host .text-muted, :host .form-control::placeholder {
+      color: var(--u-text-muted, #a99cb5) !important;
+      opacity: 1;
+    }
     .nav-link {
       color: inherit;
       padding: 0.4rem 0.8rem;
@@ -118,19 +125,24 @@ import { SilentPaymentsApiService } from './silent-payments.service';
     }
   `],
 })
-export class SilentPaymentsPsbtComponent {
+export class SilentPaymentsPsbtComponent implements OnDestroy {
+  private request?: Subscription;
+  private networkSub: Subscription;
+  ngOnDestroy(): void { this.request?.unsubscribe(); this.networkSub.unsubscribe(); }
+  resetResult(): void { this.request?.unsubscribe(); this.result = null; this.errorMessage = null; this.inspecting = false; }
+
   rawPsbt = '';
   inspecting = false;
   errorMessage: string | null = null;
   result: { valid: boolean; bip375_present: boolean; bip376_present: boolean } | null = null;
 
   constructor(
-    private api: SilentPaymentsApiService,
+    public api: SilentPaymentsApiService,
     private cd: ChangeDetectorRef
-  ) {}
+  ) { this.networkSub = this.api.networkChanges$.subscribe(() => { this.resetResult(); this.cd.markForCheck(); }); }
 
   loadDemoPsbt(): void {
-    this.rawPsbt = 'cHNidP8BAFICAAAAAQAAAAAAAAAAAAAAAQAAAAAAAAAAAA==';
+    this.rawPsbt = SILENT_PAYMENT_SAMPLE_PSBT;
     this.inspect();
   }
 
@@ -140,7 +152,8 @@ export class SilentPaymentsPsbtComponent {
     this.errorMessage = null;
     this.result = null;
 
-    this.api.validatePsbt$(this.rawPsbt.trim()).subscribe({
+    this.request?.unsubscribe();
+    this.request = this.api.validatePsbt$(this.rawPsbt.trim()).subscribe({
       next: res => {
         if (res.valid) {
           this.result = res;
