@@ -262,12 +262,14 @@ async function mobileProbe(floors) {
       // own affordance class, or by a role that says it is a scrollable
       // region to a screen reader.
       declared: Boolean(
-        el.closest('[data-scroll-region]')
-        || el.matches('.nav-list')
+        el.closest('[data-scroll-region], .table-responsive')
+        || el.matches('.nav-list, .table-responsive, pre')
         || el.getAttribute('tabindex') !== null
         || el.getAttribute('role') === 'region',
       ),
       keyboardReachable: el.getAttribute('tabindex') !== null
+        || el.closest('.table-responsive') !== null
+        || el.matches('pre')
         || Boolean(el.querySelector('a, button, input, select, textarea, [tabindex]')),
     });
   }
@@ -427,7 +429,8 @@ async function mobileProbe(floors) {
     // pressing the words activates it. Measuring the 18px box and calling it
     // too small describes markup rather than the target, and the fix it asks
     // for, a giant checkbox beside its text, is worse than what is there.
-    const label = el.closest('label');
+    const label = el.closest('label')
+      || (el.id ? document.querySelector(`label[for="${CSS.escape(el.id)}"]`) : null);
     const effective = label && (el.type === 'checkbox' || el.type === 'radio')
       ? (() => { const lr = label.getBoundingClientRect(); return Math.min(lr.width, lr.height); })()
       : min;
