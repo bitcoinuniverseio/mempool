@@ -1,7 +1,9 @@
-import { Component, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectionStrategy, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { firstValueFrom, Subject, Subscription, takeUntil } from 'rxjs';
+import { scanSilentBundle, verifySilentBundle, SilentPaymentMatch, validateSilentScanInputs } from './silent-payments-scanner';
 import { SilentPaymentsApiService } from './silent-payments.service';
 
 @Component({
@@ -14,36 +16,37 @@ import { SilentPaymentsApiService } from './silent-payments.service';
       <header class="page-header mb-4">
         <div class="title-row d-flex flex-wrap align-items-center justify-content-between gap-2">
           <h1 class="m-0">Silent Payments In-Browser Scanner</h1>
-          <span class="badge bg-success">Zero-Knowledge Client-Side Scan</span>
+          <span class="badge bg-success">Client-Side Receiver Scan</span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
-          Perform client-side BIP352 balance detection using public block bundles. Your scan and spend keys never leave your browser.
+          Perform client-side BIP352 received-output detection using public block bundles. Your private scan capability is used only in this page. Only a spend public key is needed.
         </p>
 
         <!-- Navigation Tabs -->
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/payments/silent">Overview</a>
-          <a class="nav-link active" routerLink="/payments/silent/scan">In-Browser Scanner</a>
-          <a class="nav-link" routerLink="/payments/silent/address">Address Validator</a>
-          <a class="nav-link" routerLink="/payments/silent/psbt">PSBT Inspector</a>
-          <a class="nav-link" routerLink="/payments/silent/coverage">Indexing Coverage</a>
+          <a class="nav-link" [routerLink]="api.path('/payments/silent')">Overview</a>
+          <a class="nav-link active" [routerLink]="api.path('/payments/silent/scan')">In-Browser Scanner</a>
+          <a class="nav-link" [routerLink]="api.path('/payments/silent/address')">Address Validator</a>
+          <a class="nav-link" [routerLink]="api.path('/payments/silent/psbt')">PSBT Inspector</a>
+          <a class="nav-link" [routerLink]="api.path('/payments/silent/coverage')">Indexing Coverage</a>
         </nav>
       </header>
 
+      <p class="small text-muted">Finds received outputs; it does not determine whether they remain unspent. Range limit: 144 indexed blocks.</p>
       <!-- Scan Input Parameters -->
       <div class="card p-4 mb-4 bg-body-tertiary border">
         <h2 class="h5 mb-3">Scanner Keys & Block Range</h2>
         <form (ngSubmit)="startScan()" #scanForm="ngForm">
           <div class="row g-3">
             <div class="col-12 col-md-6">
-              <label for="scanKey" class="form-label small text-muted">Scan Public Key (hex compressed)</label>
+              <label for="scanKey" class="form-label small text-muted">Private Scan Capability (32-byte hex)</label>
               <input
                 id="scanKey"
-                type="text"
+                type="password"
                 class="form-control font-monospace"
-                placeholder="02... (33 bytes hex)"
-                [(ngModel)]="scanPubkey"
-                name="scanPubkey"
+                placeholder="Private scan key, never a seed or spend key"
+                [(ngModel)]="scanKey" autocomplete="off" spellcheck="false" maxlength="64"
+                name="scanKey"
                 required
                 [disabled]="isScanning"
               />
@@ -69,7 +72,7 @@ import { SilentPaymentsApiService } from './silent-payments.service';
                 class="form-control font-monospace"
                 [(ngModel)]="startHeight"
                 name="startHeight"
-                min="800000"
+                min="0"
                 required
                 [disabled]="isScanning"
               />
@@ -82,30 +85,24 @@ import { SilentPaymentsApiService } from './silent-payments.service';
                 class="form-control font-monospace"
                 [(ngModel)]="endHeight"
                 name="endHeight"
-                min="800000"
+                min="0"
                 required
                 [disabled]="isScanning"
               />
             </div>
           </div>
 
+          <div class="mt-3"><label for="maxLabel">Highest wallet label (change label 0 is always checked)</label><input id="maxLabel" class="form-control" type="number" [(ngModel)]="maxLabel" name="maxLabel" min="0" max="100" [disabled]="isScanning"></div>
           <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-4">
             <span class="text-muted small">
               Cryptographic tweak derivation executes entirely in your browser thread or Web Worker.
             </span>
             <div class="d-flex gap-2">
-              <button
-                type="button"
-                class="btn btn-outline-secondary"
-                (click)="loadDemoKeys()"
-                [disabled]="isScanning"
-              >
-                Load Test Keys
-              </button>
+              <button type="button" class="btn btn-outline-secondary" (click)="cancelScan()">Cancel and clear scan key</button>
               <button
                 type="submit"
                 class="btn btn-primary px-4"
-                [disabled]="isScanning || !scanPubkey || !spendPubkey"
+                [disabled]="isScanning || !scanKey || !spendPubkey"
               >
                 <span *ngIf="isScanning" class="spinner-border spinner-border-sm me-1" role="status"></span>
                 {{ isScanning ? 'Scanning Blocks...' : 'Start Scan' }}
@@ -115,6 +112,7 @@ import { SilentPaymentsApiService } from './silent-payments.service';
         </form>
       </div>
 
+      <div *ngIf="errorMessage" class="alert alert-danger" role="alert">{{ errorMessage }}</div><div *ngIf="scanComplete && !detectedOutputs.length" class="alert alert-info">Scan completed with no matching outputs in the selected range.</div>
       <!-- Scan Progress -->
       <div *ngIf="isScanning || scanComplete" class="card p-4 bg-body-tertiary border mb-4">
         <div class="d-flex justify-content-between align-items-center mb-2">
@@ -176,6 +174,10 @@ import { SilentPaymentsApiService } from './silent-payments.service';
     </div>
   `,
   styles: [`
+    :host .text-muted, :host .form-control::placeholder {
+      color: var(--u-text-muted, #a99cb5) !important;
+      opacity: 1;
+    }
     .nav-link {
       color: inherit;
       padding: 0.4rem 0.8rem;
@@ -187,68 +189,65 @@ import { SilentPaymentsApiService } from './silent-payments.service';
     }
   `],
 })
-export class SilentPaymentsScanComponent {
-  scanPubkey = '';
+export class SilentPaymentsScanComponent implements OnDestroy {
+  private readonly cancelled = new Subject<void>();
+  scanKey = '';
+  maxLabel = 0;
   spendPubkey = '';
-  startHeight = 860395;
-  endHeight = 860400;
+  startHeight: number | null = null;
+  endHeight: number | null = null;
   isScanning = false;
   scanComplete = false;
-  currentScanHeight = 860395;
+  currentScanHeight = 0;
   scannedBlocksCount = 0;
   candidatesEvaluated = 0;
   scanPercentage = 0;
-
-  detectedOutputs: { height: number; txid: string; vout: number; pubkey: string; amount_sats: number }[] = [];
-
-  constructor(
-    private api: SilentPaymentsApiService,
-    private cd: ChangeDetectorRef
-  ) {}
-
-  loadDemoKeys(): void {
-    this.scanPubkey = '0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798';
-    this.spendPubkey = '03c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5';
-    this.cd.markForCheck();
+  errorMessage: string | null = null;
+  detectedOutputs: SilentPaymentMatch[] = [];
+  private epoch = 0;
+  private networkSub: Subscription;
+  constructor(public api: SilentPaymentsApiService, private cd: ChangeDetectorRef) {
+    this.networkSub = api.networkChanges$.subscribe(() => {
+      this.cancelScan(); this.detectedOutputs = []; this.scanComplete = false; this.cd.markForCheck();
+    });
   }
-
-  startScan(): void {
-    if (!this.scanPubkey || !this.spendPubkey) return;
-    this.isScanning = true;
-    this.scanComplete = false;
-    this.detectedOutputs = [];
-    this.scannedBlocksCount = 0;
-    this.candidatesEvaluated = 0;
-    this.currentScanHeight = this.startHeight;
-
-    const totalBlocks = Math.max(1, this.endHeight - this.startHeight + 1);
-
-    const step = () => {
-      if (this.currentScanHeight <= this.endHeight) {
-        this.scannedBlocksCount++;
-        this.candidatesEvaluated += 18;
-        this.scanPercentage = (this.scannedBlocksCount / totalBlocks) * 100;
-
-        if (this.currentScanHeight === this.endHeight) {
-          this.detectedOutputs.push({
-            height: this.endHeight,
-            txid: '4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b',
-            vout: 0,
-            pubkey: '0289a1c2d3e4f5061728394a5b6c7d8e9f0123456789abcdef0123456789abcd',
-            amount_sats: 125000,
-          });
-        }
-
-        this.currentScanHeight++;
-        this.cd.markForCheck();
-        setTimeout(step, 100);
-      } else {
-        this.isScanning = false;
-        this.scanComplete = true;
-        this.cd.markForCheck();
+  cancelScan(): void { this.epoch++; this.cancelled.next(); this.scanKey = ''; this.isScanning = false; this.detectedOutputs = []; this.scanComplete = false; }
+  ngOnDestroy(): void { this.cancelScan(); this.networkSub.unsubscribe(); this.cancelled.complete(); }
+  async startScan(): Promise<void> {
+    const start = this.startHeight; const end = this.endHeight;
+    if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start! < 0 || end! < start! || end! - start! >= 144) {
+      this.scanKey = ''; this.errorMessage = 'Choose a valid range of at most 144 indexed blocks.'; return;
+    }
+    const epoch = ++this.epoch; const network = this.api.network;
+    this.cancelled.next();
+    const scanKey = this.scanKey; const spendKey = this.spendPubkey;
+    this.isScanning = true; this.scanComplete = false; this.errorMessage = null;
+    this.detectedOutputs = []; this.scannedBlocksCount = 0; this.candidatesEvaluated = 0; this.scanPercentage = 0;
+    try {
+      validateSilentScanInputs(scanKey, spendKey, this.maxLabel);
+      let previousHash: string | undefined;
+      for (let height = start!; height <= end!; height++) {
+        const manifest = await firstValueFrom(this.api.getBlockManifest$(height).pipe(takeUntil(this.cancelled)));
+        if (epoch !== this.epoch) return;
+        const raw = await firstValueFrom(this.api.getBlockBundleBytes$(height).pipe(takeUntil(this.cancelled)));
+        if (epoch !== this.epoch) return;
+        const bundle = await verifySilentBundle(raw, manifest, network, height);
+        if (previousHash && bundle.previous_block_hash !== previousHash) throw new Error('Chain changed during scanning. Restart the selected range.');
+        const matches = await scanSilentBundle(bundle, scanKey, spendKey, this.maxLabel, () => epoch !== this.epoch);
+        if (epoch !== this.epoch) return;
+        this.detectedOutputs.push(...matches); this.currentScanHeight = height; this.scannedBlocksCount++;
+        this.candidatesEvaluated += bundle.transactions.reduce((n, tx) => n + tx.candidate_outputs.length, 0);
+        this.scanPercentage = this.scannedBlocksCount / (end! - start! + 1) * 100;
+        previousHash = bundle.block_hash; this.cd.markForCheck();
       }
-    };
-
-    setTimeout(step, 50);
+      // Confirm the final checkpoint still belongs to the source chain before reporting success.
+      const finalManifest = await firstValueFrom(this.api.getBlockManifest$(end!).pipe(takeUntil(this.cancelled)));
+      if (finalManifest.block_hash !== previousHash) throw new Error('Chain changed during scanning. Restart the selected range.');
+      if (epoch === this.epoch) this.scanComplete = true;
+    } catch (error: any) {
+      if (epoch === this.epoch) { this.detectedOutputs = []; this.errorMessage = error?.error?.error || error?.message || 'Scan source is unavailable.'; }
+    } finally {
+      if (epoch === this.epoch) { this.scanKey = ''; this.isScanning = false; this.cd.markForCheck(); }
+    }
   }
 }

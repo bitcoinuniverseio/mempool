@@ -1,7 +1,8 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { EMPTY, Subscription } from 'rxjs';
+import { catchError, distinctUntilChanged, startWith, switchMap } from 'rxjs/operators';
 import { SilentPaymentsApiService, SilentPaymentCoverageOverview } from './silent-payments.service';
 
 @Component({
@@ -19,16 +20,16 @@ import { SilentPaymentsApiService, SilentPaymentCoverageOverview } from './silen
           </span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
-          Historical indexer status, block bundle archives, and tweaks hash commitments for deterministic client-side balance scanning.
+          Historical indexer status, block bundle archives, and bundle integrity commitments for deterministic client-side receiver scanning.
         </p>
 
         <!-- Navigation Tabs -->
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/payments/silent">Overview</a>
-          <a class="nav-link" routerLink="/payments/silent/scan">In-Browser Scanner</a>
-          <a class="nav-link" routerLink="/payments/silent/address">Address Validator</a>
-          <a class="nav-link" routerLink="/payments/silent/psbt">PSBT Inspector</a>
-          <a class="nav-link active" routerLink="/payments/silent/coverage">Indexing Coverage</a>
+          <a class="nav-link" [routerLink]="api.path('/payments/silent')">Overview</a>
+          <a class="nav-link" [routerLink]="api.path('/payments/silent/scan')">In-Browser Scanner</a>
+          <a class="nav-link" [routerLink]="api.path('/payments/silent/address')">Address Validator</a>
+          <a class="nav-link" [routerLink]="api.path('/payments/silent/psbt')">PSBT Inspector</a>
+          <a class="nav-link active" [routerLink]="api.path('/payments/silent/coverage')">Indexing Coverage</a>
         </nav>
       </header>
 
@@ -43,7 +44,7 @@ import { SilentPaymentsApiService, SilentPaymentCoverageOverview } from './silen
 
       <div *ngIf="!loading && overview" class="content-body">
         <div class="card p-4 bg-body-tertiary border mb-4">
-          <h2 class="h5 mb-3">Recent Block Manifests</h2>
+          <h2 class="h5 mb-3">Recent Block Manifests</h2><p>Status: {{ overview.status }}. {{ overview.reason }}</p><p *ngIf="!overview.recent_manifests.length">No completed bundles have been ingested for this network.</p>
           <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
               <thead>
@@ -51,16 +52,16 @@ import { SilentPaymentsApiService, SilentPaymentCoverageOverview } from './silen
                   <th>Block Height</th>
                   <th>Candidate Outputs</th>
                   <th>Total Spent Inputs</th>
-                  <th>Tweaks Hash Commitment</th>
+                  <th>Bundle SHA-256</th>
                   <th class="text-end">Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let h of recentHeights">
-                  <td class="fw-bold">{{ h }}</td>
-                  <td><span class="badge bg-info">18 outputs</span></td>
-                  <td>4,200 inputs</td>
-                  <td><code class="small">e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855...</code></td>
+                <tr *ngFor="let manifest of overview.recent_manifests">
+                  <td class="fw-bold">{{ manifest.height }}</td>
+                  <td><span class="badge bg-info">{{ manifest.candidate_output_count }} outputs</span></td>
+                  <td>{{ manifest.num_inputs }} inputs</td>
+                  <td><code class="small">{{ manifest.bundle_hash }}</code></td>
                   <td class="text-end"><span class="badge bg-success">Materialized</span></td>
                 </tr>
               </tbody>
@@ -71,6 +72,10 @@ import { SilentPaymentsApiService, SilentPaymentCoverageOverview } from './silen
     </div>
   `,
   styles: [`
+    :host .text-muted, :host .form-control::placeholder {
+      color: var(--u-text-muted, #a99cb5) !important;
+      opacity: 1;
+    }
     .nav-link {
       color: inherit;
       padding: 0.4rem 0.8rem;
@@ -86,17 +91,23 @@ export class SilentPaymentsCoverageComponent implements OnInit, OnDestroy {
   overview: SilentPaymentCoverageOverview | null = null;
   loading = true;
   error: string | null = null;
-  recentHeights: number[] = [860400, 860399, 860398, 860397, 860396];
+
   private sub = new Subscription();
 
   constructor(
-    private api: SilentPaymentsApiService,
+    public api: SilentPaymentsApiService,
     private cd: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
     this.sub.add(
-      this.api.getCoverage$().subscribe({
+      this.api.networkChanges$.pipe(startWith(this.api.network), distinctUntilChanged(), switchMap(() => {
+        this.loading = true; this.overview = null; this.error = null;
+        return this.api.getCoverage$().pipe(catchError(err => {
+          this.error = err?.error?.reason || err?.error?.error || 'First-party coverage source is unavailable.';
+          this.loading = false; this.cd.markForCheck(); return EMPTY;
+        }));
+      })).subscribe({
         next: data => {
           this.overview = data;
           this.loading = false;

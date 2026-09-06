@@ -1,7 +1,8 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { EMPTY, Subscription } from 'rxjs';
+import { catchError, distinctUntilChanged, startWith, switchMap } from 'rxjs/operators';
 import { SilentPaymentsApiService, SilentPaymentCoverageOverview } from './silent-payments.service';
 
 @Component({
@@ -19,16 +20,16 @@ import { SilentPaymentsApiService, SilentPaymentCoverageOverview } from './silen
           </span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
-          Non-interactive reusable stealth addresses for Bitcoin providing sender-receiver unlinkability and client-side balance discovery.
+          Non-interactive reusable stealth addresses for Bitcoin providing sender-receiver unlinkability and client-side received-output discovery.
         </p>
 
         <!-- Navigation Tabs -->
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link active" routerLink="/payments/silent">Overview</a>
-          <a class="nav-link" routerLink="/payments/silent/scan">In-Browser Scanner</a>
-          <a class="nav-link" routerLink="/payments/silent/address">Address Validator</a>
-          <a class="nav-link" routerLink="/payments/silent/psbt">PSBT Inspector</a>
-          <a class="nav-link" routerLink="/payments/silent/coverage">Indexing Coverage</a>
+          <a class="nav-link active" [routerLink]="api.path('/payments/silent')">Overview</a>
+          <a class="nav-link" [routerLink]="api.path('/payments/silent/scan')">In-Browser Scanner</a>
+          <a class="nav-link" [routerLink]="api.path('/payments/silent/address')">Address Validator</a>
+          <a class="nav-link" [routerLink]="api.path('/payments/silent/psbt')">PSBT Inspector</a>
+          <a class="nav-link" [routerLink]="api.path('/payments/silent/coverage')">Indexing Coverage</a>
         </nav>
       </header>
 
@@ -48,7 +49,7 @@ import { SilentPaymentsApiService, SilentPaymentCoverageOverview } from './silen
             <div class="card p-3 h-100 bg-body-tertiary border">
               <div class="text-muted small">Latest Indexed Height</div>
               <div class="h4 my-1 text-primary">{{ overview.latest_indexed_height | number }}</div>
-              <div class="small text-muted">Synchronized with core node</div>
+              <div class="small text-muted">{{ overview.status }}: {{ overview.reason }}</div>
             </div>
           </div>
           <div class="col-12 col-sm-6 col-lg-3">
@@ -61,23 +62,23 @@ import { SilentPaymentsApiService, SilentPaymentCoverageOverview } from './silen
           <div class="col-12 col-sm-6 col-lg-3">
             <div class="card p-3 h-100 bg-body-tertiary border">
               <div class="text-muted small">Candidate SP Outputs</div>
-              <div class="h4 my-1 text-info">{{ overview.total_sp_outputs_detected | number }}</div>
-              <div class="small text-muted">On-chain stealth outputs</div>
+              <div class="h4 my-1 text-info">{{ overview.total_candidate_outputs | number }}</div>
+              <div class="small text-muted">Eligible Taproot candidates; receiver matches are private</div>
             </div>
           </div>
           <div class="col-12 col-sm-6 col-lg-3">
             <div class="card p-3 h-100 bg-body-tertiary border">
               <div class="text-muted small">Ecosystem Wallets</div>
-              <div class="h4 my-1 text-warning">{{ overview.ecosystem_adoption_count }}</div>
-              <div class="small text-muted">Verified implementations</div>
+              <div class="h4 my-1 text-warning">Unknown</div>
+              <div class="small text-muted">No current support evidence recorded</div>
             </div>
           </div>
         </section>
 
         <!-- Ecosystem Support Registry -->
         <section class="card p-4 bg-body-tertiary border mb-4">
-          <h2 class="h5 mb-3">Verified Wallet & Ecosystem Support</h2>
-          <div class="table-responsive">
+          <h2 class="h5 mb-3">Wallet Support Evidence</h2>
+          <p *ngIf="!overview.support_claims.length">No versioned support evidence has been recorded.</p><div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
               <thead>
                 <tr>
@@ -86,7 +87,7 @@ import { SilentPaymentsApiService, SilentPaymentCoverageOverview } from './silen
                   <th>Receiving (Scanning)</th>
                   <th>BIP375 Send PSBT</th>
                   <th>BIP376 Spend PSBT</th>
-                  <th class="text-end">Verified Version</th>
+                  <th class="text-end">Evidence / Version</th>
                 </tr>
               </thead>
               <tbody>
@@ -112,7 +113,7 @@ import { SilentPaymentsApiService, SilentPaymentCoverageOverview } from './silen
                       {{ claim.bip376_spend_psbt ? 'Supported' : 'No' }}
                     </span>
                   </td>
-                  <td class="text-end text-muted small"><code>{{ claim.verified_version }}</code></td>
+                  <td class="text-end text-muted small"><code>{{ claim.verified_version }}</code><br><a [href]="claim.evidence_url" target="_blank" rel="noopener noreferrer">{{ claim.status }}</a><br>{{ claim.updated_at | date }}</td>
                 </tr>
               </tbody>
             </table>
@@ -122,6 +123,10 @@ import { SilentPaymentsApiService, SilentPaymentCoverageOverview } from './silen
     </div>
   `,
   styles: [`
+    :host .text-muted, :host .form-control::placeholder {
+      color: var(--u-text-muted, #a99cb5) !important;
+      opacity: 1;
+    }
     .nav-link {
       color: inherit;
       padding: 0.4rem 0.8rem;
@@ -140,13 +145,19 @@ export class SilentPaymentsOverviewComponent implements OnInit, OnDestroy {
   private sub = new Subscription();
 
   constructor(
-    private api: SilentPaymentsApiService,
+    public api: SilentPaymentsApiService,
     private cd: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
     this.sub.add(
-      this.api.getCoverage$().subscribe({
+      this.api.networkChanges$.pipe(startWith(this.api.network), distinctUntilChanged(), switchMap(() => {
+        this.loading = true; this.overview = null; this.error = null;
+        return this.api.getCoverage$().pipe(catchError(err => {
+          this.error = err?.error?.reason || err?.error?.error || 'First-party coverage source is unavailable.';
+          this.loading = false; this.cd.markForCheck(); return EMPTY;
+        }));
+      })).subscribe({
         next: data => {
           this.overview = data;
           this.loading = false;

@@ -1,175 +1,163 @@
-import crypto from 'crypto';
+import { createHash } from 'crypto';
+import config from '../../../config';
+import DB from '../../../database';
 import logger from '../../../logger';
-import { IntelligenceEventBus } from '../events/intelligence-event-bus';
-import {
-  SilentPaymentBlockManifest,
-  SilentPaymentBlockBundle,
-  SilentPaymentSupportClaim,
-  SilentPaymentCoverageOverview,
-} from './silent-payments.models';
+import blocks from '../../blocks';
+import bitcoinApi from '../../bitcoin/bitcoin-api-factory';
+import bitcoinClient from '../../bitcoin/bitcoin-client';
+import { IEsploraApi } from '../../bitcoin/esplora-api.interface';
+import { buildSilentPaymentBundle, SILENT_PAYMENTS_SCHEMA_QUERIES } from './silent-payments-ingestion';
+import { decodeSilentAddress, inspectPsbt, SP_NETWORKS } from './silent-payments-parsers';
+import { SilentPaymentBlockBundle, SilentPaymentBlockManifest, SilentPaymentCoverageOverview, SilentPaymentSupportClaim } from './silent-payments.models';
+
+export class SilentPaymentUnavailable extends Error {}
 
 export class SilentPaymentsService {
   private static instance: SilentPaymentsService;
-  private eventBus = IntelligenceEventBus.getInstance();
-
-  private manifests: Map<number, SilentPaymentBlockManifest> = new Map();
-  private bundles: Map<number, SilentPaymentBlockBundle> = new Map();
-  private supportClaims: SilentPaymentSupportClaim[] = [];
-
-  private constructor() {
-    this.seedInitialData();
-  }
+  private started = false;
+  private queue: Promise<void> = Promise.resolve();
+  private initialized = false;
+  private failure: string | undefined;
+  private readonly network = config.MEMPOOL.NETWORK === 'testnet' ? 'testnet' : config.MEMPOOL.NETWORK || 'mainnet';
 
   public static getInstance(): SilentPaymentsService {
-    if (!SilentPaymentsService.instance) {
-      SilentPaymentsService.instance = new SilentPaymentsService();
-    }
+    if (!SilentPaymentsService.instance) {SilentPaymentsService.instance = new SilentPaymentsService();}
     return SilentPaymentsService.instance;
   }
 
-  private seedInitialData(): void {
-    const baseHeight = 860400;
-    for (let i = 0; i < 5; i++) {
-      const h = baseHeight - i;
-      const manifest: SilentPaymentBlockManifest = {
-        height: h,
-        block_hash: `0000000000000000000${h}abcdef1234567890abcdef`,
-        num_inputs: 4200,
-        num_sp_outputs: 14 + (i * 3),
-        tweaks_hash: crypto.randomBytes(32).toString('hex'),
-        bundle_s3_url: `s3://mempool-silent-payments/bundles/${h}.json.gz`,
-        created_at: new Date(Date.now() - (i * 600000)).toISOString(),
-      };
-      this.manifests.set(h, manifest);
-
-      this.bundles.set(h, {
-        height: h,
-        block_hash: manifest.block_hash,
-        spent_outpoints: [
-          { txid: crypto.randomBytes(32).toString('hex'), vout: 0, pubkey: '02' + crypto.randomBytes(32).toString('hex') },
-        ],
-        candidate_outputs: [
-          { txid: crypto.randomBytes(32).toString('hex'), vout: 0, pubkey: '02' + crypto.randomBytes(32).toString('hex'), amount_sats: 50000 },
-        ],
-        input_tweak_sum: crypto.randomBytes(32).toString('hex'),
+  public start(): void {
+    if (this.started) {return;}
+    this.started = true;
+    blocks.setNewBlockCallback((block, txids, transactions) => {
+      this.queue = this.queue.then(/** @asyncUnsafe The following catch records ingestion failures. */ async () => {
+        await this.assertSource(this.network);
+        await this.ensureStorage();
+        await this.reconcileAndIngest(block, transactions);
+        this.failure = undefined;
+      }).catch(error => {
+        this.failure = error instanceof SilentPaymentUnavailable ? error.message : 'First-party block ingestion failed; checkpoint was not advanced.';
+        logger.warn(`Silent Payments: ${this.failure}`);
       });
+    });
+  }
+
+  /** @asyncUnsafe Source/storage failures propagate to the route or shared-event error boundary. */
+  private async ensureStorage(): Promise<void> {
+    if (!config.DATABASE.ENABLED) {throw new SilentPaymentUnavailable('Silent Payment persistence requires the configured MySQL database.');}
+    if (this.initialized) {return;}
+    for (const query of SILENT_PAYMENTS_SCHEMA_QUERIES) {await DB.query(query);}
+    this.initialized = true;
+  }
+
+  /** @asyncUnsafe Source/storage failures propagate to the route or shared-event error boundary. */
+  private async assertSource(network: string): Promise<void> {
+    if (!SP_NETWORKS.includes(network) || network !== this.network) {throw new SilentPaymentUnavailable(`No first-party Bitcoin source is configured for ${network}.`);}
+    let info: any;
+    try { info = await bitcoinClient.getBlockchainInfo(); }
+    catch { throw new SilentPaymentUnavailable('Configured Bitcoin Core RPC is unavailable.'); }
+    const actual = ({ main: 'mainnet', test: 'testnet', testnet4: 'testnet4', signet: 'signet', regtest: 'regtest' })[info?.chain];
+    if (actual !== network) {throw new SilentPaymentUnavailable('Configured Bitcoin Core chain does not match the requested network.');}
+    if (info.initialblockdownload) {throw new SilentPaymentUnavailable('Configured Bitcoin Core is still synchronizing.');}
+    // Check the shared Esplora/electrum source against Core before accepting its block data.
+    let coreHash: string;
+    try { coreHash = await bitcoinClient.getBlockHash(0); }
+    catch { throw new SilentPaymentUnavailable('Cannot verify Bitcoin source identity.'); }
+    if (await bitcoinApi.$getBlockHash(0) !== coreHash) {throw new SilentPaymentUnavailable('Shared Bitcoin source and Core have different genesis blocks.');}
+  }
+
+  /** @asyncUnsafe Source/storage failures propagate to the route or shared-event error boundary. */
+  private async latest(network: string): Promise<SilentPaymentBlockManifest | null> {
+    const [rows]: any = await DB.query('SELECT manifest_json FROM intelligence_silent_payment_blocks WHERE chain = ? AND network = ? ORDER BY height DESC LIMIT 1', ['bitcoin', network]);
+    return rows.length ? JSON.parse(rows[0].manifest_json) : null;
+  }
+
+  /** Serialized shared-block consumer. Each row atomically contains both bundle and checkpoint. */
+  /** @asyncUnsafe Source/storage failures propagate to the route or shared-event error boundary. */
+  public async ingestBlock(network: string, block: IEsploraApi.Block, transactions: IEsploraApi.Transaction[]): Promise<void> {
+    if (network !== this.network) {throw new SilentPaymentUnavailable('Cannot ingest a different source network.');}
+    const { manifest, bytes } = buildSilentPaymentBundle(network, block, transactions);
+    await DB.$atomicQuery([
+      { query: 'DELETE FROM intelligence_silent_payment_blocks WHERE chain = ? AND network = ? AND height >= ? AND (height > ? OR block_hash <> ?)', params: ['bitcoin', network, block.height, block.height, block.id] },
+      { query: `INSERT INTO intelligence_silent_payment_blocks (chain, network, height, block_hash, previous_block_hash, bundle_hash, manifest_json, bundle_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE bundle_hash = VALUES(bundle_hash), manifest_json = VALUES(manifest_json), bundle_json = VALUES(bundle_json)`, params: ['bitcoin', network, block.height, block.id, block.previousblockhash, manifest.bundle_hash, JSON.stringify(manifest), bytes] }
+    ]);
+  }
+
+  /** @asyncUnsafe Source/storage failures propagate to the route or shared-event error boundary. */
+  private async reconcileAndIngest(block: IEsploraApi.Block, transactions: IEsploraApi.Transaction[]): Promise<void> {
+    let checkpoint = await this.latest(this.network);
+    const sourceTip = await bitcoinApi.$getBlockHeightTip();
+    let walked = 0;
+    while (checkpoint && (checkpoint.height > sourceTip || await bitcoinApi.$getBlockHash(checkpoint.height) !== checkpoint.block_hash)) {
+      if (++walked > 144) {throw new SilentPaymentUnavailable('Reorg recovery reached its 144-block batch limit; recovery resumes on the next shared block.');}
+      await DB.query('DELETE FROM intelligence_silent_payment_blocks WHERE chain = ? AND network = ? AND height >= ?', ['bitcoin', this.network, checkpoint.height]);
+      checkpoint = await this.latest(this.network);
     }
-
-    this.supportClaims = [
-      {
-        wallet_id: 'silentium',
-        name: 'Silentium Core',
-        send_supported: true,
-        receive_supported: true,
-        bip352_compliance: true,
-        bip375_send_psbt: true,
-        bip376_spend_psbt: true,
-        verified_version: 'v1.4.0',
-        updated_at: new Date().toISOString(),
-      },
-      {
-        wallet_id: 'sparrow',
-        name: 'Sparrow Wallet',
-        send_supported: true,
-        receive_supported: true,
-        bip352_compliance: true,
-        bip375_send_psbt: true,
-        bip376_spend_psbt: false,
-        verified_version: 'v1.9.1',
-        updated_at: new Date().toISOString(),
-      },
-      {
-        wallet_id: 'cake',
-        name: 'Cake Wallet',
-        send_supported: true,
-        receive_supported: false,
-        bip352_compliance: true,
-        bip375_send_psbt: false,
-        bip376_spend_psbt: false,
-        verified_version: 'v4.18.0',
-        updated_at: new Date().toISOString(),
-      },
-    ];
-  }
-
-  public getCoverageOverview(): SilentPaymentCoverageOverview {
-    const sortedHeights = Array.from(this.manifests.keys()).sort((a, b) => b - a);
-    const latestHeight = sortedHeights[0] || 860400;
-    const totalOutputs = Array.from(this.manifests.values()).reduce((acc, m) => acc + m.num_sp_outputs, 0);
-
-    return {
-      latest_indexed_height: latestHeight,
-      total_indexed_blocks: this.manifests.size,
-      total_sp_outputs_detected: totalOutputs,
-      ecosystem_adoption_count: this.supportClaims.length,
-      support_claims: this.supportClaims,
-      last_updated: new Date().toISOString(),
-    };
-  }
-
-  public getBlockManifest(height: number): SilentPaymentBlockManifest | null {
-    return this.manifests.get(height) || null;
-  }
-
-  public getBlockBundle(height: number): SilentPaymentBlockBundle | null {
-    return this.bundles.get(height) || null;
-  }
-
-  public getSupportRegistry(): SilentPaymentSupportClaim[] {
-    return this.supportClaims;
-  }
-
-  public validateSilentPaymentAddress(address: string): { valid: boolean; network?: string; scan_pubkey?: string; spend_pubkey?: string; error?: string } {
-    if (!address || typeof address !== 'string') {
-      return { valid: false, error: 'Address is required.' };
+    if (checkpoint && checkpoint.height >= block.height) {return;}
+    // Restart/retry catches up in bounded batches through the existing shared source client.
+    const start = checkpoint ? checkpoint.height + 1 : block.height;
+    const end = Math.min(block.height, start + 143);
+    for (let height = start; height <= end; height++) {
+      const hash = height === block.height ? block.id : await bitcoinApi.$getBlockHash(height);
+      const nextBlock = height === block.height ? block : await bitcoinApi.$getBlock(hash);
+      const txs = height === block.height ? transactions : await bitcoinApi.$getTxsForBlock(hash);
+      if (checkpoint && nextBlock.previousblockhash !== checkpoint.block_hash) {throw new SilentPaymentUnavailable('Block continuity changed during ingestion; retry on the next shared block.');}
+      if (await bitcoinApi.$getBlockHash(height) !== nextBlock.id) {throw new SilentPaymentUnavailable('Block changed during ingestion; checkpoint was not advanced.');}
+      await this.ingestBlock(this.network, nextBlock, txs);
+      checkpoint = { height, block_hash: nextBlock.id } as SilentPaymentBlockManifest;
     }
-
-    const trimmed = address.trim();
-    const isMainnet = trimmed.startsWith('sp1q');
-    const isTestnet = trimmed.startsWith('tsp1q');
-
-    if (!isMainnet && !isTestnet) {
-      return { valid: false, error: 'Invalid Silent Payment address prefix. Expected sp1q or tsp1q.' };
-    }
-
-    // BIP352 address must decode to 66 bytes (two 33-byte compressed public keys)
-    // In bech32m encoding, 66 bytes produces 116 characters plus hrp prefix (approx 121-122 chars)
-    if (trimmed.length < 110 || trimmed.length > 130) {
-      return { valid: false, error: 'Invalid Silent Payment address length for BIP352 encoding.' };
-    }
-
-    return {
-      valid: true,
-      network: isMainnet ? 'mainnet' : 'testnet',
-      scan_pubkey: '02' + trimmed.slice(4, 36),
-      spend_pubkey: '03' + trimmed.slice(36, 68),
-    };
   }
 
-  public validatePsbtFields(psbtBase64: string): { valid: boolean; bip375_present: boolean; bip376_present: boolean; error?: string } {
-    if (!psbtBase64 || typeof psbtBase64 !== 'string') {
-      return { valid: false, bip375_present: false, bip376_present: false, error: 'PSBT payload is required.' };
-    }
-
+  public async getCoverageOverview(network = 'mainnet'): Promise<SilentPaymentCoverageOverview> {
+    const empty: SilentPaymentCoverageOverview = { chain: 'bitcoin', network, status: 'unavailable', latest_indexed_height: null, total_indexed_blocks: null, total_candidate_outputs: null, total_sp_outputs_detected: null, ecosystem_adoption_count: null, support_claims: [], last_updated: null, recent_manifests: [] };
     try {
-      const buffer = Buffer.from(psbtBase64, 'base64');
-      if (buffer.length < 5 || buffer.toString('utf8', 0, 4) !== 'psbt') {
-        return { valid: false, bip375_present: false, bip376_present: false, error: 'Invalid PSBT header magic.' };
-      }
-
-      // Check for BIP375 / BIP376 proprietary or global fields
-      const hasBip375 = buffer.includes(Buffer.from([0xfc, 0x07, 0x73, 0x70, 0x5f, 0x73, 0x65, 0x6e, 0x64])) || true;
-      const hasBip376 = buffer.includes(Buffer.from([0xfc, 0x08, 0x73, 0x70, 0x5f, 0x73, 0x70, 0x65, 0x6e, 0x64])) || false;
-
-      return {
-        valid: true,
-        bip375_present: hasBip375,
-        bip376_present: hasBip376,
-      };
-    } catch (e) {
-      return { valid: false, bip375_present: false, bip376_present: false, error: 'Failed to decode PSBT base64.' };
+      await this.assertSource(network); await this.ensureStorage();
+      const [rows]: any = await DB.query('SELECT manifest_json FROM intelligence_silent_payment_blocks WHERE chain = ? AND network = ? ORDER BY height DESC LIMIT 10', ['bitcoin', network]);
+      const recent: SilentPaymentBlockManifest[] = rows.map(row => JSON.parse(row.manifest_json));
+      if (recent.length && await bitcoinApi.$getBlockHash(recent[0].height) !== recent[0].block_hash) {throw new SilentPaymentUnavailable('Persisted checkpoint was displaced; reorg recovery is pending.');}
+      const [totals]: any = await DB.query('SELECT COUNT(*) AS blocks, SUM(CAST(JSON_EXTRACT(manifest_json, \'$.candidate_output_count\') AS UNSIGNED)) AS candidates FROM intelligence_silent_payment_blocks WHERE chain = ? AND network = ?', ['bitcoin', network]);
+      const tip = await bitcoinApi.$getBlockHeightTip();
+      return { ...empty, status: !recent.length ? 'empty' : this.failure || recent[0].height < tip ? 'stale' : 'current', reason: this.failure, latest_indexed_height: recent[0]?.height ?? null, total_indexed_blocks: Number(totals[0].blocks), total_candidate_outputs: Number(totals[0].candidates || 0), last_updated: recent[0]?.created_at ?? null, recent_manifests: recent, support_claims: await this.getSupportRegistry() };
+    } catch (error) {
+      return { ...empty, reason: error instanceof SilentPaymentUnavailable ? error.message : 'Silent Payment storage or configured first-party source is unavailable.' };
     }
   }
+
+  /** @asyncUnsafe Source/storage failures propagate to the route or shared-event error boundary. */
+  private async stored(height: number, network: string): Promise<{ manifest: SilentPaymentBlockManifest; bytes: string } | null> {
+    if (!Number.isSafeInteger(height) || height < 0 || height > 0xffffffff) {throw new Error('Invalid block height.');}
+    await this.assertSource(network); await this.ensureStorage();
+    const [rows]: any = await DB.query('SELECT manifest_json, bundle_json FROM intelligence_silent_payment_blocks WHERE chain = ? AND network = ? AND height = ?', ['bitcoin', network, height]);
+    if (!rows.length) {return null;}
+    const manifest = JSON.parse(rows[0].manifest_json);
+    const bytes = rows[0].bundle_json;
+    if (manifest.block_hash !== await bitcoinApi.$getBlockHash(height)) {throw new SilentPaymentUnavailable('Requested checkpoint was displaced; reorg recovery is pending.');}
+    if (createHash('sha256').update(bytes).digest('hex') !== manifest.bundle_hash) {throw new SilentPaymentUnavailable('Stored bundle integrity check failed.');}
+    return { manifest, bytes };
+  }
+
+  /** @asyncUnsafe Source/storage failures propagate to the route or shared-event error boundary. */
+  public async getBlockManifest(height: number, network = 'mainnet'): Promise<SilentPaymentBlockManifest | null> { return (await this.stored(height, network))?.manifest || null; }
+  /** @asyncUnsafe Source/storage failures propagate to the route or shared-event error boundary. */
+  public async getBlockBundle(height: number, network = 'mainnet'): Promise<SilentPaymentBlockBundle | null> { const stored = await this.stored(height, network); return stored ? JSON.parse(stored.bytes) : null; }
+  /** @asyncUnsafe Source/storage failures propagate to the route or shared-event error boundary. */
+  public async getBlockBundleBytes(height: number, network = 'mainnet'): Promise<string | null> { return (await this.stored(height, network))?.bytes || null; }
+  /** @asyncUnsafe Source/storage failures propagate to the route or shared-event error boundary. */
+  public async getSupportRegistry(): Promise<SilentPaymentSupportClaim[]> {
+    await this.ensureStorage();
+    const [rows]: any = await DB.query('SELECT claim_json FROM intelligence_silent_payment_support ORDER BY observed_at DESC LIMIT 100');
+    return rows.map(row => {
+      const claim: SilentPaymentSupportClaim = JSON.parse(row.claim_json);
+      const capabilities = ['send_supported', 'receive_supported', 'bip352_compliance', 'bip375_send_psbt', 'bip376_spend_psbt'];
+      if ([claim.wallet_id, claim.name, claim.verified_version].some(value => typeof value !== 'string' || !value.trim()) || capabilities.some(key => typeof claim[key] !== 'boolean') || !Number.isFinite(Date.parse(claim.updated_at)) || !['documented', 'tested'].includes(claim.status)) {throw new SilentPaymentUnavailable('Stored wallet support evidence is incomplete.');}
+      let evidence: URL;
+      try { evidence = new URL(claim.evidence_url); }
+      catch { throw new SilentPaymentUnavailable('Stored wallet support evidence URL is invalid.'); }
+      if (evidence.protocol !== 'https:' || !evidence.hostname || evidence.username || evidence.password) {throw new SilentPaymentUnavailable('Stored wallet support evidence URL is invalid.');}
+      return claim;
+    });
+  }
+  public validateSilentPaymentAddress(address: unknown, network?: string) { return decodeSilentAddress(address, network); }
+  public validatePsbtFields(psbt: unknown) { return inspectPsbt(psbt); }
 }
 
 export const silentPaymentsService = SilentPaymentsService.getInstance();
