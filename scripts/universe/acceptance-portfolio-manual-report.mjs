@@ -84,7 +84,7 @@ export async function checkManualPortfolioReport(page, output, screenshots, { pa
       await editor.locator('summary').click();
     }
     await editor.getByLabel('Position name', { exact: true }).fill(position.name);
-    await editor.getByLabel('Position type', { exact: true }).selectOption(position.kind);
+    await editor.getByLabel(/^Position type/).selectOption(position.kind);
     await editor.getByLabel('Exact quantity', { exact: true }).fill(position.quantity);
     await editor.getByLabel('Unit price (optional)', { exact: true }).fill(position.unitPrice);
     await editor.getByLabel('Price currency', { exact: true }).fill(position.currency);
@@ -179,12 +179,12 @@ export async function checkManualPortfolioReport(page, output, screenshots, { pa
     pass('Q05-P29-manual-csv', 'Actual downloaded CSV independently parses to exact amounts and dates; mixed currencies and liability remain separate, unpriced has no invented price and formula-leading name is literal spreadsheet text', { artifact: csv.path, sha256: digest(csv.bytes), manualRows: csv.rows.length });
 
     phase = 'redacted-csv';
-    await report.getByLabel('Values', { exact: true }).selectOption('percentages');
+    await report.getByLabel(/^Values/).selectOption('percentages');
     await until(async () => !(await preview.innerText()).includes(positions[0].quantity), 'Value redaction must affect the actual preview');
     const redacted = await download('manual-report-redacted-' + suffix + '.csv');
     assert.ok(redacted.rows.every(entry => entry.quantity === 'Hidden' && entry.unit_price === 'Hidden' && entry.value === 'Hidden' && entry.share === 'Not combined'));
     pass('Q05-P29-manual-redaction', 'Actual redacted CSV hides quantity, unit price and value without inventing manual allocation percentages', { artifact: redacted.path, sha256: digest(redacted.bytes) });
-    await report.getByLabel('Values', { exact: true }).selectOption('absolute');
+    await report.getByLabel(/^Values/).selectOption('absolute');
 
     phase = 'actual-print-and-pdf';
     await page.evaluate(() => {

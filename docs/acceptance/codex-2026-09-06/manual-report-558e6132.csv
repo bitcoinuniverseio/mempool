@@ -1,0 +1,4 @@
+"asset","holding","share","value","source","kind","quantity","unit_price","quote_currency","effective_at"
+"Local report 558e6132 exact lot","","Not combined","270215977.6422297937037034","User-entered","asset","9007199254740993.12345678","0.00000003","USD","2026-09-06"
+"Local report 558e6132 liability","","Not combined","10","User-entered","liability","2.5000","4","EUR","2026-09-06"
+"'=Local_report_558e6132","","Not combined","Unpriced","User-entered","asset","0.00000001","Not supplied","","2026-09-06"
