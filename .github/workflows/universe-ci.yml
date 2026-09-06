@@ -850,6 +850,8 @@ jobs:
       # thorough passes are elsewhere.
       - name: A third engine, on the checks that do not need a thumb
         working-directory: scripts/universe/visual-qa
+        env:
+          HOME: /root
         run: >-
           node mobile-check.mjs --base=http://127.0.0.1:$GATEWAY_PORT
           --browser=firefox --routes=home,tx,address,blocks,docs

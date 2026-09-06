@@ -1,6 +1,6 @@
 import { Component, OnInit, ChangeDetectionStrategy, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { BehaviorSubject, EMPTY, merge, Observable, Subscription } from 'rxjs';
+import { BehaviorSubject, EMPTY, merge, Observable, of, Subscription } from 'rxjs';
 import { catchError, switchMap, tap } from 'rxjs/operators';
 import { WebsocketService } from '@app/services/websocket.service';
 import { RbfTree } from '@interfaces/node-api.interface';
@@ -48,7 +48,8 @@ export class RbfList implements OnInit, OnDestroy {
           return this.apiService.getRbfList$(this.fullRbf);
         }),
         catchError((e) => {
-          return EMPTY;
+          this.isLoading = false;
+          return of([]);
         })
       ),
       this.stateService.rbfLatest$
