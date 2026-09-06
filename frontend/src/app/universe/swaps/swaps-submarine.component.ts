@@ -1,26 +1,28 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { SharedModule } from '@app/shared/shared.module';
 import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-swaps-submarine',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, SharedModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: ['.text-muted { color: var(--u-text-muted) !important; }'],
   template: `
     <div class="intelligence-page container-xl">
       <header class="page-header mb-4">
         <h1>Submarine Swap Verification</h1>
         <p class="text-muted">On-chain Bitcoin funding to Lightning invoice settlement verification.</p>
         <nav class="nav nav-pills gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/swaps">Overview</a>
-          <a class="nav-link active" routerLink="/swaps/submarine">Submarine</a>
-          <a class="nav-link" routerLink="/swaps/reverse">Reverse</a>
-          <a class="nav-link" routerLink="/swaps/chain">Chain Swaps</a>
-          <a class="nav-link" routerLink="/swaps/providers">Providers</a>
-          <a class="nav-link" routerLink="/swaps/inspect">Inspector</a>
-          <a class="nav-link" routerLink="/swaps/recover">Recovery Planner</a>
-          <a class="nav-link" routerLink="/swaps/simulate">Simulator</a>
+          <a class="nav-link" [routerLink]="'/swaps' | relativeUrl">Overview</a>
+          <a class="nav-link active" [routerLink]="'/swaps/submarine' | relativeUrl">Submarine</a>
+          <a class="nav-link" [routerLink]="'/swaps/reverse' | relativeUrl">Reverse</a>
+          <a class="nav-link" [routerLink]="'/swaps/chain' | relativeUrl">Chain Swaps</a>
+          <a class="nav-link" [routerLink]="'/swaps/providers' | relativeUrl">Providers</a>
+          <a class="nav-link" [routerLink]="'/swaps/inspect' | relativeUrl">Inspector</a>
+          <a class="nav-link" [routerLink]="'/swaps/recover' | relativeUrl">Recovery Planner</a>
+          <a class="nav-link" [routerLink]="'/swaps/simulate' | relativeUrl">Simulator</a>
         </nav>
       </header>
 
