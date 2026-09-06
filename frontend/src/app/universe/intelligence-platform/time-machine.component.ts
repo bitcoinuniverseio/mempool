@@ -133,7 +133,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
 
             <!-- Historical Fee Histogram -->
             <h5 class="mb-3" *ngIf="currentState.histogram">Fee Rate Histogram At State</h5>
-            <div class="table-responsive" *ngIf="currentState.histogram">
+            <div class="table-responsive" *ngIf="currentState.histogram" tabindex="0">
               <table class="table table-sm table-hover mb-0">
                 <thead>
                   <tr>

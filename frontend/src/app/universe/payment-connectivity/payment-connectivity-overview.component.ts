@@ -68,7 +68,7 @@ import { PaymentConnectivityApiService, PaymentConnectivityOverview } from './pa
         <div class="col-12 col-lg-8">
           <div class="card p-4 bg-body-tertiary border h-100">
             <h2 class="h5 mb-3">Verified Client & Wallet Applications</h2>
-            <div class="table-responsive">
+            <div class="table-responsive" tabindex="0">
               <table class="table table-sm table-hover align-middle">
                 <thead>
                   <tr>

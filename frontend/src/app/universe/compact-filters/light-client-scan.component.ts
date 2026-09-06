@@ -112,7 +112,7 @@ import { FormsModule } from '@angular/forms';
                 </div>
               </div>
 
-              <div class="table-responsive" *ngIf="scanResults.matches.length > 0">
+              <div class="table-responsive" *ngIf="scanResults.matches.length  tabindex="0"> 0">
                 <table class="table table-sm table-hover align-middle">
                   <thead>
                     <tr>

@@ -87,7 +87,7 @@ import { NodeSecurityApiService, NodeSecurityOverview } from './node-security.se
           <h5 class="card-title mb-0">Active Critical Advisories</h5>
           <span class="badge bg-danger">{{ overview.critical_advisories.length }} High Priority</span>
         </div>
-        <div class="table-responsive">
+        <div class="table-responsive" tabindex="0">
           <table class="table table-dark table-hover mb-0">
             <thead>
               <tr>

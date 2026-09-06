@@ -2021,8 +2021,8 @@
     },
     {
       "path": "docs/acceptance/ci-repair-2026-09-06.json",
-      "sha256": "d3e827a06836c8f6fbea6cf57a02465ff9197e24ca44fa89bad53a8eb462cc62",
-      "bytes": 29722
+      "sha256": "1729cfbc21a973df9cfaef861a4c1813d6f2e362c11f59e52b3f90fde04f0173",
+      "bytes": 31436
     },
     {
       "path": "docs/acceptance/current-execution-evidence.json",
@@ -2286,8 +2286,8 @@
     },
     {
       "path": "frontend/src/app/universe/ark-vpack/ark-exit.component.ts",
-      "sha256": "8f857fd2bd97b4a8971757b9ab830b83719ce5bd26b6c3349550fa3bc3ffe9fa",
-      "bytes": 2632
+      "sha256": "608eca9f2488aa6fa249def1c5aac1878824fe19abd9148f7593802ed048deeb",
+      "bytes": 2645
     },
     {
       "path": "frontend/src/app/universe/ark-vpack/ark-providers.component.ts",
@@ -2326,8 +2326,8 @@
     },
     {
       "path": "frontend/src/app/universe/bitcoin-staking/staking-delegations.component.ts",
-      "sha256": "dbb0f9afcd25ba6c76ac15a3b7b2be85ab8d60cedae27ead99df95f66d41e659",
-      "bytes": 5313
+      "sha256": "a8bdd5a63ee5505ba3ad61be41b0975dc5348de5f3d8d404a62de71cb91341c2",
+      "bytes": 5326
     },
     {
       "path": "frontend/src/app/universe/bitcoin-staking/staking-evidence.component.ts",
@@ -2361,33 +2361,33 @@
     },
     {
       "path": "frontend/src/app/universe/block-propagation/block-propagation-block-detail.component.ts",
-      "sha256": "869dc59866c6ced6032e2cd89d8e8e3b8d1f2a1b9f745a705031a9fee6806684",
-      "bytes": 4622
+      "sha256": "c0a016c0c6a6f6fcceb68ed3603a0fa441b38ff31a6d28cf7387bf991860759f",
+      "bytes": 4635
     },
     {
       "path": "frontend/src/app/universe/block-propagation/block-propagation-compact-blocks.component.ts",
-      "sha256": "6de082d32a8be0caea34b729c65b9b27ce47a1e175ac2333d8fdb75ff620021b",
-      "bytes": 3497
+      "sha256": "4cfc3f555fe03409aaf6c52ec533455b47b22cefbf2ac29bf173f90c98a9d3f8",
+      "bytes": 3510
     },
     {
       "path": "frontend/src/app/universe/block-propagation/block-propagation-fibre.component.ts",
-      "sha256": "0b2849b03b7d760bc89890d4ed54be3d80b7fcbf8b114c3445de808aa8b9e91f",
-      "bytes": 3710
+      "sha256": "8ac6795f3b58cb03ebf66a4ebe2b1b06da8831224a6ff456ef3f8488a8ba7c46",
+      "bytes": 3723
     },
     {
       "path": "frontend/src/app/universe/block-propagation/block-propagation-fork-races.component.ts",
-      "sha256": "6f3a6f56e3ea4d7e08f322b22f8512c7465c1a4797e9a5c64e63f279a317e517",
-      "bytes": 3329
+      "sha256": "4c3483a9a404eb531da5f63f1cb1dc5f175d23af2295d01c36c8415a12de455b",
+      "bytes": 3342
     },
     {
       "path": "frontend/src/app/universe/block-propagation/block-propagation-live.component.ts",
-      "sha256": "07f839e06583ee1128148c9d7105fbf7df677a310be261eec5045f488fbffc78",
-      "bytes": 3350
+      "sha256": "afc37432c0c9adf1ea1c1f50ca57315587203f9c38edaffc3c55e27cd174d2bb",
+      "bytes": 3363
     },
     {
       "path": "frontend/src/app/universe/block-propagation/block-propagation-overview.component.ts",
-      "sha256": "0d85a160fd9d2fa65ad4c583b5f1c2c2b0ac701302af7a9ff84ee03c87c2aefa",
-      "bytes": 6687
+      "sha256": "efdad8488e1569df3d057187084e86784c1c5a277c51221d13ab159db13fe536",
+      "bytes": 6700
     },
     {
       "path": "frontend/src/app/universe/block-propagation/block-propagation-race-detail.component.ts",
@@ -2396,8 +2396,8 @@
     },
     {
       "path": "frontend/src/app/universe/block-propagation/block-propagation-stale-tips.component.ts",
-      "sha256": "2fe37973ed81a3c6aff74a96525ef1ad3a140e6fc57f7066373df364635dc0e5",
-      "bytes": 2982
+      "sha256": "951db472e14ea93d7e3dd219f388759e4461318e14262bdfa80590513468c29a",
+      "bytes": 2995
     },
     {
       "path": "frontend/src/app/universe/blockspace/blockspace-compare.component.ts",
@@ -2406,18 +2406,18 @@
     },
     {
       "path": "frontend/src/app/universe/blockspace/blockspace-composition.component.ts",
-      "sha256": "d6b5f8ee8eaca7fa25f8857eb4b23921a6eaf1156fac8c8c540d343ba00ad141",
-      "bytes": 4793
+      "sha256": "0598aa5a09e5628d767bd36b4202bf78af517eeeeb0f8cfda8b36d4f4fd5d7d8",
+      "bytes": 4806
     },
     {
       "path": "frontend/src/app/universe/blockspace/blockspace-overview.component.ts",
-      "sha256": "dd9fb2905f3d35d4aa8b8426325fc71c85607e9e951479cf4673b96b196a4b13",
-      "bytes": 8339
+      "sha256": "93de97a428bb7cb43d07b127fb59b64575738535f5bd71dd83b88189d60c3f03",
+      "bytes": 8365
     },
     {
       "path": "frontend/src/app/universe/blockspace/blockspace-regimes.component.ts",
-      "sha256": "d37f95ebb7275e19d449a9246268b6b476e2edd33740f4b1e2cc067739fcbb9f",
-      "bytes": 4688
+      "sha256": "e24fa5cd1f8fd613c8967e39361a55f7198ad6a54c0c51b7759f8349126ee93c",
+      "bytes": 4701
     },
     {
       "path": "frontend/src/app/universe/blockspace/blockspace-taxonomy.component.ts",
@@ -2431,8 +2431,8 @@
     },
     {
       "path": "frontend/src/app/universe/bootstrap/bootstrap-overview.component.ts",
-      "sha256": "6f17b30d884e24397c975ddaa0f28e3ca574e277bebef60f81e43efd4adcc339",
-      "bytes": 7225
+      "sha256": "36d18e31cc4164727f8533a7c265419f6a7c1ccfda7c88051926f6b09292b2c9",
+      "bytes": 7238
     },
     {
       "path": "frontend/src/app/universe/bootstrap/bootstrap-planner.component.ts",
@@ -2446,8 +2446,8 @@
     },
     {
       "path": "frontend/src/app/universe/bootstrap/bootstrap-snapshots.component.ts",
-      "sha256": "1e19ce90f425a55732b7d34726cc9a441e4f2f9288c5864b1daf7a008540e286",
-      "bytes": 4407
+      "sha256": "c7c8148bf68f17f92d2a9cbd9defd7257b8afc87b6b8c6bc65cd4817de4419db",
+      "bytes": 4420
     },
     {
       "path": "frontend/src/app/universe/bootstrap/bootstrap-verify.component.ts",
@@ -2476,13 +2476,13 @@
     },
     {
       "path": "frontend/src/app/universe/collaborative-privacy/collaborative-privacy-coordinators.component.ts",
-      "sha256": "eb2e97b65b09cbece6bff90e11ded360cddbfeb8cab0d2c593e8e0f7ae8d4fe2",
-      "bytes": 2860
+      "sha256": "3bc28e9acd903a5f19e42f8bf183997abea612774a48eb9ff0e100dc8ed6f5a0",
+      "bytes": 2873
     },
     {
       "path": "frontend/src/app/universe/collaborative-privacy/collaborative-privacy-fidelity-bonds.component.ts",
-      "sha256": "5cb8a2049e9d652f4dab7d11c01e1dbdd61acc1c52516e62987a6d590b76a550",
-      "bytes": 2932
+      "sha256": "8141c841a0a641e8d2cc4ca8b9171c79d3936c7526444829fcdc1dd2b73f64f8",
+      "bytes": 2945
     },
     {
       "path": "frontend/src/app/universe/collaborative-privacy/collaborative-privacy-inspect.component.ts",
@@ -2496,8 +2496,8 @@
     },
     {
       "path": "frontend/src/app/universe/collaborative-privacy/collaborative-privacy-overview.component.ts",
-      "sha256": "0a8930e848af84229343aa3665b9c2f109cf894d89d0332b6203ba5944e47491",
-      "bytes": 6321
+      "sha256": "df4b6001fdc2a5b7de9593fb8ec95ca0b8eeff49dc6e1cea71ed0919d034214e",
+      "bytes": 6334
     },
     {
       "path": "frontend/src/app/universe/collaborative-privacy/collaborative-privacy-round-detail.component.ts",
@@ -2521,13 +2521,13 @@
     },
     {
       "path": "frontend/src/app/universe/compact-filters/light-client-overview.component.ts",
-      "sha256": "f066a9d39dda926a727f724a8ec9c07d43bcf2300637bd96c8cd8cd38bc1c8cc",
-      "bytes": 7549
+      "sha256": "50a0d2157b3e8e0ade7db9ad9b41bbc7f8e6cec3c2bd84dfce9b4b2259a8717c",
+      "bytes": 7562
     },
     {
       "path": "frontend/src/app/universe/compact-filters/light-client-privacy.component.ts",
-      "sha256": "d27f0e0c4d78558a627f6cb6e70127429fafebe77694d87cf8ede4eac8cb8bad",
-      "bytes": 5367
+      "sha256": "c31c29d638aa894379c75af1bbfbd930206e11597bb53570197eb632f75f5c02",
+      "bytes": 5380
     },
     {
       "path": "frontend/src/app/universe/compact-filters/light-client-provider-detail.component.ts",
@@ -2536,13 +2536,13 @@
     },
     {
       "path": "frontend/src/app/universe/compact-filters/light-client-providers.component.ts",
-      "sha256": "5a8bd691c08c4da7e6b135120804b9a91faa83cce354d6940bf49c8362f9e1c7",
-      "bytes": 4657
+      "sha256": "8b5e07d69110ff0db51e190ca9adf91fca314c109d4d27b8895cb3a6470e57a2",
+      "bytes": 4670
     },
     {
       "path": "frontend/src/app/universe/compact-filters/light-client-scan.component.ts",
-      "sha256": "611a86f9e7e080c5e38ec6a79059eeac06e11960565aaf95c6d32ad79379b1b4",
-      "bytes": 8195
+      "sha256": "36aa6a14cd3ae35d69c5b45428a0c4f43f31b45bb3b2bbb020ff3c2032116908",
+      "bytes": 8208
     },
     {
       "path": "frontend/src/app/universe/compact-filters/light-client-verify.component.ts",
@@ -2551,43 +2551,43 @@
     },
     {
       "path": "frontend/src/app/universe/consensus-conformance/consensus-conformance-case-detail.component.ts",
-      "sha256": "c0cb6052677d741f5746f2a070d32278910b6fe09e88dd1ea807f1411591c8b3",
-      "bytes": 4798
+      "sha256": "25b3f8c5cbb280de3f5e5b4a758796a82f433c57ce7647e286572b5e37dcec43",
+      "bytes": 4811
     },
     {
       "path": "frontend/src/app/universe/consensus-conformance/consensus-conformance-cases.component.ts",
-      "sha256": "670286776c78726bea3ee3531b0dfa8294832cb535c2e59a40265de0292f181c",
-      "bytes": 3026
+      "sha256": "d702b6c46d1d4997c77437367ef74a4e7852dfee2ece52db423b7a99967b3744",
+      "bytes": 3039
     },
     {
       "path": "frontend/src/app/universe/consensus-conformance/consensus-conformance-corpora.component.ts",
-      "sha256": "9b94013bd47abe12ccbc5efdfb60860d42eea22917c0ac288ba643a207830b1d",
-      "bytes": 2316
+      "sha256": "780835a21d41ab31dd211145e96f908a51795e69d5a68a6b35c9806c38529b80",
+      "bytes": 2329
     },
     {
       "path": "frontend/src/app/universe/consensus-conformance/consensus-conformance-differential.component.ts",
-      "sha256": "d6236d96a3bb47538b8848452e546a3ce64c067e61469ebbdf57229953add501",
-      "bytes": 3129
+      "sha256": "225c7b56f8df1d850d3125f54550ad792ef594f6f212a3055b6b8826dc3b5260",
+      "bytes": 3142
     },
     {
       "path": "frontend/src/app/universe/consensus-conformance/consensus-conformance-formal.component.ts",
-      "sha256": "13b627d56955684b371bfc78f26f247e4bd6ecce2425d15291845433d5e3fab7",
-      "bytes": 2782
+      "sha256": "7ff0a76abc775103f93aa239458883b465f558ac315920b781ffef02d2b6c160",
+      "bytes": 2795
     },
     {
       "path": "frontend/src/app/universe/consensus-conformance/consensus-conformance-overview.component.ts",
-      "sha256": "e762b056a460179811b26efe2bac0c7aeac484cf9d6eb659e75f36ec9626897b",
-      "bytes": 7467
+      "sha256": "3b568e6f3044160352c3db792113244a5e7565e24532de4468b2b17d08e853f4",
+      "bytes": 7493
     },
     {
       "path": "frontend/src/app/universe/consensus-conformance/consensus-conformance-specifications.component.ts",
-      "sha256": "849dffbaef7d854f7c1251d9ed4b1ac6b082da7df9ce6f65f6d88a6eff0b242d",
-      "bytes": 2451
+      "sha256": "baf5bf217f0d476da9f62242d7d92b16b28f63236a24634959fb6be7c6fc0f13",
+      "bytes": 2464
     },
     {
       "path": "frontend/src/app/universe/consensus/consensus-compare.component.ts",
-      "sha256": "1557d375e269431199fbbb07a3a2196e74d040420b490ad397812cee170308c9",
-      "bytes": 5468
+      "sha256": "fae0a3a861167721adc9e8173a657a6c4a99e3c8387124fbaabdb9561ac2b26d",
+      "bytes": 5481
     },
     {
       "path": "frontend/src/app/universe/consensus/consensus-proposal-detail.component.ts",
@@ -2611,8 +2611,8 @@
     },
     {
       "path": "frontend/src/app/universe/consensus/vaults-simulate.component.ts",
-      "sha256": "e0c88f27744cf3a8685bc9120483ce5559e33b4de024db35cf18720e521ed541",
-      "bytes": 7764
+      "sha256": "ddec46ef42e2da8606380c7db2d3b6f5d663d7261a14d3767b3000cba64bacf2",
+      "bytes": 7777
     },
     {
       "path": "frontend/src/app/universe/data-studio/data-live-stream.component.ts",
@@ -2631,8 +2631,8 @@
     },
     {
       "path": "frontend/src/app/universe/dlc/dlc-events.component.ts",
-      "sha256": "0334e7d68221141d01d2c3567383744d676b0d27ff727935c0ebd59c95305bf2",
-      "bytes": 4628
+      "sha256": "fdc946d5d3a47d7543c201c6a8a9d991f665b7e592f48994dfd794a2ab9f0990",
+      "bytes": 4641
     },
     {
       "path": "frontend/src/app/universe/dlc/dlc-inspect.component.ts",
@@ -2651,8 +2651,8 @@
     },
     {
       "path": "frontend/src/app/universe/dlc/dlc-overview.component.ts",
-      "sha256": "10373f06ccedf81e96aaf085466c1cf233bbb1f37eb38ff40f7dae030038aa38",
-      "bytes": 7202
+      "sha256": "ec47876248e371e31f7a7ee201f33d2fff51530ca88a870f5da59ffc699c8e9d",
+      "bytes": 7215
     },
     {
       "path": "frontend/src/app/universe/dlc/dlc-simulate.component.ts",
@@ -2661,8 +2661,8 @@
     },
     {
       "path": "frontend/src/app/universe/ecash/ecash-cashu-detail.component.ts",
-      "sha256": "d331a1c4ed5973b24c0e412cd9a32137559fa0dd1ef410ff74af08691fb7a387",
-      "bytes": 4717
+      "sha256": "38a2280239cc1b9df1c83880ae4549b4bd3ace92448c1e0e25b1cc7e3fb92218",
+      "bytes": 4730
     },
     {
       "path": "frontend/src/app/universe/ecash/ecash-cashu.component.ts",
@@ -2686,8 +2686,8 @@
     },
     {
       "path": "frontend/src/app/universe/ecash/ecash-overview.component.ts",
-      "sha256": "4ec6a556b758662d06bf8cdabaefd9e784f8a6c684e057e73b3441b6592f5146",
-      "bytes": 7850
+      "sha256": "95920f5e59d3ebe62a41ffd3ee515ec0f3628e7960ecb407dd118fe563a79b57",
+      "bytes": 7876
     },
     {
       "path": "frontend/src/app/universe/fractal/cat20-center.component.ts",
@@ -2706,18 +2706,18 @@
     },
     {
       "path": "frontend/src/app/universe/global-network/global-network-nodes.component.ts",
-      "sha256": "61e657eb159d43d4254b9e57470c6a25c37277a99769332e00b4cf96d4d2614e",
-      "bytes": 7170
+      "sha256": "6891ddcd23b0658c4aa235741824605bab8edf2c8f3e5dd52a46035420a453c4",
+      "bytes": 7183
     },
     {
       "path": "frontend/src/app/universe/global-network/global-network-overview.component.ts",
-      "sha256": "b8eb78df489ae918bf371ddecfd2d8d6cf7124738455301ef4fcd0c558ba642e",
-      "bytes": 8039
+      "sha256": "2d6947e8aa54fde12bccdc8ab726f03ffe67737c7395958e36d6877a63a00723",
+      "bytes": 8078
     },
     {
       "path": "frontend/src/app/universe/global-network/global-network-seeds.component.ts",
-      "sha256": "b10a003253d333d8b686e5328eef9f30c294dd2e2f56701b521f0705cf23744f",
-      "bytes": 4706
+      "sha256": "333b2ab760e2ab5709a0b2b85ba1ade48bd31f88a461668885b9f1ea8be47809",
+      "bytes": 4719
     },
     {
       "path": "frontend/src/app/universe/global-network/global-network-self-check.component.ts",
@@ -2736,8 +2736,8 @@
     },
     {
       "path": "frontend/src/app/universe/intelligence-platform/developer-platform.component.ts",
-      "sha256": "9c524daa713e8384542983a11fb15950bd4ae0b8402ba1a5e5ed5ed86321a93e",
-      "bytes": 9550
+      "sha256": "eff629781405e435e7d9a91f0b68ee4a109167a305a79331359c8c15a619d342",
+      "bytes": 9576
     },
     {
       "path": "frontend/src/app/universe/intelligence-platform/incident-center.component.ts",
@@ -2746,53 +2746,53 @@
     },
     {
       "path": "frontend/src/app/universe/intelligence-platform/knowledge-registry.component.ts",
-      "sha256": "316294aa86b6c9d0ed59c971dff6baa4eab5660f1e5c793a77387d0a8629dc2c",
-      "bytes": 8910
+      "sha256": "351fd41258348f466792009370cb8bc9b1cf545ea0793166fefe6ffc5038e463",
+      "bytes": 8936
     },
     {
       "path": "frontend/src/app/universe/intelligence-platform/mining-templates.component.ts",
-      "sha256": "f6232e476ddc61ad76c5e07f71a1df0193c9dde5135fbc7cedd543799e6df5b1",
-      "bytes": 7831
+      "sha256": "847b85f9d9b780bc5c80d551222d19fb704a7c60f01ae6d358313a39e7443cb8",
+      "bytes": 7844
     },
     {
       "path": "frontend/src/app/universe/intelligence-platform/policy-lab.component.ts",
-      "sha256": "817b86907ee8d0243bb32b38189995ccd5ceffde97d63c395267fd47ac76c4f0",
-      "bytes": 14822
+      "sha256": "951b96179bbcb39969fd1c53cb9df7441013e37788d0ff1d87edaec2a2f47730",
+      "bytes": 14835
     },
     {
       "path": "frontend/src/app/universe/intelligence-platform/protocol-explorer.component.ts",
-      "sha256": "52777bf1d35952977acd943b607ec528558aaf150a3078974ee43504513ebe33",
-      "bytes": 7751
+      "sha256": "109158531c56f5736c703c9ddc540faecb802c8cef205c5a7d6c7a2750469f09",
+      "bytes": 7764
     },
     {
       "path": "frontend/src/app/universe/intelligence-platform/query-studio.component.ts",
-      "sha256": "ad56b9b9b47dbfa49b0f64bb4c0ebbd50fab9c4e3afa0537a9510c6008437f40",
-      "bytes": 7195
+      "sha256": "e34334861552d0d9f997859d590d05c1858eb9f3595a39f5afd139a4e4d5cd21",
+      "bytes": 7208
     },
     {
       "path": "frontend/src/app/universe/intelligence-platform/relay-observatory.component.ts",
-      "sha256": "fcd4bd383b53a6e487da1d7749e9b5c5fa31a5edcfaea39f9e08eb010a598ddc",
-      "bytes": 13428
+      "sha256": "478b32c93970b25ce82ba63e28f7568ba3f28df1d48372ffe19a137a16b30fa8",
+      "bytes": 13441
     },
     {
       "path": "frontend/src/app/universe/intelligence-platform/script-workbench.component.ts",
-      "sha256": "92a70511efb221ebaed80d4632e53d5441d09a9b956dad22457c7deb93e8eac2",
-      "bytes": 13973
+      "sha256": "830c2ff12259c9f8e34a90ba13c5f1f256e5db8d8f670863f29bc58b777be936",
+      "bytes": 13986
     },
     {
       "path": "frontend/src/app/universe/intelligence-platform/time-machine.component.ts",
-      "sha256": "cca0ecbd6fed1ca57c21982890422964f70d232fc8743bde814ee093532fb097",
-      "bytes": 10027
+      "sha256": "304568fa80c9f4c2314c659ed493b01ac6a6d5e7d0503283b35e3fce23d8a623",
+      "bytes": 10040
     },
     {
       "path": "frontend/src/app/universe/intelligence-platform/transaction-graph.component.ts",
-      "sha256": "9ed135762429224d14a5c4a9b2ad222d4a766fca965623d6aab2adc44b98dbe1",
-      "bytes": 8533
+      "sha256": "2e4848ec8aac5d9ebf16c5d70dac60444103eee3b20936b99fc9bdefee258f61",
+      "bytes": 8559
     },
     {
       "path": "frontend/src/app/universe/intelligence-platform/utxo-intelligence.component.ts",
-      "sha256": "f7f212595889a454fb012e282d90dcefcc12f251ed6b0af49e014de741e6609f",
-      "bytes": 8143
+      "sha256": "27a8e6237732bf24a3cf6bb3e55fd8b705eef6f6645e38cca6c82a44a76a6b97",
+      "bytes": 8169
     },
     {
       "path": "frontend/src/app/universe/intelligence-platform/verify-proof.component.ts",
@@ -2801,8 +2801,8 @@
     },
     {
       "path": "frontend/src/app/universe/intelligence-platform/watchlists.component.ts",
-      "sha256": "d55778ea4ee8d88d5596f156b0f356f70090e834acd56d8edf9bbae3604db421",
-      "bytes": 7748
+      "sha256": "f9562bf959732982511c317a25c469c6fd5ccf51660097c53576ce2c9107fd90",
+      "bytes": 7774
     },
     {
       "path": "frontend/src/app/universe/l2-observatory/l2-observatory.component.ts",
@@ -2836,13 +2836,13 @@
     },
     {
       "path": "frontend/src/app/universe/lightning-reliability/lightning-node-reliability.component.ts",
-      "sha256": "5876f600277f5c752a5d5cade2c66597a52e959cdbbf7c830e157d262f765dbe",
-      "bytes": 6325
+      "sha256": "f3dfd541068cf83d2f0d114ff197fb509351f5eb8039dd5d6941b4e06020a1a6",
+      "bytes": 6338
     },
     {
       "path": "frontend/src/app/universe/lightning-reliability/lightning-reliability-overview.component.ts",
-      "sha256": "1802d764e9333f140542f8d096ff6b706b2e76ecf79e10045a7df4107e83be76",
-      "bytes": 6725
+      "sha256": "b88e044c8136f380eaaacf218448022cfbeb171bc50a49eb7cb0adb36acf92fc",
+      "bytes": 6738
     },
     {
       "path": "frontend/src/app/universe/lightning-resilience/lightning-resilience-channel-detail.component.ts",
@@ -2851,13 +2851,13 @@
     },
     {
       "path": "frontend/src/app/universe/lightning-resilience/lightning-resilience-htlcs.component.ts",
-      "sha256": "b97f1369c734dadaf336d48b8726a223e7bddf106212f8d482cebfb5bfaac0ea",
-      "bytes": 3696
+      "sha256": "08500942831968aa30aab7cdb29cd510874e54447e8affb6dccbf6ad24dc9869",
+      "bytes": 3709
     },
     {
       "path": "frontend/src/app/universe/lightning-resilience/lightning-resilience-mitigations.component.ts",
-      "sha256": "e6f7f290f150b7454b26b1eb93836a28c80c95dabdc8e213f050c0552ecdc982",
-      "bytes": 4068
+      "sha256": "91eb555cd13adfa8257ebe1e71bc0c0f5783322d6ecb8512513923ef007e5d38",
+      "bytes": 4081
     },
     {
       "path": "frontend/src/app/universe/lightning-resilience/lightning-resilience-node-detail.component.ts",
@@ -2871,8 +2871,8 @@
     },
     {
       "path": "frontend/src/app/universe/lightning-resilience/lightning-resilience-overview.component.ts",
-      "sha256": "822bf5d1a69eb926854a5165e9176c099b7c68c300882f6a6e309597e8cb82d0",
-      "bytes": 7752
+      "sha256": "3a520661b52eb928caecc23adb702da5657ac884359d62129441777c520b568c",
+      "bytes": 7765
     },
     {
       "path": "frontend/src/app/universe/lightning-resilience/lightning-resilience-simulate.component.ts",
@@ -2921,28 +2921,28 @@
     },
     {
       "path": "frontend/src/app/universe/mining-decentralized/decentralized-mining-braidpool.component.ts",
-      "sha256": "d15c0988414e78cc0a16318d059f8bfaa742d191c874ae52dd37aa896af434c1",
-      "bytes": 4323
+      "sha256": "58cd6ada813ad45e487f7d1a08e0b2784e24c8e67f69746e0d7f7f5807bddf6e",
+      "bytes": 4336
     },
     {
       "path": "frontend/src/app/universe/mining-decentralized/decentralized-mining-compare.component.ts",
-      "sha256": "ef6d1d5d968174b91da4a950cc101196534910beda728576791ac3ba0fce772e",
-      "bytes": 5568
+      "sha256": "8123e7eaa900b25a09fb153721827ea4e00ef5a7699c52997d35343fc3b1d04a",
+      "bytes": 5581
     },
     {
       "path": "frontend/src/app/universe/mining-decentralized/decentralized-mining-datum.component.ts",
-      "sha256": "a28182bce3db6c56640673c0ec850fdaa8cf209a9a5470cf348f322cfcdb0a86",
-      "bytes": 4259
+      "sha256": "93aa535e13b65525813a5780a968d51a58b2515591f98b2c0a59c93603a33603",
+      "bytes": 4272
     },
     {
       "path": "frontend/src/app/universe/mining-decentralized/decentralized-mining-overview.component.ts",
-      "sha256": "509cf14be1f65b50398b27819ed0a66bb4c0a1cfe16386510f3d57d7e39055da",
-      "bytes": 7488
+      "sha256": "50e139c5c25bc57e2f75935791ac6eecf90d9f81662a5520a5ad2babcdbbd46d",
+      "bytes": 7501
     },
     {
       "path": "frontend/src/app/universe/mining-decentralized/decentralized-mining-p2pool.component.ts",
-      "sha256": "0257156502b652427ca9819d2170b46bfc8e47f3df57f6a4abaa49d2f51001d1",
-      "bytes": 4145
+      "sha256": "f1d500b7b889de46d99d92ea400f27801f0f48c5901002895916565206b84352",
+      "bytes": 4158
     },
     {
       "path": "frontend/src/app/universe/mining-decentralized/decentralized-mining-share-detail.component.ts",
@@ -2981,8 +2981,8 @@
     },
     {
       "path": "frontend/src/app/universe/multiparty/multiparty-compatibility.component.ts",
-      "sha256": "156de3f04752ac6fbf73956a101e8ff5aa89e888981f1701885d25334803e12d",
-      "bytes": 5871
+      "sha256": "602c4cdd7a4640955f4e292a00b442eab275ab76f11001cedfd5aabb8ed00f6b",
+      "bytes": 5884
     },
     {
       "path": "frontend/src/app/universe/multiparty/multiparty-labels.component.ts",
@@ -3026,8 +3026,8 @@
     },
     {
       "path": "frontend/src/app/universe/node-security/node-security-advisories.component.ts",
-      "sha256": "c9c0359ee6be78f88bcdbf60e413c2155856781a89a4137d34a58be0bf6d872f",
-      "bytes": 3103
+      "sha256": "a5bbccda1741da3b9f571adb5c3403be409853a249800cbbfb902bd01be1ebd4",
+      "bytes": 3116
     },
     {
       "path": "frontend/src/app/universe/node-security/node-security-advisory-detail.component.ts",
@@ -3036,8 +3036,8 @@
     },
     {
       "path": "frontend/src/app/universe/node-security/node-security-artifacts.component.ts",
-      "sha256": "8b57336d52a88572c00b4e68aea8d6e2ab7db95f33ebce57445e6de6f2fdac78",
-      "bytes": 2791
+      "sha256": "40e55375194ae66c2b76eb62bc6af0292fefc846cd7d296833ced2b040f76d13",
+      "bytes": 2804
     },
     {
       "path": "frontend/src/app/universe/node-security/node-security-configuration.component.ts",
@@ -3046,8 +3046,8 @@
     },
     {
       "path": "frontend/src/app/universe/node-security/node-security-fleet.component.ts",
-      "sha256": "6a6f106c592bea17335ee3dd1f870b4ecc0323f41be1fec16bb10fdf165146c7",
-      "bytes": 3347
+      "sha256": "6f1c127c9226270a1f0deadef6f7c9b7dfa7bec1407d7750f16c10bde2b6793e",
+      "bytes": 3360
     },
     {
       "path": "frontend/src/app/universe/node-security/node-security-node-detail.component.ts",
@@ -3056,13 +3056,13 @@
     },
     {
       "path": "frontend/src/app/universe/node-security/node-security-overview.component.ts",
-      "sha256": "ebcc0252fd742d7d37b624e50da7a6eba102a0f7ccd3a0d6cc5a1721099b29aa",
-      "bytes": 6263
+      "sha256": "2350952421f1086515fcd0271fc6980681d565d4b9603d174715ad65d0f6fdcb",
+      "bytes": 6276
     },
     {
       "path": "frontend/src/app/universe/node-security/node-security-releases.component.ts",
-      "sha256": "83607ab07ca4ecce7f636cf9df4480ee32a6a53fe6c919329ebe72f2a1430d10",
-      "bytes": 2890
+      "sha256": "3ff48d0c7c3f599154fb9ffcc18b07c64324ae1b1b231e6c33e7708d7a6bb2fc",
+      "bytes": 2903
     },
     {
       "path": "frontend/src/app/universe/node-security/node-security-upgrade.component.ts",
@@ -3086,8 +3086,8 @@
     },
     {
       "path": "frontend/src/app/universe/offchain/offchain-utxo.component.ts",
-      "sha256": "8b3f8a34a073ae88c4441df833f6382660dcb5a26cb8a29f445cbdf3d536a8f3",
-      "bytes": 7291
+      "sha256": "b75b292a99d47a2d92fffcf001d268a8b59f1b3ac21adf1346f4a77e3ed79071",
+      "bytes": 7304
     },
     {
       "path": "frontend/src/app/universe/offchain/statechain-operator-detail.component.ts",
@@ -3106,13 +3106,13 @@
     },
     {
       "path": "frontend/src/app/universe/opentimestamps/opentimestamps-batches.component.ts",
-      "sha256": "1c966d22a0699412900246e35e8e255590a1689e8d7d41939dd5670c47aa8a7e",
-      "bytes": 2790
+      "sha256": "8b51acf231a16d6441895bb39780b6b1e657ce92107291642f7b5e2007d73e3a",
+      "bytes": 2803
     },
     {
       "path": "frontend/src/app/universe/opentimestamps/opentimestamps-calendars.component.ts",
-      "sha256": "072ca17ae48fae1954593fb9994b08a74911c1d89daae62a6c573361071a457d",
-      "bytes": 2815
+      "sha256": "2a179163488202e693ef8e60817be6ef082f66d2d5f02f23c2587eb0f2616a02",
+      "bytes": 2828
     },
     {
       "path": "frontend/src/app/universe/opentimestamps/opentimestamps-git.component.ts",
@@ -3126,8 +3126,8 @@
     },
     {
       "path": "frontend/src/app/universe/opentimestamps/opentimestamps-overview.component.ts",
-      "sha256": "3e690b7aeaac3c43e3cc33c622c08368ac1efda0796017f45a48418a2663dec9",
-      "bytes": 5909
+      "sha256": "5b4ce161b12a412260c9bff6f58815beb02b9a81aada60b80fd0adca0b25eb94",
+      "bytes": 5922
     },
     {
       "path": "frontend/src/app/universe/opentimestamps/opentimestamps-stamp.component.ts",
@@ -3151,13 +3151,13 @@
     },
     {
       "path": "frontend/src/app/universe/payjoin/payjoin-compatibility.component.ts",
-      "sha256": "dd5362aee730aa802b0bc5fc4777c4cbfe629a1442dea6aa3ee607ffee04801a",
-      "bytes": 4638
+      "sha256": "5db1f0fa42182bfc1b05451372e14e43edeb12b00c33deef2f17989cf6c97376",
+      "bytes": 4651
     },
     {
       "path": "frontend/src/app/universe/payjoin/payjoin-directory.component.ts",
-      "sha256": "d6a971bca08d2bf054a8605edcb50c842f60022fa502cee71bef98356933630a",
-      "bytes": 4617
+      "sha256": "7c3df3d3883e8532020bdeb7fe7d79ca57d22a254a15c42e55305eaff40591be",
+      "bytes": 4630
     },
     {
       "path": "frontend/src/app/universe/payjoin/payjoin-overview.component.ts",
@@ -3171,8 +3171,8 @@
     },
     {
       "path": "frontend/src/app/universe/payment-connectivity/payment-connectivity-overview.component.ts",
-      "sha256": "37b585f63e18d4007cd193e467e1a809b5de165297949173564fdc352fd08db4",
-      "bytes": 7117
+      "sha256": "f3f60bf8011c04e0466f0b5625c96ae73aeda2a3a02b0eaa6a1e25f9acc67074",
+      "bytes": 7130
     },
     {
       "path": "frontend/src/app/universe/payment-connectivity/payment-lightning-address.component.ts",
@@ -3181,13 +3181,13 @@
     },
     {
       "path": "frontend/src/app/universe/payment-connectivity/payment-lnurl.component.ts",
-      "sha256": "017c9e0c5334b25b61c6edffe62e5c4fccb24b469960087ffa6bf13dc3fa13c7",
-      "bytes": 4894
+      "sha256": "0b2208d2164cbbb860b319c865ec9bc4cc1a9fa7ad1a18e7c81a7f0411a3eba5",
+      "bytes": 4907
     },
     {
       "path": "frontend/src/app/universe/payment-connectivity/payment-nwc-compatibility.component.ts",
-      "sha256": "80ce730d428af5e58bc4af593c7fabd94c35be4bac1e6b7d2d4feb34f7ac5292",
-      "bytes": 4783
+      "sha256": "8460fa09bc3e3c33ddc605aea11f0cf6f729aaeaeb7f604d211a8d200a29f4f5",
+      "bytes": 4796
     },
     {
       "path": "frontend/src/app/universe/payment-connectivity/payment-nwc-inspect.component.ts",
@@ -3196,8 +3196,8 @@
     },
     {
       "path": "frontend/src/app/universe/payment-connectivity/payment-nwc.component.ts",
-      "sha256": "158c9831408e1f1c8d6d7ca819fae140f85c1f3fd1614c5e3927dce1040e93a4",
-      "bytes": 4389
+      "sha256": "078dbb680e82dffc9baf731e52466a68fb1de4335e1c5193e99eb652a3dc02b3",
+      "bytes": 4402
     },
     {
       "path": "frontend/src/app/universe/payment-connectivity/payment-zaps.component.ts",
@@ -3306,8 +3306,8 @@
     },
     {
       "path": "frontend/src/app/universe/private-submission/private-submission-accelerators.component.ts",
-      "sha256": "2b48fa25d2175f2873f251197e89fb9c82eeb711bf55f7c17ee3b1ed13225ebf",
-      "bytes": 3686
+      "sha256": "4a73f8a35835d4c7e6f16d40773096dc6d76365f63ca7f213dac7c102c2453bb",
+      "bytes": 3699
     },
     {
       "path": "frontend/src/app/universe/private-submission/private-submission-broadcast.component.ts",
@@ -3316,8 +3316,8 @@
     },
     {
       "path": "frontend/src/app/universe/private-submission/private-submission-ordering-block.component.ts",
-      "sha256": "d30b2c43f97695fd58d9cf2bfdcd8c759a4c72aded106a3d1c1b18764c4aefb5",
-      "bytes": 4892
+      "sha256": "5adb40befb954018ee869364e4a2f383714c53d0469bbe289e84733172073b13",
+      "bytes": 4905
     },
     {
       "path": "frontend/src/app/universe/private-submission/private-submission-ordering-tx.component.ts",
@@ -3326,8 +3326,8 @@
     },
     {
       "path": "frontend/src/app/universe/private-submission/private-submission-ordering.component.ts",
-      "sha256": "0eda92e591d09b5ac0dff773455503ba7835bd2589b7082e300bbfe5087629ff",
-      "bytes": 3388
+      "sha256": "61d063405f1a069446864edbce8884ffb83aa948c1268b0bdf859d75939f1a7a",
+      "bytes": 3401
     },
     {
       "path": "frontend/src/app/universe/private-submission/private-submission-overview.component.ts",
@@ -3381,8 +3381,8 @@
     },
     {
       "path": "frontend/src/app/universe/quantum/quantum-history.component.ts",
-      "sha256": "65a62043f0da58c914b2be70df99ae64b3328f3d34237414e901708744ae89b1",
-      "bytes": 4259
+      "sha256": "bafac2c4bc5636e8e098c2f5662e9eddee5f1e416936f46fbbaf408192caf8ec",
+      "bytes": 4272
     },
     {
       "path": "frontend/src/app/universe/quantum/quantum-migration.component.ts",
@@ -3391,18 +3391,18 @@
     },
     {
       "path": "frontend/src/app/universe/quantum/quantum-overview.component.ts",
-      "sha256": "422b8fe03e62dd1427e9ffd1251c160a4c5cafccada7d8bb0d3fd15aad54e528",
-      "bytes": 6495
+      "sha256": "c629aa1067efc44a9ec7fbb6f7bdac417883a33556dc1a25fc6fcd334d2e0f54",
+      "bytes": 6508
     },
     {
       "path": "frontend/src/app/universe/reserves/reserves-overview.component.ts",
-      "sha256": "9fff5a1c9d15d1526146d30f52866c49984722abaab7cb686b042b0e8b7e9b0f",
-      "bytes": 8529
+      "sha256": "b6060896dc7d9133e024b5dd2b5ad23f67a194e1969ea1909b6e3db84a8a17f0",
+      "bytes": 8555
     },
     {
       "path": "frontend/src/app/universe/reserves/reserves-provider-detail.component.ts",
-      "sha256": "9eeb6c21d35657b787d3437092cd4d3268e436350005029ebcfd28fe0e2ce935",
-      "bytes": 6692
+      "sha256": "04efdb3181e92ce57ebfc6096d397175ae0060136446a7ac83c6c284b645ece1",
+      "bytes": 6705
     },
     {
       "path": "frontend/src/app/universe/reserves/reserves-providers.component.ts",
@@ -3451,13 +3451,13 @@
     },
     {
       "path": "frontend/src/app/universe/silent-payments/silent-payments-coverage.component.ts",
-      "sha256": "a1055476dd8a5d06c5f40a34b53c3b6673c6be562c49a618127ddcb264d7f11e",
-      "bytes": 5302
+      "sha256": "2ae74d37a059b17c1d9c73bf6658749a6a0b7eb40208c35ebb27ace781a41fa6",
+      "bytes": 5315
     },
     {
       "path": "frontend/src/app/universe/silent-payments/silent-payments-overview.component.ts",
-      "sha256": "ebe6f8732155f275c1777563a4ba7bb170dffba51b3057c19042c7c5c85cd79b",
-      "bytes": 7963
+      "sha256": "ee1759d302b2ac7c1eef08a5b34c64bf2960ce042611bba078ea9e92e3f9b2a1",
+      "bytes": 7976
     },
     {
       "path": "frontend/src/app/universe/silent-payments/silent-payments-psbt.component.ts",
@@ -3466,18 +3466,18 @@
     },
     {
       "path": "frontend/src/app/universe/silent-payments/silent-payments-scan.component.ts",
-      "sha256": "f9ff191e6b7d0371e71651d8905ef85280d9155a08e79b9a6733a51fb96cf312",
-      "bytes": 12673
+      "sha256": "e3f6567583539c5f40eb60d48cad1e8267cfd315bf2b392ec04aaccb33d57b01",
+      "bytes": 12686
     },
     {
       "path": "frontend/src/app/universe/simplicity/simplicity-contracts.component.ts",
-      "sha256": "f85780fbc1b14f0b3e4ba2bb061d650177858e454256852a6b99f8cbb3631303",
-      "bytes": 4679
+      "sha256": "c692c83bd274647918e5f1ff39370bedff53e783d32efc38736e20535cffeb25",
+      "bytes": 4692
     },
     {
       "path": "frontend/src/app/universe/simplicity/simplicity-overview.component.ts",
-      "sha256": "2f85416ab92cde3436028dadd7e510af0e49e475b8ba079d8755703fb16c594f",
-      "bytes": 7625
+      "sha256": "4e0ee3a6df91629bd63fc9b6da0a683f405ab330771976b909b0a527f4ca7566",
+      "bytes": 7638
     },
     {
       "path": "frontend/src/app/universe/simplicity/simplicity-program-detail.component.ts",
@@ -3491,8 +3491,8 @@
     },
     {
       "path": "frontend/src/app/universe/simplicity/simplicity-tx.component.ts",
-      "sha256": "00fafc3f27d8f496301c9dac48d903b08027d37bfeb783f7b713edb693e29b11",
-      "bytes": 6392
+      "sha256": "a3ec1fea6e0d6ced1b9a16ba95160863eeb9c10d52f0fe1e38586701b6e7923d",
+      "bytes": 6405
     },
     {
       "path": "frontend/src/app/universe/simplicity/simplicity-verify.component.ts",
@@ -3511,8 +3511,8 @@
     },
     {
       "path": "frontend/src/app/universe/swaps/swaps-chain.component.ts",
-      "sha256": "5cba7608a8200534a4f3162ad51f54a481e18cad6c41e555994ec3efc0c3ec3f",
-      "bytes": 2887
+      "sha256": "8c7d081afb2de930fc5719528c248bb0bb1875509aa45a83ac232cf88f97d54c",
+      "bytes": 2900
     },
     {
       "path": "frontend/src/app/universe/swaps/swaps-inspect.component.ts",
@@ -3521,8 +3521,8 @@
     },
     {
       "path": "frontend/src/app/universe/swaps/swaps-overview.component.ts",
-      "sha256": "8e122d53d7a8892e6c59af29000d0225435c181136beb554eae715f535415804",
-      "bytes": 7946
+      "sha256": "11c6514050a30594a6a230215a583cfad55ddb2771478400c91a4354fcbc3a25",
+      "bytes": 7972
     },
     {
       "path": "frontend/src/app/universe/swaps/swaps-provider-detail.component.ts",
@@ -5114,7 +5114,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/bitcoin-staking/staking-delegations.component.ts",
-          "sha256": "dbb0f9afcd25ba6c76ac15a3b7b2be85ab8d60cedae27ead99df95f66d41e659"
+          "sha256": "a8bdd5a63ee5505ba3ad61be41b0975dc5348de5f3d8d404a62de71cb91341c2"
         }
       },
       {
@@ -6889,7 +6889,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/intelligence-platform/policy-lab.component.ts",
-          "sha256": "817b86907ee8d0243bb32b38189995ccd5ceffde97d63c395267fd47ac76c4f0"
+          "sha256": "951b96179bbcb39969fd1c53cb9df7441013e37788d0ff1d87edaec2a2f47730"
         }
       },
       {
@@ -7072,7 +7072,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/intelligence-platform/script-workbench.component.ts",
-          "sha256": "92a70511efb221ebaed80d4632e53d5441d09a9b956dad22457c7deb93e8eac2"
+          "sha256": "830c2ff12259c9f8e34a90ba13c5f1f256e5db8d8f670863f29bc58b777be936"
         }
       },
       {
@@ -7330,7 +7330,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/intelligence-platform/relay-observatory.component.ts",
-          "sha256": "fcd4bd383b53a6e487da1d7749e9b5c5fa31a5edcfaea39f9e08eb010a598ddc"
+          "sha256": "478b32c93970b25ce82ba63e28f7568ba3f28df1d48372ffe19a137a16b30fa8"
         }
       },
       {
@@ -7433,7 +7433,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/intelligence-platform/time-machine.component.ts",
-          "sha256": "cca0ecbd6fed1ca57c21982890422964f70d232fc8743bde814ee093532fb097"
+          "sha256": "304568fa80c9f4c2314c659ed493b01ac6a6d5e7d0503283b35e3fce23d8a623"
         }
       },
       {
@@ -7500,7 +7500,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/intelligence-platform/mining-templates.component.ts",
-          "sha256": "f6232e476ddc61ad76c5e07f71a1df0193c9dde5135fbc7cedd543799e6df5b1"
+          "sha256": "847b85f9d9b780bc5c80d551222d19fb704a7c60f01ae6d358313a39e7443cb8"
         }
       },
       {
@@ -7573,7 +7573,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/intelligence-platform/utxo-intelligence.component.ts",
-          "sha256": "f7f212595889a454fb012e282d90dcefcc12f251ed6b0af49e014de741e6609f"
+          "sha256": "27a8e6237732bf24a3cf6bb3e55fd8b705eef6f6645e38cca6c82a44a76a6b97"
         }
       },
       {
@@ -7644,7 +7644,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/intelligence-platform/transaction-graph.component.ts",
-          "sha256": "9ed135762429224d14a5c4a9b2ad222d4a766fca965623d6aab2adc44b98dbe1"
+          "sha256": "2e4848ec8aac5d9ebf16c5d70dac60444103eee3b20936b99fc9bdefee258f61"
         }
       },
       {
@@ -7772,7 +7772,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/intelligence-platform/knowledge-registry.component.ts",
-          "sha256": "316294aa86b6c9d0ed59c971dff6baa4eab5660f1e5c793a77387d0a8629dc2c"
+          "sha256": "351fd41258348f466792009370cb8bc9b1cf545ea0793166fefe6ffc5038e463"
         }
       },
       {
@@ -7859,7 +7859,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/intelligence-platform/developer-platform.component.ts",
-          "sha256": "9c524daa713e8384542983a11fb15950bd4ae0b8402ba1a5e5ed5ed86321a93e"
+          "sha256": "eff629781405e435e7d9a91f0b68ee4a109167a305a79331359c8c15a619d342"
         }
       },
       {
@@ -7934,7 +7934,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/intelligence-platform/query-studio.component.ts",
-          "sha256": "ad56b9b9b47dbfa49b0f64bb4c0ebbd50fab9c4e3afa0537a9510c6008437f40"
+          "sha256": "e34334861552d0d9f997859d590d05c1858eb9f3595a39f5afd139a4e4d5cd21"
         }
       },
       {
@@ -7981,7 +7981,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/intelligence-platform/watchlists.component.ts",
-          "sha256": "d55778ea4ee8d88d5596f156b0f356f70090e834acd56d8edf9bbae3604db421"
+          "sha256": "f9562bf959732982511c317a25c469c6fd5ccf51660097c53576ce2c9107fd90"
         }
       },
       {
@@ -8084,7 +8084,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/intelligence-platform/protocol-explorer.component.ts",
-          "sha256": "52777bf1d35952977acd943b607ec528558aaf150a3078974ee43504513ebe33"
+          "sha256": "109158531c56f5736c703c9ddc540faecb802c8cef205c5a7d6c7a2750469f09"
         }
       },
       {
@@ -8142,7 +8142,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/global-network/global-network-overview.component.ts",
-          "sha256": "b8eb78df489ae918bf371ddecfd2d8d6cf7124738455301ef4fcd0c558ba642e"
+          "sha256": "2d6947e8aa54fde12bccdc8ab726f03ffe67737c7395958e36d6877a63a00723"
         }
       },
       {
@@ -8241,7 +8241,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/global-network/global-network-nodes.component.ts",
-          "sha256": "61e657eb159d43d4254b9e57470c6a25c37277a99769332e00b4cf96d4d2614e"
+          "sha256": "6891ddcd23b0658c4aa235741824605bab8edf2c8f3e5dd52a46035420a453c4"
         }
       },
       {
@@ -8411,7 +8411,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/global-network/global-network-seeds.component.ts",
-          "sha256": "b10a003253d333d8b686e5328eef9f30c294dd2e2f56701b521f0705cf23744f"
+          "sha256": "333b2ab760e2ab5709a0b2b85ba1ade48bd31f88a461668885b9f1ea8be47809"
         }
       },
       {
@@ -8540,7 +8540,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/lightning-reliability/lightning-reliability-overview.component.ts",
-          "sha256": "1802d764e9333f140542f8d096ff6b706b2e76ecf79e10045a7df4107e83be76"
+          "sha256": "b88e044c8136f380eaaacf218448022cfbeb171bc50a49eb7cb0adb36acf92fc"
         }
       },
       {
@@ -8711,7 +8711,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/lightning-reliability/lightning-node-reliability.component.ts",
-          "sha256": "5876f600277f5c752a5d5cade2c66597a52e959cdbbf7c830e157d262f765dbe"
+          "sha256": "f3dfd541068cf83d2f0d114ff197fb509351f5eb8039dd5d6941b4e06020a1a6"
         }
       },
       {
@@ -8889,7 +8889,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/silent-payments/silent-payments-overview.component.ts",
-          "sha256": "ebe6f8732155f275c1777563a4ba7bb170dffba51b3057c19042c7c5c85cd79b"
+          "sha256": "ee1759d302b2ac7c1eef08a5b34c64bf2960ce042611bba078ea9e92e3f9b2a1"
         }
       },
       {
@@ -9020,7 +9020,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/silent-payments/silent-payments-scan.component.ts",
-          "sha256": "f9ff191e6b7d0371e71651d8905ef85280d9155a08e79b9a6733a51fb96cf312"
+          "sha256": "e3f6567583539c5f40eb60d48cad1e8267cfd315bf2b392ec04aaccb33d57b01"
         }
       },
       {
@@ -9280,7 +9280,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/silent-payments/silent-payments-coverage.component.ts",
-          "sha256": "a1055476dd8a5d06c5f40a34b53c3b6673c6be562c49a618127ddcb264d7f11e"
+          "sha256": "2ae74d37a059b17c1d9c73bf6658749a6a0b7eb40208c35ebb27ace781a41fa6"
         }
       },
       {
@@ -9483,7 +9483,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/payjoin/payjoin-directory.component.ts",
-          "sha256": "d6a971bca08d2bf054a8605edcb50c842f60022fa502cee71bef98356933630a"
+          "sha256": "7c3df3d3883e8532020bdeb7fe7d79ca57d22a254a15c42e55305eaff40591be"
         }
       },
       {
@@ -9541,7 +9541,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/payjoin/payjoin-compatibility.component.ts",
-          "sha256": "dd5362aee730aa802b0bc5fc4777c4cbfe629a1442dea6aa3ee607ffee04801a"
+          "sha256": "5db1f0fa42182bfc1b05451372e14e43edeb12b00c33deef2f17989cf6c97376"
         }
       },
       {
@@ -9710,7 +9710,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/ecash/ecash-overview.component.ts",
-          "sha256": "4ec6a556b758662d06bf8cdabaefd9e784f8a6c684e057e73b3441b6592f5146"
+          "sha256": "95920f5e59d3ebe62a41ffd3ee515ec0f3628e7960ecb407dd118fe563a79b57"
         }
       },
       {
@@ -9818,7 +9818,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/ecash/ecash-cashu-detail.component.ts",
-          "sha256": "d331a1c4ed5973b24c0e412cd9a32137559fa0dd1ef410ff74af08691fb7a387"
+          "sha256": "38a2280239cc1b9df1c83880ae4549b4bd3ace92448c1e0e25b1cc7e3fb92218"
         }
       },
       {
@@ -10129,7 +10129,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/consensus/consensus-compare.component.ts",
-          "sha256": "1557d375e269431199fbbb07a3a2196e74d040420b490ad397812cee170308c9"
+          "sha256": "fae0a3a861167721adc9e8173a657a6c4a99e3c8387124fbaabdb9561ac2b26d"
         }
       },
       {
@@ -10353,7 +10353,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/consensus/vaults-simulate.component.ts",
-          "sha256": "e0c88f27744cf3a8685bc9120483ce5559e33b4de024db35cf18720e521ed541"
+          "sha256": "ddec46ef42e2da8606380c7db2d3b6f5d663d7261a14d3767b3000cba64bacf2"
         }
       },
       {
@@ -10411,7 +10411,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/quantum/quantum-overview.component.ts",
-          "sha256": "422b8fe03e62dd1427e9ffd1251c160a4c5cafccada7d8bb0d3fd15aad54e528"
+          "sha256": "c629aa1067efc44a9ec7fbb6f7bdac417883a33556dc1a25fc6fcd334d2e0f54"
         }
       },
       {
@@ -10527,7 +10527,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/quantum/quantum-history.component.ts",
-          "sha256": "65a62043f0da58c914b2be70df99ae64b3328f3d34237414e901708744ae89b1"
+          "sha256": "bafac2c4bc5636e8e098c2f5662e9eddee5f1e416936f46fbbaf408192caf8ec"
         }
       },
       {
@@ -10747,7 +10747,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/blockspace/blockspace-overview.component.ts",
-          "sha256": "dd9fb2905f3d35d4aa8b8426325fc71c85607e9e951479cf4673b96b196a4b13"
+          "sha256": "93de97a428bb7cb43d07b127fb59b64575738535f5bd71dd83b88189d60c3f03"
         }
       },
       {
@@ -10797,7 +10797,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/blockspace/blockspace-composition.component.ts",
-          "sha256": "d6b5f8ee8eaca7fa25f8857eb4b23921a6eaf1156fac8c8c540d343ba00ad141"
+          "sha256": "0598aa5a09e5628d767bd36b4202bf78af517eeeeb0f8cfda8b36d4f4fd5d7d8"
         }
       },
       {
@@ -10847,7 +10847,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/blockspace/blockspace-regimes.component.ts",
-          "sha256": "d37f95ebb7275e19d449a9246268b6b476e2edd33740f4b1e2cc067739fcbb9f"
+          "sha256": "e24fa5cd1f8fd613c8967e39361a55f7198ad6a54c0c51b7759f8349126ee93c"
         }
       },
       {
@@ -11001,7 +11001,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/reserves/reserves-overview.component.ts",
-          "sha256": "9fff5a1c9d15d1526146d30f52866c49984722abaab7cb686b042b0e8b7e9b0f"
+          "sha256": "b6060896dc7d9133e024b5dd2b5ad23f67a194e1969ea1909b6e3db84a8a17f0"
         }
       },
       {
@@ -11113,7 +11113,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/reserves/reserves-provider-detail.component.ts",
-          "sha256": "9eeb6c21d35657b787d3437092cd4d3268e436350005029ebcfd28fe0e2ce935"
+          "sha256": "04efdb3181e92ce57ebfc6096d397175ae0060136446a7ac83c6c284b645ece1"
         }
       },
       {
@@ -11360,7 +11360,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/dlc/dlc-overview.component.ts",
-          "sha256": "10373f06ccedf81e96aaf085466c1cf233bbb1f37eb38ff40f7dae030038aa38"
+          "sha256": "ec47876248e371e31f7a7ee201f33d2fff51530ca88a870f5da59ffc699c8e9d"
         }
       },
       {
@@ -11510,7 +11510,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/dlc/dlc-events.component.ts",
-          "sha256": "0334e7d68221141d01d2c3567383744d676b0d27ff727935c0ebd59c95305bf2"
+          "sha256": "fdc946d5d3a47d7543c201c6a8a9d991f665b7e592f48994dfd794a2ab9f0990"
         }
       },
       {
@@ -11744,7 +11744,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/simplicity/simplicity-overview.component.ts",
-          "sha256": "2f85416ab92cde3436028dadd7e510af0e49e475b8ba079d8755703fb16c594f"
+          "sha256": "4e0ee3a6df91629bd63fc9b6da0a683f405ab330771976b909b0a527f4ca7566"
         }
       },
       {
@@ -11794,7 +11794,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/simplicity/simplicity-contracts.component.ts",
-          "sha256": "f85780fbc1b14f0b3e4ba2bb061d650177858e454256852a6b99f8cbb3631303"
+          "sha256": "c692c83bd274647918e5f1ff39370bedff53e783d32efc38736e20535cffeb25"
         }
       },
       {
@@ -11836,7 +11836,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/simplicity/simplicity-tx.component.ts",
-          "sha256": "00fafc3f27d8f496301c9dac48d903b08027d37bfeb783f7b713edb693e29b11"
+          "sha256": "a3ec1fea6e0d6ced1b9a16ba95160863eeb9c10d52f0fe1e38586701b6e7923d"
         }
       },
       {
@@ -12074,7 +12074,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/offchain/offchain-utxo.component.ts",
-          "sha256": "8b3f8a34a073ae88c4441df833f6382660dcb5a26cb8a29f445cbdf3d536a8f3"
+          "sha256": "b75b292a99d47a2d92fffcf001d268a8b59f1b3ac21adf1346f4a77e3ed79071"
         }
       },
       {
@@ -12511,7 +12511,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/compact-filters/light-client-overview.component.ts",
-          "sha256": "f066a9d39dda926a727f724a8ec9c07d43bcf2300637bd96c8cd8cd38bc1c8cc"
+          "sha256": "50a0d2157b3e8e0ade7db9ad9b41bbc7f8e6cec3c2bd84dfce9b4b2259a8717c"
         }
       },
       {
@@ -12569,7 +12569,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/compact-filters/light-client-providers.component.ts",
-          "sha256": "5a8bd691c08c4da7e6b135120804b9a91faa83cce354d6940bf49c8362f9e1c7"
+          "sha256": "8b5e07d69110ff0db51e190ca9adf91fca314c109d4d27b8895cb3a6470e57a2"
         }
       },
       {
@@ -12820,7 +12820,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/compact-filters/light-client-scan.component.ts",
-          "sha256": "611a86f9e7e080c5e38ec6a79059eeac06e11960565aaf95c6d32ad79379b1b4"
+          "sha256": "36aa6a14cd3ae35d69c5b45428a0c4f43f31b45bb3b2bbb020ff3c2032116908"
         }
       },
       {
@@ -12869,7 +12869,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/compact-filters/light-client-privacy.component.ts",
-          "sha256": "d27f0e0c4d78558a627f6cb6e70127429fafebe77694d87cf8ede4eac8cb8bad"
+          "sha256": "c31c29d638aa894379c75af1bbfbd930206e11597bb53570197eb632f75f5c02"
         }
       },
       {
@@ -12931,7 +12931,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/bootstrap/bootstrap-overview.component.ts",
-          "sha256": "6f17b30d884e24397c975ddaa0f28e3ca574e277bebef60f81e43efd4adcc339"
+          "sha256": "36d18e31cc4164727f8533a7c265419f6a7c1ccfda7c88051926f6b09292b2c9"
         }
       },
       {
@@ -12985,7 +12985,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/bootstrap/bootstrap-snapshots.component.ts",
-          "sha256": "1e19ce90f425a55732b7d34726cc9a441e4f2f9288c5864b1daf7a008540e286"
+          "sha256": "c7c8148bf68f17f92d2a9cbd9defd7257b8afc87b6b8c6bc65cd4817de4419db"
         }
       },
       {
@@ -13535,7 +13535,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/multiparty/multiparty-compatibility.component.ts",
-          "sha256": "156de3f04752ac6fbf73956a101e8ff5aa89e888981f1701885d25334803e12d"
+          "sha256": "602c4cdd7a4640955f4e292a00b442eab275ab76f11001cedfd5aabb8ed00f6b"
         }
       },
       {
@@ -13589,7 +13589,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/mining-decentralized/decentralized-mining-overview.component.ts",
-          "sha256": "509cf14be1f65b50398b27819ed0a66bb4c0a1cfe16386510f3d57d7e39055da"
+          "sha256": "50e139c5c25bc57e2f75935791ac6eecf90d9f81662a5520a5ad2babcdbbd46d"
         }
       },
       {
@@ -13643,7 +13643,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/mining-decentralized/decentralized-mining-datum.component.ts",
-          "sha256": "a28182bce3db6c56640673c0ec850fdaa8cf209a9a5470cf348f322cfcdb0a86"
+          "sha256": "93aa535e13b65525813a5780a968d51a58b2515591f98b2c0a59c93603a33603"
         }
       },
       {
@@ -13697,7 +13697,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/mining-decentralized/decentralized-mining-p2pool.component.ts",
-          "sha256": "0257156502b652427ca9819d2170b46bfc8e47f3df57f6a4abaa49d2f51001d1"
+          "sha256": "f1d500b7b889de46d99d92ea400f27801f0f48c5901002895916565206b84352"
         }
       },
       {
@@ -13751,7 +13751,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/mining-decentralized/decentralized-mining-braidpool.component.ts",
-          "sha256": "d15c0988414e78cc0a16318d059f8bfaa742d191c874ae52dd37aa896af434c1"
+          "sha256": "58cd6ada813ad45e487f7d1a08e0b2784e24c8e67f69746e0d7f7f5807bddf6e"
         }
       },
       {
@@ -13839,7 +13839,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/mining-decentralized/decentralized-mining-compare.component.ts",
-          "sha256": "ef6d1d5d968174b91da4a950cc101196534910beda728576791ac3ba0fce772e"
+          "sha256": "8123e7eaa900b25a09fb153721827ea4e00ef5a7699c52997d35343fc3b1d04a"
         }
       },
       {
@@ -13901,7 +13901,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/payment-connectivity/payment-connectivity-overview.component.ts",
-          "sha256": "37b585f63e18d4007cd193e467e1a809b5de165297949173564fdc352fd08db4"
+          "sha256": "f3f60bf8011c04e0466f0b5625c96ae73aeda2a3a02b0eaa6a1e25f9acc67074"
         }
       },
       {
@@ -13959,7 +13959,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/payment-connectivity/payment-nwc.component.ts",
-          "sha256": "158c9831408e1f1c8d6d7ca819fae140f85c1f3fd1614c5e3927dce1040e93a4"
+          "sha256": "078dbb680e82dffc9baf731e52466a68fb1de4335e1c5193e99eb652a3dc02b3"
         }
       },
       {
@@ -14079,7 +14079,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/payment-connectivity/payment-nwc-compatibility.component.ts",
-          "sha256": "80ce730d428af5e58bc4af593c7fabd94c35be4bac1e6b7d2d4feb34f7ac5292"
+          "sha256": "8460fa09bc3e3c33ddc605aea11f0cf6f729aaeaeb7f604d211a8d200a29f4f5"
         }
       },
       {
@@ -14137,7 +14137,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/payment-connectivity/payment-lnurl.component.ts",
-          "sha256": "017c9e0c5334b25b61c6edffe62e5c4fccb24b469960087ffa6bf13dc3fa13c7"
+          "sha256": "0b2208d2164cbbb860b319c865ec9bc4cc1a9fa7ad1a18e7c81a7f0411a3eba5"
         }
       },
       {
@@ -16040,7 +16040,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/swaps/swaps-overview.component.ts",
-          "sha256": "8e122d53d7a8892e6c59af29000d0225435c181136beb554eae715f535415804"
+          "sha256": "11c6514050a30594a6a230215a583cfad55ddb2771478400c91a4354fcbc3a25"
         }
       },
       {
@@ -16175,7 +16175,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/swaps/swaps-chain.component.ts",
-          "sha256": "5cba7608a8200534a4f3162ad51f54a481e18cad6c41e555994ec3efc0c3ec3f"
+          "sha256": "8c7d081afb2de930fc5719528c248bb0bb1875509aa45a83ac232cf88f97d54c"
         }
       },
       {
@@ -16923,7 +16923,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/ark-vpack/ark-exit.component.ts",
-          "sha256": "8f857fd2bd97b4a8971757b9ab830b83719ce5bd26b6c3349550fa3bc3ffe9fa"
+          "sha256": "608eca9f2488aa6fa249def1c5aac1878824fe19abd9148f7593802ed048deeb"
         }
       },
       {
@@ -17088,7 +17088,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/lightning-resilience/lightning-resilience-overview.component.ts",
-          "sha256": "822bf5d1a69eb926854a5165e9176c099b7c68c300882f6a6e309597e8cb82d0"
+          "sha256": "3a520661b52eb928caecc23adb702da5657ac884359d62129441777c520b568c"
         }
       },
       {
@@ -17122,7 +17122,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/lightning-resilience/lightning-resilience-htlcs.component.ts",
-          "sha256": "b97f1369c734dadaf336d48b8726a223e7bddf106212f8d482cebfb5bfaac0ea"
+          "sha256": "08500942831968aa30aab7cdb29cd510874e54447e8affb6dccbf6ad24dc9869"
         }
       },
       {
@@ -17293,7 +17293,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/lightning-resilience/lightning-resilience-mitigations.component.ts",
-          "sha256": "e6f7f290f150b7454b26b1eb93836a28c80c95dabdc8e213f050c0552ecdc982"
+          "sha256": "91eb555cd13adfa8257ebe1e71bc0c0f5783322d6ecb8512513923ef007e5d38"
         }
       },
       {
@@ -17355,7 +17355,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/block-propagation/block-propagation-overview.component.ts",
-          "sha256": "0d85a160fd9d2fa65ad4c583b5f1c2c2b0ac701302af7a9ff84ee03c87c2aefa"
+          "sha256": "efdad8488e1569df3d057187084e86784c1c5a277c51221d13ab159db13fe536"
         }
       },
       {
@@ -17385,7 +17385,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/block-propagation/block-propagation-live.component.ts",
-          "sha256": "07f839e06583ee1128148c9d7105fbf7df677a310be261eec5045f488fbffc78"
+          "sha256": "afc37432c0c9adf1ea1c1f50ca57315587203f9c38edaffc3c55e27cd174d2bb"
         }
       },
       {
@@ -17415,7 +17415,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/block-propagation/block-propagation-block-detail.component.ts",
-          "sha256": "869dc59866c6ced6032e2cd89d8e8e3b8d1f2a1b9f745a705031a9fee6806684"
+          "sha256": "c0a016c0c6a6f6fcceb68ed3603a0fa441b38ff31a6d28cf7387bf991860759f"
         }
       },
       {
@@ -17445,7 +17445,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/block-propagation/block-propagation-compact-blocks.component.ts",
-          "sha256": "6de082d32a8be0caea34b729c65b9b27ce47a1e175ac2333d8fdb75ff620021b"
+          "sha256": "4cfc3f555fe03409aaf6c52ec533455b47b22cefbf2ac29bf173f90c98a9d3f8"
         }
       },
       {
@@ -17475,7 +17475,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/block-propagation/block-propagation-fork-races.component.ts",
-          "sha256": "6f3a6f56e3ea4d7e08f322b22f8512c7465c1a4797e9a5c64e63f279a317e517"
+          "sha256": "4c3483a9a404eb531da5f63f1cb1dc5f175d23af2295d01c36c8415a12de455b"
         }
       },
       {
@@ -17531,7 +17531,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/block-propagation/block-propagation-stale-tips.component.ts",
-          "sha256": "2fe37973ed81a3c6aff74a96525ef1ad3a140e6fc57f7066373df364635dc0e5"
+          "sha256": "951db472e14ea93d7e3dd219f388759e4461318e14262bdfa80590513468c29a"
         }
       },
       {
@@ -17557,7 +17557,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/block-propagation/block-propagation-fibre.component.ts",
-          "sha256": "0b2849b03b7d760bc89890d4ed54be3d80b7fcbf8b114c3445de808aa8b9e91f"
+          "sha256": "8ac6795f3b58cb03ebf66a4ebe2b1b06da8831224a6ff456ef3f8488a8ba7c46"
         }
       },
       {
@@ -17713,7 +17713,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/private-submission/private-submission-accelerators.component.ts",
-          "sha256": "2b48fa25d2175f2873f251197e89fb9c82eeb711bf55f7c17ee3b1ed13225ebf"
+          "sha256": "4a73f8a35835d4c7e6f16d40773096dc6d76365f63ca7f213dac7c102c2453bb"
         }
       },
       {
@@ -17824,7 +17824,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/private-submission/private-submission-ordering.component.ts",
-          "sha256": "0eda92e591d09b5ac0dff773455503ba7835bd2589b7082e300bbfe5087629ff"
+          "sha256": "61d063405f1a069446864edbce8884ffb83aa948c1268b0bdf859d75939f1a7a"
         }
       },
       {
@@ -17896,7 +17896,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/private-submission/private-submission-ordering-block.component.ts",
-          "sha256": "d30b2c43f97695fd58d9cf2bfdcd8c759a4c72aded106a3d1c1b18764c4aefb5"
+          "sha256": "5adb40befb954018ee869364e4a2f383714c53d0469bbe289e84733172073b13"
         }
       },
       {
@@ -17954,7 +17954,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/opentimestamps/opentimestamps-overview.component.ts",
-          "sha256": "3e690b7aeaac3c43e3cc33c622c08368ac1efda0796017f45a48418a2663dec9"
+          "sha256": "5b4ce161b12a412260c9bff6f58815beb02b9a81aada60b80fd0adca0b25eb94"
         }
       },
       {
@@ -18096,7 +18096,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/opentimestamps/opentimestamps-calendars.component.ts",
-          "sha256": "072ca17ae48fae1954593fb9994b08a74911c1d89daae62a6c573361071a457d"
+          "sha256": "2a179163488202e693ef8e60817be6ef082f66d2d5f02f23c2587eb0f2616a02"
         }
       },
       {
@@ -18122,7 +18122,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/opentimestamps/opentimestamps-batches.component.ts",
-          "sha256": "1c966d22a0699412900246e35e8e255590a1689e8d7d41939dd5670c47aa8a7e"
+          "sha256": "8b51acf231a16d6441895bb39780b6b1e657ce92107291642f7b5e2007d73e3a"
         }
       },
       {
@@ -18184,7 +18184,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/consensus-conformance/consensus-conformance-overview.component.ts",
-          "sha256": "e762b056a460179811b26efe2bac0c7aeac484cf9d6eb659e75f36ec9626897b"
+          "sha256": "3b568e6f3044160352c3db792113244a5e7565e24532de4468b2b17d08e853f4"
         }
       },
       {
@@ -18201,7 +18201,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/consensus-conformance/consensus-conformance-differential.component.ts",
-          "sha256": "d6236d96a3bb47538b8848452e546a3ce64c067e61469ebbdf57229953add501"
+          "sha256": "225c7b56f8df1d850d3125f54550ad792ef594f6f212a3055b6b8826dc3b5260"
         }
       },
       {
@@ -18231,7 +18231,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/consensus-conformance/consensus-conformance-cases.component.ts",
-          "sha256": "670286776c78726bea3ee3531b0dfa8294832cb535c2e59a40265de0292f181c"
+          "sha256": "d702b6c46d1d4997c77437367ef74a4e7852dfee2ece52db423b7a99967b3744"
         }
       },
       {
@@ -18282,7 +18282,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/consensus-conformance/consensus-conformance-case-detail.component.ts",
-          "sha256": "c0cb6052677d741f5746f2a070d32278910b6fe09e88dd1ea807f1411591c8b3"
+          "sha256": "25b3f8c5cbb280de3f5e5b4a758796a82f433c57ce7647e286572b5e37dcec43"
         }
       },
       {
@@ -18308,7 +18308,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/consensus-conformance/consensus-conformance-formal.component.ts",
-          "sha256": "13b627d56955684b371bfc78f26f247e4bd6ecce2425d15291845433d5e3fab7"
+          "sha256": "7ff0a76abc775103f93aa239458883b465f558ac315920b781ffef02d2b6c160"
         }
       },
       {
@@ -18325,7 +18325,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/consensus-conformance/consensus-conformance-specifications.component.ts",
-          "sha256": "849dffbaef7d854f7c1251d9ed4b1ac6b082da7df9ce6f65f6d88a6eff0b242d"
+          "sha256": "baf5bf217f0d476da9f62242d7d92b16b28f63236a24634959fb6be7c6fc0f13"
         }
       },
       {
@@ -18342,7 +18342,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/consensus-conformance/consensus-conformance-corpora.component.ts",
-          "sha256": "9b94013bd47abe12ccbc5efdfb60860d42eea22917c0ac288ba643a207830b1d"
+          "sha256": "780835a21d41ab31dd211145e96f908a51795e69d5a68a6b35c9806c38529b80"
         }
       },
       {
@@ -18462,7 +18462,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/node-security/node-security-overview.component.ts",
-          "sha256": "ebcc0252fd742d7d37b624e50da7a6eba102a0f7ccd3a0d6cc5a1721099b29aa"
+          "sha256": "2350952421f1086515fcd0271fc6980681d565d4b9603d174715ad65d0f6fdcb"
         }
       },
       {
@@ -18496,7 +18496,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/node-security/node-security-fleet.component.ts",
-          "sha256": "6a6f106c592bea17335ee3dd1f870b4ecc0323f41be1fec16bb10fdf165146c7"
+          "sha256": "6f1c127c9226270a1f0deadef6f7c9b7dfa7bec1407d7750f16c10bde2b6793e"
         }
       },
       {
@@ -18556,7 +18556,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/node-security/node-security-advisories.component.ts",
-          "sha256": "c9c0359ee6be78f88bcdbf60e413c2155856781a89a4137d34a58be0bf6d872f"
+          "sha256": "a5bbccda1741da3b9f571adb5c3403be409853a249800cbbfb902bd01be1ebd4"
         }
       },
       {
@@ -18612,7 +18612,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/node-security/node-security-releases.component.ts",
-          "sha256": "83607ab07ca4ecce7f636cf9df4480ee32a6a53fe6c919329ebe72f2a1430d10"
+          "sha256": "3ff48d0c7c3f599154fb9ffcc18b07c64324ae1b1b231e6c33e7708d7a6bb2fc"
         }
       },
       {
@@ -18638,7 +18638,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/node-security/node-security-artifacts.component.ts",
-          "sha256": "8b57336d52a88572c00b4e68aea8d6e2ab7db95f33ebce57445e6de6f2fdac78"
+          "sha256": "40e55375194ae66c2b76eb62bc6af0292fefc846cd7d296833ced2b040f76d13"
         }
       },
       {
@@ -18756,7 +18756,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/collaborative-privacy/collaborative-privacy-overview.component.ts",
-          "sha256": "0a8930e848af84229343aa3665b9c2f109cf894d89d0332b6203ba5944e47491"
+          "sha256": "df4b6001fdc2a5b7de9593fb8ec95ca0b8eeff49dc6e1cea71ed0919d034214e"
         }
       },
       {
@@ -18872,7 +18872,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/collaborative-privacy/collaborative-privacy-coordinators.component.ts",
-          "sha256": "eb2e97b65b09cbece6bff90e11ded360cddbfeb8cab0d2c593e8e0f7ae8d4fe2"
+          "sha256": "3bc28e9acd903a5f19e42f8bf183997abea612774a48eb9ff0e100dc8ed6f5a0"
         }
       },
       {
@@ -18928,7 +18928,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/collaborative-privacy/collaborative-privacy-fidelity-bonds.component.ts",
-          "sha256": "5cb8a2049e9d652f4dab7d11c01e1dbdd61acc1c52516e62987a6d590b76a550"
+          "sha256": "8141c841a0a641e8d2cc4ca8b9171c79d3936c7526444829fcdc1dd2b73f64f8"
         }
       },
       {
@@ -37299,7 +37299,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01",
-          "sha256": "d3e827a06836c8f6fbea6cf57a02465ff9197e24ca44fa89bad53a8eb462cc62"
+          "sha256": "1729cfbc21a973df9cfaef861a4c1813d6f2e362c11f59e52b3f90fde04f0173"
         }
       ],
       "blockers": [
@@ -37365,7 +37365,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01",
-          "sha256": "d3e827a06836c8f6fbea6cf57a02465ff9197e24ca44fa89bad53a8eb462cc62"
+          "sha256": "1729cfbc21a973df9cfaef861a4c1813d6f2e362c11f59e52b3f90fde04f0173"
         }
       ],
       "blockers": [
@@ -37431,7 +37431,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01",
-          "sha256": "d3e827a06836c8f6fbea6cf57a02465ff9197e24ca44fa89bad53a8eb462cc62"
+          "sha256": "1729cfbc21a973df9cfaef861a4c1813d6f2e362c11f59e52b3f90fde04f0173"
         }
       ],
       "blockers": [
@@ -51338,7 +51338,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/policy-lab.component.ts",
-          "sha256": "817b86907ee8d0243bb32b38189995ccd5ceffde97d63c395267fd47ac76c4f0"
+          "sha256": "951b96179bbcb39969fd1c53cb9df7441013e37788d0ff1d87edaec2a2f47730"
         }
       ],
       "entry": null,
@@ -51441,7 +51441,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/policy-lab.component.ts",
-          "sha256": "817b86907ee8d0243bb32b38189995ccd5ceffde97d63c395267fd47ac76c4f0"
+          "sha256": "951b96179bbcb39969fd1c53cb9df7441013e37788d0ff1d87edaec2a2f47730"
         }
       ],
       "entry": null,
@@ -51544,7 +51544,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/script-workbench.component.ts",
-          "sha256": "92a70511efb221ebaed80d4632e53d5441d09a9b956dad22457c7deb93e8eac2"
+          "sha256": "830c2ff12259c9f8e34a90ba13c5f1f256e5db8d8f670863f29bc58b777be936"
         }
       ],
       "entry": null,
@@ -51691,7 +51691,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/script-workbench.component.ts",
-          "sha256": "92a70511efb221ebaed80d4632e53d5441d09a9b956dad22457c7deb93e8eac2"
+          "sha256": "830c2ff12259c9f8e34a90ba13c5f1f256e5db8d8f670863f29bc58b777be936"
         }
       ],
       "entry": null,
@@ -51838,7 +51838,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/script-workbench.component.ts",
-          "sha256": "92a70511efb221ebaed80d4632e53d5441d09a9b956dad22457c7deb93e8eac2"
+          "sha256": "830c2ff12259c9f8e34a90ba13c5f1f256e5db8d8f670863f29bc58b777be936"
         }
       ],
       "entry": null,
@@ -51985,7 +51985,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/script-workbench.component.ts",
-          "sha256": "92a70511efb221ebaed80d4632e53d5441d09a9b956dad22457c7deb93e8eac2"
+          "sha256": "830c2ff12259c9f8e34a90ba13c5f1f256e5db8d8f670863f29bc58b777be936"
         }
       ],
       "entry": null,
@@ -52132,7 +52132,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/script-workbench.component.ts",
-          "sha256": "92a70511efb221ebaed80d4632e53d5441d09a9b956dad22457c7deb93e8eac2"
+          "sha256": "830c2ff12259c9f8e34a90ba13c5f1f256e5db8d8f670863f29bc58b777be936"
         }
       ],
       "entry": null,
@@ -52279,7 +52279,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/script-workbench.component.ts",
-          "sha256": "92a70511efb221ebaed80d4632e53d5441d09a9b956dad22457c7deb93e8eac2"
+          "sha256": "830c2ff12259c9f8e34a90ba13c5f1f256e5db8d8f670863f29bc58b777be936"
         }
       ],
       "entry": null,
@@ -52426,7 +52426,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/script-workbench.component.ts",
-          "sha256": "92a70511efb221ebaed80d4632e53d5441d09a9b956dad22457c7deb93e8eac2"
+          "sha256": "830c2ff12259c9f8e34a90ba13c5f1f256e5db8d8f670863f29bc58b777be936"
         }
       ],
       "entry": null,
@@ -52573,7 +52573,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/script-workbench.component.ts",
-          "sha256": "92a70511efb221ebaed80d4632e53d5441d09a9b956dad22457c7deb93e8eac2"
+          "sha256": "830c2ff12259c9f8e34a90ba13c5f1f256e5db8d8f670863f29bc58b777be936"
         }
       ],
       "entry": null,
@@ -52720,7 +52720,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/script-workbench.component.ts",
-          "sha256": "92a70511efb221ebaed80d4632e53d5441d09a9b956dad22457c7deb93e8eac2"
+          "sha256": "830c2ff12259c9f8e34a90ba13c5f1f256e5db8d8f670863f29bc58b777be936"
         }
       ],
       "entry": null,
@@ -53653,7 +53653,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/relay-observatory.component.ts",
-          "sha256": "fcd4bd383b53a6e487da1d7749e9b5c5fa31a5edcfaea39f9e08eb010a598ddc"
+          "sha256": "478b32c93970b25ce82ba63e28f7568ba3f28df1d48372ffe19a137a16b30fa8"
         }
       ],
       "entry": null,
@@ -53788,7 +53788,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/relay-observatory.component.ts",
-          "sha256": "fcd4bd383b53a6e487da1d7749e9b5c5fa31a5edcfaea39f9e08eb010a598ddc"
+          "sha256": "478b32c93970b25ce82ba63e28f7568ba3f28df1d48372ffe19a137a16b30fa8"
         }
       ],
       "entry": null,
@@ -53923,7 +53923,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/time-machine.component.ts",
-          "sha256": "cca0ecbd6fed1ca57c21982890422964f70d232fc8743bde814ee093532fb097"
+          "sha256": "304568fa80c9f4c2314c659ed493b01ac6a6d5e7d0503283b35e3fce23d8a623"
         }
       ],
       "entry": null,
@@ -54034,7 +54034,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/time-machine.component.ts",
-          "sha256": "cca0ecbd6fed1ca57c21982890422964f70d232fc8743bde814ee093532fb097"
+          "sha256": "304568fa80c9f4c2314c659ed493b01ac6a6d5e7d0503283b35e3fce23d8a623"
         }
       ],
       "entry": null,
@@ -54145,7 +54145,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/time-machine.component.ts",
-          "sha256": "cca0ecbd6fed1ca57c21982890422964f70d232fc8743bde814ee093532fb097"
+          "sha256": "304568fa80c9f4c2314c659ed493b01ac6a6d5e7d0503283b35e3fce23d8a623"
         }
       ],
       "entry": null,
@@ -54256,7 +54256,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/time-machine.component.ts",
-          "sha256": "cca0ecbd6fed1ca57c21982890422964f70d232fc8743bde814ee093532fb097"
+          "sha256": "304568fa80c9f4c2314c659ed493b01ac6a6d5e7d0503283b35e3fce23d8a623"
         }
       ],
       "entry": null,
@@ -54367,7 +54367,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/mining-templates.component.ts",
-          "sha256": "f6232e476ddc61ad76c5e07f71a1df0193c9dde5135fbc7cedd543799e6df5b1"
+          "sha256": "847b85f9d9b780bc5c80d551222d19fb704a7c60f01ae6d358313a39e7443cb8"
         }
       ],
       "entry": null,
@@ -54474,7 +54474,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/transaction-graph.component.ts",
-          "sha256": "9ed135762429224d14a5c4a9b2ad222d4a766fca965623d6aab2adc44b98dbe1"
+          "sha256": "2e4848ec8aac5d9ebf16c5d70dac60444103eee3b20936b99fc9bdefee258f61"
         }
       ],
       "entry": null,
@@ -54565,7 +54565,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/transaction-graph.component.ts",
-          "sha256": "9ed135762429224d14a5c4a9b2ad222d4a766fca965623d6aab2adc44b98dbe1"
+          "sha256": "2e4848ec8aac5d9ebf16c5d70dac60444103eee3b20936b99fc9bdefee258f61"
         }
       ],
       "entry": null,
@@ -54656,7 +54656,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/knowledge-registry.component.ts",
-          "sha256": "316294aa86b6c9d0ed59c971dff6baa4eab5660f1e5c793a77387d0a8629dc2c"
+          "sha256": "351fd41258348f466792009370cb8bc9b1cf545ea0793166fefe6ffc5038e463"
         }
       ],
       "entry": null,
@@ -54775,7 +54775,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/knowledge-registry.component.ts",
-          "sha256": "316294aa86b6c9d0ed59c971dff6baa4eab5660f1e5c793a77387d0a8629dc2c"
+          "sha256": "351fd41258348f466792009370cb8bc9b1cf545ea0793166fefe6ffc5038e463"
         }
       ],
       "entry": null,
@@ -54894,7 +54894,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/developer-platform.component.ts",
-          "sha256": "9c524daa713e8384542983a11fb15950bd4ae0b8402ba1a5e5ed5ed86321a93e"
+          "sha256": "eff629781405e435e7d9a91f0b68ee4a109167a305a79331359c8c15a619d342"
         }
       ],
       "entry": null,
@@ -55009,7 +55009,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/developer-platform.component.ts",
-          "sha256": "9c524daa713e8384542983a11fb15950bd4ae0b8402ba1a5e5ed5ed86321a93e"
+          "sha256": "eff629781405e435e7d9a91f0b68ee4a109167a305a79331359c8c15a619d342"
         }
       ],
       "entry": null,
@@ -55124,7 +55124,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/query-studio.component.ts",
-          "sha256": "ad56b9b9b47dbfa49b0f64bb4c0ebbd50fab9c4e3afa0537a9510c6008437f40"
+          "sha256": "e34334861552d0d9f997859d590d05c1858eb9f3595a39f5afd139a4e4d5cd21"
         }
       ],
       "entry": null,
@@ -55227,7 +55227,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/query-studio.component.ts",
-          "sha256": "ad56b9b9b47dbfa49b0f64bb4c0ebbd50fab9c4e3afa0537a9510c6008437f40"
+          "sha256": "e34334861552d0d9f997859d590d05c1858eb9f3595a39f5afd139a4e4d5cd21"
         }
       ],
       "entry": null,
@@ -55330,7 +55330,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/watchlists.component.ts",
-          "sha256": "d55778ea4ee8d88d5596f156b0f356f70090e834acd56d8edf9bbae3604db421"
+          "sha256": "f9562bf959732982511c317a25c469c6fd5ccf51660097c53576ce2c9107fd90"
         }
       ],
       "entry": null,
@@ -55417,7 +55417,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/protocol-explorer.component.ts",
-          "sha256": "52777bf1d35952977acd943b607ec528558aaf150a3078974ee43504513ebe33"
+          "sha256": "109158531c56f5736c703c9ddc540faecb802c8cef205c5a7d6c7a2750469f09"
         }
       ],
       "entry": null,
@@ -55536,7 +55536,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/protocol-explorer.component.ts",
-          "sha256": "52777bf1d35952977acd943b607ec528558aaf150a3078974ee43504513ebe33"
+          "sha256": "109158531c56f5736c703c9ddc540faecb802c8cef205c5a7d6c7a2750469f09"
         }
       ],
       "entry": null,
@@ -55655,7 +55655,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/protocol-explorer.component.ts",
-          "sha256": "52777bf1d35952977acd943b607ec528558aaf150a3078974ee43504513ebe33"
+          "sha256": "109158531c56f5736c703c9ddc540faecb802c8cef205c5a7d6c7a2750469f09"
         }
       ],
       "entry": null,
@@ -55774,7 +55774,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/global-network/global-network-nodes.component.ts",
-          "sha256": "61e657eb159d43d4254b9e57470c6a25c37277a99769332e00b4cf96d4d2614e"
+          "sha256": "6891ddcd23b0658c4aa235741824605bab8edf2c8f3e5dd52a46035420a453c4"
         }
       ],
       "entry": null,
@@ -56043,7 +56043,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/silent-payments/silent-payments-scan.component.ts",
-          "sha256": "f9ff191e6b7d0371e71651d8905ef85280d9155a08e79b9a6733a51fb96cf312"
+          "sha256": "e3f6567583539c5f40eb60d48cad1e8267cfd315bf2b392ec04aaccb33d57b01"
         }
       ],
       "entry": null,
@@ -56162,7 +56162,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/silent-payments/silent-payments-scan.component.ts",
-          "sha256": "f9ff191e6b7d0371e71651d8905ef85280d9155a08e79b9a6733a51fb96cf312"
+          "sha256": "e3f6567583539c5f40eb60d48cad1e8267cfd315bf2b392ec04aaccb33d57b01"
         }
       ],
       "entry": null,
@@ -57717,7 +57717,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/consensus/vaults-simulate.component.ts",
-          "sha256": "e0c88f27744cf3a8685bc9120483ce5559e33b4de024db35cf18720e521ed541"
+          "sha256": "ddec46ef42e2da8606380c7db2d3b6f5d663d7261a14d3767b3000cba64bacf2"
         }
       ],
       "entry": null,
@@ -59686,7 +59686,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/compact-filters/light-client-scan.component.ts",
-          "sha256": "611a86f9e7e080c5e38ec6a79059eeac06e11960565aaf95c6d32ad79379b1b4"
+          "sha256": "36aa6a14cd3ae35d69c5b45428a0c4f43f31b45bb3b2bbb020ff3c2032116908"
         }
       ],
       "entry": null,
@@ -59757,7 +59757,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/compact-filters/light-client-scan.component.ts",
-          "sha256": "611a86f9e7e080c5e38ec6a79059eeac06e11960565aaf95c6d32ad79379b1b4"
+          "sha256": "36aa6a14cd3ae35d69c5b45428a0c4f43f31b45bb3b2bbb020ff3c2032116908"
         }
       ],
       "entry": null,
@@ -67264,7 +67264,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/consensus-conformance/consensus-conformance-case-detail.component.ts",
-          "sha256": "c0cb6052677d741f5746f2a070d32278910b6fe09e88dd1ea807f1411591c8b3"
+          "sha256": "25b3f8c5cbb280de3f5e5b4a758796a82f433c57ce7647e286572b5e37dcec43"
         }
       ],
       "entry": null,
@@ -118276,7 +118276,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "d3e827a06836c8f6fbea6cf57a02465ff9197e24ca44fa89bad53a8eb462cc62"
+          "sha256": "1729cfbc21a973df9cfaef861a4c1813d6f2e362c11f59e52b3f90fde04f0173"
         }
       ],
       "blockers": [
@@ -118350,7 +118350,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "d3e827a06836c8f6fbea6cf57a02465ff9197e24ca44fa89bad53a8eb462cc62"
+          "sha256": "1729cfbc21a973df9cfaef861a4c1813d6f2e362c11f59e52b3f90fde04f0173"
         }
       ],
       "blockers": [
@@ -118424,7 +118424,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "d3e827a06836c8f6fbea6cf57a02465ff9197e24ca44fa89bad53a8eb462cc62"
+          "sha256": "1729cfbc21a973df9cfaef861a4c1813d6f2e362c11f59e52b3f90fde04f0173"
         }
       ],
       "blockers": [
@@ -118498,7 +118498,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "d3e827a06836c8f6fbea6cf57a02465ff9197e24ca44fa89bad53a8eb462cc62"
+          "sha256": "1729cfbc21a973df9cfaef861a4c1813d6f2e362c11f59e52b3f90fde04f0173"
         }
       ],
       "blockers": [
@@ -118572,7 +118572,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "d3e827a06836c8f6fbea6cf57a02465ff9197e24ca44fa89bad53a8eb462cc62"
+          "sha256": "1729cfbc21a973df9cfaef861a4c1813d6f2e362c11f59e52b3f90fde04f0173"
         }
       ],
       "blockers": [
@@ -118646,7 +118646,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "d3e827a06836c8f6fbea6cf57a02465ff9197e24ca44fa89bad53a8eb462cc62"
+          "sha256": "1729cfbc21a973df9cfaef861a4c1813d6f2e362c11f59e52b3f90fde04f0173"
         }
       ],
       "blockers": [
@@ -118720,7 +118720,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "d3e827a06836c8f6fbea6cf57a02465ff9197e24ca44fa89bad53a8eb462cc62"
+          "sha256": "1729cfbc21a973df9cfaef861a4c1813d6f2e362c11f59e52b3f90fde04f0173"
         }
       ],
       "blockers": [
@@ -118794,7 +118794,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "d3e827a06836c8f6fbea6cf57a02465ff9197e24ca44fa89bad53a8eb462cc62"
+          "sha256": "1729cfbc21a973df9cfaef861a4c1813d6f2e362c11f59e52b3f90fde04f0173"
         }
       ],
       "blockers": [
@@ -118868,7 +118868,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "d3e827a06836c8f6fbea6cf57a02465ff9197e24ca44fa89bad53a8eb462cc62"
+          "sha256": "1729cfbc21a973df9cfaef861a4c1813d6f2e362c11f59e52b3f90fde04f0173"
         }
       ],
       "blockers": [
@@ -118942,7 +118942,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "d3e827a06836c8f6fbea6cf57a02465ff9197e24ca44fa89bad53a8eb462cc62"
+          "sha256": "1729cfbc21a973df9cfaef861a4c1813d6f2e362c11f59e52b3f90fde04f0173"
         }
       ],
       "blockers": [
@@ -119016,7 +119016,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "d3e827a06836c8f6fbea6cf57a02465ff9197e24ca44fa89bad53a8eb462cc62"
+          "sha256": "1729cfbc21a973df9cfaef861a4c1813d6f2e362c11f59e52b3f90fde04f0173"
         }
       ],
       "blockers": [
@@ -119090,7 +119090,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "d3e827a06836c8f6fbea6cf57a02465ff9197e24ca44fa89bad53a8eb462cc62"
+          "sha256": "1729cfbc21a973df9cfaef861a4c1813d6f2e362c11f59e52b3f90fde04f0173"
         }
       ],
       "blockers": [

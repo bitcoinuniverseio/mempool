@@ -158,7 +158,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
             </div>
 
             <!-- Sensor Observations Timeline -->
-            <div class="table-responsive">
+            <div class="table-responsive" tabindex="0">
               <table class="table table-hover mb-0">
                 <thead>
                   <tr>

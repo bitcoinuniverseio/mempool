@@ -183,7 +183,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
           <div class="card-header">
             <h4 class="h5 mb-0">Package Members</h4>
           </div>
-          <div class="table-responsive">
+          <div class="table-responsive" tabindex="0">
             <table class="table table-hover mb-0">
               <thead>
                 <tr>

@@ -58,7 +58,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
             {{ loadingDiff ? 'Analyzing Diff...' : 'Diff Selected Templates' }}
           </button>
         </div>
-        <div class="table-responsive">
+        <div class="table-responsive" tabindex="0">
           <table class="table table-hover mb-0">
             <thead>
               <tr>

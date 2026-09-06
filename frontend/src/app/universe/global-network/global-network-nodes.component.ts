@@ -77,7 +77,7 @@ import { GlobalNetworkApiService, GlobalNetworkObservation } from './global-netw
       </div>
 
       <div *ngIf="!loading && filteredNodes.length > 0" class="card bg-body-tertiary border">
-        <div class="table-responsive">
+        <div class="table-responsive" tabindex="0">
           <table class="table table-hover align-middle mb-0">
             <thead>
               <tr>

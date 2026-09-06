@@ -60,7 +60,7 @@ import { DecentralizedMiningApiService } from './decentralized-mining.service';
         <div class="col-12">
           <div class="card p-4 bg-body-tertiary border">
             <h2 class="h5 mb-3">Protocol Feature Comparison</h2>
-            <div class="table-responsive">
+            <div class="table-responsive" tabindex="0">
               <table class="table table-hover align-middle">
                 <thead>
                   <tr>

@@ -82,7 +82,7 @@ import { LightningReliabilityApiService, LightningReliabilityOverview } from './
             <h2 class="h5 m-0">Top Performing Routing Nodes</h2>
             <span class="text-muted small">Ranked by probe reachability score</span>
           </div>
-          <div class="table-responsive">
+          <div class="table-responsive" tabindex="0">
             <table class="table table-hover align-middle mb-0">
               <thead>
                 <tr>

@@ -79,7 +79,7 @@ import { BlockspaceApiService, BlockspaceOverview } from './blockspace.service';
         <!-- Semantic Classes Breakdown -->
         <section class="card p-4 bg-body-tertiary border mb-4">
           <h2 class="h5 mb-3">Semantic Blockspace Consumption (24h)</h2>
-          <div class="table-responsive">
+          <div class="table-responsive" tabindex="0">
             <table class="table table-hover align-middle mb-0">
               <thead>
                 <tr>
@@ -118,7 +118,7 @@ import { BlockspaceApiService, BlockspaceOverview } from './blockspace.service';
         <!-- Recent Composition Blocks -->
         <section class="card p-4 bg-body-tertiary border">
           <h2 class="h5 mb-3">Recent Block Composition</h2>
-          <div class="table-responsive">
+          <div class="table-responsive" tabindex="0">
             <table class="table table-sm table-hover align-middle mb-0">
               <thead>
                 <tr>

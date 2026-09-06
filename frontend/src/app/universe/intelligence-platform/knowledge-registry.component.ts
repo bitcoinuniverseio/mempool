@@ -49,7 +49,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
           No entity labels match the selected criteria.
         </div>
 
-        <div class="table-responsive" *ngIf="filteredLabels.length > 0">
+        <div class="table-responsive" *ngIf="filteredLabels.length  tabindex="0"> 0">
           <table class="table table-hover mb-0">
             <thead>
               <tr>
@@ -128,7 +128,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
         <div class="card-header">
           <h4 class="mb-0">Public Attribution Audit Trail</h4>
         </div>
-        <div class="table-responsive">
+        <div class="table-responsive" tabindex="0">
           <table class="table table-sm table-hover mb-0">
             <thead>
               <tr>
