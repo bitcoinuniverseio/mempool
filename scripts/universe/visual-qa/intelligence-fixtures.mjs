@@ -809,19 +809,19 @@ export const intelligenceFixtures = {
   },
 
   // 21. Decentralized Mining Observatory
-  'GET /api/v1/intelligence/mining-decentralized/overview': {
+  'GET /api/v1/intelligence/mining/decentralized/overview': {
     protocols_tracked: ['datum', 'p2pool_v2', 'braidpool'],
     observed_shares_24h: 42800,
     template_autonomy_ratio: 0.94,
     independent_block_templates_count: 12,
   },
-  'GET /api/v1/intelligence/mining-decentralized/shares': {
+  'GET /api/v1/intelligence/mining/decentralized/shares': {
     shares: [
       { share_id: 'datum-share-887412-001', protocol: 'datum', miner_id: 'miner-ocean-01', difficulty: 65536, template_diff_count: 0, timestamp: '2026-09-04T05:30:00Z' },
       { share_id: 'share-datum-881290', protocol: 'datum', miner_id: 'miner-ocean-ashburn-01', difficulty: 65536, template_diff_count: 0, timestamp: '2026-09-04T05:30:00Z' },
     ],
   },
-  'GET /api/v1/intelligence/mining-decentralized/shares/datum-share-887412-001': {
+  'GET /api/v1/intelligence/mining/decentralized/shares/datum-share-887412-001': {
     share_id: 'datum-share-887412-001',
     protocol: 'datum',
     miner_id: 'miner-ocean-01',
@@ -831,7 +831,7 @@ export const intelligenceFixtures = {
     timestamp: '2026-09-04T05:30:00Z',
     verified: true,
   },
-  'GET /api/v1/intelligence/mining-decentralized/shares/share-datum-881290': {
+  'GET /api/v1/intelligence/mining/decentralized/shares/share-datum-881290': {
     share_id: 'share-datum-881290',
     protocol: 'datum',
     share_height: 881290,
@@ -850,13 +850,13 @@ export const intelligenceFixtures = {
     template_diff_count: 0,
     verified: true,
   },
-  'GET /api/v1/intelligence/mining-decentralized/templates/compare': {
+  'GET /api/v1/intelligence/mining/decentralized/templates/compare': {
     miner_selected_txs: 2450,
     pool_suggested_txs: 2452,
     tx_divergence_count: 2,
     weight_divergence_pct: 0.04,
   },
-  'GET /api/v1/intelligence/mining-decentralized/datum/summary': {
+  'GET /api/v1/intelligence/mining/decentralized/datum/summary': {
     protocol: 'datum',
     active_hashrate_share: 0.038,
     connected_rigs: 1840,
@@ -2555,5 +2555,415 @@ export const intelligenceFixtures = {
     errors: [],
     attestation_digest: '9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b',
     evaluated_at: '2026-09-06T05:30:00Z',
+  },
+
+  // Routes the serial broad pass reached with nothing behind them.
+  //
+  // Each body is what the service that serves the route actually returns,
+  // taken by calling it, and the two universe reads are the overlay's own
+  // answers. A body written from a route name is how a page passes here and
+  // 404s in production, which is what the bootstrap and decentralized mining
+  // paths in this change were doing.
+  'GET /api/v1/intelligence/bitcoin-staking/delegation/del-882001-allnodes': {
+    delegation_id: 'del-882001-allnodes',
+    staker_pk: '031b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f',
+    finality_provider_pks: [
+      '0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798'
+    ],
+    staking_amount_sat: 5000000,
+    state: 'active',
+    staking_txid: 'd9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0',
+    staking_vout: 0,
+    staking_timelock_blocks: 10080,
+    start_height: 856000,
+    end_height: 866080,
+    covenant_signatures_count: 3,
+    covenant_signatures_required: 3,
+    last_updated_at: '2026-09-04T00:00:00Z',
+    discrepancy_flags: []
+  },
+  'GET /api/v1/intelligence/bitcoin-staking/finality-provider/fp-allnodes-01': {
+    provider_id: 'fp-allnodes-01',
+    moniker: 'Allnodes Babylon Staking Pool',
+    btc_pk: '0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798',
+    commission_rate_percent: 5,
+    active_tvl_sat: 45000000000,
+    delegations_count: 1420,
+    uptime_percent: 99.98,
+    is_slashed: false,
+    eots_public_key: '02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5',
+    first_registered_at: '2026-06-01T00:00:00Z',
+    last_activity_at: '2026-09-04T05:00:00Z'
+  },
+  'GET /api/v1/intelligence/bitcoin-staking/finality-providers': [
+    {
+      provider_id: 'fp-allnodes-01',
+      moniker: 'Allnodes Babylon Staking Pool',
+      btc_pk: '0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798',
+      commission_rate_percent: 5,
+      active_tvl_sat: 45000000000,
+      delegations_count: 1420,
+      uptime_percent: 99.98,
+      is_slashed: false,
+      eots_public_key: '02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5',
+      first_registered_at: '2026-06-01T00:00:00Z',
+      last_activity_at: '2026-09-04T05:00:00Z'
+    },
+    {
+      provider_id: 'fp-luganodes-02',
+      moniker: 'Luganodes Institutional',
+      btc_pk: '02f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9',
+      commission_rate_percent: 4.5,
+      active_tvl_sat: 38000000000,
+      delegations_count: 980,
+      uptime_percent: 99.95,
+      is_slashed: false,
+      eots_public_key: '03fff9749575f0ab1b38e201972a41d01ab700190f59317a469e52d9600bf41fbc',
+      first_registered_at: '2026-06-15T00:00:00Z',
+      last_activity_at: '2026-09-04T05:00:00Z'
+    },
+    {
+      provider_id: 'fp-rogue-slashed-09',
+      moniker: 'Faulty Double Signer Node',
+      btc_pk: '02d4b532da69ad5788d2be6e74d300865158d12521e73a9e6d3fea0c5b3531dc6e',
+      commission_rate_percent: 1,
+      active_tvl_sat: 0,
+      delegations_count: 15,
+      uptime_percent: 74.2,
+      is_slashed: true,
+      eots_public_key: '02e4d94d3b64c679b3ee38734fe0d15e9858df34ab941b38f15d2a937964177d61',
+      first_registered_at: '2026-07-10T00:00:00Z',
+      last_activity_at: '2026-08-20T12:00:00Z'
+    }
+  ],
+  'GET /api/v1/intelligence/compact-filters/blocks/000000000000000000021b379b37c02b54bf9cf7ff2ecdf44a6c4b2a8d5f3089': {
+    block_hash: '000000000000000000018a7c2b3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d',
+    block_height: 860000,
+    filter_type: 'basic_0x00',
+    element_count: 3420,
+    filter_bytes_hex: '0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20',
+    filter_hash: 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2',
+    filter_header: '5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b',
+    false_positive_rate: 0.0000012,
+    includes_spent_prevouts: true,
+    includes_outputs: true,
+    excludes_op_return: true
+  },
+  'GET /api/v1/intelligence/multiparty/compatibility': {
+    matrix: [
+      {
+        product_id: 'coldcard-mk4-q',
+        vendor: 'Coinkite',
+        name: 'COLDCARD Q',
+        capabilities: {
+          psbt_v0: true,
+          psbt_v2: true,
+          musig2_bip327: true,
+          musig2_psbt_bip373: true,
+          musig_descriptor_bip390: true,
+          wallet_policy_bip388: true,
+          bsms_bip129: true,
+          labels_bip329: true,
+          frost_rfc9591_compatible: false,
+          frost_bip340_ready: false
+        }
+      },
+      {
+        product_id: 'bitbox02-btc',
+        vendor: 'Shift Crypto',
+        name: 'BitBox02 Bitcoin-only',
+        capabilities: {
+          psbt_v0: true,
+          psbt_v2: true,
+          musig2_bip327: true,
+          musig2_psbt_bip373: true,
+          musig_descriptor_bip390: false,
+          wallet_policy_bip388: true,
+          bsms_bip129: true,
+          labels_bip329: true,
+          frost_rfc9591_compatible: false,
+          frost_bip340_ready: false
+        }
+      },
+      {
+        product_id: 'sparrow-desktop',
+        vendor: 'Sparrow Wallet',
+        name: 'Sparrow Wallet Desktop',
+        capabilities: {
+          psbt_v0: true,
+          psbt_v2: true,
+          musig2_bip327: true,
+          musig2_psbt_bip373: true,
+          musig_descriptor_bip390: true,
+          wallet_policy_bip388: true,
+          bsms_bip129: true,
+          labels_bip329: true,
+          frost_rfc9591_compatible: true,
+          frost_bip340_ready: false
+        }
+      }
+    ],
+    protocols: {
+      musig2: 'BIP-327 & BIP-373 (n-of-n Schnorr)',
+      wallet_policies: 'BIP-388 (Signer descriptor templates)',
+      bsms: 'BIP-129 (Secure multisig setup coordinator)',
+      labels: 'BIP-329 (Wallet labels streaming)',
+      frost: 'RFC-9591 (Threshold Schnorr, explicit BIP-340 compatibility distinction)'
+    }
+  },
+  'GET /api/v1/intelligence/payment-connectivity/lnurl/providers': [
+    {
+      endpoint_id: 'lnurl-stacker-news',
+      domain: 'stacker.news',
+      lightning_address_sample: 'user@stacker.news',
+      capabilities: {
+        lud01_base_spec: true,
+        lud06_pay: true,
+        lud03_withdraw: true,
+        lud04_auth: true,
+        lud16_lightning_address: true,
+        lud18_payer_data: true,
+        lud21_payment_verification: true
+      },
+      is_https: true,
+      ssrf_safe: true,
+      last_validated_at: '2026-09-04T04:00:00Z'
+    }
+  ],
+  'GET /api/v1/intelligence/simplicity/transactions/9f4a1c7e5b2d8036a1f4c9e7b3d5081a2c6e4f9b7d3a1c58e26f0b4d9a7c3e15': {
+    txid: '9f4a1c7e5b2d8036a1f4c9e7b3d5081a2c6e4f9b7d3a1c58e26f0b4d9a7c3e15',
+    has_simplicity: false,
+    executions: []
+  },
+  'GET /api/v1/intelligence/mining/decentralized/compare': {
+    height: 860500,
+    template_a_id: 'tmpl-datum-860500',
+    template_b_id: 'tmpl-pool-central-860500',
+    shared_txs_count: 3650,
+    exclusive_txs_a_count: 190,
+    exclusive_txs_b_count: 140,
+    similarity_ratio: 0.945,
+    fee_difference_sats: 240000
+  },
+  'GET /api/v1/universe/sources': {
+    generatedAt: '2026-09-06T11:30:23.818Z',
+    sources: [
+      {
+        authorityId: 'index-alkanes',
+        protocols: [
+          'alkanes'
+        ],
+        ready: false,
+        checkpoint: {
+          heightAtomic: '899091',
+          blockHash: '000000000000000000005b26a246ce2adf43e282d0bf5f73eb254daba31a34a8',
+          observedAt: '2026-09-06T11:26:33.438Z'
+        },
+        status: 'degraded',
+        checkedAt: '2026-09-06T11:26:33.438Z',
+        lagBlocks: '66464',
+        lastSuccessAt: null,
+        lastAnsweredAt: '2026-09-06T11:26:33.438Z',
+        consecutiveFailures: 0
+      },
+      {
+        authorityId: 'index-atomicals',
+        protocols: [
+          'arc20'
+        ],
+        ready: true,
+        checkpoint: {
+          heightAtomic: '964103',
+          blockHash: '9bc546ebe6b779085ddb14af42e9e5fd9a3c55c73a54707d4469f96888749631',
+          observedAt: '2026-09-06T11:26:36.120Z'
+        },
+        status: 'stale',
+        checkedAt: '2026-09-06T11:26:36.120Z',
+        lagBlocks: '1452',
+        lastSuccessAt: '2026-09-06T11:26:36.120Z',
+        lastAnsweredAt: '2026-09-06T11:26:36.120Z',
+        consecutiveFailures: 0
+      },
+      {
+        authorityId: 'index-atomicals-nfts-and-realms',
+        protocols: [
+          'atomicals_nft',
+          'realms',
+          'subrealms'
+        ],
+        ready: true,
+        checkpoint: {
+          heightAtomic: '964103',
+          blockHash: '9bc546ebe6b779085ddb14af42e9e5fd9a3c55c73a54707d4469f96888749631',
+          observedAt: '2026-09-06T11:26:48.107Z'
+        },
+        status: 'stale',
+        checkedAt: '2026-09-06T11:26:48.107Z',
+        lagBlocks: '1452',
+        lastSuccessAt: '2026-09-06T11:26:48.107Z',
+        lastAnsweredAt: '2026-09-06T11:26:48.107Z',
+        consecutiveFailures: 0
+      },
+      {
+        authorityId: 'index-bitmap',
+        protocols: [
+          'bitmap'
+        ],
+        ready: false,
+        checkpoint: null,
+        status: 'unconfigured',
+        checkedAt: '2026-09-06T11:30:23.818Z',
+        lagBlocks: null,
+        lastSuccessAt: null,
+        lastAnsweredAt: null,
+        consecutiveFailures: 0
+      },
+      {
+        authorityId: 'index-block20',
+        protocols: [
+          'block20'
+        ],
+        ready: false,
+        checkpoint: null,
+        status: 'unconfigured',
+        checkedAt: '2026-09-06T11:30:23.818Z',
+        lagBlocks: null,
+        lastSuccessAt: null,
+        lastAnsweredAt: null,
+        consecutiveFailures: 0
+      },
+      {
+        authorityId: 'index-brc20',
+        protocols: [
+          'brc20'
+        ],
+        ready: false,
+        checkpoint: null,
+        status: 'unconfigured',
+        checkedAt: '2026-09-06T11:30:23.818Z',
+        lagBlocks: null,
+        lastSuccessAt: null,
+        lastAnsweredAt: null,
+        consecutiveFailures: 0
+      }
+    ]
+  },
+  'GET /api/v1/universe/blocks/887412/inscriptions': {
+    schemaVersion: 'universe-explorer-asset-v1',
+    status: 'ok',
+    authorityId: 'ord',
+    checkpoint: {
+      chain: 'bitcoin',
+      network: 'mainnet',
+      heightAtomic: '920938',
+      blockHash: '00000000000000000001b79093464330c1b0fdab17378235041f93b6103dcc8e',
+      reorgEpoch: '00000000000000000001b79093464330c1b0fdab17378235041f93b6103dcc8e',
+      observedAt: '2026-09-06T11:30:24.047Z'
+    },
+    value: {
+      ids: [
+        '408d95308ea008aa42ee9607e73b608b72c1165987ddb98e65b7431395970762i0',
+        '888840eccdf08c7682317c2a5cb512e819898949ef24ff93c313d6c69e5d2b26i0',
+        'a6b7c6bafad208e6eb993b2a8cb5819c701d98d25862c8ee49cd38e7fda1746bi0',
+        'd4896ada9fab4b0e880bf290cb26107ade1c780a8471c1a1b898228d5149d239i0',
+        '37abe3960671827266b765269ba4f3d8295f27c7b08931c34ed147ed0eacc23ei0',
+        'e51a5ac5a50311c10daaff845e9b5933a6f646c908eb768bbded0a9381e0dc69i0',
+        '85494bf4027490cfb146b314fda23ae43c7064a2c600227fcb1a630b0ec9076ci0',
+        '1751b5b2b1667e653bdbd83743a4ed6335f62941ad4ab7f51abc19ed5888a98di0',
+        'f3ff53749a7393acd57ed9ac321ef117bd748a25774649023318dd2f6c99b6a2i0',
+        '03936bbb0ed63140854696a4009d32ca6b9db4ae31a5890844b86ad68abb64a5i0',
+        '923e397f249362ad65bcad26acd2b913d13820a9c5857b68061a10ff40cd88b9i0',
+        '620d0a8b0cf894f25f4a00a661c4a759685a3e6a472533760e060e39aa5252dai0',
+        '474ef6e2d63ef4e78c7fdd66aad9eaf90babce49fb93d505961d8aeb6e254de1i0',
+        '664a89e65fe91dca64e8c815f0227a40bd0b4c22363a0088084ca2ba559027a7i0',
+        '847a0a3d79c7abfa627d227582356e1b14767a3adf574a6a9a213ab72368af6ai0',
+        '1d08ee3c85e3710ff6f4b3a6475d1d46710dce57a9acfe829965d50159e69161i0',
+        'b3de32dc38c95ce517ed9d25e75cc32c4a173975578eb53a0e75156554fe2240i0',
+        'd302562084104e621cbe206dc638564c6615e7e7933076c51b75c3254ff9469ei0',
+        '6987bed5b1902a4060bb686bde5ca8af43f49edfa04722d12f24e0a1ee69ef72i0',
+        '20ae1955a585c2bd9734cff9b62aeae4d05e8b36488b5c5e635d469e11d85fc4i0',
+        '0e04cd1ff7857716f6123d7836e6f7fd718555c31e6837e02e279cff6878f835i0',
+        '96d5f59a7e2521ca9d89b889420d66beeec7c2c91290c870537df7a460db3d3di0',
+        '79c4dacf5a3202cfd391afd50c41de9793485e22b1cdac4e421e0b5fd4de4ab5i0',
+        '21bf132421732ca3404580016f6473b0f8a797bdaefec558e8c174edd569a76di0',
+        '0514a83e7c1b55d2fae510ec256e7fe089dc2b9957cf1f1952f950692c7113c7i0',
+        'c817cff6b80486074315ad346cb3d721647fe8b2dfed3bbbeb5461fc20a290e2i0',
+        '56a08a01c6bed5d62f6d400326b26886856d9f139eba33011feaa60575426be9i0',
+        'f2264b2d88d71a573869e1ef7a147650f4f1dd35fd35c30b7156e8cf7fe12178i0',
+        '80d61abdabbcb3bcf7f929e5dbc2c1c8de0c0bea2b656ef0ef3d35615b978179i0',
+        'de54738ce574fbe453fc8bde90e81febfdb028a6e9f22ded2c8a9c95d767d57di0',
+        '4a578510a22758a1be351017c9d43d30837969fa43a06e0e83d3a1859bcb3c80i0',
+        '829c23cbcf010bf5d0d426b4ef2cb59ebdc3e7e5a39d9779c8c0243d53f6798ai0',
+        '07d80b8b0d4a105e58ea6e3020e836d1f84df03b9bf1ffc3e2a3e26616bd3090i0',
+        'f4adff3f8419fb0958c9ccbc7dfae42874fa64bc878b1073b556a6012b1cd293i0',
+        'cb3d2ae121ff4daaa8a71ed37ed9b866bd4baebdde537efd75865c36f4cd2ca9i0',
+        '4fa7414189ecef4d305e3091bcbe63631eefdd0912a9e10825e953ae186e42b9i0',
+        'fd01a8f2337d49ad642325c5712496d748ddf3424380d1d7fd1e6e75564383b9i0',
+        'ef7a8a24bf7ce183a66c2ccd33385f2f1a81febcbebf7c318d399e21d98cd4bbi0',
+        'c7d3c6b512adbfc434eb705d3b08542a5ceef72f96e0152a3bbf1f39349401d3i0',
+        '4c8256236a00274f0cafcc887fe52c8fed420c1b0d226dcd95d2ecfa91318fe0i0',
+        '72fba68f1b2520131eac86ea9cf3dd8c6e6b643eb49fcbce441cca3765c9cae1i0',
+        '3cf2353844f2c44a1e2f6d5ecd15d3f7beb33422131fa5807fcd90ba2a77baedi0',
+        'f8518ee7f90ad7abc5167d88f6103365c6ee015596a8a34734a0c12f84c92400i0',
+        '8f4a9e3db539fc317c4ad85895c2e42611a4b5955d0f9f387e5d5f0578119d00i0',
+        '24cc0a0ac99d22e5dc9b5ae9170f446fe8aea8c8efc6fde92ee8c641b8f56501i0',
+        '9252bff39cefc7577061d73d35f8544080fdfc48f6b1e9a84f63bbb4ecf5d801i0',
+        '8825429321dedb9233aeb3eabdd0fd9c809854ea4ff34295a02e31eed8a8e801i0',
+        '5374b6714277065ea0b286ec2c120b6a3a17e3e5ea0c2c9b43684904af7e9904i0',
+        '5e263b9ab725122aa2e0a1db7e471d0b30f9680462ac8beb67c2f32e1650bc04i0',
+        '4facec7c02f2bb45807cda38964c4f15a6acd72c4a0de0e47a96401cf9dbee04i0',
+        '6d7b86169ea229cd33d3d1737e2bdf1cb3e779cd5d98ee82937787352266c009i0',
+        '44791e867d5d04020f253a6d78fc228b17e8890244c40e88dfdded576d63560ai0',
+        '8139f5835609269934afca5344986fe71a8538ae08f15765cadae55893abb00ai0',
+        '9f41abfaa448fab83389b57a3db547f4481e739ed9d08fb61e7970181bcfba0bi0',
+        'd00c327b8b2682a0a6ea1f61366bb13f3c2767cd20aa95e017c2f0f6ad13450di0',
+        '2b7c9d2a2f8ebff071dc7edf063d889fe5f06931cf1265e343aa3703bb41740ei0',
+        '31700f2ff5cea02768a24d315df03f3d2ca936d733c4ab2e9ba0ff20bccc1c0fi0',
+        '250e229b37dc5b1f6295f75e270e854ef38ccb042c5a9765e83acf6c63a92b10i0',
+        '5808965baa6cc56fd311f51e2ffe735f699c5244e65f393c2814e5c70ec85f10i0',
+        'd5c0773de782ea99c9a911a36be84528d006f23e68f7814ff76851591b460d11i0',
+        'a3d9823b78bef86e5a268c6f6b1f29bc01b8c947fa8282d55d54f73dd15e4511i0',
+        '8f43ca854a469a396fd193bafc8d7fe04fd02498671ce9376d6fb80d3a33b511i0',
+        'de55f0ac9688eb442a5ccf45217cdba665838d24df80023d0b52eaa84df52a15i0',
+        '6e3249ad0c49618ab749804ff83e6ab2e73139abf0b36b020cfa55c436744816i0',
+        'eb75e54b143dc2c404a0ed40900538b44644991f90c6bde201bae46505e81e18i0',
+        'd98d84c778d30c5db6a59bf787472ac4e6d4696003a3235454884cc1e339f61ai0',
+        '6d62126af1c38df0408fa52fb5341c3d6169068d76bdcc0bf2aceff05242891bi0',
+        'dd141e978ff7957cf3ea52f175ea6b1ea565923a25242d8656bc31441141a11ci0',
+        '6b87a189cb09db0266fd2c4e7ee77ee4008e8bd3c2ee12f234b469db3d4afe1fi0',
+        '082b3b663176539c24317f861c93cb91ec7f5ffe41eed16a492f2cfb25142120i0',
+        '82776e31bc10aadfad800fbb53f5a16e7cad82826d5f937e9e63d948402da922i0',
+        'ba22f6f0bf029d7586331b9ac8fe3830b952011535eab7619944d6317e7bb422i0',
+        '9e2ca4d31556c9fd2bfaf0524315efb6e601a169517770132e47a495336ecc22i0',
+        '87751d2e73f8da66e6b67894d13462e9225bbbf071f944689153b9c42b6d5d24i0',
+        'b0b41762d089b7c06247e7fdb3beeaa815dad40ebace43b6cdd1add6248ccf24i0',
+        '015cf6e01bac9cb22d51f8e337b818a59b0290a9e9f127353ae76f2123642d25i0',
+        '37c4f8f60128e1a32810734c6374bfa3859e7dcfdc7badf34263e74fc5e02e27i0',
+        '253f4e7e075e05d2ce2302ab70d7087c233f66a5c9cf3cb14aa3f204b9338f27i0',
+        '4c9d890397a0835c338779c673ff9503ed0328c7d02b7a81d191fe51e741a728i0',
+        '16e70012374668057184d9612b53c5f65a5b0ff3de4ec7db2bcbc518ee0c4e2di0',
+        '498a6450ee1943a51d816811450f18b674d81872501fa2cf235f2ddb7f568c2di0',
+        '458f700e300946dc52351d000d6595f7b5a7578891b2c24a31f9cd1e93cac72di0',
+        '2066e1b180b24b791dd021ebdb5de665429f945616dd9c5cb3547d3789a29c2ei0',
+        'e0b17e2e2bfa6823dbc2084dd27a619ed4fc8831d32be1d8d2f69d5d128eea2fi0',
+        '3d1a18911fc7fba3029b1e141e6c11c0f4444d36dc7f7d1b2f9c57f89bd78e33i0',
+        '9a60440f7bb76fdb57359a1246a7b476ebba2fee9f92f3e0a1c66e5dcf91a935i0',
+        '27acfb46126d0a1f30d409f35cd36e85f6a0dad8d1265532fdae54ce1171d836i0',
+        '4599fae2c9ce8dc8503b5d07338948b06907df1c2e9a12da81309d9dd5b53137i0',
+        'd48fd3b1f3d006bf3d0c93af12af5c98e3ab763f03a2ecdf8c7175a54f9f4b37i0',
+        '6576e938bed83f062c30881a56b5faacb72d7e19e4be361752080486da48eb37i0',
+        '39df0044bee13b745b56157ed30612626720f4ccf3ca594b76863c1aa358433ci0',
+        '6e0e9b886fa2a3aed44019f7d8ecdd432b9e341a2fc3246267ad05afcbff9f3di0',
+        '724265e8c9e67f06f349c5572c109293e9a25ad4dc2192b66a1660ef2b58813ei0',
+        '8323b067c90ec57342f0b9e9f1cf8939c872510713c8ea688382d88a60fa8d3fi0',
+        '381469eac1315d795ceb6d6dbecec084d2909fc20097462619bb607e92008e40i0',
+        '99149ab9e3df7c8344c4e220606a66aeeed3c347016a5540d4cc7bcb0e86a440i0',
+        'd7377e0f39196a273769479843330b9317063b0d0e388626143c09972daec541i0',
+        '6dc4a634b1b05cf3df2c6bc60940ffb832ec0d2926088d7b50f9cbce0a415142i0',
+        '7e9bf02bf326c634a59b766506c0ea4cbf0d2096f45d90bf7248660131755c42i0',
+        'bd257716022ff821b646c1d4418a409b3b9c9126c86fe072403934cdf59e8942i0'
+      ],
+      more: true
+    }
   },
 };

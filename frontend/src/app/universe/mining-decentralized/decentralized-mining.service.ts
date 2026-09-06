@@ -48,26 +48,26 @@ export class DecentralizedMiningApiService {
 
   getOverview$(): Observable<DecentralizedMiningOverview> {
     return this.httpClient.get<DecentralizedMiningOverview>(
-      `${this.apiBaseUrl}/api/v1/intelligence/mining-decentralized/overview`
+      `${this.apiBaseUrl}/api/v1/intelligence/mining/decentralized/overview`
     );
   }
 
   getShares$(protocol?: string): Observable<MiningShare[]> {
     const url = protocol
-      ? `${this.apiBaseUrl}/api/v1/intelligence/mining-decentralized/shares?protocol=${encodeURIComponent(protocol)}`
-      : `${this.apiBaseUrl}/api/v1/intelligence/mining-decentralized/shares`;
+      ? `${this.apiBaseUrl}/api/v1/intelligence/mining/decentralized/shares?protocol=${encodeURIComponent(protocol)}`
+      : `${this.apiBaseUrl}/api/v1/intelligence/mining/decentralized/shares`;
     return this.httpClient.get<MiningShare[]>(url);
   }
 
   getShareById$(shareId: string): Observable<MiningShare> {
     return this.httpClient.get<MiningShare>(
-      `${this.apiBaseUrl}/api/v1/intelligence/mining-decentralized/shares/${encodeURIComponent(shareId)}`
+      `${this.apiBaseUrl}/api/v1/intelligence/mining/decentralized/shares/${encodeURIComponent(shareId)}`
     );
   }
 
   getTemplateComparison$(): Observable<any> {
     return this.httpClient.get<any>(
-      `${this.apiBaseUrl}/api/v1/intelligence/mining-decentralized/compare`
+      `${this.apiBaseUrl}/api/v1/intelligence/mining/decentralized/compare`
     );
   }
 }
