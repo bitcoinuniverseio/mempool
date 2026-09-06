@@ -1,0 +1,9 @@
+{
+  "pid": 62636,
+  "script": "D:/universe/mempool/.tmp/explorer-health-cc524f6d97b5/backend/dist/index.js",
+  "port": 3410,
+  "revision": "0a8e1575039218709d45f5957290253454b3a0d4",
+  "startedAt": "2026-09-06T14:22:25.373Z",
+  "configPath": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\final-runtime\\monolith-config.json",
+  "scope": "Actual candidate monolith; provided-public-proof validation; owned read-only Esplora source; no database/background indexing/private RPC/funds"
+}

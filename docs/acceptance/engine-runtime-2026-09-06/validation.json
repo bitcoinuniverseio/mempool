@@ -1,0 +1,103 @@
+{
+  "sourceBoundary": "Engine implementation checkpoint. Later theme repair and final browser/CI results remain separate.",
+  "fullBackend": {
+    "command": "npm run test:ci -- --runInBand",
+    "suitesPassed": 79,
+    "testsPassed": 809,
+    "testsSkipped": 4,
+    "durationSeconds": 105.923,
+    "skips": "Explicit live Esplora summary/history/UTXO/cursor checks gated by UNIVERSE_ESPLORA_CONTRACT_URL; not exercised."
+  },
+  "fullFrontend": {
+    "filesPassed": 100,
+    "testsPassed": 1577,
+    "startedAt": "2026-09-06T14:03:07Z",
+    "durationSeconds": 116.31
+  },
+  "builds": {
+    "backend": "PASS",
+    "frontend": "PASS",
+    "frontendBuiltAt": "2026-09-06T14:05:58.675Z",
+    "frontendAngularHash": "2d7770f72477074b",
+    "limitation": "The initial engine build predates the theme repair. It is not final visual acceptance."
+  },
+  "backendLint": {
+    "errors": 0,
+    "warnings": 1428,
+    "sourceBoundary": "Later test annotations; not evidence of a changed serving process."
+  },
+  "musig2Focused": {
+    "suitesPassed": 4,
+    "testsPassed": 72,
+    "suites": [
+      {
+        "suite": "src/api/intelligence/multiparty/musig2.test.ts",
+        "testsPassed": 25
+      },
+      {
+        "suite": "src/api/intelligence/verification-integrity.test.ts",
+        "testsPassed": 17
+      },
+      {
+        "suite": "src/api/intelligence/multiparty/public-session.test.ts",
+        "testsPassed": 23
+      },
+      {
+        "suite": "src/api/intelligence/multiparty/multiparty.test.ts",
+        "testsPassed": 7
+      }
+    ],
+    "note": "Verification-integrity cases overlap the OTS subset; do not add these subset counts to the full suite total."
+  },
+  "otsFocused": {
+    "suitesPassed": 3,
+    "testsPassed": 53,
+    "durationSeconds": 9.934
+  },
+  "themeSourceFollowup": {
+    "revision": "a974f79f32d07b1157cf1e56756c74add5b3de44",
+    "componentTestsPassed": 32,
+    "lintErrors": 0,
+    "lintWarnings": 1,
+    "visualAcceptance": "Prior a974 results retained as three passes/five failures; final frontend4e9 completed all eight supplied-proof theme/width checks. Initial32 component tests are source evidence at their original checkpoint.",
+    "latestSourceCandidate": "4e9c2749b5ede261a55cd1388fac1e66469eaefd"
+  },
+  "frontendLint": {
+    "errors": 0,
+    "warnings": 2611,
+    "artifact": "docs/acceptance/engine-runtime-2026-09-06/validation/frontend-final-lint.log"
+  },
+  "gatewayTests": {
+    "testsPassed": 29,
+    "testsFailed": 0,
+    "durationMilliseconds": 203.1781,
+    "artifact": "docs/acceptance/engine-runtime-2026-09-06/validation/gateway-final-tests.log",
+    "scope": "Local gateway ownership/route-contract regression checks; no new real-network acceptance."
+  },
+  "finalProvidedProofVisual": {
+    "frontendRevision": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+    "monolithRevision": "0a8e1575039218709d45f5957290253454b3a0d4",
+    "casesPassed": 8,
+    "scope": "Actual positive proof consumers, both themes, widths390 and1440; separate from full mobile gate.",
+    "finishedAt": "2026-09-06T14:47:51.487Z"
+  },
+  "mobileProbeRegression": {
+    "checksPassed": 21,
+    "scope": "Local diagnostic probe regression assertions; not application mobile acceptance.",
+    "artifact": "docs/acceptance/engine-runtime-2026-09-06/validation/mobile-probe-final.log"
+  },
+  "integratedFrontend": {
+    "revision": "bbca7f46873d35c5f6146cbb33b3e4cab09f926f",
+    "build": "PASS",
+    "buildLog": "docs/acceptance/engine-runtime-2026-09-06/integration-followup/frontend-integrated-build.log",
+    "buildSummary": "Build at: 2026-09-06T14:56:54.471Z - Hash: e0d21ceda257e4a8 - Time: 69995ms",
+    "testFilesPassed": 100,
+    "testsPassed": 1577,
+    "testsStartedAt": "2026-09-06T14:55:34Z",
+    "durationSeconds": 10.94,
+    "testLog": "docs/acceptance/engine-runtime-2026-09-06/integration-followup/frontend-integrated-tests.log",
+    "providedProofChecksPassed": 8,
+    "providedProofChecksFinishedAt": "2026-09-06T14:57:51.840Z",
+    "scope": "Integrated frontend source/build and repeated positive verifier consumer checks; actual monolith remains0a. No full mobile or expanded operation GO."
+  }
+}

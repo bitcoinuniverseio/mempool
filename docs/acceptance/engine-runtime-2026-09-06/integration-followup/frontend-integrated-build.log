@@ -1,0 +1,443 @@
+
+> mempool-frontend@3.3.1 build:universe
+> npm run generate-themes && npm run generate-config && npm run ng -- build --configuration production && npm run copy-themes
+
+
+> mempool-frontend@3.3.1 generate-themes
+> node generate-themes.js
+
+Built dark.css and dark.67b16cef42ec259c.css
+Built contrast.css and contrast.2a0a1c64924b6668.css
+Theme manifest written to theme-manifest.json
+
+> mempool-frontend@3.3.1 generate-config
+> node generate-config.js
+
+mempool-frontend-config.json file not found, using default config
+Copied src/index.mempool.html to src/index.html
+Injected theme manifest into src/index.html: {
+  dark: 'dark.67b16cef42ec259c.css',
+  contrast: 'contrast.2a0a1c64924b6668.css'
+}
+mempool version 3.3.1
+mempool revision bbca7f468
+Configuration changes detected, updating src/resources/config.js file
+OLD CONFIG:  (function (window) {
+  window.__env = window.__env || {};
+    window.__env.GIT_COMMIT_HASH = '4e9c2749b';
+    window.__env.PACKAGE_JSON_VERSION = '3.3.1';
+  }((typeof global !== 'undefined') ? global : this));
+NEW CONFIG:  (function (window) {
+  window.__env = window.__env || {};
+    window.__env.GIT_COMMIT_HASH = 'bbca7f468';
+    window.__env.PACKAGE_JSON_VERSION = '3.3.1';
+  }((typeof global !== 'undefined') ? global : this));
+src/resources/config.js file updated
+
+> mempool-frontend@3.3.1 ng
+> node ./node_modules/@angular/cli/bin/ng.js build --configuration production
+
+- Generating browser application bundles (phase: setup)...
+    TypeScript compiler options "target" and "useDefineForClassFields" are set to "ES2022" and "false" respectively by the Angular CLI. To control ECMA version and features use the Browserslist configuration. For more information, see https://angular.dev/tools/cli/build#configuring-browser-compatibility
+    NOTE: You can set the "target" to "ES2022" in the project's tsconfig to remove this warning.
+    TypeScript compiler options "target" and "useDefineForClassFields" are set to "ES2022" and "false" respectively by the Angular CLI. To control ECMA version and features use the Browserslist configuration. For more information, see https://angular.dev/tools/cli/build#configuring-browser-compatibility
+    NOTE: You can set the "target" to "ES2022" in the project's tsconfig to remove this warning.
+√ Browser application bundle generation complete.
+√ Browser application bundle generation complete.
+- Copying assets...
+√ Copying assets complete.
+- Generating index html...
+√ Index html generation complete.
+
+Initial chunk files           | Names                                                                             |  Raw size | Estimated transfer size
+main.066715fdfa45a1f7.js      | main                                                                              |   1.48 MB |               357.67 kB
+styles.985650da85457200.css   | styles                                                                            | 211.59 kB |                26.93 kB
+polyfills.1dcbcc2e7b946d1f.js | polyfills                                                                         |  35.42 kB |                11.64 kB
+runtime.0aa8683ce49b94ae.js   | runtime                                                                           |  10.11 kB |                 4.52 kB
+
+                              | Initial total                                                                     |   1.74 MB |               400.76 kB
+
+Lazy chunk files              | Names                                                                             |  Raw size | Estimated transfer size
+7651.419b681bd9fe5c76.js      | components-tracker-tracker-module                                                 | 827.35 kB |               233.09 kB
+8111.c1fd62eada003f2f.js      | components-tracker-tracker-module                                                 | 759.08 kB |               117.55 kB
+4423.d6e55c7869c5feaf.js      | app-docs-docs-module                                                              | 482.29 kB |                74.07 kB
+7060.bb3f658cd2e38227.js      | app-universe-multichain-explorer-multichain-explorer-module                       | 290.03 kB |                49.99 kB
+5570.cf4a8b2288ea35bd.js      | components-tracker-tracker-module                                                 | 184.76 kB |                36.22 kB
+1175.051916fa8f04d032.js      | app-lightning-lightning-module                                                    | 172.45 kB |                30.53 kB
+6758.a0d2173d31319a18.js      | app-bitcoin-graphs-module                                                         | 142.68 kB |                34.26 kB
+5724.1508c700037eaa47.js      | app-master-page-module                                                            | 111.24 kB |                21.68 kB
+6396.49a6a181aaf143ab.js      | app-universe-swaps-swaps-inspect-component                                        |  89.33 kB |                29.03 kB
+9482.bfc7b5ceaa54ea57.js      | components-block-block-module                                                     |  87.84 kB |                18.75 kB
+2328.c19d0a4551efbdb2.js      | app-universe-chain-docs-chain-docs-module                                         |  79.16 kB |                20.35 kB
+7938.f6cfd0c247937123.js      | app-universe-chain-graphs-chain-graphs-module                                     |  76.96 kB |                13.52 kB
+9375.28ebed7fbdcc977f.js      | app-bitcoin-graphs-module                                                         |  72.21 kB |                17.84 kB
+7053.7b771b0c4c2de2a1.js      | app-lightning-lightning-module                                                    |  71.58 kB |                13.37 kB
+7133.c34b14476223ee73.js      | app-universe-universe-module                                                      |  64.44 kB |                14.96 kB
+8194.9aa7bd6ce6e68ae5.js      | onboarding-onboarding-component                                                   |  63.93 kB |                18.80 kB
+common.746caf2c199c8e76.js    | common                                                                            |  58.12 kB |                12.10 kB
+2799.d7aa48f6207a81af.js      | app-previews-module                                                               |  57.29 kB |                13.66 kB
+6539.fa4b802773e1d20e.js      | app-universe-workbench-psbt-workbench-component                                   |  56.67 kB |                15.42 kB
+6655.10bba961bddd8214.js      | components-tracker-tracker-module                                                 |  55.09 kB |                11.38 kB
+2666.f6c93eb12e441772.js      | app-liquid-liquid-master-page-module                                              |  52.01 kB |                12.51 kB
+1905.0edfcce70703cba3.js      | app-universe-labs-privacy-privacy-lab-component                                   |  49.17 kB |                14.18 kB
+3177.aca9a72b77b35151.js      | app-master-page-module                                                            |  45.23 kB |                10.88 kB
+3524.5f67e2786487bace.js      | components-tracker-tracker-module                                                 |  44.29 kB |                10.75 kB
+2511.816228383dd8b8ad.js      | app-universe-swaps-swaps-inspect-component                                        |  43.30 kB |                13.01 kB
+2623.85163347cf616bc4.js      | app-universe-mempool-intelligence-package-simulator-component                     |  35.57 kB |                10.60 kB
+3290.9951d0fe917a1205.js      | components-tracker-tracker-module                                                 |  33.51 kB |                 8.00 kB
+9909.39f58a65de958fb1.js      | -                                                                                 |  29.46 kB |                 9.52 kB
+4746.6c6e0b2a2aaa6052.js      | app-universe-node-console-node-overview-component                                 |  27.67 kB |                 7.06 kB
+6363.1cd21e2d542c73a4.js      | app-master-page-module                                                            |  27.59 kB |                 6.76 kB
+8090.50ed90c15f7ac551.js      | app-master-page-module                                                            |  26.69 kB |                 6.70 kB
+9748.883e0becb89eba6f.js      | app-universe-mempool-intelligence-bump-component                                  |  24.98 kB |                 6.98 kB
+5723.1506ab1c91ce22a4.js      | home-overview-component                                                           |  23.90 kB |                 6.66 kB
+9241.e9995da0eafb0d19.js      | app-lightning-lightning-previews-module                                           |  22.55 kB |                 5.78 kB
+8083.a36cd47b79b516b6.js      | reports-report-builder-component                                                  |  21.68 kB |                 6.64 kB
+1580.b1ef883f5786b6e2.js      | app-universe-node-console-node-rpc-component                                      |  21.28 kB |                 5.63 kB
+1564.8c686abb1c83feca.js      | app-universe-provenance-graph-provenance-graph-component                          |  20.31 kB |                 6.04 kB
+5692.a12ac62ebc8af223.js      | app-universe-network-observatory-network-observatory-component                    |  19.45 kB |                 3.94 kB
+4190.8df412d28b403bae.js      | app-universe-outpoint-outpoint-component                                          |  19.12 kB |                 5.22 kB
+4896.0951571498453c2e.js      | home-portfolio-home-component                                                     |  18.87 kB |                 5.10 kB
+880.c16166e72c39cbb8.js       | app-universe-pulse-pulse-component                                                |  18.62 kB |                 5.43 kB
+5578.d6a86660a6ebaf7e.js      | app-bitcoin-graphs-module                                                         |  18.56 kB |                 4.09 kB
+2917.fd8dd4afabd47bbe.js      | app-universe-mempool-intelligence-cluster-detail-component                        |  18.48 kB |                 5.28 kB
+6106.4bedf7346158404d.js      | app-universe-rune-rune-component                                                  |  18.46 kB |                 4.82 kB
+7621.c57b1467ac54edef.js      | app-universe-mining-lab-dogecoin-mining-component                                 |  17.77 kB |                 5.45 kB
+9727.f3f32f166c93d86e.js      | app-liquid-liquid-graphs-module                                                   |  17.65 kB |                 3.95 kB
+7410.b6fd56c9d5074820.js      | app-universe-live-live-universe-component                                         |  17.59 kB |                 5.43 kB
+3300.8563eea938cf4b8a.js      | app-universe-data-studio-data-studio-component                                    |  17.06 kB |                 3.75 kB
+3876.ae461faafc400312.js      | app-universe-inscription-inscription-component                                    |  16.96 kB |                 4.52 kB
+5392.d01c24ca8185262a.js      | app-universe-sat-sat-component                                                    |  16.82 kB |                 4.31 kB
+6524.332253015cd0b84d.js      | app-universe-taproot-assets-taproot-assets-component                              |  16.27 kB |                 3.48 kB
+4067.32112e6de654ba1d.js      | app-universe-fractal-cat20-center-component                                       |  16.08 kB |                 3.43 kB
+5532.4d4959b0e0f85b01.js      | app-universe-liquid-observatory-liquid-observatory-component                      |  16.06 kB |                 3.50 kB
+9156.145e1a0803e3d759.js      | app-universe-silent-payments-silent-payments-scan-component                       |  15.93 kB |                 4.88 kB
+8993.7a10e858a710c9de.js      | app-universe-ark-ark-dashboard-component                                          |  15.81 kB |                 3.43 kB
+9360.f525c9871475efa3.js      | app-universe-l2-observatory-l2-observatory-component                              |  15.69 kB |                 3.19 kB
+6180.5832e23cf9ea2a54.js      | app-universe-saved-saved-component                                                |  15.63 kB |                 4.27 kB
+1012.514e1c3e84491e34.js      | app-universe-utxo-set-utxo-set-component                                          |  15.57 kB |                 3.38 kB
+2122.f135452c590312cc.js      | app-universe-taproot-assets-lightning-standards-component                         |  15.45 kB |                 3.40 kB
+8911.148593733ddde8bc.js      | app-universe-wildkin-wildkin-creatures-component                                  |  15.31 kB |                 3.29 kB
+9507.070dab7dd8e97eb8.js      | app-master-page-module                                                            |  15.27 kB |                 4.22 kB
+4000.dca1809602794dd6.js      | app-universe-zcash-privacy-zcash-privacy-component                                |  15.16 kB |                 3.27 kB
+1524.511c761f130943fb.js      | app-universe-mempool-intelligence-cluster-list-component                          |  15.08 kB |                 4.49 kB
+3844.e6b73150ee84786b.js      | app-universe-payment-studio-payment-studio-component                              |  14.78 kB |                 3.22 kB
+6967.ea6e43760313409a.js      | app-universe-intelligence-platform-policy-lab-component                           |  14.78 kB |                 3.77 kB
+6616.87da1248b8cbec3c.js      | app-universe-stratum-v2-stratum-v2-component                                      |  14.06 kB |                 2.97 kB
+5205.c7d374de2c2a5fd0.js      | app-universe-zcash-privacy-zcash-viewing-key-workspace-component                  |  14.04 kB |                 3.14 kB
+6109.37d70d0f2853cf75.js      | app-universe-mempool-intelligence-feerate-diagram-component                       |  13.99 kB |                 4.29 kB
+3224.7a7b03a3d07311c6.js      | app-universe-wildkin-wildkin-component                                            |  13.91 kB |                 3.01 kB
+2894.b19ec18fdba78805.js      | app-universe-liquid-observatory-liquid-unblind-workspace-component                |  13.89 kB |                 3.12 kB
+5465.a077ec01cb0e7aa5.js      | app-universe-fractal-fractal-dashboard-component                                  |  13.80 kB |                 2.97 kB
+4056.ca6e9f1a8db83760.js      | app-universe-script-studio-script-studio-component                                |  13.65 kB |                 3.11 kB
+4760.1739c22b7eea299c.js      | app-universe-wildkin-wildkin-bloodlines-component                                 |  13.56 kB |                 2.94 kB
+580.1c4a55fa0a6da7c9.js       | anima-item-component                                                              |  13.22 kB |                 3.81 kB
+7243.f32e6f3adbfdf65d.js      | app-universe-data-studio-data-live-stream-component                               |  13.04 kB |                 2.93 kB
+7908.f43e45e1683004fb.js      | app-universe-intelligence-platform-script-workbench-component                     |  12.85 kB |                 3.15 kB
+1206.65faca82e637feab.js      | home-ephemeral-portfolio-component                                                |  12.85 kB |                 4.20 kB
+2947.f29c124801980ddf.js      | shell-portfolio-shell-component                                                   |  12.76 kB |                 4.05 kB
+3941.a08e2c04aecfb381.js      | anima-transitions-component                                                       |  12.72 kB |                 3.86 kB
+8697.9b2b6fca43821551.js      | app-universe-intelligence-platform-relay-observatory-component                    |  12.46 kB |                 3.41 kB
+1235.a5dce7cd7eabb7de.js      | time-machine-time-machine-component                                               |  12.45 kB |                 4.15 kB
+4489.3c16ad7ddfd186cf.js      | app-universe-rgb-rgb-studio-component                                             |  11.98 kB |                 2.59 kB
+9193.9cae6f17badee2dc.js      | holdings-holdings-component                                                       |  11.74 kB |                 3.74 kB
+752.c8db7b742ec64145.js       | utxos-utxo-center-component                                                       |  11.67 kB |                 4.04 kB
+434.e295d9a83bcf85ad.js       | shell-portfolio-shell-component                                                   |  11.61 kB |                 3.66 kB
+4009.610f497ba962e7bc.js      | app-universe-portfolio-portfolio-routes                                           |  11.54 kB |                 2.86 kB
+4250.cc18cb255fdca0a3.js      | anima-item-history-component                                                      |  11.38 kB |                 3.45 kB
+3070.a9ab0de9acd83a2e.js      | app-universe-opentimestamps-opentimestamps-verify-component                       |  11.16 kB |                 3.18 kB
+4497.ac64580cd85d70d8.js      | app-graphs-lightning-graphs-module                                                |  10.97 kB |                 3.91 kB
+377.e30d2a0b675f9779.js       | app-universe-swaps-swaps-recover-component                                        |  10.90 kB |                 3.45 kB
+4728.4d4617bff86e1ec5.js      | app-universe-multiparty-multiparty-musig2-component                               |  10.88 kB |                 3.02 kB
+8216.3f34976cc41061e4.js      | insights-insights-component                                                       |  10.86 kB |                 3.65 kB
+4358.0abb446162d265f6.js      | app-universe-reserves-reserves-verify-component                                   |  10.68 kB |                 3.15 kB
+8316.6b027defcfddebd0.js      | app-universe-swaps-swaps-overview-component                                       |  10.56 kB |                 3.15 kB
+8269.9e566ac19bca311b.js      | app-universe-mining-lab-bitcoin-mining-component                                  |  10.39 kB |                 3.25 kB
+9357.5ff9467653f52598.js      | anima-items-component                                                             |  10.29 kB |                 3.13 kB
+5817.a181a2c838099ebf.js      | app-universe-intelligence-platform-developer-platform-component                   |  10.02 kB |                 3.09 kB
+3516.95c23fed2b730749.js      | anima-transition-component                                                        |   9.95 kB |                 3.14 kB
+8840.4418acef4dd3d476.js      | app-universe-pwa-offline-page-component                                           |   9.76 kB |                 3.16 kB
+8552.47a8feab1b67ab50.js      | accounts-manage-portfolios-component                                              |   9.68 kB |                 3.12 kB
+4102.b9fca0e10eb62a84.js      | app-universe-intelligence-platform-time-machine-component                         |   9.67 kB |                 2.94 kB
+5043.9f7dbb6a15dfbdd0.js      | app-universe-intelligence-platform-knowledge-registry-component                   |   9.64 kB |                 2.91 kB
+7669.0dadce67a8445138.js      | app-universe-intelligence-platform-verify-proof-component                         |   9.42 kB |                 2.66 kB
+8707.9a93d4b958c0d819.js      | app-universe-bitcoin-staking-staking-evidence-component                           |   8.67 kB |                 2.63 kB
+780.27812f60e0b22295.js       | settings-portfolio-settings-component                                             |   8.56 kB |                 2.84 kB
+3852.959f14cca2559080.js      | app-universe-reserves-reserves-overview-component                                 |   8.43 kB |                 2.58 kB
+8540.b90d90fcb7feaa78.js      | app-universe-intelligence-platform-transaction-graph-component                    |   8.33 kB |                 2.60 kB
+3210.30c5d839e9653a47.js      | app-universe-swaps-swaps-simulate-component                                       |   8.32 kB |                 2.40 kB
+9865.c8e075313292c2aa.js      | app-universe-consensus-vaults-simulate-component                                  |   8.25 kB |                 2.64 kB
+9233.6621571cc9e42247.js      | app-universe-intelligence-platform-utxo-intelligence-component                    |   8.17 kB |                 2.47 kB
+2493.015894c8aa2937d0.js      | app-universe-payjoin-payjoin-analyze-component                                    |   8.13 kB |                 2.57 kB
+2364.be7580e700349c0c.js      | app-universe-blockspace-blockspace-overview-component                             |   8.12 kB |                 2.51 kB
+9349.a375f96704ec3c02.js      | app-universe-compact-filters-light-client-scan-component                          |   8.05 kB |                 2.54 kB
+4955.a7bc810f1bd19a45.js      | sources-sources-component                                                         |   8.02 kB |                 2.88 kB
+1711.89f8ec119209798d.js      | app-universe-intelligence-platform-watchlists-component                           |   7.98 kB |                 2.67 kB
+6065.0e4cbb6c43454bd6.js      | app-universe-intelligence-platform-protocol-explorer-component                    |   7.97 kB |                 2.56 kB
+6367.e599b051645bc8b1.js      | performance-performance-component                                                 |   7.95 kB |                 2.84 kB
+3869.a6771813c8dcedc7.js      | app-universe-intelligence-platform-mining-templates-component                     |   7.92 kB |                 2.45 kB
+2722.ce78386fed0e98f5.js      | app-universe-global-network-global-network-nodes-component                        |   7.89 kB |                 2.56 kB
+4346.7aaaa4d2e1d49ad3.js      | app-universe-payjoin-payjoin-playground-component                                 |   7.87 kB |                 2.39 kB
+6226.26ab2ccb813041a0.js      | app-universe-global-network-global-network-overview-component                     |   7.87 kB |                 2.47 kB
+9966.6c256fe1c4caa27c.js      | app-universe-lightning-resilience-lightning-resilience-overview-component         |   7.83 kB |                 2.39 kB
+8647.6db278802f260b28.js      | share-share-view-component                                                        |   7.65 kB |                 3.07 kB
+228.6c5da1b8d4db48c8.js       | app-universe-silent-payments-silent-payments-overview-component                   |   7.62 kB |                 2.51 kB
+6513.db22b07536282105.js      | app-universe-dlc-dlc-event-detail-component                                       |   7.59 kB |                 2.23 kB
+2940.cf25b7fd6a1ff2d0.js      | app-universe-offchain-statechain-verify-component                                 |   7.57 kB |                 2.52 kB
+1252.cd5408dcd1858aa2.js      | app-universe-ecash-ecash-overview-component                                       |   7.53 kB |                 2.43 kB
+8871.755204643d3c1344.js      | app-universe-compact-filters-light-client-overview-component                      |   7.51 kB |                 2.41 kB
+8669.f58794829b243357.js      | app-universe-ecash-ecash-inspect-component                                        |   7.49 kB |                 2.79 kB
+6132.10ed6f5a166a0dfb.js      | app-universe-consensus-conformance-consensus-conformance-overview-component       |   7.49 kB |                 2.29 kB
+4108.7866681dc176b22d.js      | app-universe-simplicity-simplicity-overview-component                             |   7.47 kB |                 2.34 kB
+9958.a0d2fe148ffa22e0.js      | app-universe-global-network-global-network-self-check-component                   |   7.30 kB |                 2.40 kB
+4978.8e4139cb9aa1fb7c.js      | app-universe-mining-lab-reorgs-component                                          |   7.28 kB |                 2.19 kB
+6176.7fdbcc3ad64b5b6b.js      | app-universe-dlc-dlc-overview-component                                           |   7.24 kB |                 2.37 kB
+626.74b4306743cdaea6.js       | app-universe-intelligence-platform-query-studio-component                         |   7.20 kB |                 2.27 kB
+786.4339101d24269ed2.js       | app-universe-mining-decentralized-decentralized-mining-overview-component         |   7.19 kB |                 2.40 kB
+777.c883935cabb0649d.js       | app-universe-bootstrap-bootstrap-planner-component                                |   7.17 kB |                 2.29 kB
+170.b6d11d0f661beae8.js       | app-universe-pwa-share-receiver-component                                         |   7.12 kB |                 2.53 kB
+5798.d3efe97983129c76.js      | app-universe-offchain-offchain-recovery-component                                 |   7.08 kB |                 2.42 kB
+9004.290489df161491a2.js      | app-universe-bootstrap-bootstrap-overview-component                               |   7.06 kB |                 2.39 kB
+4217.a10d5973e14504be.js      | app-universe-offchain-offchain-utxo-component                                     |   7.04 kB |                 2.44 kB
+1269.6b0cd21d537bf0ed.js      | app-universe-dlc-dlc-simulate-component                                           |   7.03 kB |                 2.25 kB
+6306.56c3e2bd2149a585.js      | app-universe-consensus-vaults-designer-component                                  |   6.98 kB |                 2.28 kB
+1974.add1ffa0b41fcb21.js      | app-universe-quantum-quantum-audit-component                                      |   6.95 kB |                 2.36 kB
+6553.c59cce9797aa556a.js      | app-universe-dlc-dlc-inspect-component                                            |   6.94 kB |                 2.36 kB
+2648.d36d403cbda973dc.js      | app-universe-silent-payments-silent-payments-psbt-component                       |   6.92 kB |                 2.27 kB
+7857.b75fff4ac552986f.js      | app-universe-bitcoin-staking-staking-overview-component                           |   6.92 kB |                 2.28 kB
+6988.835d96ad3c43d8a1.js      | app-universe-multiparty-multiparty-overview-component                             |   6.89 kB |                 2.12 kB
+9374.fa3b1851786479d4.js      | app-universe-payment-connectivity-payment-connectivity-overview-component         |   6.88 kB |                 2.30 kB
+7307.4025aa9e6e4d038d.js      | app-universe-swaps-swaps-providers-component                                      |   6.88 kB |                 2.28 kB
+2335.56b764d58baea683.js      | app-universe-offchain-coinswap-inspect-component                                  |   6.83 kB |                 2.35 kB
+4368.b3759b4a7e4f51f6.js      | app-universe-lightning-reliability-lightning-liquidity-component                  |   6.81 kB |                 2.28 kB
+2289.ec93950fd64d038f.js      | app-universe-payment-connectivity-payment-zaps-component                          |   6.71 kB |                 2.22 kB
+7889.2929e8ea43a86135.js      | app-universe-silent-payments-silent-payments-address-component                    |   6.70 kB |                 2.20 kB
+1793.2d273801d2024857.js      | app-universe-simplicity-simplicity-program-detail-component                       |   6.69 kB |                 2.11 kB
+5337.cf2d15b9f8aa2ea7.js      | app-universe-compact-filters-light-client-verify-component                        |   6.69 kB |                 2.19 kB
+9056.627720094e742ac6.js      | app-universe-block-propagation-block-propagation-overview-component               |   6.68 kB |                 2.11 kB
+7186.b02118cf4e06e18a.js      | app-universe-private-submission-private-submission-overview-component             |   6.66 kB |                 2.09 kB
+793.8e59ee6d58e630e0.js       | home-workspace-redirect-component                                                 |   6.65 kB |                 2.66 kB
+8710.8b831626c21d5f3c.js      | app-universe-bootstrap-bootstrap-verify-component                                 |   6.61 kB |                 2.21 kB
+2923.983c1bbb1d313249.js      | app-universe-lightning-resilience-lightning-resilience-simulate-component         |   6.54 kB |                 2.10 kB
+3078.1b17196260a6e841.js      | app-universe-simplicity-simplicity-verify-component                               |   6.50 kB |                 2.21 kB
+6828.8652b54373579313.js      | app-universe-collaborative-privacy-collaborative-privacy-overview-component       |   6.45 kB |                 2.04 kB
+3785.f7b4d5e931689864.js      | app-universe-lightning-reliability-lightning-node-reliability-component           |   6.44 kB |                 2.15 kB
+2321.f571815ce408842c.js      | app-universe-quantum-quantum-migration-component                                  |   6.43 kB |                 2.25 kB
+6378.93a749c7b4330a45.js      | app-universe-payment-connectivity-payment-nwc-inspect-component                   |   6.43 kB |                 2.21 kB
+5120.4d61db85357978e4.js      | app-universe-quantum-quantum-overview-component                                   |   6.41 kB |                 2.15 kB
+2956.538f4afdb316eb42.js      | app-universe-reserves-reserves-provider-detail-component                          |   6.40 kB |                 2.19 kB
+4018.d4dba91492a8e98b.js      | app-universe-bitcoin-staking-staking-delegation-detail-component                  |   6.39 kB |                 2.06 kB
+63.22e4c7059c98d480.js        | app-universe-simplicity-simplicity-tx-component                                   |   6.33 kB |                 2.05 kB
+7324.3679a6d1d6cf7a84.js      | app-universe-lightning-reliability-lightning-reliability-overview-component       |   6.32 kB |                 2.23 kB
+8129.e2efe932b6947c88.js      | app-universe-offchain-statechain-operator-detail-component                        |   6.29 kB |                 2.06 kB
+624.9a58422d0f6fd3e4.js       | app-universe-node-security-node-security-overview-component                       |   6.27 kB |                 1.99 kB
+3369.3bc2fa8f551ca638.js      | app-universe-global-network-global-network-node-detail-component                  |   6.23 kB |                 2.02 kB
+4451.09225bce704a23e1.js      | app-universe-bootstrap-bootstrap-snapshot-detail-component                        |   6.23 kB |                 2.10 kB
+5602.08b9d90c64830bd0.js      | app-universe-lightning-reliability-lightning-channel-lifecycle-component          |   6.16 kB |                 1.99 kB
+9108.f7f1fea4b466f8c7.js      | app-universe-opentimestamps-opentimestamps-overview-component                     |   6.04 kB |                 1.96 kB
+704.ef1b98d01eb7b448.js       | components-privacy-policy-privacy-policy-module                                   |   6.04 kB |                 2.39 kB
+3893.8779ebe76c097b81.js      | app-universe-intelligence-platform-incident-center-component                      |   6.00 kB |                 1.96 kB
+4178.d8bd18916f94a1bf.js      | app-universe-simplicity-simplicity-tools-component                                |   5.98 kB |                 2.14 kB
+6209.e77be9f0c2bd68b5.js      | app-universe-dlc-dlc-oracle-detail-component                                      |   5.90 kB |                 1.88 kB
+5226.407df041b09e3708.js      | app-universe-consensus-consensus-proposals-component                              |   5.86 kB |                 2.00 kB
+627.b902c376300e9e01.js       | app-universe-bitcoin-staking-staking-reconciliation-component                     |   5.86 kB |                 1.99 kB
+4252.9867400c7591b825.js      | app-universe-source-page-source-page-component                                    |   5.84 kB |                 2.30 kB
+3266.e904dc33327092a5.js      | app-universe-consensus-consensus-compare-component                                |   5.83 kB |                 2.09 kB
+6117.926e6b581dadcb6d.js      | app-universe-swaps-swaps-inspect-component                                        |   5.80 kB |                 1.99 kB
+5878.45c7e0bd26c4cb10.js      | app-universe-mining-decentralized-decentralized-mining-share-detail-component     |   5.80 kB |                 1.86 kB
+3093.0ea237ab11dcca1b.js      | app-universe-compact-filters-light-client-provider-detail-component               |   5.79 kB |                 1.99 kB
+3090.9a8161506a08d194.js      | app-universe-global-network-global-network-snapshots-component                    |   5.77 kB |                 1.88 kB
+4702.ce9974a049f1d0d3.js      | app-universe-multiparty-multiparty-compatibility-component                        |   5.70 kB |                 1.82 kB
+5887.6cefdedc1556825a.js      | app-universe-compact-filters-light-client-filters-component                       |   5.65 kB |                 1.98 kB
+7318.257b0086204a9150.js      | app-universe-bitcoin-staking-staking-finality-provider-detail-component           |   5.62 kB |                 1.90 kB
+453.c9b2564fd01178cd.js       | app-universe-silent-payments-silent-payments-coverage-component                   |   5.60 kB |                 2.07 kB
+4981.35ba93e40a614b91.js      | app-universe-bootstrap-bootstrap-chainstates-component                            |   5.58 kB |                 1.95 kB
+3731.9ee8ade2fa6c0b60.js      | activity-activity-component                                                       |   5.56 kB |                 2.02 kB
+8451.f8d640a0da92dfd5.js      | app-universe-lightning-reliability-lightning-lsp-component                        |   5.55 kB |                 1.93 kB
+5642.d8cddb9e48f2295f.js      | app-universe-offchain-statechain-operators-component                              |   5.54 kB |                 1.93 kB
+5728.6e3b0c8ba1593c50.js      | app-universe-private-submission-private-submission-receipts-component             |   5.54 kB |                 1.90 kB
+13.99bcf37228a0fd49.js        | app-universe-ecash-ecash-fedimint-detail-component                                |   5.54 kB |                 1.89 kB
+7762.4a43d156b03ea7a2.js      | app-universe-bitcoin-staking-staking-parameters-component                         |   5.51 kB |                 1.88 kB
+2880.b5f33b12227dd16f.js      | app-universe-ark-vpack-ark-vpack-overview-component                               |   5.49 kB |                 1.81 kB
+3684.693b84fa093bea0b.js      | home-portfolio-home-component                                                     |   5.49 kB |                 2.11 kB
+5026.2ee2a2cceb93be3a.js      | app-universe-offchain-coinswap-overview-component                                 |   5.45 kB |                 1.90 kB
+1084.fa8cebffbdfa720c.js      | app-universe-payment-connectivity-payment-lnurl-component                         |   5.44 kB |                 1.83 kB
+3308.465d55350f33b521.js      | components-terms-of-service-terms-of-service-module                               |   5.38 kB |                 2.15 kB
+8381.302bf2b9cd0fe97c.js      | app-universe-bitcoin-staking-staking-delegations-component                        |   5.35 kB |                 1.88 kB
+7052.b2afdc34900fa41c.js      | app-universe-consensus-vaults-overview-component                                  |   5.33 kB |                 1.92 kB
+4628.d2f55328f3affead.js      | app-universe-payjoin-payjoin-overview-component                                   |   5.32 kB |                 1.88 kB
+5356.71c3ef8f99ec35d7.js      | app-universe-compact-filters-light-client-privacy-component                       |   5.31 kB |                 1.82 kB
+5274.f0b2244764c762ad.js      | app-universe-blockspace-blockspace-compare-component                              |   5.29 kB |                 1.71 kB
+5673.e40e106b0e8aca33.js      | app-universe-bitcoin-staking-staking-finality-providers-component                 |   5.28 kB |                 1.80 kB
+1210.b408f41dbc779f3f.js      | app-universe-dlc-dlc-oracles-component                                            |   5.27 kB |                 1.82 kB
+2417.f7fd0fbf261faa53.js      | app-universe-consensus-consensus-proposal-detail-component                        |   5.25 kB |                 1.85 kB
+8004.791aaa31221e67d6.js      | app-universe-mining-decentralized-decentralized-mining-compare-component          |   5.22 kB |                 1.81 kB
+7875.7829b62d89737a76.js      | app-universe-reserves-reserves-snapshot-detail-component                          |   5.20 kB |                 1.83 kB
+2357.bfc5ef02b9c6f303.js      | app-universe-global-network-global-network-seeds-component                        |   5.18 kB |                 1.93 kB
+8580.33f88c39daf1bc17.js      | app-universe-private-submission-private-submission-broadcast-component            |   5.17 kB |                 1.73 kB
+4153.bc3597811c6b4eaf.js      | app-universe-ecash-ecash-fedimint-component                                       |   5.03 kB |                 1.79 kB
+615.45fa7c74b1f638f0.js       | app-universe-ecash-ecash-cashu-component                                          |   5.02 kB |                 1.80 kB
+2650.97daa18c9bc49719.js      | app-universe-dlc-dlc-events-component                                             |   5.00 kB |                 1.76 kB
+1323.4cc7bf16aabb36eb.js      | app-universe-blockspace-blockspace-composition-component                          |   4.97 kB |                 1.75 kB
+810.34560c703ea8a84f.js       | app-universe-lightning-reliability-lightning-closure-forensics-component          |   4.96 kB |                 1.74 kB
+174.460126cafe87cfab.js       | app-universe-quantum-quantum-exposure-component                                   |   4.95 kB |                 1.77 kB
+3494.8aed2e6b41c058cb.js      | app-universe-compact-filters-light-client-providers-component                     |   4.94 kB |                 1.75 kB
+3974.696f62cd61164580.js      | app-universe-lightning-resilience-lightning-resilience-channel-detail-component   |   4.93 kB |                 1.68 kB
+649.4f98e150dfc11280.js       | app-universe-payjoin-payjoin-compatibility-component                              |   4.92 kB |                 1.79 kB
+6722.a394b6cca9d47379.js      | app-universe-payjoin-payjoin-directory-component                                  |   4.90 kB |                 1.81 kB
+7303.de72f88c4a7cf1de.js      | app-universe-consensus-conformance-consensus-conformance-case-detail-component    |   4.85 kB |                 1.80 kB
+2971.9e3ff64a7bf42384.js      | app-universe-reserves-reserves-providers-component                                |   4.84 kB |                 1.73 kB
+7362.6b9312d0dd1d18da.js      | app-universe-simplicity-simplicity-contracts-component                            |   4.84 kB |                 1.77 kB
+7829.0e9536eefb0f7bb9.js      | app-universe-collaborative-privacy-collaborative-privacy-inspect-component        |   4.82 kB |                 1.71 kB
+4630.ff4d331c0bbcf741.js      | app-universe-block-propagation-block-propagation-block-detail-component           |   4.77 kB |                 1.72 kB
+6780.63a450897a49c29c.js      | app-universe-swaps-swaps-provider-detail-component                                |   4.74 kB |                 1.80 kB
+1066.f9b071f20861be55.js      | app-universe-opentimestamps-opentimestamps-stamp-component                        |   4.74 kB |                 1.71 kB
+7929.491bf80e5658007b.js      | app-universe-blockspace-blockspace-regimes-component                              |   4.72 kB |                 1.79 kB
+8447.6626d79fe0291635.js      | app-universe-ecash-ecash-cashu-detail-component                                   |   4.71 kB |                 1.79 kB
+229.4e1afafcbdffd15d.js       | app-universe-private-submission-private-submission-ordering-block-component       |   4.70 kB |                 1.73 kB
+1920.8ad2258993e4030f.js      | app-universe-bootstrap-bootstrap-snapshots-component                              |   4.69 kB |                 1.73 kB
+8385.3b395b063792ed6f.js      | app-universe-quantum-quantum-history-component                                    |   4.66 kB |                 1.77 kB
+1887.ecfcfe68d36589ff.js      | app-universe-payment-connectivity-payment-nwc-component                           |   4.58 kB |                 1.67 kB
+4700.82902bea49deec4e.js      | app-universe-mining-decentralized-decentralized-mining-datum-component            |   4.53 kB |                 1.66 kB
+2351.2a5e86961b503436.js      | app-universe-mining-decentralized-decentralized-mining-braidpool-component        |   4.51 kB |                 1.67 kB
+7557.ed85021c5f903b5a.js      | app-universe-mining-decentralized-decentralized-mining-p2pool-component           |   4.39 kB |                 1.65 kB
+3024.98282b6743d6f171.js      | app-universe-blockspace-blockspace-taxonomy-component                             |   4.38 kB |                 1.59 kB
+3014.082e7f8df3de3775.js      | app-universe-payment-connectivity-payment-nwc-compatibility-component             |   4.38 kB |                 1.49 kB
+9031.f14269398592046a.js      | app-universe-node-security-node-security-node-detail-component                    |   4.27 kB |                 1.55 kB
+1442.e0406843d276bbd9.js      | app-universe-private-submission-private-submission-accelerator-detail-component   |   4.25 kB |                 1.51 kB
+1133.e8223152fcce4ec7.js      | app-universe-node-security-node-security-upgrade-component                        |   4.18 kB |                 1.51 kB
+1464.27a112b14d76013a.js      | app-universe-private-submission-private-submission-ordering-tx-component          |   4.17 kB |                 1.49 kB
+3765.5723791d0f9771f5.js      | app-universe-collaborative-privacy-collaborative-privacy-round-detail-component   |   4.16 kB |                 1.48 kB
+383.171dbee01253e077.js       | app-universe-lightning-resilience-lightning-resilience-mitigations-component      |   4.07 kB |                 1.58 kB
+9618.11d2e131bb611a33.js      | app-universe-lightning-resilience-lightning-resilience-onion-component            |   4.04 kB |                 1.50 kB
+8581.87241c2083657397.js      | app-universe-lightning-resilience-lightning-resilience-node-detail-component      |   4.01 kB |                 1.48 kB
+6276.20a8e3aa77645cc6.js      | app-universe-block-propagation-block-propagation-race-detail-component            |   4.01 kB |                 1.47 kB
+1229.ec91c911e15fe567.js      | app-universe-private-submission-private-submission-accelerators-component         |   3.99 kB |                 1.55 kB
+8745.60d35929c97fd83d.js      | app-universe-ark-vpack-ark-providers-component                                    |   3.99 kB |                 1.49 kB
+6172.624c815dfbdf83f4.js      | app-universe-multiparty-multiparty-bsms-component                                 |   3.97 kB |                 1.53 kB
+1485.b954a4b4a0f57350.js      | app-universe-block-propagation-block-propagation-fibre-component                  |   3.94 kB |                 1.51 kB
+9825.eb7158547bc4005c.js      | app-universe-lightning-resilience-lightning-resilience-htlcs-component            |   3.80 kB |                 1.50 kB
+3388.0ebaafd0c64cb0d3.js      | app-universe-payment-connectivity-payment-lightning-address-component             |   3.79 kB |                 1.41 kB
+5689.2cc4afa4c7e83ea1.js      | app-universe-private-submission-private-submission-ordering-component             |   3.78 kB |                 1.49 kB
+9505.62684d2911600e24.js      | app-universe-multiparty-multiparty-policies-component                             |   3.75 kB |                 1.45 kB
+1717.2918ae19b2a42390.js      | app-universe-block-propagation-block-propagation-live-component                   |   3.73 kB |                 1.53 kB
+7097.e2ce64adad1d2c4d.js      | app-universe-block-propagation-block-propagation-compact-blocks-component         |   3.70 kB |                 1.50 kB
+3864.110044be145ab95e.js      | app-universe-multiparty-multiparty-labels-component                               |   3.62 kB |                 1.41 kB
+3428.c75a24e0338bca92.js      | app-universe-block-propagation-block-propagation-fork-races-component             |   3.60 kB |                 1.41 kB
+2830.bfcd6b6f9ece87bb.js      | app-universe-node-security-node-security-advisory-detail-component                |   3.52 kB |                 1.30 kB
+113.a95b16f93740dcd8.js       | app-universe-node-security-node-security-fleet-component                          |   3.48 kB |                 1.42 kB
+6982.c3b4ef558477b14b.js      | app-bitcoin-graphs-module                                                         |   3.43 kB |                 1.23 kB
+556.3e3ec260f1446885.js       | app-universe-consensus-conformance-consensus-conformance-cases-component          |   3.42 kB |                 1.40 kB
+8456.ef664e78817d6f2f.js      | app-universe-swaps-swaps-chain-component                                          |   3.40 kB |                 1.23 kB
+2356.d5c6502736aa576e.js      | app-universe-node-security-node-security-advisories-component                     |   3.39 kB |                 1.36 kB
+1386.88d443786ce09756.js      | app-universe-mining-lab-mining-lab-component                                      |   3.35 kB |                 1.35 kB
+6442.f57bfed662c4616b.js      | app-universe-consensus-conformance-consensus-conformance-differential-component   |   3.34 kB |                 1.26 kB
+6689.94a4fe8924869604.js      | app-universe-block-propagation-block-propagation-stale-tips-component             |   3.33 kB |                 1.37 kB
+1246.fbfb1fe93695a46f.js      | app-universe-collaborative-privacy-collaborative-privacy-fidelity-bonds-component |   3.25 kB |                 1.38 kB
+1689.3d74a9fde8abe83e.js      | app-universe-opentimestamps-opentimestamps-batches-component                      |   3.15 kB |                 1.31 kB
+180.aa4e22c4b7d63005.js       | app-universe-collaborative-privacy-collaborative-privacy-coordinators-component   |   3.12 kB |                 1.30 kB
+1622.fbd5370e0d218f7d.js      | app-universe-opentimestamps-opentimestamps-calendars-component                    |   3.11 kB |                 1.31 kB
+6321.576d97e998a2830f.js      | app-universe-swaps-swaps-submarine-component                                      |   3.07 kB |                 1.09 kB
+3845.bd6d1b1c2ee46caa.js      | app-universe-node-security-node-security-releases-component                       |   3.06 kB |                 1.31 kB
+454.cc8b0550f5b59103.js       | app-universe-node-security-node-security-artifacts-component                      |   3.05 kB |                 1.31 kB
+3628.34429c81815e9654.js      | app-universe-consensus-conformance-consensus-conformance-formal-component         |   3.00 kB |                 1.27 kB
+8041.c6ad88ccd2bf8987.js      | app-universe-ark-vpack-ark-exit-component                                         |   2.97 kB |                 1.16 kB
+3437.4584499797c9c567.js      | graphs-graphs-module                                                              |   2.79 kB |               959 bytes
+5818.4584499797c9c567.js      | components-block-block-module                                                     |   2.79 kB |               959 bytes
+3117.fe9e8be2baac6fbb.js      | app-universe-consensus-conformance-consensus-conformance-specifications-component |   2.77 kB |                 1.15 kB
+6895.45e4e71cf167159f.js      | app-universe-ark-vpack-ark-vpack-translate-component                              |   2.68 kB |                 1.04 kB
+4015.f9534f0149b77fb9.js      | app-universe-swaps-swaps-reverse-component                                        |   2.67 kB |               995 bytes
+7741.650898c6ff6f4cae.js      | app-universe-consensus-conformance-consensus-conformance-corpora-component        |   2.67 kB |                 1.21 kB
+5536.713eadcfabc94432.js      | app-universe-ark-vpack-ark-backups-component                                      |   2.41 kB |               971 bytes
+2446.9e110c7ad8d2bd05.js      | app-universe-ark-vpack-ark-exit-simulate-component                                |   2.21 kB |               902 bytes
+7781.170cb371da20391e.js      | app-universe-multiparty-multiparty-session-component                              |   2.21 kB |               982 bytes
+8575.19f818429970ef41.js      | app-universe-node-security-node-security-configuration-component                  |   2.17 kB |                 1.02 kB
+5810.20543a41d042e9fb.js      | app-universe-ark-vpack-ark-vpack-verify-component                                 |   2.14 kB |               923 bytes
+9556.3ddc6e94a1777bb6.js      | app-universe-ark-vpack-ark-vtxo-detail-component                                  |   2.01 kB |               927 bytes
+8247.b28156d521d44212.js      | app-universe-collaborative-privacy-collaborative-privacy-wabisabi-component       |   1.85 kB |               842 bytes
+975.7a26cbe4cea9bab2.js       | app-universe-collaborative-privacy-collaborative-privacy-joinmarket-component     |   1.84 kB |               869 bytes
+2719.7f91439955f76e0f.js      | app-universe-collaborative-privacy-collaborative-privacy-whirlpool-component      |   1.76 kB |               834 bytes
+4524.3e055640142af740.js      | components-transaction-libwally-js                                                |   1.69 kB |               731 bytes
+6299.b099719ff1c92960.js      | components-block-block-module                                                     |   1.46 kB |               694 bytes
+7725.f2bd54dfa997da6c.js      | app-universe-opentimestamps-opentimestamps-inspect-component                      |   1.22 kB |               630 bytes
+7249.aecc39909a8de2a7.js      | app-universe-opentimestamps-opentimestamps-git-component                          |   1.22 kB |               626 bytes
+4773.b250ec234d49909d.js      | app-universe-anima-anima-routes                                                   | 993 bytes |               296 bytes
+5841.2d26e1f0b541a76c.js      | app-liquid-liquid-graphs-module                                                   | 734 bytes |               365 bytes
+
+Build at: 2026-09-06T14:56:54.471Z - Hash: e0d21ceda257e4a8 - Time: 69995ms
+
+./src/app/universe/multichain-explorer/multichain-explorer.component.scss?ngResource - Warning: Module Warning (from ../../../mempool/frontend/node_modules/sass-loader/dist/cjs.js):
+Deprecation Warning on line 115, column 2 of file:///D:/universe/mempool/.tmp/explorer-health-cc524f6d97b5/frontend/src/app/universe/_universe-tokens.scss:115:2:
+Sass's behavior for declarations that appear after nested
+rules will be changing to match the behavior specified by CSS in an upcoming
+version. To keep the existing behavior, move the declaration above the nested
+rule. To opt into the new behavior, wrap the declaration in `& {}`.
+
+More info: https://sass-lang.com/d/mixed-decls
+
+115 |   transition: $properties $duration ease-out;
+
+
+src\app\universe\_universe-tokens.scss 116:3                                   universe-motion()
+src\app\universe\multichain-explorer\multichain-explorer.component.scss 506:5  root stylesheet
+
+
+Warning: src/app/universe/live/live-universe.component.ts:42:27 - warning NG8113: AsyncPipe is not used within the template of LiveUniverseComponent
+
+42   imports: [CommonModule, AsyncPipe, DatePipe],
+                             ~~~~~~~~~
+
+
+Warning: src/app/universe/live/live-universe.component.ts:42:38 - warning NG8113: DatePipe is not used within the template of LiveUniverseComponent
+
+42   imports: [CommonModule, AsyncPipe, DatePipe],
+                                        ~~~~~~~~
+
+
+Warning: src/app/universe/pwa/connectivity-banner.component.ts:37:50 - warning NG8113: DatePipe is not used within the template of ConnectivityBannerComponent
+
+37   imports: [CommonModule, RouterLink, AsyncPipe, DatePipe],
+                                                    ~~~~~~~~
+
+
+Warning: D:/universe/mempool/.tmp/explorer-health-cc524f6d97b5/frontend/src/app/components/acceleration-timeline/acceleration-timeline.component.scss exceeded maximum budget. Budget 6.00 kB was not met by 873 bytes with a total of 6.87 kB.
+
+Warning: D:/universe/mempool/.tmp/explorer-health-cc524f6d97b5/frontend/src/app/components/custom-dashboard/custom-dashboard.component.scss exceeded maximum budget. Budget 6.00 kB was not met by 1.63 kB with a total of 7.63 kB.
+
+Warning: D:/universe/mempool/.tmp/explorer-health-cc524f6d97b5/frontend/src/app/components/master-page/master-page.component.scss exceeded maximum budget. Budget 6.00 kB was not met by 2.72 kB with a total of 8.72 kB.
+
+Warning: D:/universe/mempool/.tmp/explorer-health-cc524f6d97b5/frontend/src/app/components/transactions-list/transactions-list.component.scss exceeded maximum budget. Budget 6.00 kB was not met by 1.50 kB with a total of 7.50 kB.
+
+Warning: D:/universe/mempool/.tmp/explorer-health-cc524f6d97b5/frontend/src/app/dashboard/dashboard.component.scss exceeded maximum budget. Budget 6.00 kB was not met by 6.42 kB with a total of 12.42 kB.
+
+Warning: D:/universe/mempool/.tmp/explorer-health-cc524f6d97b5/frontend/src/app/docs/api-docs/api-docs.component.scss exceeded maximum budget. Budget 6.00 kB was not met by 1.65 kB with a total of 7.64 kB.
+
+Warning: D:/universe/mempool/.tmp/explorer-health-cc524f6d97b5/frontend/src/app/universe/chain-dashboard/chain-dashboard.component.scss exceeded maximum budget. Budget 6.00 kB was not met by 5.61 kB with a total of 11.61 kB.
+
+Warning: D:/universe/mempool/.tmp/explorer-health-cc524f6d97b5/frontend/src/app/universe/chain-dashboard/chain-lens.component.scss exceeded maximum budget. Budget 6.00 kB was not met by 3.59 kB with a total of 9.59 kB.
+
+Warning: D:/universe/mempool/.tmp/explorer-health-cc524f6d97b5/frontend/src/app/universe/chain-dashboard/chain-mining.component.scss exceeded maximum budget. Budget 6.00 kB was not met by 4.50 kB with a total of 10.50 kB.
+
+Warning: D:/universe/mempool/.tmp/explorer-health-cc524f6d97b5/frontend/src/app/universe/chain-docs/chain-docs.component.scss exceeded maximum budget. Budget 6.00 kB was not met by 4.76 kB with a total of 10.76 kB.
+
+Warning: D:/universe/mempool/.tmp/explorer-health-cc524f6d97b5/frontend/src/app/universe/chain-graphs/chain-chart.component.scss exceeded maximum budget. Budget 6.00 kB was not met by 4.73 kB with a total of 10.73 kB.
+
+Warning: D:/universe/mempool/.tmp/explorer-health-cc524f6d97b5/frontend/src/app/universe/chain-graphs/chain-graphs.component.scss exceeded maximum budget. Budget 6.00 kB was not met by 3.75 kB with a total of 9.75 kB.
+
+Warning: D:/universe/mempool/.tmp/explorer-health-cc524f6d97b5/frontend/src/app/universe/chain-graphs/chain-pools-ranking.component.scss exceeded maximum budget. Budget 6.00 kB was not met by 4.38 kB with a total of 10.38 kB.
+
+Warning: D:/universe/mempool/.tmp/explorer-health-cc524f6d97b5/frontend/src/app/universe/multichain-explorer/multichain-explorer.component.scss exceeded maximum budget. Budget 6.00 kB was not met by 17.05 kB with a total of 23.05 kB.
+
+Warning: D:/universe/mempool/.tmp/explorer-health-cc524f6d97b5/frontend/src/app/universe/node-console/node-console.component.scss exceeded maximum budget. Budget 6.00 kB was not met by 467 bytes with a total of 6.47 kB.
+
+Warning: D:/universe/mempool/.tmp/explorer-health-cc524f6d97b5/frontend/src/app/universe/portfolio/workers/discovery.worker.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/universe/mempool/.tmp/explorer-health-cc524f6d97b5/frontend/src/app/universe/product-page.scss exceeded maximum budget. Budget 6.00 kB was not met by 821 bytes with a total of 6.82 kB.
+
+
+
+> mempool-frontend@3.3.1 copy-themes
+> node generate-themes.js copy
+
+Copied 4 theme files to all locale directories

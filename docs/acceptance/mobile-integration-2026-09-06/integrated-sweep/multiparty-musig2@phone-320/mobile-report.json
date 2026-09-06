@@ -1,0 +1,25 @@
+{
+  "base": "http://127.0.0.1:4310",
+  "browser": "chromium",
+  "build": "066715fdfa45a1f7",
+  "report": [],
+  "findings": [
+    "multiparty-musig2@phone-320: could not be measured: Error: page.waitForTimeout: Target page, context or browser has been closed",
+    "runner: run incomplete: Error: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
+  "grazes": [],
+  "passes": [
+    "viewport: viewport-fit=cover is asked for",
+    "viewport: zoom is not restricted"
+  ],
+  "executionComplete": false,
+  "cases": [
+    {
+      "route": "multiparty-musig2",
+      "viewport": "phone-320",
+      "status": "incomplete",
+      "phase": "navigation",
+      "error": "Error: page.waitForTimeout: Target page, context or browser has been closed"
+    }
+  ]
+}

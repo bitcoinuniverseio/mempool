@@ -1,0 +1,67 @@
+{
+  "base": "http://127.0.0.1:4310",
+  "browser": "chromium",
+  "build": "066715fdfa45a1f7",
+  "report": [
+    {
+      "route": "lightning-resilience",
+      "viewport": "phone-landscape",
+      "overflowBy": 0,
+      "viewportWidth": 844,
+      "culprits": [],
+      "scrollers": [
+        {
+          "el": "app-lightning-resilience-overview div.table-responsive",
+          "declared": true,
+          "keyboardReachable": true
+        }
+      ],
+      "clippers": [],
+      "smallFields": [],
+      "targetsBelowWcag": [],
+      "targetsBelowPlatform": [],
+      "atBottom": {
+        "hidden": [],
+        "barTop": 324
+      },
+      "insets": {
+        "top": "0px",
+        "bottom": "21px",
+        "left": "59px",
+        "right": "59px"
+      },
+      "chrome": {
+        "headerPadTop": 0,
+        "barPadBottom": 21,
+        "barPadLeft": 59,
+        "barPadRight": 59,
+        "headerBottom": 57
+      },
+      "overflowingSurfaces": [],
+      "nav": {
+        "scrolls": false,
+        "scrollLeft": 0,
+        "activeVisible": null,
+        "hasActive": false,
+        "affordance": false
+      },
+      "innerHeight": 390,
+      "docHeight": 1800
+    }
+  ],
+  "findings": [],
+  "grazes": [],
+  "passes": [
+    "viewport: viewport-fit=cover is asked for",
+    "viewport: zoom is not restricted"
+  ],
+  "executionComplete": true,
+  "cases": [
+    {
+      "route": "lightning-resilience",
+      "viewport": "phone-landscape",
+      "status": "measured",
+      "phase": "complete"
+    }
+  ]
+}

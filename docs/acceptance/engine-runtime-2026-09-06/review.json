@@ -1,0 +1,1615 @@
+{
+  "schemaVersion": "universe-engine-runtime-evidence-v1",
+  "recordedAt": "2026-09-06T15:00:48.616Z",
+  "scope": "Actual candidate HTTP and browser observations for two supplied-input verifier operations, including negative controls and subsequent readable positive results in both themes at desktop/mobile widths. No whole-application GO.",
+  "sourceBinding": {
+    "servedMonolithRevision": "0a8e1575039218709d45f5957290253454b3a0d4",
+    "servedFrontendReportedRevision": "0a8e15750",
+    "sourceFiles": [
+      {
+        "path": "backend/src/api/intelligence/opentimestamps/opentimestamps-proof.ts",
+        "gitBlobSha256": "3e78afb15b12bf22e79ce5dd60a81b22c00d4b193fa6f5a9450e25f67df83c54",
+        "bytes": 14458
+      },
+      {
+        "path": "backend/src/api/intelligence/opentimestamps/opentimestamps-errors.ts",
+        "gitBlobSha256": "d8c603617aaa08fdeb131b6e0289a66ade3a87cc1c6ee43dd38606670f738f69",
+        "bytes": 171
+      },
+      {
+        "path": "backend/src/api/intelligence/opentimestamps/opentimestamps.service.ts",
+        "gitBlobSha256": "3ee2df0018fe8b5ce286d7555f026395efcc090fc8c50af390ae52811dc90d08",
+        "bytes": 3341
+      },
+      {
+        "path": "backend/src/api/intelligence/opentimestamps/opentimestamps.routes.ts",
+        "gitBlobSha256": "7557ff87f0f80a811bdb42a3a75c7ea6885a33523af773cd7c5daa12fc8aa877",
+        "bytes": 2966
+      },
+      {
+        "path": "backend/src/api/intelligence/opentimestamps/opentimestamps.models.ts",
+        "gitBlobSha256": "77895d2e4c4be0f6d3099a38f3805c2f70a54c4ed053a2c1a92bdf678a087e76",
+        "bytes": 2151
+      },
+      {
+        "path": "backend/src/api/intelligence/multiparty/musig2.ts",
+        "gitBlobSha256": "d3c2ff8afe54733003dc5c3f3a84770fc2549cc8bc5465931aee4631b8aa52a6",
+        "bytes": 6643
+      },
+      {
+        "path": "backend/src/api/intelligence/multiparty/multiparty.service.ts",
+        "gitBlobSha256": "6486bac3515dec842312b7ffd8dd0bf68aeca4bc3cf2dd542d887551f3c537f5",
+        "bytes": 10810
+      },
+      {
+        "path": "backend/src/api/intelligence/multiparty/multiparty.routes.ts",
+        "gitBlobSha256": "a0968b77faf9eab274168b98efe54b68d54cba2561d2c5b3eabd70144dc5093c",
+        "bytes": 2614
+      },
+      {
+        "path": "backend/src/api/intelligence/multiparty/multiparty.models.ts",
+        "gitBlobSha256": "b9ad71529b3f5b0dacfea4ad79faa5afe9add9581e58b6ba535050f38f8e1785",
+        "bytes": 2791
+      },
+      {
+        "path": "frontend/src/app/universe/opentimestamps/opentimestamps-verify.component.ts",
+        "gitBlobSha256": "0fbcffa34d3160e1b54064ea8299371fd3db4e37e8f117d2fe71937515738c83",
+        "bytes": 11304
+      },
+      {
+        "path": "frontend/src/app/universe/opentimestamps/opentimestamps.service.ts",
+        "gitBlobSha256": "1aa8d0fd3b2512e80d95e16aaf97e474d92f1ed2b5c6945b312bf14a4e647327",
+        "bytes": 3210
+      },
+      {
+        "path": "frontend/src/app/universe/multiparty/multiparty-musig2.component.ts",
+        "gitBlobSha256": "7d2852bce2df89e542d12f6f6c8b789b718227f694bc06b246ac3f4a8a51323b",
+        "bytes": 10852
+      },
+      {
+        "path": "frontend/src/app/universe/multiparty/multiparty.service.ts",
+        "gitBlobSha256": "abd8c91aa2802fca897bf2977e02ed96719cda991949345cb425c2736f2ad4f9",
+        "bytes": 3459
+      },
+      {
+        "path": "scripts/universe/gateway.mjs",
+        "gitBlobSha256": "bac7854917fd8d6d69bae3f47e874b4003826d986063302e7fc02a9d0e1b3ef9",
+        "bytes": 23676
+      }
+    ],
+    "sourceHashKind": "SHA256 of git blobs at the explicitly identified serving checkpoint. Later current worktree edits do not replace this binding.",
+    "earlierHealthRuntime": "Existing 64d9 frontend/gateway and 8b2 overlay health artifacts remain unchanged and describe an earlier run."
+  },
+  "runtime": {
+    "direct": {
+      "origin": "http://127.0.0.1:3410",
+      "startedAt": "2026-09-06T14:25:18.967Z",
+      "finishedAt": "2026-09-06T14:25:20.670Z",
+      "assertionsPassed": 13,
+      "operations": [
+        {
+          "name": "candidate identity",
+          "path": "/api/v1/backend-info",
+          "method": "GET",
+          "httpStatus": 200,
+          "resultStatus": null,
+          "verified": null,
+          "observedAt": "2026-09-06T14:25:19.012Z"
+        },
+        {
+          "name": "complete public transcript",
+          "path": "/api/v1/intelligence/multiparty/public-sessions/verify",
+          "method": "POST",
+          "httpStatus": 200,
+          "resultStatus": "verified-session",
+          "verified": true,
+          "observedAt": "2026-09-06T14:25:19.045Z"
+        },
+        {
+          "name": "corrupt partial rejected",
+          "path": "/api/v1/intelligence/multiparty/public-sessions/verify",
+          "method": "POST",
+          "httpStatus": 400,
+          "resultStatus": "invalid-input",
+          "verified": false,
+          "observedAt": "2026-09-06T14:25:19.059Z"
+        },
+        {
+          "name": "key aggregation scope",
+          "path": "/api/v1/intelligence/multiparty/public-sessions/verify",
+          "method": "POST",
+          "httpStatus": 200,
+          "resultStatus": "partial-session",
+          "verified": false,
+          "observedAt": "2026-09-06T14:25:19.066Z"
+        },
+        {
+          "name": "unsupported tweak rejected",
+          "path": "/api/v1/intelligence/multiparty/public-sessions/verify",
+          "method": "POST",
+          "httpStatus": 400,
+          "resultStatus": "invalid-input",
+          "verified": false,
+          "observedAt": "2026-09-06T14:25:19.070Z"
+        },
+        {
+          "name": "actual owned-header anchored proof",
+          "path": "/api/v1/intelligence/timestamps/proofs/verify",
+          "method": "POST",
+          "httpStatus": 200,
+          "resultStatus": "bitcoin_attestation_verified",
+          "verified": true,
+          "observedAt": "2026-09-06T14:25:19.733Z"
+        },
+        {
+          "name": "document mismatch",
+          "path": "/api/v1/intelligence/timestamps/proofs/verify",
+          "method": "POST",
+          "httpStatus": 200,
+          "resultStatus": "file_mismatch",
+          "verified": false,
+          "observedAt": "2026-09-06T14:25:19.739Z"
+        },
+        {
+          "name": "invalid Bitcoin commitment",
+          "path": "/api/v1/intelligence/timestamps/proofs/verify",
+          "method": "POST",
+          "httpStatus": 200,
+          "resultStatus": "bitcoin_attestation_invalid",
+          "verified": false,
+          "observedAt": "2026-09-06T14:25:20.107Z"
+        },
+        {
+          "name": "pending calendar without fetching it",
+          "path": "/api/v1/intelligence/timestamps/proofs/verify",
+          "method": "POST",
+          "httpStatus": 200,
+          "resultStatus": "pending_calendar_attestation",
+          "verified": false,
+          "observedAt": "2026-09-06T14:25:20.110Z"
+        },
+        {
+          "name": "unknown notary",
+          "path": "/api/v1/intelligence/timestamps/proofs/verify",
+          "method": "POST",
+          "httpStatus": 200,
+          "resultStatus": "unsupported_attestation",
+          "verified": false,
+          "observedAt": "2026-09-06T14:25:20.113Z"
+        },
+        {
+          "name": "wrong network cannot inherit mainnet",
+          "path": "/api/v1/intelligence/timestamps/proofs/verify",
+          "method": "POST",
+          "httpStatus": 200,
+          "resultStatus": "network_mismatch",
+          "verified": false,
+          "observedAt": "2026-09-06T14:25:20.120Z"
+        },
+        {
+          "name": "malformed proof rejected",
+          "path": "/api/v1/intelligence/timestamps/proofs/verify",
+          "method": "POST",
+          "httpStatus": 400,
+          "resultStatus": "invalid-proof",
+          "verified": null,
+          "observedAt": "2026-09-06T14:25:20.123Z"
+        },
+        {
+          "name": "subsequent valid proof recovers",
+          "path": "/api/v1/intelligence/timestamps/proofs/verify",
+          "method": "POST",
+          "httpStatus": 200,
+          "resultStatus": "bitcoin_attestation_verified",
+          "verified": true,
+          "observedAt": "2026-09-06T14:25:20.670Z"
+        }
+      ]
+    },
+    "gateway": {
+      "origin": "http://127.0.0.1:4310",
+      "startedAt": "2026-09-06T14:28:00.557Z",
+      "finishedAt": "2026-09-06T14:28:03.523Z",
+      "assertionsPassed": 13,
+      "operations": [
+        {
+          "name": "candidate identity",
+          "path": "/api/v1/backend-info",
+          "method": "GET",
+          "httpStatus": 200,
+          "resultStatus": null,
+          "verified": null,
+          "observedAt": "2026-09-06T14:28:00.623Z"
+        },
+        {
+          "name": "complete public transcript",
+          "path": "/api/v1/intelligence/multiparty/public-sessions/verify",
+          "method": "POST",
+          "httpStatus": 200,
+          "resultStatus": "verified-session",
+          "verified": true,
+          "observedAt": "2026-09-06T14:28:00.638Z"
+        },
+        {
+          "name": "corrupt partial rejected",
+          "path": "/api/v1/intelligence/multiparty/public-sessions/verify",
+          "method": "POST",
+          "httpStatus": 400,
+          "resultStatus": "invalid-input",
+          "verified": false,
+          "observedAt": "2026-09-06T14:28:00.652Z"
+        },
+        {
+          "name": "key aggregation scope",
+          "path": "/api/v1/intelligence/multiparty/public-sessions/verify",
+          "method": "POST",
+          "httpStatus": 200,
+          "resultStatus": "partial-session",
+          "verified": false,
+          "observedAt": "2026-09-06T14:28:00.660Z"
+        },
+        {
+          "name": "unsupported tweak rejected",
+          "path": "/api/v1/intelligence/multiparty/public-sessions/verify",
+          "method": "POST",
+          "httpStatus": 400,
+          "resultStatus": "invalid-input",
+          "verified": false,
+          "observedAt": "2026-09-06T14:28:00.665Z"
+        },
+        {
+          "name": "actual owned-header anchored proof",
+          "path": "/api/v1/intelligence/timestamps/proofs/verify",
+          "method": "POST",
+          "httpStatus": 200,
+          "resultStatus": "bitcoin_attestation_verified",
+          "verified": true,
+          "observedAt": "2026-09-06T14:28:01.892Z"
+        },
+        {
+          "name": "document mismatch",
+          "path": "/api/v1/intelligence/timestamps/proofs/verify",
+          "method": "POST",
+          "httpStatus": 200,
+          "resultStatus": "file_mismatch",
+          "verified": false,
+          "observedAt": "2026-09-06T14:28:01.898Z"
+        },
+        {
+          "name": "invalid Bitcoin commitment",
+          "path": "/api/v1/intelligence/timestamps/proofs/verify",
+          "method": "POST",
+          "httpStatus": 200,
+          "resultStatus": "bitcoin_attestation_invalid",
+          "verified": false,
+          "observedAt": "2026-09-06T14:28:02.712Z"
+        },
+        {
+          "name": "pending calendar without fetching it",
+          "path": "/api/v1/intelligence/timestamps/proofs/verify",
+          "method": "POST",
+          "httpStatus": 200,
+          "resultStatus": "pending_calendar_attestation",
+          "verified": false,
+          "observedAt": "2026-09-06T14:28:02.722Z"
+        },
+        {
+          "name": "unknown notary",
+          "path": "/api/v1/intelligence/timestamps/proofs/verify",
+          "method": "POST",
+          "httpStatus": 200,
+          "resultStatus": "unsupported_attestation",
+          "verified": false,
+          "observedAt": "2026-09-06T14:28:02.727Z"
+        },
+        {
+          "name": "wrong network cannot inherit mainnet",
+          "path": "/api/v1/intelligence/timestamps/proofs/verify",
+          "method": "POST",
+          "httpStatus": 200,
+          "resultStatus": "network_mismatch",
+          "verified": false,
+          "observedAt": "2026-09-06T14:28:02.734Z"
+        },
+        {
+          "name": "malformed proof rejected",
+          "path": "/api/v1/intelligence/timestamps/proofs/verify",
+          "method": "POST",
+          "httpStatus": 400,
+          "resultStatus": "invalid-proof",
+          "verified": null,
+          "observedAt": "2026-09-06T14:28:02.740Z"
+        },
+        {
+          "name": "subsequent valid proof recovers",
+          "path": "/api/v1/intelligence/timestamps/proofs/verify",
+          "method": "POST",
+          "httpStatus": 200,
+          "resultStatus": "bitcoin_attestation_verified",
+          "verified": true,
+          "observedAt": "2026-09-06T14:28:03.523Z"
+        }
+      ]
+    },
+    "consumer": {
+      "browser": "152.0.7977.64",
+      "startedAt": "2026-09-06T14:30:21.019Z",
+      "finishedAt": "2026-09-06T14:30:27.018Z",
+      "assertionsPassed": 8,
+      "responsesObserved": 8,
+      "assertions": [
+        "Complete public transcript and exact computed signature rendered",
+        "Changing transcript clears prior verdict; corrupt partial is visibly rejected",
+        "Reload and key-only request show partial scope, not completed signing rounds",
+        "Exact mainnet proof digest, block hash, height and timestamp rendered from owned header verification",
+        "Wrong document digest cannot retain confirmed verdict",
+        "Pending calendar receipt renders pending, without a confirmed badge",
+        "Invalid real proof commitment is rejected despite matching document digest",
+        "Reload clears old proof and fresh resubmission recovers verified result at390px"
+      ],
+      "acceptance": "PASS for recorded DOM/response assertions only; NOT ACCEPTED for complete visual usability.",
+      "visualFailure": "Manual review found unreadable OTS card/input/result colors and MuSig2 badge/active-tab colors in light theme. Initial screenshots are functional/diagnostic evidence, not a visual pass.",
+      "followup": "Initial source0a functional assertions remain unchanged. The next a974 theme phase recorded five failures and three passes; final frontend4e9 phase passed all eight exact provided-proof result/contrast/geometry checks with the same source0a monolith. Each phase is archived separately."
+    },
+    "themeBefore": {
+      "sourceRevision": "a974f79f32d07b1157cf1e56756c74add5b3de44",
+      "passed": 3,
+      "failed": 5,
+      "scope": "Failing-first contrast evidence: MuSig2 muted text and mobile native More button; original reports/screenshots retained without reclassification.",
+      "cases": [
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-before/engine-theme-musig2-dark-1440.json",
+          "tool": "musig2",
+          "theme": "dark",
+          "width": 1440,
+          "status": "FAIL",
+          "frontendReportedRevision": "a974f79f3",
+          "backendReportedRevision": "0a8e15750",
+          "startedAt": "2026-09-06T14:44:37.702Z",
+          "finishedAt": "2026-09-06T14:44:38.943Z",
+          "textContrastFailures": 4,
+          "geometry": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "theme": null,
+            "bodyClass": ""
+          },
+          "browser": "152.0.7977.64"
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-before/engine-theme-musig2-dark-390.json",
+          "tool": "musig2",
+          "theme": "dark",
+          "width": 390,
+          "status": "FAIL",
+          "frontendReportedRevision": "a974f79f3",
+          "backendReportedRevision": "0a8e15750",
+          "startedAt": "2026-09-06T14:44:42.779Z",
+          "finishedAt": "2026-09-06T14:44:44.197Z",
+          "textContrastFailures": 5,
+          "geometry": {
+            "width": 390,
+            "scrollWidth": 390,
+            "theme": null,
+            "bodyClass": ""
+          },
+          "browser": "152.0.7977.64"
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-before/engine-theme-musig2-light-1440.json",
+          "tool": "musig2",
+          "theme": "light",
+          "width": 1440,
+          "status": "FAIL",
+          "frontendReportedRevision": "a974f79f3",
+          "backendReportedRevision": "0a8e15750",
+          "startedAt": "2026-09-06T14:44:13.492Z",
+          "finishedAt": "2026-09-06T14:44:15.128Z",
+          "textContrastFailures": 1,
+          "geometry": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "theme": null,
+            "bodyClass": ""
+          },
+          "browser": "152.0.7977.64"
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-before/engine-theme-musig2-light-390.json",
+          "tool": "musig2",
+          "theme": "light",
+          "width": 390,
+          "status": "FAIL",
+          "frontendReportedRevision": "a974f79f3",
+          "backendReportedRevision": "0a8e15750",
+          "startedAt": "2026-09-06T14:44:40.337Z",
+          "finishedAt": "2026-09-06T14:44:41.356Z",
+          "textContrastFailures": 1,
+          "geometry": {
+            "width": 390,
+            "scrollWidth": 390,
+            "theme": null,
+            "bodyClass": ""
+          },
+          "browser": "152.0.7977.64"
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-before/engine-theme-ots-dark-1440.json",
+          "tool": "ots",
+          "theme": "dark",
+          "width": 1440,
+          "status": "PASS",
+          "frontendReportedRevision": "a974f79f3",
+          "backendReportedRevision": "0a8e15750",
+          "startedAt": "2026-09-06T14:44:27.241Z",
+          "finishedAt": "2026-09-06T14:44:29.238Z",
+          "textContrastFailures": 0,
+          "geometry": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "theme": null,
+            "bodyClass": ""
+          },
+          "browser": "152.0.7977.64"
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-before/engine-theme-ots-dark-390.json",
+          "tool": "ots",
+          "theme": "dark",
+          "width": 390,
+          "status": "FAIL",
+          "frontendReportedRevision": "a974f79f3",
+          "backendReportedRevision": "0a8e15750",
+          "startedAt": "2026-09-06T14:44:34.530Z",
+          "finishedAt": "2026-09-06T14:44:36.348Z",
+          "textContrastFailures": 1,
+          "geometry": {
+            "width": 390,
+            "scrollWidth": 390,
+            "theme": null,
+            "bodyClass": ""
+          },
+          "browser": "152.0.7977.64"
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-before/engine-theme-ots-light-1440.json",
+          "tool": "ots",
+          "theme": "light",
+          "width": 1440,
+          "status": "PASS",
+          "frontendReportedRevision": "a974f79f3",
+          "backendReportedRevision": "0a8e15750",
+          "startedAt": "2026-09-06T14:44:01.965Z",
+          "finishedAt": "2026-09-06T14:44:04.375Z",
+          "textContrastFailures": 0,
+          "geometry": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "theme": null,
+            "bodyClass": ""
+          },
+          "browser": "152.0.7977.64"
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-before/engine-theme-ots-light-390.json",
+          "tool": "ots",
+          "theme": "light",
+          "width": 390,
+          "status": "PASS",
+          "frontendReportedRevision": "a974f79f3",
+          "backendReportedRevision": "0a8e15750",
+          "startedAt": "2026-09-06T14:44:30.671Z",
+          "finishedAt": "2026-09-06T14:44:32.739Z",
+          "textContrastFailures": 0,
+          "geometry": {
+            "width": 390,
+            "scrollWidth": 390,
+            "theme": null,
+            "bodyClass": ""
+          },
+          "browser": "152.0.7977.64"
+        }
+      ]
+    },
+    "themeFinal": {
+      "status": "PASS LOCAL",
+      "scope": "Two provided-proof positive consumers only, light/dark at widths1440 and390. Each run observes the actual verification API response and exact visible proof/signature result, zero sampled text contrast failures and no horizontal document overflow. Does not establish full site mobile acceptance.",
+      "frontendSourceRevision": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+      "monolithSourceRevision": "0a8e1575039218709d45f5957290253454b3a0d4",
+      "gatewaySourceRevision": "0a8e1575039218709d45f5957290253454b3a0d4",
+      "gatewayBinding": "Parent reports gateway code unchanged from the initial source0a process; per-case backend-info identifies actual monolith0a.",
+      "overlayRevisionReportedByParent": "b9ddc216c1fd4dd0a478f2fc44f929d4195dbe9b",
+      "overlayScope": "Engine verification routes were handled by the monolith; this overlay identity adds no authority or protocol data acceptance.",
+      "casesPassed": 8,
+      "cases": [
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-final/engine-theme-musig2-dark-1440.json",
+          "tool": "musig2",
+          "theme": "dark",
+          "width": 1440,
+          "status": "PASS",
+          "frontendReportedRevision": "4e9c2749b",
+          "backendReportedRevision": "0a8e15750",
+          "startedAt": "2026-09-06T14:47:44.908Z",
+          "finishedAt": "2026-09-06T14:47:46.168Z",
+          "textContrastFailures": 0,
+          "geometry": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "theme": null,
+            "bodyClass": ""
+          },
+          "browser": "152.0.7977.64"
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-final/engine-theme-musig2-dark-390.json",
+          "tool": "musig2",
+          "theme": "dark",
+          "width": 390,
+          "status": "PASS",
+          "frontendReportedRevision": "4e9c2749b",
+          "backendReportedRevision": "0a8e15750",
+          "startedAt": "2026-09-06T14:47:50.256Z",
+          "finishedAt": "2026-09-06T14:47:51.487Z",
+          "textContrastFailures": 0,
+          "geometry": {
+            "width": 390,
+            "scrollWidth": 390,
+            "theme": null,
+            "bodyClass": ""
+          },
+          "browser": "152.0.7977.64"
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-final/engine-theme-musig2-light-1440.json",
+          "tool": "musig2",
+          "theme": "light",
+          "width": 1440,
+          "status": "PASS",
+          "frontendReportedRevision": "4e9c2749b",
+          "backendReportedRevision": "0a8e15750",
+          "startedAt": "2026-09-06T14:47:41.758Z",
+          "finishedAt": "2026-09-06T14:47:43.271Z",
+          "textContrastFailures": 0,
+          "geometry": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "theme": null,
+            "bodyClass": ""
+          },
+          "browser": "152.0.7977.64"
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-final/engine-theme-musig2-light-390.json",
+          "tool": "musig2",
+          "theme": "light",
+          "width": 390,
+          "status": "PASS",
+          "frontendReportedRevision": "4e9c2749b",
+          "backendReportedRevision": "0a8e15750",
+          "startedAt": "2026-09-06T14:47:47.698Z",
+          "finishedAt": "2026-09-06T14:47:48.819Z",
+          "textContrastFailures": 0,
+          "geometry": {
+            "width": 390,
+            "scrollWidth": 390,
+            "theme": null,
+            "bodyClass": ""
+          },
+          "browser": "152.0.7977.64"
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-final/engine-theme-ots-dark-1440.json",
+          "tool": "ots",
+          "theme": "dark",
+          "width": 1440,
+          "status": "PASS",
+          "frontendReportedRevision": "4e9c2749b",
+          "backendReportedRevision": "0a8e15750",
+          "startedAt": "2026-09-06T14:47:30.039Z",
+          "finishedAt": "2026-09-06T14:47:32.226Z",
+          "textContrastFailures": 0,
+          "geometry": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "theme": null,
+            "bodyClass": ""
+          },
+          "browser": "152.0.7977.64"
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-final/engine-theme-ots-dark-390.json",
+          "tool": "ots",
+          "theme": "dark",
+          "width": 390,
+          "status": "PASS",
+          "frontendReportedRevision": "4e9c2749b",
+          "backendReportedRevision": "0a8e15750",
+          "startedAt": "2026-09-06T14:47:37.897Z",
+          "finishedAt": "2026-09-06T14:47:39.920Z",
+          "textContrastFailures": 0,
+          "geometry": {
+            "width": 390,
+            "scrollWidth": 390,
+            "theme": null,
+            "bodyClass": ""
+          },
+          "browser": "152.0.7977.64"
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-final/engine-theme-ots-light-1440.json",
+          "tool": "ots",
+          "theme": "light",
+          "width": 1440,
+          "status": "PASS",
+          "frontendReportedRevision": "4e9c2749b",
+          "backendReportedRevision": "0a8e15750",
+          "startedAt": "2026-09-06T14:47:25.295Z",
+          "finishedAt": "2026-09-06T14:47:28.372Z",
+          "textContrastFailures": 0,
+          "geometry": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "theme": null,
+            "bodyClass": ""
+          },
+          "browser": "152.0.7977.64"
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-final/engine-theme-ots-light-390.json",
+          "tool": "ots",
+          "theme": "light",
+          "width": 390,
+          "status": "PASS",
+          "frontendReportedRevision": "4e9c2749b",
+          "backendReportedRevision": "0a8e15750",
+          "startedAt": "2026-09-06T14:47:34.145Z",
+          "finishedAt": "2026-09-06T14:47:36.199Z",
+          "textContrastFailures": 0,
+          "geometry": {
+            "width": 390,
+            "scrollWidth": 390,
+            "theme": null,
+            "bodyClass": ""
+          },
+          "browser": "152.0.7977.64"
+        }
+      ],
+      "manualReview": {
+        "reviewer": "root",
+        "representativeScreenshotsReviewed": 4,
+        "coverageReported": "Both components, themes and widths were represented. All eight automated reports were inspected separately."
+      }
+    },
+    "integratedConsumerFollowup": {
+      "status": "PASS LOCAL",
+      "scope": "Repeat only the same two supplied-proof positive consumers at integrated frontend revision. Eight actual response, exact rendered reference, text contrast and geometry checks. Prior HTTP negative-control and consumer-state evidence remains at its original source0a checkpoint.",
+      "frontendSourceRevision": "bbca7f46873d35c5f6146cbb33b3e4cab09f926f",
+      "monolithSourceRevision": "0a8e1575039218709d45f5957290253454b3a0d4",
+      "casesPassed": 8,
+      "startedAt": "2026-09-06T14:57:17.792Z",
+      "finishedAt": "2026-09-06T14:57:51.840Z",
+      "cases": [
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/integration-followup/engine-integrated-musig2-dark-1440.json",
+          "tool": "musig2",
+          "theme": "dark",
+          "width": 1440,
+          "status": "PASS",
+          "frontendReportedRevision": "bbca7f468",
+          "backendReportedRevision": "0a8e15750",
+          "startedAt": "2026-09-06T14:57:40.772Z",
+          "finishedAt": "2026-09-06T14:57:42.879Z",
+          "textContrastFailures": 0,
+          "geometry": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "theme": null,
+            "bodyClass": ""
+          },
+          "browser": "152.0.7977.64"
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/integration-followup/engine-integrated-musig2-dark-390.json",
+          "tool": "musig2",
+          "theme": "dark",
+          "width": 390,
+          "status": "PASS",
+          "frontendReportedRevision": "bbca7f468",
+          "backendReportedRevision": "0a8e15750",
+          "startedAt": "2026-09-06T14:57:50.003Z",
+          "finishedAt": "2026-09-06T14:57:51.840Z",
+          "textContrastFailures": 0,
+          "geometry": {
+            "width": 390,
+            "scrollWidth": 390,
+            "theme": null,
+            "bodyClass": ""
+          },
+          "browser": "152.0.7977.64"
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/integration-followup/engine-integrated-musig2-light-1440.json",
+          "tool": "musig2",
+          "theme": "light",
+          "width": 1440,
+          "status": "PASS",
+          "frontendReportedRevision": "bbca7f468",
+          "backendReportedRevision": "0a8e15750",
+          "startedAt": "2026-09-06T14:57:36.279Z",
+          "finishedAt": "2026-09-06T14:57:38.369Z",
+          "textContrastFailures": 0,
+          "geometry": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "theme": null,
+            "bodyClass": ""
+          },
+          "browser": "152.0.7977.64"
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/integration-followup/engine-integrated-musig2-light-390.json",
+          "tool": "musig2",
+          "theme": "light",
+          "width": 390,
+          "status": "PASS",
+          "frontendReportedRevision": "bbca7f468",
+          "backendReportedRevision": "0a8e15750",
+          "startedAt": "2026-09-06T14:57:45.942Z",
+          "finishedAt": "2026-09-06T14:57:47.904Z",
+          "textContrastFailures": 0,
+          "geometry": {
+            "width": 390,
+            "scrollWidth": 390,
+            "theme": null,
+            "bodyClass": ""
+          },
+          "browser": "152.0.7977.64"
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/integration-followup/engine-integrated-ots-dark-1440.json",
+          "tool": "ots",
+          "theme": "dark",
+          "width": 1440,
+          "status": "PASS",
+          "frontendReportedRevision": "bbca7f468",
+          "backendReportedRevision": "0a8e15750",
+          "startedAt": "2026-09-06T14:57:22.015Z",
+          "finishedAt": "2026-09-06T14:57:24.500Z",
+          "textContrastFailures": 0,
+          "geometry": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "theme": null,
+            "bodyClass": ""
+          },
+          "browser": "152.0.7977.64"
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/integration-followup/engine-integrated-ots-dark-390.json",
+          "tool": "ots",
+          "theme": "dark",
+          "width": 390,
+          "status": "PASS",
+          "frontendReportedRevision": "bbca7f468",
+          "backendReportedRevision": "0a8e15750",
+          "startedAt": "2026-09-06T14:57:31.564Z",
+          "finishedAt": "2026-09-06T14:57:34.106Z",
+          "textContrastFailures": 0,
+          "geometry": {
+            "width": 390,
+            "scrollWidth": 390,
+            "theme": null,
+            "bodyClass": ""
+          },
+          "browser": "152.0.7977.64"
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/integration-followup/engine-integrated-ots-light-1440.json",
+          "tool": "ots",
+          "theme": "light",
+          "width": 1440,
+          "status": "PASS",
+          "frontendReportedRevision": "bbca7f468",
+          "backendReportedRevision": "0a8e15750",
+          "startedAt": "2026-09-06T14:57:17.792Z",
+          "finishedAt": "2026-09-06T14:57:20.039Z",
+          "textContrastFailures": 0,
+          "geometry": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "theme": null,
+            "bodyClass": ""
+          },
+          "browser": "152.0.7977.64"
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/integration-followup/engine-integrated-ots-light-390.json",
+          "tool": "ots",
+          "theme": "light",
+          "width": 390,
+          "status": "PASS",
+          "frontendReportedRevision": "bbca7f468",
+          "backendReportedRevision": "0a8e15750",
+          "startedAt": "2026-09-06T14:57:26.659Z",
+          "finishedAt": "2026-09-06T14:57:29.192Z",
+          "textContrastFailures": 0,
+          "geometry": {
+            "width": 390,
+            "scrollWidth": 390,
+            "theme": null,
+            "bodyClass": ""
+          },
+          "browser": "152.0.7977.64"
+        }
+      ],
+      "sourceFiles": [
+        {
+          "path": "frontend/src/app/universe/opentimestamps/opentimestamps-verify.component.ts",
+          "gitBlobSha256": "3a300ed2da02766663c2d63a83071e5385317927bf3bf940cda874fc992ac40c",
+          "bytes": 11393
+        },
+        {
+          "path": "frontend/src/app/universe/opentimestamps/opentimestamps.service.ts",
+          "gitBlobSha256": "1aa8d0fd3b2512e80d95e16aaf97e474d92f1ed2b5c6945b312bf14a4e647327",
+          "bytes": 3210
+        },
+        {
+          "path": "frontend/src/app/universe/multiparty/multiparty-musig2.component.ts",
+          "gitBlobSha256": "4420ed31bf14a3d915386cdfaeaf4a62645ff66da07491d8b9e52c802fd33c5c",
+          "bytes": 10930
+        },
+        {
+          "path": "frontend/src/app/universe/multiparty/multiparty.service.ts",
+          "gitBlobSha256": "abd8c91aa2802fca897bf2977e02ed96719cda991949345cb425c2736f2ad4f9",
+          "bytes": 3459
+        },
+        {
+          "path": "frontend/src/app/components/master-page/master-page.component.scss",
+          "gitBlobSha256": "c7ad7c3b64473f0bfc76d6699346ebffa214abcc88d6654d795f5feeaa2ccd48",
+          "bytes": 20931
+        },
+        {
+          "path": "frontend/src/styles.scss",
+          "gitBlobSha256": "82bc63fdf29e2ee0beb136668f366daab4262e3b5aef408844d84e6663602331",
+          "bytes": 53911
+        },
+        {
+          "path": "scripts/universe/visual-qa/contrast-probe.mjs",
+          "gitBlobSha256": "21f4f40f9b0b87ea1b14d99ff0fcf102bb15989abc8fb76ee2146ff196c9438b",
+          "bytes": 15616
+        }
+      ],
+      "incomingAncestry": {
+        "revision": "ff2a108247a47a214db471850078ef8fcd98bf88",
+        "isAncestorOfIntegratedRevision": true,
+        "check": "git merge-base --is-ancestor"
+      },
+      "preservation": "All previous88 archived file hashes and all earlier source0a/a974/4e9 observations remain unchanged. No full mobile, other operation or application acceptance added."
+    }
+  },
+  "operations": [
+    {
+      "id": "API-8f2d0a9754f2",
+      "status": "PASS LOCAL",
+      "method": "POST",
+      "path": "/api/v1/intelligence/timestamps/proofs/verify",
+      "consumerId": "UI-1afe77615c32",
+      "consumerRoute": "/tools/timestamp/verify",
+      "scope": "Supplied detached format-v1 proof and expected public document digest verified against actual owned mainnet header reads, plus observed mismatch, bad commitment, pending, unknown attestation, wrong network, malformed-input and subsequent-valid resubmission outcomes.",
+      "authority": "https://explorer.bitcoinuniverse.io/api",
+      "verifiedNetwork": "mainnet",
+      "exactReference": {
+        "document": "hello-world.txt",
+        "documentSha256": "03ba204e50d126e4674c005e04d82e84c21366780af1f43bd54a37816b6ab340",
+        "blockHeight": 358391,
+        "blockHash": "000000000000000003e892881a8cdcdc117c06d444057c98b6f04a9ee75a2319",
+        "blockTime": "2015-05-28T15:41:18.000Z",
+        "operationCount": 38
+      },
+      "limits": [
+        "Only the observed mainnet proof path is accepted here; other networks and runtime source-outage/reorg scenarios need separate execution evidence.",
+        "Stamp/upgrade/calendar observation operations remain unavailable because their owned client/directory and durable batch/anchor sources are not connected.",
+        "The verifier trusts the configured owned active-chain reader and validates returned genesis/header/hash bindings; it does not independently validate the full Bitcoin chain.",
+        "Consumer acceptance covers the supplied public inputs, observed negative outcomes at source0a and subsequent readable positive results at frontend4e9. It is not full application or all-network acceptance."
+      ],
+      "consumerStatus": "PASS LOCAL"
+    },
+    {
+      "id": "API-4edb832dd83d",
+      "status": "PASS LOCAL",
+      "method": "POST",
+      "path": "/api/v1/intelligence/multiparty/public-sessions/verify",
+      "consumerId": "UI-a270e89bb4c9",
+      "consumerRoute": "/tools/multiparty/musig2",
+      "scope": "Provided ordered untweaked BIP327 public transcript: computed key/nonce aggregation, each partial verification, aggregated final signature and final BIP340 verification, with corrupt partial, key-only partial scope and unsupported tweak controls.",
+      "exactReference": {
+        "upstreamCommit": "ccb5415095c5b096abc9bd72384a6db4b7c34bce",
+        "vectorFile": "sig_agg_vectors.json",
+        "selection": "first valid_test_cases entry with empty tweak_indices",
+        "expectedFinalSignature": "041da22223ce65c92c9a0d6c2cac828aaf1eee56304fec371ddf91ebb2b9ef0912f1038025857fedeb3ff696f8b99fa4bb2c5812f6095a2e0004ec99ce18de1e"
+      },
+      "limits": [
+        "No tweak handling, secret signing, nonce generation, participant authentication, transaction-sighash derivation or cross-session nonce-reuse assurance is implemented by this supplied-public-data verification.",
+        "Durable sessions, product conformance publication, vendor-key trust and manifest verification remain separate unavailable operations.",
+        "Consumer acceptance covers the supplied public inputs, observed negative outcomes at source0a and subsequent readable positive results at frontend4e9. It is not full application or all-network acceptance."
+      ],
+      "consumerStatus": "PASS LOCAL"
+    }
+  ],
+  "validationArtifact": "docs/acceptance/engine-runtime-2026-09-06/validation.json",
+  "artifacts": [
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/engine-http-direct.json",
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\final-runtime\\engine-http-direct.json",
+      "sha256": "3f42235df58addc8078b92cdc6de1272286507bb51d36b2188fb1256ca4ecfb4",
+      "bytes": 22651
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/engine-http-gateway.json",
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\final-runtime\\engine-http-gateway.json",
+      "sha256": "fa3b05e23cea58532987cbc780dd8b092ad253b04ee9c0370b7fa9d862513278",
+      "bytes": 22651
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/engine-ui.json",
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\final-runtime\\engine-ui.json",
+      "sha256": "aff199ba7b350c6d402e29b00732d8af7d28e5c31856012ffacfca081f37c410",
+      "bytes": 8334
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/engine-http.mjs",
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\final-runtime\\engine-http.mjs",
+      "sha256": "f09d85e2508cabed184f456ae700220b4666c3131b8f696544a0abf874b27054",
+      "bytes": 5301
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/engine-ui.mjs",
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\final-runtime\\engine-ui.mjs",
+      "sha256": "d6fa2a66b671b8f44a1715244bf1c520e37dc2922bdf16410c6f5290a3341bcf",
+      "bytes": 7258
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/public-musig2-transcript.json",
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\final-runtime\\public-musig2-transcript.json",
+      "sha256": "0aec29dcc2f3687fbe426d7a515dc04fac23d0215f80a964f296fc04535360aa",
+      "bytes": 1060
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/gateway-process.json",
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\final-runtime\\gateway-process.json",
+      "sha256": "d9748349eaf09a90bfbd5570a753321e43bb9870d33656ece4c6af752ec4769c",
+      "bytes": 294
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/monolith-process.json",
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\final-runtime\\monolith-process.json",
+      "sha256": "cf844888e79af438782021e9fa2673240f1a034da246318a8e15a0c55c7de849",
+      "bytes": 515
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/initial-ui/musig2-complete.png",
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\final-runtime\\musig2-complete.png",
+      "sha256": "b593b129d3a515ff763a655ffbd0c8783e91d917177e99ddaf18db6c0d7f93de",
+      "bytes": 161028
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/initial-ui/musig2-complete.txt",
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\final-runtime\\musig2-complete.txt",
+      "sha256": "fbd837a36d1f2dedb967c11db8367b5d24664c0b30026f20ce49da109f0bc414",
+      "bytes": 3137
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/initial-ui/musig2-corrupt.png",
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\final-runtime\\musig2-corrupt.png",
+      "sha256": "97d57691ae543ac5471ff5a052237526eb25f314861f2bcb378505c7bd58d2b9",
+      "bytes": 147613
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/initial-ui/musig2-corrupt.txt",
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\final-runtime\\musig2-corrupt.txt",
+      "sha256": "1bf0463eb05dbe45a0751c7cbabd4aad87a6f4baceb988b7824955bf6804cb95",
+      "bytes": 2879
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/initial-ui/musig2-key-only.png",
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\final-runtime\\musig2-key-only.png",
+      "sha256": "dceb8a1a07e9573f451b8a93c0253fd562059ac3a7abd7fe33ef90c1f13286fa",
+      "bytes": 129284
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/initial-ui/musig2-key-only.txt",
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\final-runtime\\musig2-key-only.txt",
+      "sha256": "9e3c183c708000b00ca3e843456a59ec654e245a3f96c60e139a7f74dc074adf",
+      "bytes": 2939
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/initial-ui/ots-anchored.png",
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\final-runtime\\ots-anchored.png",
+      "sha256": "96f282cccbb8513fd3847a43af264a100487bc78c25a30ed0798a72e2dc1a29c",
+      "bytes": 145879
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/initial-ui/ots-anchored.txt",
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\final-runtime\\ots-anchored.txt",
+      "sha256": "f26f1c6ec4e0324ff246fb5e1762aae91f78aa70fc9b48fd778e0b0c28505715",
+      "bytes": 2894
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/initial-ui/ots-bad-commitment.png",
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\final-runtime\\ots-bad-commitment.png",
+      "sha256": "b4d7df5ab5e89a09e5f238ce343f8881dbb54074204fc509929ef3b0e8ffafea",
+      "bytes": 126767
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/initial-ui/ots-bad-commitment.txt",
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\final-runtime\\ots-bad-commitment.txt",
+      "sha256": "7984d8c556efd2a800fb443a3ea806dbe8ef56d1f8ef932ff71d1eda120d578d",
+      "bytes": 2667
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/initial-ui/ots-digest-mismatch.png",
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\final-runtime\\ots-digest-mismatch.png",
+      "sha256": "2a338c44a93ec222c85266b421c176bec145ff8695fefd08e52f44c57c02044d",
+      "bytes": 122677
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/initial-ui/ots-digest-mismatch.txt",
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\final-runtime\\ots-digest-mismatch.txt",
+      "sha256": "4a6940668c660585810839e7c565d3106afff9d6b7f561f144ea91e3b47c940a",
+      "bytes": 2644
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/initial-ui/ots-pending.png",
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\final-runtime\\ots-pending.png",
+      "sha256": "29398e2f8463e3173400133269d17c5fd08d49c8f445a71a09bf0f395f675764",
+      "bytes": 117380
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/initial-ui/ots-pending.txt",
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\final-runtime\\ots-pending.txt",
+      "sha256": "144c81650e5c74c6b2da0017834509994d6310f6f77517bc9ac6557259b1d34c",
+      "bytes": 2735
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/initial-ui/ots-recovered-mobile.png",
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\final-runtime\\ots-recovered-mobile.png",
+      "sha256": "2b763ef5919ee42e5ef9d47330b3e03deeabd79d3d3372b429036d840df80ec8",
+      "bytes": 122721
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/initial-ui/ots-recovered-mobile.txt",
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\final-runtime\\ots-recovered-mobile.txt",
+      "sha256": "8d9e9cb9daf63749e8b364943720453e1b00e8eed690668acce992c391fa1e4e",
+      "bytes": 2827
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/validation/backend-engines-all-tests.log",
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\backend-engines-all-tests.log",
+      "sha256": "dead71a7c6fe59c7459060c2bf2f94194aeee26119b81d6d757541aeebb74a32",
+      "bytes": 273116
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/validation/frontend-engines-all-tests.log",
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\frontend-engines-all-tests.log",
+      "sha256": "bb2f4b84ba2bec14ce241a3a48c564165b90c5b556981e221d586cb7f5b272fa",
+      "bytes": 9005
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/validation/backend-engines-build.log",
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\backend-engines-build.log",
+      "sha256": "9237e4dbe7038de18bd3ec9b0442fc397c9c5fbd149f20c371fcf1569b45be2f",
+      "bytes": 224
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/validation/frontend-engines-build.log",
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\frontend-engines-build.log",
+      "sha256": "cb04692521f746253e6c4870b517bfb59f2ea26c4e6767377bed71622dc0c3e6",
+      "bytes": 55556
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/validation/backend-final-lint.log",
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\backend-final-lint.log",
+      "sha256": "cf94797e1728d4d7c063f6162c44998c6642d35aa126136da6606c47c0cdd985",
+      "bytes": 158388
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/validation/ots-backend-focused-final.log",
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\ots-backend-focused-final.log",
+      "sha256": "fe940d7e88fb18f06c84352dedfcbdf0189e48d0550e83c743b16641c3dccf6a",
+      "bytes": 5260
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/validation/ots-reorg-failing-first.log",
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\ots-reorg-failing-first.log",
+      "sha256": "899e7e20ac6e6b96be8185317d492a6e6bd42442e561e09691b3387639ac4c95",
+      "bytes": 3954
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/validation/verifier-theme-component-tests.log",
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\verifier-theme-component-tests.log",
+      "sha256": "460419e0edd8bfa0f6e46764814cede41db9d0ee2eec9ba94d1360b3be398a56",
+      "bytes": 649
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/validation/verifier-theme-component-lint.log",
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\verifier-theme-component-lint.log",
+      "sha256": "3859049654c609bba0c31b442b6b23ba51f1c06c7e391a6a9b3fece3176f29c1",
+      "bytes": 1018
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/public-inputs/opentimestamps/.gitattributes",
+      "original": "backend\\src\\api\\intelligence\\opentimestamps\\__fixtures__\\.gitattributes",
+      "sha256": "47eee8201e832b73648585f6676aa340ae13a072edcf822f6dac5cf0ba653729",
+      "bytes": 38
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/public-inputs/opentimestamps/bad-stamp.txt",
+      "original": "backend\\src\\api\\intelligence\\opentimestamps\\__fixtures__\\bad-stamp.txt",
+      "sha256": "7e3717bbe020f53cdc6c40154a1a8e55bddc13a28c8bb3c82e9ee64b81b44872",
+      "bytes": 93
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/public-inputs/opentimestamps/bad-stamp.txt.ots",
+      "original": "backend\\src\\api\\intelligence\\opentimestamps\\__fixtures__\\bad-stamp.txt.ots",
+      "sha256": "ffea851e316c968e5142df3ea8aa668621d2fec30153e0bd0ef912782e2af7cc",
+      "bytes": 688
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/public-inputs/opentimestamps/bitcoin-358391-header.json",
+      "original": "backend\\src\\api\\intelligence\\opentimestamps\\__fixtures__\\bitcoin-358391-header.json",
+      "sha256": "3bb8cd32257fadfd92eaab2647e209f33c995215f078ff1af58305484b7ffe52",
+      "bytes": 378
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/public-inputs/opentimestamps/hello-world.txt",
+      "original": "backend\\src\\api\\intelligence\\opentimestamps\\__fixtures__\\hello-world.txt",
+      "sha256": "03ba204e50d126e4674c005e04d82e84c21366780af1f43bd54a37816b6ab340",
+      "bytes": 13
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/public-inputs/opentimestamps/hello-world.txt.ots",
+      "original": "backend\\src\\api\\intelligence\\opentimestamps\\__fixtures__\\hello-world.txt.ots",
+      "sha256": "be61ecb940db2e4a6f89fbed59c8d4f7f74fa756cbc1fad1ad7aabcb2bf59c30",
+      "bytes": 688
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/public-inputs/opentimestamps/incomplete.txt",
+      "original": "backend\\src\\api\\intelligence\\opentimestamps\\__fixtures__\\incomplete.txt",
+      "sha256": "05c4f616a8e5310d19d938cfd769864d7f4ccdc2ca8b479b10af83564b097af9",
+      "bytes": 63
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/public-inputs/opentimestamps/incomplete.txt.ots",
+      "original": "backend\\src\\api\\intelligence\\opentimestamps\\__fixtures__\\incomplete.txt.ots",
+      "sha256": "95673f2878cbcfdddded530bd2ad5f3fb04e13d2e659760d7c1386346fdd036c",
+      "bytes": 175
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/public-inputs/opentimestamps/merkle1.txt",
+      "original": "backend\\src\\api\\intelligence\\opentimestamps\\__fixtures__\\merkle1.txt",
+      "sha256": "d32fee9a827f5a0d580f80beb7edce662dd99fcd6591e4ef8a6244403df0b7c9",
+      "bytes": 111
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/public-inputs/opentimestamps/merkle1.txt.ots",
+      "original": "backend\\src\\api\\intelligence\\opentimestamps\\__fixtures__\\merkle1.txt.ots",
+      "sha256": "90ba8251d3f3c67e7a0f1610503912b522deeac4662267f8b38d7e81d697c300",
+      "bytes": 335
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/public-inputs/opentimestamps/README.md",
+      "original": "backend\\src\\api\\intelligence\\opentimestamps\\__fixtures__\\README.md",
+      "sha256": "ff4afca18b1c4b31627fde6fb6c0691b3dd808145f51b6f1bc15deda969bae52",
+      "bytes": 1153
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/public-inputs/opentimestamps/sources.json",
+      "original": "backend\\src\\api\\intelligence\\opentimestamps\\__fixtures__\\sources.json",
+      "sha256": "f7f8a29ca511347696fe6807cd55cd63658dbba0847846375a57453742faf369",
+      "bytes": 3234
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/public-inputs/opentimestamps/unknown-notary.txt",
+      "original": "backend\\src\\api\\intelligence\\opentimestamps\\__fixtures__\\unknown-notary.txt",
+      "sha256": "dcc21d1d1f42a436a2a07fc915dec04db41b83c898845948c3d664b6660f4f91",
+      "bytes": 71
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/public-inputs/opentimestamps/unknown-notary.txt.ots",
+      "original": "backend\\src\\api\\intelligence\\opentimestamps\\__fixtures__\\unknown-notary.txt.ots",
+      "sha256": "8e9b2d5941745ce822e01c8aedf3725671960d0932699107d4531db7df3c841e",
+      "bytes": 175
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/public-inputs/musig2/sig_agg_vectors.json",
+      "original": "backend/src/api/intelligence/multiparty/vectors/sig_agg_vectors.json",
+      "sha256": "15f14c034fb2a5739d7ce638be94c5b37ea675a2e01159092dd93b59d69c3439",
+      "bytes": 5978
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/public-inputs/musig2/README.md",
+      "original": "backend/src/api/intelligence/multiparty/vectors/README.md",
+      "sha256": "a7a7bdce0ea0342a5f17ad6cedfa1c8b5b8ba345bdd15ef9f619d34d36c604cf",
+      "bytes": 1628
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/owned-reader-binding.json",
+      "sha256": "1ab4afac3fa95e26daf4a66e642ce8c758ac6d8d460053ac9a26424d02df669f",
+      "bytes": 655,
+      "provenance": "Allowlisted projection from actual candidate configuration."
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/validation/frontend-final-lint.log",
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\frontend-final-lint.log",
+      "sha256": "5c102c0d11c8b51a73c7c01318c951efb5802c14ef63a77d7cc2cfd420e98f3a",
+      "bytes": 340184
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/validation/gateway-final-tests.log",
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\gateway-final-tests.log",
+      "sha256": "77639becb24905a6f020ed90789b908a71f0e84e144f92cd39eb89ec6df36c83",
+      "bytes": 2258
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-before/engine-theme-musig2-dark-1440.json",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/theme-before/engine-theme-musig2-dark-1440.json",
+      "sha256": "6b80edf967b62b2cf7fdabebe3531bf0d004c62a4b51e255ce84c1152a0e8c90",
+      "bytes": 8903
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-before/engine-theme-musig2-dark-1440.png",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/theme-before/engine-theme-musig2-dark-1440.png",
+      "sha256": "9abdfc0098a43e694a9a7c8172c088434dcf9308e6de35f7f06b5175c353053b",
+      "bytes": 163899
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-before/engine-theme-musig2-dark-390.json",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/theme-before/engine-theme-musig2-dark-390.json",
+      "sha256": "fba1f564b057d977955fb307b031b85b99856e3c5f0e2b8cea52105103f02d26",
+      "bytes": 9944
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-before/engine-theme-musig2-dark-390.png",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/theme-before/engine-theme-musig2-dark-390.png",
+      "sha256": "70d9a9a0327c7f59c413f322e663e194cfb4bf0ed7245997e1ce383fd0e38702",
+      "bytes": 135771
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-before/engine-theme-musig2-light-1440.json",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/theme-before/engine-theme-musig2-light-1440.json",
+      "sha256": "8ade09a2680c91414d99b9325c304bbbac60b77b63201e0e8a4ea1a974655f50",
+      "bytes": 5542
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-before/engine-theme-musig2-light-1440.png",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/theme-before/engine-theme-musig2-light-1440.png",
+      "sha256": "fbcdce626efd5b0d613325f60021fee7f56acb15be90790877a420af837afbbe",
+      "bytes": 173368
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-before/engine-theme-musig2-light-390.json",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/theme-before/engine-theme-musig2-light-390.json",
+      "sha256": "3448dc49a2dfa4f13cc3a3427d5f92516b85fd9ee84cd8c0ef3d8bd4e000117b",
+      "bytes": 5535
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-before/engine-theme-musig2-light-390.png",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/theme-before/engine-theme-musig2-light-390.png",
+      "sha256": "f0337b594b8ff58ca88ff9091d0de71eb01012c8f7e0944eda96c26b88404e21",
+      "bytes": 135892
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-before/engine-theme-ots-dark-1440.json",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/theme-before/engine-theme-ots-dark-1440.json",
+      "sha256": "265660c5ac8790ec109fdb785ee34f33ce0663c2b933794140a19005afecf52d",
+      "bytes": 2855
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-before/engine-theme-ots-dark-1440.png",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/theme-before/engine-theme-ots-dark-1440.png",
+      "sha256": "5d11553610d4921a1dfd96e219bf0c0c7374bdcf8384d9f88bbcbf377025aa55",
+      "bytes": 142057
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-before/engine-theme-ots-dark-390.json",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/theme-before/engine-theme-ots-dark-390.json",
+      "sha256": "cbb4a7573a61d021bc26f193ce41de8a2641e587c5fb72b190fc092605597038",
+      "bytes": 4024
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-before/engine-theme-ots-dark-390.png",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/theme-before/engine-theme-ots-dark-390.png",
+      "sha256": "cdbb9c3f379e3e17a45ec197d6276bf6059d23c3cdf59cbbb0613f9d0f78ee6b",
+      "bytes": 116462
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-before/engine-theme-ots-light-1440.json",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/theme-before/engine-theme-ots-light-1440.json",
+      "sha256": "31122d0e7af1386e784afc09f5d43f3dec387891ef07854dcf24bea6092a0916",
+      "bytes": 2856
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-before/engine-theme-ots-light-1440.png",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/theme-before/engine-theme-ots-light-1440.png",
+      "sha256": "bd53e446fef5eeb55bbdab220bfb79b258978586e3dc278d533c18f9a2b38446",
+      "bytes": 150165
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-before/engine-theme-ots-light-390.json",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/theme-before/engine-theme-ots-light-390.json",
+      "sha256": "c938decc1dd9ad5ec68c1b3b78ad5c7123df4914ad2fcdff855a110cc7240f95",
+      "bytes": 2853
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-before/engine-theme-ots-light-390.png",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/theme-before/engine-theme-ots-light-390.png",
+      "sha256": "bf5eb59522e8dc2347b13f6e7dc6df1fc8bd9bfe0244cfd12afadd47744bac9b",
+      "bytes": 115953
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-before/engine-theme-ui.mjs",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/theme-before/engine-theme-ui.mjs",
+      "sha256": "9bfaffb9ae94d4f8831209975eb0ee4040730897fe8b710e2812bce770774368",
+      "bytes": 5211
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-final/engine-theme-musig2-dark-1440.json",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/final-runtime/engine-theme-musig2-dark-1440.json",
+      "sha256": "3f4913d3362e4702c68b89b230f1a6edc01d7315e387c50ff413189b665719f5",
+      "bytes": 4185
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-final/engine-theme-musig2-dark-1440.png",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/final-runtime/engine-theme-musig2-dark-1440.png",
+      "sha256": "de5af08788c0f7eff4999cea4dbc13cec9e350c09b335e2d001215a861ffd569",
+      "bytes": 164002
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-final/engine-theme-musig2-dark-390.json",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/final-runtime/engine-theme-musig2-dark-390.json",
+      "sha256": "93a2ab43453286a980026a1066dddd5b36e5b8641d7839ff36428aaa6466062f",
+      "bytes": 4182
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-final/engine-theme-musig2-dark-390.png",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/final-runtime/engine-theme-musig2-dark-390.png",
+      "sha256": "d6bbc74d5c6506912126be12a949ad759727157e6726f8c9ee7831a9a4a467a8",
+      "bytes": 135202
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-final/engine-theme-musig2-light-1440.json",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/final-runtime/engine-theme-musig2-light-1440.json",
+      "sha256": "421bb086c4c983b228d8330af159263dfe3748f821baff9c943e61b879021374",
+      "bytes": 4186
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-final/engine-theme-musig2-light-1440.png",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/final-runtime/engine-theme-musig2-light-1440.png",
+      "sha256": "e99ba857f7eb5e5b00c35d446a48a76ec854c2b63b3498df3fdfc90d5fcc866b",
+      "bytes": 164111
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-final/engine-theme-musig2-light-390.json",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/final-runtime/engine-theme-musig2-light-390.json",
+      "sha256": "136efe0adba3e0852f912b315eb390bdab3c554fa851a6fcb011dafd3c1f987f",
+      "bytes": 4183
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-final/engine-theme-musig2-light-390.png",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/final-runtime/engine-theme-musig2-light-390.png",
+      "sha256": "d6b26a6df4b6ba5871f709809b039880420e9c718ba78ca8e5f9eaca6c67f17d",
+      "bytes": 135287
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-final/engine-theme-ots-dark-1440.json",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/final-runtime/engine-theme-ots-dark-1440.json",
+      "sha256": "886f1d0595c043d3a6e6107deb027c7502abbd6ab4d311a851d1217cf57682ca",
+      "bytes": 2855
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-final/engine-theme-ots-dark-1440.png",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/final-runtime/engine-theme-ots-dark-1440.png",
+      "sha256": "f17fd57704c67f8422d6fd998b85ee33330fd92b45dbd30ce7e19f7f057c1705",
+      "bytes": 142102
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-final/engine-theme-ots-dark-390.json",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/final-runtime/engine-theme-ots-dark-390.json",
+      "sha256": "15258c903cc86db444f69ee44d9dad391f1244b7a3cb0a129dd977d36ea2d100",
+      "bytes": 2852
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-final/engine-theme-ots-dark-390.png",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/final-runtime/engine-theme-ots-dark-390.png",
+      "sha256": "260d894950282cfe7097e279c96a101955dd984c8feadb83ce100c71c32bf0a1",
+      "bytes": 115991
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-final/engine-theme-ots-light-1440.json",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/final-runtime/engine-theme-ots-light-1440.json",
+      "sha256": "473240d67cdc05c9d2ead4e5e7c5233b69961e17ca1d5c30ce8b9f831830aa21",
+      "bytes": 2856
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-final/engine-theme-ots-light-1440.png",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/final-runtime/engine-theme-ots-light-1440.png",
+      "sha256": "337e7cb2b8461ff36c24477bc69eb7decfe1258503af7c4353a21ae713ec564d",
+      "bytes": 141472
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-final/engine-theme-ots-light-390.json",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/final-runtime/engine-theme-ots-light-390.json",
+      "sha256": "9c528d169dc53f20eebe59bb6f690d2d182fbb4f4e7477b6e57d07bbbcd0d006",
+      "bytes": 2853
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-final/engine-theme-ots-light-390.png",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/final-runtime/engine-theme-ots-light-390.png",
+      "sha256": "1b1307040749f1548ed2de0aa207292bd7c979de809c4e40d21a5d86f1d6b8f7",
+      "bytes": 115507
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-final/engine-theme-ui.mjs",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/final-runtime/engine-theme-ui.mjs",
+      "sha256": "9b38d62e0d1cd397eb5698987908c6d8ebbbd56395618abe7a8bc039d7aeae0f",
+      "bytes": 5211
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/validation/mobile-probe-final.log",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/mobile-probe-final.log",
+      "sha256": "0c6ad92760ec5e60c102937c7500200507a13f273c095b50c2eaebd8df001e8d",
+      "bytes": 5655
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/theme-final/contrast-probe.mjs",
+      "original": "scripts/universe/visual-qa/contrast-probe.mjs",
+      "revision": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+      "sha256": "21f4f40f9b0b87ea1b14d99ff0fcf102bb15989abc8fb76ee2146ff196c9438b",
+      "bytes": 15616
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/integration-followup/engine-integrated-musig2-dark-1440.json",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/final-runtime/engine-integrated-musig2-dark-1440.json",
+      "sha256": "5a3fd37129da6f870fbe6e826eccd5d82b0db8a52b9859e1d6fc696c4838b6e6",
+      "bytes": 4185
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/integration-followup/engine-integrated-musig2-dark-1440.png",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/final-runtime/engine-integrated-musig2-dark-1440.png",
+      "sha256": "550e7ed2e0926241c2225d2844cadcd9039f3ed09470bbe36f9e1223a6984c1d",
+      "bytes": 163898
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/integration-followup/engine-integrated-musig2-dark-390.json",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/final-runtime/engine-integrated-musig2-dark-390.json",
+      "sha256": "307a5506e3d563b95ca49e5c2f785c59ed5342ee3b943c2f68cb0dd05a2e7ace",
+      "bytes": 4182
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/integration-followup/engine-integrated-musig2-dark-390.png",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/final-runtime/engine-integrated-musig2-dark-390.png",
+      "sha256": "45075e8366065658fb9b6bb72ce55b56459fbd60a213d4cb597d99f5e6b52884",
+      "bytes": 146669
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/integration-followup/engine-integrated-musig2-light-1440.json",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/final-runtime/engine-integrated-musig2-light-1440.json",
+      "sha256": "959e967695b2fe701cd81ec88ad0dbe99944c9dbd6f4651cc16929e95f264bfc",
+      "bytes": 4186
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/integration-followup/engine-integrated-musig2-light-1440.png",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/final-runtime/engine-integrated-musig2-light-1440.png",
+      "sha256": "06226063e1a6b51bd6a58912a96a4bd7809ac562ba083f59b08ba53259d37949",
+      "bytes": 163984
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/integration-followup/engine-integrated-musig2-light-390.json",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/final-runtime/engine-integrated-musig2-light-390.json",
+      "sha256": "7ad0b5ae8b0a69050347c445733bc8db2a112ba300031157c9488f771e6d8258",
+      "bytes": 4183
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/integration-followup/engine-integrated-musig2-light-390.png",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/final-runtime/engine-integrated-musig2-light-390.png",
+      "sha256": "a7c955480b126a28171ececdae3aac5c76824f0582a375265f99300fa84a8ce5",
+      "bytes": 135164
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/integration-followup/engine-integrated-ots-dark-1440.json",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/final-runtime/engine-integrated-ots-dark-1440.json",
+      "sha256": "fdf48d4e305d99ca7cd9282a9a54292a409afff8eb9c713f1ff32e90657d3e50",
+      "bytes": 2855
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/integration-followup/engine-integrated-ots-dark-1440.png",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/final-runtime/engine-integrated-ots-dark-1440.png",
+      "sha256": "8446c65b43e24f2843ffb02dc5fcc24a098c79d794fcae673f2c6de3818cc541",
+      "bytes": 141998
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/integration-followup/engine-integrated-ots-dark-390.json",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/final-runtime/engine-integrated-ots-dark-390.json",
+      "sha256": "f077a2bc7bd3e5fb3a0bc55db0d03a5e32dfec79ef8976a544a7165894911675",
+      "bytes": 2852
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/integration-followup/engine-integrated-ots-dark-390.png",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/final-runtime/engine-integrated-ots-dark-390.png",
+      "sha256": "e838fc911af10aa472312acad778e8a2cbd2c9e3dc45bf4b2d46b434ac38dd76",
+      "bytes": 116619
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/integration-followup/engine-integrated-ots-light-1440.json",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/final-runtime/engine-integrated-ots-light-1440.json",
+      "sha256": "e3d5eb67c356d68c7972570ae4dc2c7492d6fe9f3ff81af25657f65e9f6f6f29",
+      "bytes": 2856
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/integration-followup/engine-integrated-ots-light-1440.png",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/final-runtime/engine-integrated-ots-light-1440.png",
+      "sha256": "e97c6854f99bdb5059ff97043b4b03fa5de62d91b8fcce1d1d6d860a059bed52",
+      "bytes": 141343
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/integration-followup/engine-integrated-ots-light-390.json",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/final-runtime/engine-integrated-ots-light-390.json",
+      "sha256": "404209e998ecc77980d83ecb0d9acc8464514d779edc6a386781632c6fe59409",
+      "bytes": 2853
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/integration-followup/engine-integrated-ots-light-390.png",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/final-runtime/engine-integrated-ots-light-390.png",
+      "sha256": "ae9c8ffe7a43f2d643a38db1111f8fe7e79e03d1eb5e718d0be81f7c88eb9a02",
+      "bytes": 115835
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/integration-followup/engine-integrated-ui.mjs",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/final-runtime/engine-integrated-ui.mjs",
+      "sha256": "db08fb15aadb952c7c29428f5781da019ce93559fabb9275a11b3c5f206b98fe",
+      "bytes": 5216
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/integration-followup/frontend-integrated-build.log",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/frontend-integrated-build.log",
+      "sha256": "74acabc3401ab83fb412c42f437e2c7e82b2de50e7da0679107bb07b372a7daf",
+      "bytes": 56048
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/integration-followup/frontend-integrated-tests.log",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/frontend-integrated-tests.log",
+      "sha256": "51781e79a54e0a0b623322ab93f428b55eaa58e5b07ce5ba3d90fb505b8f3f9b",
+      "bytes": 9131
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/integration-followup/merge-mobile-review.mjs",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/merge-mobile-review.mjs",
+      "sha256": "4ce49c8f48cf7ca026fe40cbd8543f17b31761a4c9b1b6f35a143a2bafc294a6",
+      "bytes": 2329
+    },
+    {
+      "artifact": "docs/acceptance/engine-runtime-2026-09-06/integration-followup/merge-mobile-resolution.json",
+      "original": "C:/WINDOWS/TEMP/explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab/merge-mobile-resolution.json",
+      "sha256": "a8cf0c6771d53726c835aeae605ede1d7ef3406252269cac3547f0a7694f335a",
+      "bytes": 17186
+    }
+  ],
+  "releaseGate": {
+    "newPassLocalRows": 4,
+    "realNetworkE2ePassesAdded": 0,
+    "functionalGo": false,
+    "operationDenominatorReconciled": false,
+    "operationDenominator": null,
+    "newPassLocalIds": [
+      "API-8f2d0a9754f2",
+      "API-4edb832dd83d",
+      "UI-1afe77615c32",
+      "UI-a270e89bb4c9"
+    ]
+  },
+  "pendingFinalVisualEvidence": false,
+  "validationArtifactSha256": "889c6a3d50216ff71fee405c753328c09d3fac388ae04605336b0a6e1b5aa423",
+  "latestUnservedSourceCandidateAtDraft": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+  "finalVisualEvidenceScope": "Readability acceptance covers the two supplied-proof consumers at the separately measured frontend4e9 and integrated frontendbbca checkpoints, both with actual monolith0a. Future revisions and broader mobile/functional gates need separate results."
+}

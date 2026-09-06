@@ -1,0 +1,565 @@
+{
+  "schemaVersion": "universe-scoped-mobile-review-v1",
+  "recordedAt": "2026-09-06T15:08:15.008Z",
+  "scope": "Fixture-backed layout regressions, not authority or full-site acceptance.",
+  "initial": {
+    "frontendSource": "bbca7f46873d35c5f6146cbb33b3e4cab09f926f",
+    "planned": 80,
+    "measured": 77,
+    "passes": 75,
+    "layoutFailures": [
+      {
+        "route": "private-submission-ordering-block",
+        "viewport": "phone-320",
+        "findings": [
+          "private-submission-ordering-block@phone-320: 1 shell or repeated controls under 44px: app-private-submission-ordering-block a@28.41x477.8 (repeated)"
+        ]
+      },
+      {
+        "route": "private-submission-ordering-block",
+        "viewport": "phone-390",
+        "findings": [
+          "private-submission-ordering-block@phone-390: 1 shell or repeated controls under 44px: app-private-submission-ordering-block a@28.41x477.8 (repeated)"
+        ]
+      }
+    ],
+    "unmeasured": [
+      {
+        "route": "multiparty-musig2",
+        "viewport": "phone-320",
+        "findings": [
+          "multiparty-musig2@phone-320: could not be measured: Error: page.waitForTimeout: Target page, context or browser has been closed",
+          "runner: run incomplete: Error: page.waitForTimeout: Target page, context or browser has been closed"
+        ]
+      },
+      {
+        "route": "global-network",
+        "viewport": "phone-landscape",
+        "findings": [
+          "global-network@phone-landscape: could not be measured: Error: browserContext.newPage: Target page, context or browser has been closed\nBrowser logs:\n\n<launching> C:/Program Files/Google/Chrome/Application/chrome.exe --disable-field-trial-config --disable-b",
+          "runner: run incomplete: Error: browserContext.newPage: Target page, context or browser has been closed\nBrowser logs:\n\n<launching> C:/Program Files/Google/Chrome/Application/chrome.exe --disable-field-trial-config --disable-b"
+        ]
+      },
+      {
+        "route": "private-submission-ordering-block",
+        "viewport": "phone-landscape",
+        "findings": [
+          "private-submission-ordering-block@phone-landscape: could not be measured: Error: page.waitForTimeout: Target page, context or browser has been closed",
+          "runner: run incomplete: Error: page.waitForTimeout: Target page, context or browser has been closed"
+        ]
+      }
+    ],
+    "firstAttemptPassed": false
+  },
+  "repair": {
+    "source": "a96c96fbbe8aa115fc69619578e4f5fb2e64452d",
+    "file": "frontend/src/styles/_universe-product-narrow.scss",
+    "description": "Keep monospace identifiers intact inside existing scrolling tables; retain wrapping elsewhere. Two transaction links previously collapsed to28.41px wide,477.8px tall.",
+    "sourceSha256": "eb1806d8ceb5d51a0e90b9f015cab2304c6854d8261de71796bcaaf253a6e7fe"
+  },
+  "final": {
+    "frontendSource": "a96c96fbbe8aa115fc69619578e4f5fb2e64452d",
+    "servedConfigSha256": "ff96da26c51fa5568a42e9bd46e670be60aa2ad3e49a41650c8ae0c7cacf5b5a",
+    "cases": [
+      {
+        "scope": "global-network@phone-landscape",
+        "executionComplete": true,
+        "findings": 0
+      },
+      {
+        "scope": "multiparty-musig2@phone-320",
+        "executionComplete": true,
+        "findings": 0
+      },
+      {
+        "scope": "private-submission-ordering-block@phone-320",
+        "executionComplete": true,
+        "findings": 0
+      },
+      {
+        "scope": "private-submission-ordering-block@phone-390",
+        "executionComplete": true,
+        "findings": 0
+      },
+      {
+        "scope": "private-submission-ordering-block@phone-landscape",
+        "executionComplete": true,
+        "findings": 0
+      }
+    ],
+    "scope": "Five independently completed checks: the repaired transaction table at320/390/landscape and the three previously unmeasured cases. Earlier75 passes retain their bbca source binding. No full-site or single-complete-sweep pass is inferred."
+  },
+  "browser": {
+    "executable": "Google Chrome",
+    "version": "152.0.7977.64",
+    "mode": "headless, fresh profile, one browser/tab at a time"
+  },
+  "artifacts": [
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/result.json",
+      "bytes": 85488,
+      "sha256": "b45997d4950d2c589968ffb044243769e64f9a8dce3e2ed104264391e3021680"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/runner.mjs",
+      "bytes": 2601,
+      "sha256": "8cffcd2318ea3a3427689752618d4a5bdd769333a31d96360c35f26eb77268a6"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/docs@phone-320/mobile-report.json",
+      "bytes": 1290,
+      "sha256": "03aba84b7a050f6071894fa18d01f6615f8d7d6e8b78f0ccdfe514711eafa8f0"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/global-network@phone-320/mobile-report.json",
+      "bytes": 1470,
+      "sha256": "51c121a5e42b0f100827e81781e5a977e624353fea12579418c000ad312bbf3d"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/consensus-proposals@phone-320/mobile-report.json",
+      "bytes": 1321,
+      "sha256": "6e9755f69331358f8932ebdde7ac938f971ea1527d5c1b8ec40862afd9da05b0"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/vaults-designer@phone-320/mobile-report.json",
+      "bytes": 1313,
+      "sha256": "8d90de4245a3f1590c4ade2239524740d32aaceaf80ad97d0c03a8b3427bb05e"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/dlc-simulate@phone-320/mobile-report.json",
+      "bytes": 1307,
+      "sha256": "642a39658abe25e30bd7d0f5a9497dd249c3d8f2d0919d2796e31880e4b4ff63"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/light-client-provider-detail@phone-320/mobile-report.json",
+      "bytes": 1339,
+      "sha256": "0cc9aaf39e94231ef53583b84bdea77c36d2514b1e28c6d43b1a3855fcf1b98a"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/light-client-privacy@phone-320/mobile-report.json",
+      "bytes": 1479,
+      "sha256": "778b2611797314bfe212042c121df9ee21e9cb58f45b89b1ebd46eda179eeac1"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/multiparty-musig2@phone-320/mobile-report.json",
+      "bytes": 773,
+      "sha256": "d66aaed0dd1bf05ce0a1a2b9a38ae32bb6e7dc944cc5df67997a70379a1ae52d"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/multiparty-musig2@phone-320.log",
+      "bytes": 2528,
+      "sha256": "0cde5e44edd5d9f98fb46a3aeb21e5f5618a658802c6eb0d730ab159d548bd0a"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/multiparty-bsms@phone-320/mobile-report.json",
+      "bytes": 1466,
+      "sha256": "0084b51c143b91177517294574dd1875bb0c82b1d6da20bde2b5fb5b65536293"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/staking-delegation-detail@phone-320/mobile-report.json",
+      "bytes": 1332,
+      "sha256": "e28c8c40fc940a3d3abfeaad75e475a504c85a792513fec6394f8fc3fa6a1ab9"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/lightning-resilience@phone-320/mobile-report.json",
+      "bytes": 1488,
+      "sha256": "f4ede810eab4c766577c5e2e511e3dec184d92027a84a9e7814bf90cba17656f"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/lightning-resilience-channel-detail@phone-320/mobile-report.json",
+      "bytes": 1353,
+      "sha256": "0bfd3dbcf1018ae772ab7a9196604843267dcf515c6fc93c3bc92a6a988f5e42"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/lightning-resilience-simulate@phone-320/mobile-report.json",
+      "bytes": 1341,
+      "sha256": "bf3fccdeb30b38c422e608519c625b22832a93110253fc597a7c9ec45c5e82ea"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/block-propagation-block-detail@phone-320/mobile-report.json",
+      "bytes": 1509,
+      "sha256": "b923ebaf3a064a31e31d131bfeef52d6e69c031abb369f2edf0c6214aee92ca6"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/private-submission@phone-320/mobile-report.json",
+      "bytes": 1319,
+      "sha256": "256643a9ebf020aa86314fc687c0d87f957f5fea7af4e1a4abd1fd3dd15ba11a"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/private-submission-broadcast@phone-320/mobile-report.json",
+      "bytes": 1339,
+      "sha256": "c4956ad657d89ca8ba3f8e44968d5fbf4d12ca1c34df672ea32accbe2376aab7"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/private-submission-ordering-tx@phone-320/mobile-report.json",
+      "bytes": 1343,
+      "sha256": "c0537eb18254318b53ad6163e5ab15bd55e20362794bae7cd3bd50200501caa0"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/private-submission-ordering-block@phone-320/mobile-report.json",
+      "bytes": 1756,
+      "sha256": "4605ba15c329eb4c8bfe32cf1450a308ee8abcb14fd8281eb0e2998155ec881b"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/private-submission-ordering-block@phone-320.log",
+      "bytes": 2627,
+      "sha256": "a6b659ac7804b962d0e8d87b67abf4e913f4477ee4bbc197a28074f45fd41722"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/opentimestamps@phone-320/mobile-report.json",
+      "bytes": 1470,
+      "sha256": "6b0ab978f6ac3ba66b33f0cf8f50fb1f13daa043f97887d23884dc91bdcd6571"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/opentimestamps-verify@phone-320/mobile-report.json",
+      "bytes": 1325,
+      "sha256": "7243125ba49feb56dd6b1d35c32bc641f9356c00ff3a9087e2534223ee3a1aa2"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/opentimestamps-intelligence@phone-320/mobile-report.json",
+      "bytes": 1496,
+      "sha256": "ff63cb304ed30ea250c9fa6ca6b40956129ccdd246bb5d40ef08722f002126b8"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/consensus-conformance@phone-320/mobile-report.json",
+      "bytes": 1651,
+      "sha256": "6012fcbcd99f86ae884b1305ab72eb536c9acf1d35ad05c2079a1d29d4f59577"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/collaborative-privacy@phone-320/mobile-report.json",
+      "bytes": 1491,
+      "sha256": "3fe68947481769073d27992a32d52bf11116e1b05f6df778ce657fde66347f6b"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/chain-menu@phone-320/mobile-report.json",
+      "bytes": 1717,
+      "sha256": "27d466fa4c6ecca74296123b110b56c6cf6bd3d50f5eadc0a87975b2a39474c5"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/docs@phone-360/mobile-report.json",
+      "bytes": 1290,
+      "sha256": "39ac84f8fda463a2943e061276ca0c67dadcb481725be546ee6ff6d79b436bc2"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/chain-menu@phone-360/mobile-report.json",
+      "bytes": 1582,
+      "sha256": "bdaf870e44a97d5b4bc743e93b5cabe6909ce78fdea7446ba1757f3151cdf1c7"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/docs@phone-390/mobile-report.json",
+      "bytes": 1294,
+      "sha256": "6899b48f70792722e94e9ac8e4af2fd8a34275db234da9ec6a32775d520acd9a"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/global-network@phone-390/mobile-report.json",
+      "bytes": 1315,
+      "sha256": "c6ef0baf934f7916a7b781d0923afdbeeec7cad345eeaf6e8d590d300144d295"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/consensus-proposals@phone-390/mobile-report.json",
+      "bytes": 1325,
+      "sha256": "38cc2b7c681af8e7bfadd069863eecf5134a32857c0ca5b8fc4c427e4a7a8311"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/vaults-designer@phone-390/mobile-report.json",
+      "bytes": 1317,
+      "sha256": "9da16b8543d11d3c57b161458e03eab33a668eed7e86e4b1955841a6ad345034"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/dlc-simulate@phone-390/mobile-report.json",
+      "bytes": 1311,
+      "sha256": "97b9989d085f833b06a309635894d9eb8ab1bfc6946522e062f34e492430e225"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/light-client-provider-detail@phone-390/mobile-report.json",
+      "bytes": 1343,
+      "sha256": "38a65fc2422880cf6f9bafe626c71a7a69676312f8008c4344ac5bf554f9be78"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/light-client-privacy@phone-390/mobile-report.json",
+      "bytes": 1483,
+      "sha256": "f6dbdb2ce021f923077389d36b3a29bea5d9806743c418b33f95c21a20d327e4"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/multiparty-musig2@phone-390/mobile-report.json",
+      "bytes": 1321,
+      "sha256": "3171a016f3e883b820e9733132c69f1a5f59b04558096cbbde1e40c0aaa53f07"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/multiparty-bsms@phone-390/mobile-report.json",
+      "bytes": 1470,
+      "sha256": "752a3fccbcd0d75e3ff84139209923e9545b8ccd9f4bbcca0fd57636e8d53cb4"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/staking-delegation-detail@phone-390/mobile-report.json",
+      "bytes": 1336,
+      "sha256": "0a013c9fadf8ca3ca9c8e8372769369d2e7940f5bea4c80c938756978a5ca203"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/lightning-resilience@phone-390/mobile-report.json",
+      "bytes": 1492,
+      "sha256": "3831e0ae14e92cdfa7cae23a975c327a04e8c35217a648e1c580c1abe219fbf4"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/lightning-resilience-channel-detail@phone-390/mobile-report.json",
+      "bytes": 1357,
+      "sha256": "8b3c59a60ed8fbf6127562af6fd293502979d812e0cdb3dd5e5bfa02e0f38e36"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/lightning-resilience-simulate@phone-390/mobile-report.json",
+      "bytes": 1345,
+      "sha256": "c492ed7ede9e372024f0041e905e85a541c0ad841a2632f557085c0310e02a28"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/block-propagation-block-detail@phone-390/mobile-report.json",
+      "bytes": 1347,
+      "sha256": "7a75758af7b3e775bfa7fd7396f035d09f89ceba4499baf92712924849145d98"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/private-submission@phone-390/mobile-report.json",
+      "bytes": 1323,
+      "sha256": "922503c7e6348c03754af3f3f4c4f40f6c0159ec3f3302be77b166d8b0c2a700"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/private-submission-broadcast@phone-390/mobile-report.json",
+      "bytes": 1343,
+      "sha256": "fbd325fd033663e875c53e84d4c63a67862b679cc9eea719b15aee021d71b059"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/private-submission-ordering-tx@phone-390/mobile-report.json",
+      "bytes": 1347,
+      "sha256": "420ae8688810a1c75ad68bf87f7e13183443099584fcfce759613c15775fd725"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/private-submission-ordering-block@phone-390/mobile-report.json",
+      "bytes": 1760,
+      "sha256": "97eeeff6a947c45a5738434bf22ad92def52283773bed386311d0e0a652ee42a"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/private-submission-ordering-block@phone-390.log",
+      "bytes": 2824,
+      "sha256": "7c16bfd405f0f4ca586f3fc30d26b0dc45f40ad600e68ea5a6fa3e40008a4d92"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/opentimestamps@phone-390/mobile-report.json",
+      "bytes": 1474,
+      "sha256": "9cb8b29a8efac80ebcfe43def2429470fe47e0d56867600d1938ddfa22f92089"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/opentimestamps-verify@phone-390/mobile-report.json",
+      "bytes": 1329,
+      "sha256": "2403a8b50a79540a7f525dfb0bfddb64ee8c9f5c3e7418c788f9304f98f7409a"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/opentimestamps-intelligence@phone-390/mobile-report.json",
+      "bytes": 1500,
+      "sha256": "a5294ef8cf3c82c59301cabb3a69eea4a1f02a891b502e93a87381aabd4ac6ff"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/consensus-conformance@phone-390/mobile-report.json",
+      "bytes": 1655,
+      "sha256": "6debf2166c9e37315f50e5ef88bc168e90956a603576f46975a7fe7759a735f4"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/collaborative-privacy@phone-390/mobile-report.json",
+      "bytes": 1495,
+      "sha256": "c74267a58168810e5733c9c3e543bede1411e8c5a585cc2bf6b52d1a9022b655"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/chain-menu@phone-390/mobile-report.json",
+      "bytes": 1586,
+      "sha256": "fd32f3c2e774aaa4d143c06c3f15ab0815ff16cfbcce26a663c6ae030b34f5e9"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/docs@phone-430/mobile-report.json",
+      "bytes": 1290,
+      "sha256": "014e1bca38d6ba724a541072bd6c248daa1c5b3f6059280f06ab812f20819b56"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/chain-menu@phone-430/mobile-report.json",
+      "bytes": 1447,
+      "sha256": "151f27d58ba7caeceaee68fab9976ff723b612722cc403ecc3e7583bdfd8c7e1"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/docs@phone-landscape/mobile-report.json",
+      "bytes": 1307,
+      "sha256": "adb9ec2a6f1161461d7b117ebae2f59f753a13be85c5e454e2a4e2d5076d60a1"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/global-network@phone-landscape/mobile-report.json",
+      "bytes": 1466,
+      "sha256": "b19a993900324a8a058e479092fe874409c6017a297750d77e9b12fdd3a6638b"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/global-network@phone-landscape.log",
+      "bytes": 4214,
+      "sha256": "7b5eb4f5394c480493f9bbba476594ab0ea9b74a178083d0b21604bd741e2028"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/consensus-proposals@phone-landscape/mobile-report.json",
+      "bytes": 1338,
+      "sha256": "b8075876556661d0dbd893fa5d74714fefe8be7d3f2e28202471b49679066e6c"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/vaults-designer@phone-landscape/mobile-report.json",
+      "bytes": 1330,
+      "sha256": "8938f8f5f159c76c5a7461d06b26488eb6cfef7f15f940accbf1008aa76dcc5d"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/dlc-simulate@phone-landscape/mobile-report.json",
+      "bytes": 1324,
+      "sha256": "51bc2f3c345c085a23998cbe03a639289f7ae835181cfbf739bc5f236677ee6f"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/light-client-provider-detail@phone-landscape/mobile-report.json",
+      "bytes": 1356,
+      "sha256": "4dfbd264148f080da6d0fdd12c3fbe3bff357e21a3fa11ec69b3f1a8ca32c7ca"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/light-client-privacy@phone-landscape/mobile-report.json",
+      "bytes": 1340,
+      "sha256": "b7488a99d02720b024dff0eab9d722c4d852ffa4c2a33cca427a23e1b70eb1e2"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/multiparty-musig2@phone-landscape/mobile-report.json",
+      "bytes": 1334,
+      "sha256": "40644578f59dcd2bcfbcd68491e8da91005b3fb82a43cd3f98bdf06edd665488"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/multiparty-bsms@phone-landscape/mobile-report.json",
+      "bytes": 1330,
+      "sha256": "d64be9959f3a17ad335a3776cd8c55d40f4da2482312c973d0a060e5fd8ec2bc"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/staking-delegation-detail@phone-landscape/mobile-report.json",
+      "bytes": 1349,
+      "sha256": "8996ebaf52d94ced1929885fdf3db695c4ef26f3c15b6ab072482f99555b9bc9"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/lightning-resilience@phone-landscape/mobile-report.json",
+      "bytes": 1505,
+      "sha256": "da98274578fb3eb553285d4ebd454320e6d4772a36856753c999e90fe0922a57"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/lightning-resilience-channel-detail@phone-landscape/mobile-report.json",
+      "bytes": 1370,
+      "sha256": "3b29a9af154585013ab1cf5a24502cf82f160a7b6d57d9a09486a5df3c6d9465"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/lightning-resilience-simulate@phone-landscape/mobile-report.json",
+      "bytes": 1358,
+      "sha256": "ffbf5a2a9844e300e21d44c5230df220bf245a53330c7c68020e0fe1307a21be"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/block-propagation-block-detail@phone-landscape/mobile-report.json",
+      "bytes": 1360,
+      "sha256": "8105fe1b79a8c58753ec41d4eb5a756928d1ba396f9ae9b036c958359484905d"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/private-submission@phone-landscape/mobile-report.json",
+      "bytes": 1336,
+      "sha256": "b7f7a33c9b454face8b408bfa7039c95ce28e2aa1fe54aa6205416e4f5603a6b"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/private-submission-broadcast@phone-landscape/mobile-report.json",
+      "bytes": 1356,
+      "sha256": "cc7a3df91f596b029ae900e8cc95e14c6df2a9ceaf31edf901d5fb87da9d248e"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/private-submission-ordering-tx@phone-landscape/mobile-report.json",
+      "bytes": 1360,
+      "sha256": "70081652547a2dd668f6a00e9520742f0d5f9c96b640b6949b3c5ee202e96618"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/private-submission-ordering-block@phone-landscape/mobile-report.json",
+      "bytes": 817,
+      "sha256": "80b70079eae4fce16cd57ca42457a82167d4e447d76215925dfafab649b9d117"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/private-submission-ordering-block@phone-landscape.log",
+      "bytes": 2578,
+      "sha256": "0732f98f7bc19b3c43c3d8d3eed4e7a24107870ae40710bb914a9bbafbcacdbd"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/opentimestamps@phone-landscape/mobile-report.json",
+      "bytes": 1487,
+      "sha256": "37808c4a71175bb2ad1e3ea5d0d5ca3403e7fae1aa560f1ee4a2b12a99f45175"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/opentimestamps-verify@phone-landscape/mobile-report.json",
+      "bytes": 1342,
+      "sha256": "e9696defc5fb159f31abf1ab12901454ab1185ab58bcbc3b582f4ba35e614010"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/opentimestamps-intelligence@phone-landscape/mobile-report.json",
+      "bytes": 1513,
+      "sha256": "715e9833ac5c550b1200c89ee96194c5e78ba723951843389d8ecd7f32a9aa2a"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/consensus-conformance@phone-landscape/mobile-report.json",
+      "bytes": 1508,
+      "sha256": "cee47f494ae0280070baf4998f4adc7e3c2f293c0827a39a25c45710c90abefa"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/collaborative-privacy@phone-landscape/mobile-report.json",
+      "bytes": 1508,
+      "sha256": "3580b1f480ce3a5030d7878966824b9bbbad752cc56efe19f35860c1485ae0c4"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/chain-menu@phone-landscape/mobile-report.json",
+      "bytes": 1464,
+      "sha256": "53f16d82fa6df0ef5cea760ddeb5e0d372d59514daf5cb20d4122cc6abb61548"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/docs@tablet-768/mobile-report.json",
+      "bytes": 1292,
+      "sha256": "8d9668e863985eeb9f41bb65b518876348ce598ce210ec8d193c3a29ea130e55"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/chain-menu@tablet-768/mobile-report.json",
+      "bytes": 1449,
+      "sha256": "ee98745579af1379e9ec1da711fb9e63d1e9501bdeb84cdba52c74996a7c46e2"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/docs@desktop-1024/mobile-report.json",
+      "bytes": 2951,
+      "sha256": "f6bc74546c657592e8b9682498881287d817712614e078b499bd4bb6f60b8522"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/integrated-sweep/chain-menu@desktop-1024/mobile-report.json",
+      "bytes": 3311,
+      "sha256": "d15a754d04df13de9ee0576bd163b71f029bd376eabac44f9be8e3eff819b6be"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/table-fix/global-network@phone-landscape/mobile-report.json",
+      "bytes": 1328,
+      "sha256": "bff4abccd8659e41b3df8efca8a12c2e2e24ddc4f1c3a37467381627fd637a13"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/table-fix/multiparty-musig2@phone-320/mobile-report.json",
+      "bytes": 1317,
+      "sha256": "8b9f23383b3110909c5e23bdab17556440b1672e252103b64a790a83280bd51d"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/table-fix/private-submission-ordering-block@phone-320/mobile-report.json",
+      "bytes": 1518,
+      "sha256": "0cf3d77652712c03f77b5e5ec61026ff01553d66badad0bb6f06a278cd4b2c4d"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/table-fix/private-submission-ordering-block@phone-390/mobile-report.json",
+      "bytes": 1522,
+      "sha256": "75dff5d7f665291404aa5fbdafe16234c30dd83a9a3abfa3b225400d146e67c2"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/table-fix/private-submission-ordering-block@phone-landscape/mobile-report.json",
+      "bytes": 1535,
+      "sha256": "02341288165740e6202684885268df414800f3ca82d5ece00247f401ac8013eb"
+    },
+    {
+      "artifact": "docs/acceptance/mobile-integration-2026-09-06/frontend-table-fix-build.log",
+      "bytes": 56048,
+      "sha256": "8f8d86b84bccc88920f6df35d020764f05d6f395e1c9bcf240e12f59f1b7f332"
+    }
+  ],
+  "fullMobileAcceptance": false
+}

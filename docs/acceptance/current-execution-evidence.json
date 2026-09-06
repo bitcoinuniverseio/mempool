@@ -1,7 +1,7 @@
 {
   "schemaVersion": "universe-operation-evidence-v1",
-  "recordedAt": "2026-09-06T13:13:56.275Z",
-  "scope": "Reviewed current local acceptance evidence. Exact prior IDs/assertions remain preserved. Registry identity and bounded local health/UI scopes are separate from the80 blocked protocol data descriptors and full application acceptance.",
+  "recordedAt": "2026-09-06T15:00:48.621Z",
+  "scope": "Reviewed local acceptance with preserved original IDs/assertions. Registry identity, bounded health scopes and two supplied-input verifier APIs with their two consumers remain distinct from 80 blocked protocol data descriptors and complete application acceptance.",
   "candidateRevisions": {
     "repositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
     "servedFrontendSource": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
@@ -16,7 +16,7 @@
     "sha256": "4996123314054724cff8fd13f297e32cdee33b13cfb5f33bf32f3a0e20af0368",
     "recordedAt": "2026-09-06T07:05:00.000Z"
   },
-  "liveObservationNote": "Original public deployment observations and all failed harness attempts remain archived. No complete data-operation/network journey or whole-application GO is inferred.",
+  "liveObservationNote": "Historical public/health observations and failed harness attempts remain archived. Actual source0a verifier APIs/negative consumer controls and final frontend4e9 with actual monolith0a positive supplied-proof readability are separate evidence phases. No whole-application GO is inferred. Independent integrated frontendbbca provided-proof positive reruns passed with the same actual monolith0a; earlier observations retain their original revisions.",
   "runtimeArtifact": "docs/acceptance/health-runtime-2026-09-06/review.json",
   "validationArtifact": "docs/acceptance/health-runtime-2026-09-06/validation.json",
   "rows": [
@@ -620,27 +620,93 @@
     {
       "id": "NAV-154",
       "status": "BLOCKED",
-      "scope": "/tools/multiparty/musig2/session/:sessionId: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "scope": "/tools/multiparty/musig2/session/:sessionId: inspected current implementation and applicable local regression evidence; the separate offered operation still lacks the specific authority or integration listed below.",
       "evidence": [
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+          "note": "Separate exact source0a HTTP/DOM evidence, a974 failing-first contrast reports and final frontend4e9/monolith0a readable supplied-proof results; no full application GO."
         }
       ],
       "blockers": [
-        "BIP327 aggregation/nonce/partial-signature/tweak engine; durable session authority; trusted product/vendor-key directory, signed payload contract and actual version-specific conformance results. A final BIP340 primitive is insufficient."
+        "A durable public-session reader with authenticated session identity and verified persisted transitions is not connected. Provided transcript verification does not supply session history."
       ],
-      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "actual": "The supplied-public-transcript engine is implemented. Arbitrary session-ID display remains unavailable without its durable session authority.",
       "candidateRevisions": {
         "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
         "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
         "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
-        "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f"
+        "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+        "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+        "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+        "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+        "sourceBoundary": "Earlier health/runtime revisions remain historical. Initial verifier HTTP/DOM observations bind source0a. Final supplied-proof theme results bind served frontend4e9 and actual monolith0a; no acceptance propagates automatically to later revisions.",
+        "finalVerifierFrontend": "4e9c2749b5ede261a55cd1388fac1e66469eaefd"
       },
-      "verificationTime": "2026-09-06T12:55:51.141Z",
-      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
-      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
-      "previousExecutionAssertions": []
+      "verificationTime": "2026-09-06T14:30:27.018Z",
+      "repairState": "specific remaining integration or consumer acceptance incomplete",
+      "verificationKind": "current route-specific prerequisite reconciliation with separate actual engine evidence",
+      "previousExecutionAssertions": [
+        {
+          "id": "NAV-154",
+          "status": "BLOCKED",
+          "scope": "/tools/multiparty/musig2/session/:sessionId: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            }
+          ],
+          "blockers": [
+            "BIP327 aggregation/nonce/partial-signature/tweak engine; durable session authority; trusted product/vendor-key directory, signed payload contract and actual version-specific conformance results. A final BIP340 primitive is insufficient."
+          ],
+          "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f"
+          },
+          "verificationTime": "2026-09-06T12:55:51.141Z",
+          "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+          "verificationKind": "current source inspection and applicable local regressions; no real-network E2E"
+        },
+        {
+          "id": "NAV-154",
+          "status": "BLOCKED",
+          "scope": "/tools/multiparty/musig2/session/:sessionId: inspected current implementation and applicable local regression evidence; the separate offered operation still lacks the specific authority or integration listed below.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            },
+            {
+              "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+              "note": "Actual source0a direct/gateway verifier assertions and DOM responses, public input provenance, exact archives and the still-pending visual acceptance boundary."
+            }
+          ],
+          "blockers": [
+            "A durable public-session reader with authenticated session identity and verified persisted transitions is not connected. Provided transcript verification does not supply session history."
+          ],
+          "actual": "The supplied-public-transcript engine is implemented. Arbitrary session-ID display remains unavailable without its durable session authority.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+            "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+            "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+            "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+            "sourceBoundary": "Earlier health/runtime revisions above remain historical. Verifier runtime is source0a; the later theme source is not yet accepted as a final visual run."
+          },
+          "verificationTime": "2026-09-06T14:30:27.018Z",
+          "repairState": "specific remaining integration or consumer acceptance incomplete",
+          "verificationKind": "current route-specific prerequisite reconciliation with separate actual engine evidence"
+        }
+      ]
     },
     {
       "id": "UI-77ac99d0042d",
@@ -719,28 +785,128 @@
     },
     {
       "id": "UI-a270e89bb4c9",
-      "status": "BLOCKED",
-      "scope": "verifySession(): inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "status": "PASS LOCAL",
+      "scope": "verifySession() at /tools/multiparty/musig2: supplied untweaked BIP327 public transcript produces the exact computed final signature; source0a DOM checks cover corrupt partial rejection, verdict clearing, reload and key-only partial scope. Final frontend4e9 shows the positive result readably in light/dark at390/1440. The same four positive theme/width cases for this consumer were independently repeated at integrated frontendbbca with actual monolith0a.",
       "evidence": [
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+          "note": "Separate exact source0a HTTP/DOM evidence, a974 failing-first contrast reports and final frontend4e9/monolith0a readable supplied-proof results; no full application GO."
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+          "note": "Integration follow-up: frontendbbca production build,100files/1577tests and eight actual provided-proof positive theme/width checks passed with monolith0a. Earlier artifacts and assertions remain unchanged."
         }
       ],
-      "blockers": [
-        "BIP327 aggregation/nonce/partial-signature/tweak engine; durable session authority; trusted product/vendor-key directory, signed payload contract and actual version-specific conformance results. A final BIP340 primitive is insufficient."
-      ],
-      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "blockers": [],
+      "actual": "Actual candidate API responses and exact rendered public references were checked without response interception. All four final theme/width cases for this consumer passed sampled text contrast, field-color and horizontal-overflow checks. Initial unreadable screenshots and five intermediate theme failures remain preserved; no full application, durable signing, calendar submission or all-network acceptance is inferred. The integrated frontendbbca repeat independently passed the same positive result and readability checks; initial negative controls remain bound to source0a.",
       "candidateRevisions": {
         "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
         "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
         "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
-        "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f"
+        "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+        "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+        "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+        "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+        "sourceBoundary": "Earlier health/runtime revisions remain historical. Initial verifier HTTP/DOM observations bind source0a. Final supplied-proof theme results bind served frontend4e9 and actual monolith0a; no acceptance propagates automatically to later revisions. An independent subsequent eight-case positive consumer rerun binds integrated frontendbbca to the same actual monolith0a; no new operation scope is added.",
+        "finalVerifierFrontend": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+        "integratedVerifierFrontend": "bbca7f46873d35c5f6146cbb33b3e4cab09f926f"
       },
-      "verificationTime": "2026-09-06T12:55:51.141Z",
-      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
-      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
-      "previousExecutionAssertions": []
+      "verificationTime": "2026-09-06T14:57:51.840Z",
+      "repairState": "implemented and accepted within the exact supplied-proof consumer scope",
+      "verificationKind": "actual provided-proof consumer journey with separately bound initial negative controls and final positive visual checks",
+      "previousExecutionAssertions": [
+        {
+          "id": "UI-a270e89bb4c9",
+          "status": "BLOCKED",
+          "scope": "verifySession(): inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            }
+          ],
+          "blockers": [
+            "BIP327 aggregation/nonce/partial-signature/tweak engine; durable session authority; trusted product/vendor-key directory, signed payload contract and actual version-specific conformance results. A final BIP340 primitive is insufficient."
+          ],
+          "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f"
+          },
+          "verificationTime": "2026-09-06T12:55:51.141Z",
+          "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+          "verificationKind": "current source inspection and applicable local regressions; no real-network E2E"
+        },
+        {
+          "id": "UI-a270e89bb4c9",
+          "status": "BLOCKED",
+          "scope": "verifySession(): actual provided-input browser-to-gateway verification and negative controls were observed, while complete visual acceptance remains pending.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            },
+            {
+              "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+              "note": "Actual source0a direct/gateway verifier assertions and DOM responses, public input provenance, exact archives and the still-pending visual acceptance boundary."
+            }
+          ],
+          "blockers": [
+            "Initial source0a screenshots contain unreadable verifier theme combinations. Later theme repairs require final built/served visual verification before this consumer operation is accepted."
+          ],
+          "actual": "Actual response/DOM assertions passed for the provided public inputs, including clearing old verdicts, negative results and reload. The observed contrast failure remains attached to this run; the engine is implemented.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+            "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+            "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+            "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+            "sourceBoundary": "Earlier health/runtime revisions above remain historical. Verifier runtime is source0a; the later theme source is not yet accepted as a final visual run."
+          },
+          "verificationTime": "2026-09-06T14:30:27.018Z",
+          "repairState": "specific remaining integration or consumer acceptance incomplete",
+          "verificationKind": "actual scoped consumer assertions with unresolved visual usability"
+        },
+        {
+          "id": "UI-a270e89bb4c9",
+          "status": "PASS LOCAL",
+          "scope": "verifySession() at /tools/multiparty/musig2: supplied untweaked BIP327 public transcript produces the exact computed final signature; source0a DOM checks cover corrupt partial rejection, verdict clearing, reload and key-only partial scope. Final frontend4e9 shows the positive result readably in light/dark at390/1440.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            },
+            {
+              "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+              "note": "Separate exact source0a HTTP/DOM evidence, a974 failing-first contrast reports and final frontend4e9/monolith0a readable supplied-proof results; no full application GO."
+            }
+          ],
+          "blockers": [],
+          "actual": "Actual candidate API responses and exact rendered public references were checked without response interception. All four final theme/width cases for this consumer passed sampled text contrast, field-color and horizontal-overflow checks. Initial unreadable screenshots and five intermediate theme failures remain preserved; no full application, durable signing, calendar submission or all-network acceptance is inferred.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+            "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+            "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+            "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+            "sourceBoundary": "Earlier health/runtime revisions remain historical. Initial verifier HTTP/DOM observations bind source0a. Final supplied-proof theme results bind served frontend4e9 and actual monolith0a; no acceptance propagates automatically to later revisions.",
+            "finalVerifierFrontend": "4e9c2749b5ede261a55cd1388fac1e66469eaefd"
+          },
+          "verificationTime": "2026-09-06T14:47:51.487Z",
+          "repairState": "implemented and accepted within the exact supplied-proof consumer scope",
+          "verificationKind": "actual provided-proof consumer journey with separately bound initial negative controls and final positive visual checks"
+        }
+      ]
     },
     {
       "id": "UI-9a0754e1c394",
@@ -770,52 +936,218 @@
     {
       "id": "UI-e8fb8228430e",
       "status": "BLOCKED",
-      "scope": "stamp(): inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "scope": "stamp(): inspected current implementation and applicable local regression evidence; the separate offered operation still lacks the specific authority or integration listed below.",
       "evidence": [
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+          "note": "Separate exact source0a HTTP/DOM evidence, a974 failing-first contrast reports and final frontend4e9/monolith0a readable supplied-proof results; no full application GO."
         }
       ],
       "blockers": [
-        "Owned calendar client/directory and actual stamp/upgrade responses, .ots operation/attestation engine and owned Bitcoin header reader."
+        "Owned calendar submission client and actual returned attestation are not connected. No digest submission/proof creation journey has been established."
       ],
-      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "actual": "The supplied-input cryptographic verifiers are implemented and tested separately. This row remains blocked by its route-specific source/integration; it inherits no pass from those two verifier APIs.",
       "candidateRevisions": {
         "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
         "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
         "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
-        "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f"
+        "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+        "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+        "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+        "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+        "sourceBoundary": "Earlier health/runtime revisions remain historical. Initial verifier HTTP/DOM observations bind source0a. Final supplied-proof theme results bind served frontend4e9 and actual monolith0a; no acceptance propagates automatically to later revisions.",
+        "finalVerifierFrontend": "4e9c2749b5ede261a55cd1388fac1e66469eaefd"
       },
-      "verificationTime": "2026-09-06T12:55:51.141Z",
-      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
-      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
-      "previousExecutionAssertions": []
+      "verificationTime": "2026-09-06T14:30:27.018Z",
+      "repairState": "specific remaining integration or consumer acceptance incomplete",
+      "verificationKind": "current route-specific prerequisite reconciliation with separate actual engine evidence",
+      "previousExecutionAssertions": [
+        {
+          "id": "UI-e8fb8228430e",
+          "status": "BLOCKED",
+          "scope": "stamp(): inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            }
+          ],
+          "blockers": [
+            "Owned calendar client/directory and actual stamp/upgrade responses, .ots operation/attestation engine and owned Bitcoin header reader."
+          ],
+          "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f"
+          },
+          "verificationTime": "2026-09-06T12:55:51.141Z",
+          "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+          "verificationKind": "current source inspection and applicable local regressions; no real-network E2E"
+        },
+        {
+          "id": "UI-e8fb8228430e",
+          "status": "BLOCKED",
+          "scope": "stamp(): inspected current implementation and applicable local regression evidence; the separate offered operation still lacks the specific authority or integration listed below.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            },
+            {
+              "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+              "note": "Actual source0a direct/gateway verifier assertions and DOM responses, public input provenance, exact archives and the still-pending visual acceptance boundary."
+            }
+          ],
+          "blockers": [
+            "Owned calendar submission client and actual returned attestation are not connected. No digest submission/proof creation journey has been established."
+          ],
+          "actual": "The supplied-input cryptographic verifiers are implemented and tested separately. This row remains blocked by its route-specific source/integration; it inherits no pass from those two verifier APIs.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+            "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+            "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+            "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+            "sourceBoundary": "Earlier health/runtime revisions above remain historical. Verifier runtime is source0a; the later theme source is not yet accepted as a final visual run."
+          },
+          "verificationTime": "2026-09-06T14:30:27.018Z",
+          "repairState": "specific remaining integration or consumer acceptance incomplete",
+          "verificationKind": "current route-specific prerequisite reconciliation with separate actual engine evidence"
+        }
+      ]
     },
     {
       "id": "UI-1afe77615c32",
-      "status": "BLOCKED",
-      "scope": "verifyProof(): inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "status": "PASS LOCAL",
+      "scope": "verifyProof() at /tools/timestamp/verify: supplied official detached proof and expected digest produce the exact owned-mainnet block/hash/time; source0a DOM checks cover mismatch, pending, bad commitment, clearing old verdict and reload/resubmission. Final frontend4e9 shows the positive result readably in light/dark at390/1440. The same four positive theme/width cases for this consumer were independently repeated at integrated frontendbbca with actual monolith0a.",
       "evidence": [
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+          "note": "Separate exact source0a HTTP/DOM evidence, a974 failing-first contrast reports and final frontend4e9/monolith0a readable supplied-proof results; no full application GO."
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+          "note": "Integration follow-up: frontendbbca production build,100files/1577tests and eight actual provided-proof positive theme/width checks passed with monolith0a. Earlier artifacts and assertions remain unchanged."
         }
       ],
-      "blockers": [
-        "Owned calendar client/directory and actual stamp/upgrade responses, .ots operation/attestation engine and owned Bitcoin header reader."
-      ],
-      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "blockers": [],
+      "actual": "Actual candidate API responses and exact rendered public references were checked without response interception. All four final theme/width cases for this consumer passed sampled text contrast, field-color and horizontal-overflow checks. Initial unreadable screenshots and five intermediate theme failures remain preserved; no full application, durable signing, calendar submission or all-network acceptance is inferred. The integrated frontendbbca repeat independently passed the same positive result and readability checks; initial negative controls remain bound to source0a.",
       "candidateRevisions": {
         "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
         "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
         "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
-        "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f"
+        "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+        "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+        "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+        "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+        "sourceBoundary": "Earlier health/runtime revisions remain historical. Initial verifier HTTP/DOM observations bind source0a. Final supplied-proof theme results bind served frontend4e9 and actual monolith0a; no acceptance propagates automatically to later revisions. An independent subsequent eight-case positive consumer rerun binds integrated frontendbbca to the same actual monolith0a; no new operation scope is added.",
+        "finalVerifierFrontend": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+        "integratedVerifierFrontend": "bbca7f46873d35c5f6146cbb33b3e4cab09f926f"
       },
-      "verificationTime": "2026-09-06T12:55:51.141Z",
-      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
-      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
-      "previousExecutionAssertions": []
+      "verificationTime": "2026-09-06T14:57:51.840Z",
+      "repairState": "implemented and accepted within the exact supplied-proof consumer scope",
+      "verificationKind": "actual provided-proof consumer journey with separately bound initial negative controls and final positive visual checks",
+      "previousExecutionAssertions": [
+        {
+          "id": "UI-1afe77615c32",
+          "status": "BLOCKED",
+          "scope": "verifyProof(): inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            }
+          ],
+          "blockers": [
+            "Owned calendar client/directory and actual stamp/upgrade responses, .ots operation/attestation engine and owned Bitcoin header reader."
+          ],
+          "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f"
+          },
+          "verificationTime": "2026-09-06T12:55:51.141Z",
+          "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+          "verificationKind": "current source inspection and applicable local regressions; no real-network E2E"
+        },
+        {
+          "id": "UI-1afe77615c32",
+          "status": "BLOCKED",
+          "scope": "verifyProof(): actual provided-input browser-to-gateway verification and negative controls were observed, while complete visual acceptance remains pending.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            },
+            {
+              "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+              "note": "Actual source0a direct/gateway verifier assertions and DOM responses, public input provenance, exact archives and the still-pending visual acceptance boundary."
+            }
+          ],
+          "blockers": [
+            "Initial source0a screenshots contain unreadable verifier theme combinations. Later theme repairs require final built/served visual verification before this consumer operation is accepted."
+          ],
+          "actual": "Actual response/DOM assertions passed for the provided public inputs, including clearing old verdicts, negative results and reload. The observed contrast failure remains attached to this run; the engine is implemented.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+            "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+            "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+            "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+            "sourceBoundary": "Earlier health/runtime revisions above remain historical. Verifier runtime is source0a; the later theme source is not yet accepted as a final visual run."
+          },
+          "verificationTime": "2026-09-06T14:30:27.018Z",
+          "repairState": "specific remaining integration or consumer acceptance incomplete",
+          "verificationKind": "actual scoped consumer assertions with unresolved visual usability"
+        },
+        {
+          "id": "UI-1afe77615c32",
+          "status": "PASS LOCAL",
+          "scope": "verifyProof() at /tools/timestamp/verify: supplied official detached proof and expected digest produce the exact owned-mainnet block/hash/time; source0a DOM checks cover mismatch, pending, bad commitment, clearing old verdict and reload/resubmission. Final frontend4e9 shows the positive result readably in light/dark at390/1440.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            },
+            {
+              "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+              "note": "Separate exact source0a HTTP/DOM evidence, a974 failing-first contrast reports and final frontend4e9/monolith0a readable supplied-proof results; no full application GO."
+            }
+          ],
+          "blockers": [],
+          "actual": "Actual candidate API responses and exact rendered public references were checked without response interception. All four final theme/width cases for this consumer passed sampled text contrast, field-color and horizontal-overflow checks. Initial unreadable screenshots and five intermediate theme failures remain preserved; no full application, durable signing, calendar submission or all-network acceptance is inferred.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+            "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+            "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+            "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+            "sourceBoundary": "Earlier health/runtime revisions remain historical. Initial verifier HTTP/DOM observations bind source0a. Final supplied-proof theme results bind served frontend4e9 and actual monolith0a; no acceptance propagates automatically to later revisions.",
+            "finalVerifierFrontend": "4e9c2749b5ede261a55cd1388fac1e66469eaefd"
+          },
+          "verificationTime": "2026-09-06T14:47:51.487Z",
+          "repairState": "implemented and accepted within the exact supplied-proof consumer scope",
+          "verificationKind": "actual provided-proof consumer journey with separately bound initial negative controls and final positive visual checks"
+        }
+      ]
     },
     {
       "id": "API-3554ee92daa6",
@@ -1120,377 +1452,1431 @@
     {
       "id": "API-ed4c4fc3a2e4",
       "status": "BLOCKED",
-      "scope": "GET /api/v1/intelligence/multiparty/overview: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "scope": "GET /api/v1/intelligence/multiparty/overview: inspected current implementation and applicable local regression evidence; the separate offered operation still lacks the specific authority or integration listed below.",
       "evidence": [
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+          "note": "Separate exact source0a HTTP/DOM evidence, a974 failing-first contrast reports and final frontend4e9/monolith0a readable supplied-proof results; no full application GO."
         }
       ],
       "blockers": [
-        "BIP327 aggregation/nonce/partial-signature/tweak engine; durable session authority; trusted product/vendor-key directory, signed payload contract and actual version-specific conformance results. A final BIP340 primitive is insufficient."
+        "Trusted product/capability directory and actual version-specific conformance results are not connected for this read route."
       ],
-      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "actual": "The supplied-input cryptographic verifiers are implemented and tested separately. This row remains blocked by its route-specific source/integration; it inherits no pass from those two verifier APIs.",
       "candidateRevisions": {
         "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
         "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
         "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
-        "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f"
+        "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+        "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+        "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+        "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+        "sourceBoundary": "Earlier health/runtime revisions remain historical. Initial verifier HTTP/DOM observations bind source0a. Final supplied-proof theme results bind served frontend4e9 and actual monolith0a; no acceptance propagates automatically to later revisions.",
+        "finalVerifierFrontend": "4e9c2749b5ede261a55cd1388fac1e66469eaefd"
       },
-      "verificationTime": "2026-09-06T12:55:51.141Z",
-      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
-      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
-      "previousExecutionAssertions": []
+      "verificationTime": "2026-09-06T14:30:27.018Z",
+      "repairState": "specific remaining integration or consumer acceptance incomplete",
+      "verificationKind": "current route-specific prerequisite reconciliation with separate actual engine evidence",
+      "previousExecutionAssertions": [
+        {
+          "id": "API-ed4c4fc3a2e4",
+          "status": "BLOCKED",
+          "scope": "GET /api/v1/intelligence/multiparty/overview: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            }
+          ],
+          "blockers": [
+            "BIP327 aggregation/nonce/partial-signature/tweak engine; durable session authority; trusted product/vendor-key directory, signed payload contract and actual version-specific conformance results. A final BIP340 primitive is insufficient."
+          ],
+          "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f"
+          },
+          "verificationTime": "2026-09-06T12:55:51.141Z",
+          "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+          "verificationKind": "current source inspection and applicable local regressions; no real-network E2E"
+        },
+        {
+          "id": "API-ed4c4fc3a2e4",
+          "status": "BLOCKED",
+          "scope": "GET /api/v1/intelligence/multiparty/overview: inspected current implementation and applicable local regression evidence; the separate offered operation still lacks the specific authority or integration listed below.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            },
+            {
+              "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+              "note": "Actual source0a direct/gateway verifier assertions and DOM responses, public input provenance, exact archives and the still-pending visual acceptance boundary."
+            }
+          ],
+          "blockers": [
+            "Trusted product/capability directory and actual version-specific conformance results are not connected for this read route."
+          ],
+          "actual": "The supplied-input cryptographic verifiers are implemented and tested separately. This row remains blocked by its route-specific source/integration; it inherits no pass from those two verifier APIs.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+            "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+            "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+            "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+            "sourceBoundary": "Earlier health/runtime revisions above remain historical. Verifier runtime is source0a; the later theme source is not yet accepted as a final visual run."
+          },
+          "verificationTime": "2026-09-06T14:30:27.018Z",
+          "repairState": "specific remaining integration or consumer acceptance incomplete",
+          "verificationKind": "current route-specific prerequisite reconciliation with separate actual engine evidence"
+        }
+      ]
     },
     {
       "id": "API-a4ffe2ba32ff",
       "status": "BLOCKED",
-      "scope": "GET /api/v1/intelligence/multiparty/products: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "scope": "GET /api/v1/intelligence/multiparty/products: inspected current implementation and applicable local regression evidence; the separate offered operation still lacks the specific authority or integration listed below.",
       "evidence": [
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+          "note": "Separate exact source0a HTTP/DOM evidence, a974 failing-first contrast reports and final frontend4e9/monolith0a readable supplied-proof results; no full application GO."
         }
       ],
       "blockers": [
-        "BIP327 aggregation/nonce/partial-signature/tweak engine; durable session authority; trusted product/vendor-key directory, signed payload contract and actual version-specific conformance results. A final BIP340 primitive is insufficient."
+        "Trusted product/capability directory and actual version-specific conformance results are not connected for this read route."
       ],
-      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "actual": "The supplied-input cryptographic verifiers are implemented and tested separately. This row remains blocked by its route-specific source/integration; it inherits no pass from those two verifier APIs.",
       "candidateRevisions": {
         "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
         "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
         "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
-        "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f"
+        "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+        "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+        "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+        "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+        "sourceBoundary": "Earlier health/runtime revisions remain historical. Initial verifier HTTP/DOM observations bind source0a. Final supplied-proof theme results bind served frontend4e9 and actual monolith0a; no acceptance propagates automatically to later revisions.",
+        "finalVerifierFrontend": "4e9c2749b5ede261a55cd1388fac1e66469eaefd"
       },
-      "verificationTime": "2026-09-06T12:55:51.141Z",
-      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
-      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
-      "previousExecutionAssertions": []
+      "verificationTime": "2026-09-06T14:30:27.018Z",
+      "repairState": "specific remaining integration or consumer acceptance incomplete",
+      "verificationKind": "current route-specific prerequisite reconciliation with separate actual engine evidence",
+      "previousExecutionAssertions": [
+        {
+          "id": "API-a4ffe2ba32ff",
+          "status": "BLOCKED",
+          "scope": "GET /api/v1/intelligence/multiparty/products: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            }
+          ],
+          "blockers": [
+            "BIP327 aggregation/nonce/partial-signature/tweak engine; durable session authority; trusted product/vendor-key directory, signed payload contract and actual version-specific conformance results. A final BIP340 primitive is insufficient."
+          ],
+          "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f"
+          },
+          "verificationTime": "2026-09-06T12:55:51.141Z",
+          "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+          "verificationKind": "current source inspection and applicable local regressions; no real-network E2E"
+        },
+        {
+          "id": "API-a4ffe2ba32ff",
+          "status": "BLOCKED",
+          "scope": "GET /api/v1/intelligence/multiparty/products: inspected current implementation and applicable local regression evidence; the separate offered operation still lacks the specific authority or integration listed below.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            },
+            {
+              "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+              "note": "Actual source0a direct/gateway verifier assertions and DOM responses, public input provenance, exact archives and the still-pending visual acceptance boundary."
+            }
+          ],
+          "blockers": [
+            "Trusted product/capability directory and actual version-specific conformance results are not connected for this read route."
+          ],
+          "actual": "The supplied-input cryptographic verifiers are implemented and tested separately. This row remains blocked by its route-specific source/integration; it inherits no pass from those two verifier APIs.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+            "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+            "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+            "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+            "sourceBoundary": "Earlier health/runtime revisions above remain historical. Verifier runtime is source0a; the later theme source is not yet accepted as a final visual run."
+          },
+          "verificationTime": "2026-09-06T14:30:27.018Z",
+          "repairState": "specific remaining integration or consumer acceptance incomplete",
+          "verificationKind": "current route-specific prerequisite reconciliation with separate actual engine evidence"
+        }
+      ]
     },
     {
       "id": "API-96b030600c5c",
       "status": "BLOCKED",
-      "scope": "GET /api/v1/intelligence/multiparty/products/:productId: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "scope": "GET /api/v1/intelligence/multiparty/products/:productId: inspected current implementation and applicable local regression evidence; the separate offered operation still lacks the specific authority or integration listed below.",
       "evidence": [
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+          "note": "Separate exact source0a HTTP/DOM evidence, a974 failing-first contrast reports and final frontend4e9/monolith0a readable supplied-proof results; no full application GO."
         }
       ],
       "blockers": [
-        "BIP327 aggregation/nonce/partial-signature/tweak engine; durable session authority; trusted product/vendor-key directory, signed payload contract and actual version-specific conformance results. A final BIP340 primitive is insufficient."
+        "Trusted product/capability directory and actual version-specific conformance results are not connected for this read route."
       ],
-      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "actual": "The supplied-input cryptographic verifiers are implemented and tested separately. This row remains blocked by its route-specific source/integration; it inherits no pass from those two verifier APIs.",
       "candidateRevisions": {
         "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
         "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
         "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
-        "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f"
+        "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+        "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+        "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+        "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+        "sourceBoundary": "Earlier health/runtime revisions remain historical. Initial verifier HTTP/DOM observations bind source0a. Final supplied-proof theme results bind served frontend4e9 and actual monolith0a; no acceptance propagates automatically to later revisions.",
+        "finalVerifierFrontend": "4e9c2749b5ede261a55cd1388fac1e66469eaefd"
       },
-      "verificationTime": "2026-09-06T12:55:51.141Z",
-      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
-      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
-      "previousExecutionAssertions": []
+      "verificationTime": "2026-09-06T14:30:27.018Z",
+      "repairState": "specific remaining integration or consumer acceptance incomplete",
+      "verificationKind": "current route-specific prerequisite reconciliation with separate actual engine evidence",
+      "previousExecutionAssertions": [
+        {
+          "id": "API-96b030600c5c",
+          "status": "BLOCKED",
+          "scope": "GET /api/v1/intelligence/multiparty/products/:productId: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            }
+          ],
+          "blockers": [
+            "BIP327 aggregation/nonce/partial-signature/tweak engine; durable session authority; trusted product/vendor-key directory, signed payload contract and actual version-specific conformance results. A final BIP340 primitive is insufficient."
+          ],
+          "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f"
+          },
+          "verificationTime": "2026-09-06T12:55:51.141Z",
+          "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+          "verificationKind": "current source inspection and applicable local regressions; no real-network E2E"
+        },
+        {
+          "id": "API-96b030600c5c",
+          "status": "BLOCKED",
+          "scope": "GET /api/v1/intelligence/multiparty/products/:productId: inspected current implementation and applicable local regression evidence; the separate offered operation still lacks the specific authority or integration listed below.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            },
+            {
+              "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+              "note": "Actual source0a direct/gateway verifier assertions and DOM responses, public input provenance, exact archives and the still-pending visual acceptance boundary."
+            }
+          ],
+          "blockers": [
+            "Trusted product/capability directory and actual version-specific conformance results are not connected for this read route."
+          ],
+          "actual": "The supplied-input cryptographic verifiers are implemented and tested separately. This row remains blocked by its route-specific source/integration; it inherits no pass from those two verifier APIs.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+            "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+            "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+            "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+            "sourceBoundary": "Earlier health/runtime revisions above remain historical. Verifier runtime is source0a; the later theme source is not yet accepted as a final visual run."
+          },
+          "verificationTime": "2026-09-06T14:30:27.018Z",
+          "repairState": "specific remaining integration or consumer acceptance incomplete",
+          "verificationKind": "current route-specific prerequisite reconciliation with separate actual engine evidence"
+        }
+      ]
     },
     {
       "id": "API-749ab181fb16",
       "status": "BLOCKED",
-      "scope": "GET /api/v1/intelligence/multiparty/compatibility: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "scope": "GET /api/v1/intelligence/multiparty/compatibility: inspected current implementation and applicable local regression evidence; the separate offered operation still lacks the specific authority or integration listed below.",
       "evidence": [
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+          "note": "Separate exact source0a HTTP/DOM evidence, a974 failing-first contrast reports and final frontend4e9/monolith0a readable supplied-proof results; no full application GO."
         }
       ],
       "blockers": [
-        "BIP327 aggregation/nonce/partial-signature/tweak engine; durable session authority; trusted product/vendor-key directory, signed payload contract and actual version-specific conformance results. A final BIP340 primitive is insufficient."
+        "Trusted product/capability directory and actual version-specific conformance results are not connected for this read route."
       ],
-      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "actual": "The supplied-input cryptographic verifiers are implemented and tested separately. This row remains blocked by its route-specific source/integration; it inherits no pass from those two verifier APIs.",
       "candidateRevisions": {
         "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
         "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
         "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
-        "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f"
+        "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+        "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+        "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+        "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+        "sourceBoundary": "Earlier health/runtime revisions remain historical. Initial verifier HTTP/DOM observations bind source0a. Final supplied-proof theme results bind served frontend4e9 and actual monolith0a; no acceptance propagates automatically to later revisions.",
+        "finalVerifierFrontend": "4e9c2749b5ede261a55cd1388fac1e66469eaefd"
       },
-      "verificationTime": "2026-09-06T12:55:51.141Z",
-      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
-      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
-      "previousExecutionAssertions": []
+      "verificationTime": "2026-09-06T14:30:27.018Z",
+      "repairState": "specific remaining integration or consumer acceptance incomplete",
+      "verificationKind": "current route-specific prerequisite reconciliation with separate actual engine evidence",
+      "previousExecutionAssertions": [
+        {
+          "id": "API-749ab181fb16",
+          "status": "BLOCKED",
+          "scope": "GET /api/v1/intelligence/multiparty/compatibility: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            }
+          ],
+          "blockers": [
+            "BIP327 aggregation/nonce/partial-signature/tweak engine; durable session authority; trusted product/vendor-key directory, signed payload contract and actual version-specific conformance results. A final BIP340 primitive is insufficient."
+          ],
+          "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f"
+          },
+          "verificationTime": "2026-09-06T12:55:51.141Z",
+          "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+          "verificationKind": "current source inspection and applicable local regressions; no real-network E2E"
+        },
+        {
+          "id": "API-749ab181fb16",
+          "status": "BLOCKED",
+          "scope": "GET /api/v1/intelligence/multiparty/compatibility: inspected current implementation and applicable local regression evidence; the separate offered operation still lacks the specific authority or integration listed below.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            },
+            {
+              "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+              "note": "Actual source0a direct/gateway verifier assertions and DOM responses, public input provenance, exact archives and the still-pending visual acceptance boundary."
+            }
+          ],
+          "blockers": [
+            "Trusted product/capability directory and actual version-specific conformance results are not connected for this read route."
+          ],
+          "actual": "The supplied-input cryptographic verifiers are implemented and tested separately. This row remains blocked by its route-specific source/integration; it inherits no pass from those two verifier APIs.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+            "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+            "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+            "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+            "sourceBoundary": "Earlier health/runtime revisions above remain historical. Verifier runtime is source0a; the later theme source is not yet accepted as a final visual run."
+          },
+          "verificationTime": "2026-09-06T14:30:27.018Z",
+          "repairState": "specific remaining integration or consumer acceptance incomplete",
+          "verificationKind": "current route-specific prerequisite reconciliation with separate actual engine evidence"
+        }
+      ]
     },
     {
       "id": "API-82870a3cc814",
       "status": "BLOCKED",
-      "scope": "GET /api/v1/intelligence/multiparty/test-vectors: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "scope": "GET /api/v1/intelligence/multiparty/test-vectors: inspected current implementation and applicable local regression evidence; the separate offered operation still lacks the specific authority or integration listed below.",
       "evidence": [
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+          "note": "Separate exact source0a HTTP/DOM evidence, a974 failing-first contrast reports and final frontend4e9/monolith0a readable supplied-proof results; no full application GO."
         }
       ],
       "blockers": [
-        "BIP327 aggregation/nonce/partial-signature/tweak engine; durable session authority; trusted product/vendor-key directory, signed payload contract and actual version-specific conformance results. A final BIP340 primitive is insufficient."
+        "The public vector-results publication route has no connected version-specific conformance source. Pinned BIP327 unit vectors are executed locally, but that does not implement this publication route."
       ],
-      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "actual": "The supplied-input cryptographic verifiers are implemented and tested separately. This row remains blocked by its route-specific source/integration; it inherits no pass from those two verifier APIs.",
       "candidateRevisions": {
         "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
         "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
         "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
-        "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f"
+        "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+        "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+        "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+        "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+        "sourceBoundary": "Earlier health/runtime revisions remain historical. Initial verifier HTTP/DOM observations bind source0a. Final supplied-proof theme results bind served frontend4e9 and actual monolith0a; no acceptance propagates automatically to later revisions.",
+        "finalVerifierFrontend": "4e9c2749b5ede261a55cd1388fac1e66469eaefd"
       },
-      "verificationTime": "2026-09-06T12:55:51.141Z",
-      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
-      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
-      "previousExecutionAssertions": []
+      "verificationTime": "2026-09-06T14:30:27.018Z",
+      "repairState": "specific remaining integration or consumer acceptance incomplete",
+      "verificationKind": "current route-specific prerequisite reconciliation with separate actual engine evidence",
+      "previousExecutionAssertions": [
+        {
+          "id": "API-82870a3cc814",
+          "status": "BLOCKED",
+          "scope": "GET /api/v1/intelligence/multiparty/test-vectors: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            }
+          ],
+          "blockers": [
+            "BIP327 aggregation/nonce/partial-signature/tweak engine; durable session authority; trusted product/vendor-key directory, signed payload contract and actual version-specific conformance results. A final BIP340 primitive is insufficient."
+          ],
+          "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f"
+          },
+          "verificationTime": "2026-09-06T12:55:51.141Z",
+          "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+          "verificationKind": "current source inspection and applicable local regressions; no real-network E2E"
+        },
+        {
+          "id": "API-82870a3cc814",
+          "status": "BLOCKED",
+          "scope": "GET /api/v1/intelligence/multiparty/test-vectors: inspected current implementation and applicable local regression evidence; the separate offered operation still lacks the specific authority or integration listed below.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            },
+            {
+              "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+              "note": "Actual source0a direct/gateway verifier assertions and DOM responses, public input provenance, exact archives and the still-pending visual acceptance boundary."
+            }
+          ],
+          "blockers": [
+            "The public vector-results publication route has no connected version-specific conformance source. Pinned BIP327 unit vectors are executed locally, but that does not implement this publication route."
+          ],
+          "actual": "The supplied-input cryptographic verifiers are implemented and tested separately. This row remains blocked by its route-specific source/integration; it inherits no pass from those two verifier APIs.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+            "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+            "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+            "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+            "sourceBoundary": "Earlier health/runtime revisions above remain historical. Verifier runtime is source0a; the later theme source is not yet accepted as a final visual run."
+          },
+          "verificationTime": "2026-09-06T14:30:27.018Z",
+          "repairState": "specific remaining integration or consumer acceptance incomplete",
+          "verificationKind": "current route-specific prerequisite reconciliation with separate actual engine evidence"
+        }
+      ]
     },
     {
       "id": "API-a6a124d6c5a0",
       "status": "BLOCKED",
-      "scope": "POST /api/v1/intelligence/multiparty/manifests/verify: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "scope": "POST /api/v1/intelligence/multiparty/manifests/verify: inspected current implementation and applicable local regression evidence; the separate offered operation still lacks the specific authority or integration listed below.",
       "evidence": [
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+          "note": "Separate exact source0a HTTP/DOM evidence, a974 failing-first contrast reports and final frontend4e9/monolith0a readable supplied-proof results; no full application GO."
         }
       ],
       "blockers": [
-        "BIP327 aggregation/nonce/partial-signature/tweak engine; durable session authority; trusted product/vendor-key directory, signed payload contract and actual version-specific conformance results. A final BIP340 primitive is insufficient."
+        "Trusted vendor-key directory, exact signed-payload encoding and supported signature algorithm for vendor manifests remain unavailable."
       ],
-      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "actual": "The supplied-input cryptographic verifiers are implemented and tested separately. This row remains blocked by its route-specific source/integration; it inherits no pass from those two verifier APIs.",
       "candidateRevisions": {
         "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
         "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
         "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
-        "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f"
+        "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+        "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+        "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+        "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+        "sourceBoundary": "Earlier health/runtime revisions remain historical. Initial verifier HTTP/DOM observations bind source0a. Final supplied-proof theme results bind served frontend4e9 and actual monolith0a; no acceptance propagates automatically to later revisions.",
+        "finalVerifierFrontend": "4e9c2749b5ede261a55cd1388fac1e66469eaefd"
       },
-      "verificationTime": "2026-09-06T12:55:51.141Z",
-      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
-      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
-      "previousExecutionAssertions": []
+      "verificationTime": "2026-09-06T14:30:27.018Z",
+      "repairState": "specific remaining integration or consumer acceptance incomplete",
+      "verificationKind": "current route-specific prerequisite reconciliation with separate actual engine evidence",
+      "previousExecutionAssertions": [
+        {
+          "id": "API-a6a124d6c5a0",
+          "status": "BLOCKED",
+          "scope": "POST /api/v1/intelligence/multiparty/manifests/verify: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            }
+          ],
+          "blockers": [
+            "BIP327 aggregation/nonce/partial-signature/tweak engine; durable session authority; trusted product/vendor-key directory, signed payload contract and actual version-specific conformance results. A final BIP340 primitive is insufficient."
+          ],
+          "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f"
+          },
+          "verificationTime": "2026-09-06T12:55:51.141Z",
+          "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+          "verificationKind": "current source inspection and applicable local regressions; no real-network E2E"
+        },
+        {
+          "id": "API-a6a124d6c5a0",
+          "status": "BLOCKED",
+          "scope": "POST /api/v1/intelligence/multiparty/manifests/verify: inspected current implementation and applicable local regression evidence; the separate offered operation still lacks the specific authority or integration listed below.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            },
+            {
+              "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+              "note": "Actual source0a direct/gateway verifier assertions and DOM responses, public input provenance, exact archives and the still-pending visual acceptance boundary."
+            }
+          ],
+          "blockers": [
+            "Trusted vendor-key directory, exact signed-payload encoding and supported signature algorithm for vendor manifests remain unavailable."
+          ],
+          "actual": "The supplied-input cryptographic verifiers are implemented and tested separately. This row remains blocked by its route-specific source/integration; it inherits no pass from those two verifier APIs.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+            "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+            "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+            "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+            "sourceBoundary": "Earlier health/runtime revisions above remain historical. Verifier runtime is source0a; the later theme source is not yet accepted as a final visual run."
+          },
+          "verificationTime": "2026-09-06T14:30:27.018Z",
+          "repairState": "specific remaining integration or consumer acceptance incomplete",
+          "verificationKind": "current route-specific prerequisite reconciliation with separate actual engine evidence"
+        }
+      ]
     },
     {
       "id": "API-4edb832dd83d",
-      "status": "BLOCKED",
-      "scope": "POST /api/v1/intelligence/multiparty/public-sessions/verify: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "status": "PASS LOCAL",
+      "scope": "POST /api/v1/intelligence/multiparty/public-sessions/verify: Provided ordered untweaked BIP327 public transcript: computed key/nonce aggregation, each partial verification, aggregated final signature and final BIP340 verification, with corrupt partial, key-only partial scope and unsupported tweak controls. API acceptance only; the separately identified consumer row records final supplied-proof readability. Other operations remain outside this pass.",
       "evidence": [
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+          "note": "Separate exact source0a HTTP/DOM evidence, a974 failing-first contrast reports and final frontend4e9/monolith0a readable supplied-proof results; no full application GO."
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+          "note": "Integration follow-up: frontendbbca production build,100files/1577tests and eight actual provided-proof positive theme/width checks passed with monolith0a. Earlier artifacts and assertions remain unchanged."
         }
       ],
-      "blockers": [
-        "BIP327 aggregation/nonce/partial-signature/tweak engine; durable session authority; trusted product/vendor-key directory, signed payload contract and actual version-specific conformance results. A final BIP340 primitive is insufficient."
-      ],
-      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "blockers": [],
+      "actual": "Actual direct and gateway HTTP requests passed the stated positive and negative controls at source0a. The separate consumer row now includes final frontend4e9/monolith0a readability checks. Initial source0a theme defects and a974 contrast failures remain archived. No complete-application or additional realNetworkE2e pass is claimed. Integrated frontendbbca consumer reruns passed separately, without broadening this API scope.",
       "candidateRevisions": {
         "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
         "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
         "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
-        "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f"
+        "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+        "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+        "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+        "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+        "sourceBoundary": "Earlier health/runtime revisions remain historical. Initial verifier HTTP/DOM observations bind source0a. Final supplied-proof theme results bind served frontend4e9 and actual monolith0a; no acceptance propagates automatically to later revisions. An independent subsequent eight-case positive consumer rerun binds integrated frontendbbca to the same actual monolith0a; no new operation scope is added.",
+        "finalVerifierFrontend": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+        "integratedVerifierFrontend": "bbca7f46873d35c5f6146cbb33b3e4cab09f926f"
       },
-      "verificationTime": "2026-09-06T12:55:51.141Z",
-      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
-      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
-      "previousExecutionAssertions": []
+      "verificationTime": "2026-09-06T14:30:27.018Z",
+      "repairState": "implemented and verified within the exact API scope; consumer evidence recorded separately",
+      "verificationKind": "actual candidate HTTP and supplied-input verification; observed owned-mainnet reads for OTS, local public-data cryptography for MuSig2",
+      "previousExecutionAssertions": [
+        {
+          "id": "API-4edb832dd83d",
+          "status": "BLOCKED",
+          "scope": "POST /api/v1/intelligence/multiparty/public-sessions/verify: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            }
+          ],
+          "blockers": [
+            "BIP327 aggregation/nonce/partial-signature/tweak engine; durable session authority; trusted product/vendor-key directory, signed payload contract and actual version-specific conformance results. A final BIP340 primitive is insufficient."
+          ],
+          "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f"
+          },
+          "verificationTime": "2026-09-06T12:55:51.141Z",
+          "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+          "verificationKind": "current source inspection and applicable local regressions; no real-network E2E"
+        },
+        {
+          "id": "API-4edb832dd83d",
+          "status": "PASS LOCAL",
+          "scope": "POST /api/v1/intelligence/multiparty/public-sessions/verify: Provided ordered untweaked BIP327 public transcript: computed key/nonce aggregation, each partial verification, aggregated final signature and final BIP340 verification, with corrupt partial, key-only partial scope and unsupported tweak controls. API acceptance only; complete visual usability and other operations remain outside this pass.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            },
+            {
+              "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+              "note": "Actual source0a direct/gateway verifier assertions and DOM responses, public input provenance, exact archives and the still-pending visual acceptance boundary."
+            }
+          ],
+          "blockers": [],
+          "actual": "Actual direct and gateway HTTP requests passed the stated positive and negative controls at source0a. Eight combined browser DOM/response assertions support result propagation, but source0a screenshots have a known theme/readability failure; final visual recheck is pending. No complete-application or additional realNetworkE2e pass is claimed.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+            "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+            "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+            "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+            "sourceBoundary": "Earlier health/runtime revisions above remain historical. Verifier runtime is source0a; the later theme source is not yet accepted as a final visual run."
+          },
+          "verificationTime": "2026-09-06T14:30:27.018Z",
+          "repairState": "implemented and verified within the exact API scope; final consumer visual acceptance pending",
+          "verificationKind": "actual candidate HTTP and supplied-input verification; observed owned-mainnet reads for OTS, local public-data cryptography for MuSig2"
+        },
+        {
+          "id": "API-4edb832dd83d",
+          "status": "PASS LOCAL",
+          "scope": "POST /api/v1/intelligence/multiparty/public-sessions/verify: Provided ordered untweaked BIP327 public transcript: computed key/nonce aggregation, each partial verification, aggregated final signature and final BIP340 verification, with corrupt partial, key-only partial scope and unsupported tweak controls. API acceptance only; the separately identified consumer row records final supplied-proof readability. Other operations remain outside this pass.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            },
+            {
+              "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+              "note": "Separate exact source0a HTTP/DOM evidence, a974 failing-first contrast reports and final frontend4e9/monolith0a readable supplied-proof results; no full application GO."
+            }
+          ],
+          "blockers": [],
+          "actual": "Actual direct and gateway HTTP requests passed the stated positive and negative controls at source0a. The separate consumer row now includes final frontend4e9/monolith0a readability checks. Initial source0a theme defects and a974 contrast failures remain archived. No complete-application or additional realNetworkE2e pass is claimed.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+            "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+            "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+            "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+            "sourceBoundary": "Earlier health/runtime revisions remain historical. Initial verifier HTTP/DOM observations bind source0a. Final supplied-proof theme results bind served frontend4e9 and actual monolith0a; no acceptance propagates automatically to later revisions.",
+            "finalVerifierFrontend": "4e9c2749b5ede261a55cd1388fac1e66469eaefd"
+          },
+          "verificationTime": "2026-09-06T14:30:27.018Z",
+          "repairState": "implemented and verified within the exact API scope; consumer evidence recorded separately",
+          "verificationKind": "actual candidate HTTP and supplied-input verification; observed owned-mainnet reads for OTS, local public-data cryptography for MuSig2"
+        }
+      ]
     },
     {
       "id": "API-5b1b5761c70c",
       "status": "BLOCKED",
-      "scope": "GET /api/v1/intelligence/timestamps/overview: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "scope": "GET /api/v1/intelligence/timestamps/overview: inspected current implementation and applicable local regression evidence; the separate offered operation still lacks the specific authority or integration listed below.",
       "evidence": [
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+          "note": "Separate exact source0a HTTP/DOM evidence, a974 failing-first contrast reports and final frontend4e9/monolith0a readable supplied-proof results; no full application GO."
         }
       ],
       "blockers": [
-        "Owned calendar client/directory and actual stamp/upgrade responses, .ots operation/attestation engine and owned Bitcoin header reader."
+        "Owned calendar directory/health and durable calendar batch/anchor observation sources are not connected for this read route."
       ],
-      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "actual": "The supplied-input cryptographic verifiers are implemented and tested separately. This row remains blocked by its route-specific source/integration; it inherits no pass from those two verifier APIs.",
       "candidateRevisions": {
         "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
         "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
         "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
-        "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f"
+        "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+        "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+        "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+        "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+        "sourceBoundary": "Earlier health/runtime revisions remain historical. Initial verifier HTTP/DOM observations bind source0a. Final supplied-proof theme results bind served frontend4e9 and actual monolith0a; no acceptance propagates automatically to later revisions.",
+        "finalVerifierFrontend": "4e9c2749b5ede261a55cd1388fac1e66469eaefd"
       },
-      "verificationTime": "2026-09-06T12:55:51.141Z",
-      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
-      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
-      "previousExecutionAssertions": []
+      "verificationTime": "2026-09-06T14:30:27.018Z",
+      "repairState": "specific remaining integration or consumer acceptance incomplete",
+      "verificationKind": "current route-specific prerequisite reconciliation with separate actual engine evidence",
+      "previousExecutionAssertions": [
+        {
+          "id": "API-5b1b5761c70c",
+          "status": "BLOCKED",
+          "scope": "GET /api/v1/intelligence/timestamps/overview: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            }
+          ],
+          "blockers": [
+            "Owned calendar client/directory and actual stamp/upgrade responses, .ots operation/attestation engine and owned Bitcoin header reader."
+          ],
+          "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f"
+          },
+          "verificationTime": "2026-09-06T12:55:51.141Z",
+          "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+          "verificationKind": "current source inspection and applicable local regressions; no real-network E2E"
+        },
+        {
+          "id": "API-5b1b5761c70c",
+          "status": "BLOCKED",
+          "scope": "GET /api/v1/intelligence/timestamps/overview: inspected current implementation and applicable local regression evidence; the separate offered operation still lacks the specific authority or integration listed below.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            },
+            {
+              "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+              "note": "Actual source0a direct/gateway verifier assertions and DOM responses, public input provenance, exact archives and the still-pending visual acceptance boundary."
+            }
+          ],
+          "blockers": [
+            "Owned calendar directory/health and durable calendar batch/anchor observation sources are not connected for this read route."
+          ],
+          "actual": "The supplied-input cryptographic verifiers are implemented and tested separately. This row remains blocked by its route-specific source/integration; it inherits no pass from those two verifier APIs.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+            "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+            "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+            "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+            "sourceBoundary": "Earlier health/runtime revisions above remain historical. Verifier runtime is source0a; the later theme source is not yet accepted as a final visual run."
+          },
+          "verificationTime": "2026-09-06T14:30:27.018Z",
+          "repairState": "specific remaining integration or consumer acceptance incomplete",
+          "verificationKind": "current route-specific prerequisite reconciliation with separate actual engine evidence"
+        }
+      ]
     },
     {
       "id": "API-6edf27971284",
       "status": "BLOCKED",
-      "scope": "GET /api/v1/intelligence/timestamps/calendars: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "scope": "GET /api/v1/intelligence/timestamps/calendars: inspected current implementation and applicable local regression evidence; the separate offered operation still lacks the specific authority or integration listed below.",
       "evidence": [
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+          "note": "Separate exact source0a HTTP/DOM evidence, a974 failing-first contrast reports and final frontend4e9/monolith0a readable supplied-proof results; no full application GO."
         }
       ],
       "blockers": [
-        "Owned calendar client/directory and actual stamp/upgrade responses, .ots operation/attestation engine and owned Bitcoin header reader."
+        "Owned calendar directory/health and durable calendar batch/anchor observation sources are not connected for this read route."
       ],
-      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "actual": "The supplied-input cryptographic verifiers are implemented and tested separately. This row remains blocked by its route-specific source/integration; it inherits no pass from those two verifier APIs.",
       "candidateRevisions": {
         "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
         "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
         "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
-        "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f"
+        "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+        "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+        "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+        "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+        "sourceBoundary": "Earlier health/runtime revisions remain historical. Initial verifier HTTP/DOM observations bind source0a. Final supplied-proof theme results bind served frontend4e9 and actual monolith0a; no acceptance propagates automatically to later revisions.",
+        "finalVerifierFrontend": "4e9c2749b5ede261a55cd1388fac1e66469eaefd"
       },
-      "verificationTime": "2026-09-06T12:55:51.141Z",
-      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
-      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
-      "previousExecutionAssertions": []
+      "verificationTime": "2026-09-06T14:30:27.018Z",
+      "repairState": "specific remaining integration or consumer acceptance incomplete",
+      "verificationKind": "current route-specific prerequisite reconciliation with separate actual engine evidence",
+      "previousExecutionAssertions": [
+        {
+          "id": "API-6edf27971284",
+          "status": "BLOCKED",
+          "scope": "GET /api/v1/intelligence/timestamps/calendars: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            }
+          ],
+          "blockers": [
+            "Owned calendar client/directory and actual stamp/upgrade responses, .ots operation/attestation engine and owned Bitcoin header reader."
+          ],
+          "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f"
+          },
+          "verificationTime": "2026-09-06T12:55:51.141Z",
+          "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+          "verificationKind": "current source inspection and applicable local regressions; no real-network E2E"
+        },
+        {
+          "id": "API-6edf27971284",
+          "status": "BLOCKED",
+          "scope": "GET /api/v1/intelligence/timestamps/calendars: inspected current implementation and applicable local regression evidence; the separate offered operation still lacks the specific authority or integration listed below.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            },
+            {
+              "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+              "note": "Actual source0a direct/gateway verifier assertions and DOM responses, public input provenance, exact archives and the still-pending visual acceptance boundary."
+            }
+          ],
+          "blockers": [
+            "Owned calendar directory/health and durable calendar batch/anchor observation sources are not connected for this read route."
+          ],
+          "actual": "The supplied-input cryptographic verifiers are implemented and tested separately. This row remains blocked by its route-specific source/integration; it inherits no pass from those two verifier APIs.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+            "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+            "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+            "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+            "sourceBoundary": "Earlier health/runtime revisions above remain historical. Verifier runtime is source0a; the later theme source is not yet accepted as a final visual run."
+          },
+          "verificationTime": "2026-09-06T14:30:27.018Z",
+          "repairState": "specific remaining integration or consumer acceptance incomplete",
+          "verificationKind": "current route-specific prerequisite reconciliation with separate actual engine evidence"
+        }
+      ]
     },
     {
       "id": "API-442bda5b85ec",
       "status": "BLOCKED",
-      "scope": "GET /api/v1/intelligence/timestamps/calendars/:calendarId: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "scope": "GET /api/v1/intelligence/timestamps/calendars/:calendarId: inspected current implementation and applicable local regression evidence; the separate offered operation still lacks the specific authority or integration listed below.",
       "evidence": [
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+          "note": "Separate exact source0a HTTP/DOM evidence, a974 failing-first contrast reports and final frontend4e9/monolith0a readable supplied-proof results; no full application GO."
         }
       ],
       "blockers": [
-        "Owned calendar client/directory and actual stamp/upgrade responses, .ots operation/attestation engine and owned Bitcoin header reader."
+        "Owned calendar directory/health and durable calendar batch/anchor observation sources are not connected for this read route."
       ],
-      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "actual": "The supplied-input cryptographic verifiers are implemented and tested separately. This row remains blocked by its route-specific source/integration; it inherits no pass from those two verifier APIs.",
       "candidateRevisions": {
         "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
         "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
         "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
-        "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f"
+        "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+        "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+        "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+        "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+        "sourceBoundary": "Earlier health/runtime revisions remain historical. Initial verifier HTTP/DOM observations bind source0a. Final supplied-proof theme results bind served frontend4e9 and actual monolith0a; no acceptance propagates automatically to later revisions.",
+        "finalVerifierFrontend": "4e9c2749b5ede261a55cd1388fac1e66469eaefd"
       },
-      "verificationTime": "2026-09-06T12:55:51.141Z",
-      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
-      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
-      "previousExecutionAssertions": []
+      "verificationTime": "2026-09-06T14:30:27.018Z",
+      "repairState": "specific remaining integration or consumer acceptance incomplete",
+      "verificationKind": "current route-specific prerequisite reconciliation with separate actual engine evidence",
+      "previousExecutionAssertions": [
+        {
+          "id": "API-442bda5b85ec",
+          "status": "BLOCKED",
+          "scope": "GET /api/v1/intelligence/timestamps/calendars/:calendarId: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            }
+          ],
+          "blockers": [
+            "Owned calendar client/directory and actual stamp/upgrade responses, .ots operation/attestation engine and owned Bitcoin header reader."
+          ],
+          "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f"
+          },
+          "verificationTime": "2026-09-06T12:55:51.141Z",
+          "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+          "verificationKind": "current source inspection and applicable local regressions; no real-network E2E"
+        },
+        {
+          "id": "API-442bda5b85ec",
+          "status": "BLOCKED",
+          "scope": "GET /api/v1/intelligence/timestamps/calendars/:calendarId: inspected current implementation and applicable local regression evidence; the separate offered operation still lacks the specific authority or integration listed below.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            },
+            {
+              "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+              "note": "Actual source0a direct/gateway verifier assertions and DOM responses, public input provenance, exact archives and the still-pending visual acceptance boundary."
+            }
+          ],
+          "blockers": [
+            "Owned calendar directory/health and durable calendar batch/anchor observation sources are not connected for this read route."
+          ],
+          "actual": "The supplied-input cryptographic verifiers are implemented and tested separately. This row remains blocked by its route-specific source/integration; it inherits no pass from those two verifier APIs.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+            "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+            "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+            "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+            "sourceBoundary": "Earlier health/runtime revisions above remain historical. Verifier runtime is source0a; the later theme source is not yet accepted as a final visual run."
+          },
+          "verificationTime": "2026-09-06T14:30:27.018Z",
+          "repairState": "specific remaining integration or consumer acceptance incomplete",
+          "verificationKind": "current route-specific prerequisite reconciliation with separate actual engine evidence"
+        }
+      ]
     },
     {
       "id": "API-ab717d793eae",
       "status": "BLOCKED",
-      "scope": "GET /api/v1/intelligence/timestamps/anchors: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "scope": "GET /api/v1/intelligence/timestamps/anchors: inspected current implementation and applicable local regression evidence; the separate offered operation still lacks the specific authority or integration listed below.",
       "evidence": [
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+          "note": "Separate exact source0a HTTP/DOM evidence, a974 failing-first contrast reports and final frontend4e9/monolith0a readable supplied-proof results; no full application GO."
         }
       ],
       "blockers": [
-        "Owned calendar client/directory and actual stamp/upgrade responses, .ots operation/attestation engine and owned Bitcoin header reader."
+        "An owned anchor-list observation source is not connected. Verifying a supplied proof through a configured header reader does not populate an anchor catalogue."
       ],
-      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "actual": "The supplied-input cryptographic verifiers are implemented and tested separately. This row remains blocked by its route-specific source/integration; it inherits no pass from those two verifier APIs.",
       "candidateRevisions": {
         "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
         "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
         "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
-        "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f"
+        "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+        "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+        "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+        "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+        "sourceBoundary": "Earlier health/runtime revisions remain historical. Initial verifier HTTP/DOM observations bind source0a. Final supplied-proof theme results bind served frontend4e9 and actual monolith0a; no acceptance propagates automatically to later revisions.",
+        "finalVerifierFrontend": "4e9c2749b5ede261a55cd1388fac1e66469eaefd"
       },
-      "verificationTime": "2026-09-06T12:55:51.141Z",
-      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
-      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
-      "previousExecutionAssertions": []
+      "verificationTime": "2026-09-06T14:30:27.018Z",
+      "repairState": "specific remaining integration or consumer acceptance incomplete",
+      "verificationKind": "current route-specific prerequisite reconciliation with separate actual engine evidence",
+      "previousExecutionAssertions": [
+        {
+          "id": "API-ab717d793eae",
+          "status": "BLOCKED",
+          "scope": "GET /api/v1/intelligence/timestamps/anchors: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            }
+          ],
+          "blockers": [
+            "Owned calendar client/directory and actual stamp/upgrade responses, .ots operation/attestation engine and owned Bitcoin header reader."
+          ],
+          "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f"
+          },
+          "verificationTime": "2026-09-06T12:55:51.141Z",
+          "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+          "verificationKind": "current source inspection and applicable local regressions; no real-network E2E"
+        },
+        {
+          "id": "API-ab717d793eae",
+          "status": "BLOCKED",
+          "scope": "GET /api/v1/intelligence/timestamps/anchors: inspected current implementation and applicable local regression evidence; the separate offered operation still lacks the specific authority or integration listed below.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            },
+            {
+              "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+              "note": "Actual source0a direct/gateway verifier assertions and DOM responses, public input provenance, exact archives and the still-pending visual acceptance boundary."
+            }
+          ],
+          "blockers": [
+            "An owned anchor-list observation source is not connected. Verifying a supplied proof through a configured header reader does not populate an anchor catalogue."
+          ],
+          "actual": "The supplied-input cryptographic verifiers are implemented and tested separately. This row remains blocked by its route-specific source/integration; it inherits no pass from those two verifier APIs.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+            "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+            "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+            "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+            "sourceBoundary": "Earlier health/runtime revisions above remain historical. Verifier runtime is source0a; the later theme source is not yet accepted as a final visual run."
+          },
+          "verificationTime": "2026-09-06T14:30:27.018Z",
+          "repairState": "specific remaining integration or consumer acceptance incomplete",
+          "verificationKind": "current route-specific prerequisite reconciliation with separate actual engine evidence"
+        }
+      ]
     },
     {
       "id": "API-aecc63eb2417",
       "status": "BLOCKED",
-      "scope": "GET /api/v1/intelligence/timestamps/batches/:batchId: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "scope": "GET /api/v1/intelligence/timestamps/batches/:batchId: inspected current implementation and applicable local regression evidence; the separate offered operation still lacks the specific authority or integration listed below.",
       "evidence": [
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+          "note": "Separate exact source0a HTTP/DOM evidence, a974 failing-first contrast reports and final frontend4e9/monolith0a readable supplied-proof results; no full application GO."
         }
       ],
       "blockers": [
-        "Owned calendar client/directory and actual stamp/upgrade responses, .ots operation/attestation engine and owned Bitcoin header reader."
+        "Owned calendar directory/health and durable calendar batch/anchor observation sources are not connected for this read route."
       ],
-      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "actual": "The supplied-input cryptographic verifiers are implemented and tested separately. This row remains blocked by its route-specific source/integration; it inherits no pass from those two verifier APIs.",
       "candidateRevisions": {
         "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
         "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
         "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
-        "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f"
+        "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+        "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+        "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+        "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+        "sourceBoundary": "Earlier health/runtime revisions remain historical. Initial verifier HTTP/DOM observations bind source0a. Final supplied-proof theme results bind served frontend4e9 and actual monolith0a; no acceptance propagates automatically to later revisions.",
+        "finalVerifierFrontend": "4e9c2749b5ede261a55cd1388fac1e66469eaefd"
       },
-      "verificationTime": "2026-09-06T12:55:51.141Z",
-      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
-      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
-      "previousExecutionAssertions": []
+      "verificationTime": "2026-09-06T14:30:27.018Z",
+      "repairState": "specific remaining integration or consumer acceptance incomplete",
+      "verificationKind": "current route-specific prerequisite reconciliation with separate actual engine evidence",
+      "previousExecutionAssertions": [
+        {
+          "id": "API-aecc63eb2417",
+          "status": "BLOCKED",
+          "scope": "GET /api/v1/intelligence/timestamps/batches/:batchId: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            }
+          ],
+          "blockers": [
+            "Owned calendar client/directory and actual stamp/upgrade responses, .ots operation/attestation engine and owned Bitcoin header reader."
+          ],
+          "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f"
+          },
+          "verificationTime": "2026-09-06T12:55:51.141Z",
+          "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+          "verificationKind": "current source inspection and applicable local regressions; no real-network E2E"
+        },
+        {
+          "id": "API-aecc63eb2417",
+          "status": "BLOCKED",
+          "scope": "GET /api/v1/intelligence/timestamps/batches/:batchId: inspected current implementation and applicable local regression evidence; the separate offered operation still lacks the specific authority or integration listed below.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            },
+            {
+              "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+              "note": "Actual source0a direct/gateway verifier assertions and DOM responses, public input provenance, exact archives and the still-pending visual acceptance boundary."
+            }
+          ],
+          "blockers": [
+            "Owned calendar directory/health and durable calendar batch/anchor observation sources are not connected for this read route."
+          ],
+          "actual": "The supplied-input cryptographic verifiers are implemented and tested separately. This row remains blocked by its route-specific source/integration; it inherits no pass from those two verifier APIs.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+            "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+            "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+            "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+            "sourceBoundary": "Earlier health/runtime revisions above remain historical. Verifier runtime is source0a; the later theme source is not yet accepted as a final visual run."
+          },
+          "verificationTime": "2026-09-06T14:30:27.018Z",
+          "repairState": "specific remaining integration or consumer acceptance incomplete",
+          "verificationKind": "current route-specific prerequisite reconciliation with separate actual engine evidence"
+        }
+      ]
     },
     {
       "id": "API-8ae92367a70c",
       "status": "BLOCKED",
-      "scope": "POST /api/v1/intelligence/timestamps/digests/stamp: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "scope": "POST /api/v1/intelligence/timestamps/digests/stamp: inspected current implementation and applicable local regression evidence; the separate offered operation still lacks the specific authority or integration listed below.",
       "evidence": [
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+          "note": "Separate exact source0a HTTP/DOM evidence, a974 failing-first contrast reports and final frontend4e9/monolith0a readable supplied-proof results; no full application GO."
         }
       ],
       "blockers": [
-        "Owned calendar client/directory and actual stamp/upgrade responses, .ots operation/attestation engine and owned Bitcoin header reader."
+        "Owned calendar submission client and actual returned attestation are not connected. No digest submission/proof creation journey has been established."
       ],
-      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "actual": "The supplied-input cryptographic verifiers are implemented and tested separately. This row remains blocked by its route-specific source/integration; it inherits no pass from those two verifier APIs.",
       "candidateRevisions": {
         "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
         "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
         "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
-        "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f"
+        "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+        "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+        "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+        "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+        "sourceBoundary": "Earlier health/runtime revisions remain historical. Initial verifier HTTP/DOM observations bind source0a. Final supplied-proof theme results bind served frontend4e9 and actual monolith0a; no acceptance propagates automatically to later revisions.",
+        "finalVerifierFrontend": "4e9c2749b5ede261a55cd1388fac1e66469eaefd"
       },
-      "verificationTime": "2026-09-06T12:55:51.141Z",
-      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
-      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
-      "previousExecutionAssertions": []
+      "verificationTime": "2026-09-06T14:30:27.018Z",
+      "repairState": "specific remaining integration or consumer acceptance incomplete",
+      "verificationKind": "current route-specific prerequisite reconciliation with separate actual engine evidence",
+      "previousExecutionAssertions": [
+        {
+          "id": "API-8ae92367a70c",
+          "status": "BLOCKED",
+          "scope": "POST /api/v1/intelligence/timestamps/digests/stamp: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            }
+          ],
+          "blockers": [
+            "Owned calendar client/directory and actual stamp/upgrade responses, .ots operation/attestation engine and owned Bitcoin header reader."
+          ],
+          "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f"
+          },
+          "verificationTime": "2026-09-06T12:55:51.141Z",
+          "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+          "verificationKind": "current source inspection and applicable local regressions; no real-network E2E"
+        },
+        {
+          "id": "API-8ae92367a70c",
+          "status": "BLOCKED",
+          "scope": "POST /api/v1/intelligence/timestamps/digests/stamp: inspected current implementation and applicable local regression evidence; the separate offered operation still lacks the specific authority or integration listed below.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            },
+            {
+              "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+              "note": "Actual source0a direct/gateway verifier assertions and DOM responses, public input provenance, exact archives and the still-pending visual acceptance boundary."
+            }
+          ],
+          "blockers": [
+            "Owned calendar submission client and actual returned attestation are not connected. No digest submission/proof creation journey has been established."
+          ],
+          "actual": "The supplied-input cryptographic verifiers are implemented and tested separately. This row remains blocked by its route-specific source/integration; it inherits no pass from those two verifier APIs.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+            "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+            "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+            "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+            "sourceBoundary": "Earlier health/runtime revisions above remain historical. Verifier runtime is source0a; the later theme source is not yet accepted as a final visual run."
+          },
+          "verificationTime": "2026-09-06T14:30:27.018Z",
+          "repairState": "specific remaining integration or consumer acceptance incomplete",
+          "verificationKind": "current route-specific prerequisite reconciliation with separate actual engine evidence"
+        }
+      ]
     },
     {
       "id": "API-8f2d0a9754f2",
-      "status": "BLOCKED",
-      "scope": "POST /api/v1/intelligence/timestamps/proofs/verify: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "status": "PASS LOCAL",
+      "scope": "POST /api/v1/intelligence/timestamps/proofs/verify: Supplied detached format-v1 proof and expected public document digest verified against actual owned mainnet header reads, plus observed mismatch, bad commitment, pending, unknown attestation, wrong network, malformed-input and subsequent-valid resubmission outcomes. API acceptance only; the separately identified consumer row records final supplied-proof readability. Other operations remain outside this pass.",
       "evidence": [
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+          "note": "Separate exact source0a HTTP/DOM evidence, a974 failing-first contrast reports and final frontend4e9/monolith0a readable supplied-proof results; no full application GO."
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+          "note": "Integration follow-up: frontendbbca production build,100files/1577tests and eight actual provided-proof positive theme/width checks passed with monolith0a. Earlier artifacts and assertions remain unchanged."
         }
       ],
-      "blockers": [
-        "Owned calendar client/directory and actual stamp/upgrade responses, .ots operation/attestation engine and owned Bitcoin header reader."
-      ],
-      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "blockers": [],
+      "actual": "Actual direct and gateway HTTP requests passed the stated positive and negative controls at source0a. The separate consumer row now includes final frontend4e9/monolith0a readability checks. Initial source0a theme defects and a974 contrast failures remain archived. No complete-application or additional realNetworkE2e pass is claimed. Integrated frontendbbca consumer reruns passed separately, without broadening this API scope.",
       "candidateRevisions": {
         "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
         "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
         "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
-        "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f"
+        "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+        "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+        "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+        "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+        "sourceBoundary": "Earlier health/runtime revisions remain historical. Initial verifier HTTP/DOM observations bind source0a. Final supplied-proof theme results bind served frontend4e9 and actual monolith0a; no acceptance propagates automatically to later revisions. An independent subsequent eight-case positive consumer rerun binds integrated frontendbbca to the same actual monolith0a; no new operation scope is added.",
+        "finalVerifierFrontend": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+        "integratedVerifierFrontend": "bbca7f46873d35c5f6146cbb33b3e4cab09f926f"
       },
-      "verificationTime": "2026-09-06T12:55:51.141Z",
-      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
-      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
-      "previousExecutionAssertions": []
+      "verificationTime": "2026-09-06T14:30:27.018Z",
+      "repairState": "implemented and verified within the exact API scope; consumer evidence recorded separately",
+      "verificationKind": "actual candidate HTTP and supplied-input verification; observed owned-mainnet reads for OTS, local public-data cryptography for MuSig2",
+      "previousExecutionAssertions": [
+        {
+          "id": "API-8f2d0a9754f2",
+          "status": "BLOCKED",
+          "scope": "POST /api/v1/intelligence/timestamps/proofs/verify: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            }
+          ],
+          "blockers": [
+            "Owned calendar client/directory and actual stamp/upgrade responses, .ots operation/attestation engine and owned Bitcoin header reader."
+          ],
+          "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f"
+          },
+          "verificationTime": "2026-09-06T12:55:51.141Z",
+          "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+          "verificationKind": "current source inspection and applicable local regressions; no real-network E2E"
+        },
+        {
+          "id": "API-8f2d0a9754f2",
+          "status": "PASS LOCAL",
+          "scope": "POST /api/v1/intelligence/timestamps/proofs/verify: Supplied detached format-v1 proof and expected public document digest verified against actual owned mainnet header reads, plus observed mismatch, bad commitment, pending, unknown attestation, wrong network, malformed-input and subsequent-valid resubmission outcomes. API acceptance only; complete visual usability and other operations remain outside this pass.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            },
+            {
+              "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+              "note": "Actual source0a direct/gateway verifier assertions and DOM responses, public input provenance, exact archives and the still-pending visual acceptance boundary."
+            }
+          ],
+          "blockers": [],
+          "actual": "Actual direct and gateway HTTP requests passed the stated positive and negative controls at source0a. Eight combined browser DOM/response assertions support result propagation, but source0a screenshots have a known theme/readability failure; final visual recheck is pending. No complete-application or additional realNetworkE2e pass is claimed.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+            "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+            "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+            "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+            "sourceBoundary": "Earlier health/runtime revisions above remain historical. Verifier runtime is source0a; the later theme source is not yet accepted as a final visual run."
+          },
+          "verificationTime": "2026-09-06T14:30:27.018Z",
+          "repairState": "implemented and verified within the exact API scope; final consumer visual acceptance pending",
+          "verificationKind": "actual candidate HTTP and supplied-input verification; observed owned-mainnet reads for OTS, local public-data cryptography for MuSig2"
+        },
+        {
+          "id": "API-8f2d0a9754f2",
+          "status": "PASS LOCAL",
+          "scope": "POST /api/v1/intelligence/timestamps/proofs/verify: Supplied detached format-v1 proof and expected public document digest verified against actual owned mainnet header reads, plus observed mismatch, bad commitment, pending, unknown attestation, wrong network, malformed-input and subsequent-valid resubmission outcomes. API acceptance only; the separately identified consumer row records final supplied-proof readability. Other operations remain outside this pass.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            },
+            {
+              "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+              "note": "Separate exact source0a HTTP/DOM evidence, a974 failing-first contrast reports and final frontend4e9/monolith0a readable supplied-proof results; no full application GO."
+            }
+          ],
+          "blockers": [],
+          "actual": "Actual direct and gateway HTTP requests passed the stated positive and negative controls at source0a. The separate consumer row now includes final frontend4e9/monolith0a readability checks. Initial source0a theme defects and a974 contrast failures remain archived. No complete-application or additional realNetworkE2e pass is claimed.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+            "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+            "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+            "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+            "sourceBoundary": "Earlier health/runtime revisions remain historical. Initial verifier HTTP/DOM observations bind source0a. Final supplied-proof theme results bind served frontend4e9 and actual monolith0a; no acceptance propagates automatically to later revisions.",
+            "finalVerifierFrontend": "4e9c2749b5ede261a55cd1388fac1e66469eaefd"
+          },
+          "verificationTime": "2026-09-06T14:30:27.018Z",
+          "repairState": "implemented and verified within the exact API scope; consumer evidence recorded separately",
+          "verificationKind": "actual candidate HTTP and supplied-input verification; observed owned-mainnet reads for OTS, local public-data cryptography for MuSig2"
+        }
+      ]
     },
     {
       "id": "API-1e4fb78fbdf0",
       "status": "BLOCKED",
-      "scope": "POST /api/v1/intelligence/timestamps/proofs/upgrade: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "scope": "POST /api/v1/intelligence/timestamps/proofs/upgrade: inspected current implementation and applicable local regression evidence; the separate offered operation still lacks the specific authority or integration listed below.",
       "evidence": [
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+          "note": "Separate exact source0a HTTP/DOM evidence, a974 failing-first contrast reports and final frontend4e9/monolith0a readable supplied-proof results; no full application GO."
         }
       ],
       "blockers": [
-        "Owned calendar client/directory and actual stamp/upgrade responses, .ots operation/attestation engine and owned Bitcoin header reader."
+        "Owned calendar upgrade client, actual response and validation/readback of the returned upgraded proof are not connected."
       ],
-      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "actual": "The supplied-input cryptographic verifiers are implemented and tested separately. This row remains blocked by its route-specific source/integration; it inherits no pass from those two verifier APIs.",
       "candidateRevisions": {
         "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
         "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
         "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
-        "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f"
+        "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+        "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+        "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+        "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+        "sourceBoundary": "Earlier health/runtime revisions remain historical. Initial verifier HTTP/DOM observations bind source0a. Final supplied-proof theme results bind served frontend4e9 and actual monolith0a; no acceptance propagates automatically to later revisions.",
+        "finalVerifierFrontend": "4e9c2749b5ede261a55cd1388fac1e66469eaefd"
       },
-      "verificationTime": "2026-09-06T12:55:51.141Z",
-      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
-      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
-      "previousExecutionAssertions": []
+      "verificationTime": "2026-09-06T14:30:27.018Z",
+      "repairState": "specific remaining integration or consumer acceptance incomplete",
+      "verificationKind": "current route-specific prerequisite reconciliation with separate actual engine evidence",
+      "previousExecutionAssertions": [
+        {
+          "id": "API-1e4fb78fbdf0",
+          "status": "BLOCKED",
+          "scope": "POST /api/v1/intelligence/timestamps/proofs/upgrade: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            }
+          ],
+          "blockers": [
+            "Owned calendar client/directory and actual stamp/upgrade responses, .ots operation/attestation engine and owned Bitcoin header reader."
+          ],
+          "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f"
+          },
+          "verificationTime": "2026-09-06T12:55:51.141Z",
+          "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+          "verificationKind": "current source inspection and applicable local regressions; no real-network E2E"
+        },
+        {
+          "id": "API-1e4fb78fbdf0",
+          "status": "BLOCKED",
+          "scope": "POST /api/v1/intelligence/timestamps/proofs/upgrade: inspected current implementation and applicable local regression evidence; the separate offered operation still lacks the specific authority or integration listed below.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            },
+            {
+              "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+              "note": "Actual source0a direct/gateway verifier assertions and DOM responses, public input provenance, exact archives and the still-pending visual acceptance boundary."
+            }
+          ],
+          "blockers": [
+            "Owned calendar upgrade client, actual response and validation/readback of the returned upgraded proof are not connected."
+          ],
+          "actual": "The supplied-input cryptographic verifiers are implemented and tested separately. This row remains blocked by its route-specific source/integration; it inherits no pass from those two verifier APIs.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+            "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+            "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+            "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+            "sourceBoundary": "Earlier health/runtime revisions above remain historical. Verifier runtime is source0a; the later theme source is not yet accepted as a final visual run."
+          },
+          "verificationTime": "2026-09-06T14:30:27.018Z",
+          "repairState": "specific remaining integration or consumer acceptance incomplete",
+          "verificationKind": "current route-specific prerequisite reconciliation with separate actual engine evidence"
+        }
+      ]
     },
     {
       "id": "API-CURRENT-98c58e35b676",
@@ -1525,26 +2911,98 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        },
+        {
+          "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+          "note": "Separate exact source0a HTTP/DOM evidence, a974 failing-first contrast reports and final frontend4e9/monolith0a readable supplied-proof results; no full application GO."
         }
       ],
       "blockers": [
         "Measured owned-node/chainstate readers; trusted signed snapshot catalogue, producer keys, actual bytes and pinned Core commitments; durable verification/job stores and private authorized executor. Public operator handlers must receive authorization before any executor is connected.",
-        "BIP327 aggregation/nonce/partial-signature/tweak engine; durable session authority; trusted product/vendor-key directory, signed payload contract and actual version-specific conformance results. A final BIP340 primitive is insufficient.",
-        "Owned calendar client/directory and actual stamp/upgrade responses, .ots operation/attestation engine and owned Bitcoin header reader.",
         "Owned Tor/I2P relay client, durable queue/cancel worker, owned policy/mempool/ordering sensors, and trusted accelerator provider keys with exact signed encoding and signature algorithm.",
-        "Compatible RGB validation engine and owned Bitcoin commitment/seal-state authority; actual consignment validation has no connected implementation."
+        "Compatible RGB validation engine and owned Bitcoin commitment/seal-state authority; actual consignment validation has no connected implementation.",
+        "Owned calendar submission/upgrade clients and durable calendar/batch/anchor observation sources; durable signing sessions, trusted product/vendor-key directory and signed-payload contract remain unavailable. Untweaked BIP327 provided-transcript and detached .ots verification engines are now implemented, with only the two explicitly scoped APIs and their supplied-proof consumers accepted."
       ],
-      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "actual": "The two supplied-input verifier API scopes and their two consumers now pass locally within exact public proof/transcript boundaries. Complete verification/relay coverage and unrelated Bootstrap/RGB/private-relay/trust prerequisites remain unaccepted.",
       "candidateRevisions": {
         "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
         "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
         "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
-        "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f"
+        "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+        "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+        "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+        "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+        "sourceBoundary": "Earlier health/runtime revisions remain historical. Initial verifier HTTP/DOM observations bind source0a. Final supplied-proof theme results bind served frontend4e9 and actual monolith0a; no acceptance propagates automatically to later revisions.",
+        "finalVerifierFrontend": "4e9c2749b5ede261a55cd1388fac1e66469eaefd"
       },
-      "verificationTime": "2026-09-06T12:55:51.141Z",
-      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
-      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
-      "previousExecutionAssertions": []
+      "verificationTime": "2026-09-06T14:30:27.018Z",
+      "repairState": "specific remaining integration or consumer acceptance incomplete",
+      "verificationKind": "current route-specific prerequisite reconciliation with separate actual engine evidence",
+      "previousExecutionAssertions": [
+        {
+          "id": "T-17",
+          "status": "BLOCKED",
+          "scope": "WP07 integrity regression subset inspected and repaired; the broad real verification/relay scenario remains unaccepted.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            }
+          ],
+          "blockers": [
+            "Measured owned-node/chainstate readers; trusted signed snapshot catalogue, producer keys, actual bytes and pinned Core commitments; durable verification/job stores and private authorized executor. Public operator handlers must receive authorization before any executor is connected.",
+            "BIP327 aggregation/nonce/partial-signature/tweak engine; durable session authority; trusted product/vendor-key directory, signed payload contract and actual version-specific conformance results. A final BIP340 primitive is insufficient.",
+            "Owned calendar client/directory and actual stamp/upgrade responses, .ots operation/attestation engine and owned Bitcoin header reader.",
+            "Owned Tor/I2P relay client, durable queue/cancel worker, owned policy/mempool/ordering sensors, and trusted accelerator provider keys with exact signed encoding and signature algorithm.",
+            "Compatible RGB validation engine and owned Bitcoin commitment/seal-state authority; actual consignment validation has no connected implementation."
+          ],
+          "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f"
+          },
+          "verificationTime": "2026-09-06T12:55:51.141Z",
+          "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+          "verificationKind": "current source inspection and applicable local regressions; no real-network E2E"
+        },
+        {
+          "id": "T-17",
+          "status": "BLOCKED",
+          "scope": "WP07 integrity regression subset inspected and repaired; the broad real verification/relay scenario remains unaccepted.",
+          "evidence": [
+            {
+              "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+              "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+            },
+            {
+              "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
+              "note": "Actual source0a direct/gateway verifier assertions and DOM responses, public input provenance, exact archives and the still-pending visual acceptance boundary."
+            }
+          ],
+          "blockers": [
+            "Measured owned-node/chainstate readers; trusted signed snapshot catalogue, producer keys, actual bytes and pinned Core commitments; durable verification/job stores and private authorized executor. Public operator handlers must receive authorization before any executor is connected.",
+            "Owned Tor/I2P relay client, durable queue/cancel worker, owned policy/mempool/ordering sensors, and trusted accelerator provider keys with exact signed encoding and signature algorithm.",
+            "Compatible RGB validation engine and owned Bitcoin commitment/seal-state authority; actual consignment validation has no connected implementation.",
+            "Owned calendar submission/upgrade clients and durable calendar/batch/anchor observation sources; durable signing sessions, trusted product/vendor-key directory and signed-payload contract remain unavailable. Untweaked BIP327 provided-transcript and detached .ots verification engines are now implemented, with only the two explicitly scoped API passes recorded."
+          ],
+          "actual": "Two actual provided-input API verifier scopes now pass locally. Complete verification/relay coverage, final readable consumers and the unrelated Bootstrap/RGB/private-relay/trust prerequisites remain unaccepted.",
+          "candidateRevisions": {
+            "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+            "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+            "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+            "currentRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+            "verifierRuntimeMonolith": "0a8e1575039218709d45f5957290253454b3a0d4",
+            "verifierRuntimeFrontendReportedRevision": "0a8e15750",
+            "themeSourceFollowup": "4e9c2749b5ede261a55cd1388fac1e66469eaefd",
+            "sourceBoundary": "Earlier health/runtime revisions above remain historical. Verifier runtime is source0a; the later theme source is not yet accepted as a final visual run."
+          },
+          "verificationTime": "2026-09-06T14:30:27.018Z",
+          "repairState": "specific remaining integration or consumer acceptance incomplete",
+          "verificationKind": "current route-specific prerequisite reconciliation with separate actual engine evidence"
+        }
+      ]
     },
     {
       "id": "PRO-01/registry",
@@ -5920,5 +7378,6 @@
   ],
   "finalRepositoryRevision": "453a3ecaf02c4fd46a7a06a59f171d40e8d3c281",
   "productionCodeRevision": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
-  "preparedConfigurationRequirement": "Set chainReference:false for index checkpoints; preserve explicit absent/stale node observations independently. This requirement does not alter the archived runtime configuration or imply a new serving overlay."
+  "preparedConfigurationRequirement": "Set chainReference:false for index checkpoints; preserve explicit absent/stale node observations independently. This requirement does not alter the archived runtime configuration or imply a new serving overlay.",
+  "engineRuntimeArtifact": "docs/acceptance/engine-runtime-2026-09-06/review.json"
 }

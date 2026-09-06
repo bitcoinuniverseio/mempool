@@ -1,0 +1,11 @@
+(node:2620) ESLintIgnoreWarning: The ".eslintignore" file is no longer supported. Switch to using the "ignores" property in "eslint.config.js": https://eslint.org/docs/latest/use/configure/migration-guide#ignoring-files
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:2620) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/universe/mempool/.tmp/explorer-health-cc524f6d97b5/frontend/eslint.config.js?mtime=1788696990196 is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\frontend\package.json.
+
+D:\universe\mempool\.tmp\explorer-health-cc524f6d97b5\frontend\src\app\universe\multiparty\multiparty-musig2.component.ts
+  173:35  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+
+✖ 1 problem (0 errors, 1 warning)
+

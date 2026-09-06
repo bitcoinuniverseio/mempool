@@ -1,0 +1,67 @@
+{
+  "base": "http://127.0.0.1:4310",
+  "browser": "chromium",
+  "build": "066715fdfa45a1f7",
+  "report": [
+    {
+      "route": "opentimestamps-intelligence",
+      "viewport": "phone-390",
+      "overflowBy": 0,
+      "viewportWidth": 390,
+      "culprits": [],
+      "scrollers": [
+        {
+          "el": "app-opentimestamps-overview div.table-responsive",
+          "declared": true,
+          "keyboardReachable": true
+        }
+      ],
+      "clippers": [],
+      "smallFields": [],
+      "targetsBelowWcag": [],
+      "targetsBelowPlatform": [],
+      "atBottom": {
+        "hidden": [],
+        "barTop": 757
+      },
+      "insets": {
+        "top": "59px",
+        "bottom": "34px",
+        "left": "0px",
+        "right": "0px"
+      },
+      "chrome": {
+        "headerPadTop": 59,
+        "barPadBottom": 34,
+        "barPadLeft": 0,
+        "barPadRight": 0,
+        "headerBottom": 180
+      },
+      "overflowingSurfaces": [],
+      "nav": {
+        "scrolls": false,
+        "scrollLeft": 0,
+        "activeVisible": null,
+        "hasActive": false,
+        "affordance": false
+      },
+      "innerHeight": 844,
+      "docHeight": 2541
+    }
+  ],
+  "findings": [],
+  "grazes": [],
+  "passes": [
+    "viewport: viewport-fit=cover is asked for",
+    "viewport: zoom is not restricted"
+  ],
+  "executionComplete": true,
+  "cases": [
+    {
+      "route": "opentimestamps-intelligence",
+      "viewport": "phone-390",
+      "status": "measured",
+      "phase": "complete"
+    }
+  ]
+}

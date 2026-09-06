@@ -1,0 +1,100 @@
+{
+  "startedAt": "2026-09-06T14:57:50.003Z",
+  "tool": "musig2",
+  "theme": "dark",
+  "width": 390,
+  "scope": "Actual frontend and gateway with candidate monolith and owned Bitcoin header reads; no intercepted responses; fresh headless profile; theme contrast and rendered provided-proof result.",
+  "responses": [
+    {
+      "url": "http://127.0.0.1:4310/api/v1/intelligence/multiparty/public-sessions/verify",
+      "status": 200,
+      "body": {
+        "verified": true,
+        "stage": "verified-session",
+        "scope": "bip327-untweaked-public-transcript",
+        "error": "",
+        "participant_count": 2,
+        "has_duplicate_nonces": false,
+        "aggregate_public_key": "f68803d6235df99eb72f251d832b52029a64ae2c195a15823bd85f9577478408",
+        "provided_aggregate_public_key": null,
+        "key_aggregation_verified": true,
+        "aggregate_nonce": "0341432722c5cd0268d829c702cf0d1cbce57033eed201fd335191385227c3210c03d377f2d258b64aadc0e16f26462323d701d286046a2ea93365656afd9875982b",
+        "nonce_aggregation_verified": true,
+        "partial_signature_validity": [
+          true,
+          true
+        ],
+        "final_bip340_valid": true,
+        "final_signature": "041da22223ce65c92c9a0d6c2cac828aaf1eee56304fec371ddf91ebb2b9ef0912f1038025857fedeb3ff696f8b99fa4bb2c5812f6095a2e0004ec99ce18de1e",
+        "final_signature_scope": "BIP340 over the BIP327-computed untweaked participant aggregate and supplied 32-byte message hash. No transaction sighash derivation, participant identity authentication, nonce-generation or cross-session nonce-reuse verification.",
+        "errors": [],
+        "warnings": []
+      }
+    }
+  ],
+  "frontendRevision": "bbca7f468",
+  "backendInfo": {
+    "hostname": "SERVER",
+    "version": "3.3.1",
+    "gitCommit": "0a8e15750",
+    "lightning": false,
+    "backend": "esplora",
+    "coreVersion": "?",
+    "osVersion": "Windows_NT 10.0.26100",
+    "chainSync": null,
+    "checkpoint": null
+  },
+  "bodyText": "MuSig2 Session Coordinator (BIP327)\nPublic Transcript Verification\n\nVerify an untweaked BIP327 public transcript. Keep participants, public nonces and partial signatures in the same order. Enter public data only.\n\nOverview\nMuSig2 Coordinator\nBSMS Setup (BIP129)\nWallet Policies (BIP388)\nLabels (BIP329)\nHardware Matrix\nSession Public Data\nCosigner Public Keys (33-byte compressed hex, one per line)\nMessage Digest (32-byte hex)\nAdd public nonces and partial signatures\nPublic Nonces (66-byte hex, one per participant)\nPartial Signatures (32-byte hex, in participant order)\nFinal Signature (optional 64-byte hex consistency check)\nVerify Public Data\nLoad Key Aggregation Sample\nAggregated Key & Verification Result\nPublic transcript verified\nUntweaked Aggregate Public Key\nf68803d6235df99eb72f251d832b52029a64ae2c195a15823bd85f9577478408\nCosigners Count\n2 participants\nVerified Final Signature\n041da22223ce65c92c9a0d6c2cac828aaf1eee56304fec371ddf91ebb2b9ef0912f1038025857fedeb3ff696f8b99fa4bb2c5812f6095a2e0004ec99ce18de1e",
+  "contrast": {
+    "text": [],
+    "painted": [],
+    "canvas": [],
+    "sampled": 67
+  },
+  "fields": [
+    {
+      "id": "musig2-keys",
+      "color": "rgb(246, 242, 248)",
+      "background": "rgb(28, 21, 38)",
+      "fontSize": "16px",
+      "valueLength": 133
+    },
+    {
+      "id": "musig2-message",
+      "color": "rgb(246, 242, 248)",
+      "background": "rgb(28, 21, 38)",
+      "fontSize": "16px",
+      "valueLength": 64
+    },
+    {
+      "id": "musig2-nonces",
+      "color": "rgb(246, 242, 248)",
+      "background": "rgb(28, 21, 38)",
+      "fontSize": "16px",
+      "valueLength": 265
+    },
+    {
+      "id": "musig2-partials",
+      "color": "rgb(246, 242, 248)",
+      "background": "rgb(28, 21, 38)",
+      "fontSize": "16px",
+      "valueLength": 129
+    },
+    {
+      "id": "musig2-final",
+      "color": "rgb(246, 242, 248)",
+      "background": "rgb(28, 21, 38)",
+      "fontSize": "16px",
+      "valueLength": 128
+    }
+  ],
+  "geometry": {
+    "width": 390,
+    "scrollWidth": 390,
+    "theme": null,
+    "bodyClass": ""
+  },
+  "status": "PASS",
+  "finishedAt": "2026-09-06T14:57:51.840Z",
+  "browser": "152.0.7977.64"
+}

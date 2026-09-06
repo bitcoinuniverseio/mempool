@@ -1,0 +1,422 @@
+{
+  "startedAt": "2026-09-06T14:25:18.967Z",
+  "origin": "http://127.0.0.1:3410",
+  "scope": "Actual candidate monolith HTTP; no intercepted responses; BIP327 public transcript verification and historical Bitcoin .ots commitment reads through configured Universe-owned Esplora",
+  "observations": [
+    {
+      "name": "candidate identity",
+      "path": "/api/v1/backend-info",
+      "method": "GET",
+      "request": null,
+      "status": 200,
+      "response": {
+        "hostname": "SERVER",
+        "version": "3.3.1",
+        "gitCommit": "0a8e15750",
+        "lightning": false,
+        "backend": "esplora",
+        "coreVersion": "?",
+        "osVersion": "Windows_NT 10.0.26100",
+        "chainSync": null,
+        "checkpoint": null
+      },
+      "observedAt": "2026-09-06T14:25:19.012Z",
+      "assertions": "PASS"
+    },
+    {
+      "name": "complete public transcript",
+      "path": "/api/v1/intelligence/multiparty/public-sessions/verify",
+      "method": "POST",
+      "request": {
+        "participant_public_keys": [
+          "03935F972DA013F80AE011890FA89B67A27B7BE6CCB24D3274D18B2D4067F261A9",
+          "02D2DC6F5DF7C56ACF38C7FA0AE7A759AE30E19B37359DFDE015872324C7EF6E05"
+        ],
+        "public_nonces": [
+          "036E5EE6E28824029FEA3E8A9DDD2C8483F5AF98F7177C3AF3CB6F47CAF8D94AE902DBA67E4A1F3680826172DA15AFB1A8CA85C7C5CC88900905C8DC8C328511B53E",
+          "03E4F798DA48A76EEC1C9CC5AB7A880FFBA201A5F064E627EC9CB0031D1D58FC5103E06180315C5A522B7EC7C08B69DCD721C313C940819296D0A7AB8E8795AC1F00"
+        ],
+        "partial_signatures": [
+          "B15D2CD3C3D22B04DAE438CE653F6B4ECF042F42CFDED7C41B64AAF9B4AF53FB",
+          "6193D6AC61B354E9105BBDC8937A3454A6D705B6D57322A5A472A02CE99FCB64"
+        ],
+        "aggregate_nonce": "0341432722C5CD0268D829C702CF0D1CBCE57033EED201FD335191385227C3210C03D377F2D258B64AADC0E16F26462323D701D286046A2EA93365656AFD9875982B",
+        "message_hash": "599C67EA410D005B9DA90817CF03ED3B1C868E4DA4EDF00A5880B0082C237869",
+        "final_signature": "041DA22223CE65C92C9A0D6C2CAC828AAF1EEE56304FEC371DDF91EBB2B9EF0912F1038025857FEDEB3FF696F8B99FA4BB2C5812F6095A2E0004EC99CE18DE1E"
+      },
+      "status": 200,
+      "response": {
+        "verified": true,
+        "stage": "verified-session",
+        "scope": "bip327-untweaked-public-transcript",
+        "error": "",
+        "participant_count": 2,
+        "has_duplicate_nonces": false,
+        "aggregate_public_key": "f68803d6235df99eb72f251d832b52029a64ae2c195a15823bd85f9577478408",
+        "provided_aggregate_public_key": null,
+        "key_aggregation_verified": true,
+        "aggregate_nonce": "0341432722c5cd0268d829c702cf0d1cbce57033eed201fd335191385227c3210c03d377f2d258b64aadc0e16f26462323d701d286046a2ea93365656afd9875982b",
+        "nonce_aggregation_verified": true,
+        "partial_signature_validity": [
+          true,
+          true
+        ],
+        "final_bip340_valid": true,
+        "final_signature": "041da22223ce65c92c9a0d6c2cac828aaf1eee56304fec371ddf91ebb2b9ef0912f1038025857fedeb3ff696f8b99fa4bb2c5812f6095a2e0004ec99ce18de1e",
+        "final_signature_scope": "BIP340 over the BIP327-computed untweaked participant aggregate and supplied 32-byte message hash. No transaction sighash derivation, participant identity authentication, nonce-generation or cross-session nonce-reuse verification.",
+        "errors": [],
+        "warnings": []
+      },
+      "observedAt": "2026-09-06T14:25:19.045Z",
+      "assertions": "PASS"
+    },
+    {
+      "name": "corrupt partial rejected",
+      "path": "/api/v1/intelligence/multiparty/public-sessions/verify",
+      "method": "POST",
+      "request": {
+        "participant_public_keys": [
+          "03935F972DA013F80AE011890FA89B67A27B7BE6CCB24D3274D18B2D4067F261A9",
+          "02D2DC6F5DF7C56ACF38C7FA0AE7A759AE30E19B37359DFDE015872324C7EF6E05"
+        ],
+        "public_nonces": [
+          "036E5EE6E28824029FEA3E8A9DDD2C8483F5AF98F7177C3AF3CB6F47CAF8D94AE902DBA67E4A1F3680826172DA15AFB1A8CA85C7C5CC88900905C8DC8C328511B53E",
+          "03E4F798DA48A76EEC1C9CC5AB7A880FFBA201A5F064E627EC9CB0031D1D58FC5103E06180315C5A522B7EC7C08B69DCD721C313C940819296D0A7AB8E8795AC1F00"
+        ],
+        "partial_signatures": [
+          "0000000000000000000000000000000000000000000000000000000000000000",
+          "6193D6AC61B354E9105BBDC8937A3454A6D705B6D57322A5A472A02CE99FCB64"
+        ],
+        "aggregate_nonce": "0341432722C5CD0268D829C702CF0D1CBCE57033EED201FD335191385227C3210C03D377F2D258B64AADC0E16F26462323D701D286046A2EA93365656AFD9875982B",
+        "message_hash": "599C67EA410D005B9DA90817CF03ED3B1C868E4DA4EDF00A5880B0082C237869",
+        "final_signature": "041DA22223CE65C92C9A0D6C2CAC828AAF1EEE56304FEC371DDF91EBB2B9EF0912F1038025857FEDEB3FF696F8B99FA4BB2C5812F6095A2E0004EC99CE18DE1E"
+      },
+      "status": 400,
+      "response": {
+        "verified": false,
+        "stage": "invalid-input",
+        "scope": "bip327-untweaked-public-transcript",
+        "error": "Invalid partial signature at participant index 0.",
+        "participant_count": 2,
+        "has_duplicate_nonces": false,
+        "aggregate_public_key": "f68803d6235df99eb72f251d832b52029a64ae2c195a15823bd85f9577478408",
+        "provided_aggregate_public_key": null,
+        "key_aggregation_verified": true,
+        "aggregate_nonce": "0341432722c5cd0268d829c702cf0d1cbce57033eed201fd335191385227c3210c03d377f2d258b64aadc0e16f26462323d701d286046a2ea93365656afd9875982b",
+        "nonce_aggregation_verified": true,
+        "partial_signature_validity": [
+          false,
+          true
+        ],
+        "final_bip340_valid": true,
+        "final_signature": null,
+        "final_signature_scope": "BIP340 over the BIP327-computed untweaked participant aggregate and supplied 32-byte message hash. No transaction sighash derivation, participant identity authentication, nonce-generation or cross-session nonce-reuse verification.",
+        "errors": [
+          "Invalid partial signature at participant index 0."
+        ],
+        "warnings": []
+      },
+      "observedAt": "2026-09-06T14:25:19.059Z",
+      "assertions": "PASS"
+    },
+    {
+      "name": "key aggregation scope",
+      "path": "/api/v1/intelligence/multiparty/public-sessions/verify",
+      "method": "POST",
+      "request": {
+        "participant_public_keys": [
+          "03935F972DA013F80AE011890FA89B67A27B7BE6CCB24D3274D18B2D4067F261A9",
+          "02D2DC6F5DF7C56ACF38C7FA0AE7A759AE30E19B37359DFDE015872324C7EF6E05"
+        ],
+        "message_hash": "599C67EA410D005B9DA90817CF03ED3B1C868E4DA4EDF00A5880B0082C237869"
+      },
+      "status": 200,
+      "response": {
+        "verified": false,
+        "stage": "partial-session",
+        "scope": "bip327-untweaked-public-transcript",
+        "error": "",
+        "participant_count": 2,
+        "has_duplicate_nonces": false,
+        "aggregate_public_key": "f68803d6235df99eb72f251d832b52029a64ae2c195a15823bd85f9577478408",
+        "provided_aggregate_public_key": null,
+        "key_aggregation_verified": true,
+        "aggregate_nonce": null,
+        "nonce_aggregation_verified": false,
+        "partial_signature_validity": [],
+        "final_bip340_valid": null,
+        "final_signature": null,
+        "final_signature_scope": "BIP340 over the BIP327-computed untweaked participant aggregate and supplied 32-byte message hash. No transaction sighash derivation, participant identity authentication, nonce-generation or cross-session nonce-reuse verification.",
+        "errors": [],
+        "warnings": [
+          "The supplied public transcript is incomplete; only the reported individual checks were performed."
+        ]
+      },
+      "observedAt": "2026-09-06T14:25:19.066Z",
+      "assertions": "PASS"
+    },
+    {
+      "name": "unsupported tweak rejected",
+      "path": "/api/v1/intelligence/multiparty/public-sessions/verify",
+      "method": "POST",
+      "request": {
+        "participant_public_keys": [
+          "03935F972DA013F80AE011890FA89B67A27B7BE6CCB24D3274D18B2D4067F261A9",
+          "02D2DC6F5DF7C56ACF38C7FA0AE7A759AE30E19B37359DFDE015872324C7EF6E05"
+        ],
+        "public_nonces": [
+          "036E5EE6E28824029FEA3E8A9DDD2C8483F5AF98F7177C3AF3CB6F47CAF8D94AE902DBA67E4A1F3680826172DA15AFB1A8CA85C7C5CC88900905C8DC8C328511B53E",
+          "03E4F798DA48A76EEC1C9CC5AB7A880FFBA201A5F064E627EC9CB0031D1D58FC5103E06180315C5A522B7EC7C08B69DCD721C313C940819296D0A7AB8E8795AC1F00"
+        ],
+        "partial_signatures": [
+          "B15D2CD3C3D22B04DAE438CE653F6B4ECF042F42CFDED7C41B64AAF9B4AF53FB",
+          "6193D6AC61B354E9105BBDC8937A3454A6D705B6D57322A5A472A02CE99FCB64"
+        ],
+        "aggregate_nonce": "0341432722C5CD0268D829C702CF0D1CBCE57033EED201FD335191385227C3210C03D377F2D258B64AADC0E16F26462323D701D286046A2EA93365656AFD9875982B",
+        "message_hash": "599C67EA410D005B9DA90817CF03ED3B1C868E4DA4EDF00A5880B0082C237869",
+        "final_signature": "041DA22223CE65C92C9A0D6C2CAC828AAF1EEE56304FEC371DDF91EBB2B9EF0912F1038025857FEDEB3FF696F8B99FA4BB2C5812F6095A2E0004EC99CE18DE1E",
+        "tweaks": [
+          "0101010101010101010101010101010101010101010101010101010101010101"
+        ]
+      },
+      "status": 400,
+      "response": {
+        "verified": false,
+        "stage": "invalid-input",
+        "scope": "bip327-untweaked-public-transcript",
+        "error": "Unsupported public-session fields; only untweaked BIP327 transcripts are supported: tweaks.",
+        "participant_count": 2,
+        "has_duplicate_nonces": false,
+        "aggregate_public_key": null,
+        "provided_aggregate_public_key": null,
+        "key_aggregation_verified": false,
+        "aggregate_nonce": null,
+        "nonce_aggregation_verified": false,
+        "partial_signature_validity": [],
+        "final_bip340_valid": null,
+        "final_signature": null,
+        "final_signature_scope": "BIP340 over the BIP327-computed untweaked participant aggregate and supplied 32-byte message hash. No transaction sighash derivation, participant identity authentication, nonce-generation or cross-session nonce-reuse verification.",
+        "errors": [
+          "Unsupported public-session fields; only untweaked BIP327 transcripts are supported: tweaks."
+        ],
+        "warnings": []
+      },
+      "observedAt": "2026-09-06T14:25:19.070Z",
+      "assertions": "PASS"
+    },
+    {
+      "name": "actual owned-header anchored proof",
+      "path": "/api/v1/intelligence/timestamps/proofs/verify",
+      "method": "POST",
+      "request": {
+        "proof": "AE9wZW5UaW1lc3RhbXBzAABQcm9vZgC/ieLohOiSlAEIA7ogTlDRJuRnTABeBNguhMITZngK8fQ71Uo3gWtqs0AD8cgBAQAAAAHkgvnTLsw7ple2nYmAEIV7VEV6kEl5gv9W+XxOxY5vmAEAAABrSDBFAiEAslOt0dHPkIRDOKR1oE/xP8nnvSQrB3Yt6gf1YIst42cCIACyaMqcM0KzdpzdBiiRMXzc74eqwxC2hV6dk4mOu+jsASECDY5NEH0rM5sAUO/dS0oJJFqgVgSPElOWN06moqsHCcb/////AmUz5gUAAAAAGXapFAvwV9QPu6Z0SGJRX1tVojEN5XcviKyghgEAAAAAABl2qRTwBoisAAAAAAgI8SCph/cWxTORPDFMeONdNYhMrJQ/pCysSdKyxp9AA/hfiAgI8SDexVs0h+Hj9yKkm1WneDIVhieF9KOss5KEYBn3HcZKnQgI8SCyyhj0heCAR44CXas9RktBbA4ey2Ypya786MghTQQkMggI8CARsOkGYRlv9LCBPD7aFBurXpFgSDe996DJ3zfbDjoRmAgI8CDDS8GkoQk//RSMAWseZkdCkU6Tnvq+TT01ZRWRSybZ4ggI8CDD5ufDjGn2ryTCvjTrrEglft5h7AohuVNeREMne+MGRggI8SAHmL+GBuAAJOXV1UvwyWD2Kd+52taRV0VbbyZSwOjegQgI8CA/mtptYLqiRABrsKrVFEitL6+51LZIegmZz/JrkfD1NggI8SDHAwGelZqN0/rvdIm7MoukhVdHWOcJHwFGTrZYcsl1yAgI8CDL/v/1E/+EuRXj/tb515lnZjD4Nk6ipsdVf62UpbXXiAgI8SAL4jcJhZkTur1EYLvd+O0hPnyHc6Sx+s4w+Kz98JO3BQgIAAWIlg1z1xkBA/fvFQ==",
+        "digest": "03ba204e50d126e4674c005e04d82e84c21366780af1f43bd54a37816b6ab340",
+        "network": "mainnet"
+      },
+      "status": 200,
+      "response": {
+        "status": "bitcoin_attestation_verified",
+        "verified": true,
+        "digest_matches": true,
+        "file_digest": "03ba204e50d126e4674c005e04d82e84c21366780af1f43bd54a37816b6ab340",
+        "file_hash_algorithm": "sha256",
+        "network": "mainnet",
+        "calendar_attestations": [],
+        "operation_count": 38,
+        "notices": [],
+        "errors": [],
+        "attestation_type": "bitcoin",
+        "earliest_proven_block_height": 358391,
+        "earliest_proven_time_utc": "2015-05-28T15:41:18.000Z",
+        "bitcoin_block_hash": "000000000000000003e892881a8cdcdc117c06d444057c98b6f04a9ee75a2319"
+      },
+      "observedAt": "2026-09-06T14:25:19.733Z",
+      "assertions": "PASS"
+    },
+    {
+      "name": "document mismatch",
+      "path": "/api/v1/intelligence/timestamps/proofs/verify",
+      "method": "POST",
+      "request": {
+        "proof": "AE9wZW5UaW1lc3RhbXBzAABQcm9vZgC/ieLohOiSlAEIA7ogTlDRJuRnTABeBNguhMITZngK8fQ71Uo3gWtqs0AD8cgBAQAAAAHkgvnTLsw7ple2nYmAEIV7VEV6kEl5gv9W+XxOxY5vmAEAAABrSDBFAiEAslOt0dHPkIRDOKR1oE/xP8nnvSQrB3Yt6gf1YIst42cCIACyaMqcM0KzdpzdBiiRMXzc74eqwxC2hV6dk4mOu+jsASECDY5NEH0rM5sAUO/dS0oJJFqgVgSPElOWN06moqsHCcb/////AmUz5gUAAAAAGXapFAvwV9QPu6Z0SGJRX1tVojEN5XcviKyghgEAAAAAABl2qRTwBoisAAAAAAgI8SCph/cWxTORPDFMeONdNYhMrJQ/pCysSdKyxp9AA/hfiAgI8SDexVs0h+Hj9yKkm1WneDIVhieF9KOss5KEYBn3HcZKnQgI8SCyyhj0heCAR44CXas9RktBbA4ey2Ypya786MghTQQkMggI8CARsOkGYRlv9LCBPD7aFBurXpFgSDe996DJ3zfbDjoRmAgI8CDDS8GkoQk//RSMAWseZkdCkU6Tnvq+TT01ZRWRSybZ4ggI8CDD5ufDjGn2ryTCvjTrrEglft5h7AohuVNeREMne+MGRggI8SAHmL+GBuAAJOXV1UvwyWD2Kd+52taRV0VbbyZSwOjegQgI8CA/mtptYLqiRABrsKrVFEitL6+51LZIegmZz/JrkfD1NggI8SDHAwGelZqN0/rvdIm7MoukhVdHWOcJHwFGTrZYcsl1yAgI8CDL/v/1E/+EuRXj/tb515lnZjD4Nk6ipsdVf62UpbXXiAgI8SAL4jcJhZkTur1EYLvd+O0hPnyHc6Sx+s4w+Kz98JO3BQgIAAWIlg1z1xkBA/fvFQ==",
+        "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "network": "mainnet"
+      },
+      "status": 200,
+      "response": {
+        "status": "file_mismatch",
+        "verified": false,
+        "digest_matches": false,
+        "file_digest": "03ba204e50d126e4674c005e04d82e84c21366780af1f43bd54a37816b6ab340",
+        "file_hash_algorithm": "sha256",
+        "network": "mainnet",
+        "calendar_attestations": [],
+        "operation_count": 38,
+        "notices": [],
+        "errors": [
+          "The supplied digest does not match the detached proof."
+        ]
+      },
+      "observedAt": "2026-09-06T14:25:19.739Z",
+      "assertions": "PASS"
+    },
+    {
+      "name": "invalid Bitcoin commitment",
+      "path": "/api/v1/intelligence/timestamps/proofs/verify",
+      "method": "POST",
+      "request": {
+        "proof": "AE9wZW5UaW1lc3RhbXBzAABQcm9vZgC/ieLohOiSlAEIfjcXu+Ag9TzcbEAVShqOVb3cE6KMi7PILp7mS4G0SHID8cgBAQAAAAHkgvnTLsw7ple2nYmAEIV7VEV6kEl5gv9W+XxOxY5vmAEAAABrSDBFAiEAslOt0dHPkIRDOKR1oE/xP8nnvSQrB3Yt6gf1YIst42cCIACyaMqcM0KzdpzdBiiRMXzc74eqwxC2hV6dk4mOu+jsASECDY5NEH0rM5sAUO/dS0oJJFqgVgSPElOWN06moqsHCcb/////AmUz5gUAAAAAGXapFAvwV9QPu6Z0SGJRX1tVojEN5XcviKyghgEAAAAAABl2qRTwBoisAAAAAAgI8SCph/cWxTORPDFMeONdNYhMrJQ/pCysSdKyxp9AA/hfiAgI8SDexVs0h+Hj9yKkm1WneDIVhieF9KOss5KEYBn3HcZKnQgI8SCyyhj0heCAR44CXas9RktBbA4ey2Ypya786MghTQQkMggI8CARsOkGYRlv9LCBPD7aFBurXpFgSDe996DJ3zfbDjoRmAgI8CDDS8GkoQk//RSMAWseZkdCkU6Tnvq+TT01ZRWRSybZ4ggI8CDD5ufDjGn2ryTCvjTrrEglft5h7AohuVNeREMne+MGRggI8SAHmL+GBuAAJOXV1UvwyWD2Kd+52taRV0VbbyZSwOjegQgI8CA/mtptYLqiRABrsKrVFEitL6+51LZIegmZz/JrkfD1NggI8SDHAwGelZqN0/rvdIm7MoukhVdHWOcJHwFGTrZYcsl1yAgI8CDL/v/1E/+EuRXj/tb515lnZjD4Nk6ipsdVf62UpbXXiAgI8SAL4jcJhZkTur1EYLvd+O0hPnyHc6Sx+s4w+Kz98JO3BQgIAAWIlg1z1xkBA/fvFQ==",
+        "digest": "7e3717bbe020f53cdc6c40154a1a8e55bddc13a28c8bb3c82e9ee64b81b44872",
+        "network": "mainnet"
+      },
+      "status": 200,
+      "response": {
+        "status": "bitcoin_attestation_invalid",
+        "verified": false,
+        "digest_matches": true,
+        "file_digest": "7e3717bbe020f53cdc6c40154a1a8e55bddc13a28c8bb3c82e9ee64b81b44872",
+        "file_hash_algorithm": "sha256",
+        "network": "mainnet",
+        "calendar_attestations": [],
+        "operation_count": 38,
+        "notices": [],
+        "errors": [
+          "The proof commitment does not match the Bitcoin Merkle root at height 358391."
+        ]
+      },
+      "observedAt": "2026-09-06T14:25:20.107Z",
+      "assertions": "PASS"
+    },
+    {
+      "name": "pending calendar without fetching it",
+      "path": "/api/v1/intelligence/timestamps/proofs/verify",
+      "method": "POST",
+      "request": {
+        "proof": "AE9wZW5UaW1lc3RhbXBzAABQcm9vZgC/ieLohOiSlAEIBcT2FqjlMQ0Z2TjP12mGTX9MzcLKi0ebEK+DVksJevnwEOdUv5OAan66poDve9ARS/QI8BC1c+iFDP2eY9HwQ/u2/CUOCPEEV8+lxPAIb7GsjU5OsOcAg9/jDS75DI4uLWh0dHBzOi8vYWxpY2UuYnRjLmNhbGVuZGFyLm9wZW50aW1lc3RhbXBzLm9yZw==",
+        "network": "mainnet"
+      },
+      "status": 200,
+      "response": {
+        "status": "pending_calendar_attestation",
+        "verified": false,
+        "digest_matches": null,
+        "file_digest": "05c4f616a8e5310d19d938cfd769864d7f4ccdc2ca8b479b10af83564b097af9",
+        "file_hash_algorithm": "sha256",
+        "network": "mainnet",
+        "calendar_attestations": [
+          {
+            "calendar_url": "https://alice.btc.calendar.opentimestamps.org",
+            "status": "pending"
+          }
+        ],
+        "operation_count": 6,
+        "notices": [
+          "No separate file digest was supplied. Only the digest embedded in this proof can be checked for anchoring."
+        ],
+        "errors": []
+      },
+      "observedAt": "2026-09-06T14:25:20.110Z",
+      "assertions": "PASS"
+    },
+    {
+      "name": "unknown notary",
+      "path": "/api/v1/intelligence/timestamps/proofs/verify",
+      "method": "POST",
+      "request": {
+        "proof": "AE9wZW5UaW1lc3RhbXBzAABQcm9vZgC/ieLohOiSlAEI3MIdHR9CpDaioH/JFd7ATbQbg8iYhFlIw9ZktmYPT5HwEF3ewMmaoL/ncAkGFX3XZbsI8BCevS1d31iE2elX6k4fdG/qCPEEV+idKPAI/SjWICYzGFwAAQIDBAUGBwgueHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eA==",
+        "network": "mainnet"
+      },
+      "status": 200,
+      "response": {
+        "status": "unsupported_attestation",
+        "verified": false,
+        "digest_matches": null,
+        "file_digest": "dcc21d1d1f42a436a2a07fc915dec04db41b83c898845948c3d664b6660f4f91",
+        "file_hash_algorithm": "sha256",
+        "network": "mainnet",
+        "calendar_attestations": [],
+        "operation_count": 6,
+        "notices": [
+          "No separate file digest was supplied. Only the digest embedded in this proof can be checked for anchoring.",
+          "1 unsupported attestation(s) were not verified."
+        ],
+        "errors": []
+      },
+      "observedAt": "2026-09-06T14:25:20.113Z",
+      "assertions": "PASS"
+    },
+    {
+      "name": "wrong network cannot inherit mainnet",
+      "path": "/api/v1/intelligence/timestamps/proofs/verify",
+      "method": "POST",
+      "request": {
+        "proof": "AE9wZW5UaW1lc3RhbXBzAABQcm9vZgC/ieLohOiSlAEIA7ogTlDRJuRnTABeBNguhMITZngK8fQ71Uo3gWtqs0AD8cgBAQAAAAHkgvnTLsw7ple2nYmAEIV7VEV6kEl5gv9W+XxOxY5vmAEAAABrSDBFAiEAslOt0dHPkIRDOKR1oE/xP8nnvSQrB3Yt6gf1YIst42cCIACyaMqcM0KzdpzdBiiRMXzc74eqwxC2hV6dk4mOu+jsASECDY5NEH0rM5sAUO/dS0oJJFqgVgSPElOWN06moqsHCcb/////AmUz5gUAAAAAGXapFAvwV9QPu6Z0SGJRX1tVojEN5XcviKyghgEAAAAAABl2qRTwBoisAAAAAAgI8SCph/cWxTORPDFMeONdNYhMrJQ/pCysSdKyxp9AA/hfiAgI8SDexVs0h+Hj9yKkm1WneDIVhieF9KOss5KEYBn3HcZKnQgI8SCyyhj0heCAR44CXas9RktBbA4ey2Ypya786MghTQQkMggI8CARsOkGYRlv9LCBPD7aFBurXpFgSDe996DJ3zfbDjoRmAgI8CDDS8GkoQk//RSMAWseZkdCkU6Tnvq+TT01ZRWRSybZ4ggI8CDD5ufDjGn2ryTCvjTrrEglft5h7AohuVNeREMne+MGRggI8SAHmL+GBuAAJOXV1UvwyWD2Kd+52taRV0VbbyZSwOjegQgI8CA/mtptYLqiRABrsKrVFEitL6+51LZIegmZz/JrkfD1NggI8SDHAwGelZqN0/rvdIm7MoukhVdHWOcJHwFGTrZYcsl1yAgI8CDL/v/1E/+EuRXj/tb515lnZjD4Nk6ipsdVf62UpbXXiAgI8SAL4jcJhZkTur1EYLvd+O0hPnyHc6Sx+s4w+Kz98JO3BQgIAAWIlg1z1xkBA/fvFQ==",
+        "digest": "03ba204e50d126e4674c005e04d82e84c21366780af1f43bd54a37816b6ab340",
+        "network": "signet"
+      },
+      "status": 200,
+      "response": {
+        "status": "network_mismatch",
+        "verified": false,
+        "digest_matches": true,
+        "file_digest": "03ba204e50d126e4674c005e04d82e84c21366780af1f43bd54a37816b6ab340",
+        "file_hash_algorithm": "sha256",
+        "network": "mainnet",
+        "calendar_attestations": [],
+        "operation_count": 38,
+        "notices": [],
+        "errors": [
+          "The requested network does not match the configured Bitcoin reader."
+        ]
+      },
+      "observedAt": "2026-09-06T14:25:20.120Z",
+      "assertions": "PASS"
+    },
+    {
+      "name": "malformed proof rejected",
+      "path": "/api/v1/intelligence/timestamps/proofs/verify",
+      "method": "POST",
+      "request": {
+        "proof": "not-a-proof"
+      },
+      "status": 400,
+      "response": {
+        "stage": "invalid-proof",
+        "error": "The .ots proof is not valid base64."
+      },
+      "observedAt": "2026-09-06T14:25:20.123Z",
+      "assertions": "PASS"
+    },
+    {
+      "name": "subsequent valid proof recovers",
+      "path": "/api/v1/intelligence/timestamps/proofs/verify",
+      "method": "POST",
+      "request": {
+        "proof": "AE9wZW5UaW1lc3RhbXBzAABQcm9vZgC/ieLohOiSlAEIA7ogTlDRJuRnTABeBNguhMITZngK8fQ71Uo3gWtqs0AD8cgBAQAAAAHkgvnTLsw7ple2nYmAEIV7VEV6kEl5gv9W+XxOxY5vmAEAAABrSDBFAiEAslOt0dHPkIRDOKR1oE/xP8nnvSQrB3Yt6gf1YIst42cCIACyaMqcM0KzdpzdBiiRMXzc74eqwxC2hV6dk4mOu+jsASECDY5NEH0rM5sAUO/dS0oJJFqgVgSPElOWN06moqsHCcb/////AmUz5gUAAAAAGXapFAvwV9QPu6Z0SGJRX1tVojEN5XcviKyghgEAAAAAABl2qRTwBoisAAAAAAgI8SCph/cWxTORPDFMeONdNYhMrJQ/pCysSdKyxp9AA/hfiAgI8SDexVs0h+Hj9yKkm1WneDIVhieF9KOss5KEYBn3HcZKnQgI8SCyyhj0heCAR44CXas9RktBbA4ey2Ypya786MghTQQkMggI8CARsOkGYRlv9LCBPD7aFBurXpFgSDe996DJ3zfbDjoRmAgI8CDDS8GkoQk//RSMAWseZkdCkU6Tnvq+TT01ZRWRSybZ4ggI8CDD5ufDjGn2ryTCvjTrrEglft5h7AohuVNeREMne+MGRggI8SAHmL+GBuAAJOXV1UvwyWD2Kd+52taRV0VbbyZSwOjegQgI8CA/mtptYLqiRABrsKrVFEitL6+51LZIegmZz/JrkfD1NggI8SDHAwGelZqN0/rvdIm7MoukhVdHWOcJHwFGTrZYcsl1yAgI8CDL/v/1E/+EuRXj/tb515lnZjD4Nk6ipsdVf62UpbXXiAgI8SAL4jcJhZkTur1EYLvd+O0hPnyHc6Sx+s4w+Kz98JO3BQgIAAWIlg1z1xkBA/fvFQ==",
+        "digest": "03ba204e50d126e4674c005e04d82e84c21366780af1f43bd54a37816b6ab340",
+        "network": "mainnet"
+      },
+      "status": 200,
+      "response": {
+        "status": "bitcoin_attestation_verified",
+        "verified": true,
+        "digest_matches": true,
+        "file_digest": "03ba204e50d126e4674c005e04d82e84c21366780af1f43bd54a37816b6ab340",
+        "file_hash_algorithm": "sha256",
+        "network": "mainnet",
+        "calendar_attestations": [],
+        "operation_count": 38,
+        "notices": [],
+        "errors": [],
+        "attestation_type": "bitcoin",
+        "earliest_proven_block_height": 358391,
+        "earliest_proven_time_utc": "2015-05-28T15:41:18.000Z",
+        "bitcoin_block_hash": "000000000000000003e892881a8cdcdc117c06d444057c98b6f04a9ee75a2319"
+      },
+      "observedAt": "2026-09-06T14:25:20.670Z",
+      "assertions": "PASS"
+    }
+  ],
+  "result": "PASS SCOPED ASSERTIONS",
+  "finishedAt": "2026-09-06T14:25:20.670Z"
+}

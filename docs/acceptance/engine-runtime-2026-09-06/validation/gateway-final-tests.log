@@ -1,0 +1,37 @@
+✔ HTML documentation aliases reach the frontend while API consumers retain dispatch (1.5797ms)
+✔ protocol overlay routes reach the overlay unchanged (0.6798ms)
+✔ portfolio v2 routes reach the overlay unchanged (0.223ms)
+✔ chain-domain routes reach the overlay unchanged (0.1753ms)
+✔ Zcash privacy belongs to the explorer backend before generic Zcash dispatch (0.1623ms)
+✔ ANIMA root and all six operations reach the overlay with their exact query (0.1458ms)
+✔ ANIMA ownership requires a full path segment (0.1588ms)
+✔ a path that merely begins with a chain name stays on the backend (0.1391ms)
+✔ explicit v1 routes reach the backend unchanged (0.161ms)
+✔ unprefixed api routes are rewritten onto the backend prefix (0.2973ms)
+✔ a query string survives the rewrite (0.1025ms)
+✔ the bare api path reaches the backend index (0.1093ms)
+✔ a universe path that is not under the v1 prefix is not sent to the overlay (0.0938ms)
+✔ everything outside the api tree is left for the static handler (0.132ms)
+✔ the Universe live socket reaches the overlay while the Bitcoin socket stays on the backend (0.0986ms)
+✔ the socket systemd passes is used when it is addressed to this process (0.1152ms)
+✔ a plain start opens its own port (0.0663ms)
+✔ a descriptor addressed to another process is ignored (0.0597ms)
+✔ a handover of no sockets is not a handover (0.0717ms)
+✔ the content policy follows the build behind the static root (8.8606ms)
+✔ the whole Esplora address family reaches the index with the api prefix stripped (0.4888ms)
+✔ the rest of the Esplora surface reaches the index too (0.1719ms)
+✔ a query string survives the rewrite onto the index (0.1646ms)
+✔ the index never receives a v1 path (0.1878ms)
+✔ the overlay keeps its routes when an index is configured (0.1261ms)
+✔ the index administrative surface is refused rather than proxied (0.1668ms)
+✔ WebSocket ownership is unchanged by the index (0.1287ms)
+✔ nothing outside the api tree is sent to the index (0.1253ms)
+✔ with no index configured the backend still owns the whole api surface (0.1151ms)
+ℹ tests 29
+ℹ suites 0
+ℹ pass 29
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 203.1781
