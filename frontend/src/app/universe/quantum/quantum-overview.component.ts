@@ -77,7 +77,7 @@ import { QuantumApiService, QuantumOverview } from './quantum.service';
         <!-- Cohorts Breakdown Table -->
         <section class="card p-4 bg-body-tertiary border mb-4">
           <h2 class="h5 mb-3">Vulnerability Exposure by Script Standard</h2>
-          <div class="table-responsive">
+          <div class="table-responsive" tabindex="0" role="region" aria-label="Vulnerability Exposure by Script Standard, scroll horizontally" i18n-aria-label>
             <table class="table table-hover align-middle mb-0">
               <thead>
                 <tr>

@@ -105,7 +105,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
           No API keys created yet. Click "Generate New Key" to provision credentials.
         </div>
 
-        <div class="table-responsive" *ngIf="keys.length > 0">
+        <div class="table-responsive" *ngIf="keys.length > 0" tabindex="0" role="region" aria-label="Scoped API keys, scroll horizontally" i18n-aria-label>
           <table class="table table-hover mb-0">
             <thead>
               <tr>
@@ -136,7 +136,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
         <div class="card-header">
           <h4 class="mb-0">Configured Webhook Subscriptions</h4>
         </div>
-        <div class="table-responsive">
+        <div class="table-responsive" tabindex="0" role="region" aria-label="Configured Webhook Subscriptions, scroll horizontally" i18n-aria-label>
           <table class="table table-hover mb-0">
             <thead>
               <tr>

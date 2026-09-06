@@ -34,26 +34,26 @@ import { FormsModule } from '@angular/forms';
           <div class="card p-4 bg-body-tertiary border h-100">
             <h2 class="h5 mb-3">Privacy Guardrails</h2>
             <div class="mb-3">
-              <div class="form-check form-switch mb-2">
+              <label class="form-check form-switch mb-2 touch-check-label">
                 <input class="form-check-input" type="checkbox" id="torRoute" [(ngModel)]="torOnly" />
-                <label class="form-check-label fw-bold" for="torRoute">Route Block Queries over Tor / Onion</label>
-              </div>
+                <span class="form-check-label fw-bold">Route Block Queries over Tor / Onion</span>
+              </label>
               <p class="small text-muted mb-3">
                 Prevents peer correlation between your IP address and the specific block heights fetched after filter matches.
               </p>
 
-              <div class="form-check form-switch mb-2">
+              <label class="form-check form-switch mb-2 touch-check-label">
                 <input class="form-check-input" type="checkbox" id="decoyReqs" [(ngModel)]="decoyRequests" />
-                <label class="form-check-label fw-bold" for="decoyReqs">Inject Decoy Block Requests</label>
-              </div>
+                <span class="form-check-label fw-bold">Inject Decoy Block Requests</span>
+              </label>
               <p class="small text-muted mb-3">
                 Downloads random neighboring blocks alongside true filter matches to obscure the exact transaction timing.
               </p>
 
-              <div class="form-check form-switch mb-2">
+              <label class="form-check form-switch mb-2 touch-check-label">
                 <input class="form-check-input" type="checkbox" id="splitProviders" [(ngModel)]="splitPeers" />
-                <label class="form-check-label fw-bold" for="splitProviders">Separate Filter Peer from Block Peer</label>
-              </div>
+                <span class="form-check-label fw-bold">Separate Filter Peer from Block Peer</span>
+              </label>
               <p class="small text-muted mb-0">
                 Never requests block bodies from the same peer that supplied the compact filter.
               </p>
@@ -64,7 +64,7 @@ import { FormsModule } from '@angular/forms';
         <div class="col-12 col-lg-6">
           <div class="card p-4 bg-body-tertiary border h-100">
             <h2 class="h5 mb-3">Comparison: Bloom Filters vs Compact Filters</h2>
-            <div class="table-responsive">
+            <div class="table-responsive" tabindex="0" role="region" aria-label="Comparison: Bloom Filters vs Compact Filters, scroll horizontally" i18n-aria-label>
               <table class="table table-sm table-bordered">
                 <thead class="table-light">
                   <tr>

@@ -45,7 +45,7 @@ import { SilentPaymentsApiService, SilentPaymentCoverageOverview } from './silen
       <div *ngIf="!loading && overview" class="content-body">
         <div class="card p-4 bg-body-tertiary border mb-4">
           <h2 class="h5 mb-3">Recent Block Manifests</h2><p>Status: {{ overview.status }}. {{ overview.reason }}</p><p *ngIf="!overview.recent_manifests.length">No completed bundles have been ingested for this network.</p>
-          <div class="table-responsive">
+          <div class="table-responsive" tabindex="0" role="region" aria-label="Recent Block Manifests, scroll horizontally" i18n-aria-label>
             <table class="table table-hover align-middle mb-0">
               <thead>
                 <tr>

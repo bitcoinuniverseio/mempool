@@ -76,7 +76,7 @@ import { BootstrapApiService, BootstrapOverview } from './bootstrap.service';
               <h2 class="h5 m-0">Pinned AssumeUTXO Snapshots</h2>
               <a routerLink="/node/bootstrap/snapshots" class="small text-decoration-none">View All &rarr;</a>
             </div>
-            <div class="table-responsive">
+            <div class="table-responsive" tabindex="0" role="region" aria-label="Pinned AssumeUTXO Snapshots, scroll horizontally" i18n-aria-label>
               <table class="table table-sm table-hover align-middle">
                 <thead>
                   <tr>

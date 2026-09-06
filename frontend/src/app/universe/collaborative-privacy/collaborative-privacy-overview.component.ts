@@ -87,7 +87,7 @@ import { CollaborativePrivacyApiService, CollaborativeOverview } from './collabo
           <h5 class="card-title mb-0">Recent CoinJoin & Collaborative Transactions</h5>
           <span class="badge bg-secondary">{{ overview.recent_rounds.length }} Rounds</span>
         </div>
-        <div class="table-responsive">
+        <div class="table-responsive" tabindex="0" role="region" aria-label="Recent CoinJoin &amp; Collaborative Transactions, scroll horizontally" i18n-aria-label>
           <table class="table table-dark table-hover mb-0">
             <thead>
               <tr>

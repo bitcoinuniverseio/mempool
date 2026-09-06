@@ -77,7 +77,7 @@ import { CompactFiltersApiService, CompactFilterOverview } from './compact-filte
               <h2 class="h5 m-0">Observed Compact Filter Peers</h2>
               <a routerLink="/network/light-client/providers" class="small text-decoration-none">View All &rarr;</a>
             </div>
-            <div class="table-responsive">
+            <div class="table-responsive" tabindex="0" role="region" aria-label="Observed Compact Filter Peers, scroll horizontally" i18n-aria-label>
               <table class="table table-sm table-hover align-middle">
                 <thead>
                   <tr>

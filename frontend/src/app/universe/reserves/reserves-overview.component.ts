@@ -78,7 +78,7 @@ import { ReservesApiService, ReservesOverview } from './reserves.service';
             <h2 class="h5 m-0">Custodial and Exchange Attestations</h2>
             <a class="btn btn-sm btn-outline-primary" routerLink="/intelligence/reserves/providers">View All Providers</a>
           </div>
-          <div class="table-responsive">
+          <div class="table-responsive" tabindex="0" role="region" aria-label="Custodial and Exchange Attestations, scroll horizontally" i18n-aria-label>
             <table class="table table-hover align-middle mb-0">
               <thead>
                 <tr>
@@ -124,7 +124,7 @@ import { ReservesApiService, ReservesOverview } from './reserves.service';
         <!-- Recent Snapshots -->
         <section class="card p-4 bg-body-tertiary border">
           <h2 class="h5 mb-3">Recent Onchain Attestation Snapshots</h2>
-          <div class="table-responsive">
+          <div class="table-responsive" tabindex="0" role="region" aria-label="Recent Onchain Attestation Snapshots, scroll horizontally" i18n-aria-label>
             <table class="table table-sm table-hover align-middle mb-0">
               <thead>
                 <tr>

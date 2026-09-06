@@ -78,7 +78,7 @@ import { SilentPaymentsApiService, SilentPaymentCoverageOverview } from './silen
         <!-- Ecosystem Support Registry -->
         <section class="card p-4 bg-body-tertiary border mb-4">
           <h2 class="h5 mb-3">Wallet Support Evidence</h2>
-          <p *ngIf="!overview.support_claims.length">No versioned support evidence has been recorded.</p><div class="table-responsive">
+          <p *ngIf="!overview.support_claims.length">No versioned support evidence has been recorded.</p><div class="table-responsive" tabindex="0" role="region" aria-label="Wallet Support Evidence, scroll horizontally" i18n-aria-label>
             <table class="table table-hover align-middle mb-0">
               <thead>
                 <tr>

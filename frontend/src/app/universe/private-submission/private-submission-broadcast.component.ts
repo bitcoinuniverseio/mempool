@@ -33,18 +33,18 @@ import { PrivateSubmissionApiService } from './private-submission.service';
 
             <div class="mb-3">
               <label class="form-label text-muted small text-uppercase">Target Partner Pools</label>
-              <div class="form-check">
+              <label class="form-check touch-check-label">
                 <input class="form-check-input" type="checkbox" id="p1" checked>
-                <label class="form-check-label" for="p1">Foundry USA (30.5% global hashrate)</label>
-              </div>
-              <div class="form-check">
+                <span class="form-check-label">Foundry USA (30.5% global hashrate)</span>
+              </label>
+              <label class="form-check touch-check-label">
                 <input class="form-check-input" type="checkbox" id="p2" checked>
-                <label class="form-check-label" for="p2">AntPool (24.1% global hashrate)</label>
-              </div>
-              <div class="form-check">
+                <span class="form-check-label">AntPool (24.1% global hashrate)</span>
+              </label>
+              <label class="form-check touch-check-label">
                 <input class="form-check-input" type="checkbox" id="p3" checked>
-                <label class="form-check-label" for="p3">F2Pool (12.3% global hashrate)</label>
-              </div>
+                <span class="form-check-label">F2Pool (12.3% global hashrate)</span>
+              </label>
             </div>
 
             <button class="btn btn-success w-100" (click)="submitPrivate()" [disabled]="submitting || !rawTxHex">

@@ -83,7 +83,7 @@ import { LightningResilienceApiService, LightningResilienceOverview } from './li
           <h5 class="card-title mb-0">High-Pressure & Congested Channels</h5>
           <span class="badge bg-warning text-dark">{{ overview.top_congested_channels.length }} High Priority</span>
         </div>
-        <div class="table-responsive">
+        <div class="table-responsive" tabindex="0" role="region" aria-label="High-Pressure &amp; Congested Channels, scroll horizontally" i18n-aria-label>
           <table class="table table-dark table-hover mb-0">
             <thead>
               <tr>

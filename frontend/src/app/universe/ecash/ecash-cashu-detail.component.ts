@@ -53,7 +53,7 @@ import { EcashApiService, CashuMint } from './ecash.service';
         <!-- Keysets Table -->
         <div class="card p-4 bg-body-tertiary border mb-4">
           <h2 class="h5 mb-3">Cryptographic Keysets</h2>
-          <div class="table-responsive">
+          <div class="table-responsive" tabindex="0" role="region" aria-label="Cryptographic Keysets, scroll horizontally" i18n-aria-label>
             <table class="table table-hover align-middle mb-0">
               <thead>
                 <tr>

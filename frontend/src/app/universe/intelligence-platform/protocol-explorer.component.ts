@@ -89,7 +89,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
         <div class="card-header">
           <h4 class="mb-0">Registered Protocol Adapters</h4>
         </div>
-        <div class="table-responsive">
+        <div class="table-responsive" tabindex="0" role="region" aria-label="Registered Protocol Adapters, scroll horizontally" i18n-aria-label>
           <table class="table table-hover mb-0">
             <thead>
               <tr>
