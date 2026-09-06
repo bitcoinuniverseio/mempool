@@ -74,10 +74,10 @@ if (!BROWSER) {
  * the run's own header rather than left for a reader to assume.
  */
 const CAN_EMULATE_MOBILE = ENGINE_NAME !== 'firefox';
-// Reusing the native window is a Windows Chromium workaround. Other engines
-// retain the fresh-page isolation used by this gate before that workaround:
-// Firefox can stall while navigating a reused document to about:blank.
-const REUSE_PAGE = process.platform === 'win32' && ENGINE_NAME === 'chromium';
+// Reusing the page avoids thrashing browser processes in container environments
+// like Linux WebKit and Chromium. Firefox retains fresh-page isolation because
+// it can stall while navigating a reused document to about:blank.
+const REUSE_PAGE = ENGINE_NAME !== 'firefox';
 
 function mobileBrowserLaunchOptions(browser, engineName = 'chromium', executablePath) {
   if (executablePath !== undefined && (engineName !== 'chromium' || typeof executablePath !== 'string' || !executablePath.trim())) {
@@ -871,10 +871,10 @@ async function run() {
           measurement.phase = page ? 'session-reset' : 'page-creation';
           console.log(`[${ENGINE_NAME}] Measuring ${scope}`);
           try {
-            if (page) {
+            if (page && !page.isClosed()) {
               // A fresh tab had empty session storage, while local storage and
               // cookies already belonged to the shared viewport context.
-              if (page.url() !== 'about:blank') await page.evaluate(() => sessionStorage.clear());
+              if (page.url() !== 'about:blank') await page.evaluate(() => sessionStorage.clear()).catch(() => undefined);
               // Force a new document even when two route URLs differ only by
               // their hash. Keep the single tab and its viewport alive.
               await page.goto('about:blank', { waitUntil: 'domcontentloaded', timeout: 45_000 });
