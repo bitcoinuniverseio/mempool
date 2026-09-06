@@ -2,7 +2,9 @@
 
 The health handoff is now bound to the existing application ledger. Its source findings remain historical evidence. Importing the handoff does not establish a current runtime or end-to-end pass.
 
-The final production-code candidate is mempool `c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f`; repository revision `453a3ecaf02c4fd46a7a06a59f171d40e8d3c281` adds only workflow and documentation changes. Final checks passed 76 backend suites / 730 tests, with four explicit live Esplora skips, and 97 frontend files / 1,543 tests. The backend build passed. Exact log summaries and hashes are in `health-runtime-2026-09-06/validation.json`. These checks do not establish whole-application readiness.
+Later mobile source and backend reference corrections are recorded separately in `mobile-source-repair-2026-09-06.json` and `mobile-repair-2026-09-06/README.md`. They preserve the earlier actual serving revisions and do not add operation or mobile acceptance passes.
+
+The initial health repair production-code checkpoint is mempool `c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f`; repository revision `453a3ecaf02c4fd46a7a06a59f171d40e8d3c281` adds only workflow and documentation changes. Final checks passed 76 backend suites / 730 tests, with four explicit live Esplora skips, and 97 frontend files / 1,543 tests. The backend build passed. Exact log summaries and hashes are in `health-runtime-2026-09-06/validation.json`. These checks do not establish whole-application readiness.
 
 The implementation candidate started from mempool PR #101 at `d6f9f4677e57c13cf80434f2a9c1009c43b1f304`. Its isolated final frontend worktree preserves the later legitimate baseline `445702835144f1998dc3ed1f79e2ef77ed6871af`, including the request-cache, truthful-failure, bootstrap, mining and visual-fixture repairs. The handoff inspected the older PR head `2ce46d53f414b52f189983515d2dd6d019a2d831`. A source revision alone does not identify serving assets. The corresponding backend-apis candidate is `8b2aea3afd4b2f26e2ee5f1275171a937515cbc2`; runtime evidence must bind these actual candidates separately.
 

@@ -1,0 +1,1060 @@
+{
+  "scope": "source annotations and Angular template parsing only; browser audit remains required",
+  "recordedAt": "2026-09-06T13:26:17.788Z",
+  "occurrences": 197,
+  "componentFiles": 71,
+  "containers": 82,
+  "passed": false,
+  "failingFiles": 71,
+  "results": [
+    {
+      "file": "frontend/src/app/universe/ark-vpack/ark-exit.component.ts",
+      "selector": "app-ark-exit",
+      "containers": 1,
+      "labels": [
+        "Exit Path Verification Matrix, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/block-propagation/block-propagation-block-detail.component.ts",
+      "selector": "app-block-propagation-block-detail",
+      "containers": 1,
+      "labels": [
+        "Regional Sensor First-Arrival Latencies, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/block-propagation/block-propagation-compact-blocks.component.ts",
+      "selector": "app-block-propagation-compact-blocks",
+      "containers": 1,
+      "labels": [
+        "Compact Block Reconstruction History, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/block-propagation/block-propagation-fibre.component.ts",
+      "selector": "app-block-propagation-fibre",
+      "containers": 1,
+      "labels": [
+        "FIBRE Node Mesh Status, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/block-propagation/block-propagation-fork-races.component.ts",
+      "selector": "app-block-propagation-fork-races",
+      "containers": 1,
+      "labels": [
+        "Detected Simultaneous Block Races, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/block-propagation/block-propagation-live.component.ts",
+      "selector": "app-block-propagation-live",
+      "containers": 1,
+      "labels": [
+        "Live Propagation Queue, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/block-propagation/block-propagation-overview.component.ts",
+      "selector": "app-block-propagation-overview",
+      "containers": 1,
+      "labels": [
+        "Recent Block Propagation Events, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/block-propagation/block-propagation-stale-tips.component.ts",
+      "selector": "app-block-propagation-stale-tips",
+      "containers": 1,
+      "labels": [
+        "Stale Tip History, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/blockspace/blockspace-composition.component.ts",
+      "selector": "app-blockspace-composition",
+      "containers": 1,
+      "labels": [
+        "Historical Block Breakdown, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/blockspace/blockspace-overview.component.ts",
+      "selector": "app-blockspace-overview",
+      "containers": 2,
+      "labels": [
+        "Semantic Blockspace Consumption (24h), scroll horizontally",
+        "Recent Block Composition, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">",
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/blockspace/blockspace-regimes.component.ts",
+      "selector": "app-blockspace-regimes",
+      "containers": 1,
+      "labels": [
+        "Detected Regime History, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/bootstrap/bootstrap-overview.component.ts",
+      "selector": "app-bootstrap-overview",
+      "containers": 1,
+      "labels": [
+        "Pinned AssumeUTXO Snapshots, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/collaborative-privacy/collaborative-privacy-coordinators.component.ts",
+      "selector": "app-collaborative-privacy-coordinators",
+      "containers": 1,
+      "labels": [
+        "Active Coordinators, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/collaborative-privacy/collaborative-privacy-fidelity-bonds.component.ts",
+      "selector": "app-collaborative-privacy-fidelity-bonds",
+      "containers": 1,
+      "labels": [
+        "Active Timelocked Fidelity Bonds, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/collaborative-privacy/collaborative-privacy-overview.component.ts",
+      "selector": "app-collaborative-privacy-overview",
+      "containers": 1,
+      "labels": [
+        "Recent CoinJoin & Collaborative Transactions, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/compact-filters/light-client-overview.component.ts",
+      "selector": "app-light-client-overview",
+      "containers": 1,
+      "labels": [
+        "Observed Compact Filter Peers, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/compact-filters/light-client-privacy.component.ts",
+      "selector": "app-light-client-privacy",
+      "containers": 1,
+      "labels": [
+        "Comparison: Bloom Filters vs Compact Filters, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/consensus/consensus-compare.component.ts",
+      "selector": "app-consensus-compare",
+      "containers": 1,
+      "labels": [
+        "Covenant Proposal Comparison Matrix, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/consensus-conformance/consensus-conformance-case-detail.component.ts",
+      "selector": "app-consensus-conformance-case-detail",
+      "containers": 1,
+      "labels": [
+        "Multi-Engine Execution Results, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/consensus-conformance/consensus-conformance-cases.component.ts",
+      "selector": "app-consensus-conformance-cases",
+      "containers": 1,
+      "labels": [
+        "Catalog of Identified Divergences, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/consensus-conformance/consensus-conformance-corpora.component.ts",
+      "selector": "app-consensus-conformance-corpora",
+      "containers": 1,
+      "labels": [
+        "Corpora Catalogs, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/consensus-conformance/consensus-conformance-differential.component.ts",
+      "selector": "app-consensus-conformance-differential",
+      "containers": 1,
+      "labels": [
+        "Consensus Verification Targets, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/consensus-conformance/consensus-conformance-formal.component.ts",
+      "selector": "app-consensus-conformance-formal",
+      "containers": 1,
+      "labels": [
+        "Formally Verified Bitcoin Specifications, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/consensus-conformance/consensus-conformance-overview.component.ts",
+      "selector": "app-consensus-conformance-overview",
+      "containers": 2,
+      "labels": [
+        "Consensus Engine Conformance Ratings, scroll horizontally",
+        "Active Discrepancy Findings, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">",
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/consensus-conformance/consensus-conformance-specifications.component.ts",
+      "selector": "app-consensus-conformance-specifications",
+      "containers": 1,
+      "labels": [
+        "Target BIP Standards, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/dlc/dlc-overview.component.ts",
+      "selector": "app-dlc-overview",
+      "containers": 1,
+      "labels": [
+        "Recent Oracle Announcements, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/ecash/ecash-cashu-detail.component.ts",
+      "selector": "app-ecash-cashu-detail",
+      "containers": 1,
+      "labels": [
+        "Cryptographic Keysets, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/ecash/ecash-overview.component.ts",
+      "selector": "app-ecash-overview",
+      "containers": 2,
+      "labels": [
+        "Cashu Mints, scroll horizontally",
+        "Fedimint Federations, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">",
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/global-network/global-network-nodes.component.ts",
+      "selector": "app-global-network-nodes",
+      "containers": 1,
+      "labels": [
+        "Global Reachable Bitcoin Nodes, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/global-network/global-network-overview.component.ts",
+      "selector": "app-global-network-overview",
+      "containers": 3,
+      "labels": [
+        "Transport Protocol Breakdown, scroll horizontally",
+        "Top Geographic Regions, scroll horizontally",
+        "Client Software Diversity, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">",
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">",
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/global-network/global-network-seeds.component.ts",
+      "selector": "app-global-network-seeds",
+      "containers": 1,
+      "labels": [
+        "Bitcoin DNS Seed Observatory, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/intelligence-platform/developer-platform.component.ts",
+      "selector": "app-developer-platform",
+      "containers": 2,
+      "labels": [
+        "Scoped API keys, scroll horizontally",
+        "Configured Webhook Subscriptions, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\" *ngIf=\"keys.length > 0\">",
+        "region role: <div class=\"table-responsive\" *ngIf=\"keys.length > 0\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\" *ngIf=\"keys.length > 0\">",
+        "translatable accessible name: <div class=\"table-responsive\" *ngIf=\"keys.length > 0\">",
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/intelligence-platform/knowledge-registry.component.ts",
+      "selector": "app-knowledge-registry",
+      "containers": 2,
+      "labels": [
+        "Entity Labels, scroll horizontally",
+        "Public Attribution Audit Trail, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\" *ngIf=\"filteredLabels.length > 0\">",
+        "region role: <div class=\"table-responsive\" *ngIf=\"filteredLabels.length > 0\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\" *ngIf=\"filteredLabels.length > 0\">",
+        "translatable accessible name: <div class=\"table-responsive\" *ngIf=\"filteredLabels.length > 0\">",
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/intelligence-platform/protocol-explorer.component.ts",
+      "selector": "app-protocol-explorer",
+      "containers": 1,
+      "labels": [
+        "Registered Protocol Adapters, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/intelligence-platform/utxo-intelligence.component.ts",
+      "selector": "app-utxo-intelligence",
+      "containers": 2,
+      "labels": [
+        "Supply Distribution by Script Type, scroll horizontally",
+        "Economically Unspendable Outputs Across Feerates, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">",
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/intelligence-platform/watchlists.component.ts",
+      "selector": "app-watchlists",
+      "containers": 2,
+      "labels": [
+        "Blinded Monitored Entities, scroll horizontally",
+        "Recent In-App Alert Notifications, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive mb-4\">",
+        "region role: <div class=\"table-responsive mb-4\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive mb-4\">",
+        "translatable accessible name: <div class=\"table-responsive mb-4\">",
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/lightning-reliability/lightning-node-reliability.component.ts",
+      "selector": "app-lightning-node-reliability",
+      "containers": 1,
+      "labels": [
+        "Multi-Region Sensor Probes, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div *ngIf=\"node.probes.length > 0\" class=\"table-responsive\">",
+        "region role: <div *ngIf=\"node.probes.length > 0\" class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div *ngIf=\"node.probes.length > 0\" class=\"table-responsive\">",
+        "translatable accessible name: <div *ngIf=\"node.probes.length > 0\" class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/lightning-reliability/lightning-reliability-overview.component.ts",
+      "selector": "app-lightning-reliability-overview",
+      "containers": 1,
+      "labels": [
+        "Top Performing Routing Nodes, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/lightning-resilience/lightning-resilience-htlcs.component.ts",
+      "selector": "app-lightning-resilience-htlcs",
+      "containers": 1,
+      "labels": [
+        "Commitment Slot Allocations Across Monitored Channels, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/lightning-resilience/lightning-resilience-mitigations.component.ts",
+      "selector": "app-lightning-resilience-mitigations",
+      "containers": 1,
+      "labels": [
+        "Active Defense Strategies, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/lightning-resilience/lightning-resilience-overview.component.ts",
+      "selector": "app-lightning-resilience-overview",
+      "containers": 1,
+      "labels": [
+        "High-Pressure & Congested Channels, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/mining-decentralized/decentralized-mining-compare.component.ts",
+      "selector": "app-decentralized-mining-compare",
+      "containers": 1,
+      "labels": [
+        "Protocol Feature Comparison, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/mining-decentralized/decentralized-mining-overview.component.ts",
+      "selector": "app-decentralized-mining-overview",
+      "containers": 1,
+      "labels": [
+        "Recent Validated Sharechain Submissions, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/multiparty/multiparty-bsms.component.ts",
+      "selector": "app-multiparty-bsms",
+      "containers": 1,
+      "labels": [
+        "Sample BSMS Descriptor Template, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <pre class=\"p-3 bg-body border rounded font-monospace small text-break mb-3\">",
+        "region role: <pre class=\"p-3 bg-body border rounded font-monospace small text-break mb-3\">",
+        "meaningful accessible name and scroll guidance: <pre class=\"p-3 bg-body border rounded font-monospace small text-break mb-3\">",
+        "translatable accessible name: <pre class=\"p-3 bg-body border rounded font-monospace small text-break mb-3\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/multiparty/multiparty-compatibility.component.ts",
+      "selector": "app-multiparty-compatibility",
+      "containers": 1,
+      "labels": [
+        "Hardware Vendor Compatibility Matrix, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/multiparty/multiparty-labels.component.ts",
+      "selector": "app-multiparty-labels",
+      "containers": 1,
+      "labels": [
+        "Sample BIP329 Export Stream, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <pre class=\"p-3 bg-body border rounded font-monospace small text-break mb-0\">",
+        "region role: <pre class=\"p-3 bg-body border rounded font-monospace small text-break mb-0\">",
+        "meaningful accessible name and scroll guidance: <pre class=\"p-3 bg-body border rounded font-monospace small text-break mb-0\">",
+        "translatable accessible name: <pre class=\"p-3 bg-body border rounded font-monospace small text-break mb-0\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/node-security/node-security-advisories.component.ts",
+      "selector": "app-node-security-advisories",
+      "containers": 1,
+      "labels": [
+        "Tracked Security Disclosures, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/node-security/node-security-artifacts.component.ts",
+      "selector": "app-node-security-artifacts",
+      "containers": 1,
+      "labels": [
+        "Verified Release Binaries, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/node-security/node-security-configuration.component.ts",
+      "selector": "app-node-security-configuration",
+      "containers": 1,
+      "labels": [
+        "Recommended Production Configuration, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <pre class=\"bg-black text-light p-3 rounded font-monospace small mb-0\">",
+        "region role: <pre class=\"bg-black text-light p-3 rounded font-monospace small mb-0\">",
+        "meaningful accessible name and scroll guidance: <pre class=\"bg-black text-light p-3 rounded font-monospace small mb-0\">",
+        "translatable accessible name: <pre class=\"bg-black text-light p-3 rounded font-monospace small mb-0\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/node-security/node-security-fleet.component.ts",
+      "selector": "app-node-security-fleet",
+      "containers": 1,
+      "labels": [
+        "Fleet Node Inventory, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/node-security/node-security-overview.component.ts",
+      "selector": "app-node-security-overview",
+      "containers": 1,
+      "labels": [
+        "Active Critical Advisories, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/node-security/node-security-releases.component.ts",
+      "selector": "app-node-security-releases",
+      "containers": 1,
+      "labels": [
+        "Official Release Matrix, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/offchain/offchain-utxo.component.ts",
+      "selector": "app-offchain-utxo",
+      "containers": 1,
+      "labels": [
+        "Observed Protocol Operators, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/opentimestamps/opentimestamps-batches.component.ts",
+      "selector": "app-opentimestamps-batches",
+      "containers": 1,
+      "labels": [
+        "Confirmed Anchor Batches, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/opentimestamps/opentimestamps-calendars.component.ts",
+      "selector": "app-opentimestamps-calendars",
+      "containers": 1,
+      "labels": [
+        "Active Public Calendar Servers, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/opentimestamps/opentimestamps-overview.component.ts",
+      "selector": "app-opentimestamps-overview",
+      "containers": 1,
+      "labels": [
+        "Recent Bitcoin Merkle Tree Anchors, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/payjoin/payjoin-compatibility.component.ts",
+      "selector": "app-payjoin-compatibility",
+      "containers": 1,
+      "labels": [
+        "Payjoin Ecosystem Compatibility Matrix, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/payjoin/payjoin-directory.component.ts",
+      "selector": "app-payjoin-directory",
+      "containers": 1,
+      "labels": [
+        "Payjoin Directory Observatory, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/payment-connectivity/payment-connectivity-overview.component.ts",
+      "selector": "app-payment-connectivity-overview",
+      "containers": 1,
+      "labels": [
+        "Verified Client & Wallet Applications, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/payment-connectivity/payment-lnurl.component.ts",
+      "selector": "app-payment-lnurl",
+      "containers": 1,
+      "labels": [
+        "LNURL Specifications & Providers, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/private-submission/private-submission-accelerators.component.ts",
+      "selector": "app-private-submission-accelerators",
+      "containers": 1,
+      "labels": [
+        "Available Acceleration Services, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/private-submission/private-submission-ordering-block.component.ts",
+      "selector": "app-private-submission-ordering-block",
+      "containers": 1,
+      "labels": [
+        "Detected Anomalous Transactions, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/private-submission/private-submission-ordering.component.ts",
+      "selector": "app-private-submission-ordering",
+      "containers": 1,
+      "labels": [
+        "Detected Ordering Discrepancies & Private Inclusions, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/quantum/quantum-history.component.ts",
+      "selector": "app-quantum-history",
+      "containers": 1,
+      "labels": [
+        "Public Key Reveal Timeline, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/quantum/quantum-overview.component.ts",
+      "selector": "app-quantum-overview",
+      "containers": 1,
+      "labels": [
+        "Vulnerability Exposure by Script Standard, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/reserves/reserves-overview.component.ts",
+      "selector": "app-reserves-overview",
+      "containers": 2,
+      "labels": [
+        "Custodial and Exchange Attestations, scroll horizontally",
+        "Recent Onchain Attestation Snapshots, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">",
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/reserves/reserves-provider-detail.component.ts",
+      "selector": "app-reserves-provider-detail",
+      "containers": 1,
+      "labels": [
+        "Published Snapshots, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/silent-payments/silent-payments-coverage.component.ts",
+      "selector": "app-silent-payments-coverage",
+      "containers": 1,
+      "labels": [
+        "Recent Block Manifests, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/silent-payments/silent-payments-overview.component.ts",
+      "selector": "app-silent-payments-overview",
+      "containers": 1,
+      "labels": [
+        "Wallet Support Evidence, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/swaps/swaps-chain.component.ts",
+      "selector": "app-swaps-chain",
+      "containers": 1,
+      "labels": [
+        "Atomic HTLC & PTLC Cross-Chain Invariants, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    },
+    {
+      "file": "frontend/src/app/universe/swaps/swaps-overview.component.ts",
+      "selector": "app-swaps-overview",
+      "containers": 2,
+      "labels": [
+        "Historical public lockup checks, scroll horizontally",
+        "Recent Verified Swap Records, scroll horizontally"
+      ],
+      "issues": [
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">",
+        "keyboard focus: <div class=\"table-responsive\">",
+        "region role: <div class=\"table-responsive\">",
+        "meaningful accessible name and scroll guidance: <div class=\"table-responsive\">",
+        "translatable accessible name: <div class=\"table-responsive\">"
+      ]
+    }
+  ]
+}

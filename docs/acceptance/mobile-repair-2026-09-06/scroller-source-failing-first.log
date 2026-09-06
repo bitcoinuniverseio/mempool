@@ -1,0 +1,98 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: all audited scroll containers must be named keyboard-accessible regions
+
+71 !== 0
+
+    at file:///C:/WINDOWS/TEMP/explorer-pr101-mobile-9990031283/check-scroller-annotations.mjs:95:8 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 71,
+  expected: 0,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.19.0
+{
+  "scope": "source annotations and Angular template parsing only; browser audit remains required",
+  "recordedAt": "2026-09-06T13:26:17.788Z",
+  "occurrences": 197,
+  "componentFiles": 71,
+  "containers": 82,
+  "passed": false,
+  "failingFiles": 71
+}
+app-ark-exit: 4 source issues
+app-block-propagation-block-detail: 4 source issues
+app-block-propagation-compact-blocks: 4 source issues
+app-block-propagation-fibre: 4 source issues
+app-block-propagation-fork-races: 4 source issues
+app-block-propagation-live: 4 source issues
+app-block-propagation-overview: 4 source issues
+app-block-propagation-stale-tips: 4 source issues
+app-blockspace-composition: 4 source issues
+app-blockspace-overview: 8 source issues
+app-blockspace-regimes: 4 source issues
+app-bootstrap-overview: 4 source issues
+app-collaborative-privacy-coordinators: 4 source issues
+app-collaborative-privacy-fidelity-bonds: 4 source issues
+app-collaborative-privacy-overview: 4 source issues
+app-light-client-overview: 4 source issues
+app-light-client-privacy: 4 source issues
+app-consensus-compare: 4 source issues
+app-consensus-conformance-case-detail: 4 source issues
+app-consensus-conformance-cases: 4 source issues
+app-consensus-conformance-corpora: 4 source issues
+app-consensus-conformance-differential: 4 source issues
+app-consensus-conformance-formal: 4 source issues
+app-consensus-conformance-overview: 8 source issues
+app-consensus-conformance-specifications: 4 source issues
+app-dlc-overview: 4 source issues
+app-ecash-cashu-detail: 4 source issues
+app-ecash-overview: 8 source issues
+app-global-network-nodes: 4 source issues
+app-global-network-overview: 12 source issues
+app-global-network-seeds: 4 source issues
+app-developer-platform: 8 source issues
+app-knowledge-registry: 8 source issues
+app-protocol-explorer: 4 source issues
+app-utxo-intelligence: 8 source issues
+app-watchlists: 8 source issues
+app-lightning-node-reliability: 4 source issues
+app-lightning-reliability-overview: 4 source issues
+app-lightning-resilience-htlcs: 4 source issues
+app-lightning-resilience-mitigations: 4 source issues
+app-lightning-resilience-overview: 4 source issues
+app-decentralized-mining-compare: 4 source issues
+app-decentralized-mining-overview: 4 source issues
+app-multiparty-bsms: 4 source issues
+app-multiparty-compatibility: 4 source issues
+app-multiparty-labels: 4 source issues
+app-node-security-advisories: 4 source issues
+app-node-security-artifacts: 4 source issues
+app-node-security-configuration: 4 source issues
+app-node-security-fleet: 4 source issues
+app-node-security-overview: 4 source issues
+app-node-security-releases: 4 source issues
+app-offchain-utxo: 4 source issues
+app-opentimestamps-batches: 4 source issues
+app-opentimestamps-calendars: 4 source issues
+app-opentimestamps-overview: 4 source issues
+app-payjoin-compatibility: 4 source issues
+app-payjoin-directory: 4 source issues
+app-payment-connectivity-overview: 4 source issues
+app-payment-lnurl: 4 source issues
+app-private-submission-accelerators: 4 source issues
+app-private-submission-ordering-block: 4 source issues
+app-private-submission-ordering: 4 source issues
+app-quantum-history: 4 source issues
+app-quantum-overview: 4 source issues
+app-reserves-overview: 8 source issues
+app-reserves-provider-detail: 4 source issues
+app-silent-payments-coverage: 4 source issues
+app-silent-payments-overview: 4 source issues
+app-swaps-chain: 4 source issues
+app-swaps-overview: 8 source issues

@@ -36,6 +36,7 @@ export interface MuSig2PublicSessionSchema {
   unsigned_transaction_hash: string;
   input_index: number;
   message_hash: string;
+  /** Participant order is preserved, with nonces and partials at matching indices. No tweaks are supported. */
   participant_public_keys: string[];
   aggregate_public_key: string;
   public_nonces: string[];
@@ -47,6 +48,26 @@ export interface MuSig2PublicSessionSchema {
   has_duplicate_nonces: boolean;
   session_hash: string;
   created_at: string;
+}
+
+export interface MuSig2VerificationResult {
+  verified: boolean;
+  stage: 'invalid-input' | 'partial-session' | 'verified-session';
+  scope: 'bip327-untweaked-public-transcript';
+  error: string;
+  participant_count: number;
+  has_duplicate_nonces: boolean;
+  aggregate_public_key: string | null;
+  provided_aggregate_public_key: string | null;
+  key_aggregation_verified: boolean;
+  aggregate_nonce: string | null;
+  nonce_aggregation_verified: boolean;
+  partial_signature_validity: boolean[];
+  final_bip340_valid: boolean | null;
+  final_signature: string | null;
+  final_signature_scope: string;
+  errors: string[];
+  warnings: string[];
 }
 
 export interface WalletPolicyFixture {

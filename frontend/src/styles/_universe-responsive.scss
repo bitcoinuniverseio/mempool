@@ -39,7 +39,7 @@
     }
   }
 
-  app-lightning-resilience-channel-detail dd.font-monospace {
+  :is(app-lightning-resilience-channel-detail, app-private-submission-ordering-tx) dd.font-monospace {
     overflow-wrap: anywhere;
   }
 

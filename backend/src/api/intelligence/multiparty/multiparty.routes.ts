@@ -68,7 +68,7 @@ class MultipartyRoutes {
     app.post('/api/v1/intelligence/multiparty/public-sessions/verify', (req: Request, res: Response) => {
       try {
         const result = multipartyService.verifyPublicSession(req.body);
-        res.status(result.stage === 'invalid-input' ? 400 : 503).json(result);
+        res.status(result.stage === 'invalid-input' ? 400 : 200).json(result);
       } catch (err: any) {
         fail(res, err);
       }

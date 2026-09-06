@@ -69,9 +69,9 @@ class OpenTimestampsRoutes {
       }
     });
 
-    app.post('/api/v1/intelligence/timestamps/proofs/verify', (req: Request, res: Response) => {
+    app.post('/api/v1/intelligence/timestamps/proofs/verify', async (req: Request, res: Response) => {
       try {
-        const result = openTimestampsService.verifyProof(req.body);
+        const result = await openTimestampsService.verifyProof(req.body);
         res.json(result);
       } catch (err: any) {
         fail(res, err);

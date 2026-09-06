@@ -1,0 +1,119 @@
+{
+  "schemaVersion": "universe-ots-verifier-frontend-evidence-v1",
+  "recordedAt": "2026-09-06T14:00:20.534Z",
+  "scope": "Local OpenTimestamps verification browser contract and rendered component checks. No real proof/network operation acceptance is inferred.",
+  "operationId": "API-8f2d0a9754f2",
+  "apiRoute": "POST /api/v1/intelligence/timestamps/proofs/verify",
+  "consumerRoute": "/tools/timestamp/verify",
+  "sourceFiles": [
+    {
+      "path": "frontend/src/app/universe/opentimestamps/opentimestamps-verify.component.ts",
+      "sha256": "f641c0765e45cc776d8cec73c07601adad683823fbd0ee3bab17cb42b5f532e6",
+      "lastWrittenAt": "2026-09-06T13:58:21.851Z"
+    },
+    {
+      "path": "frontend/src/app/universe/opentimestamps/opentimestamps.service.ts",
+      "sha256": "51ed985021b3d8abbd8191f228a813f18da9912e18dd5f784ecec4ca5732013c",
+      "lastWrittenAt": "2026-09-06T13:55:30.031Z"
+    },
+    {
+      "path": "frontend/src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts",
+      "sha256": "916ff9130d4dc8a51444002bd2c1a99a64547ee0fbcc972dafa02a2b4b49b755",
+      "lastWrittenAt": "2026-09-06T13:57:55.699Z"
+    },
+    {
+      "path": "frontend/src/app/universe/opentimestamps/opentimestamps.service.spec.ts",
+      "sha256": "7014a32bb565681ec67a879e838b7793a221f3fd7190fe5beb6f1d2072e334ce",
+      "lastWrittenAt": "2026-09-06T13:52:24.831Z"
+    }
+  ],
+  "behaviors": [
+    "Only an explicit bitcoin_attestation_verified status and verified=true can show the confirmed badge; standard block identity, timestamp and selected network must agree.",
+    "When an expected file digest is supplied, digest_matches must be true and file_digest must exactly match it. Without a digest, the UI states that file identity was not checked.",
+    "Pending calendar attestations, rejected proofs, explicit network mismatch, unsupported operations/attestations and unavailable owned headers retain distinct nonpositive presentation.",
+    "Proof, expected-digest and network changes cancel outstanding requests and clear previous results, including late old-network responses.",
+    "The UI renders earliest_proven_block_height, earliest_proven_time_utc and operation_count rather than the previous nonexistent aliases."
+  ],
+  "validation": {
+    "initialHarnessAttempt": {
+      "testsFailed": 21,
+      "testsPassed": 2,
+      "reason": "Angular constructor metadata was absent in Vitest. This attempt did not demonstrate product behavior.",
+      "artifact": "docs/acceptance/ots-verifier-frontend-2026-09-06/ots-frontend-failing-first.log"
+    },
+    "behaviorFailingFirst": {
+      "testsFailed": 21,
+      "testsPassed": 2,
+      "reason": "Old component rendered every HTTP200 as confirmed, ignored optional digest/network contract, and kept stale results.",
+      "artifact": "docs/acceptance/ots-verifier-frontend-2026-09-06/ots-frontend-behavior-failing-first.log"
+    },
+    "negativeContractFailingFirst": {
+      "testsFailed": 2,
+      "testsPassed": 21,
+      "reason": "Explicit negative reader-network mismatch and HTTP400 unsupported-operation required separate presentation.",
+      "artifact": "docs/acceptance/ots-verifier-frontend-2026-09-06/ots-frontend-negative-contract-failing-first.log"
+    },
+    "finalFocusedTests": {
+      "filesPassed": 2,
+      "testsPassed": 25,
+      "startedAt": "2026-09-06T13:58:24Z",
+      "durationSeconds": 2.92,
+      "artifact": "docs/acceptance/ots-verifier-frontend-2026-09-06/ots-frontend-final-passing.log"
+    },
+    "lint": {
+      "exitCode": 0,
+      "errors": 0,
+      "warnings": 11,
+      "note": "Warnings are existing any declarations in the neighboring service methods.",
+      "artifact": "docs/acceptance/ots-verifier-frontend-2026-09-06/ots-frontend-final-lint.log"
+    },
+    "sourceTypecheck": {
+      "command": "tsc -p tsconfig.app.json --noEmit",
+      "exitCode": 0,
+      "artifact": "docs/acceptance/ots-verifier-frontend-2026-09-06/ots-frontend-final-typecheck.log"
+    }
+  },
+  "artifacts": [
+    {
+      "artifact": "docs/acceptance/ots-verifier-frontend-2026-09-06/ots-frontend-failing-first.log",
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\ots-frontend-failing-first.log",
+      "sha256": "b711d2c1e280346abb90e210621dad951ca27abd13e31e03bfa8e04a96dc32ac",
+      "bytes": 18640
+    },
+    {
+      "artifact": "docs/acceptance/ots-verifier-frontend-2026-09-06/ots-frontend-behavior-failing-first.log",
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\ots-frontend-behavior-failing-first.log",
+      "sha256": "ab726b1a1eb1c2b83b9f9e0f13099efa55714645915716ba7fca1b20d4d6260d",
+      "bytes": 23517
+    },
+    {
+      "artifact": "docs/acceptance/ots-verifier-frontend-2026-09-06/ots-frontend-negative-contract-failing-first.log",
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\ots-frontend-negative-contract-failing-first.log",
+      "sha256": "5548fd6f4193a59d210ca6a78864000737a04001978afe893a1deedea09691b5",
+      "bytes": 6691
+    },
+    {
+      "artifact": "docs/acceptance/ots-verifier-frontend-2026-09-06/ots-frontend-final-passing.log",
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\ots-frontend-final-passing.log",
+      "sha256": "385e022aa57ae86a3f847b7491b487ec481ab8ed9ed8ef163bf64535fa73e910",
+      "bytes": 645
+    },
+    {
+      "artifact": "docs/acceptance/ots-verifier-frontend-2026-09-06/ots-frontend-final-lint.log",
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\ots-frontend-final-lint.log",
+      "sha256": "6a3100b0c850ebd756a311d4e26ea04718134ce101fad0d558fcccd1f8ae3962",
+      "bytes": 2119
+    },
+    {
+      "artifact": "docs/acceptance/ots-verifier-frontend-2026-09-06/ots-frontend-final-typecheck.log",
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\ots-frontend-final-typecheck.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    }
+  ],
+  "acceptance": {
+    "status": "BLOCKED",
+    "realNetworkE2ePassesAdded": 0,
+    "limitation": "Backend engine implementation, owned-reader integration and actual consumer proof verification require their own evidence. These test payloads are deterministic contract fixtures."
+  }
+}

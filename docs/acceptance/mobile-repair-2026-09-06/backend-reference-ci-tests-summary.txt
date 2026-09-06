@@ -1,0 +1,15 @@
+tests	Run unit tests	2026-09-06T13:23:23.0261566Z PASS src/universe-explorer/sources/explorer-source.client.spec.ts
+tests	Run unit tests	2026-09-06T13:23:23.2974594Z PASS src/universe-explorer/sources/explorer-source-freshness.spec.ts
+tests	Run unit tests	2026-09-06T13:23:23.7861792Z PASS src/universe-explorer/chains/chain-capabilities.service.spec.ts (5.356 s)
+tests	Run unit tests	2026-09-06T13:23:25.1928149Z PASS src/universe-explorer/sources/explorer-source.config.spec.ts
+tests	Run unit tests	2026-09-06T13:23:25.1938505Z PASS src/universe-explorer/chains/chain-health-repair.spec.ts
+tests	Run unit tests	2026-09-06T13:23:25.1942866Z PASS src/universe-explorer/sources/explorer-source-health-repair.spec.ts
+tests	Run unit tests	2026-09-06T13:23:25.1982756Z PASS src/universe-explorer/chains/authority-health-observations.spec.ts
+tests	Run unit tests	2026-09-06T13:23:25.2707419Z PASS src/universe-explorer/sources/explorer-sources.service.spec.ts
+tests	Run unit tests	2026-09-06T13:23:28.6676937Z PASS src/universe-explorer/chains/chain-capabilities.routes.spec.ts
+tests	Run unit tests	2026-09-06T13:23:36.7288058Z Test Suites: 423 passed, 423 total
+tests	Run unit tests	2026-09-06T13:23:36.7316999Z Tests:       4574 passed, 4574 total
+tests	Run unit tests	2026-09-06T13:23:36.7346513Z Time:        20.697 s
+tests	Run end-to-end tests	2026-09-06T13:24:12.2605848Z Test Suites: 4 passed, 4 total
+tests	Run end-to-end tests	2026-09-06T13:24:12.2606659Z Tests:       27 passed, 27 total
+tests	Run end-to-end tests	2026-09-06T13:24:12.2607851Z Time:        34.163 s

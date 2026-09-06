@@ -1999,13 +1999,13 @@
     },
     {
       "path": "backend/src/api/intelligence/multiparty/multiparty.routes.ts",
-      "sha256": "d0cfaee7a268e34b088d83df059f743927e894bf3c7d57ce0996cf6caf22fb98",
-      "bytes": 2688
+      "sha256": "b59a814745c0276d83bef7ae48ff1b9cf21c7d6ae5c2185e14abe8f935a9d737",
+      "bytes": 2686
     },
     {
       "path": "backend/src/api/intelligence/multiparty/multiparty.service.ts",
-      "sha256": "3ed29b1c397bcd412a3cf6a57d8837c6dfd044c68996b64dfe7b1134c554f8c5",
-      "bytes": 6444
+      "sha256": "6486bac3515dec842312b7ffd8dd0bf68aeca4bc3cf2dd542d887551f3c537f5",
+      "bytes": 10810
     },
     {
       "path": "backend/src/api/intelligence/node-security/node-security.routes.ts",
@@ -2019,13 +2019,13 @@
     },
     {
       "path": "backend/src/api/intelligence/opentimestamps/opentimestamps.routes.ts",
-      "sha256": "df983fca08444b206c936df215ce7f21c7df687f63c480fe15d917dbc45a7fb1",
-      "bytes": 3040
+      "sha256": "034d9eeb10ffb42a3353f8614bc675e4463035249d594bc8a1c77f875522b338",
+      "bytes": 3049
     },
     {
       "path": "backend/src/api/intelligence/opentimestamps/opentimestamps.service.ts",
-      "sha256": "fad2e42d1d1856638260991ed4b3348b48df62133979c59eff82fbbaacfbfc34",
-      "bytes": 3198
+      "sha256": "3ee2df0018fe8b5ce286d7555f026395efcc090fc8c50af390ae52811dc90d08",
+      "bytes": 3341
     },
     {
       "path": "backend/src/api/intelligence/payjoin/payjoin.routes.ts",
@@ -2234,8 +2234,8 @@
     },
     {
       "path": "docs/acceptance/HEALTH-REPAIR-2026-09-06.md",
-      "sha256": "288f7b4aa552900bfba57f83e9d114957c0b3fc95f3971a3e7e5ade385c974c9",
-      "bytes": 20649
+      "sha256": "bd2c92eda6007ae4090e768999075c366006469e3a018d19caa8e0cb26c58ff1",
+      "bytes": 20934
     },
     {
       "path": "docs/acceptance/network-contract-2026-09-05.md",
@@ -3199,8 +3199,8 @@
     },
     {
       "path": "frontend/src/app/universe/multiparty/multiparty-musig2.component.ts",
-      "sha256": "139ff2a0439fdb48c7e15c484b7a509cbdc375083d5cc515120695257972f179",
-      "bytes": 7696
+      "sha256": "af590ea0036ea426935631026fdd3dc0d9b319069235182e14e0304fbe6b0843",
+      "bytes": 10968
     },
     {
       "path": "frontend/src/app/universe/multiparty/multiparty-overview.component.ts",
@@ -3344,8 +3344,8 @@
     },
     {
       "path": "frontend/src/app/universe/opentimestamps/opentimestamps-verify.component.ts",
-      "sha256": "efdf9709fea38687f970bc36e582c4c7b49c22dfcc308cb00b2d5070e3a89428",
-      "bytes": 4604
+      "sha256": "f641c0765e45cc776d8cec73c07601adad683823fbd0ee3bab17cb42b5f532e6",
+      "bytes": 11352
     },
     {
       "path": "frontend/src/app/universe/outpoint/outpoint.component.ts",
@@ -13561,7 +13561,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/multiparty/multiparty-musig2.component.ts",
-          "sha256": "139ff2a0439fdb48c7e15c484b7a509cbdc375083d5cc515120695257972f179"
+          "sha256": "af590ea0036ea426935631026fdd3dc0d9b319069235182e14e0304fbe6b0843"
         }
       },
       {
@@ -18249,7 +18249,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/opentimestamps/opentimestamps-verify.component.ts",
-          "sha256": "efdf9709fea38687f970bc36e582c4c7b49c22dfcc308cb00b2d5070e3a89428"
+          "sha256": "f641c0765e45cc776d8cec73c07601adad683823fbd0ee3bab17cb42b5f532e6"
         }
       },
       {
@@ -60141,7 +60141,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/multiparty/multiparty-musig2.component.ts",
-          "sha256": "139ff2a0439fdb48c7e15c484b7a509cbdc375083d5cc515120695257972f179"
+          "sha256": "af590ea0036ea426935631026fdd3dc0d9b319069235182e14e0304fbe6b0843"
         }
       ],
       "entry": null,
@@ -60220,7 +60220,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/multiparty/multiparty-musig2.component.ts",
-          "sha256": "139ff2a0439fdb48c7e15c484b7a509cbdc375083d5cc515120695257972f179"
+          "sha256": "af590ea0036ea426935631026fdd3dc0d9b319069235182e14e0304fbe6b0843"
         }
       ],
       "entry": null,
@@ -67364,7 +67364,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/opentimestamps/opentimestamps-verify.component.ts",
-          "sha256": "efdf9709fea38687f970bc36e582c4c7b49c22dfcc308cb00b2d5070e3a89428"
+          "sha256": "f641c0765e45cc776d8cec73c07601adad683823fbd0ee3bab17cb42b5f532e6"
         }
       ],
       "entry": null,
@@ -114372,11 +114372,11 @@
         },
         {
           "artifact": "backend/src/api/intelligence/multiparty/multiparty.routes.ts",
-          "sha256": "d0cfaee7a268e34b088d83df059f743927e894bf3c7d57ce0996cf6caf22fb98"
+          "sha256": "b59a814745c0276d83bef7ae48ff1b9cf21c7d6ae5c2185e14abe8f935a9d737"
         },
         {
           "artifact": "backend/src/api/intelligence/multiparty/multiparty.service.ts",
-          "sha256": "3ed29b1c397bcd412a3cf6a57d8837c6dfd044c68996b64dfe7b1134c554f8c5"
+          "sha256": "6486bac3515dec842312b7ffd8dd0bf68aeca4bc3cf2dd542d887551f3c537f5"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -114441,11 +114441,11 @@
         },
         {
           "artifact": "backend/src/api/intelligence/multiparty/multiparty.routes.ts",
-          "sha256": "d0cfaee7a268e34b088d83df059f743927e894bf3c7d57ce0996cf6caf22fb98"
+          "sha256": "b59a814745c0276d83bef7ae48ff1b9cf21c7d6ae5c2185e14abe8f935a9d737"
         },
         {
           "artifact": "backend/src/api/intelligence/multiparty/multiparty.service.ts",
-          "sha256": "3ed29b1c397bcd412a3cf6a57d8837c6dfd044c68996b64dfe7b1134c554f8c5"
+          "sha256": "6486bac3515dec842312b7ffd8dd0bf68aeca4bc3cf2dd542d887551f3c537f5"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -114510,11 +114510,11 @@
         },
         {
           "artifact": "backend/src/api/intelligence/multiparty/multiparty.routes.ts",
-          "sha256": "d0cfaee7a268e34b088d83df059f743927e894bf3c7d57ce0996cf6caf22fb98"
+          "sha256": "b59a814745c0276d83bef7ae48ff1b9cf21c7d6ae5c2185e14abe8f935a9d737"
         },
         {
           "artifact": "backend/src/api/intelligence/multiparty/multiparty.service.ts",
-          "sha256": "3ed29b1c397bcd412a3cf6a57d8837c6dfd044c68996b64dfe7b1134c554f8c5"
+          "sha256": "6486bac3515dec842312b7ffd8dd0bf68aeca4bc3cf2dd542d887551f3c537f5"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -114579,11 +114579,11 @@
         },
         {
           "artifact": "backend/src/api/intelligence/multiparty/multiparty.routes.ts",
-          "sha256": "d0cfaee7a268e34b088d83df059f743927e894bf3c7d57ce0996cf6caf22fb98"
+          "sha256": "b59a814745c0276d83bef7ae48ff1b9cf21c7d6ae5c2185e14abe8f935a9d737"
         },
         {
           "artifact": "backend/src/api/intelligence/multiparty/multiparty.service.ts",
-          "sha256": "3ed29b1c397bcd412a3cf6a57d8837c6dfd044c68996b64dfe7b1134c554f8c5"
+          "sha256": "6486bac3515dec842312b7ffd8dd0bf68aeca4bc3cf2dd542d887551f3c537f5"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -114648,11 +114648,11 @@
         },
         {
           "artifact": "backend/src/api/intelligence/multiparty/multiparty.routes.ts",
-          "sha256": "d0cfaee7a268e34b088d83df059f743927e894bf3c7d57ce0996cf6caf22fb98"
+          "sha256": "b59a814745c0276d83bef7ae48ff1b9cf21c7d6ae5c2185e14abe8f935a9d737"
         },
         {
           "artifact": "backend/src/api/intelligence/multiparty/multiparty.service.ts",
-          "sha256": "3ed29b1c397bcd412a3cf6a57d8837c6dfd044c68996b64dfe7b1134c554f8c5"
+          "sha256": "6486bac3515dec842312b7ffd8dd0bf68aeca4bc3cf2dd542d887551f3c537f5"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -114717,11 +114717,11 @@
         },
         {
           "artifact": "backend/src/api/intelligence/multiparty/multiparty.routes.ts",
-          "sha256": "d0cfaee7a268e34b088d83df059f743927e894bf3c7d57ce0996cf6caf22fb98"
+          "sha256": "b59a814745c0276d83bef7ae48ff1b9cf21c7d6ae5c2185e14abe8f935a9d737"
         },
         {
           "artifact": "backend/src/api/intelligence/multiparty/multiparty.service.ts",
-          "sha256": "3ed29b1c397bcd412a3cf6a57d8837c6dfd044c68996b64dfe7b1134c554f8c5"
+          "sha256": "6486bac3515dec842312b7ffd8dd0bf68aeca4bc3cf2dd542d887551f3c537f5"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -114786,11 +114786,11 @@
         },
         {
           "artifact": "backend/src/api/intelligence/multiparty/multiparty.routes.ts",
-          "sha256": "d0cfaee7a268e34b088d83df059f743927e894bf3c7d57ce0996cf6caf22fb98"
+          "sha256": "b59a814745c0276d83bef7ae48ff1b9cf21c7d6ae5c2185e14abe8f935a9d737"
         },
         {
           "artifact": "backend/src/api/intelligence/multiparty/multiparty.service.ts",
-          "sha256": "3ed29b1c397bcd412a3cf6a57d8837c6dfd044c68996b64dfe7b1134c554f8c5"
+          "sha256": "6486bac3515dec842312b7ffd8dd0bf68aeca4bc3cf2dd542d887551f3c537f5"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -119455,11 +119455,11 @@
         },
         {
           "artifact": "backend/src/api/intelligence/opentimestamps/opentimestamps.routes.ts",
-          "sha256": "df983fca08444b206c936df215ce7f21c7df687f63c480fe15d917dbc45a7fb1"
+          "sha256": "034d9eeb10ffb42a3353f8614bc675e4463035249d594bc8a1c77f875522b338"
         },
         {
           "artifact": "backend/src/api/intelligence/opentimestamps/opentimestamps.service.ts",
-          "sha256": "fad2e42d1d1856638260991ed4b3348b48df62133979c59eff82fbbaacfbfc34"
+          "sha256": "3ee2df0018fe8b5ce286d7555f026395efcc090fc8c50af390ae52811dc90d08"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -119524,11 +119524,11 @@
         },
         {
           "artifact": "backend/src/api/intelligence/opentimestamps/opentimestamps.routes.ts",
-          "sha256": "df983fca08444b206c936df215ce7f21c7df687f63c480fe15d917dbc45a7fb1"
+          "sha256": "034d9eeb10ffb42a3353f8614bc675e4463035249d594bc8a1c77f875522b338"
         },
         {
           "artifact": "backend/src/api/intelligence/opentimestamps/opentimestamps.service.ts",
-          "sha256": "fad2e42d1d1856638260991ed4b3348b48df62133979c59eff82fbbaacfbfc34"
+          "sha256": "3ee2df0018fe8b5ce286d7555f026395efcc090fc8c50af390ae52811dc90d08"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -119593,11 +119593,11 @@
         },
         {
           "artifact": "backend/src/api/intelligence/opentimestamps/opentimestamps.routes.ts",
-          "sha256": "df983fca08444b206c936df215ce7f21c7df687f63c480fe15d917dbc45a7fb1"
+          "sha256": "034d9eeb10ffb42a3353f8614bc675e4463035249d594bc8a1c77f875522b338"
         },
         {
           "artifact": "backend/src/api/intelligence/opentimestamps/opentimestamps.service.ts",
-          "sha256": "fad2e42d1d1856638260991ed4b3348b48df62133979c59eff82fbbaacfbfc34"
+          "sha256": "3ee2df0018fe8b5ce286d7555f026395efcc090fc8c50af390ae52811dc90d08"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -119662,11 +119662,11 @@
         },
         {
           "artifact": "backend/src/api/intelligence/opentimestamps/opentimestamps.routes.ts",
-          "sha256": "df983fca08444b206c936df215ce7f21c7df687f63c480fe15d917dbc45a7fb1"
+          "sha256": "034d9eeb10ffb42a3353f8614bc675e4463035249d594bc8a1c77f875522b338"
         },
         {
           "artifact": "backend/src/api/intelligence/opentimestamps/opentimestamps.service.ts",
-          "sha256": "fad2e42d1d1856638260991ed4b3348b48df62133979c59eff82fbbaacfbfc34"
+          "sha256": "3ee2df0018fe8b5ce286d7555f026395efcc090fc8c50af390ae52811dc90d08"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -119731,11 +119731,11 @@
         },
         {
           "artifact": "backend/src/api/intelligence/opentimestamps/opentimestamps.routes.ts",
-          "sha256": "df983fca08444b206c936df215ce7f21c7df687f63c480fe15d917dbc45a7fb1"
+          "sha256": "034d9eeb10ffb42a3353f8614bc675e4463035249d594bc8a1c77f875522b338"
         },
         {
           "artifact": "backend/src/api/intelligence/opentimestamps/opentimestamps.service.ts",
-          "sha256": "fad2e42d1d1856638260991ed4b3348b48df62133979c59eff82fbbaacfbfc34"
+          "sha256": "3ee2df0018fe8b5ce286d7555f026395efcc090fc8c50af390ae52811dc90d08"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -119800,11 +119800,11 @@
         },
         {
           "artifact": "backend/src/api/intelligence/opentimestamps/opentimestamps.routes.ts",
-          "sha256": "df983fca08444b206c936df215ce7f21c7df687f63c480fe15d917dbc45a7fb1"
+          "sha256": "034d9eeb10ffb42a3353f8614bc675e4463035249d594bc8a1c77f875522b338"
         },
         {
           "artifact": "backend/src/api/intelligence/opentimestamps/opentimestamps.service.ts",
-          "sha256": "fad2e42d1d1856638260991ed4b3348b48df62133979c59eff82fbbaacfbfc34"
+          "sha256": "3ee2df0018fe8b5ce286d7555f026395efcc090fc8c50af390ae52811dc90d08"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -119869,11 +119869,11 @@
         },
         {
           "artifact": "backend/src/api/intelligence/opentimestamps/opentimestamps.routes.ts",
-          "sha256": "df983fca08444b206c936df215ce7f21c7df687f63c480fe15d917dbc45a7fb1"
+          "sha256": "034d9eeb10ffb42a3353f8614bc675e4463035249d594bc8a1c77f875522b338"
         },
         {
           "artifact": "backend/src/api/intelligence/opentimestamps/opentimestamps.service.ts",
-          "sha256": "fad2e42d1d1856638260991ed4b3348b48df62133979c59eff82fbbaacfbfc34"
+          "sha256": "3ee2df0018fe8b5ce286d7555f026395efcc090fc8c50af390ae52811dc90d08"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -119938,11 +119938,11 @@
         },
         {
           "artifact": "backend/src/api/intelligence/opentimestamps/opentimestamps.routes.ts",
-          "sha256": "df983fca08444b206c936df215ce7f21c7df687f63c480fe15d917dbc45a7fb1"
+          "sha256": "034d9eeb10ffb42a3353f8614bc675e4463035249d594bc8a1c77f875522b338"
         },
         {
           "artifact": "backend/src/api/intelligence/opentimestamps/opentimestamps.service.ts",
-          "sha256": "fad2e42d1d1856638260991ed4b3348b48df62133979c59eff82fbbaacfbfc34"
+          "sha256": "3ee2df0018fe8b5ce286d7555f026395efcc090fc8c50af390ae52811dc90d08"
         },
         {
           "artifact": "backend/src/index.ts",

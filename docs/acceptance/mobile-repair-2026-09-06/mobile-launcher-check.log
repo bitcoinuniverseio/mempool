@@ -1,0 +1,10 @@
+
+Mobile gate, build 066715fdfa45a1f7
+4 routes across 1 window sizes, 4 measured pages
+
+-- 2 checks with something to say that passed --
+  viewport: viewport-fit=cover is asked for
+  viewport: zoom is not restricted
+
+No mobile failures.
+

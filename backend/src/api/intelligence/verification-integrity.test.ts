@@ -3,6 +3,8 @@ import timestampsService from './opentimestamps/opentimestamps.service';
 import multipartyService from './multiparty/multiparty.service';
 import express from 'express';
 import { Server } from 'http';
+import fs from 'fs';
+import path from 'path';
 import bootstrapRoutes from './bootstrap/bootstrap.routes';
 import timestampRoutes from './opentimestamps/opentimestamps.routes';
 import multipartyRoutes from './multiparty/multiparty.routes';
@@ -30,26 +32,27 @@ describe('verification evidence integrity', () => {
 
   it('does not manufacture calendar receipts, proof upgrades or Bitcoin attestations', () => {
     expect(() => timestampsService.stampDigest('ab'.repeat(32))).toThrow(/unavailable/i);
-    expect(() => timestampsService.verifyProof({ digest: 'ab'.repeat(32), ots_proof: 'verified-proof-data' })).toThrow(/unavailable/i);
     expect(() => timestampsService.upgradeProof({ ots_proof: 'pending-proof-data' })).toThrow(/unavailable/i);
   });
 
-  it('rejects malformed successful proof inputs instead of verifying an empty object', () => {
-    expect(() => timestampsService.verifyProof({})).toThrow(/proof/i);
+  it('rejects malformed successful proof inputs instead of verifying an empty object', async () => {
+    await expect(timestampsService.verifyProof({})).rejects.toThrow(/proof/i);
     expect(() => timestampsService.stampDigest('z'.repeat(64))).toThrow(/digest/i);
   });
 
-  it('does not certify a final signature by its length or fabricate a participant aggregate key', () => {
+  it('does not certify a final signature by its length and computes the participant aggregate independently', () => {
     const result = multipartyService.verifyPublicSession({ participant_public_keys: participants,
       aggregate_public_key: publicKey, message_hash: message, final_signature: '00'.repeat(64) });
-    expect(result).toMatchObject({ verified: false, aggregate_public_key: null, final_bip340_valid: false });
+    expect(result).toMatchObject({ verified: false, key_aggregation_verified: true, final_bip340_valid: false });
+    expect(result.aggregate_public_key).not.toBe(publicKey.toLowerCase());
   });
 
-  it('executes BIP340 verification but keeps the unverified MuSig2 session distinct', () => {
+  it('rejects a valid unrelated BIP340 signature whose key is not the participant aggregate', () => {
     const result = multipartyService.verifyPublicSession({ participant_public_keys: participants,
       aggregate_public_key: publicKey, message_hash: message, final_signature: signature });
-    expect(result).toMatchObject({ verified: false, stage: 'unavailable-musig2-engine',
-      key_aggregation_verified: false, aggregate_public_key: null, final_bip340_valid: true });
+    expect(result).toMatchObject({ verified: false, stage: 'invalid-input',
+      key_aggregation_verified: true, final_bip340_valid: false });
+    expect(result.errors).toContain('The supplied aggregate public key does not match the ordered participant aggregation.');
     const wrongMessage = multipartyService.verifyPublicSession({ participant_public_keys: participants,
       aggregate_public_key: publicKey, message_hash: '01'.repeat(32), final_signature: signature });
     expect(wrongMessage.final_bip340_valid).toBe(false);
@@ -89,9 +92,9 @@ describe('verification HTTP contracts', () => {
 
   it.each([
     ['/bootstrap/verifications', { height: 840000, sha256: 'ab'.repeat(32), utxo_hash: 'cd'.repeat(32) }, 503, 'unavailable-manifest'],
-    ['/timestamps/proofs/verify', { proof: 'BAAAAAAAb3Rz' }, 503, 'unavailable-proof-verifier'],
+    ['/timestamps/proofs/verify', { proof: 'BAAAAAAAb3Rz' }, 400, 'invalid-proof'],
     ['/timestamps/proofs/verify', {}, 400, 'invalid-input'],
-    ['/multiparty/public-sessions/verify', { participant_public_keys: participants, message_hash: message }, 503, 'unavailable-musig2-engine'],
+    ['/multiparty/public-sessions/verify', { participant_public_keys: participants, message_hash: message }, 200, 'partial-session'],
     ['/multiparty/manifests/verify', { product_id: 'untrusted', signature: 'arbitrary' }, 503, 'unavailable-vendor-trust'],
   ])('classifies the actual %s request', /** @asyncUnsafe Jest awaits this test and reports its rejection. */ async (route, body, status, stage) => {
     const response = await fetch(origin + '/api/v1/intelligence' + route, {
@@ -101,14 +104,40 @@ describe('verification HTTP contracts', () => {
     expect(await response.json()).toMatchObject({ stage });
   });
 
-  it('returns a real final BIP340 result without converting missing MuSig2 verification into HTTP success', /** @asyncUnsafe Jest awaits this test and reports its rejection. */ async () => {
+  it('does not convert an unrelated valid BIP340 signature into successful transcript verification', /** @asyncUnsafe Jest awaits this test and reports its rejection. */ async () => {
     const response = await fetch(origin + '/api/v1/intelligence/multiparty/public-sessions/verify', {
       method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({
         participant_public_keys: participants, aggregate_public_key: publicKey, message_hash: message, final_signature: signature,
       }),
     });
-    expect(response.status).toBe(503);
-    expect(await response.json()).toMatchObject({ verified: false, final_bip340_valid: true,
-      aggregate_public_key: null, stage: 'unavailable-musig2-engine' });
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ verified: false, final_bip340_valid: false,
+      key_aggregation_verified: true, stage: 'invalid-input' });
+  });
+
+  it('verifies an official complete BIP327 public transcript over HTTP and rejects a corrupted contribution', /** @asyncUnsafe Jest awaits this test and reports its rejection. */ async () => {
+    const vectors = JSON.parse(fs.readFileSync(path.join(__dirname, 'multiparty/vectors/sig_agg_vectors.json'), 'utf8'));
+    const test = vectors.valid_test_cases[0];
+    const session = {
+      participant_public_keys: test.key_indices.map(index => vectors.pubkeys[index]),
+      public_nonces: test.nonce_indices.map(index => vectors.pnonces[index]),
+      partial_signatures: test.psig_indices.map(index => vectors.psigs[index]),
+      message_hash: vectors.msg, aggregate_nonce: test.aggnonce, final_signature: test.expected,
+    };
+    const response = await fetch(origin + '/api/v1/intelligence/multiparty/public-sessions/verify', {
+      method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(session),
+    });
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ verified: true, stage: 'verified-session',
+      key_aggregation_verified: true, nonce_aggregation_verified: true,
+      partial_signature_validity: [true, true], final_bip340_valid: true,
+      final_signature: test.expected.toLowerCase() });
+    session.partial_signatures.reverse();
+    const invalid = await fetch(origin + '/api/v1/intelligence/multiparty/public-sessions/verify', {
+      method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(session),
+    });
+    expect(invalid.status).toBe(400);
+    expect(await invalid.json()).toMatchObject({ verified: false, stage: 'invalid-input',
+      partial_signature_validity: [false, false] });
   });
 });

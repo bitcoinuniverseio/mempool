@@ -1,0 +1,167 @@
+
+> mempool-frontend@3.3.1 test
+> vitest run --run src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts src/app/universe/opentimestamps/opentimestamps.service.spec.ts
+
+
+ RUN  v3.2.7 D:/universe/mempool/.tmp/explorer-health-cc524f6d97b5/frontend
+
+ ✓ src/app/universe/opentimestamps/opentimestamps.service.spec.ts (2 tests) 8ms
+ ❯ src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts (21 tests | 21 failed) 283ms
+   × OpenTimestamps verification presentation > never treats an incomplete or conflicting HTTP 200 as verified 166ms
+     → NG0202: This constructor is not compatible with Angular Dependency Injection because its dependency at index 0 of the parameter list is invalid.
+This can happen if the dependency type is a primitive like a string or if an ancestor of this class is missing an Angular decorator.
+
+Please check that 1) the type for the parameter at index 0 is correct and 2) the correct Angular decorators are defined for this class and its ancestors.
+   × OpenTimestamps verification presentation > never treats an incomplete or conflicting HTTP 200 as verified 7ms
+     → NG0202: This constructor is not compatible with Angular Dependency Injection because its dependency at index 0 of the parameter list is invalid.
+This can happen if the dependency type is a primitive like a string or if an ancestor of this class is missing an Angular decorator.
+
+Please check that 1) the type for the parameter at index 0 is correct and 2) the correct Angular decorators are defined for this class and its ancestors.
+   × OpenTimestamps verification presentation > never treats an incomplete or conflicting HTTP 200 as verified 7ms
+     → NG0202: This constructor is not compatible with Angular Dependency Injection because its dependency at index 0 of the parameter list is invalid.
+This can happen if the dependency type is a primitive like a string or if an ancestor of this class is missing an Angular decorator.
+
+Please check that 1) the type for the parameter at index 0 is correct and 2) the correct Angular decorators are defined for this class and its ancestors.
+   × OpenTimestamps verification presentation > never treats an incomplete or conflicting HTTP 200 as verified 5ms
+     → NG0202: This constructor is not compatible with Angular Dependency Injection because its dependency at index 0 of the parameter list is invalid.
+This can happen if the dependency type is a primitive like a string or if an ancestor of this class is missing an Angular decorator.
+
+Please check that 1) the type for the parameter at index 0 is correct and 2) the correct Angular decorators are defined for this class and its ancestors.
+   × OpenTimestamps verification presentation > never treats an incomplete or conflicting HTTP 200 as verified 8ms
+     → NG0202: This constructor is not compatible with Angular Dependency Injection because its dependency at index 0 of the parameter list is invalid.
+This can happen if the dependency type is a primitive like a string or if an ancestor of this class is missing an Angular decorator.
+
+Please check that 1) the type for the parameter at index 0 is correct and 2) the correct Angular decorators are defined for this class and its ancestors.
+   × OpenTimestamps verification presentation > never treats an incomplete or conflicting HTTP 200 as verified 6ms
+     → NG0202: This constructor is not compatible with Angular Dependency Injection because its dependency at index 0 of the parameter list is invalid.
+This can happen if the dependency type is a primitive like a string or if an ancestor of this class is missing an Angular decorator.
+
+Please check that 1) the type for the parameter at index 0 is correct and 2) the correct Angular decorators are defined for this class and its ancestors.
+   × OpenTimestamps verification presentation > renders pending_calendar_attestation without a confirmed badge 5ms
+     → NG0202: This constructor is not compatible with Angular Dependency Injection because its dependency at index 0 of the parameter list is invalid.
+This can happen if the dependency type is a primitive like a string or if an ancestor of this class is missing an Angular decorator.
+
+Please check that 1) the type for the parameter at index 0 is correct and 2) the correct Angular decorators are defined for this class and its ancestors.
+   × OpenTimestamps verification presentation > renders bitcoin_attestation_invalid without a confirmed badge 4ms
+     → NG0202: This constructor is not compatible with Angular Dependency Injection because its dependency at index 0 of the parameter list is invalid.
+This can happen if the dependency type is a primitive like a string or if an ancestor of this class is missing an Angular decorator.
+
+Please check that 1) the type for the parameter at index 0 is correct and 2) the correct Angular decorators are defined for this class and its ancestors.
+   × OpenTimestamps verification presentation > renders file_mismatch without a confirmed badge 5ms
+     → NG0202: This constructor is not compatible with Angular Dependency Injection because its dependency at index 0 of the parameter list is invalid.
+This can happen if the dependency type is a primitive like a string or if an ancestor of this class is missing an Angular decorator.
+
+Please check that 1) the type for the parameter at index 0 is correct and 2) the correct Angular decorators are defined for this class and its ancestors.
+   × OpenTimestamps verification presentation > renders bitcoin_attestation_reorg without a confirmed badge 5ms
+     → NG0202: This constructor is not compatible with Angular Dependency Injection because its dependency at index 0 of the parameter list is invalid.
+This can happen if the dependency type is a primitive like a string or if an ancestor of this class is missing an Angular decorator.
+
+Please check that 1) the type for the parameter at index 0 is correct and 2) the correct Angular decorators are defined for this class and its ancestors.
+   × OpenTimestamps verification presentation > renders unsupported_attestation without a confirmed badge 7ms
+     → NG0202: This constructor is not compatible with Angular Dependency Injection because its dependency at index 0 of the parameter list is invalid.
+This can happen if the dependency type is a primitive like a string or if an ancestor of this class is missing an Angular decorator.
+
+Please check that 1) the type for the parameter at index 0 is correct and 2) the correct Angular decorators are defined for this class and its ancestors.
+   × OpenTimestamps verification presentation > renders standard anchor fields without claiming file identity when no digest was supplied 4ms
+     → NG0202: This constructor is not compatible with Angular Dependency Injection because its dependency at index 0 of the parameter list is invalid.
+This can happen if the dependency type is a primitive like a string or if an ancestor of this class is missing an Angular decorator.
+
+Please check that 1) the type for the parameter at index 0 is correct and 2) the correct Angular decorators are defined for this class and its ancestors.
+   × OpenTimestamps verification presentation > sends and requires the exact optional digest and selected network 3ms
+     → NG0202: This constructor is not compatible with Angular Dependency Injection because its dependency at index 0 of the parameter list is invalid.
+This can happen if the dependency type is a primitive like a string or if an ancestor of this class is missing an Angular decorator.
+
+Please check that 1) the type for the parameter at index 0 is correct and 2) the correct Angular decorators are defined for this class and its ancestors.
+   × OpenTimestamps verification presentation > does not certify an unchecked or different requested file digest 3ms
+     → NG0202: This constructor is not compatible with Angular Dependency Injection because its dependency at index 0 of the parameter list is invalid.
+This can happen if the dependency type is a primitive like a string or if an ancestor of this class is missing an Angular decorator.
+
+Please check that 1) the type for the parameter at index 0 is correct and 2) the correct Angular decorators are defined for this class and its ancestors.
+   × OpenTimestamps verification presentation > does not certify an unchecked or different requested file digest 7ms
+     → NG0202: This constructor is not compatible with Angular Dependency Injection because its dependency at index 0 of the parameter list is invalid.
+This can happen if the dependency type is a primitive like a string or if an ancestor of this class is missing an Angular decorator.
+
+Please check that 1) the type for the parameter at index 0 is correct and 2) the correct Angular decorators are defined for this class and its ancestors.
+   × OpenTimestamps verification presentation > does not certify an unchecked or different requested file digest 4ms
+     → NG0202: This constructor is not compatible with Angular Dependency Injection because its dependency at index 0 of the parameter list is invalid.
+This can happen if the dependency type is a primitive like a string or if an ancestor of this class is missing an Angular decorator.
+
+Please check that 1) the type for the parameter at index 0 is correct and 2) the correct Angular decorators are defined for this class and its ancestors.
+   × OpenTimestamps verification presentation > rejects malformed expected digests before sending a request 6ms
+     → NG0202: This constructor is not compatible with Angular Dependency Injection because its dependency at index 0 of the parameter list is invalid.
+This can happen if the dependency type is a primitive like a string or if an ancestor of this class is missing an Angular decorator.
+
+Please check that 1) the type for the parameter at index 0 is correct and 2) the correct Angular decorators are defined for this class and its ancestors.
+   × OpenTimestamps verification presentation > distinguishes HTTP 400 failures without preserving an old positive verdict 4ms
+     → NG0202: This constructor is not compatible with Angular Dependency Injection because its dependency at index 0 of the parameter list is invalid.
+This can happen if the dependency type is a primitive like a string or if an ancestor of this class is missing an Angular decorator.
+
+Please check that 1) the type for the parameter at index 0 is correct and 2) the correct Angular decorators are defined for this class and its ancestors.
+   × OpenTimestamps verification presentation > distinguishes HTTP 503 failures without preserving an old positive verdict 8ms
+     → NG0202: This constructor is not compatible with Angular Dependency Injection because its dependency at index 0 of the parameter list is invalid.
+This can happen if the dependency type is a primitive like a string or if an ancestor of this class is missing an Angular decorator.
+
+Please check that 1) the type for the parameter at index 0 is correct and 2) the correct Angular decorators are defined for this class and its ancestors.
+   × OpenTimestamps verification presentation > clears an old result when the proof input changes 3ms
+     → NG0202: This constructor is not compatible with Angular Dependency Injection because its dependency at index 0 of the parameter list is invalid.
+This can happen if the dependency type is a primitive like a string or if an ancestor of this class is missing an Angular decorator.
+
+Please check that 1) the type for the parameter at index 0 is correct and 2) the correct Angular decorators are defined for this class and its ancestors.
+   × OpenTimestamps verification presentation > clears and cancels verification on a network change, including a late old-network response 3ms
+     → NG0202: This constructor is not compatible with Angular Dependency Injection because its dependency at index 0 of the parameter list is invalid.
+This can happen if the dependency type is a primitive like a string or if an ancestor of this class is missing an Angular decorator.
+
+Please check that 1) the type for the parameter at index 0 is correct and 2) the correct Angular decorators are defined for this class and its ancestors.
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 21 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > never treats an incomplete or conflicting HTTP 200 as verified
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > never treats an incomplete or conflicting HTTP 200 as verified
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > never treats an incomplete or conflicting HTTP 200 as verified
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > never treats an incomplete or conflicting HTTP 200 as verified
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > never treats an incomplete or conflicting HTTP 200 as verified
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > never treats an incomplete or conflicting HTTP 200 as verified
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > renders pending_calendar_attestation without a confirmed badge
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > renders bitcoin_attestation_invalid without a confirmed badge
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > renders file_mismatch without a confirmed badge
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > renders bitcoin_attestation_reorg without a confirmed badge
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > renders unsupported_attestation without a confirmed badge
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > renders standard anchor fields without claiming file identity when no digest was supplied
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > sends and requires the exact optional digest and selected network
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > does not certify an unchecked or different requested file digest
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > does not certify an unchecked or different requested file digest
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > does not certify an unchecked or different requested file digest
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > rejects malformed expected digests before sending a request
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > distinguishes HTTP 400 failures without preserving an old positive verdict
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > distinguishes HTTP 503 failures without preserving an old positive verdict
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > clears an old result when the proof input changes
+ FAIL  src/app/universe/opentimestamps/opentimestamps-verify.component.spec.ts > OpenTimestamps verification presentation > clears and cancels verification on a network change, including a late old-network response
+Error: NG0202: This constructor is not compatible with Angular Dependency Injection because its dependency at index 0 of the parameter list is invalid.
+This can happen if the dependency type is a primitive like a string or if an ancestor of this class is missing an Angular decorator.
+
+Please check that 1) the type for the parameter at index 0 is correct and 2) the correct Angular decorators are defined for this class and its ancestors.
+ ❯ ɵɵinvalidFactoryDep ../../../mempool/k8-fastbuild-ST-199a4f3c4e20/bin/packages/core/src/di/injector_compatibility.ts:160:9
+ ❯ NodeInjectorFactory.OpenTimestampsVerifyComponent_Factory [as factory] ng:/OpenTimestampsVerifyComponent/ɵfac.js:5:73
+ ❯ getNodeInjectable ../../../mempool/k8-fastbuild-ST-199a4f3c4e20/bin/packages/core/src/render3/di.ts:784:38
+ ❯ instantiateAllDirectives ../../../mempool/k8-fastbuild-ST-199a4f3c4e20/bin/packages/core/src/render3/instructions/shared.ts:405:23
+ ❯ createDirectivesInstances ../../../mempool/k8-fastbuild-ST-199a4f3c4e20/bin/packages/core/src/render3/instructions/shared.ts:122:3
+ ❯ ComponentFactory.create ../../../mempool/k8-fastbuild-ST-199a4f3c4e20/bin/packages/core/src/render3/component_ref.ts:342:9
+ ❯ initComponent ../../../mempool/k8-fastbuild-ST-199a4f3c4e20/bin/packages/core/testing/src/test_bed.ts:695:45
+ ❯ _ZoneDelegate.invoke ../../../mempool/frontend/node_modules/zone.js/fesm2015/zone.js:398:28
+    396|             return this._invokeZS
+    397|                 ? this._invokeZS.onInvoke(this._invokeDlgt, this._invo…
+    398|                 : callback.apply(applyThis, applyArgs);
+       |                            ^
+    399|         }
+    400|         handleError(targetZone, error) {
+ ❯ Object.onInvoke ../../../mempool/k8-fastbuild-ST-199a4f3c4e20/bin/packages/core/src/zone/ng_zone.ts:476:25
+ ❯ _ZoneDelegate.invoke ../../../mempool/frontend/node_modules/zone.js/fesm2015/zone.js:397:34
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/21]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  21 failed | 2 passed (23)
+   Start at  13:52:38
+   Duration  2.96s (transform 246ms, setup 205ms, collect 952ms, tests 291ms, environment 1.21s, prepare 353ms)
+

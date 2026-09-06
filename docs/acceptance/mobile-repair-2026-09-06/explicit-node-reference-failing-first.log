@@ -1,0 +1,38 @@
+FAIL src/universe-explorer/sources/explorer-source-health-repair.spec.ts
+  ● source observation consistency repair › does not replace a stale explicit node observation with the fresh indexed checkpoint
+
+    expect(received).toBeNull()
+
+    Received: "0"
+
+      135 |       if (nodeState === 'failed')
+      136 |         expect(backend.nodeFailureKind).toBe('transport');
+    > 137 |       expect(row(snapshots, 'ord').lagBlocks).toBeNull();
+          |                                               ^
+      138 |       expect(row(snapshots, 'ord').lastKnownLagBlocks).toBe('10');
+      139 |
+      140 |       responseKind = 'node';
+
+      at universe-explorer/sources/explorer-source-health-repair.spec.ts:137:47
+
+  ● source observation consistency repair › does not replace a failed explicit node observation with the fresh indexed checkpoint
+
+    expect(received).toBeNull()
+
+    Received: "0"
+
+      135 |       if (nodeState === 'failed')
+      136 |         expect(backend.nodeFailureKind).toBe('transport');
+    > 137 |       expect(row(snapshots, 'ord').lagBlocks).toBeNull();
+          |                                               ^
+      138 |       expect(row(snapshots, 'ord').lastKnownLagBlocks).toBe('10');
+      139 |
+      140 |       responseKind = 'node';
+
+      at universe-explorer/sources/explorer-source-health-repair.spec.ts:137:47
+
+Test Suites: 1 failed, 1 total
+Tests:       2 failed, 7 passed, 9 total
+Snapshots:   0 total
+Time:        0.848 s, estimated 1 s
+Ran all test suites matching src/universe-explorer/sources/explorer-source-health-repair.spec.ts.

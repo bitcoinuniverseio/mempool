@@ -1,0 +1,66 @@
+{
+  "repository": "https://github.com/opentimestamps/javascript-opentimestamps",
+  "commit": "c07ba8be0dae4e8721a84f32820abf7b2547a6ce",
+  "files": [
+    {
+      "name": "hello-world.txt",
+      "url": "https://raw.githubusercontent.com/opentimestamps/javascript-opentimestamps/c07ba8be0dae4e8721a84f32820abf7b2547a6ce/examples/hello-world.txt",
+      "sha256": "03ba204e50d126e4674c005e04d82e84c21366780af1f43bd54a37816b6ab340",
+      "bytes": 13
+    },
+    {
+      "name": "hello-world.txt.ots",
+      "url": "https://raw.githubusercontent.com/opentimestamps/javascript-opentimestamps/c07ba8be0dae4e8721a84f32820abf7b2547a6ce/examples/hello-world.txt.ots",
+      "sha256": "be61ecb940db2e4a6f89fbed59c8d4f7f74fa756cbc1fad1ad7aabcb2bf59c30",
+      "bytes": 688
+    },
+    {
+      "name": "bad-stamp.txt",
+      "url": "https://raw.githubusercontent.com/opentimestamps/javascript-opentimestamps/c07ba8be0dae4e8721a84f32820abf7b2547a6ce/examples/bad-stamp.txt",
+      "sha256": "7e3717bbe020f53cdc6c40154a1a8e55bddc13a28c8bb3c82e9ee64b81b44872",
+      "bytes": 93
+    },
+    {
+      "name": "bad-stamp.txt.ots",
+      "url": "https://raw.githubusercontent.com/opentimestamps/javascript-opentimestamps/c07ba8be0dae4e8721a84f32820abf7b2547a6ce/examples/bad-stamp.txt.ots",
+      "sha256": "ffea851e316c968e5142df3ea8aa668621d2fec30153e0bd0ef912782e2af7cc",
+      "bytes": 688
+    },
+    {
+      "name": "incomplete.txt",
+      "url": "https://raw.githubusercontent.com/opentimestamps/javascript-opentimestamps/c07ba8be0dae4e8721a84f32820abf7b2547a6ce/examples/incomplete.txt",
+      "sha256": "05c4f616a8e5310d19d938cfd769864d7f4ccdc2ca8b479b10af83564b097af9",
+      "bytes": 63
+    },
+    {
+      "name": "incomplete.txt.ots",
+      "url": "https://raw.githubusercontent.com/opentimestamps/javascript-opentimestamps/c07ba8be0dae4e8721a84f32820abf7b2547a6ce/examples/incomplete.txt.ots",
+      "sha256": "95673f2878cbcfdddded530bd2ad5f3fb04e13d2e659760d7c1386346fdd036c",
+      "bytes": 175
+    },
+    {
+      "name": "unknown-notary.txt",
+      "url": "https://raw.githubusercontent.com/opentimestamps/javascript-opentimestamps/c07ba8be0dae4e8721a84f32820abf7b2547a6ce/examples/unknown-notary.txt",
+      "sha256": "dcc21d1d1f42a436a2a07fc915dec04db41b83c898845948c3d664b6660f4f91",
+      "bytes": 71
+    },
+    {
+      "name": "unknown-notary.txt.ots",
+      "url": "https://raw.githubusercontent.com/opentimestamps/javascript-opentimestamps/c07ba8be0dae4e8721a84f32820abf7b2547a6ce/examples/unknown-notary.txt.ots",
+      "sha256": "8e9b2d5941745ce822e01c8aedf3725671960d0932699107d4531db7df3c841e",
+      "bytes": 175
+    },
+    {
+      "name": "merkle1.txt",
+      "url": "https://raw.githubusercontent.com/opentimestamps/javascript-opentimestamps/c07ba8be0dae4e8721a84f32820abf7b2547a6ce/examples/merkle1.txt",
+      "sha256": "d32fee9a827f5a0d580f80beb7edce662dd99fcd6591e4ef8a6244403df0b7c9",
+      "bytes": 111
+    },
+    {
+      "name": "merkle1.txt.ots",
+      "url": "https://raw.githubusercontent.com/opentimestamps/javascript-opentimestamps/c07ba8be0dae4e8721a84f32820abf7b2547a6ce/examples/merkle1.txt.ots",
+      "sha256": "90ba8251d3f3c67e7a0f1610503912b522deeac4662267f8b38d7e81d697c300",
+      "bytes": 335
+    }
+  ]
+}
