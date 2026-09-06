@@ -213,6 +213,21 @@
       "files": [
         "frontend/src/app/dashboard/dashboard.component.scss"
       ]
+    },
+    {
+      "id": "CI-CAUSE-13",
+      "job": "Frontend build",
+      "failingStep": "Every route renders and finishes, at a phone and a desktop width",
+      "run": 34027390232,
+      "class": "contract mismatch and fixture coverage gap",
+      "result": "unfinished pages fell to zero. The mining, tx and chain-menu findings from the previous run were real and are fixed. What remained was 96 pages whose API requests had no fixture and failed closed.",
+      "finding": "43 distinct endpoints had no fixture. 40 are mounted by the explorer backend and 2 by the overlay; they simply had no fixture. One was a path mismatch: the whole mining-decentralized frontend service calls /api/v1/intelligence/mining-decentralized/*, and the backend mounts /api/v1/intelligence/mining/decentralized/*. All five of its calls 404 in production. The frontend now calls the mounted path and the fixture keys follow.",
+      "method": "Each fixture body is the response the service that serves the route actually returns, obtained by importing the compiled service and calling the method its handler calls. The two overlay reads are the deployment's own answers, read from it. Writing a body from the route name is how a page passes here and 404s in production, which is what the bootstrap and mining routes were already doing.",
+      "files": [
+        "scripts/universe/visual-qa/intelligence-fixtures.mjs",
+        "frontend/src/app/universe/mining-decentralized/decentralized-mining.service.ts"
+      ],
+      "verification": "43 fixtures added, 206 keys total, fixture contract test passes, both packages typecheck."
     }
   ],
   "findings": [
