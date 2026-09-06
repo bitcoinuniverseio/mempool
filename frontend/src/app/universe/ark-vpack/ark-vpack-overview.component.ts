@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRe
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { ArkVpackApiService, VpackOverview } from './ark-vpack.service';
 
 @Component({
@@ -11,6 +12,9 @@ import { ArkVpackApiService, VpackOverview } from './ark-vpack.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
+      <div class="alert alert-warning" role="alert" *ngIf="loadError">
+        {{ loadError }}
+      </div>
       <header class="page-header mb-4">
         <div class="title-row d-flex flex-wrap align-items-center justify-content-between gap-2">
           <h1 class="m-0">Ark V-PACK, VTXO Portability & Unilateral Exit Center</h1>
@@ -94,13 +98,24 @@ export class ArkVpackOverviewComponent implements OnInit, OnDestroy {
   public loading = true;
   private sub?: Subscription;
 
+  public loadError: string | null = null;
+
   constructor(private api: ArkVpackApiService, private cdr: ChangeDetectorRef) {}
 
   public ngOnInit(): void {
-    this.sub = this.api.getOverview$().subscribe((data) => {
-      this.overview = data;
-      this.loading = false;
-      this.cdr.markForCheck();
+    this.sub = this.api.getOverview$().subscribe({
+      next: (data) => {
+        this.overview = data;
+        this.loading = false;
+        this.loadError = null;
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.overview = null;
+        this.loading = false;
+        this.loadError = loadFailureMessage(classifyLoadFailure(err));
+        this.cdr.markForCheck();
+      },
     });
   }
 

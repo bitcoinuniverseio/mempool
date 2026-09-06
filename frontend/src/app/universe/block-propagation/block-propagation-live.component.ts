@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { BlockPropagationApiService } from './block-propagation.service';
 
 @Component({
@@ -9,6 +10,9 @@ import { BlockPropagationApiService } from './block-propagation.service';
   imports: [CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4">
+      <div class="alert alert-warning" role="alert" *ngIf="loadError">
+        {{ loadError }}
+      </div>
       <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
           <h1 class="h2 mb-1">Live Block Announcement Stream</h1>
@@ -61,11 +65,20 @@ import { BlockPropagationApiService } from './block-propagation.service';
 export class BlockPropagationLiveComponent implements OnInit {
   public liveData: any = { live_blocks: [] };
 
+  public loadError: string | null = null;
+
   constructor(private api: BlockPropagationApiService) {}
 
   public ngOnInit(): void {
-    this.api.getLive$().subscribe(data => {
-      this.liveData = data;
+    this.api.getLive$().subscribe({
+      next: data => {
+        this.liveData = data;
+        this.loadError = null;
+      },
+      error: err => {
+        this.liveData = null;
+        this.loadError = loadFailureMessage(classifyLoadFailure(err));
+      },
     });
   }
 }

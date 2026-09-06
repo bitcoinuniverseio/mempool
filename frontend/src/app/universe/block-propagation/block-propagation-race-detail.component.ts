@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { BlockPropagationApiService } from './block-propagation.service';
 
 @Component({
@@ -9,6 +10,9 @@ import { BlockPropagationApiService } from './block-propagation.service';
   imports: [CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4" *ngIf="race">
+      <div class="alert alert-warning" role="alert" *ngIf="loadError">
+        {{ loadError }}
+      </div>
       <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
           <h1 class="h2 mb-1">Fork Race: <span class="text-info">{{ race.race_id }}</span> (Height {{ race.height }})</h1>
@@ -62,6 +66,8 @@ import { BlockPropagationApiService } from './block-propagation.service';
 export class BlockPropagationRaceDetailComponent implements OnInit {
   public race: any = null;
 
+  public loadError: string | null = null;
+
   constructor(
     private route: ActivatedRoute,
     private api: BlockPropagationApiService
@@ -70,8 +76,15 @@ export class BlockPropagationRaceDetailComponent implements OnInit {
   public ngOnInit(): void {
     this.route.paramMap.subscribe(params => {
       const raceId = params.get('raceId') || 'race-863920';
-      this.api.getForkRace$(raceId).subscribe(res => {
-        this.race = res;
+      this.api.getForkRace$(raceId).subscribe({
+        next: res => {
+          this.race = res;
+          this.loadError = null;
+        },
+        error: err => {
+          this.race = null;
+          this.loadError = loadFailureMessage(classifyLoadFailure(err));
+        },
       });
     });
   }

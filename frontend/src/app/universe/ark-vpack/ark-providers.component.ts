@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRe
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { ArkVpackApiService } from './ark-vpack.service';
 
 @Component({
@@ -11,6 +12,9 @@ import { ArkVpackApiService } from './ark-vpack.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
+      <div class="alert alert-warning" role="alert" *ngIf="loadError">
+        {{ loadError }}
+      </div>
       <header class="page-header mb-4">
         <h1>Ark Service Provider (ASP) Observatory</h1>
         <p class="text-muted">Registered Ark service providers with signed manifests, round frequency, and exit policies.</p>
@@ -57,13 +61,24 @@ export class ArkProvidersComponent implements OnInit, OnDestroy {
   public loading = true;
   private sub?: Subscription;
 
+  public loadError: string | null = null;
+
   constructor(private api: ArkVpackApiService, private cdr: ChangeDetectorRef) {}
 
   public ngOnInit(): void {
-    this.sub = this.api.getProviders$().subscribe((data) => {
-      this.providers = data;
-      this.loading = false;
-      this.cdr.markForCheck();
+    this.sub = this.api.getProviders$().subscribe({
+      next: (data) => {
+        this.providers = data;
+        this.loading = false;
+        this.loadError = null;
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.providers = [];
+        this.loading = false;
+        this.loadError = loadFailureMessage(classifyLoadFailure(err));
+        this.cdr.markForCheck();
+      },
     });
   }
 
