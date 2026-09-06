@@ -1,5 +1,5 @@
 import { readActivityRows, activitySummary } from './protocol-activity-view';
-import type { ExplorerProtocolActivityPage } from './universe.types';
+import type { ExplorerProtocolActivityPage, ExplorerProtocolObjectsPage } from './universe.types';
 
 describe('readActivityRows', () => {
   it('reads the common identity, kind, transaction and height keys', () => {
@@ -86,9 +86,20 @@ describe('activitySummary', () => {
     expect(activitySummary(page({ state: 'unsupported' })))
       .toBe('This protocol has no activity feed this explorer reads yet.');
   });
+
+  it.each(['unconfigured', 'unavailable', 'unsupported'] as const)('keeps the owned %s reason visible', (state) => {
+    const degradedReason = 'The authority needs configuration or recovery before this read can complete.';
+    expect(activitySummary(page({ state, degradedReason }))).toBe(degradedReason);
+    const objects: ExplorerProtocolObjectsPage = {
+      schemaVersion: 'universe-protocol-objects-v1', protocolId: 'names', state,
+      authorityId: null, objectsPath: null, items: [], nextCursor: null, checkpoint: null,
+      degradedReason, observedAt: null,
+    };
+    expect(objectsSummary(objects, 0)).toBe(degradedReason);
+  });
 });
 
-import { readObjectRows } from './protocol-activity-view';
+import { readObjectRows, objectsSummary } from './protocol-activity-view';
 
 describe('readObjectRows', () => {
   it('reads the identity and status keys the object collections publish', () => {

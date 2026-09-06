@@ -1,9 +1,16 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createRequire } from 'node:module';
-import { Subject, of } from 'rxjs';
+import { BehaviorSubject, Subject, of } from 'rxjs';
+import { convertToParamMap } from '@angular/router';
 import { publicSwapPackage, checkRecoveryArtifact } from './swaps-package';
 import { SwapsRecoverComponent } from './swaps-recover.component';
 import { SwapsApiService } from './swaps.service';
+import { SwapsProvidersComponent } from './swaps-providers.component';
+import { SwapsProviderDetailComponent } from './swaps-provider-detail.component';
+import { SwapsInspectComponent } from './swaps-inspect.component';
+
+// Handler tests use the real components; shared visual dependencies require a browser.
+vi.mock('@app/shared/shared.module', () => ({ SharedModule: class {} }));
 
 // The fixture serializer is bitcoinjs, while the browser verification uses scure.
 const require = createRequire(import.meta.url);
@@ -104,5 +111,75 @@ describe('Swaps consumer network and error boundary', () => {
     const api = new SwapsApiService(http, state), error = vi.fn(); api.getOverview$().subscribe({ error });
     expect(http.get).toHaveBeenCalledWith('/api/v1/intelligence/swaps/overview', { params: { chain: 'bitcoin', network: 'signet' } });
     pending.error(new Error('offline')); expect(error).toHaveBeenCalled(); expect(api.path('/swaps/recover')).toBe('/signet/swaps/recover');
+  });
+  it('binds provider lookups to the requested network and encodes provider identifiers', () => {
+    const http: any = { get: vi.fn(() => of(null)) };
+    const api = new SwapsApiService(http, { network: 'mainnet', isBrowser: true } as any);
+    api.getProviders$('signet').subscribe(); api.getProviderById$('provider/name', 'signet').subscribe();
+    expect(http.get).toHaveBeenNthCalledWith(1, '/api/v1/intelligence/swaps/providers', { params: { chain: 'bitcoin', network: 'signet' } });
+    expect(http.get).toHaveBeenNthCalledWith(2, '/api/v1/intelligence/swaps/providers/provider%2Fname', { params: { chain: 'bitcoin', network: 'signet' } });
+  });
+  it('retains unavailable-registry errors and resumes provider reads after a network change', () => {
+    const network$ = new BehaviorSubject('signet'), first = new Subject<any>(), second = new Subject<any>();
+    const api: any = { network$, getProviders$: vi.fn().mockReturnValueOnce(first).mockReturnValueOnce(second) };
+    const component = new SwapsProvidersComponent(api, { markForCheck: vi.fn() } as any);
+    component.ngOnInit();
+    first.error({ status: 503, error: { stage: 'unavailable-registry', error: 'Authenticated registry unavailable.' } });
+    expect(component.error).toBe('Authenticated registry unavailable.'); expect(component.loading).toBe(false);
+    network$.next('testnet'); expect(api.getProviders$).toHaveBeenLastCalledWith('testnet');
+    expect(component.error).toBe(''); expect(component.loading).toBe(true);
+    second.next([]); expect(component.providers).toEqual([]); expect(component.loading).toBe(false);
+    component.ngOnDestroy();
+  });
+  it('clears previous provider data and ignores delayed responses after switching networks', () => {
+    const network$ = new BehaviorSubject('signet'), first = new Subject<any>(), second = new Subject<any>();
+    const api: any = { network$, getProviders$: vi.fn().mockReturnValueOnce(first).mockReturnValueOnce(second) };
+    const component = new SwapsProvidersComponent(api, { markForCheck: vi.fn() } as any);
+    component.ngOnInit(); first.next([{ provider_id: 'unit-old-network' }]);
+    network$.next('testnet'); expect(component.providers).toEqual([]);
+    first.next([{ provider_id: 'unit-stale' }]); expect(component.providers).toEqual([]);
+    component.ngOnDestroy(); second.next([{ provider_id: 'unit-after-destroy' }]); expect(component.providers).toEqual([]);
+  });
+  it('distinguishes provider lookup failures and clears stale details on route and network changes', () => {
+    const network$ = new BehaviorSubject('signet'), paramMap = new BehaviorSubject(convertToParamMap({ providerId: 'first' }));
+    const requests: Subject<any>[] = [];
+    const api: any = { network$, getProviderById$: vi.fn(() => { const request = new Subject<any>(); requests.push(request); return request; }) };
+    const component = new SwapsProviderDetailComponent({ paramMap } as any, api, { markForCheck: vi.fn() } as any);
+    component.ngOnInit(); requests[0].next({ name: 'Unit first' }); expect(component.provider?.name).toBe('Unit first');
+    paramMap.next(convertToParamMap({ providerId: 'second' })); expect(component.provider).toBeUndefined();
+    requests[0].next({ name: 'Stale' }); expect(component.provider).toBeUndefined();
+    requests[1].error({ status: 404, error: { stage: 'unknown-provider', error: 'Unknown provider identity.' } });
+    expect(component.error).toBe('Unknown provider identity.');
+    network$.next('testnet'); expect(api.getProviderById$).toHaveBeenLastCalledWith('second', 'testnet');
+    requests[2].error({ status: 503, error: { stage: 'unavailable-registry', error: 'Registry unavailable.' } });
+    expect(component.error).toBe('Registry unavailable.'); expect(component.provider).toBeUndefined();
+    component.ngOnDestroy();
+  });
+  it('never substitutes a catalog provider when the route has no identity', () => {
+    const api: any = { network$: of('signet'), getProviderById$: vi.fn() };
+    const component = new SwapsProviderDetailComponent({ paramMap: of(convertToParamMap({})) } as any, api, { markForCheck: vi.fn() } as any);
+    component.ngOnInit(); expect(api.getProviderById$).not.toHaveBeenCalled();
+    expect(component.error).toBe('A provider identity is required.'); expect(component.loading).toBe(false); component.ngOnDestroy();
+  });
+});
+
+describe('Inspector local operation and evidence boundary', () => {
+  it('validates public JSON locally without sending evidence requests or accepting private fields', () => {
+    const api: any = { network: 'signet', network$: of('signet'), verify$: vi.fn() };
+    const component = new SwapsInspectComponent(api, { markForCheck: vi.fn() } as any);
+    component.raw = JSON.stringify(pkg); component.inspect();
+    expect(component.message).toContain('This checks structure only'); expect(api.verify$).not.toHaveBeenCalled();
+    component.raw = JSON.stringify({ ...pkg, preimage: 'private' }); component.verify();
+    expect(component.error).toContain('public contract fields'); expect(api.verify$).not.toHaveBeenCalled(); component.ngOnDestroy();
+  });
+  it('cancels stale inspector evidence and retains a real request failure', () => {
+    const network$ = new Subject<string>(), first = new Subject<any>(), second = new Subject<any>();
+    const api: any = { network: 'signet', network$, verify$: vi.fn().mockReturnValueOnce(first).mockReturnValueOnce(second) };
+    const component = new SwapsInspectComponent(api, { markForCheck: vi.fn() } as any);
+    component.raw = JSON.stringify(pkg); component.verify();
+    expect(api.verify$).toHaveBeenCalledWith(pkg, 'signet'); network$.next('testnet');
+    first.next({ lockup: { verified: true } }); expect(component.result).toBeNull();
+    component.verify(); second.error({ error: { error: 'Owned node unavailable.' } });
+    expect(component.error).toBe('Owned node unavailable.'); expect(component.result).toBeNull(); component.ngOnDestroy();
   });
 });

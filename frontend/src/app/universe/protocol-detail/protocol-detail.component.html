@@ -111,10 +111,13 @@
         <ng-container *ngIf="objects$ | async as objects">
           <ng-container [ngSwitch]="objects.kind">
             <p *ngSwitchCase="'loading'" class="skeleton-line" aria-busy="true"></p>
-            <p *ngSwitchCase="'error'" class="degraded" i18n="universe.detail.authority-objects-error">
-              The explorer could not reach its own overlay to read this collection. Nothing about the
-              protocol is inferred from the failure.
-            </p>
+            <ng-container *ngSwitchCase="'error'">
+              <p class="degraded" role="alert" i18n="universe.detail.authority-objects-error">
+                The explorer could not read a valid collection page. Try again to check its objects.
+              </p>
+              <button type="button" class="load-more" (click)="loadObjects(vm.protocol.id)"
+                      i18n="universe.detail.objects-retry">Retry objects</button>
+            </ng-container>
             <ng-container *ngSwitchCase="'loaded'">
               <p class="activity-summary">{{ objectsSummaryLabel(objects) }}</p>
 
@@ -125,6 +128,10 @@
                 </li>
               </ul>
               <ng-template #objectsEmpty></ng-template>
+
+              <p class="degraded" role="alert" *ngIf="objects.loadMoreError">{{ objects.loadMoreError }}</p>
+              <button type="button" class="load-more" *ngIf="objects.page.state === 'unavailable' || objects.page.state === 'unconfigured'"
+                      (click)="loadObjects(vm.protocol.id)" i18n="universe.detail.objects-retry">Retry objects</button>
 
               <button type="button" class="load-more" *ngIf="objects.page.nextCursor"
                       (click)="loadMoreObjects(vm.protocol.id)"
@@ -142,10 +149,13 @@
         <ng-container *ngIf="activity$ | async as activity">
           <ng-container [ngSwitch]="activity.kind">
             <p *ngSwitchCase="'loading'" class="skeleton-line" aria-busy="true"></p>
-            <p *ngSwitchCase="'error'" class="degraded" i18n="universe.detail.authority-activity-error">
-              The explorer could not reach its own overlay to read this feed. Nothing about the
-              protocol is inferred from the failure.
-            </p>
+            <ng-container *ngSwitchCase="'error'">
+              <p class="degraded" role="alert" i18n="universe.detail.authority-activity-error">
+                The explorer could not read a valid activity page. Try again to check its activity.
+              </p>
+              <button type="button" class="load-more" (click)="loadActivity(vm.protocol.id)"
+                      i18n="universe.detail.activity-retry">Retry activity</button>
+            </ng-container>
             <ng-container *ngSwitchCase="'loaded'">
               <p class="activity-summary">{{ activitySummaryLabel(activity) }}</p>
 
@@ -160,6 +170,10 @@
                 </li>
               </ul>
               <ng-template #activityEmpty></ng-template>
+
+              <p class="degraded" role="alert" *ngIf="activity.loadMoreError">{{ activity.loadMoreError }}</p>
+              <button type="button" class="load-more" *ngIf="activity.page.state === 'unavailable' || activity.page.state === 'unconfigured'"
+                      (click)="loadActivity(vm.protocol.id)" i18n="universe.detail.activity-retry">Retry activity</button>
 
               <button type="button" class="load-more" *ngIf="activity.page.hasMore"
                       (click)="loadMoreActivity(vm.protocol.id)"

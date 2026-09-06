@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, catchError, map, of, shareReplay, throwError, defer, distinctUntilChanged, startWith, switchMap, take } from 'rxjs';
 import { StateService } from '@app/services/state.service';
+import { ProtocolPageKind, readProtocolFailure, readProtocolPage } from './universe-protocol-contract';
 import {
   BackendInfo,
   ExplorerTransactionAssetFlow,
@@ -95,61 +96,6 @@ import {
 export const UNIVERSE_OUTPOINT_BATCH_LIMIT = 50;
 export const UNIVERSE_TRANSACTION_BATCH_LIMIT = 25;
 
-const ACTIVITY_STATES = ['served', 'unconfigured', 'unavailable', 'unsupported'];
-
-/**
- * Guards the activity envelope before it reaches a component. A response
- * that is not the documented document (a gateway's HTML, an array, an older
- * release) resolves to the explicit unsupported page rather than flowing
- * into the page as if it were feed data.
- */
-function isActivityPage(value: unknown): value is ExplorerProtocolActivityPage {
-  return typeof value === 'object' && value !== null && !Array.isArray(value)
-    && ACTIVITY_STATES.includes((value as ExplorerProtocolActivityPage).state);
-}
-
-function unsupportedActivityPage(protocolId: string): ExplorerProtocolActivityPage {
-  return {
-    schemaVersion: 'universe-protocol-activity-v1',
-    protocolId,
-    state: 'unsupported',
-    authorityId: null,
-    feedPath: null,
-    source: null,
-    assets: [],
-    events: [],
-    invalidations: [],
-    holderSnapshots: [],
-    nextCursor: null,
-    hasMore: false,
-    checkpoint: null,
-    degradedReason: null,
-    observedAt: new Date().toISOString(),
-  };
-}
-
-const OBJECTS_STATES = ['served', 'unconfigured', 'unavailable', 'unsupported'];
-
-function isObjectsPage(value: unknown): value is ExplorerProtocolObjectsPage {
-  return typeof value === 'object' && value !== null && !Array.isArray(value)
-    && OBJECTS_STATES.includes((value as ExplorerProtocolObjectsPage).state);
-}
-
-function unsupportedObjectsPage(protocolId: string): ExplorerProtocolObjectsPage {
-  return {
-    schemaVersion: 'universe-protocol-objects-v1',
-    protocolId,
-    state: 'unsupported',
-    authorityId: null,
-    objectsPath: null,
-    items: [],
-    nextCursor: null,
-    checkpoint: null,
-    degradedReason: null,
-    observedAt: new Date().toISOString(),
-  };
-}
-
 /**
  * How many pending transactions each chain will return in one request.
  *
@@ -209,12 +155,16 @@ export class UniverseApiService {
   }
 
   /** Re-subscribes at a network switch, cancelling the previous HTTP request. */
-  private scopedRequest<T>(url: string, body?: unknown, chain = 'bitcoin'): Observable<T> {
+  private scopedRequest<T>(url: string, body?: unknown, chain = 'bitcoin',
+    recover?: (error: unknown, network: ExplorerNetwork) => Observable<T>): Observable<T> {
     return this.selectedNetwork$().pipe(
       // Other-chain protocol directory routes currently offer mainnet reads only.
       map((network) => chain === 'bitcoin' ? network : 'mainnet' as ExplorerNetwork),
       distinctUntilChanged(),
-      switchMap((network) => this.requestForNetwork<T>(url, network, body, chain)),
+      switchMap((network) => {
+        const request = this.requestForNetwork<T>(url, network, body, chain);
+        return recover ? request.pipe(catchError((error) => recover(error, network))) : request;
+      }),
     );
   }
 
@@ -229,7 +179,8 @@ export class UniverseApiService {
     for (const key of ['checkpoint', 'flow', 'evidence', 'source']) {
       if (row[key]) {this.assertResponseContext(row[key], network, chain);}
     }
-    for (const key of ['results', 'positions', 'sources', 'inputs', 'outputs', 'actions', 'sourceEvidence', 'utxos']) {
+    for (const key of ['results', 'positions', 'sources', 'inputs', 'outputs', 'actions', 'sourceEvidence', 'utxos',
+      'assets', 'events', 'invalidations', 'holderSnapshots', 'items']) {
       if (Array.isArray(row[key])) {
         for (const child of row[key] as unknown[]) {this.assertResponseContext(child, network, chain);}
       }
@@ -255,26 +206,21 @@ export class UniverseApiService {
     }));
   }
 
-  /**
-   * One protocol's recent activity from its own authority. A 404 means the
-   * authority publishes no feed this explorer reads, which is a state to
-   * render, not an error, so it resolves to an explicit unsupported page.
-   */
+  private protocolFailure(error: unknown, kind: ProtocolPageKind, protocolId: string,
+    network: ExplorerNetwork, chain: string): Observable<ExplorerProtocolActivityPage | ExplorerProtocolObjectsPage> {
+    const page = readProtocolFailure(kind, error, protocolId);
+    this.assertResponseContext(page, network, chain);
+    return of(page);
+  }
+
+  /** Validates the authority document while retaining typed dependency states and transport errors. */
   getProtocolActivity$(protocolId: string, cursor?: string, limit = 25, chain = 'bitcoin'): Observable<ExplorerProtocolActivityPage> {
     let query = '?limit=' + Math.min(Math.max(1, Math.floor(limit)), 200);
     if (cursor) {query += '&cursor=' + encodeURIComponent(cursor);}
-    return this.scopedRequest<ExplorerProtocolActivityPage>(
+    return this.scopedRequest<unknown>(
       this.apiBaseUrl + '/api/v1/universe/protocols/' + encodeURIComponent(protocolId) + '/activity' + query,
-      undefined, chain,
-    ).pipe(
-      map((page) => isActivityPage(page) ? page : unsupportedActivityPage(protocolId)),
-      catchError((error) => {
-        if (error?.status === 404) {
-          return of(unsupportedActivityPage(protocolId));
-        }
-        return throwError(() => error);
-      }),
-    );
+      undefined, chain, (error, network) => this.protocolFailure(error, 'activity', protocolId, network, chain),
+    ).pipe(map((page) => readProtocolPage('activity', page, protocolId)));
   }
 
   getStatus$(): Observable<StatusResponse> {
@@ -608,27 +554,14 @@ export class UniverseApiService {
     return protocol;
   }
 
-  /**
-   * One protocol's standing objects from its own authority. A 404 means the
-   * authority publishes no objects route this explorer reads; any body that
-   * is not the documented page resolves to the same explicit state instead
-   * of flowing into the page as object data.
-   */
+  /** One protocol's validated standing objects, with explicit dependency and failure states. */
   getProtocolObjects$(protocolId: string, cursor?: string, limit = 25, chain = 'bitcoin'): Observable<ExplorerProtocolObjectsPage> {
     let query = '?limit=' + Math.min(Math.max(1, Math.floor(limit)), 200);
     if (cursor) {query += '&cursor=' + encodeURIComponent(cursor);}
-    return this.scopedRequest<ExplorerProtocolObjectsPage>(
+    return this.scopedRequest<unknown>(
       this.apiBaseUrl + '/api/v1/universe/protocols/' + encodeURIComponent(protocolId) + '/objects' + query,
-      undefined, chain,
-    ).pipe(
-      map((page) => isObjectsPage(page) ? page : unsupportedObjectsPage(protocolId)),
-      catchError((error) => {
-        if (error?.status === 404) {
-          return of(unsupportedObjectsPage(protocolId));
-        }
-        return throwError(() => error);
-      }),
-    );
+      undefined, chain, (error, network) => this.protocolFailure(error, 'objects', protocolId, network, chain),
+    ).pipe(map((page) => readProtocolPage('objects', page, protocolId)));
   }
 
   /** ANIMA protocol status, scanner readiness, and exact supply. */

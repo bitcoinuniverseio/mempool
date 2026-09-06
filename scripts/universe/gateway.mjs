@@ -9,6 +9,7 @@
  *   /api/v1/bitcoin/*   ->  the protocol overlay
  *   /api/v1/dogecoin/*  ->  the protocol overlay
  *   /api/v1/zcash/*     ->  the protocol overlay
+ *   /api/v1/anima/*     ->  the protocol overlay
  *   /api/v1/*           ->  the explorer backend, including WebSocket upgrades
  *   /api/*              ->  the first-party Esplora index, with /api stripped
  *   everything else     ->  the built frontend, with SPA fallback
@@ -204,6 +205,7 @@ const OVERLAY_CHAIN_PREFIXES = [
   '/api/v1/bitcoin',
   '/api/v1/dogecoin',
   '/api/v1/zcash',
+  '/api/v1/anima',
 ];
 
 /**

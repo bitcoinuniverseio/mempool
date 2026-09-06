@@ -24,7 +24,7 @@ class SwapsRoutes {
         }
         return await fn(req, res);
       } catch (err) {
-        return res.status(err instanceof SwapEvidenceError ? 400 : 503).json({
+        return res.status(err instanceof SwapEvidenceError && err.code !== 'unavailable-registry' ? 400 : 503).json({
           error: err instanceof SwapEvidenceError ? err.message : 'Swap evidence service is unavailable.',
           stage: err instanceof SwapEvidenceError ? err.code : 'unavailable-source',
         });
@@ -35,13 +35,16 @@ class SwapsRoutes {
     app.get(`${base}/providers`, handle((_req, res) => res.json(swapsService.listProviders())));
     app.get(`${base}/providers/:providerId`, handle((req, res) => {
       const provider = swapsService.getProvider(req.params.providerId);
-      return provider ? res.json(provider) : res.status(404).json({ error: 'No authenticated provider manifest has been observed.', stage: 'unverified' });
+      return provider ? res.json(provider) : res.status(404).json({ error: 'The provider identity is unknown to the authenticated registry.', stage: 'unknown-provider' });
     }));
     app.get(`${base}/providers/:providerId/history`, handle((req, res) => {
       const history = swapsService.getProviderHistory(req.params.providerId);
-      return history ? res.json(history) : res.status(404).json({ error: 'No authenticated provider observations are available.', stage: 'not-observable' });
+      return history ? res.json(history) : res.status(404).json({ error: 'The provider identity is unknown to the authenticated registry.', stage: 'unknown-provider' });
     }));
-    app.post(`${base}/manifests/verify`, handle((req, res) => res.json(swapsService.verifyProviderManifest(req.body))));
+    app.post(`${base}/manifests/verify`, handle((req, res) => {
+      const result = swapsService.verifyProviderManifest(req.body);
+      return res.status(result.stage === 'unavailable-registry' ? 503 : result.stage === 'invalid' ? 400 : 200).json(result);
+    }));
     app.post(`${base}/public-receipts/verify`, handle(/** @asyncUnsafe The route wrapper catches rejected requests. */ async (req, res) => res.json(await swapsService.verifyReceipts(req.body, swapContext(req.query.chain, req.query.network)))));
     app.post(`${base}/chain-context`, handle(/** @asyncUnsafe The route wrapper catches rejected requests. */ async (req, res) => {
       const recovery_plan = await swapsService.planRecovery(req.body, swapContext(req.query.chain, req.query.network));
