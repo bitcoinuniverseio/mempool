@@ -165,6 +165,7 @@ export async function verifyDetachedProof(request: TimestampProofRequest, reader
   const read = async <T>(operation: () => Promise<T>): Promise<T> => {
     let timer: NodeJS.Timeout | undefined;
     try {
+      if (Date.now() >= deadline) {throw new Error('header read deadline exceeded');}
       return await Promise.race([
         operation(),
         new Promise<never>((_resolve, reject) => { timer = setTimeout(() => reject(new Error('header read timeout')), Math.max(1, deadline - Date.now())); timer.unref?.(); }),
@@ -196,6 +197,13 @@ export async function verifyDetachedProof(request: TimestampProofRequest, reader
     if (attestation.message.length !== 32 || !block.merkleRoot?.equals(attestation.message)) {result.errors.push(`The proof commitment does not match the Bitcoin Merkle root at height ${attestation.height}.`);}
   }
   if (result.errors.length) {return { ...result, status: 'bitcoin_attestation_invalid' };}
+  // A previous branch can be orphaned while a later branch is being read.
+  // Recheck every accepted anchor before returning the complete proof verdict.
+  for (const [anchorHeight, anchor] of headers) {
+    if (checkedHash(await read(() => reader.$getBlockHash(anchorHeight))) !== anchor.hash) {
+      return { ...result, status: 'bitcoin_attestation_reorg', errors: ['An active block changed before all proof branches were verified. Retry with current chain evidence.'] };
+    }
+  }
   const height = Math.min(...headers.keys());
   const earliest = headers.get(height)!;
   return {
