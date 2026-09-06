@@ -29,7 +29,9 @@
  */
 
 import http from 'node:http';
+import https from 'node:https';
 import net from 'node:net';
+import tls from 'node:tls';
 import { createHash } from 'node:crypto';
 import { createReadStream, existsSync, readFileSync, statSync } from 'node:fs';
 import { extname, join, normalize, resolve, sep } from 'node:path';
@@ -52,6 +54,11 @@ const OVERLAY = new URL(process.env.UNIVERSE_GATEWAY_OVERLAY || 'http://127.0.0.
 const ESPLORA = process.env.UNIVERSE_GATEWAY_ESPLORA
   ? new URL(process.env.UNIVERSE_GATEWAY_ESPLORA)
   : null;
+for (const upstream of [BACKEND, OVERLAY, ESPLORA].filter(Boolean)) {
+  if (!['http:', 'https:'].includes(upstream.protocol)) {
+    throw new Error('Gateway authorities must use HTTP or HTTPS.');
+  }
+}
 const ROOT = resolve(process.env.UNIVERSE_GATEWAY_ROOT || 'frontend/dist/mempool/browser');
 
 /** Upstream request budget. Long enough for a cold index read, short enough to fail fast. */
@@ -341,7 +348,8 @@ function proxy(request, response, route) {
       headers: { ...request.headers, host: upstream.host },
       timeout: UPSTREAM_TIMEOUT_MS,
     };
-    const proxied = http.request(options, (upstreamResponse) => {
+    const transport = upstream.protocol === 'https:' ? https : http;
+    const proxied = transport.request(options, (upstreamResponse) => {
       if (clientGone) {
         upstreamResponse.destroy();
         return;
@@ -527,7 +535,7 @@ server.on('upgrade', (request, socket, head) => {
     return;
   }
   const upstream = websocketUpstreamFor(pathname);
-  const proxied = net.connect(Number(upstream.port), upstream.hostname, () => {
+  const connected = () => {
     const lines = [`${request.method} ${request.url} HTTP/1.1`];
     for (const [name, value] of Object.entries(request.headers)) {
       if (name.toLowerCase() === 'host') continue;
@@ -540,7 +548,15 @@ server.on('upgrade', (request, socket, head) => {
     if (head?.length) proxied.write(head);
     proxied.pipe(socket);
     socket.pipe(proxied);
-  });
+  };
+  const secure = upstream.protocol === 'https:';
+  const options = {
+    host: upstream.hostname,
+    port: Number(upstream.port || (secure ? 443 : 80)),
+  };
+  const proxied = secure
+    ? tls.connect({ ...options, servername: net.isIP(upstream.hostname) ? undefined : upstream.hostname }, connected)
+    : net.connect(options, connected);
   const close = () => {
     socket.destroy();
     proxied.destroy();

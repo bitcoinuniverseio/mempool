@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   ChainCapabilityEnvelope,
   ChainExplorerPayload,
+  UniverseExplorerHealthV2,
 } from '@app/universe/universe.types';
 import {
   chainProfile,
@@ -56,6 +57,63 @@ function capability(
     release: { sha: 'abc1234' },
     ...overrides,
   } as ChainCapabilityEnvelope;
+}
+
+function sampleHealthV2(
+  overrides: Partial<UniverseExplorerHealthV2> = {}
+): UniverseExplorerHealthV2 {
+  return {
+    schemaVersion: 'universe-explorer-health-v2',
+    chain: 'dogecoin',
+    network: 'mainnet',
+    node: {
+      reachability: 'reachable',
+      synced: true,
+      state: 'synced',
+      heightAtomic: '5123456',
+      blockHash: BLOCK_HASH,
+      initialBlockDownload: false,
+      blocksBehindNetworkAtomic: '0',
+      observedAt: '2026-08-29T05:00:00.000Z',
+      latencyMs: 12,
+      degradedReasons: [],
+    },
+    confirmed: {
+      availability: 'ready',
+      coverage: 'complete',
+      heightAtomic: '5123456',
+      blockHash: BLOCK_HASH,
+      lagBlocksAtomic: '0',
+      observedAt: '2026-08-29T05:00:00.000Z',
+      reads: { block: true, transaction: true, outpoint: true },
+      degradedReasons: [],
+    },
+    address: {
+      availability: 'ready',
+      coverage: 'complete',
+      observedAt: '2026-08-29T05:00:00.000Z',
+      degradedReasons: [],
+    },
+    mempool: {
+      supported: true,
+      state: 'ready',
+      completeness: 'complete',
+      snapshotId: 's1',
+      sequenceAtomic: '9',
+      observedAt: '2026-08-29T05:00:00.000Z',
+      ageSeconds: 5,
+      degradedReasons: [],
+    },
+    protocols: [],
+    summary: {
+      baseChainSynced: true,
+      servicesReady: true,
+      allOfferedReady: true,
+      degradedReasons: [],
+    },
+    observedAt: '2026-08-29T05:00:00.000Z',
+    ...overrides,
+  };
 }
 
 describe('formatExactInteger', () => {
@@ -214,24 +272,24 @@ describe('shortenIdentifier', () => {
 });
 
 describe('readStatusRail', () => {
-  it('always returns the same five readings, in order', () => {
+  it('always returns the same six readings, in order', () => {
     const ids = readStatusRail(capability(), DOGE, Date.now()).map((r) => r.id);
-    expect(ids).toEqual(['state', 'tip', 'lag', 'freshness', 'mempool']);
+    expect(ids).toEqual(['state', 'services', 'tip', 'lag', 'freshness', 'mempool']);
   });
 
-  it('keeps all five readings when there is no status at all', () => {
+  it('keeps all six readings when there is no status at all', () => {
     const rail = readStatusRail(null, DOGE, Date.now());
-    expect(rail).toHaveLength(5);
+    expect(rail).toHaveLength(6);
     expect(rail[0].tone).toBe('unavailable');
   });
 
   it('calls a chain at the tip proven and a lagging one partial', () => {
     const now = Date.parse('2026-08-29T05:00:10.000Z');
-    const atTip = readStatusRail(capability(), DOGE, now).find((r) => r.id === 'lag');
+    const atTip = readStatusRail(capability({ health: sampleHealthV2() }), DOGE, now).find((r) => r.id === 'lag');
     expect(atTip?.tone).toBe('proven');
 
     const behind = readStatusRail(
-      capability({ lagBlocksAtomic: '42' }),
+      capability({ health: sampleHealthV2({ node: { ...sampleHealthV2().node, blocksBehindNetworkAtomic: '42' } }) }),
       DOGE,
       now
     ).find((r) => r.id === 'lag');
@@ -254,7 +312,7 @@ describe('readStatusRail freshness', () => {
   // the one figure on the rail that changes on its own could not be checked
   // against anything.
   it('carries the exact observation time behind the relative one', () => {
-    const reading = readStatusRail(capability(), DOGE, Date.now()).find(
+    const reading = readStatusRail(capability({ health: sampleHealthV2() }), DOGE, Date.now()).find(
       (r) => r.id === 'freshness'
     );
     expect(reading?.exact).toBe('2026-08-29T05:00:00.000Z');
@@ -1006,8 +1064,8 @@ describe('the chain reading on the status rail', () => {
       Date.parse('2026-08-29T05:00:10.000Z')
     );
     const state = rail.find((reading) => reading.id === 'state');
-    expect(state?.value).toBe('Degraded');
-    expect(state?.tone).toBe('partial');
+    expect(state?.value).toBe('Status unknown');
+    expect(state?.tone).toBe('unavailable');
   });
 
   it('keeps the worse reading when the node itself is the problem', () => {
@@ -1016,14 +1074,106 @@ describe('the chain reading on the status rail', () => {
       DOGE,
       Date.parse('2026-08-29T05:00:10.000Z')
     );
-    expect(rail.find((reading) => reading.id === 'state')?.value).toBe('Unavailable');
+    expect(rail.find((reading) => reading.id === 'state')?.value).toBe('Status unknown');
   });
 
-  it('still reads ready when the chain says so', () => {
+  it('keeps node sync unknown when a legacy report says ready', () => {
     const rail = readStatusRail(capability(), DOGE, Date.parse('2026-08-29T05:00:10.000Z'));
     const state = rail.find((reading) => reading.id === 'state');
-    expect(state?.value).toBe('Ready');
+    expect(state?.value).toBe('Status unknown');
+    expect(state?.tone).toBe('unavailable');
+  });
+
+  it('truthfully reports base chain ready under health v2 even if secondary protocols are degraded', () => {
+    const health = sampleHealthV2({
+      summary: {
+        baseChainSynced: true,
+        servicesReady: false,
+        allOfferedReady: false,
+        degradedReasons: ['protocol-qualification-pending'],
+      },
+      protocols: [
+        {
+          protocolId: 'drc20',
+          availability: 'degraded',
+          coverage: 'partial',
+          qualification: 'unknown',
+          checkpoint: null, lagBlocksAtomic: null,
+          observedAt: '2026-08-29T05:00:00.000Z',
+          degradedReasons: ['protocol-qualification-pending'],
+        },
+      ],
+    });
+    const rail = readStatusRail(
+      capability({ ready: false, health }),
+      DOGE,
+      Date.parse('2026-08-29T05:00:10.000Z')
+    );
+    const state = rail.find((reading) => reading.id === 'state');
+    expect(state?.value).toBe('Synced');
     expect(state?.tone).toBe('proven');
+  });
+
+  it('reports degraded on status rail under health v2 when base chain node is syncing', () => {
+    const health = sampleHealthV2({
+      node: {
+        reachability: 'reachable',
+        synced: false,
+        state: 'syncing',
+        heightAtomic: '5000000',
+        blockHash: BLOCK_HASH,
+        initialBlockDownload: false,
+        blocksBehindNetworkAtomic: '123456',
+        observedAt: '2026-08-29T05:00:00.000Z',
+        latencyMs: 25,
+        degradedReasons: ['base-chain-node-syncing'],
+      },
+      summary: {
+        baseChainSynced: false,
+        servicesReady: false,
+        allOfferedReady: false,
+        degradedReasons: ['base-chain-node-syncing'],
+      },
+    });
+    const rail = readStatusRail(
+      capability({ ready: false, health }),
+      DOGE,
+      Date.parse('2026-08-29T05:00:10.000Z')
+    );
+    const state = rail.find((reading) => reading.id === 'state');
+    expect(state?.value).toBe('Syncing');
+    expect(state?.tone).toBe('partial');
+  });
+
+  it('reports unavailable on status rail under health v2 when base chain node is unreachable', () => {
+    const health = sampleHealthV2({
+      node: {
+        reachability: 'unreachable',
+        synced: false,
+        state: 'unavailable',
+        heightAtomic: null,
+        blockHash: null,
+        initialBlockDownload: null,
+        blocksBehindNetworkAtomic: null,
+        observedAt: '2026-08-29T05:00:00.000Z',
+        latencyMs: null,
+        degradedReasons: ['base-chain-node-unreachable'],
+      },
+      summary: {
+        baseChainSynced: false,
+        servicesReady: false,
+        allOfferedReady: false,
+        degradedReasons: ['base-chain-node-unreachable'],
+      },
+    });
+    const rail = readStatusRail(
+      capability({ ready: false, health }),
+      DOGE,
+      Date.parse('2026-08-29T05:00:10.000Z')
+    );
+    const state = rail.find((reading) => reading.id === 'state');
+    expect(state?.value).toBe('Node unavailable');
+    expect(state?.tone).toBe('unavailable');
   });
 });
 
@@ -1031,6 +1181,33 @@ describe('readNotReadyReasons', () => {
   it('says nothing about a ready chain', () => {
     expect(readNotReadyReasons(capability())).toBeNull();
     expect(readNotReadyReasons(null)).toBeNull();
+  });
+
+  it('reads degraded reasons from health v2 when allOfferedReady is false', () => {
+    const health = sampleHealthV2({
+      summary: {
+        baseChainSynced: true,
+        servicesReady: false,
+        allOfferedReady: false,
+        degradedReasons: ['protocol-qualification-pending', 'confirmed-history-partial'],
+      },
+    });
+    const reasons = readNotReadyReasons(capability({ health }));
+    expect(reasons).toHaveLength(2);
+    expect(reasons?.[0].code).toBe('protocol-qualification-pending');
+    expect(reasons?.[1].code).toBe('confirmed-history-partial');
+  });
+
+  it('returns null from health v2 when allOfferedReady is true', () => {
+    const health = sampleHealthV2({
+      summary: {
+        baseChainSynced: true,
+        servicesReady: true,
+        allOfferedReady: true,
+        degradedReasons: [],
+      },
+    });
+    expect(readNotReadyReasons(capability({ health }))).toBeNull();
   });
 
   it('reads the reasons the chain gave', () => {

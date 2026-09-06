@@ -19,7 +19,7 @@
       }
     </a>
 
-    <div ngbDropdown class="chain-picker" *ngIf="network.val === '' && (chainCapabilities$ | async) as capabilities">
+    <div ngbDropdown #chainMenu="ngbDropdown" [autoClose]="'outside'" class="chain-picker" *ngIf="(chainCapabilities$ | async) as capabilities">
       <button ngbDropdownToggle type="button" class="chain-toggle" aria-haspopup="true" aria-label="Select blockchain">
         <span class="chain-symbol">{{ chainTicker(activeChain) }}</span>
         <span class="chain-name">{{ chainName(activeChain) }}</span>
@@ -27,11 +27,13 @@
       </button>
       <div ngbDropdownMenu class="chain-menu" [ngClass]="{'dropdown-menu-right': isMobile}">
         <button ngbDropdownItem type="button" *ngFor="let chain of explorerChains" class="chain-option"
-          [class.active]="activeChain === chain" (click)="switchChain(chain)">
-          <span class="chain-option-title">{{ chainName(chain) }} / {{ chainTicker(chain) }}</span>
+          [class.active]="activeChain === chain" (click)="switchChain(chain); chainMenu.close()">
+          <span class="chain-option-title">{{ chainName(chain) }} / {{ chainTicker(chain) }} · {{ chainNetwork(chain) }}</span>
           <span class="chain-option-state">{{ chainState(chainCapability(capabilities, chain)) }}</span>
           <span class="chain-option-detail">{{ chainDetail(chainCapability(capabilities, chain)) }}</span>
         </button>
+        <p class="chain-health-error" role="status" *ngIf="(chainHealth$ | async)?.error as error">{{ error }}</p>
+        <app-chain-health-details [capability]="chainCapability(capabilities, activeChain)"></app-chain-health-details>
       </div>
     </div>
 

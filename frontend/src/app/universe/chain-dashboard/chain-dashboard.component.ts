@@ -1,3 +1,4 @@
+import { ChainHealthDetailsComponent } from '../multichain-explorer/chain-health-details.component';
 import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
@@ -134,6 +135,7 @@ const FEE_BASIS_LABELS: Record<string, string> = {
     RouterModule,
     ChainTimelineComponent,
     ChainLensComponent,
+    ChainHealthDetailsComponent,
   ],
   templateUrl: './chain-dashboard.component.html',
   styleUrls: ['./chain-dashboard.component.scss'],

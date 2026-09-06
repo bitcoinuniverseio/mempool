@@ -81,8 +81,12 @@ export class MultipartyApiService {
 
   verifyMusig2Session$(session: any): Observable<any> {
     return this.httpClient.post<any>(
-      `${this.apiBaseUrl}/api/v1/intelligence/multiparty/musig2/verify`,
-      session
+      `${this.apiBaseUrl}/api/v1/intelligence/multiparty/public-sessions/verify`,
+      {
+        ...session,
+        participant_public_keys: session.participant_public_keys ?? session.cosigners,
+        message_hash: session.message_hash ?? session.message_digest,
+      }
     );
   }
 

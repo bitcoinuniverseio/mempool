@@ -17,6 +17,7 @@ import { ServerStatusComponent } from '@components/server-health/server-status.c
 import { FaucetComponent } from '@components/faucet/faucet.component';
 import { SimpleProofWidgetComponent } from '@components/simpleproof-widget/simpleproof-widget.component';
 import { SimpleProofCuboWidgetComponent } from '@components/simpleproof-widget/simpleproof-cubo-widget.component';
+import { ChainHealthDetailsComponent } from '@app/universe/multichain-explorer/chain-health-details.component';
 import { ChainSyncNoticeComponent } from '@app/universe/chain-sync-notice/chain-sync-notice.component';
 import { ConnectivityBannerComponent } from '@app/universe/pwa/connectivity-banner.component';
 import { CommandPaletteComponent } from '@app/universe/command-center/command-palette.component';
@@ -1579,6 +1580,7 @@ export class MasterPageRoutingModule { }
     MasterPageRoutingModule,
     SharedModule,
     ChainSyncNoticeComponent,
+    ChainHealthDetailsComponent,
     ConnectivityBannerComponent,
     CommandPaletteComponent,
   ],

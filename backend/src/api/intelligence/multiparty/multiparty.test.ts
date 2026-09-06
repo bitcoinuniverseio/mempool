@@ -1,69 +1,49 @@
-import multipartyService from './multiparty.service';
+import multipartyService, { MultipartyEvidenceError } from './multiparty.service';
+
+const participants = [
+  '0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798',
+  '02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5',
+];
 
 describe('MultipartyService', () => {
-  it('should return overview with products and supported protocols', () => {
-    const overview = multipartyService.getOverview();
-    expect(overview.total_products).toBeGreaterThanOrEqual(2);
-    expect(overview.bip373_ready_count).toBeGreaterThan(0);
-    expect(overview.bip388_ready_count).toBeGreaterThan(0);
-    expect(overview.sample_policies.length).toBeGreaterThanOrEqual(1);
+  it('requires actual product capability and conformance evidence', () => {
+    for (const read of [() => multipartyService.getOverview(), () => multipartyService.listProducts(),
+      () => multipartyService.getProduct('coldcard-mk4-q'), () => multipartyService.getCompatibility(),
+      () => multipartyService.getTestVectors()]) expect(read).toThrow(MultipartyEvidenceError);
   });
 
-  it('should list products and retrieve single product by ID', () => {
-    const products = multipartyService.listProducts();
-    expect(products.length).toBeGreaterThanOrEqual(2);
-
-    const coldcard = multipartyService.getProduct('coldcard-mk4-q');
-    expect(coldcard).toBeDefined();
-    expect(coldcard?.capabilities.musig2_bip327).toBe(true);
-    expect(coldcard?.capabilities.musig2_psbt_bip373).toBe(true);
-  });
-
-  it('should verify MuSig2 public session and reject duplicate participant pubkeys', () => {
-    const valid = multipartyService.verifyPublicSession({
-      participant_public_keys: [
-        '0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798',
-        '03c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5',
-      ],
-      public_nonces: ['nonce1', 'nonce2'],
-      final_signature: '00'.repeat(64),
+  it('keeps missing key-aggregation and nonce-verification engines explicit', () => {
+    expect(multipartyService.verifyPublicSession({ participant_public_keys: participants })).toMatchObject({
+      verified: false, stage: 'unavailable-musig2-engine', aggregate_public_key: null, final_bip340_valid: null,
     });
-    expect(valid.verified).toBe(true);
-    expect(valid.has_duplicate_nonces).toBe(false);
-    expect(valid.final_bip340_valid).toBe(true);
-
-    const duplicateParticipants = multipartyService.verifyPublicSession({
-      participant_public_keys: [
-        '0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798',
-        '0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798',
-      ],
-      public_nonces: ['nonce1', 'nonce2'],
-    });
-    expect(duplicateParticipants.verified).toBe(false);
-    expect(duplicateParticipants.errors).toContain(
-      'Duplicate participant public keys are prohibited in key aggregation'
-    );
   });
 
-  it('should flag dangerous public nonce reuse across sessions', () => {
-    const reusedNonces = multipartyService.verifyPublicSession({
-      participant_public_keys: [
-        '0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798',
-        '03c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5',
-      ],
-      public_nonces: ['nonce_same', 'nonce_same'],
-    });
-    expect(reusedNonces.has_duplicate_nonces).toBe(true);
-    expect(reusedNonces.warnings.length).toBeGreaterThan(0);
+  it('retains the application duplicate-cosigner check, including hexadecimal case aliases', () => {
+    const result = multipartyService.verifyPublicSession({ participant_public_keys: [participants[0], participants[0].toUpperCase()] });
+    expect(result.stage).toBe('invalid-input');
+    expect(result.errors).toContain('Duplicate participant public keys are prohibited in this application.');
   });
 
-  it('should provide compatibility and test vectors', () => {
-    const comp = multipartyService.getCompatibility();
-    expect(comp.matrix.length).toBeGreaterThanOrEqual(2);
-    expect(comp.protocols.musig2).toBeDefined();
+  it('checks participant encodings instead of hashing arbitrary strings into an aggregate', () => {
+    const result = multipartyService.verifyPublicSession({ participant_public_keys: ['not-a-key', 'another-string'] });
+    expect(result).toMatchObject({ verified: false, stage: 'invalid-input', aggregate_public_key: null });
+  });
 
-    const vectors = multipartyService.getTestVectors();
-    expect(vectors.bip327_key_aggregation.length).toBeGreaterThan(0);
-    expect(vectors.bip388_wallet_policy.length).toBeGreaterThan(0);
+  it('reports only the actual local public-nonce duplicate observation', () => {
+    const result = multipartyService.verifyPublicSession({ participant_public_keys: participants, public_nonces: ['nonce', 'nonce'] });
+    expect(result.has_duplicate_nonces).toBe(true);
+    expect(result.verified).toBe(false);
+    expect(result.warnings.some(w => w.includes('not verification'))).toBe(true);
+  });
+
+  it('rejects malformed final signature fields without claiming a failed check ran', () => {
+    expect(multipartyService.verifyPublicSession({ participant_public_keys: participants, final_signature: 'zz'.repeat(64) }))
+      .toMatchObject({ verified: false, stage: 'invalid-input', final_bip340_valid: null });
+  });
+
+  it('does not confuse a complete vendor payload with a trusted signature', () => {
+    expect(multipartyService.verifyManifest({ product_id: 'untrusted', signature: 'arbitrary' }))
+      .toMatchObject({ verified: false, stage: 'unavailable-vendor-trust' });
+    expect(multipartyService.verifyManifest(null)).toMatchObject({ verified: false, stage: 'invalid-input' });
   });
 });

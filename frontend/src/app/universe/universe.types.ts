@@ -315,8 +315,111 @@ export interface OrdBlockInscriptionsView {
 
 // --- Multi-chain explorer ---
 
+export const UNIVERSE_EXPLORER_HEALTH_SCHEMA_VERSION =
+  'universe-explorer-health-v2' as const;
+
 export type ExplorerChain = 'bitcoin' | 'dogecoin' | 'zcash';
 export type ExplorerNetwork = 'mainnet' | 'testnet' | 'testnet4' | 'signet' | 'regtest';
+
+export type ProtocolQualificationState =
+  | 'qualified'
+  | 'unknown'
+  | 'unqualified';
+
+export interface HealthObservation {
+  authorityId?: string | null;
+  chain?: ExplorerChain;
+  network?: ExplorerNetwork;
+  ageSeconds?: number | null;
+  stale?: boolean;
+  lastFailureKind?: string | null;
+}
+
+export interface HealthCheckpointView extends Omit<SourceCheckpoint, 'blockHash'> {
+  blockHash: string | null;
+  authorityId?: string | null;
+  chain?: ExplorerChain;
+  network?: ExplorerNetwork;
+}
+
+export interface NodeHealthView extends HealthObservation {
+  checkpoint?: HealthCheckpointView | null;
+  reachability: 'reachable' | 'unreachable' | 'unknown';
+  synced: boolean | null;
+  state: 'synced' | 'syncing' | 'behind' | 'unavailable' | 'unknown';
+  heightAtomic: string | null;
+  blockHash: string | null;
+  initialBlockDownload: boolean | null;
+  blocksBehindNetworkAtomic: string | null;
+  observedAt: string | null;
+  latencyMs?: number | null;
+  degradedReasons: string[];
+}
+
+export interface ConfirmedHealthView extends HealthObservation {
+  checkpoint?: HealthCheckpointView | null;
+  availability: 'ready' | 'degraded' | 'unavailable' | 'unknown';
+  coverage: 'complete' | 'partial' | 'unavailable' | 'unknown';
+  heightAtomic: string | null;
+  blockHash: string | null;
+  lagBlocksAtomic: string | null;
+  observedAt: string | null;
+  reads: {
+    block: boolean;
+    transaction: boolean;
+    outpoint: boolean;
+  };
+  degradedReasons: string[];
+}
+
+export interface AddressHealthView extends HealthObservation {
+  availability: 'ready' | 'degraded' | 'unavailable' | 'unknown';
+  coverage: 'complete' | 'partial' | 'unavailable' | 'unknown';
+  observedAt: string | null;
+  degradedReasons: string[];
+}
+
+export interface MempoolHealthView extends HealthObservation {
+  supported: boolean;
+  state: 'ready' | 'degraded' | 'unavailable' | 'unknown';
+  completeness: 'complete' | 'partial' | 'unavailable' | 'unknown';
+  snapshotId: string | null;
+  sequenceAtomic: string | null;
+  observedAt: string | null;
+  ageSeconds: number | null;
+  degradedReasons: string[];
+}
+
+export interface ProtocolHealthView extends HealthObservation {
+  protocolId: string;
+  availability: 'ready' | 'degraded' | 'unavailable' | 'unknown';
+  coverage: 'complete' | 'partial' | 'unavailable' | 'unknown';
+  qualification: ProtocolQualificationState;
+  checkpoint: HealthCheckpointView | null;
+  lagBlocksAtomic: string | null;
+  observedAt: string | null;
+  degradedReasons: string[];
+}
+
+export interface HealthSummaryView {
+  baseChainSynced: boolean | null;
+  servicesReady: boolean;
+  allOfferedReady: boolean;
+  degradedReasons: string[];
+}
+
+export interface UniverseExplorerHealthV2 {
+  schemaVersion: typeof UNIVERSE_EXPLORER_HEALTH_SCHEMA_VERSION;
+  chain: ExplorerChain;
+  network: ExplorerNetwork;
+  node: NodeHealthView;
+  confirmed: ConfirmedHealthView;
+  address: AddressHealthView;
+  mempool: MempoolHealthView;
+  protocols: ProtocolHealthView[];
+  summary: HealthSummaryView;
+  observedAt: string;
+}
 
 export interface ChainCapabilityProtocol {
   protocolId: string;
@@ -376,6 +479,7 @@ export interface ChainCapabilityEnvelope {
   lagBlocksAtomic: string | null;
   degradedReasons: string[];
   release: { sha: string };
+  health?: UniverseExplorerHealthV2;
 }
 
 export type ChainExplorerPayload = Record<string, unknown>;

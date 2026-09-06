@@ -52,6 +52,13 @@ describe('PrivateSubmissionService', () => {
     expect(malformed.errors).toContain('Valid 32-byte txid is required');
   });
 
+  it('rejects a 64-character nonhex txid and never treats signature-shaped bytes as trusted', () => {
+    const receipt = { provider_id: 'provider', receipt_id: 'receipt', provider_signature: 'ab'.repeat(64), txid: 'z'.repeat(64) };
+    expect(privateSubmissionService.verifyAcceleratorReceipt(receipt)).toMatchObject({ verified: false, stage: 'invalid' });
+    expect(privateSubmissionService.verifyAcceleratorReceipt({ ...receipt, txid: 'ab'.repeat(32) }))
+      .toMatchObject({ verified: false, stage: 'unavailable-registry' });
+  });
+
   it('reports the missing ordering sensor rather than evidence for invented transactions', () => {
     expect(() => privateSubmissionService.getTransactionOrdering('9b71d224bd62f3785d96d46ad3ea3d73319bfbc2770d3d5f7cc9a4744d91aafb'))
       .toThrow(unavailable('unavailable-source'));

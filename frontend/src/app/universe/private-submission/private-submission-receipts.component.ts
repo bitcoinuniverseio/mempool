@@ -90,12 +90,27 @@ export class PrivateSubmissionReceiptsComponent {
       this.loadError = $localize`:@@submission.receipt.malformed:This is not readable JSON.`;
       return;
     }
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      this.verificationResult = null;
+      this.loadError = $localize`:@@submission.receipt.object:Enter a receipt JSON object.`;
+      return;
+    }
+    const requested = parsed as Record<string, unknown>;
     this.verifying = true;
     this.loadError = null;
     this.verificationResult = null;
     this.api.verifyReceipt$(parsed).subscribe({
       next: res => {
-        this.verificationResult = res;
+        const verified = res?.verified === true && res?.signature_valid === true
+          && typeof res.receipt_id === 'string' && res.receipt_id.length > 0
+          && typeof res.provider_id === 'string' && res.provider_id.length > 0
+          && typeof res.txid === 'string' && /^[0-9a-f]{64}$/i.test(res.txid)
+          && res.receipt_id === requested.receipt_id && res.provider_id === requested.provider_id
+          && res.txid.toLowerCase() === String(requested.txid).toLowerCase();
+        this.verificationResult = verified ? res : null;
+        if (!verified) {
+          this.loadError = $localize`:@@submission.receipt.unverified:The service did not verify the signature and identity of this receipt.`;
+        }
         this.verifying = false;
       },
       error: err => {

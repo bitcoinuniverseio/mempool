@@ -674,3 +674,18 @@ main {
     min-height: 100lvh;
   }
 }
+.chain-option-title {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.chain-option-detail {
+  grid-column: 1 / -1;
+  overflow-wrap: anywhere;
+}
+
+.chain-health-error {
+  padding: var(--u-space-3);
+  color: var(--u-text-primary);
+  white-space: normal;
+}
