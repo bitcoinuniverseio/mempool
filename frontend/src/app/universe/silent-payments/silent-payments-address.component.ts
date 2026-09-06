@@ -111,9 +111,18 @@ import { SilentPaymentsApiService } from './silent-payments.service';
       border-radius: 0.375rem;
     }
     .nav-link.active {
-      background-color: var(--bs-primary, #f7931a);
-      color: #fff;
+      background-color: var(--u-brand, #c40059);
+      color: var(--u-brand-contrast, #fff);
     }
+    :host .badge.bg-primary {
+      background-color: var(--u-brand, #c40059) !important;
+      color: var(--u-brand-contrast, #fff) !important;
+    }
+    :host .badge.bg-secondary {
+      background-color: var(--u-state-neutral-surface, #edeaf1) !important;
+      color: var(--u-state-neutral, #5e5769) !important;
+    }
+    :host .text-success { color: var(--u-state-proven, #0f6b3a) !important; }
   `],
 })
 export class SilentPaymentsAddressComponent implements OnDestroy {

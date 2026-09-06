@@ -16,14 +16,22 @@ import type { ScriptKind } from '../stores/portfolio-model';
 export const SCRIPT_KINDS: readonly ScriptKind[] = ['p2pkh', 'p2sh-p2wpkh', 'p2wpkh', 'p2tr'];
 
 /** xpub/ypub/zpub/tpub/upub/vpub version prefixes by script kind. */
-const PUBLIC_PREFIXES: readonly { prefix: string; script: ScriptKind; testnet: boolean }[] = [
-  { prefix: 'xpub', script: 'p2pkh', testnet: false },
-  { prefix: 'ypub', script: 'p2sh-p2wpkh', testnet: false },
-  { prefix: 'zpub', script: 'p2wpkh', testnet: false },
-  { prefix: 'tpub', script: 'p2pkh', testnet: true },
-  { prefix: 'upub', script: 'p2sh-p2wpkh', testnet: true },
-  { prefix: 'vpub', script: 'p2wpkh', testnet: true },
+const PUBLIC_PREFIXES: readonly { prefix: string; script: ScriptKind; testnet: boolean; versions: { public: number; private: number } }[] = [
+  { prefix: 'xpub', script: 'p2pkh', testnet: false, versions: { public: 0x0488b21e, private: 0x0488ade4 } },
+  { prefix: 'ypub', script: 'p2sh-p2wpkh', testnet: false, versions: { public: 0x049d7cb2, private: 0x049d7878 } },
+  { prefix: 'zpub', script: 'p2wpkh', testnet: false, versions: { public: 0x04b24746, private: 0x04b2430c } },
+  { prefix: 'tpub', script: 'p2pkh', testnet: true, versions: { public: 0x043587cf, private: 0x04358394 } },
+  { prefix: 'upub', script: 'p2sh-p2wpkh', testnet: true, versions: { public: 0x044a5262, private: 0x044a4e28 } },
+  { prefix: 'vpub', script: 'p2wpkh', testnet: true, versions: { public: 0x045f1cf6, private: 0x045f18bc } },
 ];
+
+function decodePublicExtendedKey(text: string): HDKey {
+  const match = PUBLIC_PREFIXES.find(candidate => text.startsWith(candidate.prefix));
+  if (match === undefined) throw new Error('A supported extended public key is required.');
+  const key = HDKey.fromExtendedKey(text, match.versions);
+  if (key.privateKey !== null || key.publicKey === null) throw new Error('Private extended keys are not accepted.');
+  return key;
+}
 
 export interface ExtendedKeyInfo {
   readonly kind: 'xpub';
@@ -38,7 +46,7 @@ export function classifyExtendedKey(input: string): ExtendedKeyInfo | null {
   const match = PUBLIC_PREFIXES.find((candidate) => text.startsWith(candidate.prefix));
   if (match === undefined) return null;
   try {
-    HDKey.fromExtendedKey(text);
+    decodePublicExtendedKey(text);
   } catch {
     return null;
   }
@@ -60,7 +68,7 @@ export interface DescriptorInfo {
  * Parses and checksum-verifies a public output descriptor. Rejects any
  * key expression that carries no recognizable public key.
  */
-export function classifyDescriptor(input: string, testnet = false): DescriptorInfo | null {
+export function classifyDescriptor(input: string, testnet?: boolean): DescriptorInfo | null {
   const text = (input ?? '').trim();
   if (text.length === 0 || text.length > 1024) return null;
   // Verify the checksum separately so a broken checksum still yields a
@@ -71,6 +79,12 @@ export function classifyDescriptor(input: string, testnet = false): DescriptorIn
     const parsed = parseDescriptor(withoutChecksum);
     const keys = collectExtendedKeys(parsed);
     if (keys.length === 0) return null;
+    // Extended-key versions establish the network. A caller may constrain
+    // that network, but cannot relabel mainnet keys as testnet or vice versa.
+    const keyNetworks = keys.map(key => classifyExtendedKey(key)?.testnet);
+    const inferredTestnet = keyNetworks[0];
+    if (typeof inferredTestnet !== 'boolean' || keyNetworks.some(network => network !== inferredTestnet)) return null;
+    if (testnet !== undefined && testnet !== inferredTestnet) return null;
     let script: ScriptKind | 'multisig' = 'p2wpkh';
     if (/multisig/.test(withoutChecksum)) script = 'multisig';
     else if (withoutChecksum.startsWith('pkh(')) script = 'p2pkh';
@@ -91,7 +105,7 @@ export function classifyDescriptor(input: string, testnet = false): DescriptorIn
       kind: 'descriptor',
       value: text,
       script,
-      testnet,
+      testnet: inferredTestnet,
       extendedKeys: keys,
       checksumValid,
       multipath: withoutChecksum.includes('<') && withoutChecksum.includes('>'),
@@ -137,7 +151,7 @@ export interface DeriveBatchResult {
 
 /** Derives one batch of receive or change addresses from an account xpub. */
 export function deriveAddressBatch(request: DeriveBatchRequest): DeriveBatchResult {
-  const hd = HDKey.fromExtendedKey(request.key);
+  const hd = decodePublicExtendedKey(request.key);
   const branchIndex = request.branch === 'external' ? 0 : 1;
   const addressEncoder = Address(request.testnet ? TEST_NETWORK : NETWORK);
   const addresses: { index: number; address: string }[] = [];

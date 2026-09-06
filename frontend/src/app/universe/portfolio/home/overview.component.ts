@@ -15,16 +15,18 @@ import { PortfoliosStore } from '../stores/portfolios.store';
 import { PortfolioSessionService } from '../stores/session.service';
 import { PortfolioDataStateComponent } from '../shared/data-state.component';
 import { atomicToDisplay, formatExact, maskedValue, truncateIdentifier } from '../shared/exact';
+import { ManualPositionsComponent } from '../manual/manual-positions.component';
 
 type RangeKey = '24h' | '7d' | '30d' | '90d' | '1y' | 'all';
 
 @Component({
   selector: 'app-portfolio-overview',
   standalone: true,
-  imports: [NgxEchartsDirective, PortfolioDataStateComponent, RouterLink],
+  imports: [NgxEchartsDirective, PortfolioDataStateComponent, RouterLink, ManualPositionsComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="overview">
+      <app-manual-positions />
       <!-- Primary region: the value hero. -->
       <section class="hero" aria-label="Portfolio value">
         <div class="hero-main">

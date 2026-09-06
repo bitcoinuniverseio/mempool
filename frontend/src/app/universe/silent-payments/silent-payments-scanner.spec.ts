@@ -9,12 +9,17 @@ import { SilentPaymentsApiService, SilentPaymentBlockBundle, SilentPaymentBlockM
 
 const order = Point.CURVE().n;
 function key() { const ecdh = createECDH('secp256k1'); ecdh.generateKeys(); return ecdh; }
+// OpenSSL exports the scalar without leading zero bytes; BIP352 serializes exactly 32.
+function scalarBytes(ecdh: ReturnType<typeof createECDH>): Buffer {
+  return Buffer.from(ecdh.getPrivateKey().toString('hex').padStart(64, '0'), 'hex');
+}
 function tagged(tag: string, bytes: Buffer) { const t=createHash('sha256').update(tag).digest(); return createHash('sha256').update(Buffer.concat([t,t,bytes])).digest(); }
 function uint32(n:number, little=false) { const b=Buffer.alloc(4); if(little)b.writeUInt32LE(n);else b.writeUInt32BE(n); return b; }
 
 // Independent sender-side ECDH uses OpenSSL. Ephemeral test scan material is never saved.
-function fixture() {
+function fixture(receiverScalar?: Buffer) {
   const input=key(); const receiver=key(); const spend=key();
+  if (receiverScalar) {receiver.setPrivateKey(receiverScalar);}
   const inputPoint=input.getPublicKey(undefined,'compressed');
   const outpoint=Buffer.concat([Buffer.from('01'.repeat(32),'hex'),uint32(7,true)]);
   const inputHash=BigInt('0x'+tagged('BIP0352/Inputs',Buffer.concat([outpoint,inputPoint])).toString('hex'));
@@ -24,7 +29,7 @@ function fixture() {
   const shared=Point.fromBytes(receiver.getPublicKey(undefined,'compressed')).multiply(BigInt('0x'+sender.getPrivateKey().toString('hex'))).toBytes();
   expect(Buffer.from(shared).subarray(1)).toEqual(sender.computeSecret(receiver.getPublicKey()));
   const base=Point.fromBytes(spend.getPublicKey(undefined,'compressed'));
-  const label=BigInt('0x'+tagged('BIP0352/Label',Buffer.concat([receiver.getPrivateKey(),uint32(0)])).toString('hex'));
+  const label=BigInt('0x'+tagged('BIP0352/Label',Buffer.concat([scalarBytes(receiver),uint32(0)])).toString('hex'));
   const outputs=[0,1].map((k) => {
     const tweak=BigInt('0x'+tagged('BIP0352/SharedSecret',Buffer.concat([Buffer.from(shared),uint32(k)])).toString('hex'));
     const p=base.add(Point.BASE.multiply((tweak+(k===1?label:0n))%order));
@@ -35,19 +40,19 @@ function fixture() {
   }]};
   const raw=JSON.stringify(bundle);
   const manifest:SilentPaymentBlockManifest={schema_version:1,chain:'bitcoin',network:'signet',height:12,block_hash:bundle.block_hash,previous_block_hash:bundle.previous_block_hash,num_inputs:1,candidate_output_count:2,bundle_hash:createHash('sha256').update(raw).digest('hex'),bundle_url:'',created_at:'2026-09-05T00:00:00Z'};
-  return {bundle,raw,manifest,scan:receiver.getPrivateKey().toString('hex'),spend:spend.getPublicKey(undefined,'compressed').toString('hex')};
+  return {bundle,raw,manifest,scan:scalarBytes(receiver).toString('hex'),spend:spend.getPublicKey(undefined,'compressed').toString('hex')};
 }
 
 describe('receiver computation and integrity',()=>{
-  it('finds independently constructed base and change-label outputs across consecutive k values',async()=>{
-    const f=fixture();
+  it.each(['random', 'leading-zero'] as const)('finds independently constructed base and change-label outputs with a %s scan scalar',async(keyCase)=>{
+    const f=fixture(keyCase === 'leading-zero' ? Buffer.from([1]) : undefined);
     const matches=await scanSilentBundle(await verifySilentBundle(f.raw,f.manifest,'signet'),f.scan,f.spend);
     expect(matches.map(m=>m.vout).sort()).toEqual([0,1]);
     expect(matches.map(m=>m.amount_sats).sort()).toEqual(['1000','1001']);
   });
   it('returns a valid non-match for another receiver and honors cancellation',async()=>{
     const f=fixture();
-    expect(await scanSilentBundle(f.bundle,key().getPrivateKey().toString('hex'),f.spend)).toEqual([]);
+    expect(await scanSilentBundle(f.bundle,scalarBytes(key()).toString('hex'),f.spend)).toEqual([]);
     await expect(scanSilentBundle(f.bundle,f.scan,f.spend,0,()=>true)).rejects.toThrow('cancelled');
   });
   it('rejects tampering, wrong network, wrong public keys and scan public key in the private field',async()=>{
@@ -69,8 +74,8 @@ describe('scanner consumer privacy boundary',()=>{
     expect(validateAddress$).toHaveBeenCalledWith(uri);
     expect(component.result?.valid).toBe(true);component.ngOnDestroy();
   });
-  it('unsubscribes cancelled manifest reads before fetching a bundle',async()=>{
-    const f=fixture();const pending=new Subject<SilentPaymentBlockManifest>();
+  it.each(['random', 'leading-zero'] as const)('unsubscribes cancelled manifest reads before fetching a bundle with a %s scan scalar',async(keyCase)=>{
+    const f=fixture(keyCase === 'leading-zero' ? Buffer.from([1]) : undefined);const pending=new Subject<SilentPaymentBlockManifest>();
     const bundle=vi.fn(()=>of(f.raw));
     const api:any={network:'signet',networkChanges$:new Subject<string>(),getBlockManifest$:()=>pending,getBlockBundleBytes$:bundle};
     const component=new SilentPaymentsScanComponent(api,{markForCheck:vi.fn()} as any);
