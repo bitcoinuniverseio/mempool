@@ -1,0 +1,23 @@
+[
+  {
+    "service": "mempool-backend",
+    "url": "http://127.0.0.1:8996/api/v1/backend-info",
+    "status": "unreachable",
+    "error": "No connection could be made because the target machine actively refused it. (127.0.0.1:8996)",
+    "time": "2026-09-05T23:01:34.7913664Z"
+  },
+  {
+    "service": "backend-apis-overlay",
+    "url": "http://127.0.0.1:3400/api/v1/universe/status",
+    "status": "unreachable",
+    "error": "No connection could be made because the target machine actively refused it. (127.0.0.1:3400)",
+    "time": "2026-09-05T23:01:36.8322690Z"
+  },
+  {
+    "service": "isolated-acceptance",
+    "url": "http://localhost:4310/__acceptance",
+    "status": 200,
+    "body": "{\"scope\":\"isolated compiled route handlers and candidate frontend\",\"revision\":\"4e9701186b7b6bc55aa8f02079dd92fa5facddad\",\"nodeAvailable\":false,\"persistenceAvailable\":false,\"realNetworkE2ePasses\":0}",
+    "time": "2026-09-05T23:01:38.8962728Z"
+  }
+]

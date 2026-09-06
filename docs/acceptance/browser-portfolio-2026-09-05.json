@@ -1,0 +1,57 @@
+{
+  "checkedAt": "2026-09-06T00:34:28.473Z",
+  "origin": "http://localhost:4310",
+  "scope": "Pure local UI workflows using actual IndexedDB/WebCrypto; no real share persistence or chain acceptance",
+  "realNetworkE2ePasses": 0,
+  "checks": [
+    {
+      "id": "PF-LOCAL-CREATE",
+      "status": "PASS",
+      "path": "/portfolio/p/99c7884938be93775a0c6177/overview",
+      "persistence": {
+        "kdf": "argon2id",
+        "recordCount": 2,
+        "encryptedRecords": true
+      },
+      "scope": "Empty manual portfolio saved through encrypted vault UI"
+    },
+    {
+      "id": "PF-LOCAL-EMPTY-REPORT",
+      "status": "PASS",
+      "scope": "Empty report cannot create a fabricated share"
+    },
+    {
+      "id": "PF-LOCAL-REPORT-LIGHT",
+      "status": "PASS",
+      "width": 1440,
+      "overflow": false
+    },
+    {
+      "id": "PF-LOCAL-REPORT-DARK",
+      "status": "PASS",
+      "width": 390,
+      "overflow": false
+    },
+    {
+      "id": "PF-LOCAL-REPORT-HIGH-CONTRAST",
+      "status": "PASS",
+      "width": 390,
+      "overflow": false
+    },
+    {
+      "id": "PF-LOCAL-RELOAD-UNLOCK",
+      "status": "PASS",
+      "scope": "Actual persisted IndexedDB vault, wrong passphrase rejected, requested portfolio restored"
+    },
+    {
+      "id": "PF-LOCAL-UNKNOWN-IDENTITY",
+      "status": "PASS",
+      "scope": "Unknown requested portfolio cannot render the prior portfolio"
+    },
+    {
+      "id": "PF-SHARE-UNAVAILABLE",
+      "status": "PASS",
+      "scope": "Unavailable sharing dependency is shown as a failure, without fabricating missing/expired/decrypted data"
+    }
+  ]
+}

@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-09-06T00:39:14.488Z",
+  "status": "FUNCTIONAL NO-GO",
+  "operationDenominatorReconciled": false,
+  "realNetworkE2ePasses": 0,
+  "preserved": {
+    "navigation": 351,
+    "protocols": 39,
+    "namedOperations": 37
+  },
+  "routeRendering": {
+    "PASS": 335,
+    "FAIL": 3,
+    "NOT VERIFIED": 13
+  },
+  "namedLocalPasses": [
+    "SP-05",
+    "SP-06",
+    "DOC-01"
+  ],
+  "narrowCandidateEvidence": [
+    {
+      "id": "UI-1309ff721a69",
+      "status": "PASS LOCAL",
+      "scope": "Offline BIP352/BIP321 address decoding, expected public keys and malformed/wrong-network rejection through actual form and HTTP handler",
+      "testedNetworks": [
+        "mainnet",
+        "signet"
+      ],
+      "variantCoverageComplete": false,
+      "recordedBy": "acceptance-reconcile-v1"
+    },
+    {
+      "id": "UI-07fc31393043",
+      "status": "PASS LOCAL",
+      "scope": "Offline complete PSBT structural inspection and standard-field detection through actual form and HTTP handler; no signature/DLEQ verification, signing or broadcast",
+      "testedNetworks": [
+        "mainnet"
+      ],
+      "variantCoverageComplete": false,
+      "recordedBy": "acceptance-reconcile-v1"
+    },
+    {
+      "id": "UI-172e4d6e5ee2",
+      "status": "PASS LOCAL",
+      "scope": "Actual simulation form: hypothetical arithmetic and invalid-input rejection only; no observed chain state or recovery result",
+      "testedNetworks": [],
+      "variantCoverageComplete": false,
+      "recordedBy": "acceptance-reconcile-v1"
+    },
+    {
+      "id": "API-fce252521818",
+      "status": "PASS LOCAL",
+      "scope": "Offline BIP352/BIP321 address decoding, expected public keys and malformed/wrong-network rejection through actual form and HTTP handler",
+      "testedNetworks": [
+        "mainnet",
+        "signet"
+      ],
+      "variantCoverageComplete": false,
+      "recordedBy": "acceptance-reconcile-v1"
+    },
+    {
+      "id": "API-b4cca5e92776",
+      "status": "PASS LOCAL",
+      "scope": "Offline complete PSBT structural inspection and standard-field detection through actual form and HTTP handler; no signature/DLEQ verification, signing or broadcast",
+      "testedNetworks": [
+        "mainnet"
+      ],
+      "variantCoverageComplete": false,
+      "recordedBy": "acceptance-reconcile-v1"
+    }
+  ],
+  "inputs": [
+    {
+      "path": "docs/acceptance/2026-09-05-inventory.json",
+      "sha256": "9facec09ae740c667ce0bcd51356597c6442cd052a076f7672f5d23622bdc018"
+    },
+    {
+      "path": "docs/acceptance/2026-09-05-controls.json",
+      "sha256": "ddf2ad09bf398cde9ac13ae182e193828b9204de046d76eaec7592588fdf9d85"
+    },
+    {
+      "path": "docs/acceptance/browser-navigation-2026-09-05.json",
+      "sha256": "82e4e56b26a39d3134afc2f0ea6dfe464a397864cbb3951e9e38578bae5aab09"
+    },
+    {
+      "path": "docs/acceptance/browser-parser-2026-09-05.json",
+      "sha256": "d8258e5816d8078fab1b76d71eae5dd0aa323a2e2448f095c0187998dbb8fd81"
+    },
+    {
+      "path": "docs/acceptance/parser-http-2026-09-05.json",
+      "sha256": "de89ab4ff022c7063a06ff62b73d3acf642cbf0e270e7c9cc9163c50fabb5dd6"
+    },
+    {
+      "path": "docs/acceptance/browser-workflows-2026-09-05.json",
+      "sha256": "205660573b41b3577650e6b6cb192ac5fc45df948cd6bf83a395194933fe0b4b"
+    },
+    {
+      "path": "docs/acceptance/network-contract-2026-09-05.md",
+      "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401"
+    },
+    {
+      "path": "docs/acceptance/silent-payments-2026-09-05.md",
+      "sha256": "c3a98ae654594ccc458a5172e96e68c55b9e1e6b8515f8f128b6989a9e3c00d1"
+    },
+    {
+      "path": "docs/acceptance/swaps-2026-09-05.md",
+      "sha256": "2aba21991c071926b5b21390b804d54652bf4c1ae7beafa8e6f5621142324341"
+    },
+    {
+      "path": "docs/acceptance/protected-operations-2026-09-05.md",
+      "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2"
+    },
+    {
+      "path": "../.runtime/acceptance-final-gateway-contract.log",
+      "sha256": "f85d65a610e0decce02c345b487c2830b40031681b75612b06cd9a08bf6d1d3a"
+    }
+  ],
+  "limitations": [
+    "Route rendering is separate from an operation, valid parameter identity or dependency pass.",
+    "Parser request network context establishes no real-network E2E pass.",
+    "Only two parser forms, their two POST handlers and the simulation run handler receive narrow candidate evidence.",
+    "Portfolio browser acceptance and every other unlisted handler remain unpromoted.",
+    "The 37 named operations are a preserved starting inventory, not the final operation denominator."
+  ]
+}
