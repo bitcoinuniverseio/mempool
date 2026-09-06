@@ -92,7 +92,7 @@ jobs:
         run: node scripts/universe/check-origins.mjs
 
       - name: Gateway routing
-        run: node --test scripts/universe/gateway.test.mjs
+        run: node --test scripts/universe/gateway.test.mjs scripts/universe/gateway-https.test.mjs
 
       - name: The Explorer admin address redirects to the Control Center
         run: node --test scripts/universe/admin-redirect.test.mjs
