@@ -261,7 +261,20 @@
         "frontend/src/styles.scss",
         "frontend/src/app (102 templates)"
       ],
-      "verification": "frontend typecheck clean, lint 0 errors, 1497 tests pass, colour, palette, fill and text gates pass."
+      "verification": "frontend typecheck clean, lint 0 errors, 1497 tests pass, colour, palette, fill and text gates pass.",
+      "secondPass": {
+        "run": 34038955236,
+        "remaining": 22,
+        "from": 226,
+        "note": "The scroll region, header wrap and checkbox fixes took the gate from 226 findings to 22. One of the 22 was caused by the first fix: overflow-wrap: anywhere changes an element min-content width, so inside a table cell it collapsed a monospace link to one character per line, 24px wide and 607px tall. That is break-word now, which breaks the same strings without shrinking the box.",
+        "alsoRepaired": [
+          "A flex child is min-width auto by default and will not shrink however its content wraps. That was the other half of the header overflow, and it is why the staking delegation heading still reached past the edge after the first pass.",
+          "Three pre blocks scroll sideways and now declare it, the same fault the tables had.",
+          "A select sized by its longest option, and a badge holding a long state word, both take the width of the phone rather than pushing the row out.",
+          "The checkbox floor now applies in landscape as well, which the gate measures separately.",
+          "The docs page ends inside .doc-content, its own scrolling region, so the shell bottom reservation never reached the last section and the final heading sat under the bar."
+        ]
+      }
     }
   ],
   "findings": [

@@ -1874,8 +1874,8 @@
     },
     {
       "path": "backend/src/api/bitcoin/bitcoin.routes.ts",
-      "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433",
-      "bytes": 45615
+      "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1",
+      "bytes": 45624
     },
     {
       "path": "backend/src/api/capabilities.routes.ts",
@@ -1929,13 +1929,13 @@
     },
     {
       "path": "backend/src/api/intelligence/bootstrap/bootstrap.routes.ts",
-      "sha256": "2dc02152ee575d347a25e92f631a2e43b9e00ff3d80c93faad5530882ec9f937",
-      "bytes": 5171
+      "sha256": "84304c26bc3879adada70fbcec35c2131a32bd98823cf70d6721234a0afdfca3",
+      "bytes": 5176
     },
     {
       "path": "backend/src/api/intelligence/bootstrap/bootstrap.service.ts",
-      "sha256": "c7941a83f01566f2433d5a843833c1f39ac88797d89954cb2de2a5847d9f2b64",
-      "bytes": 4003
+      "sha256": "cbc39c11191b8b947072cc88f49fe0af67d9dbdef80e78e1914a8aa3356a68b2",
+      "bytes": 4080
     },
     {
       "path": "backend/src/api/intelligence/collaborative-privacy/collaborative-privacy.routes.ts",
@@ -1999,13 +1999,13 @@
     },
     {
       "path": "backend/src/api/intelligence/multiparty/multiparty.routes.ts",
-      "sha256": "b59a814745c0276d83bef7ae48ff1b9cf21c7d6ae5c2185e14abe8f935a9d737",
-      "bytes": 2686
+      "sha256": "4ca4cb37b9018abbdbf43f5298e0d412120f271ae7ed7c5a1cdb59fa3ef89e52",
+      "bytes": 2693
     },
     {
       "path": "backend/src/api/intelligence/multiparty/multiparty.service.ts",
-      "sha256": "6486bac3515dec842312b7ffd8dd0bf68aeca4bc3cf2dd542d887551f3c537f5",
-      "bytes": 10810
+      "sha256": "e29625dfbb506dcddea55519aa9431e6775198eee4fa9d1f0fb506b5968c6a2b",
+      "bytes": 10980
     },
     {
       "path": "backend/src/api/intelligence/node-security/node-security.routes.ts",
@@ -2019,13 +2019,13 @@
     },
     {
       "path": "backend/src/api/intelligence/opentimestamps/opentimestamps.routes.ts",
-      "sha256": "034d9eeb10ffb42a3353f8614bc675e4463035249d594bc8a1c77f875522b338",
-      "bytes": 3049
+      "sha256": "98242768dec9f5e8550e8a9b908a5c3f53057c603c4420997595dfb6a0b6e6ba",
+      "bytes": 3058
     },
     {
       "path": "backend/src/api/intelligence/opentimestamps/opentimestamps.service.ts",
-      "sha256": "3ee2df0018fe8b5ce286d7555f026395efcc090fc8c50af390ae52811dc90d08",
-      "bytes": 3341
+      "sha256": "7c9c9402b91a94d2e379d77775ad0ed0a70353a3d292aa7a4a6547b652612ee5",
+      "bytes": 3405
     },
     {
       "path": "backend/src/api/intelligence/payjoin/payjoin.routes.ts",
@@ -2049,8 +2049,8 @@
     },
     {
       "path": "backend/src/api/intelligence/private-submission/private-submission.service.ts",
-      "sha256": "61d2ee638095c66be73f2a1324b18f826c729bf85209093a466d3f8543c0a119",
-      "bytes": 5898
+      "sha256": "ba2ebe009ba654425ec46c19d0f41d4a8357c7fde42c852cb99c3f62a075d412",
+      "bytes": 5902
     },
     {
       "path": "backend/src/api/intelligence/protocols/protocols.routes.ts",
@@ -2219,18 +2219,18 @@
     },
     {
       "path": "docs/acceptance/BACKEND-CHECKPOINT-CONTRACT.md",
-      "sha256": "c384137bb19b7d3e75575585e157a6e437c9490d3dd73d1ae6c84bedda8255f4",
-      "bytes": 2542
+      "sha256": "d78d6f1b0fb32d4725f5e72931588dfb43fbede0884cc8dd4abce30a810b6e57",
+      "bytes": 2597
     },
     {
       "path": "docs/acceptance/ci-repair-2026-09-06.json",
-      "sha256": "74c0c699f9ea65d0be1db9d97ba7bfe23b60b7b53438ce2f3f190dc3a60da078",
-      "bytes": 31862
+      "sha256": "db87e2e0b8611144cdbcd3ff0d7b6fbe43d5c9df5191e6b3ad9d20572683d752",
+      "bytes": 33198
     },
     {
       "path": "docs/acceptance/current-execution-evidence.json",
-      "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
-      "bytes": 470387
+      "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
+      "bytes": 477770
     },
     {
       "path": "docs/acceptance/durable-portfolio-2026-09-06.md",
@@ -2249,8 +2249,8 @@
     },
     {
       "path": "docs/acceptance/HEALTH-REPAIR-2026-09-06.md",
-      "sha256": "81ce1dced449105b5eeb2331e6f0604b165c673d88a99bc132e464d7cc43b058",
-      "bytes": 27935
+      "sha256": "2b3dc07cbce5d9b8f88a21d1f79e5bec1d4022d70f547fb63b741b4a60fb3018",
+      "bytes": 28079
     },
     {
       "path": "docs/acceptance/health-runtime-2026-09-06/candidate-asset-binding.json",
@@ -2324,8 +2324,8 @@
     },
     {
       "path": "docs/acceptance/wp07-repair-2026-09-06.json",
-      "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7",
-      "bytes": 9230
+      "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4",
+      "bytes": 9421
     },
     {
       "path": "docs/protocols/PROTOCOL-COVERAGE.json",
@@ -2374,8 +2374,8 @@
     },
     {
       "path": "frontend/src/app/components/master-page/master-page.component.ts",
-      "sha256": "de48da21260c2123ec3a6224259c767b5f58fec49ef25800ff42394fca2f2edb",
-      "bytes": 11091
+      "sha256": "4afbc950aac11926ca51fdd642c5105262cd908869b669eae5618646d3672db5",
+      "bytes": 11380
     },
     {
       "path": "frontend/src/app/components/mempool-block-view/mempool-block-view.component.ts",
@@ -2449,8 +2449,8 @@
     },
     {
       "path": "frontend/src/app/docs/docs/docs.component.ts",
-      "sha256": "57331bd23a9a20534977930e80c2deca4764efd896063314d483ab54e58da816",
-      "bytes": 3457
+      "sha256": "0385849bc99bc503613755802a9f9740a264797259587c91ca5786041fd9d945",
+      "bytes": 3458
     },
     {
       "path": "frontend/src/app/lightning/channel/channel.component.ts",
@@ -2704,8 +2704,8 @@
     },
     {
       "path": "frontend/src/app/universe/chain-dashboard/chain-dashboard.component.ts",
-      "sha256": "7d4fbc3fe29316c04273b2ea335e9af7f3fb6dec725a8b73cb202c8cd7f739e0",
-      "bytes": 11602
+      "sha256": "f01935e747d84ca932763fb503b37e5671ffedf1fa6553a1ab193ce6da40cde1",
+      "bytes": 11604
     },
     {
       "path": "frontend/src/app/universe/chain-dashboard/chain-mining.component.ts",
@@ -3219,8 +3219,8 @@
     },
     {
       "path": "frontend/src/app/universe/multichain-explorer/multichain-explorer.component.ts",
-      "sha256": "12ad04b9f693fe945863f194d6e418b3f7c1517a37a28ba32eff10641ac37b48",
-      "bytes": 30789
+      "sha256": "25c24c68641dba68869664bb253937339bc62219b4a2b53724ae486f18c7bf59",
+      "bytes": 30796
     },
     {
       "path": "frontend/src/app/universe/multichain-explorer/multichain-explorer.module.ts",
@@ -3229,8 +3229,8 @@
     },
     {
       "path": "frontend/src/app/universe/multiparty/multiparty-bsms.component.ts",
-      "sha256": "935a72509856b5178b354213b8e579300cbc478077f84cb64ef93f4a7fb195f5",
-      "bytes": 4183
+      "sha256": "27ef37d830825196080dfe3de7b0988aea7d062e2312adbd635b10dcc10ad737",
+      "bytes": 4100
     },
     {
       "path": "frontend/src/app/universe/multiparty/multiparty-compatibility.component.ts",
@@ -3239,13 +3239,13 @@
     },
     {
       "path": "frontend/src/app/universe/multiparty/multiparty-labels.component.ts",
-      "sha256": "4a98ae067ba408ed1ed30a4a95c255d75975266ad62e7ef2c0f178f1b1352f92",
-      "bytes": 3767
+      "sha256": "f950598a0781abbc56da5f10916b2e881373e7ee9b25cf20e9fefa61e0978820",
+      "bytes": 3700
     },
     {
       "path": "frontend/src/app/universe/multiparty/multiparty-musig2.component.ts",
-      "sha256": "72f5c1a1fd8c5ce66664d06acd2f013a7bddff10fb479d689766a82eba26a92b",
-      "bytes": 11043
+      "sha256": "c6972704483fcaf31fafdf8014c5db95cb92b296a37a5c2fd2fed1b311197d80",
+      "bytes": 11157
     },
     {
       "path": "frontend/src/app/universe/multiparty/multiparty-overview.component.ts",
@@ -3259,8 +3259,8 @@
     },
     {
       "path": "frontend/src/app/universe/multiparty/multiparty-session.component.ts",
-      "sha256": "260496f0584f9c60a2cabfb2f7e1361a687ece5a90886e91dda26388515f3211",
-      "bytes": 2035
+      "sha256": "043e482bc3adb267642ac17840d63de4bad889d0ad926d0c59f7f1c4d4297abb",
+      "bytes": 2084
     },
     {
       "path": "frontend/src/app/universe/network-observatory/network-observatory.component.ts",
@@ -3294,8 +3294,8 @@
     },
     {
       "path": "frontend/src/app/universe/node-security/node-security-configuration.component.ts",
-      "sha256": "fab80239d9924141ceb6b48e2817ca18cf9900052666d92e63216fe8250522f7",
-      "bytes": 1928
+      "sha256": "a6f5f3afe71d2ccd30dd728c855497fcbef4ba39bb9c462e9c35b900810b85ea",
+      "bytes": 1874
     },
     {
       "path": "frontend/src/app/universe/node-security/node-security-fleet.component.ts",
@@ -3389,8 +3389,8 @@
     },
     {
       "path": "frontend/src/app/universe/opentimestamps/opentimestamps-verify.component.ts",
-      "sha256": "4a74509a2b7a6918f35c1d44d3f9a8360b3e395ff4d05b9c9ba34cb04ca2b31d",
-      "bytes": 11439
+      "sha256": "d2c2ade397630394afe439e5ab811598390f1c1c74fe34205d3194f299601d27",
+      "bytes": 11587
     },
     {
       "path": "frontend/src/app/universe/outpoint/outpoint.component.ts",
@@ -3564,8 +3564,8 @@
     },
     {
       "path": "frontend/src/app/universe/private-submission/private-submission-broadcast.component.ts",
-      "sha256": "1883086ad15f2075b793ff9ccb73dff58a3dceef35be7e0f4f057221b9d56d51",
-      "bytes": 5411
+      "sha256": "fe70e8fe9aa3a3b4bb1e3fe52929f2a19c5e72928a86fae49fe5b6b1cbc6e70c",
+      "bytes": 5423
     },
     {
       "path": "frontend/src/app/universe/private-submission/private-submission-ordering-block.component.ts",
@@ -3589,8 +3589,8 @@
     },
     {
       "path": "frontend/src/app/universe/private-submission/private-submission-receipts.component.ts",
-      "sha256": "3be12fe1696764cec7caf305a51470e51ba2d3271c28ab39109b18d46950d709",
-      "bytes": 5822
+      "sha256": "814bf90ccfd6fc074c3aff5983e9a4ae73cd4a76a5057034501868881e32992f",
+      "bytes": 5843
     },
     {
       "path": "frontend/src/app/universe/protocol-detail/protocol-detail.component.ts",
@@ -3819,8 +3819,8 @@
     },
     {
       "path": "frontend/src/app/universe/universe-api.service.ts",
-      "sha256": "4027753165cff05bd9a9221ad0a2d3231f9d26489f953a3d5da5693983513519",
-      "bytes": 37406
+      "sha256": "44dd358d40cc64adc4b6a2c1cb558ae7d113b725d5a5f6a31f74ba93fe9b3eb0",
+      "bytes": 37437
     },
     {
       "path": "frontend/src/app/universe/utxo-set/utxo-set.component.ts",
@@ -3859,8 +3859,8 @@
     },
     {
       "path": "scripts/universe/acceptance-matrix.mjs",
-      "sha256": "f1c732166b6e786b03417ecdda979b5e2d91d794e628957122b3882c41efb7eb",
-      "bytes": 42266
+      "sha256": "e659f3449004b3508cda5641715e196502b57a69099106cd6f85e2df22bab53a",
+      "bytes": 42389
     }
   ],
   "sourceCandidates": {
@@ -4603,7 +4603,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/components/master-page/master-page.component.ts",
-          "sha256": "de48da21260c2123ec3a6224259c767b5f58fec49ef25800ff42394fca2f2edb"
+          "sha256": "4afbc950aac11926ca51fdd642c5105262cd908869b669eae5618646d3672db5"
         }
       },
       {
@@ -13606,7 +13606,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/multiparty/multiparty-musig2.component.ts",
-          "sha256": "72f5c1a1fd8c5ce66664d06acd2f013a7bddff10fb479d689766a82eba26a92b"
+          "sha256": "c6972704483fcaf31fafdf8014c5db95cb92b296a37a5c2fd2fed1b311197d80"
         }
       },
       {
@@ -13628,7 +13628,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/multiparty/multiparty-session.component.ts",
-          "sha256": "260496f0584f9c60a2cabfb2f7e1361a687ece5a90886e91dda26388515f3211"
+          "sha256": "043e482bc3adb267642ac17840d63de4bad889d0ad926d0c59f7f1c4d4297abb"
         }
       },
       {
@@ -13665,7 +13665,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/multiparty/multiparty-bsms.component.ts",
-          "sha256": "935a72509856b5178b354213b8e579300cbc478077f84cb64ef93f4a7fb195f5"
+          "sha256": "27ef37d830825196080dfe3de7b0988aea7d062e2312adbd635b10dcc10ad737"
         }
       },
       {
@@ -13739,7 +13739,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/multiparty/multiparty-labels.component.ts",
-          "sha256": "4a98ae067ba408ed1ed30a4a95c255d75975266ad62e7ef2c0f178f1b1352f92"
+          "sha256": "f950598a0781abbc56da5f10916b2e881373e7ee9b25cf20e9fefa61e0978820"
         }
       },
       {
@@ -17937,7 +17937,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/private-submission/private-submission-broadcast.component.ts",
-          "sha256": "1883086ad15f2075b793ff9ccb73dff58a3dceef35be7e0f4f057221b9d56d51"
+          "sha256": "fe70e8fe9aa3a3b4bb1e3fe52929f2a19c5e72928a86fae49fe5b6b1cbc6e70c"
         }
       },
       {
@@ -18048,7 +18048,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/private-submission/private-submission-receipts.component.ts",
-          "sha256": "3be12fe1696764cec7caf305a51470e51ba2d3271c28ab39109b18d46950d709"
+          "sha256": "814bf90ccfd6fc074c3aff5983e9a4ae73cd4a76a5057034501868881e32992f"
         }
       },
       {
@@ -18294,7 +18294,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/opentimestamps/opentimestamps-verify.component.ts",
-          "sha256": "4a74509a2b7a6918f35c1d44d3f9a8360b3e395ff4d05b9c9ba34cb04ca2b31d"
+          "sha256": "d2c2ade397630394afe439e5ab811598390f1c1c74fe34205d3194f299601d27"
         }
       },
       {
@@ -18952,7 +18952,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/node-security/node-security-configuration.component.ts",
-          "sha256": "fab80239d9924141ceb6b48e2817ca18cf9900052666d92e63216fe8250522f7"
+          "sha256": "a6f5f3afe71d2ccd30dd728c855497fcbef4ba39bb9c462e9c35b900810b85ea"
         }
       },
       {
@@ -22189,7 +22189,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/chain-dashboard/chain-dashboard.component.ts",
-          "sha256": "7d4fbc3fe29316c04273b2ea335e9af7f3fb6dec725a8b73cb202c8cd7f739e0"
+          "sha256": "f01935e747d84ca932763fb503b37e5671ffedf1fa6553a1ab193ce6da40cde1"
         }
       },
       {
@@ -22491,7 +22491,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/multichain-explorer/multichain-explorer.component.ts",
-          "sha256": "12ad04b9f693fe945863f194d6e418b3f7c1517a37a28ba32eff10641ac37b48"
+          "sha256": "25c24c68641dba68869664bb253937339bc62219b4a2b53724ae486f18c7bf59"
         }
       },
       {
@@ -24351,7 +24351,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/docs/docs/docs.component.ts",
-          "sha256": "57331bd23a9a20534977930e80c2deca4764efd896063314d483ab54e58da816"
+          "sha256": "0385849bc99bc503613755802a9f9740a264797259587c91ca5786041fd9d945"
         }
       },
       {
@@ -32611,7 +32611,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         },
         {
           "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
@@ -32631,7 +32631,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "NAV-154"
         }
       ],
@@ -37648,7 +37648,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01",
-          "sha256": "74c0c699f9ea65d0be1db9d97ba7bfe23b60b7b53438ce2f3f190dc3a60da078"
+          "sha256": "db87e2e0b8611144cdbcd3ff0d7b6fbe43d5c9df5191e6b3ad9d20572683d752"
         }
       ],
       "blockers": [
@@ -37663,7 +37663,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "NAV-249"
         }
       ],
@@ -37719,7 +37719,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01",
-          "sha256": "74c0c699f9ea65d0be1db9d97ba7bfe23b60b7b53438ce2f3f190dc3a60da078"
+          "sha256": "db87e2e0b8611144cdbcd3ff0d7b6fbe43d5c9df5191e6b3ad9d20572683d752"
         }
       ],
       "blockers": [
@@ -37734,7 +37734,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "NAV-250"
         }
       ],
@@ -37790,7 +37790,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01",
-          "sha256": "74c0c699f9ea65d0be1db9d97ba7bfe23b60b7b53438ce2f3f190dc3a60da078"
+          "sha256": "db87e2e0b8611144cdbcd3ff0d7b6fbe43d5c9df5191e6b3ad9d20572683d752"
         }
       ],
       "blockers": [
@@ -37805,7 +37805,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "NAV-251"
         }
       ],
@@ -48065,7 +48065,7 @@
         },
         {
           "artifact": "frontend/src/app/components/master-page/master-page.component.ts",
-          "sha256": "de48da21260c2123ec3a6224259c767b5f58fec49ef25800ff42394fca2f2edb"
+          "sha256": "4afbc950aac11926ca51fdd642c5105262cd908869b669eae5618646d3672db5"
         }
       ],
       "entry": null,
@@ -48184,7 +48184,7 @@
         },
         {
           "artifact": "frontend/src/app/components/master-page/master-page.component.ts",
-          "sha256": "de48da21260c2123ec3a6224259c767b5f58fec49ef25800ff42394fca2f2edb"
+          "sha256": "4afbc950aac11926ca51fdd642c5105262cd908869b669eae5618646d3672db5"
         }
       ],
       "entry": null,
@@ -48303,7 +48303,7 @@
         },
         {
           "artifact": "frontend/src/app/components/master-page/master-page.component.ts",
-          "sha256": "de48da21260c2123ec3a6224259c767b5f58fec49ef25800ff42394fca2f2edb"
+          "sha256": "4afbc950aac11926ca51fdd642c5105262cd908869b669eae5618646d3672db5"
         }
       ],
       "entry": null,
@@ -48422,7 +48422,7 @@
         },
         {
           "artifact": "frontend/src/app/components/master-page/master-page.component.ts",
-          "sha256": "de48da21260c2123ec3a6224259c767b5f58fec49ef25800ff42394fca2f2edb"
+          "sha256": "4afbc950aac11926ca51fdd642c5105262cd908869b669eae5618646d3672db5"
         }
       ],
       "entry": null,
@@ -51270,7 +51270,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "RGB source inspection only; no RGB engine or new validation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         }
       ],
       "blockers": [
@@ -51306,7 +51306,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "UI-77ac99d0042d"
         }
       ],
@@ -60200,7 +60200,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         }
       ],
       "blockers": [
@@ -60228,7 +60228,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "UI-323b21db2184"
         }
       ],
@@ -60295,7 +60295,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         }
       ],
       "blockers": [
@@ -60323,7 +60323,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "UI-df848a3a472c"
         }
       ],
@@ -60390,7 +60390,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         },
         {
           "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
@@ -60422,11 +60422,11 @@
         },
         {
           "artifact": "frontend/src/app/universe/multiparty/multiparty-musig2.component.ts",
-          "sha256": "72f5c1a1fd8c5ce66664d06acd2f013a7bddff10fb479d689766a82eba26a92b"
+          "sha256": "c6972704483fcaf31fafdf8014c5db95cb92b296a37a5c2fd2fed1b311197d80"
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "UI-a270e89bb4c9"
         }
       ],
@@ -60611,7 +60611,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/multiparty/multiparty-musig2.component.ts",
-          "sha256": "72f5c1a1fd8c5ce66664d06acd2f013a7bddff10fb479d689766a82eba26a92b"
+          "sha256": "c6972704483fcaf31fafdf8014c5db95cb92b296a37a5c2fd2fed1b311197d80"
         }
       ],
       "entry": null,
@@ -67534,7 +67534,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/private-submission/private-submission-broadcast.component.ts",
-          "sha256": "1883086ad15f2075b793ff9ccb73dff58a3dceef35be7e0f4f057221b9d56d51"
+          "sha256": "fe70e8fe9aa3a3b4bb1e3fe52929f2a19c5e72928a86fae49fe5b6b1cbc6e70c"
         }
       ],
       "entry": null,
@@ -67589,7 +67589,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         }
       ],
       "blockers": [
@@ -67613,11 +67613,11 @@
         },
         {
           "artifact": "frontend/src/app/universe/private-submission/private-submission-receipts.component.ts",
-          "sha256": "3be12fe1696764cec7caf305a51470e51ba2d3271c28ab39109b18d46950d709"
+          "sha256": "814bf90ccfd6fc074c3aff5983e9a4ae73cd4a76a5057034501868881e32992f"
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "UI-9a0754e1c394"
         }
       ],
@@ -67692,7 +67692,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         },
         {
           "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
@@ -67725,7 +67725,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "UI-e8fb8228430e"
         }
       ],
@@ -67854,7 +67854,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         },
         {
           "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
@@ -67886,11 +67886,11 @@
         },
         {
           "artifact": "frontend/src/app/universe/opentimestamps/opentimestamps-verify.component.ts",
-          "sha256": "4a74509a2b7a6918f35c1d44d3f9a8360b3e395ff4d05b9c9ba34cb04ca2b31d"
+          "sha256": "d2c2ade397630394afe439e5ab811598390f1c1c74fe34205d3194f299601d27"
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "UI-1afe77615c32"
         }
       ],
@@ -78588,7 +78588,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/multichain-explorer/multichain-explorer.component.ts",
-          "sha256": "12ad04b9f693fe945863f194d6e418b3f7c1517a37a28ba32eff10641ac37b48"
+          "sha256": "25c24c68641dba68869664bb253937339bc62219b4a2b53724ae486f18c7bf59"
         }
       ],
       "entry": null,
@@ -93849,7 +93849,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -93909,7 +93909,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -93969,7 +93969,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -94029,7 +94029,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -94089,7 +94089,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -94149,7 +94149,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -94209,7 +94209,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -94269,7 +94269,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -94329,7 +94329,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -94389,7 +94389,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -94449,7 +94449,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -94509,7 +94509,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -94569,7 +94569,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -94629,7 +94629,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -94689,7 +94689,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -94749,7 +94749,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -94809,7 +94809,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -94869,7 +94869,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -94929,7 +94929,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -94989,7 +94989,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -95049,7 +95049,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -95109,7 +95109,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -95169,7 +95169,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -95229,7 +95229,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -95289,7 +95289,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -95349,7 +95349,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -95409,7 +95409,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -95469,7 +95469,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -95529,7 +95529,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -95589,7 +95589,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -95649,7 +95649,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -95709,7 +95709,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -95769,7 +95769,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -95829,7 +95829,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -95894,7 +95894,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -95959,7 +95959,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -96024,7 +96024,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -96089,7 +96089,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -96154,7 +96154,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -96219,7 +96219,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -96284,7 +96284,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -96349,7 +96349,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -96414,7 +96414,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -96479,7 +96479,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -96544,7 +96544,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -96609,7 +96609,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -96674,7 +96674,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -96739,7 +96739,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -96804,7 +96804,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -96869,7 +96869,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -96934,7 +96934,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -96999,7 +96999,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -97064,7 +97064,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -97129,7 +97129,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -97194,7 +97194,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -97259,7 +97259,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -97332,11 +97332,11 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "API-76fbabab2425"
         }
       ],
@@ -97416,7 +97416,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -97481,7 +97481,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -97546,7 +97546,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "129fc0671bed40fd8dde05c561d132cad4f414a8920845ffdc770166ed685433"
+          "sha256": "87dbd14241d45f48c4a4d2c10aa885736426b82cb20cfe834464e63f4a74b7c1"
         }
       ],
       "entry": null,
@@ -114194,7 +114194,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         }
       ],
       "blockers": [
@@ -114209,11 +114209,11 @@
         },
         {
           "artifact": "backend/src/api/intelligence/bootstrap/bootstrap.routes.ts",
-          "sha256": "2dc02152ee575d347a25e92f631a2e43b9e00ff3d80c93faad5530882ec9f937"
+          "sha256": "84304c26bc3879adada70fbcec35c2131a32bd98823cf70d6721234a0afdfca3"
         },
         {
           "artifact": "backend/src/api/intelligence/bootstrap/bootstrap.service.ts",
-          "sha256": "c7941a83f01566f2433d5a843833c1f39ac88797d89954cb2de2a5847d9f2b64"
+          "sha256": "cbc39c11191b8b947072cc88f49fe0af67d9dbdef80e78e1914a8aa3356a68b2"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -114222,7 +114222,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "API-3554ee92daa6"
         }
       ],
@@ -114287,7 +114287,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         }
       ],
       "blockers": [
@@ -114302,11 +114302,11 @@
         },
         {
           "artifact": "backend/src/api/intelligence/bootstrap/bootstrap.routes.ts",
-          "sha256": "2dc02152ee575d347a25e92f631a2e43b9e00ff3d80c93faad5530882ec9f937"
+          "sha256": "84304c26bc3879adada70fbcec35c2131a32bd98823cf70d6721234a0afdfca3"
         },
         {
           "artifact": "backend/src/api/intelligence/bootstrap/bootstrap.service.ts",
-          "sha256": "c7941a83f01566f2433d5a843833c1f39ac88797d89954cb2de2a5847d9f2b64"
+          "sha256": "cbc39c11191b8b947072cc88f49fe0af67d9dbdef80e78e1914a8aa3356a68b2"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -114315,7 +114315,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "API-221ca2ac68cd"
         }
       ],
@@ -114380,7 +114380,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         }
       ],
       "blockers": [
@@ -114395,11 +114395,11 @@
         },
         {
           "artifact": "backend/src/api/intelligence/bootstrap/bootstrap.routes.ts",
-          "sha256": "2dc02152ee575d347a25e92f631a2e43b9e00ff3d80c93faad5530882ec9f937"
+          "sha256": "84304c26bc3879adada70fbcec35c2131a32bd98823cf70d6721234a0afdfca3"
         },
         {
           "artifact": "backend/src/api/intelligence/bootstrap/bootstrap.service.ts",
-          "sha256": "c7941a83f01566f2433d5a843833c1f39ac88797d89954cb2de2a5847d9f2b64"
+          "sha256": "cbc39c11191b8b947072cc88f49fe0af67d9dbdef80e78e1914a8aa3356a68b2"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -114408,7 +114408,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "API-cc2c0c7769d5"
         }
       ],
@@ -114473,7 +114473,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         }
       ],
       "blockers": [
@@ -114488,11 +114488,11 @@
         },
         {
           "artifact": "backend/src/api/intelligence/bootstrap/bootstrap.routes.ts",
-          "sha256": "2dc02152ee575d347a25e92f631a2e43b9e00ff3d80c93faad5530882ec9f937"
+          "sha256": "84304c26bc3879adada70fbcec35c2131a32bd98823cf70d6721234a0afdfca3"
         },
         {
           "artifact": "backend/src/api/intelligence/bootstrap/bootstrap.service.ts",
-          "sha256": "c7941a83f01566f2433d5a843833c1f39ac88797d89954cb2de2a5847d9f2b64"
+          "sha256": "cbc39c11191b8b947072cc88f49fe0af67d9dbdef80e78e1914a8aa3356a68b2"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -114501,7 +114501,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "API-bff2c2bc86f3"
         }
       ],
@@ -114566,7 +114566,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         }
       ],
       "blockers": [
@@ -114581,11 +114581,11 @@
         },
         {
           "artifact": "backend/src/api/intelligence/bootstrap/bootstrap.routes.ts",
-          "sha256": "2dc02152ee575d347a25e92f631a2e43b9e00ff3d80c93faad5530882ec9f937"
+          "sha256": "84304c26bc3879adada70fbcec35c2131a32bd98823cf70d6721234a0afdfca3"
         },
         {
           "artifact": "backend/src/api/intelligence/bootstrap/bootstrap.service.ts",
-          "sha256": "c7941a83f01566f2433d5a843833c1f39ac88797d89954cb2de2a5847d9f2b64"
+          "sha256": "cbc39c11191b8b947072cc88f49fe0af67d9dbdef80e78e1914a8aa3356a68b2"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -114594,7 +114594,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "API-2413360cedef"
         }
       ],
@@ -114659,7 +114659,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         }
       ],
       "blockers": [
@@ -114674,11 +114674,11 @@
         },
         {
           "artifact": "backend/src/api/intelligence/bootstrap/bootstrap.routes.ts",
-          "sha256": "2dc02152ee575d347a25e92f631a2e43b9e00ff3d80c93faad5530882ec9f937"
+          "sha256": "84304c26bc3879adada70fbcec35c2131a32bd98823cf70d6721234a0afdfca3"
         },
         {
           "artifact": "backend/src/api/intelligence/bootstrap/bootstrap.service.ts",
-          "sha256": "c7941a83f01566f2433d5a843833c1f39ac88797d89954cb2de2a5847d9f2b64"
+          "sha256": "cbc39c11191b8b947072cc88f49fe0af67d9dbdef80e78e1914a8aa3356a68b2"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -114687,7 +114687,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "API-a12b504ea4e9"
         }
       ],
@@ -114752,7 +114752,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         }
       ],
       "blockers": [
@@ -114767,11 +114767,11 @@
         },
         {
           "artifact": "backend/src/api/intelligence/bootstrap/bootstrap.routes.ts",
-          "sha256": "2dc02152ee575d347a25e92f631a2e43b9e00ff3d80c93faad5530882ec9f937"
+          "sha256": "84304c26bc3879adada70fbcec35c2131a32bd98823cf70d6721234a0afdfca3"
         },
         {
           "artifact": "backend/src/api/intelligence/bootstrap/bootstrap.service.ts",
-          "sha256": "c7941a83f01566f2433d5a843833c1f39ac88797d89954cb2de2a5847d9f2b64"
+          "sha256": "cbc39c11191b8b947072cc88f49fe0af67d9dbdef80e78e1914a8aa3356a68b2"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -114780,7 +114780,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "API-4dc9791028b6"
         }
       ],
@@ -114845,7 +114845,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         }
       ],
       "blockers": [
@@ -114860,11 +114860,11 @@
         },
         {
           "artifact": "backend/src/api/intelligence/bootstrap/bootstrap.routes.ts",
-          "sha256": "2dc02152ee575d347a25e92f631a2e43b9e00ff3d80c93faad5530882ec9f937"
+          "sha256": "84304c26bc3879adada70fbcec35c2131a32bd98823cf70d6721234a0afdfca3"
         },
         {
           "artifact": "backend/src/api/intelligence/bootstrap/bootstrap.service.ts",
-          "sha256": "c7941a83f01566f2433d5a843833c1f39ac88797d89954cb2de2a5847d9f2b64"
+          "sha256": "cbc39c11191b8b947072cc88f49fe0af67d9dbdef80e78e1914a8aa3356a68b2"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -114873,7 +114873,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "API-a69696fb804b"
         }
       ],
@@ -114938,7 +114938,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         }
       ],
       "blockers": [
@@ -114953,11 +114953,11 @@
         },
         {
           "artifact": "backend/src/api/intelligence/bootstrap/bootstrap.routes.ts",
-          "sha256": "2dc02152ee575d347a25e92f631a2e43b9e00ff3d80c93faad5530882ec9f937"
+          "sha256": "84304c26bc3879adada70fbcec35c2131a32bd98823cf70d6721234a0afdfca3"
         },
         {
           "artifact": "backend/src/api/intelligence/bootstrap/bootstrap.service.ts",
-          "sha256": "c7941a83f01566f2433d5a843833c1f39ac88797d89954cb2de2a5847d9f2b64"
+          "sha256": "cbc39c11191b8b947072cc88f49fe0af67d9dbdef80e78e1914a8aa3356a68b2"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -114966,7 +114966,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "API-a84a6389ab1d"
         }
       ],
@@ -115031,7 +115031,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         }
       ],
       "blockers": [
@@ -115046,11 +115046,11 @@
         },
         {
           "artifact": "backend/src/api/intelligence/bootstrap/bootstrap.routes.ts",
-          "sha256": "2dc02152ee575d347a25e92f631a2e43b9e00ff3d80c93faad5530882ec9f937"
+          "sha256": "84304c26bc3879adada70fbcec35c2131a32bd98823cf70d6721234a0afdfca3"
         },
         {
           "artifact": "backend/src/api/intelligence/bootstrap/bootstrap.service.ts",
-          "sha256": "c7941a83f01566f2433d5a843833c1f39ac88797d89954cb2de2a5847d9f2b64"
+          "sha256": "cbc39c11191b8b947072cc88f49fe0af67d9dbdef80e78e1914a8aa3356a68b2"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -115059,7 +115059,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "API-7754d2a583e6"
         }
       ],
@@ -115125,7 +115125,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         }
       ],
       "blockers": [
@@ -115140,11 +115140,11 @@
         },
         {
           "artifact": "backend/src/api/intelligence/bootstrap/bootstrap.routes.ts",
-          "sha256": "2dc02152ee575d347a25e92f631a2e43b9e00ff3d80c93faad5530882ec9f937"
+          "sha256": "84304c26bc3879adada70fbcec35c2131a32bd98823cf70d6721234a0afdfca3"
         },
         {
           "artifact": "backend/src/api/intelligence/bootstrap/bootstrap.service.ts",
-          "sha256": "c7941a83f01566f2433d5a843833c1f39ac88797d89954cb2de2a5847d9f2b64"
+          "sha256": "cbc39c11191b8b947072cc88f49fe0af67d9dbdef80e78e1914a8aa3356a68b2"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -115153,7 +115153,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "API-740780b1aee5"
         }
       ],
@@ -115219,7 +115219,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         }
       ],
       "blockers": [
@@ -115234,11 +115234,11 @@
         },
         {
           "artifact": "backend/src/api/intelligence/bootstrap/bootstrap.routes.ts",
-          "sha256": "2dc02152ee575d347a25e92f631a2e43b9e00ff3d80c93faad5530882ec9f937"
+          "sha256": "84304c26bc3879adada70fbcec35c2131a32bd98823cf70d6721234a0afdfca3"
         },
         {
           "artifact": "backend/src/api/intelligence/bootstrap/bootstrap.service.ts",
-          "sha256": "c7941a83f01566f2433d5a843833c1f39ac88797d89954cb2de2a5847d9f2b64"
+          "sha256": "cbc39c11191b8b947072cc88f49fe0af67d9dbdef80e78e1914a8aa3356a68b2"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -115247,7 +115247,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "API-37f5e957512d"
         }
       ],
@@ -115312,7 +115312,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         },
         {
           "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
@@ -115332,11 +115332,11 @@
         },
         {
           "artifact": "backend/src/api/intelligence/multiparty/multiparty.routes.ts",
-          "sha256": "b59a814745c0276d83bef7ae48ff1b9cf21c7d6ae5c2185e14abe8f935a9d737"
+          "sha256": "4ca4cb37b9018abbdbf43f5298e0d412120f271ae7ed7c5a1cdb59fa3ef89e52"
         },
         {
           "artifact": "backend/src/api/intelligence/multiparty/multiparty.service.ts",
-          "sha256": "6486bac3515dec842312b7ffd8dd0bf68aeca4bc3cf2dd542d887551f3c537f5"
+          "sha256": "e29625dfbb506dcddea55519aa9431e6775198eee4fa9d1f0fb506b5968c6a2b"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -115345,7 +115345,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "API-ed4c4fc3a2e4"
         }
       ],
@@ -115472,7 +115472,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         },
         {
           "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
@@ -115492,11 +115492,11 @@
         },
         {
           "artifact": "backend/src/api/intelligence/multiparty/multiparty.routes.ts",
-          "sha256": "b59a814745c0276d83bef7ae48ff1b9cf21c7d6ae5c2185e14abe8f935a9d737"
+          "sha256": "4ca4cb37b9018abbdbf43f5298e0d412120f271ae7ed7c5a1cdb59fa3ef89e52"
         },
         {
           "artifact": "backend/src/api/intelligence/multiparty/multiparty.service.ts",
-          "sha256": "6486bac3515dec842312b7ffd8dd0bf68aeca4bc3cf2dd542d887551f3c537f5"
+          "sha256": "e29625dfbb506dcddea55519aa9431e6775198eee4fa9d1f0fb506b5968c6a2b"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -115505,7 +115505,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "API-a4ffe2ba32ff"
         }
       ],
@@ -115632,7 +115632,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         },
         {
           "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
@@ -115652,11 +115652,11 @@
         },
         {
           "artifact": "backend/src/api/intelligence/multiparty/multiparty.routes.ts",
-          "sha256": "b59a814745c0276d83bef7ae48ff1b9cf21c7d6ae5c2185e14abe8f935a9d737"
+          "sha256": "4ca4cb37b9018abbdbf43f5298e0d412120f271ae7ed7c5a1cdb59fa3ef89e52"
         },
         {
           "artifact": "backend/src/api/intelligence/multiparty/multiparty.service.ts",
-          "sha256": "6486bac3515dec842312b7ffd8dd0bf68aeca4bc3cf2dd542d887551f3c537f5"
+          "sha256": "e29625dfbb506dcddea55519aa9431e6775198eee4fa9d1f0fb506b5968c6a2b"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -115665,7 +115665,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "API-96b030600c5c"
         }
       ],
@@ -115792,7 +115792,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         },
         {
           "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
@@ -115812,11 +115812,11 @@
         },
         {
           "artifact": "backend/src/api/intelligence/multiparty/multiparty.routes.ts",
-          "sha256": "b59a814745c0276d83bef7ae48ff1b9cf21c7d6ae5c2185e14abe8f935a9d737"
+          "sha256": "4ca4cb37b9018abbdbf43f5298e0d412120f271ae7ed7c5a1cdb59fa3ef89e52"
         },
         {
           "artifact": "backend/src/api/intelligence/multiparty/multiparty.service.ts",
-          "sha256": "6486bac3515dec842312b7ffd8dd0bf68aeca4bc3cf2dd542d887551f3c537f5"
+          "sha256": "e29625dfbb506dcddea55519aa9431e6775198eee4fa9d1f0fb506b5968c6a2b"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -115825,7 +115825,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "API-749ab181fb16"
         }
       ],
@@ -115952,7 +115952,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         },
         {
           "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
@@ -115972,11 +115972,11 @@
         },
         {
           "artifact": "backend/src/api/intelligence/multiparty/multiparty.routes.ts",
-          "sha256": "b59a814745c0276d83bef7ae48ff1b9cf21c7d6ae5c2185e14abe8f935a9d737"
+          "sha256": "4ca4cb37b9018abbdbf43f5298e0d412120f271ae7ed7c5a1cdb59fa3ef89e52"
         },
         {
           "artifact": "backend/src/api/intelligence/multiparty/multiparty.service.ts",
-          "sha256": "6486bac3515dec842312b7ffd8dd0bf68aeca4bc3cf2dd542d887551f3c537f5"
+          "sha256": "e29625dfbb506dcddea55519aa9431e6775198eee4fa9d1f0fb506b5968c6a2b"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -115985,7 +115985,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "API-82870a3cc814"
         }
       ],
@@ -116112,7 +116112,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         },
         {
           "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
@@ -116132,11 +116132,11 @@
         },
         {
           "artifact": "backend/src/api/intelligence/multiparty/multiparty.routes.ts",
-          "sha256": "b59a814745c0276d83bef7ae48ff1b9cf21c7d6ae5c2185e14abe8f935a9d737"
+          "sha256": "4ca4cb37b9018abbdbf43f5298e0d412120f271ae7ed7c5a1cdb59fa3ef89e52"
         },
         {
           "artifact": "backend/src/api/intelligence/multiparty/multiparty.service.ts",
-          "sha256": "6486bac3515dec842312b7ffd8dd0bf68aeca4bc3cf2dd542d887551f3c537f5"
+          "sha256": "e29625dfbb506dcddea55519aa9431e6775198eee4fa9d1f0fb506b5968c6a2b"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -116145,7 +116145,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "API-a6a124d6c5a0"
         }
       ],
@@ -116272,7 +116272,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         },
         {
           "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
@@ -116295,11 +116295,11 @@
         },
         {
           "artifact": "backend/src/api/intelligence/multiparty/multiparty.routes.ts",
-          "sha256": "b59a814745c0276d83bef7ae48ff1b9cf21c7d6ae5c2185e14abe8f935a9d737"
+          "sha256": "4ca4cb37b9018abbdbf43f5298e0d412120f271ae7ed7c5a1cdb59fa3ef89e52"
         },
         {
           "artifact": "backend/src/api/intelligence/multiparty/multiparty.service.ts",
-          "sha256": "6486bac3515dec842312b7ffd8dd0bf68aeca4bc3cf2dd542d887551f3c537f5"
+          "sha256": "e29625dfbb506dcddea55519aa9431e6775198eee4fa9d1f0fb506b5968c6a2b"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -116308,7 +116308,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "API-4edb832dd83d"
         }
       ],
@@ -120237,7 +120237,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         }
       ],
       "blockers": [
@@ -120256,7 +120256,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/private-submission/private-submission.service.ts",
-          "sha256": "61d2ee638095c66be73f2a1324b18f826c729bf85209093a466d3f8543c0a119"
+          "sha256": "ba2ebe009ba654425ec46c19d0f41d4a8357c7fde42c852cb99c3f62a075d412"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -120265,7 +120265,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "API-0b1262738a26"
         }
       ],
@@ -120351,7 +120351,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         }
       ],
       "blockers": [
@@ -120370,7 +120370,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/private-submission/private-submission.service.ts",
-          "sha256": "61d2ee638095c66be73f2a1324b18f826c729bf85209093a466d3f8543c0a119"
+          "sha256": "ba2ebe009ba654425ec46c19d0f41d4a8357c7fde42c852cb99c3f62a075d412"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -120379,7 +120379,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "API-21b73dc215f0"
         }
       ],
@@ -120465,7 +120465,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         }
       ],
       "blockers": [
@@ -120484,7 +120484,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/private-submission/private-submission.service.ts",
-          "sha256": "61d2ee638095c66be73f2a1324b18f826c729bf85209093a466d3f8543c0a119"
+          "sha256": "ba2ebe009ba654425ec46c19d0f41d4a8357c7fde42c852cb99c3f62a075d412"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -120493,7 +120493,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "API-b890c5b18aa9"
         }
       ],
@@ -120579,7 +120579,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         }
       ],
       "blockers": [
@@ -120598,7 +120598,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/private-submission/private-submission.service.ts",
-          "sha256": "61d2ee638095c66be73f2a1324b18f826c729bf85209093a466d3f8543c0a119"
+          "sha256": "ba2ebe009ba654425ec46c19d0f41d4a8357c7fde42c852cb99c3f62a075d412"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -120607,7 +120607,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "API-501ebd9a571e"
         }
       ],
@@ -120693,7 +120693,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         }
       ],
       "blockers": [
@@ -120712,7 +120712,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/private-submission/private-submission.service.ts",
-          "sha256": "61d2ee638095c66be73f2a1324b18f826c729bf85209093a466d3f8543c0a119"
+          "sha256": "ba2ebe009ba654425ec46c19d0f41d4a8357c7fde42c852cb99c3f62a075d412"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -120721,7 +120721,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "API-fc5873a9e610"
         }
       ],
@@ -120807,7 +120807,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         }
       ],
       "blockers": [
@@ -120826,7 +120826,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/private-submission/private-submission.service.ts",
-          "sha256": "61d2ee638095c66be73f2a1324b18f826c729bf85209093a466d3f8543c0a119"
+          "sha256": "ba2ebe009ba654425ec46c19d0f41d4a8357c7fde42c852cb99c3f62a075d412"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -120835,7 +120835,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "API-55036967e3c6"
         }
       ],
@@ -120921,7 +120921,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         }
       ],
       "blockers": [
@@ -120940,7 +120940,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/private-submission/private-submission.service.ts",
-          "sha256": "61d2ee638095c66be73f2a1324b18f826c729bf85209093a466d3f8543c0a119"
+          "sha256": "ba2ebe009ba654425ec46c19d0f41d4a8357c7fde42c852cb99c3f62a075d412"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -120949,7 +120949,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "API-e0f0abac5d30"
         }
       ],
@@ -121035,7 +121035,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         }
       ],
       "blockers": [
@@ -121054,7 +121054,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/private-submission/private-submission.service.ts",
-          "sha256": "61d2ee638095c66be73f2a1324b18f826c729bf85209093a466d3f8543c0a119"
+          "sha256": "ba2ebe009ba654425ec46c19d0f41d4a8357c7fde42c852cb99c3f62a075d412"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -121063,7 +121063,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "API-701fd1e7a970"
         }
       ],
@@ -121149,7 +121149,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         }
       ],
       "blockers": [
@@ -121168,7 +121168,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/private-submission/private-submission.service.ts",
-          "sha256": "61d2ee638095c66be73f2a1324b18f826c729bf85209093a466d3f8543c0a119"
+          "sha256": "ba2ebe009ba654425ec46c19d0f41d4a8357c7fde42c852cb99c3f62a075d412"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -121177,7 +121177,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "API-ce2c51a268a0"
         }
       ],
@@ -121263,7 +121263,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         }
       ],
       "blockers": [
@@ -121282,7 +121282,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/private-submission/private-submission.service.ts",
-          "sha256": "61d2ee638095c66be73f2a1324b18f826c729bf85209093a466d3f8543c0a119"
+          "sha256": "ba2ebe009ba654425ec46c19d0f41d4a8357c7fde42c852cb99c3f62a075d412"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -121291,7 +121291,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "API-fdb340196a39"
         }
       ],
@@ -121377,7 +121377,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         }
       ],
       "blockers": [
@@ -121396,7 +121396,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/private-submission/private-submission.service.ts",
-          "sha256": "61d2ee638095c66be73f2a1324b18f826c729bf85209093a466d3f8543c0a119"
+          "sha256": "ba2ebe009ba654425ec46c19d0f41d4a8357c7fde42c852cb99c3f62a075d412"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -121405,7 +121405,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "API-f2fe08ad257d"
         }
       ],
@@ -121491,7 +121491,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         }
       ],
       "blockers": [
@@ -121510,7 +121510,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/private-submission/private-submission.service.ts",
-          "sha256": "61d2ee638095c66be73f2a1324b18f826c729bf85209093a466d3f8543c0a119"
+          "sha256": "ba2ebe009ba654425ec46c19d0f41d4a8357c7fde42c852cb99c3f62a075d412"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -121519,7 +121519,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "API-9de0ce16ccad"
         }
       ],
@@ -121605,7 +121605,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         },
         {
           "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
@@ -121625,11 +121625,11 @@
         },
         {
           "artifact": "backend/src/api/intelligence/opentimestamps/opentimestamps.routes.ts",
-          "sha256": "034d9eeb10ffb42a3353f8614bc675e4463035249d594bc8a1c77f875522b338"
+          "sha256": "98242768dec9f5e8550e8a9b908a5c3f53057c603c4420997595dfb6a0b6e6ba"
         },
         {
           "artifact": "backend/src/api/intelligence/opentimestamps/opentimestamps.service.ts",
-          "sha256": "3ee2df0018fe8b5ce286d7555f026395efcc090fc8c50af390ae52811dc90d08"
+          "sha256": "7c9c9402b91a94d2e379d77775ad0ed0a70353a3d292aa7a4a6547b652612ee5"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -121638,7 +121638,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "API-5b1b5761c70c"
         }
       ],
@@ -121765,7 +121765,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         },
         {
           "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
@@ -121785,11 +121785,11 @@
         },
         {
           "artifact": "backend/src/api/intelligence/opentimestamps/opentimestamps.routes.ts",
-          "sha256": "034d9eeb10ffb42a3353f8614bc675e4463035249d594bc8a1c77f875522b338"
+          "sha256": "98242768dec9f5e8550e8a9b908a5c3f53057c603c4420997595dfb6a0b6e6ba"
         },
         {
           "artifact": "backend/src/api/intelligence/opentimestamps/opentimestamps.service.ts",
-          "sha256": "3ee2df0018fe8b5ce286d7555f026395efcc090fc8c50af390ae52811dc90d08"
+          "sha256": "7c9c9402b91a94d2e379d77775ad0ed0a70353a3d292aa7a4a6547b652612ee5"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -121798,7 +121798,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "API-6edf27971284"
         }
       ],
@@ -121925,7 +121925,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         },
         {
           "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
@@ -121945,11 +121945,11 @@
         },
         {
           "artifact": "backend/src/api/intelligence/opentimestamps/opentimestamps.routes.ts",
-          "sha256": "034d9eeb10ffb42a3353f8614bc675e4463035249d594bc8a1c77f875522b338"
+          "sha256": "98242768dec9f5e8550e8a9b908a5c3f53057c603c4420997595dfb6a0b6e6ba"
         },
         {
           "artifact": "backend/src/api/intelligence/opentimestamps/opentimestamps.service.ts",
-          "sha256": "3ee2df0018fe8b5ce286d7555f026395efcc090fc8c50af390ae52811dc90d08"
+          "sha256": "7c9c9402b91a94d2e379d77775ad0ed0a70353a3d292aa7a4a6547b652612ee5"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -121958,7 +121958,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "API-442bda5b85ec"
         }
       ],
@@ -122085,7 +122085,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         },
         {
           "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
@@ -122105,11 +122105,11 @@
         },
         {
           "artifact": "backend/src/api/intelligence/opentimestamps/opentimestamps.routes.ts",
-          "sha256": "034d9eeb10ffb42a3353f8614bc675e4463035249d594bc8a1c77f875522b338"
+          "sha256": "98242768dec9f5e8550e8a9b908a5c3f53057c603c4420997595dfb6a0b6e6ba"
         },
         {
           "artifact": "backend/src/api/intelligence/opentimestamps/opentimestamps.service.ts",
-          "sha256": "3ee2df0018fe8b5ce286d7555f026395efcc090fc8c50af390ae52811dc90d08"
+          "sha256": "7c9c9402b91a94d2e379d77775ad0ed0a70353a3d292aa7a4a6547b652612ee5"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -122118,7 +122118,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "API-ab717d793eae"
         }
       ],
@@ -122245,7 +122245,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         },
         {
           "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
@@ -122265,11 +122265,11 @@
         },
         {
           "artifact": "backend/src/api/intelligence/opentimestamps/opentimestamps.routes.ts",
-          "sha256": "034d9eeb10ffb42a3353f8614bc675e4463035249d594bc8a1c77f875522b338"
+          "sha256": "98242768dec9f5e8550e8a9b908a5c3f53057c603c4420997595dfb6a0b6e6ba"
         },
         {
           "artifact": "backend/src/api/intelligence/opentimestamps/opentimestamps.service.ts",
-          "sha256": "3ee2df0018fe8b5ce286d7555f026395efcc090fc8c50af390ae52811dc90d08"
+          "sha256": "7c9c9402b91a94d2e379d77775ad0ed0a70353a3d292aa7a4a6547b652612ee5"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -122278,7 +122278,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "API-aecc63eb2417"
         }
       ],
@@ -122405,7 +122405,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         },
         {
           "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
@@ -122425,11 +122425,11 @@
         },
         {
           "artifact": "backend/src/api/intelligence/opentimestamps/opentimestamps.routes.ts",
-          "sha256": "034d9eeb10ffb42a3353f8614bc675e4463035249d594bc8a1c77f875522b338"
+          "sha256": "98242768dec9f5e8550e8a9b908a5c3f53057c603c4420997595dfb6a0b6e6ba"
         },
         {
           "artifact": "backend/src/api/intelligence/opentimestamps/opentimestamps.service.ts",
-          "sha256": "3ee2df0018fe8b5ce286d7555f026395efcc090fc8c50af390ae52811dc90d08"
+          "sha256": "7c9c9402b91a94d2e379d77775ad0ed0a70353a3d292aa7a4a6547b652612ee5"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -122438,7 +122438,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "API-8ae92367a70c"
         }
       ],
@@ -122565,7 +122565,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         },
         {
           "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
@@ -122588,11 +122588,11 @@
         },
         {
           "artifact": "backend/src/api/intelligence/opentimestamps/opentimestamps.routes.ts",
-          "sha256": "034d9eeb10ffb42a3353f8614bc675e4463035249d594bc8a1c77f875522b338"
+          "sha256": "98242768dec9f5e8550e8a9b908a5c3f53057c603c4420997595dfb6a0b6e6ba"
         },
         {
           "artifact": "backend/src/api/intelligence/opentimestamps/opentimestamps.service.ts",
-          "sha256": "3ee2df0018fe8b5ce286d7555f026395efcc090fc8c50af390ae52811dc90d08"
+          "sha256": "7c9c9402b91a94d2e379d77775ad0ed0a70353a3d292aa7a4a6547b652612ee5"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -122601,7 +122601,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "API-8f2d0a9754f2"
         }
       ],
@@ -122758,7 +122758,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         },
         {
           "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
@@ -122778,11 +122778,11 @@
         },
         {
           "artifact": "backend/src/api/intelligence/opentimestamps/opentimestamps.routes.ts",
-          "sha256": "034d9eeb10ffb42a3353f8614bc675e4463035249d594bc8a1c77f875522b338"
+          "sha256": "98242768dec9f5e8550e8a9b908a5c3f53057c603c4420997595dfb6a0b6e6ba"
         },
         {
           "artifact": "backend/src/api/intelligence/opentimestamps/opentimestamps.service.ts",
-          "sha256": "3ee2df0018fe8b5ce286d7555f026395efcc090fc8c50af390ae52811dc90d08"
+          "sha256": "7c9c9402b91a94d2e379d77775ad0ed0a70353a3d292aa7a4a6547b652612ee5"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -122791,7 +122791,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "API-1e4fb78fbdf0"
         }
       ],
@@ -124538,7 +124538,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         }
       ],
       "blockers": [
@@ -124548,11 +124548,11 @@
       "sources": [
         {
           "artifact": "backend/src/api/intelligence/bootstrap/bootstrap.routes.ts",
-          "sha256": "2dc02152ee575d347a25e92f631a2e43b9e00ff3d80c93faad5530882ec9f937"
+          "sha256": "84304c26bc3879adada70fbcec35c2131a32bd98823cf70d6721234a0afdfca3"
         },
         {
           "artifact": "backend/src/api/intelligence/bootstrap/bootstrap.service.ts",
-          "sha256": "c7941a83f01566f2433d5a843833c1f39ac88797d89954cb2de2a5847d9f2b64"
+          "sha256": "cbc39c11191b8b947072cc88f49fe0af67d9dbdef80e78e1914a8aa3356a68b2"
         },
         {
           "artifact": "backend/src/index.ts",
@@ -124561,7 +124561,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "API-CURRENT-98c58e35b676"
         }
       ],
@@ -124614,11 +124614,11 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4027753165cff05bd9a9221ad0a2d3231f9d26489f953a3d5da5693983513519"
+          "sha256": "44dd358d40cc64adc4b6a2c1cb558ae7d113b725d5a5f6a31f74ba93fe9b3eb0"
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "H-01"
         }
       ],
@@ -124691,7 +124691,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4027753165cff05bd9a9221ad0a2d3231f9d26489f953a3d5da5693983513519"
+          "sha256": "44dd358d40cc64adc4b6a2c1cb558ae7d113b725d5a5f6a31f74ba93fe9b3eb0"
         }
       ],
       "chain": "all",
@@ -124748,7 +124748,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4027753165cff05bd9a9221ad0a2d3231f9d26489f953a3d5da5693983513519"
+          "sha256": "44dd358d40cc64adc4b6a2c1cb558ae7d113b725d5a5f6a31f74ba93fe9b3eb0"
         }
       ],
       "chain": "all",
@@ -124804,7 +124804,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4027753165cff05bd9a9221ad0a2d3231f9d26489f953a3d5da5693983513519"
+          "sha256": "44dd358d40cc64adc4b6a2c1cb558ae7d113b725d5a5f6a31f74ba93fe9b3eb0"
         }
       ],
       "chain": "all",
@@ -124862,7 +124862,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4027753165cff05bd9a9221ad0a2d3231f9d26489f953a3d5da5693983513519"
+          "sha256": "44dd358d40cc64adc4b6a2c1cb558ae7d113b725d5a5f6a31f74ba93fe9b3eb0"
         }
       ],
       "chain": "bitcoin",
@@ -124919,7 +124919,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4027753165cff05bd9a9221ad0a2d3231f9d26489f953a3d5da5693983513519"
+          "sha256": "44dd358d40cc64adc4b6a2c1cb558ae7d113b725d5a5f6a31f74ba93fe9b3eb0"
         }
       ],
       "chain": "dogecoin",
@@ -124976,7 +124976,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4027753165cff05bd9a9221ad0a2d3231f9d26489f953a3d5da5693983513519"
+          "sha256": "44dd358d40cc64adc4b6a2c1cb558ae7d113b725d5a5f6a31f74ba93fe9b3eb0"
         }
       ],
       "chain": "zcash",
@@ -125033,7 +125033,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4027753165cff05bd9a9221ad0a2d3231f9d26489f953a3d5da5693983513519"
+          "sha256": "44dd358d40cc64adc4b6a2c1cb558ae7d113b725d5a5f6a31f74ba93fe9b3eb0"
         }
       ],
       "chain": "all",
@@ -125098,11 +125098,11 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4027753165cff05bd9a9221ad0a2d3231f9d26489f953a3d5da5693983513519"
+          "sha256": "44dd358d40cc64adc4b6a2c1cb558ae7d113b725d5a5f6a31f74ba93fe9b3eb0"
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "H-09"
         }
       ],
@@ -125196,11 +125196,11 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4027753165cff05bd9a9221ad0a2d3231f9d26489f953a3d5da5693983513519"
+          "sha256": "44dd358d40cc64adc4b6a2c1cb558ae7d113b725d5a5f6a31f74ba93fe9b3eb0"
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "R-01"
         }
       ],
@@ -125281,11 +125281,11 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4027753165cff05bd9a9221ad0a2d3231f9d26489f953a3d5da5693983513519"
+          "sha256": "44dd358d40cc64adc4b6a2c1cb558ae7d113b725d5a5f6a31f74ba93fe9b3eb0"
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "R-02"
         }
       ],
@@ -125368,7 +125368,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4027753165cff05bd9a9221ad0a2d3231f9d26489f953a3d5da5693983513519"
+          "sha256": "44dd358d40cc64adc4b6a2c1cb558ae7d113b725d5a5f6a31f74ba93fe9b3eb0"
         },
         {
           "artifact": "frontend/src/app/universe/multichain-explorer/multichain-explorer.module.ts",
@@ -125376,7 +125376,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "R-03"
         }
       ],
@@ -125457,7 +125457,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4027753165cff05bd9a9221ad0a2d3231f9d26489f953a3d5da5693983513519"
+          "sha256": "44dd358d40cc64adc4b6a2c1cb558ae7d113b725d5a5f6a31f74ba93fe9b3eb0"
         },
         {
           "artifact": "frontend/src/app/universe/multichain-explorer/multichain-explorer.module.ts",
@@ -125465,7 +125465,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "R-04-TX"
         }
       ],
@@ -125545,7 +125545,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4027753165cff05bd9a9221ad0a2d3231f9d26489f953a3d5da5693983513519"
+          "sha256": "44dd358d40cc64adc4b6a2c1cb558ae7d113b725d5a5f6a31f74ba93fe9b3eb0"
         },
         {
           "artifact": "frontend/src/app/universe/multichain-explorer/multichain-explorer.module.ts",
@@ -125553,7 +125553,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "R-04-ADDRESS"
         }
       ],
@@ -125635,7 +125635,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4027753165cff05bd9a9221ad0a2d3231f9d26489f953a3d5da5693983513519"
+          "sha256": "44dd358d40cc64adc4b6a2c1cb558ae7d113b725d5a5f6a31f74ba93fe9b3eb0"
         },
         {
           "artifact": "frontend/src/app/universe/multichain-explorer/multichain-explorer.module.ts",
@@ -125643,7 +125643,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "R-04-UNSPENT"
         }
       ],
@@ -125723,7 +125723,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4027753165cff05bd9a9221ad0a2d3231f9d26489f953a3d5da5693983513519"
+          "sha256": "44dd358d40cc64adc4b6a2c1cb558ae7d113b725d5a5f6a31f74ba93fe9b3eb0"
         },
         {
           "artifact": "frontend/src/app/universe/multichain-explorer/multichain-explorer.module.ts",
@@ -125731,7 +125731,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "R-04-SPENT"
         }
       ],
@@ -125809,11 +125809,11 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4027753165cff05bd9a9221ad0a2d3231f9d26489f953a3d5da5693983513519"
+          "sha256": "44dd358d40cc64adc4b6a2c1cb558ae7d113b725d5a5f6a31f74ba93fe9b3eb0"
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "R-05"
         }
       ],
@@ -125895,7 +125895,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4027753165cff05bd9a9221ad0a2d3231f9d26489f953a3d5da5693983513519"
+          "sha256": "44dd358d40cc64adc4b6a2c1cb558ae7d113b725d5a5f6a31f74ba93fe9b3eb0"
         },
         {
           "artifact": "frontend/src/app/universe/multichain-explorer/multichain-explorer.module.ts",
@@ -125903,7 +125903,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "R-06-BLOCK"
         }
       ],
@@ -125985,7 +125985,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4027753165cff05bd9a9221ad0a2d3231f9d26489f953a3d5da5693983513519"
+          "sha256": "44dd358d40cc64adc4b6a2c1cb558ae7d113b725d5a5f6a31f74ba93fe9b3eb0"
         },
         {
           "artifact": "frontend/src/app/universe/multichain-explorer/multichain-explorer.module.ts",
@@ -125993,7 +125993,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "R-06-TX"
         }
       ],
@@ -126073,7 +126073,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4027753165cff05bd9a9221ad0a2d3231f9d26489f953a3d5da5693983513519"
+          "sha256": "44dd358d40cc64adc4b6a2c1cb558ae7d113b725d5a5f6a31f74ba93fe9b3eb0"
         },
         {
           "artifact": "frontend/src/app/universe/multichain-explorer/multichain-explorer.module.ts",
@@ -126081,7 +126081,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "R-06-ADDRESS"
         }
       ],
@@ -126163,7 +126163,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4027753165cff05bd9a9221ad0a2d3231f9d26489f953a3d5da5693983513519"
+          "sha256": "44dd358d40cc64adc4b6a2c1cb558ae7d113b725d5a5f6a31f74ba93fe9b3eb0"
         },
         {
           "artifact": "frontend/src/app/universe/multichain-explorer/multichain-explorer.module.ts",
@@ -126171,7 +126171,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "R-06-OUTPOINT"
         }
       ],
@@ -126726,7 +126726,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "R-07"
         }
       ],
@@ -126797,7 +126797,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "R-08"
         }
       ],
@@ -126860,7 +126860,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4027753165cff05bd9a9221ad0a2d3231f9d26489f953a3d5da5693983513519"
+          "sha256": "44dd358d40cc64adc4b6a2c1cb558ae7d113b725d5a5f6a31f74ba93fe9b3eb0"
         }
       ],
       "chain": "btc",
@@ -126914,7 +126914,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4027753165cff05bd9a9221ad0a2d3231f9d26489f953a3d5da5693983513519"
+          "sha256": "44dd358d40cc64adc4b6a2c1cb558ae7d113b725d5a5f6a31f74ba93fe9b3eb0"
         }
       ],
       "chain": "doge",
@@ -126968,7 +126968,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4027753165cff05bd9a9221ad0a2d3231f9d26489f953a3d5da5693983513519"
+          "sha256": "44dd358d40cc64adc4b6a2c1cb558ae7d113b725d5a5f6a31f74ba93fe9b3eb0"
         }
       ],
       "chain": "zec",
@@ -127022,7 +127022,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4027753165cff05bd9a9221ad0a2d3231f9d26489f953a3d5da5693983513519"
+          "sha256": "44dd358d40cc64adc4b6a2c1cb558ae7d113b725d5a5f6a31f74ba93fe9b3eb0"
         }
       ],
       "chain": "zec",
@@ -127076,7 +127076,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4027753165cff05bd9a9221ad0a2d3231f9d26489f953a3d5da5693983513519"
+          "sha256": "44dd358d40cc64adc4b6a2c1cb558ae7d113b725d5a5f6a31f74ba93fe9b3eb0"
         }
       ],
       "chain": "zec",
@@ -127130,7 +127130,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4027753165cff05bd9a9221ad0a2d3231f9d26489f953a3d5da5693983513519"
+          "sha256": "44dd358d40cc64adc4b6a2c1cb558ae7d113b725d5a5f6a31f74ba93fe9b3eb0"
         }
       ],
       "chain": "all",
@@ -127184,7 +127184,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4027753165cff05bd9a9221ad0a2d3231f9d26489f953a3d5da5693983513519"
+          "sha256": "44dd358d40cc64adc4b6a2c1cb558ae7d113b725d5a5f6a31f74ba93fe9b3eb0"
         }
       ],
       "chain": "all",
@@ -127238,7 +127238,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4027753165cff05bd9a9221ad0a2d3231f9d26489f953a3d5da5693983513519"
+          "sha256": "44dd358d40cc64adc4b6a2c1cb558ae7d113b725d5a5f6a31f74ba93fe9b3eb0"
         }
       ],
       "chain": "btc",
@@ -127292,7 +127292,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4027753165cff05bd9a9221ad0a2d3231f9d26489f953a3d5da5693983513519"
+          "sha256": "44dd358d40cc64adc4b6a2c1cb558ae7d113b725d5a5f6a31f74ba93fe9b3eb0"
         }
       ],
       "chain": "doge",
@@ -127354,11 +127354,11 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4027753165cff05bd9a9221ad0a2d3231f9d26489f953a3d5da5693983513519"
+          "sha256": "44dd358d40cc64adc4b6a2c1cb558ae7d113b725d5a5f6a31f74ba93fe9b3eb0"
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "T-10"
         }
       ],
@@ -127435,11 +127435,11 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4027753165cff05bd9a9221ad0a2d3231f9d26489f953a3d5da5693983513519"
+          "sha256": "44dd358d40cc64adc4b6a2c1cb558ae7d113b725d5a5f6a31f74ba93fe9b3eb0"
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "T-11"
         }
       ],
@@ -127508,7 +127508,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4027753165cff05bd9a9221ad0a2d3231f9d26489f953a3d5da5693983513519"
+          "sha256": "44dd358d40cc64adc4b6a2c1cb558ae7d113b725d5a5f6a31f74ba93fe9b3eb0"
         }
       ],
       "chain": "all",
@@ -127562,7 +127562,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4027753165cff05bd9a9221ad0a2d3231f9d26489f953a3d5da5693983513519"
+          "sha256": "44dd358d40cc64adc4b6a2c1cb558ae7d113b725d5a5f6a31f74ba93fe9b3eb0"
         }
       ],
       "chain": "all",
@@ -127624,11 +127624,11 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4027753165cff05bd9a9221ad0a2d3231f9d26489f953a3d5da5693983513519"
+          "sha256": "44dd358d40cc64adc4b6a2c1cb558ae7d113b725d5a5f6a31f74ba93fe9b3eb0"
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "T-14"
         }
       ],
@@ -128249,7 +128249,7 @@
         {
           "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
           "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass.",
-          "sha256": "bd2faa54ef12c179efde605b38a07b0e5e15f8014adecd768ec317bbef03cab7"
+          "sha256": "5a54237693de0b9e463d2dca6dec1cd3a652d715d7f2a046b67e2fe57c7e94d4"
         },
         {
           "artifact": "docs/acceptance/engine-runtime-2026-09-06/review.json",
@@ -128272,7 +128272,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "T-17"
         }
       ],
@@ -131322,7 +131322,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-01/registry"
         }
       ],
@@ -131422,7 +131422,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-01/outpoint"
         }
       ],
@@ -131522,7 +131522,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-01/outpoints-batch"
         }
       ],
@@ -131622,7 +131622,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-01/transaction-flow"
         }
       ],
@@ -131722,7 +131722,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-01/transactions-batch"
         }
       ],
@@ -131818,7 +131818,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-01/address-holdings"
         }
       ],
@@ -131918,7 +131918,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-01/inscription"
         }
       ],
@@ -132014,7 +132014,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-01/block-inscriptions"
         }
       ],
@@ -132111,7 +132111,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-02/registry"
         }
       ],
@@ -132211,7 +132211,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-02/outpoint"
         }
       ],
@@ -132311,7 +132311,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-02/outpoints-batch"
         }
       ],
@@ -132411,7 +132411,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-02/transaction-flow"
         }
       ],
@@ -132511,7 +132511,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-02/transactions-batch"
         }
       ],
@@ -132607,7 +132607,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-02/address-holdings"
         }
       ],
@@ -132707,7 +132707,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-02/sat"
         }
       ],
@@ -132804,7 +132804,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-03/registry"
         }
       ],
@@ -132900,7 +132900,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-03/objects"
         }
       ],
@@ -132997,7 +132997,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-04/registry"
         }
       ],
@@ -133093,7 +133093,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-04/objects"
         }
       ],
@@ -133190,7 +133190,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-05/registry"
         }
       ],
@@ -133286,7 +133286,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-05/objects"
         }
       ],
@@ -133383,7 +133383,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-06/registry"
         }
       ],
@@ -133483,7 +133483,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-06/outpoint"
         }
       ],
@@ -133583,7 +133583,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-06/outpoints-batch"
         }
       ],
@@ -133683,7 +133683,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-06/transaction-flow"
         }
       ],
@@ -133783,7 +133783,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-06/transactions-batch"
         }
       ],
@@ -133879,7 +133879,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-06/address-holdings"
         }
       ],
@@ -133979,7 +133979,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-06/rune"
         }
       ],
@@ -134076,7 +134076,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-07/registry"
         }
       ],
@@ -134172,7 +134172,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-07/activity"
         }
       ],
@@ -134269,7 +134269,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-08/registry"
         }
       ],
@@ -134365,7 +134365,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-08/activity"
         }
       ],
@@ -134462,7 +134462,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-09/registry"
         }
       ],
@@ -134558,7 +134558,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-09/activity"
         }
       ],
@@ -134655,7 +134655,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-10/registry"
         }
       ],
@@ -134751,7 +134751,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-10/activity"
         }
       ],
@@ -134848,7 +134848,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-11/registry"
         }
       ],
@@ -134944,7 +134944,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-11/activity"
         }
       ],
@@ -135041,7 +135041,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-12/registry"
         }
       ],
@@ -135137,7 +135137,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-12/activity"
         }
       ],
@@ -135237,7 +135237,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-12/outpoint"
         }
       ],
@@ -135337,7 +135337,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-12/outpoints-batch"
         }
       ],
@@ -135437,7 +135437,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-12/transaction-flow"
         }
       ],
@@ -135537,7 +135537,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-12/transactions-batch"
         }
       ],
@@ -135633,7 +135633,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-12/address-holdings"
         }
       ],
@@ -135730,7 +135730,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-13/registry"
         }
       ],
@@ -135826,7 +135826,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-13/activity"
         }
       ],
@@ -135926,7 +135926,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-13/outpoint"
         }
       ],
@@ -136026,7 +136026,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-13/outpoints-batch"
         }
       ],
@@ -136126,7 +136126,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-13/transaction-flow"
         }
       ],
@@ -136226,7 +136226,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-13/transactions-batch"
         }
       ],
@@ -136322,7 +136322,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-13/address-holdings"
         }
       ],
@@ -136419,7 +136419,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-14/registry"
         }
       ],
@@ -136519,7 +136519,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-14/outpoint"
         }
       ],
@@ -136619,7 +136619,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-14/outpoints-batch"
         }
       ],
@@ -136719,7 +136719,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-14/transaction-flow"
         }
       ],
@@ -136819,7 +136819,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-14/transactions-batch"
         }
       ],
@@ -136915,7 +136915,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-14/address-holdings"
         }
       ],
@@ -137012,7 +137012,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-15/registry"
         }
       ],
@@ -137108,7 +137108,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-15/activity"
         }
       ],
@@ -137205,7 +137205,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-16/registry"
         }
       ],
@@ -137301,7 +137301,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-16/activity"
         }
       ],
@@ -137398,7 +137398,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-17/registry"
         }
       ],
@@ -137494,7 +137494,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-17/activity"
         }
       ],
@@ -137591,7 +137591,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-18/registry"
         }
       ],
@@ -137687,7 +137687,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-18/objects"
         }
       ],
@@ -137784,7 +137784,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-19/registry"
         }
       ],
@@ -137880,7 +137880,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-19/activity"
         }
       ],
@@ -137977,7 +137977,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-20/registry"
         }
       ],
@@ -138073,7 +138073,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-20/activity"
         }
       ],
@@ -138170,7 +138170,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-21/registry"
         }
       ],
@@ -138266,7 +138266,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-21/activity"
         }
       ],
@@ -138363,7 +138363,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-22/registry"
         }
       ],
@@ -138459,7 +138459,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-22/activity"
         }
       ],
@@ -138556,7 +138556,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-23/registry"
         }
       ],
@@ -138652,7 +138652,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-23/activity"
         }
       ],
@@ -138749,7 +138749,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-24/registry"
         }
       ],
@@ -138845,7 +138845,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-24/activity"
         }
       ],
@@ -138942,7 +138942,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-25/registry"
         }
       ],
@@ -139038,7 +139038,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-25/activity"
         }
       ],
@@ -139135,7 +139135,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-26/registry"
         }
       ],
@@ -139231,7 +139231,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-26/objects"
         }
       ],
@@ -139328,7 +139328,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-27/registry"
         }
       ],
@@ -139424,7 +139424,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-27/objects"
         }
       ],
@@ -139521,7 +139521,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-28/registry"
         }
       ],
@@ -139617,7 +139617,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-28/objects"
         }
       ],
@@ -139714,7 +139714,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-29/registry"
         }
       ],
@@ -139810,7 +139810,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-29/objects"
         }
       ],
@@ -139907,7 +139907,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-30/registry"
         }
       ],
@@ -140004,7 +140004,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-30/activity"
         }
       ],
@@ -140102,7 +140102,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-31/registry"
         }
       ],
@@ -140199,7 +140199,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-32/registry"
         }
       ],
@@ -140295,7 +140295,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-32/status"
         }
       ],
@@ -140391,7 +140391,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-32/transitions"
         }
       ],
@@ -140487,7 +140487,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-32/transition"
         }
       ],
@@ -140583,7 +140583,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-32/items"
         }
       ],
@@ -140679,7 +140679,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-32/item"
         }
       ],
@@ -140775,7 +140775,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-32/item-history"
         }
       ],
@@ -140872,7 +140872,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-33/registry"
         }
       ],
@@ -140968,7 +140968,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-33/chain-list"
         }
       ],
@@ -141064,7 +141064,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-33/chain-detail"
         }
       ],
@@ -141161,7 +141161,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-34/registry"
         }
       ],
@@ -141257,7 +141257,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-34/chain-list"
         }
       ],
@@ -141353,7 +141353,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-34/chain-detail"
         }
       ],
@@ -141449,7 +141449,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-34/holders"
         }
       ],
@@ -141546,7 +141546,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-35/registry"
         }
       ],
@@ -141642,7 +141642,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-35/activity"
         }
       ],
@@ -141739,7 +141739,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-36/registry"
         }
       ],
@@ -141835,7 +141835,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-36/chain-list"
         }
       ],
@@ -141931,7 +141931,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-36/chain-detail"
         }
       ],
@@ -142028,7 +142028,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-37/registry"
         }
       ],
@@ -142124,7 +142124,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-37/chain-list"
         }
       ],
@@ -142220,7 +142220,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-37/chain-detail"
         }
       ],
@@ -142317,7 +142317,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-38/registry"
         }
       ],
@@ -142413,7 +142413,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-38/chain-list"
         }
       ],
@@ -142509,7 +142509,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-38/chain-detail"
         }
       ],
@@ -142606,7 +142606,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-39/registry"
         }
       ],
@@ -142702,7 +142702,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-39/chain-list"
         }
       ],
@@ -142798,7 +142798,7 @@
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
-          "sha256": "5c25b0eee41d2619820d01d8fa482c75f33564b0d1d0a320eeb454d5e80c9040",
+          "sha256": "0ab4fecce233b83113b17cbe66aac92cfbedeabe03e9a51c74216148b084657c",
           "rowId": "PRO-39/chain-detail"
         }
       ],
