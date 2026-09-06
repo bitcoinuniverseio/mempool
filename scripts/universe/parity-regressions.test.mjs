@@ -22,7 +22,10 @@ function read(path) {
 
 test('Mining and Charts navigation are not gated to Bitcoin', () => {
   const nav = read('frontend/src/app/components/master-page/master-page.component.html');
-  const miningItem = nav.match(/<li class="nav-item mining"[\s\S]*?<\/li>/)?.[0] ?? '';
+  // Matched on its id, the way the charts case below is. An earlier revision
+  // matched the exact class string, so adding mobile-primary to the element
+  // read as the item being absent rather than as the item being ungated.
+  const miningItem = nav.match(/<li [^>]*id="btn-pools"[\s\S]*?<\/li>/)?.[0] ?? '';
   assert.ok(miningItem.length, 'the mining navigation item exists');
   assert.ok(
     !/\*ngIf="activeChain === 'bitcoin'/.test(miningItem),
