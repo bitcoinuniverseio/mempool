@@ -447,6 +447,26 @@ function pick(list, key, idKey = 'id') {
   return list.filter((entry) => wanted.includes(typeof entry === 'string' ? entry : entry[idKey]));
 }
 
+/**
+ * Takes one slice of the route list, as --shard=i/n with i counted from one.
+ *
+ * The broad pass grew from thirty-two routes to two hundred and twenty-seven
+ * when the frontier products shipped, and a step budgeted for the first count
+ * does not finish the second inside its job. Slicing by position keeps each
+ * shard stable as routes are added: a route only ever moves shard when the
+ * list around it changes, and every route is in exactly one shard.
+ */
+function shard(list) {
+  if (!args.shard) return list;
+  const [indexText, countText] = String(args.shard).split('/');
+  const index = Number(indexText);
+  const count = Number(countText);
+  if (!Number.isInteger(index) || !Number.isInteger(count) || count < 1 || index < 1 || index > count) {
+    throw new Error(`--shard wants i/n with 1 <= i <= n, got ${args.shard}`);
+  }
+  return list.filter((_, position) => position % count === index - 1);
+}
+
 export async function installFixtures(context, state, routeId = 'unknown', scenarioId = 'default') {
   const router = new FixtureRouter({ routeId, scenarioId, state });
   context._fixtureRouter = router;
@@ -625,7 +645,7 @@ function bundleIdentity(html) {
 
 async function run() {
   let bundleAtStart = '';
-  const routes = pick(ROUTES, 'routes');
+  const routes = shard(pick(ROUTES, 'routes'));
   const viewports = pick(VIEWPORTS, 'viewports');
   const themes = pick(THEMES.map((id) => ({ id })), 'themes').map((t) => t.id);
   const states = pick(STATES.map((id) => ({ id })), 'states').map((s) => s.id);

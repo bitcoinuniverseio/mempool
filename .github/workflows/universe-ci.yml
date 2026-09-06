@@ -363,11 +363,35 @@ jobs:
       # that used to sit here said to split it again rather than raise the cap,
       # because a gate that cannot finish protects nothing. That is what the
       # shards are.
+
+      # Run in three parallel shards against the one gateway.
+      #
+      # This pass was budgeted when it covered thirty-two routes and measured
+      # 5m50s. The frontier products took it to two hundred and forty-four,
+      # and at that size one serial pass does not finish inside this job: run
+      # 34018259022 was still in this step at the 45 minute cap with nothing
+      # written out. Same reasoning as the shards on the deep pass below, and
+      # the same fix, except that these three share a runner and a gateway
+      # rather than three runners, because the cost here is per page rather
+      # than per state.
       - name: Every route renders and finishes, at a phone and a desktop width
         working-directory: scripts/universe/visual-qa
-        run: >-
-          node capture.mjs --base=http://127.0.0.1:$GATEWAY_PORT --out=./artifacts-broad
-          --states=populated --themes=default --viewports=375,1440
+        run: |
+          pids=""
+          for shard in 1 2 3; do
+            node capture.mjs --base=http://127.0.0.1:$GATEWAY_PORT \
+              --out=./artifacts-broad-$shard --shard=$shard/3 \
+              --states=populated --themes=default --viewports=375,1440 \
+              > ./broad-$shard.log 2>&1 &
+            pids="$pids $!"
+          done
+          status=0
+          for pid in $pids; do wait "$pid" || status=1; done
+          for shard in 1 2 3; do
+            echo "----- shard $shard -----"
+            cat ./broad-$shard.log
+          done
+          exit $status
 
       - name: Forced colours and 200 percent zoom
         working-directory: scripts/universe/visual-qa
@@ -396,7 +420,10 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: universe-visual-qa-broad
-          path: scripts/universe/visual-qa/artifacts-broad
+          path: |
+            scripts/universe/visual-qa/artifacts-broad-1
+            scripts/universe/visual-qa/artifacts-broad-2
+            scripts/universe/visual-qa/artifacts-broad-3
           if-no-files-found: ignore
           retention-days: 3
 
@@ -658,9 +685,26 @@ jobs:
       # It used to walk a chosen fifteen routes. Running the same checks over
       # the rest found thirty-six failures on the first pass, none of them in
       # the shell, so the list was measuring what somebody had thought to list.
+      # Three parallel shards over the shared route list, which grew from
+      # thirty-two entries to two hundred and forty-four when the frontier
+      # products shipped. One serial pass over that no longer fits the job.
       - name: Every window a phone can be, measured with a thumb
         working-directory: scripts/universe/visual-qa
-        run: node mobile-check.mjs --base=http://127.0.0.1:$GATEWAY_PORT --out=./artifacts-mobile
+        run: |
+          pids=""
+          for shard in $(seq 1 3); do
+            node mobile-check.mjs --base=http://127.0.0.1:$GATEWAY_PORT \
+              --out=./artifacts-mobile-$shard --shard=$shard/3 \
+              > ./artifacts-mobile-$shard.log 2>&1 &
+            pids="$pids $!"
+          done
+          status=0
+          for pid in $pids; do wait "$pid" || status=1; done
+          for shard in $(seq 1 3); do
+            echo "----- shard $shard -----"
+            cat ./artifacts-mobile-$shard.log
+          done
+          exit $status
 
       # What the shell costs a phone, and what it makes the page do while it
       # arrives. The gated numbers are the compressed payload, which is a
@@ -690,7 +734,9 @@ jobs:
           if-no-files-found: ignore
           name: universe-mobile-qa
           path: |
-            scripts/universe/visual-qa/artifacts-mobile
+            scripts/universe/visual-qa/artifacts-mobile-1
+            scripts/universe/visual-qa/artifacts-mobile-2
+            scripts/universe/visual-qa/artifacts-mobile-3
             scripts/universe/visual-qa/artifacts-perf
           retention-days: 3
 
@@ -722,8 +768,9 @@ jobs:
       # seven minutes in, on a page open. A container gets 64 MB of /dev/shm by
       # default, which is where the engine puts its shared buffers, and it does
       # not degrade when that runs out: the process is gone and every later page
-      # reports the context as closed.
-      options: --shm-size=2gb --ipc=host
+      # reports the context as closed. Four gigabytes because the route pass
+      # below runs three engines at once.
+      options: --shm-size=4gb --ipc=host
     timeout-minutes: 45
     defaults:
       run:
@@ -779,9 +826,21 @@ jobs:
       # is the one place worth paying for the whole matrix twice.
       - name: Every window a phone can be, on WebKit
         working-directory: scripts/universe/visual-qa
-        run: >-
-          node mobile-check.mjs --base=http://127.0.0.1:$GATEWAY_PORT
-          --browser=webkit --out=./artifacts-mobile-webkit
+        run: |
+          pids=""
+          for shard in $(seq 1 3); do
+            node mobile-check.mjs --base=http://127.0.0.1:$GATEWAY_PORT \
+              --browser=webkit --out=./artifacts-mobile-webkit-$shard --shard=$shard/3 \
+              > ./artifacts-mobile-webkit-$shard.log 2>&1 &
+            pids="$pids $!"
+          done
+          status=0
+          for pid in $pids; do wait "$pid" || status=1; done
+          for shard in $(seq 1 3); do
+            echo "----- shard $shard -----"
+            cat ./artifacts-mobile-webkit-$shard.log
+          done
+          exit $status
 
       # Firefox cannot be put into mobile emulation, so it reports a fine
       # pointer and the pointer-conditional rules do not apply to it. What it
@@ -806,6 +865,8 @@ jobs:
           if-no-files-found: ignore
           name: universe-mobile-engines
           path: |
-            scripts/universe/visual-qa/artifacts-mobile-webkit
+            scripts/universe/visual-qa/artifacts-mobile-webkit-1
+            scripts/universe/visual-qa/artifacts-mobile-webkit-2
+            scripts/universe/visual-qa/artifacts-mobile-webkit-3
             scripts/universe/visual-qa/artifacts-mobile-firefox
           retention-days: 3
