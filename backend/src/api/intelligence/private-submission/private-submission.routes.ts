@@ -1,123 +1,118 @@
 import { Application, Request, Response } from 'express';
-import privateSubmissionService from './private-submission.service';
+import privateSubmissionService, { SubmissionEvidenceError } from './private-submission.service';
+
+/**
+ * Turns an absent integration into a 503 that names it, and anything else into
+ * a 500. A read with no source behind it is a service state, not a result, so
+ * it never reaches a caller as a 200 body.
+ */
+function fail(res: Response, err: unknown): Response {
+  if (err instanceof SubmissionEvidenceError) {
+    return res.status(503).json({ stage: err.code, error: err.message });
+  }
+  return res.status(500).json({ error: (err as Error)?.message || 'Internal error' });
+}
 
 class PrivateSubmissionRoutes {
   public initRoutes(app: Application): void {
     app.get('/api/v1/intelligence/submission/overview', (_req: Request, res: Response) => {
       try {
-        const overview = privateSubmissionService.getOverview();
-        res.json(overview);
-      } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        res.json(privateSubmissionService.getOverview());
+      } catch (err) {
+        fail(res, err);
       }
     });
 
     app.get('/api/v1/intelligence/submission/capabilities', (_req: Request, res: Response) => {
       try {
-        const caps = privateSubmissionService.getCapabilities();
-        res.json(caps);
-      } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        res.json(privateSubmissionService.getCapabilities());
+      } catch (err) {
+        fail(res, err);
       }
     });
 
     app.post('/api/v1/intelligence/submission/diagnose', (req: Request, res: Response) => {
       try {
         const rawTx = req.body.raw_tx || req.body.txid || '';
-        const diagnosis = privateSubmissionService.diagnoseTransaction(rawTx);
-        res.json(diagnosis);
-      } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        res.json(privateSubmissionService.diagnoseTransaction(rawTx));
+      } catch (err) {
+        fail(res, err);
       }
     });
 
     app.post('/api/v1/intelligence/submission/private', (req: Request, res: Response) => {
       try {
-        const record = privateSubmissionService.submitPrivate(req.body);
-        res.json(record);
-      } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        res.json(privateSubmissionService.submitPrivate(req.body));
+      } catch (err) {
+        fail(res, err);
       }
     });
 
     app.get('/api/v1/intelligence/submission/private/:submissionToken', (req: Request, res: Response) => {
       try {
-        const record = privateSubmissionService.getPrivateSubmission(req.params.submissionToken);
-        if (!record) {
-          return res.status(404).json({ error: 'Submission token not found' });
-        }
-        res.json(record);
-      } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        res.json(privateSubmissionService.getPrivateSubmission(req.params.submissionToken));
+      } catch (err) {
+        fail(res, err);
       }
     });
 
     app.post('/api/v1/intelligence/submission/private/:submissionToken/abort', (req: Request, res: Response) => {
       try {
-        const result = privateSubmissionService.abortPrivateSubmission(req.params.submissionToken);
-        res.json(result);
-      } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        res.json(privateSubmissionService.abortPrivateSubmission(req.params.submissionToken));
+      } catch (err) {
+        fail(res, err);
       }
     });
 
     app.get('/api/v1/intelligence/accelerators/providers', (_req: Request, res: Response) => {
       try {
-        const providers = privateSubmissionService.listAcceleratorProviders();
-        res.json(providers);
-      } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        res.json(privateSubmissionService.listAcceleratorProviders());
+      } catch (err) {
+        fail(res, err);
       }
     });
 
     app.get('/api/v1/intelligence/accelerators/providers/:providerId', (req: Request, res: Response) => {
       try {
-        const provider = privateSubmissionService.getAcceleratorProvider(req.params.providerId);
-        if (!provider) {
-          return res.status(404).json({ error: 'Accelerator provider not found' });
-        }
-        res.json(provider);
-      } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        res.json(privateSubmissionService.getAcceleratorProvider(req.params.providerId));
+      } catch (err) {
+        fail(res, err);
       }
     });
 
+    // The one route here that can still answer, because it reads the caller's
+    // own payload. A malformed receipt is the caller's 400; a complete one
+    // cannot be verified without the registry, which is a 503.
     app.post('/api/v1/intelligence/accelerators/receipts/verify', (req: Request, res: Response) => {
       try {
-        const result = privateSubmissionService.verifyAcceleratorReceipt(req.body);
-        res.json(result);
-      } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        const result = privateSubmissionService.verifyAcceleratorReceipt(req.body || {});
+        res.status(result.stage === 'invalid' ? 400 : 503).json(result);
+      } catch (err) {
+        fail(res, err);
       }
     });
 
     app.get('/api/v1/intelligence/ordering/transactions/:txid', (req: Request, res: Response) => {
       try {
-        const ordering = privateSubmissionService.getTransactionOrdering(req.params.txid);
-        if (!ordering) {
-          return res.status(404).json({ error: 'Ordering evidence not found for txid' });
-        }
-        res.json(ordering);
-      } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        res.json(privateSubmissionService.getTransactionOrdering(req.params.txid));
+      } catch (err) {
+        fail(res, err);
       }
     });
 
     app.get('/api/v1/intelligence/ordering/blocks/:blockHash', (req: Request, res: Response) => {
       try {
-        const ordering = privateSubmissionService.getBlockOrdering(req.params.blockHash);
-        res.json(ordering);
-      } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        res.json(privateSubmissionService.getBlockOrdering(req.params.blockHash));
+      } catch (err) {
+        fail(res, err);
       }
     });
 
     app.get('/api/v1/intelligence/ordering/findings', (_req: Request, res: Response) => {
       try {
-        const findings = privateSubmissionService.listOrderingFindings();
-        res.json(findings);
-      } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        res.json(privateSubmissionService.listOrderingFindings());
+      } catch (err) {
+        fail(res, err);
       }
     });
   }

@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { PrivateSubmissionApiService } from './private-submission.service';
 
 @Component({
@@ -9,6 +10,9 @@ import { PrivateSubmissionApiService } from './private-submission.service';
   imports: [CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4">
+      <div class="alert alert-warning" role="alert" *ngIf="loadError">
+        {{ loadError }}
+      </div>
       <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
           <h1 class="h2 mb-1">Transaction Ordering Evidence & MEV Detection</h1>
@@ -59,12 +63,20 @@ import { PrivateSubmissionApiService } from './private-submission.service';
 })
 export class PrivateSubmissionOrderingComponent implements OnInit {
   public findings: any[] = [];
+  public loadError: string | null = null;
 
   constructor(private api: PrivateSubmissionApiService) {}
 
   public ngOnInit(): void {
-    this.api.listOrderingFindings$().subscribe(res => {
-      this.findings = res;
+    this.api.listOrderingFindings$().subscribe({
+      next: res => {
+        this.findings = res ?? [];
+        this.loadError = null;
+      },
+      error: err => {
+        this.findings = [];
+        this.loadError = loadFailureMessage(classifyLoadFailure(err));
+      },
     });
   }
 }

@@ -172,7 +172,14 @@ jobs:
               rustup default stable
             fi
           else
-            echo "no rustup on this runner"
+            # Some runners in the fleet have never had Rust provisioned. The
+            # backend build compiles rust-gbt, so an absent toolchain is not a
+            # condition to report and step past: install it here, in the step
+            # whose name says the toolchain is being made usable.
+            echo "no rustup on this runner; installing the pinned toolchain"
+            curl --proto "=https" --tlsv1.2 -sSf https://sh.rustup.rs -o /tmp/rustup-init.sh
+            sh /tmp/rustup-init.sh -y --profile minimal --default-toolchain stable --no-modify-path
+            export PATH="$CARGO_BIN:$PATH"
           fi
 
           # Put the repaired toolchain ahead of anything else for the steps
@@ -663,32 +670,30 @@ jobs:
             scripts/universe/visual-qa/artifacts-perf
           retention-days: 3
 
-  # The two engines the fleet cannot run.
+  # The two engines the host image cannot run directly.
   #
-  # WebKit needs a set of system libraries a Chromium-only host has never had,
-  # and it does not degrade without them: it refuses to launch and prints the
-  # list. Installing them is one apt command, and the fleet's runner user has
-  # no passwordless sudo, so `playwright install --with-deps` fails there with
-  # "sudo: a password is required". Measured on universe-linux-ultra-03.
+  # WebKit does not degrade without its system libraries: it refuses to launch
+  # and prints the list. The fleet runs Ubuntu 26.04, which carries libicu78,
+  # libxml2-16 and libvpx12, while the WebKit build Playwright ships is linked
+  # against libicu.so.74, libxml2.so.2 and libvpx.so.9. Those are different
+  # sonames, so no apt install on the host satisfies it, and the runner user
+  # has no passwordless sudo to attempt one.
   #
-  # So this one job runs on a hosted runner, where that command works. It is
-  # the exception to using the fleet, and it is here rather than folded into
-  # the job above so the exception is visible and so a hosted outage cannot
-  # take the Chromium gate down with it.
+  # So the job stays on the fleet and runs inside the Playwright image built
+  # for exactly this Playwright version, which carries both engines and every
+  # library they link. The runner user is in the docker group and the image is
+  # pinned to the version in scripts/universe/visual-qa/package.json, so this
+  # is the fleet running a matched container, not an escape to a hosted runner.
   #
-  # It is worth the exception. WebKit is what Safari and Chrome on iOS are both
+  # It is worth the container. WebKit is what Safari and Chrome on iOS are both
   # built on, and dvh, safe-area insets and the pointer media feature are
   # exactly the rules where engines disagree: a Chromium-only run proves
   # nothing about the platform half this work was written for.
-  #
-  # When the fleet's image gains those libraries, delete this job and put the
-  # two steps back in the one above, which is where they belong.
   mobile-engines:
     name: WebKit and Firefox
-    # The Windows browser fleet can run both engines without a privileged
-    # system package install. The job uses Git Bash so it shares one script
-    # with the Linux browser checks.
     runs-on: [self-hosted, linux, x64, universe-super]
+    container:
+      image: mcr.microsoft.com/playwright:v1.49.0-noble
     timeout-minutes: 45
     defaults:
       run:
@@ -720,6 +725,8 @@ jobs:
         working-directory: scripts/universe/visual-qa
         run: npm ci
 
+      # The image carries both engines already. This resolves them and fails
+      # here, legibly, if the image and the pinned Playwright ever drift.
       - name: Fetch the engines
         working-directory: scripts/universe/visual-qa
         run: npx playwright install webkit firefox

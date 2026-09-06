@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { PrivateSubmissionApiService } from './private-submission.service';
 
 @Component({
@@ -8,6 +9,9 @@ import { PrivateSubmissionApiService } from './private-submission.service';
   standalone: true,
   imports: [CommonModule, RouterModule],
   template: `
+    <div class="container-xl py-4" *ngIf="loadError">
+      <div class="alert alert-warning" role="alert">{{ loadError }}</div>
+    </div>
     <div class="container-xl py-4" *ngIf="ordering">
       <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
@@ -74,6 +78,7 @@ import { PrivateSubmissionApiService } from './private-submission.service';
 })
 export class PrivateSubmissionOrderingTxComponent implements OnInit {
   public ordering: any = null;
+  public loadError: string | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -82,9 +87,24 @@ export class PrivateSubmissionOrderingTxComponent implements OnInit {
 
   public ngOnInit(): void {
     this.route.paramMap.subscribe(params => {
-      const txid = params.get('txid') || '9f8e7d6c5b4a392817263544fedcba09876543211234567890abcdef12345678';
-      this.api.getTxOrdering$(txid).subscribe(res => {
-        this.ordering = res;
+      const txid = params.get('txid');
+      this.ordering = null;
+      if (!txid) {
+        // An earlier revision substituted a fixed txid here, so the page
+        // reported on that transaction whatever address opened it.
+        this.loadError = $localize`:@@submission.tx.missing:This address does not name a transaction.`;
+        return;
+      }
+      this.loadError = null;
+      this.api.getTxOrdering$(txid).subscribe({
+        next: res => {
+          this.ordering = res;
+          this.loadError = null;
+        },
+        error: err => {
+          this.ordering = null;
+          this.loadError = loadFailureMessage(classifyLoadFailure(err));
+        },
       });
     });
   }

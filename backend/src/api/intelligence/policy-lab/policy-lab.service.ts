@@ -32,6 +32,7 @@ export class PolicyLabService {
     return PolicyLabService.instance;
   }
 
+  /** @asyncUnsafe The route handler turns a rejection into an exact answer. */
   public async evaluateTransactionOrPackage(
     rawTxs: string[]
   ): Promise<FullPolicyEvaluationResponse> {
@@ -98,6 +99,7 @@ export class PolicyLabService {
     return this.savedEvaluations.get(id) || null;
   }
 
+  /** @asyncUnsafe The route handler turns a rejection into an exact answer. */
   public async getNodeProfiles(): Promise<NodePolicyProfile[]> {
     const primary = await bitcoinCorePolicyAdapter.getEffectivePolicyProfile();
     return [primary];

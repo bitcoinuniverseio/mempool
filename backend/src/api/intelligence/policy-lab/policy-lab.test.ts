@@ -10,7 +10,10 @@ jest.mock('rust-gbt', () => ({ GbtGenerator: jest.fn() }));
 describe('Product 1: Transaction Package, Policy, and Inclusion Lab', () => {
   const sampleTxHex = '02000000010000000000000000000000000000000000000000000000000000000000000000ffffffff0100f2052a0100000043410496b538e853519c726a2c91e61ec11600ae1390813a627c66fb8be794bbe3e67020e17e572e632024f6655f4f4b822d159ced5da51657edffd7940761c7f536a5ac00000000';
 
-  it('evaluates raw transaction package and derives topology and profile', async () => {
+  it(
+    'evaluates raw transaction package and derives topology and profile',
+    /** @asyncUnsafe A rejection here is the failure this case exists to report. */
+    async () => {
     const report = await bitcoinCorePolicyAdapter.evaluatePackage([sampleTxHex]);
     expect(report.package_id).toBeDefined();
     expect(report.members.length).toBe(1);
@@ -71,7 +74,10 @@ describe('Product 1: Transaction Package, Policy, and Inclusion Lab', () => {
     expect(card.features.length).toBeGreaterThan(3);
   });
 
-  it('orchestrates end-to-end policy evaluation via service', async () => {
+  it(
+    'orchestrates end-to-end policy evaluation via service',
+    /** @asyncUnsafe A rejection here is the failure this case exists to report. */
+    async () => {
     const response = await policyLabService.evaluateTransactionOrPackage([sampleTxHex]);
     expect(response.evaluation_id).toBeDefined();
     expect(response.package_report.members.length).toBe(1);

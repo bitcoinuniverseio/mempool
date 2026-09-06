@@ -249,7 +249,7 @@ export const intelligenceFixtures = {
     incidents: [
       {
         incident_id: 'inc-20260901',
-        title: 'Mempool Feerate Spike from Ordinals Inscription Wave',
+        title: 'Feerate Spike from Ordinals Inscription Wave',
         severity: 'informational',
         status: 'resolved',
         created_at_utc: '2026-09-01T14:30:00Z',
@@ -1302,22 +1302,22 @@ export const intelligenceFixtures = {
     status: 'relayed_to_pools',
   },
   'GET /api/v1/intelligence/accelerators/providers': [
-    { provider_id: 'mempool-accelerate', name: 'Mempool Accelerator', hashrate_coverage_pct: 65.4, supported_pools: ['Foundry USA', 'AntPool'], minimum_fee_usd: 5.0, status: 'online', success_rate_pct: 99.4 },
+    { provider_id: 'accelerator-under-test', name: 'Accelerator Under Test', hashrate_coverage_pct: 65.4, supported_pools: ['Foundry USA', 'AntPool'], minimum_fee_usd: 5.0, status: 'online', success_rate_pct: 99.4 },
   ],
-  'GET /api/v1/intelligence/accelerators/providers/mempool-accelerate': {
-    provider_id: 'mempool-accelerate',
-    name: 'Mempool Accelerator',
+  'GET /api/v1/intelligence/accelerators/providers/accelerator-under-test': {
+    provider_id: 'accelerator-under-test',
+    name: 'Accelerator Under Test',
     hashrate_coverage_pct: 65.4,
     supported_pools: ['Foundry USA', 'AntPool'],
     minimum_fee_usd: 5.0,
     status: 'online',
     success_rate_pct: 99.4,
-    api_endpoint: 'https://mempool.space/api/v1/accelerator',
+    api_endpoint: 'https://api.bitcoinuniverse.io/v1/accelerator',
     verification_format: 'ed25519_signed_receipt',
   },
   'POST /api/v1/intelligence/accelerators/receipts/verify': {
     verified: true,
-    provider_id: 'mempool-accelerate',
+    provider_id: 'accelerator-under-test',
     receipt_id: 'rcpt-984210',
     txid: '9f8e7d6c5b4a392817263544fedcba09876543211234567890abcdef12345678',
     amount_paid_sats: 15000,

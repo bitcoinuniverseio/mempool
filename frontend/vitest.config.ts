@@ -49,6 +49,10 @@ export default defineConfig({
       'src/app/universe/**/*.spec.ts',
       'src/app/shared/**/*.spec.ts',
       'src/app/components/**/*.spec.ts',
+      // The shared request cache the three API services use. Its two faults
+      // were only reachable through a network switch and through a retry, so
+      // they are asserted here rather than in a browser check.
+      'src/app/services/**/*.spec.ts',
     ],
     reporters: ['default'],
   },

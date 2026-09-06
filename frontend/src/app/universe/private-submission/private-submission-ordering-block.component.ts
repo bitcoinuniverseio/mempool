@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { PrivateSubmissionApiService } from './private-submission.service';
 
 @Component({
@@ -8,6 +9,9 @@ import { PrivateSubmissionApiService } from './private-submission.service';
   standalone: true,
   imports: [CommonModule, RouterModule],
   template: `
+    <div class="container-xl py-4" *ngIf="loadError">
+      <div class="alert alert-warning" role="alert">{{ loadError }}</div>
+    </div>
     <div class="container-xl py-4" *ngIf="blockOrdering">
       <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
@@ -77,6 +81,7 @@ import { PrivateSubmissionApiService } from './private-submission.service';
 })
 export class PrivateSubmissionOrderingBlockComponent implements OnInit {
   public blockOrdering: any = null;
+  public loadError: string | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -85,9 +90,24 @@ export class PrivateSubmissionOrderingBlockComponent implements OnInit {
 
   public ngOnInit(): void {
     this.route.paramMap.subscribe(params => {
-      const blockHash = params.get('blockHash') || '00000000000000000001a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3';
-      this.api.getBlockOrdering$(blockHash).subscribe(res => {
-        this.blockOrdering = res;
+      const blockHash = params.get('blockHash');
+      this.blockOrdering = null;
+      if (!blockHash) {
+        // An earlier revision substituted a fixed block hash here, so the page
+        // reported on that block whatever address opened it.
+        this.loadError = $localize`:@@submission.block.missing:This address does not name a block.`;
+        return;
+      }
+      this.loadError = null;
+      this.api.getBlockOrdering$(blockHash).subscribe({
+        next: res => {
+          this.blockOrdering = res;
+          this.loadError = null;
+        },
+        error: err => {
+          this.blockOrdering = null;
+          this.loadError = loadFailureMessage(classifyLoadFailure(err));
+        },
       });
     });
   }

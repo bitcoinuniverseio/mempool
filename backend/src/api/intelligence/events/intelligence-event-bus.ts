@@ -36,6 +36,7 @@ export class NatsJetStreamEventBusProvider implements IEventBusProvider {
 
   constructor(private natsUrl: string = process.env.NATS_URL || 'nats://localhost:4222') {}
 
+  /** @asyncSafe Every path returns a boolean; the failure is logged here. */
   public async connect(): Promise<boolean> {
     try {
       logger.info(`NatsJetStreamEventBusProvider: Connecting to ${this.natsUrl}`);
@@ -176,7 +177,15 @@ export class IntelligenceEventBus {
         }
       };
 
-      await execute();
+      // The emitter invokes this listener without awaiting it, so a rejection
+      // escaping here would surface as an unhandled rejection instead of as a
+      // failed delivery. Deliveries report their own outcome; this is the
+      // bookkeeping around them.
+      try {
+        await execute();
+      } catch (err) {
+        logger.err(`IntelligenceEventBus: delivery bookkeeping failed for ${subject}: ${err}`);
+      }
     };
 
     this.emitter.on(subject, listener);
