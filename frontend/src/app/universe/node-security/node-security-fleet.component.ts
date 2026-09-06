@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { NodeSecurityApiService } from './node-security.service';
 
 @Component({
@@ -9,6 +10,9 @@ import { NodeSecurityApiService } from './node-security.service';
   imports: [CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4">
+      <div class="alert alert-warning" role="alert" *ngIf="loadError">
+        {{ loadError }}
+      </div>
       <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
           <h1 class="h2 mb-1">Node Fleet Security Posture</h1>
@@ -66,11 +70,20 @@ import { NodeSecurityApiService } from './node-security.service';
 export class NodeSecurityFleetComponent implements OnInit {
   public fleet: any[] = [];
 
+  public loadError: string | null = null;
+
   constructor(private api: NodeSecurityApiService) {}
 
   public ngOnInit(): void {
-    this.api.getFleet$().subscribe(res => {
-      this.fleet = res;
+    this.api.getFleet$().subscribe({
+      next: res => {
+        this.fleet = res;
+        this.loadError = null;
+      },
+      error: err => {
+        this.fleet = [];
+        this.loadError = loadFailureMessage(classifyLoadFailure(err));
+      },
     });
   }
 }

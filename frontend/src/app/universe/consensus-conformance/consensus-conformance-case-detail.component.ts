@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { ConsensusConformanceApiService } from './consensus-conformance.service';
 
 @Component({
@@ -9,6 +10,9 @@ import { ConsensusConformanceApiService } from './consensus-conformance.service'
   imports: [CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4" *ngIf="caseRecord">
+      <div class="alert alert-warning" role="alert" *ngIf="loadError">
+        {{ loadError }}
+      </div>
       <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
           <h1 class="h2 mb-1">Divergence Case: <span class="text-info">{{ caseRecord.case_id }}</span></h1>
@@ -73,6 +77,8 @@ export class ConsensusConformanceCaseDetailComponent implements OnInit {
   public replaying = false;
   public replayResult: any = null;
 
+  public loadError: string | null = null;
+
   constructor(
     private route: ActivatedRoute,
     private api: ConsensusConformanceApiService
@@ -80,9 +86,22 @@ export class ConsensusConformanceCaseDetailComponent implements OnInit {
 
   public ngOnInit(): void {
     this.route.paramMap.subscribe(params => {
-      const caseId = params.get('caseId') || 'case-div-tapscript-sigops-01';
-      this.api.getCase$(caseId).subscribe(res => {
-        this.caseRecord = res;
+      const caseId = params.get('caseId');
+      if (!caseId) {
+        // An earlier revision substituted a fixed id here, so the page
+        // reported on that case whatever address opened it.
+        this.loadError = $localize`:@@conformance.case.missing:This address does not name a case.`;
+        return;
+      }
+      this.api.getCase$(caseId).subscribe({
+        next: res => {
+          this.caseRecord = res;
+          this.loadError = null;
+        },
+        error: err => {
+          this.caseRecord = null;
+          this.loadError = loadFailureMessage(classifyLoadFailure(err));
+        },
       });
     });
   }
@@ -90,9 +109,17 @@ export class ConsensusConformanceCaseDetailComponent implements OnInit {
   public replayCase(): void {
     if (!this.caseRecord) return;
     this.replaying = true;
-    this.api.replayCase$(this.caseRecord.case_id).subscribe(res => {
-      this.replayResult = res;
-      this.replaying = false;
+    this.api.replayCase$(this.caseRecord.case_id).subscribe({
+      next: res => {
+        this.replayResult = res;
+        this.replaying = false;
+        this.loadError = null;
+      },
+      error: err => {
+        this.replayResult = null;
+        this.replaying = false;
+        this.loadError = loadFailureMessage(classifyLoadFailure(err));
+      },
     });
   }
 }

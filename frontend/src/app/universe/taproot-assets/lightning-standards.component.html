@@ -30,6 +30,11 @@
     </button>
   </section>
 
+  <section class="panel" *ngIf="decodeError">
+    <h2>Decoded Offer Summary</h2>
+    <p role="alert">{{ decodeError }}</p>
+  </section>
+
   <ng-container *ngIf="decodedOffer">
     <section class="panel">
       <h2>Decoded Offer Summary</h2>

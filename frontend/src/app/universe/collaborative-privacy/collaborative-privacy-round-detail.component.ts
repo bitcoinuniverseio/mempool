@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { CollaborativePrivacyApiService } from './collaborative-privacy.service';
 
 @Component({
@@ -9,6 +10,9 @@ import { CollaborativePrivacyApiService } from './collaborative-privacy.service'
   imports: [CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4" *ngIf="round">
+      <div class="alert alert-warning" role="alert" *ngIf="loadError">
+        {{ loadError }}
+      </div>
       <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
           <h1 class="h2 mb-1">Round Audit: <span class="text-info font-monospace">{{ round.round_id }}</span></h1>
@@ -74,6 +78,8 @@ import { CollaborativePrivacyApiService } from './collaborative-privacy.service'
 export class CollaborativePrivacyRoundDetailComponent implements OnInit {
   public round: any = null;
 
+  public loadError: string | null = null;
+
   constructor(
     private route: ActivatedRoute,
     private api: CollaborativePrivacyApiService
@@ -81,9 +87,22 @@ export class CollaborativePrivacyRoundDetailComponent implements OnInit {
 
   public ngOnInit(): void {
     this.route.paramMap.subscribe(params => {
-      const roundId = params.get('roundId') || 'rnd-ws-864198-01';
-      this.api.getRound$(roundId).subscribe(res => {
-        this.round = res;
+      const roundId = params.get('roundId');
+      if (!roundId) {
+        // An earlier revision substituted a fixed id here, so the page
+        // reported on that round whatever address opened it.
+        this.loadError = $localize`:@@privacy.round.missing:This address does not name a round.`;
+        return;
+      }
+      this.api.getRound$(roundId).subscribe({
+        next: res => {
+          this.round = res;
+          this.loadError = null;
+        },
+        error: err => {
+          this.round = null;
+          this.loadError = loadFailureMessage(classifyLoadFailure(err));
+        },
       });
     });
   }

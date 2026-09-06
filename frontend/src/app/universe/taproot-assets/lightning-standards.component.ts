@@ -24,6 +24,7 @@ interface StandardsViewModel {
 export class LightningStandardsComponent implements OnInit {
   offerInput = '';
   decodedOffer: Bolt12Offer | null = null;
+  decodeError: string | null = null;
 
   private readonly state = new BehaviorSubject<StandardsViewModel>({ kind: 'loading' });
   readonly vm$: Observable<StandardsViewModel> = this.state.asObservable();
@@ -52,13 +53,10 @@ export class LightningStandardsComponent implements OnInit {
     const input = this.offerInput.trim();
     if (!input) return;
 
-    this.decodedOffer = {
-      offerId: input,
-      offerString: input,
-      description: 'Decoded Custom Offer',
-      currency: 'msat',
-      blindRoutesCount: 2,
-      valid: true,
-    };
+    // No BOLT12 decoder ships here. The revision this replaces echoed the
+    // input back with an invented description, an invented blinded-route count
+    // and a badge reading "Valid BOLT12 Syntax", for any string at all.
+    this.decodedOffer = null;
+    this.decodeError = $localize`:@@bolt12.decoder.unavailable:This deployment carries no BOLT12 decoder, so this offer has not been read.`;
   }
 }

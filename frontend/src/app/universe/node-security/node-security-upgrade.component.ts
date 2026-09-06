@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { NodeSecurityApiService } from './node-security.service';
 
 @Component({
@@ -10,6 +11,9 @@ import { NodeSecurityApiService } from './node-security.service';
   imports: [CommonModule, RouterModule, FormsModule],
   template: `
     <div class="container-xl py-4">
+      <div class="alert alert-warning" role="alert" *ngIf="loadError">
+        {{ loadError }}
+      </div>
       <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
           <h1 class="h2 mb-1">Fleet Upgrade Readiness Assessment</h1>
@@ -62,13 +66,23 @@ export class NodeSecurityUpgradeComponent {
   public generating = false;
   public plan: any = null;
 
+  public loadError: string | null = null;
+
   constructor(private api: NodeSecurityApiService) {}
 
   public generatePlan(): void {
     this.generating = true;
-    this.api.createUpgradePlan$({ target_version: this.targetVersion }).subscribe(res => {
-      this.plan = res;
-      this.generating = false;
+    this.api.createUpgradePlan$({ target_version: this.targetVersion }).subscribe({
+      next: res => {
+        this.plan = res;
+        this.generating = false;
+        this.loadError = null;
+      },
+      error: err => {
+        this.plan = null;
+        this.generating = false;
+        this.loadError = loadFailureMessage(classifyLoadFailure(err));
+      },
     });
   }
 }

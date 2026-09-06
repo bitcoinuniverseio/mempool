@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { NodeSecurityApiService } from './node-security.service';
 
 @Component({
@@ -9,6 +10,9 @@ import { NodeSecurityApiService } from './node-security.service';
   imports: [CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4" *ngIf="advisory">
+      <div class="alert alert-warning" role="alert" *ngIf="loadError">
+        {{ loadError }}
+      </div>
       <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
           <h1 class="h2 mb-1">Security Advisory: <span class="text-danger">{{ advisory.advisory_id }}</span></h1>
@@ -64,6 +68,8 @@ import { NodeSecurityApiService } from './node-security.service';
 export class NodeSecurityAdvisoryDetailComponent implements OnInit {
   public advisory: any = null;
 
+  public loadError: string | null = null;
+
   constructor(
     private route: ActivatedRoute,
     private api: NodeSecurityApiService
@@ -71,9 +77,22 @@ export class NodeSecurityAdvisoryDetailComponent implements OnInit {
 
   public ngOnInit(): void {
     this.route.paramMap.subscribe(params => {
-      const id = params.get('advisoryId') || 'ADV-2026-001';
-      this.api.getAdvisory$(id).subscribe(res => {
-        this.advisory = res;
+      const id = params.get('advisoryId');
+      if (!id) {
+        // An earlier revision substituted a fixed id here, so the page
+        // reported on that advisory whatever address opened it.
+        this.loadError = $localize`:@@nodesecurity.advisory.missing:This address does not name an advisory.`;
+        return;
+      }
+      this.api.getAdvisory$(id).subscribe({
+        next: res => {
+          this.advisory = res;
+          this.loadError = null;
+        },
+        error: err => {
+          this.advisory = null;
+          this.loadError = loadFailureMessage(classifyLoadFailure(err));
+        },
       });
     });
   }

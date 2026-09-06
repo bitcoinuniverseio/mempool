@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { CollaborativePrivacyApiService } from './collaborative-privacy.service';
 
 @Component({
@@ -10,6 +11,9 @@ import { CollaborativePrivacyApiService } from './collaborative-privacy.service'
   imports: [CommonModule, RouterModule, FormsModule],
   template: `
     <div class="container-xl py-4">
+      <div class="alert alert-warning" role="alert" *ngIf="loadError">
+        {{ loadError }}
+      </div>
       <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
           <h1 class="h2 mb-1">Inspect Collaborative Transaction</h1>
@@ -74,14 +78,24 @@ export class CollaborativePrivacyInspectComponent {
   public inspecting = false;
   public analysisResult: any = null;
 
+  public loadError: string | null = null;
+
   constructor(private api: CollaborativePrivacyApiService) {}
 
   public inspect(): void {
     if (!this.txid) return;
     this.inspecting = true;
-    this.api.verifyPublicPackage$({ txid: this.txid }).subscribe(res => {
-      this.analysisResult = res;
-      this.inspecting = false;
+    this.api.verifyPublicPackage$({ txid: this.txid }).subscribe({
+      next: res => {
+        this.analysisResult = res;
+        this.inspecting = false;
+        this.loadError = null;
+      },
+      error: err => {
+        this.analysisResult = null;
+        this.inspecting = false;
+        this.loadError = loadFailureMessage(classifyLoadFailure(err));
+      },
     });
   }
 }
