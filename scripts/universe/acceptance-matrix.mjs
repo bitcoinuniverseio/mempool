@@ -24,6 +24,18 @@ const bundleNames = ['known_coverage.json', 'source_ledger.json', 'audit_report.
 const hash = value => createHash('sha256').update(value).digest('hex');
 const cleanPath = value => value.replaceAll('\\', '/');
 
+export function describeArtifact(path, bytes, { executionEvidence = false } = {}) {
+  path = cleanPath(path);
+  // Git may check current application text out as LF or CRLF. Historical
+  // artifacts and execution evidence retain their original byte identities.
+  const currentTextSource = /^(?:frontend|backend)\/src\/.*\.(?:[cm]?[jt]sx?|html|s?css|sass|less|json|svg)$/.test(path)
+    || path === 'scripts/universe/acceptance-matrix.mjs';
+  const canonical = currentTextSource && !executionEvidence;
+  const content = canonical ? Buffer.from(bytes.toString('utf8').replace(/\r\n/g, '\n'), 'utf8') : bytes;
+  return { path, sha256: hash(content), sha256Encoding: canonical ? 'utf8-lf' : 'raw-bytes', bytes: content.length,
+    text: content.toString('utf8').replace(/^\uFEFF/, '') };
+}
+
 export function uniqueIds(rows, label) {
   assert(Array.isArray(rows), `${label} must be an array`);
   const ids = rows.map(row => row.id);
@@ -45,16 +57,24 @@ export function tableIds(cell) {
 export function buildMatrix({ evidencePath } = {}) {
   const artifacts = new Map(), records = new Map(), parsed = new Map();
   const gaps = [], sourceGroups = {};
+  const executionArtifacts = new Set();
   function read(path) {
     path = cleanPath(path);
     if (!artifacts.has(path)) {
       const bytes = readFileSync(resolve(root, path));
-      artifacts.set(path, { path, sha256: hash(bytes), bytes: bytes.length, text: bytes.toString('utf8').replace(/^\uFEFF/, '') });
+      artifacts.set(path, describeArtifact(path, bytes, { executionEvidence: executionArtifacts.has(path) }));
     }
     return artifacts.get(path);
   }
-  function ref(path, extra = {}) { return { artifact: cleanPath(path), sha256: read(path).sha256, ...extra }; }
+  function ref(path, extra = {}) {
+    const artifact = read(path);
+    return { artifact: cleanPath(path), sha256: artifact.sha256, sha256Encoding: artifact.sha256Encoding, ...extra };
+  }
   const json = path => JSON.parse(read(path).text);
+  // Classify execution artifacts before reading application sources. Even an
+  // application file explicitly submitted as evidence must keep its raw hash.
+  const overlay = evidencePath ? json(evidencePath) : null;
+  for (const item of overlay?.rows || []) for (const entry of item.evidence || []) executionArtifacts.add(cleanPath(entry.artifact));
   function source(path) {
     if (!parsed.has(path)) parsed.set(path, ts.createSourceFile(path, read(path).text, ts.ScriptTarget.Latest, true));
     return parsed.get(path);
@@ -453,7 +473,6 @@ export function buildMatrix({ evidencePath } = {}) {
     components: controls.components.map(component => ({ ...component, currentSource: ref(component.source) })),
     unresolved: controls.unresolved, limitations: controls.limitations };
   if (evidencePath) {
-    const overlay = json(evidencePath);
     assert.equal(overlay.schemaVersion, 'universe-operation-evidence-v1');
     uniqueIds(overlay.rows, 'current evidence overlay');
     for (const item of overlay.rows) {
@@ -469,9 +488,9 @@ export function buildMatrix({ evidencePath } = {}) {
       }
       const evidence = item.evidence.map(entry => {
         assert(typeof entry.artifact === 'string' && entry.artifact.length, `${item.id} needs an evidence artifact path`);
-        const actualHash = read(entry.artifact).sha256;
+        const artifact = read(entry.artifact), actualHash = artifact.sha256;
         if (entry.sha256) assert.equal(entry.sha256, actualHash, `${item.id} evidence artifact changed`);
-        return { ...entry, artifact: cleanPath(entry.artifact), sha256: actualHash };
+        return { ...entry, artifact: cleanPath(entry.artifact), sha256: actualHash, sha256Encoding: artifact.sha256Encoding };
       });
       Object.assign(row, { status: item.status, acceptanceScope: item.scope, evidence, blockers: item.blockers || [], actual: item.actual || null,
         network: item.network || row.network, fixtureIdentity: item.fixtureIdentity || null, journeyId: item.journeyId || null,
@@ -512,8 +531,15 @@ export function validateMatrix(matrix) {
   const sources = new Map(matrix.sources.map(source => [source.path, source]));
   for (const row of matrix.rows) {
     for (const link of row.links) assert(ids.has(link.id), `${row.id} has a dangling link: ${link.id}`);
-    for (const ref of row.sources) assert.equal(ref.sha256, sources.get(ref.artifact)?.sha256, `${row.id} has invalid source hash lineage`);
-    for (const ref of row.evidence) assert.equal(ref.sha256, sources.get(ref.artifact)?.sha256, `${row.id} has invalid evidence hash lineage`);
+    for (const ref of row.sources) {
+      assert.equal(ref.sha256, sources.get(ref.artifact)?.sha256, `${row.id} has invalid source hash lineage`);
+      assert.equal(ref.sha256Encoding, sources.get(ref.artifact)?.sha256Encoding, `${row.id} has invalid source hash encoding`);
+    }
+    for (const ref of row.evidence) {
+      assert.equal(ref.sha256, sources.get(ref.artifact)?.sha256, `${row.id} has invalid evidence hash lineage`);
+      assert.equal(ref.sha256Encoding, 'raw-bytes', `${row.id} evidence must preserve raw bytes`);
+      assert.equal(sources.get(ref.artifact)?.sha256Encoding, 'raw-bytes', `${row.id} evidence source must preserve raw bytes`);
+    }
     if (row.status.startsWith('PASS')) assert(row.acceptanceScope && row.evidence.length, `${row.id} inherited unsupported acceptance`);
   }
   for (const component of matrix.sourceCandidates.components) {
