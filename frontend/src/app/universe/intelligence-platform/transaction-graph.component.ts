@@ -96,7 +96,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
           <div class="card-body">
             <!-- Nodes Table -->
             <h5 class="mb-3">Discovered Graph Nodes</h5>
-            <div class="table-responsive mb-4">
+            <div class="table-responsive mb-4" tabindex="0">
               <table class="table table-sm table-hover mb-0">
                 <thead>
                   <tr>
@@ -121,7 +121,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
 
             <!-- Value Edges Table -->
             <h5 class="mb-3">Value Transfer Edges</h5>
-            <div class="table-responsive">
+            <div class="table-responsive" tabindex="0">
               <table class="table table-sm table-hover mb-0">
                 <thead>
                   <tr>

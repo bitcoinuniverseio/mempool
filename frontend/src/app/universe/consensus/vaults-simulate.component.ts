@@ -108,7 +108,7 @@ import { ConsensusApiService, CovenantSimulationResult } from './consensus.servi
         </div>
 
         <h3 class="h6 mb-2">Simulated State Transitions</h3>
-        <div class="table-responsive mb-4">
+        <div class="table-responsive mb-4" tabindex="0">
           <table class="table table-hover align-middle mb-0">
             <thead>
               <tr>

@@ -148,7 +148,7 @@ import { SilentPaymentsApiService } from './silent-payments.service';
       <!-- Detected Outputs List -->
       <div *ngIf="detectedOutputs.length > 0" class="card p-4 bg-body-tertiary border">
         <h2 class="h5 mb-3 text-success">Detected Silent Payment Outputs</h2>
-        <div class="table-responsive">
+        <div class="table-responsive" tabindex="0">
           <table class="table table-hover align-middle mb-0">
             <thead>
               <tr>

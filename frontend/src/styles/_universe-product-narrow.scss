@@ -1,0 +1,45 @@
+// What the product pages need at the narrowest phone width.
+//
+// The intelligence and protocol product pages all share one header shape: a
+// flex row with a title and a monospace reference on the left, and a button or
+// a button group on the right. At 320px that row does not wrap, the monospace
+// reference does not break, and `.page-shell` carries `overflow: clip`, so the
+// excess is not scrolled or shown, it is simply cut away. The mobile gate
+// measured between 7px and 330px of content lost that way across sixteen
+// pages, with block hashes and delegation ids the most common casualties.
+//
+// Three rules, all scoped to a narrow viewport and to the page container, so
+// nothing here changes a desktop layout or a page outside that container.
+@media (max-width: 575px) {
+  .container-xl {
+    // The header row stacks instead of squeezing. Without this the button on
+    // the right pushes the title off the edge rather than moving below it.
+    .d-flex.justify-content-between.border-bottom {
+      flex-wrap: wrap;
+      row-gap: var(--u-space-3);
+    }
+
+    // A group of actions wraps rather than reaching past the screen. Six of
+    // the sixteen pages lost their content to a two button group alone.
+    .btn-group {
+      flex-wrap: wrap;
+    }
+
+    // Hashes, txids, pubkeys and delegation ids. These have no spaces, so a
+    // normal wrap cannot break them and the whole string overflows. Breaking
+    // anywhere is correct for an opaque identifier: every character matters
+    // and none of them is worth losing to keep the string on one line.
+    .font-monospace {
+      overflow-wrap: anywhere;
+    }
+
+    // A checkbox a thumb can actually hit. Bootstrap renders these at 24px,
+    // which is under both platform floors, and the two pages that use them
+    // put three in a row. The token is the smaller of the Apple and Android
+    // numbers, so this is the size both would call the minimum.
+    .form-check-input {
+      width: var(--u-touch-target);
+      height: var(--u-touch-target);
+    }
+  }
+}
