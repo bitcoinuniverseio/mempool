@@ -16,6 +16,7 @@ import { PortfolioSessionService } from '../stores/session.service';
 import { PortfolioDataStateComponent } from '../shared/data-state.component';
 import { atomicToDisplay, formatExact, maskedValue, truncateIdentifier } from '../shared/exact';
 import { ManualPositionsComponent } from '../manual/manual-positions.component';
+import { isLocalOnlyPortfolio } from '../shared/local-source-state';
 
 type RangeKey = '24h' | '7d' | '30d' | '90d' | '1y' | 'all';
 
@@ -30,7 +31,11 @@ type RangeKey = '24h' | '7d' | '30d' | '90d' | '1y' | 'all';
       <!-- Primary region: the value hero. -->
       <section class="hero" aria-label="Portfolio value">
         <div class="hero-main">
-          <p class="hero-label" i18n="@@universe.portfolio.overview.portfolio-value">Portfolio value</p>
+          @if (localOnly()) {
+            <p class="hero-label" i18n="@@universe.portfolio.overview.local-value">No address-derived valuation</p>
+          } @else {
+            <p class="hero-label" i18n="@@universe.portfolio.overview.portfolio-value">Portfolio value</p>
+          }
           <p class="hero-value" aria-live="polite">
             @if (session.valuesHidden()) {
               <span class="masked">{{ masked() }}</span>
@@ -40,7 +45,11 @@ type RangeKey = '24h' | '7d' | '30d' | '90d' | '1y' | 'all';
             <span class="quote">{{ quote() }}</span>
           </p>
           <p class="hero-sub">
-            <app-portfolio-data-state [state]="state()" />
+            @if (localOnly()) {
+              <span class="local-state" role="status" i18n="@@universe.portfolio.state.local-only">Local only</span>
+            } @else {
+              <app-portfolio-data-state [state]="state()" />
+            }
             <span class="coverage" i18n="@@universe.portfolio.overview.coverage">
               {{ coverageLabel() }}
             </span>
@@ -161,6 +170,7 @@ type RangeKey = '24h' | '7d' | '30d' | '90d' | '1y' | 'all';
       .hero-value .quote { font-size: 14px; margin-left: 6px; color: var(--u-fg-soft, inherit); }
       .masked { letter-spacing: 2px; }
       .hero-sub { display: flex; gap: 10px; align-items: center; margin: 8px 0 0; }
+      .local-state { font-size: 12px; white-space: nowrap; }
       .hero-stats { display: grid; grid-template-columns: repeat(2, auto); gap: 8px 28px; margin: 0; align-content: center; }
       .hero-stats dt { font-size: 11.5px; color: var(--u-fg-soft, inherit); }
       .hero-stats dd { margin: 2px 0 0; font-size: 15px; font-variant-numeric: tabular-nums; }
@@ -198,18 +208,21 @@ export class OverviewComponent {
   readonly chartMerge = signal<Record<string, unknown>>({});
 
   readonly aggregation = computed(() => this.data().aggregation);
+  readonly localOnly = computed(() => isLocalOnlyPortfolio(this.store.activePortfolio()));
 
   readonly pricedTotalLabel = computed(() => {
+    if (this.localOnly()) { return '-'; }
     const total = this.aggregation()?.pricedTotal ?? null;
     if (total === null) return '-';
     return formatExact(total, 'en');
   });
 
-  readonly quote = computed(() => this.aggregation()?.quoteCurrency ?? 'USD');
+  readonly quote = computed(() => this.localOnly() ? '' : this.aggregation()?.quoteCurrency ?? 'USD');
 
   readonly state = computed(() => this.aggregation()?.state ?? 'pending');
 
   readonly coverageLabel = computed(() => {
+    if (this.localOnly()) { return $localize`:@@universe.portfolio.overview.local-coverage:Manual entries stay separate from address-derived totals.`; }
     const aggregation = this.aggregation();
     if (aggregation === null) return '';
     if (aggregation.unknownValueBucket === 'present') {

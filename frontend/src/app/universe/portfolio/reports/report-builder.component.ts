@@ -161,7 +161,15 @@ type ValueMode = 'absolute' | 'percentages';
       .saved-share { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
       input { width: 100%; min-width: 0; min-height: 40px; padding: 8px; border: 1px solid var(--u-separator, rgba(0,0,0,0.14)); border-radius: 8px; color: inherit; background: transparent; }
       .soft { font-size: 12.5px; color: var(--u-fg-soft, inherit); }
-      @media print { .options, .actions, .share-controls { display: none; } .table-wrap { overflow: visible; } .manual-preview table { font-size: 10px; } }
+      @media print {
+        :host { display: block; }
+        .builder { max-width: none; margin: 0; padding: 10mm; }
+        .options, .actions, .share-controls { display: none; }
+        .table-wrap { overflow: visible; }
+        .manual-preview table { font-size: 10px; }
+        h1, h2 { break-after: avoid; }
+        tr { break-inside: avoid; }
+      }
     `,
   ],
 })

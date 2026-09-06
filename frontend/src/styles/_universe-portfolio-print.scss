@@ -1,0 +1,44 @@
+// The report is a document. Its screen ancestors reserve viewport space for
+// navigation and the footer; retaining those reservations prints a blank page.
+// Scope every override to the mounted report so other route printing is unchanged.
+@media print {
+  html:has(app-report-builder),
+  body:has(app-report-builder) {
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  body:has(app-report-builder) {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    color: #111 !important;
+    --u-fg-soft: #444;
+
+    app-master-page > .site-header,
+    app-master-page .empty-sidenav,
+    app-master-page app-global-footer,
+    app-master-page app-testnet-alert,
+    app-master-page app-universe-chain-sync-notice,
+    app-master-page app-universe-connectivity-banner,
+    app-master-page app-universe-command-palette,
+    app-master-page .page-column > .flex-grow-1,
+    app-portfolio-shell .shell-header {
+      display: none !important;
+    }
+
+    app-master-page .page-shell,
+    app-master-page .page-column,
+    app-master-page #main-content,
+    app-portfolio-shell,
+    app-portfolio-shell .shell,
+    app-portfolio-shell .shell-main {
+      display: block !important;
+      height: auto !important;
+      min-height: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      overflow: visible !important;
+    }
+  }
+}

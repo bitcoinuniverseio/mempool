@@ -1,0 +1,284 @@
+{
+  "checkedAt": "2026-09-06T04:11:01.376Z",
+  "origin": "http://localhost:4310",
+  "publicFixtureSource": "docs/acceptance/browser-parser-2026-09-06.json",
+  "scope": "Local parser forms; no blockchain or wallet interoperability acceptance",
+  "checks": [
+    {
+      "id": "SP-05-UI-PUNCTUATION",
+      "status": "PASS LOCAL",
+      "scope": "Actual form -> compiled handler -> rendered result, offline parser only",
+      "network": "mainnet",
+      "inputSha256": "a8cd7234e5094c983c2db194ee627137590b8aa468d263c1428daca109f6c058",
+      "httpStatus": 400,
+      "requestUrl": "http://localhost:4310/api/v1/intelligence/payments/silent/validate-address?chain=bitcoin&network=mainnet",
+      "requestId": "acdd7ea4-2fcd-4ae6-a0a1-26fc43ef440e",
+      "expected": {
+        "valid": false
+      },
+      "actual": {
+        "valid": false,
+        "supported": false,
+        "error": "Unknown character !",
+        "code": "INVALID_ADDRESS"
+      },
+      "checkedAt": "2026-09-06T04:10:55.763Z"
+    },
+    {
+      "id": "SP-05-UI-CHECKSUM",
+      "status": "PASS LOCAL",
+      "scope": "Actual form -> compiled handler -> rendered result, offline parser only",
+      "network": "mainnet",
+      "inputSha256": "cd65a5aa5cf0d986c17dc7b7bcbb38c4e5a6a8e8fc40c100a0666be66f0d91fc",
+      "httpStatus": 400,
+      "requestUrl": "http://localhost:4310/api/v1/intelligence/payments/silent/validate-address?chain=bitcoin&network=mainnet",
+      "requestId": "7b8f269a-b750-4ee9-90c7-7b5ed4bace81",
+      "expected": {
+        "valid": false
+      },
+      "actual": {
+        "valid": false,
+        "supported": false,
+        "error": "Invalid checksum for sp1qqgste7k9hx0qftg6qmwlkqtwuy6cycyavzmzj85c6qdfhjdpdjtdgqjuexzk6murw56suy3e0rd2cgqvycxttddwsvgxe2usfpxumr70xc9pkqwx",
+        "code": "INVALID_ADDRESS"
+      },
+      "checkedAt": "2026-09-06T04:10:56.512Z"
+    },
+    {
+      "id": "SP-05-UI-MIXED-CASE",
+      "status": "PASS LOCAL",
+      "scope": "Actual form -> compiled handler -> rendered result, offline parser only",
+      "network": "mainnet",
+      "inputSha256": "39188350a7527ffdfcb2bae15cb6e3c1cdb3c257ccb0e54ae8c5e47c340f0d46",
+      "httpStatus": 400,
+      "requestUrl": "http://localhost:4310/api/v1/intelligence/payments/silent/validate-address?chain=bitcoin&network=mainnet",
+      "requestId": "03fea886-6750-4457-a7a6-4077e40790b7",
+      "expected": {
+        "valid": false
+      },
+      "actual": {
+        "valid": false,
+        "supported": false,
+        "error": "Mixed-case string SP1qqgste7k9hx0qftg6qmwlkqtwuy6cycyavzmzj85c6qdfhjdpdjtdgqjuexzk6murw56suy3e0rd2cgqvycxttddwsvgxe2usfpxumr70xc9pkqwv",
+        "code": "INVALID_ADDRESS"
+      },
+      "checkedAt": "2026-09-06T04:10:57.113Z"
+    },
+    {
+      "id": "SP-05-UI-WRONG-NETWORK",
+      "status": "PASS LOCAL",
+      "scope": "Actual form -> compiled handler -> rendered result, offline parser only",
+      "network": "signet",
+      "inputSha256": "60653447e2ecb325bc2954b8b67873c1781a6b5f540442b493408764a8ba4c6e",
+      "httpStatus": 400,
+      "requestUrl": "http://localhost:4310/api/v1/intelligence/payments/silent/validate-address?chain=bitcoin&network=signet",
+      "requestId": "6d45a9c2-06a6-43a7-853e-4aeead6d78f0",
+      "expected": {
+        "valid": false
+      },
+      "actual": {
+        "valid": false,
+        "supported": false,
+        "error": "Address belongs to a different network family.",
+        "code": "INVALID_ADDRESS"
+      },
+      "checkedAt": "2026-09-06T04:10:57.479Z"
+    },
+    {
+      "id": "SP-05-UI-OFFICIAL-KEYS",
+      "status": "PASS LOCAL",
+      "scope": "Actual form -> compiled handler -> rendered result, offline parser only",
+      "network": "mainnet",
+      "inputSha256": "60653447e2ecb325bc2954b8b67873c1781a6b5f540442b493408764a8ba4c6e",
+      "httpStatus": 200,
+      "requestUrl": "http://localhost:4310/api/v1/intelligence/payments/silent/validate-address?chain=bitcoin&network=mainnet",
+      "requestId": "384e7563-dc7b-4afd-9ace-e8dcb4c4f9e3",
+      "expected": {
+        "valid": true,
+        "scan_pubkey": "0220bcfac5b99e04ad1a06ddfb016ee13582609d60b6291e98d01a9bc9a16c96d4",
+        "spend_pubkey": "025cc9856d6f8375350e123978daac200c260cb5b5ae83106cab90484dcd8fcf36"
+      },
+      "actual": {
+        "valid": true,
+        "version": 0,
+        "supported": true,
+        "input_format": "address",
+        "inspection_scope": "silent-payment-address",
+        "compatibility": "v0",
+        "network": "mainnet",
+        "network_family": "mainnet",
+        "scan_pubkey": "0220bcfac5b99e04ad1a06ddfb016ee13582609d60b6291e98d01a9bc9a16c96d4",
+        "spend_pubkey": "025cc9856d6f8375350e123978daac200c260cb5b5ae83106cab90484dcd8fcf36"
+      },
+      "checkedAt": "2026-09-06T04:10:58.209Z"
+    },
+    {
+      "id": "SP-05-UI-BIP321",
+      "status": "PASS LOCAL",
+      "scope": "Actual form -> compiled handler -> rendered result, offline parser only",
+      "network": "mainnet",
+      "inputSha256": "98caa77c53877a442ef5a4a670671f3f71f5f22e3a99ae4d3c213428167bf385",
+      "httpStatus": 200,
+      "requestUrl": "http://localhost:4310/api/v1/intelligence/payments/silent/validate-address?chain=bitcoin&network=mainnet",
+      "requestId": "33e79468-01fc-4dc8-afb3-c7eb4a46ca09",
+      "expected": {
+        "valid": true,
+        "scan_pubkey": "0220bcfac5b99e04ad1a06ddfb016ee13582609d60b6291e98d01a9bc9a16c96d4",
+        "spend_pubkey": "025cc9856d6f8375350e123978daac200c260cb5b5ae83106cab90484dcd8fcf36"
+      },
+      "actual": {
+        "valid": true,
+        "version": 0,
+        "supported": true,
+        "input_format": "bip321",
+        "inspection_scope": "silent-payment-address",
+        "compatibility": "v0",
+        "network": "mainnet",
+        "network_family": "mainnet",
+        "scan_pubkey": "0220bcfac5b99e04ad1a06ddfb016ee13582609d60b6291e98d01a9bc9a16c96d4",
+        "spend_pubkey": "025cc9856d6f8375350e123978daac200c260cb5b5ae83106cab90484dcd8fcf36"
+      },
+      "checkedAt": "2026-09-06T04:10:58.808Z"
+    },
+    {
+      "id": "SP-06-UI-NEGATIVE-0",
+      "status": "PASS LOCAL",
+      "scope": "Actual form -> compiled handler -> rendered result, offline parser only",
+      "network": "mainnet",
+      "inputSha256": "c8afa7614a61ee5de51460dc344e6d26d0ee87c365e9b3c09fb779d8b447d7b2",
+      "httpStatus": 400,
+      "requestUrl": "http://localhost:4310/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+      "requestId": "2c26f96a-79e8-430f-bc31-c3a53d2bfebc",
+      "expected": {
+        "valid": false
+      },
+      "actual": {
+        "valid": false,
+        "bip375_present": false,
+        "bip376_present": false,
+        "well_formed": false,
+        "cryptographically_verified": false,
+        "code": "INVALID_PSBT",
+        "error": "Invalid five-byte PSBT magic."
+      },
+      "checkedAt": "2026-09-06T04:10:59.215Z"
+    },
+    {
+      "id": "SP-06-UI-NEGATIVE-1",
+      "status": "PASS LOCAL",
+      "scope": "Actual form -> compiled handler -> rendered result, offline parser only",
+      "network": "mainnet",
+      "inputSha256": "2308cf6b73b841765c6baca59c660b0f3ba38864fbce550c68d9e891b6b3330b",
+      "httpStatus": 400,
+      "requestUrl": "http://localhost:4310/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+      "requestId": "21548f36-cedf-46c8-aeeb-836a9c3f440d",
+      "expected": {
+        "valid": false
+      },
+      "actual": {
+        "valid": false,
+        "bip375_present": false,
+        "bip376_present": false,
+        "well_formed": false,
+        "cryptographically_verified": false,
+        "code": "INVALID_PSBT",
+        "error": "Truncated PSBT or oversized length."
+      },
+      "checkedAt": "2026-09-06T04:10:59.768Z"
+    },
+    {
+      "id": "SP-06-UI-NEGATIVE-2",
+      "status": "PASS LOCAL",
+      "scope": "Actual form -> compiled handler -> rendered result, offline parser only",
+      "network": "mainnet",
+      "inputSha256": "77e779d599743ff7588b771e4db9043b5f197d31a2819243faee1b4d84f40df6",
+      "httpStatus": 400,
+      "requestUrl": "http://localhost:4310/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+      "requestId": "b9e7f2ae-6435-4115-91b9-a619f5a92b7d",
+      "expected": {
+        "valid": false
+      },
+      "actual": {
+        "valid": false,
+        "bip375_present": false,
+        "bip376_present": false,
+        "well_formed": false,
+        "cryptographically_verified": false,
+        "code": "INVALID_PSBT",
+        "error": "Truncated PSBT or oversized length."
+      },
+      "checkedAt": "2026-09-06T04:11:00.366Z"
+    },
+    {
+      "id": "SP-06-UI-NEGATIVE-3",
+      "status": "PASS LOCAL",
+      "scope": "Actual form -> compiled handler -> rendered result, offline parser only",
+      "network": "mainnet",
+      "inputSha256": "b4beacc5254dfc9a0d39f00ea03fe2571a25b75fff9033a0d355960aa95aefc5",
+      "httpStatus": 400,
+      "requestUrl": "http://localhost:4310/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+      "requestId": "dd05c168-6db7-4f61-b35c-f4911dbd5cb2",
+      "expected": {
+        "valid": false
+      },
+      "actual": {
+        "valid": false,
+        "bip375_present": false,
+        "bip376_present": false,
+        "well_formed": false,
+        "cryptographically_verified": false,
+        "code": "INVALID_PSBT",
+        "error": "Malformed Base64."
+      },
+      "checkedAt": "2026-09-06T04:11:00.992Z"
+    },
+    {
+      "id": "SP-06-UI-STANDARD-VECTOR",
+      "status": "PASS LOCAL",
+      "scope": "Actual form -> compiled handler -> rendered result, offline parser only",
+      "network": "mainnet",
+      "inputSha256": "adb273331252cea7d78864f49d42422923c062c6352e1ee7900381172e7d4008",
+      "httpStatus": 200,
+      "requestUrl": "http://localhost:4310/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+      "requestId": "6f4af202-6684-4896-9b68-49756e444da2",
+      "expected": {
+        "valid": true,
+        "bip375_present": true,
+        "cryptographically_verified": false
+      },
+      "actual": {
+        "valid": true,
+        "psbt_version": 2,
+        "bip375_present": true,
+        "bip376_present": false,
+        "supported": true,
+        "well_formed": true,
+        "cryptographically_verified": false,
+        "inspection_scope": "container-and-field-structure",
+        "input_count": 1,
+        "output_count": 1,
+        "fields": [
+          {
+            "scope": "input:0",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:0",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "output:0",
+            "type": "0x9",
+            "well_formed": true,
+            "cryptographically_verified": false
+          }
+        ]
+      },
+      "checkedAt": "2026-09-06T04:11:01.376Z"
+    }
+  ]
+}
