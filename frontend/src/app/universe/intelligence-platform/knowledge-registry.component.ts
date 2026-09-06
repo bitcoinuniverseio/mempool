@@ -49,7 +49,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
           No entity labels match the selected criteria.
         </div>
 
-        <div class="table-responsive" *ngIf="filteredLabels.length  tabindex="0"> 0">
+        <div class="table-responsive" *ngIf="filteredLabels.length > 0" tabindex="0">
           <table class="table table-hover mb-0">
             <thead>
               <tr>

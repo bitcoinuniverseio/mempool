@@ -105,7 +105,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
           No API keys created yet. Click "Generate New Key" to provision credentials.
         </div>
 
-        <div class="table-responsive" *ngIf="keys.length  tabindex="0"> 0">
+        <div class="table-responsive" *ngIf="keys.length > 0" tabindex="0">
           <table class="table table-hover mb-0">
             <thead>
               <tr>
