@@ -33,6 +33,13 @@
       overflow-wrap: anywhere;
     }
 
+    // Named, focusable table regions already provide horizontal scrolling.
+    // Keep their identifiers intact so a txid link does not collapse into a
+    // single-character column with an unusably narrow touch target.
+    .table-responsive .font-monospace {
+      overflow-wrap: normal;
+    }
+
     // A checkbox a thumb can actually hit. Bootstrap renders these at 24px,
     // which is under both platform floors, and the two pages that use them
     // put three in a row. The token is the smaller of the Apple and Android
