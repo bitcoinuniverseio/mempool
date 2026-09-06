@@ -694,6 +694,12 @@ jobs:
     runs-on: [self-hosted, linux, x64, universe-super]
     container:
       image: mcr.microsoft.com/playwright:v1.49.0-noble
+      # WebKit launched inside the image and then lost its browser process
+      # seven minutes in, on a page open. A container gets 64 MB of /dev/shm by
+      # default, which is where the engine puts its shared buffers, and it does
+      # not degrade when that runs out: the process is gone and every later page
+      # reports the context as closed.
+      options: --shm-size=2gb --ipc=host
     timeout-minutes: 45
     defaults:
       run:
