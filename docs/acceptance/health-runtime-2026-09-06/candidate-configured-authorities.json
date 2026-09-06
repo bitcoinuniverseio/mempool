@@ -1,0 +1,421 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/api/v1/universe/sources?chain=bitcoin&network=mainnet",
+    "status": 200,
+    "observedAt": "2026-09-06T12:52:56.654Z"
+  },
+  "body": {
+    "generatedAt": "2026-09-06T12:52:56.641Z",
+    "sources": [
+      {
+        "authorityId": "index-alkanes",
+        "protocols": [
+          "alkanes"
+        ],
+        "ready": false,
+        "checkpoint": null,
+        "status": "unconfigured",
+        "checkedAt": "2026-09-06T12:52:56.641Z",
+        "lagBlocks": null,
+        "lastSuccessAt": null,
+        "lastAnsweredAt": null,
+        "consecutiveFailures": 0
+      },
+      {
+        "authorityId": "index-anima",
+        "protocols": [
+          "anima"
+        ],
+        "ready": false,
+        "checkpoint": null,
+        "status": "unconfigured",
+        "checkedAt": "2026-09-06T12:52:56.641Z",
+        "lagBlocks": null,
+        "lastSuccessAt": null,
+        "lastAnsweredAt": null,
+        "consecutiveFailures": 0
+      },
+      {
+        "authorityId": "index-atomicals",
+        "protocols": [
+          "arc20"
+        ],
+        "ready": false,
+        "checkpoint": null,
+        "status": "unconfigured",
+        "checkedAt": "2026-09-06T12:52:56.641Z",
+        "lagBlocks": null,
+        "lastSuccessAt": null,
+        "lastAnsweredAt": null,
+        "consecutiveFailures": 0
+      },
+      {
+        "authorityId": "index-atomicals-nfts-and-realms",
+        "protocols": [
+          "atomicals_nft",
+          "realms",
+          "subrealms"
+        ],
+        "ready": false,
+        "checkpoint": null,
+        "status": "unconfigured",
+        "checkedAt": "2026-09-06T12:52:56.641Z",
+        "lagBlocks": null,
+        "lastSuccessAt": null,
+        "lastAnsweredAt": null,
+        "consecutiveFailures": 0
+      },
+      {
+        "authorityId": "index-bitmap",
+        "protocols": [
+          "bitmap"
+        ],
+        "ready": false,
+        "checkpoint": null,
+        "status": "unconfigured",
+        "checkedAt": "2026-09-06T12:52:56.641Z",
+        "lagBlocks": null,
+        "lastSuccessAt": null,
+        "lastAnsweredAt": null,
+        "consecutiveFailures": 0
+      },
+      {
+        "authorityId": "index-block20",
+        "protocols": [
+          "block20"
+        ],
+        "ready": false,
+        "checkpoint": null,
+        "status": "unconfigured",
+        "checkedAt": "2026-09-06T12:52:56.641Z",
+        "lagBlocks": null,
+        "lastSuccessAt": null,
+        "lastAnsweredAt": null,
+        "consecutiveFailures": 0
+      },
+      {
+        "authorityId": "index-brc20",
+        "protocols": [
+          "brc20"
+        ],
+        "ready": false,
+        "checkpoint": null,
+        "status": "unconfigured",
+        "checkedAt": "2026-09-06T12:52:56.641Z",
+        "lagBlocks": null,
+        "lastSuccessAt": null,
+        "lastAnsweredAt": null,
+        "consecutiveFailures": 0
+      },
+      {
+        "authorityId": "index-cat20",
+        "protocols": [
+          "cat20"
+        ],
+        "ready": false,
+        "checkpoint": null,
+        "status": "unconfigured",
+        "checkedAt": "2026-09-06T12:52:56.641Z",
+        "lagBlocks": null,
+        "lastSuccessAt": null,
+        "lastAnsweredAt": null,
+        "consecutiveFailures": 0
+      },
+      {
+        "authorityId": "index-chainbloom",
+        "protocols": [
+          "chainbloom"
+        ],
+        "ready": false,
+        "checkpoint": null,
+        "status": "unconfigured",
+        "checkedAt": "2026-09-06T12:52:56.641Z",
+        "lagBlocks": null,
+        "lastSuccessAt": null,
+        "lastAnsweredAt": null,
+        "consecutiveFailures": 0
+      },
+      {
+        "authorityId": "index-dmt",
+        "protocols": [
+          "dmt"
+        ],
+        "ready": false,
+        "checkpoint": null,
+        "status": "unconfigured",
+        "checkedAt": "2026-09-06T12:52:56.641Z",
+        "lagBlocks": null,
+        "lastSuccessAt": null,
+        "lastAnsweredAt": null,
+        "consecutiveFailures": 0
+      },
+      {
+        "authorityId": "index-doge-tap",
+        "protocols": [
+          "tap_doge"
+        ],
+        "ready": false,
+        "checkpoint": null,
+        "status": "unconfigured",
+        "checkedAt": "2026-09-06T12:52:56.641Z",
+        "lagBlocks": null,
+        "lastSuccessAt": null,
+        "lastAnsweredAt": null,
+        "consecutiveFailures": 0
+      },
+      {
+        "authorityId": "index-drops-and-opdrop",
+        "protocols": [
+          "op_drop",
+          "drops"
+        ],
+        "ready": false,
+        "checkpoint": null,
+        "status": "unconfigured",
+        "checkedAt": "2026-09-06T12:52:56.641Z",
+        "lagBlocks": null,
+        "lastSuccessAt": null,
+        "lastAnsweredAt": null,
+        "consecutiveFailures": 0
+      },
+      {
+        "authorityId": "index-dust20",
+        "protocols": [
+          "dust20"
+        ],
+        "ready": false,
+        "checkpoint": null,
+        "status": "unconfigured",
+        "checkedAt": "2026-09-06T12:52:56.641Z",
+        "lagBlocks": null,
+        "lastSuccessAt": null,
+        "lastAnsweredAt": null,
+        "consecutiveFailures": 0
+      },
+      {
+        "authorityId": "index-mezcal",
+        "protocols": [
+          "mezcal"
+        ],
+        "ready": false,
+        "checkpoint": null,
+        "status": "unconfigured",
+        "checkedAt": "2026-09-06T12:52:56.641Z",
+        "lagBlocks": null,
+        "lastSuccessAt": null,
+        "lastAnsweredAt": null,
+        "consecutiveFailures": 0
+      },
+      {
+        "authorityId": "index-names",
+        "protocols": [
+          "names"
+        ],
+        "ready": false,
+        "checkpoint": null,
+        "status": "unconfigured",
+        "checkedAt": "2026-09-06T12:52:56.641Z",
+        "lagBlocks": null,
+        "lastSuccessAt": null,
+        "lastAnsweredAt": null,
+        "consecutiveFailures": 0
+      },
+      {
+        "authorityId": "index-op20",
+        "protocols": [
+          "op_return",
+          "op_names"
+        ],
+        "ready": false,
+        "checkpoint": null,
+        "status": "unconfigured",
+        "checkedAt": "2026-09-06T12:52:56.641Z",
+        "lagBlocks": null,
+        "lastSuccessAt": null,
+        "lastAnsweredAt": null,
+        "consecutiveFailures": 0
+      },
+      {
+        "authorityId": "index-opinscriptions",
+        "protocols": [
+          "op_inscriptions"
+        ],
+        "ready": false,
+        "checkpoint": null,
+        "status": "unconfigured",
+        "checkedAt": "2026-09-06T12:52:56.641Z",
+        "lagBlocks": null,
+        "lastSuccessAt": null,
+        "lastAnsweredAt": null,
+        "consecutiveFailures": 0
+      },
+      {
+        "authorityId": "index-ordinals",
+        "protocols": [
+          "ordex"
+        ],
+        "ready": false,
+        "checkpoint": null,
+        "status": "unconfigured",
+        "checkedAt": "2026-09-06T12:52:56.641Z",
+        "lagBlocks": null,
+        "lastSuccessAt": null,
+        "lastAnsweredAt": null,
+        "consecutiveFailures": 0
+      },
+      {
+        "authorityId": "index-patina",
+        "protocols": [
+          "patina"
+        ],
+        "ready": false,
+        "checkpoint": null,
+        "status": "unconfigured",
+        "checkedAt": "2026-09-06T12:52:56.641Z",
+        "lagBlocks": null,
+        "lastSuccessAt": null,
+        "lastAnsweredAt": null,
+        "consecutiveFailures": 0
+      },
+      {
+        "authorityId": "index-stamps",
+        "protocols": [
+          "stamps",
+          "src20",
+          "src101"
+        ],
+        "ready": false,
+        "checkpoint": null,
+        "status": "unconfigured",
+        "checkedAt": "2026-09-06T12:52:56.641Z",
+        "lagBlocks": null,
+        "lastSuccessAt": null,
+        "lastAnsweredAt": null,
+        "consecutiveFailures": 0
+      },
+      {
+        "authorityId": "index-tandem",
+        "protocols": [
+          "tandem"
+        ],
+        "ready": false,
+        "checkpoint": null,
+        "status": "unconfigured",
+        "checkedAt": "2026-09-06T12:52:56.641Z",
+        "lagBlocks": null,
+        "lastSuccessAt": null,
+        "lastAnsweredAt": null,
+        "consecutiveFailures": 0
+      },
+      {
+        "authorityId": "index-tap",
+        "protocols": [
+          "tap"
+        ],
+        "ready": false,
+        "checkpoint": null,
+        "status": "unconfigured",
+        "checkedAt": "2026-09-06T12:52:56.641Z",
+        "lagBlocks": null,
+        "lastSuccessAt": null,
+        "lastAnsweredAt": null,
+        "consecutiveFailures": 0
+      },
+      {
+        "authorityId": "index-unat",
+        "protocols": [
+          "unat"
+        ],
+        "ready": false,
+        "checkpoint": null,
+        "status": "unconfigured",
+        "checkedAt": "2026-09-06T12:52:56.641Z",
+        "lagBlocks": null,
+        "lastSuccessAt": null,
+        "lastAnsweredAt": null,
+        "consecutiveFailures": 0
+      },
+      {
+        "authorityId": "index-witness-circles",
+        "protocols": [
+          "witness_circles"
+        ],
+        "ready": false,
+        "checkpoint": null,
+        "status": "unconfigured",
+        "checkedAt": "2026-09-06T12:52:56.641Z",
+        "lagBlocks": null,
+        "lastSuccessAt": null,
+        "lastAnsweredAt": null,
+        "consecutiveFailures": 0
+      },
+      {
+        "authorityId": "index-zcash-metaprotocols",
+        "protocols": [
+          "zerdinals",
+          "zrunes",
+          "zrc20"
+        ],
+        "ready": false,
+        "checkpoint": null,
+        "status": "unconfigured",
+        "checkedAt": "2026-09-06T12:52:56.641Z",
+        "lagBlocks": null,
+        "lastSuccessAt": null,
+        "lastAnsweredAt": null,
+        "consecutiveFailures": 0
+      },
+      {
+        "chain": "bitcoin",
+        "network": "mainnet",
+        "authorityId": "mempool-backend",
+        "protocols": [
+          "bitcoin"
+        ],
+        "ready": false,
+        "checkpoint": null,
+        "status": "degraded",
+        "checkedAt": "2026-09-06T12:52:44.323Z",
+        "lagBlocks": null,
+        "lastSuccessAt": null,
+        "lastAnsweredAt": null,
+        "consecutiveFailures": 13
+      },
+      {
+        "authorityId": "ord",
+        "protocols": [
+          "ordinals",
+          "rare_sats",
+          "runes"
+        ],
+        "ready": false,
+        "checkpoint": null,
+        "status": "unconfigured",
+        "checkedAt": "2026-09-06T12:52:56.641Z",
+        "lagBlocks": null,
+        "lastSuccessAt": null,
+        "lastAnsweredAt": null,
+        "consecutiveFailures": 0
+      },
+      {
+        "authorityId": "ord-dogecoin",
+        "protocols": [
+          "doginals",
+          "drc20",
+          "dunes"
+        ],
+        "ready": false,
+        "checkpoint": null,
+        "status": "unconfigured",
+        "checkedAt": "2026-09-06T12:52:56.641Z",
+        "lagBlocks": null,
+        "lastSuccessAt": null,
+        "lastAnsweredAt": null,
+        "consecutiveFailures": 0
+      }
+    ]
+  },
+  "configurationArtifact": "docs/acceptance/health-runtime-2026-09-06/start-candidate.mjs",
+  "scope": "Actual configured-source inventory. A missing configured authority blocks its dependent operations without inventing calls to those data routes."
+}

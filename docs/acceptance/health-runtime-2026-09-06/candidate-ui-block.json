@@ -1,0 +1,3303 @@
+{
+  "startedAt": "2026-09-06T12:56:35.521Z",
+  "scope": "real candidate DOM; one page; actual GET data; no intercepted responses",
+  "mode": "block",
+  "requests": [
+    {
+      "path": "/api/v1/universe/protocols?chain=bitcoin&network=mainnet",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/chains?network=mainnet",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/block/00000000000000000001014ea6d7cc2bceaa744c0a57001db6150f7e6d95769d",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/universe/protocols?chain=bitcoin&network=mainnet",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/block/00000000000000000001014ea6d7cc2bceaa744c0a57001db6150f7e6d95769d",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/blocks/965550",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/historical-price?timestamp=1788571675&currency=USD",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/block/00000000000000000001014ea6d7cc2bceaa744c0a57001db6150f7e6d95769d/summary",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/chains?network=mainnet",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/blocks/965540",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/blocks/965530",
+      "status": 200
+    }
+  ],
+  "assertions": [
+    {
+      "blockHash": "00000000000000000001014ea6d7cc2bceaa744c0a57001db6150f7e6d95769d",
+      "height": 965545,
+      "txCount": 4012,
+      "reload": true
+    },
+    {
+      "displayed": "Synced",
+      "node": {
+        "reachability": "reachable",
+        "synced": true,
+        "state": "synced",
+        "heightAtomic": "965768",
+        "blockHash": null,
+        "initialBlockDownload": false,
+        "blocksBehindNetworkAtomic": "0",
+        "observedAt": "2026-09-06T12:55:46.440Z",
+        "degradedReasons": [],
+        "authorityId": "mempool-backend",
+        "chain": "bitcoin",
+        "network": "mainnet",
+        "ageSeconds": 50.74,
+        "stale": false,
+        "lastFailureKind": null,
+        "checkpoint": {
+          "chain": "bitcoin",
+          "network": "mainnet",
+          "heightAtomic": "965768",
+          "blockHash": null,
+          "observedAt": "2026-09-06T12:55:46.440Z",
+          "initialBlockDownload": false,
+          "synced": true,
+          "blocksBehindNetworkAtomic": "0",
+          "authorityId": "mempool-backend"
+        }
+      },
+      "details": "Service details · History unavailable · Address history needs attention · Mempool needs attention · 31 protocol services need attention\nNode · mempool-backend\n\nreachable; Synced. Base chain synchronization.\n\nObserved 50s ago · 2026-09-06T12:55:46.440Z\n\nBlock 965768\n\nConfirmed history · mempool-backend\n\nunavailable; unknown coverage. Historical blocks, transactions and outpoints.\n\nNo observation\n\nMalformed\nThe source of confirmed history did not answer, so history older than the pending set cannot be read.\nLatest refresh: malformed\nAddress history · mempool-backend\n\nunknown; unknown coverage. Confirmed address balances and activity.\n\nNo observation\n\nAddress-history reads have not been independently verified.\nLatest refresh: malformed\nMempool · mempool-backend\n\nunknown; unknown coverage. Pending transactions and arrivals.\n\nNo observation\n\nCollection of the current pending set has not been verified.\nLatest refresh: malformed\nordinals · ord\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nrare sats · ord\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nnames · index-names\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nbitmap · index-bitmap\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nunat · index-unat\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nrunes · ord\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nalkanes · index-alkanes\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nmezcal · index-mezcal\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nstamps · index-stamps\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nsrc20 · index-stamps\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nsrc101 · index-stamps\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\natomicals nft · index-atomicals-nfts-and-realms\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nrealms · index-atomicals-nfts-and-realms\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nsubrealms · index-atomicals-nfts-and-realms\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\narc20 · index-atomicals\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nop return · index-op20\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nop names · index-op20\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nop inscriptions · index-opinscriptions\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nop drop · index-drops-and-opdrop\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\ndrops · index-drops-and-opdrop\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nbrc20 · index-brc20\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\ntap · index-tap\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\ndmt · index-dmt\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\ndust20 · index-dust20\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nblock20 · index-block20\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nchainbloom · index-chainbloom\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\npatina · index-patina\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nwitness circles · index-witness-circles\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\ntandem · index-tandem\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nordex · index-ordinals\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nanima · index-anima\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nMalformed\nThe source of confirmed history did not answer, so history older than the pending set cannot be read.\nAddress-history reads have not been independently verified.\nCollection of the current pending set has not been verified.\nThis protocol's indexer did not answer.\nThis service is not configured.\nAt least one protocol service cannot provide its offered history. Base reads have their own availability.\nRefresh status",
+      "escapeCloses": true
+    }
+  ],
+  "body": "UNIVERSE\nEXPLORER\nBTC\nBitcoin\nSynced\nBitcoin / BTC · Mainnet\nSynced\nBlock 965,768 · History unavailable · Address history needs attention · Mempool needs attention · 31 protocol services need attention\nDogecoin / DOGE · Mainnet\nStatus unknown\nHistory unavailable · Address history needs attention · Mempool needs attention · 4 protocol services need attention\nZcash / ZEC · Mainnet\nStatus unknown\nHistory unavailable · Address history needs attention · Mempool needs attention · 3 protocol services need attention\nService details · History unavailable · Address history needs attention · Mempool needs attention · 31 protocol services need attention\nNode · mempool-backend\n\nreachable; Synced. Base chain synchronization.\n\nObserved 50s ago · 2026-09-06T12:55:46.440Z\n\nBlock 965768\n\nConfirmed history · mempool-backend\n\nunavailable; unknown coverage. Historical blocks, transactions and outpoints.\n\nNo observation\n\nMalformed\nThe source of confirmed history did not answer, so history older than the pending set cannot be read.\nLatest refresh: malformed\nAddress history · mempool-backend\n\nunknown; unknown coverage. Confirmed address balances and activity.\n\nNo observation\n\nAddress-history reads have not been independently verified.\nLatest refresh: malformed\nMempool · mempool-backend\n\nunknown; unknown coverage. Pending transactions and arrivals.\n\nNo observation\n\nCollection of the current pending set has not been verified.\nLatest refresh: malformed\nordinals · ord\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nrare sats · ord\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nnames · index-names\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nbitmap · index-bitmap\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nunat · index-unat\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nrunes · ord\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nalkanes · index-alkanes\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nmezcal · index-mezcal\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nstamps · index-stamps\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nsrc20 · index-stamps\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nsrc101 · index-stamps\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\natomicals nft · index-atomicals-nfts-and-realms\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nrealms · index-atomicals-nfts-and-realms\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nsubrealms · index-atomicals-nfts-and-realms\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\narc20 · index-atomicals\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nop return · index-op20\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nop names · index-op20\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nop inscriptions · index-opinscriptions\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nop drop · index-drops-and-opdrop\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\ndrops · index-drops-and-opdrop\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nbrc20 · index-brc20\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\ntap · index-tap\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\ndmt · index-dmt\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\ndust20 · index-dust20\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nblock20 · index-block20\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nchainbloom · index-chainbloom\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\npatina · index-patina\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nwitness circles · index-witness-circles\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\ntandem · index-tandem\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nordex · index-ordinals\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nanima · index-anima\n\nunavailable; unavailable coverage; unknown. This protocol’s assets and history.\n\nNo observation\n\nThis protocol's indexer did not answer.\nThis service is not configured.\nLatest refresh: authority-unconfigured\nMalformed\nThe source of confirmed history did not answer, so history older than the pending set cannot be read.\nAddress-history reads have not been independently verified.\nCollection of the current pending set has not been verified.\nThis protocol's indexer did not answer.\nThis service is not configured.\nAt least one protocol service cannot provide its offered history. Base reads have their own availability.\nRefresh status\nSearch the chain\nAll chains\nDashboard\nMining\nMempool\nProtocols\nNetwork\nData\nTools\nLabs\nPortfolio\nCharts\nDocs\n \n~0 sat/vB\n0.34 - 44.5 sat/vB\n‎0.008 BTC\n7,224 transactions\nIn ~9 minutes\n \n~0 sat/vB\n0.32 - 0.35 sat/vB\n‎0.003 BTC\n6,167 transactions\nIn ~19 minutes\n \n~0 sat/vB\n0.30 - 0.33 sat/vB\n‎0.003 BTC\n6,440 transactions\nIn ~29 minutes\n \n~0 sat/vB\n0.28 - 0.31 sat/vB\n‎0.003 BTC\n1,802 transactions\nIn ~39 minutes\n \n~0 sat/vB\n0.23 - 0.29 sat/vB\n‎0.003 BTC\n1,426 transactions\nIn ~49 minutes\n \n~0 sat/vB\n0.21 - 0.23 sat/vB\n‎0.002 BTC\n1,118 transactions\nIn ~59 minutes\n \n~0 sat/vB\n0.20 - 0.21 sat/vB\n‎0.002 BTC\n4,779 transactions\nIn ~69 minutes\n \n~0 sat/vB\n0.10 - 0.20 sat/vB\n‎0.02 BTC\n11,769 transactions\n(16 blocks)\n \n965555\n~1 sat/vB\n0.35 - 60.0 sat/vB\n‎0.009 BTC\n6,216 transactions\n34 hours ago\n AntPool\n \n965554\n~1 sat/vB\n1.00 - 100 sat/vB\n‎0.031 BTC\n2,605 transactions\n34 hours ago\n AntPool\n \n965553\n~2 sat/vB\n1.01 - 476 sat/vB\n‎0.03 BTC\n3,553 transactions\n34 hours ago\n F2Pool\n \n965552\n~1 sat/vB\n1.06 - 83.0 sat/vB\n‎0.023 BTC\n3,059 transactions\n34 hours ago\n MARA Pool\n \n965551\n~0 sat/vB\n0.32 - 100 sat/vB\n‎0.006 BTC\n7,083 transactions\n35 hours ago\n ViaBTC\n \n965550\n~1 sat/vB\n0.39 - 79.2 sat/vB\n‎0.017 BTC\n5,653 transactions\n35 hours ago\n SpiderPool\n \n965549\n~0 sat/vB\n0.41 - 140 sat/vB\n‎0.014 BTC\n5,894 transactions\n35 hours ago\n AntPool\n \n965548\n~1 sat/vB\n0.39 - 100 sat/vB\n‎0.015 BTC\n5,875 transactions\n35 hours ago\n Foundry USA\n \n965547\n~1 sat/vB\n0.84 - 100 sat/vB\n‎0.02 BTC\n4,143 transactions\n35 hours ago\n ViaBTC\n \n965546\n~1 sat/vB\n1.02 - 133 sat/vB\n‎0.024 BTC\n2,641 transactions\n35 hours ago\n Luxor\n \n965545\n~3 sat/vB\n1.99 - 200 sat/vB\n‎0.037 BTC\n4,012 transactions\n35 hours ago\n NiceHash\n \n965544\n~1 sat/vB\n1.00 - 22.4 sat/vB\n‎0.013 BTC\n2,337 transactions\n36 hours ago\n ViaBTC\n \n965543\n~2 sat/vB\n1.07 - 200 sat/vB\n‎0.024 BTC\n3,860 transactions\n36 hours ago\n AntPool\n \n965542\n~2 sat/vB\n2.00 - 83.8 sat/vB\n‎0.028 BTC\n3,402 transactions\n36 hours ago\n Foundry USA\n \n965541\n~5 sat/vB\n4.00 - 190 sat/vB\n‎0.059 BTC\n3,786 transactions\n36 hours ago\n MARA Pool\n \n965540\n~5 sat/vB\n3.12 - 476 sat/vB\n‎0.059 BTC\n3,749 transactions\n37 hours ago\n AntPool\n \n965539\n~0 sat/vB\n0.33 - 709 sat/vB\n‎0.007 BTC\n7,474 transactions\n37 hours ago\n AntPool\n \n965538\n~1 sat/vB\n0.60 - 200 sat/vB\n‎0.022 BTC\n3,544 transactions\n37 hours ago\n ViaBTC\n \n965537\n~2 sat/vB\n1.04 - 226 sat/vB\n‎0.027 BTC\n3,856 transactions\n38 hours ago\n Foundry USA\n \n965536\n~5 sat/vB\n4.01 - 600 sat/vB\n‎0.065 BTC\n3,880 transactions\n38 hours ago\n Luxor\n \n965535\n~0 sat/vB\n0.33 - 77.5 sat/vB\n‎0.008 BTC\n6,714 transactions\n38 hours ago\n ViaBTC\n \n965534\n~0 sat/vB\n0.33 - 79.2 sat/vB\n‎0.005 BTC\n6,880 transactions\n38 hours ago\n AntPool\n \n965533\n~1 sat/vB\n0.39 - 476 sat/vB\n‎0.021 BTC\n5,197 transactions\n38 hours ago\n Foundry USA\n \n965532\n~1 sat/vB\n0.37 - 15.0 sat/vB\n‎0.009 BTC\n4,927 transactions\n38 hours ago\n AntPool\n \n965531\n~2 sat/vB\n1.51 - 301 sat/vB\n‎0.037 BTC\n3,534 transactions\n38 hours ago\n SECPOOL\n \n965530\n~3 sat/vB\n1.99 - 100 sat/vB\n‎0.043 BTC\n3,813 transactions\n39 hours ago\n SpiderPool\n \n965529\n~1 sat/vB\n1.00 - 32.3 sat/vB\n‎0.016 BTC\n2,008 transactions\n39 hours ago\n ViaBTC\n \n965528\n~3 sat/vB\n2.00 - 73.9 sat/vB\n‎0.031 BTC\n3,716 transactions\n39 hours ago\n NiceHash\nBLOCK\n965545\n✕\nHash\t‎000000...d95769d\nTimestamp\t‎2026-09-05 01:27:55 (35 hours ago)\nSize\t‎1.56 MB\nWeight\t‎3.99 MWU\nFee span\t1.99 - 200 sat/vB\nMedian fee\t~3 sat/vB$0.33\nTotal fees\t‎0.037 BTC $2,951.18\nSubsidy + fees\t‎3.162 BTC $250,348.05\nMiner\t NiceHash\nDetails\n4,012 transactions\n««\n«\n1\n2\n3\n4\n5\n»\n»»\n\n\n\n\n\nUNIVERSE\nEXPLORER\n\nLive Bitcoin, Dogecoin, and Zcash activity.\n\nLanguage\nالعربية\nČeština\nDansk\nDeutsch\nEnglish\nEspañol\nفارسی\nFrançais\n한국어\nHrvatski\nहिन्दी\nनेपाली\nItaliano\nעברית\nქართული\nLietuvių\nMagyar\nМакедонски\nNederlands\n日本語\nNorsk\nPolski\nPortuguês\nRomână\nРусский\nSlovenščina\nSuomi\nSvenska\nไทย\nTürkçe\nУкраїнська\nTiếng Việt\n中文\nFiat currency\nAUD\nCAD\nCHF\nEUR\nGBP\nJPY\nUSD\nTime zone\nUTC - Greenwich Mean Time (GMT)\n────\nUTC-12 - Anywhere on Earth (AoE)\nUTC-11 - Samoa Standard Time (SST)\nUTC-10 - Hawaii Standard Time (HST)\nUTC-9 - Alaska Standard Time (AKST)\nUTC-8 - Pacific Standard Time (PST)\nUTC-7 - Mountain Standard Time (MST)\nUTC-6 - Central Standard Time (CST)\nUTC-5 - Eastern Standard Time (EST)\nUTC-4 - Atlantic Standard Time (AST)\nUTC-3 - Argentina Time (ART)\nUTC-2 - Fernando de Noronha Time (FNT)\nUTC-1 - Azores Time (AZOT)\nUTC+1 - Central European Time (CET)\nUTC+2 - Eastern European Time (EET)\nUTC+3 - Moscow Standard Time (MSK)\nUTC+4 - Armenia Time (AMT)\nUTC+5 - Pakistan Standard Time (PKT)\nUTC+6 - Xinjiang Time (XJT)\nUTC+7 - Indochina Time (ICT)\nUTC+8 - Hong Kong Time (HKT)\nUTC+9 - Japan Standard Time (JST)\nUTC+10 - Australian Eastern Standard Time (AEST)\nUTC+11 - Norfolk Time (NFT)\nUTC+12 - New Zealand Standard Time (NZST)\nUTC+13 - Tonga Time (TOT)\nUTC+14 - Line Islands Time (LINT)\nAmount units\nBTC\nsats\nFiat\nTheme\nLight\nDark\nHigh contrast\nEXPLORE\n\nRecent blocks\n\nMining\n\nCharts\n\nReplacements\n\nUNIVERSE\n\nProtocols\n\nLive protocol activity\n\nHow this explorer reads assets\n\nTOOLS\n\nAPI documentation\n\nBroadcast a transaction\n\nTest a transaction\n\nFee calculator\n\nLEGAL\n\nSource and licenses\n\nTerms of service\n\nPrivacy policy\n\nThird-party licenses\n\nRunning v3.3.1 445702835",
+  "status": "PASS SCOPED ASSERTIONS",
+  "healthResponses": [
+    {
+      "url": "http://127.0.0.1:4310/api/v1/chains?network=mainnet",
+      "rows": [
+        {
+          "schemaVersion": "universe-chain-capability-v1",
+          "chain": "bitcoin",
+          "network": "mainnet",
+          "asset": {
+            "symbol": "BTC",
+            "name": "Bitcoin",
+            "precision": 8,
+            "atomicUnit": "satoshi"
+          },
+          "ready": false,
+          "tip": null,
+          "sync": {
+            "state": "ready",
+            "initialBlockDownload": false,
+            "progressDecimal": null,
+            "updatedAt": "2026-09-06T12:55:46.440Z"
+          },
+          "mempool": {
+            "supported": true,
+            "state": "unavailable",
+            "completeness": "unavailable",
+            "snapshotId": null,
+            "sequenceAtomic": null,
+            "observedAt": null
+          },
+          "reads": {
+            "transaction": true,
+            "block": true,
+            "address": true,
+            "outpoint": true,
+            "feeEstimates": true,
+            "projectedBlocks": true,
+            "candidateBuckets": false
+          },
+          "protocols": [
+            {
+              "protocolId": "ordinals",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "rare_sats",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "names",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "bitmap",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "unat",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "runes",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "alkanes",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "mezcal",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "stamps",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "src20",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "src101",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "atomicals_nft",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "realms",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "subrealms",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "arc20",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "op_return",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "op_names",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "op_inscriptions",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "op_drop",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "drops",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "brc20",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "tap",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "dmt",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "dust20",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "block20",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "chainbloom",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "patina",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "witness_circles",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "tandem",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "ordex",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "anima",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            }
+          ],
+          "coverage": {
+            "confirmedHistory": "unavailable",
+            "addressHistory": "unavailable",
+            "protocolHistory": "unavailable"
+          },
+          "updatedAt": "2026-09-06T12:56:36.622Z",
+          "lagBlocksAtomic": null,
+          "degradedReasons": [
+            "malformed",
+            "confirmed-history-authority-unavailable",
+            "address-history-unverified",
+            "mempool-collection-unverified",
+            "protocol-authority-unavailable",
+            "authority-unconfigured",
+            "protocol-history-unavailable"
+          ],
+          "release": {
+            "sha": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+          },
+          "health": {
+            "schemaVersion": "universe-explorer-health-v2",
+            "chain": "bitcoin",
+            "network": "mainnet",
+            "node": {
+              "reachability": "reachable",
+              "synced": true,
+              "state": "synced",
+              "heightAtomic": "965768",
+              "blockHash": null,
+              "initialBlockDownload": false,
+              "blocksBehindNetworkAtomic": "0",
+              "observedAt": "2026-09-06T12:55:46.440Z",
+              "degradedReasons": [],
+              "authorityId": "mempool-backend",
+              "chain": "bitcoin",
+              "network": "mainnet",
+              "ageSeconds": 50.182,
+              "stale": false,
+              "lastFailureKind": null,
+              "checkpoint": {
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "heightAtomic": "965768",
+                "blockHash": null,
+                "observedAt": "2026-09-06T12:55:46.440Z",
+                "initialBlockDownload": false,
+                "synced": true,
+                "blocksBehindNetworkAtomic": "0",
+                "authorityId": "mempool-backend"
+              }
+            },
+            "confirmed": {
+              "availability": "unavailable",
+              "coverage": "unknown",
+              "heightAtomic": null,
+              "blockHash": null,
+              "lagBlocksAtomic": null,
+              "observedAt": null,
+              "reads": {
+                "block": true,
+                "transaction": true,
+                "outpoint": true
+              },
+              "degradedReasons": [
+                "malformed",
+                "confirmed-history-authority-unavailable"
+              ],
+              "authorityId": "mempool-backend",
+              "chain": "bitcoin",
+              "network": "mainnet",
+              "ageSeconds": null,
+              "stale": true,
+              "lastFailureKind": "malformed",
+              "checkpoint": null
+            },
+            "address": {
+              "availability": "unknown",
+              "coverage": "unknown",
+              "observedAt": null,
+              "degradedReasons": [
+                "address-history-unverified"
+              ],
+              "authorityId": "mempool-backend",
+              "chain": "bitcoin",
+              "network": "mainnet",
+              "ageSeconds": null,
+              "stale": true,
+              "lastFailureKind": "malformed"
+            },
+            "mempool": {
+              "supported": true,
+              "state": "unknown",
+              "completeness": "unknown",
+              "snapshotId": null,
+              "sequenceAtomic": null,
+              "observedAt": null,
+              "ageSeconds": null,
+              "degradedReasons": [
+                "mempool-collection-unverified"
+              ],
+              "authorityId": "mempool-backend",
+              "chain": "bitcoin",
+              "network": "mainnet",
+              "stale": true,
+              "lastFailureKind": "malformed"
+            },
+            "protocols": [
+              {
+                "protocolId": "ordinals",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "ord",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "rare_sats",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "ord",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "names",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-names",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "bitmap",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-bitmap",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "unat",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-unat",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "runes",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "ord",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "alkanes",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-alkanes",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "mezcal",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-mezcal",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "stamps",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-stamps",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "src20",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-stamps",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "src101",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-stamps",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "atomicals_nft",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-atomicals-nfts-and-realms",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "realms",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-atomicals-nfts-and-realms",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "subrealms",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-atomicals-nfts-and-realms",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "arc20",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-atomicals",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "op_return",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-op20",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "op_names",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-op20",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "op_inscriptions",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-opinscriptions",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "op_drop",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-drops-and-opdrop",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "drops",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-drops-and-opdrop",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "brc20",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-brc20",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "tap",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-tap",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "dmt",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-dmt",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "dust20",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-dust20",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "block20",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-block20",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "chainbloom",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-chainbloom",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "patina",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-patina",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "witness_circles",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-witness-circles",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "tandem",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-tandem",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "ordex",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-ordinals",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "anima",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-anima",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              }
+            ],
+            "summary": {
+              "baseChainSynced": true,
+              "servicesReady": false,
+              "allOfferedReady": false,
+              "degradedReasons": [
+                "malformed",
+                "confirmed-history-authority-unavailable",
+                "address-history-unverified",
+                "mempool-collection-unverified",
+                "protocol-authority-unavailable",
+                "authority-unconfigured",
+                "protocol-history-unavailable"
+              ]
+            },
+            "observedAt": "2026-09-06T12:56:36.622Z"
+          }
+        },
+        {
+          "schemaVersion": "universe-chain-capability-v1",
+          "chain": "dogecoin",
+          "network": "mainnet",
+          "asset": {
+            "symbol": "DOGE",
+            "name": "Dogecoin",
+            "precision": 8,
+            "atomicUnit": "koinu"
+          },
+          "ready": false,
+          "tip": null,
+          "sync": {
+            "state": "unavailable",
+            "initialBlockDownload": null,
+            "progressDecimal": null,
+            "updatedAt": null
+          },
+          "mempool": {
+            "supported": true,
+            "state": "unavailable",
+            "completeness": "unavailable",
+            "snapshotId": null,
+            "sequenceAtomic": null,
+            "observedAt": null
+          },
+          "reads": {
+            "transaction": true,
+            "block": true,
+            "address": true,
+            "outpoint": true,
+            "feeEstimates": true,
+            "projectedBlocks": false,
+            "candidateBuckets": true
+          },
+          "protocols": [
+            {
+              "protocolId": "doginals",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "authority-capability-disabled"
+              ]
+            },
+            {
+              "protocolId": "drc20",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "authority-capability-disabled"
+              ]
+            },
+            {
+              "protocolId": "tap_doge",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable"
+              ]
+            },
+            {
+              "protocolId": "dunes",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "authority-capability-disabled"
+              ]
+            }
+          ],
+          "coverage": {
+            "confirmedHistory": "unavailable",
+            "addressHistory": "unavailable",
+            "protocolHistory": "unavailable"
+          },
+          "updatedAt": "2026-09-06T12:56:36.622Z",
+          "lagBlocksAtomic": null,
+          "degradedReasons": [
+            "base-chain-authority-unavailable",
+            "confirmed-history-unconfigured",
+            "address-history-unconfigured",
+            "mempool-collector-unavailable",
+            "authority-capability-disabled",
+            "protocol-authority-unavailable",
+            "protocol-history-unavailable"
+          ],
+          "release": {
+            "sha": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+          },
+          "health": {
+            "schemaVersion": "universe-explorer-health-v2",
+            "chain": "dogecoin",
+            "network": "mainnet",
+            "node": {
+              "reachability": "unknown",
+              "synced": null,
+              "state": "unknown",
+              "heightAtomic": null,
+              "blockHash": null,
+              "initialBlockDownload": null,
+              "blocksBehindNetworkAtomic": null,
+              "observedAt": null,
+              "degradedReasons": [
+                "base-chain-authority-unavailable"
+              ],
+              "authorityId": "dogecoin-blockbook",
+              "chain": "dogecoin",
+              "network": "mainnet",
+              "ageSeconds": null,
+              "stale": true,
+              "lastFailureKind": null,
+              "checkpoint": null
+            },
+            "confirmed": {
+              "availability": "unavailable",
+              "coverage": "unknown",
+              "heightAtomic": null,
+              "blockHash": null,
+              "lagBlocksAtomic": null,
+              "observedAt": null,
+              "reads": {
+                "block": true,
+                "transaction": true,
+                "outpoint": true
+              },
+              "degradedReasons": [
+                "confirmed-history-unconfigured"
+              ],
+              "authorityId": "dogecoin-blockbook",
+              "chain": "dogecoin",
+              "network": "mainnet",
+              "ageSeconds": null,
+              "stale": true,
+              "lastFailureKind": null,
+              "checkpoint": null
+            },
+            "address": {
+              "availability": "unavailable",
+              "coverage": "unknown",
+              "observedAt": null,
+              "degradedReasons": [
+                "address-history-unconfigured"
+              ],
+              "authorityId": "dogecoin-blockbook",
+              "chain": "dogecoin",
+              "network": "mainnet",
+              "ageSeconds": null,
+              "stale": true,
+              "lastFailureKind": null
+            },
+            "mempool": {
+              "supported": true,
+              "state": "unavailable",
+              "completeness": "unavailable",
+              "snapshotId": null,
+              "sequenceAtomic": null,
+              "observedAt": null,
+              "ageSeconds": null,
+              "degradedReasons": [
+                "mempool-collector-unavailable"
+              ],
+              "authorityId": "dogecoin-core",
+              "chain": "dogecoin",
+              "network": "mainnet",
+              "stale": true,
+              "lastFailureKind": null
+            },
+            "protocols": [
+              {
+                "protocolId": "doginals",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "authority-capability-disabled"
+                ],
+                "authorityId": "ord-dogecoin",
+                "chain": "dogecoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": null
+              },
+              {
+                "protocolId": "drc20",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "authority-capability-disabled"
+                ],
+                "authorityId": "ord-dogecoin",
+                "chain": "dogecoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": null
+              },
+              {
+                "protocolId": "tap_doge",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable"
+                ],
+                "authorityId": "index-doge-tap",
+                "chain": "dogecoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": null
+              },
+              {
+                "protocolId": "dunes",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "authority-capability-disabled"
+                ],
+                "authorityId": "ord-dogecoin",
+                "chain": "dogecoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": null
+              }
+            ],
+            "summary": {
+              "baseChainSynced": null,
+              "servicesReady": false,
+              "allOfferedReady": false,
+              "degradedReasons": [
+                "base-chain-authority-unavailable",
+                "confirmed-history-unconfigured",
+                "address-history-unconfigured",
+                "mempool-collector-unavailable",
+                "authority-capability-disabled",
+                "protocol-authority-unavailable",
+                "protocol-history-unavailable"
+              ]
+            },
+            "observedAt": "2026-09-06T12:56:36.622Z"
+          }
+        },
+        {
+          "schemaVersion": "universe-chain-capability-v1",
+          "chain": "zcash",
+          "network": "mainnet",
+          "asset": {
+            "symbol": "ZEC",
+            "name": "Zcash",
+            "precision": 8,
+            "atomicUnit": "zatoshi"
+          },
+          "ready": false,
+          "tip": null,
+          "sync": {
+            "state": "unavailable",
+            "initialBlockDownload": null,
+            "progressDecimal": null,
+            "updatedAt": null
+          },
+          "mempool": {
+            "supported": true,
+            "state": "unavailable",
+            "completeness": "unavailable",
+            "snapshotId": null,
+            "sequenceAtomic": null,
+            "observedAt": null
+          },
+          "reads": {
+            "transaction": true,
+            "block": true,
+            "address": true,
+            "outpoint": true,
+            "feeEstimates": true,
+            "projectedBlocks": false,
+            "candidateBuckets": true
+          },
+          "protocols": [
+            {
+              "protocolId": "zerdinals",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "confirmed-history-unconfigured",
+                "protocol-qualification-pending"
+              ]
+            },
+            {
+              "protocolId": "zrunes",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "confirmed-history-unconfigured",
+                "protocol-qualification-pending"
+              ]
+            },
+            {
+              "protocolId": "zrc20",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "confirmed-history-unconfigured",
+                "protocol-qualification-pending"
+              ]
+            }
+          ],
+          "coverage": {
+            "confirmedHistory": "unavailable",
+            "addressHistory": "unavailable",
+            "protocolHistory": "unavailable"
+          },
+          "updatedAt": "2026-09-06T12:56:36.622Z",
+          "lagBlocksAtomic": null,
+          "degradedReasons": [
+            "base-chain-authority-unavailable",
+            "confirmed-history-unconfigured",
+            "address-history-unconfigured",
+            "mempool-collector-unavailable",
+            "protocol-qualification-pending",
+            "protocol-history-unavailable"
+          ],
+          "release": {
+            "sha": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+          },
+          "health": {
+            "schemaVersion": "universe-explorer-health-v2",
+            "chain": "zcash",
+            "network": "mainnet",
+            "node": {
+              "reachability": "unknown",
+              "synced": null,
+              "state": "unknown",
+              "heightAtomic": null,
+              "blockHash": null,
+              "initialBlockDownload": null,
+              "blocksBehindNetworkAtomic": null,
+              "observedAt": null,
+              "degradedReasons": [
+                "base-chain-authority-unavailable"
+              ],
+              "authorityId": "zcash-node",
+              "chain": "zcash",
+              "network": "mainnet",
+              "ageSeconds": null,
+              "stale": true,
+              "lastFailureKind": null,
+              "checkpoint": null
+            },
+            "confirmed": {
+              "availability": "unavailable",
+              "coverage": "unavailable",
+              "heightAtomic": null,
+              "blockHash": null,
+              "lagBlocksAtomic": null,
+              "observedAt": null,
+              "reads": {
+                "block": true,
+                "transaction": true,
+                "outpoint": true
+              },
+              "degradedReasons": [
+                "confirmed-history-unconfigured"
+              ],
+              "authorityId": "index-zcash-metaprotocols",
+              "chain": "zcash",
+              "network": "mainnet",
+              "ageSeconds": null,
+              "stale": true,
+              "lastFailureKind": null,
+              "checkpoint": null
+            },
+            "address": {
+              "availability": "unavailable",
+              "coverage": "unavailable",
+              "observedAt": null,
+              "degradedReasons": [
+                "address-history-unconfigured"
+              ],
+              "authorityId": "index-zcash-metaprotocols",
+              "chain": "zcash",
+              "network": "mainnet",
+              "ageSeconds": null,
+              "stale": true,
+              "lastFailureKind": null
+            },
+            "mempool": {
+              "supported": true,
+              "state": "unavailable",
+              "completeness": "unavailable",
+              "snapshotId": null,
+              "sequenceAtomic": null,
+              "observedAt": null,
+              "ageSeconds": null,
+              "degradedReasons": [
+                "mempool-collector-unavailable"
+              ],
+              "authorityId": "index-zcash-metaprotocols",
+              "chain": "zcash",
+              "network": "mainnet",
+              "stale": true,
+              "lastFailureKind": "unavailable"
+            },
+            "protocols": [
+              {
+                "protocolId": "zerdinals",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "confirmed-history-unconfigured",
+                  "protocol-qualification-pending"
+                ],
+                "authorityId": "index-zcash-metaprotocols",
+                "chain": "zcash",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": null
+              },
+              {
+                "protocolId": "zrunes",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "confirmed-history-unconfigured",
+                  "protocol-qualification-pending"
+                ],
+                "authorityId": "index-zcash-metaprotocols",
+                "chain": "zcash",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": null
+              },
+              {
+                "protocolId": "zrc20",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "confirmed-history-unconfigured",
+                  "protocol-qualification-pending"
+                ],
+                "authorityId": "index-zcash-metaprotocols",
+                "chain": "zcash",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": null
+              }
+            ],
+            "summary": {
+              "baseChainSynced": null,
+              "servicesReady": false,
+              "allOfferedReady": false,
+              "degradedReasons": [
+                "base-chain-authority-unavailable",
+                "confirmed-history-unconfigured",
+                "address-history-unconfigured",
+                "mempool-collector-unavailable",
+                "protocol-qualification-pending",
+                "protocol-history-unavailable"
+              ]
+            },
+            "observedAt": "2026-09-06T12:56:36.622Z"
+          }
+        }
+      ]
+    },
+    {
+      "url": "http://127.0.0.1:4310/api/v1/chains?network=mainnet",
+      "rows": [
+        {
+          "schemaVersion": "universe-chain-capability-v1",
+          "chain": "bitcoin",
+          "network": "mainnet",
+          "asset": {
+            "symbol": "BTC",
+            "name": "Bitcoin",
+            "precision": 8,
+            "atomicUnit": "satoshi"
+          },
+          "ready": false,
+          "tip": null,
+          "sync": {
+            "state": "ready",
+            "initialBlockDownload": false,
+            "progressDecimal": null,
+            "updatedAt": "2026-09-06T12:55:46.440Z"
+          },
+          "mempool": {
+            "supported": true,
+            "state": "unavailable",
+            "completeness": "unavailable",
+            "snapshotId": null,
+            "sequenceAtomic": null,
+            "observedAt": null
+          },
+          "reads": {
+            "transaction": true,
+            "block": true,
+            "address": true,
+            "outpoint": true,
+            "feeEstimates": true,
+            "projectedBlocks": true,
+            "candidateBuckets": false
+          },
+          "protocols": [
+            {
+              "protocolId": "ordinals",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "rare_sats",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "names",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "bitmap",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "unat",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "runes",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "alkanes",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "mezcal",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "stamps",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "src20",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "src101",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "atomicals_nft",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "realms",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "subrealms",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "arc20",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "op_return",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "op_names",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "op_inscriptions",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "op_drop",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "drops",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "brc20",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "tap",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "dmt",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "dust20",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "block20",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "chainbloom",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "patina",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "witness_circles",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "tandem",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "ordex",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            },
+            {
+              "protocolId": "anima",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable",
+                "authority-unconfigured"
+              ]
+            }
+          ],
+          "coverage": {
+            "confirmedHistory": "unavailable",
+            "addressHistory": "unavailable",
+            "protocolHistory": "unavailable"
+          },
+          "updatedAt": "2026-09-06T12:56:37.180Z",
+          "lagBlocksAtomic": null,
+          "degradedReasons": [
+            "malformed",
+            "confirmed-history-authority-unavailable",
+            "address-history-unverified",
+            "mempool-collection-unverified",
+            "protocol-authority-unavailable",
+            "authority-unconfigured",
+            "protocol-history-unavailable"
+          ],
+          "release": {
+            "sha": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+          },
+          "health": {
+            "schemaVersion": "universe-explorer-health-v2",
+            "chain": "bitcoin",
+            "network": "mainnet",
+            "node": {
+              "reachability": "reachable",
+              "synced": true,
+              "state": "synced",
+              "heightAtomic": "965768",
+              "blockHash": null,
+              "initialBlockDownload": false,
+              "blocksBehindNetworkAtomic": "0",
+              "observedAt": "2026-09-06T12:55:46.440Z",
+              "degradedReasons": [],
+              "authorityId": "mempool-backend",
+              "chain": "bitcoin",
+              "network": "mainnet",
+              "ageSeconds": 50.74,
+              "stale": false,
+              "lastFailureKind": null,
+              "checkpoint": {
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "heightAtomic": "965768",
+                "blockHash": null,
+                "observedAt": "2026-09-06T12:55:46.440Z",
+                "initialBlockDownload": false,
+                "synced": true,
+                "blocksBehindNetworkAtomic": "0",
+                "authorityId": "mempool-backend"
+              }
+            },
+            "confirmed": {
+              "availability": "unavailable",
+              "coverage": "unknown",
+              "heightAtomic": null,
+              "blockHash": null,
+              "lagBlocksAtomic": null,
+              "observedAt": null,
+              "reads": {
+                "block": true,
+                "transaction": true,
+                "outpoint": true
+              },
+              "degradedReasons": [
+                "malformed",
+                "confirmed-history-authority-unavailable"
+              ],
+              "authorityId": "mempool-backend",
+              "chain": "bitcoin",
+              "network": "mainnet",
+              "ageSeconds": null,
+              "stale": true,
+              "lastFailureKind": "malformed",
+              "checkpoint": null
+            },
+            "address": {
+              "availability": "unknown",
+              "coverage": "unknown",
+              "observedAt": null,
+              "degradedReasons": [
+                "address-history-unverified"
+              ],
+              "authorityId": "mempool-backend",
+              "chain": "bitcoin",
+              "network": "mainnet",
+              "ageSeconds": null,
+              "stale": true,
+              "lastFailureKind": "malformed"
+            },
+            "mempool": {
+              "supported": true,
+              "state": "unknown",
+              "completeness": "unknown",
+              "snapshotId": null,
+              "sequenceAtomic": null,
+              "observedAt": null,
+              "ageSeconds": null,
+              "degradedReasons": [
+                "mempool-collection-unverified"
+              ],
+              "authorityId": "mempool-backend",
+              "chain": "bitcoin",
+              "network": "mainnet",
+              "stale": true,
+              "lastFailureKind": "malformed"
+            },
+            "protocols": [
+              {
+                "protocolId": "ordinals",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "ord",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "rare_sats",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "ord",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "names",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-names",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "bitmap",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-bitmap",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "unat",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-unat",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "runes",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "ord",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "alkanes",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-alkanes",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "mezcal",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-mezcal",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "stamps",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-stamps",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "src20",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-stamps",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "src101",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-stamps",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "atomicals_nft",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-atomicals-nfts-and-realms",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "realms",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-atomicals-nfts-and-realms",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "subrealms",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-atomicals-nfts-and-realms",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "arc20",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-atomicals",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "op_return",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-op20",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "op_names",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-op20",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "op_inscriptions",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-opinscriptions",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "op_drop",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-drops-and-opdrop",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "drops",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-drops-and-opdrop",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "brc20",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-brc20",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "tap",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-tap",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "dmt",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-dmt",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "dust20",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-dust20",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "block20",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-block20",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "chainbloom",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-chainbloom",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "patina",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-patina",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "witness_circles",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-witness-circles",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "tandem",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-tandem",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "ordex",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-ordinals",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              },
+              {
+                "protocolId": "anima",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable",
+                  "authority-unconfigured"
+                ],
+                "authorityId": "index-anima",
+                "chain": "bitcoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": "authority-unconfigured"
+              }
+            ],
+            "summary": {
+              "baseChainSynced": true,
+              "servicesReady": false,
+              "allOfferedReady": false,
+              "degradedReasons": [
+                "malformed",
+                "confirmed-history-authority-unavailable",
+                "address-history-unverified",
+                "mempool-collection-unverified",
+                "protocol-authority-unavailable",
+                "authority-unconfigured",
+                "protocol-history-unavailable"
+              ]
+            },
+            "observedAt": "2026-09-06T12:56:37.180Z"
+          }
+        },
+        {
+          "schemaVersion": "universe-chain-capability-v1",
+          "chain": "dogecoin",
+          "network": "mainnet",
+          "asset": {
+            "symbol": "DOGE",
+            "name": "Dogecoin",
+            "precision": 8,
+            "atomicUnit": "koinu"
+          },
+          "ready": false,
+          "tip": null,
+          "sync": {
+            "state": "unavailable",
+            "initialBlockDownload": null,
+            "progressDecimal": null,
+            "updatedAt": null
+          },
+          "mempool": {
+            "supported": true,
+            "state": "unavailable",
+            "completeness": "unavailable",
+            "snapshotId": null,
+            "sequenceAtomic": null,
+            "observedAt": null
+          },
+          "reads": {
+            "transaction": true,
+            "block": true,
+            "address": true,
+            "outpoint": true,
+            "feeEstimates": true,
+            "projectedBlocks": false,
+            "candidateBuckets": true
+          },
+          "protocols": [
+            {
+              "protocolId": "doginals",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "authority-capability-disabled"
+              ]
+            },
+            {
+              "protocolId": "drc20",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "authority-capability-disabled"
+              ]
+            },
+            {
+              "protocolId": "tap_doge",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "protocol-authority-unavailable"
+              ]
+            },
+            {
+              "protocolId": "dunes",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "authority-capability-disabled"
+              ]
+            }
+          ],
+          "coverage": {
+            "confirmedHistory": "unavailable",
+            "addressHistory": "unavailable",
+            "protocolHistory": "unavailable"
+          },
+          "updatedAt": "2026-09-06T12:56:37.180Z",
+          "lagBlocksAtomic": null,
+          "degradedReasons": [
+            "base-chain-authority-unavailable",
+            "confirmed-history-unconfigured",
+            "address-history-unconfigured",
+            "mempool-collector-unavailable",
+            "authority-capability-disabled",
+            "protocol-authority-unavailable",
+            "protocol-history-unavailable"
+          ],
+          "release": {
+            "sha": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+          },
+          "health": {
+            "schemaVersion": "universe-explorer-health-v2",
+            "chain": "dogecoin",
+            "network": "mainnet",
+            "node": {
+              "reachability": "unknown",
+              "synced": null,
+              "state": "unknown",
+              "heightAtomic": null,
+              "blockHash": null,
+              "initialBlockDownload": null,
+              "blocksBehindNetworkAtomic": null,
+              "observedAt": null,
+              "degradedReasons": [
+                "base-chain-authority-unavailable"
+              ],
+              "authorityId": "dogecoin-blockbook",
+              "chain": "dogecoin",
+              "network": "mainnet",
+              "ageSeconds": null,
+              "stale": true,
+              "lastFailureKind": null,
+              "checkpoint": null
+            },
+            "confirmed": {
+              "availability": "unavailable",
+              "coverage": "unknown",
+              "heightAtomic": null,
+              "blockHash": null,
+              "lagBlocksAtomic": null,
+              "observedAt": null,
+              "reads": {
+                "block": true,
+                "transaction": true,
+                "outpoint": true
+              },
+              "degradedReasons": [
+                "confirmed-history-unconfigured"
+              ],
+              "authorityId": "dogecoin-blockbook",
+              "chain": "dogecoin",
+              "network": "mainnet",
+              "ageSeconds": null,
+              "stale": true,
+              "lastFailureKind": null,
+              "checkpoint": null
+            },
+            "address": {
+              "availability": "unavailable",
+              "coverage": "unknown",
+              "observedAt": null,
+              "degradedReasons": [
+                "address-history-unconfigured"
+              ],
+              "authorityId": "dogecoin-blockbook",
+              "chain": "dogecoin",
+              "network": "mainnet",
+              "ageSeconds": null,
+              "stale": true,
+              "lastFailureKind": null
+            },
+            "mempool": {
+              "supported": true,
+              "state": "unavailable",
+              "completeness": "unavailable",
+              "snapshotId": null,
+              "sequenceAtomic": null,
+              "observedAt": null,
+              "ageSeconds": null,
+              "degradedReasons": [
+                "mempool-collector-unavailable"
+              ],
+              "authorityId": "dogecoin-core",
+              "chain": "dogecoin",
+              "network": "mainnet",
+              "stale": true,
+              "lastFailureKind": null
+            },
+            "protocols": [
+              {
+                "protocolId": "doginals",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "authority-capability-disabled"
+                ],
+                "authorityId": "ord-dogecoin",
+                "chain": "dogecoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": null
+              },
+              {
+                "protocolId": "drc20",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "authority-capability-disabled"
+                ],
+                "authorityId": "ord-dogecoin",
+                "chain": "dogecoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": null
+              },
+              {
+                "protocolId": "tap_doge",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "protocol-authority-unavailable"
+                ],
+                "authorityId": "index-doge-tap",
+                "chain": "dogecoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": null
+              },
+              {
+                "protocolId": "dunes",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "authority-capability-disabled"
+                ],
+                "authorityId": "ord-dogecoin",
+                "chain": "dogecoin",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": null
+              }
+            ],
+            "summary": {
+              "baseChainSynced": null,
+              "servicesReady": false,
+              "allOfferedReady": false,
+              "degradedReasons": [
+                "base-chain-authority-unavailable",
+                "confirmed-history-unconfigured",
+                "address-history-unconfigured",
+                "mempool-collector-unavailable",
+                "authority-capability-disabled",
+                "protocol-authority-unavailable",
+                "protocol-history-unavailable"
+              ]
+            },
+            "observedAt": "2026-09-06T12:56:37.180Z"
+          }
+        },
+        {
+          "schemaVersion": "universe-chain-capability-v1",
+          "chain": "zcash",
+          "network": "mainnet",
+          "asset": {
+            "symbol": "ZEC",
+            "name": "Zcash",
+            "precision": 8,
+            "atomicUnit": "zatoshi"
+          },
+          "ready": false,
+          "tip": null,
+          "sync": {
+            "state": "unavailable",
+            "initialBlockDownload": null,
+            "progressDecimal": null,
+            "updatedAt": null
+          },
+          "mempool": {
+            "supported": true,
+            "state": "unavailable",
+            "completeness": "unavailable",
+            "snapshotId": null,
+            "sequenceAtomic": null,
+            "observedAt": null
+          },
+          "reads": {
+            "transaction": true,
+            "block": true,
+            "address": true,
+            "outpoint": true,
+            "feeEstimates": true,
+            "projectedBlocks": false,
+            "candidateBuckets": true
+          },
+          "protocols": [
+            {
+              "protocolId": "zerdinals",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "confirmed-history-unconfigured",
+                "protocol-qualification-pending"
+              ]
+            },
+            {
+              "protocolId": "zrunes",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "confirmed-history-unconfigured",
+                "protocol-qualification-pending"
+              ]
+            },
+            {
+              "protocolId": "zrc20",
+              "state": "unavailable",
+              "coverage": "unavailable",
+              "updatedAt": null,
+              "lagBlocksAtomic": null,
+              "degradedReasons": [
+                "confirmed-history-unconfigured",
+                "protocol-qualification-pending"
+              ]
+            }
+          ],
+          "coverage": {
+            "confirmedHistory": "unavailable",
+            "addressHistory": "unavailable",
+            "protocolHistory": "unavailable"
+          },
+          "updatedAt": "2026-09-06T12:56:37.180Z",
+          "lagBlocksAtomic": null,
+          "degradedReasons": [
+            "base-chain-authority-unavailable",
+            "confirmed-history-unconfigured",
+            "address-history-unconfigured",
+            "mempool-collector-unavailable",
+            "protocol-qualification-pending",
+            "protocol-history-unavailable"
+          ],
+          "release": {
+            "sha": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+          },
+          "health": {
+            "schemaVersion": "universe-explorer-health-v2",
+            "chain": "zcash",
+            "network": "mainnet",
+            "node": {
+              "reachability": "unknown",
+              "synced": null,
+              "state": "unknown",
+              "heightAtomic": null,
+              "blockHash": null,
+              "initialBlockDownload": null,
+              "blocksBehindNetworkAtomic": null,
+              "observedAt": null,
+              "degradedReasons": [
+                "base-chain-authority-unavailable"
+              ],
+              "authorityId": "zcash-node",
+              "chain": "zcash",
+              "network": "mainnet",
+              "ageSeconds": null,
+              "stale": true,
+              "lastFailureKind": null,
+              "checkpoint": null
+            },
+            "confirmed": {
+              "availability": "unavailable",
+              "coverage": "unavailable",
+              "heightAtomic": null,
+              "blockHash": null,
+              "lagBlocksAtomic": null,
+              "observedAt": null,
+              "reads": {
+                "block": true,
+                "transaction": true,
+                "outpoint": true
+              },
+              "degradedReasons": [
+                "confirmed-history-unconfigured"
+              ],
+              "authorityId": "index-zcash-metaprotocols",
+              "chain": "zcash",
+              "network": "mainnet",
+              "ageSeconds": null,
+              "stale": true,
+              "lastFailureKind": null,
+              "checkpoint": null
+            },
+            "address": {
+              "availability": "unavailable",
+              "coverage": "unavailable",
+              "observedAt": null,
+              "degradedReasons": [
+                "address-history-unconfigured"
+              ],
+              "authorityId": "index-zcash-metaprotocols",
+              "chain": "zcash",
+              "network": "mainnet",
+              "ageSeconds": null,
+              "stale": true,
+              "lastFailureKind": null
+            },
+            "mempool": {
+              "supported": true,
+              "state": "unavailable",
+              "completeness": "unavailable",
+              "snapshotId": null,
+              "sequenceAtomic": null,
+              "observedAt": null,
+              "ageSeconds": null,
+              "degradedReasons": [
+                "mempool-collector-unavailable"
+              ],
+              "authorityId": "index-zcash-metaprotocols",
+              "chain": "zcash",
+              "network": "mainnet",
+              "stale": true,
+              "lastFailureKind": "unavailable"
+            },
+            "protocols": [
+              {
+                "protocolId": "zerdinals",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "confirmed-history-unconfigured",
+                  "protocol-qualification-pending"
+                ],
+                "authorityId": "index-zcash-metaprotocols",
+                "chain": "zcash",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": null
+              },
+              {
+                "protocolId": "zrunes",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "confirmed-history-unconfigured",
+                  "protocol-qualification-pending"
+                ],
+                "authorityId": "index-zcash-metaprotocols",
+                "chain": "zcash",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": null
+              },
+              {
+                "protocolId": "zrc20",
+                "availability": "unavailable",
+                "coverage": "unavailable",
+                "qualification": "unknown",
+                "checkpoint": null,
+                "lagBlocksAtomic": null,
+                "observedAt": null,
+                "degradedReasons": [
+                  "confirmed-history-unconfigured",
+                  "protocol-qualification-pending"
+                ],
+                "authorityId": "index-zcash-metaprotocols",
+                "chain": "zcash",
+                "network": "mainnet",
+                "ageSeconds": null,
+                "stale": true,
+                "lastFailureKind": null
+              }
+            ],
+            "summary": {
+              "baseChainSynced": null,
+              "servicesReady": false,
+              "allOfferedReady": false,
+              "degradedReasons": [
+                "base-chain-authority-unavailable",
+                "confirmed-history-unconfigured",
+                "address-history-unconfigured",
+                "mempool-collector-unavailable",
+                "protocol-qualification-pending",
+                "protocol-history-unavailable"
+              ]
+            },
+            "observedAt": "2026-09-06T12:56:37.180Z"
+          }
+        }
+      ]
+    }
+  ],
+  "finishedAt": "2026-09-06T12:56:38.364Z"
+}

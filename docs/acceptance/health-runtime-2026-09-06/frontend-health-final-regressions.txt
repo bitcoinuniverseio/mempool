@@ -1,0 +1,11 @@
+
+ RUN  v3.2.7 D:/universe/mempool/.tmp/explorer-health-cc524f6d97b5/frontend
+
+ ✓ src/app/universe/multichain-explorer/multichain-view.spec.ts (115 tests) 38ms
+ ✓ src/app/universe/multichain-explorer/chain-health.spec.ts (28 tests) 13ms
+
+ Test Files  2 passed (2)
+      Tests  143 passed (143)
+   Start at  12:33:55
+   Duration  2.10s (transform 562ms, setup 355ms, collect 1.20s, tests 51ms, environment 1ms, prepare 642ms)
+

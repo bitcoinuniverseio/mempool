@@ -1,0 +1,82 @@
+{
+  "recordedAt": "2026-09-06T13:11:07.536Z",
+  "method": "Actual local gateway GET bytes compared with the built frontend files from the candidate directory",
+  "source": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+  "currentRepositorySource": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+  "changedFrontendOrGatewayFilesSinceRuntimeSource": [],
+  "gatewaySourceSha256": "05ba5039cc6bdafc518c27aba4e92c590f7886cbf37eb1602235e32848dd2670",
+  "files": [
+    {
+      "path": "index.html",
+      "url": "http://127.0.0.1:4310/",
+      "status": 200,
+      "bytes": 4123,
+      "localSha256": "5b273a5f8084324167254af468ada4c7a5c9c903eae1fed50cd95c1512fa19fa",
+      "servedSha256": "5b273a5f8084324167254af468ada4c7a5c9c903eae1fed50cd95c1512fa19fa",
+      "matches": true,
+      "localLastWriteUtc": "2026-09-06T12:46:34.847Z"
+    },
+    {
+      "path": "/resources/config.js",
+      "url": "http://127.0.0.1:4310/resources/config.js",
+      "status": 200,
+      "bytes": 209,
+      "localSha256": "f93fdb50c701e9ff774a75ef81011dc4e2e18cc6450b90cc6c10e832cfcede4f",
+      "servedSha256": "f93fdb50c701e9ff774a75ef81011dc4e2e18cc6450b90cc6c10e832cfcede4f",
+      "matches": true,
+      "localLastWriteUtc": "2026-09-06T12:25:14.921Z"
+    },
+    {
+      "path": "/resources/customize.js",
+      "url": "http://127.0.0.1:4310/resources/customize.js",
+      "status": 200,
+      "bytes": 0,
+      "localSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "servedSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "matches": true,
+      "localLastWriteUtc": "2026-09-06T12:45:21.370Z"
+    },
+    {
+      "path": "styles.9bcb07998e67af4b.css",
+      "url": "http://127.0.0.1:4310/styles.9bcb07998e67af4b.css",
+      "status": 200,
+      "bytes": 208851,
+      "localSha256": "04649c67d84e01db45be4b3817d8414c2bb2dea5c5037951e2c2599dd16ce0fa",
+      "servedSha256": "04649c67d84e01db45be4b3817d8414c2bb2dea5c5037951e2c2599dd16ce0fa",
+      "matches": true,
+      "localLastWriteUtc": "2026-09-06T12:46:32.393Z"
+    },
+    {
+      "path": "runtime.d8ea9d7fc345f35c.js",
+      "url": "http://127.0.0.1:4310/runtime.d8ea9d7fc345f35c.js",
+      "status": 200,
+      "bytes": 10108,
+      "localSha256": "b55bb7aa6d24bb4700ac6d0fa59b084b80df2e96bca9172f22180ee3b470fa19",
+      "servedSha256": "b55bb7aa6d24bb4700ac6d0fa59b084b80df2e96bca9172f22180ee3b470fa19",
+      "matches": true,
+      "localLastWriteUtc": "2026-09-06T12:46:32.393Z"
+    },
+    {
+      "path": "polyfills.1dcbcc2e7b946d1f.js",
+      "url": "http://127.0.0.1:4310/polyfills.1dcbcc2e7b946d1f.js",
+      "status": 200,
+      "bytes": 35425,
+      "localSha256": "ee6cec67884936bbc8737660c2522573b8a81b887697d6231ae11ce6d69ba0c0",
+      "servedSha256": "ee6cec67884936bbc8737660c2522573b8a81b887697d6231ae11ce6d69ba0c0",
+      "matches": true,
+      "localLastWriteUtc": "2026-09-06T12:46:32.393Z"
+    },
+    {
+      "path": "main.066715fdfa45a1f7.js",
+      "url": "http://127.0.0.1:4310/main.066715fdfa45a1f7.js",
+      "status": 200,
+      "bytes": 1482862,
+      "localSha256": "8f3f63339a91a5f0ec2ef5b691a1e73f96a8fc21ffd946088c8b94751f8b9ff7",
+      "servedSha256": "8f3f63339a91a5f0ec2ef5b691a1e73f96a8fc21ffd946088c8b94751f8b9ff7",
+      "matches": true,
+      "localLastWriteUtc": "2026-09-06T12:46:32.393Z"
+    }
+  ],
+  "accepted": true,
+  "limitation": "This binds the served local assets and unchanged frontend/gateway source. It does not assert that the newly repaired mempool backend is serving; Bitcoin data still come from the older public backend."
+}

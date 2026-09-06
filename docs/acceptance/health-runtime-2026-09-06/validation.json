@@ -1,0 +1,127 @@
+{
+  "recordedAt": "2026-09-06T13:13:56.275Z",
+  "candidateRevisions": {
+    "repositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+    "servedFrontendSource": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+    "servedGatewaySource": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+    "servedOverlay": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+    "publicBitcoinBackend": "4c93322bb",
+    "backendApisDevelopAfterPr178": "237005add5a8294dad86cf3fa9aa0cd3b3ec5f8b",
+    "limitation": "The c65 source fixes for Bitcoin transaction height and backend metadata were built/tested locally. They were not serving the public upstream used by the browser evidence."
+  },
+  "finalMempoolBackend": {
+    "suitesPassed": 76,
+    "testsPassed": 730,
+    "testsSkipped": 4,
+    "durationSeconds": 98.676,
+    "build": "PASS",
+    "skips": "Live Esplora address summary/history/UTXO/cursor cases gated by UNIVERSE_ESPLORA_CONTRACT_URL; pinned Jest configuration also excludes __integration_tests__."
+  },
+  "finalMempoolFrontend": {
+    "filesPassed": 97,
+    "testsPassed": 1543,
+    "startedAt": "2026-09-06T13:09:51Z",
+    "durationSeconds": 63.32,
+    "earlierFullCheckpoint": {
+      "filesPassed": 95,
+      "testsPassed": 1531,
+      "startedAt": "2026-09-06T12:29:10Z",
+      "limitation": "Predated the final receipt/session additions; superseded by the97-file run."
+    },
+    "healthFocused": {
+      "filesPassed": 2,
+      "testsPassed": 143
+    },
+    "finalProductionBuild": "PASS, as recorded by root; frontend/gateway files unchanged between64d9 andc65"
+  },
+  "backendApisCi": {
+    "source": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+    "unitSuitesPassed": 423,
+    "unitTestsPassed": 4572,
+    "integrationFrameworkSuitesPassed": 4,
+    "integrationFrameworkTestsPassed": 27,
+    "realNetworkE2e": false,
+    "limitation": "Framework integration tests do not establish owned authority-to-consumer network journeys."
+  },
+  "logEvidence": [
+    {
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mempool-backend-final-tests.log",
+      "sha256": "57980cd716b460925f5418696981f7f6550658af43d9edee7009b0dc1cd8fe56",
+      "bytes": 263888,
+      "exactSummaryLines": [
+        "> mempool-backend@3.3.1 test:ci",
+        "Test Suites: 76 passed, 76 total",
+        "Tests:       4 skipped, 730 passed, 734 total",
+        "Time:        98.676 s, estimated 196 s"
+      ]
+    },
+    {
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mempool-backend-final-build.log",
+      "sha256": "9237e4dbe7038de18bd3ec9b0442fc397c9c5fbd149f20c371fcf1569b45be2f",
+      "bytes": 224,
+      "exactSummaryLines": [
+        "> mempool-backend@3.3.1 build",
+        "> npm run tsc && npm run create-resources",
+        "> mempool-backend@3.3.1 tsc",
+        "> tsc -p tsconfig.build.json",
+        "> mempool-backend@3.3.1 create-resources",
+        "> node scripts/create-resources.mjs"
+      ]
+    },
+    {
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\frontend-final-all-tests.log",
+      "sha256": "348fe06f19835eb74559197a40f40840998cd6d088f305c15ebe2c20ef960512",
+      "bytes": 8882,
+      "exactSummaryLines": [
+        " Test Files  97 passed (97)",
+        "      Tests  1543 passed (1543)",
+        "   Start at  13:09:51",
+        "   Duration  63.32s (transform 23.08s, setup 8.26s, collect 30.69s, tests 26.96s, environment 20.30s, prepare 14.56s)"
+      ]
+    },
+    {
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\frontend-health-final-regressions.txt",
+      "sha256": "14a300a232b656ce399008b1f404f77a2c59a98342a4d8dc3f2a486f01d5ff79",
+      "bytes": 440,
+      "exactSummaryLines": [
+        " Test Files  2 passed (2)",
+        "      Tests  143 passed (143)",
+        "   Start at  12:33:55",
+        "   Duration  2.10s (transform 562ms, setup 355ms, collect 1.20s, tests 51ms, environment 1ms, prepare 642ms)"
+      ]
+    },
+    {
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\frontend-tests-health.txt",
+      "sha256": "8209491b22f23a3b4aeffd11586eb955fff026d05aa7438c732ca2c27d7bcd9b",
+      "bytes": 8531,
+      "exactSummaryLines": [
+        " Test Files  95 passed (95)",
+        "      Tests  1531 passed (1531)",
+        "   Start at  12:29:10",
+        "   Duration  63.16s (transform 9.44s, setup 10.79s, collect 29.74s, tests 17.80s, environment 18.37s, prepare 18.03s)"
+      ]
+    },
+    {
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\backend-apis-ci-tests.log",
+      "sha256": "b16875cc4f3d516eb39a0915c87301c884838969db353989d7203c8194abba27",
+      "bytes": 153238,
+      "exactSummaryLines": [
+        "tests\tRun unit tests\t2026-09-06T12:53:40.5833562Z PASS src/universe-explorer/chains/chain-capabilities.service.spec.ts (5.465 s)",
+        "tests\tRun unit tests\t2026-09-06T12:53:40.7922533Z PASS src/universe-explorer/chains/chain-health-repair.spec.ts",
+        "tests\tRun unit tests\t2026-09-06T12:53:41.6012756Z PASS src/universe-explorer/chains/authority-health-observations.spec.ts",
+        "tests\tRun unit tests\t2026-09-06T12:53:45.0271655Z PASS src/universe-explorer/chains/chain-capabilities.routes.spec.ts",
+        "tests\tRun unit tests\t2026-09-06T12:53:50.5779692Z Test Suites: 423 passed, 423 total",
+        "tests\tRun unit tests\t2026-09-06T12:53:50.5780487Z Tests:       4572 passed, 4572 total",
+        "tests\tRun unit tests\t2026-09-06T12:53:50.6592775Z Time:        17.771 s",
+        "tests\tRun end-to-end tests\t2026-09-06T12:54:26.8455989Z Test Suites: 4 passed, 4 total",
+        "tests\tRun end-to-end tests\t2026-09-06T12:54:26.8457013Z Tests:       27 passed, 27 total",
+        "tests\tRun end-to-end tests\t2026-09-06T12:54:26.8458916Z Time:        34.208 s"
+      ]
+    }
+  ],
+  "artifactBinding": "docs/acceptance/health-runtime-2026-09-06/candidate-asset-binding.json",
+  "realNetworkE2ePasses": 0,
+  "finalRepositoryRevision": "453a3ecaf02c4fd46a7a06a59f171d40e8d3c281",
+  "productionCodeRevision": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+  "preparedConfigurationRequirement": "Set chainReference:false for index checkpoints; preserve explicit absent/stale node observations independently. This requirement does not alter the archived runtime configuration or imply a new serving overlay."
+}

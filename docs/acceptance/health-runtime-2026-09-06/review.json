@@ -1,0 +1,355 @@
+{
+  "recordedAt": "2026-09-06T13:07:43.426Z",
+  "scope": "Reviewed bounded candidate observations; not complete operation acceptance",
+  "revisions": {
+    "frontendSource": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+    "gatewaySource": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+    "overlaySource": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+    "ownedPublicBackend": "4c93322bb",
+    "ownedPublicOverlay": "64f2c2259fd3097d5bdeaaf201269ba12c910849",
+    "note": "The gateway served local candidate frontend/overlay code but proxied base Bitcoin reads to the older owned public backend. Backend metadata repairs not executed in that upstream have no runtime pass here."
+  },
+  "reviewedUi": [
+    {
+      "mode": "block",
+      "status": "PASS SCOPED ASSERTIONS",
+      "startedAt": "2026-09-06T12:56:35.521Z",
+      "finishedAt": "2026-09-06T12:56:38.364Z",
+      "artifact": "docs/acceptance/health-runtime-2026-09-06/candidate-ui-block.json",
+      "acceptedScope": "Exact block hash, height965545 and4012 transactions before/after reload; loaded node synced state matched its actual health response while independent history/protocol failures remained visible, and Escape closed details."
+    },
+    {
+      "mode": "signet",
+      "status": "PASS SCOPED ASSERTIONS",
+      "startedAt": "2026-09-06T12:56:48.848Z",
+      "finishedAt": "2026-09-06T12:56:51.863Z",
+      "artifact": "docs/acceptance/health-runtime-2026-09-06/candidate-ui-signet.json",
+      "acceptedScope": "Bitcoin Signet and DOGE/ZEC Mainnet labels and API response contexts survived reload. No Signet node authority or Signet data journey was verified."
+    },
+    {
+      "mode": "address",
+      "status": "PASS SCOPED ASSERTIONS",
+      "startedAt": "2026-09-06T12:56:52.358Z",
+      "finishedAt": "2026-09-06T12:57:05.947Z",
+      "artifact": "docs/acceptance/health-runtime-2026-09-06/candidate-ui-address.json",
+      "acceptedScope": "Exact address identity and164-transaction summary only. No full history pagination, independent monetary total or retry coverage."
+    },
+    {
+      "mode": "transaction",
+      "status": "BLOCKED",
+      "startedAt": "2026-09-06T12:57:06.437Z",
+      "finishedAt": "2026-09-06T12:57:07.651Z",
+      "artifact": "docs/acceptance/health-runtime-2026-09-06/candidate-ui-transaction.json",
+      "acceptedScope": "BLOCKED. Loaded identity/fee did not fix or certify the inconsistent upstream transaction block height."
+    }
+  ],
+  "browserAttempts": {
+    "artifacts": [
+      "docs/acceptance/health-runtime-2026-09-06/candidate-browser-attempt1.json",
+      "docs/acceptance/health-runtime-2026-09-06/candidate-browser-attempt2.json",
+      "docs/acceptance/health-runtime-2026-09-06/candidate-browser-evidence.json"
+    ],
+    "acceptedFromOriginalHarness": [
+      {
+        "name": "health layout default 390x844",
+        "status": "PASS",
+        "startedAt": "2026-09-06T12:51:59.258Z",
+        "details": {
+          "viewport": 390,
+          "documentWidth": 390,
+          "menu": {
+            "left": 38,
+            "right": 390,
+            "bottom": 802,
+            "height": 748
+          },
+          "viewportHeight": 844,
+          "summaryHeight": 74.5,
+          "theme": "default"
+        }
+      },
+      {
+        "name": "health layout default 844x390",
+        "status": "PASS",
+        "startedAt": "2026-09-06T12:52:00.409Z",
+        "details": {
+          "viewport": 844,
+          "documentWidth": 844,
+          "menu": {
+            "left": 155,
+            "right": 507,
+            "bottom": 346.3999938964844,
+            "height": 294.3999938964844
+          },
+          "viewportHeight": 390,
+          "summaryHeight": 74.5,
+          "theme": "default"
+        }
+      },
+      {
+        "name": "health layout dark 390x844",
+        "status": "PASS",
+        "startedAt": "2026-09-06T12:52:01.939Z",
+        "details": {
+          "viewport": 390,
+          "documentWidth": 390,
+          "menu": {
+            "left": 38,
+            "right": 390,
+            "bottom": 802,
+            "height": 748
+          },
+          "viewportHeight": 844,
+          "summaryHeight": 74.5,
+          "theme": "dark"
+        }
+      },
+      {
+        "name": "health layout dark 844x390",
+        "status": "PASS",
+        "startedAt": "2026-09-06T12:52:03.501Z",
+        "details": {
+          "viewport": 844,
+          "documentWidth": 844,
+          "menu": {
+            "left": 155,
+            "right": 507,
+            "bottom": 346.3999938964844,
+            "height": 294.3999938964844
+          },
+          "viewportHeight": 390,
+          "summaryHeight": 74.5,
+          "theme": "dark"
+        }
+      }
+    ],
+    "rejectedClaims": "The original transaction PASS matched an early loading/status banner rather than confirmed transaction content. CSP wait-helper failures, initial missing block content and forced browser closure are retained as failed attempts. Only four layout measurements plus separately reviewed screenshots are accepted from that harness.",
+    "manualScreenshotReview": "Root manually reviewed the four390/844 light/dark health captures and the failed-recovery capture; other screenshots remain supporting records of the exact corresponding scoped script."
+  },
+  "recovery": {
+    "artifact": "docs/acceptance/health-runtime-2026-09-06/candidate-recovery-evidence.json",
+    "acceptedScope": "Local overlay stopped; gateway502 cleared old UI health to unknown and exposed retry; restart of the same candidate plus explicit retry repopulated component health. Repopulated unknown/unavailable source state is not a successful authority recovery.",
+    "productionRestart": false
+  },
+  "http": {
+    "artifact": "docs/acceptance/health-runtime-2026-09-06/candidate-http-reviewed.json",
+    "checkCount": 15,
+    "harnessPasses": 13,
+    "harnessFailures": 2,
+    "interpretation": "No blanket HTTP pass. The mainnet synced=true expectation ignored the current stale/unknown observation; the transaction result exposed an actual height discrepancy. The other checks prove their bounded response or proxy assertion only.",
+    "actualTransactionDefect": "The observed containing block hash resolves to height 965545. Transaction responses reported 965334 in the prior public observation and 965332 through the candidate proxy; both are inconsistent with that containing block.",
+    "addressLimit": "Identity and the 164-transaction summary were compared; zero amount aggregates and full pagination were not independently established.",
+    "outspendLimit": "Only the returned spent boolean was compared; no spending transaction/witness or complete consumer journey was established."
+  },
+  "tls": {
+    "artifact": "docs/acceptance/health-runtime-2026-09-06/gateway-tls-success-evidence.json",
+    "scope": "11 scoped certificate trust, HTTPS and WSS transport cases with an isolated synthetic upstream; no certificate store modification or production endpoint validation."
+  },
+  "allOriginals": [
+    {
+      "artifact": "docs/acceptance/health-runtime-2026-09-06/candidate-ui-block.json",
+      "sha256": "0f9c28de6f78106052d0e09ae653895a9ae895a94b8bcb72fa6a55750afba75d",
+      "bytes": 140066,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\candidate-ui-block.json"
+    },
+    {
+      "artifact": "docs/acceptance/health-runtime-2026-09-06/candidate-ui-signet.json",
+      "sha256": "a4a1a6060ba619192f10c8e7b1145b9cc024d255e0727ad5bd578cc38692c3aa",
+      "bytes": 118434,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\candidate-ui-signet.json"
+    },
+    {
+      "artifact": "docs/acceptance/health-runtime-2026-09-06/candidate-ui-address.json",
+      "sha256": "32bdbf649d39816651d242b22defc710e05e1cfef0488999a1f5468b2a5b703d",
+      "bytes": 71993,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\candidate-ui-address.json"
+    },
+    {
+      "artifact": "docs/acceptance/health-runtime-2026-09-06/candidate-ui-transaction.json",
+      "sha256": "fba8ceb3cbdefe33e2351739aef875cd2274f87a1eda5116a456c8b8c752d407",
+      "bytes": 61624,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\candidate-ui-transaction.json"
+    },
+    {
+      "artifact": "docs/acceptance/health-runtime-2026-09-06/candidate-ui-reviewed.mjs",
+      "sha256": "80f8e8697f33bb20f25f87de99f6272caaedeb88473071b39cccfb55015e7116",
+      "bytes": 6957,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\candidate-ui-reviewed.mjs"
+    },
+    {
+      "artifact": "docs/acceptance/health-runtime-2026-09-06/candidate-browser.mjs",
+      "sha256": "70e0a0716fad972ece2cf7857d1b5ad6401e5040ba5a330ebd2cb60805947e99",
+      "bytes": 8081,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\candidate-browser.mjs"
+    },
+    {
+      "artifact": "docs/acceptance/health-runtime-2026-09-06/candidate-http.mjs",
+      "sha256": "68a747f6822c3013049bfb916ebee2b3dc062482ef64dcd4602828bd19f87192",
+      "bytes": 4676,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\candidate-http.mjs"
+    },
+    {
+      "artifact": "docs/acceptance/health-runtime-2026-09-06/start-candidate.mjs",
+      "sha256": "bd7ee283eee41c63bc72352c46ef0911aacd2eec6e405f981d4633ede336432c",
+      "bytes": 2348,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\start-candidate.mjs"
+    },
+    {
+      "artifact": "docs/acceptance/health-runtime-2026-09-06/candidate-browser-attempt1.json",
+      "sha256": "7ccb5893e0578caae733fa0195b2c1cdc032d5cac7b9cc4c775c4c40832ef215",
+      "bytes": 3449,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\candidate-browser-attempt1.json"
+    },
+    {
+      "artifact": "docs/acceptance/health-runtime-2026-09-06/candidate-browser-attempt2.json",
+      "sha256": "986c9372fef5d58899907fb7f33b83db8dcf93be81161a774466b0fa025b4df8",
+      "bytes": 3368,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\candidate-browser-attempt2.json"
+    },
+    {
+      "artifact": "docs/acceptance/health-runtime-2026-09-06/candidate-browser-evidence.json",
+      "sha256": "0fc21afba503577cd056f0c6ec42c137dc4e30a601fac1c38652f19520582be6",
+      "bytes": 13995,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\candidate-browser-evidence.json"
+    },
+    {
+      "artifact": "docs/acceptance/health-runtime-2026-09-06/candidate-browser-attempt2.log",
+      "sha256": "369b44e4e04fee49af6110c630188137e1c0c9cefe83e54492ba9344e4c557ac",
+      "bytes": 5554,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\candidate-browser-attempt2.log"
+    },
+    {
+      "artifact": "docs/acceptance/health-runtime-2026-09-06/candidate-browser-attempt3.log",
+      "sha256": "1cde6f9de78f53d5bee3444ad16ba1ccea76ca0eaad732088decbd1de8ca8fba",
+      "bytes": 8354,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\candidate-browser-attempt3.log"
+    },
+    {
+      "artifact": "docs/acceptance/health-runtime-2026-09-06/candidate-browser-run.log",
+      "sha256": "9011d7160968c7ab2346308467ecbb7652670cc7b3c3d17cb978ba0f6ca73c30",
+      "bytes": 1679,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\candidate-browser-run.log"
+    },
+    {
+      "artifact": "docs/acceptance/health-runtime-2026-09-06/owned-public-read-attempt-1.json",
+      "sha256": "e9288a708f91435f036c0ea5092ad990d000446fb5600a256719516d9a696f39",
+      "bytes": 2794,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\owned-public-read-attempt-1.json"
+    },
+    {
+      "artifact": "docs/acceptance/health-runtime-2026-09-06/owned-public-read-evidence.json",
+      "sha256": "563d14a25c1ba662a9c13fcd8bdcac8c9bd0a6793b93ce1f9441e15e567f9fcb",
+      "bytes": 3935,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\owned-public-read-evidence.json"
+    },
+    {
+      "artifact": "docs/acceptance/health-runtime-2026-09-06/probe-owned-reads.mjs",
+      "sha256": "e1775f1caa74af9ddc97f6f4f82ba71c6213f67cc0567da8360aa375286e7323",
+      "bytes": 2822,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\probe-owned-reads.mjs"
+    },
+    {
+      "artifact": "docs/acceptance/health-runtime-2026-09-06/gateway-tls-success-evidence.json",
+      "sha256": "10250605173b003b596c26dacc2709ecb8dd819197d8d12c5cc36bc85b27e6c7",
+      "bytes": 3197,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\gateway-tls-success-evidence.json"
+    },
+    {
+      "artifact": "docs/acceptance/health-runtime-2026-09-06/gateway-tls-success.mjs",
+      "sha256": "12cf429c748fb8c2ee1f9a7ca5b713b7a07b7f224b81e76e8429df16a0ffe6c1",
+      "bytes": 10668,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\gateway-tls-success.mjs"
+    },
+    {
+      "artifact": "docs/acceptance/health-runtime-2026-09-06/candidate-ui-block-health.png",
+      "sha256": "b3aaf9ccf4473bd82228d1409dae88af967fa728b5342a060e5d9fe7452a11b0",
+      "bytes": 193346,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\candidate-ui-block-health.png"
+    },
+    {
+      "artifact": "docs/acceptance/health-runtime-2026-09-06/candidate-ui-block-reload.png",
+      "sha256": "952d1a46258dcb9a64efb1bb28bfcfd32722a49d225b75941361a380009dd068",
+      "bytes": 97654,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\candidate-ui-block-reload.png"
+    },
+    {
+      "artifact": "docs/acceptance/health-runtime-2026-09-06/candidate-ui-signet-initial.png",
+      "sha256": "30e97882ddf7c49b28751099ea05fa9a03881eb6ac8554940fc0110daea91155",
+      "bytes": 148021,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\candidate-ui-signet-initial.png"
+    },
+    {
+      "artifact": "docs/acceptance/health-runtime-2026-09-06/candidate-ui-signet-reload.png",
+      "sha256": "ab6fdfdee6ded1a8900d634553479bd1a9e79fa90d9d1d164c950ae5676b2607",
+      "bytes": 109195,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\candidate-ui-signet-reload.png"
+    },
+    {
+      "artifact": "docs/acceptance/health-runtime-2026-09-06/candidate-ui-address-loaded.png",
+      "sha256": "05cddcb519d5118921df30068b3ae41328b6e18bf787ccd3ac71d423c26a93ad",
+      "bytes": 123602,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\candidate-ui-address-loaded.png"
+    },
+    {
+      "artifact": "docs/acceptance/health-runtime-2026-09-06/candidate-ui-transaction-loaded.png",
+      "sha256": "ff7c295799bc0ab0774811e2d292153ce142e81cc95808a4e8d98389843c314d",
+      "bytes": 74309,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\candidate-ui-transaction-loaded.png"
+    },
+    {
+      "artifact": "docs/acceptance/health-runtime-2026-09-06/candidate-health-default-390.png",
+      "sha256": "8c26052b146de8699bab6cc0a994e7bbf054744800c14fc73e862e4eb0ce95c0",
+      "bytes": 61441,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\candidate-health-default-390.png"
+    },
+    {
+      "artifact": "docs/acceptance/health-runtime-2026-09-06/candidate-health-default-844.png",
+      "sha256": "b7774b1b54ea3131d007ea128da6b59818cdfbe32f07eedcb9b06af4a99914e8",
+      "bytes": 69706,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\candidate-health-default-844.png"
+    },
+    {
+      "artifact": "docs/acceptance/health-runtime-2026-09-06/candidate-health-dark-390.png",
+      "sha256": "deb70fe630bd9f2d2145cd1f86b60a2642ada1b74dbb9fb3fc57c79c9ad21765",
+      "bytes": 62327,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\candidate-health-dark-390.png"
+    },
+    {
+      "artifact": "docs/acceptance/health-runtime-2026-09-06/candidate-health-dark-844.png",
+      "sha256": "4bfec26ab850c52b7a495d83a93131a245e3259fbcb8d8a011babfd67c42bc87",
+      "bytes": 72896,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\candidate-health-dark-844.png"
+    },
+    {
+      "artifact": "docs/acceptance/health-runtime-2026-09-06/candidate-recovery-evidence.json",
+      "sha256": "fcf58d7fd3f8831d4ce1f6007de114a782d899c6a56121442b71b0fe8de9bcd1",
+      "bytes": 10640,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\candidate-recovery-evidence.json"
+    },
+    {
+      "artifact": "docs/acceptance/health-runtime-2026-09-06/candidate-recovery.mjs",
+      "sha256": "5d8890f5764082a72b30cd02bad7f3b1fd5e311a40d9eeb1d8c4b9dd6a95e236",
+      "bytes": 4338,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\candidate-recovery.mjs"
+    },
+    {
+      "artifact": "docs/acceptance/health-runtime-2026-09-06/candidate-recovery-failed.png",
+      "sha256": "265aac29638db168cd25f2d7e165cf2a367813aee54cefbfa54638991138e3b0",
+      "bytes": 144244,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\candidate-recovery-failed.png"
+    },
+    {
+      "artifact": "docs/acceptance/health-runtime-2026-09-06/candidate-recovery-restored.png",
+      "sha256": "b826a58678ee61edeb7a614ac18eb5b97d581fce09d7ff4c2f0ed1de22206519",
+      "bytes": 174842,
+      "original": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\candidate-recovery-restored.png"
+    }
+  ],
+  "realNetworkE2ePasses": 0,
+  "finalRepositoryCandidate": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+  "validationArtifact": "docs/acceptance/health-runtime-2026-09-06/validation.json",
+  "assetBindingArtifact": "docs/acceptance/health-runtime-2026-09-06/candidate-asset-binding.json",
+  "finalRepositoryRevision": "453a3ecaf02c4fd46a7a06a59f171d40e8d3c281",
+  "productionCodeRevision": "c65ab3fb00117e8515b22d40d5a3e2aa62d38f6f",
+  "preparedConfigurationRequirement": "Set chainReference:false for index checkpoints; preserve explicit absent/stale node observations independently. This requirement does not alter the archived runtime configuration or imply a new serving overlay."
+}
