@@ -1,0 +1,333 @@
+{
+  "schemaVersion": 1,
+  "acceptanceDate": "2026-09-05",
+  "generatedAt": "2026-09-06T00:01:30.9978564Z",
+  "scope": "Local backend build, full Jest unit suite, and full ESLint. No CI, runner, deployment, service start, or funded transaction validation.",
+  "repository": "D:\\universe\\mempool\\mempool",
+  "sourceHead": "4e9701186b7b6bc55aa8f02079dd92fa5facddad",
+  "runtime": {
+    "node": "v24.19.0",
+    "npm": "11.17.0"
+  },
+  "result": "UNIT_TESTS_AND_BUILD_PASS_LINT_BLOCKED",
+  "checks": [
+    {
+      "name": "full-unit-suite",
+      "command": "npm test -- --runInBand --coverage=false --detectOpenHandles --json --outputFile=D:\\universe\\mempool\\.runtime\\backend-verification-2026-09-05\\final-jest-results.json",
+      "cwd": "backend",
+      "exitCode": 0,
+      "naturalExit": true,
+      "forceExitUsed": false,
+      "suitesPassed": 73,
+      "suitesTotal": 73,
+      "testsPassed": 671,
+      "testsFailed": 0,
+      "testsSkipped": 4,
+      "testsTotal": 675,
+      "seconds": 11.505,
+      "warnings": [
+        "Jest detected one native CustomGC handle in rust-gbt imported by the actual GBT tests. The process still exited naturally with code 0; those tests retain the real native binding."
+      ],
+      "skipped": [
+        {
+          "file": "backend/src/__tests__/esplora-contract.test.ts",
+          "test": "esplora address contract against a live index answers an address summary the way the fixtures say it does"
+        },
+        {
+          "file": "backend/src/__tests__/esplora-contract.test.ts",
+          "test": "esplora address contract against a live index answers a bounded history page"
+        },
+        {
+          "file": "backend/src/__tests__/esplora-contract.test.ts",
+          "test": "esplora address contract against a live index answers a bounded UTXO list"
+        },
+        {
+          "file": "backend/src/__tests__/esplora-contract.test.ts",
+          "test": "esplora address contract against a live index pages an address with more history than one page holds"
+        }
+      ]
+    },
+    {
+      "name": "test-isolation-regression",
+      "command": "npm test -- --runInBand --coverage=false --detectOpenHandles --runTestsByPath src/__tests__/api/difficulty-adjustment.test.ts src/__tests__/api/common.ts src/__tests__/api/fee-api.ts src/api/intelligence/policy-lab/policy-lab.test.ts",
+      "cwd": "backend",
+      "exitCode": 0,
+      "suitesPassed": 4,
+      "testsPassed": 18,
+      "naturalExit": true,
+      "warnings": [
+        "A finite callWithTimeout Promise.race timer was reported in the policy adapter during this short run; it expired and the process exited naturally."
+      ]
+    },
+    {
+      "name": "backend-build",
+      "command": "npm run build",
+      "cwd": "backend",
+      "exitCode": 0,
+      "warnings": [],
+      "note": "Build completed before the four test-only isolation edits; tsconfig.build excludes these test files. No implementation files changed during verification."
+    },
+    {
+      "name": "full-backend-lint",
+      "command": "npm run lint",
+      "cwd": "backend",
+      "exitCode": 1,
+      "errorCount": 8,
+      "warningCount": 1365,
+      "errors": [
+        {
+          "file": "backend/src/api/intelligence/events/intelligence-event-bus.ts",
+          "line": 85,
+          "column": 7,
+          "rule": "local-rules/no-unhandled-await",
+          "message": "void of non-@asyncSafe callee; annotate callee with @asyncSafe or handle the promise properly",
+          "matchingHeadLine": 85,
+          "preExistingStatement": true
+        },
+        {
+          "file": "backend/src/api/intelligence/events/intelligence-event-bus.ts",
+          "line": 179,
+          "column": 7,
+          "rule": "local-rules/no-unhandled-await",
+          "message": "await of non-@asyncSafe callee in @asyncSafe context; use try/catch or annotate callee (@asyncSafe) or context (@asyncUnsafe)",
+          "matchingHeadLine": 179,
+          "preExistingStatement": true
+        },
+        {
+          "file": "backend/src/api/intelligence/policy-lab/bitcoin-core-policy-adapter.ts",
+          "line": 165,
+          "column": 21,
+          "rule": "local-rules/no-unhandled-await",
+          "message": "await of non-@asyncSafe callee in @asyncSafe context; use try/catch or annotate callee (@asyncSafe) or context (@asyncUnsafe)",
+          "matchingHeadLine": 165,
+          "preExistingStatement": true
+        },
+        {
+          "file": "backend/src/api/intelligence/policy-lab/policy-lab.service.ts",
+          "line": 38,
+          "column": 20,
+          "rule": "local-rules/no-unhandled-await",
+          "message": "await of non-@asyncSafe callee in @asyncSafe context; use try/catch or annotate callee (@asyncSafe) or context (@asyncUnsafe)",
+          "matchingHeadLine": 38,
+          "preExistingStatement": true
+        },
+        {
+          "file": "backend/src/api/intelligence/policy-lab/policy-lab.service.ts",
+          "line": 102,
+          "column": 21,
+          "rule": "local-rules/no-unhandled-await",
+          "message": "await of non-@asyncSafe callee in @asyncSafe context; use try/catch or annotate callee (@asyncSafe) or context (@asyncUnsafe)",
+          "matchingHeadLine": 102,
+          "preExistingStatement": true
+        },
+        {
+          "file": "backend/src/api/intelligence/policy-lab/policy-lab.test.ts",
+          "line": 14,
+          "column": 20,
+          "rule": "local-rules/no-unhandled-await",
+          "message": "await of non-@asyncSafe callee in @asyncSafe context; use try/catch or annotate callee (@asyncSafe) or context (@asyncUnsafe)",
+          "matchingHeadLine": 10,
+          "preExistingStatement": true
+        },
+        {
+          "file": "backend/src/api/intelligence/policy-lab/policy-lab.test.ts",
+          "line": 75,
+          "column": 22,
+          "rule": "local-rules/no-unhandled-await",
+          "message": "await of non-@asyncSafe callee in @asyncSafe context; use try/catch or annotate callee (@asyncSafe) or context (@asyncUnsafe)",
+          "matchingHeadLine": 71,
+          "preExistingStatement": true
+        },
+        {
+          "file": "backend/src/api/intelligence/storage/intelligence-storage.ts",
+          "line": 39,
+          "column": 7,
+          "rule": "@typescript-eslint/no-floating-promises",
+          "message": "Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator",
+          "matchingHeadLine": 39,
+          "preExistingStatement": true
+        }
+      ]
+    },
+    {
+      "name": "diff-whitespace",
+      "command": "git diff --check",
+      "cwd": ".",
+      "exitCode": 0,
+      "warnings": [
+        "Git printed existing working-copy LF to CRLF conversion notices."
+      ]
+    }
+  ],
+  "testIsolation": {
+    "reason": "Initial full suite passed all assertions but remained open with eight BackendInfo polling intervals plus a native CustomGC handle. After diagnostic capture, that completed process was explicitly interrupted; its exit code was 1 and it is not the passing run.",
+    "initialRun": {
+      "exitCode": 1,
+      "interruptedAfterAssertions": true,
+      "testsPassed": 671,
+      "testsSkipped": 4,
+      "reportedOpenHandles": 9
+    },
+    "files": [
+      "backend/src/__tests__/api/difficulty-adjustment.test.ts",
+      "backend/src/__tests__/api/common.ts",
+      "backend/src/__tests__/api/fee-api.ts",
+      "backend/src/api/intelligence/policy-lab/policy-lab.test.ts"
+    ],
+    "change": "Each of these four tests mocks only incidental backend-info and rust-gbt imports, preserving the actual calculations and policy subjects under assertion. No global mocks, production lifecycle changes, or forced exit were added."
+  },
+  "limitations": [
+    "Four existing live Esplora contract tests remain skipped because UNIVERSE_ESPLORA_CONTRACT_URL was not configured. No new tests were skipped.",
+    "Jest unit configuration excludes __integration_tests__; database integration and real wallet, node, provider, signing, funding, or broadcast journeys were not run by this verification.",
+    "Full lint still fails on eight pre-existing statements in events, policy, and storage. The policy test file received only test-isolation mocks; its two flagged assertion statements were already present in HEAD.",
+    "Unit tests and a local build do not establish production or end-to-end readiness."
+  ],
+  "sourceSnapshot": {
+    "capturedAfterChecks": true,
+    "algorithm": "SHA-256",
+    "fullManifestPath": "D:\\universe\\mempool\\.runtime\\backend-verification-2026-09-05\\source-manifest.json",
+    "manifestDigestDefinition": "SHA-256 of UTF-8 compact JSON array of sorted file and sha256 entries, without trailing newline",
+    "manifestSha256": "8e2618f0a3411411bbdf17f69808453d5686ce40dd4a2c1cd081e51711fb1125",
+    "manifestFileCount": 390,
+    "changedBackendFiles": [
+      {
+        "file": "backend/package-lock.json",
+        "sha256": "b84ed4772f91ce49b26536e290f01e94e156df920fc31174bfb38675023cd1f2"
+      },
+      {
+        "file": "backend/package.json",
+        "sha256": "2e8bde2681ada453418516dac5f274a7e14b627d4e129a084d030a86d52212b6"
+      },
+      {
+        "file": "backend/src/__tests__/admin-adapter.test.ts",
+        "sha256": "0a757745e88595feea805ad16fb56b39bcdf3f7b4629e5e3b6ed997aefeebc1f"
+      },
+      {
+        "file": "backend/src/__tests__/api/common.ts",
+        "sha256": "175f0034f38ef85f1b93383149e5d5395df88766acd507feecea068776a4f84e"
+      },
+      {
+        "file": "backend/src/__tests__/api/difficulty-adjustment.test.ts",
+        "sha256": "f6076fc30e4a22c42ed233c69bd318402d71038b498bbe3ba2ca9c3c9dbe8405"
+      },
+      {
+        "file": "backend/src/__tests__/api/fee-api.ts",
+        "sha256": "31c95a42de3ef845e94eb932006d9371f428130142e93b92b5690f44dd9807f8"
+      },
+      {
+        "file": "backend/src/__tests__/package-service.test.ts",
+        "sha256": "5d19347b19e1c81cc1b39b418d03dcaa92394c47acf70381e32efe5704691c6c"
+      },
+      {
+        "file": "backend/src/api/admin-adapter/admin-adapter.routes.ts",
+        "sha256": "f9fab3fcec6035e261a1b4ca6f55eebadd9e80c7f56e751884898ff1d1df97bd"
+      },
+      {
+        "file": "backend/src/api/admin-adapter/admin-adapter.security.ts",
+        "sha256": "48a41815e5530c51ccb7b9232c06da3794e5dad7fdcaac07ecd730822f2ef89b"
+      },
+      {
+        "file": "backend/src/api/intelligence/policy-lab/policy-lab.test.ts",
+        "sha256": "e42ee7f5d78d84715b56fe87aac71229f9b081e8005bb5f4d766eca250e4ed63"
+      },
+      {
+        "file": "backend/src/api/intelligence/silent-payments/bip375-public-vectors.json",
+        "sha256": "617fe2157f16efc01df642ffa2d7eab2068b27915236dd7cc03fb97601aa2e39"
+      },
+      {
+        "file": "backend/src/api/intelligence/silent-payments/silent-payments-ingestion.ts",
+        "sha256": "413b8a45265104adc9183af1a49d54a6b130c780ba2fe89e47c2bfa953c20ecc"
+      },
+      {
+        "file": "backend/src/api/intelligence/silent-payments/silent-payments-parsers.ts",
+        "sha256": "a89e990a370754af38b34ea1538e0092e6733379c4271777d10f8f2687ca6352"
+      },
+      {
+        "file": "backend/src/api/intelligence/silent-payments/silent-payments-runtime.test.ts",
+        "sha256": "f2ecc38d1bb24171839809a7525a3dd21a9b915c238a7d7f2f9c44d522d98f51"
+      },
+      {
+        "file": "backend/src/api/intelligence/silent-payments/silent-payments.models.ts",
+        "sha256": "cf3c39f531d13a95445adaf8ef722d6e97a14134657bcba0e7051894d474ae3f"
+      },
+      {
+        "file": "backend/src/api/intelligence/silent-payments/silent-payments.routes.ts",
+        "sha256": "56a88f94d9e1f339f6b38037391a6c5895472243b3c6aaabc3edbd5cdd2e4492"
+      },
+      {
+        "file": "backend/src/api/intelligence/silent-payments/silent-payments.service.ts",
+        "sha256": "598b83c8613fa55fee05e6726e9fe9fd6378ffb3bc32fbafed8a8de480225a10"
+      },
+      {
+        "file": "backend/src/api/intelligence/silent-payments/silent-payments.test.ts",
+        "sha256": "3f094a41777feffa66fdd2f5bb99796165061cc578922e0b704a82fc569cdcb4"
+      },
+      {
+        "file": "backend/src/api/intelligence/swaps/boltz-taproot.ts",
+        "sha256": "73f533e0bce25deffd47134eed3d0eafa0bc716d548bd957c30f9c1d754ef5bc"
+      },
+      {
+        "file": "backend/src/api/intelligence/swaps/swaps-evidence.ts",
+        "sha256": "da7dd85da262ae5c924952e477da20299bc32d6d003e4249c0c60c2412076d51"
+      },
+      {
+        "file": "backend/src/api/intelligence/swaps/swaps-observations.ts",
+        "sha256": "fe9b167f9f41871ec784dcdb38e657b2c7bdb538f77944bbad2d893425660f03"
+      },
+      {
+        "file": "backend/src/api/intelligence/swaps/swaps.models.ts",
+        "sha256": "36425fe64a7e8d06b9d698efd2ef2451630d5d5ad39bb34fde112fe9cf58f87a"
+      },
+      {
+        "file": "backend/src/api/intelligence/swaps/swaps.routes.ts",
+        "sha256": "f46d57bfe9aa5aace8ff8b71e7ba39a71c8f4df98bdcc9100a933595fd9da1ba"
+      },
+      {
+        "file": "backend/src/api/intelligence/swaps/swaps.service.ts",
+        "sha256": "2f17d5ace10e81d82f04754f7d088ae105c6ba239868f8151dc9f5e534f90f87"
+      },
+      {
+        "file": "backend/src/api/intelligence/swaps/swaps.test.ts",
+        "sha256": "274d9f5e55e9eccf3eaefdd23d0ebb66ccffc843b2b14e25e9a84c22c4bff41e"
+      },
+      {
+        "file": "backend/src/api/mempool-intelligence/package-service.ts",
+        "sha256": "008f40f3997dc318419d12b4bfbfe329716116b82e5a92f692cbc9ebea5fd4a9"
+      },
+      {
+        "file": "backend/src/index.ts",
+        "sha256": "4412f48a5ad8fd53da98510ddced1a58f6595208bf33f5e695e4770c627bb73f"
+      }
+    ]
+  },
+  "logArtifacts": [
+    {
+      "path": "D:\\universe\\mempool\\.runtime\\backend-verification-2026-09-05\\tests.log",
+      "sha256": "d79076dbb28d770baf178d91a1d9e1a164dcab91ecb92cdc6259124be3143c62"
+    },
+    {
+      "path": "D:\\universe\\mempool\\.runtime\\backend-verification-2026-09-05\\jest-results.json",
+      "sha256": "40b8a83d2b0801b59b8031d48abdc94a6c67923cb94a6de5c696831c649edb89"
+    },
+    {
+      "path": "D:\\universe\\mempool\\.runtime\\backend-verification-2026-09-05\\isolation-tests.log",
+      "sha256": "8ce76f96d0a153194b4d82f46cae0d650ea900aef3ffcaa24a8a94e913b6f069"
+    },
+    {
+      "path": "D:\\universe\\mempool\\.runtime\\backend-verification-2026-09-05\\final-tests.log",
+      "sha256": "3cf85fd8273307dcabd3c3a9a72e2009df2589a517831023b4cf875f1b42bcff"
+    },
+    {
+      "path": "D:\\universe\\mempool\\.runtime\\backend-verification-2026-09-05\\final-jest-results.json",
+      "sha256": "0be75ff1fb99d8c01bee85ab059ea3620c405736395144e9b2700e1715501ed2"
+    },
+    {
+      "path": "D:\\universe\\mempool\\.runtime\\backend-verification-2026-09-05\\build.log",
+      "sha256": "9237e4dbe7038de18bd3ec9b0442fc397c9c5fbd149f20c371fcf1569b45be2f"
+    },
+    {
+      "path": "D:\\universe\\mempool\\.runtime\\backend-verification-2026-09-05\\final-lint.log",
+      "sha256": "7d712f69d05abbd26682fe96744f5c5694d8c5618439e79ff7d66e59fb7e2cbc"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "STRATUM_ENABLED": null,
+  "OFFICIAL_MEMPOOL_SPACE": null,
+  "isMempoolSpaceBuild": null,
+  "BASE_MODULE": null,
+  "widgets": [],
+  "routerConditions": {
+    "stratum": false,
+    "officialMempool": false,
+    "mempoolSpaceBuild": false,
+    "simpleproof": false,
+    "simpleproofCubo": false
+  }
+}

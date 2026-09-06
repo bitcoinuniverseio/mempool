@@ -1,0 +1,30 @@
+{
+  "origin": "http://localhost:4310",
+  "revision": "d3b318211b33fbbdf6f381a9fb3b8f2bb169b276",
+  "realNetworkE2ePasses": 0,
+  "checkedAt": "2026-09-06T00:34:23.404Z",
+  "checks": [
+    {
+      "id": "SW-12-UI-PRIVATE-FIELDS",
+      "status": "PASS",
+      "sentRequests": 0,
+      "rendered": "This form accepts public contract fields only. Remove private backup fields, invoices, preimages, keys used for spending and caller height."
+    },
+    {
+      "id": "SW-SIM-UI",
+      "status": "PASS",
+      "scope": "hypothetical calculation only",
+      "rendered": "Simulation only\n\nCommon ancestor height: 197. Remaining lockup confirmations: 0.\n\nThe lockup is displaced in this scenario.\n\nAbsolute refund height condition: not satisfied. Blocks until the height condition is restored: 3.\n\nTransaction fee rate is below the hypothetical threshold. Actual eviction remains unknown.\n\nThis is not observed chain state, spend verification or a recovery plan. A usable refund also needs a confirmed unspent outpoint, the committed script, a valid signer and current node checks."
+    },
+    {
+      "id": "SW-SIM-UI-INVALID",
+      "status": "PASS",
+      "rendered": "The lockup must be mined at or below the current height, with a positive timeout and a rollback no deeper than the chain."
+    },
+    {
+      "id": "SW-12-RELOAD-HISTORY-KEYBOARD",
+      "status": "PASS",
+      "keyboardFocus": "swap-file"
+    }
+  ]
+}

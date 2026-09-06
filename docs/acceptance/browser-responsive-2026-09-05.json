@@ -1,0 +1,1646 @@
+{
+  "scope": "Rendered responsive state, not authoritative operation acceptance",
+  "checks": [
+    {
+      "route": "/labs/consensus/compare",
+      "mode": {
+        "theme": "Light",
+        "width": 1440,
+        "height": 1000
+      },
+      "finalPath": "/labs/consensus/compare",
+      "title": "Covenant Proposal Comparison Matrix",
+      "overflow": false,
+      "width": 1440,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/labs/consensus",
+        "/labs/consensus/compare",
+        "/labs/vaults",
+        "/labs/vaults/designer",
+        "/labs/vaults/simulate"
+      ],
+      "screenshot": "labs-consensus-compare-light.png",
+      "checkedAt": "2026-09-06T00:34:00.247Z"
+    },
+    {
+      "route": "/labs/consensus/conformance",
+      "mode": {
+        "theme": "Light",
+        "width": 1440,
+        "height": 1000
+      },
+      "finalPath": "/labs/consensus/conformance",
+      "title": "Consensus Conformance & Formal Verification Center",
+      "overflow": false,
+      "width": 1440,
+      "bodyClasses": "",
+      "followupLinks": [],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:00.443Z"
+    },
+    {
+      "route": "/labs/consensus/differential",
+      "mode": {
+        "theme": "Light",
+        "width": 1440,
+        "height": 1000
+      },
+      "finalPath": "/labs/consensus/differential",
+      "title": "Differential Fuzzing Matrix",
+      "overflow": false,
+      "width": 1440,
+      "bodyClasses": "",
+      "followupLinks": [],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:00.647Z"
+    },
+    {
+      "route": "/labs/consensus/cases",
+      "mode": {
+        "theme": "Light",
+        "width": 1440,
+        "height": 1000
+      },
+      "finalPath": "/labs/consensus/cases",
+      "title": "Consensus Discrepancy Cases",
+      "overflow": false,
+      "width": 1440,
+      "bodyClasses": "",
+      "followupLinks": [],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:00.892Z"
+    },
+    {
+      "route": "/labs/consensus/formal",
+      "mode": {
+        "theme": "Light",
+        "width": 1440,
+        "height": 1000
+      },
+      "finalPath": "/labs/consensus/formal",
+      "title": "Formal Specification & Machine-Checked Proofs",
+      "overflow": false,
+      "width": 1440,
+      "bodyClasses": "",
+      "followupLinks": [],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:01.113Z"
+    },
+    {
+      "route": "/labs/consensus/specifications",
+      "mode": {
+        "theme": "Light",
+        "width": 1440,
+        "height": 1000
+      },
+      "finalPath": "/labs/consensus/specifications",
+      "title": "Bitcoin Consensus BIP Specifications",
+      "overflow": false,
+      "width": 1440,
+      "bodyClasses": "",
+      "followupLinks": [],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:01.330Z"
+    },
+    {
+      "route": "/labs/consensus/corpora",
+      "mode": {
+        "theme": "Light",
+        "width": 1440,
+        "height": 1000
+      },
+      "finalPath": "/labs/consensus/corpora",
+      "title": "Differential Fuzzing Corpora & Test Suites",
+      "overflow": false,
+      "width": 1440,
+      "bodyClasses": "",
+      "followupLinks": [],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:01.574Z"
+    },
+    {
+      "route": "/protocols/bitcoin-staking",
+      "mode": {
+        "theme": "Light",
+        "width": 1440,
+        "height": 1000
+      },
+      "finalPath": "/protocols/bitcoin-staking",
+      "title": "Bitcoin Staking & Slashing Evidence Observatory",
+      "overflow": false,
+      "width": 1440,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/protocols/bitcoin-staking",
+        "/protocols/bitcoin-staking/delegations",
+        "/protocols/bitcoin-staking/finality-providers",
+        "/protocols/bitcoin-staking/parameters",
+        "/protocols/bitcoin-staking/evidence",
+        "/protocols/bitcoin-staking/reconciliation"
+      ],
+      "screenshot": "protocols-bitcoin-staking-light.png",
+      "checkedAt": "2026-09-06T00:34:01.919Z"
+    },
+    {
+      "route": "/protocols/bitcoin-staking/delegations",
+      "mode": {
+        "theme": "Light",
+        "width": 1440,
+        "height": 1000
+      },
+      "finalPath": "/protocols/bitcoin-staking/delegations",
+      "title": "Staking Delegations",
+      "overflow": false,
+      "width": 1440,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/protocols/bitcoin-staking",
+        "/protocols/bitcoin-staking/delegations",
+        "/protocols/bitcoin-staking/finality-providers",
+        "/protocols/bitcoin-staking/parameters",
+        "/protocols/bitcoin-staking/evidence",
+        "/protocols/bitcoin-staking/reconciliation"
+      ],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:02.151Z"
+    },
+    {
+      "route": "/protocols/ordinals",
+      "mode": {
+        "theme": "Light",
+        "width": 1440,
+        "height": 1000
+      },
+      "finalPath": "/protocols/ordinals",
+      "overflow": false,
+      "width": 1440,
+      "bodyClasses": "",
+      "followupLinks": [],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:02.324Z"
+    },
+    {
+      "route": "/payments/silent",
+      "mode": {
+        "theme": "Light",
+        "width": 1440,
+        "height": 1000
+      },
+      "finalPath": "/payments/silent",
+      "title": "Silent Payments Center",
+      "overflow": false,
+      "width": 1440,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/payments/silent",
+        "/payments/silent/scan",
+        "/payments/silent/address",
+        "/payments/silent/psbt",
+        "/payments/silent/coverage"
+      ],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:02.507Z"
+    },
+    {
+      "route": "/payments/silent/address",
+      "mode": {
+        "theme": "Light",
+        "width": 1440,
+        "height": 1000
+      },
+      "finalPath": "/payments/silent/address",
+      "title": "BIP352 Address & URI Validator",
+      "overflow": false,
+      "width": 1440,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/payments/silent",
+        "/payments/silent/scan",
+        "/payments/silent/address",
+        "/payments/silent/psbt",
+        "/payments/silent/coverage"
+      ],
+      "screenshot": "payments-silent-address-light.png",
+      "checkedAt": "2026-09-06T00:34:02.857Z"
+    },
+    {
+      "route": "/payments/silent/psbt",
+      "mode": {
+        "theme": "Light",
+        "width": 1440,
+        "height": 1000
+      },
+      "finalPath": "/payments/silent/psbt",
+      "title": "BIP375 & BIP376 PSBT Inspector",
+      "overflow": false,
+      "width": 1440,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/payments/silent",
+        "/payments/silent/scan",
+        "/payments/silent/address",
+        "/payments/silent/psbt",
+        "/payments/silent/coverage"
+      ],
+      "screenshot": "payments-silent-psbt-light.png",
+      "checkedAt": "2026-09-06T00:34:03.197Z"
+    },
+    {
+      "route": "/payments/silent/scan",
+      "mode": {
+        "theme": "Light",
+        "width": 1440,
+        "height": 1000
+      },
+      "finalPath": "/payments/silent/scan",
+      "title": "Silent Payments In-Browser Scanner",
+      "overflow": false,
+      "width": 1440,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/payments/silent",
+        "/payments/silent/scan",
+        "/payments/silent/address",
+        "/payments/silent/psbt",
+        "/payments/silent/coverage"
+      ],
+      "screenshot": "payments-silent-scan-light.png",
+      "checkedAt": "2026-09-06T00:34:03.546Z"
+    },
+    {
+      "route": "/payments/silent/coverage",
+      "mode": {
+        "theme": "Light",
+        "width": 1440,
+        "height": 1000
+      },
+      "finalPath": "/payments/silent/coverage",
+      "title": "Silent Payments Indexing Coverage",
+      "overflow": false,
+      "width": 1440,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/payments/silent",
+        "/payments/silent/scan",
+        "/payments/silent/address",
+        "/payments/silent/psbt",
+        "/payments/silent/coverage"
+      ],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:03.767Z"
+    },
+    {
+      "route": "/swaps",
+      "mode": {
+        "theme": "Light",
+        "width": 1440,
+        "height": 1000
+      },
+      "finalPath": "/swaps",
+      "title": "Cross-Layer Atomic Swap and Submarine Swap Verification Center",
+      "overflow": false,
+      "width": 1440,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/swaps",
+        "/swaps/submarine",
+        "/swaps/reverse",
+        "/swaps/chain",
+        "/swaps/providers",
+        "/swaps/inspect",
+        "/swaps/recover",
+        "/swaps/simulate"
+      ],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:04.042Z"
+    },
+    {
+      "route": "/swaps/submarine",
+      "mode": {
+        "theme": "Light",
+        "width": 1440,
+        "height": 1000
+      },
+      "finalPath": "/swaps/submarine",
+      "title": "Submarine Swap Verification",
+      "overflow": false,
+      "width": 1440,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/swaps",
+        "/swaps/submarine",
+        "/swaps/reverse",
+        "/swaps/chain",
+        "/swaps/providers",
+        "/swaps/inspect",
+        "/swaps/recover",
+        "/swaps/simulate"
+      ],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:04.259Z"
+    },
+    {
+      "route": "/swaps/reverse",
+      "mode": {
+        "theme": "Light",
+        "width": 1440,
+        "height": 1000
+      },
+      "finalPath": "/swaps/reverse",
+      "title": "Reverse Submarine Swap Verification",
+      "overflow": false,
+      "width": 1440,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/swaps",
+        "/swaps/submarine",
+        "/swaps/reverse",
+        "/swaps/chain",
+        "/swaps/providers",
+        "/swaps/inspect",
+        "/swaps/recover",
+        "/swaps/simulate"
+      ],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:04.509Z"
+    },
+    {
+      "route": "/swaps/chain",
+      "mode": {
+        "theme": "Light",
+        "width": 1440,
+        "height": 1000
+      },
+      "finalPath": "/swaps/chain",
+      "title": "Cross-Chain Atomic Swap Verification",
+      "overflow": false,
+      "width": 1440,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/swaps",
+        "/swaps/submarine",
+        "/swaps/reverse",
+        "/swaps/chain",
+        "/swaps/providers",
+        "/swaps/inspect",
+        "/swaps/recover",
+        "/swaps/simulate"
+      ],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:04.833Z"
+    },
+    {
+      "route": "/swaps/providers",
+      "mode": {
+        "theme": "Light",
+        "width": 1440,
+        "height": 1000
+      },
+      "finalPath": "/swaps/providers",
+      "title": "Swap Provider Directory",
+      "overflow": false,
+      "width": 1440,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/swaps",
+        "/swaps/submarine",
+        "/swaps/reverse",
+        "/swaps/chain",
+        "/swaps/providers",
+        "/swaps/inspect",
+        "/swaps/recover",
+        "/swaps/simulate"
+      ],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:05.057Z"
+    },
+    {
+      "route": "/swaps/provider/boltz",
+      "mode": {
+        "theme": "Light",
+        "width": 1440,
+        "height": 1000
+      },
+      "finalPath": "/swaps/provider/boltz",
+      "overflow": false,
+      "width": 1440,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/swaps/providers"
+      ],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:05.290Z"
+    },
+    {
+      "route": "/swaps/inspect",
+      "mode": {
+        "theme": "Light",
+        "width": 1440,
+        "height": 1000
+      },
+      "finalPath": "/swaps/inspect",
+      "title": "Public Swap Package Inspector",
+      "overflow": false,
+      "width": 1440,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/swaps",
+        "/swaps/submarine",
+        "/swaps/reverse",
+        "/swaps/chain",
+        "/swaps/providers",
+        "/swaps/inspect",
+        "/swaps/recover",
+        "/swaps/simulate"
+      ],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:05.533Z"
+    },
+    {
+      "route": "/swaps/recover",
+      "mode": {
+        "theme": "Light",
+        "width": 1440,
+        "height": 1000
+      },
+      "finalPath": "/swaps/recover",
+      "title": "Swap Recovery Planner",
+      "overflow": false,
+      "width": 1440,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/swaps",
+        "/swaps/submarine",
+        "/swaps/reverse",
+        "/swaps/chain",
+        "/swaps/providers",
+        "/swaps/inspect",
+        "/swaps/recover",
+        "/swaps/simulate"
+      ],
+      "screenshot": "swaps-recover-light.png",
+      "checkedAt": "2026-09-06T00:34:05.882Z"
+    },
+    {
+      "route": "/swaps/simulate",
+      "mode": {
+        "theme": "Light",
+        "width": 1440,
+        "height": 1000
+      },
+      "finalPath": "/swaps/simulate",
+      "title": "Atomic Swap Reorg Simulator",
+      "overflow": false,
+      "width": 1440,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/swaps",
+        "/swaps/submarine",
+        "/swaps/reverse",
+        "/swaps/chain",
+        "/swaps/providers",
+        "/swaps/inspect",
+        "/swaps/recover",
+        "/swaps/simulate"
+      ],
+      "screenshot": "swaps-simulate-light.png",
+      "checkedAt": "2026-09-06T00:34:06.151Z"
+    },
+    {
+      "route": "/signet/swaps/recover",
+      "mode": {
+        "theme": "Light",
+        "width": 1440,
+        "height": 1000
+      },
+      "finalPath": "/signet/swaps/recover",
+      "title": "Swap Recovery Planner",
+      "overflow": false,
+      "width": 1440,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/signet/swaps",
+        "/signet/swaps/submarine",
+        "/signet/swaps/reverse",
+        "/signet/swaps/chain",
+        "/signet/swaps/providers",
+        "/signet/swaps/inspect",
+        "/signet/swaps/recover",
+        "/signet/swaps/simulate"
+      ],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:06.342Z"
+    },
+    {
+      "route": "/signet/inscription/invalid-acceptance-identity",
+      "mode": {
+        "theme": "Light",
+        "width": 1440,
+        "height": 1000
+      },
+      "finalPath": "/signet/inscription/invalid-acceptance-identity",
+      "title": "Inscription",
+      "overflow": false,
+      "width": 1440,
+      "bodyClasses": "",
+      "followupLinks": [],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:06.601Z"
+    },
+    {
+      "route": "/labs/consensus/compare",
+      "mode": {
+        "theme": "Dark",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/labs/consensus/compare",
+      "title": "Covenant Proposal Comparison Matrix",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/labs/consensus",
+        "/labs/consensus/compare",
+        "/labs/vaults",
+        "/labs/vaults/designer",
+        "/labs/vaults/simulate"
+      ],
+      "screenshot": "labs-consensus-compare-dark.png",
+      "checkedAt": "2026-09-06T00:34:06.938Z"
+    },
+    {
+      "route": "/labs/consensus/conformance",
+      "mode": {
+        "theme": "Dark",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/labs/consensus/conformance",
+      "title": "Consensus Conformance & Formal Verification Center",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:07.191Z"
+    },
+    {
+      "route": "/labs/consensus/differential",
+      "mode": {
+        "theme": "Dark",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/labs/consensus/differential",
+      "title": "Differential Fuzzing Matrix",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:07.459Z"
+    },
+    {
+      "route": "/labs/consensus/cases",
+      "mode": {
+        "theme": "Dark",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/labs/consensus/cases",
+      "title": "Consensus Discrepancy Cases",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:07.689Z"
+    },
+    {
+      "route": "/labs/consensus/formal",
+      "mode": {
+        "theme": "Dark",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/labs/consensus/formal",
+      "title": "Formal Specification & Machine-Checked Proofs",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:07.998Z"
+    },
+    {
+      "route": "/labs/consensus/specifications",
+      "mode": {
+        "theme": "Dark",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/labs/consensus/specifications",
+      "title": "Bitcoin Consensus BIP Specifications",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:08.259Z"
+    },
+    {
+      "route": "/labs/consensus/corpora",
+      "mode": {
+        "theme": "Dark",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/labs/consensus/corpora",
+      "title": "Differential Fuzzing Corpora & Test Suites",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:08.578Z"
+    },
+    {
+      "route": "/protocols/bitcoin-staking",
+      "mode": {
+        "theme": "Dark",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/protocols/bitcoin-staking",
+      "title": "Bitcoin Staking & Slashing Evidence Observatory",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/protocols/bitcoin-staking",
+        "/protocols/bitcoin-staking/delegations",
+        "/protocols/bitcoin-staking/finality-providers",
+        "/protocols/bitcoin-staking/parameters",
+        "/protocols/bitcoin-staking/evidence",
+        "/protocols/bitcoin-staking/reconciliation"
+      ],
+      "screenshot": "protocols-bitcoin-staking-dark.png",
+      "checkedAt": "2026-09-06T00:34:09.012Z"
+    },
+    {
+      "route": "/protocols/bitcoin-staking/delegations",
+      "mode": {
+        "theme": "Dark",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/protocols/bitcoin-staking/delegations",
+      "title": "Staking Delegations",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/protocols/bitcoin-staking",
+        "/protocols/bitcoin-staking/delegations",
+        "/protocols/bitcoin-staking/finality-providers",
+        "/protocols/bitcoin-staking/parameters",
+        "/protocols/bitcoin-staking/evidence",
+        "/protocols/bitcoin-staking/reconciliation"
+      ],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:09.250Z"
+    },
+    {
+      "route": "/protocols/ordinals",
+      "mode": {
+        "theme": "Dark",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/protocols/ordinals",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:09.533Z"
+    },
+    {
+      "route": "/payments/silent",
+      "mode": {
+        "theme": "Dark",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/payments/silent",
+      "title": "Silent Payments Center",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/payments/silent",
+        "/payments/silent/scan",
+        "/payments/silent/address",
+        "/payments/silent/psbt",
+        "/payments/silent/coverage"
+      ],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:09.774Z"
+    },
+    {
+      "route": "/payments/silent/address",
+      "mode": {
+        "theme": "Dark",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/payments/silent/address",
+      "title": "BIP352 Address & URI Validator",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/payments/silent",
+        "/payments/silent/scan",
+        "/payments/silent/address",
+        "/payments/silent/psbt",
+        "/payments/silent/coverage"
+      ],
+      "screenshot": "payments-silent-address-dark.png",
+      "checkedAt": "2026-09-06T00:34:10.168Z"
+    },
+    {
+      "route": "/payments/silent/psbt",
+      "mode": {
+        "theme": "Dark",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/payments/silent/psbt",
+      "title": "BIP375 & BIP376 PSBT Inspector",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/payments/silent",
+        "/payments/silent/scan",
+        "/payments/silent/address",
+        "/payments/silent/psbt",
+        "/payments/silent/coverage"
+      ],
+      "screenshot": "payments-silent-psbt-dark.png",
+      "checkedAt": "2026-09-06T00:34:10.475Z"
+    },
+    {
+      "route": "/payments/silent/scan",
+      "mode": {
+        "theme": "Dark",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/payments/silent/scan",
+      "title": "Silent Payments In-Browser Scanner",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/payments/silent",
+        "/payments/silent/scan",
+        "/payments/silent/address",
+        "/payments/silent/psbt",
+        "/payments/silent/coverage"
+      ],
+      "screenshot": "payments-silent-scan-dark.png",
+      "checkedAt": "2026-09-06T00:34:10.811Z"
+    },
+    {
+      "route": "/payments/silent/coverage",
+      "mode": {
+        "theme": "Dark",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/payments/silent/coverage",
+      "title": "Silent Payments Indexing Coverage",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/payments/silent",
+        "/payments/silent/scan",
+        "/payments/silent/address",
+        "/payments/silent/psbt",
+        "/payments/silent/coverage"
+      ],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:11.061Z"
+    },
+    {
+      "route": "/swaps",
+      "mode": {
+        "theme": "Dark",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/swaps",
+      "title": "Cross-Layer Atomic Swap and Submarine Swap Verification Center",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/swaps",
+        "/swaps/submarine",
+        "/swaps/reverse",
+        "/swaps/chain",
+        "/swaps/providers",
+        "/swaps/inspect",
+        "/swaps/recover",
+        "/swaps/simulate"
+      ],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:11.376Z"
+    },
+    {
+      "route": "/swaps/submarine",
+      "mode": {
+        "theme": "Dark",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/swaps/submarine",
+      "title": "Submarine Swap Verification",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/swaps",
+        "/swaps/submarine",
+        "/swaps/reverse",
+        "/swaps/chain",
+        "/swaps/providers",
+        "/swaps/inspect",
+        "/swaps/recover",
+        "/swaps/simulate"
+      ],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:11.631Z"
+    },
+    {
+      "route": "/swaps/reverse",
+      "mode": {
+        "theme": "Dark",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/swaps/reverse",
+      "title": "Reverse Submarine Swap Verification",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/swaps",
+        "/swaps/submarine",
+        "/swaps/reverse",
+        "/swaps/chain",
+        "/swaps/providers",
+        "/swaps/inspect",
+        "/swaps/recover",
+        "/swaps/simulate"
+      ],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:11.874Z"
+    },
+    {
+      "route": "/swaps/chain",
+      "mode": {
+        "theme": "Dark",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/swaps/chain",
+      "title": "Cross-Chain Atomic Swap Verification",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/swaps",
+        "/swaps/submarine",
+        "/swaps/reverse",
+        "/swaps/chain",
+        "/swaps/providers",
+        "/swaps/inspect",
+        "/swaps/recover",
+        "/swaps/simulate"
+      ],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:12.102Z"
+    },
+    {
+      "route": "/swaps/providers",
+      "mode": {
+        "theme": "Dark",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/swaps/providers",
+      "title": "Swap Provider Directory",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/swaps",
+        "/swaps/submarine",
+        "/swaps/reverse",
+        "/swaps/chain",
+        "/swaps/providers",
+        "/swaps/inspect",
+        "/swaps/recover",
+        "/swaps/simulate"
+      ],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:12.343Z"
+    },
+    {
+      "route": "/swaps/provider/boltz",
+      "mode": {
+        "theme": "Dark",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/swaps/provider/boltz",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/swaps/providers"
+      ],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:12.548Z"
+    },
+    {
+      "route": "/swaps/inspect",
+      "mode": {
+        "theme": "Dark",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/swaps/inspect",
+      "title": "Public Swap Package Inspector",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/swaps",
+        "/swaps/submarine",
+        "/swaps/reverse",
+        "/swaps/chain",
+        "/swaps/providers",
+        "/swaps/inspect",
+        "/swaps/recover",
+        "/swaps/simulate"
+      ],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:12.834Z"
+    },
+    {
+      "route": "/swaps/recover",
+      "mode": {
+        "theme": "Dark",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/swaps/recover",
+      "title": "Swap Recovery Planner",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/swaps",
+        "/swaps/submarine",
+        "/swaps/reverse",
+        "/swaps/chain",
+        "/swaps/providers",
+        "/swaps/inspect",
+        "/swaps/recover",
+        "/swaps/simulate"
+      ],
+      "screenshot": "swaps-recover-dark.png",
+      "checkedAt": "2026-09-06T00:34:13.232Z"
+    },
+    {
+      "route": "/swaps/simulate",
+      "mode": {
+        "theme": "Dark",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/swaps/simulate",
+      "title": "Atomic Swap Reorg Simulator",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/swaps",
+        "/swaps/submarine",
+        "/swaps/reverse",
+        "/swaps/chain",
+        "/swaps/providers",
+        "/swaps/inspect",
+        "/swaps/recover",
+        "/swaps/simulate"
+      ],
+      "screenshot": "swaps-simulate-dark.png",
+      "checkedAt": "2026-09-06T00:34:13.580Z"
+    },
+    {
+      "route": "/signet/swaps/recover",
+      "mode": {
+        "theme": "Dark",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/signet/swaps/recover",
+      "title": "Swap Recovery Planner",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/signet/swaps",
+        "/signet/swaps/submarine",
+        "/signet/swaps/reverse",
+        "/signet/swaps/chain",
+        "/signet/swaps/providers",
+        "/signet/swaps/inspect",
+        "/signet/swaps/recover",
+        "/signet/swaps/simulate"
+      ],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:13.811Z"
+    },
+    {
+      "route": "/signet/inscription/invalid-acceptance-identity",
+      "mode": {
+        "theme": "Dark",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/signet/inscription/invalid-acceptance-identity",
+      "title": "Inscription",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:14.128Z"
+    },
+    {
+      "route": "/labs/consensus/compare",
+      "mode": {
+        "theme": "High contrast",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/labs/consensus/compare",
+      "title": "Covenant Proposal Comparison Matrix",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/labs/consensus",
+        "/labs/consensus/compare",
+        "/labs/vaults",
+        "/labs/vaults/designer",
+        "/labs/vaults/simulate"
+      ],
+      "screenshot": "labs-consensus-compare-high-contrast.png",
+      "checkedAt": "2026-09-06T00:34:14.483Z"
+    },
+    {
+      "route": "/labs/consensus/conformance",
+      "mode": {
+        "theme": "High contrast",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/labs/consensus/conformance",
+      "title": "Consensus Conformance & Formal Verification Center",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:14.758Z"
+    },
+    {
+      "route": "/labs/consensus/differential",
+      "mode": {
+        "theme": "High contrast",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/labs/consensus/differential",
+      "title": "Differential Fuzzing Matrix",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:15.082Z"
+    },
+    {
+      "route": "/labs/consensus/cases",
+      "mode": {
+        "theme": "High contrast",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/labs/consensus/cases",
+      "title": "Consensus Discrepancy Cases",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:15.362Z"
+    },
+    {
+      "route": "/labs/consensus/formal",
+      "mode": {
+        "theme": "High contrast",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/labs/consensus/formal",
+      "title": "Formal Specification & Machine-Checked Proofs",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:15.651Z"
+    },
+    {
+      "route": "/labs/consensus/specifications",
+      "mode": {
+        "theme": "High contrast",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/labs/consensus/specifications",
+      "title": "Bitcoin Consensus BIP Specifications",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:15.882Z"
+    },
+    {
+      "route": "/labs/consensus/corpora",
+      "mode": {
+        "theme": "High contrast",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/labs/consensus/corpora",
+      "title": "Differential Fuzzing Corpora & Test Suites",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:16.177Z"
+    },
+    {
+      "route": "/protocols/bitcoin-staking",
+      "mode": {
+        "theme": "High contrast",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/protocols/bitcoin-staking",
+      "title": "Bitcoin Staking & Slashing Evidence Observatory",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/protocols/bitcoin-staking",
+        "/protocols/bitcoin-staking/delegations",
+        "/protocols/bitcoin-staking/finality-providers",
+        "/protocols/bitcoin-staking/parameters",
+        "/protocols/bitcoin-staking/evidence",
+        "/protocols/bitcoin-staking/reconciliation"
+      ],
+      "screenshot": "protocols-bitcoin-staking-high-contrast.png",
+      "checkedAt": "2026-09-06T00:34:16.475Z"
+    },
+    {
+      "route": "/protocols/bitcoin-staking/delegations",
+      "mode": {
+        "theme": "High contrast",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/protocols/bitcoin-staking/delegations",
+      "title": "Staking Delegations",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/protocols/bitcoin-staking",
+        "/protocols/bitcoin-staking/delegations",
+        "/protocols/bitcoin-staking/finality-providers",
+        "/protocols/bitcoin-staking/parameters",
+        "/protocols/bitcoin-staking/evidence",
+        "/protocols/bitcoin-staking/reconciliation"
+      ],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:16.777Z"
+    },
+    {
+      "route": "/protocols/ordinals",
+      "mode": {
+        "theme": "High contrast",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/protocols/ordinals",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:17.083Z"
+    },
+    {
+      "route": "/payments/silent",
+      "mode": {
+        "theme": "High contrast",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/payments/silent",
+      "title": "Silent Payments Center",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/payments/silent",
+        "/payments/silent/scan",
+        "/payments/silent/address",
+        "/payments/silent/psbt",
+        "/payments/silent/coverage"
+      ],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:17.326Z"
+    },
+    {
+      "route": "/payments/silent/address",
+      "mode": {
+        "theme": "High contrast",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/payments/silent/address",
+      "title": "BIP352 Address & URI Validator",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/payments/silent",
+        "/payments/silent/scan",
+        "/payments/silent/address",
+        "/payments/silent/psbt",
+        "/payments/silent/coverage"
+      ],
+      "screenshot": "payments-silent-address-high-contrast.png",
+      "checkedAt": "2026-09-06T00:34:17.692Z"
+    },
+    {
+      "route": "/payments/silent/psbt",
+      "mode": {
+        "theme": "High contrast",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/payments/silent/psbt",
+      "title": "BIP375 & BIP376 PSBT Inspector",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/payments/silent",
+        "/payments/silent/scan",
+        "/payments/silent/address",
+        "/payments/silent/psbt",
+        "/payments/silent/coverage"
+      ],
+      "screenshot": "payments-silent-psbt-high-contrast.png",
+      "checkedAt": "2026-09-06T00:34:18.010Z"
+    },
+    {
+      "route": "/payments/silent/scan",
+      "mode": {
+        "theme": "High contrast",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/payments/silent/scan",
+      "title": "Silent Payments In-Browser Scanner",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/payments/silent",
+        "/payments/silent/scan",
+        "/payments/silent/address",
+        "/payments/silent/psbt",
+        "/payments/silent/coverage"
+      ],
+      "screenshot": "payments-silent-scan-high-contrast.png",
+      "checkedAt": "2026-09-06T00:34:18.391Z"
+    },
+    {
+      "route": "/payments/silent/coverage",
+      "mode": {
+        "theme": "High contrast",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/payments/silent/coverage",
+      "title": "Silent Payments Indexing Coverage",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/payments/silent",
+        "/payments/silent/scan",
+        "/payments/silent/address",
+        "/payments/silent/psbt",
+        "/payments/silent/coverage"
+      ],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:18.654Z"
+    },
+    {
+      "route": "/swaps",
+      "mode": {
+        "theme": "High contrast",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/swaps",
+      "title": "Cross-Layer Atomic Swap and Submarine Swap Verification Center",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/swaps",
+        "/swaps/submarine",
+        "/swaps/reverse",
+        "/swaps/chain",
+        "/swaps/providers",
+        "/swaps/inspect",
+        "/swaps/recover",
+        "/swaps/simulate"
+      ],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:18.965Z"
+    },
+    {
+      "route": "/swaps/submarine",
+      "mode": {
+        "theme": "High contrast",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/swaps/submarine",
+      "title": "Submarine Swap Verification",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/swaps",
+        "/swaps/submarine",
+        "/swaps/reverse",
+        "/swaps/chain",
+        "/swaps/providers",
+        "/swaps/inspect",
+        "/swaps/recover",
+        "/swaps/simulate"
+      ],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:19.202Z"
+    },
+    {
+      "route": "/swaps/reverse",
+      "mode": {
+        "theme": "High contrast",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/swaps/reverse",
+      "title": "Reverse Submarine Swap Verification",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/swaps",
+        "/swaps/submarine",
+        "/swaps/reverse",
+        "/swaps/chain",
+        "/swaps/providers",
+        "/swaps/inspect",
+        "/swaps/recover",
+        "/swaps/simulate"
+      ],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:19.593Z"
+    },
+    {
+      "route": "/swaps/chain",
+      "mode": {
+        "theme": "High contrast",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/swaps/chain",
+      "title": "Cross-Chain Atomic Swap Verification",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/swaps",
+        "/swaps/submarine",
+        "/swaps/reverse",
+        "/swaps/chain",
+        "/swaps/providers",
+        "/swaps/inspect",
+        "/swaps/recover",
+        "/swaps/simulate"
+      ],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:19.833Z"
+    },
+    {
+      "route": "/swaps/providers",
+      "mode": {
+        "theme": "High contrast",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/swaps/providers",
+      "title": "Swap Provider Directory",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/swaps",
+        "/swaps/submarine",
+        "/swaps/reverse",
+        "/swaps/chain",
+        "/swaps/providers",
+        "/swaps/inspect",
+        "/swaps/recover",
+        "/swaps/simulate"
+      ],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:20.185Z"
+    },
+    {
+      "route": "/swaps/provider/boltz",
+      "mode": {
+        "theme": "High contrast",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/swaps/provider/boltz",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/swaps/providers"
+      ],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:20.440Z"
+    },
+    {
+      "route": "/swaps/inspect",
+      "mode": {
+        "theme": "High contrast",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/swaps/inspect",
+      "title": "Public Swap Package Inspector",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/swaps",
+        "/swaps/submarine",
+        "/swaps/reverse",
+        "/swaps/chain",
+        "/swaps/providers",
+        "/swaps/inspect",
+        "/swaps/recover",
+        "/swaps/simulate"
+      ],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:20.812Z"
+    },
+    {
+      "route": "/swaps/recover",
+      "mode": {
+        "theme": "High contrast",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/swaps/recover",
+      "title": "Swap Recovery Planner",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/swaps",
+        "/swaps/submarine",
+        "/swaps/reverse",
+        "/swaps/chain",
+        "/swaps/providers",
+        "/swaps/inspect",
+        "/swaps/recover",
+        "/swaps/simulate"
+      ],
+      "screenshot": "swaps-recover-high-contrast.png",
+      "checkedAt": "2026-09-06T00:34:21.214Z"
+    },
+    {
+      "route": "/swaps/simulate",
+      "mode": {
+        "theme": "High contrast",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/swaps/simulate",
+      "title": "Atomic Swap Reorg Simulator",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/swaps",
+        "/swaps/submarine",
+        "/swaps/reverse",
+        "/swaps/chain",
+        "/swaps/providers",
+        "/swaps/inspect",
+        "/swaps/recover",
+        "/swaps/simulate"
+      ],
+      "screenshot": "swaps-simulate-high-contrast.png",
+      "checkedAt": "2026-09-06T00:34:21.658Z"
+    },
+    {
+      "route": "/signet/swaps/recover",
+      "mode": {
+        "theme": "High contrast",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/signet/swaps/recover",
+      "title": "Swap Recovery Planner",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [
+        "/signet/swaps",
+        "/signet/swaps/submarine",
+        "/signet/swaps/reverse",
+        "/signet/swaps/chain",
+        "/signet/swaps/providers",
+        "/signet/swaps/inspect",
+        "/signet/swaps/recover",
+        "/signet/swaps/simulate"
+      ],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:21.897Z"
+    },
+    {
+      "route": "/signet/inscription/invalid-acceptance-identity",
+      "mode": {
+        "theme": "High contrast",
+        "width": 390,
+        "height": 844
+      },
+      "finalPath": "/signet/inscription/invalid-acceptance-identity",
+      "title": "Inscription",
+      "overflow": false,
+      "width": 390,
+      "bodyClasses": "",
+      "followupLinks": [],
+      "screenshot": null,
+      "checkedAt": "2026-09-06T00:34:22.233Z"
+    }
+  ]
+}
