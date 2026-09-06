@@ -11,6 +11,8 @@ import { PortfolioSessionService } from '../stores/session.service';
 import { PortfolioShareService } from '../share/portfolio-share.service';
 import { AggregationResult } from '../shared/aggregation';
 import { ReportBuilderComponent, reportPercentage } from './report-builder.component';
+import { PortfoliosStore } from '../stores/portfolios.store';
+import { emptyPortfolio } from '../stores/portfolio-model';
 
 describe('exact portfolio report percentages', () => {
   it.each([
@@ -25,7 +27,7 @@ describe('exact portfolio report percentages', () => {
 
 describe('portfolio report sharing controls', () => {
   beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
-  afterEach(() => TestBed.resetTestingModule());
+  afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); TestBed.resetTestingModule(); });
 
   function fixture() {
     const completedAt = '2026-09-05T12:00:00.000Z';
@@ -34,6 +36,8 @@ describe('portfolio report sharing controls', () => {
     } as unknown as AggregationResult;
     const data = signal<PortfolioDataState>({ loading: false, accounts: [], completedAt, aggregation });
     const routeParams = new BehaviorSubject(convertToParamMap({ portfolioId: 'owner-one' }));
+    const portfolios = signal([emptyPortfolio('owner-one', 'Local report', '2026-09-06')]);
+    const valuesHidden = signal(false);
     const shares = {
       unlocked: vi.fn(() => true), list: vi.fn(async () => []), create: vi.fn(async () => 'share-id'),
       link: vi.fn(async () => 'https://example.test/portfolio/share/share-id#key=fragment-secret'),
@@ -42,12 +46,13 @@ describe('portfolio report sharing controls', () => {
     TestBed.configureTestingModule({ providers: [
       { provide: ActivatedRoute, useValue: { pathFromRoot: [{ paramMap: routeParams }] } },
       { provide: PortfolioDataService, useValue: { state: data } },
-      { provide: PortfolioSessionService, useValue: { valuesHidden: signal(false) } },
+      { provide: PortfolioSessionService, useValue: { valuesHidden } },
       { provide: PortfolioShareService, useValue: shares },
+      { provide: PortfoliosStore, useValue: { portfolios } },
     ] });
     const view = TestBed.createComponent(ReportBuilderComponent);
     view.detectChanges();
-    return { view, component: view.componentInstance, data, shares, completedAt, routeParams };
+    return { view, component: view.componentInstance, data, shares, completedAt, routeParams, portfolios, valuesHidden };
   }
 
   it('renders the export value in preview and shares only asset and percentage', async () => {
@@ -61,6 +66,28 @@ describe('portfolio report sharing controls', () => {
     expect(component.shareLink()).toContain('#key=fragment-secret');
   });
 
+  it('renders persisted manual positions without claiming address evidence or combining currencies', () => {
+    const { view, data, portfolios } = fixture();
+    data.update(state => ({ ...state, aggregation: null }));
+    portfolios.update(all => [{ ...all[0], manualEntries: [{
+      id: 'local-entry', name: 'Explicit local position', kind: 'asset', quantity: '9007199254740993.12345678',
+      unitPrice: '0.00000003', quoteCurrency: 'USD', effectiveAt: '2026-09-06T00:00:00.000Z',
+      authority: 'user', includedInCombined: false, tags: [],
+    }] }]);
+    view.detectChanges();
+    const preview = view.nativeElement.querySelector('[aria-label="Manual report preview"]');
+    expect(preview).not.toBeNull();
+    expect(preview.textContent).toContain('User-entered');
+    expect(preview.textContent).toContain('270\u202f215\u202f977.6422297937037034');
+    expect(preview.textContent).toContain('separate');
+    const download = [...view.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>]
+      .find(button => button.textContent?.trim() === 'Download CSV')!;
+    expect(download.disabled).toBe(false);
+    const share = [...view.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>]
+      .find(button => button.textContent?.trim() === 'Create encrypted link')!;
+    expect(share.disabled).toBe(true);
+  });
+
   it('keeps an uncertain upload retryable and refreshes saved shares', async () => {
     const { component, shares } = fixture();
     shares.create.mockRejectedValueOnce(new Error('offline'));
@@ -71,6 +98,71 @@ describe('portfolio report sharing controls', () => {
     expect(shares.retry).toHaveBeenCalledWith('pending-share', 'owner-one');
     expect(shares.list).toHaveBeenCalledWith('owner-one');
     expect(component.shareLink()).toContain('#key=fragment-secret');
+  });
+
+  it('downloads exact separate manual rows, escaping user labels and preserving unpriced entries', async () => {
+    const { view, data, portfolios } = fixture();
+    data.update(state => ({ ...state, aggregation: null }));
+    portfolios.update(all => [{ ...all[0], manualEntries: [
+      { id: 'large', name: 'My "exact", lot', kind: 'asset', quantity: '9007199254740993.12345678', unitPrice: '0.00000003', quoteCurrency: 'USD', effectiveAt: '2026-09-06T00:00:00.000Z', authority: 'user', includedInCombined: false, tags: [] },
+      { id: 'debt', name: 'Separate debt', kind: 'liability', quantity: '2.50', unitPrice: '4', quoteCurrency: 'EUR', effectiveAt: '2026-09-06T00:00:00.000Z', authority: 'user', includedInCombined: false, tags: [] },
+      { id: 'unpriced', name: 'Unpriced lot', kind: 'asset', quantity: '0.00000001', effectiveAt: '2026-09-06T00:00:00.000Z', authority: 'user', includedInCombined: false, tags: [] },
+    ] }]);
+    view.detectChanges();
+    let csv = '';
+    vi.stubGlobal('Blob', class { constructor(parts: string[]) { csv = parts.join(''); } });
+    vi.stubGlobal('URL', { createObjectURL: vi.fn(() => 'blob:local-test'), revokeObjectURL: vi.fn() });
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    const download = [...view.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>].find(button => button.textContent?.trim() === 'Download CSV')!;
+    download.click();
+    expect(click).toHaveBeenCalledOnce();
+    expect(csv).toContain('"My ""exact"", lot","","Not combined","270215977.6422297937037034","User-entered","asset","9007199254740993.12345678","0.00000003","USD","2026-09-06"');
+    expect(csv).toContain('"Separate debt","","Not combined","10","User-entered","liability","2.50","4","EUR","2026-09-06"');
+    expect(csv).toContain('"Unpriced lot","","Not combined","Unpriced","User-entered","asset","0.00000001","Not supplied","","2026-09-06"');
+    expect(csv).not.toContain('Address-derived');
+  });
+
+  it.each(['privacy', 'percentages'])('redacts manual amounts for %s without inventing an allocation', mode => {
+    const { view, component, portfolios, valuesHidden } = fixture();
+    portfolios.update(all => [{ ...all[0], manualEntries: [{
+      id: 'local', name: 'Explicit local lot', kind: 'asset', quantity: '7654321.01234', unitPrice: '8.12345', quoteCurrency: 'USD',
+      effectiveAt: '2026-09-06T00:00:00.000Z', authority: 'user', includedInCombined: false, tags: [],
+    }] }]);
+    if (mode === 'privacy') { valuesHidden.set(true); } else { component.valueMode.set('percentages'); }
+    view.detectChanges();
+    expect(component.manualRows()[0]).toMatchObject({ quantity: 'Hidden', unitPrice: 'Hidden', value: 'Hidden', displayValue: 'Hidden' });
+    const preview = view.nativeElement.querySelector('[aria-label="Manual report preview"]').textContent;
+    expect(preview).not.toContain('7654321'); expect(preview).not.toContain('8.12345');
+    expect(preview).not.toContain('%');
+  });
+
+  it.each(['=1+1', '+1+1', '-1+1', '@SUM(1)', '  =1+1', '\t=1+1', '\r=1+1'])('exports manual label %j as spreadsheet text without changing its displayed name or exact quantity', name => {
+    const { view, component, portfolios } = fixture();
+    portfolios.update(all => [{ ...all[0], manualEntries: [{
+      id: 'local', name, kind: 'asset', quantity: '9007199254740993.12345678', effectiveAt: '2026-09-06', authority: 'user', includedInCombined: false, tags: [],
+    }] }]);
+    view.detectChanges();
+    let csv = '';
+    vi.stubGlobal('Blob', class { constructor(parts: string[]) { csv = parts.join(''); } });
+    vi.stubGlobal('URL', { createObjectURL: vi.fn(() => 'blob:local-test'), revokeObjectURL: vi.fn() });
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    [...view.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>].find(button => button.textContent?.trim() === 'Download CSV')!.click();
+    expect(csv).toContain('"\'' + name + '"');
+    expect(csv).toContain('"9007199254740993.12345678"');
+    expect(component.manualRows()[0].name).toBe(name);
+  });
+
+  it('does not retain manual rows after route reuse or vault projection clearing', () => {
+    const { component, portfolios, routeParams } = fixture();
+    portfolios.update(all => [{ ...all[0], manualEntries: [{
+      id: 'local', name: 'First portfolio only', kind: 'asset', quantity: '1', effectiveAt: '2026-09-06', authority: 'user', includedInCombined: false, tags: [],
+    }] }]);
+    expect(component.manualRows()).toHaveLength(1);
+    routeParams.next(convertToParamMap({ portfolioId: 'owner-two' }));
+    expect(component.manualRows()).toEqual([]);
+    routeParams.next(convertToParamMap({ portfolioId: 'owner-one' }));
+    portfolios.set([]);
+    expect(component.manualRows()).toEqual([]);
   });
 
   it('does not create from a loading snapshot and clears recipient links after revocation', async () => {

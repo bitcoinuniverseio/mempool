@@ -8,8 +8,11 @@
  * network request, and the wizard never fakes progress or data.
  */
 
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Address, NETWORK } from '@scure/btc-signer';
+import { sha256 } from '@scure/btc-signer/utils';
+import { createBase58check } from '@scure/base';
 import { PortfoliosStore } from '../stores/portfolios.store';
 import {
   looksSecretLike,
@@ -37,6 +40,7 @@ const ADDRESS_PATTERNS: readonly { chain: string; network: string; pattern: RegE
   { chain: 'dogecoin', network: 'mainnet', pattern: /^[DA9][1-9A-HJ-NP-Za-km-z]{20,60}$/, label: 'Dogecoin' },
   { chain: 'zcash', network: 'mainnet', pattern: /^t[13][a-km-zA-HJ-NP-Z1-9]{25,60}$/, label: 'Zcash (transparent)' },
 ];
+const addressBase58Check = createBase58check(sha256);
 
 @Component({
   selector: 'app-onboarding',
@@ -45,37 +49,44 @@ const ADDRESS_PATTERNS: readonly { chain: string; network: string; pattern: RegE
   template: `
     <div class="wrap">
       <header>
-        <h1 i18n="@@universe.portfolio.onboarding.title">Create your portfolio</h1>
-        <p class="soft" i18n="@@universe.portfolio.onboarding.copy">
-          Everything private stays in this browser, encrypted. Watch-only: seed phrases and
-          private keys are never accepted.
-        </p>
+        @if (stepChoice() === 'ephemeral') {
+          <h1 i18n="@@universe.portfolio.onboarding.lookup-title">Look up one public address</h1>
+          <p class="soft" i18n="@@universe.portfolio.onboarding.lookup-copy">Open its public evidence without creating a vault or saving a portfolio.</p>
+        } @else {
+          <h1 i18n="@@universe.portfolio.onboarding.title">Create your portfolio</h1>
+          <p class="soft" i18n="@@universe.portfolio.onboarding.copy">
+            Everything private stays in this browser, encrypted. Watch-only: seed phrases and
+            private keys are never accepted.
+          </p>
+        }
       </header>
 
       @switch (step()) {
         @case ('choose') {
           <section class="choices" aria-label="Entry choices">
-            <button type="button" (click)="choose('address')">
+            <button type="button" [disabled]="preparingManual()" (click)="choose('address')">
               <strong i18n="@@universe.portfolio.onboarding.from-address">Create from one address</strong>
               <span i18n="@@universe.portfolio.onboarding.from-address-copy">Track one public address with labels and history.</span>
             </button>
-            <button type="button" (click)="choose('watch-only')">
+            <button type="button" [disabled]="preparingManual()" (click)="choose('watch-only')">
               <strong i18n="@@universe.portfolio.onboarding.watch-only">Add a Bitcoin watch-only wallet</strong>
               <span i18n="@@universe.portfolio.onboarding.watch-only-copy">Derive addresses from an xpub, ypub, zpub, or descriptor. The key never leaves this browser.</span>
             </button>
-            <button type="button" (click)="choose('list')">
+            <button type="button" [disabled]="preparingManual()" (click)="choose('list')">
               <strong i18n="@@universe.portfolio.onboarding.list">Import an address list</strong>
               <span i18n="@@universe.portfolio.onboarding.list-copy">Paste one public address per line.</span>
             </button>
-            <button type="button" (click)="choose('manual')">
+            <button type="button" [disabled]="preparingManual()" (click)="choose('manual')">
               <strong i18n="@@universe.portfolio.onboarding.manual">Create a manual-only portfolio</strong>
               <span i18n="@@universe.portfolio.onboarding.manual-copy">Keep explicit, user-entered positions. Clearly separated from chain facts.</span>
             </button>
-            <button type="button" (click)="choose('ephemeral')">
+            <button type="button" [disabled]="preparingManual()" (click)="choose('ephemeral')">
               <strong i18n="@@universe.portfolio.onboarding.ephemeral">Open one address without saving</strong>
               <span i18n="@@universe.portfolio.onboarding.ephemeral-copy">No vault, no record, no history.</span>
             </button>
           </section>
+          @if (error(); as message) { <p class="error" role="alert">{{ message }}</p> }
+          @if (preparingManual()) { <p class="soft" role="status" i18n="@@universe.portfolio.onboarding.manual-preparing">Preparing your manual portfolio…</p> }
         }
         @case ('vault') {
           <section class="panel">
@@ -102,15 +113,41 @@ const ADDRESS_PATTERNS: readonly { chain: string; network: string; pattern: RegE
             </div>
           </section>
         }
+        @case ('unlock') {
+          <section class="panel">
+            <h2 i18n="@@universe.portfolio.onboarding.unlock-title">Unlock your portfolio vault</h2>
+            <p class="soft" i18n="@@universe.portfolio.onboarding.unlock-manual-copy">Unlock the existing vault to save your manual portfolio and positions.</p>
+            <label>
+              <span i18n="@@universe.portfolio.home.passphrase">Passphrase</span>
+              <input #unlockInput type="password" autocomplete="current-password" required />
+            </label>
+            @if (error(); as message) { <p class="error" role="alert">{{ message }}</p> }
+            <div class="actions">
+              <button type="button" class="primary" [disabled]="unlockingVault()" (click)="unlockVault(unlockInput.value)">
+                @if (unlockingVault()) { <span i18n="@@universe.portfolio.onboarding.unlocking">Unlocking…</span> }
+                @else { <span i18n="@@universe.portfolio.home.unlock">Unlock</span> }
+              </button>
+              <button type="button" [disabled]="unlockingVault()" (click)="step.set('choose')" i18n="@@universe.portfolio.onboarding.back">Back</button>
+            </div>
+          </section>
+        }
         @case ('input') {
           <section class="panel">
             <h2>{{ inputTitle() }}</h2>
+            @if (stepChoice() === 'ephemeral') {
+              <label for="ephemeral-context" i18n="@@universe.portfolio.onboarding.lookup-network">Chain and network</label>
+              <select id="ephemeral-context" #contextInput [value]="ephemeralContext()" (change)="selectEphemeralContext(contextInput.value)">
+                <option value="bitcoin:mainnet">Bitcoin mainnet</option>
+                <option value="dogecoin:mainnet">Dogecoin mainnet</option>
+                <option value="zcash:mainnet">Zcash mainnet (transparent)</option>
+              </select>
+            }
             <label>
               <span>{{ inputLabel() }}</span>
               @if (stepChoice() === 'watch-only') {
-                <textarea #materialInput rows="3" (input)="validateMaterial(materialInput.value)"></textarea>
+                <textarea #materialInput rows="3" (input)="validateMaterial(materialInput.value, materialInput)"></textarea>
               } @else {
-                <textarea #materialInput rows="4" (input)="validateMaterial(materialInput.value)"></textarea>
+                <textarea #materialInput rows="4" (input)="validateMaterial(materialInput.value, materialInput)"></textarea>
               }
             </label>
             @if (rejection(); as message) { <p class="error" role="alert">{{ message }}</p> }
@@ -119,7 +156,10 @@ const ADDRESS_PATTERNS: readonly { chain: string; network: string; pattern: RegE
               Detection runs locally before anything is sent or stored. Rejected input is discarded immediately.
             </p>
             <div class="actions">
-              <button type="button" class="primary" [disabled]="!valid()" (click)="save()" i18n="@@universe.portfolio.onboarding.save">Save portfolio</button>
+              <button type="button" class="primary" [disabled]="!valid()" (click)="save()">
+                @if (stepChoice() === 'ephemeral') { <span i18n="@@universe.portfolio.onboarding.open-unsaved">Open without saving</span> }
+                @else { <span i18n="@@universe.portfolio.onboarding.save">Save portfolio</span> }
+              </button>
               <button type="button" (click)="step.set('choose')" i18n="@@universe.portfolio.onboarding.back">Back</button>
             </div>
           </section>
@@ -144,7 +184,7 @@ const ADDRESS_PATTERNS: readonly { chain: string; network: string; pattern: RegE
       h1 { margin: 0; font-size: 20px; }
       h2 { margin: 0 0 8px; font-size: 16px; }
       label { display: flex; flex-direction: column; gap: 4px; margin: 10px 0; font-size: 13px; }
-      input, textarea { padding: 10px; border-radius: 8px; border: 1px solid var(--u-separator, rgba(0,0,0,0.16)); font: inherit; }
+      input, textarea, select { padding: 10px; border-radius: 8px; border: 1px solid var(--u-separator, rgba(0,0,0,0.16)); font: inherit; }
       textarea { font-family: monospace; font-size: 12.5px; }
       .actions { display: flex; gap: 10px; margin-top: 8px; }
       button.primary, button { border-radius: 9px; border: 1px solid var(--u-separator, rgba(0,0,0,0.14)); background: transparent; padding: 10px 16px; min-height: 44px; cursor: pointer; }
@@ -156,30 +196,41 @@ const ADDRESS_PATTERNS: readonly { chain: string; network: string; pattern: RegE
     `,
   ],
 })
-export class OnboardingComponent {
+export class OnboardingComponent implements OnInit {
   readonly store = inject(PortfoliosStore);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute, { optional: true });
 
-  readonly step = signal<'choose' | 'vault' | 'input' | 'done'>('choose');
+  readonly step = signal<'choose' | 'vault' | 'unlock' | 'input' | 'done'>('choose');
   readonly stepChoice = signal<EntryChoice>('address');
   readonly error = signal('');
   readonly creatingVault = signal(false);
+  readonly unlockingVault = signal(false);
+  readonly preparingManual = signal(false);
   readonly rejection = signal('');
   readonly validation = signal('');
   readonly valid = signal(false);
+  readonly ephemeralContext = signal('bitcoin:mainnet');
 
   private portfolio: LocalPortfolio | null = null;
   private importedEntries: ImportEntry[] = [];
   private material = '';
 
+  ngOnInit(): void {
+    if (this.route?.snapshot.queryParamMap.get('mode') === 'ephemeral') {this.choose('ephemeral');}
+  }
+
   protected choose(choice: EntryChoice): void {
+    if (this.preparingManual()) {return;}
+    this.error.set('');
     this.stepChoice.set(choice);
+    this.validateMaterial('');
     if (choice === 'ephemeral') {
-      void this.router.navigate(['/portfolio/bitcoin/mainnet/bc1qexample000000000000000']);
+      this.step.set('input');
       return;
     }
     if (choice === 'manual') {
-      void this.finishManual();
+      void this.prepareManual();
       return;
     }
     this.step.set(this.store.vaultKind() === 'unlocked' ? 'input' : 'vault');
@@ -187,6 +238,7 @@ export class OnboardingComponent {
 
   protected inputTitle(): string {
     switch (this.stepChoice()) {
+      case 'ephemeral':
       case 'address':
         return $localize`:@@universe.portfolio.onboarding.address-title:Add one public address`;
       case 'watch-only':
@@ -198,6 +250,8 @@ export class OnboardingComponent {
 
   protected inputLabel(): string {
     switch (this.stepChoice()) {
+      case 'ephemeral':
+        return $localize`:@@universe.portfolio.onboarding.single-address-label:Public address`;
       case 'watch-only':
         return $localize`:@@universe.portfolio.onboarding.watch-label:Extended public key or output descriptor`;
       default:
@@ -219,7 +273,8 @@ export class OnboardingComponent {
     this.creatingVault.set(true);
     try {
       await this.store.createVault(passphrase);
-      this.step.set('input');
+      if (this.stepChoice() === 'manual') {await this.finishManual();}
+      else {this.step.set('input');}
     } catch {
       this.error.set('The encrypted vault could not be created. Check browser storage availability and retry.');
     } finally {
@@ -231,7 +286,7 @@ export class OnboardingComponent {
    * Local validation before anything leaves the page. Private material
    * trips the safety check and the input model is cleared immediately.
    */
-  protected validateMaterial(value: string): void {
+  protected validateMaterial(value: string, input?: HTMLTextAreaElement): void {
     this.material = value;
     this.rejection.set('');
     this.validation.set('');
@@ -242,6 +297,33 @@ export class OnboardingComponent {
     if (secret.secret && secret.kind !== null) {
       this.rejection.set(secretRejectionCopy(secret.kind));
       this.material = '';
+      if (input) {input.value = '';}
+      return;
+    }
+    if (this.stepChoice() === 'ephemeral') {
+      const [chain, network] = this.ephemeralContext().split(':');
+      // The Bitcoin decoder accepts valid upper/lowercase Bech32 and rejects mixed case.
+      let recognized = chain === 'bitcoin' && network === 'mainnet'
+        ? text.length <= 90
+        : ADDRESS_PATTERNS.some((entry) => entry.chain === chain && entry.network === network && entry.pattern.test(text));
+      if (recognized) {
+        try {
+          if (chain === 'bitcoin') {
+            Address(NETWORK).decode(text);
+          } else {
+            const payload = addressBase58Check.decode(text);
+            recognized = chain === 'dogecoin'
+              ? payload.length === 21 && [0x1e, 0x16].includes(payload[0])
+              : chain === 'zcash' && payload.length === 22 && payload[0] === 0x1c && [0xb8, 0xbd].includes(payload[1]);
+          }
+        } catch { recognized = false; }
+      }
+      if (!recognized) {
+        this.rejection.set($localize`:@@universe.portfolio.onboarding.single-address-bad:Enter one public address on the selected chain and network. Lists and private credentials are not accepted.`);
+        return;
+      }
+      this.validation.set($localize`:@@universe.portfolio.onboarding.single-address-ok:Public address recognized. Nothing will be saved.`);
+      this.valid.set(true);
       return;
     }
     if (this.stepChoice() === 'watch-only') {
@@ -288,13 +370,35 @@ export class OnboardingComponent {
     this.valid.set(true);
   }
 
+  protected async unlockVault(passphrase: string): Promise<void> {
+    if (this.unlockingVault()) {return;}
+    this.error.set('');
+    this.unlockingVault.set(true);
+    try {
+      if (await this.store.unlock(passphrase)) {
+        await this.finishManual();
+      } else {
+        this.error.set($localize`:@@universe.portfolio.home.unlock-failed:That passphrase did not unlock the portfolio.`);
+      }
+    } catch {
+      this.error.set($localize`:@@universe.portfolio.onboarding.unlock-error:The encrypted vault could not be unlocked. Check browser storage availability and retry.`);
+    } finally {
+      this.unlockingVault.set(false);
+    }
+  }
+
+  protected selectEphemeralContext(context: string): void {
+    this.ephemeralContext.set(context);
+    this.validateMaterial(this.material);
+  }
+
   /**
    * Parses a pasted list through the workspace importers, so an address
    * list with labels, groups, CSV headers, or JSON shape carries its
    * labels into the new portfolio. Plain whitespace lists still work.
    */
   private parseList(text: string): { entries: ImportEntry[]; rejected: number } {
-    if (/^[[{]/.test(text) || /(?:^|,)\s*(?:chain|address)/im.test(text)) {
+    if (/^[[{]/.test(text)) {
       const asJson = importJson(text);
       if (asJson.entries.length > 0 || asJson.rejections.length > 0) {
         return { entries: asJson.entries, rejected: asJson.rejections.length };
@@ -323,6 +427,13 @@ export class OnboardingComponent {
   }
 
   protected async save(): Promise<void> {
+    if (this.stepChoice() === 'ephemeral') {
+      this.validateMaterial(this.material);
+      if (!this.valid()) {return;}
+      const [chain, network] = this.ephemeralContext().split(':');
+      await this.router.navigate(['/portfolio', chain, network, this.material.trim()]);
+      return;
+    }
     const portfolio =
       this.portfolio ??
       (await this.store.createPortfolio(this.defaultName()));
@@ -377,18 +488,34 @@ export class OnboardingComponent {
     void this.router.navigate(['/portfolio/p', portfolio.id, 'overview']);
   }
 
+  private async prepareManual(): Promise<void> {
+    this.preparingManual.set(true);
+    try {
+      // A direct /portfolio/new navigation has not visited the home probe.
+      const kind = this.store.vaultKind() === 'absent' ? await this.store.initialize() : this.store.vaultKind();
+      if (kind === 'unlocked') {await this.finishManual();}
+      else {this.step.set(kind === 'locked' ? 'unlock' : 'vault');}
+    } catch {
+      this.error.set($localize`:@@universe.portfolio.onboarding.vault-probe-error:The encrypted vault could not be opened. Check browser storage availability and retry.`);
+    } finally {
+      this.preparingManual.set(false);
+    }
+  }
+
   private async finishManual(): Promise<void> {
-    const portfolio =
-      this.portfolio ??
-      (await this.store.createPortfolio(
-        this.store.vaultKind() === 'unlocked'
-          ? $localize`:@@universe.portfolio.onboarding.manual-name:Manual portfolio`
-          : '',
-        { sessionOnly: this.store.vaultKind() !== 'unlocked' },
-      ));
-    this.portfolio = portfolio;
-    this.step.set('done');
-    void this.router.navigate(['/portfolio/p', portfolio.id, 'overview']);
+    if (this.store.vaultKind() !== 'unlocked') {
+      this.step.set(this.store.vaultKind() === 'locked' ? 'unlock' : 'vault');
+      return;
+    }
+    try {
+      const portfolio = this.portfolio ?? await this.store.createPortfolio($localize`:@@universe.portfolio.onboarding.manual-name:Manual portfolio`);
+      this.portfolio = portfolio;
+      this.step.set('done');
+      void this.router.navigate(['/portfolio/p', portfolio.id, 'overview']);
+    } catch {
+      this.error.set($localize`:@@universe.portfolio.onboarding.manual-save-error:The manual portfolio could not be saved. Check browser storage availability and retry.`);
+      this.step.set('choose');
+    }
   }
 
   private defaultName(): string {

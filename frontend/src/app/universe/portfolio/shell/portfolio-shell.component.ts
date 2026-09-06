@@ -86,6 +86,8 @@ import { PortfolioDataStateComponent } from '../shared/data-state.component';
           >
             {{ data().loading ? 'Refreshing…' : 'Refresh' }}
           </button>
+          <a class="control" routerLink="/portfolio/manage" i18n="@@universe.portfolio.shell.manage-link">Manage portfolios</a>
+          <a class="control" routerLink="/portfolio/settings" i18n="@@universe.portfolio.shell.settings">Settings</a>
           <button type="button" class="control" (click)="session.lockNow()" i18n="@@universe.portfolio.shell.lock">Lock</button>
         </div>
       </header>

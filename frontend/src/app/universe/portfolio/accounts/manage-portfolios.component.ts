@@ -17,6 +17,7 @@ import { findDuplicateAddresses } from '../stores/portfolio-model';
     <div class="manage">
       <header class="head">
         <h1 i18n="@@universe.portfolio.manage.title">Manage portfolios</h1>
+        <a routerLink="/portfolio/settings" i18n="@@universe.portfolio.manage.settings">Settings</a>
         <a class="primary" routerLink="/portfolio/new" i18n="@@universe.portfolio.manage.new">New portfolio</a>
       </header>
 

@@ -88,6 +88,9 @@ export class PortfolioVaultService implements OnDestroy {
   private workerNextId = 1;
   private key: CryptoKey | null = null;
   private meta: VaultMeta | null = null;
+  private operationTail: Promise<void> = Promise.resolve();
+  private lockVersion = 0;
+  private readonly activeWrites = new Set<IDBTransaction>();
   private autoLockMinutes = 15;
   private lockTimer: ReturnType<typeof setTimeout> | null = null;
   private visibilityListener = (() => {
@@ -100,6 +103,10 @@ export class PortfolioVaultService implements OnDestroy {
 
   /** Reads the vault meta. `absent` means first run. */
   async probe(): Promise<VaultState> {
+    return this.serialize(() => this.probeState(), false);
+  }
+
+  private async probeState(): Promise<VaultState> {
     const meta = await this.readMeta();
     if (meta === null) return { kind: 'absent' };
     this.meta = meta;
@@ -112,11 +119,15 @@ export class PortfolioVaultService implements OnDestroy {
 
   /** True when a vault exists on this device. */
   async exists(): Promise<boolean> {
-    return (await this.readMeta()) !== null;
+    return this.serialize(async () => (await this.readMeta()) !== null, false);
   }
 
   async create(passphrase: string): Promise<void> {
-    if (await this.exists()) {
+    return this.serialize(version => this.createVault(passphrase, version));
+  }
+
+  private async createVault(passphrase: string, version: number): Promise<void> {
+    if (await this.readMeta()) {
       throw new Error('A vault already exists on this device.');
     }
     const salt = crypto.getRandomValues(new Uint8Array(16));
@@ -143,7 +154,9 @@ export class PortfolioVaultService implements OnDestroy {
       createdAt: now,
       updatedAt: now,
     };
-    await this.writeMeta(meta);
+    this.assertLockVersion(version);
+    await this.writeMeta(meta, version);
+    this.assertLockVersion(version);
     this.meta = meta;
     this.key = key;
     this.armAutoLock();
@@ -155,7 +168,12 @@ export class PortfolioVaultService implements OnDestroy {
    * learns nothing by probing.
    */
   async unlock(passphrase: string): Promise<boolean> {
-    const meta = this.meta ?? (await this.readMeta());
+    try { return await this.serialize(version => this.unlockVault(passphrase, version)); }
+    catch { return false; }
+  }
+
+  private async unlockVault(passphrase: string, version: number): Promise<boolean> {
+    const meta = await this.readMeta();
     if (meta === null || passphrase.length === 0) return false;
     let key: CryptoKey;
     try {
@@ -169,6 +187,7 @@ export class PortfolioVaultService implements OnDestroy {
     } catch {
       return false;
     }
+    this.assertLockVersion(version);
     this.key = key;
     this.meta = meta;
     this.armAutoLock();
@@ -177,52 +196,75 @@ export class PortfolioVaultService implements OnDestroy {
 
   /** Destroys the in-memory key. The stored ciphertext stays intact. */
   lock(): void {
+    this.lockVersion++;
     this.key = null;
+    for (const transaction of this.activeWrites) {
+      try { transaction.abort(); }
+      catch { /* A completed transaction can be waiting for its terminal event. */ }
+    }
+    if (this.workerRequests.size > 0) {
+      this.failWorker(new Error('The vault was locked before key derivation completed.'));
+    }
     if (this.lockTimer !== null) clearTimeout(this.lockTimer);
     this.lockTimer = null;
   }
 
   async changePassphrase(next: string): Promise<void> {
+    return this.serialize(version => this.replacePassphrase(next, version));
+  }
+
+  private async replacePassphrase(next: string, version: number): Promise<void> {
     if (this.key === null || this.meta === null) {
       throw new Error('The vault must be unlocked to change its passphrase.');
     }
-    // Re-encrypting every record under a fresh salted key.
+    // Prepare every encrypted record before opening the replacement transaction.
+    const previousKey = this.key;
     const records = await this.readAllRecords();
-    const decrypted: { id: string; type: string; plaintext: Uint8Array }[] = [];
-    for (const record of records) {
-      decrypted.push({
-        id: record.id,
-        type: record.type,
-        plaintext: await this.decryptBytes(this.key, record.envelope),
-      });
-    }
     const salt = crypto.getRandomValues(new Uint8Array(16));
     const key = await this.deriveKey(this.meta.kdf, next, this.saltB64(salt), this.meta.kdfParams);
     const verifier = await this.encryptBytes(key, new TextEncoder().encode(VERIFIER_PLAINTEXT));
     const meta: VaultMeta = { ...this.meta, saltB64: this.saltB64(salt), verifier, updatedAt: new Date().toISOString() };
+    const encrypted: VaultRecord[] = [];
+    for (const record of records) {
+      const plaintext = await this.decryptBytes(previousKey, record.envelope);
+      try {
+        encrypted.push({ ...record, envelope: await this.encryptBytes(key, plaintext), updatedAt: meta.updatedAt });
+      } finally {
+        plaintext.fill(0);
+      }
+    }
     const db = await this.open();
-    await this.transaction(db, ['meta'], 'readwrite', (stores) => {
+    this.assertLockVersion(version);
+    await this.transaction(db, ['meta', 'records'], 'readwrite', (stores) => {
+      for (const record of encrypted) stores['records'].put(record);
       stores['meta'].put(meta, 'vault');
     });
+    this.assertLockVersion(version);
     this.meta = meta;
     this.key = key;
-    for (const item of decrypted) {
-      const envelope = await this.encryptBytes(key, item.plaintext);
-      await this.putRecord({ id: item.id, type: item.type, envelope, updatedAt: new Date().toISOString() });
-      item.plaintext.fill(0);
-    }
   }
 
   // ------------------------------------------------------------ records
 
   async put(type: string, id: string, plaintext: unknown): Promise<void> {
+    return this.serialize(version => this.putValue(type, id, plaintext, version));
+  }
+
+  private async putValue(type: string, id: string, plaintext: unknown, version: number): Promise<void> {
     const key = this.requireKey();
     const bytes = new TextEncoder().encode(JSON.stringify(plaintext));
-    const envelope = await this.encryptBytes(key, bytes);
-    await this.putRecord({ id, type, envelope, updatedAt: new Date().toISOString() });
+    let envelope: VaultRecord['envelope'];
+    try { envelope = await this.encryptBytes(key, bytes); }
+    finally { bytes.fill(0); }
+    this.assertLockVersion(version);
+    await this.putRecord({ id, type, envelope, updatedAt: new Date().toISOString() }, version);
   }
 
   async get<T>(id: string): Promise<T | null> {
+    return this.serialize(version => this.getValue<T>(id, version));
+  }
+
+  private async getValue<T>(id: string, version: number): Promise<T | null> {
     const key = this.requireKey();
     const db = await this.open();
     const record = await this.transaction(db, ['records'], 'readonly', (stores) =>
@@ -230,17 +272,30 @@ export class PortfolioVaultService implements OnDestroy {
     ) as VaultRecord | undefined;
     if (record === undefined) return null;
     const bytes = await this.decryptBytes(key, record.envelope);
-    return JSON.parse(new TextDecoder().decode(bytes)) as T;
+    try {
+      this.assertLockVersion(version);
+      return JSON.parse(new TextDecoder().decode(bytes)) as T;
+    } finally { bytes.fill(0); }
   }
 
   async deleteRecord(id: string): Promise<void> {
+    return this.serialize(version => this.removeRecord(id, version));
+  }
+
+  private async removeRecord(id: string, version: number): Promise<void> {
+    this.requireKey();
     const db = await this.open();
+    this.assertLockVersion(version);
     await this.transaction(db, ['records'], 'readwrite', (stores) => {
       stores['records'].delete(id);
     });
   }
 
   async listByType(type: string): Promise<{ id: string; value: unknown }[]> {
+    return this.serialize(version => this.listValues(type, version));
+  }
+
+  private async listValues(type: string, version: number): Promise<{ id: string; value: unknown }[]> {
     const key = this.requireKey();
     const db = await this.open();
     const records = (await this.transaction(db, ['records'], 'readonly', (stores) =>
@@ -250,14 +305,20 @@ export class PortfolioVaultService implements OnDestroy {
     for (const record of records) {
       if (record.type !== type) continue;
       const bytes = await this.decryptBytes(key, record.envelope);
-      values.push({ id: record.id, value: JSON.parse(new TextDecoder().decode(bytes)) });
+      try { values.push({ id: record.id, value: JSON.parse(new TextDecoder().decode(bytes)) }); }
+      finally { bytes.fill(0); }
     }
+    this.assertLockVersion(version);
     return values;
   }
 
   // ------------------------------------------------------- backup/restore
 
   async exportEncrypted(applicationRelease = 'unknown'): Promise<EncryptedBackup> {
+    return this.serialize(version => this.exportBackup(applicationRelease, version));
+  }
+
+  private async exportBackup(applicationRelease: string, version: number): Promise<EncryptedBackup> {
     const meta = this.meta;
     if (meta === null) throw new Error('The vault must be unlocked to export it.');
     const records = await this.readAllRecords();
@@ -268,6 +329,7 @@ export class PortfolioVaultService implements OnDestroy {
       checksumInput.push(record.envelope.ctB64);
     }
     const payloadChecksum = await sha256Hex(checksumInput.join('|'));
+    this.assertLockVersion(version);
     return {
       format: 'universe-portfolio',
       formatVersion: VAULT_FORMAT_VERSION,
@@ -296,6 +358,10 @@ export class PortfolioVaultService implements OnDestroy {
     backup: unknown,
     passphrase: string,
   ): Promise<{ importedRecords: number }> {
+    return this.serialize(version => this.importBackup(backup, passphrase, version));
+  }
+
+  private async importBackup(backup: unknown, passphrase: string, version: number): Promise<{ importedRecords: number }> {
     if (typeof backup !== 'object' || backup === null) {
       throw new Error('That file is not a Universe portfolio backup.');
     }
@@ -303,8 +369,21 @@ export class PortfolioVaultService implements OnDestroy {
     if (candidate.format !== 'universe-portfolio' || candidate.formatVersion !== 1) {
       throw new Error('That backup format version is not supported.');
     }
-    if (!Array.isArray(candidate.records) || typeof candidate.saltB64 !== 'string') {
+    if (!Array.isArray(candidate.records) || candidate.records.length === 0 ||
+      typeof candidate.saltB64 !== 'string' ||
+      (candidate.kdf !== 'argon2id' && candidate.kdf !== 'pbkdf2') ||
+      typeof candidate.kdfParams !== 'object' || candidate.kdfParams === null) {
       throw new Error('That backup is incomplete or corrupted.');
+    }
+    const ids = new Set<string>();
+    for (const record of candidate.records) {
+      if (typeof record !== 'object' || record === null ||
+        typeof record.id !== 'string' || record.id.length === 0 || ids.has(record.id) ||
+        typeof record.type !== 'string' || record.type.length === 0 ||
+        typeof record.nonceB64 !== 'string' || typeof record.ctB64 !== 'string') {
+        throw new Error('That backup is incomplete or corrupted.');
+      }
+      ids.add(record.id);
     }
     const checksum = await sha256Hex(candidate.records.map((r) => r.ctB64).join('|'));
     if (checksum !== candidate.payloadChecksum) {
@@ -312,11 +391,13 @@ export class PortfolioVaultService implements OnDestroy {
     }
     // Passphrase proof: derive under the backup's own KDF parameters and
     // try to open the first record. Only then is anything written.
-    const key = await this.deriveKey(candidate.kdf ?? 'argon2id', passphrase, candidate.saltB64, candidate.kdfParams ?? {});
+    const key = await this.deriveKey(candidate.kdf, passphrase, candidate.saltB64, candidate.kdfParams);
     let validated = 0;
     for (const record of candidate.records) {
       try {
-        await this.decryptBytes(key, { nonceB64: record.nonceB64, ctB64: record.ctB64 });
+        const plaintext = await this.decryptBytes(key, { nonceB64: record.nonceB64, ctB64: record.ctB64 });
+        try { JSON.parse(new TextDecoder().decode(plaintext)); }
+        finally { plaintext.fill(0); }
         validated += 1;
       } catch {
         throw new Error('The passphrase did not open this backup.');
@@ -325,23 +406,10 @@ export class PortfolioVaultService implements OnDestroy {
     if (validated !== candidate.records.length) {
       throw new Error('The passphrase did not open this backup.');
     }
-    // Replace current contents atomically.
-    const db = await this.open();
-    await this.transaction(db, ['meta', 'records'], 'readwrite', (stores) => {
-      stores['records'].clear();
-    });
-    for (const record of candidate.records) {
-      await this.putRecord({
-        id: record.id,
-        type: record.type,
-        envelope: { nonceB64: record.nonceB64, ctB64: record.ctB64 },
-        updatedAt: new Date().toISOString(),
-      });
-    }
     const meta: VaultMeta = {
       version: 1,
-      kdf: candidate.kdf ?? 'argon2id',
-      kdfParams: candidate.kdfParams ?? {},
+      kdf: candidate.kdf,
+      kdfParams: candidate.kdfParams,
       saltB64: candidate.saltB64,
       verifier: { nonceB64: candidate.records[0]?.nonceB64 ?? '', ctB64: candidate.records[0]?.ctB64 ?? '' },
       createdAt: new Date().toISOString(),
@@ -351,7 +419,23 @@ export class PortfolioVaultService implements OnDestroy {
     // imported vault answers future unlock attempts.
     const freshVerifier = await this.encryptBytes(key, new TextEncoder().encode(VERIFIER_PLAINTEXT));
     const finalMeta = { ...meta, verifier: freshVerifier };
-    await this.writeMeta(finalMeta);
+    // No asynchronous crypto belongs inside this transaction: replacement
+    // records and their matching verifier must either all commit or all abort.
+    const db = await this.open();
+    this.assertLockVersion(version);
+    await this.transaction(db, ['meta', 'records'], 'readwrite', (stores) => {
+      stores['records'].clear();
+      for (const record of candidate.records!) {
+        stores['records'].put({
+          id: record.id,
+          type: record.type,
+          envelope: { nonceB64: record.nonceB64, ctB64: record.ctB64 },
+          updatedAt: meta.updatedAt,
+        });
+      }
+      stores['meta'].put(finalMeta, 'vault');
+    });
+    this.assertLockVersion(version);
     this.meta = finalMeta;
     this.key = key;
     this.armAutoLock();
@@ -361,12 +445,35 @@ export class PortfolioVaultService implements OnDestroy {
   /** Complete local deletion: vault contents and key, with confirmation done by the caller. */
   async wipe(): Promise<void> {
     this.lock();
+    return this.serialize(version => this.clearVault(version));
+  }
+
+  private async clearVault(version: number): Promise<void> {
     const db = await this.open();
+    this.assertLockVersion(version);
     await this.transaction(db, ['meta', 'records'], 'readwrite', (stores) => {
       stores['meta'].clear();
       stores['records'].clear();
     });
     this.meta = null;
+  }
+
+  // Include snapshots, crypto and commit so readers/export also see one
+  // matching metadata/key/record generation. Lock remains immediate.
+  private serialize<T>(operation: (version: number) => Promise<T>, requireCurrent = true): Promise<T> {
+    const version = this.lockVersion;
+    const result = this.operationTail.then(() => {
+      if (requireCurrent) { this.assertLockVersion(version); }
+      return operation(version);
+    });
+    this.operationTail = result.then(() => undefined, () => undefined);
+    return result;
+  }
+
+  private assertLockVersion(version: number): void {
+    if (version !== this.lockVersion) {
+      throw new Error('The vault was locked before this operation completed.');
+    }
   }
 
   // ---------------------------------------------------------- auto-lock
@@ -549,24 +656,35 @@ export class PortfolioVaultService implements OnDestroy {
   ): Promise<T> {
     return new Promise<T>((resolve, reject) => {
       const tx = db.transaction(names, mode);
+      if (mode === 'readwrite') { this.activeWrites.add(tx); }
       const stores: Record<string, IDBObjectStore> = {};
       for (const name of names) stores[name] = tx.objectStore(name);
       let result: T;
       let errored = false;
-      void Promise.resolve(body(stores))
+      let failure: unknown;
+      void Promise.resolve().then(() => body(stores))
         .then((value) => {
           result = value;
         })
         .catch((error) => {
           errored = true;
-          reject(error);
-          tx.abort();
+          failure = error;
+          try { tx.abort(); }
+          catch {
+            this.activeWrites.delete(tx);
+            reject(error);
+          }
         });
       tx.oncomplete = () => {
-        if (!errored) resolve(result as T);
+        this.activeWrites.delete(tx);
+        if (!errored) { resolve(result as T); }
+        else { reject(failure); }
       };
-      tx.onerror = () => reject(tx.error ?? new Error('IndexedDB transaction failed.'));
-      tx.onabort = () => reject(tx.error ?? new Error('IndexedDB transaction aborted.'));
+      tx.onerror = () => { failure ??= tx.error ?? new Error('IndexedDB transaction failed.'); };
+      tx.onabort = () => {
+        this.activeWrites.delete(tx);
+        reject(failure ?? tx.error ?? new Error('IndexedDB transaction aborted.'));
+      };
     });
   }
 
@@ -585,15 +703,17 @@ export class PortfolioVaultService implements OnDestroy {
     return meta ?? null;
   }
 
-  private async writeMeta(meta: VaultMeta): Promise<void> {
+  private async writeMeta(meta: VaultMeta, version = this.lockVersion): Promise<void> {
     const db = await this.open();
+    this.assertLockVersion(version);
     await this.transaction(db, ['meta'], 'readwrite', (stores) => {
       stores['meta'].put(meta, 'vault');
     });
   }
 
-  private async putRecord(record: VaultRecord): Promise<void> {
+  private async putRecord(record: VaultRecord, version = this.lockVersion): Promise<void> {
     const db = await this.open();
+    this.assertLockVersion(version);
     await this.transaction(db, ['records'], 'readwrite', (stores) => {
       stores['records'].put(record);
     });

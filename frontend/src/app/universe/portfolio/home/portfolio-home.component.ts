@@ -25,7 +25,7 @@ import { PortfoliosStore } from '../stores/portfolios.store';
             </p>
             <div class="actions">
               <a class="primary" routerLink="/portfolio/new" i18n="@@universe.portfolio.home.get-started">Get started</a>
-              <a routerLink="/portfolio/bitcoin/mainnet/bc1qexample000000000000000" i18n="@@universe.portfolio.home.lookup">Look up one address</a>
+              <a routerLink="/portfolio/new" [queryParams]="{ mode: 'ephemeral' }" i18n="@@universe.portfolio.home.lookup">Look up one address</a>
             </div>
           </section>
         }

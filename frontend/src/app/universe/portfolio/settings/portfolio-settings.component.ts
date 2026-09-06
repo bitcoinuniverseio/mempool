@@ -83,6 +83,7 @@ export class PortfolioSettingsComponent {
   private readonly downloadUrlSignal = signal('');
   private downloadNameValue = 'portfolio-backup.universe-portfolio';
   private pendingImport: unknown = null;
+  private importFileVersion = 0;
 
   readonly message = this.messageSignal.asReadonly();
   readonly downloadUrl = this.downloadUrlSignal.asReadonly();
@@ -96,8 +97,12 @@ export class PortfolioSettingsComponent {
       this.messageSignal.set($localize`:@@universe.portfolio.settings.passphrase-short:Use at least 8 characters.`);
       return;
     }
-    await this.vault.changePassphrase(value);
-    this.messageSignal.set($localize`:@@universe.portfolio.settings.passphrase-changed:Passphrase changed; every record was re-encrypted.`);
+    try {
+      await this.vault.changePassphrase(value);
+      this.messageSignal.set($localize`:@@universe.portfolio.settings.passphrase-changed:Passphrase changed; every record was re-encrypted.`);
+    } catch {
+      this.messageSignal.set($localize`:@@universe.portfolio.settings.passphrase-failed:The passphrase could not be changed. Your existing passphrase and local data are unchanged.`);
+    }
   }
 
   protected async exportBackup(): Promise<void> {
@@ -108,18 +113,23 @@ export class PortfolioSettingsComponent {
     this.messageSignal.set($localize`:@@universe.portfolio.settings.export-ready:Backup ready - download it and store it somewhere safe.`);
   }
 
-  protected importFile(event: Event): void {
+  protected async importFile(event: Event): Promise<void> {
+    const version = ++this.importFileVersion;
+    this.pendingImport = null;
+    this.messageSignal.set('');
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (file === undefined) return;
-    void file.text().then((text) => {
-      try {
-        this.pendingImport = JSON.parse(text);
-        this.messageSignal.set($localize`:@@universe.portfolio.settings.import-loaded:Backup file loaded - enter its passphrase to validate and import.`);
-      } catch {
+    try {
+      const text = await file.text();
+      if (version !== this.importFileVersion) return;
+      this.pendingImport = JSON.parse(text);
+      this.messageSignal.set($localize`:@@universe.portfolio.settings.import-loaded:Backup file loaded - enter its passphrase to validate and import.`);
+    } catch {
+      if (version === this.importFileVersion) {
         this.messageSignal.set($localize`:@@universe.portfolio.settings.import-bad-file:That file is not a valid backup.`);
       }
-    });
+    }
   }
 
   protected async importBackup(passphrase: string): Promise<void> {
