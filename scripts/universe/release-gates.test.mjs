@@ -19,7 +19,7 @@ import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
 import { createServer } from 'node:http';
 import { createServer as createTcpServer } from 'node:net';
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -166,3 +166,185 @@ test('a service that accepts connections and never responds fails as hung, not a
     server.close();
   }
 });
+
+// Execute the real cutover and rollback functions. Only host boundaries are
+// replaced: services, readiness reads, and the atomic current-pointer update.
+// The pointer is represented by a file so this also runs on Windows without
+// requiring symlink privileges; release directories and rename are real.
+function runCutoverFailure(failure, rollbackFailure = '') {
+  const functions = ['release_dir', 'rollback_failed_cutover', 'cmd_cutover', 'cmd_rollback']
+    .map((name) => script.match(new RegExp(`^${name}\\(\\) \\{$[\\s\\S]*?^\\}$`, 'm'))?.[0]
+      || script.match(new RegExp(`^${name}\\(\\) \\{[^\\n]+\\}$`, 'm'))?.[0] || '')
+    .join('\n');
+  return bash(`
+set -euo pipefail
+ROOT=$(mktemp -d)
+RELEASES="$ROOT/releases"
+CURRENT="$ROOT/current"
+GATEWAY=http://127.0.0.1:8099
+UNITS="universe-explorer-backend universe-explorer-overlay universe-explorer-gateway"
+mkdir -p "$RELEASES/mempool-old/scripts/universe" "$RELEASES/mempool-new/scripts/universe"
+printf 'inheritedListenerFd old' > "$RELEASES/mempool-old/scripts/universe/gateway.mjs"
+printf 'inheritedListenerFd new' > "$RELEASES/mempool-new/scripts/universe/gateway.mjs"
+printf '%s' "$RELEASES/mempool-old" > "$CURRENT"
+trap 'status=$?; printf "FINAL_CURRENT=%s\\n" "$(cat "$CURRENT")"; exit "$status"' EXIT
+log() { printf '%s\\n' "$*"; }
+fail() { printf 'FAILED: %s\\n' "$*" >&2; exit 1; }
+readlink() { cat "$2"; }
+ln() { printf '%s' "$2" > "$3"; }
+cmd_preflight() { return 0; }
+systemctl() {
+  [ "$1" != is-active ] || return 1
+  printf 'SERVICE %s CURRENT=%s\\n' "$*" "$(cat "$CURRENT")"
+  if [[ $(cat "$CURRENT") == */mempool-new ]]; then
+    if [ "$FAILURE" = gateway-restart ] && [ "$2" = universe-explorer-gateway ]; then return 17; fi
+    if [ "$FAILURE" = backend-restart ] && [ "$2" = universe-explorer-backend ]; then return 23; fi
+  elif [ "$ROLLBACK_FAILURE" = restart ]; then
+    return 47
+  fi
+}
+wait_for() { [ "$FAILURE" != gateway-health ] || return 19; }
+verify_live() {
+  printf 'VERIFY %s\\n' "$1"
+  if [[ "$1" == */mempool-new ]] && [ "$FAILURE" = verification ]; then return 31; fi
+  if [[ "$1" == */mempool-old ]] && [ "$ROLLBACK_FAILURE" = verification ]; then return 53; fi
+  return 0
+}
+${functions}
+cmd_cutover new
+`, { FAILURE: failure, ROLLBACK_FAILURE: rollbackFailure });
+}
+
+for (const [failure, status] of [
+  ['gateway-restart', 17], ['backend-restart', 23],
+  ['gateway-health', 19], ['verification', 31],
+]) {
+  test(`post-swap ${failure} restores the previous release and preserves the original exit status`, () => {
+    const result = runCutoverFailure(failure);
+    assert.equal(result.status, status, result.stdout + result.stderr);
+    assert.match(result.stdout, /FINAL_CURRENT=.*\/mempool-old\b/);
+    assert.match(result.stdout, /SERVICE restart universe-explorer-backend universe-explorer-overlay universe-explorer-gateway CURRENT=.*\/mempool-old\b/);
+    assert.match(result.stdout, /VERIFY .*\/mempool-old\b/);
+    assert.match(result.stdout + result.stderr, /rolled back to old/);
+    assert.doesNotMatch(result.stdout, /cutover to new complete/);
+  });
+}
+
+for (const [failure, status] of [['restart', 47], ['verification', 53]]) {
+  test(`rollback ${failure} failure stays visible without replacing the original cutover error`, () => {
+    const result = runCutoverFailure('gateway-restart', failure);
+    assert.equal(result.status, 17, result.stdout + result.stderr);
+    assert.match(result.stdout, /FINAL_CURRENT=.*\/mempool-old\b/);
+    assert.match(result.stdout + result.stderr, new RegExp(`rollback failed.*${status}`));
+    assert.match(result.stdout + result.stderr, /gateway restart failed.*17/);
+    assert.doesNotMatch(result.stdout, /rolled back to old|cutover to new complete/);
+  });
+}
+
+const authorityGate = script.match(/^gate_readable_protocols_have_authorities\(\) \{$[\s\S]*?^\}$/m)?.[0];
+const authorityPython = authorityGate?.match(/<<'PY'[^\n]*\n([\s\S]*?)\nPY\n/)?.[1];
+assert.ok(authorityPython, 'the authority gate must retain an executable Python body');
+
+function runAuthorityGate(answer) {
+  const result = spawnSync(process.env.PYTHON_FOR_RELEASE_TESTS || 'python3', ['-c', `
+import io,json,sys
+from types import SimpleNamespace
+from unittest.mock import patch
+sys.argv = ['gate', '/unused-release']
+answer = json.loads(${JSON.stringify(JSON.stringify(answer))})
+source = ${JSON.stringify(authorityPython)}
+environment = 'UNIVERSE_EXPLORER_SOURCES_JSON=[{"authorityId":"owned-reader"}]\\n'
+with patch('builtins.open', return_value=io.StringIO(environment)), patch('subprocess.run', return_value=SimpleNamespace(**answer)):
+    exec(compile(source, 'release.sh authority gate', 'exec'))
+`], { encoding: 'utf8', timeout: 10_000 });
+  assert.equal(result.error, undefined, `Python did not run: ${result.error}`);
+  return result;
+}
+
+test('the authority preflight refuses an unreachable overlay instead of skipping the gate', () => {
+  const result = runAuthorityGate({ returncode: 7, stdout: '', stderr: 'connection refused' });
+  assert.notEqual(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout + result.stderr, /overlay.*(unavailable|could not|not answer)/i);
+});
+
+test('the authority preflight accepts the readable protocol only with its configured authority', () => {
+  const protocol = { id: 'sample', releaseStatus: 'VERIFIED', indexerAuthority: 'owned-reader' };
+  assert.equal(runAuthorityGate({ returncode: 0, stdout: JSON.stringify({ protocols: [protocol] }) }).status, 0);
+  const missing = runAuthorityGate({ returncode: 0, stdout: JSON.stringify({ protocols: [{ ...protocol, indexerAuthority: 'missing' }] }) });
+  assert.notEqual(missing.status, 0);
+  assert.match(missing.stdout, /sample/);
+});
+
+const databaseGate = script.match(/^gate_database\(\) \{$[\s\S]*?^\}$/m)?.[0];
+const databaseNode = databaseGate?.match(/<<'NODE'[^\n]*\n([\s\S]*?)\nNODE\n/)?.[1];
+
+function runDatabaseGate(mode, socket = false) {
+  assert.ok(databaseNode, 'the database gate must execute an authenticated query, not only open a TCP socket');
+  const release = mkdtempSync(join(workdir, 'database-release-'));
+  mkdirSync(join(release, 'backend', 'dist'), { recursive: true });
+  mkdirSync(join(release, 'backend', 'node_modules', 'mysql2'), { recursive: true });
+  writeFileSync(join(release, 'backend', 'package.json'), '{}');
+  const config = join(release, 'backend-config.json');
+  writeFileSync(config, JSON.stringify({ DATABASE: {
+    ENABLED: true, HOST: '127.0.0.1', PORT: 3307, SOCKET: socket ? '/private/database.sock' : '',
+    DATABASE: 'release_schema', USERNAME: 'fixture-user', PASSWORD: 'fixture-password-never-log',
+  } }));
+  writeFileSync(join(release, 'backend', 'dist', 'config.js'),
+    'exports.default = require(process.env.MEMPOOL_CONFIG_FILE);');
+  writeFileSync(join(release, 'backend', 'node_modules', 'mysql2', 'promise.js'), `
+const assert = require('node:assert/strict');
+exports.createConnection = async (options) => {
+  assert.equal(options.database, 'release_schema');
+  assert.equal(options.user, 'fixture-user');
+  assert.equal(options.password, 'fixture-password-never-log');
+  assert.equal(options.connectTimeout, 5000);
+  if (process.env.DB_SOCKET === 'yes') {
+    assert.equal(options.socketPath, '/private/database.sock');
+    assert.equal(options.host, undefined);
+  } else {
+    assert.equal(options.host, '127.0.0.1');
+    assert.equal(options.port, 3307);
+  }
+  if (process.env.DB_GATE_MODE === 'auth') {
+    throw Object.assign(new Error('fixture-user fixture-password-never-log'), { code: 'ER_ACCESS_DENIED_ERROR' });
+  }
+  return {
+    query: async (query) => {
+      assert.deepEqual(query, { sql: 'SELECT 1 AS ready', timeout: 5000 });
+      if (process.env.DB_GATE_MODE === 'timeout') {
+        throw Object.assign(new Error('fixture-password-never-log'), { code: 'PROTOCOL_SEQUENCE_TIMEOUT' });
+      }
+      return [[{ ready: process.env.DB_GATE_MODE === 'wrong-result' ? 0 : 1 }]];
+    },
+    end: async () => {},
+    destroy: () => {},
+  };
+};
+`);
+  const result = spawnSync(process.execPath, ['-', release], {
+    input: databaseNode, encoding: 'utf8', timeout: 15_000,
+    env: { ...process.env, MEMPOOL_CONFIG_FILE: config, DB_GATE_MODE: mode, DB_SOCKET: socket ? 'yes' : 'no' },
+  });
+  assert.equal(result.error, undefined, `database probe did not run: ${result.error}`);
+  assert.doesNotMatch(result.stdout + result.stderr, /fixture-user|fixture-password-never-log/);
+  return result;
+}
+
+test('database readiness authenticates to the configured schema and executes only a bounded read', () => {
+  for (const socket of [false, true]) {
+    const result = runDatabaseGate('ready', socket);
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    assert.match(result.stdout, /authenticated.*SELECT 1/i);
+  }
+});
+
+for (const [mode, code] of [
+  ['auth', 'ER_ACCESS_DENIED_ERROR'], ['timeout', 'PROTOCOL_SEQUENCE_TIMEOUT'], ['wrong-result', 'CHECK_FAILED'],
+]) {
+  test(`database readiness refuses ${mode} without exposing connection credentials`, () => {
+    const result = runDatabaseGate(mode);
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, new RegExp(code));
+    assert.doesNotMatch(result.stdout, /authenticated.*SELECT 1/i);
+  });
+}

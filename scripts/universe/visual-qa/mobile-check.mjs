@@ -74,6 +74,10 @@ if (!BROWSER) {
  * the run's own header rather than left for a reader to assume.
  */
 const CAN_EMULATE_MOBILE = ENGINE_NAME !== 'firefox';
+// Reusing the native window is a Windows Chromium workaround. Other engines
+// retain the fresh-page isolation used by this gate before that workaround:
+// Firefox can stall while navigating a reused document to about:blank.
+const REUSE_PAGE = process.platform === 'win32' && ENGINE_NAME === 'chromium';
 
 function mobileBrowserLaunchOptions(browser, engineName = 'chromium', executablePath) {
   if (executablePath !== undefined && (engineName !== 'chromium' || typeof executablePath !== 'string' || !executablePath.trim())) {
@@ -1024,6 +1028,10 @@ async function run() {
             }
           } finally {
             writeReport();
+            if (!REUSE_PAGE && page) {
+              await page.close();
+              page = undefined;
+            }
           }
         }
       } finally {
