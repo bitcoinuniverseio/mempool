@@ -587,3 +587,18 @@ fa-icon {
     padding-block: var(--u-space-3);
   }
 }
+
+
+// The last heading on this page sat under the bottom bar.
+//
+// The shell reserves room for the bar on the column it shares with the
+// footer, and that covers a page whose content ends in the flow of that
+// column. This one ends inside .doc-content, which is its own scrolling
+// region, so the reservation never reached the final section and the mobile
+// gate measured the last h3 running 9.52px under the bar. Same derivation as
+// the shell rule: what the bar occupies, plus a gap.
+@media (max-width: 991.98px) {
+  .doc-content {
+    padding-bottom: calc(var(--u-bottom-nav-space) + var(--u-space-4));
+  }
+}

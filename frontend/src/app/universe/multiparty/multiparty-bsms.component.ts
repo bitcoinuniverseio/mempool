@@ -60,7 +60,7 @@ import { RouterModule } from '@angular/router';
         <div class="col-12 col-lg-6">
           <div class="card p-4 bg-body-tertiary border h-100">
             <h2 class="h5 mb-3">Sample BSMS Descriptor Template</h2>
-            <pre class="p-3 bg-body border rounded font-monospace small text-break mb-3">
+            <pre class="p-3 bg-body border rounded font-monospace small text-break mb-3" tabindex="0">
 wsh(sortedmulti(2,
   [73c5da0a/48'/0'/0'/2']xpub6E.../0/*,
   [f54c9d21/48'/0'/0'/2']xpub6F.../0/*
