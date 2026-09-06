@@ -711,6 +711,17 @@ function shardRoutes(list, spec) {
   return list.filter((_, position) => position % count === index - 1);
 }
 
+/** Navigates, and gives one second attempt before reporting a timeout. */
+async function gotoWithOneRetry(page, url) {
+  const options = { waitUntil: 'domcontentloaded', timeout: 45_000 };
+  try {
+    await page.goto(url, options);
+  } catch (error) {
+    if (error?.name !== 'TimeoutError') throw error;
+    await page.goto(url, options);
+  }
+}
+
 async function run() {
   mkdirSync(OUT, { recursive: true });
 
@@ -816,7 +827,15 @@ async function run() {
       const page = await context.newPage();
       const scope = `${route.id}@${viewport.id}`;
       try {
-        await page.goto(BASE + route.path, { waitUntil: 'domcontentloaded', timeout: 45_000 });
+        // One retry, at the same budget, before a navigation is called a failure.
+        //
+        // A single timeout here is not evidence about the page. Firefox timed out
+        // once on home at tablet-768 and, on the next run of the same commit
+        // range, once on tx in landscape: different route, different window, same
+        // budget. That is the harness, not the product, and it runs after three
+        // WebKit shards have had the machine. A page that genuinely never loads
+        // still fails, because it fails twice.
+        await gotoWithOneRetry(page, BASE + route.path);
         await page.waitForTimeout(2_400);
 
         if (route.open) {
