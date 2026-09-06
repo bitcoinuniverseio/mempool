@@ -1,0 +1,285 @@
+{
+  "scope": "Real forms and compiled HTTP handlers; offline parser acceptance only",
+  "origin": "http://localhost:4310",
+  "startedAt": "2026-09-06T03:09:37.678Z",
+  "realNetworkE2ePasses": 0,
+  "checks": [
+    {
+      "id": "SP-05-UI-PUNCTUATION",
+      "network": "mainnet",
+      "input": "sp1q!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",
+      "expected": {
+        "valid": false
+      },
+      "actual": {
+        "valid": false,
+        "supported": false,
+        "error": "Unknown character !",
+        "code": "INVALID_ADDRESS"
+      },
+      "status": "PASS",
+      "requestUrl": "http://localhost:4310/api/v1/intelligence/payments/silent/validate-address?chain=bitcoin&network=mainnet",
+      "requestId": "5c702937-3cbe-4524-8a34-a6d915ac5d48",
+      "httpStatus": 400,
+      "rendered": "BIP352 Address & URI Validator\nBech32m Stealth Standard\n\nDecode BIP352 Silent Payment addresses (sp1 / tsp1), directly or from a BIP321 URI's sp instruction. Other payment methods in the URI are not inspected.\n\nOverview\nIn-Browser Scanner\nAddress Validator\nPSBT Inspector\nIndexing Coverage\nValidate Silent Payment Address or URI\nBIP352 Address or bitcoin: URI\nLoad Official Mainnet Sample\nValidate Address\nUnknown character !",
+      "checkedAt": "2026-09-06T03:09:38.078Z"
+    },
+    {
+      "id": "SP-05-UI-CHECKSUM",
+      "network": "mainnet",
+      "input": "sp1qqgste7k9hx0qftg6qmwlkqtwuy6cycyavzmzj85c6qdfhjdpdjtdgqjuexzk6murw56suy3e0rd2cgqvycxttddwsvgxe2usfpxumr70xc9pkqwx",
+      "expected": {
+        "valid": false
+      },
+      "actual": {
+        "valid": false,
+        "supported": false,
+        "error": "Invalid checksum for sp1qqgste7k9hx0qftg6qmwlkqtwuy6cycyavzmzj85c6qdfhjdpdjtdgqjuexzk6murw56suy3e0rd2cgqvycxttddwsvgxe2usfpxumr70xc9pkqwx",
+        "code": "INVALID_ADDRESS"
+      },
+      "status": "PASS",
+      "requestUrl": "http://localhost:4310/api/v1/intelligence/payments/silent/validate-address?chain=bitcoin&network=mainnet",
+      "requestId": "902484c4-e4d3-4592-aabe-7d9dabeedaac",
+      "httpStatus": 400,
+      "rendered": "BIP352 Address & URI Validator\nBech32m Stealth Standard\n\nDecode BIP352 Silent Payment addresses (sp1 / tsp1), directly or from a BIP321 URI's sp instruction. Other payment methods in the URI are not inspected.\n\nOverview\nIn-Browser Scanner\nAddress Validator\nPSBT Inspector\nIndexing Coverage\nValidate Silent Payment Address or URI\nBIP352 Address or bitcoin: URI\nLoad Official Mainnet Sample\nValidate Address\nInvalid checksum for sp1qqgste7k9hx0qftg6qmwlkqtwuy6cycyavzmzj85c6qdfhjdpdjtdgqjuexzk6murw56suy3e0rd2cgqvycxttddwsvgxe2usfpxumr70xc9pkqwx",
+      "checkedAt": "2026-09-06T03:09:38.411Z"
+    },
+    {
+      "id": "SP-05-UI-MIXED-CASE",
+      "network": "mainnet",
+      "input": "SP1qqgste7k9hx0qftg6qmwlkqtwuy6cycyavzmzj85c6qdfhjdpdjtdgqjuexzk6murw56suy3e0rd2cgqvycxttddwsvgxe2usfpxumr70xc9pkqwv",
+      "expected": {
+        "valid": false
+      },
+      "actual": {
+        "valid": false,
+        "supported": false,
+        "error": "Mixed-case string SP1qqgste7k9hx0qftg6qmwlkqtwuy6cycyavzmzj85c6qdfhjdpdjtdgqjuexzk6murw56suy3e0rd2cgqvycxttddwsvgxe2usfpxumr70xc9pkqwv",
+        "code": "INVALID_ADDRESS"
+      },
+      "status": "PASS",
+      "requestUrl": "http://localhost:4310/api/v1/intelligence/payments/silent/validate-address?chain=bitcoin&network=mainnet",
+      "requestId": "8ed1af9c-a43f-4fd4-a61e-6be36aab1882",
+      "httpStatus": 400,
+      "rendered": "BIP352 Address & URI Validator\nBech32m Stealth Standard\n\nDecode BIP352 Silent Payment addresses (sp1 / tsp1), directly or from a BIP321 URI's sp instruction. Other payment methods in the URI are not inspected.\n\nOverview\nIn-Browser Scanner\nAddress Validator\nPSBT Inspector\nIndexing Coverage\nValidate Silent Payment Address or URI\nBIP352 Address or bitcoin: URI\nLoad Official Mainnet Sample\nValidate Address\nMixed-case string SP1qqgste7k9hx0qftg6qmwlkqtwuy6cycyavzmzj85c6qdfhjdpdjtdgqjuexzk6murw56suy3e0rd2cgqvycxttddwsvgxe2usfpxumr70xc9pkqwv",
+      "checkedAt": "2026-09-06T03:09:38.977Z"
+    },
+    {
+      "id": "SP-05-UI-WRONG-NETWORK",
+      "network": "signet",
+      "input": "sp1qqgste7k9hx0qftg6qmwlkqtwuy6cycyavzmzj85c6qdfhjdpdjtdgqjuexzk6murw56suy3e0rd2cgqvycxttddwsvgxe2usfpxumr70xc9pkqwv",
+      "expected": {
+        "valid": false
+      },
+      "actual": {
+        "valid": false,
+        "supported": false,
+        "error": "Address belongs to a different network family.",
+        "code": "INVALID_ADDRESS"
+      },
+      "status": "PASS",
+      "requestUrl": "http://localhost:4310/api/v1/intelligence/payments/silent/validate-address?chain=bitcoin&network=signet",
+      "requestId": "97476ba5-927d-4e7f-8201-69b3e575391d",
+      "httpStatus": 400,
+      "rendered": "BIP352 Address & URI Validator\nBech32m Stealth Standard\n\nDecode BIP352 Silent Payment addresses (sp1 / tsp1), directly or from a BIP321 URI's sp instruction. Other payment methods in the URI are not inspected.\n\nOverview\nIn-Browser Scanner\nAddress Validator\nPSBT Inspector\nIndexing Coverage\nValidate Silent Payment Address or URI\nBIP352 Address or bitcoin: URI\nLoad Official Mainnet Sample\nValidate Address\nAddress belongs to a different network family.",
+      "checkedAt": "2026-09-06T03:09:39.312Z"
+    },
+    {
+      "id": "SP-05-UI-OFFICIAL-KEYS",
+      "network": "mainnet",
+      "input": "sp1qqgste7k9hx0qftg6qmwlkqtwuy6cycyavzmzj85c6qdfhjdpdjtdgqjuexzk6murw56suy3e0rd2cgqvycxttddwsvgxe2usfpxumr70xc9pkqwv",
+      "expected": {
+        "valid": true,
+        "scan_pubkey": "0220bcfac5b99e04ad1a06ddfb016ee13582609d60b6291e98d01a9bc9a16c96d4",
+        "spend_pubkey": "025cc9856d6f8375350e123978daac200c260cb5b5ae83106cab90484dcd8fcf36"
+      },
+      "actual": {
+        "valid": true,
+        "version": 0,
+        "supported": true,
+        "input_format": "address",
+        "inspection_scope": "silent-payment-address",
+        "compatibility": "v0",
+        "network": "mainnet",
+        "network_family": "mainnet",
+        "scan_pubkey": "0220bcfac5b99e04ad1a06ddfb016ee13582609d60b6291e98d01a9bc9a16c96d4",
+        "spend_pubkey": "025cc9856d6f8375350e123978daac200c260cb5b5ae83106cab90484dcd8fcf36"
+      },
+      "status": "PASS",
+      "requestUrl": "http://localhost:4310/api/v1/intelligence/payments/silent/validate-address?chain=bitcoin&network=mainnet",
+      "requestId": "1ffcee21-d555-4441-81a1-e1cdec6b0b40",
+      "httpStatus": 200,
+      "rendered": "BIP352 Address & URI Validator\nBech32m Stealth Standard\n\nDecode BIP352 Silent Payment addresses (sp1 / tsp1), directly or from a BIP321 URI's sp instruction. Other payment methods in the URI are not inspected.\n\nOverview\nIn-Browser Scanner\nAddress Validator\nPSBT Inspector\nIndexing Coverage\nValidate Silent Payment Address or URI\nBIP352 Address or bitcoin: URI\nLoad Official Mainnet Sample\nValidate Address\n✓ Valid BIP352 Address\nMAINNET\nScan Public Key (B_scan)\n0220bcfac5b99e04ad1a06ddfb016ee13582609d60b6291e98d01a9bc9a16c96d4\nPublic address component; receiving scans require its private scan capability\nSpend Public Key (B_spend)\n025cc9856d6f8375350e123978daac200c260cb5b5ae83106cab90484dcd8fcf36\nCombined with shared secret scalar to produce spending script",
+      "checkedAt": "2026-09-06T03:09:39.674Z"
+    },
+    {
+      "id": "SP-05-UI-BIP321",
+      "network": "mainnet",
+      "input": "bitcoin:?sp=sp1qqgste7k9hx0qftg6qmwlkqtwuy6cycyavzmzj85c6qdfhjdpdjtdgqjuexzk6murw56suy3e0rd2cgqvycxttddwsvgxe2usfpxumr70xc9pkqwv",
+      "expected": {
+        "valid": true,
+        "scan_pubkey": "0220bcfac5b99e04ad1a06ddfb016ee13582609d60b6291e98d01a9bc9a16c96d4",
+        "spend_pubkey": "025cc9856d6f8375350e123978daac200c260cb5b5ae83106cab90484dcd8fcf36"
+      },
+      "actual": {
+        "valid": true,
+        "version": 0,
+        "supported": true,
+        "input_format": "bip321",
+        "inspection_scope": "silent-payment-address",
+        "compatibility": "v0",
+        "network": "mainnet",
+        "network_family": "mainnet",
+        "scan_pubkey": "0220bcfac5b99e04ad1a06ddfb016ee13582609d60b6291e98d01a9bc9a16c96d4",
+        "spend_pubkey": "025cc9856d6f8375350e123978daac200c260cb5b5ae83106cab90484dcd8fcf36"
+      },
+      "status": "PASS",
+      "requestUrl": "http://localhost:4310/api/v1/intelligence/payments/silent/validate-address?chain=bitcoin&network=mainnet",
+      "requestId": "7c29f114-fcfa-4a46-8d64-4aa10890d28e",
+      "httpStatus": 200,
+      "rendered": "BIP352 Address & URI Validator\nBech32m Stealth Standard\n\nDecode BIP352 Silent Payment addresses (sp1 / tsp1), directly or from a BIP321 URI's sp instruction. Other payment methods in the URI are not inspected.\n\nOverview\nIn-Browser Scanner\nAddress Validator\nPSBT Inspector\nIndexing Coverage\nValidate Silent Payment Address or URI\nBIP352 Address or bitcoin: URI\nLoad Official Mainnet Sample\nValidate Address\n✓ Valid BIP352 Address\nMAINNET\nScan Public Key (B_scan)\n0220bcfac5b99e04ad1a06ddfb016ee13582609d60b6291e98d01a9bc9a16c96d4\nPublic address component; receiving scans require its private scan capability\nSpend Public Key (B_spend)\n025cc9856d6f8375350e123978daac200c260cb5b5ae83106cab90484dcd8fcf36\nCombined with shared secret scalar to produce spending script",
+      "checkedAt": "2026-09-06T03:09:40.121Z"
+    },
+    {
+      "id": "SP-06-UI-NEGATIVE-0",
+      "network": "mainnet",
+      "input": "cHNidFg=",
+      "expected": {
+        "valid": false
+      },
+      "actual": {
+        "valid": false,
+        "bip375_present": false,
+        "bip376_present": false,
+        "well_formed": false,
+        "cryptographically_verified": false,
+        "code": "INVALID_PSBT",
+        "error": "Invalid five-byte PSBT magic."
+      },
+      "status": "PASS",
+      "requestUrl": "http://localhost:4310/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+      "requestId": "b2a85248-5192-4032-a609-671e04340003",
+      "httpStatus": 400,
+      "rendered": "BIP375 & BIP376 PSBT Inspector\nHardware & Multisig Interoperability\n\nInspect Partially Signed Bitcoin Transactions for BIP375 sending fields and BIP376 spending fields without exposing private keys.\n\nOverview\nIn-Browser Scanner\nAddress Validator\nPSBT Inspector\nIndexing Coverage\nInspect PSBT Payload\nPSBT (Base64 Encoded)\nLoad BIP375 Sample (unsigned)\nInspect Fields\nInvalid five-byte PSBT magic.",
+      "checkedAt": "2026-09-06T03:09:40.983Z"
+    },
+    {
+      "id": "SP-06-UI-NEGATIVE-1",
+      "network": "mainnet",
+      "input": "cHNidP8=",
+      "expected": {
+        "valid": false
+      },
+      "actual": {
+        "valid": false,
+        "bip375_present": false,
+        "bip376_present": false,
+        "well_formed": false,
+        "cryptographically_verified": false,
+        "code": "INVALID_PSBT",
+        "error": "Truncated PSBT or oversized length."
+      },
+      "status": "PASS",
+      "requestUrl": "http://localhost:4310/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+      "requestId": "17a3f0e6-58f2-4bfc-acd5-d4d0fdac439d",
+      "httpStatus": 400,
+      "rendered": "BIP375 & BIP376 PSBT Inspector\nHardware & Multisig Interoperability\n\nInspect Partially Signed Bitcoin Transactions for BIP375 sending fields and BIP376 spending fields without exposing private keys.\n\nOverview\nIn-Browser Scanner\nAddress Validator\nPSBT Inspector\nIndexing Coverage\nInspect PSBT Payload\nPSBT (Base64 Encoded)\nLoad BIP375 Sample (unsigned)\nInspect Fields\nTruncated PSBT or oversized length.",
+      "checkedAt": "2026-09-06T03:09:41.563Z"
+    },
+    {
+      "id": "SP-06-UI-NEGATIVE-2",
+      "network": "mainnet",
+      "input": "cHNidP8B",
+      "expected": {
+        "valid": false
+      },
+      "actual": {
+        "valid": false,
+        "bip375_present": false,
+        "bip376_present": false,
+        "well_formed": false,
+        "cryptographically_verified": false,
+        "code": "INVALID_PSBT",
+        "error": "Truncated PSBT or oversized length."
+      },
+      "status": "PASS",
+      "requestUrl": "http://localhost:4310/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+      "requestId": "589d15f0-eb32-4481-a3a6-abec680e0c8c",
+      "httpStatus": 400,
+      "rendered": "BIP375 & BIP376 PSBT Inspector\nHardware & Multisig Interoperability\n\nInspect Partially Signed Bitcoin Transactions for BIP375 sending fields and BIP376 spending fields without exposing private keys.\n\nOverview\nIn-Browser Scanner\nAddress Validator\nPSBT Inspector\nIndexing Coverage\nInspect PSBT Payload\nPSBT (Base64 Encoded)\nLoad BIP375 Sample (unsigned)\nInspect Fields\nTruncated PSBT or oversized length.",
+      "checkedAt": "2026-09-06T03:09:41.900Z"
+    },
+    {
+      "id": "SP-06-UI-NEGATIVE-3",
+      "network": "mainnet",
+      "input": "!bad base64!",
+      "expected": {
+        "valid": false
+      },
+      "actual": {
+        "valid": false,
+        "bip375_present": false,
+        "bip376_present": false,
+        "well_formed": false,
+        "cryptographically_verified": false,
+        "code": "INVALID_PSBT",
+        "error": "Malformed Base64."
+      },
+      "status": "PASS",
+      "requestUrl": "http://localhost:4310/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+      "requestId": "f32c653d-10ea-44fa-b6dd-a0994e653f68",
+      "httpStatus": 400,
+      "rendered": "BIP375 & BIP376 PSBT Inspector\nHardware & Multisig Interoperability\n\nInspect Partially Signed Bitcoin Transactions for BIP375 sending fields and BIP376 spending fields without exposing private keys.\n\nOverview\nIn-Browser Scanner\nAddress Validator\nPSBT Inspector\nIndexing Coverage\nInspect PSBT Payload\nPSBT (Base64 Encoded)\nLoad BIP375 Sample (unsigned)\nInspect Fields\nMalformed Base64.",
+      "checkedAt": "2026-09-06T03:09:42.231Z"
+    },
+    {
+      "id": "SP-06-UI-STANDARD-VECTOR",
+      "network": "mainnet",
+      "input": "cHNidP8B+wQCAAAAAQIEAgAAAAEEAQEBBQEBAQYBAAABDiAYpxdmOwurFLEqGncTI/8eQHndUy5d0T4o6hCBxwCYSgEPBAAAAAABAQqghgEAAAAAAAFSIgICyBe7dSGvw16pbzv7Jw5utQ3f+lVgYnuWH+wA8pllCL9HMEQCIHLzeIUvuENyYHLyUHbw53Vg7UwuBHFm7mpibHW/2znWAiAhKq5fCVdONB9YhvX/8y9XFuq5AwpKU3nmAWtqTULcJAEBAwQBAAAAIgYCyBe7dSGvw16pbzv7Jw5utQ3f+lVgYnuWH+wA8pllCL8IAAAAgAAAAAABEAT+////Ih0Cekh/wZ+3aYd7h0LW6hgRjzxOcrHqjG3mAqetSkHb4GghA+yk/xG3KOLg9gzmIilDpv9VudlfYnv5qZ0IS8hy1QpbIh4Cekh/wZ+3aYd7h0LW6hgRjzxOcrHqjG3mAqetSkHb4GhAihOzmFVF9yvW6JcUrrkJs+NUqEKpu4tWzQ7e0h34oZlZizEiikngvX6VzhBT98WyistUOmhwdgDjzomCLuMgIQABAwgYcwEAAAAAAAEEIlEgMm31D+Cge3rLcgcL6ztjLrmtFbppXMHlqmqgB7YUb9gBCUICekh/wZ+3aYd7h0LW6hgRjzxOcrHqjG3mAqetSkHb4GgDYeGx6d5eQssgB/fKVLng1X7ROTj61W0/GeV1E6j84DkA",
+      "expected": {
+        "valid": true,
+        "bip375_present": true,
+        "cryptographically_verified": false
+      },
+      "actual": {
+        "valid": true,
+        "psbt_version": 2,
+        "bip375_present": true,
+        "bip376_present": false,
+        "supported": true,
+        "well_formed": true,
+        "cryptographically_verified": false,
+        "inspection_scope": "container-and-field-structure",
+        "input_count": 1,
+        "output_count": 1,
+        "fields": [
+          {
+            "scope": "input:0",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:0",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "output:0",
+            "type": "0x9",
+            "well_formed": true,
+            "cryptographically_verified": false
+          }
+        ]
+      },
+      "status": "PASS",
+      "requestUrl": "http://localhost:4310/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+      "requestId": "f6744157-1370-4d55-94d8-d437b1c3be97",
+      "httpStatus": 200,
+      "rendered": "BIP375 & BIP376 PSBT Inspector\nHardware & Multisig Interoperability\n\nInspect Partially Signed Bitcoin Transactions for BIP375 sending fields and BIP376 spending fields without exposing private keys.\n\nOverview\nIn-Browser Scanner\nAddress Validator\nPSBT Inspector\nIndexing Coverage\nInspect PSBT Payload\nPSBT (Base64 Encoded)\nLoad BIP375 Sample (unsigned)\nInspect Fields\nPSBT Structure Inspection Result\n\nField structure only. Signatures, DLEQ proofs and derived payment outputs have not been cryptographically verified.\n\nBIP375 Sending Fields\nDetected\nStandard BIP375 fields describing recipient keys, ECDH shares and DLEQ proof bytes.\nBIP376 Spending Fields\nNot Found\nContains shared secret tweak scalar records and taproot internal key records for noncustodial signing.",
+      "checkedAt": "2026-09-06T03:09:42.625Z"
+    }
+  ],
+  "completedAt": "2026-09-06T03:09:42.844Z"
+}

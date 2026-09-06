@@ -1,0 +1,110 @@
+{
+  "checkedAt": "2026-09-06T03:49:42.879Z",
+  "origin": "http://localhost:4310",
+  "scope": "Local computation and explicit unavailable states only; no network/provider/recovery acceptance",
+  "checks": [
+    {
+      "id": "SW-03-UNAVAILABLE-UI",
+      "status": "PASS LOCAL",
+      "scope": "Unavailable registry is a visible error, not a verified empty provider list; provider acceptance remains blocked PRE-04",
+      "actual": {
+        "error": "The authenticated provider registry is unavailable. Provider identities and health history cannot be determined until the owned trust and signed-manifest integration is configured (PRE-04)."
+      }
+    },
+    {
+      "id": "SW-04-UNAVAILABLE-UI",
+      "status": "PASS LOCAL",
+      "scope": "No placeholder/default provider appears without registry evidence; this invalid-ID transport check does not accept a provider detail",
+      "actual": {
+        "error": "The authenticated provider registry is unavailable. Provider identities and health history cannot be determined until the owned trust and signed-manifest integration is configured (PRE-04)."
+      }
+    },
+    {
+      "id": "SW-REGISTRY-HTTP-/providers",
+      "status": "PASS LOCAL",
+      "scope": "Actual compiled failure contract only; no authenticated registry, history or manifest pass",
+      "actual": {
+        "httpStatus": 503,
+        "response": {
+          "error": "The authenticated provider registry is unavailable. Provider identities and health history cannot be determined until the owned trust and signed-manifest integration is configured (PRE-04).",
+          "stage": "unavailable-registry"
+        }
+      }
+    },
+    {
+      "id": "SW-REGISTRY-HTTP-/providers/invalid-acceptance-identity/history",
+      "status": "PASS LOCAL",
+      "scope": "Actual compiled failure contract only; no authenticated registry, history or manifest pass",
+      "actual": {
+        "httpStatus": 503,
+        "response": {
+          "error": "The authenticated provider registry is unavailable. Provider identities and health history cannot be determined until the owned trust and signed-manifest integration is configured (PRE-04).",
+          "stage": "unavailable-registry"
+        }
+      }
+    },
+    {
+      "id": "SW-REGISTRY-HTTP-/manifests/verify",
+      "status": "PASS LOCAL",
+      "scope": "Actual compiled failure contract only; no authenticated registry, history or manifest pass",
+      "actual": {
+        "httpStatus": 503,
+        "response": {
+          "valid": false,
+          "stage": "unavailable-registry",
+          "errors": [
+            "The authenticated provider registry is unavailable. Provider identities and health history cannot be determined until the owned trust and signed-manifest integration is configured (PRE-04).",
+            "No protocol-defined signed representation is configured. Signature scheme, exact normalized bytes, domain/network binding, expiry, revision and key rotation remain unverified."
+          ]
+        }
+      }
+    },
+    {
+      "id": "SW-INSPECT-LOCAL",
+      "status": "PASS LOCAL",
+      "scope": "Actual local structural check accepts public-only matching network; malformed JSON, wrong network and private field are rejected before transmission",
+      "actual": {
+        "evidenceApiRequests": 0
+      }
+    },
+    {
+      "id": "SW-SIMULATE-DISPLACED",
+      "status": "PASS LOCAL",
+      "scope": "Actual hypothetical form computation only",
+      "actual": {
+        "ancestorHeight": 197,
+        "confirmations": 0,
+        "displaced": true,
+        "blocksUntilRefund": 3
+      }
+    },
+    {
+      "id": "SW-SIMULATE-MATURE",
+      "status": "PASS LOCAL",
+      "scope": "Actual hypothetical zero-rollback and fee-boundary computation only",
+      "actual": {
+        "ancestorHeight": 200,
+        "confirmations": 3,
+        "blocksUntilRefund": 0
+      }
+    },
+    {
+      "id": "SW-SIMULATE-INVALID",
+      "status": "PASS LOCAL",
+      "scope": "Impossible input rejected and previous output cleared; no swap evidence request",
+      "actual": {
+        "evidenceApiRequests": 0
+      }
+    }
+  ],
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/api/v1/intelligence/swaps/providers?chain=bitcoin&network=mainnet"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/intelligence/swaps/providers/invalid-acceptance-identity?chain=bitcoin&network=mainnet"
+    }
+  ]
+}

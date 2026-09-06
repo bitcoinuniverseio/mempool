@@ -1,0 +1,71 @@
+{
+  "checkedAt": "2026-09-06T03:28:58.845Z",
+  "origin": "http://localhost:4310",
+  "scope": "Disposable local vault only; no chain or durable share acceptance",
+  "checks": [
+    {
+      "id": "P15-ATOMIC-BACKUP-ARTIFACT",
+      "status": "PASS",
+      "scope": "Actual encrypted backup download inspected; no private plaintext retained",
+      "bytes": 1686,
+      "sha256": "ef26bceb77026b036b87e4587a561eaf282871c500f7c96c60dfd6e5c7822c3b",
+      "recordCount": 2
+    },
+    {
+      "id": "P14-ATOMIC-QUOTA",
+      "status": "PASS",
+      "scope": "Actual built UI/KDF and IndexedDB; controlled failure on second record write; complete prior encrypted vault preserved",
+      "observedFault": {
+        "id": "672b2c03-a651-44a3-9668-7d0e4c38d2db",
+        "count": 2,
+        "fired": true,
+        "transactionStarted": true,
+        "transactionOutcome": "aborted"
+      },
+      "recordCount": 2,
+      "beforeSha256": "a5031ae645413e1ab97cab8c00b84cb3202e174ba357a5f308c26349cc8e1d51",
+      "afterSha256": "a5031ae645413e1ab97cab8c00b84cb3202e174ba357a5f308c26349cc8e1d51"
+    },
+    {
+      "id": "P14-ATOMIC-ABORT",
+      "status": "PASS",
+      "scope": "Actual built UI/KDF and IndexedDB; controlled failure on second record write; complete prior encrypted vault preserved",
+      "observedFault": {
+        "id": "f2992a5f-0f30-4d86-ac43-d6ab939eb071",
+        "count": 2,
+        "fired": true,
+        "transactionStarted": true,
+        "transactionOutcome": "aborted"
+      },
+      "recordCount": 2,
+      "beforeSha256": "a5031ae645413e1ab97cab8c00b84cb3202e174ba357a5f308c26349cc8e1d51",
+      "afterSha256": "a5031ae645413e1ab97cab8c00b84cb3202e174ba357a5f308c26349cc8e1d51"
+    },
+    {
+      "id": "P16-ATOMIC-QUOTA",
+      "status": "PASS",
+      "scope": "Actual built UI/KDF and IndexedDB; controlled failure on second record write; complete prior encrypted vault preserved",
+      "observedFault": {
+        "id": "6e3552b0-9d1c-4dd0-a00b-b3f5bb379fda",
+        "count": 2,
+        "fired": true,
+        "transactionStarted": true,
+        "transactionOutcome": "aborted"
+      },
+      "recordCount": 2,
+      "beforeSha256": "a5031ae645413e1ab97cab8c00b84cb3202e174ba357a5f308c26349cc8e1d51",
+      "afterSha256": "a5031ae645413e1ab97cab8c00b84cb3202e174ba357a5f308c26349cc8e1d51"
+    }
+  ],
+  "failure": {
+    "phase": "import-abort",
+    "error": "locator.waitFor: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('app-portfolio-settings').getByRole('status').filter({ hasText: /Controlled disposable-vault quota fault|IndexedDB transaction aborted/ }) to be visible\u001b[22m\n",
+    "observedFault": {
+      "id": "1d70edd7-43be-42ca-9d26-7e62f1e1bf6b",
+      "count": 2,
+      "fired": true,
+      "transactionStarted": true,
+      "transactionOutcome": "aborted"
+    }
+  }
+}

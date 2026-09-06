@@ -1,0 +1,85 @@
+{
+  "checkedAt": "2026-09-06T03:35:20.650Z",
+  "origin": "http://localhost:4310",
+  "scope": "Disposable local vault only; no chain or durable share acceptance",
+  "checks": [
+    {
+      "id": "P15-ATOMIC-BACKUP-ARTIFACT",
+      "status": "PASS",
+      "scope": "Actual encrypted backup download inspected; no private plaintext retained",
+      "bytes": 2594,
+      "sha256": "0b55f4430d1ddd14c16f75970954d71ee46f688b672229e93c541a28b811ffb0",
+      "recordCount": 3
+    },
+    {
+      "id": "P14-ATOMIC-QUOTA",
+      "status": "PASS",
+      "scope": "Actual built UI/KDF and IndexedDB; controlled failure on second record write; complete prior encrypted vault preserved",
+      "observedFault": {
+        "id": "247fe0ab-5c39-49fe-bff1-605686bbc4fc",
+        "count": 2,
+        "fired": true,
+        "transactionStarted": true,
+        "transactionOutcome": "aborted"
+      },
+      "recordCount": 3,
+      "beforeSha256": "51c7dd25f1d36eb7bc4334d8d78bac969317f137c2e6591398725751dde3eebb",
+      "afterSha256": "51c7dd25f1d36eb7bc4334d8d78bac969317f137c2e6591398725751dde3eebb"
+    },
+    {
+      "id": "P14-ATOMIC-ABORT",
+      "status": "PASS",
+      "scope": "Actual built UI/KDF and IndexedDB; controlled failure on second record write; complete prior encrypted vault preserved",
+      "observedFault": {
+        "id": "fecaeda7-3550-4007-88b5-20f5d88252cb",
+        "count": 3,
+        "fired": true,
+        "transactionStarted": true,
+        "transactionOutcome": "aborted"
+      },
+      "recordCount": 3,
+      "beforeSha256": "51c7dd25f1d36eb7bc4334d8d78bac969317f137c2e6591398725751dde3eebb",
+      "afterSha256": "51c7dd25f1d36eb7bc4334d8d78bac969317f137c2e6591398725751dde3eebb"
+    },
+    {
+      "id": "P16-ATOMIC-QUOTA",
+      "status": "PASS",
+      "scope": "Actual built UI/KDF and IndexedDB; controlled failure on second record write; complete prior encrypted vault preserved",
+      "observedFault": {
+        "id": "c7287db9-2ee5-4950-9415-695acf56ffc1",
+        "count": 2,
+        "fired": true,
+        "transactionStarted": true,
+        "transactionOutcome": "aborted"
+      },
+      "recordCount": 3,
+      "beforeSha256": "51c7dd25f1d36eb7bc4334d8d78bac969317f137c2e6591398725751dde3eebb",
+      "afterSha256": "51c7dd25f1d36eb7bc4334d8d78bac969317f137c2e6591398725751dde3eebb"
+    },
+    {
+      "id": "P16-ATOMIC-ABORT",
+      "status": "PASS",
+      "scope": "Actual built UI/KDF and IndexedDB; controlled failure on second record write; complete prior encrypted vault preserved",
+      "observedFault": {
+        "id": "b72e71d5-c6b3-421e-a72a-a0ebd3ac8db9",
+        "count": 3,
+        "fired": true,
+        "transactionStarted": true,
+        "transactionOutcome": "aborted"
+      },
+      "recordCount": 3,
+      "beforeSha256": "51c7dd25f1d36eb7bc4334d8d78bac969317f137c2e6591398725751dde3eebb",
+      "afterSha256": "51c7dd25f1d36eb7bc4334d8d78bac969317f137c2e6591398725751dde3eebb"
+    },
+    {
+      "id": "P16-REJECT-REPLACEMENT-SELECTION",
+      "status": "PASS",
+      "scope": "Actual file input rejects malformed JSON and cannot import its previously selected backup"
+    },
+    {
+      "id": "P16-REJECT-CORRUPT-BACKUP",
+      "status": "PASS",
+      "scope": "Actual file input and vault checksum rejection preserve all prior encrypted bytes"
+    }
+  ]
+}

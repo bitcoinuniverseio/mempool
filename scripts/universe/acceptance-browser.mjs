@@ -15,6 +15,12 @@ function writeFileSync(path, value) {
     }
   }
 }
+// A redirect needs its own checked target. A declaration containing redirectTo
+// does not make an arbitrary destination, including the home page, a pass.
+export function navigationTargetStatus(requestedPath, actualPath, errors = []) {
+  if (errors.length) return 'FAIL';
+  return actualPath === requestedPath ? 'PASS' : 'NOT VERIFIED';
+}
 
 export async function checkNavigation(page, root, output) {
   const origin = 'http://localhost:4310';
@@ -55,16 +61,22 @@ export async function checkNavigation(page, root, output) {
       try {
         await page.goto(origin + path, { waitUntil: 'domcontentloaded', timeout: 15000 });
         if (selectors.length) await page.locator(selectors.join(',')).first().waitFor({ state: 'attached', timeout: 1800 });
-        else await page.waitForFunction(() => [...document.querySelectorAll('router-outlet')]
-          .some(node => node.nextElementSibling?.tagName.startsWith('APP-') && node.nextElementSibling.tagName !== 'APP-MASTER-PAGE'), undefined, { timeout: 3000 });
+        else {
+          const deadline = Date.now() + 3000;
+          while (true) {
+            const attached = await page.evaluate(() => [...document.querySelectorAll('router-outlet')]
+              .some(node => node.nextElementSibling?.tagName.startsWith('APP-') && node.nextElementSibling.tagName !== 'APP-MASTER-PAGE'));
+            if (attached || Date.now() > deadline) break;
+            await page.waitForTimeout(50);
+          }
+        }
         result = await page.evaluate(() => ({ path: location.pathname,
           headings: [...document.querySelectorAll('h1,h2')].map(node => node.textContent.trim()).slice(0, 8),
           overflow: document.documentElement.scrollWidth > window.innerWidth + 1,
           renderedComponents: [...document.querySelectorAll('router-outlet')].map(node => node.nextElementSibling?.tagName).filter(Boolean),
         }));
-        result.renderStatus = (result.path === path || entry.declarations.some(row => row.redirectTo !== null ||
-          (row.lazyChildren && result.path.startsWith(path + '/')))
-          ) && errors.length === 0 ? 'PASS' : 'FAIL';
+        result.renderStatus = navigationTargetStatus(path, result.path, errors);
+        if (result.path !== path) result.reason = 'The destination differs from the requested entry; its redirect target needs a separate assertion.';
       } catch (error) {
         result = { path: new URL(page.url()).pathname, renderStatus: 'NOT VERIFIED', reason: error.message.split('\n')[0] };
       }

@@ -1,0 +1,2123 @@
+{
+  "schemaVersion": 1,
+  "origin": "http://localhost:4310",
+  "revision": "b8d5e3bdc837681c7ce2b8cb91616262f432a313",
+  "sourceDiffSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "results": [
+    {
+      "id": "SP-05-OFFICIAL-KEYS",
+      "operation": "SP-05",
+      "network": "mainnet",
+      "scope": "offline parser over actual compiled HTTP handler; no chain transaction claimed",
+      "endpoint": "/api/v1/intelligence/payments/silent/validate-address?chain=bitcoin&network=mainnet",
+      "requestId": "edf237b3-f858-48b1-b310-0fc8ce84e69e",
+      "inputSha256": "1bfeae29e9633198af91b185d028a31f3a3e9b0cc9e0312c9ba042aaafb36f99",
+      "expected": {
+        "valid": true,
+        "scan_pubkey": "0220bcfac5b99e04ad1a06ddfb016ee13582609d60b6291e98d01a9bc9a16c96d4",
+        "spend_pubkey": "025cc9856d6f8375350e123978daac200c260cb5b5ae83106cab90484dcd8fcf36"
+      },
+      "responseRequestId": "edf237b3-f858-48b1-b310-0fc8ce84e69e",
+      "httpStatus": 200,
+      "actual": {
+        "valid": true,
+        "version": 0,
+        "supported": true,
+        "input_format": "address",
+        "inspection_scope": "silent-payment-address",
+        "compatibility": "v0",
+        "network": "mainnet",
+        "network_family": "mainnet",
+        "scan_pubkey": "0220bcfac5b99e04ad1a06ddfb016ee13582609d60b6291e98d01a9bc9a16c96d4",
+        "spend_pubkey": "025cc9856d6f8375350e123978daac200c260cb5b5ae83106cab90484dcd8fcf36"
+      },
+      "status": "PASS",
+      "reason": null,
+      "checkedAt": "2026-09-06T03:25:02.995Z"
+    },
+    {
+      "id": "SP-05-BIP321-URI",
+      "operation": "SP-05",
+      "network": "mainnet",
+      "scope": "offline parser over actual compiled HTTP handler; no chain transaction claimed",
+      "endpoint": "/api/v1/intelligence/payments/silent/validate-address?chain=bitcoin&network=mainnet",
+      "requestId": "e562cfa5-50e4-4462-a83e-17540b5b4e2e",
+      "inputSha256": "277cb09a2c679349430fc204e523fe3e3b80a7410d6693915575b51903fe1a3d",
+      "expected": {
+        "valid": true,
+        "scan_pubkey": "0220bcfac5b99e04ad1a06ddfb016ee13582609d60b6291e98d01a9bc9a16c96d4",
+        "spend_pubkey": "025cc9856d6f8375350e123978daac200c260cb5b5ae83106cab90484dcd8fcf36"
+      },
+      "responseRequestId": "e562cfa5-50e4-4462-a83e-17540b5b4e2e",
+      "httpStatus": 200,
+      "actual": {
+        "valid": true,
+        "version": 0,
+        "supported": true,
+        "input_format": "bip321",
+        "inspection_scope": "silent-payment-address",
+        "compatibility": "v0",
+        "network": "mainnet",
+        "network_family": "mainnet",
+        "scan_pubkey": "0220bcfac5b99e04ad1a06ddfb016ee13582609d60b6291e98d01a9bc9a16c96d4",
+        "spend_pubkey": "025cc9856d6f8375350e123978daac200c260cb5b5ae83106cab90484dcd8fcf36"
+      },
+      "status": "PASS",
+      "reason": null,
+      "checkedAt": "2026-09-06T03:25:03.009Z"
+    },
+    {
+      "id": "SP-05-PUNCTUATION",
+      "operation": "SP-05",
+      "network": "mainnet",
+      "scope": "offline parser over actual compiled HTTP handler; no chain transaction claimed",
+      "endpoint": "/api/v1/intelligence/payments/silent/validate-address?chain=bitcoin&network=mainnet",
+      "requestId": "9913df47-2627-40e1-ac7e-31468d41a623",
+      "inputSha256": "d4cec5a632edfc002571d6a75dd6ebf3986641f42241645c1b03e11461abf954",
+      "expected": {
+        "valid": false
+      },
+      "responseRequestId": "9913df47-2627-40e1-ac7e-31468d41a623",
+      "httpStatus": 400,
+      "actual": {
+        "valid": false,
+        "supported": false,
+        "error": "Unknown character !",
+        "code": "INVALID_ADDRESS"
+      },
+      "status": "PASS",
+      "reason": null,
+      "checkedAt": "2026-09-06T03:25:03.019Z"
+    },
+    {
+      "id": "SP-05-CHECKSUM",
+      "operation": "SP-05",
+      "network": "mainnet",
+      "scope": "offline parser over actual compiled HTTP handler; no chain transaction claimed",
+      "endpoint": "/api/v1/intelligence/payments/silent/validate-address?chain=bitcoin&network=mainnet",
+      "requestId": "4ff31ab6-1cf1-486e-b52c-a9dfc170468e",
+      "inputSha256": "96ff8c398d6e9e40f029eb937619b763b6f03bbefa6c9f7a7cc35d8966033494",
+      "expected": {
+        "valid": false
+      },
+      "responseRequestId": "4ff31ab6-1cf1-486e-b52c-a9dfc170468e",
+      "httpStatus": 400,
+      "actual": {
+        "valid": false,
+        "supported": false,
+        "error": "Invalid checksum for sp1qqgste7k9hx0qftg6qmwlkqtwuy6cycyavzmzj85c6qdfhjdpdjtdgqjuexzk6murw56suy3e0rd2cgqvycxttddwsvgxe2usfpxumr70xc9pkqwx",
+        "code": "INVALID_ADDRESS"
+      },
+      "status": "PASS",
+      "reason": null,
+      "checkedAt": "2026-09-06T03:25:03.028Z"
+    },
+    {
+      "id": "SP-05-MIXED-CASE",
+      "operation": "SP-05",
+      "network": "mainnet",
+      "scope": "offline parser over actual compiled HTTP handler; no chain transaction claimed",
+      "endpoint": "/api/v1/intelligence/payments/silent/validate-address?chain=bitcoin&network=mainnet",
+      "requestId": "e0c753fa-9c9a-4b79-beee-2a94fc542861",
+      "inputSha256": "54723937a8bb625aa1398a59e27e6e3d06dcbd7d43f9d50785353c9f461463c4",
+      "expected": {
+        "valid": false
+      },
+      "responseRequestId": "e0c753fa-9c9a-4b79-beee-2a94fc542861",
+      "httpStatus": 400,
+      "actual": {
+        "valid": false,
+        "supported": false,
+        "error": "Mixed-case string SP1qqgste7k9hx0qftg6qmwlkqtwuy6cycyavzmzj85c6qdfhjdpdjtdgqjuexzk6murw56suy3e0rd2cgqvycxttddwsvgxe2usfpxumr70xc9pkqwv",
+        "code": "INVALID_ADDRESS"
+      },
+      "status": "PASS",
+      "reason": null,
+      "checkedAt": "2026-09-06T03:25:03.032Z"
+    },
+    {
+      "id": "SP-05-CURVE",
+      "operation": "SP-05",
+      "network": "mainnet",
+      "scope": "offline parser over actual compiled HTTP handler; no chain transaction claimed",
+      "endpoint": "/api/v1/intelligence/payments/silent/validate-address?chain=bitcoin&network=mainnet",
+      "requestId": "edc39670-c897-462a-a9c8-0f117b1f1ae9",
+      "inputSha256": "b4f2787e70e87a0a47212900135ff81ab4ed27663845b945dfd6ec56fb49f48b",
+      "expected": {
+        "valid": false
+      },
+      "responseRequestId": "edc39670-c897-462a-a9c8-0f117b1f1ae9",
+      "httpStatus": 400,
+      "actual": {
+        "valid": false,
+        "supported": false,
+        "error": "Invalid compressed secp256k1 public key.",
+        "code": "INVALID_ADDRESS"
+      },
+      "status": "PASS",
+      "reason": null,
+      "checkedAt": "2026-09-06T03:25:03.046Z"
+    },
+    {
+      "id": "SP-05-WRONG-NETWORK",
+      "operation": "SP-05",
+      "network": "signet",
+      "scope": "offline parser over actual compiled HTTP handler; no chain transaction claimed",
+      "endpoint": "/api/v1/intelligence/payments/silent/validate-address?chain=bitcoin&network=signet",
+      "requestId": "8d31b951-88ab-4640-a14a-07fc82a3f735",
+      "inputSha256": "1bfeae29e9633198af91b185d028a31f3a3e9b0cc9e0312c9ba042aaafb36f99",
+      "expected": {
+        "valid": false
+      },
+      "responseRequestId": "8d31b951-88ab-4640-a14a-07fc82a3f735",
+      "httpStatus": 400,
+      "actual": {
+        "valid": false,
+        "supported": false,
+        "error": "Address belongs to a different network family.",
+        "code": "INVALID_ADDRESS"
+      },
+      "status": "PASS",
+      "reason": null,
+      "checkedAt": "2026-09-06T03:25:03.060Z"
+    },
+    {
+      "id": "SP-05-TEST-FAMILY",
+      "operation": "SP-05",
+      "network": "signet",
+      "scope": "offline parser over actual compiled HTTP handler; no chain transaction claimed",
+      "endpoint": "/api/v1/intelligence/payments/silent/validate-address?chain=bitcoin&network=signet",
+      "requestId": "e86eb236-d18a-41e7-a205-522e76e95c17",
+      "inputSha256": "bf4058320455d80d4639ef4bee58b3f2963ba51b4df9858384780e5fa0b661a8",
+      "expected": {
+        "valid": true,
+        "network": "signet",
+        "scan_pubkey": "0220bcfac5b99e04ad1a06ddfb016ee13582609d60b6291e98d01a9bc9a16c96d4",
+        "spend_pubkey": "025cc9856d6f8375350e123978daac200c260cb5b5ae83106cab90484dcd8fcf36"
+      },
+      "responseRequestId": "e86eb236-d18a-41e7-a205-522e76e95c17",
+      "httpStatus": 200,
+      "actual": {
+        "valid": true,
+        "version": 0,
+        "supported": true,
+        "input_format": "address",
+        "inspection_scope": "silent-payment-address",
+        "compatibility": "v0",
+        "network": "signet",
+        "network_family": "test-network",
+        "scan_pubkey": "0220bcfac5b99e04ad1a06ddfb016ee13582609d60b6291e98d01a9bc9a16c96d4",
+        "spend_pubkey": "025cc9856d6f8375350e123978daac200c260cb5b5ae83106cab90484dcd8fcf36"
+      },
+      "status": "PASS",
+      "reason": null,
+      "checkedAt": "2026-09-06T03:25:03.070Z"
+    },
+    {
+      "id": "SP-05-TYPE",
+      "operation": "SP-05",
+      "network": "mainnet",
+      "scope": "offline parser over actual compiled HTTP handler; no chain transaction claimed",
+      "endpoint": "/api/v1/intelligence/payments/silent/validate-address?chain=bitcoin&network=mainnet",
+      "requestId": "e45f5d34-44c5-4043-b6f2-a367318d58f6",
+      "inputSha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "expected": {
+        "valid": false
+      },
+      "responseRequestId": "e45f5d34-44c5-4043-b6f2-a367318d58f6",
+      "httpStatus": 400,
+      "actual": {
+        "valid": false,
+        "supported": false,
+        "error": "Address or payment URI must be a nonempty string.",
+        "code": "INVALID_ADDRESS"
+      },
+      "status": "PASS",
+      "reason": null,
+      "checkedAt": "2026-09-06T03:25:03.080Z"
+    },
+    {
+      "id": "SP-06-NEGATIVE-0",
+      "operation": "SP-06",
+      "network": "mainnet",
+      "scope": "offline parser over actual compiled HTTP handler; no chain transaction claimed",
+      "endpoint": "/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+      "requestId": "7dfdcd3f-5161-4903-b642-af7e7cfdc1ac",
+      "inputSha256": "f3d7dc8c223627c8964a7ef4625527c1fa60952340907925b61d7d4f237a8b36",
+      "expected": {
+        "valid": false
+      },
+      "responseRequestId": "7dfdcd3f-5161-4903-b642-af7e7cfdc1ac",
+      "httpStatus": 400,
+      "actual": {
+        "valid": false,
+        "bip375_present": false,
+        "bip376_present": false,
+        "well_formed": false,
+        "cryptographically_verified": false,
+        "code": "INVALID_PSBT",
+        "error": "Invalid five-byte PSBT magic."
+      },
+      "status": "PASS",
+      "reason": null,
+      "checkedAt": "2026-09-06T03:25:03.090Z"
+    },
+    {
+      "id": "SP-06-NEGATIVE-1",
+      "operation": "SP-06",
+      "network": "mainnet",
+      "scope": "offline parser over actual compiled HTTP handler; no chain transaction claimed",
+      "endpoint": "/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+      "requestId": "96fa8d6c-1a42-49a6-8df5-7bda16c4f5f2",
+      "inputSha256": "31bce2a788e1583fe174dfdef76eeb086f80087d471e9149ce6b505ae9602f9f",
+      "expected": {
+        "valid": false
+      },
+      "responseRequestId": "96fa8d6c-1a42-49a6-8df5-7bda16c4f5f2",
+      "httpStatus": 400,
+      "actual": {
+        "valid": false,
+        "bip375_present": false,
+        "bip376_present": false,
+        "well_formed": false,
+        "cryptographically_verified": false,
+        "code": "INVALID_PSBT",
+        "error": "Truncated PSBT or oversized length."
+      },
+      "status": "PASS",
+      "reason": null,
+      "checkedAt": "2026-09-06T03:25:03.100Z"
+    },
+    {
+      "id": "SP-06-NEGATIVE-2",
+      "operation": "SP-06",
+      "network": "mainnet",
+      "scope": "offline parser over actual compiled HTTP handler; no chain transaction claimed",
+      "endpoint": "/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+      "requestId": "c735bc28-0db5-479b-b51e-d0cb50f711fa",
+      "inputSha256": "d22771f2d69f31466c6903934d02fc5001bc0271a6af81b28656dc4f9d29e633",
+      "expected": {
+        "valid": false
+      },
+      "responseRequestId": "c735bc28-0db5-479b-b51e-d0cb50f711fa",
+      "httpStatus": 400,
+      "actual": {
+        "valid": false,
+        "bip375_present": false,
+        "bip376_present": false,
+        "well_formed": false,
+        "cryptographically_verified": false,
+        "code": "INVALID_PSBT",
+        "error": "Truncated PSBT or oversized length."
+      },
+      "status": "PASS",
+      "reason": null,
+      "checkedAt": "2026-09-06T03:25:03.104Z"
+    },
+    {
+      "id": "SP-06-NEGATIVE-3",
+      "operation": "SP-06",
+      "network": "mainnet",
+      "scope": "offline parser over actual compiled HTTP handler; no chain transaction claimed",
+      "endpoint": "/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+      "requestId": "453724ba-d81b-40bb-9819-4a316119fe32",
+      "inputSha256": "bec06addd9f1e585fffaa4c6e1f758869aaab7d2d5597e63692ae3dbef5d9357",
+      "expected": {
+        "valid": false
+      },
+      "responseRequestId": "453724ba-d81b-40bb-9819-4a316119fe32",
+      "httpStatus": 400,
+      "actual": {
+        "valid": false,
+        "bip375_present": false,
+        "bip376_present": false,
+        "well_formed": false,
+        "cryptographically_verified": false,
+        "code": "INVALID_PSBT",
+        "error": "Truncated PSBT or oversized length."
+      },
+      "status": "PASS",
+      "reason": null,
+      "checkedAt": "2026-09-06T03:25:03.110Z"
+    },
+    {
+      "id": "SP-06-NEGATIVE-4",
+      "operation": "SP-06",
+      "network": "mainnet",
+      "scope": "offline parser over actual compiled HTTP handler; no chain transaction claimed",
+      "endpoint": "/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+      "requestId": "34ee610b-12ff-4c31-9d67-8fa96cff8a60",
+      "inputSha256": "eecaf033b6036816f6e72528b43b20aca0c125f5c55d45e055e1cc334b138aeb",
+      "expected": {
+        "valid": false
+      },
+      "responseRequestId": "34ee610b-12ff-4c31-9d67-8fa96cff8a60",
+      "httpStatus": 400,
+      "actual": {
+        "valid": false,
+        "bip375_present": false,
+        "bip376_present": false,
+        "well_formed": false,
+        "cryptographically_verified": false,
+        "code": "INVALID_PSBT",
+        "error": "Malformed Base64."
+      },
+      "status": "PASS",
+      "reason": null,
+      "checkedAt": "2026-09-06T03:25:03.115Z"
+    },
+    {
+      "id": "SP-06-NEGATIVE-5",
+      "operation": "SP-06",
+      "network": "mainnet",
+      "scope": "offline parser over actual compiled HTTP handler; no chain transaction claimed",
+      "endpoint": "/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+      "requestId": "b8238d27-ea7d-4106-9b15-8281bd502229",
+      "inputSha256": "7bb85546abaa6e17be2f810b1802385bc16b99c714e39cca9c575497f7cd638a",
+      "expected": {
+        "valid": false
+      },
+      "responseRequestId": "b8238d27-ea7d-4106-9b15-8281bd502229",
+      "httpStatus": 400,
+      "actual": {
+        "valid": false,
+        "bip375_present": false,
+        "bip376_present": false,
+        "well_formed": false,
+        "cryptographically_verified": false,
+        "code": "INVALID_PSBT",
+        "error": "PSBT must be Base64, at most 1 MiB decoded."
+      },
+      "status": "PASS",
+      "reason": null,
+      "checkedAt": "2026-09-06T03:25:03.145Z"
+    },
+    {
+      "id": "SP-06-ORDINARY",
+      "operation": "SP-06",
+      "network": "mainnet",
+      "scope": "offline parser over actual compiled HTTP handler; no chain transaction claimed",
+      "endpoint": "/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+      "requestId": "6b8ecdbd-2ed7-40ca-8b0d-ad3ff5c1da21",
+      "inputSha256": "dd80407bbb6ef2025509bf24a86f975ec28ef7005f986b91fb6f0fc7e3df187b",
+      "expected": {
+        "valid": true,
+        "bip375_present": false,
+        "bip376_present": false,
+        "cryptographically_verified": false
+      },
+      "responseRequestId": "6b8ecdbd-2ed7-40ca-8b0d-ad3ff5c1da21",
+      "httpStatus": 200,
+      "actual": {
+        "valid": true,
+        "psbt_version": 0,
+        "bip375_present": false,
+        "bip376_present": false,
+        "supported": true,
+        "well_formed": true,
+        "cryptographically_verified": false,
+        "inspection_scope": "container-and-field-structure",
+        "input_count": 1,
+        "output_count": 1,
+        "fields": []
+      },
+      "status": "PASS",
+      "reason": null,
+      "checkedAt": "2026-09-06T03:25:03.156Z"
+    },
+    {
+      "id": "SP-06-BIP375-0",
+      "operation": "SP-06",
+      "network": "mainnet",
+      "scope": "offline parser over actual compiled HTTP handler; no chain transaction claimed",
+      "endpoint": "/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+      "requestId": "65ed5aaa-89cc-4cae-9d6a-120eb3e2e8aa",
+      "inputSha256": "4cd1f56245dbb87b241835e5ee9d7b87c91b857ecc3c812accf9cd212e9a43a4",
+      "expected": {
+        "valid": true,
+        "bip375_present": true,
+        "cryptographically_verified": false
+      },
+      "responseRequestId": "65ed5aaa-89cc-4cae-9d6a-120eb3e2e8aa",
+      "httpStatus": 200,
+      "actual": {
+        "valid": true,
+        "psbt_version": 2,
+        "bip375_present": true,
+        "bip376_present": false,
+        "supported": true,
+        "well_formed": true,
+        "cryptographically_verified": false,
+        "inspection_scope": "container-and-field-structure",
+        "input_count": 1,
+        "output_count": 1,
+        "fields": [
+          {
+            "scope": "input:0",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:0",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "output:0",
+            "type": "0x9",
+            "well_formed": true,
+            "cryptographically_verified": false
+          }
+        ]
+      },
+      "status": "PASS",
+      "reason": null,
+      "checkedAt": "2026-09-06T03:25:03.176Z"
+    },
+    {
+      "id": "SP-06-BIP375-1",
+      "operation": "SP-06",
+      "network": "mainnet",
+      "scope": "offline parser over actual compiled HTTP handler; no chain transaction claimed",
+      "endpoint": "/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+      "requestId": "e1b2488c-1468-4348-a411-d6009ab890fa",
+      "inputSha256": "a3020f451f92ad371bb7380e5db67a1a7b6dad7a4a73a764c738c67ba8a0598a",
+      "expected": {
+        "valid": true,
+        "bip375_present": true,
+        "cryptographically_verified": false
+      },
+      "responseRequestId": "e1b2488c-1468-4348-a411-d6009ab890fa",
+      "httpStatus": 200,
+      "actual": {
+        "valid": true,
+        "psbt_version": 2,
+        "bip375_present": true,
+        "bip376_present": false,
+        "supported": true,
+        "well_formed": true,
+        "cryptographically_verified": false,
+        "inspection_scope": "container-and-field-structure",
+        "input_count": 1,
+        "output_count": 1,
+        "fields": [
+          {
+            "scope": "input:0",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:0",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "output:0",
+            "type": "0x9",
+            "well_formed": true,
+            "cryptographically_verified": false
+          }
+        ]
+      },
+      "status": "PASS",
+      "reason": null,
+      "checkedAt": "2026-09-06T03:25:03.184Z"
+    },
+    {
+      "id": "SP-06-BIP375-2",
+      "operation": "SP-06",
+      "network": "mainnet",
+      "scope": "offline parser over actual compiled HTTP handler; no chain transaction claimed",
+      "endpoint": "/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+      "requestId": "e6c0c147-81a7-471f-8312-939a31c09a49",
+      "inputSha256": "708c2dc8553e23d92b957b2084b791cc92a69cf798737a96af95a6077e4fb9f2",
+      "expected": {
+        "valid": true,
+        "bip375_present": true,
+        "cryptographically_verified": false
+      },
+      "responseRequestId": "e6c0c147-81a7-471f-8312-939a31c09a49",
+      "httpStatus": 200,
+      "actual": {
+        "valid": true,
+        "psbt_version": 2,
+        "bip375_present": true,
+        "bip376_present": false,
+        "supported": true,
+        "well_formed": true,
+        "cryptographically_verified": false,
+        "inspection_scope": "container-and-field-structure",
+        "input_count": 2,
+        "output_count": 1,
+        "fields": [
+          {
+            "scope": "global",
+            "type": "0x7",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "global",
+            "type": "0x8",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "output:0",
+            "type": "0x9",
+            "well_formed": true,
+            "cryptographically_verified": false
+          }
+        ]
+      },
+      "status": "PASS",
+      "reason": null,
+      "checkedAt": "2026-09-06T03:25:03.190Z"
+    },
+    {
+      "id": "SP-06-BIP375-3",
+      "operation": "SP-06",
+      "network": "mainnet",
+      "scope": "offline parser over actual compiled HTTP handler; no chain transaction claimed",
+      "endpoint": "/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+      "requestId": "d7332126-3c7b-46af-a140-7e88d6963ea1",
+      "inputSha256": "81f517027d9902c669f87e4c97aa7dbd8c13064011a45cd3b80ec588f030b983",
+      "expected": {
+        "valid": true,
+        "bip375_present": true,
+        "cryptographically_verified": false
+      },
+      "responseRequestId": "d7332126-3c7b-46af-a140-7e88d6963ea1",
+      "httpStatus": 200,
+      "actual": {
+        "valid": true,
+        "psbt_version": 2,
+        "bip375_present": true,
+        "bip376_present": false,
+        "supported": true,
+        "well_formed": true,
+        "cryptographically_verified": false,
+        "inspection_scope": "container-and-field-structure",
+        "input_count": 2,
+        "output_count": 1,
+        "fields": [
+          {
+            "scope": "input:0",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:0",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:1",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:1",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "output:0",
+            "type": "0x9",
+            "well_formed": true,
+            "cryptographically_verified": false
+          }
+        ]
+      },
+      "status": "PASS",
+      "reason": null,
+      "checkedAt": "2026-09-06T03:25:03.197Z"
+    },
+    {
+      "id": "SP-06-BIP375-4",
+      "operation": "SP-06",
+      "network": "mainnet",
+      "scope": "offline parser over actual compiled HTTP handler; no chain transaction claimed",
+      "endpoint": "/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+      "requestId": "89074b39-e68d-40f2-b9fd-9f5a852c3ec3",
+      "inputSha256": "dc2c5bee18b6510a4eb85a766d971a84c714c79a2ab38a378c1dacec101b02a9",
+      "expected": {
+        "valid": true,
+        "bip375_present": true,
+        "cryptographically_verified": false
+      },
+      "responseRequestId": "89074b39-e68d-40f2-b9fd-9f5a852c3ec3",
+      "httpStatus": 200,
+      "actual": {
+        "valid": true,
+        "psbt_version": 2,
+        "bip375_present": true,
+        "bip376_present": false,
+        "supported": true,
+        "well_formed": true,
+        "cryptographically_verified": false,
+        "inspection_scope": "container-and-field-structure",
+        "input_count": 2,
+        "output_count": 2,
+        "fields": [
+          {
+            "scope": "global",
+            "type": "0x7",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "global",
+            "type": "0x8",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:0",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:0",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:1",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:1",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "output:0",
+            "type": "0x9",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "output:1",
+            "type": "0x9",
+            "well_formed": true,
+            "cryptographically_verified": false
+          }
+        ]
+      },
+      "status": "PASS",
+      "reason": null,
+      "checkedAt": "2026-09-06T03:25:03.207Z"
+    },
+    {
+      "id": "SP-06-BIP375-5",
+      "operation": "SP-06",
+      "network": "mainnet",
+      "scope": "offline parser over actual compiled HTTP handler; no chain transaction claimed",
+      "endpoint": "/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+      "requestId": "15eacd07-2bd3-467f-bde8-60516eaa872e",
+      "inputSha256": "06edc9adcd6a28238f9522ef87454fa7870ab5bf9288b01af1f97f540d224c49",
+      "expected": {
+        "valid": true,
+        "bip375_present": true,
+        "cryptographically_verified": false
+      },
+      "responseRequestId": "15eacd07-2bd3-467f-bde8-60516eaa872e",
+      "httpStatus": 200,
+      "actual": {
+        "valid": true,
+        "psbt_version": 2,
+        "bip375_present": true,
+        "bip376_present": false,
+        "supported": true,
+        "well_formed": true,
+        "cryptographically_verified": false,
+        "inspection_scope": "container-and-field-structure",
+        "input_count": 1,
+        "output_count": 1,
+        "fields": [
+          {
+            "scope": "global",
+            "type": "0x7",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "global",
+            "type": "0x8",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:0",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:0",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "output:0",
+            "type": "0x9",
+            "well_formed": true,
+            "cryptographically_verified": false
+          }
+        ]
+      },
+      "status": "PASS",
+      "reason": null,
+      "checkedAt": "2026-09-06T03:25:03.214Z"
+    },
+    {
+      "id": "SP-06-BIP375-6",
+      "operation": "SP-06",
+      "network": "mainnet",
+      "scope": "offline parser over actual compiled HTTP handler; no chain transaction claimed",
+      "endpoint": "/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+      "requestId": "4cd9332a-363f-4b07-a8fa-3d40c30ea401",
+      "inputSha256": "c0990ed2a65d507f974ddb96d0a819e8bebb9f66ac11fd711ffeb95051e5adfa",
+      "expected": {
+        "valid": true,
+        "bip375_present": true,
+        "cryptographically_verified": false
+      },
+      "responseRequestId": "4cd9332a-363f-4b07-a8fa-3d40c30ea401",
+      "httpStatus": 200,
+      "actual": {
+        "valid": true,
+        "psbt_version": 2,
+        "bip375_present": true,
+        "bip376_present": false,
+        "supported": true,
+        "well_formed": true,
+        "cryptographically_verified": false,
+        "inspection_scope": "container-and-field-structure",
+        "input_count": 2,
+        "output_count": 3,
+        "fields": [
+          {
+            "scope": "global",
+            "type": "0x7",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "global",
+            "type": "0x7",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "global",
+            "type": "0x7",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "global",
+            "type": "0x8",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "global",
+            "type": "0x8",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "global",
+            "type": "0x8",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "output:0",
+            "type": "0x9",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "output:1",
+            "type": "0x9",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "output:2",
+            "type": "0x9",
+            "well_formed": true,
+            "cryptographically_verified": false
+          }
+        ]
+      },
+      "status": "PASS",
+      "reason": null,
+      "checkedAt": "2026-09-06T03:25:03.226Z"
+    },
+    {
+      "id": "SP-06-BIP375-7",
+      "operation": "SP-06",
+      "network": "mainnet",
+      "scope": "offline parser over actual compiled HTTP handler; no chain transaction claimed",
+      "endpoint": "/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+      "requestId": "bd57970e-f167-4d6b-92f8-1149251c84e3",
+      "inputSha256": "0f00710a9131196013a849fff8465595402329b2bf3cf9e032f89e7d3e1b57ec",
+      "expected": {
+        "valid": true,
+        "bip375_present": true,
+        "cryptographically_verified": false
+      },
+      "responseRequestId": "bd57970e-f167-4d6b-92f8-1149251c84e3",
+      "httpStatus": 200,
+      "actual": {
+        "valid": true,
+        "psbt_version": 2,
+        "bip375_present": true,
+        "bip376_present": false,
+        "supported": true,
+        "well_formed": true,
+        "cryptographically_verified": false,
+        "inspection_scope": "container-and-field-structure",
+        "input_count": 1,
+        "output_count": 2,
+        "fields": [
+          {
+            "scope": "input:0",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:0",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "output:0",
+            "type": "0x9",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "output:0",
+            "type": "0xa",
+            "well_formed": true,
+            "cryptographically_verified": false
+          }
+        ]
+      },
+      "status": "PASS",
+      "reason": null,
+      "checkedAt": "2026-09-06T03:25:03.232Z"
+    },
+    {
+      "id": "SP-06-BIP375-8",
+      "operation": "SP-06",
+      "network": "mainnet",
+      "scope": "offline parser over actual compiled HTTP handler; no chain transaction claimed",
+      "endpoint": "/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+      "requestId": "b8391055-d846-4491-88bc-736d3ffc6b10",
+      "inputSha256": "539c5f2f8f0598f5c8a6840a9b611d680b90010e2fffde905abbd3517b509ca8",
+      "expected": {
+        "valid": true,
+        "bip375_present": true,
+        "cryptographically_verified": false
+      },
+      "responseRequestId": "b8391055-d846-4491-88bc-736d3ffc6b10",
+      "httpStatus": 200,
+      "actual": {
+        "valid": true,
+        "psbt_version": 2,
+        "bip375_present": true,
+        "bip376_present": false,
+        "supported": true,
+        "well_formed": true,
+        "cryptographically_verified": false,
+        "inspection_scope": "container-and-field-structure",
+        "input_count": 1,
+        "output_count": 2,
+        "fields": [
+          {
+            "scope": "input:0",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:0",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:0",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:0",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "output:0",
+            "type": "0x9",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "output:1",
+            "type": "0x9",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "output:1",
+            "type": "0xa",
+            "well_formed": true,
+            "cryptographically_verified": false
+          }
+        ]
+      },
+      "status": "PASS",
+      "reason": null,
+      "checkedAt": "2026-09-06T03:25:03.244Z"
+    },
+    {
+      "id": "SP-06-BIP375-9",
+      "operation": "SP-06",
+      "network": "mainnet",
+      "scope": "offline parser over actual compiled HTTP handler; no chain transaction claimed",
+      "endpoint": "/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+      "requestId": "158dabd3-6d2e-47c2-94cf-2c360e881e00",
+      "inputSha256": "a94d2f09736a77eb10c4a5c87760837f1ceddf3366265c3efda369c069ea41bb",
+      "expected": {
+        "valid": true,
+        "bip375_present": true,
+        "cryptographically_verified": false
+      },
+      "responseRequestId": "158dabd3-6d2e-47c2-94cf-2c360e881e00",
+      "httpStatus": 200,
+      "actual": {
+        "valid": true,
+        "psbt_version": 2,
+        "bip375_present": true,
+        "bip376_present": false,
+        "supported": true,
+        "well_formed": true,
+        "cryptographically_verified": false,
+        "inspection_scope": "container-and-field-structure",
+        "input_count": 1,
+        "output_count": 2,
+        "fields": [
+          {
+            "scope": "input:0",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:0",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "output:0",
+            "type": "0x9",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "output:0",
+            "type": "0xa",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "output:1",
+            "type": "0x9",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "output:1",
+            "type": "0xa",
+            "well_formed": true,
+            "cryptographically_verified": false
+          }
+        ]
+      },
+      "status": "PASS",
+      "reason": null,
+      "checkedAt": "2026-09-06T03:25:03.257Z"
+    },
+    {
+      "id": "SP-06-BIP375-10",
+      "operation": "SP-06",
+      "network": "mainnet",
+      "scope": "offline parser over actual compiled HTTP handler; no chain transaction claimed",
+      "endpoint": "/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+      "requestId": "ad0ce377-70a7-4114-a227-07c656c704d9",
+      "inputSha256": "5900d891bb8c6ce52063e631495c92b000c56347dafe3179f0ed44d4d5b181d8",
+      "expected": {
+        "valid": true,
+        "bip375_present": true,
+        "cryptographically_verified": false
+      },
+      "responseRequestId": "ad0ce377-70a7-4114-a227-07c656c704d9",
+      "httpStatus": 200,
+      "actual": {
+        "valid": true,
+        "psbt_version": 2,
+        "bip375_present": true,
+        "bip376_present": false,
+        "supported": true,
+        "well_formed": true,
+        "cryptographically_verified": false,
+        "inspection_scope": "container-and-field-structure",
+        "input_count": 2,
+        "output_count": 1,
+        "fields": [
+          {
+            "scope": "input:0",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:0",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:1",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:1",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "output:0",
+            "type": "0x9",
+            "well_formed": true,
+            "cryptographically_verified": false
+          }
+        ]
+      },
+      "status": "PASS",
+      "reason": null,
+      "checkedAt": "2026-09-06T03:25:03.268Z"
+    },
+    {
+      "id": "SP-06-BIP375-11",
+      "operation": "SP-06",
+      "network": "mainnet",
+      "scope": "offline parser over actual compiled HTTP handler; no chain transaction claimed",
+      "endpoint": "/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+      "requestId": "f8865b36-5a63-4e90-ae7b-104b12536cf9",
+      "inputSha256": "4ce56d4c6fa24f71e5d6b04b90fd6319b9b4eeb43abc68789864369837f460ea",
+      "expected": {
+        "valid": true,
+        "bip375_present": true,
+        "cryptographically_verified": false
+      },
+      "responseRequestId": "f8865b36-5a63-4e90-ae7b-104b12536cf9",
+      "httpStatus": 200,
+      "actual": {
+        "valid": true,
+        "psbt_version": 2,
+        "bip375_present": true,
+        "bip376_present": false,
+        "supported": true,
+        "well_formed": true,
+        "cryptographically_verified": false,
+        "inspection_scope": "container-and-field-structure",
+        "input_count": 2,
+        "output_count": 1,
+        "fields": [
+          {
+            "scope": "global",
+            "type": "0x7",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "global",
+            "type": "0x8",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "output:0",
+            "type": "0x9",
+            "well_formed": true,
+            "cryptographically_verified": false
+          }
+        ]
+      },
+      "status": "PASS",
+      "reason": null,
+      "checkedAt": "2026-09-06T03:25:03.278Z"
+    },
+    {
+      "id": "SP-06-BIP375-12",
+      "operation": "SP-06",
+      "network": "mainnet",
+      "scope": "offline parser over actual compiled HTTP handler; no chain transaction claimed",
+      "endpoint": "/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+      "requestId": "4d7fd6cc-0685-4755-83f0-d9f1a788ff5a",
+      "inputSha256": "edda9f0957b5536c493d49c4c02e0aa7de1fb77069427201d121a2383b29a879",
+      "expected": {
+        "valid": true,
+        "bip375_present": true,
+        "cryptographically_verified": false
+      },
+      "responseRequestId": "4d7fd6cc-0685-4755-83f0-d9f1a788ff5a",
+      "httpStatus": 200,
+      "actual": {
+        "valid": true,
+        "psbt_version": 2,
+        "bip375_present": true,
+        "bip376_present": false,
+        "supported": true,
+        "well_formed": true,
+        "cryptographically_verified": false,
+        "inspection_scope": "container-and-field-structure",
+        "input_count": 2,
+        "output_count": 1,
+        "fields": [
+          {
+            "scope": "input:1",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:1",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "output:0",
+            "type": "0x9",
+            "well_formed": true,
+            "cryptographically_verified": false
+          }
+        ]
+      },
+      "status": "PASS",
+      "reason": null,
+      "checkedAt": "2026-09-06T03:25:03.300Z"
+    },
+    {
+      "id": "SP-06-BIP375-13",
+      "operation": "SP-06",
+      "network": "mainnet",
+      "scope": "offline parser over actual compiled HTTP handler; no chain transaction claimed",
+      "endpoint": "/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+      "requestId": "d74473d7-b76a-48d8-89c9-1ba39e740f6c",
+      "inputSha256": "940ecf6c3f30e148e176ef1e63bdf6f6f50239c395cf8b3f3b294d0240dd705d",
+      "expected": {
+        "valid": true,
+        "bip375_present": true,
+        "cryptographically_verified": false
+      },
+      "responseRequestId": "d74473d7-b76a-48d8-89c9-1ba39e740f6c",
+      "httpStatus": 200,
+      "actual": {
+        "valid": true,
+        "psbt_version": 2,
+        "bip375_present": true,
+        "bip376_present": false,
+        "supported": true,
+        "well_formed": true,
+        "cryptographically_verified": false,
+        "inspection_scope": "container-and-field-structure",
+        "input_count": 1,
+        "output_count": 4,
+        "fields": [
+          {
+            "scope": "input:0",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:0",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "output:0",
+            "type": "0x9",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "output:1",
+            "type": "0x9",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "output:2",
+            "type": "0x9",
+            "well_formed": true,
+            "cryptographically_verified": false
+          }
+        ]
+      },
+      "status": "PASS",
+      "reason": null,
+      "checkedAt": "2026-09-06T03:25:03.314Z"
+    },
+    {
+      "id": "SP-06-BIP375-14",
+      "operation": "SP-06",
+      "network": "mainnet",
+      "scope": "offline parser over actual compiled HTTP handler; no chain transaction claimed",
+      "endpoint": "/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+      "requestId": "193b9892-8546-4e64-8c02-20682eccc392",
+      "inputSha256": "29528977252bda64ac0b17766b8c58b3a5b7c34f2a3dda95e1c8f21dec00a5b1",
+      "expected": {
+        "valid": true,
+        "bip375_present": true,
+        "cryptographically_verified": false
+      },
+      "responseRequestId": "193b9892-8546-4e64-8c02-20682eccc392",
+      "httpStatus": 200,
+      "actual": {
+        "valid": true,
+        "psbt_version": 2,
+        "bip375_present": true,
+        "bip376_present": false,
+        "supported": true,
+        "well_formed": true,
+        "cryptographically_verified": false,
+        "inspection_scope": "container-and-field-structure",
+        "input_count": 1,
+        "output_count": 6,
+        "fields": [
+          {
+            "scope": "input:0",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:0",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "output:0",
+            "type": "0x9",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "output:2",
+            "type": "0x9",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "output:4",
+            "type": "0x9",
+            "well_formed": true,
+            "cryptographically_verified": false
+          }
+        ]
+      },
+      "status": "PASS",
+      "reason": null,
+      "checkedAt": "2026-09-06T03:25:03.323Z"
+    },
+    {
+      "id": "SP-06-BIP375-15",
+      "operation": "SP-06",
+      "network": "mainnet",
+      "scope": "offline parser over actual compiled HTTP handler; no chain transaction claimed",
+      "endpoint": "/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+      "requestId": "22d2ad1f-db2d-4f10-bd4c-0c286f2f14dd",
+      "inputSha256": "d88ff09abe9e996e4d39b07697b8bfd243a09eb74aa2a74b2816bc04b0d02bda",
+      "expected": {
+        "valid": true,
+        "bip375_present": true,
+        "cryptographically_verified": false
+      },
+      "responseRequestId": "22d2ad1f-db2d-4f10-bd4c-0c286f2f14dd",
+      "httpStatus": 200,
+      "actual": {
+        "valid": true,
+        "psbt_version": 2,
+        "bip375_present": true,
+        "bip376_present": false,
+        "supported": true,
+        "well_formed": true,
+        "cryptographically_verified": false,
+        "inspection_scope": "container-and-field-structure",
+        "input_count": 2,
+        "output_count": 1,
+        "fields": [
+          {
+            "scope": "input:0",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:0",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:1",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:1",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "output:0",
+            "type": "0x9",
+            "well_formed": true,
+            "cryptographically_verified": false
+          }
+        ]
+      },
+      "status": "PASS",
+      "reason": null,
+      "checkedAt": "2026-09-06T03:25:03.337Z"
+    },
+    {
+      "id": "SP-06-BIP375-16",
+      "operation": "SP-06",
+      "network": "mainnet",
+      "scope": "offline parser over actual compiled HTTP handler; no chain transaction claimed",
+      "endpoint": "/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+      "requestId": "ee453d8e-c174-4cda-b42a-4ad74c2cb671",
+      "inputSha256": "ecccf97c711f361895d6b318a3104fc776e31d30bf17b95f39f32c0ceac4a12a",
+      "expected": {
+        "valid": true,
+        "bip375_present": true,
+        "cryptographically_verified": false
+      },
+      "responseRequestId": "ee453d8e-c174-4cda-b42a-4ad74c2cb671",
+      "httpStatus": 200,
+      "actual": {
+        "valid": true,
+        "psbt_version": 2,
+        "bip375_present": true,
+        "bip376_present": false,
+        "supported": true,
+        "well_formed": true,
+        "cryptographically_verified": false,
+        "inspection_scope": "container-and-field-structure",
+        "input_count": 1,
+        "output_count": 1,
+        "fields": [
+          {
+            "scope": "output:0",
+            "type": "0x9",
+            "well_formed": true,
+            "cryptographically_verified": false
+          }
+        ]
+      },
+      "status": "PASS",
+      "reason": null,
+      "checkedAt": "2026-09-06T03:25:03.344Z"
+    },
+    {
+      "id": "SP-06-BIP375-17",
+      "operation": "SP-06",
+      "network": "mainnet",
+      "scope": "offline parser over actual compiled HTTP handler; no chain transaction claimed",
+      "endpoint": "/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+      "requestId": "7bdb29c1-5268-4208-8cb3-ffe962406d00",
+      "inputSha256": "5261fe40fdfd0110c10251af040cbcf6a437c55f23d12b11d180c108f477ab14",
+      "expected": {
+        "valid": true,
+        "bip375_present": true,
+        "cryptographically_verified": false
+      },
+      "responseRequestId": "7bdb29c1-5268-4208-8cb3-ffe962406d00",
+      "httpStatus": 200,
+      "actual": {
+        "valid": true,
+        "psbt_version": 2,
+        "bip375_present": true,
+        "bip376_present": false,
+        "supported": true,
+        "well_formed": true,
+        "cryptographically_verified": false,
+        "inspection_scope": "container-and-field-structure",
+        "input_count": 2,
+        "output_count": 1,
+        "fields": [
+          {
+            "scope": "input:0",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:0",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "output:0",
+            "type": "0x9",
+            "well_formed": true,
+            "cryptographically_verified": false
+          }
+        ]
+      },
+      "status": "PASS",
+      "reason": null,
+      "checkedAt": "2026-09-06T03:25:03.356Z"
+    },
+    {
+      "id": "SP-06-BIP375-18",
+      "operation": "SP-06",
+      "network": "mainnet",
+      "scope": "offline parser over actual compiled HTTP handler; no chain transaction claimed",
+      "endpoint": "/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+      "requestId": "3939f373-31b3-4153-99a4-e1dc1a875ec4",
+      "inputSha256": "d68f80eb22107e6eee90240ae65b61c583eed6b6c5cb938f1f7cada887513bc5",
+      "expected": {
+        "valid": true,
+        "bip375_present": true,
+        "cryptographically_verified": false
+      },
+      "responseRequestId": "3939f373-31b3-4153-99a4-e1dc1a875ec4",
+      "httpStatus": 200,
+      "actual": {
+        "valid": true,
+        "psbt_version": 2,
+        "bip375_present": true,
+        "bip376_present": false,
+        "supported": true,
+        "well_formed": true,
+        "cryptographically_verified": false,
+        "inspection_scope": "container-and-field-structure",
+        "input_count": 1,
+        "output_count": 2,
+        "fields": [
+          {
+            "scope": "input:0",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:0",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "output:0",
+            "type": "0x9",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "output:1",
+            "type": "0x9",
+            "well_formed": true,
+            "cryptographically_verified": false
+          }
+        ]
+      },
+      "status": "PASS",
+      "reason": null,
+      "checkedAt": "2026-09-06T03:25:03.369Z"
+    },
+    {
+      "id": "SP-06-BIP375-19",
+      "operation": "SP-06",
+      "network": "mainnet",
+      "scope": "offline parser over actual compiled HTTP handler; no chain transaction claimed",
+      "endpoint": "/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+      "requestId": "88365f5d-92c7-4a59-838a-13726e635732",
+      "inputSha256": "da76c455978926f852cc8ec0583f46be7e0e42c99bd8c3e9be58bbfe5513add4",
+      "expected": {
+        "valid": true,
+        "bip375_present": true,
+        "cryptographically_verified": false
+      },
+      "responseRequestId": "88365f5d-92c7-4a59-838a-13726e635732",
+      "httpStatus": 200,
+      "actual": {
+        "valid": true,
+        "psbt_version": 2,
+        "bip375_present": true,
+        "bip376_present": false,
+        "supported": true,
+        "well_formed": true,
+        "cryptographically_verified": false,
+        "inspection_scope": "container-and-field-structure",
+        "input_count": 9,
+        "output_count": 6,
+        "fields": [
+          {
+            "scope": "input:0",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:0",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:0",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:0",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:0",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:0",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:1",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:1",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:1",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:1",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:1",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:1",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:2",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:2",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:2",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:2",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:2",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:2",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:3",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:3",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:3",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:3",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:3",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:3",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:4",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:4",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:4",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:4",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:4",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:4",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:5",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:5",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:5",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:5",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:5",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:5",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:6",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:6",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:6",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:6",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:6",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:6",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:7",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:7",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:7",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:7",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:7",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:7",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:8",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:8",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:8",
+            "type": "0x1d",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:8",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:8",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "input:8",
+            "type": "0x1e",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "output:0",
+            "type": "0x9",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "output:1",
+            "type": "0x9",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "output:2",
+            "type": "0x9",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "output:3",
+            "type": "0x9",
+            "well_formed": true,
+            "cryptographically_verified": false
+          },
+          {
+            "scope": "output:4",
+            "type": "0x9",
+            "well_formed": true,
+            "cryptographically_verified": false
+          }
+        ]
+      },
+      "status": "PASS",
+      "reason": null,
+      "checkedAt": "2026-09-06T03:25:03.401Z"
+    },
+    {
+      "id": "SP-06-BIP375-INVALID-0",
+      "operation": "SP-06",
+      "network": "mainnet",
+      "scope": "offline parser over actual compiled HTTP handler; no chain transaction claimed",
+      "endpoint": "/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+      "requestId": "9df9f86b-2243-4afd-b745-777ff5e6ae78",
+      "inputSha256": "892d0a942f3ad7048a8571e0bb1952a24aba0b9546242ce9c4f24fc493428cbc",
+      "expected": {
+        "valid": false
+      },
+      "responseRequestId": "9df9f86b-2243-4afd-b745-777ff5e6ae78",
+      "httpStatus": 400,
+      "actual": {
+        "valid": false,
+        "bip375_present": false,
+        "bip376_present": false,
+        "well_formed": false,
+        "cryptographically_verified": false,
+        "code": "INVALID_PSBT",
+        "error": "Silent Payment label requires output info."
+      },
+      "status": "PASS",
+      "reason": null,
+      "checkedAt": "2026-09-06T03:25:03.408Z"
+    },
+    {
+      "id": "SP-06-BIP375-INVALID-1",
+      "operation": "SP-06",
+      "network": "mainnet",
+      "scope": "offline parser over actual compiled HTTP handler; no chain transaction claimed",
+      "endpoint": "/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+      "requestId": "929da7a6-86d4-4f41-987e-4d3dac4c2323",
+      "inputSha256": "90ef2f195fe254713ba4b19eef0e10d7121f2f53294bc2cbdd765349ef3fa46c",
+      "expected": {
+        "valid": false
+      },
+      "responseRequestId": "929da7a6-86d4-4f41-987e-4d3dac4c2323",
+      "httpStatus": 400,
+      "actual": {
+        "valid": false,
+        "bip375_present": false,
+        "bip376_present": false,
+        "well_formed": false,
+        "cryptographically_verified": false,
+        "code": "INVALID_PSBT",
+        "error": "Invalid Silent Payment output public keys."
+      },
+      "status": "PASS",
+      "reason": null,
+      "checkedAt": "2026-09-06T03:25:03.415Z"
+    },
+    {
+      "id": "SP-06-BIP375-INVALID-2",
+      "operation": "SP-06",
+      "network": "mainnet",
+      "scope": "offline parser over actual compiled HTTP handler; no chain transaction claimed",
+      "endpoint": "/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+      "requestId": "a744fe01-43b3-4f37-96b7-8706e4a67288",
+      "inputSha256": "e0801e29ba4c52a771ac70f787efb416136f46ff5d74fee537e8d2f8185bbcdf",
+      "expected": {
+        "valid": false
+      },
+      "responseRequestId": "a744fe01-43b3-4f37-96b7-8706e4a67288",
+      "httpStatus": 400,
+      "actual": {
+        "valid": false,
+        "bip375_present": false,
+        "bip376_present": false,
+        "well_formed": false,
+        "cryptographically_verified": false,
+        "code": "INVALID_PSBT",
+        "error": "Invalid ECDH share point."
+      },
+      "status": "PASS",
+      "reason": null,
+      "checkedAt": "2026-09-06T03:25:03.421Z"
+    },
+    {
+      "id": "SP-06-BIP375-INVALID-3",
+      "operation": "SP-06",
+      "network": "mainnet",
+      "scope": "offline parser over actual compiled HTTP handler; no chain transaction claimed",
+      "endpoint": "/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+      "requestId": "8b897de1-19b2-4c01-b17e-90669cd777c8",
+      "inputSha256": "e15e98537560f0d7ca28269aa1844f21c2da96fdb8db9b396d0df2e71655a6b4",
+      "expected": {
+        "valid": false
+      },
+      "responseRequestId": "8b897de1-19b2-4c01-b17e-90669cd777c8",
+      "httpStatus": 400,
+      "actual": {
+        "valid": false,
+        "bip375_present": false,
+        "bip376_present": false,
+        "well_formed": false,
+        "cryptographically_verified": false,
+        "code": "INVALID_PSBT",
+        "error": "Missing or malformed DLEQ proof."
+      },
+      "status": "PASS",
+      "reason": null,
+      "checkedAt": "2026-09-06T03:25:03.425Z"
+    },
+    {
+      "id": "SP-06-BIP375-INVALID-4",
+      "operation": "SP-06",
+      "network": "mainnet",
+      "scope": "offline parser over actual compiled HTTP handler; no chain transaction claimed",
+      "endpoint": "/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+      "requestId": "8573db67-98ec-416a-83f5-0929ad97902f",
+      "inputSha256": "6de8afc44aaadf243598895b6328ae8f7f9913f7436f19066d5db94f9708ab3b",
+      "expected": {
+        "valid": false
+      },
+      "responseRequestId": "8573db67-98ec-416a-83f5-0929ad97902f",
+      "httpStatus": 400,
+      "actual": {
+        "valid": false,
+        "bip375_present": false,
+        "bip376_present": false,
+        "well_formed": false,
+        "cryptographically_verified": false,
+        "code": "INVALID_PSBT",
+        "error": "Computed Silent Payment outputs require fixed inputs and outputs."
+      },
+      "status": "PASS",
+      "reason": null,
+      "checkedAt": "2026-09-06T03:25:03.433Z"
+    },
+    {
+      "id": "SP-06-BIP375-INVALID-5",
+      "operation": "SP-06",
+      "network": "mainnet",
+      "scope": "offline parser over actual compiled HTTP handler; no chain transaction claimed",
+      "endpoint": "/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+      "requestId": "5ae809ba-f104-4dba-b216-a404db8a6029",
+      "inputSha256": "4c71cac771c20432deffac643c3fbb86bbb824b46a6fb6a6a0825fa852a3da4a",
+      "expected": {
+        "valid": false
+      },
+      "responseRequestId": "5ae809ba-f104-4dba-b216-a404db8a6029",
+      "httpStatus": 400,
+      "actual": {
+        "valid": false,
+        "bip375_present": false,
+        "bip376_present": false,
+        "well_formed": false,
+        "cryptographically_verified": false,
+        "code": "INVALID_PSBT",
+        "error": "Output requires script or Silent Payment info."
+      },
+      "status": "PASS",
+      "reason": null,
+      "checkedAt": "2026-09-06T03:25:03.439Z"
+    }
+  ],
+  "passed": 42,
+  "failed": 0
+}
