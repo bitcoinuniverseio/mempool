@@ -33,7 +33,7 @@ jobs:
     # it competed for the six runners that are the only ones able to run the
     # visual matrix, while eight runners carrying `universe-ci` sat idle, and a
     # three minute job held a slot the fifty minute one was queued for.
-    runs-on: [self-hosted, linux, x64, universe, gcp, universe-gcp-medium]
+    runs-on: [self-hosted, linux, x64, universe-super]
     timeout-minutes: 10
     steps:
       - name: Checkout
@@ -120,7 +120,7 @@ jobs:
 
   backend:
     name: Backend build and test
-    runs-on: [self-hosted, linux, x64, universe, gcp, universe-gcp-large]
+    runs-on: [self-hosted, linux, x64, universe-super]
     timeout-minutes: 45
     env:
       COMPOSE_PROJECT_NAME: mempool-integration-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}
@@ -134,8 +134,6 @@ jobs:
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '24.19.0'
-          cache: npm
-          cache-dependency-path: backend/package-lock.json
 
       # `npm ci` here builds rust-gbt, so it needs a Rust toolchain that can
       # actually compile. A self-hosted runner can be left holding a toolchain
@@ -231,7 +229,7 @@ jobs:
     # floor depending on which machine measured it. The mobile and visual
     # jobs below are pinned for the same reason; the backend job is not,
     # because nothing it runs measures a glyph.
-    runs-on: [self-hosted, linux, x64, universe, gcp, universe-gcp-medium]
+    runs-on: [self-hosted, linux, x64, universe-super]
     # This builds, gates the bundle, and walks every route once at a phone and
     # a desktop width. The deep pass that used to follow it now runs beside it,
     # sharded, because it stopped fitting: 71 minutes of a 100 minute cap on
@@ -246,8 +244,6 @@ jobs:
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '24.19.0'
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
 
       - name: Install
         working-directory: frontend
@@ -423,7 +419,7 @@ jobs:
     # a shard can only ever pick up the build made from its own source, and a
     # miss falls back to building rather than failing.
     needs: frontend
-    runs-on: [self-hosted, linux, x64, universe, gcp, universe-gcp-medium]
+    runs-on: [self-hosted, linux, x64, universe-ultra]
     timeout-minutes: 60
     strategy:
       # One shard failing says nothing about the others, and finding out that
@@ -448,8 +444,6 @@ jobs:
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '24.19.0'
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
 
       - name: Take the build the frontend job made
         id: dist
@@ -574,7 +568,7 @@ jobs:
     # so the run is as long as the longest shard either way, and a run now
     # makes exactly one build.
     needs: frontend
-    runs-on: [self-hosted, linux, x64, universe, gcp, universe-gcp-large]
+    runs-on: [self-hosted, linux, x64, universe-super]
     timeout-minutes: 45
     steps:
       - name: Checkout
@@ -584,8 +578,6 @@ jobs:
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '24.19.0'
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
 
       - name: Take the build the frontend job made
         id: dist
@@ -696,7 +688,7 @@ jobs:
     # The Windows browser fleet can run both engines without a privileged
     # system package install. The job uses Git Bash so it shares one script
     # with the Linux browser checks.
-    runs-on: [self-hosted, Windows, X64, universe-router]
+    runs-on: [self-hosted, linux, x64, universe-super]
     timeout-minutes: 45
     defaults:
       run:
@@ -709,8 +701,6 @@ jobs:
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '24.19.0'
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
 
       - name: Install
         working-directory: frontend

@@ -22,7 +22,7 @@ on:
 jobs:
   cache:
     name: "Cache assets for builds"
-    runs-on: [self-hosted, linux, x64, universe, gcp, universe-gcp-small]
+    runs-on: [self-hosted, linux, x64, universe-super]
     steps:
       - name: Determine checkout ref
         id: determine-ref
@@ -123,7 +123,7 @@ jobs:
           key: promo-video-assets-cache
 
   e2e:
-    runs-on: [self-hosted, linux, x64, universe, gcp, universe-gcp-small]
+    runs-on: [self-hosted, linux, x64, universe-super]
     needs: [cache]
     strategy:
       fail-fast: false
@@ -152,8 +152,6 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 24.13.0
-          cache: "npm"
-          cache-dependency-path: ${{ matrix.module }}/frontend/package-lock.json
 
       - name: Restore cached mining pool assets
         continue-on-error: true
