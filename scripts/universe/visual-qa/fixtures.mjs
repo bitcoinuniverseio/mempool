@@ -89,6 +89,8 @@ export const fixtures = {
   '/api/v1/mining/hashrate/3d': buildHashrateSeries(),
   '/api/v1/mining/hashrate/1w': buildHashrateSeries(),
   '/api/v1/mining/hashrate/1m': buildHashrateSeries(),
+  '/api/v1/mining/hashrate/1y': buildHashrateSeries(),
+  '/api/v1/mining/hashrate/pools/1y': buildHashrateSeries(),
   '/api/v1/mining/hashrate': buildHashrateSeries(),
   '/api/v1/mining/difficulty-adjustments/1y': buildDifficultyAdjustments(),
   '/api/v1/mining/difficulty-adjustments': buildDifficultyAdjustments(),

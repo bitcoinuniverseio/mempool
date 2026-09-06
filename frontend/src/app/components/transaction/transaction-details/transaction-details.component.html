@@ -286,9 +286,9 @@
 <ng-template #minerRow>
   @if (network === '') {
     @if (!isLoadingTx) {
-      <tr>
-        <td class="td-width" i18n="block.miner">Miner</td>
-        @if (pool) {
+      @if (pool) {
+        <tr>
+          <td class="td-width" i18n="block.miner">Miner</td>
           <td class="wrap-cell">
             <a placement="bottom" [routerLink]="['/mining/pool' | relativeUrl, pool.slug]" class="badge pool-credit">
               <span class="miner-name" *ngIf="pool.minerNames?.length > 1 && pool.minerNames[1] != ''">
@@ -302,12 +302,8 @@
               {{ pool.name }}
             </a>
           </td>
-        } @else {
-          <td>
-            <span class="skeleton-loader"></span>
-          </td>
-        }
-      </tr>
+        </tr>
+      }
     } @else {
       <ng-container *ngTemplateOutlet="skeletonDetailsRow"></ng-container>
     }
