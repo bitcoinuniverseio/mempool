@@ -2,7 +2,8 @@ import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRe
 import { CommonModule } from '@angular/common';
 import { SharedModule } from '@app/shared/shared.module';
 import { RouterModule, ActivatedRoute } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { combineLatest, of, Subscription } from 'rxjs';
+import { catchError, switchMap } from 'rxjs/operators';
 import { SwapsApiService, SwapProvider } from './swaps.service';
 
 @Component({
@@ -17,10 +18,11 @@ import { SwapsApiService, SwapProvider } from './swaps.service';
         <div class="d-flex align-items-center gap-2 mb-2">
           <a [routerLink]="'/swaps/providers' | relativeUrl" class="btn btn-sm btn-outline-secondary">← Back to Providers</a>
         </div>
-        <h1 *ngIf="provider">{{ provider.name }}</h1>
+        <h1>{{ provider?.name || 'Swap Provider' }}</h1>
         <p class="text-muted font-monospace" *ngIf="provider">{{ provider.identity_key }}</p>
       </header>
 
+      <p *ngIf="loading" role="status">Loading provider...</p>
       <p *ngIf="error" class="alert alert-warning" role="alert">{{ error }}</p><div *ngIf="provider" class="card p-4 bg-body-tertiary border">
         <h5 class="mb-3">Provider Manifest</h5>
         <div class="row g-3">
@@ -49,6 +51,7 @@ import { SwapsApiService, SwapProvider } from './swaps.service';
 })
 export class SwapsProviderDetailComponent implements OnInit, OnDestroy {
   public provider?: SwapProvider; public error = '';
+  public loading = true;
   private sub?: Subscription;
 
   constructor(
@@ -58,11 +61,19 @@ export class SwapsProviderDetailComponent implements OnInit, OnDestroy {
   ) {}
 
   public ngOnInit(): void {
-    const id = this.route.snapshot.paramMap.get('providerId') || 'boltz-exchange';
-    this.sub = this.api.getProviderById$(id).subscribe({ next: (p) => {
-      this.provider = p;
+    this.sub = combineLatest([this.route.paramMap, this.api.network$]).pipe(switchMap(([params, network]) => {
+      this.provider = undefined; this.error = ''; this.loading = true;
       this.cdr.markForCheck();
-    }, error: err => { this.error = err.error?.error || 'Provider evidence unavailable.'; this.cdr.markForCheck(); } });
+      const id = params.get('providerId');
+      if (!id) { this.error = 'A provider identity is required.'; return of(null); }
+      return this.api.getProviderById$(id, network).pipe(catchError(err => {
+        this.error = err.error?.error || 'Provider evidence unavailable.';
+        return of(null);
+      }));
+    })).subscribe(p => {
+      this.provider = p || undefined; this.loading = false;
+      this.cdr.markForCheck();
+    });
   }
 
   public ngOnDestroy(): void {

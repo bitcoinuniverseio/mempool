@@ -2,7 +2,8 @@ import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRe
 import { CommonModule } from '@angular/common';
 import { SharedModule } from '@app/shared/shared.module';
 import { RouterModule } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { of, Subscription } from 'rxjs';
+import { catchError, switchMap } from 'rxjs/operators';
 import { SwapsApiService, SwapProvider } from './swaps.service';
 
 @Component({
@@ -69,14 +70,16 @@ export class SwapsProvidersComponent implements OnInit, OnDestroy {
   constructor(private api: SwapsApiService, private cdr: ChangeDetectorRef) {}
 
   public ngOnInit(): void {
-    this.sub = this.api.getProviders$().subscribe({
-      next: (data) => {
-        this.providers = data;
-        this.loading = false;
-        this.cdr.markForCheck();
-      },
-      error: err => {
+    this.sub = this.api.network$.pipe(switchMap(network => {
+      this.providers = []; this.error = ''; this.loading = true;
+      this.cdr.markForCheck();
+      return this.api.getProviders$(network).pipe(catchError(err => {
         this.error = err.error?.error || 'Provider evidence service is unavailable.';
+        return of(null);
+      }));
+    })).subscribe({
+      next: (data) => {
+        this.providers = data || [];
         this.loading = false;
         this.cdr.markForCheck();
       },

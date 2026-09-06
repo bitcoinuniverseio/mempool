@@ -88,12 +88,13 @@ export function activitySummary(
       return `The authority answered: ${parts.join(', ')} in this page of its feed.`;
     }
     case 'unconfigured':
-      return 'No authority for this protocol is configured in this deployment, so its activity is not shown.';
+      return page.degradedReason
+        ?? 'No authority for this protocol is configured in this deployment, so its activity is not shown.';
     case 'unavailable':
       return page.degradedReason
         ?? 'The authority could not answer, so its activity is not shown.';
     case 'unsupported':
-      return 'This protocol has no activity feed this explorer reads yet.';
+      return page.degradedReason ?? 'This protocol has no activity feed this explorer reads yet.';
   }
 }
 
@@ -147,11 +148,12 @@ export function objectsSummary(
         ? 'The authority answered: 1 object in this page of its collection.'
         : `The authority answered: ${totalItems} objects in this page of its collection.`;
     case 'unconfigured':
-      return 'No authority for this protocol is configured in this deployment, so its objects are not shown.';
+      return page.degradedReason
+        ?? 'No authority for this protocol is configured in this deployment, so its objects are not shown.';
     case 'unavailable':
       return page.degradedReason
         ?? 'The authority could not answer, so its objects are not shown.';
     case 'unsupported':
-      return 'This protocol has no objects route this explorer reads yet.';
+      return page.degradedReason ?? 'This protocol has no objects route this explorer reads yet.';
   }
 }

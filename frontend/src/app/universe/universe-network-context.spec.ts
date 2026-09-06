@@ -1,6 +1,6 @@
 // New WP01 regression tests. HTTP fixtures prove isolation, not real-network acceptance.
 import { describe, expect, it } from 'vitest';
-import { Observable, Subject, forkJoin, of } from 'rxjs';
+import { Observable, Subject, forkJoin, of, throwError } from 'rxjs';
 import { UniverseApiService } from './universe-api.service';
 import { UniverseLocalService } from './universe-local.service';
 import { InscriptionComponent } from './inscription/inscription.component';
@@ -79,7 +79,13 @@ describe('NET-01 selected context', () => {
   it.each(manifest.protocols)('uses the recorded chain for $id feed and source reads', (protocol) => {
     const calls: string[] = [];
     const api = new UniverseApiService({ get: (url: string) => {
-      calls.push(url); return of({});
+      calls.push(url);
+      // Only URL scoping is under test here; use the controller's typed failure body.
+      const kind = url.match(/\/(activity|objects)\?/)?.[1];
+      return kind ? throwError(() => ({ status: 404, error: {
+        schemaVersion: `universe-protocol-${kind}-v1`, protocolId: protocol.id,
+        state: 'unsupported', degradedReason: 'Fixture response for network parameterization.',
+      } })) : of({});
     } } as never, { isBrowser: true, network: 'signet' } as never);
     api.getProtocolActivity$(protocol.id, undefined, 25, protocol.chain).subscribe();
     api.getProtocolObjects$(protocol.id, undefined, 25, protocol.chain).subscribe();

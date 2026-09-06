@@ -1,6 +1,6 @@
 import { crypto, initEccLib, networks, payments, Psbt, script, Transaction } from 'bitcoinjs-lib';
 import * as ecc from 'tiny-secp256k1';
-import { SwapsService } from './swaps.service';
+import swapsService, { SwapsService } from './swaps.service';
 import { BitcoinSwapAuthority, SwapAuthority, swapContext } from './swaps-evidence';
 import { SwapContext, SwapPackage } from './swaps.models';
 import { SwapObservationStore } from './swaps-observations';
@@ -44,7 +44,10 @@ describe('Swap evidence and unsigned recovery with controlled unit authority', (
   it('removes synthetic overview, provider records, metrics and settlement assertions', /** @asyncUnsafe Jest owns rejected test promises. */ async () => {
     const service = new SwapsService(authority(), store()), overview = await service.getOverview(ctx);
     expect(overview.total_swaps_observed).toBeNull(); expect(overview.total_volume_sats).toBeNull(); expect(overview.active_providers_count).toBeNull();
-    expect(overview.recent_swaps).toEqual([]); expect(service.listProviders()).toEqual([]); expect(service.getProviderHistory('boltz-exchange')).toBeNull(); expect(service.listProtocols()).toHaveLength(4);
+    expect(overview.recent_swaps).toEqual([]); expect(service.listProtocols()).toHaveLength(4);
+    expect(() => service.listProviders()).toThrow(expect.objectContaining({ code: 'unavailable-registry' }));
+    expect(() => service.getProvider('boltz-exchange')).toThrow(expect.objectContaining({ code: 'unavailable-registry' }));
+    expect(() => service.getProviderHistory('boltz-exchange')).toThrow(expect.objectContaining({ code: 'unavailable-registry' }));
     expect(service.reconcileCrossLayer('swp-boltz-887412-002').reconciliation_state).toBe('insufficient_private_evidence');
   });
   it('reports absent durable observation storage', /** @asyncUnsafe Jest owns rejected test promises. */ async () => { const db = store(); db.recent.mockRejectedValue(new Error('offline')); expect((await new SwapsService(authority(), db).getOverview(ctx)).observation_status).toBe('unavailable-storage'); });
@@ -104,6 +107,41 @@ describe('Configured first-party node authority', () => {
 describe('Real route handlers', () => {
   const handlers = new Map<string, any>();
   beforeAll(() => routes.initRoutes({ get: (path, handler) => handlers.set(`GET ${path}`, handler), post: (path, handler) => handlers.set(`POST ${path}`, handler) } as any));
+  afterEach(() => jest.restoreAllMocks());
+  const response = (): any => {
+    const res: any = { setHeader: jest.fn(), status: jest.fn(), json: jest.fn() };
+    res.status.mockReturnValue(res); res.json.mockReturnValue(res); return res;
+  };
+  it.each(['/providers', '/providers/:providerId', '/providers/:providerId/history'])('reports unavailable registry for %s without claiming zero or unknown providers', /** @asyncUnsafe Jest owns rejected test promises. */ async path => {
+    const res = response();
+    await handlers.get(`GET /api/v1/intelligence/swaps${path}`)({ method: 'GET', path, query: ctx, params: { providerId: 'boltz-exchange' } }, res);
+    expect(res.status).toHaveBeenCalledWith(503);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ stage: 'unavailable-registry', error: expect.stringContaining('PRE-04') }));
+    expect(res.setHeader).toHaveBeenCalledWith('Cache-Control', 'no-store');
+  });
+  it('reserves unknown identity for an available registry lookup', /** @asyncUnsafe Jest owns rejected test promises. */ async () => {
+    jest.spyOn(swapsService, 'getProvider').mockReturnValue(undefined);
+    const res = response();
+    await handlers.get('GET /api/v1/intelligence/swaps/providers/:providerId')({ method: 'GET', path: '/providers/missing', query: ctx, params: { providerId: 'missing' } }, res);
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ stage: 'unknown-provider' }));
+  });
+  it.each([
+    {},
+    { provider_id: 'self-declared', identity_key: 'not-key', provider_signature: 'not-signature' },
+    { provider_id: 'self-declared', identity_key: '02' + refundKey.toString('hex'), provider_signature: '00'.repeat(64) },
+  ])('does not invent a signed manifest contract or trust caller keys %#', /** @asyncUnsafe Jest owns rejected test promises. */ async body => {
+    const res = response();
+    await handlers.get('POST /api/v1/intelligence/swaps/manifests/verify')({ method: 'POST', path: '/manifests/verify', query: ctx, body }, res);
+    expect(res.status).toHaveBeenCalledWith(503);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ valid: false, stage: 'unavailable-registry' }));
+  });
+  it.each([null, []])('rejects malformed manifest envelopes %#', /** @asyncUnsafe Jest owns rejected test promises. */ async body => {
+    const res = response();
+    await handlers.get('POST /api/v1/intelligence/swaps/manifests/verify')({ method: 'POST', path: '/manifests/verify', query: ctx, body }, res);
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ stage: 'invalid' }));
+  });
   it.each([{ current_height: 9999999 }, { privateKey: 'sensitive' }])('rejects unsafe request fields %j', /** @asyncUnsafe Jest owns rejected test promises. */ async extra => { const res: any = { setHeader: jest.fn(), status: jest.fn(), json: jest.fn() }; res.status.mockReturnValue(res); res.json.mockReturnValue(res); await handlers.get('POST /api/v1/intelligence/swaps/chain-context')({ method: 'POST', path: '/chain-context', query: ctx, body: { ...pkg, ...extra } }, res); expect(res.status).toHaveBeenCalledWith(400); expect(res.json.mock.calls[0][0].stage).toBe('invalid'); });
   it('rejects partial network context', () => expect(() => swapContext(undefined, 'signet')).toThrow());
 });

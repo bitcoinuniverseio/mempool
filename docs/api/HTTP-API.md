@@ -45,7 +45,7 @@ flowchart LR
 | `/api/v1/chains` | protocol overlay | the chain roster |
 | `/api/v1/zcash/privacy` and its children | explorer backend | checked before the generic Zcash prefix; lookalike names do not match |
 | `/api/v1/bitcoin/**`, `/api/v1/dogecoin/**`, `/api/v1/zcash/**` | protocol overlay | per-chain domain surfaces |
-| `/api/v1/anima/**` | protocol overlay | status, transition events, items and item history |
+| `/api/v1/anima` and its children | protocol overlay | status, transition events, organisms and organism history; full path segments only |
 | everything else under `/api/v1/**` | explorer backend | the inherited Bitcoin API, plus the Universe capability report |
 | `/api/internal/**` | nobody | refused with `404` at the gateway when an index is configured, so index administration never reaches the public origin |
 | `/api/**` | the address index, with `/api` stripped | only when the deployment runs one; otherwise it is rewritten onto the backend's `/api/v1/` prefix |
@@ -56,6 +56,8 @@ Two consequences are worth stating plainly because both have caused confusion:
 - **Lookalike paths stay with the backend.** `/api/v1/chainstats` is not
   `/api/v1/chains`, and the prefix match is on a full segment. Anything under
   `/api/v1/` that does not match a dedicated overlay prefix is the backend's.
+  ANIMA follows the same rule: `/api/v1/animal`, `/api/v1/animator` and
+  `/api/v1/anima-other` stay with the backend. Paths and queries pass unchanged.
 - **With `MEMPOOL.BACKEND` set to `esplora` the backend does not mount the
   address, script hash, transaction, block, or mempool routes at all.** It
   expects the edge to send that whole family to the index. Point `/api/` at the
@@ -107,6 +109,13 @@ their own result row. Registry aliases resolve through the owned registry.
 The OP inscriptions objects adapter reads its authority's existing
 `/api/op-inscriptions/inscriptions` endpoint and validates its offset pagination.
 An objects page is not an activity feed or proof of a mint/transfer operation.
+
+Activity and objects consumers validate the document version, protocol identity,
+state, required data, pagination and nested source context. Only the overlay's
+typed unsupported contract establishes an unsupported operation. An untyped
+404, HTML fallback, malformed document or transport failure remains an error.
+The protocol page offers retry and retains already loaded rows when a later
+page fails. These checks do not establish authority availability or completeness.
 
 ### `GET /api/v1/capabilities`
 

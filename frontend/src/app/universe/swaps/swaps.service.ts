@@ -38,11 +38,11 @@ export class SwapsApiService {
   public getOverview$(): Observable<SwapsOverview> {
     return this.network$.pipe(switchMap(network => this.http.get<SwapsOverview>(`${this.baseUrl}/overview`, { params: this.params(network) })));
   }
-  public getProviders$(): Observable<SwapProvider[]> {
-    return this.network$.pipe(switchMap(network => this.http.get<SwapProvider[]>(`${this.baseUrl}/providers`, { params: this.params(network) })));
+  public getProviders$(network = this.network): Observable<SwapProvider[]> {
+    return this.http.get<SwapProvider[]>(`${this.baseUrl}/providers`, { params: this.params(network) });
   }
-  public getProviderById$(id: string): Observable<SwapProvider> {
-    return this.network$.pipe(switchMap(network => this.http.get<SwapProvider>(`${this.baseUrl}/providers/${encodeURIComponent(id)}`, { params: this.params(network) })));
+  public getProviderById$(id: string, network = this.network): Observable<SwapProvider> {
+    return this.http.get<SwapProvider>(`${this.baseUrl}/providers/${encodeURIComponent(id)}`, { params: this.params(network) });
   }
   public recover$(pkg: object, network: string): Observable<{ recovery_plan: SwapRecoveryPlan }> {
     return this.http.post<{ recovery_plan: SwapRecoveryPlan }>(`${this.baseUrl}/chain-context`, pkg, { params: this.params(network) });

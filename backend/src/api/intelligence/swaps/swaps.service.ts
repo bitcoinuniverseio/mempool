@@ -2,7 +2,8 @@ import { SwapPackage, SwapProtocolDefinition, SwapProvider, SwapLockupVerificati
 import { BitcoinSwapAuthority, LockupEvidence, SwapAuthority, SwapEvidenceError, swapContext } from './swaps-evidence';
 import { boltzContract, refundPsbt, verifyBoltzSpend } from './boltz-taproot';
 import { DatabaseSwapObservations, SwapObservationStore } from './swaps-observations';
-import * as ecc from 'tiny-secp256k1';
+
+const providerRegistryUnavailable = 'The authenticated provider registry is unavailable. Provider identities and health history cannot be determined until the owned trust and signed-manifest integration is configured (PRE-04).';
 
 export class SwapsService {
   private readonly protocols: SwapProtocolDefinition[] = [
@@ -60,15 +61,15 @@ export class SwapsService {
         ? 'Bitcoin two-leaf Taproot script evidence and unsigned refunds; provider identity and release revision unverified.'
         : 'Protocol-specific proof adapter and owned integration unavailable. Catalog declarations are not verified support.' }));
   }
-  public listProviders(): SwapProvider[] { return []; }
-  public getProvider(_id: string): SwapProvider | undefined { return undefined; }
-  public getProviderHistory(_id: string): null { return null; }
+  public listProviders(): SwapProvider[] { throw new SwapEvidenceError('unavailable-registry', providerRegistryUnavailable); }
+  public getProvider(_id: string): SwapProvider | undefined { throw new SwapEvidenceError('unavailable-registry', providerRegistryUnavailable); }
+  public getProviderHistory(_id: string): null { throw new SwapEvidenceError('unavailable-registry', providerRegistryUnavailable); }
 
   /** @asyncSafe Storage failures become explicit unavailable-storage diagnostics. */
   public async getOverview(context = swapContext()): Promise<SwapsOverview> {
     const result: SwapsOverview = { total_swaps_observed: null, active_providers_count: null, total_volume_sats: null,
       supported_protocols_count: 0, recent_swaps: [], active_providers: [], protocols: this.listProtocols(),
-      notes: ['Provider health, settlement volume and provider revision support have no authenticated observation source.'] };
+      notes: [providerRegistryUnavailable, 'Provider health, settlement volume and provider revision support have no authenticated observation source.'] };
     try {
       result.recent_observations = await this.observations.recent(context);
       result.observation_status = 'historical-observations';
@@ -205,15 +206,12 @@ export class SwapsService {
   }
 
   public verifyProviderManifest(manifest: Partial<SwapProvider>): { valid: boolean; stage: string; errors: string[] } {
-    const errors: string[] = [];
-    if (!manifest || typeof manifest !== 'object' || Array.isArray(manifest)) errors.push('Manifest must be an object.');
-    else {
-      if (!manifest.provider_id) errors.push('provider_id is required');
-      if (typeof manifest.identity_key !== 'string' || !/^(02|03)[0-9a-fA-F]{64}$/.test(manifest.identity_key) || !ecc.isPoint(Buffer.from(manifest.identity_key, 'hex'))) errors.push('A valid compressed identity key is required.');
-      if (typeof manifest.provider_signature !== 'string' || !/^[0-9a-fA-F]{128}$/.test(manifest.provider_signature)) errors.push('No accepted provider signature was supplied.');
+    if (!manifest || typeof manifest !== 'object' || Array.isArray(manifest)) {
+      return { valid: false, stage: 'invalid', errors: ['Manifest must be an object.'] };
     }
-    errors.push('No authenticated provider identity registry or protocol-defined signed manifest representation is configured. Signature, identity, domain, validity and protocol revision remain unverified.');
-    return { valid: false, stage: errors.length > 1 ? 'invalid' : 'unverified', errors };
+    // No signature encoding or key type is authoritative until the owned contract is supplied.
+    return { valid: false, stage: 'unavailable-registry', errors: [providerRegistryUnavailable,
+      'No protocol-defined signed representation is configured. Signature scheme, exact normalized bytes, domain/network binding, expiry, revision and key rotation remain unverified.'] };
   }
 
   public reconcileCrossLayer(_swapId: string) {

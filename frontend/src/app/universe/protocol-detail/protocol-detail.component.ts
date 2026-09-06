@@ -29,6 +29,7 @@ interface ProtocolActivityState {
   readonly rows?: readonly ProtocolActivityRow[];
   readonly summary?: string;
   readonly loadingMore?: boolean;
+  readonly loadMoreError?: string;
 }
 
 interface ProtocolObjectsState {
@@ -37,6 +38,7 @@ interface ProtocolObjectsState {
   readonly rows?: readonly ProtocolObjectRow[];
   readonly summary?: string;
   readonly loadingMore?: boolean;
+  readonly loadMoreError?: string;
 }
 
 interface ProtocolDetailViewModel {
@@ -162,8 +164,8 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
 
   /**
    * Reads the protocol's authority feed, first page. Every terminal state
-   * resolves to a page the template can state truthfully; only a transport
-   * failure of the explorer's own overlay lands here as an error.
+   * resolves to a page the template can state truthfully; transport and
+   * invalid document failures land here as an error with an explicit retry.
    */
   loadActivity(protocolId: string): void {
     this.activitySubscription?.unsubscribe();
@@ -182,10 +184,13 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
     if (state.kind !== 'loaded' || !this.activityCursor || state.loadingMore) {
       return;
     }
-    this.activity$.next({ ...state, loadingMore: true });
+    this.activity$.next({ ...state, loadingMore: true, loadMoreError: undefined });
+    const failed = (reason = $localize`:@@universe.detail.activity-page-failed:The next activity page could not be read. Try again.`): void => {
+      this.activity$.next({ ...state, loadingMore: false, loadMoreError: reason });
+    };
     this.activitySubscription = this.api.getProtocolActivity$(protocolId, this.activityCursor, 25, this.protocolChain).pipe(take(1)).subscribe({
-      next: (page) => this.pushActivityPage(page),
-      error: () => this.activity$.next({ ...state, loadingMore: false }),
+      next: (page) => page.state === 'served' ? this.pushActivityPage(page) : failed(page.degradedReason ?? undefined),
+      error: () => failed(),
     });
   }
 
@@ -227,10 +232,13 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
     if (state.kind !== 'loaded' || !this.objectCursor || state.loadingMore) {
       return;
     }
-    this.objects$.next({ ...state, loadingMore: true });
+    this.objects$.next({ ...state, loadingMore: true, loadMoreError: undefined });
+    const failed = (reason = $localize`:@@universe.detail.objects-page-failed:The next objects page could not be read. Try again.`): void => {
+      this.objects$.next({ ...state, loadingMore: false, loadMoreError: reason });
+    };
     this.objectSubscription = this.api.getProtocolObjects$(protocolId, this.objectCursor, 25, this.protocolChain).pipe(take(1)).subscribe({
-      next: (page) => this.pushObjectsPage(page),
-      error: () => this.objects$.next({ ...state, loadingMore: false }),
+      next: (page) => page.state === 'served' ? this.pushObjectsPage(page) : failed(page.degradedReason ?? undefined),
+      error: () => failed(),
     });
   }
 

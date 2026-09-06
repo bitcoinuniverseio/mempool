@@ -92,6 +92,31 @@ test('Zcash privacy belongs to the explorer backend before generic Zcash dispatc
   }
 });
 
+test('ANIMA root and all six operations reach the overlay with their exact query', () => {
+  for (const url of [
+    '/api/v1/anima',
+    '/api/v1/anima/',
+    '/api/v1/anima/status?chain=bitcoin&network=mainnet',
+    '/api/v1/anima/events?limit=25&offset=25&organism=abc%3A1',
+    '/api/v1/anima/events/event%3A1?chain=bitcoin&network=mainnet',
+    '/api/v1/anima/organisms?limit=10&offset=20',
+    '/api/v1/anima/organisms/organism%3A1?network=mainnet',
+    '/api/v1/anima/organisms/organism%3A1/history?limit=10&offset=10',
+  ]) {
+    const route = routeFor(new URL(url, 'http://x.invalid').pathname, url);
+    assert.equal(port(route), OVERLAY_PORT, url);
+    assert.equal(route.path, url, url);
+  }
+});
+
+test('ANIMA ownership requires a full path segment', () => {
+  for (const url of ['/api/v1/animal', '/api/v1/animator', '/api/v1/anima-other', '/api/v1/animal/status']) {
+    const route = routeFor(new URL(url, 'http://x.invalid').pathname, url);
+    assert.equal(port(route), BACKEND_PORT, url);
+    assert.equal(route.path, url, url);
+  }
+});
+
 test('a path that merely begins with a chain name stays on the backend', () => {
   for (const url of ['/api/v1/chainstats', '/api/v1/bitcoind', '/api/v1/zcashier']) {
     const pathname = new URL(url, 'http://x.invalid').pathname;

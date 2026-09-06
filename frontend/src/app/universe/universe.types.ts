@@ -644,7 +644,8 @@ export interface ExplorerProtocolActivityPage {
     observedAt: string;
   } | null;
   degradedReason: string | null;
-  observedAt: string;
+  /** The compact typed unsupported response carries no observation timestamp. */
+  observedAt: string | null;
 }
 
 export type {
@@ -680,7 +681,8 @@ export interface ExplorerProtocolObjectsPage {
     observedAt: string;
   } | null;
   degradedReason: string | null;
-  observedAt: string;
+  /** The compact typed unsupported response carries no observation timestamp. */
+  observedAt: string | null;
 }
 
 // ---------------------------------------------------------------------------
