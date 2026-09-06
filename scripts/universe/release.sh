@@ -157,14 +157,53 @@ gate_configuration() {
 }
 
 gate_database() {
+  local dir=$1
   [ "$(conf_value DATABASE.ENABLED)" = true ] || { log "database disabled, skipping"; return; }
-  python3 - <<'PY' || fail "the configured database did not answer"
-import json, socket
-conf = json.load(open('/etc/universe-explorer/backend.json'))['DATABASE']
-with socket.create_connection((conf['HOST'], conf['PORT']), timeout=5):
-    pass
-PY
-  log "database accepts connections"
+  MEMPOOL_CONFIG_FILE="$CONF/backend.json" node - "$dir" <<'NODE' || fail "the configured database did not pass its read-only readiness query"
+const { createRequire } = require('node:module');
+const { resolve } = require('node:path');
+let connection;
+let stage = 'configuration';
+const deadline = setTimeout(() => {
+  console.error('database readiness exceeded its 10s deadline');
+  process.exit(1);
+}, 10_000);
+(async () => {
+  // Load only the release's configuration and driver, never its database
+  // singleton or startup path, which can acquire locks or run migrations.
+  const releaseRequire = createRequire(resolve(process.argv[2], 'backend/package.json'));
+  const config = releaseRequire('./dist/config.js').default.DATABASE;
+  const mysql = releaseRequire('mysql2/promise');
+  stage = 'connection';
+  connection = await mysql.createConnection({
+    ...(config.SOCKET ? { socketPath: config.SOCKET } : { host: config.HOST }),
+    port: config.PORT,
+    database: config.DATABASE,
+    user: config.USERNAME,
+    password: config.PASSWORD,
+    connectTimeout: 5000,
+  });
+  stage = 'query';
+  const [rows] = await connection.query({ sql: 'SELECT 1 AS ready', timeout: 5000 });
+  if (!Array.isArray(rows) || rows.length !== 1 || rows[0].ready !== 1) {
+    throw new Error('unexpected database readiness result');
+  }
+  stage = 'disconnect';
+  await connection.end();
+  connection = undefined;
+  clearTimeout(deadline);
+  console.log('database authenticated to the configured schema and answered SELECT 1');
+})().catch((error) => {
+  clearTimeout(deadline);
+  try { connection?.destroy(); } catch { /* retain the original failure */ }
+  // Driver messages may contain user names, hosts or credentials. Print only
+  // a bounded stage and the driver's machine-readable code.
+  const code = /^[A-Z][A-Z0-9_]{0,63}$/.test(error?.code || '') ? error.code : 'CHECK_FAILED';
+  console.error(`database ${stage} failed (${code})`);
+  process.exitCode = 1;
+});
+NODE
+  log "database read-only readiness query passed"
 }
 
 # Address lookup, held to the same standard as anything else this origin
@@ -318,11 +357,11 @@ raw = env.get('UNIVERSE_EXPLORER_SOURCES_JSON', '')
 configured = {s['authorityId'] for s in (json.loads(raw) if raw else [])}
 
 out = subprocess.run(
-    ['curl', '-sS', '-m', '10', 'http://127.0.0.1:3400/api/v1/universe/protocols'],
+    ['curl', '-fsS', '-m', '10', 'http://127.0.0.1:3400/api/v1/universe/protocols'],
     capture_output=True, text=True)
 if out.returncode != 0 or not out.stdout.strip():
-    print('overlay not answering yet, skipping this gate')
-    sys.exit(0)
+    print('overlay protocol manifest could not be read; authority coverage is unverified')
+    sys.exit(1)
 
 manifest = json.loads(out.stdout)
 missing = [
@@ -393,7 +432,7 @@ cmd_preflight() {
   gate_release_present "$dir"
   gate_manifest_matches "$dir" "$sha"
   gate_configuration
-  gate_database
+  gate_database "$dir"
   gate_address_backend
   gate_sources_parse
   gate_private_listeners
@@ -655,6 +694,25 @@ print('the live socket accepts a browser handshake')
 PY
 }
 
+# A rollback is attempted in a subshell so its own fail/exit cannot replace the
+# original cutover error. cmd_rollback explicitly checks its mutation commands:
+# invoking it in this conditional disables Bash's implicit errexit handling.
+rollback_failed_cutover() {
+  local previous=$1 status=$2 reason=$3
+  log "$reason (exit $status); rolling back" >&2
+  if [ -z "$previous" ]; then
+    log "rollback unavailable: there is no previous release; cutover remains failed (exit $status)" >&2
+    return 0
+  fi
+  local previous_sha; previous_sha=$(basename "$previous")
+  if (cmd_rollback "${previous_sha#mempool-}"); then
+    return 0
+  else
+    local rollback_status=$?
+    log "rollback failed (exit $rollback_status); original cutover failure remains exit $status" >&2
+  fi
+}
+
 cmd_cutover() {
   local sha=$1
   local dir; dir=$(release_dir "$sha")
@@ -712,18 +770,37 @@ cmd_cutover() {
       log "the gateway changed, restarting it first; nothing holds the port, so the origin sees a brief gap"
       log "enable universe-explorer-gateway.socket to close it"
     fi
-    systemctl restart universe-explorer-gateway
-    wait_for "$GATEWAY/__gateway/health" gateway \
-      || fail "the gateway did not come back after its restart, and nothing has been switched behind it yet"
+    if systemctl restart universe-explorer-gateway; then
+      :
+    else
+      local status=$?
+      rollback_failed_cutover "$previous" "$status" "gateway restart failed"
+      return "$status"
+    fi
+    if wait_for "$GATEWAY/__gateway/health" gateway; then
+      :
+    else
+      local status=$?
+      rollback_failed_cutover "$previous" "$status" "gateway did not come back after its restart"
+      return "$status"
+    fi
   else
     log "the gateway is unchanged, leaving it up so the origin sees no gap"
   fi
 
-  systemctl restart universe-explorer-backend universe-explorer-overlay
-  if ! verify_live "$dir"; then
-    log "verification failed, rolling back"
-    [ -n "$previous" ] && cmd_rollback "$(basename "$previous" | sed 's/^mempool-//')"
-    fail "cutover verification failed"
+  if systemctl restart universe-explorer-backend universe-explorer-overlay; then
+    :
+  else
+    local status=$?
+    rollback_failed_cutover "$previous" "$status" "backend/overlay restart failed"
+    return "$status"
+  fi
+  if verify_live "$dir"; then
+    :
+  else
+    local status=$?
+    rollback_failed_cutover "$previous" "$status" "cutover verification failed"
+    return "$status"
   fi
   log "cutover to $sha complete"
 }
@@ -744,11 +821,17 @@ cmd_rollback() {
     fi
   fi
 
-  ln -sfn "$dir" "$CURRENT.new"
-  mv -Tf "$CURRENT.new" "$CURRENT"
+  ln -sfn "$dir" "$CURRENT.new" || return $?
+  mv -Tf "$CURRENT.new" "$CURRENT" || return $?
   # shellcheck disable=SC2086
-  systemctl restart $UNITS
-  verify_live "$dir" || fail "rollback target did not come back either"
+  systemctl restart $UNITS || return $?
+  if verify_live "$dir"; then
+    :
+  else
+    local status=$?
+    log "rollback target did not come back either (exit $status)" >&2
+    return "$status"
+  fi
   log "rolled back to $sha"
 }
 
