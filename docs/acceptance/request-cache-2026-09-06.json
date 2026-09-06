@@ -1,0 +1,62 @@
+{
+  "schemaVersion": "universe-request-cache-evidence-v1",
+  "recordedAt": "2026-09-06T07:05:00.000Z",
+  "coverageIds": ["D-CACHE-01", "D-CACHE-02"],
+  "evidenceScope": "LOCAL. Component evidence for the cache algorithm and for the three services that use it. It does not establish any protocol read, and it is not a network journey.",
+  "verificationNetwork": "not applicable; no request leaves the process in these cases",
+  "priorBehaviour": {
+    "shape": "Three services carried a character-for-character copy of the same private request cache: ApiService, ElectrsApiService and LightningApiService.",
+    "defect1": {
+      "id": "D-CACHE-01",
+      "symbol": "generateCacheKey",
+      "was": "functionName + JSON.stringify(params)",
+      "why": "Each service prefixes apiBaseUrl + apiBasePath onto every URL, and apiBasePath is reassigned by the networkChanged$ subscription. The key carried neither, so the same call with the same arguments on two networks resolved to one entry and the first network to ask owned the answer for the length of the window."
+    },
+    "defect2": {
+      "id": "D-CACHE-02",
+      "symbol": "cachedRequest",
+      "was": "catchError((error) => { subject.error(error); return of(null); })",
+      "why": "The map entry survived the failure. A BehaviorSubject that has errored replays that error to every later subscriber, so a retry inside the window read the dead subject and never reached the network."
+    }
+  },
+  "repair": {
+    "newFile": "frontend/src/app/services/request-cache.ts",
+    "newFileIsNew": true,
+    "key": "namespace | identity | JSON.stringify(params), where namespace is apiBaseUrl + apiBasePath captured before the request is issued, not read back in the response handler, and identity is a per-function-reference id held in a WeakMap so a minified name cannot make two functions collide. Argument order is preserved because it is meaningful to the callees.",
+    "failurePath": "The entry is evicted before the error is delivered, and only if the map still holds the same entry, so a newer request that replaced it is not discarded. The error still reaches every caller waiting on it.",
+    "unchanged": "Same-network concurrent callers still share one in-flight request. Expiry is still swept on each call, so the map stays bounded.",
+    "callersRetested": [
+      "frontend/src/app/components/transactions-list/transactions-list.component.ts:137 getOutspendsBatched$",
+      "frontend/src/app/components/tx-bowtie-graph/tx-bowtie-graph.component.ts:130 getOutspendsBatched$",
+      "frontend/src/app/lightning/nodes-networks-chart/nodes-networks-chart.component.ts:92 listStatistics$",
+      "frontend/src/app/lightning/statistics-chart/lightning-statistics-chart.component.ts:89 listStatistics$"
+    ]
+  },
+  "tests": {
+    "file": "frontend/src/app/services/request-cache.spec.ts",
+    "fileIsNew": true,
+    "runner": "vitest 3.2.7 on Node 24.19.0",
+    "cases": 9,
+    "result": "9 passed",
+    "failingFirstProof": {
+      "method": "The pre-repair algorithm was reinstated verbatim behind the same exported surface and the same nine cases were run against it.",
+      "failed": 4,
+      "passed": 5,
+      "failingCases": [
+        "keeps the namespace, the identity and the arguments apart in the key",
+        "does not answer one network with the other network's response",
+        "separates the same call on two origins",
+        "delivers the error to the callers waiting on it, then makes a fresh request on retry"
+      ]
+    }
+  },
+  "regressionScope": {
+    "frontendSuite": "1497 tests across 92 files pass after the rewiring",
+    "typecheck": "tsc -p tsconfig.app.json --noEmit clean",
+    "lint": "0 errors"
+  },
+  "notEstablished": [
+    "A real read against two live networks through a browser, with the displayed source and checkpoint compared after the switch and after a reload. That needs the changed Explorer overlay to be reachable, which it is not; see explorer-live-probe-2026-09-06.json.",
+    "blockSummaryLoaded and blockAuditLoaded were left alone. No caller was found that contaminates them across a network change, so nothing was refactored on suspicion."
+  ]
+}

@@ -1,0 +1,234 @@
+{
+  "schemaVersion": "universe-operation-evidence-v1",
+  "recordedAt": "2026-09-06T07:05:00.000Z",
+  "scope": "Outcomes established in the 2026-09-06 CI repair session. Rows are promoted only where an operation was actually exercised. Repairs to CI, to the shared request cache and to the private submission answers are recorded in their own artifacts; a repair is not an operation acceptance and none of them promotes a row to PASS.",
+  "liveObservationNote": "Read-only observation on 2026-09-06: the owned public deployment answers the registry and status routes at registryVersion 1.0.0 with 38 identities and sourceSha 64f2c225, which is older than the 39-identity registry these descriptors come from. Of 36 representative descriptor routes probed at limit=1, three answered 200 (the Zcash list reads, with a checkpoint at height 3473647), 30 answered 404 and three answered 503. A success on that deployment is evidence about that deployment, not about the candidate revision, exactly as a 404 on it was not evidence that the candidate is broken.",
+  "liveObservationArtifact": "docs/acceptance/explorer-live-probe-2026-09-06.json",
+  "rows": [
+    {
+      "id": "API-0b1262738a26",
+      "status": "BLOCKED",
+      "scope": "GET /api/v1/intelligence/submission/overview is offered and reachable. It reports the integration it is waiting on as a 503 naming the stage, and no longer answers with an invented result. The operation itself does not complete.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
+          "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour"
+        }
+      ],
+      "blockers": [
+        "PRE-01: the owned Tor and I2P private submission relay is not configured on this deployment, so a submission cannot be queued, relayed or aborted."
+      ],
+      "actual": "HTTP 503 with a stage of unavailable-relay, unavailable-registry or unavailable-source, and the message naming the missing integration."
+    },
+    {
+      "id": "API-21b73dc215f0",
+      "status": "BLOCKED",
+      "scope": "GET /api/v1/intelligence/submission/capabilities is offered and reachable. It reports the integration it is waiting on as a 503 naming the stage, and no longer answers with an invented result. The operation itself does not complete.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
+          "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour"
+        }
+      ],
+      "blockers": [
+        "PRE-01: the owned Tor and I2P private submission relay is not configured on this deployment, so a submission cannot be queued, relayed or aborted."
+      ],
+      "actual": "HTTP 503 with a stage of unavailable-relay, unavailable-registry or unavailable-source, and the message naming the missing integration."
+    },
+    {
+      "id": "API-b890c5b18aa9",
+      "status": "BLOCKED",
+      "scope": "POST /api/v1/intelligence/submission/diagnose is offered and reachable. It reports the integration it is waiting on as a 503 naming the stage, and no longer answers with an invented result. The operation itself does not complete.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
+          "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour"
+        }
+      ],
+      "blockers": [
+        "PRE-01: the owned mempool and policy source for a specific transaction is not wired to this route, so feerate, policy, RBF and CPFP findings cannot be derived."
+      ],
+      "actual": "HTTP 503 with a stage of unavailable-relay, unavailable-registry or unavailable-source, and the message naming the missing integration."
+    },
+    {
+      "id": "API-501ebd9a571e",
+      "status": "BLOCKED",
+      "scope": "POST /api/v1/intelligence/submission/private is offered and reachable. It reports the integration it is waiting on as a 503 naming the stage, and no longer answers with an invented result. The operation itself does not complete.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
+          "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour"
+        }
+      ],
+      "blockers": [
+        "PRE-01: the owned Tor and I2P private submission relay is not configured on this deployment, so a submission cannot be queued, relayed or aborted."
+      ],
+      "actual": "HTTP 503 with a stage of unavailable-relay, unavailable-registry or unavailable-source, and the message naming the missing integration."
+    },
+    {
+      "id": "API-fc5873a9e610",
+      "status": "BLOCKED",
+      "scope": "GET /api/v1/intelligence/submission/private/:submissionToken is offered and reachable. It reports the integration it is waiting on as a 503 naming the stage, and no longer answers with an invented result. The operation itself does not complete.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
+          "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour"
+        }
+      ],
+      "blockers": [
+        "PRE-01: the owned Tor and I2P private submission relay is not configured on this deployment, so a submission cannot be queued, relayed or aborted."
+      ],
+      "actual": "HTTP 503 with a stage of unavailable-relay, unavailable-registry or unavailable-source, and the message naming the missing integration."
+    },
+    {
+      "id": "API-55036967e3c6",
+      "status": "BLOCKED",
+      "scope": "POST /api/v1/intelligence/submission/private/:submissionToken/abort is offered and reachable. It reports the integration it is waiting on as a 503 naming the stage, and no longer answers with an invented result. The operation itself does not complete.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
+          "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour"
+        }
+      ],
+      "blockers": [
+        "PRE-01: the owned Tor and I2P private submission relay is not configured on this deployment, so a submission cannot be queued, relayed or aborted."
+      ],
+      "actual": "HTTP 503 with a stage of unavailable-relay, unavailable-registry or unavailable-source, and the message naming the missing integration."
+    },
+    {
+      "id": "API-e0f0abac5d30",
+      "status": "BLOCKED",
+      "scope": "GET /api/v1/intelligence/accelerators/providers is offered and reachable. It reports the integration it is waiting on as a 503 naming the stage, and no longer answers with an invented result. The operation itself does not complete.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
+          "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour"
+        }
+      ],
+      "blockers": [
+        "PRE-04: there is no owned signed accelerator provider directory, so provider identity, health and receipt trust cannot be established."
+      ],
+      "actual": "HTTP 503 with a stage of unavailable-relay, unavailable-registry or unavailable-source, and the message naming the missing integration."
+    },
+    {
+      "id": "API-701fd1e7a970",
+      "status": "BLOCKED",
+      "scope": "GET /api/v1/intelligence/accelerators/providers/:providerId is offered and reachable. It reports the integration it is waiting on as a 503 naming the stage, and no longer answers with an invented result. The operation itself does not complete.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
+          "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour"
+        }
+      ],
+      "blockers": [
+        "PRE-04: there is no owned signed accelerator provider directory, so provider identity, health and receipt trust cannot be established."
+      ],
+      "actual": "HTTP 503 with a stage of unavailable-relay, unavailable-registry or unavailable-source, and the message naming the missing integration."
+    },
+    {
+      "id": "API-ce2c51a268a0",
+      "status": "BLOCKED",
+      "scope": "POST /api/v1/intelligence/accelerators/receipts/verify is offered and reachable. It reports the integration it is waiting on as a 503 naming the stage, and no longer answers with an invented result. The operation itself does not complete. Its structural validation stage does complete: a malformed receipt is rejected with 400 and its faults named. Verification itself needs a provider key this deployment does not have, so a structurally complete receipt is reported as unverified rather than as verified.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
+          "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour"
+        }
+      ],
+      "blockers": [
+        "PRE-04: there is no owned signed accelerator provider directory, so provider identity, health and receipt trust cannot be established."
+      ],
+      "actual": "HTTP 503 with a stage of unavailable-relay, unavailable-registry or unavailable-source, and the message naming the missing integration."
+    },
+    {
+      "id": "API-fdb340196a39",
+      "status": "BLOCKED",
+      "scope": "GET /api/v1/intelligence/ordering/transactions/:txid is offered and reachable. It reports the integration it is waiting on as a 503 naming the stage, and no longer answers with an invented result. The operation itself does not complete.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
+          "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour"
+        }
+      ],
+      "blockers": [
+        "PRE-01: the owned relay sensor and template recorder are not configured, so first-seen and template observation cannot be derived."
+      ],
+      "actual": "HTTP 503 with a stage of unavailable-relay, unavailable-registry or unavailable-source, and the message naming the missing integration."
+    },
+    {
+      "id": "API-f2fe08ad257d",
+      "status": "BLOCKED",
+      "scope": "GET /api/v1/intelligence/ordering/blocks/:blockHash is offered and reachable. It reports the integration it is waiting on as a 503 naming the stage, and no longer answers with an invented result. The operation itself does not complete.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
+          "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour"
+        }
+      ],
+      "blockers": [
+        "PRE-01: the owned relay sensor and template recorder are not configured, so first-seen and template observation cannot be derived."
+      ],
+      "actual": "HTTP 503 with a stage of unavailable-relay, unavailable-registry or unavailable-source, and the message naming the missing integration."
+    },
+    {
+      "id": "API-9de0ce16ccad",
+      "status": "BLOCKED",
+      "scope": "GET /api/v1/intelligence/ordering/findings is offered and reachable. It reports the integration it is waiting on as a 503 naming the stage, and no longer answers with an invented result. The operation itself does not complete.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
+          "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour"
+        }
+      ],
+      "blockers": [
+        "PRE-01: the owned relay sensor and template recorder are not configured, so first-seen and template observation cannot be derived."
+      ],
+      "actual": "HTTP 503 with a stage of unavailable-relay, unavailable-registry or unavailable-source, and the message naming the missing integration."
+    },
+    {
+      "id": "NAV-249",
+      "status": "BLOCKED",
+      "scope": "The route renders and reports the missing ordering source rather than an invented finding. An address that names no transaction or block now says so instead of substituting a fixed one, which is what the surface did before.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
+          "note": "FIND-PRIVSUB-01"
+        }
+      ],
+      "blockers": [
+        "PRE-01: the owned relay sensor and template recorder are not configured, so first-seen and template observation cannot be derived."
+      ],
+      "actual": "The page renders its failure state naming the unavailable ordering source."
+    },
+    {
+      "id": "NAV-250",
+      "status": "BLOCKED",
+      "scope": "The route renders and reports the missing ordering source rather than an invented finding. An address that names no transaction or block now says so instead of substituting a fixed one, which is what the surface did before.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
+          "note": "FIND-PRIVSUB-01"
+        }
+      ],
+      "blockers": [
+        "PRE-01: the owned relay sensor and template recorder are not configured, so first-seen and template observation cannot be derived."
+      ],
+      "actual": "The page renders its failure state naming the unavailable ordering source."
+    },
+    {
+      "id": "NAV-251",
+      "status": "BLOCKED",
+      "scope": "The route renders and reports the missing ordering source rather than an invented finding. An address that names no transaction or block now says so instead of substituting a fixed one, which is what the surface did before.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
+          "note": "FIND-PRIVSUB-01"
+        }
+      ],
+      "blockers": [
+        "PRE-01: the owned relay sensor and template recorder are not configured, so first-seen and template observation cannot be derived."
+      ],
+      "actual": "The page renders its failure state naming the unavailable ordering source."
+    }
+  ]
+}

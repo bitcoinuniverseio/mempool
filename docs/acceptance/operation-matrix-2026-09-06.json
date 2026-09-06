@@ -1851,8 +1851,8 @@
     },
     {
       "path": "backend/src/api/intelligence/private-submission/private-submission.routes.ts",
-      "sha256": "6804308adf36fe19ba1c3e5cb9637f6be1e5bf990706384cafdcbaed7574e124",
-      "bytes": 4865
+      "sha256": "7b1f3f3854d6eaae1b44b883a3265dad832b017c39c9eaa96c0da1177aa11e9c",
+      "bytes": 4136
     },
     {
       "path": "backend/src/api/intelligence/protocols/protocols.routes.ts",
@@ -1891,8 +1891,8 @@
     },
     {
       "path": "backend/src/api/intelligence/swaps/swaps.routes.ts",
-      "sha256": "46ba8e32b54656862021f68429075219aeea6c884cc4bc849272881aa8ea0428",
-      "bytes": 4064
+      "sha256": "992e9e0f33ca1d5b696e6771dce33371f64b0db5b6dc4466e349d838e876c1ba",
+      "bytes": 4071
     },
     {
       "path": "backend/src/api/intelligence/templates/templates.routes.ts",
@@ -2020,9 +2020,19 @@
       "bytes": 744214
     },
     {
+      "path": "docs/acceptance/ci-repair-2026-09-06.json",
+      "sha256": "ca8c21588d57600a3b454a890312eb47eecd1c5dbd5ac5479768023ca4516115",
+      "bytes": 15520
+    },
+    {
+      "path": "docs/acceptance/current-execution-evidence.json",
+      "sha256": "e7015319ac7fb8e83de0e034abe97bb757b5c9cc0061c8d8c8f2da66f6330084",
+      "bytes": 14063
+    },
+    {
       "path": "docs/acceptance/durable-portfolio-2026-09-06.md",
-      "sha256": "413e69a374650e0a3ffe804740c5f85066d44af35712a8a28e58d9bd77514292",
-      "bytes": 15220
+      "sha256": "361781570404857209c13a8d956d5a8fe686e65b4bcbdc82182b1d0a232e2f62",
+      "bytes": 15295
     },
     {
       "path": "docs/acceptance/network-contract-2026-09-05.md",
@@ -2031,8 +2041,8 @@
     },
     {
       "path": "docs/acceptance/operation-matrix-2026-09-06.md",
-      "sha256": "bb8fc1773fa50ed5642561e8fdf988a324e9e6670fa2feac922f19d99408e4f3",
-      "bytes": 4544
+      "sha256": "a86842c105b88854fa6623d1eae36a40365a3e9252f42d4bc58dd0d376946e8e",
+      "bytes": 4593
     },
     {
       "path": "docs/acceptance/portfolio-sharing-2026-09-05.md",
@@ -2055,14 +2065,19 @@
       "bytes": 18451
     },
     {
+      "path": "docs/acceptance/STATUS-2026-09-06.md",
+      "sha256": "a160b888f52318ade934204c1c16e8b0c11b66b8698fc4256987aca87aa70869",
+      "bytes": 8725
+    },
+    {
       "path": "docs/acceptance/swaps-2026-09-05.md",
       "sha256": "2fed3220d068ca4650b25a122f9705358b8404cb18b3f1486fd9dcfac7c89fa1",
       "bytes": 16107
     },
     {
       "path": "docs/acceptance/swaps-2026-09-06.md",
-      "sha256": "37fd5f610c21d30cead18911b6dd5cac20b27a9fb6d103eba1eedca270b87954",
-      "bytes": 8361
+      "sha256": "3a8024a67153f8f82b3ed742bb544d2b43f8e422fdf132f3b80e1e6ac19ed9ac",
+      "bytes": 8419
     },
     {
       "path": "docs/protocols/PROTOCOL-COVERAGE.json",
@@ -2081,8 +2096,8 @@
     },
     {
       "path": "frontend/src/app/components/block/block.component.ts",
-      "sha256": "5bb606d5fd055245770f985349b48cf3adec2dce4c21033fe218a91c754b1071",
-      "bytes": 38030
+      "sha256": "465004be7b231ee15042869b21f84a5ca8feb28dca0095d49e76911de9b80382",
+      "bytes": 39075
     },
     {
       "path": "frontend/src/app/components/blocks-list/blocks-list.component.ts",
@@ -2176,13 +2191,13 @@
     },
     {
       "path": "frontend/src/app/components/transaction/transaction-raw.component.ts",
-      "sha256": "887903ee3977b70d0ccec21ebe053032f1282c00eeb4eea53662ec656d90e14f",
-      "bytes": 15916
+      "sha256": "a011ed511389f2b98f341d8cfb43d99c0759689d116f908913194781899fac86",
+      "bytes": 16350
     },
     {
       "path": "frontend/src/app/components/transaction/transaction.component.ts",
-      "sha256": "04db138c9c9c3aeb14fbdf32bb9eea6fa01771a4033e9aa5d55cfcb100f751bf",
-      "bytes": 46825
+      "sha256": "8e3a51cd00bd73eb2a21c60e14069f8bc17f3c997c2d15b0fabe9007d1b2da07",
+      "bytes": 48075
     },
     {
       "path": "frontend/src/app/docs/docs/docs.component.ts",
@@ -2196,8 +2211,8 @@
     },
     {
       "path": "frontend/src/app/lightning/justice-list/justice-list.component.ts",
-      "sha256": "9862c33ae9baad5172bfae27cbd88d7e0f6d273f723638f0b9524a9a067d76df",
-      "bytes": 2132
+      "sha256": "705ee1a0a68be19155bd1304a21709626b6f0a659513014268bc3fa08b63fcf4",
+      "bytes": 2193
     },
     {
       "path": "frontend/src/app/lightning/lightning-dashboard/lightning-dashboard.component.ts",
@@ -2211,8 +2226,8 @@
     },
     {
       "path": "frontend/src/app/lightning/node/node.component.ts",
-      "sha256": "092c711e1adc92d56295e4ba21e77e7893f6ca785c62f4414db4ec72c1b0933a",
-      "bytes": 5719
+      "sha256": "731ae1298b2d1974a51ef779a6cb299e037c0d7a170d3287dfa91a7ade285fa5",
+      "bytes": 5897
     },
     {
       "path": "frontend/src/app/lightning/nodes-per-country/nodes-per-country.component.ts",
@@ -3196,8 +3211,8 @@
     },
     {
       "path": "frontend/src/app/universe/portfolio/accounts/manage-portfolios.component.ts",
-      "sha256": "09c27f7033e51f65a9371e8a9fc26f3fe60209a26080066d57bb976e33ac76f5",
-      "bytes": 8573
+      "sha256": "c27d4c31fa60acdddd558b875b2e6f77415ad30ad5627d3eeec9f9ab35ad38dc",
+      "bytes": 8575
     },
     {
       "path": "frontend/src/app/universe/portfolio/activity/activity.component.ts",
@@ -3221,13 +3236,13 @@
     },
     {
       "path": "frontend/src/app/universe/portfolio/home/overview.component.ts",
-      "sha256": "694731bde99c3d35dcf03b0e3a6d9fc982d9620ad137ed50a2790958c05ab930",
-      "bytes": 14725
+      "sha256": "4e3657abb234a7638a8ff6c615c6fdda9699a53c873c6ee660db524862766100",
+      "bytes": 15550
     },
     {
       "path": "frontend/src/app/universe/portfolio/home/portfolio-home.component.ts",
-      "sha256": "63fcddfb2cb0f8d3e8c207e69f287ec8773d07ced86d5ff3371585bfc1325b39",
-      "bytes": 5452
+      "sha256": "88d919b4c8a9f19fe07f96501fcb6c96d076312a8b177aa7da0e49d4474f904c",
+      "bytes": 5453
     },
     {
       "path": "frontend/src/app/universe/portfolio/home/workspace-redirect.component.ts",
@@ -3241,8 +3256,8 @@
     },
     {
       "path": "frontend/src/app/universe/portfolio/onboarding/onboarding.component.ts",
-      "sha256": "a0ea8c6faf84d6707af55a7b006898535c03be83ad934539ee8910b45097c436",
-      "bytes": 25601
+      "sha256": "ef7020b5178fdc3d445deba16cb35fa4a4bfaa55720d407bdd037d33854ac53d",
+      "bytes": 25804
     },
     {
       "path": "frontend/src/app/universe/portfolio/performance/performance.component.ts",
@@ -3251,13 +3266,13 @@
     },
     {
       "path": "frontend/src/app/universe/portfolio/reports/report-builder.component.ts",
-      "sha256": "40904aefb65e67a22c52683499e53cc4fcff194bb019cbb21a2df59651f99962",
-      "bytes": 17896
+      "sha256": "1ca68b8403f257b31469ab53a454c4f6386ba2217c0b4b5bf68373362e402c11",
+      "bytes": 18173
     },
     {
       "path": "frontend/src/app/universe/portfolio/settings/portfolio-settings.component.ts",
-      "sha256": "1d37486e0c4db18fc1765f3b57b7242cb8cf6f16ceafc662b26a50741882545f",
-      "bytes": 7954
+      "sha256": "3944ec386921be6ffb75d4eca8afeef477eebaf32908f8ac7fe55c42fbb8b595",
+      "bytes": 7980
     },
     {
       "path": "frontend/src/app/universe/portfolio/share/share-view.component.ts",
@@ -3266,8 +3281,8 @@
     },
     {
       "path": "frontend/src/app/universe/portfolio/shell/portfolio-shell.component.ts",
-      "sha256": "4702b018e4ddc73abce12a9bb09303d0c0a97d97a30bcf894fccfdfa64993e69",
-      "bytes": 11025
+      "sha256": "7e1f524570a36a866a08965fd91f64cdd92edc8dfe12912988366a6439bcac84",
+      "bytes": 11451
     },
     {
       "path": "frontend/src/app/universe/portfolio/sources/sources.component.ts",
@@ -3286,48 +3301,48 @@
     },
     {
       "path": "frontend/src/app/universe/private-submission/private-submission-accelerator-detail.component.ts",
-      "sha256": "a0e19e8912953741b500035f1f9cf13c6e43156e6fd12dd5109ce6f7bdffe92b",
-      "bytes": 3890
+      "sha256": "fd450a84b62ea32433b19d73f67f32c4935f68c15b9ed06287846f00fe62d11b",
+      "bytes": 4712
     },
     {
       "path": "frontend/src/app/universe/private-submission/private-submission-accelerators.component.ts",
-      "sha256": "a41754e387f7e478a613a4be6b61d26d228d88cebd81de64134205e365f5d3e6",
-      "bytes": 3249
+      "sha256": "2b48fa25d2175f2873f251197e89fb9c82eeb711bf55f7c17ee3b1ed13225ebf",
+      "bytes": 3686
     },
     {
       "path": "frontend/src/app/universe/private-submission/private-submission-broadcast.component.ts",
-      "sha256": "5450eb9e0c5bee0e5ad5e8d473c46151c4a1e9ccb5de890267b5816c3cdbc7d2",
-      "bytes": 4630
+      "sha256": "b1a97a7d6bc1b401141dfc91cd6fde5b97ef2aa98837d1be25f03884d2e4a1c8",
+      "bytes": 5390
     },
     {
       "path": "frontend/src/app/universe/private-submission/private-submission-ordering-block.component.ts",
-      "sha256": "7c177fabfc37a9a4a99dba29a4cdd1b959ef5db3bbe9ceff13d2857c303ee630",
-      "bytes": 4119
+      "sha256": "d30b2c43f97695fd58d9cf2bfdcd8c759a4c72aded106a3d1c1b18764c4aefb5",
+      "bytes": 4892
     },
     {
       "path": "frontend/src/app/universe/private-submission/private-submission-ordering-tx.component.ts",
-      "sha256": "873bf5f6c8e53d60fdc8ca98423fb6223feeed7263586fafe7d7d8ecb8c6c9d9",
-      "bytes": 3982
+      "sha256": "e89f30feb3b65a3da02d6146b0e5dee5c843ac7b217839873c4867116e1ef1b0",
+      "bytes": 4743
     },
     {
       "path": "frontend/src/app/universe/private-submission/private-submission-ordering.component.ts",
-      "sha256": "e08963b73d695e6c4e18dc8ebe8b2f73d27aff1dd45c9dae0c36ad3919b98330",
-      "bytes": 2952
+      "sha256": "0eda92e591d09b5ac0dff773455503ba7835bd2589b7082e300bbfe5087629ff",
+      "bytes": 3388
     },
     {
       "path": "frontend/src/app/universe/private-submission/private-submission-overview.component.ts",
-      "sha256": "53191d9799307e4696e93c11837fcf00f1fc9ace7d81444c8a710cbfdccb3953",
-      "bytes": 6267
+      "sha256": "32abd3dcc868a6910e7b92b425a7b29217c750e01b78765aaa41f70ee090e60d",
+      "bytes": 7024
     },
     {
       "path": "frontend/src/app/universe/private-submission/private-submission-receipts.component.ts",
-      "sha256": "8306061d579d5ab42c52b70e05d50eed2bb6aead0f1b24800e8c2f06336542fd",
-      "bytes": 4280
+      "sha256": "b8ccd9ccbda15be1e63702f791c641fc702a717df6162b783b454cdd8dda5067",
+      "bytes": 4859
     },
     {
       "path": "frontend/src/app/universe/protocol-detail/protocol-detail.component.ts",
-      "sha256": "8f64d1402f957521174d958d754ae02509dff102f82d5e04c1cdcded4f42fc43",
-      "bytes": 14434
+      "sha256": "ed967a84743a475eceeaac832adf6a39b991d369bae4f395a24819ffcf056e82",
+      "bytes": 14454
     },
     {
       "path": "frontend/src/app/universe/protocol-directory/protocol-directory.component.ts",
@@ -3431,8 +3446,8 @@
     },
     {
       "path": "frontend/src/app/universe/silent-payments/silent-payments-address.component.ts",
-      "sha256": "019a0e58f6edaa9d66050b990dc18cafca6a3d21ab67c2d7118bce7f53846c81",
-      "bytes": 7152
+      "sha256": "39c6dd05b8596045620b4d709709998b0dddcc014ebb7ad39499ed8586a95c18",
+      "bytes": 7165
     },
     {
       "path": "frontend/src/app/universe/silent-payments/silent-payments-coverage.component.ts",
@@ -3446,8 +3461,8 @@
     },
     {
       "path": "frontend/src/app/universe/silent-payments/silent-payments-psbt.component.ts",
-      "sha256": "a7beb5d36b59691b145398c5942bc8091121461838833a70f3b51b16f022e5d5",
-      "bytes": 7628
+      "sha256": "42165dbf57c1d67c6d9b12114ce2142d57f8f6fb216a7ac29cae78c67c2e52aa",
+      "bytes": 7644
     },
     {
       "path": "frontend/src/app/universe/silent-payments/silent-payments-scan.component.ts",
@@ -3511,13 +3526,13 @@
     },
     {
       "path": "frontend/src/app/universe/swaps/swaps-provider-detail.component.ts",
-      "sha256": "57c17b3a6964874943b3779fb813d1c70ad9253ff7a58750f7546c5d5809d7cd",
-      "bytes": 3489
+      "sha256": "5e75ece811975dc572482a26563de5f161f966e53e299f1d01528e4b775c81d2",
+      "bytes": 3509
     },
     {
       "path": "frontend/src/app/universe/swaps/swaps-providers.component.ts",
-      "sha256": "9a6bc0cf9269f25b7f0c370993cee891b330421944ad78149fc2161f85d71a8e",
-      "bytes": 4598
+      "sha256": "2293c7217b1d8b0d63ed1b20c39312383fe09a60112a2f11882746eee372716d",
+      "bytes": 4613
     },
     {
       "path": "frontend/src/app/universe/swaps/swaps-recover.component.ts",
@@ -3586,8 +3601,8 @@
     },
     {
       "path": "scripts/universe/acceptance-matrix.mjs",
-      "sha256": "63e17630b0c181c659d3026621b4d1955045973c59a41e9f17c774f9ba7605d4",
-      "bytes": 32428
+      "sha256": "ee18e949a283ba042319b4516eecc2c556110da13bc77085ed9b524ec06dcf51",
+      "bytes": 32865
     }
   ],
   "sourceCandidates": {
@@ -9100,7 +9115,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/silent-payments/silent-payments-address.component.ts",
-          "sha256": "019a0e58f6edaa9d66050b990dc18cafca6a3d21ab67c2d7118bce7f53846c81"
+          "sha256": "39c6dd05b8596045620b4d709709998b0dddcc014ebb7ad39499ed8586a95c18"
         }
       },
       {
@@ -9195,7 +9210,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/silent-payments/silent-payments-psbt.component.ts",
-          "sha256": "a7beb5d36b59691b145398c5942bc8091121461838833a70f3b51b16f022e5d5"
+          "sha256": "42165dbf57c1d67c6d9b12114ce2142d57f8f6fb216a7ac29cae78c67c2e52aa"
         }
       },
       {
@@ -16226,7 +16241,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/swaps/swaps-providers.component.ts",
-          "sha256": "9a6bc0cf9269f25b7f0c370993cee891b330421944ad78149fc2161f85d71a8e"
+          "sha256": "2293c7217b1d8b0d63ed1b20c39312383fe09a60112a2f11882746eee372716d"
         }
       },
       {
@@ -16264,7 +16279,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/swaps/swaps-provider-detail.component.ts",
-          "sha256": "57c17b3a6964874943b3779fb813d1c70ad9253ff7a58750f7546c5d5809d7cd"
+          "sha256": "5e75ece811975dc572482a26563de5f161f966e53e299f1d01528e4b775c81d2"
         }
       },
       {
@@ -17613,7 +17628,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/private-submission/private-submission-overview.component.ts",
-          "sha256": "53191d9799307e4696e93c11837fcf00f1fc9ace7d81444c8a710cbfdccb3953"
+          "sha256": "32abd3dcc868a6910e7b92b425a7b29217c750e01b78765aaa41f70ee090e60d"
         }
       },
       {
@@ -17664,7 +17679,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/private-submission/private-submission-broadcast.component.ts",
-          "sha256": "5450eb9e0c5bee0e5ad5e8d473c46151c4a1e9ccb5de890267b5816c3cdbc7d2"
+          "sha256": "b1a97a7d6bc1b401141dfc91cd6fde5b97ef2aa98837d1be25f03884d2e4a1c8"
         }
       },
       {
@@ -17698,7 +17713,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/private-submission/private-submission-accelerators.component.ts",
-          "sha256": "a41754e387f7e478a613a4be6b61d26d228d88cebd81de64134205e365f5d3e6"
+          "sha256": "2b48fa25d2175f2873f251197e89fb9c82eeb711bf55f7c17ee3b1ed13225ebf"
         }
       },
       {
@@ -17728,7 +17743,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/private-submission/private-submission-accelerator-detail.component.ts",
-          "sha256": "a0e19e8912953741b500035f1f9cf13c6e43156e6fd12dd5109ce6f7bdffe92b"
+          "sha256": "fd450a84b62ea32433b19d73f67f32c4935f68c15b9ed06287846f00fe62d11b"
         }
       },
       {
@@ -17775,7 +17790,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/private-submission/private-submission-receipts.component.ts",
-          "sha256": "8306061d579d5ab42c52b70e05d50eed2bb6aead0f1b24800e8c2f06336542fd"
+          "sha256": "b8ccd9ccbda15be1e63702f791c641fc702a717df6162b783b454cdd8dda5067"
         }
       },
       {
@@ -17809,7 +17824,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/private-submission/private-submission-ordering.component.ts",
-          "sha256": "e08963b73d695e6c4e18dc8ebe8b2f73d27aff1dd45c9dae0c36ad3919b98330"
+          "sha256": "0eda92e591d09b5ac0dff773455503ba7835bd2589b7082e300bbfe5087629ff"
         }
       },
       {
@@ -17843,7 +17858,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/private-submission/private-submission-ordering-tx.component.ts",
-          "sha256": "873bf5f6c8e53d60fdc8ca98423fb6223feeed7263586fafe7d7d8ecb8c6c9d9"
+          "sha256": "e89f30feb3b65a3da02d6146b0e5dee5c843ac7b217839873c4867116e1ef1b0"
         }
       },
       {
@@ -17881,7 +17896,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/private-submission/private-submission-ordering-block.component.ts",
-          "sha256": "7c177fabfc37a9a4a99dba29a4cdd1b959ef5db3bbe9ceff13d2857c303ee630"
+          "sha256": "d30b2c43f97695fd58d9cf2bfdcd8c759a4c72aded106a3d1c1b18764c4aefb5"
         }
       },
       {
@@ -20037,7 +20052,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/protocol-detail/protocol-detail.component.ts",
-          "sha256": "8f64d1402f957521174d958d754ae02509dff102f82d5e04c1cdcded4f42fc43"
+          "sha256": "ed967a84743a475eceeaac832adf6a39b991d369bae4f395a24819ffcf056e82"
         }
       },
       {
@@ -20128,7 +20143,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/portfolio/home/portfolio-home.component.ts",
-          "sha256": "63fcddfb2cb0f8d3e8c207e69f287ec8773d07ced86d5ff3371585bfc1325b39"
+          "sha256": "88d919b4c8a9f19fe07f96501fcb6c96d076312a8b177aa7da0e49d4474f904c"
         }
       },
       {
@@ -20371,7 +20386,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/portfolio/onboarding/onboarding.component.ts",
-          "sha256": "a0ea8c6faf84d6707af55a7b006898535c03be83ad934539ee8910b45097c436"
+          "sha256": "ef7020b5178fdc3d445deba16cb35fa4a4bfaa55720d407bdd037d33854ac53d"
         }
       },
       {
@@ -20502,7 +20517,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/portfolio/accounts/manage-portfolios.component.ts",
-          "sha256": "09c27f7033e51f65a9371e8a9fc26f3fe60209a26080066d57bb976e33ac76f5"
+          "sha256": "c27d4c31fa60acdddd558b875b2e6f77415ad30ad5627d3eeec9f9ab35ad38dc"
         }
       },
       {
@@ -20637,7 +20652,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/portfolio/settings/portfolio-settings.component.ts",
-          "sha256": "1d37486e0c4db18fc1765f3b57b7242cb8cf6f16ceafc662b26a50741882545f"
+          "sha256": "3944ec386921be6ffb75d4eca8afeef477eebaf32908f8ac7fe55c42fbb8b595"
         }
       },
       {
@@ -20831,7 +20846,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/portfolio/shell/portfolio-shell.component.ts",
-          "sha256": "4702b018e4ddc73abce12a9bb09303d0c0a97d97a30bcf894fccfdfa64993e69"
+          "sha256": "7e1f524570a36a866a08965fd91f64cdd92edc8dfe12912988366a6439bcac84"
         }
       },
       {
@@ -20865,7 +20880,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/portfolio/home/overview.component.ts",
-          "sha256": "694731bde99c3d35dcf03b0e3a6d9fc982d9620ad137ed50a2790958c05ab930"
+          "sha256": "4e3657abb234a7638a8ff6c615c6fdda9699a53c873c6ee660db524862766100"
         }
       },
       {
@@ -21371,7 +21386,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/portfolio/reports/report-builder.component.ts",
-          "sha256": "40904aefb65e67a22c52683499e53cc4fcff194bb019cbb21a2df59651f99962"
+          "sha256": "1ca68b8403f257b31469ab53a454c4f6386ba2217c0b4b5bf68373362e402c11"
         }
       },
       {
@@ -22453,7 +22468,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/components/transaction/transaction-raw.component.ts",
-          "sha256": "887903ee3977b70d0ccec21ebe053032f1282c00eeb4eea53662ec656d90e14f"
+          "sha256": "a011ed511389f2b98f341d8cfb43d99c0759689d116f908913194781899fac86"
         }
       },
       {
@@ -23024,7 +23039,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/components/transaction/transaction.component.ts",
-          "sha256": "04db138c9c9c3aeb14fbdf32bb9eea6fa01771a4033e9aa5d55cfcb100f751bf"
+          "sha256": "8e3a51cd00bd73eb2a21c60e14069f8bc17f3c997c2d15b0fabe9007d1b2da07"
         }
       },
       {
@@ -23499,7 +23514,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/components/block/block.component.ts",
-          "sha256": "5bb606d5fd055245770f985349b48cf3adec2dce4c21033fe218a91c754b1071"
+          "sha256": "465004be7b231ee15042869b21f84a5ca8feb28dca0095d49e76911de9b80382"
         }
       },
       {
@@ -23693,7 +23708,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/lightning/node/node.component.ts",
-          "sha256": "092c711e1adc92d56295e4ba21e77e7893f6ca785c62f4414db4ec72c1b0933a"
+          "sha256": "731ae1298b2d1974a51ef779a6cb299e037c0d7a170d3287dfa91a7ade285fa5"
         }
       },
       {
@@ -24004,7 +24019,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/lightning/justice-list/justice-list.component.ts",
-          "sha256": "9862c33ae9baad5172bfae27cbd88d7e0f6d273f723638f0b9524a9a067d76df"
+          "sha256": "705ee1a0a68be19155bd1304a21709626b6f0a659513014268bc3fa08b63fcf4"
         }
       },
       {
@@ -24224,8 +24239,6 @@
       ],
       "found": [],
       "searchedDirectories": [
-        "D:/universe/mempool/audits",
-        "D:/universe/mempool/.tmp",
         "C:/Users/ordinalking.SERVER/.codex/attachments"
       ],
       "reason": "The described 243-row working ledger cannot be imported without its original IDs and files. No IDs or contents are reconstructed."
@@ -37274,22 +37287,35 @@
     {
       "id": "NAV-249",
       "kind": "navigation",
-      "status": "NOT TESTED",
-      "acceptanceScope": null,
+      "status": "BLOCKED",
+      "acceptanceScope": "The route renders and reports the missing ordering source rather than an invented finding. An address that names no transaction or block now says so instead of substituting a fixed one, which is what the surface did before.",
       "role": "unresolved",
       "network": "unverified",
       "requiredServices": [],
       "fixtureIdentity": null,
       "assertions": [],
-      "actual": null,
-      "evidence": [],
-      "blockers": [],
+      "actual": "The page renders its failure state naming the unavailable ordering source.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
+          "note": "FIND-PRIVSUB-01",
+          "sha256": "ca8c21588d57600a3b454a890312eb47eecd1c5dbd5ac5479768023ca4516115"
+        }
+      ],
+      "blockers": [
+        "PRE-01: the owned relay sensor and template recorder are not configured, so first-seen and template observation cannot be derived."
+      ],
       "links": [],
       "sources": [
         {
           "artifact": "docs/acceptance/2026-09-05-inventory.json",
           "sha256": "a8a02a688d51201205a19f6c100aeb1def19f4f80d645756d877cb8f328276e5",
           "pointer": "/navigation/248"
+        },
+        {
+          "artifact": "docs/acceptance/current-execution-evidence.json",
+          "sha256": "e7015319ac7fb8e83de0e034abe97bb757b5c9cc0061c8d8c8f2da66f6330084",
+          "rowId": "NAV-249"
         }
       ],
       "entry": "/intelligence/ordering",
@@ -37321,27 +37347,41 @@
           "frontend/src/app/universe/private-submission/private-submission-ordering.component.ts"
         ]
       },
-      "remainingWork": "Execute and reconcile the complete method, query, event, network and role variants. Historical/source assertions are not current acceptance."
+      "remainingWork": "Execute and reconcile the complete method, query, event, network and role variants. Historical/source assertions are not current acceptance.",
+      "journeyId": null
     },
     {
       "id": "NAV-250",
       "kind": "navigation",
-      "status": "NOT TESTED",
-      "acceptanceScope": null,
+      "status": "BLOCKED",
+      "acceptanceScope": "The route renders and reports the missing ordering source rather than an invented finding. An address that names no transaction or block now says so instead of substituting a fixed one, which is what the surface did before.",
       "role": "unresolved",
       "network": "unverified",
       "requiredServices": [],
       "fixtureIdentity": null,
       "assertions": [],
-      "actual": null,
-      "evidence": [],
-      "blockers": [],
+      "actual": "The page renders its failure state naming the unavailable ordering source.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
+          "note": "FIND-PRIVSUB-01",
+          "sha256": "ca8c21588d57600a3b454a890312eb47eecd1c5dbd5ac5479768023ca4516115"
+        }
+      ],
+      "blockers": [
+        "PRE-01: the owned relay sensor and template recorder are not configured, so first-seen and template observation cannot be derived."
+      ],
       "links": [],
       "sources": [
         {
           "artifact": "docs/acceptance/2026-09-05-inventory.json",
           "sha256": "a8a02a688d51201205a19f6c100aeb1def19f4f80d645756d877cb8f328276e5",
           "pointer": "/navigation/249"
+        },
+        {
+          "artifact": "docs/acceptance/current-execution-evidence.json",
+          "sha256": "e7015319ac7fb8e83de0e034abe97bb757b5c9cc0061c8d8c8f2da66f6330084",
+          "rowId": "NAV-250"
         }
       ],
       "entry": "/intelligence/ordering/tx/:txid",
@@ -37373,27 +37413,41 @@
           "frontend/src/app/universe/private-submission/private-submission-ordering-tx.component.ts"
         ]
       },
-      "remainingWork": "Execute and reconcile the complete method, query, event, network and role variants. Historical/source assertions are not current acceptance."
+      "remainingWork": "Execute and reconcile the complete method, query, event, network and role variants. Historical/source assertions are not current acceptance.",
+      "journeyId": null
     },
     {
       "id": "NAV-251",
       "kind": "navigation",
-      "status": "NOT TESTED",
-      "acceptanceScope": null,
+      "status": "BLOCKED",
+      "acceptanceScope": "The route renders and reports the missing ordering source rather than an invented finding. An address that names no transaction or block now says so instead of substituting a fixed one, which is what the surface did before.",
       "role": "unresolved",
       "network": "unverified",
       "requiredServices": [],
       "fixtureIdentity": null,
       "assertions": [],
-      "actual": null,
-      "evidence": [],
-      "blockers": [],
+      "actual": "The page renders its failure state naming the unavailable ordering source.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
+          "note": "FIND-PRIVSUB-01",
+          "sha256": "ca8c21588d57600a3b454a890312eb47eecd1c5dbd5ac5479768023ca4516115"
+        }
+      ],
+      "blockers": [
+        "PRE-01: the owned relay sensor and template recorder are not configured, so first-seen and template observation cannot be derived."
+      ],
       "links": [],
       "sources": [
         {
           "artifact": "docs/acceptance/2026-09-05-inventory.json",
           "sha256": "a8a02a688d51201205a19f6c100aeb1def19f4f80d645756d877cb8f328276e5",
           "pointer": "/navigation/250"
+        },
+        {
+          "artifact": "docs/acceptance/current-execution-evidence.json",
+          "sha256": "e7015319ac7fb8e83de0e034abe97bb757b5c9cc0061c8d8c8f2da66f6330084",
+          "rowId": "NAV-251"
         }
       ],
       "entry": "/intelligence/ordering/block/:blockHash",
@@ -37425,7 +37479,8 @@
           "frontend/src/app/universe/private-submission/private-submission-ordering-block.component.ts"
         ]
       },
-      "remainingWork": "Execute and reconcile the complete method, query, event, network and role variants. Historical/source assertions are not current acceptance."
+      "remainingWork": "Execute and reconcile the complete method, query, event, network and role variants. Historical/source assertions are not current acceptance.",
+      "journeyId": null
     },
     {
       "id": "NAV-252",
@@ -46473,7 +46528,7 @@
         },
         {
           "artifact": "docs/acceptance/swaps-2026-09-06.md",
-          "sha256": "37fd5f610c21d30cead18911b6dd5cac20b27a9fb6d103eba1eedca270b87954",
+          "sha256": "3a8024a67153f8f82b3ed742bb544d2b43f8e422fdf132f3b80e1e6ac19ed9ac",
           "line": 37,
           "originalIdCell": "SW-01",
           "originalTableRow": "| SW-01 | BLOCKED; unknown totals retained | PRE-02 durable actual observation readback and PRE-01 real checkpoint/reorg evidence. |"
@@ -46550,7 +46605,7 @@
         },
         {
           "artifact": "docs/acceptance/swaps-2026-09-06.md",
-          "sha256": "37fd5f610c21d30cead18911b6dd5cac20b27a9fb6d103eba1eedca270b87954",
+          "sha256": "3a8024a67153f8f82b3ed742bb544d2b43f8e422fdf132f3b80e1e6ac19ed9ac",
           "line": 38,
           "originalIdCell": "SW-02",
           "originalTableRow": "| SW-02 | Catalog checks retained; authenticated provider revision/support BLOCKED | PRE-04 provider provenance and PRE-03 actual network support. Catalog declarations are not support acceptance. |"
@@ -46627,7 +46682,7 @@
         },
         {
           "artifact": "docs/acceptance/swaps-2026-09-06.md",
-          "sha256": "37fd5f610c21d30cead18911b6dd5cac20b27a9fb6d103eba1eedca270b87954",
+          "sha256": "3a8024a67153f8f82b3ed742bb544d2b43f8e422fdf132f3b80e1e6ac19ed9ac",
           "line": 39,
           "originalIdCell": "SW-03, SW-04, SW-05, SW-06",
           "originalTableRow": "| SW-03, SW-04, SW-05, SW-06 | BLOCKED; local unavailable/unknown error distinction repaired | PRE-04 registry, real health history and accepted signed-manifest contract. SW-05 also requires permitted durable storage. |"
@@ -46704,7 +46759,7 @@
         },
         {
           "artifact": "docs/acceptance/swaps-2026-09-06.md",
-          "sha256": "37fd5f610c21d30cead18911b6dd5cac20b27a9fb6d103eba1eedca270b87954",
+          "sha256": "3a8024a67153f8f82b3ed742bb544d2b43f8e422fdf132f3b80e1e6ac19ed9ac",
           "line": 39,
           "originalIdCell": "SW-03, SW-04, SW-05, SW-06",
           "originalTableRow": "| SW-03, SW-04, SW-05, SW-06 | BLOCKED; local unavailable/unknown error distinction repaired | PRE-04 registry, real health history and accepted signed-manifest contract. SW-05 also requires permitted durable storage. |"
@@ -46781,7 +46836,7 @@
         },
         {
           "artifact": "docs/acceptance/swaps-2026-09-06.md",
-          "sha256": "37fd5f610c21d30cead18911b6dd5cac20b27a9fb6d103eba1eedca270b87954",
+          "sha256": "3a8024a67153f8f82b3ed742bb544d2b43f8e422fdf132f3b80e1e6ac19ed9ac",
           "line": 39,
           "originalIdCell": "SW-03, SW-04, SW-05, SW-06",
           "originalTableRow": "| SW-03, SW-04, SW-05, SW-06 | BLOCKED; local unavailable/unknown error distinction repaired | PRE-04 registry, real health history and accepted signed-manifest contract. SW-05 also requires permitted durable storage. |"
@@ -46858,7 +46913,7 @@
         },
         {
           "artifact": "docs/acceptance/swaps-2026-09-06.md",
-          "sha256": "37fd5f610c21d30cead18911b6dd5cac20b27a9fb6d103eba1eedca270b87954",
+          "sha256": "3a8024a67153f8f82b3ed742bb544d2b43f8e422fdf132f3b80e1e6ac19ed9ac",
           "line": 39,
           "originalIdCell": "SW-03, SW-04, SW-05, SW-06",
           "originalTableRow": "| SW-03, SW-04, SW-05, SW-06 | BLOCKED; local unavailable/unknown error distinction repaired | PRE-04 registry, real health history and accepted signed-manifest contract. SW-05 also requires permitted durable storage. |"
@@ -46935,7 +46990,7 @@
         },
         {
           "artifact": "docs/acceptance/swaps-2026-09-06.md",
-          "sha256": "37fd5f610c21d30cead18911b6dd5cac20b27a9fb6d103eba1eedca270b87954",
+          "sha256": "3a8024a67153f8f82b3ed742bb544d2b43f8e422fdf132f3b80e1e6ac19ed9ac",
           "line": 40,
           "originalIdCell": "SW-07, SW-08, SW-09",
           "originalTableRow": "| SW-07, SW-08, SW-09 | BLOCKED; existing local lockup/claim/refund verification regression passes | PRE-01 owned supported node and actual controlled lockup or confirmed claim/refund with public commitments. |"
@@ -47012,7 +47067,7 @@
         },
         {
           "artifact": "docs/acceptance/swaps-2026-09-06.md",
-          "sha256": "37fd5f610c21d30cead18911b6dd5cac20b27a9fb6d103eba1eedca270b87954",
+          "sha256": "3a8024a67153f8f82b3ed742bb544d2b43f8e422fdf132f3b80e1e6ac19ed9ac",
           "line": 40,
           "originalIdCell": "SW-07, SW-08, SW-09",
           "originalTableRow": "| SW-07, SW-08, SW-09 | BLOCKED; existing local lockup/claim/refund verification regression passes | PRE-01 owned supported node and actual controlled lockup or confirmed claim/refund with public commitments. |"
@@ -47089,7 +47144,7 @@
         },
         {
           "artifact": "docs/acceptance/swaps-2026-09-06.md",
-          "sha256": "37fd5f610c21d30cead18911b6dd5cac20b27a9fb6d103eba1eedca270b87954",
+          "sha256": "3a8024a67153f8f82b3ed742bb544d2b43f8e422fdf132f3b80e1e6ac19ed9ac",
           "line": 40,
           "originalIdCell": "SW-07, SW-08, SW-09",
           "originalTableRow": "| SW-07, SW-08, SW-09 | BLOCKED; existing local lockup/claim/refund verification regression passes | PRE-01 owned supported node and actual controlled lockup or confirmed claim/refund with public commitments. |"
@@ -47166,7 +47221,7 @@
         },
         {
           "artifact": "docs/acceptance/swaps-2026-09-06.md",
-          "sha256": "37fd5f610c21d30cead18911b6dd5cac20b27a9fb6d103eba1eedca270b87954",
+          "sha256": "3a8024a67153f8f82b3ed742bb544d2b43f8e422fdf132f3b80e1e6ac19ed9ac",
           "line": 41,
           "originalIdCell": "SW-10, SW-12",
           "originalTableRow": "| SW-10, SW-12 | BLOCKED; local unsigned generator and independent decoder regressions pass | PRE-01 real controlled lockup, selected authoritative checkpoint and compatible controlled signer; actual UI copy/download/reload proof belongs to the integration owner. Refund broadcast is not required for these rows. |"
@@ -47243,7 +47298,7 @@
         },
         {
           "artifact": "docs/acceptance/swaps-2026-09-06.md",
-          "sha256": "37fd5f610c21d30cead18911b6dd5cac20b27a9fb6d103eba1eedca270b87954",
+          "sha256": "3a8024a67153f8f82b3ed742bb544d2b43f8e422fdf132f3b80e1e6ac19ed9ac",
           "line": 42,
           "originalIdCell": "SW-11",
           "originalTableRow": "| SW-11 | BLOCKED; truthful `insufficient_private_evidence` retained | PRE-04 authenticated specific settlement receipt plus independent chain evidence. |"
@@ -47320,7 +47375,7 @@
         },
         {
           "artifact": "docs/acceptance/swaps-2026-09-06.md",
-          "sha256": "37fd5f610c21d30cead18911b6dd5cac20b27a9fb6d103eba1eedca270b87954",
+          "sha256": "3a8024a67153f8f82b3ed742bb544d2b43f8e422fdf132f3b80e1e6ac19ed9ac",
           "line": 41,
           "originalIdCell": "SW-10, SW-12",
           "originalTableRow": "| SW-10, SW-12 | BLOCKED; local unsigned generator and independent decoder regressions pass | PRE-01 real controlled lockup, selected authoritative checkpoint and compatible controlled signer; actual UI copy/download/reload proof belongs to the integration owner. Refund broadcast is not required for these rows. |"
@@ -56226,7 +56281,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/silent-payments/silent-payments-address.component.ts",
-          "sha256": "019a0e58f6edaa9d66050b990dc18cafca6a3d21ab67c2d7118bce7f53846c81"
+          "sha256": "39c6dd05b8596045620b4d709709998b0dddcc014ebb7ad39499ed8586a95c18"
         }
       ],
       "entry": null,
@@ -56346,7 +56401,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/silent-payments/silent-payments-address.component.ts",
-          "sha256": "019a0e58f6edaa9d66050b990dc18cafca6a3d21ab67c2d7118bce7f53846c81"
+          "sha256": "39c6dd05b8596045620b4d709709998b0dddcc014ebb7ad39499ed8586a95c18"
         }
       ],
       "entry": null,
@@ -56441,7 +56496,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/silent-payments/silent-payments-address.component.ts",
-          "sha256": "019a0e58f6edaa9d66050b990dc18cafca6a3d21ab67c2d7118bce7f53846c81"
+          "sha256": "39c6dd05b8596045620b4d709709998b0dddcc014ebb7ad39499ed8586a95c18"
         }
       ],
       "entry": null,
@@ -56536,7 +56591,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/silent-payments/silent-payments-psbt.component.ts",
-          "sha256": "a7beb5d36b59691b145398c5942bc8091121461838833a70f3b51b16f022e5d5"
+          "sha256": "42165dbf57c1d67c6d9b12114ce2142d57f8f6fb216a7ac29cae78c67c2e52aa"
         }
       ],
       "entry": null,
@@ -56654,7 +56709,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/silent-payments/silent-payments-psbt.component.ts",
-          "sha256": "a7beb5d36b59691b145398c5942bc8091121461838833a70f3b51b16f022e5d5"
+          "sha256": "42165dbf57c1d67c6d9b12114ce2142d57f8f6fb216a7ac29cae78c67c2e52aa"
         }
       ],
       "entry": null,
@@ -56749,7 +56804,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/silent-payments/silent-payments-psbt.component.ts",
-          "sha256": "a7beb5d36b59691b145398c5942bc8091121461838833a70f3b51b16f022e5d5"
+          "sha256": "42165dbf57c1d67c6d9b12114ce2142d57f8f6fb216a7ac29cae78c67c2e52aa"
         }
       ],
       "entry": null,
@@ -66838,7 +66893,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/private-submission/private-submission-overview.component.ts",
-          "sha256": "53191d9799307e4696e93c11837fcf00f1fc9ace7d81444c8a710cbfdccb3953"
+          "sha256": "32abd3dcc868a6910e7b92b425a7b29217c750e01b78765aaa41f70ee090e60d"
         }
       ],
       "entry": null,
@@ -66917,7 +66972,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/private-submission/private-submission-broadcast.component.ts",
-          "sha256": "5450eb9e0c5bee0e5ad5e8d473c46151c4a1e9ccb5de890267b5816c3cdbc7d2"
+          "sha256": "b1a97a7d6bc1b401141dfc91cd6fde5b97ef2aa98837d1be25f03884d2e4a1c8"
         }
       ],
       "entry": null,
@@ -66988,7 +67043,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/private-submission/private-submission-receipts.component.ts",
-          "sha256": "8306061d579d5ab42c52b70e05d50eed2bb6aead0f1b24800e8c2f06336542fd"
+          "sha256": "b8ccd9ccbda15be1e63702f791c641fc702a717df6162b783b454cdd8dda5067"
         }
       ],
       "entry": null,
@@ -69837,7 +69892,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/protocol-detail/protocol-detail.component.ts",
-          "sha256": "8f64d1402f957521174d958d754ae02509dff102f82d5e04c1cdcded4f42fc43"
+          "sha256": "ed967a84743a475eceeaac832adf6a39b991d369bae4f395a24819ffcf056e82"
         }
       ],
       "entry": null,
@@ -70012,7 +70067,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/protocol-detail/protocol-detail.component.ts",
-          "sha256": "8f64d1402f957521174d958d754ae02509dff102f82d5e04c1cdcded4f42fc43"
+          "sha256": "ed967a84743a475eceeaac832adf6a39b991d369bae4f395a24819ffcf056e82"
         }
       ],
       "entry": null,
@@ -70187,7 +70242,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/protocol-detail/protocol-detail.component.ts",
-          "sha256": "8f64d1402f957521174d958d754ae02509dff102f82d5e04c1cdcded4f42fc43"
+          "sha256": "ed967a84743a475eceeaac832adf6a39b991d369bae4f395a24819ffcf056e82"
         }
       ],
       "entry": null,
@@ -70362,7 +70417,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/home/portfolio-home.component.ts",
-          "sha256": "63fcddfb2cb0f8d3e8c207e69f287ec8773d07ced86d5ff3371585bfc1325b39"
+          "sha256": "88d919b4c8a9f19fe07f96501fcb6c96d076312a8b177aa7da0e49d4474f904c"
         }
       ],
       "entry": null,
@@ -70477,7 +70532,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/onboarding/onboarding.component.ts",
-          "sha256": "a0ea8c6faf84d6707af55a7b006898535c03be83ad934539ee8910b45097c436"
+          "sha256": "ef7020b5178fdc3d445deba16cb35fa4a4bfaa55720d407bdd037d33854ac53d"
         }
       ],
       "entry": null,
@@ -70672,7 +70727,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/onboarding/onboarding.component.ts",
-          "sha256": "a0ea8c6faf84d6707af55a7b006898535c03be83ad934539ee8910b45097c436"
+          "sha256": "ef7020b5178fdc3d445deba16cb35fa4a4bfaa55720d407bdd037d33854ac53d"
         }
       ],
       "entry": null,
@@ -70867,7 +70922,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/onboarding/onboarding.component.ts",
-          "sha256": "a0ea8c6faf84d6707af55a7b006898535c03be83ad934539ee8910b45097c436"
+          "sha256": "ef7020b5178fdc3d445deba16cb35fa4a4bfaa55720d407bdd037d33854ac53d"
         }
       ],
       "entry": null,
@@ -71062,7 +71117,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/onboarding/onboarding.component.ts",
-          "sha256": "a0ea8c6faf84d6707af55a7b006898535c03be83ad934539ee8910b45097c436"
+          "sha256": "ef7020b5178fdc3d445deba16cb35fa4a4bfaa55720d407bdd037d33854ac53d"
         }
       ],
       "entry": null,
@@ -71257,7 +71312,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/onboarding/onboarding.component.ts",
-          "sha256": "a0ea8c6faf84d6707af55a7b006898535c03be83ad934539ee8910b45097c436"
+          "sha256": "ef7020b5178fdc3d445deba16cb35fa4a4bfaa55720d407bdd037d33854ac53d"
         }
       ],
       "entry": null,
@@ -71452,7 +71507,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/onboarding/onboarding.component.ts",
-          "sha256": "a0ea8c6faf84d6707af55a7b006898535c03be83ad934539ee8910b45097c436"
+          "sha256": "ef7020b5178fdc3d445deba16cb35fa4a4bfaa55720d407bdd037d33854ac53d"
         }
       ],
       "entry": null,
@@ -71647,7 +71702,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/onboarding/onboarding.component.ts",
-          "sha256": "a0ea8c6faf84d6707af55a7b006898535c03be83ad934539ee8910b45097c436"
+          "sha256": "ef7020b5178fdc3d445deba16cb35fa4a4bfaa55720d407bdd037d33854ac53d"
         }
       ],
       "entry": null,
@@ -71842,7 +71897,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/onboarding/onboarding.component.ts",
-          "sha256": "a0ea8c6faf84d6707af55a7b006898535c03be83ad934539ee8910b45097c436"
+          "sha256": "ef7020b5178fdc3d445deba16cb35fa4a4bfaa55720d407bdd037d33854ac53d"
         }
       ],
       "entry": null,
@@ -72037,7 +72092,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/onboarding/onboarding.component.ts",
-          "sha256": "a0ea8c6faf84d6707af55a7b006898535c03be83ad934539ee8910b45097c436"
+          "sha256": "ef7020b5178fdc3d445deba16cb35fa4a4bfaa55720d407bdd037d33854ac53d"
         }
       ],
       "entry": null,
@@ -72232,7 +72287,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/accounts/manage-portfolios.component.ts",
-          "sha256": "09c27f7033e51f65a9371e8a9fc26f3fe60209a26080066d57bb976e33ac76f5"
+          "sha256": "c27d4c31fa60acdddd558b875b2e6f77415ad30ad5627d3eeec9f9ab35ad38dc"
         }
       ],
       "entry": null,
@@ -72339,7 +72394,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/accounts/manage-portfolios.component.ts",
-          "sha256": "09c27f7033e51f65a9371e8a9fc26f3fe60209a26080066d57bb976e33ac76f5"
+          "sha256": "c27d4c31fa60acdddd558b875b2e6f77415ad30ad5627d3eeec9f9ab35ad38dc"
         }
       ],
       "entry": null,
@@ -72446,7 +72501,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/accounts/manage-portfolios.component.ts",
-          "sha256": "09c27f7033e51f65a9371e8a9fc26f3fe60209a26080066d57bb976e33ac76f5"
+          "sha256": "c27d4c31fa60acdddd558b875b2e6f77415ad30ad5627d3eeec9f9ab35ad38dc"
         }
       ],
       "entry": null,
@@ -72553,7 +72608,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/accounts/manage-portfolios.component.ts",
-          "sha256": "09c27f7033e51f65a9371e8a9fc26f3fe60209a26080066d57bb976e33ac76f5"
+          "sha256": "c27d4c31fa60acdddd558b875b2e6f77415ad30ad5627d3eeec9f9ab35ad38dc"
         }
       ],
       "entry": null,
@@ -72660,7 +72715,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/accounts/manage-portfolios.component.ts",
-          "sha256": "09c27f7033e51f65a9371e8a9fc26f3fe60209a26080066d57bb976e33ac76f5"
+          "sha256": "c27d4c31fa60acdddd558b875b2e6f77415ad30ad5627d3eeec9f9ab35ad38dc"
         }
       ],
       "entry": null,
@@ -72767,7 +72822,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/accounts/manage-portfolios.component.ts",
-          "sha256": "09c27f7033e51f65a9371e8a9fc26f3fe60209a26080066d57bb976e33ac76f5"
+          "sha256": "c27d4c31fa60acdddd558b875b2e6f77415ad30ad5627d3eeec9f9ab35ad38dc"
         }
       ],
       "entry": null,
@@ -72874,7 +72929,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/accounts/manage-portfolios.component.ts",
-          "sha256": "09c27f7033e51f65a9371e8a9fc26f3fe60209a26080066d57bb976e33ac76f5"
+          "sha256": "c27d4c31fa60acdddd558b875b2e6f77415ad30ad5627d3eeec9f9ab35ad38dc"
         }
       ],
       "entry": null,
@@ -72981,7 +73036,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/accounts/manage-portfolios.component.ts",
-          "sha256": "09c27f7033e51f65a9371e8a9fc26f3fe60209a26080066d57bb976e33ac76f5"
+          "sha256": "c27d4c31fa60acdddd558b875b2e6f77415ad30ad5627d3eeec9f9ab35ad38dc"
         }
       ],
       "entry": null,
@@ -73088,7 +73143,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/settings/portfolio-settings.component.ts",
-          "sha256": "1d37486e0c4db18fc1765f3b57b7242cb8cf6f16ceafc662b26a50741882545f"
+          "sha256": "3944ec386921be6ffb75d4eca8afeef477eebaf32908f8ac7fe55c42fbb8b595"
         }
       ],
       "entry": null,
@@ -73219,7 +73274,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/settings/portfolio-settings.component.ts",
-          "sha256": "1d37486e0c4db18fc1765f3b57b7242cb8cf6f16ceafc662b26a50741882545f"
+          "sha256": "3944ec386921be6ffb75d4eca8afeef477eebaf32908f8ac7fe55c42fbb8b595"
         }
       ],
       "entry": null,
@@ -73350,7 +73405,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/settings/portfolio-settings.component.ts",
-          "sha256": "1d37486e0c4db18fc1765f3b57b7242cb8cf6f16ceafc662b26a50741882545f"
+          "sha256": "3944ec386921be6ffb75d4eca8afeef477eebaf32908f8ac7fe55c42fbb8b595"
         }
       ],
       "entry": null,
@@ -73481,7 +73536,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/settings/portfolio-settings.component.ts",
-          "sha256": "1d37486e0c4db18fc1765f3b57b7242cb8cf6f16ceafc662b26a50741882545f"
+          "sha256": "3944ec386921be6ffb75d4eca8afeef477eebaf32908f8ac7fe55c42fbb8b595"
         }
       ],
       "entry": null,
@@ -73612,7 +73667,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/settings/portfolio-settings.component.ts",
-          "sha256": "1d37486e0c4db18fc1765f3b57b7242cb8cf6f16ceafc662b26a50741882545f"
+          "sha256": "3944ec386921be6ffb75d4eca8afeef477eebaf32908f8ac7fe55c42fbb8b595"
         }
       ],
       "entry": null,
@@ -73941,7 +73996,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/shell/portfolio-shell.component.ts",
-          "sha256": "4702b018e4ddc73abce12a9bb09303d0c0a97d97a30bcf894fccfdfa64993e69"
+          "sha256": "7e1f524570a36a866a08965fd91f64cdd92edc8dfe12912988366a6439bcac84"
         }
       ],
       "entry": null,
@@ -74056,7 +74111,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/shell/portfolio-shell.component.ts",
-          "sha256": "4702b018e4ddc73abce12a9bb09303d0c0a97d97a30bcf894fccfdfa64993e69"
+          "sha256": "7e1f524570a36a866a08965fd91f64cdd92edc8dfe12912988366a6439bcac84"
         }
       ],
       "entry": null,
@@ -74171,7 +74226,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/shell/portfolio-shell.component.ts",
-          "sha256": "4702b018e4ddc73abce12a9bb09303d0c0a97d97a30bcf894fccfdfa64993e69"
+          "sha256": "7e1f524570a36a866a08965fd91f64cdd92edc8dfe12912988366a6439bcac84"
         }
       ],
       "entry": null,
@@ -74286,7 +74341,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/shell/portfolio-shell.component.ts",
-          "sha256": "4702b018e4ddc73abce12a9bb09303d0c0a97d97a30bcf894fccfdfa64993e69"
+          "sha256": "7e1f524570a36a866a08965fd91f64cdd92edc8dfe12912988366a6439bcac84"
         }
       ],
       "entry": null,
@@ -74401,7 +74456,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/shell/portfolio-shell.component.ts",
-          "sha256": "4702b018e4ddc73abce12a9bb09303d0c0a97d97a30bcf894fccfdfa64993e69"
+          "sha256": "7e1f524570a36a866a08965fd91f64cdd92edc8dfe12912988366a6439bcac84"
         }
       ],
       "entry": null,
@@ -74516,7 +74571,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/shell/portfolio-shell.component.ts",
-          "sha256": "4702b018e4ddc73abce12a9bb09303d0c0a97d97a30bcf894fccfdfa64993e69"
+          "sha256": "7e1f524570a36a866a08965fd91f64cdd92edc8dfe12912988366a6439bcac84"
         }
       ],
       "entry": null,
@@ -74631,7 +74686,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/home/overview.component.ts",
-          "sha256": "694731bde99c3d35dcf03b0e3a6d9fc982d9620ad137ed50a2790958c05ab930"
+          "sha256": "4e3657abb234a7638a8ff6c615c6fdda9699a53c873c6ee660db524862766100"
         }
       ],
       "entry": null,
@@ -75430,7 +75485,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/reports/report-builder.component.ts",
-          "sha256": "40904aefb65e67a22c52683499e53cc4fcff194bb019cbb21a2df59651f99962"
+          "sha256": "1ca68b8403f257b31469ab53a454c4f6386ba2217c0b4b5bf68373362e402c11"
         }
       ],
       "entry": null,
@@ -75593,7 +75648,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/reports/report-builder.component.ts",
-          "sha256": "40904aefb65e67a22c52683499e53cc4fcff194bb019cbb21a2df59651f99962"
+          "sha256": "1ca68b8403f257b31469ab53a454c4f6386ba2217c0b4b5bf68373362e402c11"
         }
       ],
       "entry": null,
@@ -75756,7 +75811,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/reports/report-builder.component.ts",
-          "sha256": "40904aefb65e67a22c52683499e53cc4fcff194bb019cbb21a2df59651f99962"
+          "sha256": "1ca68b8403f257b31469ab53a454c4f6386ba2217c0b4b5bf68373362e402c11"
         }
       ],
       "entry": null,
@@ -75919,7 +75974,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/reports/report-builder.component.ts",
-          "sha256": "40904aefb65e67a22c52683499e53cc4fcff194bb019cbb21a2df59651f99962"
+          "sha256": "1ca68b8403f257b31469ab53a454c4f6386ba2217c0b4b5bf68373362e402c11"
         }
       ],
       "entry": null,
@@ -76082,7 +76137,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/reports/report-builder.component.ts",
-          "sha256": "40904aefb65e67a22c52683499e53cc4fcff194bb019cbb21a2df59651f99962"
+          "sha256": "1ca68b8403f257b31469ab53a454c4f6386ba2217c0b4b5bf68373362e402c11"
         }
       ],
       "entry": null,
@@ -76245,7 +76300,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/reports/report-builder.component.ts",
-          "sha256": "40904aefb65e67a22c52683499e53cc4fcff194bb019cbb21a2df59651f99962"
+          "sha256": "1ca68b8403f257b31469ab53a454c4f6386ba2217c0b4b5bf68373362e402c11"
         }
       ],
       "entry": null,
@@ -76408,7 +76463,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/reports/report-builder.component.ts",
-          "sha256": "40904aefb65e67a22c52683499e53cc4fcff194bb019cbb21a2df59651f99962"
+          "sha256": "1ca68b8403f257b31469ab53a454c4f6386ba2217c0b4b5bf68373362e402c11"
         }
       ],
       "entry": null,
@@ -76571,7 +76626,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/reports/report-builder.component.ts",
-          "sha256": "40904aefb65e67a22c52683499e53cc4fcff194bb019cbb21a2df59651f99962"
+          "sha256": "1ca68b8403f257b31469ab53a454c4f6386ba2217c0b4b5bf68373362e402c11"
         }
       ],
       "entry": null,
@@ -76734,7 +76789,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/reports/report-builder.component.ts",
-          "sha256": "40904aefb65e67a22c52683499e53cc4fcff194bb019cbb21a2df59651f99962"
+          "sha256": "1ca68b8403f257b31469ab53a454c4f6386ba2217c0b4b5bf68373362e402c11"
         }
       ],
       "entry": null,
@@ -76897,7 +76952,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/reports/report-builder.component.ts",
-          "sha256": "40904aefb65e67a22c52683499e53cc4fcff194bb019cbb21a2df59651f99962"
+          "sha256": "1ca68b8403f257b31469ab53a454c4f6386ba2217c0b4b5bf68373362e402c11"
         }
       ],
       "entry": null,
@@ -77060,7 +77115,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/reports/report-builder.component.ts",
-          "sha256": "40904aefb65e67a22c52683499e53cc4fcff194bb019cbb21a2df59651f99962"
+          "sha256": "1ca68b8403f257b31469ab53a454c4f6386ba2217c0b4b5bf68373362e402c11"
         }
       ],
       "entry": null,
@@ -77915,7 +77970,7 @@
         },
         {
           "artifact": "frontend/src/app/components/transaction/transaction-raw.component.ts",
-          "sha256": "887903ee3977b70d0ccec21ebe053032f1282c00eeb4eea53662ec656d90e14f"
+          "sha256": "a011ed511389f2b98f341d8cfb43d99c0759689d116f908913194781899fac86"
         }
       ],
       "entry": null,
@@ -78097,7 +78152,7 @@
         },
         {
           "artifact": "frontend/src/app/components/transaction/transaction-raw.component.ts",
-          "sha256": "887903ee3977b70d0ccec21ebe053032f1282c00eeb4eea53662ec656d90e14f"
+          "sha256": "a011ed511389f2b98f341d8cfb43d99c0759689d116f908913194781899fac86"
         }
       ],
       "entry": null,
@@ -78279,7 +78334,7 @@
         },
         {
           "artifact": "frontend/src/app/components/transaction/transaction-raw.component.ts",
-          "sha256": "887903ee3977b70d0ccec21ebe053032f1282c00eeb4eea53662ec656d90e14f"
+          "sha256": "a011ed511389f2b98f341d8cfb43d99c0759689d116f908913194781899fac86"
         }
       ],
       "entry": null,
@@ -78461,7 +78516,7 @@
         },
         {
           "artifact": "frontend/src/app/components/transaction/transaction-raw.component.ts",
-          "sha256": "887903ee3977b70d0ccec21ebe053032f1282c00eeb4eea53662ec656d90e14f"
+          "sha256": "a011ed511389f2b98f341d8cfb43d99c0759689d116f908913194781899fac86"
         }
       ],
       "entry": null,
@@ -78643,7 +78698,7 @@
         },
         {
           "artifact": "frontend/src/app/components/transaction/transaction-raw.component.ts",
-          "sha256": "887903ee3977b70d0ccec21ebe053032f1282c00eeb4eea53662ec656d90e14f"
+          "sha256": "a011ed511389f2b98f341d8cfb43d99c0759689d116f908913194781899fac86"
         }
       ],
       "entry": null,
@@ -78825,7 +78880,7 @@
         },
         {
           "artifact": "frontend/src/app/components/transaction/transaction-raw.component.ts",
-          "sha256": "887903ee3977b70d0ccec21ebe053032f1282c00eeb4eea53662ec656d90e14f"
+          "sha256": "a011ed511389f2b98f341d8cfb43d99c0759689d116f908913194781899fac86"
         }
       ],
       "entry": null,
@@ -79007,7 +79062,7 @@
         },
         {
           "artifact": "frontend/src/app/components/transaction/transaction-raw.component.ts",
-          "sha256": "887903ee3977b70d0ccec21ebe053032f1282c00eeb4eea53662ec656d90e14f"
+          "sha256": "a011ed511389f2b98f341d8cfb43d99c0759689d116f908913194781899fac86"
         }
       ],
       "entry": null,
@@ -79189,7 +79244,7 @@
         },
         {
           "artifact": "frontend/src/app/components/transaction/transaction-raw.component.ts",
-          "sha256": "887903ee3977b70d0ccec21ebe053032f1282c00eeb4eea53662ec656d90e14f"
+          "sha256": "a011ed511389f2b98f341d8cfb43d99c0759689d116f908913194781899fac86"
         }
       ],
       "entry": null,
@@ -79371,7 +79426,7 @@
         },
         {
           "artifact": "frontend/src/app/components/transaction/transaction.component.ts",
-          "sha256": "04db138c9c9c3aeb14fbdf32bb9eea6fa01771a4033e9aa5d55cfcb100f751bf"
+          "sha256": "8e3a51cd00bd73eb2a21c60e14069f8bc17f3c997c2d15b0fabe9007d1b2da07"
         }
       ],
       "entry": null,
@@ -79909,7 +79964,7 @@
         },
         {
           "artifact": "frontend/src/app/components/transaction/transaction.component.ts",
-          "sha256": "04db138c9c9c3aeb14fbdf32bb9eea6fa01771a4033e9aa5d55cfcb100f751bf"
+          "sha256": "8e3a51cd00bd73eb2a21c60e14069f8bc17f3c997c2d15b0fabe9007d1b2da07"
         }
       ],
       "entry": null,
@@ -80447,7 +80502,7 @@
         },
         {
           "artifact": "frontend/src/app/components/transaction/transaction.component.ts",
-          "sha256": "04db138c9c9c3aeb14fbdf32bb9eea6fa01771a4033e9aa5d55cfcb100f751bf"
+          "sha256": "8e3a51cd00bd73eb2a21c60e14069f8bc17f3c997c2d15b0fabe9007d1b2da07"
         }
       ],
       "entry": null,
@@ -80985,7 +81040,7 @@
         },
         {
           "artifact": "frontend/src/app/components/transaction/transaction.component.ts",
-          "sha256": "04db138c9c9c3aeb14fbdf32bb9eea6fa01771a4033e9aa5d55cfcb100f751bf"
+          "sha256": "8e3a51cd00bd73eb2a21c60e14069f8bc17f3c997c2d15b0fabe9007d1b2da07"
         }
       ],
       "entry": null,
@@ -81523,7 +81578,7 @@
         },
         {
           "artifact": "frontend/src/app/components/transaction/transaction.component.ts",
-          "sha256": "04db138c9c9c3aeb14fbdf32bb9eea6fa01771a4033e9aa5d55cfcb100f751bf"
+          "sha256": "8e3a51cd00bd73eb2a21c60e14069f8bc17f3c997c2d15b0fabe9007d1b2da07"
         }
       ],
       "entry": null,
@@ -82061,7 +82116,7 @@
         },
         {
           "artifact": "frontend/src/app/components/block/block.component.ts",
-          "sha256": "5bb606d5fd055245770f985349b48cf3adec2dce4c21033fe218a91c754b1071"
+          "sha256": "465004be7b231ee15042869b21f84a5ca8feb28dca0095d49e76911de9b80382"
         }
       ],
       "entry": null,
@@ -82451,7 +82506,7 @@
         },
         {
           "artifact": "frontend/src/app/components/block/block.component.ts",
-          "sha256": "5bb606d5fd055245770f985349b48cf3adec2dce4c21033fe218a91c754b1071"
+          "sha256": "465004be7b231ee15042869b21f84a5ca8feb28dca0095d49e76911de9b80382"
         }
       ],
       "entry": null,
@@ -82841,7 +82896,7 @@
         },
         {
           "artifact": "frontend/src/app/components/block/block.component.ts",
-          "sha256": "5bb606d5fd055245770f985349b48cf3adec2dce4c21033fe218a91c754b1071"
+          "sha256": "465004be7b231ee15042869b21f84a5ca8feb28dca0095d49e76911de9b80382"
         }
       ],
       "entry": null,
@@ -83231,7 +83286,7 @@
         },
         {
           "artifact": "frontend/src/app/components/block/block.component.ts",
-          "sha256": "5bb606d5fd055245770f985349b48cf3adec2dce4c21033fe218a91c754b1071"
+          "sha256": "465004be7b231ee15042869b21f84a5ca8feb28dca0095d49e76911de9b80382"
         }
       ],
       "entry": null,
@@ -83621,7 +83676,7 @@
         },
         {
           "artifact": "frontend/src/app/components/block/block.component.ts",
-          "sha256": "5bb606d5fd055245770f985349b48cf3adec2dce4c21033fe218a91c754b1071"
+          "sha256": "465004be7b231ee15042869b21f84a5ca8feb28dca0095d49e76911de9b80382"
         }
       ],
       "entry": null,
@@ -84011,7 +84066,7 @@
         },
         {
           "artifact": "frontend/src/app/components/block/block.component.ts",
-          "sha256": "5bb606d5fd055245770f985349b48cf3adec2dce4c21033fe218a91c754b1071"
+          "sha256": "465004be7b231ee15042869b21f84a5ca8feb28dca0095d49e76911de9b80382"
         }
       ],
       "entry": null,
@@ -84401,7 +84456,7 @@
         },
         {
           "artifact": "frontend/src/app/components/block/block.component.ts",
-          "sha256": "5bb606d5fd055245770f985349b48cf3adec2dce4c21033fe218a91c754b1071"
+          "sha256": "465004be7b231ee15042869b21f84a5ca8feb28dca0095d49e76911de9b80382"
         }
       ],
       "entry": null,
@@ -84791,7 +84846,7 @@
         },
         {
           "artifact": "frontend/src/app/components/block/block.component.ts",
-          "sha256": "5bb606d5fd055245770f985349b48cf3adec2dce4c21033fe218a91c754b1071"
+          "sha256": "465004be7b231ee15042869b21f84a5ca8feb28dca0095d49e76911de9b80382"
         }
       ],
       "entry": null,
@@ -85181,7 +85236,7 @@
         },
         {
           "artifact": "frontend/src/app/components/block/block.component.ts",
-          "sha256": "5bb606d5fd055245770f985349b48cf3adec2dce4c21033fe218a91c754b1071"
+          "sha256": "465004be7b231ee15042869b21f84a5ca8feb28dca0095d49e76911de9b80382"
         }
       ],
       "entry": null,
@@ -85571,7 +85626,7 @@
         },
         {
           "artifact": "frontend/src/app/components/block/block.component.ts",
-          "sha256": "5bb606d5fd055245770f985349b48cf3adec2dce4c21033fe218a91c754b1071"
+          "sha256": "465004be7b231ee15042869b21f84a5ca8feb28dca0095d49e76911de9b80382"
         }
       ],
       "entry": null,
@@ -85961,7 +86016,7 @@
         },
         {
           "artifact": "frontend/src/app/lightning/node/node.component.ts",
-          "sha256": "092c711e1adc92d56295e4ba21e77e7893f6ca785c62f4414db4ec72c1b0933a"
+          "sha256": "731ae1298b2d1974a51ef779a6cb299e037c0d7a170d3287dfa91a7ade285fa5"
         }
       ],
       "entry": null,
@@ -86047,7 +86102,7 @@
         },
         {
           "artifact": "frontend/src/app/lightning/node/node.component.ts",
-          "sha256": "092c711e1adc92d56295e4ba21e77e7893f6ca785c62f4414db4ec72c1b0933a"
+          "sha256": "731ae1298b2d1974a51ef779a6cb299e037c0d7a170d3287dfa91a7ade285fa5"
         }
       ],
       "entry": null,
@@ -86133,7 +86188,7 @@
         },
         {
           "artifact": "frontend/src/app/lightning/node/node.component.ts",
-          "sha256": "092c711e1adc92d56295e4ba21e77e7893f6ca785c62f4414db4ec72c1b0933a"
+          "sha256": "731ae1298b2d1974a51ef779a6cb299e037c0d7a170d3287dfa91a7ade285fa5"
         }
       ],
       "entry": null,
@@ -86219,7 +86274,7 @@
         },
         {
           "artifact": "frontend/src/app/lightning/node/node.component.ts",
-          "sha256": "092c711e1adc92d56295e4ba21e77e7893f6ca785c62f4414db4ec72c1b0933a"
+          "sha256": "731ae1298b2d1974a51ef779a6cb299e037c0d7a170d3287dfa91a7ade285fa5"
         }
       ],
       "entry": null,
@@ -86305,7 +86360,7 @@
         },
         {
           "artifact": "frontend/src/app/lightning/node/node.component.ts",
-          "sha256": "092c711e1adc92d56295e4ba21e77e7893f6ca785c62f4414db4ec72c1b0933a"
+          "sha256": "731ae1298b2d1974a51ef779a6cb299e037c0d7a170d3287dfa91a7ade285fa5"
         }
       ],
       "entry": null,
@@ -86391,7 +86446,7 @@
         },
         {
           "artifact": "frontend/src/app/lightning/node/node.component.ts",
-          "sha256": "092c711e1adc92d56295e4ba21e77e7893f6ca785c62f4414db4ec72c1b0933a"
+          "sha256": "731ae1298b2d1974a51ef779a6cb299e037c0d7a170d3287dfa91a7ade285fa5"
         }
       ],
       "entry": null,
@@ -86477,7 +86532,7 @@
         },
         {
           "artifact": "frontend/src/app/lightning/node/node.component.ts",
-          "sha256": "092c711e1adc92d56295e4ba21e77e7893f6ca785c62f4414db4ec72c1b0933a"
+          "sha256": "731ae1298b2d1974a51ef779a6cb299e037c0d7a170d3287dfa91a7ade285fa5"
         }
       ],
       "entry": null,
@@ -86563,7 +86618,7 @@
         },
         {
           "artifact": "frontend/src/app/lightning/node/node.component.ts",
-          "sha256": "092c711e1adc92d56295e4ba21e77e7893f6ca785c62f4414db4ec72c1b0933a"
+          "sha256": "731ae1298b2d1974a51ef779a6cb299e037c0d7a170d3287dfa91a7ade285fa5"
         }
       ],
       "entry": null,
@@ -86997,7 +87052,7 @@
         },
         {
           "artifact": "frontend/src/app/lightning/justice-list/justice-list.component.ts",
-          "sha256": "9862c33ae9baad5172bfae27cbd88d7e0f6d273f723638f0b9524a9a067d76df"
+          "sha256": "705ee1a0a68be19155bd1304a21709626b6f0a659513014268bc3fa08b63fcf4"
         }
       ],
       "entry": null,
@@ -116201,7 +116256,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/swaps/swaps.routes.ts",
-          "sha256": "46ba8e32b54656862021f68429075219aeea6c884cc4bc849272881aa8ea0428"
+          "sha256": "992e9e0f33ca1d5b696e6771dce33371f64b0db5b6dc4466e349d838e876c1ba"
         }
       ],
       "entry": null,
@@ -116266,7 +116321,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/swaps/swaps.routes.ts",
-          "sha256": "46ba8e32b54656862021f68429075219aeea6c884cc4bc849272881aa8ea0428"
+          "sha256": "992e9e0f33ca1d5b696e6771dce33371f64b0db5b6dc4466e349d838e876c1ba"
         }
       ],
       "entry": null,
@@ -116331,7 +116386,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/swaps/swaps.routes.ts",
-          "sha256": "46ba8e32b54656862021f68429075219aeea6c884cc4bc849272881aa8ea0428"
+          "sha256": "992e9e0f33ca1d5b696e6771dce33371f64b0db5b6dc4466e349d838e876c1ba"
         }
       ],
       "entry": null,
@@ -116396,7 +116451,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/swaps/swaps.routes.ts",
-          "sha256": "46ba8e32b54656862021f68429075219aeea6c884cc4bc849272881aa8ea0428"
+          "sha256": "992e9e0f33ca1d5b696e6771dce33371f64b0db5b6dc4466e349d838e876c1ba"
         }
       ],
       "entry": null,
@@ -116461,7 +116516,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/swaps/swaps.routes.ts",
-          "sha256": "46ba8e32b54656862021f68429075219aeea6c884cc4bc849272881aa8ea0428"
+          "sha256": "992e9e0f33ca1d5b696e6771dce33371f64b0db5b6dc4466e349d838e876c1ba"
         }
       ],
       "entry": null,
@@ -116526,7 +116581,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/swaps/swaps.routes.ts",
-          "sha256": "46ba8e32b54656862021f68429075219aeea6c884cc4bc849272881aa8ea0428"
+          "sha256": "992e9e0f33ca1d5b696e6771dce33371f64b0db5b6dc4466e349d838e876c1ba"
         }
       ],
       "entry": null,
@@ -116599,7 +116654,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/swaps/swaps.routes.ts",
-          "sha256": "46ba8e32b54656862021f68429075219aeea6c884cc4bc849272881aa8ea0428"
+          "sha256": "992e9e0f33ca1d5b696e6771dce33371f64b0db5b6dc4466e349d838e876c1ba"
         }
       ],
       "entry": null,
@@ -116668,7 +116723,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/swaps/swaps.routes.ts",
-          "sha256": "46ba8e32b54656862021f68429075219aeea6c884cc4bc849272881aa8ea0428"
+          "sha256": "992e9e0f33ca1d5b696e6771dce33371f64b0db5b6dc4466e349d838e876c1ba"
         }
       ],
       "entry": null,
@@ -118209,16 +118264,24 @@
     {
       "id": "API-0b1262738a26",
       "kind": "api-candidate",
-      "status": "NOT TESTED",
-      "acceptanceScope": null,
+      "status": "BLOCKED",
+      "acceptanceScope": "GET /api/v1/intelligence/submission/overview is offered and reachable. It reports the integration it is waiting on as a 503 naming the stage, and no longer answers with an invented result. The operation itself does not complete.",
       "role": "unresolved",
       "network": "unverified",
       "requiredServices": [],
       "fixtureIdentity": null,
       "assertions": [],
-      "actual": null,
-      "evidence": [],
-      "blockers": [],
+      "actual": "HTTP 503 with a stage of unavailable-relay, unavailable-registry or unavailable-source, and the message naming the missing integration.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
+          "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
+          "sha256": "ca8c21588d57600a3b454a890312eb47eecd1c5dbd5ac5479768023ca4516115"
+        }
+      ],
+      "blockers": [
+        "PRE-01: the owned Tor and I2P private submission relay is not configured on this deployment, so a submission cannot be queued, relayed or aborted."
+      ],
       "links": [],
       "sources": [
         {
@@ -118228,7 +118291,12 @@
         },
         {
           "artifact": "backend/src/api/intelligence/private-submission/private-submission.routes.ts",
-          "sha256": "6804308adf36fe19ba1c3e5cb9637f6be1e5bf990706384cafdcbaed7574e124"
+          "sha256": "7b1f3f3854d6eaae1b44b883a3265dad832b017c39c9eaa96c0da1177aa11e9c"
+        },
+        {
+          "artifact": "docs/acceptance/current-execution-evidence.json",
+          "sha256": "e7015319ac7fb8e83de0e034abe97bb757b5c9cc0061c8d8c8f2da66f6330084",
+          "rowId": "API-0b1262738a26"
         }
       ],
       "entry": null,
@@ -118264,21 +118332,30 @@
       "routeConditions": [],
       "registrationConditions": [],
       "route": "/api/v1/intelligence/submission/overview",
-      "routeResolution": "source literal/default expression; runtime mounting/configuration unverified"
+      "routeResolution": "source literal/default expression; runtime mounting/configuration unverified",
+      "journeyId": null
     },
     {
       "id": "API-21b73dc215f0",
       "kind": "api-candidate",
-      "status": "NOT TESTED",
-      "acceptanceScope": null,
+      "status": "BLOCKED",
+      "acceptanceScope": "GET /api/v1/intelligence/submission/capabilities is offered and reachable. It reports the integration it is waiting on as a 503 naming the stage, and no longer answers with an invented result. The operation itself does not complete.",
       "role": "unresolved",
       "network": "unverified",
       "requiredServices": [],
       "fixtureIdentity": null,
       "assertions": [],
-      "actual": null,
-      "evidence": [],
-      "blockers": [],
+      "actual": "HTTP 503 with a stage of unavailable-relay, unavailable-registry or unavailable-source, and the message naming the missing integration.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
+          "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
+          "sha256": "ca8c21588d57600a3b454a890312eb47eecd1c5dbd5ac5479768023ca4516115"
+        }
+      ],
+      "blockers": [
+        "PRE-01: the owned Tor and I2P private submission relay is not configured on this deployment, so a submission cannot be queued, relayed or aborted."
+      ],
       "links": [],
       "sources": [
         {
@@ -118288,7 +118365,12 @@
         },
         {
           "artifact": "backend/src/api/intelligence/private-submission/private-submission.routes.ts",
-          "sha256": "6804308adf36fe19ba1c3e5cb9637f6be1e5bf990706384cafdcbaed7574e124"
+          "sha256": "7b1f3f3854d6eaae1b44b883a3265dad832b017c39c9eaa96c0da1177aa11e9c"
+        },
+        {
+          "artifact": "docs/acceptance/current-execution-evidence.json",
+          "sha256": "e7015319ac7fb8e83de0e034abe97bb757b5c9cc0061c8d8c8f2da66f6330084",
+          "rowId": "API-21b73dc215f0"
         }
       ],
       "entry": null,
@@ -118324,21 +118406,30 @@
       "routeConditions": [],
       "registrationConditions": [],
       "route": "/api/v1/intelligence/submission/capabilities",
-      "routeResolution": "source literal/default expression; runtime mounting/configuration unverified"
+      "routeResolution": "source literal/default expression; runtime mounting/configuration unverified",
+      "journeyId": null
     },
     {
       "id": "API-b890c5b18aa9",
       "kind": "api-candidate",
-      "status": "NOT TESTED",
-      "acceptanceScope": null,
+      "status": "BLOCKED",
+      "acceptanceScope": "POST /api/v1/intelligence/submission/diagnose is offered and reachable. It reports the integration it is waiting on as a 503 naming the stage, and no longer answers with an invented result. The operation itself does not complete.",
       "role": "unresolved",
       "network": "unverified",
       "requiredServices": [],
       "fixtureIdentity": null,
       "assertions": [],
-      "actual": null,
-      "evidence": [],
-      "blockers": [],
+      "actual": "HTTP 503 with a stage of unavailable-relay, unavailable-registry or unavailable-source, and the message naming the missing integration.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
+          "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
+          "sha256": "ca8c21588d57600a3b454a890312eb47eecd1c5dbd5ac5479768023ca4516115"
+        }
+      ],
+      "blockers": [
+        "PRE-01: the owned mempool and policy source for a specific transaction is not wired to this route, so feerate, policy, RBF and CPFP findings cannot be derived."
+      ],
       "links": [],
       "sources": [
         {
@@ -118348,7 +118439,12 @@
         },
         {
           "artifact": "backend/src/api/intelligence/private-submission/private-submission.routes.ts",
-          "sha256": "6804308adf36fe19ba1c3e5cb9637f6be1e5bf990706384cafdcbaed7574e124"
+          "sha256": "7b1f3f3854d6eaae1b44b883a3265dad832b017c39c9eaa96c0da1177aa11e9c"
+        },
+        {
+          "artifact": "docs/acceptance/current-execution-evidence.json",
+          "sha256": "e7015319ac7fb8e83de0e034abe97bb757b5c9cc0061c8d8c8f2da66f6330084",
+          "rowId": "API-b890c5b18aa9"
         }
       ],
       "entry": null,
@@ -118384,21 +118480,30 @@
       "routeConditions": [],
       "registrationConditions": [],
       "route": "/api/v1/intelligence/submission/diagnose",
-      "routeResolution": "source literal/default expression; runtime mounting/configuration unverified"
+      "routeResolution": "source literal/default expression; runtime mounting/configuration unverified",
+      "journeyId": null
     },
     {
       "id": "API-501ebd9a571e",
       "kind": "api-candidate",
-      "status": "NOT TESTED",
-      "acceptanceScope": null,
+      "status": "BLOCKED",
+      "acceptanceScope": "POST /api/v1/intelligence/submission/private is offered and reachable. It reports the integration it is waiting on as a 503 naming the stage, and no longer answers with an invented result. The operation itself does not complete.",
       "role": "unresolved",
       "network": "unverified",
       "requiredServices": [],
       "fixtureIdentity": null,
       "assertions": [],
-      "actual": null,
-      "evidence": [],
-      "blockers": [],
+      "actual": "HTTP 503 with a stage of unavailable-relay, unavailable-registry or unavailable-source, and the message naming the missing integration.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
+          "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
+          "sha256": "ca8c21588d57600a3b454a890312eb47eecd1c5dbd5ac5479768023ca4516115"
+        }
+      ],
+      "blockers": [
+        "PRE-01: the owned Tor and I2P private submission relay is not configured on this deployment, so a submission cannot be queued, relayed or aborted."
+      ],
       "links": [],
       "sources": [
         {
@@ -118408,7 +118513,12 @@
         },
         {
           "artifact": "backend/src/api/intelligence/private-submission/private-submission.routes.ts",
-          "sha256": "6804308adf36fe19ba1c3e5cb9637f6be1e5bf990706384cafdcbaed7574e124"
+          "sha256": "7b1f3f3854d6eaae1b44b883a3265dad832b017c39c9eaa96c0da1177aa11e9c"
+        },
+        {
+          "artifact": "docs/acceptance/current-execution-evidence.json",
+          "sha256": "e7015319ac7fb8e83de0e034abe97bb757b5c9cc0061c8d8c8f2da66f6330084",
+          "rowId": "API-501ebd9a571e"
         }
       ],
       "entry": null,
@@ -118444,21 +118554,30 @@
       "routeConditions": [],
       "registrationConditions": [],
       "route": "/api/v1/intelligence/submission/private",
-      "routeResolution": "source literal/default expression; runtime mounting/configuration unverified"
+      "routeResolution": "source literal/default expression; runtime mounting/configuration unverified",
+      "journeyId": null
     },
     {
       "id": "API-fc5873a9e610",
       "kind": "api-candidate",
-      "status": "NOT TESTED",
-      "acceptanceScope": null,
+      "status": "BLOCKED",
+      "acceptanceScope": "GET /api/v1/intelligence/submission/private/:submissionToken is offered and reachable. It reports the integration it is waiting on as a 503 naming the stage, and no longer answers with an invented result. The operation itself does not complete.",
       "role": "unresolved",
       "network": "unverified",
       "requiredServices": [],
       "fixtureIdentity": null,
       "assertions": [],
-      "actual": null,
-      "evidence": [],
-      "blockers": [],
+      "actual": "HTTP 503 with a stage of unavailable-relay, unavailable-registry or unavailable-source, and the message naming the missing integration.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
+          "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
+          "sha256": "ca8c21588d57600a3b454a890312eb47eecd1c5dbd5ac5479768023ca4516115"
+        }
+      ],
+      "blockers": [
+        "PRE-01: the owned Tor and I2P private submission relay is not configured on this deployment, so a submission cannot be queued, relayed or aborted."
+      ],
       "links": [],
       "sources": [
         {
@@ -118468,7 +118587,12 @@
         },
         {
           "artifact": "backend/src/api/intelligence/private-submission/private-submission.routes.ts",
-          "sha256": "6804308adf36fe19ba1c3e5cb9637f6be1e5bf990706384cafdcbaed7574e124"
+          "sha256": "7b1f3f3854d6eaae1b44b883a3265dad832b017c39c9eaa96c0da1177aa11e9c"
+        },
+        {
+          "artifact": "docs/acceptance/current-execution-evidence.json",
+          "sha256": "e7015319ac7fb8e83de0e034abe97bb757b5c9cc0061c8d8c8f2da66f6330084",
+          "rowId": "API-fc5873a9e610"
         }
       ],
       "entry": null,
@@ -118504,21 +118628,30 @@
       "routeConditions": [],
       "registrationConditions": [],
       "route": "/api/v1/intelligence/submission/private/:submissionToken",
-      "routeResolution": "source literal/default expression; runtime mounting/configuration unverified"
+      "routeResolution": "source literal/default expression; runtime mounting/configuration unverified",
+      "journeyId": null
     },
     {
       "id": "API-55036967e3c6",
       "kind": "api-candidate",
-      "status": "NOT TESTED",
-      "acceptanceScope": null,
+      "status": "BLOCKED",
+      "acceptanceScope": "POST /api/v1/intelligence/submission/private/:submissionToken/abort is offered and reachable. It reports the integration it is waiting on as a 503 naming the stage, and no longer answers with an invented result. The operation itself does not complete.",
       "role": "unresolved",
       "network": "unverified",
       "requiredServices": [],
       "fixtureIdentity": null,
       "assertions": [],
-      "actual": null,
-      "evidence": [],
-      "blockers": [],
+      "actual": "HTTP 503 with a stage of unavailable-relay, unavailable-registry or unavailable-source, and the message naming the missing integration.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
+          "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
+          "sha256": "ca8c21588d57600a3b454a890312eb47eecd1c5dbd5ac5479768023ca4516115"
+        }
+      ],
+      "blockers": [
+        "PRE-01: the owned Tor and I2P private submission relay is not configured on this deployment, so a submission cannot be queued, relayed or aborted."
+      ],
       "links": [],
       "sources": [
         {
@@ -118528,7 +118661,12 @@
         },
         {
           "artifact": "backend/src/api/intelligence/private-submission/private-submission.routes.ts",
-          "sha256": "6804308adf36fe19ba1c3e5cb9637f6be1e5bf990706384cafdcbaed7574e124"
+          "sha256": "7b1f3f3854d6eaae1b44b883a3265dad832b017c39c9eaa96c0da1177aa11e9c"
+        },
+        {
+          "artifact": "docs/acceptance/current-execution-evidence.json",
+          "sha256": "e7015319ac7fb8e83de0e034abe97bb757b5c9cc0061c8d8c8f2da66f6330084",
+          "rowId": "API-55036967e3c6"
         }
       ],
       "entry": null,
@@ -118564,21 +118702,30 @@
       "routeConditions": [],
       "registrationConditions": [],
       "route": "/api/v1/intelligence/submission/private/:submissionToken/abort",
-      "routeResolution": "source literal/default expression; runtime mounting/configuration unverified"
+      "routeResolution": "source literal/default expression; runtime mounting/configuration unverified",
+      "journeyId": null
     },
     {
       "id": "API-e0f0abac5d30",
       "kind": "api-candidate",
-      "status": "NOT TESTED",
-      "acceptanceScope": null,
+      "status": "BLOCKED",
+      "acceptanceScope": "GET /api/v1/intelligence/accelerators/providers is offered and reachable. It reports the integration it is waiting on as a 503 naming the stage, and no longer answers with an invented result. The operation itself does not complete.",
       "role": "unresolved",
       "network": "unverified",
       "requiredServices": [],
       "fixtureIdentity": null,
       "assertions": [],
-      "actual": null,
-      "evidence": [],
-      "blockers": [],
+      "actual": "HTTP 503 with a stage of unavailable-relay, unavailable-registry or unavailable-source, and the message naming the missing integration.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
+          "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
+          "sha256": "ca8c21588d57600a3b454a890312eb47eecd1c5dbd5ac5479768023ca4516115"
+        }
+      ],
+      "blockers": [
+        "PRE-04: there is no owned signed accelerator provider directory, so provider identity, health and receipt trust cannot be established."
+      ],
       "links": [],
       "sources": [
         {
@@ -118588,7 +118735,12 @@
         },
         {
           "artifact": "backend/src/api/intelligence/private-submission/private-submission.routes.ts",
-          "sha256": "6804308adf36fe19ba1c3e5cb9637f6be1e5bf990706384cafdcbaed7574e124"
+          "sha256": "7b1f3f3854d6eaae1b44b883a3265dad832b017c39c9eaa96c0da1177aa11e9c"
+        },
+        {
+          "artifact": "docs/acceptance/current-execution-evidence.json",
+          "sha256": "e7015319ac7fb8e83de0e034abe97bb757b5c9cc0061c8d8c8f2da66f6330084",
+          "rowId": "API-e0f0abac5d30"
         }
       ],
       "entry": null,
@@ -118624,21 +118776,30 @@
       "routeConditions": [],
       "registrationConditions": [],
       "route": "/api/v1/intelligence/accelerators/providers",
-      "routeResolution": "source literal/default expression; runtime mounting/configuration unverified"
+      "routeResolution": "source literal/default expression; runtime mounting/configuration unverified",
+      "journeyId": null
     },
     {
       "id": "API-701fd1e7a970",
       "kind": "api-candidate",
-      "status": "NOT TESTED",
-      "acceptanceScope": null,
+      "status": "BLOCKED",
+      "acceptanceScope": "GET /api/v1/intelligence/accelerators/providers/:providerId is offered and reachable. It reports the integration it is waiting on as a 503 naming the stage, and no longer answers with an invented result. The operation itself does not complete.",
       "role": "unresolved",
       "network": "unverified",
       "requiredServices": [],
       "fixtureIdentity": null,
       "assertions": [],
-      "actual": null,
-      "evidence": [],
-      "blockers": [],
+      "actual": "HTTP 503 with a stage of unavailable-relay, unavailable-registry or unavailable-source, and the message naming the missing integration.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
+          "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
+          "sha256": "ca8c21588d57600a3b454a890312eb47eecd1c5dbd5ac5479768023ca4516115"
+        }
+      ],
+      "blockers": [
+        "PRE-04: there is no owned signed accelerator provider directory, so provider identity, health and receipt trust cannot be established."
+      ],
       "links": [],
       "sources": [
         {
@@ -118648,7 +118809,12 @@
         },
         {
           "artifact": "backend/src/api/intelligence/private-submission/private-submission.routes.ts",
-          "sha256": "6804308adf36fe19ba1c3e5cb9637f6be1e5bf990706384cafdcbaed7574e124"
+          "sha256": "7b1f3f3854d6eaae1b44b883a3265dad832b017c39c9eaa96c0da1177aa11e9c"
+        },
+        {
+          "artifact": "docs/acceptance/current-execution-evidence.json",
+          "sha256": "e7015319ac7fb8e83de0e034abe97bb757b5c9cc0061c8d8c8f2da66f6330084",
+          "rowId": "API-701fd1e7a970"
         }
       ],
       "entry": null,
@@ -118684,21 +118850,30 @@
       "routeConditions": [],
       "registrationConditions": [],
       "route": "/api/v1/intelligence/accelerators/providers/:providerId",
-      "routeResolution": "source literal/default expression; runtime mounting/configuration unverified"
+      "routeResolution": "source literal/default expression; runtime mounting/configuration unverified",
+      "journeyId": null
     },
     {
       "id": "API-ce2c51a268a0",
       "kind": "api-candidate",
-      "status": "NOT TESTED",
-      "acceptanceScope": null,
+      "status": "BLOCKED",
+      "acceptanceScope": "POST /api/v1/intelligence/accelerators/receipts/verify is offered and reachable. It reports the integration it is waiting on as a 503 naming the stage, and no longer answers with an invented result. The operation itself does not complete. Its structural validation stage does complete: a malformed receipt is rejected with 400 and its faults named. Verification itself needs a provider key this deployment does not have, so a structurally complete receipt is reported as unverified rather than as verified.",
       "role": "unresolved",
       "network": "unverified",
       "requiredServices": [],
       "fixtureIdentity": null,
       "assertions": [],
-      "actual": null,
-      "evidence": [],
-      "blockers": [],
+      "actual": "HTTP 503 with a stage of unavailable-relay, unavailable-registry or unavailable-source, and the message naming the missing integration.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
+          "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
+          "sha256": "ca8c21588d57600a3b454a890312eb47eecd1c5dbd5ac5479768023ca4516115"
+        }
+      ],
+      "blockers": [
+        "PRE-04: there is no owned signed accelerator provider directory, so provider identity, health and receipt trust cannot be established."
+      ],
       "links": [],
       "sources": [
         {
@@ -118708,7 +118883,12 @@
         },
         {
           "artifact": "backend/src/api/intelligence/private-submission/private-submission.routes.ts",
-          "sha256": "6804308adf36fe19ba1c3e5cb9637f6be1e5bf990706384cafdcbaed7574e124"
+          "sha256": "7b1f3f3854d6eaae1b44b883a3265dad832b017c39c9eaa96c0da1177aa11e9c"
+        },
+        {
+          "artifact": "docs/acceptance/current-execution-evidence.json",
+          "sha256": "e7015319ac7fb8e83de0e034abe97bb757b5c9cc0061c8d8c8f2da66f6330084",
+          "rowId": "API-ce2c51a268a0"
         }
       ],
       "entry": null,
@@ -118744,21 +118924,30 @@
       "routeConditions": [],
       "registrationConditions": [],
       "route": "/api/v1/intelligence/accelerators/receipts/verify",
-      "routeResolution": "source literal/default expression; runtime mounting/configuration unverified"
+      "routeResolution": "source literal/default expression; runtime mounting/configuration unverified",
+      "journeyId": null
     },
     {
       "id": "API-fdb340196a39",
       "kind": "api-candidate",
-      "status": "NOT TESTED",
-      "acceptanceScope": null,
+      "status": "BLOCKED",
+      "acceptanceScope": "GET /api/v1/intelligence/ordering/transactions/:txid is offered and reachable. It reports the integration it is waiting on as a 503 naming the stage, and no longer answers with an invented result. The operation itself does not complete.",
       "role": "unresolved",
       "network": "unverified",
       "requiredServices": [],
       "fixtureIdentity": null,
       "assertions": [],
-      "actual": null,
-      "evidence": [],
-      "blockers": [],
+      "actual": "HTTP 503 with a stage of unavailable-relay, unavailable-registry or unavailable-source, and the message naming the missing integration.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
+          "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
+          "sha256": "ca8c21588d57600a3b454a890312eb47eecd1c5dbd5ac5479768023ca4516115"
+        }
+      ],
+      "blockers": [
+        "PRE-01: the owned relay sensor and template recorder are not configured, so first-seen and template observation cannot be derived."
+      ],
       "links": [],
       "sources": [
         {
@@ -118768,7 +118957,12 @@
         },
         {
           "artifact": "backend/src/api/intelligence/private-submission/private-submission.routes.ts",
-          "sha256": "6804308adf36fe19ba1c3e5cb9637f6be1e5bf990706384cafdcbaed7574e124"
+          "sha256": "7b1f3f3854d6eaae1b44b883a3265dad832b017c39c9eaa96c0da1177aa11e9c"
+        },
+        {
+          "artifact": "docs/acceptance/current-execution-evidence.json",
+          "sha256": "e7015319ac7fb8e83de0e034abe97bb757b5c9cc0061c8d8c8f2da66f6330084",
+          "rowId": "API-fdb340196a39"
         }
       ],
       "entry": null,
@@ -118804,21 +118998,30 @@
       "routeConditions": [],
       "registrationConditions": [],
       "route": "/api/v1/intelligence/ordering/transactions/:txid",
-      "routeResolution": "source literal/default expression; runtime mounting/configuration unverified"
+      "routeResolution": "source literal/default expression; runtime mounting/configuration unverified",
+      "journeyId": null
     },
     {
       "id": "API-f2fe08ad257d",
       "kind": "api-candidate",
-      "status": "NOT TESTED",
-      "acceptanceScope": null,
+      "status": "BLOCKED",
+      "acceptanceScope": "GET /api/v1/intelligence/ordering/blocks/:blockHash is offered and reachable. It reports the integration it is waiting on as a 503 naming the stage, and no longer answers with an invented result. The operation itself does not complete.",
       "role": "unresolved",
       "network": "unverified",
       "requiredServices": [],
       "fixtureIdentity": null,
       "assertions": [],
-      "actual": null,
-      "evidence": [],
-      "blockers": [],
+      "actual": "HTTP 503 with a stage of unavailable-relay, unavailable-registry or unavailable-source, and the message naming the missing integration.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
+          "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
+          "sha256": "ca8c21588d57600a3b454a890312eb47eecd1c5dbd5ac5479768023ca4516115"
+        }
+      ],
+      "blockers": [
+        "PRE-01: the owned relay sensor and template recorder are not configured, so first-seen and template observation cannot be derived."
+      ],
       "links": [],
       "sources": [
         {
@@ -118828,7 +119031,12 @@
         },
         {
           "artifact": "backend/src/api/intelligence/private-submission/private-submission.routes.ts",
-          "sha256": "6804308adf36fe19ba1c3e5cb9637f6be1e5bf990706384cafdcbaed7574e124"
+          "sha256": "7b1f3f3854d6eaae1b44b883a3265dad832b017c39c9eaa96c0da1177aa11e9c"
+        },
+        {
+          "artifact": "docs/acceptance/current-execution-evidence.json",
+          "sha256": "e7015319ac7fb8e83de0e034abe97bb757b5c9cc0061c8d8c8f2da66f6330084",
+          "rowId": "API-f2fe08ad257d"
         }
       ],
       "entry": null,
@@ -118864,21 +119072,30 @@
       "routeConditions": [],
       "registrationConditions": [],
       "route": "/api/v1/intelligence/ordering/blocks/:blockHash",
-      "routeResolution": "source literal/default expression; runtime mounting/configuration unverified"
+      "routeResolution": "source literal/default expression; runtime mounting/configuration unverified",
+      "journeyId": null
     },
     {
       "id": "API-9de0ce16ccad",
       "kind": "api-candidate",
-      "status": "NOT TESTED",
-      "acceptanceScope": null,
+      "status": "BLOCKED",
+      "acceptanceScope": "GET /api/v1/intelligence/ordering/findings is offered and reachable. It reports the integration it is waiting on as a 503 naming the stage, and no longer answers with an invented result. The operation itself does not complete.",
       "role": "unresolved",
       "network": "unverified",
       "requiredServices": [],
       "fixtureIdentity": null,
       "assertions": [],
-      "actual": null,
-      "evidence": [],
-      "blockers": [],
+      "actual": "HTTP 503 with a stage of unavailable-relay, unavailable-registry or unavailable-source, and the message naming the missing integration.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
+          "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
+          "sha256": "ca8c21588d57600a3b454a890312eb47eecd1c5dbd5ac5479768023ca4516115"
+        }
+      ],
+      "blockers": [
+        "PRE-01: the owned relay sensor and template recorder are not configured, so first-seen and template observation cannot be derived."
+      ],
       "links": [],
       "sources": [
         {
@@ -118888,7 +119105,12 @@
         },
         {
           "artifact": "backend/src/api/intelligence/private-submission/private-submission.routes.ts",
-          "sha256": "6804308adf36fe19ba1c3e5cb9637f6be1e5bf990706384cafdcbaed7574e124"
+          "sha256": "7b1f3f3854d6eaae1b44b883a3265dad832b017c39c9eaa96c0da1177aa11e9c"
+        },
+        {
+          "artifact": "docs/acceptance/current-execution-evidence.json",
+          "sha256": "e7015319ac7fb8e83de0e034abe97bb757b5c9cc0061c8d8c8f2da66f6330084",
+          "rowId": "API-9de0ce16ccad"
         }
       ],
       "entry": null,
@@ -118924,7 +119146,8 @@
       "routeConditions": [],
       "registrationConditions": [],
       "route": "/api/v1/intelligence/ordering/findings",
-      "routeResolution": "source literal/default expression; runtime mounting/configuration unverified"
+      "routeResolution": "source literal/default expression; runtime mounting/configuration unverified",
+      "journeyId": null
     },
     {
       "id": "API-5b1b5761c70c",
@@ -123782,7 +124005,7 @@
         },
         {
           "artifact": "docs/acceptance/swaps-2026-09-06.md",
-          "sha256": "37fd5f610c21d30cead18911b6dd5cac20b27a9fb6d103eba1eedca270b87954",
+          "sha256": "3a8024a67153f8f82b3ed742bb544d2b43f8e422fdf132f3b80e1e6ac19ed9ac",
           "line": 43,
           "originalIdCell": "SW-UI-INSPECT",
           "originalTableRow": "| SW-UI-INSPECT | PASS, LOCAL HANDLER for public JSON validation; chain action BLOCKED | SWR-011 proves local operation, private-field rejection and request cancellation. Actual chain action needs SW-07. Browser evidence remains separate. |"
@@ -123814,7 +124037,7 @@
         },
         {
           "artifact": "docs/acceptance/swaps-2026-09-06.md",
-          "sha256": "37fd5f610c21d30cead18911b6dd5cac20b27a9fb6d103eba1eedca270b87954",
+          "sha256": "3a8024a67153f8f82b3ed742bb544d2b43f8e422fdf132f3b80e1e6ac19ed9ac",
           "line": 44,
           "originalIdCell": "SW-UI-SIM",
           "originalTableRow": "| SW-UI-SIM | PASS, LOCAL LOGIC/HANDLER | SWR-011. No actual reorg, eviction or recovery is inferred. |"
@@ -123839,7 +124062,7 @@
       "sources": [
         {
           "artifact": "docs/acceptance/swaps-2026-09-06.md",
-          "sha256": "37fd5f610c21d30cead18911b6dd5cac20b27a9fb6d103eba1eedca270b87954",
+          "sha256": "3a8024a67153f8f82b3ed742bb544d2b43f8e422fdf132f3b80e1e6ac19ed9ac",
           "line": 26,
           "originalIdCell": "SWR-010",
           "originalTableRow": "| SWR-010 | Backend `node node_modules/jest/bin/jest.js src/api/intelligence/swaps/swaps.test.ts --runInBand --coverage=false` | 48 passed. Existing two-leaf lockup/spend/recovery/signing tests plus 503 registry, reserved 404, malformed manifest and self-declared-key regressions. |"
@@ -123864,7 +124087,7 @@
       "sources": [
         {
           "artifact": "docs/acceptance/swaps-2026-09-06.md",
-          "sha256": "37fd5f610c21d30cead18911b6dd5cac20b27a9fb6d103eba1eedca270b87954",
+          "sha256": "3a8024a67153f8f82b3ed742bb544d2b43f8e422fdf132f3b80e1e6ac19ed9ac",
           "line": 27,
           "originalIdCell": "SWR-011",
           "originalTableRow": "| SWR-011 | Frontend `node node_modules/vitest/vitest.mjs run src/app/universe/swaps/swaps-package.spec.ts src/app/universe/swaps/swaps-simulation.spec.ts` | 36 passed. Independent artifact decode, real inspector/recovery/provider handlers, route/network cancellation and error recovery, and local simulation. Shared visual dependencies are isolated for handler tests; this is not browser evidence. |"
@@ -123889,7 +124112,7 @@
       "sources": [
         {
           "artifact": "docs/acceptance/swaps-2026-09-06.md",
-          "sha256": "37fd5f610c21d30cead18911b6dd5cac20b27a9fb6d103eba1eedca270b87954",
+          "sha256": "3a8024a67153f8f82b3ed742bb544d2b43f8e422fdf132f3b80e1e6ac19ed9ac",
           "line": 28,
           "originalIdCell": "SWR-012",
           "originalTableRow": "| SWR-012 | Backend `node node_modules/typescript/bin/tsc -p tsconfig.build.json --noEmit`; frontend `node node_modules/typescript/bin/tsc -p tsconfig.app.json --noEmit` | Both passed. |"
@@ -123914,7 +124137,7 @@
       "sources": [
         {
           "artifact": "docs/acceptance/swaps-2026-09-06.md",
-          "sha256": "37fd5f610c21d30cead18911b6dd5cac20b27a9fb6d103eba1eedca270b87954",
+          "sha256": "3a8024a67153f8f82b3ed742bb544d2b43f8e422fdf132f3b80e1e6ac19ed9ac",
           "line": 29,
           "originalIdCell": "SWR-013",
           "originalTableRow": "| SWR-013 | Backend `node node_modules/eslint/bin/eslint.js src/api/intelligence/swaps --ext .ts --quiet`; scoped `git diff --check` | Both passed. |"
