@@ -1,0 +1,122 @@
+{
+  "passed": true,
+  "recordedAt": "2026-09-06T12:48:40.575Z",
+  "repo": "D:\\universe\\mempool\\.tmp\\explorer-health-cc524f6d97b5",
+  "node": "v24.19.0",
+  "commit": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+  "gatewaySha256": "05ba5039cc6bdafc518c27aba4e92c590f7886cbf37eb1602235e32848dd2670",
+  "trust": "NODE_EXTRA_CA_CERTS only in spawned gateway children; verification enabled; no certificate store changes",
+  "listenerAddress": "127.0.0.1",
+  "ephemeralPorts": [
+    55887,
+    55890,
+    55919,
+    55945
+  ],
+  "checks": [
+    {
+      "transport": "HTTPS and WSS upstream",
+      "control": "same valid certificate without scoped CA trust",
+      "httpStatus": 502,
+      "websocketRejected": true
+    },
+    {
+      "transport": "HTTPS upstream",
+      "path": "/api/v1/backend-info?probe=one%20two",
+      "host": "127.0.0.1:55887",
+      "method": "GET",
+      "body": "",
+      "tls": "TLSv1.3",
+      "sni": null
+    },
+    {
+      "transport": "HTTPS upstream",
+      "path": "/api/v1/universe/status?probe=overlay",
+      "host": "127.0.0.1:55887",
+      "method": "GET",
+      "body": "",
+      "tls": "TLSv1.3",
+      "sni": null
+    },
+    {
+      "transport": "HTTPS upstream",
+      "path": "/api/v1/test-body",
+      "host": "127.0.0.1:55887",
+      "method": "POST",
+      "body": "{\"test\":\"body preserved\"}",
+      "tls": "TLSv1.3",
+      "sni": null
+    },
+    {
+      "transport": "WSS upstream",
+      "path": "/api/v1/ws?probe=backend",
+      "host": "127.0.0.1:55887",
+      "tls": "TLSv1.3",
+      "sni": null,
+      "textEcho": true,
+      "binaryEcho": true,
+      "pingPong": true,
+      "closeHandshake": true
+    },
+    {
+      "transport": "WSS upstream",
+      "path": "/api/v1/universe/ws?probe=overlay",
+      "host": "127.0.0.1:55887",
+      "tls": "TLSv1.3",
+      "sni": null,
+      "textEcho": true,
+      "binaryEcho": true,
+      "pingPong": true,
+      "closeHandshake": true
+    },
+    {
+      "transport": "HTTPS upstream",
+      "path": "/api/v1/backend-info?probe=one%20two",
+      "host": "localhost:55887",
+      "method": "GET",
+      "body": "",
+      "tls": "TLSv1.3",
+      "sni": "localhost"
+    },
+    {
+      "transport": "HTTPS upstream",
+      "path": "/api/v1/universe/status?probe=overlay",
+      "host": "localhost:55887",
+      "method": "GET",
+      "body": "",
+      "tls": "TLSv1.3",
+      "sni": "localhost"
+    },
+    {
+      "transport": "HTTPS upstream",
+      "path": "/api/v1/test-body",
+      "host": "localhost:55887",
+      "method": "POST",
+      "body": "{\"test\":\"body preserved\"}",
+      "tls": "TLSv1.3",
+      "sni": "localhost"
+    },
+    {
+      "transport": "WSS upstream",
+      "path": "/api/v1/ws?probe=backend",
+      "host": "localhost:55887",
+      "tls": "TLSv1.3",
+      "sni": "localhost",
+      "textEcho": true,
+      "binaryEcho": true,
+      "pingPong": true,
+      "closeHandshake": true
+    },
+    {
+      "transport": "WSS upstream",
+      "path": "/api/v1/universe/ws?probe=overlay",
+      "host": "localhost:55887",
+      "tls": "TLSv1.3",
+      "sni": "localhost",
+      "textEcho": true,
+      "binaryEcho": true,
+      "pingPong": true,
+      "closeHandshake": true
+    }
+  ]
+}

@@ -1,0 +1,1428 @@
+{
+  "schemaVersion": "universe-operation-evidence-v1",
+  "recordedAt": "2026-09-06T12:55:51.141Z",
+  "scope": "Mergeable current WP07 blocked outcomes. Preserve all unmentioned historical and current ledger IDs; rows do not claim full operation acceptance.",
+  "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+  "rows": [
+    {
+      "id": "NAV-154",
+      "status": "BLOCKED",
+      "scope": "/tools/multiparty/musig2/session/:sessionId: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "BIP327 aggregation/nonce/partial-signature/tweak engine; durable session authority; trusted product/vendor-key directory, signed payload contract and actual version-specific conformance results. A final BIP340 primitive is insufficient."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": []
+    },
+    {
+      "id": "UI-77ac99d0042d",
+      "status": "BLOCKED",
+      "scope": "validate(): inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "RGB source inspection only; no RGB engine or new validation pass."
+        }
+      ],
+      "blockers": [
+        "Compatible RGB validation engine and owned Bitcoin commitment/seal-state authority; actual consignment validation has no connected implementation."
+      ],
+      "actual": "Current RGB validate handler reports unavailable and does not invoke a validation engine.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "previous unavailable behavior inspected; engine remains missing",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": []
+    },
+    {
+      "id": "UI-323b21db2184",
+      "status": "BLOCKED",
+      "scope": "verifyChecksum(): inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "Measured owned-node/chainstate readers; trusted signed snapshot catalogue, producer keys, actual bytes and pinned Core commitments; durable verification/job stores and private authorized executor. Public operator handlers must receive authorization before any executor is connected."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": []
+    },
+    {
+      "id": "UI-df848a3a472c",
+      "status": "BLOCKED",
+      "scope": "calculatePlan(): inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "Measured owned-node/chainstate readers; trusted signed snapshot catalogue, producer keys, actual bytes and pinned Core commitments; durable verification/job stores and private authorized executor. Public operator handlers must receive authorization before any executor is connected."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": []
+    },
+    {
+      "id": "UI-a270e89bb4c9",
+      "status": "BLOCKED",
+      "scope": "verifySession(): inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "BIP327 aggregation/nonce/partial-signature/tweak engine; durable session authority; trusted product/vendor-key directory, signed payload contract and actual version-specific conformance results. A final BIP340 primitive is insufficient."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": []
+    },
+    {
+      "id": "UI-9a0754e1c394",
+      "status": "BLOCKED",
+      "scope": "verifyReceipt(): inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "Owned Tor/I2P relay client, durable queue/cancel worker, owned policy/mempool/ordering sensors, and trusted accelerator provider keys with exact signed encoding and signature algorithm."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": []
+    },
+    {
+      "id": "UI-e8fb8228430e",
+      "status": "BLOCKED",
+      "scope": "stamp(): inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "Owned calendar client/directory and actual stamp/upgrade responses, .ots operation/attestation engine and owned Bitcoin header reader."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": []
+    },
+    {
+      "id": "UI-1afe77615c32",
+      "status": "BLOCKED",
+      "scope": "verifyProof(): inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "Owned calendar client/directory and actual stamp/upgrade responses, .ots operation/attestation engine and owned Bitcoin header reader."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": []
+    },
+    {
+      "id": "API-3554ee92daa6",
+      "status": "BLOCKED",
+      "scope": "GET /api/v1/intelligence/bootstrap/overview: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "Measured owned-node/chainstate readers; trusted signed snapshot catalogue, producer keys, actual bytes and pinned Core commitments; durable verification/job stores and private authorized executor. Public operator handlers must receive authorization before any executor is connected."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": []
+    },
+    {
+      "id": "API-221ca2ac68cd",
+      "status": "BLOCKED",
+      "scope": "GET /api/v1/intelligence/bootstrap/nodes: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "Measured owned-node/chainstate readers; trusted signed snapshot catalogue, producer keys, actual bytes and pinned Core commitments; durable verification/job stores and private authorized executor. Public operator handlers must receive authorization before any executor is connected."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": []
+    },
+    {
+      "id": "API-cc2c0c7769d5",
+      "status": "BLOCKED",
+      "scope": "GET /api/v1/intelligence/bootstrap/nodes/:nodeId/chainstates: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "Measured owned-node/chainstate readers; trusted signed snapshot catalogue, producer keys, actual bytes and pinned Core commitments; durable verification/job stores and private authorized executor. Public operator handlers must receive authorization before any executor is connected."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": []
+    },
+    {
+      "id": "API-bff2c2bc86f3",
+      "status": "BLOCKED",
+      "scope": "GET /api/v1/intelligence/bootstrap/snapshots: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "Measured owned-node/chainstate readers; trusted signed snapshot catalogue, producer keys, actual bytes and pinned Core commitments; durable verification/job stores and private authorized executor. Public operator handlers must receive authorization before any executor is connected."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": []
+    },
+    {
+      "id": "API-2413360cedef",
+      "status": "BLOCKED",
+      "scope": "GET /api/v1/intelligence/bootstrap/snapshots/:snapshotId: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "Measured owned-node/chainstate readers; trusted signed snapshot catalogue, producer keys, actual bytes and pinned Core commitments; durable verification/job stores and private authorized executor. Public operator handlers must receive authorization before any executor is connected."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": []
+    },
+    {
+      "id": "API-a12b504ea4e9",
+      "status": "BLOCKED",
+      "scope": "GET /api/v1/intelligence/bootstrap/snapshots/:snapshotId/manifest: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "Measured owned-node/chainstate readers; trusted signed snapshot catalogue, producer keys, actual bytes and pinned Core commitments; durable verification/job stores and private authorized executor. Public operator handlers must receive authorization before any executor is connected."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": []
+    },
+    {
+      "id": "API-4dc9791028b6",
+      "status": "BLOCKED",
+      "scope": "POST /api/v1/intelligence/bootstrap/verifications: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "Measured owned-node/chainstate readers; trusted signed snapshot catalogue, producer keys, actual bytes and pinned Core commitments; durable verification/job stores and private authorized executor. Public operator handlers must receive authorization before any executor is connected."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": []
+    },
+    {
+      "id": "API-a69696fb804b",
+      "status": "BLOCKED",
+      "scope": "GET /api/v1/intelligence/bootstrap/verifications/:verificationId: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "Measured owned-node/chainstate readers; trusted signed snapshot catalogue, producer keys, actual bytes and pinned Core commitments; durable verification/job stores and private authorized executor. Public operator handlers must receive authorization before any executor is connected."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": []
+    },
+    {
+      "id": "API-a84a6389ab1d",
+      "status": "BLOCKED",
+      "scope": "POST /api/v1/intelligence/bootstrap/plans: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "Measured owned-node/chainstate readers; trusted signed snapshot catalogue, producer keys, actual bytes and pinned Core commitments; durable verification/job stores and private authorized executor. Public operator handlers must receive authorization before any executor is connected."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": []
+    },
+    {
+      "id": "API-7754d2a583e6",
+      "status": "BLOCKED",
+      "scope": "POST /api/v1/intelligence/bootstrap/operator/snapshots: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "Measured owned-node/chainstate readers; trusted signed snapshot catalogue, producer keys, actual bytes and pinned Core commitments; durable verification/job stores and private authorized executor. Public operator handlers must receive authorization before any executor is connected."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": []
+    },
+    {
+      "id": "API-740780b1aee5",
+      "status": "BLOCKED",
+      "scope": "POST /api/v1/intelligence/bootstrap/operator/loads: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "Measured owned-node/chainstate readers; trusted signed snapshot catalogue, producer keys, actual bytes and pinned Core commitments; durable verification/job stores and private authorized executor. Public operator handlers must receive authorization before any executor is connected."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": []
+    },
+    {
+      "id": "API-37f5e957512d",
+      "status": "BLOCKED",
+      "scope": "GET /api/v1/intelligence/bootstrap/jobs/:jobId: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "Measured owned-node/chainstate readers; trusted signed snapshot catalogue, producer keys, actual bytes and pinned Core commitments; durable verification/job stores and private authorized executor. Public operator handlers must receive authorization before any executor is connected."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": []
+    },
+    {
+      "id": "API-ed4c4fc3a2e4",
+      "status": "BLOCKED",
+      "scope": "GET /api/v1/intelligence/multiparty/overview: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "BIP327 aggregation/nonce/partial-signature/tweak engine; durable session authority; trusted product/vendor-key directory, signed payload contract and actual version-specific conformance results. A final BIP340 primitive is insufficient."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": []
+    },
+    {
+      "id": "API-a4ffe2ba32ff",
+      "status": "BLOCKED",
+      "scope": "GET /api/v1/intelligence/multiparty/products: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "BIP327 aggregation/nonce/partial-signature/tweak engine; durable session authority; trusted product/vendor-key directory, signed payload contract and actual version-specific conformance results. A final BIP340 primitive is insufficient."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": []
+    },
+    {
+      "id": "API-96b030600c5c",
+      "status": "BLOCKED",
+      "scope": "GET /api/v1/intelligence/multiparty/products/:productId: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "BIP327 aggregation/nonce/partial-signature/tweak engine; durable session authority; trusted product/vendor-key directory, signed payload contract and actual version-specific conformance results. A final BIP340 primitive is insufficient."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": []
+    },
+    {
+      "id": "API-749ab181fb16",
+      "status": "BLOCKED",
+      "scope": "GET /api/v1/intelligence/multiparty/compatibility: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "BIP327 aggregation/nonce/partial-signature/tweak engine; durable session authority; trusted product/vendor-key directory, signed payload contract and actual version-specific conformance results. A final BIP340 primitive is insufficient."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": []
+    },
+    {
+      "id": "API-82870a3cc814",
+      "status": "BLOCKED",
+      "scope": "GET /api/v1/intelligence/multiparty/test-vectors: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "BIP327 aggregation/nonce/partial-signature/tweak engine; durable session authority; trusted product/vendor-key directory, signed payload contract and actual version-specific conformance results. A final BIP340 primitive is insufficient."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": []
+    },
+    {
+      "id": "API-a6a124d6c5a0",
+      "status": "BLOCKED",
+      "scope": "POST /api/v1/intelligence/multiparty/manifests/verify: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "BIP327 aggregation/nonce/partial-signature/tweak engine; durable session authority; trusted product/vendor-key directory, signed payload contract and actual version-specific conformance results. A final BIP340 primitive is insufficient."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": []
+    },
+    {
+      "id": "API-4edb832dd83d",
+      "status": "BLOCKED",
+      "scope": "POST /api/v1/intelligence/multiparty/public-sessions/verify: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "BIP327 aggregation/nonce/partial-signature/tweak engine; durable session authority; trusted product/vendor-key directory, signed payload contract and actual version-specific conformance results. A final BIP340 primitive is insufficient."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": []
+    },
+    {
+      "id": "API-0b1262738a26",
+      "status": "BLOCKED",
+      "scope": "GET /api/v1/intelligence/submission/overview: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "Owned Tor/I2P relay client, durable queue/cancel worker, owned policy/mempool/ordering sensors, and trusted accelerator provider keys with exact signed encoding and signature algorithm."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": [
+        {
+          "source": "docs/acceptance/current-execution-evidence.json",
+          "recordedAt": "2026-09-06T07:05:00.000Z",
+          "assertion": {
+            "id": "API-0b1262738a26",
+            "status": "BLOCKED",
+            "scope": "GET /api/v1/intelligence/submission/overview is offered and reachable. It reports the integration it is waiting on as a 503 naming the stage, and no longer answers with an invented result. The operation itself does not complete.",
+            "evidence": [
+              {
+                "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
+                "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour"
+              }
+            ],
+            "blockers": [
+              "PRE-01: the owned Tor and I2P private submission relay is not configured on this deployment, so a submission cannot be queued, relayed or aborted."
+            ],
+            "actual": "HTTP 503 with a stage of unavailable-relay, unavailable-registry or unavailable-source, and the message naming the missing integration."
+          }
+        }
+      ]
+    },
+    {
+      "id": "API-21b73dc215f0",
+      "status": "BLOCKED",
+      "scope": "GET /api/v1/intelligence/submission/capabilities: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "Owned Tor/I2P relay client, durable queue/cancel worker, owned policy/mempool/ordering sensors, and trusted accelerator provider keys with exact signed encoding and signature algorithm."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": [
+        {
+          "source": "docs/acceptance/current-execution-evidence.json",
+          "recordedAt": "2026-09-06T07:05:00.000Z",
+          "assertion": {
+            "id": "API-21b73dc215f0",
+            "status": "BLOCKED",
+            "scope": "GET /api/v1/intelligence/submission/capabilities is offered and reachable. It reports the integration it is waiting on as a 503 naming the stage, and no longer answers with an invented result. The operation itself does not complete.",
+            "evidence": [
+              {
+                "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
+                "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour"
+              }
+            ],
+            "blockers": [
+              "PRE-01: the owned Tor and I2P private submission relay is not configured on this deployment, so a submission cannot be queued, relayed or aborted."
+            ],
+            "actual": "HTTP 503 with a stage of unavailable-relay, unavailable-registry or unavailable-source, and the message naming the missing integration."
+          }
+        }
+      ]
+    },
+    {
+      "id": "API-b890c5b18aa9",
+      "status": "BLOCKED",
+      "scope": "POST /api/v1/intelligence/submission/diagnose: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "Owned Tor/I2P relay client, durable queue/cancel worker, owned policy/mempool/ordering sensors, and trusted accelerator provider keys with exact signed encoding and signature algorithm."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": [
+        {
+          "source": "docs/acceptance/current-execution-evidence.json",
+          "recordedAt": "2026-09-06T07:05:00.000Z",
+          "assertion": {
+            "id": "API-b890c5b18aa9",
+            "status": "BLOCKED",
+            "scope": "POST /api/v1/intelligence/submission/diagnose is offered and reachable. It reports the integration it is waiting on as a 503 naming the stage, and no longer answers with an invented result. The operation itself does not complete.",
+            "evidence": [
+              {
+                "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
+                "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour"
+              }
+            ],
+            "blockers": [
+              "PRE-01: the owned mempool and policy source for a specific transaction is not wired to this route, so feerate, policy, RBF and CPFP findings cannot be derived."
+            ],
+            "actual": "HTTP 503 with a stage of unavailable-relay, unavailable-registry or unavailable-source, and the message naming the missing integration."
+          }
+        }
+      ]
+    },
+    {
+      "id": "API-501ebd9a571e",
+      "status": "BLOCKED",
+      "scope": "POST /api/v1/intelligence/submission/private: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "Owned Tor/I2P relay client, durable queue/cancel worker, owned policy/mempool/ordering sensors, and trusted accelerator provider keys with exact signed encoding and signature algorithm."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": [
+        {
+          "source": "docs/acceptance/current-execution-evidence.json",
+          "recordedAt": "2026-09-06T07:05:00.000Z",
+          "assertion": {
+            "id": "API-501ebd9a571e",
+            "status": "BLOCKED",
+            "scope": "POST /api/v1/intelligence/submission/private is offered and reachable. It reports the integration it is waiting on as a 503 naming the stage, and no longer answers with an invented result. The operation itself does not complete.",
+            "evidence": [
+              {
+                "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
+                "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour"
+              }
+            ],
+            "blockers": [
+              "PRE-01: the owned Tor and I2P private submission relay is not configured on this deployment, so a submission cannot be queued, relayed or aborted."
+            ],
+            "actual": "HTTP 503 with a stage of unavailable-relay, unavailable-registry or unavailable-source, and the message naming the missing integration."
+          }
+        }
+      ]
+    },
+    {
+      "id": "API-fc5873a9e610",
+      "status": "BLOCKED",
+      "scope": "GET /api/v1/intelligence/submission/private/:submissionToken: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "Owned Tor/I2P relay client, durable queue/cancel worker, owned policy/mempool/ordering sensors, and trusted accelerator provider keys with exact signed encoding and signature algorithm."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": [
+        {
+          "source": "docs/acceptance/current-execution-evidence.json",
+          "recordedAt": "2026-09-06T07:05:00.000Z",
+          "assertion": {
+            "id": "API-fc5873a9e610",
+            "status": "BLOCKED",
+            "scope": "GET /api/v1/intelligence/submission/private/:submissionToken is offered and reachable. It reports the integration it is waiting on as a 503 naming the stage, and no longer answers with an invented result. The operation itself does not complete.",
+            "evidence": [
+              {
+                "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
+                "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour"
+              }
+            ],
+            "blockers": [
+              "PRE-01: the owned Tor and I2P private submission relay is not configured on this deployment, so a submission cannot be queued, relayed or aborted."
+            ],
+            "actual": "HTTP 503 with a stage of unavailable-relay, unavailable-registry or unavailable-source, and the message naming the missing integration."
+          }
+        }
+      ]
+    },
+    {
+      "id": "API-55036967e3c6",
+      "status": "BLOCKED",
+      "scope": "POST /api/v1/intelligence/submission/private/:submissionToken/abort: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "Owned Tor/I2P relay client, durable queue/cancel worker, owned policy/mempool/ordering sensors, and trusted accelerator provider keys with exact signed encoding and signature algorithm."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": [
+        {
+          "source": "docs/acceptance/current-execution-evidence.json",
+          "recordedAt": "2026-09-06T07:05:00.000Z",
+          "assertion": {
+            "id": "API-55036967e3c6",
+            "status": "BLOCKED",
+            "scope": "POST /api/v1/intelligence/submission/private/:submissionToken/abort is offered and reachable. It reports the integration it is waiting on as a 503 naming the stage, and no longer answers with an invented result. The operation itself does not complete.",
+            "evidence": [
+              {
+                "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
+                "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour"
+              }
+            ],
+            "blockers": [
+              "PRE-01: the owned Tor and I2P private submission relay is not configured on this deployment, so a submission cannot be queued, relayed or aborted."
+            ],
+            "actual": "HTTP 503 with a stage of unavailable-relay, unavailable-registry or unavailable-source, and the message naming the missing integration."
+          }
+        }
+      ]
+    },
+    {
+      "id": "API-e0f0abac5d30",
+      "status": "BLOCKED",
+      "scope": "GET /api/v1/intelligence/accelerators/providers: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "Owned Tor/I2P relay client, durable queue/cancel worker, owned policy/mempool/ordering sensors, and trusted accelerator provider keys with exact signed encoding and signature algorithm."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": [
+        {
+          "source": "docs/acceptance/current-execution-evidence.json",
+          "recordedAt": "2026-09-06T07:05:00.000Z",
+          "assertion": {
+            "id": "API-e0f0abac5d30",
+            "status": "BLOCKED",
+            "scope": "GET /api/v1/intelligence/accelerators/providers is offered and reachable. It reports the integration it is waiting on as a 503 naming the stage, and no longer answers with an invented result. The operation itself does not complete.",
+            "evidence": [
+              {
+                "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
+                "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour"
+              }
+            ],
+            "blockers": [
+              "PRE-04: there is no owned signed accelerator provider directory, so provider identity, health and receipt trust cannot be established."
+            ],
+            "actual": "HTTP 503 with a stage of unavailable-relay, unavailable-registry or unavailable-source, and the message naming the missing integration."
+          }
+        }
+      ]
+    },
+    {
+      "id": "API-701fd1e7a970",
+      "status": "BLOCKED",
+      "scope": "GET /api/v1/intelligence/accelerators/providers/:providerId: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "Owned Tor/I2P relay client, durable queue/cancel worker, owned policy/mempool/ordering sensors, and trusted accelerator provider keys with exact signed encoding and signature algorithm."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": [
+        {
+          "source": "docs/acceptance/current-execution-evidence.json",
+          "recordedAt": "2026-09-06T07:05:00.000Z",
+          "assertion": {
+            "id": "API-701fd1e7a970",
+            "status": "BLOCKED",
+            "scope": "GET /api/v1/intelligence/accelerators/providers/:providerId is offered and reachable. It reports the integration it is waiting on as a 503 naming the stage, and no longer answers with an invented result. The operation itself does not complete.",
+            "evidence": [
+              {
+                "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
+                "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour"
+              }
+            ],
+            "blockers": [
+              "PRE-04: there is no owned signed accelerator provider directory, so provider identity, health and receipt trust cannot be established."
+            ],
+            "actual": "HTTP 503 with a stage of unavailable-relay, unavailable-registry or unavailable-source, and the message naming the missing integration."
+          }
+        }
+      ]
+    },
+    {
+      "id": "API-ce2c51a268a0",
+      "status": "BLOCKED",
+      "scope": "POST /api/v1/intelligence/accelerators/receipts/verify: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "Owned Tor/I2P relay client, durable queue/cancel worker, owned policy/mempool/ordering sensors, and trusted accelerator provider keys with exact signed encoding and signature algorithm."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": [
+        {
+          "source": "docs/acceptance/current-execution-evidence.json",
+          "recordedAt": "2026-09-06T07:05:00.000Z",
+          "assertion": {
+            "id": "API-ce2c51a268a0",
+            "status": "BLOCKED",
+            "scope": "POST /api/v1/intelligence/accelerators/receipts/verify is offered and reachable. It reports the integration it is waiting on as a 503 naming the stage, and no longer answers with an invented result. The operation itself does not complete. Its structural validation stage does complete: a malformed receipt is rejected with 400 and its faults named. Verification itself needs a provider key this deployment does not have, so a structurally complete receipt is reported as unverified rather than as verified.",
+            "evidence": [
+              {
+                "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
+                "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour"
+              }
+            ],
+            "blockers": [
+              "PRE-04: there is no owned signed accelerator provider directory, so provider identity, health and receipt trust cannot be established."
+            ],
+            "actual": "HTTP 503 with a stage of unavailable-relay, unavailable-registry or unavailable-source, and the message naming the missing integration."
+          }
+        }
+      ]
+    },
+    {
+      "id": "API-fdb340196a39",
+      "status": "BLOCKED",
+      "scope": "GET /api/v1/intelligence/ordering/transactions/:txid: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "Owned Tor/I2P relay client, durable queue/cancel worker, owned policy/mempool/ordering sensors, and trusted accelerator provider keys with exact signed encoding and signature algorithm."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": [
+        {
+          "source": "docs/acceptance/current-execution-evidence.json",
+          "recordedAt": "2026-09-06T07:05:00.000Z",
+          "assertion": {
+            "id": "API-fdb340196a39",
+            "status": "BLOCKED",
+            "scope": "GET /api/v1/intelligence/ordering/transactions/:txid is offered and reachable. It reports the integration it is waiting on as a 503 naming the stage, and no longer answers with an invented result. The operation itself does not complete.",
+            "evidence": [
+              {
+                "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
+                "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour"
+              }
+            ],
+            "blockers": [
+              "PRE-01: the owned relay sensor and template recorder are not configured, so first-seen and template observation cannot be derived."
+            ],
+            "actual": "HTTP 503 with a stage of unavailable-relay, unavailable-registry or unavailable-source, and the message naming the missing integration."
+          }
+        }
+      ]
+    },
+    {
+      "id": "API-f2fe08ad257d",
+      "status": "BLOCKED",
+      "scope": "GET /api/v1/intelligence/ordering/blocks/:blockHash: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "Owned Tor/I2P relay client, durable queue/cancel worker, owned policy/mempool/ordering sensors, and trusted accelerator provider keys with exact signed encoding and signature algorithm."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": [
+        {
+          "source": "docs/acceptance/current-execution-evidence.json",
+          "recordedAt": "2026-09-06T07:05:00.000Z",
+          "assertion": {
+            "id": "API-f2fe08ad257d",
+            "status": "BLOCKED",
+            "scope": "GET /api/v1/intelligence/ordering/blocks/:blockHash is offered and reachable. It reports the integration it is waiting on as a 503 naming the stage, and no longer answers with an invented result. The operation itself does not complete.",
+            "evidence": [
+              {
+                "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
+                "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour"
+              }
+            ],
+            "blockers": [
+              "PRE-01: the owned relay sensor and template recorder are not configured, so first-seen and template observation cannot be derived."
+            ],
+            "actual": "HTTP 503 with a stage of unavailable-relay, unavailable-registry or unavailable-source, and the message naming the missing integration."
+          }
+        }
+      ]
+    },
+    {
+      "id": "API-9de0ce16ccad",
+      "status": "BLOCKED",
+      "scope": "GET /api/v1/intelligence/ordering/findings: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "Owned Tor/I2P relay client, durable queue/cancel worker, owned policy/mempool/ordering sensors, and trusted accelerator provider keys with exact signed encoding and signature algorithm."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": [
+        {
+          "source": "docs/acceptance/current-execution-evidence.json",
+          "recordedAt": "2026-09-06T07:05:00.000Z",
+          "assertion": {
+            "id": "API-9de0ce16ccad",
+            "status": "BLOCKED",
+            "scope": "GET /api/v1/intelligence/ordering/findings is offered and reachable. It reports the integration it is waiting on as a 503 naming the stage, and no longer answers with an invented result. The operation itself does not complete.",
+            "evidence": [
+              {
+                "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
+                "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour"
+              }
+            ],
+            "blockers": [
+              "PRE-01: the owned relay sensor and template recorder are not configured, so first-seen and template observation cannot be derived."
+            ],
+            "actual": "HTTP 503 with a stage of unavailable-relay, unavailable-registry or unavailable-source, and the message naming the missing integration."
+          }
+        }
+      ]
+    },
+    {
+      "id": "API-5b1b5761c70c",
+      "status": "BLOCKED",
+      "scope": "GET /api/v1/intelligence/timestamps/overview: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "Owned calendar client/directory and actual stamp/upgrade responses, .ots operation/attestation engine and owned Bitcoin header reader."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": []
+    },
+    {
+      "id": "API-6edf27971284",
+      "status": "BLOCKED",
+      "scope": "GET /api/v1/intelligence/timestamps/calendars: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "Owned calendar client/directory and actual stamp/upgrade responses, .ots operation/attestation engine and owned Bitcoin header reader."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": []
+    },
+    {
+      "id": "API-442bda5b85ec",
+      "status": "BLOCKED",
+      "scope": "GET /api/v1/intelligence/timestamps/calendars/:calendarId: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "Owned calendar client/directory and actual stamp/upgrade responses, .ots operation/attestation engine and owned Bitcoin header reader."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": []
+    },
+    {
+      "id": "API-ab717d793eae",
+      "status": "BLOCKED",
+      "scope": "GET /api/v1/intelligence/timestamps/anchors: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "Owned calendar client/directory and actual stamp/upgrade responses, .ots operation/attestation engine and owned Bitcoin header reader."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": []
+    },
+    {
+      "id": "API-aecc63eb2417",
+      "status": "BLOCKED",
+      "scope": "GET /api/v1/intelligence/timestamps/batches/:batchId: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "Owned calendar client/directory and actual stamp/upgrade responses, .ots operation/attestation engine and owned Bitcoin header reader."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": []
+    },
+    {
+      "id": "API-8ae92367a70c",
+      "status": "BLOCKED",
+      "scope": "POST /api/v1/intelligence/timestamps/digests/stamp: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "Owned calendar client/directory and actual stamp/upgrade responses, .ots operation/attestation engine and owned Bitcoin header reader."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": []
+    },
+    {
+      "id": "API-8f2d0a9754f2",
+      "status": "BLOCKED",
+      "scope": "POST /api/v1/intelligence/timestamps/proofs/verify: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "Owned calendar client/directory and actual stamp/upgrade responses, .ots operation/attestation engine and owned Bitcoin header reader."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": []
+    },
+    {
+      "id": "API-1e4fb78fbdf0",
+      "status": "BLOCKED",
+      "scope": "POST /api/v1/intelligence/timestamps/proofs/upgrade: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "Owned calendar client/directory and actual stamp/upgrade responses, .ots operation/attestation engine and owned Bitcoin header reader."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": []
+    },
+    {
+      "id": "API-CURRENT-98c58e35b676",
+      "status": "BLOCKED",
+      "scope": "GET /api/v1/intelligence/bootstrap/chainstates: inspected current implementation and applicable local regression evidence; the offered operation still lacks its required engine or owned authority.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "Measured owned-node/chainstate readers; trusted signed snapshot catalogue, producer keys, actual bytes and pinned Core commitments; durable verification/job stores and private authorized executor. Public operator handlers must receive authorization before any executor is connected."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": []
+    },
+    {
+      "id": "T-17",
+      "status": "BLOCKED",
+      "scope": "WP07 integrity regression subset inspected and repaired; the broad real verification/relay scenario remains unaccepted.",
+      "evidence": [
+        {
+          "artifact": "docs/acceptance/wp07-repair-2026-09-06.json",
+          "note": "Exact source hashes, scoped integrity assertions and full local test results; no operation pass."
+        }
+      ],
+      "blockers": [
+        "Measured owned-node/chainstate readers; trusted signed snapshot catalogue, producer keys, actual bytes and pinned Core commitments; durable verification/job stores and private authorized executor. Public operator handlers must receive authorization before any executor is connected.",
+        "BIP327 aggregation/nonce/partial-signature/tweak engine; durable session authority; trusted product/vendor-key directory, signed payload contract and actual version-specific conformance results. A final BIP340 primitive is insufficient.",
+        "Owned calendar client/directory and actual stamp/upgrade responses, .ots operation/attestation engine and owned Bitcoin header reader.",
+        "Owned Tor/I2P relay client, durable queue/cancel worker, owned policy/mempool/ordering sensors, and trusted accelerator provider keys with exact signed encoding and signature algorithm.",
+        "Compatible RGB validation engine and owned Bitcoin commitment/seal-state authority; actual consignment validation has no connected implementation."
+      ],
+      "actual": "Source and local tests establish bounded integrity behavior. No real owned-source-to-consumer completion established; do not treat source unavailability or partial cryptographic verification as success.",
+      "candidateRevisions": {
+        "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+        "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+        "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+      },
+      "verificationTime": "2026-09-06T12:55:51.141Z",
+      "repairState": "bounded false-verdict repairs validated locally; required operation remains blocked",
+      "verificationKind": "current source inspection and applicable local regressions; no real-network E2E",
+      "previousExecutionAssertions": []
+    }
+  ]
+}

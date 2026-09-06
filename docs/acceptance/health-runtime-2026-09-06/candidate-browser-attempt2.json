@@ -1,0 +1,104 @@
+{
+  "startedAt": "2026-09-06T12:51:04.897Z",
+  "scope": "one headless Chromium page; actual local candidate; approved public Bitcoin GET upstream; no request interception",
+  "revisions": {
+    "mempool": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+    "overlay": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+  },
+  "checks": [
+    {
+      "name": "block actual data and refresh",
+      "status": "FAIL",
+      "startedAt": "2026-09-06T12:51:05.314Z",
+      "error": "locator.waitFor: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - waiting for getByText('965,545').first() to be visible\u001b[22m\n"
+    },
+    {
+      "name": "synced node and separate service details",
+      "status": "FAIL",
+      "startedAt": "2026-09-06T12:51:12.425Z",
+      "error": "page.waitForFunction: Target page, context or browser has been closed"
+    },
+    {
+      "name": "transaction actual identity and confirmation",
+      "status": "FAIL",
+      "startedAt": "2026-09-06T12:51:12.427Z",
+      "error": "page.goto: Target page, context or browser has been closed"
+    },
+    {
+      "name": "address actual identity and history",
+      "status": "FAIL",
+      "startedAt": "2026-09-06T12:51:12.428Z",
+      "error": "page.goto: Target page, context or browser has been closed"
+    },
+    {
+      "name": "health layout default 390x844",
+      "status": "FAIL",
+      "startedAt": "2026-09-06T12:51:12.429Z",
+      "error": "page.evaluate: Target page, context or browser has been closed"
+    },
+    {
+      "name": "health layout default 844x390",
+      "status": "FAIL",
+      "startedAt": "2026-09-06T12:51:12.430Z",
+      "error": "page.evaluate: Target page, context or browser has been closed"
+    },
+    {
+      "name": "health layout dark 390x844",
+      "status": "FAIL",
+      "startedAt": "2026-09-06T12:51:12.430Z",
+      "error": "page.evaluate: Target page, context or browser has been closed"
+    },
+    {
+      "name": "health layout dark 844x390",
+      "status": "FAIL",
+      "startedAt": "2026-09-06T12:51:12.431Z",
+      "error": "page.evaluate: Target page, context or browser has been closed"
+    },
+    {
+      "name": "Signet context survives reload with DOGE/ZEC mainnet",
+      "status": "FAIL",
+      "startedAt": "2026-09-06T12:51:12.432Z",
+      "error": "page.setViewportSize: Target page, context or browser has been closed"
+    }
+  ],
+  "api": [
+    {
+      "path": "/api/v1/universe/protocols?chain=bitcoin&network=mainnet",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/block/00000000000000000001014ea6d7cc2bceaa744c0a57001db6150f7e6d95769d",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/chains?network=mainnet",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/blocks/965550",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/block/00000000000000000001014ea6d7cc2bceaa744c0a57001db6150f7e6d95769d/summary",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/historical-price?timestamp=1788571675&currency=USD",
+      "status": 200
+    },
+    {
+      "path": "/api/block/0000000000000000000034de505cc04d4d96246cb6a832e861842ac04ccf68d7/txs/0",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/blocks/965540",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/blocks/965530",
+      "status": 200
+    }
+  ],
+  "pageErrors": [],
+  "finishedAt": "2026-09-06T12:51:12.434Z"
+}

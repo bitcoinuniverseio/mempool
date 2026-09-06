@@ -1,0 +1,9 @@
+{"name":"block actual data and refresh","status":"FAIL","startedAt":"2026-09-06T12:48:50.579Z","error":"locator.waitFor: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - waiting for getByText('965,545').first() to be visible\u001b[22m\n"}
+{"name":"synced node and separate service details","status":"FAIL","startedAt":"2026-09-06T12:49:09.789Z","error":"page.waitForFunction: Target page, context or browser has been closed"}
+{"name":"transaction actual identity and confirmation","status":"FAIL","startedAt":"2026-09-06T12:49:09.791Z","error":"page.goto: Target page, context or browser has been closed"}
+{"name":"address actual identity and history","status":"FAIL","startedAt":"2026-09-06T12:49:09.793Z","error":"page.goto: Target page, context or browser has been closed"}
+{"name":"health layout default 390x844","status":"FAIL","startedAt":"2026-09-06T12:49:09.795Z","error":"page.evaluate: Target page, context or browser has been closed"}
+{"name":"health layout default 844x390","status":"FAIL","startedAt":"2026-09-06T12:49:09.797Z","error":"page.evaluate: Target page, context or browser has been closed"}
+{"name":"health layout dark 390x844","status":"FAIL","startedAt":"2026-09-06T12:49:09.798Z","error":"page.evaluate: Target page, context or browser has been closed"}
+{"name":"health layout dark 844x390","status":"FAIL","startedAt":"2026-09-06T12:49:09.803Z","error":"page.evaluate: Target page, context or browser has been closed"}
+{"name":"Signet context survives reload with DOGE/ZEC mainnet","status":"FAIL","startedAt":"2026-09-06T12:49:09.806Z","error":"page.setViewportSize: Target page, context or browser has been closed"}

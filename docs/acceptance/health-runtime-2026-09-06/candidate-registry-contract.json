@@ -1,0 +1,1400 @@
+{
+  "schemaVersion": "universe-explorer-protocol-manifest-v1",
+  "registryVersion": "1.1.0",
+  "sourceSha": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2",
+  "request": {
+    "method": "GET",
+    "path": "/api/v1/universe/protocols?chain=bitcoin&network=mainnet",
+    "status": 200,
+    "observedAt": "2026-09-06T12:52:56.665Z"
+  },
+  "comparison": "All 39 full protocol records equal the checked-in manifest. This checks identity/descriptor publication only, not the declared releaseStatus/coverage as runtime truth.",
+  "sourceManifest": {
+    "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
+    "sha256": "eafda8dd21bb14139a262d31f70d2522d77b84cd19b3138db8ba24a6bd89df75"
+  },
+  "protocols": [
+    {
+      "id": "ordinals",
+      "chain": "bitcoin",
+      "indexerAuthority": "ord",
+      "networks": [
+        "mainnet"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "outpoint",
+          "method": "GET",
+          "route": "/api/v1/universe/outpoints/:txid/:vout",
+          "authorityPath": "/output/:outpoint",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "outpoints-batch",
+          "method": "POST",
+          "route": "/api/v1/universe/outpoints/batch",
+          "authorityPath": "/output/:outpoint",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "transaction-flow",
+          "method": "GET",
+          "route": "/api/v1/universe/transactions/:txid",
+          "authorityPath": "/output/:outpoint",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "transactions-batch",
+          "method": "POST",
+          "route": "/api/v1/universe/transactions/batch",
+          "authorityPath": "/output/:outpoint",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "address-holdings",
+          "method": "GET",
+          "route": "/api/v1/universe/addresses/:address/holdings",
+          "authorityPath": "/output/:outpoint",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "inscription",
+          "method": "GET",
+          "route": "/api/v1/universe/inscriptions/:reference",
+          "authorityPath": "/inscription/:reference",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "block-inscriptions",
+          "method": "GET",
+          "route": "/api/v1/universe/blocks/:height/inscriptions",
+          "authorityPath": "/inscriptions/block/:height/:page",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "fullRecordSha256": "bf15e8e812f7ffcd891b3de378a74bbaed1e1e421dfd5ace684dd2215b8554a0"
+    },
+    {
+      "id": "rare_sats",
+      "chain": "bitcoin",
+      "indexerAuthority": "ord",
+      "networks": [
+        "mainnet"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "outpoint",
+          "method": "GET",
+          "route": "/api/v1/universe/outpoints/:txid/:vout",
+          "authorityPath": "/output/:outpoint",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "outpoints-batch",
+          "method": "POST",
+          "route": "/api/v1/universe/outpoints/batch",
+          "authorityPath": "/output/:outpoint",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "transaction-flow",
+          "method": "GET",
+          "route": "/api/v1/universe/transactions/:txid",
+          "authorityPath": "/output/:outpoint",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "transactions-batch",
+          "method": "POST",
+          "route": "/api/v1/universe/transactions/batch",
+          "authorityPath": "/output/:outpoint",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "address-holdings",
+          "method": "GET",
+          "route": "/api/v1/universe/addresses/:address/holdings",
+          "authorityPath": "/output/:outpoint",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "sat",
+          "method": "GET",
+          "route": "/api/v1/universe/sats/:reference",
+          "authorityPath": "/sat/:reference",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "fullRecordSha256": "b9769b121e0ec293f3c6b46c2dd0e3955c5652f7c3c5783a4349d3425eec3ba5"
+    },
+    {
+      "id": "names",
+      "chain": "bitcoin",
+      "indexerAuthority": "index-names",
+      "networks": [
+        "mainnet"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "objects",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/names/objects",
+          "authorityPath": "/v1/marketplace/protocols/names/assets",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "fullRecordSha256": "b1f3c1c6bef6c61a8a8d38111cd926cf1f73bf7ff58bf2009e52aacbe721d8bb"
+    },
+    {
+      "id": "bitmap",
+      "chain": "bitcoin",
+      "indexerAuthority": "index-bitmap",
+      "networks": [
+        "mainnet"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "objects",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/bitmap/objects",
+          "authorityPath": "/v1/marketplace/protocols/bitmap/assets",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "fullRecordSha256": "89cf3edb26aafbbca0729acfae3d92c4117acf468cd7ab6dafda4eff4b07e314"
+    },
+    {
+      "id": "unat",
+      "chain": "bitcoin",
+      "indexerAuthority": "index-unat",
+      "networks": [
+        "mainnet"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "objects",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/unat/objects",
+          "authorityPath": "/v1/marketplace/protocols/unat/assets",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "fullRecordSha256": "00e09cc740be9e5a1d53d5cc0f4479481a50de6ee63864cd1e2178f9fdc2c4e8"
+    },
+    {
+      "id": "runes",
+      "chain": "bitcoin",
+      "indexerAuthority": "ord",
+      "networks": [
+        "mainnet"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "outpoint",
+          "method": "GET",
+          "route": "/api/v1/universe/outpoints/:txid/:vout",
+          "authorityPath": "/output/:outpoint",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "outpoints-batch",
+          "method": "POST",
+          "route": "/api/v1/universe/outpoints/batch",
+          "authorityPath": "/output/:outpoint",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "transaction-flow",
+          "method": "GET",
+          "route": "/api/v1/universe/transactions/:txid",
+          "authorityPath": "/output/:outpoint",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "transactions-batch",
+          "method": "POST",
+          "route": "/api/v1/universe/transactions/batch",
+          "authorityPath": "/output/:outpoint",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "address-holdings",
+          "method": "GET",
+          "route": "/api/v1/universe/addresses/:address/holdings",
+          "authorityPath": "/output/:outpoint",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "rune",
+          "method": "GET",
+          "route": "/api/v1/universe/runes/:reference",
+          "authorityPath": "/rune/:reference",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "fullRecordSha256": "c3cf92985c82ef127b74e0d3145e4bcc279ed5675c6b3f765885ba8eab927b35"
+    },
+    {
+      "id": "alkanes",
+      "chain": "bitcoin",
+      "indexerAuthority": "index-alkanes",
+      "networks": [
+        "mainnet"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "activity",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/alkanes/activity",
+          "authorityPath": "/token-explorer/alkanes",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "fullRecordSha256": "d8e9f25cfae44a388ed3b9f8314d18fed3dc4b95076e373dfcea0c78da6a9d59"
+    },
+    {
+      "id": "mezcal",
+      "chain": "bitcoin",
+      "indexerAuthority": "index-mezcal",
+      "networks": [
+        "mainnet"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "activity",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/mezcal/activity",
+          "authorityPath": "/token-explorer/mezcal",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "fullRecordSha256": "d320866b38f689104ee6162f69256760998ec3a533185250bec6a9943c81ea76"
+    },
+    {
+      "id": "stamps",
+      "chain": "bitcoin",
+      "indexerAuthority": "index-stamps",
+      "networks": [
+        "mainnet"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "activity",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/stamps/activity",
+          "authorityPath": "/token-explorer/stamps",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "fullRecordSha256": "0c92c029326df57d1285e7c97e97a9d2a29f9fddfdac8b01662ee8b31c164536"
+    },
+    {
+      "id": "src20",
+      "chain": "bitcoin",
+      "indexerAuthority": "index-stamps",
+      "networks": [
+        "mainnet"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "activity",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/src20/activity",
+          "authorityPath": "/token-explorer/src20",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "fullRecordSha256": "33d7e80be7d188ec211ff26782e0d8d73e42455989e5d283fde70da1c6b5b720"
+    },
+    {
+      "id": "src101",
+      "chain": "bitcoin",
+      "indexerAuthority": "index-stamps",
+      "networks": [
+        "mainnet"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "activity",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/src101/activity",
+          "authorityPath": "/token-explorer/src101",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "fullRecordSha256": "2bd1b11a866e2357b9990d9addd1a815132e4309bdcf0674a80c5db8c5ef0b75"
+    },
+    {
+      "id": "atomicals_nft",
+      "chain": "bitcoin",
+      "indexerAuthority": "index-atomicals-nfts-and-realms",
+      "networks": [
+        "mainnet"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "activity",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/atomicals_nft/activity",
+          "authorityPath": "/token-explorer/atomicals",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "outpoint",
+          "method": "GET",
+          "route": "/api/v1/universe/outpoints/:txid/:vout",
+          "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "outpoints-batch",
+          "method": "POST",
+          "route": "/api/v1/universe/outpoints/batch",
+          "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "transaction-flow",
+          "method": "GET",
+          "route": "/api/v1/universe/transactions/:txid",
+          "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "transactions-batch",
+          "method": "POST",
+          "route": "/api/v1/universe/transactions/batch",
+          "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "address-holdings",
+          "method": "GET",
+          "route": "/api/v1/universe/addresses/:address/holdings",
+          "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "fullRecordSha256": "ebe74dc52a3634c16ca040c24d496d0f6494a1c6f53bd185cf050198a0fd99d1"
+    },
+    {
+      "id": "realms",
+      "chain": "bitcoin",
+      "indexerAuthority": "index-atomicals-nfts-and-realms",
+      "networks": [
+        "mainnet"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "activity",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/realms/activity",
+          "authorityPath": "/token-explorer/realms",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "outpoint",
+          "method": "GET",
+          "route": "/api/v1/universe/outpoints/:txid/:vout",
+          "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "outpoints-batch",
+          "method": "POST",
+          "route": "/api/v1/universe/outpoints/batch",
+          "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "transaction-flow",
+          "method": "GET",
+          "route": "/api/v1/universe/transactions/:txid",
+          "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "transactions-batch",
+          "method": "POST",
+          "route": "/api/v1/universe/transactions/batch",
+          "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "address-holdings",
+          "method": "GET",
+          "route": "/api/v1/universe/addresses/:address/holdings",
+          "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "fullRecordSha256": "43081c11a956f764930b36ef8bd6ed61ecd715e457724ab4fce2f6378c4931ee"
+    },
+    {
+      "id": "subrealms",
+      "chain": "bitcoin",
+      "indexerAuthority": "index-atomicals-nfts-and-realms",
+      "networks": [
+        "mainnet"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "outpoint",
+          "method": "GET",
+          "route": "/api/v1/universe/outpoints/:txid/:vout",
+          "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "outpoints-batch",
+          "method": "POST",
+          "route": "/api/v1/universe/outpoints/batch",
+          "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "transaction-flow",
+          "method": "GET",
+          "route": "/api/v1/universe/transactions/:txid",
+          "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "transactions-batch",
+          "method": "POST",
+          "route": "/api/v1/universe/transactions/batch",
+          "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "address-holdings",
+          "method": "GET",
+          "route": "/api/v1/universe/addresses/:address/holdings",
+          "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "fullRecordSha256": "f20ea1960fd5bc84d059cb6228f426d69a2e9bd6eaad5459acfe323ac00573b1"
+    },
+    {
+      "id": "arc20",
+      "chain": "bitcoin",
+      "indexerAuthority": "index-atomicals",
+      "networks": [
+        "mainnet"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "activity",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/arc20/activity",
+          "authorityPath": "/token-explorer/arc20",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "fullRecordSha256": "0b635518f47fbdf4c3b51f9652125a22b48265386468c718c4a42da49a19dbcb"
+    },
+    {
+      "id": "op_return",
+      "chain": "bitcoin",
+      "indexerAuthority": "index-op20",
+      "networks": [
+        "mainnet"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "activity",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/op_return/activity",
+          "authorityPath": "/token-explorer/op20",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "fullRecordSha256": "b508b66c9d3b3e3f69dfba04321e68fb4f58579aaff53caee036607926be3e50"
+    },
+    {
+      "id": "op_names",
+      "chain": "bitcoin",
+      "indexerAuthority": "index-op20",
+      "networks": [
+        "mainnet"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "activity",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/op_names/activity",
+          "authorityPath": "/token-explorer/op20",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "fullRecordSha256": "04460b61d1507eaa32d81166d487fe47295ea6b810e6fb586cfe4b8fa37c132d"
+    },
+    {
+      "id": "op_inscriptions",
+      "chain": "bitcoin",
+      "indexerAuthority": "index-opinscriptions",
+      "networks": [
+        "mainnet"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "objects",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/op_inscriptions/objects",
+          "authorityPath": "/api/op-inscriptions/inscriptions",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "fullRecordSha256": "c63b22c35f502e30ba0dca2abb133f1a15ea3cd4da1a36ce277bdee7e52e9e0e"
+    },
+    {
+      "id": "op_drop",
+      "chain": "bitcoin",
+      "indexerAuthority": "index-drops-and-opdrop",
+      "networks": [
+        "mainnet"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "activity",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/op_drop/activity",
+          "authorityPath": "/op-drop/token-explorer",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "fullRecordSha256": "9b3dd76e14589dac3b5ef1ea6a12be70afcb69777479d0b79cd557529aefe3d1"
+    },
+    {
+      "id": "drops",
+      "chain": "bitcoin",
+      "indexerAuthority": "index-drops-and-opdrop",
+      "networks": [
+        "mainnet"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "activity",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/drops/activity",
+          "authorityPath": "/drops/token-explorer",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "fullRecordSha256": "7118daf6755ab6b7af5455b98e68a8c3baf769f6beca8ef6499b93ffc6f96642"
+    },
+    {
+      "id": "brc20",
+      "chain": "bitcoin",
+      "indexerAuthority": "index-brc20",
+      "networks": [
+        "mainnet"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "activity",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/brc20/activity",
+          "authorityPath": "/token-explorer/brc20",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "fullRecordSha256": "c0a5cdbcb85363b9a3c9d2a7cf734ad8d5c5f1f6bb67459637f17e04bb0010aa"
+    },
+    {
+      "id": "tap",
+      "chain": "bitcoin",
+      "indexerAuthority": "index-tap",
+      "networks": [
+        "mainnet"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "activity",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/tap/activity",
+          "authorityPath": "/token-explorer/tap",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "fullRecordSha256": "c36e5568b0aa38f80cd9663d5b7938f16a97778c513d39af6aa15d9fc48a5802"
+    },
+    {
+      "id": "dmt",
+      "chain": "bitcoin",
+      "indexerAuthority": "index-dmt",
+      "networks": [
+        "mainnet"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "activity",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/dmt/activity",
+          "authorityPath": "/token-explorer/dmt",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "fullRecordSha256": "289e484d8cac84c551ed13502954739ef6313215562a4c9fb670e3476269cb4f"
+    },
+    {
+      "id": "dust20",
+      "chain": "bitcoin",
+      "indexerAuthority": "index-dust20",
+      "networks": [
+        "mainnet"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "activity",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/dust20/activity",
+          "authorityPath": "/token-explorer/dust20",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "fullRecordSha256": "dcadadc29a6b7e99fd444de699c9f77a772954c0fdb873f350e6655b1ac994da"
+    },
+    {
+      "id": "block20",
+      "chain": "bitcoin",
+      "indexerAuthority": "index-block20",
+      "networks": [
+        "mainnet"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "activity",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/block20/activity",
+          "authorityPath": "/token-explorer/block20",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "fullRecordSha256": "50897d76fcf6fa1e436f36ec36f72853619dc004daf1a2d1859346b55a755c90"
+    },
+    {
+      "id": "chainbloom",
+      "chain": "bitcoin",
+      "indexerAuthority": "index-chainbloom",
+      "networks": [
+        "mainnet"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "objects",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/chainbloom/objects",
+          "authorityPath": "/v1/chainbloom/worlds",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "fullRecordSha256": "33e43298128229324eb36d46d3a7df8095cba1c1fb62f1baac0d8a65e82ab636"
+    },
+    {
+      "id": "patina",
+      "chain": "bitcoin",
+      "indexerAuthority": "index-patina",
+      "networks": [
+        "mainnet"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "objects",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/patina/objects",
+          "authorityPath": "/patina/artifacts",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "fullRecordSha256": "4707c3ad3e334274f8df8bbda9b2867c95787936f46d814a3e66b17d5eca2938"
+    },
+    {
+      "id": "witness_circles",
+      "chain": "bitcoin",
+      "indexerAuthority": "index-witness-circles",
+      "networks": [
+        "mainnet"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "objects",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/witness_circles/objects",
+          "authorityPath": "/v1/witness/circles",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "fullRecordSha256": "34e0df8b68e0fad0a4af9a61244525e1e5e671d9255f148e8707514d491d3661"
+    },
+    {
+      "id": "tandem",
+      "chain": "bitcoin",
+      "indexerAuthority": "index-tandem",
+      "networks": [
+        "mainnet"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "objects",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/tandem/objects",
+          "authorityPath": "/tandem/verified/objects",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "fullRecordSha256": "c115b9dd670f23e09cc9ac5465fb78bdd2cd35a63d802d2dfb4e2149aa90d9f5"
+    },
+    {
+      "id": "cat20",
+      "chain": "fractal",
+      "indexerAuthority": "index-cat20",
+      "networks": [
+        "mainnet",
+        "testnet"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "activity",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/cat20/activity",
+          "authorityPath": "/token-explorer/cat20",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "fullRecordSha256": "83643601add2133860a23ef89aac48dbd2e5aff88cbb307d75099a3e7ff30a5b"
+    },
+    {
+      "id": "ordex",
+      "chain": "bitcoin",
+      "indexerAuthority": "index-ordinals",
+      "networks": [
+        "mainnet"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "fullRecordSha256": "bfa1db7d03af434f020a4f3fa5181cfcee907efded4e81c52ad99a506e64af47"
+    },
+    {
+      "id": "anima",
+      "chain": "bitcoin",
+      "indexerAuthority": "index-anima",
+      "networks": [
+        "mainnet"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "status",
+          "method": "GET",
+          "route": "/api/v1/anima/status",
+          "authorityPath": "/anima/status",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "transitions",
+          "method": "GET",
+          "route": "/api/v1/anima/events",
+          "authorityPath": "/anima/events",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "transition",
+          "method": "GET",
+          "route": "/api/v1/anima/events/:eventId",
+          "authorityPath": "/anima/events",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "items",
+          "method": "GET",
+          "route": "/api/v1/anima/organisms",
+          "authorityPath": "/anima/organisms",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "item",
+          "method": "GET",
+          "route": "/api/v1/anima/organisms/:organismId",
+          "authorityPath": "/anima/organism/:organismId",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "item-history",
+          "method": "GET",
+          "route": "/api/v1/anima/organisms/:organismId/history",
+          "authorityPath": "/anima/lineage/:organismId",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "fullRecordSha256": "af7b23ba7a4c793dd3809222a2acbbef39321321fd1f146bb151eb997a404a31"
+    },
+    {
+      "id": "doginals",
+      "chain": "dogecoin",
+      "indexerAuthority": "ord-dogecoin",
+      "networks": [
+        "mainnet"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "chain-list",
+          "method": "GET",
+          "route": "/api/v1/dogecoin/protocols/doginals",
+          "authorityPath": "/api/v1/inscriptions",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "chain-detail",
+          "method": "GET",
+          "route": "/api/v1/dogecoin/protocols/doginals/:reference",
+          "authorityPath": "/inscription/:reference",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "fullRecordSha256": "3b3c2374c16f65468857e17342ef0d179f6846c8641da5cb4be69eee62e99265"
+    },
+    {
+      "id": "drc20",
+      "chain": "dogecoin",
+      "indexerAuthority": "ord-dogecoin",
+      "networks": [
+        "mainnet"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "chain-list",
+          "method": "GET",
+          "route": "/api/v1/dogecoin/protocols/drc20",
+          "authorityPath": "/api/v1/drc20/tokens",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "chain-detail",
+          "method": "GET",
+          "route": "/api/v1/dogecoin/protocols/drc20/:reference",
+          "authorityPath": "/api/v1/drc20/tokens/:reference",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "holders",
+          "method": "GET",
+          "route": "/api/v1/dogecoin/protocols/drc20/:reference/holders",
+          "authorityPath": "/api/v1/drc20/tokens/:reference/holders",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "fullRecordSha256": "58049453844ed46029affd77724826d9819ca68c90602bd24dc925dfbac5a60f"
+    },
+    {
+      "id": "tap_doge",
+      "chain": "dogecoin",
+      "indexerAuthority": "index-doge-tap",
+      "networks": [
+        "mainnet"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "activity",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/tap_doge/activity",
+          "authorityPath": "/token-explorer/doge-tap",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "fullRecordSha256": "b48311a2ca8761749799c5b8f43be6dc711751048ddf2771029004da845a8830"
+    },
+    {
+      "id": "dunes",
+      "chain": "dogecoin",
+      "indexerAuthority": "ord-dogecoin",
+      "networks": [
+        "mainnet"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "chain-list",
+          "method": "GET",
+          "route": "/api/v1/dogecoin/protocols/dunes",
+          "authorityPath": "/api/v1/dunes/tokens",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "chain-detail",
+          "method": "GET",
+          "route": "/api/v1/dogecoin/protocols/dunes/:reference",
+          "authorityPath": "/api/v1/dunes/tokens/:reference",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "fullRecordSha256": "38af92ad4ef87311fc879d8753e9fe2a6e683e527fcb784849d98cd523f1992c"
+    },
+    {
+      "id": "zerdinals",
+      "chain": "zcash",
+      "indexerAuthority": "index-zcash-metaprotocols",
+      "networks": [
+        "mainnet"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "chain-list",
+          "method": "GET",
+          "route": "/api/v1/zcash/protocols/zerdinals",
+          "authorityPath": "/zcash-metaprotocols/inscriptions",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "chain-detail",
+          "method": "GET",
+          "route": "/api/v1/zcash/protocols/zerdinals/:reference",
+          "authorityPath": "/zcash-metaprotocols/inscriptions/:reference",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "fullRecordSha256": "1bdc421ef1363c15f80d6d3f4d8ff3b78f58ef752c83d6e4065fa70a1c50814d"
+    },
+    {
+      "id": "zrunes",
+      "chain": "zcash",
+      "indexerAuthority": "index-zcash-metaprotocols",
+      "networks": [
+        "mainnet"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "chain-list",
+          "method": "GET",
+          "route": "/api/v1/zcash/protocols/zrunes",
+          "authorityPath": "/zcash-metaprotocols/zrunes",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "chain-detail",
+          "method": "GET",
+          "route": "/api/v1/zcash/protocols/zrunes/:reference",
+          "authorityPath": "/zcash-metaprotocols/zrunes/:reference",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "fullRecordSha256": "23cf9b2e999f9e4c33912e2c8df969b8fab468171f699bb6a88c5aea939f86a8"
+    },
+    {
+      "id": "zrc20",
+      "chain": "zcash",
+      "indexerAuthority": "index-zcash-metaprotocols",
+      "networks": [
+        "mainnet"
+      ],
+      "readOperationDescriptors": [
+        {
+          "id": "registry",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols",
+          "authorityPath": null,
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "chain-list",
+          "method": "GET",
+          "route": "/api/v1/zcash/protocols/zrc20",
+          "authorityPath": "/zcash-metaprotocols/tokens",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "chain-detail",
+          "method": "GET",
+          "route": "/api/v1/zcash/protocols/zrc20/:reference",
+          "authorityPath": "/zcash-metaprotocols/tokens/:reference",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        }
+      ],
+      "fullRecordSha256": "6ef5ab6daf5cb75674a201eeea78f51514e2d2ffaebfb245cc9373ec82c729f1"
+    }
+  ]
+}

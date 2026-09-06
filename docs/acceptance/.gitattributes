@@ -1,0 +1,3 @@
+# Preserve the attachment hash across Windows and Linux checkouts.
+explorer-health-handoff-2026-09-06.json -text
+prior-execution-evidence-2026-09-06T0705.json -text

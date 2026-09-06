@@ -1,0 +1,362 @@
+{
+  "startedAt": "2026-09-06T12:51:54.943Z",
+  "scope": "one headless Chromium page; actual local candidate; approved public Bitcoin GET upstream; no request interception",
+  "revisions": {
+    "mempool": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+    "overlay": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+  },
+  "checks": [
+    {
+      "name": "block actual data and refresh",
+      "status": "FAIL",
+      "startedAt": "2026-09-06T12:51:56.242Z",
+      "error": "Authoritative block hash absent"
+    },
+    {
+      "name": "synced node and separate service details",
+      "status": "FAIL",
+      "startedAt": "2026-09-06T12:51:58.098Z",
+      "error": "page.waitForFunction: EvalError: Refused to evaluate a string as JavaScript because 'unsafe-eval' is not an allowed source of script in the following Content Security Policy directive: \"script-src 'self' 'sha256-F5AsGcf/Fnd0Us+C7HURogB4lMHknY+tbbgVptti54w='\".\n\n    at eval (<anonymous>)\n    at predicate (eval at evaluate (:234:30), <anonymous>:11:37)\n    at next (eval at evaluate (:234:30), <anonymous>:32:31)\n    at w.<computed> (http://127.0.0.1:4310/polyfills.1dcbcc2e7b946d1f.js:1:10853)\n    at f.invokeTask (http://127.0.0.1:4310/polyfills.1dcbcc2e7b946d1f.js:1:20036)\n    at L.runTask (http://127.0.0.1:4310/polyfills.1dcbcc2e7b946d1f.js:1:14909)\n    at invokeTask (http://127.0.0.1:4310/polyfills.1dcbcc2e7b946d1f.js:1:21124)\n    at invoke (http://127.0.0.1:4310/polyfills.1dcbcc2e7b946d1f.js:1:21024)\n    at E.args.<computed> (http://127.0.0.1:4310/polyfills.1dcbcc2e7b946d1f.js:1:10474)"
+    },
+    {
+      "name": "transaction actual identity and confirmation",
+      "status": "PASS",
+      "startedAt": "2026-09-06T12:51:58.131Z",
+      "details": {
+        "txid": "203612a2ba2fb9303cd170b4b794b74bcfde55b100725d4b7c46cf89286c850a",
+        "authoritativeConfirmation": {
+          "confirmed": true,
+          "block_height": 965334,
+          "block_hash": "00000000000000000001014ea6d7cc2bceaa744c0a57001db6150f7e6d95769d",
+          "block_time": 1788571675
+        },
+        "expectedFeeSats": 199,
+        "renderedText": "UNIVERSE\nEXPLORER\nBTC\nBitcoin\nStatus unknown\nSearch the chain\nAll chains\nDashboard\nMining\nMempool\nProtocols\nNetwork\nData\nTools\nLabs\nPortfolio\nCharts\nDocs\nBitcoin · Status unknown\n\nCurrent node synchronization could not be confirmed. Individual services report their own availability.\n\nRefresh status\nTRANSACTION\n203612a2ba2fb9303cd170b4b794b74bcfde55b100725d4b7c46\ncf89286c850a\n203612a2ba2fb9303cd170b4b794b74bcfde55b100725d4b7c46cf89286c850a\n\n\n\n\n\n\n\nLoading transaction\n\n\n\nFlow\n\n\nInputs & Outputs\n\n\nDetails\n\t\n\t\n\t\n\t\n\t\n\t\nUNIVERSE\nEXPLORER\n\nLive Bitcoin, Dogecoin, and Zcash activity.\n\nLanguage\nالعربية\nČeština\nDansk\nDeutsch\nEnglish\nEspañol\nفارسی\nFrançais\n한국어\nHrvatski\nहिन्दी\nनेपाली\nItaliano\nעברית\nქართული\nLietuvių\nMagyar\nМакедонски\nNederlands\n日本語\nNorsk\nPolski\nPortuguês\nRomână\nРусский\nSlovenščina\nSuomi\nSvenska\nไทย\nTürkçe\nУкраїнська\nTiếng Việt\n中文\nFiat currency\nAUD\nCAD\nCHF\nEUR\nGBP\nJPY\nUSD\nTime zone\nUTC - Greenwich Mean Time (GMT)\n────\nUTC-12 - Anywhere on Earth (AoE)\nUTC-11 - Samoa Standard Time (SST)\nUTC-10 - Hawaii Standard Time (HST)\nUTC-9 - Alaska Standard Time (AKST)\nUTC-8 - Pacific Standard Time (PST)\nUTC-7 - Mountain Standard Time (MST)\nUTC-6 - Central Standard Time (CST)\nUTC-5 - Eastern Standard Time (EST)\nUTC-4 - Atlantic Standard Time (AST)\nUTC-3 - Argentina Time (ART)\nUTC-2 - Fernando de Noronha Time (FNT)\nUTC-1 - Azores Time (AZOT)\nUTC+1 - Central European Time (CET)\nUTC+2 - Eastern European Time (EET)\nUTC+3 - Moscow Standard Time (MSK)\nUTC+4 - Armenia Time (AMT)\nUTC+5 - Pakistan Standard Time (PKT)\nUTC+6 - Xinjiang Time (XJT)\nUTC+7 - Indochina Time (ICT)\nUTC+8 - Hong Kong Time (HKT)\nUTC+9 - Japan Standard Time (JST)\nUTC+10 - Australian Eastern Standard Time (AEST)\nUTC+11 - Norfolk Time (NFT)\nUTC+12 - New Zealand Standard Time (NZST)\nUTC+13 - Tonga Time (TOT)\nUTC+14 - Line Islands Time (LINT)\nAmount units\nBTC\nsats\nFiat\nTheme\nLight\nDark\nHigh contrast\nEXPLORE\n\nRecent blocks\n\nMining\n\nCharts\n\nReplacements\n\nUNIVERSE\n\nProtocols\n\nLive protocol activity\n\nHow this explorer reads assets\n\nTOOLS\n\nAPI documentation\n\nBroadcast a transaction\n\nTest a transaction\n\nFee calculator\n\nLEGAL\n\nSource and licenses\n\nTerms of service\n\nPrivacy policy\n\nThird-party licenses\n\nRunning v3.3.1 445702835"
+      }
+    },
+    {
+      "name": "address actual identity and history",
+      "status": "FAIL",
+      "startedAt": "2026-09-06T12:51:58.902Z",
+      "error": "page.waitForFunction: EvalError: Refused to evaluate a string as JavaScript because 'unsafe-eval' is not an allowed source of script in the following Content Security Policy directive: \"script-src 'self' 'sha256-F5AsGcf/Fnd0Us+C7HURogB4lMHknY+tbbgVptti54w='\".\n\n    at eval (<anonymous>)\n    at predicate (eval at evaluate (:234:30), <anonymous>:11:37)\n    at next (eval at evaluate (:234:30), <anonymous>:32:31)\n    at w.<computed> (http://127.0.0.1:4310/polyfills.1dcbcc2e7b946d1f.js:1:10853)\n    at f.invokeTask (http://127.0.0.1:4310/polyfills.1dcbcc2e7b946d1f.js:1:20036)\n    at L.runTask (http://127.0.0.1:4310/polyfills.1dcbcc2e7b946d1f.js:1:14909)\n    at invokeTask (http://127.0.0.1:4310/polyfills.1dcbcc2e7b946d1f.js:1:21124)\n    at invoke (http://127.0.0.1:4310/polyfills.1dcbcc2e7b946d1f.js:1:21024)\n    at E.args.<computed> (http://127.0.0.1:4310/polyfills.1dcbcc2e7b946d1f.js:1:10474)"
+    },
+    {
+      "name": "health layout default 390x844",
+      "status": "PASS",
+      "startedAt": "2026-09-06T12:51:59.258Z",
+      "details": {
+        "viewport": 390,
+        "documentWidth": 390,
+        "menu": {
+          "left": 38,
+          "right": 390,
+          "bottom": 802,
+          "height": 748
+        },
+        "viewportHeight": 844,
+        "summaryHeight": 74.5,
+        "theme": "default"
+      }
+    },
+    {
+      "name": "health layout default 844x390",
+      "status": "PASS",
+      "startedAt": "2026-09-06T12:52:00.409Z",
+      "details": {
+        "viewport": 844,
+        "documentWidth": 844,
+        "menu": {
+          "left": 155,
+          "right": 507,
+          "bottom": 346.3999938964844,
+          "height": 294.3999938964844
+        },
+        "viewportHeight": 390,
+        "summaryHeight": 74.5,
+        "theme": "default"
+      }
+    },
+    {
+      "name": "health layout dark 390x844",
+      "status": "PASS",
+      "startedAt": "2026-09-06T12:52:01.939Z",
+      "details": {
+        "viewport": 390,
+        "documentWidth": 390,
+        "menu": {
+          "left": 38,
+          "right": 390,
+          "bottom": 802,
+          "height": 748
+        },
+        "viewportHeight": 844,
+        "summaryHeight": 74.5,
+        "theme": "dark"
+      }
+    },
+    {
+      "name": "health layout dark 844x390",
+      "status": "PASS",
+      "startedAt": "2026-09-06T12:52:03.501Z",
+      "details": {
+        "viewport": 844,
+        "documentWidth": 844,
+        "menu": {
+          "left": 155,
+          "right": 507,
+          "bottom": 346.3999938964844,
+          "height": 294.3999938964844
+        },
+        "viewportHeight": 390,
+        "summaryHeight": 74.5,
+        "theme": "dark"
+      }
+    },
+    {
+      "name": "Signet context survives reload with DOGE/ZEC mainnet",
+      "status": "FAIL",
+      "startedAt": "2026-09-06T12:52:05.931Z",
+      "error": "locator.click: Target page, context or browser has been closed"
+    }
+  ],
+  "api": [
+    {
+      "path": "/api/v1/universe/protocols?chain=bitcoin&network=mainnet",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/chains?network=mainnet",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/block/00000000000000000001014ea6d7cc2bceaa744c0a57001db6150f7e6d95769d",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/blocks/965550",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/historical-price?timestamp=1788571675&currency=USD",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/blocks/965540",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/blocks/965530",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/block/00000000000000000001014ea6d7cc2bceaa744c0a57001db6150f7e6d95769d/summary",
+      "status": 200
+    },
+    {
+      "path": "/api/block/0000000000000000000034de505cc04d4d96246cb6a832e861842ac04ccf68d7/txs/0",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/universe/protocols?chain=bitcoin&network=mainnet",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/chains?network=mainnet",
+      "status": 200
+    },
+    {
+      "path": "/api/tx/203612a2ba2fb9303cd170b4b794b74bcfde55b100725d4b7c46cf89286c850a",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/block/00000000000000000001014ea6d7cc2bceaa744c0a57001db6150f7e6d95769d",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/historical-price?timestamp=1788571675&currency=USD",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/tx/203612a2ba2fb9303cd170b4b794b74bcfde55b100725d4b7c46cf89286c850a/rbf",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/cpfp/203612a2ba2fb9303cd170b4b794b74bcfde55b100725d4b7c46cf89286c850a",
+      "status": 200
+    },
+    {
+      "path": "/api/txs/outspends?txids=203612a2ba2fb9303cd170b4b794b74bcfde55b100725d4b7c46cf89286c850a",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/universe/transactions/203612a2ba2fb9303cd170b4b794b74bcfde55b100725d4b7c46cf89286c850a?chain=bitcoin&network=mainnet",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/universe/protocols?chain=bitcoin&network=mainnet",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/chains?network=mainnet",
+      "status": 200
+    },
+    {
+      "path": "/api/address/3NWYUyokv3HcL8PmFVrzFVhhg7ur9Eg8xY",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/universe/protocols?chain=bitcoin&network=mainnet",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/block/00000000000000000001014ea6d7cc2bceaa744c0a57001db6150f7e6d95769d",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/blocks/965550",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/historical-price?timestamp=1788571675&currency=USD",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/block/00000000000000000001014ea6d7cc2bceaa744c0a57001db6150f7e6d95769d/summary",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/chains?network=mainnet",
+      "status": 200
+    },
+    {
+      "path": "/api/block/0000000000000000000034de505cc04d4d96246cb6a832e861842ac04ccf68d7/txs/0",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/universe/protocols?chain=bitcoin&network=mainnet",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/block/00000000000000000001014ea6d7cc2bceaa744c0a57001db6150f7e6d95769d",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/blocks/965550",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/historical-price?timestamp=1788571675&currency=USD",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/block/00000000000000000001014ea6d7cc2bceaa744c0a57001db6150f7e6d95769d/summary",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/chains?network=mainnet",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/blocks/965540",
+      "status": 200
+    },
+    {
+      "path": "/api/block/0000000000000000000034de505cc04d4d96246cb6a832e861842ac04ccf68d7/txs/0",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/universe/protocols?chain=bitcoin&network=mainnet",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/block/00000000000000000001014ea6d7cc2bceaa744c0a57001db6150f7e6d95769d",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/blocks/965550",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/historical-price?timestamp=1788571675&currency=USD",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/block/00000000000000000001014ea6d7cc2bceaa744c0a57001db6150f7e6d95769d/summary",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/chains?network=mainnet",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/blocks/965540",
+      "status": 200
+    },
+    {
+      "path": "/api/block/0000000000000000000034de505cc04d4d96246cb6a832e861842ac04ccf68d7/txs/0",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/universe/protocols?chain=bitcoin&network=mainnet",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/block/00000000000000000001014ea6d7cc2bceaa744c0a57001db6150f7e6d95769d",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/blocks/965550",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/block/00000000000000000001014ea6d7cc2bceaa744c0a57001db6150f7e6d95769d/summary",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/historical-price?timestamp=1788571675&currency=USD",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/chains?network=mainnet",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/blocks/965540",
+      "status": 200
+    },
+    {
+      "path": "/api/block/0000000000000000000034de505cc04d4d96246cb6a832e861842ac04ccf68d7/txs/0",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/universe/protocols?chain=bitcoin&network=signet",
+      "status": 200
+    },
+    {
+      "path": "/signet/api/v1/statistics/2h",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/chains?network=signet",
+      "status": 200
+    },
+    {
+      "path": "/signet/api/v1/blocks/965550",
+      "status": 200
+    },
+    {
+      "path": "/signet/api/v1/blocks/965540",
+      "status": 200
+    },
+    {
+      "path": "/signet/api/v1/blocks/965530",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/universe/transactions/batch?chain=bitcoin&network=signet",
+      "status": 200
+    }
+  ],
+  "pageErrors": [],
+  "finishedAt": "2026-09-06T12:52:12.238Z"
+}

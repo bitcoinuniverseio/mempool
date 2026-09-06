@@ -14,6 +14,8 @@ const ts = require('typescript');
 const output = 'docs/acceptance/operation-matrix-2026-09-06.json';
 const inventories = ['docs/acceptance/2026-09-05-inventory.json', 'docs/acceptance/2026-09-05-controls.json'];
 const protocolFile = 'docs/protocols/PROTOCOL-COVERAGE.json';
+const healthHandoffFile = 'docs/acceptance/explorer-health-handoff-2026-09-06.json';
+const universeApiFile = 'frontend/src/app/universe/universe-api.service.ts';
 const catalogFile = 'backend/src/api/admin-adapter/admin-adapter.catalog.ts';
 const adminFile = 'backend/src/api/admin-adapter/admin-adapter.routes.ts';
 const kindsFile = 'backend/node_modules/@bitcoinuniverse/ecosystem-contracts/lib/admin-control.js';
@@ -168,6 +170,75 @@ export function buildMatrix({ evidencePath } = {}) {
       }
     });
   }
+  // Reconcile the inspected verification modules against the current routes.
+  // Older candidate IDs remain authoritative; only newly declared routes get
+  // a new stable ID. This bounded pass does not certify the whole denominator.
+  sourceGroups['current-api-addition'] = [];
+  for (const [module, registration] of [
+    ['bootstrap', 'bootstrapRoutes'], ['multiparty', 'multipartyRoutes'],
+    ['opentimestamps', 'openTimestampsRoutes'], ['private-submission', 'privateSubmissionRoutes'],
+  ]) {
+    const routeFile = `backend/src/api/intelligence/${module}/${module}.routes.ts`;
+    const serviceFile = `backend/src/api/intelligence/${module}/${module}.service.ts`;
+    const registrationCalls = matchingCalls('backend/src/index.ts', call => call.expression.getText() === `${registration}.initRoutes`);
+    for (const call of matchingCalls(routeFile, call => /^app\.(get|post)$/.test(call.expression.getText()) && ts.isStringLiteralLike(call.arguments[0]))) {
+      const method = call.expression.name.text.toUpperCase(), route = call.arguments[0].text;
+      const matchingRows = [...records.values()].filter(row => row.sourceFile === routeFile && row.method === method && row.route === route);
+      assert(matchingRows.length <= 1, `Duplicate inspected route binding ${method} ${route}`);
+      let row = matchingRows[0];
+      if (!row) {
+        const id = `API-CURRENT-${hash(`${routeFile}|${method}|${route}`).slice(0, 12)}`;
+        row = add(id, 'current-api-addition', { sourceFile: routeFile, method, route,
+          remainingWork: 'Execute the newly inventoried route against its owned source and actual consumer; source discovery is not acceptance.' }, ref(routeFile));
+        sourceGroups['current-api-addition'].push(id);
+      }
+      row.role = 'public request at this route; no handler authorization guard';
+      if (route.includes('/operator/')) row.requiredRoleForExecution = 'Private authorized operator; require a guard before connecting the currently absent executor';
+      row.routeConditions = conditions(call);
+      row.registrationConditions = registrationCalls.flatMap(conditions);
+      row.routeResolution = 'Current literal route and backend initialization registration inspected; external gateway policy and runtime journey remain separate';
+      row.sources.push(ref(serviceFile), ref('backend/src/index.ts', { symbol: `${registration}.initRoutes` }));
+    }
+  }
+  const healthHandoff = json(healthHandoffFile);
+  assert.equal(read(healthHandoffFile).sha256, '98ed8c95130a94dd30d8d998f4f3a4f84c2b6bfe4aefa084817783600f4805b7', 'Preserve the original health handoff bytes');
+  assert.equal(healthHandoff.schema, 'explorer-health-investigation-supplement-v1');
+  sourceGroups['health-verification'] = uniqueIds(healthHandoff.rows.map(row => ({ id: row.coverageId })), 'health handoff');
+  assert.equal(sourceGroups['health-verification'].length, 40, 'Reconcile changed health handoff identities explicitly');
+  const historyBindings = {
+    'R-03': ['dogecoin', 'block', '/block/:reference'],
+    'R-04-TX': ['dogecoin', 'transaction', '/tx/:txid'],
+    'R-04-ADDRESS': ['dogecoin', 'address', '/address/:address'],
+    'R-04-UNSPENT': ['dogecoin', 'outpoint', '/outpoint/:txid/:vout'],
+    'R-04-SPENT': ['dogecoin', 'outpoint', '/outpoint/:txid/:vout'],
+    'R-06-BLOCK': ['zcash', 'block', '/block/:reference'],
+    'R-06-TX': ['zcash', 'transaction', '/tx/:txid'],
+    'R-06-ADDRESS': ['zcash', 'address', '/address/:address'],
+    'R-06-OUTPOINT': ['zcash', 'outpoint', '/outpoint/:txid/:vout'],
+  };
+  healthHandoff.rows.forEach((original, index) => {
+    const history = historyBindings[original.coverageId];
+    const inventoryOnly = ['R-07', 'R-08', 'T-15', 'T-16', 'T-17'].includes(original.coverageId);
+    const apiBindings = history ? [{ method: 'GET', route: `/api/v1/${history[0]}${history[2]}` }]
+      : inventoryOnly ? [] : [{ method: 'GET', route: '/api/v1/chains' }, { method: 'GET', route: '/api/v1/:chain/status' }];
+    const row = add(original.coverageId, 'health-verification', {
+      chain: original.chain, operation: original.operation, feature: original.feature,
+      role: original.coverageId === 'T-16' ? 'authorized private Control Center identity and unauthorized negative case'
+        : original.coverageId === 'R-08' ? 'repository acceptance reviewer' : 'public explorer reader',
+      method: apiBindings.length === 1 ? apiBindings[0].method : null,
+      route: apiBindings.length === 1 ? apiBindings[0].route : null,
+      apiBindings, entry: history ? `/${history[0]}${history[2].replace(':address', ':reference')}` : inventoryOnly ? null : 'Chain selector and chain status',
+      query: history ? { network: 'mainnet', ...(history[1] === 'block' || history[1] === 'address'
+        ? history[0] === 'dogecoin' ? { page: ':page', limit: ':bounded-limit' } : { offset: ':offset', limit: ':bounded-limit' } : {}) } : {},
+      requiredServices: history ? [history[0] === 'dogecoin' ? 'owned Dogecoin Blockbook confirmed-history source' : 'index-zcash-metaprotocols'] : [],
+      assertions: original.expectedAssertions, workPackage: original.workPackage,
+      priorAssertion: { status: original.status, verificationKind: original.verificationKind,
+        reason: original.reason, evidenceRefs: original.evidenceRefs, endToEndPass: original.endToEndPass },
+      remainingWork: 'Execute the specified regression and applicable real source-to-consumer journey. The handoff is historical source evidence, not a current result.',
+    }, ref(healthHandoffFile, { pointer: `/rows/${index}` }));
+    if (apiBindings.length) row.sources.push(ref(universeApiFile));
+    if (history) row.sources.push(ref('frontend/src/app/universe/multichain-explorer/multichain-explorer.module.ts'));
+  });
   for (const path of readdirSync(resolve(root, 'docs/acceptance')).filter(name => name.endsWith('.md')).sort().map(name => `docs/acceptance/${name}`)) {
     read(path).text.split(/\r?\n/).forEach((line, index) => {
       if (!line.startsWith('|')) return;
@@ -207,6 +278,28 @@ export function buildMatrix({ evidencePath } = {}) {
       }, ref(protocolFile, { pointer: `/protocols/${index}/readOperationDescriptors/${operationIndex}` }));
       link(row, identity.id, 'exact protocol identity'); sourceGroups['protocol-operation'].push(id);
     }
+  });
+  const handoffOperationIds = uniqueIds(healthHandoff.protocolOperationRows.map(row => ({ id: row.coverageId })), 'health handoff protocol operations');
+  assert.equal(handoffOperationIds.length, sourceGroups['protocol-operation'].length, 'Reconcile changed handoff operation coverage');
+  assert.equal(healthHandoff.protocolCatalogue.length, protocolIds.length, 'Reconcile changed handoff protocol identities');
+  for (const original of healthHandoff.protocolCatalogue) {
+    const identity = inventory.protocols.find(row => row.id === original.id);
+    const protocol = protocolManifest.protocols.find(row => row.id === original.protocol);
+    assert(identity?.protocol === original.protocol && protocol?.chain === original.chain && protocol.indexerAuthority === original.authority,
+      `Handoff identity or authority mismatch: ${original.id}`);
+    assert.deepEqual([...original.declaredOperations].sort(), [...protocol.implementedReadOperations].sort(), `Handoff operation mismatch: ${original.id}`);
+  }
+  healthHandoff.protocolOperationRows.forEach((original, index) => {
+    const identity = inventory.protocols.find(row => row.protocol === original.protocol);
+    const row = records.get(`${identity?.id}/${original.operation}`);
+    assert(row && original.coverageId === `${identity.id}.${original.operation}` && row.chain === original.chain && row.authority === original.authority,
+      `Cannot bind handoff operation without changing identity: ${original.coverageId}`);
+    row.handoffBinding = { coverageId: original.coverageId, ledgerId: row.id, priorStatus: original.status,
+      evidenceLevel: original.evidenceLevel, originalMissingPrerequisite: original.missingPrerequisite,
+      steps: original.steps, expectedFinalOutcome: original.expectedFinalOutcome };
+    row.sources.push(ref(healthHandoffFile, { pointer: `/protocolOperationRows/${index}` }));
+    link(records.get('R-07'), row.id, 'exact handoff protocol operation');
+    link(records.get('T-15'), row.id, 'protocol operation failure, pagination and batch variants remain separately required');
   });
   const prefix = evaluate(declaration(adminFile, 'PREFIX'), adminFile, new Set());
   assert.equal(prefix, '/internal/admin/v1', 'Review changed private admin prefix before generation');
@@ -381,7 +474,10 @@ export function buildMatrix({ evidencePath } = {}) {
         return { ...entry, artifact: cleanPath(entry.artifact), sha256: actualHash };
       });
       Object.assign(row, { status: item.status, acceptanceScope: item.scope, evidence, blockers: item.blockers || [], actual: item.actual || null,
-        network: item.network || row.network, fixtureIdentity: item.fixtureIdentity || null, journeyId: item.journeyId || null });
+        network: item.network || row.network, fixtureIdentity: item.fixtureIdentity || null, journeyId: item.journeyId || null,
+        candidateRevisions: item.candidateRevisions || null, verificationTime: item.verificationTime || null,
+        repairState: item.repairState || null, verificationKind: item.verificationKind || null,
+        previousExecutionAssertions: item.previousExecutionAssertions || [] });
       row.sources.push(ref(evidencePath, { rowId: item.id }));
     }
   }
@@ -390,6 +486,11 @@ export function buildMatrix({ evidencePath } = {}) {
   const matrix = { schemaVersion: 'universe-operation-matrix-v1', sourceBaseline: 'b8d5e3bdc837681c7ce2b8cb91616262f432a313',
     status: 'FUNCTIONAL NO-GO', operationDenominatorReconciled: false, operationDenominator: null,
     countingPolicy: 'Groups and rows overlap. No source-count sum or rendering percentage is application coverage.',
+    healthHandoff: { artifact: healthHandoffFile, sha256: read(healthHandoffFile).sha256,
+      healthRows: sourceGroups['health-verification'].length, protocolOperationBindings: handoffOperationIds.length,
+      protocolOperationIds: handoffOperationIds,
+      historicalCounts: { FAIL: 8, BLOCKED: 14, 'NOT TESTED': 18 },
+      countingPolicy: 'Health scenarios supplement the preserved ledger; period-form protocol IDs bind to existing slash-form IDs without adding operations.' },
     realNetworkE2ePasses: new Set(rows.filter(row => ['PASS SIGNET', 'PASS NETWORK'].includes(row.status)).map(row => row.journeyId)).size,
     sourceCounts: { navigation: inventory.navigation.length, namedOperations: inventory.operations.length, protocolIdentities: inventory.protocols.length,
       uiCandidates: controls.operations.length, apiCandidates: controls.apiOperations.length, additionalRouteDeclarations: controls.additionalDeclaredPaths.length,
@@ -417,6 +518,13 @@ export function validateMatrix(matrix) {
   }
   for (const component of matrix.sourceCandidates.components) {
     assert.equal(component.currentSource.sha256, sources.get(component.source)?.sha256, `${component.source} has invalid component source hash lineage`);
+  }
+  if (matrix.healthHandoff) {
+    assert.equal(matrix.healthHandoff.sha256, sources.get(matrix.healthHandoff.artifact)?.sha256, 'Invalid health handoff source hash lineage');
+    const bindings = matrix.rows.filter(row => row.handoffBinding);
+    const bindingIds = uniqueIds(bindings.map(row => ({ id: row.handoffBinding.coverageId })), 'handoff operation bindings');
+    assert.deepEqual(bindingIds.sort(), [...matrix.healthHandoff.protocolOperationIds].sort(), 'Lost handoff operation binding');
+    for (const row of bindings) assert.equal(row.handoffBinding.ledgerId, row.id, 'Handoff binding changed the original ledger ID');
   }
   return true;
 }

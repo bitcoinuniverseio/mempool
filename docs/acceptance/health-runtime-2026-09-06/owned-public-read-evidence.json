@@ -1,0 +1,146 @@
+{
+  "scope": "public-live read-only; independent from candidate",
+  "startedAt": "2026-09-06T12:37:47.870Z",
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/api/v1/blocks/tip/height",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/block-height/965545",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/block/00000000000000000001014ea6d7cc2bceaa744c0a57001db6150f7e6d95769d",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/block/00000000000000000001014ea6d7cc2bceaa744c0a57001db6150f7e6d95769d/txids",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tx/203612a2ba2fb9303cd170b4b794b74bcfde55b100725d4b7c46cf89286c850a",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tx/203612a2ba2fb9303cd170b4b794b74bcfde55b100725d4b7c46cf89286c850a/outspends",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/address/3NWYUyokv3HcL8PmFVrzFVhhg7ur9Eg8xY",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/dogecoin/status?network=mainnet",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/dogecoin/block/6363071?network=mainnet&limit=1",
+      "status": 503
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/zcash/status?network=mainnet",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/zcash/block/3473922?network=mainnet&limit=1",
+      "status": 200
+    }
+  ],
+  "bitcoin": {
+    "chain": "bitcoin",
+    "network": "mainnet",
+    "blockHash": "00000000000000000001014ea6d7cc2bceaa744c0a57001db6150f7e6d95769d",
+    "height": 965545,
+    "blockTransactionCount": 4012,
+    "txid": "203612a2ba2fb9303cd170b4b794b74bcfde55b100725d4b7c46cf89286c850a",
+    "transaction": {
+      "status": {
+        "confirmed": true,
+        "block_height": 965334,
+        "block_hash": "00000000000000000001014ea6d7cc2bceaa744c0a57001db6150f7e6d95769d",
+        "block_time": 1788571675
+      },
+      "outputValues": [
+        62817
+      ],
+      "fee": 199
+    },
+    "address": "3NWYUyokv3HcL8PmFVrzFVhhg7ur9Eg8xY",
+    "addressState": {
+      "address": "3NWYUyokv3HcL8PmFVrzFVhhg7ur9Eg8xY",
+      "chain_stats": {
+        "funded_txo_count": 0,
+        "funded_txo_sum": 0,
+        "spent_txo_count": 0,
+        "spent_txo_sum": 0,
+        "tx_count": 164
+      },
+      "mempool_stats": {
+        "funded_txo_count": 0,
+        "funded_txo_sum": 0,
+        "spent_txo_count": 0,
+        "spent_txo_sum": 0,
+        "tx_count": 0
+      },
+      "electrum": true
+    },
+    "outspend": {
+      "spent": true
+    }
+  },
+  "dogecoin": {
+    "release": {
+      "sha": "64f2c2259fd3097d5bdeaaf201269ba12c910849"
+    },
+    "tip": {
+      "heightAtomic": "6363081",
+      "blockHash": "de8e12a46ff44240c65d2c95f747877471216805bcf3e1c3a178661f799cbfa1",
+      "observedAt": "2026-09-06T12:37:48.014Z"
+    },
+    "ready": false,
+    "coverage": {
+      "confirmedHistory": "unavailable",
+      "addressHistory": "unavailable",
+      "protocolHistory": "unavailable"
+    },
+    "degradedReasons": [
+      "confirmed-history-authority-unavailable",
+      "protocol-history-unavailable"
+    ],
+    "historicalBlockReadStatus": 503
+  },
+  "zcash": {
+    "release": {
+      "sha": "64f2c2259fd3097d5bdeaaf201269ba12c910849"
+    },
+    "tip": {
+      "heightAtomic": "3473932",
+      "blockHash": "000000000009b899b6c8f01fba17aa6e95da67b6b47422314573b51512be71da",
+      "observedAt": "2026-09-06T12:37:46.487Z"
+    },
+    "ready": false,
+    "coverage": {
+      "confirmedHistory": "partial",
+      "addressHistory": "partial",
+      "protocolHistory": "partial"
+    },
+    "degradedReasons": [
+      "confirmed-history-authority-unavailable",
+      "protocol-history-unavailable"
+    ],
+    "historicalBlockReadStatus": 200
+  },
+  "finishedAt": "2026-09-06T12:37:50.758Z"
+}

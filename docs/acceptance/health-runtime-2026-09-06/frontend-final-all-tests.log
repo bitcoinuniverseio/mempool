@@ -1,0 +1,118 @@
+
+> mempool-frontend@3.3.1 test:ci
+> vitest run --reporter=default --maxWorkers=2
+
+
+ RUN  v3.2.7 D:/universe/mempool/.tmp/explorer-health-cc524f6d97b5/frontend
+
+ ✓ src/app/universe/portfolio/shell/portfolio-shell.component.spec.ts (11 tests) 2434ms
+   ✓ portfolio shell route ownership > loads the URL portfolio instead of the previously active portfolio on direct open and route reuse  559ms
+   ✓ portfolio shell route ownership > activates the actual overview child with its route-provided chart dependency  636ms
+ ✓ src/app/universe/portfolio/onboarding/onboarding.component.spec.ts (43 tests) 2431ms
+   ✓ vault onboarding progress and retry > disables duplicate creation, reports failure, then allows a successful retry  549ms
+ ✓ src/app/universe/universe-route-order.spec.ts (37 tests) 15967ms
+   ✓ reserved Universe routes through the Angular router > recognizes /labs/consensus/compare as its declared component  1045ms
+ ✓ src/app/universe/portfolio/reports/report-builder.component.spec.ts (27 tests) 1000ms
+   ✓ portfolio report sharing controls > renders the export value in preview and shares only asset and percentage  348ms
+ ✓ src/app/universe/portfolio/settings/portfolio-settings.component.spec.ts (4 tests) 781ms
+   ✓ portfolio backup file selection > cannot import a previously selected backup after malformed JSON is selected  486ms
+ ✓ src/app/universe/portfolio/manual/manual-positions.component.spec.ts (7 tests) 746ms
+   ✓ manual positions editor > persists exact user-entered fields through the store without adding public accounts or combined balances  319ms
+ ✓ src/app/universe/portfolio/stores/vault.service.spec.ts (23 tests) 703ms
+ ✓ src/app/universe/portfolio/share/share-view.component.spec.ts (5 tests) 709ms
+   ✓ portfolio share route and response states > opens an independently encrypted snapshot when the same share receives its fragment key  455ms
+ ✓ src/app/universe/multiparty/multiparty-session.component.spec.ts (1 test) 142ms
+ ✓ src/app/universe/portfolio/home/overview.component.spec.ts (2 tests) 46ms
+ ✓ src/app/universe/silent-payments/silent-payments-scanner.spec.ts (10 tests) 278ms
+ ✓ src/app/universe/portfolio/shared/derivation.spec.ts (21 tests) 230ms
+ ✓ src/app/shared/load-state.spec.ts (20 tests) 87ms
+ ✓ src/app/universe/command-center/command-query.spec.ts (22 tests) 39ms
+ ✓ src/app/universe/universe-protocol-contract.spec.ts (131 tests) 61ms
+ ✓ src/app/universe/swaps/swaps-package.spec.ts (28 tests) 101ms
+ ✓ src/app/universe/live/live-buffer.spec.ts (14 tests) 43ms
+ ✓ src/app/universe/multichain-explorer/multichain-view.spec.ts (115 tests) 44ms
+ ✓ src/app/universe/portfolio/data/portfolio-data.service.spec.ts (3 tests) 18ms
+ ✓ src/app/universe/portfolio/share/portfolio-share.service.spec.ts (11 tests) 32ms
+ ✓ src/app/universe/portfolio/workspace/workspace-import.spec.ts (10 tests) 9ms
+ ✓ src/app/universe/portfolio/shared/insights.spec.ts (5 tests) 21ms
+ ✓ src/app/universe/universe-api.service.spec.ts (13 tests) 21ms
+ ✓ src/app/universe/labs/privacy/privacy-rules.spec.ts (47 tests) 16ms
+ ✓ src/app/universe/universe-network-context.spec.ts (51 tests) 31ms
+ ✓ src/app/universe/mining-lab/auxpow-parser.spec.ts (7 tests) 12ms
+ ✓ src/app/universe/protocol-directory/protocol-directory.component.spec.ts (22 tests) 22ms
+ ✓ src/app/universe/portfolio/portfolio-calendar.spec.ts (10 tests) 20ms
+ ✓ src/app/universe/portfolio/portfolio-view.spec.ts (12 tests) 25ms
+ ✓ src/app/universe/multichain-explorer/live-model-check.spec.ts (21 tests) 20ms
+ ✓ src/app/universe/protocol-detail/protocol-detail.component.spec.ts (7 tests) 16ms
+ ✓ src/app/universe/portfolio/portfolio-watchlist.service.spec.ts (9 tests) 9ms
+ ✓ src/app/services/request-cache.spec.ts (9 tests) 15ms
+ ✓ src/app/universe/pwa/universe-service-worker.spec.ts (14 tests) 27ms
+ ✓ src/app/universe/chain-health.service.spec.ts (2 tests) 18ms
+ ✓ src/app/universe/universe-pulse.service.spec.ts (10 tests) 26ms
+ ✓ src/app/universe/workbench/psbt-inspect.spec.ts (50 tests) 27ms
+ ✓ src/app/universe/asset-lookup.spec.ts (18 tests) 15ms
+ ✓ src/app/universe/portfolio/portfolio-alerts.spec.ts (14 tests) 18ms
+ ✓ src/app/universe/universe-evidence.spec.ts (20 tests) 28ms
+ ✓ src/app/universe/workbench/psbt-summary.spec.ts (26 tests) 23ms
+ ✓ src/app/universe/universe-local.service.spec.ts (18 tests) 39ms
+ ✓ src/app/universe/multichain-explorer/ruleset-assets.spec.ts (19 tests) 38ms
+ ✓ src/app/universe/node-console/node-view.spec.ts (51 tests) 21ms
+ ✓ src/app/universe/asset-flow/asset-flow.component.spec.ts (26 tests) 25ms
+ ✓ src/app/universe/multiparty/multiparty.service.spec.ts (1 test) 15ms
+ ✓ src/app/universe/portfolio/shared/aggregation.spec.ts (9 tests) 18ms
+ ✓ src/app/universe/universe-identifier.spec.ts (21 tests) 36ms
+ ✓ src/app/universe/command-center/command-candidates.spec.ts (18 tests) 17ms
+ ✓ src/app/universe/mempool-intelligence/bump-view.spec.ts (18 tests) 10ms
+ ✓ src/app/universe/portfolio/portfolio-chart.spec.ts (7 tests) 9ms
+ ✓ src/app/universe/address-assets/address-assets.component.spec.ts (11 tests) 56ms
+ ✓ src/app/universe/chain-dashboard/chain-lens.spec.ts (9 tests) 11ms
+ ✓ src/app/universe/mempool-intelligence/cluster-layout.spec.ts (19 tests) 19ms
+ ✓ src/app/universe/multichain-explorer/dune-assets.spec.ts (9 tests) 15ms
+ ✓ src/app/universe/provenance-graph/provenance-graph.spec.ts (15 tests) 14ms
+ ✓ src/app/universe/mempool-intelligence/package-input.spec.ts (22 tests) 13ms
+ ✓ src/app/universe/mempool-intelligence/cluster-format.spec.ts (14 tests) 10ms
+ ✓ src/app/universe/portfolio/shared/secret-detection.spec.ts (8 tests) 8ms
+ ✓ src/app/universe/chain-dashboard/mean-basis.spec.ts (7 tests) 13ms
+ ✓ src/app/shared/address-error.spec.ts (10 tests) 8ms
+ ✓ src/app/universe/multichain-explorer/chain-health.spec.ts (28 tests) 16ms
+ ✓ src/app/universe/pwa/storage-format.spec.ts (8 tests) 7ms
+ ✓ src/app/universe/multichain-explorer/zcash-block.spec.ts (10 tests) 11ms
+ ✓ src/app/universe/multichain-explorer/zcash-address.spec.ts (5 tests) 9ms
+ ✓ src/app/universe/labs/privacy/privacy-map.spec.ts (10 tests) 7ms
+ ✓ src/app/universe/universe-chain-routing.spec.ts (7 tests) 9ms
+ ✓ src/app/universe/portfolio/portfolio-alerts.service.spec.ts (10 tests) 14ms
+ ✓ src/app/universe/mining-lab/mining-analysis.spec.ts (6 tests) 8ms
+ ✓ src/app/universe/portfolio/shared/utxo-safety.spec.ts (8 tests) 11ms
+ ✓ src/app/universe/intelligence-platform/intelligence-platform.spec.ts (22 tests) 12ms
+ ✓ src/app/components/search-form/search-clear.spec.ts (4 tests) 3ms
+ ✓ src/app/universe/chain-dashboard/chain-timeline.spec.ts (6 tests) 8ms
+ ✓ src/app/universe/command-center/command-keyboard.spec.ts (9 tests) 3ms
+ ✓ src/app/universe/chain-docs/chain-docs.component.spec.ts (7 tests) 9ms
+ ✓ src/app/universe/portfolio/manual/manual-positions.spec.ts (24 tests) 7ms
+ ✓ src/app/universe/chain-sync-notice/chain-sync-notice.component.spec.ts (8 tests) 5ms
+ ✓ src/app/universe/multichain-explorer/chain-reasons.spec.ts (6 tests) 6ms
+ ✓ src/app/universe/private-submission/private-submission-receipts.component.spec.ts (5 tests) 7ms
+ ✓ src/app/universe/chain-graphs/chain-chart-format.spec.ts (18 tests) 8ms
+ ✓ src/app/shared/pipes/http-error-pipe/http-error.pipe.spec.ts (10 tests) 7ms
+ ✓ src/app/universe/command-center/command-history.spec.ts (6 tests) 12ms
+ ✓ src/app/universe/swaps/swaps-simulation.spec.ts (8 tests) 9ms
+ ✓ src/app/universe/multichain-explorer/candidate-buckets.spec.ts (7 tests) 9ms
+ ✓ src/app/universe/command-center/command-batch.spec.ts (7 tests) 10ms
+ ✓ src/app/universe/chain-dashboard/chain-dashboard.component.spec.ts (2 tests) 3ms
+ ✓ src/app/universe/universe-viewport.service.spec.ts (8 tests) 5ms
+ ✓ src/app/universe/portfolio/shared/exact.spec.ts (7 tests) 6ms
+ ✓ src/app/universe/protocol-activity-view.spec.ts (13 tests) 5ms
+ ✓ src/app/universe/multichain-explorer/protocol-index.spec.ts (4 tests) 5ms
+ ✓ src/app/universe/pwa/share-target.spec.ts (12 tests) 6ms
+ ✓ src/app/universe/chain-graphs/chain-chart-config.spec.ts (15 tests) 6ms
+ ✓ src/app/components/master-page/nav-reveal.spec.ts (7 tests) 4ms
+ ✓ src/app/universe/universe-websocket.service.spec.ts (2 tests) 4ms
+ ✓ src/app/shared/secret-detection.spec.ts (5 tests) 3ms
+ ✓ src/app/universe/portfolio/portfolio.component.spec.ts (1 test) 2ms
+ ✓ src/app/universe/pwa/connectivity-banner.spec.ts (4 tests) 2ms
+
+ Test Files  97 passed (97)
+      Tests  1543 passed (1543)
+   Start at  13:09:51
+   Duration  63.32s (transform 23.08s, setup 8.26s, collect 30.69s, tests 26.96s, environment 20.30s, prepare 14.56s)
+

@@ -1,0 +1,191 @@
+{
+  "schemaVersion": "universe-wp07-repair-evidence-v1",
+  "recordedAt": "2026-09-06T12:55:51.141Z",
+  "scope": "Source integrity, real BIP340 public-vector verification, isolated route responses and focused consumer contracts. No complete WP07 operation or network journey accepted.",
+  "candidateRevisions": {
+    "mempoolBase": "445702835144f1998dc3ed1f79e2ef77ed6871af",
+    "mempoolCandidate": "64d9ebccd6deb1da07c14fbb3fe77596af1f3646",
+    "backendApis": "8b2aea3afd4b2f26e2ee5f1275171a937515cbc2"
+  },
+  "productionFiles": [
+    {
+      "path": "backend/src/api/intelligence/bootstrap/bootstrap.service.ts",
+      "sha256": "c7941a83f01566f2433d5a843833c1f39ac88797d89954cb2de2a5847d9f2b64"
+    },
+    {
+      "path": "backend/src/api/intelligence/bootstrap/bootstrap.routes.ts",
+      "sha256": "2dc02152ee575d347a25e92f631a2e43b9e00ff3d80c93faad5530882ec9f937"
+    },
+    {
+      "path": "backend/src/api/intelligence/multiparty/multiparty.service.ts",
+      "sha256": "3ed29b1c397bcd412a3cf6a57d8837c6dfd044c68996b64dfe7b1134c554f8c5"
+    },
+    {
+      "path": "backend/src/api/intelligence/multiparty/multiparty.routes.ts",
+      "sha256": "d0cfaee7a268e34b088d83df059f743927e894bf3c7d57ce0996cf6caf22fb98"
+    },
+    {
+      "path": "backend/src/api/intelligence/opentimestamps/opentimestamps.service.ts",
+      "sha256": "fad2e42d1d1856638260991ed4b3348b48df62133979c59eff82fbbaacfbfc34"
+    },
+    {
+      "path": "backend/src/api/intelligence/opentimestamps/opentimestamps.routes.ts",
+      "sha256": "df983fca08444b206c936df215ce7f21c7df687f63c480fe15d917dbc45a7fb1"
+    },
+    {
+      "path": "backend/src/api/intelligence/private-submission/private-submission.service.ts",
+      "sha256": "61d2ee638095c66be73f2a1324b18f826c729bf85209093a466d3f8543c0a119"
+    },
+    {
+      "path": "backend/src/api/intelligence/private-submission/private-submission.routes.ts",
+      "sha256": "5bd302bf8f29cb6c3cf2c7fa28b7569f7ef44131907c1f1b654825467d93e2d3"
+    },
+    {
+      "path": "frontend/src/app/universe/multiparty/multiparty.service.ts",
+      "sha256": "4371986868889b21cce6d2cad268accad4616b877f33f88ab75ecb78bb7857cf"
+    },
+    {
+      "path": "frontend/src/app/universe/multiparty/multiparty-session.component.ts",
+      "sha256": "260496f0584f9c60a2cabfb2f7e1361a687ece5a90886e91dda26388515f3211"
+    },
+    {
+      "path": "frontend/src/app/universe/private-submission/private-submission-receipts.component.ts",
+      "sha256": "3be12fe1696764cec7caf305a51470e51ba2d3271c28ab39109b18d46950d709"
+    },
+    {
+      "path": "frontend/src/app/universe/rgb/rgb-studio.component.ts",
+      "sha256": "dd0492f3072fd9d5110a078fa659ba2642a2cce0241cb04f6660dc9c4d7ad4ea"
+    }
+  ],
+  "tests": [
+    {
+      "path": "backend/src/api/intelligence/bootstrap/bootstrap.test.ts",
+      "sha256": "31b28759ff3a54ef49e257bce9d94b67a1eae41f2c732da2a87e7b6339aee223"
+    },
+    {
+      "path": "backend/src/api/intelligence/multiparty/multiparty.test.ts",
+      "sha256": "08be6dd4d4ee367a7d0f4e66fb9a5de665759a9982d0a5f96276bb194b561e5e"
+    },
+    {
+      "path": "backend/src/api/intelligence/opentimestamps/opentimestamps.test.ts",
+      "sha256": "ef3b3c85c54e0d3eed89dac87dc5b43adcf1468608c9b138c8d01187bbb4f6fa"
+    },
+    {
+      "path": "backend/src/api/intelligence/private-submission/private-submission.test.ts",
+      "sha256": "f673368af275a88edc83e1dd5da188bae070f96f5724b168eba3cbfed9031c8b"
+    },
+    {
+      "path": "backend/src/api/intelligence/verification-integrity.test.ts",
+      "sha256": "4a7f98f94676714c5449e99579671e851a89e0951271d0465aac1895d904233f"
+    },
+    {
+      "path": "frontend/src/app/universe/multiparty/multiparty.service.spec.ts",
+      "sha256": "b87aeb5defc19661b91f468c1d9d93aea5a8d19ec1f0cc1c836390bed9039de1"
+    },
+    {
+      "path": "frontend/src/app/universe/multiparty/multiparty-session.component.spec.ts",
+      "sha256": "23f63c8b7611049a76343ee7e7c93808e44e3ab665fc2dc6308132c864d24aff"
+    },
+    {
+      "path": "frontend/src/app/universe/private-submission/private-submission-receipts.component.spec.ts",
+      "sha256": "9ce92166877709b4106ba829fc4e9eab6aadf1ab2bb966088929141b0e173bb2"
+    }
+  ],
+  "logs": [
+    {
+      "path": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mempool-backend-full-tests.log",
+      "sha256": "278806fc192a88290558bc0885cf6872d3b021e4f9217afb7c1ec5c44980917b",
+      "bytes": 261021,
+      "note": "Full local output retained outside the source checkout."
+    },
+    {
+      "path": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mempool-backend-full-lint.log",
+      "sha256": "5119ae35b540ca95bec90898ece74129785683399ea3bc916b9df39af274ba5a",
+      "bytes": 154963,
+      "note": "Full local output retained outside the source checkout."
+    },
+    {
+      "path": "C:\\WINDOWS\\TEMP\\explorer-repair-handoff-c5b7a2d25e4a4240933575908ba457ab\\mempool-backend-source-typecheck.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "note": "Full local output retained outside the source checkout."
+    }
+  ],
+  "outcomes": [
+    {
+      "command": "npm run test:ci -- --maxWorkers=2",
+      "cwd": "backend",
+      "exitCode": 0,
+      "suitesPassed": 74,
+      "testsPassed": 705,
+      "testsSkipped": 4,
+      "durationSeconds": 101.227,
+      "kind": "full local regression, not authority-to-consumer acceptance",
+      "skipped": {
+        "source": "backend/src/__tests__/esplora-contract.test.ts",
+        "requiredEnvironment": "UNIVERSE_ESPLORA_CONTRACT_URL",
+        "cases": [
+          "live address summary",
+          "bounded address history",
+          "bounded UTXO list",
+          "multi-page address cursor"
+        ]
+      },
+      "excludedByPinnedConfig": "backend/jest.config.ts excludes __integration_tests__ from this command; those integration journeys are not certified by this result."
+    },
+    {
+      "command": "npm run lint",
+      "cwd": "backend",
+      "exitCode": 0,
+      "errors": 0,
+      "warnings": 1387
+    },
+    {
+      "command": "node node_modules/typescript/bin/tsc -p tsconfig.build.json --noEmit",
+      "cwd": "backend",
+      "exitCode": 0
+    },
+    {
+      "command": "node node_modules/vitest/vitest.mjs run src/app/universe/multiparty/multiparty.service.spec.ts src/app/universe/private-submission/private-submission-receipts.component.spec.ts --maxWorkers=2",
+      "cwd": "frontend",
+      "exitCode": 0,
+      "testsPassed": 6,
+      "startedAt": "2026-09-06T12:36:38Z"
+    },
+    {
+      "command": "node node_modules/vitest/vitest.mjs run src/app/universe/multiparty/multiparty-session.component.spec.ts --maxWorkers=2",
+      "cwd": "frontend",
+      "exitCode": 0,
+      "testsPassed": 1,
+      "startedAt": "2026-09-06T12:42:02Z",
+      "kind": "Angular rendered DOM regression under jsdom; not a browser or network journey"
+    },
+    {
+      "command": "Scoped ESLint for changed frontend verification files",
+      "cwd": "frontend",
+      "exitCode": 0,
+      "errors": 0,
+      "note": "Session component/spec had no lint warnings. Existing any/curly warnings remain on other feature files."
+    }
+  ],
+  "assertions": [
+    "Unconfigured bootstrap reads, trusted snapshot verification and operator jobs produce typed unavailability; no seeded or imaginary result remains in these services.",
+    "Unconfigured OpenTimestamps calendar reads, stamp, upgrade and attestation verification do not create proof or Bitcoin-confirmation claims.",
+    "BIP340 public vector 0 verifies with tiny-secp256k1; the zero signature and changed message fail. Whole MuSig2 verified remains false even when the supplied final signature verifies.",
+    "MuSig2 never derives an aggregate key by hashing participant strings or verifies a vendor manifest from the presence of signature text.",
+    "Isolated Express route tests exercise the actual mounted verification paths and frontend input aliases. Missing authority returns 503; invalid structural input returns 400.",
+    "Accelerator receipt txid must contain exactly 32 bytes in hexadecimal. A structurally complete signature-shaped receipt stays unverified without provider trust.",
+    "Receipt UI rejects empty, negative, signature-invalid and mismatched identity responses even when delivered over HTTP 200.",
+    "Session UI renders arbitrary requested ID with unknown nonce/partial-signature state and unverified final signature, rather than invented completion."
+  ],
+  "publicReference": {
+    "vector": "BIP340 public test vector 0 (only public key, message and signature used)",
+    "specification": "https://github.com/bitcoin/bips/blob/master/bip-0340.mediawiki",
+    "vectors": "https://github.com/bitcoin/bips/blob/master/bip-0340/test-vectors.csv",
+    "bip327": "https://github.com/bitcoin/bips/blob/master/bip-0327.mediawiki",
+    "implementation": "tiny-secp256k1 2.2.4 verifySchnorr",
+    "scopeLimit": "This primitive neither authenticates participant aggregation nor verifies MuSig2 nonces, partial signatures, tweaks, product conformance or vendor identity."
+  },
+  "remainingPrerequisitesDocument": "docs/acceptance/HEALTH-REPAIR-2026-09-06.md",
+  "realNetworkE2ePasses": 0
+}
