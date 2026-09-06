@@ -159,16 +159,17 @@ export function aggregatePortfolio(
   const duplicates: string[] = [];
   for (const snapshot of snapshots) {
     if (includeAccounts !== null && !includeAccounts.has(snapshot.accountId)) continue;
-    const existing = claimedBy.get(snapshot.address);
+    const addressKey = JSON.stringify([snapshot.chain, snapshot.network, snapshot.address]);
+    const existing = claimedBy.get(addressKey);
     if (existing === undefined) {
-      claimedBy.set(snapshot.address, policy[snapshot.address] ?? snapshot.accountId);
+      claimedBy.set(addressKey, policy[snapshot.address] ?? snapshot.accountId);
     } else if (existing !== (policy[snapshot.address] ?? snapshot.accountId)) {
       if (!duplicates.includes(snapshot.address)) duplicates.push(snapshot.address);
     }
   }
   const included = snapshots.filter(
     (snapshot) =>
-      claimedBy.get(snapshot.address) === snapshot.accountId &&
+      claimedBy.get(JSON.stringify([snapshot.chain, snapshot.network, snapshot.address])) === snapshot.accountId &&
       (includeAccounts === null || includeAccounts.has(snapshot.accountId)),
   );
   duplicates.sort();

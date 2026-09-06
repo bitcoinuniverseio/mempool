@@ -4,10 +4,15 @@
  * CSV, or evidence JSON entirely client-side.
  */
 
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { combineLatest, map } from 'rxjs';
 import { PortfolioDataService } from '../data/portfolio-data.service';
 import { PortfolioSessionService } from '../stores/session.service';
-import { formatExact, maskedValue, truncateIdentifier } from '../shared/exact';
+import { formatExact, truncateIdentifier } from '../shared/exact';
+import { PortfolioShareService, PortfolioShareSummary } from '../share/portfolio-share.service';
 
 type AddressMode = 'included' | 'truncated' | 'removed';
 type ValueMode = 'absolute' | 'percentages';
@@ -15,12 +20,13 @@ type ValueMode = 'absolute' | 'percentages';
 @Component({
   selector: 'app-report-builder',
   standalone: true,
+  imports: [DatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="builder">
       <h1 i18n="@@universe.portfolio.reports.title">Redacted report</h1>
       <p class="soft" i18n="@@universe.portfolio.reports.copy">
-        Everything renders in this browser from the loaded evidence - nothing is uploaded.
+        Downloads render in this browser from the loaded evidence.
         The preview shows exactly what the report exposes.
       </p>
 
@@ -53,6 +59,7 @@ type ValueMode = 'absolute' | 'percentages';
                 <th scope="col" i18n="@@universe.portfolio.reports.asset">Asset</th>
                 <th scope="col" i18n="@@universe.portfolio.reports.holding">Holding</th>
                 <th scope="col" i18n="@@universe.portfolio.reports.share">Share</th>
+                <th scope="col" i18n="@@universe.portfolio.reports.value">Value</th>
               </tr>
             </thead>
             <tbody>
@@ -61,6 +68,7 @@ type ValueMode = 'absolute' | 'percentages';
                   <td>{{ row.asset }}</td>
                   <td>{{ row.holding }}</td>
                   <td>{{ row.share }}</td>
+                  <td>{{ row.value }}</td>
                 </tr>
               }
             </tbody>
@@ -72,6 +80,49 @@ type ValueMode = 'absolute' | 'percentages';
         <button type="button" (click)="print()" i18n="@@universe.portfolio.reports.print">Print / save PDF</button>
         <button type="button" [disabled]="reportRows().length === 0" (click)="downloadCsv()" i18n="@@universe.portfolio.reports.csv">Download CSV</button>
       </div>
+
+      <section class="preview share-controls" aria-labelledby="share-report-title">
+        <h2 id="share-report-title" i18n="@@universe.portfolio.reports.share-title">Encrypted share</h2>
+        <p class="soft" i18n="@@universe.portfolio.reports.share-copy">
+          Share the asset and percentage columns shown above. Addresses and absolute values are excluded.
+          Only encrypted data is uploaded. Anyone with the full link can read it until expiry or revocation.
+        </p>
+        <div class="options">
+          <label>
+            <span i18n="@@universe.portfolio.reports.expiry">Expires after</span>
+            <select #expiry (change)="shareTtl.set(+$any(expiry.value))" [disabled]="shareBusy()">
+              <option value="86400">1 day</option>
+              <option value="604800">7 days</option>
+              <option value="2592000">30 days</option>
+            </select>
+          </label>
+          <button type="button" (click)="createShare()" [disabled]="shareBusy() || data().loading || !data().completedAt || reportRows().length === 0" i18n="@@universe.portfolio.reports.create-share">Create encrypted link</button>
+          <button type="button" (click)="refreshShares()" [disabled]="shareBusy()" i18n="@@universe.portfolio.reports.refresh-shares">Refresh saved shares</button>
+        </div>
+        @if (shareMessage()) { <p role="status" class="soft">{{ shareMessage() }}</p> }
+        @if (shareLink()) {
+          <label>
+            <span i18n="@@universe.portfolio.reports.full-link">Full recipient link</span>
+            <input readonly [value]="shareLink()" (focus)="$any($event.target).select()" />
+          </label>
+        }
+        @for (share of savedShares(); track share.shareId) {
+          <div class="saved-share">
+            <span class="soft">{{ share.createdAt | date:'short' }} · {{ share.state }} · expires {{ share.expiresAt | date:'short' }}</span>
+            <div class="actions">
+              @if (share.state === 'active') {
+                <button type="button" (click)="showShareLink(share.shareId)" [disabled]="shareBusy()">Show link</button>
+              }
+              @if (share.state === 'pending') {
+                <button type="button" (click)="retryShare(share.shareId)" [disabled]="shareBusy()">Retry upload</button>
+              }
+              @if (share.state === 'active' || share.state === 'pending') {
+                <button type="button" (click)="revokeShare(share.shareId)" [disabled]="shareBusy()">Revoke</button>
+              }
+            </div>
+          </div>
+        }
+      </section>
     </div>
   `,
   styles: [
@@ -86,22 +137,99 @@ type ValueMode = 'absolute' | 'percentages';
       .preview { border: 1px dashed var(--u-separator, rgba(0,0,0,0.18)); border-radius: 12px; padding: 14px 16px; }
       table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
       th, td { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--u-separator, rgba(0,0,0,0.06)); }
-      .actions { display: flex; gap: 10px; }
+      .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+      .saved-share { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+      input { width: 100%; min-width: 0; min-height: 40px; padding: 8px; border: 1px solid var(--u-separator, rgba(0,0,0,0.14)); border-radius: 8px; color: inherit; background: transparent; }
       .soft { font-size: 12.5px; color: var(--u-fg-soft, inherit); }
+      @media print { .options, .actions, .share-controls { display: none; } }
     `,
   ],
 })
 export class ReportBuilderComponent {
   readonly data = inject(PortfolioDataService).state;
   readonly session = inject(PortfolioSessionService);
-  readonly portfolioId = input<string>('');
+  readonly portfolioId = toSignal(combineLatest(inject(ActivatedRoute).pathFromRoot.map((route) => route.paramMap))
+    .pipe(map((params) => params.map((value) => value.get('portfolioId')).find(Boolean) ?? '')), { initialValue: '' });
+  private readonly shares = inject(PortfolioShareService);
+  readonly shareTtl = signal(86400);
+  readonly shareBusy = signal(false);
+  readonly shareMessage = signal('');
+  readonly shareLink = signal('');
+  readonly savedShares = signal<PortfolioShareSummary[]>([]);
+
+  constructor() {
+    effect(() => {
+      this.portfolioId();
+      this.shareLink.set('');
+      this.savedShares.set([]);
+      void this.refreshShares();
+    });
+  }
+
+  async refreshShares(): Promise<void> {
+    const portfolioId = this.portfolioId();
+    if (!this.shares.unlocked()) {
+      this.savedShares.set([]);
+      this.shareLink.set('');
+      this.shareMessage.set('Unlock the portfolio vault to create or manage shares.');
+      return;
+    }
+    try {
+      const shares = await this.shares.list(portfolioId);
+      if (this.portfolioId() === portfolioId) { this.savedShares.set(shares); }
+    }
+    catch { this.shareMessage.set('Saved shares could not be read. Unlock the vault and retry.'); }
+  }
+
+  private async shareAction(action: () => Promise<void>, success: string): Promise<void> {
+    if (this.shareBusy()) {return;}
+    this.shareBusy.set(true);
+    const portfolioId = this.portfolioId();
+    this.shareLink.set('');
+    this.shareMessage.set('Working…');
+    try { await action(); if (this.portfolioId() === portfolioId) { this.shareMessage.set(success); } }
+    catch { if (this.portfolioId() === portfolioId) { this.shareMessage.set('The share could not be updated. Check that the vault is unlocked and sharing storage is available, then retry. Pending uploads remain saved.'); } }
+    finally { this.shareBusy.set(false); await this.refreshShares(); }
+  }
+
+  async createShare(): Promise<void> {
+    const portfolioId = this.portfolioId();
+    const completedAt = this.data().completedAt;
+    if (this.data().loading || !completedAt) {return;}
+    await this.shareAction(async () => {
+      const shareId = await this.shares.create(portfolioId, this.reportRows().map(({ asset, share }) => ({ asset, share })), completedAt, this.shareTtl());
+      const link = await this.shares.link(shareId, portfolioId, window.location.origin);
+      if (this.portfolioId() === portfolioId) { this.shareLink.set(link); }
+    }, 'Encrypted share created. Copy the full recipient link.');
+  }
+
+  async retryShare(shareId: string): Promise<void> {
+    const portfolioId = this.portfolioId();
+    await this.shareAction(async () => {
+      await this.shares.retry(shareId, portfolioId);
+      const link = await this.shares.link(shareId, portfolioId, window.location.origin);
+      if (this.portfolioId() === portfolioId) { this.shareLink.set(link); }
+    }, 'Encrypted share uploaded.');
+  }
+
+  async revokeShare(shareId: string): Promise<void> {
+    await this.shareAction(() => this.shares.revoke(shareId, this.portfolioId()), 'Share revoked. Existing downloaded copies cannot be recalled.');
+  }
+
+  async showShareLink(shareId: string): Promise<void> {
+    const portfolioId = this.portfolioId();
+    await this.shareAction(async () => {
+      const link = await this.shares.link(shareId, portfolioId, window.location.origin);
+      if (this.portfolioId() === portfolioId) { this.shareLink.set(link); }
+    }, 'Copy the full recipient link.');
+  }
 
   readonly addressMode = signal<AddressMode>('truncated');
   readonly valueMode = signal<ValueMode>('absolute');
 
   readonly reportRows = computed(() => {
     const aggregation = this.data().aggregation;
-    if (aggregation === null) return [];
+    if (aggregation === null) {return [];}
     const total = aggregation.pricedTotal;
     return aggregation.holdings.map((holding) => {
       const asset = holding.displayName ?? holding.assetKey.split(':').pop() ?? holding.assetKey;
@@ -116,12 +244,12 @@ export class ReportBuilderComponent {
         holding.pricedValue === null
           ? $localize`:@@universe.portfolio.reports.unpriced:Unpriced`
           : this.valueMode() === 'percentages' || this.session.valuesHidden()
-            ? `${percent(holding.pricedValue, total ?? '0')}%`
+            ? reportPercentage(holding.pricedValue, total)
             : formatExact(holding.pricedValue, 'en');
       return {
         asset,
         holding: holdingText,
-        share: `${percent(holding.pricedValue ?? '0', total ?? '0')}%`,
+        share: reportPercentage(holding.pricedValue, total),
         value,
       };
     });
@@ -160,14 +288,15 @@ export class ReportBuilderComponent {
   }
 }
 
-function percent(part: string, total: string): string {
-  if (total === '0' || total.length === 0) return '0';
+export function reportPercentage(part: string | null, total: string | null): string {
+  if (part === null || total === null || !/^\d+(\.\d+)?$/.test(part) || !/^\d+(\.\d+)?$/.test(total)) {return 'Unpriced';}
   const scale = (value: string): bigint => BigInt(value.replace('.', ''));
+  if (scale(total) === 0n) {return 'Unavailable';}
   const partScale = part.split('.')[1]?.length ?? 0;
   const totalScale = total.split('.')[1]?.length ?? 0;
-  const scaled = (scale(part) * 10n ** BigInt(Math.max(0, totalScale - partScale) + 8)) / scale(total);
-  const whole = scaled / 100_000_000n;
-  const fraction = (scaled % 100_000_000n).toString().padStart(8, '0').replace(/0+$/, '');
+  const scaled = (scale(part) * 10n ** BigInt(totalScale) * 10_000n) / (scale(total) * 10n ** BigInt(partScale));
+  const whole = scaled / 100n;
+  const fraction = (scaled % 100n).toString().padStart(2, '0').replace(/0+$/, '');
   const text = fraction.length === 0 ? `${whole}` : `${whole}.${fraction}`;
-  return formatExact(text, 'en', { maximumFractionDigits: 2 });
+  return `${formatExact(text, 'en', { maximumFractionDigits: 2 })}%`;
 }

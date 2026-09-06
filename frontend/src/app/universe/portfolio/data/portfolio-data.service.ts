@@ -105,6 +105,7 @@ export class PortfolioDataService {
       const results = await Promise.allSettled(
         chunk.map(({ account, address }) => this.loadAddress(account, address)),
       );
+      if (sequence !== this.loadSequence) return;
       for (let offset = 0; offset < results.length; offset += 1) {
         const result = results[offset];
         const { account, address } = chunk[offset];
@@ -180,7 +181,7 @@ export class PortfolioDataService {
         })),
       },
       holdings: {
-        assetKey: 'bitcoin:mainnet:base:native:bitcoin',
+        assetKey: summary.nativeBalance?.assetKey ?? `${account.chain}:${account.network}:base:native:${account.chain}`,
         quantityAtomic: summary.nativeBalance?.quantityAtomic ?? null,
         value: summary.nativeBalance?.value,
         valuationState: summary.nativeBalance?.valuationState ?? 'unpriced',

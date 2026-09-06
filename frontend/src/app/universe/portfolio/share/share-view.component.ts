@@ -5,8 +5,11 @@
  * server-side; expired and revoked states are explicit.
  */
 
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, input, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { ActivatedRoute } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { combineLatest, firstValueFrom } from 'rxjs';
 import { formatExact } from '../shared/exact';
 
 interface SharePayload {
@@ -82,7 +85,9 @@ interface SharePayload {
 })
 export class ShareViewComponent implements OnInit {
   private readonly http = inject(HttpClient);
-  readonly shareId = input<string>('');
+  private readonly route = inject(ActivatedRoute);
+  private readonly destroyRef = inject(DestroyRef);
+  private requestSequence = 0;
 
   private readonly stateSignal = signal<'loading' | 'ready' | 'expired' | 'missing' | 'no-key' | 'failed'>('loading');
   private readonly snapshotSignal = signal<{ readonly holdings: readonly { readonly asset: string; readonly share: string }[]; readonly createdAt: string } | null>(null);
@@ -97,12 +102,17 @@ export class ShareViewComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    void this.open();
+    this.destroyRef.onDestroy(() => { this.requestSequence++; });
+    combineLatest([this.route.paramMap, this.route.fragment]).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(([params, fragment]) => {
+      void this.open(params.get('shareId') ?? '', fragment ?? '');
+    });
   }
 
-  private async open(): Promise<void> {
-    const shareId = this.shareId();
-    const keyFragment = window.location.hash.replace(/^#key=/, '');
+  private async open(shareId: string, fragment: string): Promise<void> {
+    const sequence = ++this.requestSequence;
+    const keyFragment = fragment.replace(/^key=/, '');
+    this.snapshotSignal.set(null);
+    this.stateSignal.set('loading');
     if (shareId.length === 0) {
       this.stateSignal.set('missing');
       return;
@@ -112,17 +122,11 @@ export class ShareViewComponent implements OnInit {
         `/api/v2/universe/portfolio-share/${encodeURIComponent(shareId)}`,
         { responseType: 'json' },
       );
-      const payload = await new Promise<SharePayload | null>((resolve) => {
-        response.subscribe({
-          next: (value) => resolve(value),
-          error: () => resolve(null),
-        });
-      });
-      if (payload === null) {
-        this.stateSignal.set('missing');
-        return;
-      }
-      if (new Date(payload.expiresAt).getTime() < Date.now()) {
+      const payload = await firstValueFrom(response.pipe(takeUntilDestroyed(this.destroyRef)));
+      if (sequence !== this.requestSequence) return;
+      if (payload?.format !== 'universe-portfolio-share' || payload.formatVersion !== 1 ||
+          !Number.isFinite(Date.parse(payload.expiresAt))) throw new Error('Invalid share response.');
+      if (Date.parse(payload.expiresAt) <= Date.now()) {
         this.stateSignal.set('expired');
         return;
       }
@@ -131,12 +135,15 @@ export class ShareViewComponent implements OnInit {
         return;
       }
       const plaintext = await this.decrypt(payload, keyFragment);
+      if (sequence !== this.requestSequence) return;
       this.snapshotSignal.set(plaintext);
       this.stateSignal.set('ready');
       // The key must not linger: drop the fragment after use.
       history.replaceState(null, '', window.location.pathname + window.location.search);
-    } catch {
-      this.stateSignal.set('failed');
+    } catch (error) {
+      if (sequence !== this.requestSequence) return;
+      this.stateSignal.set(error instanceof HttpErrorResponse && error.status === 404 ? 'missing'
+        : error instanceof HttpErrorResponse && error.status === 410 ? 'expired' : 'failed');
     }
   }
 
@@ -146,6 +153,11 @@ export class ShareViewComponent implements OnInit {
     const nonce = Uint8Array.from(atob(payload.nonceB64), (character) => character.charCodeAt(0));
     const ct = Uint8Array.from(atob(payload.ctB64), (character) => character.charCodeAt(0));
     const plaintext = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: nonce as BufferSource }, key, ct as BufferSource);
-    return JSON.parse(new TextDecoder().decode(plaintext));
+    const snapshot = JSON.parse(new TextDecoder().decode(plaintext));
+    if (!snapshot || !Array.isArray(snapshot.holdings) || !Number.isFinite(Date.parse(snapshot.createdAt)) ||
+        snapshot.holdings.some(row => !row || typeof row.asset !== 'string' || typeof row.share !== 'string')) {
+      throw new Error('Invalid share snapshot.');
+    }
+    return snapshot;
   }
 }

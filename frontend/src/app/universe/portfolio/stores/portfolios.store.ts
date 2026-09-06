@@ -145,8 +145,15 @@ export class PortfoliosStore {
   }
 
   async setActivePortfolio(id: string): Promise<void> {
-    this._activePortfolioId.set(id);
+    if (this.selectPortfolio(id) === null) throw new Error('The portfolio no longer exists.');
     await this.writePreferences((current) => ({ ...current, activePortfolioId: id }));
+  }
+
+  /** A route may select only an existing local portfolio, without changing vault preferences. */
+  selectPortfolio(id: string): LocalPortfolio | null {
+    const portfolio = this.livePortfolios().find((entry) => entry.id === id) ?? null;
+    this._activePortfolioId.set(portfolio?.id ?? null);
+    return portfolio;
   }
 
   async applyInclusionPolicy(portfolioId: string, policy: InclusionPolicy): Promise<void> {

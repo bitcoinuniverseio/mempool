@@ -9,6 +9,7 @@
  */
 
 import type { Routes } from '@angular/router';
+import { provideEchartsCore } from 'ngx-echarts';
 
 export const PORTFOLIO_ROUTES: Routes = [
   { path: '', loadComponent: () => import('./home/portfolio-home.component').then((m) => m.PortfolioHomeComponent), data: { universe: true } },
@@ -18,6 +19,7 @@ export const PORTFOLIO_ROUTES: Routes = [
   { path: 'workspace', loadComponent: () => import('./home/workspace-redirect.component').then((m) => m.WorkspaceRedirectComponent) },
   {
     path: 'p/:portfolioId',
+    providers: [provideEchartsCore({ echarts: () => import('@app/graphs/echarts').then((module) => module.echarts) })],
     loadComponent: () => import('./shell/portfolio-shell.component').then((m) => m.PortfolioShellComponent),
     children: [
       { path: '', redirectTo: 'overview', pathMatch: 'full' },
