@@ -1,4 +1,4 @@
-import { BehaviorSubject, Observable, catchError, filter, of, shareReplay, take, tap, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, filter, of, take, tap } from 'rxjs';
 
 /**
  * The short lived de-duplication cache the API services share.
@@ -112,8 +112,7 @@ export class RequestCache {
           subject.error(error);
           return of(null);
         }),
-        shareReplay(1),
-      ).subscribe({ error: () => { /* delivered through the subject */ } });
+      ).subscribe({ error: () => { /* already delivered through the subject */ } });
     }
 
     return entry.subject.asObservable().pipe(
@@ -126,9 +125,4 @@ export class RequestCache {
   public get size(): number {
     return this.entries.size;
   }
-}
-
-/** Kept so a caller can surface a synchronous construction fault as a stream. */
-export function failedRequest<T>(error: unknown): Observable<T> {
-  return throwError(() => error);
 }
