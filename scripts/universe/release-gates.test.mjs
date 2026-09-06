@@ -206,6 +206,27 @@ test('a public listener is reported as its port, not as an empty string', () => 
   for (const port of ports) assert.match(port, /^[0-9]+$/);
 });
 
+test('the declared NetBird DNS binding does not count as a public listener', () => {
+  assert.deepEqual(parsePorts([
+    'LISTEN 0 4096 100.124.130.242:53 0.0.0.0:*',
+  ]), []);
+});
+
+test('DNS on wildcard, public or another VPN address remains exposed', () => {
+  for (const address of ['0.0.0.0', '159.195.109.76', '100.124.130.243', '[::]']) {
+    assert.deepEqual(parsePorts([
+      `LISTEN 0 4096 ${address}:53 0.0.0.0:*`,
+    ]), ['53'], address);
+  }
+});
+
+test('other ports on the declared NetBird address remain exposed', () => {
+  assert.deepEqual(parsePorts([
+    'LISTEN 0 4096 100.124.130.242:5353 0.0.0.0:*',
+    'LISTEN 0 4096 100.124.130.242:8996 0.0.0.0:*',
+  ]), ['5353', '8996']);
+});
+
 // ------------------------------------------------------------ wait_for ----
 
 const waitForMatch = script.match(/^wait_for\(\) \{$[\s\S]*?^\}$/m);
