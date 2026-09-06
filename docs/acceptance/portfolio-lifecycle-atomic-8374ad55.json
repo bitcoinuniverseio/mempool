@@ -1,0 +1,26 @@
+{
+  "checkedAt": "2026-09-06T03:23:22.172Z",
+  "origin": "http://localhost:4310",
+  "scope": "Disposable local vault only; no chain or durable share acceptance",
+  "checks": [
+    {
+      "id": "P15-ATOMIC-BACKUP-ARTIFACT",
+      "status": "PASS",
+      "scope": "Actual encrypted backup download inspected; no private plaintext retained",
+      "bytes": 1686,
+      "sha256": "c4ea7fcd9014006431a7e45105700cae229e497c5ec543d579d45665f2ff115f",
+      "recordCount": 2
+    }
+  ],
+  "failure": {
+    "phase": "passphrase-quota",
+    "error": "page.waitForFunction: EvalError: Refused to evaluate a string as JavaScript because 'unsafe-eval' is not an allowed source of script in the following Content Security Policy directive: \"script-src 'self' 'sha256-F5AsGcf/Fnd0Us+C7HURogB4lMHknY+tbbgVptti54w='\".\n\n    at eval (<anonymous>)\n    at predicate (eval at evaluate (:234:30), <anonymous>:11:37)\n    at next (eval at evaluate (:234:30), <anonymous>:32:31)\n    at w.<computed> (http://localhost:4310/polyfills.137298e21d7ef511.js:1:10853)\n    at f.invokeTask (http://localhost:4310/polyfills.137298e21d7ef511.js:1:20036)\n    at L.runTask (http://localhost:4310/polyfills.137298e21d7ef511.js:1:14909)\n    at invokeTask (http://localhost:4310/polyfills.137298e21d7ef511.js:1:21124)\n    at invoke (http://localhost:4310/polyfills.137298e21d7ef511.js:1:21024)\n    at E.args.<computed> (http://localhost:4310/polyfills.137298e21d7ef511.js:1:10474)",
+    "observedFault": {
+      "id": "68db7a36-35bb-4dbb-be06-c4004d1b7845",
+      "count": 0,
+      "fired": false,
+      "transactionStarted": false,
+      "transactionOutcome": "pending"
+    }
+  }
+}

@@ -1,0 +1,65 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { writeFileSync, unlinkSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { buildMatrix, tableIds, uniqueIds, validateMatrix } from './acceptance-matrix.mjs';
+
+test('markdown imports retain expanded ranges, compact IDs and separate operation/evidence identities', () => {
+  assert.deepEqual(tableIds('OV-04 to OV-07'), ['OV-04', 'OV-05', 'OV-06', 'OV-07']);
+  assert.deepEqual(tableIds('SP-STORE-001 / SP-01,02,03'), ['SP-STORE-001', 'SP-01', 'SP-02', 'SP-03']);
+  assert.deepEqual(tableIds('Q07-A03'), ['Q07-A03']);
+  assert.deepEqual(tableIds('SW-UI-INSPECT'), ['SW-UI-INSPECT']);
+  assert.throws(() => tableIds('OV-07 to OV-04'), /Invalid ID range/);
+});
+
+test('duplicate source IDs cannot be silently deduplicated', () => {
+  assert.throws(() => uniqueIds([{ id: 'P01' }, { id: 'P01' }], 'source'), /duplicate/);
+});
+
+test('current acceptance evidence must exist and keep its actual artifact hash lineage', () => {
+  const overlay = join(tmpdir(), `mempool-matrix-evidence-${process.pid}.json`);
+  try {
+    const row = { id: 'SP-05', status: 'PASS LOCAL', scope: 'Actual local parser artifact',
+      evidence: [{ artifact: 'docs/acceptance/does-not-exist-evidence.json' }] };
+    writeFileSync(overlay, JSON.stringify({ schemaVersion: 'universe-operation-evidence-v1', rows: [row] }));
+    assert.throws(() => buildMatrix({ evidencePath: overlay }), /ENOENT|evidence artifact/);
+    row.evidence = [{ artifact: 'docs/acceptance/2026-09-05-inventory.json' }];
+    writeFileSync(overlay, JSON.stringify({ schemaVersion: 'universe-operation-evidence-v1', rows: [row] }));
+    const matrix = buildMatrix({ evidencePath: overlay });
+    const accepted = matrix.rows.find(entry => entry.id === 'SP-05');
+    assert.match(accepted.evidence[0].sha256, /^[0-9a-f]{64}$/);
+    accepted.evidence[0].sha256 = '0'.repeat(64);
+    assert.throws(() => validateMatrix(matrix), /evidence hash lineage/);
+  } finally { unlinkSync(overlay); }
+});
+
+test('actual source matrix preserves named inventories and required distinct variants without promoting source acceptance', () => {
+  const matrix = buildMatrix(), byId = new Map(matrix.rows.map(row => [row.id, row]));
+  assert.deepEqual(matrix.sourceCounts, { navigation: 351, namedOperations: 37, protocolIdentities: 39,
+    uiCandidates: 304, apiCandidates: 546, additionalRouteDeclarations: 55, components: 302, controls: 1569, handlerBindings: 344 });
+  assert.equal(matrix.sourceGroups['protocol-operation'].length, 119);
+  for (let n = 1; n <= 36; n++) assert(byId.has(`Q05-P${String(n).padStart(2, '0')}`));
+  for (let n = 1; n <= 12; n++) assert(byId.has(`Q07-A${String(n).padStart(2, '0')}`));
+  assert.equal(matrix.sourceGroups['admin-resource-variant'].length, 14);
+  assert.equal(matrix.sourceGroups['admin-operation-variant'].length, 26);
+  assert.equal(matrix.sourceGroups['portfolio-history-variant'].length, 6);
+  assert(byId.has('Q07-A08/explorer.indexer.task.run/blocksPrices'));
+  assert(byId.has('Q07-A08/explorer.indexer.task.run/coinStatsIndex'));
+  assert(byId.has('Q05-P23/fromHeight-toTimestamp'));
+  assert.equal(byId.get('PRO-32/status').route, '/api/v1/anima/status');
+  assert.equal(byId.get('PRO-01/outpoints-batch').method, 'POST');
+  assert.deepEqual(byId.get('PRO-01/outpoint').declaredNetworks, ['mainnet']);
+  assert.equal(byId.get('PRO-01/outpoint').network, 'unverified');
+  assert(matrix.rows.every(row => row.status === 'NOT TESTED' && row.evidence.length === 0));
+  assert.equal(matrix.operationDenominator, null); assert.equal(matrix.realNetworkE2ePasses, 0);
+  assert(matrix.gaps.some(gap => gap.kind === 'missing-handoff-bundle'));
+  const lost = structuredClone(matrix); lost.rows = lost.rows.filter(row => row.id !== 'Q05-P01');
+  assert.throws(() => validateMatrix(lost), /lost Q05-P01/);
+  const duplicate = structuredClone(matrix); duplicate.rows.push(duplicate.rows[0]);
+  assert.throws(() => validateMatrix(duplicate), /duplicate IDs/);
+  const corrupted = structuredClone(matrix); corrupted.rows[0].sources[0].sha256 = '0'.repeat(64);
+  assert.throws(() => validateMatrix(corrupted), /source hash lineage/);
+  const falsePass = structuredClone(matrix); falsePass.rows[0].status = 'PASS LOCAL';
+  assert.throws(() => validateMatrix(falsePass), /unsupported acceptance/);
+});

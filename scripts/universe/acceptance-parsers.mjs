@@ -57,6 +57,6 @@ for (const test of cases) {
 const artifact = { schemaVersion: 1, origin, revision: execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim(),
   sourceDiffSha256: createHash('sha256').update(execFileSync('git', ['diff', '--', 'backend/src/api/intelligence/silent-payments'], { cwd: root })).digest('hex'),
   results, passed: results.filter(row => row.status === 'PASS').length, failed: results.filter(row => row.status === 'FAIL').length };
-writeFileSync(resolve(root, 'docs/acceptance/parser-http-2026-09-05.json'), JSON.stringify(artifact, null, 2) + '\n');
+writeFileSync(resolve(root, process.argv[2] || 'docs/acceptance/parser-http-2026-09-05.json'), JSON.stringify(artifact, null, 2) + '\n');
 console.log(JSON.stringify({ passed: artifact.passed, failed: artifact.failed, scope: 'offline parser HTTP acceptance' }));
 process.exitCode = artifact.failed ? 1 : 0;

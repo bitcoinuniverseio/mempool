@@ -24,7 +24,7 @@ app.use((req, res, next) => {
 });
 app.use(express.json({ limit: '2mb' }));
 const revision = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim();
-app.get('/__acceptance', (_req, res) => res.json({
+app.get(['/__acceptance', '/api/v1/__acceptance'], (_req, res) => res.json({
   scope: 'isolated compiled route handlers and candidate frontend', revision,
   nodeAvailable: false, persistenceAvailable: false, realNetworkE2ePasses: 0,
 }));
@@ -36,10 +36,16 @@ app.use(apiPrefixes, (_req, res) => {
   res.status(503).json({ code: 'ACCEPTANCE_DEPENDENCY_UNAVAILABLE',
     error: 'This isolated localhost host has no chain, indexer or portfolio authority configured.' });
 });
-const build = path.join(root, 'frontend/dist/mempool/browser');
-if (!fs.existsSync(path.join(build, 'index.html'))) throw new Error('Build the candidate frontend first.');
-app.use(express.static(build));
-app.get('*', (_req, res) => res.sendFile(path.join(build, 'index.html')));
+// Handler-only mode lets the actual gateway own the one frontend origin.
+// It does not start indexing, supply authority data or claim full backend boot.
+if (process.env.UNIVERSE_ACCEPTANCE_HANDLER_ONLY === '1') {
+  app.use((_req, res) => res.status(404).json({ code: 'ACCEPTANCE_ROUTE_NOT_MOUNTED' }));
+} else {
+  const build = path.join(root, 'frontend/dist/mempool/browser');
+  if (!fs.existsSync(path.join(build, 'index.html'))) throw new Error('Build the candidate frontend first.');
+  app.use(express.static(build));
+  app.get('*', (_req, res) => res.sendFile(path.join(build, 'index.html')));
+}
 app.use((error, _req, res, _next) => {
   res.status(error.type === 'entity.too.large' ? 413 : 400).json({ code: 'INVALID_REQUEST', error: 'Invalid JSON request body.' });
 });

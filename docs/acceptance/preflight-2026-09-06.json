@@ -1,0 +1,167 @@
+{
+  "checkedAt": "2026-09-06T03:18:42.630Z",
+  "origin": "http://localhost:4310",
+  "revision": "b8d5e3bdc837681c7ce2b8cb91616262f432a313",
+  "scope": "Actual candidate gateway with isolated compiled parser/swap handlers; no indexer, chain authority or database configured.",
+  "source": [
+    {
+      "path": "scripts/universe/gateway.mjs",
+      "sha256": "e12bff13ebc75cc18693ac01096ef8ea8e3e9fe1e38fe0bde297b7c0c1fb31d8"
+    },
+    {
+      "path": "scripts/universe/acceptance-server.cjs",
+      "sha256": "0a9cf4d6c4e78d54a448d884dda3df7d7ce2da20d779fd05ed4dad57cfefab6e"
+    }
+  ],
+  "probes": [
+    {
+      "path": "/__gateway/health",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "document": {
+        "status": "ok",
+        "root": "D:\\universe\\mempool\\mempool\\frontend\\dist\\mempool\\browser"
+      },
+      "bodySha256": "d5545ac762c00e4257350890d6c5dd2f55fc97d11c5925cc4d7bb91b4cec4e45",
+      "contract": "JSON",
+      "acceptance": "NOT AN OPERATION PASS",
+      "checkedAt": "2026-09-06T03:18:05.692Z"
+    },
+    {
+      "path": "/api/v1/__acceptance",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "document": {
+        "scope": "isolated compiled route handlers and candidate frontend",
+        "revision": "b8d5e3bdc837681c7ce2b8cb91616262f432a313",
+        "nodeAvailable": false,
+        "persistenceAvailable": false,
+        "realNetworkE2ePasses": 0
+      },
+      "bodySha256": "87fc17c292a2a40b3361bc39123102a3d51bc7f5449b16ecf7a47158bac1ecce",
+      "contract": "JSON",
+      "acceptance": "NOT AN OPERATION PASS",
+      "checkedAt": "2026-09-06T03:18:05.702Z"
+    },
+    {
+      "path": "/api/v1/backend-info",
+      "status": 503,
+      "contentType": "application/json; charset=utf-8",
+      "document": {
+        "code": "ACCEPTANCE_DEPENDENCY_UNAVAILABLE",
+        "error": "This isolated localhost host has no chain, indexer or portfolio authority configured."
+      },
+      "bodySha256": "641338e23176bbb53f834e822592d914fbcb1fd6207f8cba5cd5234d1c2dc244",
+      "contract": "JSON",
+      "acceptance": "NOT AN OPERATION PASS",
+      "checkedAt": "2026-09-06T03:18:05.709Z"
+    },
+    {
+      "path": "/api/v1/capabilities",
+      "status": 503,
+      "contentType": "application/json; charset=utf-8",
+      "document": {
+        "code": "ACCEPTANCE_DEPENDENCY_UNAVAILABLE",
+        "error": "This isolated localhost host has no chain, indexer or portfolio authority configured."
+      },
+      "bodySha256": "641338e23176bbb53f834e822592d914fbcb1fd6207f8cba5cd5234d1c2dc244",
+      "contract": "JSON",
+      "acceptance": "NOT AN OPERATION PASS",
+      "checkedAt": "2026-09-06T03:18:05.717Z"
+    },
+    {
+      "path": "/api/v1/universe/status",
+      "status": 502,
+      "contentType": "application/json; charset=utf-8",
+      "document": {
+        "error": "upstream-unavailable"
+      },
+      "bodySha256": "783e2f6c0842dd31bb2ada4a8f4c35c42d31306cc0b356767329e3447ec2a97e",
+      "contract": "JSON",
+      "acceptance": "NOT AN OPERATION PASS",
+      "checkedAt": "2026-09-06T03:18:10.981Z"
+    },
+    {
+      "path": "/api/v1/anima/status",
+      "status": 502,
+      "contentType": "application/json; charset=utf-8",
+      "document": {
+        "error": "upstream-unavailable"
+      },
+      "bodySha256": "783e2f6c0842dd31bb2ada4a8f4c35c42d31306cc0b356767329e3447ec2a97e",
+      "contract": "JSON",
+      "acceptance": "NOT AN OPERATION PASS",
+      "checkedAt": "2026-09-06T03:18:16.254Z"
+    },
+    {
+      "path": "/api/v1/anima/events?from=0&limit=1",
+      "status": 502,
+      "contentType": "application/json; charset=utf-8",
+      "document": {
+        "error": "upstream-unavailable"
+      },
+      "bodySha256": "783e2f6c0842dd31bb2ada4a8f4c35c42d31306cc0b356767329e3447ec2a97e",
+      "contract": "JSON",
+      "acceptance": "NOT AN OPERATION PASS",
+      "checkedAt": "2026-09-06T03:18:21.526Z"
+    },
+    {
+      "path": "/api/v1/anima/events/invalid-acceptance-identity",
+      "status": 502,
+      "contentType": "application/json; charset=utf-8",
+      "document": {
+        "error": "upstream-unavailable"
+      },
+      "bodySha256": "783e2f6c0842dd31bb2ada4a8f4c35c42d31306cc0b356767329e3447ec2a97e",
+      "contract": "JSON",
+      "acceptance": "NOT AN OPERATION PASS",
+      "checkedAt": "2026-09-06T03:18:26.807Z"
+    },
+    {
+      "path": "/api/v1/anima/organisms?offset=0&limit=1",
+      "status": 502,
+      "contentType": "application/json; charset=utf-8",
+      "document": {
+        "error": "upstream-unavailable"
+      },
+      "bodySha256": "783e2f6c0842dd31bb2ada4a8f4c35c42d31306cc0b356767329e3447ec2a97e",
+      "contract": "JSON",
+      "acceptance": "NOT AN OPERATION PASS",
+      "checkedAt": "2026-09-06T03:18:32.082Z"
+    },
+    {
+      "path": "/api/v1/anima/organisms/invalid-acceptance-identity",
+      "status": 502,
+      "contentType": "application/json; charset=utf-8",
+      "document": {
+        "error": "upstream-unavailable"
+      },
+      "bodySha256": "783e2f6c0842dd31bb2ada4a8f4c35c42d31306cc0b356767329e3447ec2a97e",
+      "contract": "JSON",
+      "acceptance": "NOT AN OPERATION PASS",
+      "checkedAt": "2026-09-06T03:18:37.355Z"
+    },
+    {
+      "path": "/api/v1/anima/organisms/invalid-acceptance-identity/history?limit=1",
+      "status": 502,
+      "contentType": "application/json; charset=utf-8",
+      "document": {
+        "error": "upstream-unavailable"
+      },
+      "bodySha256": "783e2f6c0842dd31bb2ada4a8f4c35c42d31306cc0b356767329e3447ec2a97e",
+      "contract": "JSON",
+      "acceptance": "NOT AN OPERATION PASS",
+      "checkedAt": "2026-09-06T03:18:42.630Z"
+    }
+  ],
+  "realNetworkE2ePasses": 0,
+  "realSignetE2ePasses": 0,
+  "prerequisites": {
+    "PRE-01": "The established D:/universe/.ssh/config loader is unreadable by this session (Permission denied). No owned Core network/checkpoint or controlled reference was obtained.",
+    "PRE-02": "No approved disposable MySQL credential loader in the scoped candidate configuration/environment. DATABASE.ENABLED=false; no SQL attempted.",
+    "PRE-03": "No overlay listener on 127.0.0.1:3400 or approved per-authority context/reference. Gateway errors do not establish a production outage.",
+    "PRE-04": "No configured provider trust, versioned signed manifest, health history or authenticated settlement receipt source in the scoped candidate.",
+    "PRE-05": "No active paired Control Center test identities, controlled audit persistence or safely configured private operation runtime.",
+    "PRE-06": "Universe CI triggers self-hosted jobs on develop/main push and pull requests. No push, PR, workflow or deployment invoked."
+  }
+}
