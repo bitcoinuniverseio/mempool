@@ -248,6 +248,18 @@ export class MasterPageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   chainState(capability: ChainCapabilityEnvelope | undefined): string {
     if (!capability) {return availabilityLabel(null);}
+    if (capability.health) {
+      if (
+        capability.health.summary.baseChainSynced === true ||
+        (capability.health.node.synced === true && capability.health.node.state === 'synced')
+      ) {
+        return availabilityLabel('ready');
+      }
+      if (capability.health.node.reachability === 'unreachable' || capability.health.node.state === 'unavailable') {
+        return availabilityLabel('unavailable');
+      }
+      return availabilityLabel('degraded');
+    }
     return capability.ready ? availabilityLabel('ready') : availabilityLabel('degraded');
   }
 
@@ -271,6 +283,19 @@ export class MasterPageComponent implements OnInit, AfterViewInit, OnDestroy {
     const height = tip
       ? $localize`:@@master-page.chain-tip:Block ${tip.display}:HEIGHT:`
       : $localize`:@@master-page.chain-tip-none:No tip reported`;
+    if (capability.health) {
+      if (!capability.health.summary.allOfferedReady) {
+        const [first] = describeChainReasons(
+          capability.health.summary.degradedReasons ?? capability.degradedReasons ?? []
+        );
+        return first ? `${height}. ${first.text}` : height;
+      }
+      if (!capability.mempool.supported) {
+        return height;
+      }
+      const coverage = completenessLabel(capability.mempool.completeness);
+      return $localize`:@@master-page.chain-ready-detail:${height}:BLOCK:. Pending coverage ${coverage}:COVERAGE:.`;
+    }
     if (!capability.ready) {
       const [first] = describeChainReasons(capability.degradedReasons ?? []);
       return first ? `${height}. ${first.text}` : height;
