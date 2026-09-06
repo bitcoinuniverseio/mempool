@@ -243,6 +243,25 @@
       "files": [
         "scripts/universe/visual-qa/mobile-check.mjs"
       ]
+    },
+    {
+      "id": "CI-CAUSE-15",
+      "job": "Mobile and adaptive layout",
+      "failingStep": "Every window a phone can be, measured with a thumb",
+      "run": 34032083836,
+      "class": "product defect on newly reachable coverage",
+      "note": "This job is gated on the frontend job, which has failed since 3 September, so it had not run to completion since the frontier products shipped. 226 findings across three shards, all on those pages, none of them created by this branch.",
+      "findings": {
+        "undeclared scroll regions": "About 200. Bootstrap gives .table-responsive overflow-x: auto and no tabindex or role, so a clipped row has no keyboard route and is not announced. 102 of them across 89 files, none declared. Each now carries tabindex=0, which is what Bootstrap documents for a responsive table.",
+        "content clipped by the page shell": "Sixteen pages lost between 7px and 330px at 320px. The product header is a flex row that does not wrap, and the monospace reference under the title has no spaces to break on, while .page-shell carries overflow: clip so the excess is cut rather than scrolled. A narrow-width partial wraps that row and its button group and lets an opaque identifier break anywhere.",
+        "touch targets": "Two pages put three 24px checkboxes in a row. They take the 44px token at compact widths, which is the smaller of the two platform floors."
+      },
+      "files": [
+        "frontend/src/styles/_universe-product-narrow.scss",
+        "frontend/src/styles.scss",
+        "frontend/src/app (102 templates)"
+      ],
+      "verification": "frontend typecheck clean, lint 0 errors, 1497 tests pass, colour, palette, fill and text gates pass."
     }
   ],
   "findings": [

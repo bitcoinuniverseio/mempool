@@ -69,7 +69,7 @@ import { SimplicityApiService } from './simplicity.service';
 
           <div class="card p-4 bg-body-tertiary border">
             <h2 class="h5 mb-3">Execution Steps</h2>
-            <div class="table-responsive">
+            <div class="table-responsive" tabindex="0">
               <table class="table table-sm table-hover align-middle">
                 <thead>
                   <tr>

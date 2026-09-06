@@ -84,7 +84,7 @@ import { GlobalNetworkApiService, GlobalNetworkOverview } from './global-network
           <div class="col-12 col-lg-6">
             <div class="card p-4 h-100 bg-body-tertiary border">
               <h2 class="h5 mb-3">Transport Protocol Breakdown</h2>
-              <div class="table-responsive">
+              <div class="table-responsive" tabindex="0">
                 <table class="table table-sm table-hover align-middle mb-0">
                   <thead>
                     <tr>
@@ -106,7 +106,7 @@ import { GlobalNetworkApiService, GlobalNetworkOverview } from './global-network
           <div class="col-12 col-lg-6">
             <div class="card p-4 h-100 bg-body-tertiary border">
               <h2 class="h5 mb-3">Top Geographic Regions</h2>
-              <div class="table-responsive">
+              <div class="table-responsive" tabindex="0">
                 <table class="table table-sm table-hover align-middle mb-0">
                   <thead>
                     <tr>
@@ -129,7 +129,7 @@ import { GlobalNetworkApiService, GlobalNetworkOverview } from './global-network
         <!-- Software Agent Versions -->
         <section class="card p-4 bg-body-tertiary border mb-4">
           <h2 class="h5 mb-3">Client Software Diversity</h2>
-          <div class="table-responsive">
+          <div class="table-responsive" tabindex="0">
             <table class="table table-sm table-hover align-middle mb-0">
               <thead>
                 <tr>

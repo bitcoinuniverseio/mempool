@@ -28,7 +28,7 @@ import { RouterModule } from '@angular/router';
 
       <div class="card p-4 bg-body-tertiary border">
         <h5 class="mb-3">Atomic HTLC & PTLC Cross-Chain Invariants</h5>
-        <div class="table-responsive">
+        <div class="table-responsive" tabindex="0">
           <table class="table table-hover align-middle mb-0">
             <thead>
               <tr>

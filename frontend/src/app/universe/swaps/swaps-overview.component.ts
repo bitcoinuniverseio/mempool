@@ -79,7 +79,7 @@ import { SwapsApiService, SwapsOverview } from './swaps.service';
           <div class="card bg-body-tertiary border p-3">
             <h2 class="h5">Historical public lockup checks</h2>
             <p class="small text-muted">Up to 100 recorded checks for this network. These are checkpoint snapshots, not current settlement or spend status.</p>
-            <div class="table-responsive"><table class="table table-hover small">
+            <div class="table-responsive" tabindex="0"><table class="table table-hover small">
               <thead><tr><th>Outpoint</th><th>Value (sats)</th><th>Stage at check</th><th>Checkpoint</th><th>Observed</th></tr></thead>
               <tbody><tr *ngFor="let observation of overview.recent_observations">
                 <td class="text-break font-monospace">{{ observation.txid }}:{{ observation.vout }}</td>
@@ -92,7 +92,7 @@ import { SwapsApiService, SwapsOverview } from './swaps.service';
         <div class="col-12">
           <div class="card bg-body-tertiary border p-3">
             <h5 class="card-title mb-3">Recent Verified Swap Records</h5>
-            <div class="table-responsive">
+            <div class="table-responsive" tabindex="0">
               <table class="table table-hover align-middle mb-0">
                 <thead>
                   <tr>

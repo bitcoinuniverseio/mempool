@@ -25,7 +25,7 @@ import { OpenTimestampsApiService } from './opentimestamps.service';
         <div class="card-header border-secondary">
           <h5 class="card-title mb-0">Confirmed Anchor Batches</h5>
         </div>
-        <div class="table-responsive">
+        <div class="table-responsive" tabindex="0">
           <table class="table table-dark table-hover mb-0">
             <thead>
               <tr>

@@ -79,7 +79,7 @@ import { EcashApiService, EcashOverview } from './ecash.service';
             <h2 class="h5 m-0">Cashu Mints</h2>
             <a routerLink="/ecash/cashu" class="btn btn-sm btn-outline-primary">View All Mints</a>
           </div>
-          <div class="table-responsive">
+          <div class="table-responsive" tabindex="0">
             <table class="table table-hover align-middle mb-0">
               <thead>
                 <tr>
@@ -115,7 +115,7 @@ import { EcashApiService, EcashOverview } from './ecash.service';
             <h2 class="h5 m-0">Fedimint Federations</h2>
             <a routerLink="/ecash/fedimint" class="btn btn-sm btn-outline-primary">View All Federations</a>
           </div>
-          <div class="table-responsive">
+          <div class="table-responsive" tabindex="0">
             <table class="table table-hover align-middle mb-0">
               <thead>
                 <tr>

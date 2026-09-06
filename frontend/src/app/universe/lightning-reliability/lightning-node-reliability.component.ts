@@ -81,7 +81,7 @@ import { LightningReliabilityApiService, LightningNodeReliability } from './ligh
           <div *ngIf="node.probes.length === 0" class="text-muted small">
             No regional probe records logged during the active observation window.
           </div>
-          <div *ngIf="node.probes.length > 0" class="table-responsive">
+          <div *ngIf="node.probes.length > 0" class="table-responsive" tabindex="0">
             <table class="table table-hover align-middle mb-0">
               <thead>
                 <tr>

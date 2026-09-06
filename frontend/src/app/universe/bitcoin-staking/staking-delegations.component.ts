@@ -42,7 +42,7 @@ import { BitcoinStakingApiService, StakingDelegation } from './bitcoin-staking.s
       </div>
 
       <div *ngIf="!loading && delegations.length > 0" class="card p-4 bg-body-tertiary border">
-        <div class="table-responsive">
+        <div class="table-responsive" tabindex="0">
           <table class="table table-hover align-middle">
             <thead>
               <tr>

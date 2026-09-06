@@ -33,7 +33,7 @@ import { RouterModule } from '@angular/router';
         <div class="col-12 col-lg-6">
           <div class="card p-4 bg-body-tertiary border h-100">
             <h2 class="h5 mb-3">NWC Event Kinds</h2>
-            <div class="table-responsive">
+            <div class="table-responsive" tabindex="0">
               <table class="table table-sm table-bordered mb-0">
                 <thead class="table-light">
                   <tr>

@@ -70,7 +70,7 @@ import { OffchainApiService, OffchainOverview } from './offchain.service';
               <h2 class="h5 m-0">Observed Protocol Operators</h2>
               <a routerLink="/offchain/statechains/operators" class="small text-decoration-none">View All &rarr;</a>
             </div>
-            <div class="table-responsive">
+            <div class="table-responsive" tabindex="0">
               <table class="table table-sm table-hover align-middle">
                 <thead>
                   <tr>

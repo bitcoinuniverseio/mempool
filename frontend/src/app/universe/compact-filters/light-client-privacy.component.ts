@@ -64,7 +64,7 @@ import { FormsModule } from '@angular/forms';
         <div class="col-12 col-lg-6">
           <div class="card p-4 bg-body-tertiary border h-100">
             <h2 class="h5 mb-3">Comparison: Bloom Filters vs Compact Filters</h2>
-            <div class="table-responsive">
+            <div class="table-responsive" tabindex="0">
               <table class="table table-sm table-bordered">
                 <thead class="table-light">
                   <tr>

@@ -41,7 +41,7 @@ import { BlockspaceApiService, BlockspaceCompositionPoint } from './blockspace.s
       <div *ngIf="!loading && composition.length > 0" class="content-body">
         <section class="card p-4 bg-body-tertiary border mb-4">
           <h2 class="h5 mb-3">Historical Block Breakdown</h2>
-          <div class="table-responsive">
+          <div class="table-responsive" tabindex="0">
             <table class="table table-hover align-middle mb-0">
               <thead>
                 <tr>
