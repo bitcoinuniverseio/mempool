@@ -727,22 +727,17 @@ export const intelligenceFixtures = {
       { id: 'snapshot', type: 'snapshot_chainstate', validated_height: 855000, target_height: 855000, progress: 1.0 },
     ],
   },
-  'POST /api/v1/intelligence/bootstrap/snapshots/verify': {
+  'POST /api/v1/intelligence/bootstrap/verifications': {
     valid: true,
     snapshot_id: 'snapshot-mainnet-840000',
     matches_compiled_assumeutxo: true,
     hash_match: true,
     findings: [],
   },
-  'POST /api/v1/intelligence/bootstrap/planner': {
+  'POST /api/v1/intelligence/bootstrap/plans': {
     assumeutxo_ready_hours: 1.2,
     traditional_ibd_hours: 14.5,
     background_validation_hours: 16.0,
-    recommended_strategy: 'assumeutxo_bootstrap',
-    estimated_time_savings_hours: 36.5,
-    disk_requirement_gb: 35,
-  },
-  'POST /api/v1/intelligence/bootstrap/planner/evaluate': {
     recommended_strategy: 'assumeutxo_bootstrap',
     estimated_time_savings_hours: 36.5,
     disk_requirement_gb: 35,

@@ -164,6 +164,39 @@
         ".github/workflows/universe-ci.yml"
       ],
       "verification": "The partition was checked directly: 244 routes split 82, 81, 81, with every id present exactly once. All ten visual QA unit tests pass."
+    },
+    {
+      "id": "CI-CAUSE-10",
+      "job": "WebKit and Firefox",
+      "failingStep": "A third engine, on the checks that do not need a thumb",
+      "reachedOnlyAfterFixing": "CI-CAUSE-06 and CI-CAUSE-08",
+      "run": 34020917944,
+      "class": "environment startup",
+      "firstCausalError": "Running Nightly as root in a regular user's session is not supported. ($HOME is /github/home which is owned by uid 999.)",
+      "repair": "The step sets HOME=/root, which is the fix Playwright itself names. It appeared only once the job moved into a container, and only on Firefox; WebKit passed all three shards in the same job.",
+      "files": [
+        ".github/workflows/universe-ci.yml"
+      ],
+      "verification": "Pending the run on the head that carries it."
+    },
+    {
+      "id": "CI-CAUSE-11",
+      "job": "Frontend build",
+      "failingStep": "Every route renders and finishes, at a phone and a desktop width",
+      "reachedOnlyAfterFixing": "CI-CAUSE-09",
+      "run": 34020917944,
+      "class": "product defect and a fixture gap, surfaced by making the gate finish",
+      "firstCausalError": "2 unmatched fixture requests on bootstrap-planner; 3 pages that never finished, on mining at both widths and tx at 1440; .chain-toggle absent on the chain-menu scenario at both widths.",
+      "measurement": "mining and chain-menu were in the 32 route list that passed at the last green run 0f3e5a19. tx and bootstrap-planner were added after it and had never been measured. The broad pass has not completed since, so none of this had been reported.",
+      "repair": "The bootstrap wiring is repaired: the frontend was posting to /bootstrap/snapshots/verify and /bootstrap/planner, and the backend mounts neither. It now calls /bootstrap/verifications and /bootstrap/plans, and the backend gains the /bootstrap/chainstates list route the chainstates page was already calling and receiving a 404 for. That mismatch is why the AssumeUTXO verifier had an error branch at all, and why that branch reported the snapshot as valid. The fixture keys follow the real routes.",
+      "remaining": "mining, tx and chain-menu are re-run serially to separate a real regression from the timing of three browsers sharing a runner. The broad pass is serial again and the frontend job carries a 90 minute budget for it; the WebKit job keeps its three shards, which passed.",
+      "files": [
+        "frontend/src/app/universe/bootstrap/bootstrap.service.ts",
+        "backend/src/api/intelligence/bootstrap/bootstrap.routes.ts",
+        "backend/src/api/intelligence/bootstrap/bootstrap.service.ts",
+        "scripts/universe/visual-qa/intelligence-fixtures.mjs",
+        ".github/workflows/universe-ci.yml"
+      ]
     }
   ],
   "findings": [

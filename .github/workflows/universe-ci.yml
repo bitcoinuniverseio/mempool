@@ -242,7 +242,7 @@ jobs:
     # sharded, because it stopped fitting: 71 minutes of a 100 minute cap on
     # its own, and on develop it reached the cap and the required check died as
     # a timeout. Budget here is for the work that is left, with room to grow.
-    timeout-minutes: 45
+    timeout-minutes: 90
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -364,34 +364,25 @@ jobs:
       # because a gate that cannot finish protects nothing. That is what the
       # shards are.
 
-      # Run in three parallel shards against the one gateway.
+      # One pass, not three in parallel.
       #
       # This pass was budgeted when it covered thirty-two routes and measured
       # 5m50s. The frontier products took it to two hundred and forty-four,
-      # and at that size one serial pass does not finish inside this job: run
-      # 34018259022 was still in this step at the 45 minute cap with nothing
-      # written out. Same reasoning as the shards on the deep pass below, and
-      # the same fix, except that these three share a runner and a gateway
-      # rather than three runners, because the cost here is per page rather
-      # than per state.
+      # and at that size it no longer fit the 45 minute job: run 34018259022
+      # was still inside this step at the cap with nothing written out.
+      #
+      # Three shards in parallel did fit, and the WebKit job runs that way.
+      # This one does not, because three browsers sharing a runner change the
+      # timing of the thing it measures, and this gate fails a page that did
+      # not settle inside fifteen seconds. A gate whose verdict depends on how
+      # busy the machine was is worse than a slow one. capture.mjs takes
+      # --shard=i/n either way, so this can be split again once the timing is
+      # no longer what is being measured.
       - name: Every route renders and finishes, at a phone and a desktop width
         working-directory: scripts/universe/visual-qa
-        run: |
-          pids=""
-          for shard in 1 2 3; do
-            node capture.mjs --base=http://127.0.0.1:$GATEWAY_PORT \
-              --out=./artifacts-broad-$shard --shard=$shard/3 \
-              --states=populated --themes=default --viewports=375,1440 \
-              > ./broad-$shard.log 2>&1 &
-            pids="$pids $!"
-          done
-          status=0
-          for pid in $pids; do wait "$pid" || status=1; done
-          for shard in 1 2 3; do
-            echo "----- shard $shard -----"
-            cat ./broad-$shard.log
-          done
-          exit $status
+        run: >-
+          node capture.mjs --base=http://127.0.0.1:$GATEWAY_PORT --out=./artifacts-broad
+          --states=populated --themes=default --viewports=375,1440
 
       - name: Forced colours and 200 percent zoom
         working-directory: scripts/universe/visual-qa
@@ -420,10 +411,7 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: universe-visual-qa-broad
-          path: |
-            scripts/universe/visual-qa/artifacts-broad-1
-            scripts/universe/visual-qa/artifacts-broad-2
-            scripts/universe/visual-qa/artifacts-broad-3
+          path: scripts/universe/visual-qa/artifacts-broad
           if-no-files-found: ignore
           retention-days: 3
 
@@ -851,6 +839,9 @@ jobs:
       - name: A third engine, on the checks that do not need a thumb
         working-directory: scripts/universe/visual-qa
         env:
+          # Firefox refuses to start as root when HOME belongs to another uid,
+          # which is what the container image gives it. Its own message names
+          # this as the fix.
           HOME: /root
         run: >-
           node mobile-check.mjs --base=http://127.0.0.1:$GATEWAY_PORT
