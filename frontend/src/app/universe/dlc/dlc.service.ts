@@ -47,15 +47,23 @@ export interface DlcEvent {
   };
 }
 
+export interface DlcOverviewAnnouncement {
+  event_id: string;
+  oracle_id: string;
+  event_descriptor?: {
+    type: 'enumerated' | 'numeric';
+  } | null;
+  maturity_formatted: string;
+  verified?: boolean;
+}
+
 export interface DlcOverview {
   total_oracles: number;
-  active_oracles: number;
-  total_events: number;
+  healthy_oracles: number;
+  active_events: number;
   total_attestations: number;
-  conflicts_detected: number;
-  supported_tlv_revisions: string[];
-  recent_events: DlcEvent[];
-  featured_oracles: DlcOracle[];
+  verified_conflicts: number;
+  recent_events: DlcOverviewAnnouncement[];
 }
 
 @Injectable({

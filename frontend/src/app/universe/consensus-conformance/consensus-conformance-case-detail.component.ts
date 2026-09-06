@@ -65,8 +65,8 @@ import { ConsensusConformanceApiService } from './consensus-conformance.service'
           <h5 class="card-title mb-0">Test Vector Payload</h5>
         </div>
         <div class="card-body">
-          <label class="form-label text-muted small text-uppercase">Raw Transaction Hex</label>
-          <textarea class="form-control bg-black text-light font-monospace small" rows="4" readonly>{{ caseRecord.raw_tx }}</textarea>
+          <label class="form-label text-muted small text-uppercase" for="consensus-case-raw-transaction">Raw Transaction Hex</label>
+          <textarea class="form-control bg-black text-light font-monospace small" id="consensus-case-raw-transaction" rows="4" readonly>{{ caseRecord.raw_tx }}</textarea>
         </div>
       </div>
     </div>

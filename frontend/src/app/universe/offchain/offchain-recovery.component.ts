@@ -36,21 +36,21 @@ import { OffchainApiService } from './offchain.service';
             <h2 class="h5 mb-3">Recovery Context</h2>
 
             <div class="mb-3">
-              <label class="form-label small text-muted">Protocol Type</label>
-              <select class="form-select" [(ngModel)]="protocolType">
+              <label class="form-label small text-muted" for="offchain-recovery-protocol">Protocol Type</label>
+              <select class="form-select" id="offchain-recovery-protocol" [(ngModel)]="protocolType">
                 <option value="statechain">Mercury Statechain (Unilateral Exit)</option>
                 <option value="coinswap">Teleport CoinSwap (Timeout Refund)</option>
               </select>
             </div>
 
             <div class="mb-3">
-              <label class="form-label small text-muted">Deposit / Funding TxID</label>
-              <input type="text" class="form-control font-monospace small" [(ngModel)]="txid" />
+              <label class="form-label small text-muted" for="offchain-recovery-txid">Deposit / Funding TxID</label>
+              <input type="text" class="form-control font-monospace small" id="offchain-recovery-txid" [(ngModel)]="txid" />
             </div>
 
             <div class="mb-3">
-              <label class="form-label small text-muted">Locktime Height</label>
-              <input type="number" class="form-control" [(ngModel)]="locktimeHeight" />
+              <label class="form-label small text-muted" for="offchain-recovery-locktime">Locktime Height</label>
+              <input type="number" class="form-control" id="offchain-recovery-locktime" [(ngModel)]="locktimeHeight" />
             </div>
 
             <button class="btn btn-primary w-100" (click)="generatePlan()" [disabled]="planning">

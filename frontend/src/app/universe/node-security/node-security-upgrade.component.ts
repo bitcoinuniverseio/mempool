@@ -27,8 +27,8 @@ import { NodeSecurityApiService } from './node-security.service';
           <div class="card bg-dark border-secondary p-3">
             <h5 class="card-title mb-3">Generate Upgrade Plan</h5>
             <div class="mb-3">
-              <label class="form-label text-muted small text-uppercase">Target Release</label>
-              <select class="form-select bg-black text-light border-secondary" [(ngModel)]="targetVersion">
+              <label class="form-label text-muted small text-uppercase" for="node-security-upgrade-release">Target Release</label>
+              <select class="form-select bg-black text-light border-secondary" id="node-security-upgrade-release" [(ngModel)]="targetVersion">
                 <option value="v28.0">Bitcoin Core v28.0 (Latest Stable)</option>
                 <option value="v27.1">Bitcoin Core v27.1 (LTS Maintenance)</option>
               </select>

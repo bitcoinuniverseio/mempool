@@ -667,6 +667,14 @@
   --tertiary: var(--u-lavender);
   --success: var(--u-state-proven);
   --info: var(--u-state-pending);
+  // Newer templates use Bootstrap 5 names; the installed Bootstrap 4 build
+  // only provides the unprefixed names above.
+  --bs-primary: var(--u-brand);
+  --bs-secondary: var(--u-state-neutral);
+  --bs-success: var(--u-state-proven);
+  --bs-warning: var(--u-state-partial);
+  --bs-danger: var(--u-state-unavailable);
+  --bs-dark-bg-subtle: var(--u-surface-inset);
   --link-color: var(--u-brand);
   --link-hover-color: var(--u-brand-hover);
   --icon: var(--u-text-secondary);

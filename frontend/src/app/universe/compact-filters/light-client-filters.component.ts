@@ -36,8 +36,8 @@ import { CompactFiltersApiService } from './compact-filters.service';
             <h2 class="h5 mb-3">Block Filter Lookup</h2>
 
             <div class="mb-3">
-              <label class="form-label small text-muted">Block Hash or Height</label>
-              <input type="text" class="form-control font-monospace small" [(ngModel)]="blockHash" />
+              <label class="form-label small text-muted" for="light-client-filters-block">Block Hash or Height</label>
+              <input type="text" class="form-control font-monospace small" id="light-client-filters-block" [(ngModel)]="blockHash" />
             </div>
 
             <button class="btn btn-primary w-100" (click)="fetchFilter()" [disabled]="fetching">

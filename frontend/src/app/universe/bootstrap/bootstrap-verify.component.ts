@@ -36,18 +36,18 @@ import { BootstrapApiService } from './bootstrap.service';
             <h2 class="h5 mb-3">Snapshot File Integrity Check</h2>
 
             <div class="mb-3">
-              <label class="form-label small text-muted">Snapshot Height</label>
-              <input type="number" class="form-control" [(ngModel)]="snapshotHeight" />
+              <label class="form-label small text-muted" for="bootstrap-verify-height">Snapshot Height</label>
+              <input type="number" class="form-control" id="bootstrap-verify-height" [(ngModel)]="snapshotHeight" />
             </div>
 
             <div class="mb-3">
-              <label class="form-label small text-muted">Calculated File SHA-256 Checksum</label>
-              <input type="text" class="form-control font-monospace small" [(ngModel)]="computedSha256" />
+              <label class="form-label small text-muted" for="bootstrap-verify-checksum">Calculated File SHA-256 Checksum</label>
+              <input type="text" class="form-control font-monospace small" id="bootstrap-verify-checksum" [(ngModel)]="computedSha256" />
             </div>
 
             <div class="mb-3">
-              <label class="form-label small text-muted">Base UTXO Set Hash (MuHash)</label>
-              <input type="text" class="form-control font-monospace small" [(ngModel)]="computedUtxoHash" />
+              <label class="form-label small text-muted" for="bootstrap-verify-utxo-hash">Base UTXO Set Hash (MuHash)</label>
+              <input type="text" class="form-control font-monospace small" id="bootstrap-verify-utxo-hash" [(ngModel)]="computedUtxoHash" />
             </div>
 
             <button class="btn btn-primary w-100" (click)="verifyChecksum()" [disabled]="verifying">

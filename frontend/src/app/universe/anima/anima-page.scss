@@ -69,6 +69,12 @@
 
   dt { color: var(--u-text-muted); }
   dd { margin: 0; overflow-wrap: anywhere; }
+
+  .browse-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--u-touch-target);
+  }
 }
 
 .event-list {

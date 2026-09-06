@@ -38,8 +38,9 @@ import { FormsModule } from '@angular/forms';
             </p>
 
             <div class="mb-3">
-              <label class="form-label small text-muted">Package JSON</label>
+              <label class="form-label small text-muted" for="coinswap-inspect-package">Package JSON</label>
               <textarea
+                id="coinswap-inspect-package"
                 class="form-control font-monospace small"
                 rows="14"
                 [(ngModel)]="packageInput"

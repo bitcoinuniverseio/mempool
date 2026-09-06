@@ -44,9 +44,10 @@ import { SimplicityApiService } from './simplicity.service';
             <dl class="row mb-0">
               <dt class="col-sm-4 text-muted">Program ID</dt>
               <dd class="col-sm-8 font-monospace small">
-                <a [routerLink]="['/liquid/simplicity/program', execution.program_id]" class="text-decoration-none">
+                <a *ngIf="execution.program_id; else programUnavailable" [routerLink]="['/liquid/simplicity/program', execution.program_id]" class="text-decoration-none">
                   {{ execution.program_id }}
                 </a>
+                <ng-template #programUnavailable><span i18n>Program unavailable</span></ng-template>
               </dd>
 
               <dt class="col-sm-4 text-muted">Input Index</dt>

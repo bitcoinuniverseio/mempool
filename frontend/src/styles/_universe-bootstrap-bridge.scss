@@ -19,6 +19,17 @@
     font-family: var(--u-font-text);
   }
 
+  // Bootstrap's utility rules are compiled from the original dark palette
+  // and use !important, so changing the inherited body colour is insufficient.
+  .text-body { color: var(--u-text-primary) !important; }
+  .text-muted { color: var(--u-text-muted) !important; }
+  .text-secondary { color: var(--u-text-secondary) !important; }
+  .text-primary { color: var(--u-brand) !important; }
+  .text-success { color: var(--u-state-proven) !important; }
+  .text-warning { color: var(--u-state-partial) !important; }
+  .text-info { color: var(--u-state-pending) !important; }
+  .text-danger { color: var(--u-state-unavailable) !important; }
+
   // Inline code and keyboard keys. Bootstrap ships a pink that lands at
   // 3.5:1 on this page ground, which is under the floor for body text.
   // Inline code reads as text, so it takes text ink on a sunken chip rather
@@ -72,6 +83,34 @@
     border-color: var(--u-border);
   }
 
+  .card.bg-dark,
+  .intelligence-page .bg-dark,
+  .bg-body-tertiary {
+    background-color: var(--u-surface-raised) !important;
+  }
+
+  .bg-body {
+    background-color: var(--u-surface-page) !important;
+  }
+
+  .intelligence-page .bg-black,
+  .form-control.bg-black,
+  .form-select.bg-black {
+    background-color: var(--u-surface-sunken) !important;
+  }
+
+  .intelligence-page .text-light,
+  .card.bg-dark .text-light,
+  .form-control.text-light,
+  .form-select.text-light {
+    color: var(--u-text-primary) !important;
+  }
+
+  .alert.bg-dark {
+    background-color: var(--u-surface-raised) !important;
+    color: var(--u-text-primary);
+  }
+
   // --- Tables ----------------------------------------------------------------
 
   .table {
@@ -86,6 +125,10 @@
       border-bottom-color: var(--u-border);
       color: var(--u-text-muted);
     }
+  }
+
+  .table-dark {
+    background-color: var(--u-surface-raised);
   }
 
   .table-striped tbody tr:nth-of-type(odd) {
@@ -123,7 +166,8 @@
     }
   }
 
-  .custom-select {
+  .custom-select,
+  .form-select {
     background-color: var(--u-surface-raised);
     border-color: var(--u-border-strong);
     color: var(--u-text-primary);
@@ -350,6 +394,33 @@
     color: var(--u-state-unavailable);
   }
 
+  // Keep unavailable actions visually quiet without fading their labels.
+  .btn:disabled,
+  .btn.disabled {
+    opacity: 1;
+    background-color: var(--u-surface-inset);
+    border-color: var(--u-border);
+    color: var(--u-text-primary);
+  }
+
+  // Bootstrap 5 badge markup uses background utilities instead of the older
+  // badge-* variants. Pair both the ink and fill, including explicit text-dark.
+  @each $variant, $state in (secondary: neutral, success: proven, info: pending, warning: partial, danger: unavailable) {
+    .badge-#{$variant},
+    .badge.bg-#{$variant} {
+      background-color: var(--u-state-#{$state}-surface) !important;
+      border: 1px solid var(--u-state-#{$state}-border);
+      color: var(--u-state-#{$state}) !important;
+    }
+  }
+
+  .badge-primary,
+  .badge.bg-primary {
+    background-color: var(--u-brand-subtle) !important;
+    border: 1px solid var(--u-brand-border);
+    color: var(--u-brand) !important;
+  }
+
   // --- Overlays --------------------------------------------------------------
 
   .modal-content {
@@ -385,6 +456,14 @@
   }
 
   // --- Navigation ------------------------------------------------------------
+
+  .nav-pills .nav-link.active,
+  .nav-pills .show > .nav-link {
+    // Component styles also set a literal white foreground. The paired token
+    // must win when the dark theme switches the fill to a pale brand colour.
+    background-color: var(--u-brand) !important;
+    color: var(--u-brand-contrast) !important;
+  }
 
   .nav-tabs {
     border-bottom-color: var(--u-border);

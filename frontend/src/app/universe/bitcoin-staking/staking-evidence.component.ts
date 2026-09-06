@@ -42,30 +42,31 @@ import { BitcoinStakingApiService, EotsSlashingEvidence } from './bitcoin-stakin
             </p>
 
             <div class="mb-2">
-              <label class="form-label small text-muted">EOTS Public Key</label>
-              <input type="text" class="form-control font-monospace small" [(ngModel)]="eotsPk" />
+              <label class="form-label small text-muted" for="staking-evidence-public-key">EOTS Public Key</label>
+              <input type="text" class="form-control font-monospace small" id="staking-evidence-public-key" [(ngModel)]="eotsPk" />
             </div>
 
             <div class="mb-2">
-              <label class="form-label small text-muted">Committed Nonce Point (R)</label>
-              <input type="text" class="form-control font-monospace small" [(ngModel)]="noncePoint" />
+              <label class="form-label small text-muted" for="staking-evidence-nonce">Committed Nonce Point (R)</label>
+              <input type="text" class="form-control font-monospace small" id="staking-evidence-nonce" [(ngModel)]="noncePoint" />
             </div>
 
             <div class="row g-2 mb-2">
               <div class="col-6">
-                <label class="form-label small text-muted">Signed Message A</label>
-                <input type="text" class="form-control font-monospace small" [(ngModel)]="msgA" />
+                <label class="form-label small text-muted" for="staking-evidence-message-a">Signed Message A</label>
+                <input type="text" class="form-control font-monospace small" id="staking-evidence-message-a" [(ngModel)]="msgA" />
               </div>
               <div class="col-6">
-                <label class="form-label small text-muted">Signed Message B</label>
-                <input type="text" class="form-control font-monospace small" [(ngModel)]="msgB" />
+                <label class="form-label small text-muted" for="staking-evidence-message-b">Signed Message B</label>
+                <input type="text" class="form-control font-monospace small" id="staking-evidence-message-b" [(ngModel)]="msgB" />
               </div>
             </div>
 
             <div class="mb-3">
-              <label class="form-label small text-muted">Signature A & Signature B</label>
-              <input type="text" class="form-control font-monospace small mb-1" [(ngModel)]="sigA" placeholder="Sig A" />
-              <input type="text" class="form-control font-monospace small" [(ngModel)]="sigB" placeholder="Sig B" />
+              <label class="form-label small text-muted" for="staking-evidence-signature-a" i18n>Signature A</label>
+              <input type="text" class="form-control font-monospace small mb-1" id="staking-evidence-signature-a" [(ngModel)]="sigA" placeholder="Sig A" />
+              <label class="form-label small text-muted" for="staking-evidence-signature-b" i18n>Signature B</label>
+              <input type="text" class="form-control font-monospace small" id="staking-evidence-signature-b" [(ngModel)]="sigB" placeholder="Sig B" />
             </div>
 
             <div class="d-flex gap-2">

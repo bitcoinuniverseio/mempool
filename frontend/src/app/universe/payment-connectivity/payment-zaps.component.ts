@@ -37,8 +37,9 @@ import { PaymentConnectivityApiService } from './payment-connectivity.service';
             <h2 class="h5 mb-3">Zap Receipt Verification</h2>
 
             <div class="mb-3">
-              <label class="form-label small text-muted">Zap Request JSON (kind 9734)</label>
+              <label class="form-label small text-muted" for="payment-zaps-request">Zap Request JSON (kind 9734)</label>
               <textarea
+                id="payment-zaps-request"
                 class="form-control font-monospace small"
                 rows="6"
                 [(ngModel)]="zapRequestJson"
@@ -46,8 +47,8 @@ import { PaymentConnectivityApiService } from './payment-connectivity.service';
             </div>
 
             <div class="mb-3">
-              <label class="form-label small text-muted">Lightning Invoice Description SHA-256 Hash</label>
-              <input type="text" class="form-control font-monospace small" [(ngModel)]="descriptionHash" />
+              <label class="form-label small text-muted" for="payment-zaps-description-hash">Lightning Invoice Description SHA-256 Hash</label>
+              <input type="text" class="form-control font-monospace small" id="payment-zaps-description-hash" [(ngModel)]="descriptionHash" />
             </div>
 
             <div class="d-flex gap-2">

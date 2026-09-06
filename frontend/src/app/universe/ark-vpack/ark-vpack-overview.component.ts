@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
-import { ArkVpackApiService, VpackOverview } from './ark-vpack.service';
+import { ArkVpackApiService, isVpackOverview, VpackOverview } from './ark-vpack.service';
 
 @Component({
   selector: 'app-ark-vpack-overview',
@@ -47,7 +47,7 @@ import { ArkVpackApiService, VpackOverview } from './ark-vpack.service';
           <div class="card p-3 bg-body-tertiary border h-100">
             <div class="text-muted small">Standard V-PACK Versions</div>
             <div class="fs-4 fw-bold mt-1">{{ overview.total_vpack_versions }}</div>
-            <div class="small text-success mt-1">MVV v0.1.0 and v0.2.0-rc1</div>
+            <div class="small text-muted mt-1">{{ overview.active_versions.join(', ') || 'None reported' }}</div>
           </div>
         </div>
         <div class="col-12 col-md-3">
@@ -105,9 +105,10 @@ export class ArkVpackOverviewComponent implements OnInit, OnDestroy {
   public ngOnInit(): void {
     this.sub = this.api.getOverview$().subscribe({
       next: (data) => {
-        this.overview = data;
+        const valid = isVpackOverview(data);
+        this.overview = valid ? data : null;
         this.loading = false;
-        this.loadError = null;
+        this.loadError = valid ? null : 'The Ark V-PACK overview response is malformed. Implementation and version data could not be displayed.';
         this.cdr.markForCheck();
       },
       error: (err) => {

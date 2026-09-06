@@ -24,8 +24,8 @@ import { LightningResilienceApiService } from './lightning-resilience.service';
             <h5 class="card-title mb-3">Simulation Parameters</h5>
 
             <div class="mb-3">
-              <label class="form-label text-muted small text-uppercase">Attack Vector Scenario</label>
-              <select class="form-select bg-black text-light border-secondary" [(ngModel)]="scenario">
+              <label class="form-label text-muted small text-uppercase" for="lightning-resilience-scenario">Attack Vector Scenario</label>
+              <select class="form-select bg-black text-light border-secondary" id="lightning-resilience-scenario" [(ngModel)]="scenario">
                 <option value="slot_exhaustion_dos">Slot Exhaustion (483 unendorsed dust HTLCs)</option>
                 <option value="slow_hold_liquidity_pinning">Slow Hold Liquidity Pinning (Prolonged P95 Latency)</option>
                 <option value="onion_message_storm">Onion Messaging Queue Flood (CPU / Memory DoS)</option>
@@ -34,8 +34,8 @@ import { LightningResilienceApiService } from './lightning-resilience.service';
             </div>
 
             <div class="mb-3">
-              <label class="form-label text-muted small text-uppercase">Attacker Capital / Slots</label>
-              <input type="number" class="form-control bg-black text-light border-secondary" [(ngModel)]="attackerSlots" min="10" max="483">
+              <label class="form-label text-muted small text-uppercase" for="lightning-resilience-slots">Attacker Capital / Slots</label>
+              <input type="number" class="form-control bg-black text-light border-secondary" id="lightning-resilience-slots" [(ngModel)]="attackerSlots" min="10" max="483">
             </div>
 
             <div class="mb-3">

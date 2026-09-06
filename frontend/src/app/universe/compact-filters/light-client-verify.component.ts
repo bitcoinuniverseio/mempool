@@ -36,18 +36,18 @@ import { CompactFiltersApiService } from './compact-filters.service';
             <h2 class="h5 mb-3">Verification Range & Peers</h2>
 
             <div class="mb-3">
-              <label class="form-label small text-muted">Start Height</label>
-              <input type="number" class="form-control" [(ngModel)]="startHeight" />
+              <label class="form-label small text-muted" for="light-client-verify-start">Start Height</label>
+              <input type="number" class="form-control" id="light-client-verify-start" [(ngModel)]="startHeight" />
             </div>
 
             <div class="mb-3">
-              <label class="form-label small text-muted">Stop Height</label>
-              <input type="number" class="form-control" [(ngModel)]="stopHeight" />
+              <label class="form-label small text-muted" for="light-client-verify-stop">Stop Height</label>
+              <input type="number" class="form-control" id="light-client-verify-stop" [(ngModel)]="stopHeight" />
             </div>
 
             <div class="mb-3">
-              <label class="form-label small text-muted">Sampled Peers Count</label>
-              <input type="number" class="form-control" [(ngModel)]="peerCount" />
+              <label class="form-label small text-muted" for="light-client-verify-peers">Sampled Peers Count</label>
+              <input type="number" class="form-control" id="light-client-verify-peers" [(ngModel)]="peerCount" />
             </div>
 
             <button class="btn btn-primary w-100" (click)="runVerification()" [disabled]="verifying">

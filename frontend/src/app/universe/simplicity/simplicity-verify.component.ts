@@ -37,8 +37,9 @@ import { SimplicityApiService } from './simplicity.service';
             </p>
 
             <div class="mb-3">
-              <label class="form-label small text-muted">Proof Manifest JSON</label>
+              <label class="form-label small text-muted" for="simplicity-verify-manifest">Proof Manifest JSON</label>
               <textarea
+                id="simplicity-verify-manifest"
                 class="form-control font-monospace small"
                 rows="14"
                 [(ngModel)]="manifestInput"

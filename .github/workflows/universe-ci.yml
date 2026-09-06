@@ -449,7 +449,10 @@ jobs:
     # a shard can only ever pick up the build made from its own source, and a
     # miss falls back to building rather than failing.
     needs: frontend
-    runs-on: [self-hosted, linux, x64, universe-ultra]
+    # The old Ultra group is empty and its replacement is restricted to other
+    # repositories. Use this repository's authorized browser-capable pool,
+    # which already runs the frontend, mobile and cross-browser checks.
+    runs-on: [self-hosted, linux, x64, universe-super, browser-heavy]
     timeout-minutes: 60
     strategy:
       # One shard failing says nothing about the others, and finding out that

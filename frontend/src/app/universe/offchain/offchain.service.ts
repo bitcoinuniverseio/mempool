@@ -30,6 +30,24 @@ export interface OffchainOverview {
   featured_operators: OffchainOperator[];
 }
 
+/** Fields returned by GET /offchain/operators/:operatorId. */
+export interface OffchainOperatorDetail {
+  operator_id: string;
+  protocol: 'mercury_statechain' | 'teleport_coinswap';
+  operator_public_key: string;
+  display_name: string;
+  networks: string[];
+  endpoints: { clearnet: string; tor_onion?: string; i2p?: string };
+  supported_versions: string[];
+  signature_count_endpoint?: string;
+  transfer_capabilities: string[];
+  recovery_capabilities: string[];
+  health: 'healthy' | 'degraded' | 'unreachable';
+  effective_from: string;
+  expires_at: string;
+  provenance: { registered_in_knowledge_registry: boolean; identity_ref?: string; verified_signature: boolean };
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -63,8 +81,8 @@ export class OffchainApiService {
     return this.httpClient.get<OffchainOperator[]>(url);
   }
 
-  getOperatorById$(operatorId: string): Observable<OffchainOperator> {
-    return this.httpClient.get<OffchainOperator>(
+  getOperatorById$(operatorId: string): Observable<OffchainOperatorDetail> {
+    return this.httpClient.get<OffchainOperatorDetail>(
       `${this.apiBaseUrl}/api/v1/intelligence/offchain/operators/${encodeURIComponent(operatorId)}`
     );
   }

@@ -49,12 +49,13 @@ cmd_install() {
   [ -e "$dir" ] && fail "$dir already exists; releases are never overwritten in place"
 
   local previous; previous=$(readlink -f "$CURRENT" 2>/dev/null || true)
-  mkdir -p "$dir"
-  tar -xzf "$tarball" -C "$dir"
+  mkdir -p "$dir" || return $?
+  tar -xzf "$tarball" -C "$dir" || return $?
 
   # Reuse the running dependency tree only when both lock files match. A
   # changed lock must use the package inputs carried by the new artifact.
   local reuse_previous=false
+  local previous_lock release_lock
   if [ -n "$previous" ] && [ -d "$previous/backend/node_modules" ]; then
     previous_lock="$previous/backend/package-lock.json"
     release_lock="$dir/backend/package-lock.json"
@@ -64,10 +65,16 @@ cmd_install() {
   fi
 
   if [ ! -d "$dir/backend/node_modules" ] && [ "$reuse_previous" = true ]; then
-    cp -al "$previous/backend/node_modules" "$dir/backend/node_modules"
-    [ -d "$dir/backend/rust-gbt" ]     || { [ -d "$previous/backend/rust-gbt" ] && cp -al "$previous/backend/rust-gbt" "$dir/backend/rust-gbt"; } || true
-    [ -f "$dir/backend/package.json" ] || cp -a  "$previous/backend/package.json" "$dir/backend/package.json"
-    [ -d "$dir/rust" ]                 || { [ -d "$previous/rust" ] && cp -al "$previous/rust" "$dir/rust"; } || true
+    cp -al "$previous/backend/node_modules" "$dir/backend/node_modules" || return $?
+    if [ ! -d "$dir/backend/rust-gbt" ] && [ -d "$previous/backend/rust-gbt" ]; then
+      cp -al "$previous/backend/rust-gbt" "$dir/backend/rust-gbt" || return $?
+    fi
+    if [ ! -f "$dir/backend/package.json" ]; then
+      cp -a "$previous/backend/package.json" "$dir/backend/package.json" || return $?
+    fi
+    if [ ! -d "$dir/rust" ] && [ -d "$previous/rust" ]; then
+      cp -al "$previous/rust" "$dir/rust" || return $?
+    fi
   fi
 
   if [ ! -d "$dir/backend/node_modules" ]; then
@@ -76,16 +83,34 @@ cmd_install() {
     [ -d "$dir/backend/vendor" ]            || fail "release has no vendored package inputs"
     [ -d "$dir/backend/rust-gbt" ]          || fail "release has no compiled gbt module"
     log "installing the release dependency tree"
+    local install_status=0
     (
-      cd "$dir/backend"
-      npm ci --omit=dev --omit=optional --ignore-scripts
-      node -e "require('@bitcoinuniverse/ecosystem-contracts'); require('rust-gbt')"
-    ) || fail "the release dependency tree could not be installed"
+      cd "$dir/backend" || exit $?
+      npm ci --omit=dev --omit=optional --ignore-scripts || exit $?
+    ) || install_status=$?
+    if [ "$install_status" -ne 0 ]; then
+      log "the release dependency tree could not be installed (exit $install_status)" >&2
+      return "$install_status"
+    fi
   fi
 
-  printf '%s\n' "$sha" > "$dir/RELEASE-SHA"
-  chown -R root:universe-explorer "$dir"
-  chmod -R go-w "$dir"
+  # Check every tree, including reused or artifact-supplied dependencies.
+  # Loading tiny-secp256k1 also reads and instantiates its shipped WASM file.
+  # Explicit returns above and below remain effective when a caller checks
+  # cmd_install conditionally, which disables Bash's implicit errexit.
+  local dependency_status=0
+  (
+    cd "$dir/backend" || exit $?
+    node -e "require('@bitcoinuniverse/ecosystem-contracts'); require('rust-gbt'); require('tiny-secp256k1')"
+  ) || dependency_status=$?
+  if [ "$dependency_status" -ne 0 ]; then
+    log "the installed runtime dependencies could not be loaded (exit $dependency_status)" >&2
+    return "$dependency_status"
+  fi
+
+  printf '%s\n' "$sha" > "$dir/RELEASE-SHA" || return $?
+  chown -R root:universe-explorer "$dir" || return $?
+  chmod -R go-w "$dir" || return $?
   log "installed $dir"
 }
 
