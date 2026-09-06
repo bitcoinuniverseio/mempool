@@ -437,6 +437,8 @@
 
 .nav-link {
   align-items: center;
+  background: transparent;
+  border: 0;
   border-radius: var(--u-radius-md);
   color: var(--u-text-secondary);
   display: flex;

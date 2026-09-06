@@ -125,6 +125,7 @@ import { MultipartyApiService, Musig2VerificationResult } from './multiparty.ser
     </div>
   `,
   styles: [`
+    .text-muted { color: var(--u-text-muted) !important; }
     .nav-link { color: inherit; padding: 0.4rem 0.8rem; border-radius: 0.375rem; }
     .nav-link.active { background-color: var(--u-brand); color: var(--u-brand-contrast); }
   `],
