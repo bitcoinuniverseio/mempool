@@ -292,6 +292,14 @@ jobs:
         working-directory: scripts/universe/visual-qa
         run: npm ci
 
+      # The fleet caches browsers under a shared path, and a runner that has
+      # never held the build this Playwright pins fails at launch with the
+      # revision it wanted. This resolves it there, and is a no-op on a runner
+      # whose cache already has it.
+      - name: Fetch the engine
+        working-directory: scripts/universe/visual-qa
+        run: npx playwright install chromium
+
       - name: The unfinished-page gate fires on the states that shipped
         working-directory: scripts/universe/visual-qa
         run: node --test progress-gate.test.mjs
@@ -474,6 +482,14 @@ jobs:
         working-directory: scripts/universe/visual-qa
         run: npm ci
 
+      # The fleet caches browsers under a shared path, and a runner that has
+      # never held the build this Playwright pins fails at launch with the
+      # revision it wanted. This resolves it there, and is a no-op on a runner
+      # whose cache already has it.
+      - name: Fetch the engine
+        working-directory: scripts/universe/visual-qa
+        run: npx playwright install chromium
+
       # A fixed port here once measured another job's build: two runners share
       # a host, the second gateway crashed on the taken port behind "&", the
       # probe happily reached the first job's server, and the run died halfway
@@ -606,6 +622,14 @@ jobs:
       - name: Install the visual QA harness
         working-directory: scripts/universe/visual-qa
         run: npm ci
+
+      # The fleet caches browsers under a shared path, and a runner that has
+      # never held the build this Playwright pins fails at launch with the
+      # revision it wanted. This resolves it there, and is a no-op on a runner
+      # whose cache already has it.
+      - name: Fetch the engine
+        working-directory: scripts/universe/visual-qa
+        run: npx playwright install chromium
 
       # Same reasoning as the matrix job: a fixed port once measured another
       # job's build, so each run takes a free one and refuses to continue
