@@ -89,10 +89,21 @@ export const fixtures = {
   '/api/v1/mining/hashrate/3d': buildHashrateSeries(),
   '/api/v1/mining/hashrate/1w': buildHashrateSeries(),
   '/api/v1/mining/hashrate/1m': buildHashrateSeries(),
+  '/api/v1/mining/hashrate/3m': buildHashrateSeries(),
+  '/api/v1/mining/hashrate/6m': buildHashrateSeries(),
   '/api/v1/mining/hashrate/1y': buildHashrateSeries(),
+  '/api/v1/mining/hashrate/2y': buildHashrateSeries(),
+  '/api/v1/mining/hashrate/3y': buildHashrateSeries(),
+  '/api/v1/mining/hashrate/all': buildHashrateSeries(),
   '/api/v1/mining/hashrate/pools/1y': buildHashrateSeries(),
   '/api/v1/mining/hashrate': buildHashrateSeries(),
+  '/api/v1/mining/difficulty-adjustments/1m': buildDifficultyAdjustments(),
+  '/api/v1/mining/difficulty-adjustments/3m': buildDifficultyAdjustments(),
+  '/api/v1/mining/difficulty-adjustments/6m': buildDifficultyAdjustments(),
   '/api/v1/mining/difficulty-adjustments/1y': buildDifficultyAdjustments(),
+  '/api/v1/mining/difficulty-adjustments/2y': buildDifficultyAdjustments(),
+  '/api/v1/mining/difficulty-adjustments/3y': buildDifficultyAdjustments(),
+  '/api/v1/mining/difficulty-adjustments/all': buildDifficultyAdjustments(),
   '/api/v1/mining/difficulty-adjustments': buildDifficultyAdjustments(),
 
   '/api/v1/universe/protocols': {
@@ -220,7 +231,16 @@ export const detailFixtures = {
   '/api/txs/outspends': [[{ spent: false }, { spent: false }]],
   [`/api/v1/cpfp/${TXID_A}`]: { ancestors: [], descendants: [], bestDescendant: null, effectiveFeePerVsize: 19.7, sigops: 2, adjustedVsize: 209 },
   '/api/v1/historical-price': { prices: [{ time: 1_772_100_000, USD: 96_400 }], exchangeRates: { USDEUR: 0.92, USDGBP: 0.79, USDCAD: 1.36, USDCHF: 0.88, USDAUD: 1.5, USDJPY: 155 } },
+  '/api/v1/mining/pools/24h': fixtures['/api/v1/mining/pools/1w'],
+  '/api/v1/mining/pools/3d': fixtures['/api/v1/mining/pools/1w'],
   '/api/v1/mining/pools/1m': fixtures['/api/v1/mining/pools/1w'],
+  '/api/v1/mining/pools/3m': fixtures['/api/v1/mining/pools/1w'],
+  '/api/v1/mining/pools/6m': fixtures['/api/v1/mining/pools/1w'],
+  '/api/v1/mining/pools/1y': fixtures['/api/v1/mining/pools/1w'],
+  '/api/v1/mining/pools/2y': fixtures['/api/v1/mining/pools/1w'],
+  '/api/v1/mining/pools/3y': fixtures['/api/v1/mining/pools/1w'],
+  '/api/v1/mining/pools/all': fixtures['/api/v1/mining/pools/1w'],
+  '/api/v1/mining/pools': fixtures['/api/v1/mining/pools/1w'],
   // The Universe authority answers for this transaction: one proven output
   // position, so the flow has something real to lay out rather than only
   // ever being reviewed in its empty state.
@@ -445,6 +465,7 @@ function buildHashrateSeries() {
     if (day % 14 === 0) {
       difficulty.push({
         timestamp: now - day * 86_400,
+        time: now - day * 86_400,
         difficulty: Math.round(110_568_428_300_952 * (1 + drift / 3)),
         height: 964_000 - day * 144,
         adjustment: Number((drift * 12).toFixed(2)),
@@ -466,7 +487,7 @@ function buildDifficultyAdjustments() {
     now - i * 14 * 86_400,
     964_000 - i * 2016,
     110_568_428_300_952 * (1 - i * 0.004),
-    Number((Math.sin(i / 3) * 3).toFixed(2)),
+    Number((1 + Math.sin(i / 3) * 0.03).toFixed(4)),
   ]);
 }
 

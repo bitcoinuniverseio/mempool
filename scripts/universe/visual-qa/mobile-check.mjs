@@ -771,6 +771,7 @@ async function run() {
     const context = await browser.newContext({
       viewport: { width: viewport.width, height: viewport.height },
       deviceScaleFactor: 1,
+      serviceWorkers: 'block',
       // Emulate the device, not just its size.
       //
       // `hasTouch` alone delivers touch events and leaves the CSS pointer
