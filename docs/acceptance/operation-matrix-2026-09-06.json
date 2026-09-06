@@ -2529,8 +2529,8 @@
     },
     {
       "path": "frontend/src/app/universe/ark-vpack/ark-exit-simulate.component.ts",
-      "sha256": "7e32b9fa0884bcbd5fd086934032a0b68f8e9052427192c580f8eda85dc49218",
-      "bytes": 2188
+      "sha256": "883fe60946d757edacd345fa0e10eb3c8d9516b765325663b9692abe3cd1a09e",
+      "bytes": 2192
     },
     {
       "path": "frontend/src/app/universe/ark-vpack/ark-exit.component.ts",
@@ -2544,13 +2544,13 @@
     },
     {
       "path": "frontend/src/app/universe/ark-vpack/ark-vpack-overview.component.ts",
-      "sha256": "2c081039003ccab51fc96afa0d6707991291b13866238590dd141b27dc26cd06",
-      "bytes": 5864
+      "sha256": "ef06afdf497b4c91317a350526a05d7b6675c8b974ca00a4e81188dd32682961",
+      "bytes": 5871
     },
     {
       "path": "frontend/src/app/universe/ark-vpack/ark-vpack-translate.component.ts",
-      "sha256": "62cb6c166bf358dd9147cab4e5fb9945c13b051cb0c522257bd53691fe264da4",
-      "bytes": 2826
+      "sha256": "0ce4c798a7fcaf1c3da9bc67ac06b9c7dd6fd60630037132f07a6a5dccfbe797",
+      "bytes": 2831
     },
     {
       "path": "frontend/src/app/universe/ark-vpack/ark-vpack-verify.component.ts",
@@ -2579,8 +2579,8 @@
     },
     {
       "path": "frontend/src/app/universe/bitcoin-staking/staking-evidence.component.ts",
-      "sha256": "af6233e5e50dbc3c8c623882098d43952941e9640f4b42939e333d2fe2541d07",
-      "bytes": 9199
+      "sha256": "2ce9e15496c139902ac317e43e7524610a63a885d30b383d59e19f6fe3198aa6",
+      "bytes": 9211
     },
     {
       "path": "frontend/src/app/universe/bitcoin-staking/staking-finality-provider-detail.component.ts",
@@ -2684,8 +2684,8 @@
     },
     {
       "path": "frontend/src/app/universe/bootstrap/bootstrap-planner.component.ts",
-      "sha256": "f891b6b1a5fbd295b800eebe4f90dd7a628866378848a838519b0fa2e7ffc224",
-      "bytes": 7617
+      "sha256": "bcbff70f945580a1a0b6f2f000a3823e2081db89c8a1cf9727ac6c1c82fa5f76",
+      "bytes": 7625
     },
     {
       "path": "frontend/src/app/universe/bootstrap/bootstrap-snapshot-detail.component.ts",
@@ -2699,8 +2699,8 @@
     },
     {
       "path": "frontend/src/app/universe/bootstrap/bootstrap-verify.component.ts",
-      "sha256": "13cdd9715cac62cb12ea19843637535512ede0164c956be0e6b9ba5a201b4e48",
-      "bytes": 6894
+      "sha256": "76152d5744e796aa17d17650a47d9f29c23ed92819517fd6e765a6b3d8af709e",
+      "bytes": 6900
     },
     {
       "path": "frontend/src/app/universe/chain-dashboard/chain-dashboard.component.ts",
@@ -2764,8 +2764,8 @@
     },
     {
       "path": "frontend/src/app/universe/compact-filters/light-client-filters.component.ts",
-      "sha256": "d047b012dce76612877ed5a5390be3f89e31cecbe590bf36cbda8ee91dc7423f",
-      "bytes": 6111
+      "sha256": "ab4951b60604d6bf661af0d035f32946bba0171795060f34d3c94a9eeab7ec97",
+      "bytes": 6113
     },
     {
       "path": "frontend/src/app/universe/compact-filters/light-client-overview.component.ts",
@@ -2789,18 +2789,18 @@
     },
     {
       "path": "frontend/src/app/universe/compact-filters/light-client-scan.component.ts",
-      "sha256": "9f7c40ddefd15533be8a4e6eca2ceb9c536e2b8146fb4f2cf736791e93d6aea8",
-      "bytes": 8401
+      "sha256": "e31b037786c2fb08934191e608ed206ba658dfe83e002142f70172166de0bef1",
+      "bytes": 8408
     },
     {
       "path": "frontend/src/app/universe/compact-filters/light-client-verify.component.ts",
-      "sha256": "bc0bf0794f813b088b98b60adc2b6bb4b54615b559659a007e7acb6139c22cb9",
-      "bytes": 6993
+      "sha256": "ce9cde3381572b7ceb71f965cceb6256f6c4c7164c8dd6d52f4bcc09b1ed1a50",
+      "bytes": 6999
     },
     {
       "path": "frontend/src/app/universe/consensus-conformance/consensus-conformance-case-detail.component.ts",
-      "sha256": "62920a211069371031cd66ddd13bb9672f0f42ba92b00de8b465f9ce46b1eb8c",
-      "bytes": 4977
+      "sha256": "5b2fa026e429f5fb5f58ae5df7ce2a3c4eeb8a6bc1afd9fc4315f7900d999aed",
+      "bytes": 4979
     },
     {
       "path": "frontend/src/app/universe/consensus-conformance/consensus-conformance-cases.component.ts",
@@ -2899,13 +2899,13 @@
     },
     {
       "path": "frontend/src/app/universe/dlc/dlc-overview.component.ts",
-      "sha256": "bb2b20e84d9e1553960f54b8456a49d35f1f00485ab59e94286d97da1796516d",
-      "bytes": 7353
+      "sha256": "bd80bebe670b0fe8034a185ca1d9a944b0587ee087c5f1a35fb36057d5daec86",
+      "bytes": 7374
     },
     {
       "path": "frontend/src/app/universe/dlc/dlc-simulate.component.ts",
-      "sha256": "cec6f6807bc99cba773d065e3e55b47a14e9d1759d8d8aa2457476519c4d3cf5",
-      "bytes": 7349
+      "sha256": "40fdc0615adcb3da2be4de98c0ff4d0ef62918b1708a7f2eeb2f587efb358364",
+      "bytes": 7355
     },
     {
       "path": "frontend/src/app/universe/ecash/ecash-cashu-detail.component.ts",
@@ -3119,13 +3119,13 @@
     },
     {
       "path": "frontend/src/app/universe/lightning-resilience/lightning-resilience-overview.component.ts",
-      "sha256": "de724ce31024a6fcc53ae9abcd8ed1b09135c30c4e57ae76ad0650f08a2af813",
-      "bytes": 8030
+      "sha256": "badd0925f64f5722595da0f940a9b3cbfddbdd497d6ad8a599e0b44ddcff05e6",
+      "bytes": 8032
     },
     {
       "path": "frontend/src/app/universe/lightning-resilience/lightning-resilience-simulate.component.ts",
-      "sha256": "56c6c04a6f61869c1a7c454f0ed5cc0efb61cda40a4239ff8999b8e8a3539f15",
-      "bytes": 6138
+      "sha256": "7048fe1c4f54ec0443844716fd44437c81f4f491dfab908ce4a9325f55e37854",
+      "bytes": 6142
     },
     {
       "path": "frontend/src/app/universe/liquid-observatory/liquid-observatory.component.ts",
@@ -3319,13 +3319,13 @@
     },
     {
       "path": "frontend/src/app/universe/node-security/node-security-upgrade.component.ts",
-      "sha256": "5a9e1438b654a2eff7cf7960e90fdd64e54132780dde751ec2fee9f97bbcfcd7",
-      "bytes": 3747
+      "sha256": "b147c339444fb38a42370d22a9573270a8a98900f185ae29cb949cae1b7fdc4e",
+      "bytes": 3749
     },
     {
       "path": "frontend/src/app/universe/offchain/coinswap-inspect.component.ts",
-      "sha256": "e03108d64c231c317b770fcf9de874a38b10ca581679fd94ea9d462389260ad3",
-      "bytes": 7150
+      "sha256": "ea1c6442d291c6c9a76d499fb4d8aee30fe2ea7c480f18e330c9c9ff1d4494d5",
+      "bytes": 7153
     },
     {
       "path": "frontend/src/app/universe/offchain/coinswap-overview.component.ts",
@@ -3334,8 +3334,8 @@
     },
     {
       "path": "frontend/src/app/universe/offchain/offchain-recovery.component.ts",
-      "sha256": "73709b11346356919d012330e97a433b9395bfece8537c563bd3f29c1b46e288",
-      "bytes": 7451
+      "sha256": "1dc37adb3b2cca17828bd5f5e5536893adb02174f617c857a38e07ba6a43bbdf",
+      "bytes": 7457
     },
     {
       "path": "frontend/src/app/universe/offchain/offchain-utxo.component.ts",
@@ -3344,8 +3344,8 @@
     },
     {
       "path": "frontend/src/app/universe/offchain/statechain-operator-detail.component.ts",
-      "sha256": "2226c9e706d55af339c4a03ff38bcbeefee8613dd065aea528b1e1d9392488ca",
-      "bytes": 6255
+      "sha256": "9e4c5132169239f926163ac9109a0d5a4a243e13c270655c2fcf52e123a07fb1",
+      "bytes": 6282
     },
     {
       "path": "frontend/src/app/universe/offchain/statechain-operators.component.ts",
@@ -3354,8 +3354,8 @@
     },
     {
       "path": "frontend/src/app/universe/offchain/statechain-verify.component.ts",
-      "sha256": "e21a174f31099542ac1e2cfd45a460fbb044cdda6728fe6f33a0810b1afb87c0",
-      "bytes": 7794
+      "sha256": "a613675055373bafcabee425e857e53ca606e927a07ffbaabf2201a81b7703c4",
+      "bytes": 7797
     },
     {
       "path": "frontend/src/app/universe/opentimestamps/opentimestamps-batches.component.ts",
@@ -3454,8 +3454,8 @@
     },
     {
       "path": "frontend/src/app/universe/payment-connectivity/payment-zaps.component.ts",
-      "sha256": "48956232f776fd5700355221df2204cfde218716f08d5f3a2c868e3e81ec0f69",
-      "bytes": 7030
+      "sha256": "6f4bf8461a23892da9cea2a465be06d041463d811ad85f96e30680d5ea3cda65",
+      "bytes": 7035
     },
     {
       "path": "frontend/src/app/universe/payment-studio/payment-studio.component.ts",
@@ -3739,18 +3739,18 @@
     },
     {
       "path": "frontend/src/app/universe/simplicity/simplicity-tools.component.ts",
-      "sha256": "f560dba4a2648c3b85b841003fefb0625758d9e2bebb2114d44752dbc24e4a87",
-      "bytes": 6285
+      "sha256": "6831c74abc4ad4f62e204fb96d041b777a8ccf47b8569e8c4852752156a5fd89",
+      "bytes": 6288
     },
     {
       "path": "frontend/src/app/universe/simplicity/simplicity-tx.component.ts",
-      "sha256": "fd9c6f68b86ca9e77f26dc5e37b68d33a581933b2138b4a0a550ed6f39f4437a",
-      "bytes": 6557
+      "sha256": "2dd4816f5d110094ed50111c2c238911022f5aa520fb2705764a478bc7d2ec17",
+      "bytes": 6561
     },
     {
       "path": "frontend/src/app/universe/simplicity/simplicity-verify.component.ts",
-      "sha256": "f017fbcb6aac42a3ec5bea6acc534012513fe5f61c5b976b1e67b492291ce76d",
-      "bytes": 6775
+      "sha256": "f9c36aa39005f07a2f195f6760f2d765dcf85bdce235b201542d602d0c209b6c",
+      "bytes": 6778
     },
     {
       "path": "frontend/src/app/universe/source-page/source-page.component.ts",
@@ -5667,7 +5667,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/bitcoin-staking/staking-evidence.component.ts",
-          "sha256": "af6233e5e50dbc3c8c623882098d43952941e9640f4b42939e333d2fe2541d07"
+          "sha256": "2ce9e15496c139902ac317e43e7524610a63a885d30b383d59e19f6fe3198aa6"
         }
       },
       {
@@ -11618,7 +11618,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/dlc/dlc-overview.component.ts",
-          "sha256": "bb2b20e84d9e1553960f54b8456a49d35f1f00485ab59e94286d97da1796516d"
+          "sha256": "bd80bebe670b0fe8034a185ca1d9a944b0587ee087c5f1a35fb36057d5daec86"
         }
       },
       {
@@ -11948,7 +11948,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/dlc/dlc-simulate.component.ts",
-          "sha256": "cec6f6807bc99cba773d065e3e55b47a14e9d1759d8d8aa2457476519c4d3cf5"
+          "sha256": "40fdc0615adcb3da2be4de98c0ff4d0ef62918b1708a7f2eeb2f587efb358364"
         }
       },
       {
@@ -12094,7 +12094,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/simplicity/simplicity-tx.component.ts",
-          "sha256": "fd9c6f68b86ca9e77f26dc5e37b68d33a581933b2138b4a0a550ed6f39f4437a"
+          "sha256": "2dd4816f5d110094ed50111c2c238911022f5aa520fb2705764a478bc7d2ec17"
         }
       },
       {
@@ -12199,7 +12199,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/simplicity/simplicity-tools.component.ts",
-          "sha256": "f560dba4a2648c3b85b841003fefb0625758d9e2bebb2114d44752dbc24e4a87"
+          "sha256": "6831c74abc4ad4f62e204fb96d041b777a8ccf47b8569e8c4852752156a5fd89"
         }
       },
       {
@@ -12270,7 +12270,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/simplicity/simplicity-verify.component.ts",
-          "sha256": "f017fbcb6aac42a3ec5bea6acc534012513fe5f61c5b976b1e67b492291ce76d"
+          "sha256": "f9c36aa39005f07a2f195f6760f2d765dcf85bdce235b201542d602d0c209b6c"
         }
       },
       {
@@ -12432,7 +12432,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/offchain/statechain-operator-detail.component.ts",
-          "sha256": "2226c9e706d55af339c4a03ff38bcbeefee8613dd065aea528b1e1d9392488ca"
+          "sha256": "9e4c5132169239f926163ac9109a0d5a4a243e13c270655c2fcf52e123a07fb1"
         }
       },
       {
@@ -12511,7 +12511,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/offchain/statechain-verify.component.ts",
-          "sha256": "e21a174f31099542ac1e2cfd45a460fbb044cdda6728fe6f33a0810b1afb87c0"
+          "sha256": "a613675055373bafcabee425e857e53ca606e927a07ffbaabf2201a81b7703c4"
         }
       },
       {
@@ -12636,7 +12636,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/offchain/coinswap-inspect.component.ts",
-          "sha256": "e03108d64c231c317b770fcf9de874a38b10ca581679fd94ea9d462389260ad3"
+          "sha256": "ea1c6442d291c6c9a76d499fb4d8aee30fe2ea7c480f18e330c9c9ff1d4494d5"
         }
       },
       {
@@ -12707,7 +12707,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/offchain/offchain-recovery.component.ts",
-          "sha256": "73709b11346356919d012330e97a433b9395bfece8537c563bd3f29c1b46e288"
+          "sha256": "1dc37adb3b2cca17828bd5f5e5536893adb02174f617c857a38e07ba6a43bbdf"
         }
       },
       {
@@ -12936,7 +12936,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/compact-filters/light-client-filters.component.ts",
-          "sha256": "d047b012dce76612877ed5a5390be3f89e31cecbe590bf36cbda8ee91dc7423f"
+          "sha256": "ab4951b60604d6bf661af0d035f32946bba0171795060f34d3c94a9eeab7ec97"
         }
       },
       {
@@ -13003,7 +13003,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/compact-filters/light-client-verify.component.ts",
-          "sha256": "bc0bf0794f813b088b98b60adc2b6bb4b54615b559659a007e7acb6139c22cb9"
+          "sha256": "ce9cde3381572b7ceb71f965cceb6256f6c4c7164c8dd6d52f4bcc09b1ed1a50"
         }
       },
       {
@@ -13078,7 +13078,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/compact-filters/light-client-scan.component.ts",
-          "sha256": "9f7c40ddefd15533be8a4e6eca2ceb9c536e2b8146fb4f2cf736791e93d6aea8"
+          "sha256": "e31b037786c2fb08934191e608ed206ba658dfe83e002142f70172166de0bef1"
         }
       },
       {
@@ -13352,7 +13352,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/bootstrap/bootstrap-verify.component.ts",
-          "sha256": "13cdd9715cac62cb12ea19843637535512ede0164c956be0e6b9ba5a201b4e48"
+          "sha256": "76152d5744e796aa17d17650a47d9f29c23ed92819517fd6e765a6b3d8af709e"
         }
       },
       {
@@ -13419,7 +13419,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/bootstrap/bootstrap-planner.component.ts",
-          "sha256": "f891b6b1a5fbd295b800eebe4f90dd7a628866378848a838519b0fa2e7ffc224"
+          "sha256": "bcbff70f945580a1a0b6f2f000a3823e2081db89c8a1cf9727ac6c1c82fa5f76"
         }
       },
       {
@@ -14515,7 +14515,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/payment-connectivity/payment-zaps.component.ts",
-          "sha256": "48956232f776fd5700355221df2204cfde218716f08d5f3a2c868e3e81ec0f69"
+          "sha256": "6f4bf8461a23892da9cea2a465be06d041463d811ad85f96e30680d5ea3cda65"
         }
       },
       {
@@ -16959,7 +16959,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/ark-vpack/ark-vpack-overview.component.ts",
-          "sha256": "2c081039003ccab51fc96afa0d6707991291b13866238590dd141b27dc26cd06"
+          "sha256": "ef06afdf497b4c91317a350526a05d7b6675c8b974ca00a4e81188dd32682961"
         }
       },
       {
@@ -17065,7 +17065,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/ark-vpack/ark-vpack-translate.component.ts",
-          "sha256": "62cb6c166bf358dd9147cab4e5fb9945c13b051cb0c522257bd53691fe264da4"
+          "sha256": "0ce4c798a7fcaf1c3da9bc67ac06b9c7dd6fd60630037132f07a6a5dccfbe797"
         }
       },
       {
@@ -17234,7 +17234,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/ark-vpack/ark-exit-simulate.component.ts",
-          "sha256": "7e32b9fa0884bcbd5fd086934032a0b68f8e9052427192c580f8eda85dc49218"
+          "sha256": "883fe60946d757edacd345fa0e10eb3c8d9516b765325663b9692abe3cd1a09e"
         }
       },
       {
@@ -17346,7 +17346,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/lightning-resilience/lightning-resilience-overview.component.ts",
-          "sha256": "de724ce31024a6fcc53ae9abcd8ed1b09135c30c4e57ae76ad0650f08a2af813"
+          "sha256": "badd0925f64f5722595da0f940a9b3cbfddbdd497d6ad8a599e0b44ddcff05e6"
         }
       },
       {
@@ -17525,7 +17525,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/lightning-resilience/lightning-resilience-simulate.component.ts",
-          "sha256": "56c6c04a6f61869c1a7c454f0ed5cc0efb61cda40a4239ff8999b8e8a3539f15"
+          "sha256": "7048fe1c4f54ec0443844716fd44437c81f4f491dfab908ce4a9325f55e37854"
         }
       },
       {
@@ -18540,7 +18540,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/consensus-conformance/consensus-conformance-case-detail.component.ts",
-          "sha256": "62920a211069371031cd66ddd13bb9672f0f42ba92b00de8b465f9ce46b1eb8c"
+          "sha256": "5b2fa026e429f5fb5f58ae5df7ce2a3c4eeb8a6bc1afd9fc4315f7900d999aed"
         }
       },
       {
@@ -18935,7 +18935,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/node-security/node-security-upgrade.component.ts",
-          "sha256": "5a9e1438b654a2eff7cf7960e90fdd64e54132780dde751ec2fee9f97bbcfcd7"
+          "sha256": "b147c339444fb38a42370d22a9573270a8a98900f185ae29cb949cae1b7fdc4e"
         }
       },
       {
@@ -50598,7 +50598,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/bitcoin-staking/staking-evidence.component.ts",
-          "sha256": "af6233e5e50dbc3c8c623882098d43952941e9640f4b42939e333d2fe2541d07"
+          "sha256": "2ce9e15496c139902ac317e43e7524610a63a885d30b383d59e19f6fe3198aa6"
         }
       ],
       "entry": null,
@@ -50685,7 +50685,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/bitcoin-staking/staking-evidence.component.ts",
-          "sha256": "af6233e5e50dbc3c8c623882098d43952941e9640f4b42939e333d2fe2541d07"
+          "sha256": "2ce9e15496c139902ac317e43e7524610a63a885d30b383d59e19f6fe3198aa6"
         }
       ],
       "entry": null,
@@ -59168,7 +59168,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/dlc/dlc-simulate.component.ts",
-          "sha256": "cec6f6807bc99cba773d065e3e55b47a14e9d1759d8d8aa2457476519c4d3cf5"
+          "sha256": "40fdc0615adcb3da2be4de98c0ff4d0ef62918b1708a7f2eeb2f587efb358364"
         }
       ],
       "entry": null,
@@ -59239,7 +59239,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/simplicity/simplicity-tools.component.ts",
-          "sha256": "f560dba4a2648c3b85b841003fefb0625758d9e2bebb2114d44752dbc24e4a87"
+          "sha256": "6831c74abc4ad4f62e204fb96d041b777a8ccf47b8569e8c4852752156a5fd89"
         }
       ],
       "entry": null,
@@ -59310,7 +59310,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/simplicity/simplicity-tools.component.ts",
-          "sha256": "f560dba4a2648c3b85b841003fefb0625758d9e2bebb2114d44752dbc24e4a87"
+          "sha256": "6831c74abc4ad4f62e204fb96d041b777a8ccf47b8569e8c4852752156a5fd89"
         }
       ],
       "entry": null,
@@ -59381,7 +59381,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/simplicity/simplicity-verify.component.ts",
-          "sha256": "f017fbcb6aac42a3ec5bea6acc534012513fe5f61c5b976b1e67b492291ce76d"
+          "sha256": "f9c36aa39005f07a2f195f6760f2d765dcf85bdce235b201542d602d0c209b6c"
         }
       ],
       "entry": null,
@@ -59464,7 +59464,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/simplicity/simplicity-verify.component.ts",
-          "sha256": "f017fbcb6aac42a3ec5bea6acc534012513fe5f61c5b976b1e67b492291ce76d"
+          "sha256": "f9c36aa39005f07a2f195f6760f2d765dcf85bdce235b201542d602d0c209b6c"
         }
       ],
       "entry": null,
@@ -59547,7 +59547,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/offchain/statechain-verify.component.ts",
-          "sha256": "e21a174f31099542ac1e2cfd45a460fbb044cdda6728fe6f33a0810b1afb87c0"
+          "sha256": "a613675055373bafcabee425e857e53ca606e927a07ffbaabf2201a81b7703c4"
         }
       ],
       "entry": null,
@@ -59630,7 +59630,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/offchain/statechain-verify.component.ts",
-          "sha256": "e21a174f31099542ac1e2cfd45a460fbb044cdda6728fe6f33a0810b1afb87c0"
+          "sha256": "a613675055373bafcabee425e857e53ca606e927a07ffbaabf2201a81b7703c4"
         }
       ],
       "entry": null,
@@ -59713,7 +59713,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/offchain/coinswap-inspect.component.ts",
-          "sha256": "e03108d64c231c317b770fcf9de874a38b10ca581679fd94ea9d462389260ad3"
+          "sha256": "ea1c6442d291c6c9a76d499fb4d8aee30fe2ea7c480f18e330c9c9ff1d4494d5"
         }
       ],
       "entry": null,
@@ -59784,7 +59784,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/offchain/coinswap-inspect.component.ts",
-          "sha256": "e03108d64c231c317b770fcf9de874a38b10ca581679fd94ea9d462389260ad3"
+          "sha256": "ea1c6442d291c6c9a76d499fb4d8aee30fe2ea7c480f18e330c9c9ff1d4494d5"
         }
       ],
       "entry": null,
@@ -59855,7 +59855,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/offchain/offchain-recovery.component.ts",
-          "sha256": "73709b11346356919d012330e97a433b9395bfece8537c563bd3f29c1b46e288"
+          "sha256": "1dc37adb3b2cca17828bd5f5e5536893adb02174f617c857a38e07ba6a43bbdf"
         }
       ],
       "entry": null,
@@ -59926,7 +59926,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/compact-filters/light-client-filters.component.ts",
-          "sha256": "d047b012dce76612877ed5a5390be3f89e31cecbe590bf36cbda8ee91dc7423f"
+          "sha256": "ab4951b60604d6bf661af0d035f32946bba0171795060f34d3c94a9eeab7ec97"
         }
       ],
       "entry": null,
@@ -60005,7 +60005,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/compact-filters/light-client-verify.component.ts",
-          "sha256": "bc0bf0794f813b088b98b60adc2b6bb4b54615b559659a007e7acb6139c22cb9"
+          "sha256": "ce9cde3381572b7ceb71f965cceb6256f6c4c7164c8dd6d52f4bcc09b1ed1a50"
         }
       ],
       "entry": null,
@@ -60076,7 +60076,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/compact-filters/light-client-scan.component.ts",
-          "sha256": "9f7c40ddefd15533be8a4e6eca2ceb9c536e2b8146fb4f2cf736791e93d6aea8"
+          "sha256": "e31b037786c2fb08934191e608ed206ba658dfe83e002142f70172166de0bef1"
         }
       ],
       "entry": null,
@@ -60147,7 +60147,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/compact-filters/light-client-scan.component.ts",
-          "sha256": "9f7c40ddefd15533be8a4e6eca2ceb9c536e2b8146fb4f2cf736791e93d6aea8"
+          "sha256": "e31b037786c2fb08934191e608ed206ba658dfe83e002142f70172166de0bef1"
         }
       ],
       "entry": null,
@@ -60226,7 +60226,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/bootstrap/bootstrap-verify.component.ts",
-          "sha256": "13cdd9715cac62cb12ea19843637535512ede0164c956be0e6b9ba5a201b4e48"
+          "sha256": "76152d5744e796aa17d17650a47d9f29c23ed92819517fd6e765a6b3d8af709e"
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
@@ -60321,7 +60321,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/bootstrap/bootstrap-planner.component.ts",
-          "sha256": "f891b6b1a5fbd295b800eebe4f90dd7a628866378848a838519b0fa2e7ffc224"
+          "sha256": "bcbff70f945580a1a0b6f2f000a3823e2081db89c8a1cf9727ac6c1c82fa5f76"
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
@@ -60850,7 +60850,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/payment-connectivity/payment-zaps.component.ts",
-          "sha256": "48956232f776fd5700355221df2204cfde218716f08d5f3a2c868e3e81ec0f69"
+          "sha256": "6f4bf8461a23892da9cea2a465be06d041463d811ad85f96e30680d5ea3cda65"
         }
       ],
       "entry": null,
@@ -60925,7 +60925,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/payment-connectivity/payment-zaps.component.ts",
-          "sha256": "48956232f776fd5700355221df2204cfde218716f08d5f3a2c868e3e81ec0f69"
+          "sha256": "6f4bf8461a23892da9cea2a465be06d041463d811ad85f96e30680d5ea3cda65"
         }
       ],
       "entry": null,
@@ -67386,7 +67386,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/lightning-resilience/lightning-resilience-simulate.component.ts",
-          "sha256": "56c6c04a6f61869c1a7c454f0ed5cc0efb61cda40a4239ff8999b8e8a3539f15"
+          "sha256": "7048fe1c4f54ec0443844716fd44437c81f4f491dfab908ce4a9325f55e37854"
         }
       ],
       "entry": null,
@@ -68069,7 +68069,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/consensus-conformance/consensus-conformance-case-detail.component.ts",
-          "sha256": "62920a211069371031cd66ddd13bb9672f0f42ba92b00de8b465f9ce46b1eb8c"
+          "sha256": "5b2fa026e429f5fb5f58ae5df7ce2a3c4eeb8a6bc1afd9fc4315f7900d999aed"
         }
       ],
       "entry": null,
@@ -68152,7 +68152,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/node-security/node-security-upgrade.component.ts",
-          "sha256": "5a9e1438b654a2eff7cf7960e90fdd64e54132780dde751ec2fee9f97bbcfcd7"
+          "sha256": "b147c339444fb38a42370d22a9573270a8a98900f185ae29cb949cae1b7fdc4e"
         }
       ],
       "entry": null,

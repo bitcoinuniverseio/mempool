@@ -617,6 +617,12 @@ interface that this deployment has not declared. Three ports are declared, in
 | 8333 | Bitcoin Core peer to peer |
 | 50001 | the peer restricted Fulcrum endpoint the other host reads |
 
+The listener gate also recognizes the host's NetBird DNS binding at
+`100.124.130.242:53` on its private `wt0` interface. This exact address and port
+were verified on the host on 2026-09-06. It does not permit port 53 on a wildcard,
+the public interface, another VPN address, or other ports on that VPN address.
+The Docker bridge binding at `172.17.0.1` remains private to the host's containers.
+
 Everything else in this stack answers on loopback and is reached through it.
 The overlay, the backend, the gateway and every protocol authority bind to
 `127.0.0.1`, and the public origin arrives over a forward-only SSH tunnel

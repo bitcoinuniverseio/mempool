@@ -428,8 +428,11 @@ gate_private_listeners() {
   # Every listening TCP socket that is not on a loopback address. Docker's
   # bridge address is treated as private: it is reachable only from containers
   # on this host, and the services behind it are the same ones loopback serves.
+  # The host's NetBird resolver binds 100.124.130.242:53 on wt0, its private
+  # VPN interface. Exclude only that declared address and port; a wildcard,
+  # another VPN address or another service on this address must still fail.
   local exposed
-  exposed=$(ss -ltn 2>/dev/null     | awk 'NR > 1 { print $4 }'     | grep -vE '^(127\.|\[::1\]|172\.17\.0\.1:)'     | sed -E 's/.*:([0-9]+)$/\1/'     | sort -u)
+  exposed=$(ss -ltn 2>/dev/null     | awk 'NR > 1 { print $4 }'     | grep -vE '^(127\.|\[::1\]|172\.17\.0\.1:|100\.124\.130\.242:53$)'     | sed -E 's/.*:([0-9]+)$/\1/'     | sort -u)
 
   local unexpected=""
   local port
@@ -447,7 +450,7 @@ gate_private_listeners() {
     fail "a service is listening on a public interface"
   fi
 
-  log "no unexpected public listener: only$(printf ' %s' $PUBLIC_LISTENERS) answer off loopback"
+  log "no unexpected public listener; public ports$(printf ' %s' $PUBLIC_LISTENERS), declared Docker bridge and NetBird DNS bindings"
 }
 
 cmd_preflight() {
