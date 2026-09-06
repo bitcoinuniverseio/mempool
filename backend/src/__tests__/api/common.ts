@@ -1,6 +1,10 @@
 import { Common } from '../../api/common';
 import { MempoolTransactionExtended, TransactionExtended } from '../../mempool.interfaces';
 
+// These calculation tests do not use the RPC poller or native block generator.
+jest.mock('../../api/backend-info', () => ({}));
+jest.mock('rust-gbt', () => ({ GbtGenerator: jest.fn() }));
+
 const randomTransactions = require('./test-data/transactions-random.json');
 const replacedTransactions = require('./test-data/transactions-replaced.json');
 const rbfTransactions = require('./test-data/transactions-rbfs.json');

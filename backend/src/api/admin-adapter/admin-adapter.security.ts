@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from 'express';
+import express, { NextFunction, Request, RequestHandler, Response } from 'express';
 import { createHash, createHmac, timingSafeEqual } from 'crypto';
 import adminControl from '@bitcoinuniverse/ecosystem-contracts/admin-control';
 import logger from '../../logger';
@@ -127,7 +127,7 @@ function equal(left: string, right: string): boolean {
 }
 
 export type AdminAdapterVerdict =
-  | { ok: true }
+  | { ok: true; authorization: { keyId: string; elevated: boolean } }
   | { ok: false; status: number; code: string; message: string; reason: string };
 
 const nonces = new AdminAdapterNonceStore();
@@ -247,7 +247,34 @@ export function verifyAdminAdapterRequest(input: {
     return rejected('A signed service request replayed a nonce.');
   }
 
-  return { ok: true };
+  // This declaration is covered by the existing signed body digest. An
+  // unsigned forwarding header cannot upgrade a request's authority.
+  let elevated = false;
+  if (input.rawBody.length > 0) {
+    try {
+      const body = JSON.parse(input.rawBody.toString('utf8'));
+      elevated = body?.adminAuthorization?.elevated === true;
+    } catch {
+      return rejected('A signed admin request did not contain valid JSON.');
+    }
+  }
+  return { ok: true, authorization: { keyId, elevated } };
+}
+
+/** Mount before any general body parser so signatures retain the exact bytes. */
+export function adminAdapterJsonParser(): RequestHandler {
+  return express.json({
+    limit: '256kb',
+    strict: true,
+    verify: (request, _response, buffer) => {
+      (request as Request & { rawBody?: Buffer }).rawBody = Buffer.from(buffer);
+    },
+  });
+}
+
+/** The control plane owns reauthentication; this gate requires its signed claim. */
+export function hasSignedAdminElevation(response: Pick<Response, 'locals'>): boolean {
+  return response.locals.adminAdapterAuthorization?.elevated === true;
 }
 
 /** Admin responses are never cached, indexed, or framed. */
@@ -275,6 +302,7 @@ export function adminAdapterGuard() {
       remoteAddress: request.socket.remoteAddress ?? '',
     });
     if (verdict.ok) {
+      response.locals.adminAdapterAuthorization = verdict.authorization;
       next();
       return;
     }

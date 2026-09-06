@@ -1,5 +1,4 @@
-import { Application, NextFunction, Request, Response } from 'express';
-import express from 'express';
+import { Application, Request, Response } from 'express';
 import { randomUUID } from 'crypto';
 import adminControl from '@bitcoinuniverse/ecosystem-contracts/admin-control';
 import type {
@@ -13,7 +12,7 @@ import backendInfo from '../backend-info';
 import blocks from '../blocks';
 import capabilities from '../capabilities';
 import memPool from '../mempool';
-import { adminAdapterGuard } from './admin-adapter.security';
+import { adminAdapterGuard, adminAdapterJsonParser, hasSignedAdminElevation } from './admin-adapter.security';
 import {
   adminEnvelope,
   adminTimestamp,
@@ -215,17 +214,9 @@ async function collect(kind: AdminResourceKind, query: string, limit: number): P
  */
 class AdminAdapterRoutes {
   public initRoutes(app: Application): void {
-    // Keep the exact bytes so the signature is checked against what the sender
-    // digested. Re-serialising a parsed object would break every signature.
-    const parser = express.json({
-      limit: '256kb',
-      strict: true,
-      verify: (request, _response, buffer) => {
-        (request as Request & { rawBody?: Buffer }).rawBody = Buffer.from(buffer);
-      },
-    });
-
-    app.use(PREFIX, parser, adminAdapterGuard());
+    // Also support standalone registration; the full app captures these bytes
+    // before its general parsers consume the request stream.
+    app.use(PREFIX, adminAdapterJsonParser(), adminAdapterGuard());
 
     app.get(`${PREFIX}/manifest`, async (_request: Request, response: Response) => {
       try {
@@ -341,15 +332,15 @@ class AdminAdapterRoutes {
       try {
         operationId = String(request.params.operationId).slice(0, 160);
         const operation = findExplorerOperation(operationId);
-        const elevated = String(request.headers['x-bu-admin-elevated'] ?? '') === '1';
+        const elevated = hasSignedAdminElevation(response);
         if (adminRiskRequiresElevation(operation.risk) && !elevated) {
-          // The control plane owns re-authentication. Refusing here as well
-          // means a leaked service key cannot reach a high-risk operation.
+          // Permission checks and reauthentication belong to the control plane.
+          // Its elevation claim must be inside the signed request body.
           fail(
             response,
             403,
             'ELEVATION_REQUIRED',
-            `${operation.name} needs an elevated action token and the request did not carry one.`,
+            `${operation.name} requires adminAuthorization.elevated=true in the signed JSON request body.`,
           );
           return;
         }

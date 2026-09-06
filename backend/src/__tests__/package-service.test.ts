@@ -23,6 +23,7 @@ const {
   chunksFromDiagram,
   descendantsOf,
   MAX_PACKAGE_SIZE,
+  MAX_TOTAL_HEX_LENGTH,
   validateRawTxs,
 } = require('../api/mempool-intelligence/package-service');
 
@@ -59,6 +60,13 @@ describe('validateRawTxs', () => {
 
   it('refuses a package larger than the route will read', () => {
     expect(validateRawTxs(['ab'.repeat(3_000_000)])?.status).toBe(400);
+  });
+
+  it('checks large valid hex without overflowing and bounds the aggregate package size', () => {
+    const atLimit = 'ab'.repeat(MAX_TOTAL_HEX_LENGTH / 2);
+    expect(validateRawTxs([atLimit])).toBeNull();
+    expect(validateRawTxs([atLimit, 'cd'])?.message).toContain('larger');
+    expect(validateRawTxs([atLimit.slice(0, -2) + 'zz'])?.status).toBe(400);
   });
 
   it('refuses the same transaction twice, which is not a package', () => {

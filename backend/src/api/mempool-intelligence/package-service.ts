@@ -27,7 +27,7 @@ export const MAX_PACKAGE_SIZE = 25;
 /** Largest total hex a caller may submit, so one request cannot be a payload. */
 export const MAX_TOTAL_HEX_LENGTH = 4_000_000;
 
-const HEX = /^[0-9a-f]+$/i;
+const NON_HEX = /[^0-9a-f]/i;
 
 export interface PackageRequestError {
   readonly status: number;
@@ -81,13 +81,13 @@ export function validateRawTxs(raw: unknown): PackageRequestError | null {
     if (typeof item !== 'string' || !item.length) {
       return { status: 400, message: 'Every entry must be a raw transaction in hexadecimal.' };
     }
-    if (item.length % 2 !== 0 || !HEX.test(item)) {
+    total += item.length;
+    if (total > MAX_TOTAL_HEX_LENGTH) {
+      return { status: 400, message: 'That package is larger than this route will read.' };
+    }
+    if (item.length % 2 !== 0 || NON_HEX.test(item)) {
       return { status: 400, message: 'Every entry must be an even number of hexadecimal characters.' };
     }
-    total += item.length;
-  }
-  if (total > MAX_TOTAL_HEX_LENGTH) {
-    return { status: 400, message: 'That package is larger than this route will read.' };
   }
   const seen = new Set(raw as string[]);
   if (seen.size !== raw.length) {
