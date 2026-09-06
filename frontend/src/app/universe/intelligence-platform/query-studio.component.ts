@@ -92,7 +92,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
               <h5 class="mb-0">Execution Results</h5>
               <span class="badge badge-secondary">{{ queryResult.rows?.length || 0 }} rows</span>
             </div>
-            <div class="table-responsive">
+            <div class="table-responsive" tabindex="0">
               <table class="table table-sm table-hover mb-0">
                 <thead>
                   <tr>

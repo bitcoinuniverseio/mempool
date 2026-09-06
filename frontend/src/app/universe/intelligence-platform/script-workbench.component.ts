@@ -95,7 +95,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
 
             <div *ngIf="scriptResult.stack_execution?.length > 0">
               <h5 class="h6 mb-2">Simulated Stack Trace</h5>
-              <div class="table-responsive">
+              <div class="table-responsive" tabindex="0">
                 <table class="table table-sm table-hover mb-0">
                   <thead>
                     <tr>

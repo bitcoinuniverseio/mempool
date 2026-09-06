@@ -75,7 +75,7 @@ import { SimplicityApiService, SimplicityOverview } from './simplicity.service';
               <h2 class="h5 m-0">Featured Simplicity Contracts</h2>
               <a routerLink="/liquid/simplicity/contracts" class="small text-decoration-none">View All &rarr;</a>
             </div>
-            <div class="table-responsive">
+            <div class="table-responsive" tabindex="0">
               <table class="table table-sm table-hover align-middle">
                 <thead>
                   <tr>
