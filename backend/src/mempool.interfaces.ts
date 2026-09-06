@@ -515,6 +515,16 @@ export interface IBackendInfo {
    * this product must never do. Null while the state has not been read yet.
    */
   chainSync: IChainSyncState | null;
+  /** Completed block cache observed by the HTTP metadata endpoint. */
+  checkpoint?: IIndexedCheckpoint | null;
+}
+
+export interface IIndexedCheckpoint {
+  chain: 'bitcoin' | 'liquid';
+  network: 'mainnet' | 'testnet' | 'testnet4' | 'signet' | 'regtest';
+  heightAtomic: string;
+  blockHash: string;
+  observedAt: string;
 }
 
 export interface IChainSyncState {

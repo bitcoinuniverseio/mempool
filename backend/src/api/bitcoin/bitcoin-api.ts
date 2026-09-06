@@ -117,13 +117,12 @@ class BitcoinApi implements AbstractBitcoinApi {
     const verboseBlock: IBitcoinApi.VerboseBlock = await this.bitcoindClient.getBlock(hash, 2);
     const transactions: IEsploraApi.Transaction[] = [];
     for (const tx of verboseBlock.tx) {
-      const converted = await this.$convertTransaction(tx, true, false, verboseBlock.confirmations === -1);
-      converted.status = {
+      const converted = await this.$convertTransaction(tx, true, false, verboseBlock.confirmations === -1, {
         confirmed: true,
         block_height: verboseBlock.height,
         block_hash: hash,
         block_time: verboseBlock.time,
-      };
+      });
       transactions.push(converted);
     }
     return transactions;
@@ -290,7 +289,7 @@ class BitcoinApi implements AbstractBitcoinApi {
   }
 
   /** @asyncUnsafe */
-  protected async $convertTransaction(transaction: IBitcoinApi.Transaction, addPrevout: boolean, lazyPrevouts = false, allowMissingPrevouts = false): Promise<IEsploraApi.Transaction> {
+  protected async $convertTransaction(transaction: IBitcoinApi.Transaction, addPrevout: boolean, lazyPrevouts = false, allowMissingPrevouts = false, blockStatus?: IEsploraApi.Status): Promise<IEsploraApi.Transaction> {
     let esploraTransaction: IEsploraApi.Transaction = {
       txid: transaction.txid,
       version: transaction.version,
@@ -300,7 +299,7 @@ class BitcoinApi implements AbstractBitcoinApi {
       fee: 0,
       vin: [],
       vout: [],
-      status: { confirmed: false },
+      status: blockStatus ?? { confirmed: false },
     };
 
     esploraTransaction.vout = transaction.vout.map((vout) => {
@@ -329,13 +328,25 @@ class BitcoinApi implements AbstractBitcoinApi {
       };
     });
 
-    if (transaction.confirmations) {
-      esploraTransaction.status = {
-        confirmed: true,
-        block_height: blocks.getCurrentBlockHeight() - transaction.confirmations + 1,
-        block_hash: transaction.blockhash,
-        block_time: transaction.blocktime,
-      };
+    if (!blockStatus && transaction.confirmations > 0) {
+      // Core confirmations advance with the node, while the explorer's local
+      // index can lag. Only the transaction's block hash identifies its height.
+      const block = await this.bitcoindClient.getBlockHeader(transaction.blockhash, true);
+      if (!block || block.hash !== transaction.blockhash || !/^[0-9a-f]{64}$/i.test(block.hash)
+        || !Number.isSafeInteger(block.height) || block.height < 0
+        || !Number.isSafeInteger(block.time) || block.time < 0
+        || !Number.isSafeInteger(block.confirmations)) {
+        throw new Error('Invalid transaction block header');
+      }
+      // A reorg may occur between the transaction and header reads.
+      if (block.confirmations > 0) {
+        esploraTransaction.status = {
+          confirmed: true,
+          block_height: block.height,
+          block_hash: block.hash,
+          block_time: block.time,
+        };
+      }
     }
 
     if (addPrevout) {
@@ -346,7 +357,7 @@ class BitcoinApi implements AbstractBitcoinApi {
           throw e;
         }
       }
-    } else if (!transaction.confirmations) {
+    } else if (!transaction.confirmations && !esploraTransaction.status.confirmed) {
       esploraTransaction = await this.$appendMempoolFeeData(esploraTransaction);
     }
 
@@ -416,9 +427,12 @@ class BitcoinApi implements AbstractBitcoinApi {
     return this.bitcoindClient.getBlockHash(0).then((hash: string) =>
       this.bitcoindClient.getBlock(hash, 2)
         .then((block: IBitcoinApi.Block) => {
-          return this.$convertTransaction(Object.assign(block.tx[0], {
-            confirmations: blocks.getCurrentBlockHeight() + 1,
-            blocktime: block.time }), false);
+          return this.$convertTransaction(block.tx[0], false, false, false, {
+            confirmed: true,
+            block_height: 0,
+            block_hash: hash,
+            block_time: block.time,
+          });
         })
     );
   }
