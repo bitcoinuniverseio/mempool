@@ -197,6 +197,22 @@
         "scripts/universe/visual-qa/intelligence-fixtures.mjs",
         ".github/workflows/universe-ci.yml"
       ]
+    },
+    {
+      "id": "CI-CAUSE-12",
+      "job": "WebKit and Firefox",
+      "failingStep": "A third engine, on the checks that do not need a thumb",
+      "reachedOnlyAfterFixing": "CI-CAUSE-10",
+      "run": 34026066231,
+      "class": "product defect on newly reachable coverage",
+      "note": "Firefox had not run in this job at all: before the container it could not find its system libraries, and inside the container it could not start as root with a foreign HOME. These are its first results here, not regressions.",
+      "findings": [
+        "home@phone-320: the replacement fee cell holds a number and its unit on one line, and together they extend five pixels past the cell with no way to reach them. Chromium rounds the same layout away; Firefox measures it. Repaired: the unit wraps to a second line at 360px and below, so the number is never the part that is clipped.",
+        "home@tablet-768: page.goto exceeded 45000ms waiting for domcontentloaded, at one viewport out of seven for the same route in the same run. Not yet explained. Left unchanged and measured again rather than absorbed into a longer timeout."
+      ],
+      "files": [
+        "frontend/src/app/dashboard/dashboard.component.scss"
+      ]
     }
   ],
   "findings": [

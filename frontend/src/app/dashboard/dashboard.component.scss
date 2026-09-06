@@ -705,6 +705,19 @@
   }
 }
 
+// The narrowest phone still in use.
+//
+// The replacement fee cell holds a number and its unit, and at 320px the two
+// together are wider than the cell. Held on one line they simply extend past
+// its edge with no way to reach them, which Firefox measures at five pixels
+// and Chromium rounds away. The unit drops to a second line here instead, so
+// the number itself is never the part that gets clipped.
+@media (max-width: 360px) {
+  .table-scroll > .lastest-replacements-table .table-cell-new-fee {
+    white-space: normal;
+  }
+}
+
 // --- Components that arrive with their own box ------------------------------
 //
 // Difficulty and the protocol strip were written to sit inside a Bootstrap
