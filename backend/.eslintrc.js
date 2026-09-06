@@ -18,7 +18,7 @@ module.exports = {
   "ignorePatterns": ["dist", "eslint-local-rules", ".eslintrc.js", "testSetup*.ts", "jest.integration.*.ts", "__tests__", "*.config.ts"],
   "overrides": [
     {
-      "files": ["src/__integration_tests__/**/*"],
+      "files": ["src/__integration_tests__/**/*", "src/**/*.test.ts"],
       "rules": {
         "@typescript-eslint/no-floating-promises": "off",
         "local-rules/no-unhandled-await": "off"
