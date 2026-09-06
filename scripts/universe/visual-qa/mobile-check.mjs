@@ -699,14 +699,32 @@ async function focusWalk(page, steps) {
   }, steps);
 }
 
+/** Takes one slice of a route list, as i/n counted from one. */
+function shardRoutes(list, spec) {
+  if (!spec) return list;
+  const [indexText, countText] = String(spec).split('/');
+  const index = Number(indexText);
+  const count = Number(countText);
+  if (!Number.isInteger(index) || !Number.isInteger(count) || count < 1 || index < 1 || index > count) {
+    throw new Error("--shard wants i/n with 1 <= i <= n, got " + spec);
+  }
+  return list.filter((_, position) => position % count === index - 1);
+}
+
 async function run() {
   mkdirSync(OUT, { recursive: true });
 
-  const routes = ROUTES.filter((r) => MOBILE_ROUTE_IDS.includes(r.id));
-  if (routes.length !== MOBILE_ROUTE_IDS.length) {
-    const missing = MOBILE_ROUTE_IDS.filter((id) => !routes.some((r) => r.id === id));
+  const selected = ROUTES.filter((r) => MOBILE_ROUTE_IDS.includes(r.id));
+  if (selected.length !== MOBILE_ROUTE_IDS.length) {
+    const missing = MOBILE_ROUTE_IDS.filter((id) => !selected.some((r) => r.id === id));
     throw new Error(`these route ids are not in the shared route list: ${missing.join(', ')}`);
   }
+
+  // The same slice capture.mjs takes, for the same reason: this walks the
+  // shared route list, which grew from thirty-two entries to two hundred and
+  // forty-four, and one serial pass over it no longer finishes inside the job
+  // that runs it. Slicing by position keeps a route in one shard only.
+  const routes = shardRoutes(selected, args.shard);
   const viewports = args.viewports
     ? VIEWPORTS.filter((v) => String(args.viewports).split(',').includes(v.id))
     : VIEWPORTS;
