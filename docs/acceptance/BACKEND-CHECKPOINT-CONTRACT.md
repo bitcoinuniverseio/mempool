@@ -40,7 +40,9 @@ staleness and index lag independently. This checkpoint does not claim full
 address coverage, historical database completeness, or mempool completeness.
 
 For the Universe explorer source client, configure the owned `mempool-backend`
-source with `readyPath: "/api/v1/backend-info"`. Its existing checkpoint parser
+source with `readyPath: "/api/v1/backend-info"` and `chainReference: false`.
+The checkpoint belongs to the index; only the independently observed Core
+`chainSync` may supply the node reference. Its existing checkpoint parser
 accepts the nested height, hash, context, and observation time. Do not configure
 a `blockHashPath` to pair `/api/blocks/tip/hash` with `chainSync.blocks`: they
 describe independent progress and can differ by hundreds of blocks. Core
