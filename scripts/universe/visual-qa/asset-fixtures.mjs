@@ -28,6 +28,17 @@ const CHECKPOINT = {
 };
 
 export const assetFixtures = {
+  '/api/v1/universe/blocks/887412/inscriptions': {
+    schemaVersion: 'universe-asset-lookup-v1',
+    status: 'ok',
+    authorityId: 'ord',
+    checkpoint: CHECKPOINT,
+    value: {
+      ids: [INSCRIPTION_ID],
+      more: false,
+    },
+  },
+
   [`/api/v1/universe/outpoints/${OUTPOINT_TXID}/1`]: {
     outpoint: `${OUTPOINT_TXID}:1`,
     status: 'ok',
