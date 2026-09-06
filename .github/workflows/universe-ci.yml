@@ -302,7 +302,7 @@ jobs:
 
       - name: The unfinished-page gate fires on the states that shipped
         working-directory: scripts/universe/visual-qa
-        run: node --test progress-gate.test.mjs
+        run: node --test progress-gate.test.mjs mobile-session.test.mjs
 
       # The public chain page gate, checked against the states it exists for.
       # It runs against the live origin rather than this build, so nothing in

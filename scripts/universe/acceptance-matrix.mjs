@@ -529,10 +529,19 @@ export function validateMatrix(matrix) {
   return true;
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const args = process.argv.slice(2), evidenceIndex = args.indexOf('--evidence');
+export function buildCommandMatrix(args = []) {
+  const evidenceIndex = args.indexOf('--evidence');
   assert(args.every((arg, i) => arg === '--check' || arg === '--evidence' || i === evidenceIndex + 1 && evidenceIndex >= 0), 'Usage: acceptance-matrix.mjs [--check] [--evidence path.json]');
-  const matrix = buildMatrix({ evidencePath: evidenceIndex >= 0 ? args[evidenceIndex + 1] : undefined });
+  if (evidenceIndex >= 0) assert(args[evidenceIndex + 1] && !args[evidenceIndex + 1].startsWith('--'), '--evidence requires a file path');
+  // Regenerating the committed ledger must retain reviewed execution evidence.
+  // Source-only exploration remains available through buildMatrix(), without
+  // silently resetting reviewed rows when an operator omits an optional flag.
+  return buildMatrix({ evidencePath: evidenceIndex >= 0 ? args[evidenceIndex + 1] : 'docs/acceptance/current-execution-evidence.json' });
+}
+
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const args = process.argv.slice(2);
+  const matrix = buildCommandMatrix(args);
   if (args.includes('--check')) {
     const stored = JSON.parse(readFileSync(resolve(root, output), 'utf8'));
     validateMatrix(stored);
