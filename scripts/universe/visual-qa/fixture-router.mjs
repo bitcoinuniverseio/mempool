@@ -161,12 +161,13 @@ export class FixtureRouter {
       }
     }
 
-    // Find in registry matching method and path
-    const candidate = this.registry.find((entry) => {
+    // Find in registry matching method and path, prioritizing exact path matches
+    const matchEntry = (entry, allowPrefix) => {
       if (entry.method !== method) return false;
       if (entry.path !== normalizedPath) {
+        if (!allowPrefix) return false;
         // Support prefix match only for specific dynamic prefixes like /api/v1/intelligence/forecasts/
-        if (!normalizedPath.startsWith(entry.path)) return false;
+        if (!normalizedPath.startsWith(entry.path + '/') && !normalizedPath.startsWith(entry.path)) return false;
       }
       if (entry.network && entry.network !== network) return false;
       if (entry.state && entry.state !== state) return false;
@@ -190,7 +191,12 @@ export class FixtureRouter {
       }
 
       return true;
-    });
+    };
+
+    let candidate = this.registry.find((entry) => matchEntry(entry, false));
+    if (!candidate) {
+      candidate = this.registry.find((entry) => matchEntry(entry, true));
+    }
 
     if (candidate) {
       return {
