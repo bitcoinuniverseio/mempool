@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { ConsensusConformanceApiService } from './consensus-conformance.service';
 
 @Component({
@@ -9,6 +10,9 @@ import { ConsensusConformanceApiService } from './consensus-conformance.service'
   imports: [CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4">
+      <div class="alert alert-warning" role="alert" *ngIf="loadError">
+        {{ loadError }}
+      </div>
       <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
           <h1 class="h2 mb-1">Formal Specification & Machine-Checked Proofs</h1>
@@ -50,11 +54,20 @@ import { ConsensusConformanceApiService } from './consensus-conformance.service'
 export class ConsensusConformanceFormalComponent implements OnInit {
   public artifacts: any[] = [];
 
+  public loadError: string | null = null;
+
   constructor(private api: ConsensusConformanceApiService) {}
 
   public ngOnInit(): void {
-    this.api.getFormalArtifacts$().subscribe(res => {
-      this.artifacts = res;
+    this.api.getFormalArtifacts$().subscribe({
+      next: res => {
+        this.artifacts = res;
+        this.loadError = null;
+      },
+      error: err => {
+        this.artifacts = [];
+        this.loadError = loadFailureMessage(classifyLoadFailure(err));
+      },
     });
   }
 }

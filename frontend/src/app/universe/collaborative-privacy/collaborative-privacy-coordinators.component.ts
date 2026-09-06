@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { CollaborativePrivacyApiService } from './collaborative-privacy.service';
 
 @Component({
@@ -9,6 +10,9 @@ import { CollaborativePrivacyApiService } from './collaborative-privacy.service'
   imports: [CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4">
+      <div class="alert alert-warning" role="alert" *ngIf="loadError">
+        {{ loadError }}
+      </div>
       <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
           <h1 class="h2 mb-1">CoinJoin Coordinator Registry</h1>
@@ -52,11 +56,20 @@ import { CollaborativePrivacyApiService } from './collaborative-privacy.service'
 export class CollaborativePrivacyCoordinatorsComponent implements OnInit {
   public coordinators: any[] = [];
 
+  public loadError: string | null = null;
+
   constructor(private api: CollaborativePrivacyApiService) {}
 
   public ngOnInit(): void {
-    this.api.getCoordinators$().subscribe(res => {
-      this.coordinators = res;
+    this.api.getCoordinators$().subscribe({
+      next: res => {
+        this.coordinators = res;
+        this.loadError = null;
+      },
+      error: err => {
+        this.coordinators = [];
+        this.loadError = loadFailureMessage(classifyLoadFailure(err));
+      },
     });
   }
 }

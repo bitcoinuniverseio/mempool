@@ -238,11 +238,37 @@
         }
       ],
       "stillCarryingThePattern": {
-        "note": "Three further services report verified: true from an invented fallback. They are the same class and are not repaired here, because repairing them means error states across seventeen components and this change is already the size it should be.",
+        "note": "Repaired in the same change. See FIND-FALSEPASS-02.",
+        "files": []
+      }
+    },
+    {
+      "id": "FIND-FALSEPASS-02",
+      "severity": "the remaining verification fallbacks, repaired",
+      "observation": "The three services that answered a failed request with verified: true, and the BOLT12 decoder that read nothing, are repaired on the same terms as the rest.",
+      "repaired": [
+        {
+          "file": "frontend/src/app/universe/collaborative-privacy/collaborative-privacy.service.ts",
+          "change": "Seven invented fallbacks removed, including the public package verification that reported itself verified. Five components render the failure."
+        },
+        {
+          "file": "frontend/src/app/universe/consensus-conformance/consensus-conformance.service.ts",
+          "change": "Six invented fallbacks removed, including two that reported a conformance case as verified. Four components render the failure, and the case replay reports its own."
+        },
+        {
+          "file": "frontend/src/app/universe/node-security/node-security.service.ts",
+          "change": "Nine invented fallbacks removed, including the Guix artifact verification that reported itself verified. Eight components render the failure."
+        },
+        {
+          "file": "frontend/src/app/universe/taproot-assets/lightning-standards.component.ts",
+          "was": "decode() echoed the input back with an invented description, an invented blinded-route count and a badge reading \"Valid BOLT12 Syntax\", for any string at all. No decoder exists in the page.",
+          "now": "It reports that this deployment carries no BOLT12 decoder and shows no summary."
+        }
+      ],
+      "alsoFixed": "Four detail routes substituted a fixed id when the address named none, so each reported on the same record whatever opened it: a round, a conformance case, an advisory and a node. Each now says the address names nothing.",
+      "stillCarryingTheLowerSeverityVariant": {
+        "note": "Two reads in lightning-standards degrade to an empty list rather than to invented records. An empty list still states that there is nothing, when the truth is that the service could not be asked, but it does not manufacture a record. The sixteen files in FIND-FALLBACK-01 that are not verification surfaces are also unchanged.",
         "files": [
-          "frontend/src/app/universe/collaborative-privacy/collaborative-privacy.service.ts",
-          "frontend/src/app/universe/consensus-conformance/consensus-conformance.service.ts",
-          "frontend/src/app/universe/node-security/node-security.service.ts",
           "frontend/src/app/universe/taproot-assets/lightning-standards.component.ts"
         ]
       }

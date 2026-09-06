@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { NodeSecurityApiService } from './node-security.service';
 
 @Component({
@@ -9,6 +10,9 @@ import { NodeSecurityApiService } from './node-security.service';
   imports: [CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4" *ngIf="node">
+      <div class="alert alert-warning" role="alert" *ngIf="loadError">
+        {{ loadError }}
+      </div>
       <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
           <h1 class="h2 mb-1">Node Security Profile: <span class="text-info">{{ node.node_id }}</span></h1>
@@ -68,6 +72,8 @@ import { NodeSecurityApiService } from './node-security.service';
 export class NodeSecurityNodeDetailComponent implements OnInit {
   public node: any = null;
 
+  public loadError: string | null = null;
+
   constructor(
     private route: ActivatedRoute,
     private api: NodeSecurityApiService
@@ -75,9 +81,22 @@ export class NodeSecurityNodeDetailComponent implements OnInit {
 
   public ngOnInit(): void {
     this.route.paramMap.subscribe(params => {
-      const nodeId = params.get('nodeId') || 'node-prod-eu-01';
-      this.api.getNode$(nodeId).subscribe(res => {
-        this.node = res;
+      const nodeId = params.get('nodeId');
+      if (!nodeId) {
+        // An earlier revision substituted a fixed id here, so the page
+        // reported on that node whatever address opened it.
+        this.loadError = $localize`:@@nodesecurity.node.missing:This address does not name a node.`;
+        return;
+      }
+      this.api.getNode$(nodeId).subscribe({
+        next: res => {
+          this.node = res;
+          this.loadError = null;
+        },
+        error: err => {
+          this.node = null;
+          this.loadError = loadFailureMessage(classifyLoadFailure(err));
+        },
       });
     });
   }
