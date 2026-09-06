@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { BlockPropagationApiService } from './block-propagation.service';
 
 @Component({
@@ -9,6 +10,9 @@ import { BlockPropagationApiService } from './block-propagation.service';
   imports: [CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4">
+      <div class="alert alert-warning" role="alert" *ngIf="loadError">
+        {{ loadError }}
+      </div>
       <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
           <h1 class="h2 mb-1">BIP152 Compact Block Reconstruction Intelligence</h1>
@@ -66,11 +70,20 @@ import { BlockPropagationApiService } from './block-propagation.service';
 export class BlockPropagationCompactBlocksComponent implements OnInit {
   public compactBlocks: any[] = [];
 
+  public loadError: string | null = null;
+
   constructor(private api: BlockPropagationApiService) {}
 
   public ngOnInit(): void {
-    this.api.getCompactBlocks$().subscribe(res => {
-      this.compactBlocks = res;
+    this.api.getCompactBlocks$().subscribe({
+      next: res => {
+        this.compactBlocks = res;
+        this.loadError = null;
+      },
+      error: err => {
+        this.compactBlocks = [];
+        this.loadError = loadFailureMessage(classifyLoadFailure(err));
+      },
     });
   }
 }

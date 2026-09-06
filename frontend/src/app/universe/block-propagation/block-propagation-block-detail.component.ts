@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { BlockPropagationApiService } from './block-propagation.service';
 
 @Component({
@@ -9,6 +10,9 @@ import { BlockPropagationApiService } from './block-propagation.service';
   imports: [CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4" *ngIf="block">
+      <div class="alert alert-warning" role="alert" *ngIf="loadError">
+        {{ loadError }}
+      </div>
       <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
           <h1 class="h2 mb-1">Block {{ block.height }} Propagation Analysis</h1>
@@ -80,6 +84,8 @@ import { BlockPropagationApiService } from './block-propagation.service';
 export class BlockPropagationBlockDetailComponent implements OnInit {
   public block: any = null;
 
+  public loadError: string | null = null;
+
   constructor(
     private route: ActivatedRoute,
     private api: BlockPropagationApiService
@@ -88,8 +94,15 @@ export class BlockPropagationBlockDetailComponent implements OnInit {
   public ngOnInit(): void {
     this.route.paramMap.subscribe(params => {
       const hash = params.get('blockHash') || '00000000000000000001a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3';
-      this.api.getBlock$(hash).subscribe(res => {
-        this.block = res;
+      this.api.getBlock$(hash).subscribe({
+        next: res => {
+          this.block = res;
+          this.loadError = null;
+        },
+        error: err => {
+          this.block = null;
+          this.loadError = loadFailureMessage(classifyLoadFailure(err));
+        },
       });
     });
   }

@@ -2021,8 +2021,8 @@
     },
     {
       "path": "docs/acceptance/ci-repair-2026-09-06.json",
-      "sha256": "36b506265c1388d4b2da95120a8c9a958223b67004b504847b8df33d564287fa",
-      "bytes": 23777
+      "sha256": "02482780b692999af2b7e30e8341f7a05b807db021b0715d958622e56e817f98",
+      "bytes": 23254
     },
     {
       "path": "docs/acceptance/current-execution-evidence.json",
@@ -2066,8 +2066,8 @@
     },
     {
       "path": "docs/acceptance/STATUS-2026-09-06.md",
-      "sha256": "8480a907352f122742d72618d6045305e68d17452878b679d0ec236b3dd765af",
-      "bytes": 11123
+      "sha256": "687a2efcc696d37bf33993409e9148465badbd7ba67d433b469e433ad576c17b",
+      "bytes": 11437
     },
     {
       "path": "docs/acceptance/swaps-2026-09-05.md",
@@ -2291,13 +2291,13 @@
     },
     {
       "path": "frontend/src/app/universe/ark-vpack/ark-providers.component.ts",
-      "sha256": "3e195045a79c3a18a04f00e03bd12df7420a71a8815e5c84c18fc7ad491313ae",
-      "bytes": 3201
+      "sha256": "1a6d59587c58f0b2ce7853b8a537d9817f9ffe304d4b15aaae28b8acf50eb29b",
+      "bytes": 3705
     },
     {
       "path": "frontend/src/app/universe/ark-vpack/ark-vpack-overview.component.ts",
-      "sha256": "019872a94a9ec5eec527fa5462889d4742aa72323b33ac611cd818fa316db245",
-      "bytes": 5140
+      "sha256": "51f295e5a12f7f9916b558de5ab0a3e856237dba1f4488a40dc7e2a7bd95f052",
+      "bytes": 5645
     },
     {
       "path": "frontend/src/app/universe/ark-vpack/ark-vpack-translate.component.ts",
@@ -2361,43 +2361,43 @@
     },
     {
       "path": "frontend/src/app/universe/block-propagation/block-propagation-block-detail.component.ts",
-      "sha256": "f3c71a28eead126b114bb43fe9a212bf1dcd2cdb16e9fe3e9c325137053a46b1",
-      "bytes": 4177
+      "sha256": "869dc59866c6ced6032e2cd89d8e8e3b8d1f2a1b9f745a705031a9fee6806684",
+      "bytes": 4622
     },
     {
       "path": "frontend/src/app/universe/block-propagation/block-propagation-compact-blocks.component.ts",
-      "sha256": "e852f59d8775ac2ea88af6be46ab4a5651151730e6b5dc4d9a5b2a2dc599d6ba",
-      "bytes": 3060
+      "sha256": "6de082d32a8be0caea34b729c65b9b27ce47a1e175ac2333d8fdb75ff620021b",
+      "bytes": 3497
     },
     {
       "path": "frontend/src/app/universe/block-propagation/block-propagation-fibre.component.ts",
-      "sha256": "545f1eb2e62d03891a2ccca060a976e211ef70dd95be6d1914f5876274638c75",
-      "bytes": 3279
+      "sha256": "0b2849b03b7d760bc89890d4ed54be3d80b7fcbf8b114c3445de808aa8b9e91f",
+      "bytes": 3710
     },
     {
       "path": "frontend/src/app/universe/block-propagation/block-propagation-fork-races.component.ts",
-      "sha256": "f52fe30b9e4c3a574177a2812b67ad616b651611489eb3eee50cba3a667e239c",
-      "bytes": 2896
+      "sha256": "6f3a6f56e3ea4d7e08f322b22f8512c7465c1a4797e9a5c64e63f279a317e517",
+      "bytes": 3329
     },
     {
       "path": "frontend/src/app/universe/block-propagation/block-propagation-live.component.ts",
-      "sha256": "7ed7998d31ccdd45b3e73130c9eb6106e3c0c9dd6ae191b259ca0f9ad4c1828c",
-      "bytes": 2916
+      "sha256": "07f839e06583ee1128148c9d7105fbf7df677a310be261eec5045f488fbffc78",
+      "bytes": 3350
     },
     {
       "path": "frontend/src/app/universe/block-propagation/block-propagation-overview.component.ts",
-      "sha256": "61f2bcbec51002df976914ba5781046abddfb45a203844f75e335cd6fa7c5f13",
-      "bytes": 6253
+      "sha256": "0d85a160fd9d2fa65ad4c583b5f1c2c2b0ac701302af7a9ff84ee03c87c2aefa",
+      "bytes": 6687
     },
     {
       "path": "frontend/src/app/universe/block-propagation/block-propagation-race-detail.component.ts",
-      "sha256": "d4d18095c2fe0b5c5cfb2f9685babec37c459f9ff5776c65d656382ddc72f71d",
-      "bytes": 3384
+      "sha256": "2f84a8cc3119bed1f82d784253e00852f1c69086092ab386eca933e0c5144c46",
+      "bytes": 3828
     },
     {
       "path": "frontend/src/app/universe/block-propagation/block-propagation-stale-tips.component.ts",
-      "sha256": "bbdad5b4364fd8b5baf45ae268e96e627cf23e3244bfcca7e925dfdf3f0d6d7a",
-      "bytes": 2549
+      "sha256": "2fe37973ed81a3c6aff74a96525ef1ad3a140e6fc57f7066373df364635dc0e5",
+      "bytes": 2982
     },
     {
       "path": "frontend/src/app/universe/blockspace/blockspace-compare.component.ts",
@@ -2851,13 +2851,13 @@
     },
     {
       "path": "frontend/src/app/universe/lightning-resilience/lightning-resilience-htlcs.component.ts",
-      "sha256": "d6992ae05b77941bf31d930709a720108691ea9d854e7cea751b77afd8f11c02",
-      "bytes": 3264
+      "sha256": "b97f1369c734dadaf336d48b8726a223e7bddf106212f8d482cebfb5bfaac0ea",
+      "bytes": 3696
     },
     {
       "path": "frontend/src/app/universe/lightning-resilience/lightning-resilience-mitigations.component.ts",
-      "sha256": "de4e4f8549dc723537fe1de95d0c9c90226488e67593d6200776783567d46509",
-      "bytes": 3633
+      "sha256": "e6f7f290f150b7454b26b1eb93836a28c80c95dabdc8e213f050c0552ecdc982",
+      "bytes": 4068
     },
     {
       "path": "frontend/src/app/universe/lightning-resilience/lightning-resilience-node-detail.component.ts",
@@ -2866,13 +2866,13 @@
     },
     {
       "path": "frontend/src/app/universe/lightning-resilience/lightning-resilience-onion.component.ts",
-      "sha256": "b6a483ac82bd20cf36dfdad6518409a776b5913ad1e66f94b22adc390f81dc0e",
-      "bytes": 4130
+      "sha256": "0ab7d221dc8bb128f05b44dd7c94b280039734754d243059b1924f8abe76ae0b",
+      "bytes": 4564
     },
     {
       "path": "frontend/src/app/universe/lightning-resilience/lightning-resilience-overview.component.ts",
-      "sha256": "2fd928299a655e57e6b8cf28c914d7986cfc965a6878b2acdc4cea4a77c55ecd",
-      "bytes": 7318
+      "sha256": "822bf5d1a69eb926854a5165e9176c099b7c68c300882f6a6e309597e8cb82d0",
+      "bytes": 7752
     },
     {
       "path": "frontend/src/app/universe/lightning-resilience/lightning-resilience-simulate.component.ts",
@@ -16701,7 +16701,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/ark-vpack/ark-vpack-overview.component.ts",
-          "sha256": "019872a94a9ec5eec527fa5462889d4742aa72323b33ac611cd818fa316db245"
+          "sha256": "51f295e5a12f7f9916b558de5ab0a3e856237dba1f4488a40dc7e2a7bd95f052"
         }
       },
       {
@@ -17030,7 +17030,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/ark-vpack/ark-providers.component.ts",
-          "sha256": "3e195045a79c3a18a04f00e03bd12df7420a71a8815e5c84c18fc7ad491313ae"
+          "sha256": "1a6d59587c58f0b2ce7853b8a537d9817f9ffe304d4b15aaae28b8acf50eb29b"
         }
       },
       {
@@ -17088,7 +17088,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/lightning-resilience/lightning-resilience-overview.component.ts",
-          "sha256": "2fd928299a655e57e6b8cf28c914d7986cfc965a6878b2acdc4cea4a77c55ecd"
+          "sha256": "822bf5d1a69eb926854a5165e9176c099b7c68c300882f6a6e309597e8cb82d0"
         }
       },
       {
@@ -17122,7 +17122,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/lightning-resilience/lightning-resilience-htlcs.component.ts",
-          "sha256": "d6992ae05b77941bf31d930709a720108691ea9d854e7cea751b77afd8f11c02"
+          "sha256": "b97f1369c734dadaf336d48b8726a223e7bddf106212f8d482cebfb5bfaac0ea"
         }
       },
       {
@@ -17148,7 +17148,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/lightning-resilience/lightning-resilience-onion.component.ts",
-          "sha256": "b6a483ac82bd20cf36dfdad6518409a776b5913ad1e66f94b22adc390f81dc0e"
+          "sha256": "0ab7d221dc8bb128f05b44dd7c94b280039734754d243059b1924f8abe76ae0b"
         }
       },
       {
@@ -17293,7 +17293,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/lightning-resilience/lightning-resilience-mitigations.component.ts",
-          "sha256": "de4e4f8549dc723537fe1de95d0c9c90226488e67593d6200776783567d46509"
+          "sha256": "e6f7f290f150b7454b26b1eb93836a28c80c95dabdc8e213f050c0552ecdc982"
         }
       },
       {
@@ -17355,7 +17355,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/block-propagation/block-propagation-overview.component.ts",
-          "sha256": "61f2bcbec51002df976914ba5781046abddfb45a203844f75e335cd6fa7c5f13"
+          "sha256": "0d85a160fd9d2fa65ad4c583b5f1c2c2b0ac701302af7a9ff84ee03c87c2aefa"
         }
       },
       {
@@ -17385,7 +17385,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/block-propagation/block-propagation-live.component.ts",
-          "sha256": "7ed7998d31ccdd45b3e73130c9eb6106e3c0c9dd6ae191b259ca0f9ad4c1828c"
+          "sha256": "07f839e06583ee1128148c9d7105fbf7df677a310be261eec5045f488fbffc78"
         }
       },
       {
@@ -17415,7 +17415,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/block-propagation/block-propagation-block-detail.component.ts",
-          "sha256": "f3c71a28eead126b114bb43fe9a212bf1dcd2cdb16e9fe3e9c325137053a46b1"
+          "sha256": "869dc59866c6ced6032e2cd89d8e8e3b8d1f2a1b9f745a705031a9fee6806684"
         }
       },
       {
@@ -17445,7 +17445,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/block-propagation/block-propagation-compact-blocks.component.ts",
-          "sha256": "e852f59d8775ac2ea88af6be46ab4a5651151730e6b5dc4d9a5b2a2dc599d6ba"
+          "sha256": "6de082d32a8be0caea34b729c65b9b27ce47a1e175ac2333d8fdb75ff620021b"
         }
       },
       {
@@ -17475,7 +17475,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/block-propagation/block-propagation-fork-races.component.ts",
-          "sha256": "f52fe30b9e4c3a574177a2812b67ad616b651611489eb3eee50cba3a667e239c"
+          "sha256": "6f3a6f56e3ea4d7e08f322b22f8512c7465c1a4797e9a5c64e63f279a317e517"
         }
       },
       {
@@ -17505,7 +17505,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/block-propagation/block-propagation-race-detail.component.ts",
-          "sha256": "d4d18095c2fe0b5c5cfb2f9685babec37c459f9ff5776c65d656382ddc72f71d"
+          "sha256": "2f84a8cc3119bed1f82d784253e00852f1c69086092ab386eca933e0c5144c46"
         }
       },
       {
@@ -17531,7 +17531,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/block-propagation/block-propagation-stale-tips.component.ts",
-          "sha256": "bbdad5b4364fd8b5baf45ae268e96e627cf23e3244bfcca7e925dfdf3f0d6d7a"
+          "sha256": "2fe37973ed81a3c6aff74a96525ef1ad3a140e6fc57f7066373df364635dc0e5"
         }
       },
       {
@@ -17557,7 +17557,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/block-propagation/block-propagation-fibre.component.ts",
-          "sha256": "545f1eb2e62d03891a2ccca060a976e211ef70dd95be6d1914f5876274638c75"
+          "sha256": "0b2849b03b7d760bc89890d4ed54be3d80b7fcbf8b114c3445de808aa8b9e91f"
         }
       },
       {
@@ -37299,7 +37299,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01",
-          "sha256": "36b506265c1388d4b2da95120a8c9a958223b67004b504847b8df33d564287fa"
+          "sha256": "02482780b692999af2b7e30e8341f7a05b807db021b0715d958622e56e817f98"
         }
       ],
       "blockers": [
@@ -37365,7 +37365,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01",
-          "sha256": "36b506265c1388d4b2da95120a8c9a958223b67004b504847b8df33d564287fa"
+          "sha256": "02482780b692999af2b7e30e8341f7a05b807db021b0715d958622e56e817f98"
         }
       ],
       "blockers": [
@@ -37431,7 +37431,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01",
-          "sha256": "36b506265c1388d4b2da95120a8c9a958223b67004b504847b8df33d564287fa"
+          "sha256": "02482780b692999af2b7e30e8341f7a05b807db021b0715d958622e56e817f98"
         }
       ],
       "blockers": [
@@ -118276,7 +118276,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "36b506265c1388d4b2da95120a8c9a958223b67004b504847b8df33d564287fa"
+          "sha256": "02482780b692999af2b7e30e8341f7a05b807db021b0715d958622e56e817f98"
         }
       ],
       "blockers": [
@@ -118350,7 +118350,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "36b506265c1388d4b2da95120a8c9a958223b67004b504847b8df33d564287fa"
+          "sha256": "02482780b692999af2b7e30e8341f7a05b807db021b0715d958622e56e817f98"
         }
       ],
       "blockers": [
@@ -118424,7 +118424,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "36b506265c1388d4b2da95120a8c9a958223b67004b504847b8df33d564287fa"
+          "sha256": "02482780b692999af2b7e30e8341f7a05b807db021b0715d958622e56e817f98"
         }
       ],
       "blockers": [
@@ -118498,7 +118498,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "36b506265c1388d4b2da95120a8c9a958223b67004b504847b8df33d564287fa"
+          "sha256": "02482780b692999af2b7e30e8341f7a05b807db021b0715d958622e56e817f98"
         }
       ],
       "blockers": [
@@ -118572,7 +118572,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "36b506265c1388d4b2da95120a8c9a958223b67004b504847b8df33d564287fa"
+          "sha256": "02482780b692999af2b7e30e8341f7a05b807db021b0715d958622e56e817f98"
         }
       ],
       "blockers": [
@@ -118646,7 +118646,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "36b506265c1388d4b2da95120a8c9a958223b67004b504847b8df33d564287fa"
+          "sha256": "02482780b692999af2b7e30e8341f7a05b807db021b0715d958622e56e817f98"
         }
       ],
       "blockers": [
@@ -118720,7 +118720,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "36b506265c1388d4b2da95120a8c9a958223b67004b504847b8df33d564287fa"
+          "sha256": "02482780b692999af2b7e30e8341f7a05b807db021b0715d958622e56e817f98"
         }
       ],
       "blockers": [
@@ -118794,7 +118794,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "36b506265c1388d4b2da95120a8c9a958223b67004b504847b8df33d564287fa"
+          "sha256": "02482780b692999af2b7e30e8341f7a05b807db021b0715d958622e56e817f98"
         }
       ],
       "blockers": [
@@ -118868,7 +118868,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "36b506265c1388d4b2da95120a8c9a958223b67004b504847b8df33d564287fa"
+          "sha256": "02482780b692999af2b7e30e8341f7a05b807db021b0715d958622e56e817f98"
         }
       ],
       "blockers": [
@@ -118942,7 +118942,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "36b506265c1388d4b2da95120a8c9a958223b67004b504847b8df33d564287fa"
+          "sha256": "02482780b692999af2b7e30e8341f7a05b807db021b0715d958622e56e817f98"
         }
       ],
       "blockers": [
@@ -119016,7 +119016,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "36b506265c1388d4b2da95120a8c9a958223b67004b504847b8df33d564287fa"
+          "sha256": "02482780b692999af2b7e30e8341f7a05b807db021b0715d958622e56e817f98"
         }
       ],
       "blockers": [
@@ -119090,7 +119090,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "36b506265c1388d4b2da95120a8c9a958223b67004b504847b8df33d564287fa"
+          "sha256": "02482780b692999af2b7e30e8341f7a05b807db021b0715d958622e56e817f98"
         }
       ],
       "blockers": [

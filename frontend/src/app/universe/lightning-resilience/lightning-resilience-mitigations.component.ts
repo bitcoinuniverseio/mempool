@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { LightningResilienceApiService } from './lightning-resilience.service';
 
 @Component({
@@ -9,6 +10,9 @@ import { LightningResilienceApiService } from './lightning-resilience.service';
   imports: [CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4">
+      <div class="alert alert-warning" role="alert" *ngIf="loadError">
+        {{ loadError }}
+      </div>
       <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
           <h1 class="h2 mb-1">Lightning Anti-Jamming & Defense Mitigations</h1>
@@ -74,11 +78,20 @@ import { LightningResilienceApiService } from './lightning-resilience.service';
 export class LightningResilienceMitigationsComponent implements OnInit {
   public mitigations: any[] = [];
 
+  public loadError: string | null = null;
+
   constructor(private api: LightningResilienceApiService) {}
 
   public ngOnInit(): void {
-    this.api.getMitigations$().subscribe(res => {
-      this.mitigations = res;
+    this.api.getMitigations$().subscribe({
+      next: res => {
+        this.mitigations = res;
+        this.loadError = null;
+      },
+      error: err => {
+        this.mitigations = [];
+        this.loadError = loadFailureMessage(classifyLoadFailure(err));
+      },
     });
   }
 }

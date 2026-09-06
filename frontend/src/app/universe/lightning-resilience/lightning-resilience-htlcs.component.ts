@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { LightningResilienceApiService } from './lightning-resilience.service';
 
 @Component({
@@ -9,6 +10,9 @@ import { LightningResilienceApiService } from './lightning-resilience.service';
   imports: [CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4">
+      <div class="alert alert-warning" role="alert" *ngIf="loadError">
+        {{ loadError }}
+      </div>
       <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
           <h1 class="h2 mb-1">HTLC / PTLC Slot Pressure & Liquidity Locking</h1>
@@ -70,11 +74,20 @@ import { LightningResilienceApiService } from './lightning-resilience.service';
 export class LightningResilienceHtlcsComponent implements OnInit {
   public channels: any[] = [];
 
+  public loadError: string | null = null;
+
   constructor(private api: LightningResilienceApiService) {}
 
   public ngOnInit(): void {
-    this.api.getChannels$().subscribe(res => {
-      this.channels = res;
+    this.api.getChannels$().subscribe({
+      next: res => {
+        this.channels = res;
+        this.loadError = null;
+      },
+      error: err => {
+        this.channels = [];
+        this.loadError = loadFailureMessage(classifyLoadFailure(err));
+      },
     });
   }
 }

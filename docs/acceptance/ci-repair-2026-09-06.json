@@ -194,29 +194,26 @@
     {
       "id": "FIND-FALLBACK-01",
       "severity": "same class, not repaired in this change",
-      "observation": "The catchError(() => of(<invented value>)) pattern appears in nineteen further files under frontend/src/app/universe. Each answers a failed request with a value no source produced. Only the private submission service is repaired here, because that is the one the failing gates identified. The remaining files are named so the finding is not lost.",
-      "files": [
-        "frontend/src/app/universe/ark/ark-dashboard.component.ts",
-        "frontend/src/app/universe/ark-vpack/ark-vpack.service.ts",
-        "frontend/src/app/universe/block-propagation/block-propagation.service.ts",
-        "frontend/src/app/universe/chain-dashboard/chain-mining.component.ts",
-        "frontend/src/app/universe/collaborative-privacy/collaborative-privacy.service.ts",
-        "frontend/src/app/universe/consensus-conformance/consensus-conformance.service.ts",
-        "frontend/src/app/universe/l2-observatory/l2-observatory.component.ts",
-        "frontend/src/app/universe/lightning-resilience/lightning-resilience.service.ts",
-        "frontend/src/app/universe/liquid-observatory/liquid-observatory.component.ts",
-        "frontend/src/app/universe/network-observatory/network-observatory.component.ts",
-        "frontend/src/app/universe/node-security/node-security.service.ts",
-        "frontend/src/app/universe/opentimestamps/opentimestamps.service.ts",
-        "frontend/src/app/universe/protocol-directory/protocol-directory.component.ts",
-        "frontend/src/app/universe/protocol-strip/protocol-strip.component.ts",
-        "frontend/src/app/universe/pwa/share-receiver.component.ts",
-        "frontend/src/app/universe/stratum-v2/stratum-v2.component.ts",
-        "frontend/src/app/universe/taproot-assets/lightning-standards.component.ts",
-        "frontend/src/app/universe/taproot-assets/taproot-assets.component.ts",
-        "frontend/src/app/universe/utxo-set/utxo-set.component.ts",
-        "frontend/src/app/universe/wildkin/wildkin-bloodlines.component.ts"
-      ]
+      "observation": "The catchError fallback pattern appears across frontend/src/app/universe. Counted by what each one actually returns, rather than by how many files contain the call, because they are not the same defect: 26 return null, 16 return an empty collection, 2 return an explicit failure state, and the rest returned a populated record no source produced. Only the last class invents an answer, and none of those remain.",
+      "classification": {
+        "returns-null": {
+          "count": 26,
+          "verdict": "honest. An optional read that is absent reads as absent."
+        },
+        "returns-empty-collection": {
+          "count": 18,
+          "verdict": "weak. An empty list states that there is nothing, when the truth is that the service could not be asked. Not repaired here, and not a fabricated record."
+        },
+        "returns-explicit-failure-state": {
+          "count": 2,
+          "verdict": "honest. The consumer renders it as a failure."
+        },
+        "returns-invented-record": {
+          "count": 0,
+          "verdict": "repaired. Was 21 across three services plus the surfaces in FIND-PRIVSUB-01, FIND-FALSEPASS-01 and FIND-FALSEPASS-02."
+        }
+      },
+      "note": "An earlier revision of this record listed nineteen files by name and called them all the same finding. That overstated it: most of those files return null or an empty collection. The classification above is measured rather than counted by grep."
     },
     {
       "id": "FIND-FALSEPASS-01",

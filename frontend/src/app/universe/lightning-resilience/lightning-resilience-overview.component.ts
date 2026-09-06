@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { LightningResilienceApiService, LightningResilienceOverview } from './lightning-resilience.service';
 
 @Component({
@@ -9,6 +10,9 @@ import { LightningResilienceApiService, LightningResilienceOverview } from './li
   imports: [CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4">
+      <div class="alert alert-warning" role="alert" *ngIf="loadError">
+        {{ loadError }}
+      </div>
       <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
           <h1 class="h2 mb-1">Lightning HTLC/PTLC Congestion & Jamming Resilience Center</h1>
@@ -142,11 +146,20 @@ import { LightningResilienceApiService, LightningResilienceOverview } from './li
 export class LightningResilienceOverviewComponent implements OnInit {
   public overview: LightningResilienceOverview | null = null;
 
+  public loadError: string | null = null;
+
   constructor(private api: LightningResilienceApiService) {}
 
   public ngOnInit(): void {
-    this.api.getOverview$().subscribe(res => {
-      this.overview = res;
+    this.api.getOverview$().subscribe({
+      next: res => {
+        this.overview = res;
+        this.loadError = null;
+      },
+      error: err => {
+        this.overview = null;
+        this.loadError = loadFailureMessage(classifyLoadFailure(err));
+      },
     });
   }
 }
