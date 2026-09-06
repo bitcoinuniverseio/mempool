@@ -1,0 +1,3 @@
+*.ots binary
+*.txt -text
+*.json -text
