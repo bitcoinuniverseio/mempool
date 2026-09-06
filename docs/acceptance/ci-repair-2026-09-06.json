@@ -228,6 +228,21 @@
         "frontend/src/app/universe/mining-decentralized/decentralized-mining.service.ts"
       ],
       "verification": "43 fixtures added, 206 keys total, fixture contract test passes, both packages typecheck."
+    },
+    {
+      "id": "CI-CAUSE-14",
+      "job": "WebKit and Firefox",
+      "failingStep": "A third engine, on the checks that do not need a thumb",
+      "runs": [
+        34027390232,
+        34030635773
+      ],
+      "class": "harness flake, not a product defect",
+      "evidence": "One navigation timeout per run, at a different route and window each time: home at tablet-768, then tx in landscape. Same 45 second budget, same commit range, and every other window for those routes passed in the same run. WebKit passed all three of its shards in both runs.",
+      "repair": "The navigation takes one retry at the same budget before it is called a failure. A page that genuinely never loads still fails, because it fails twice. The budget itself is unchanged, so a real slow page is still reported.",
+      "files": [
+        "scripts/universe/visual-qa/mobile-check.mjs"
+      ]
     }
   ],
   "findings": [
