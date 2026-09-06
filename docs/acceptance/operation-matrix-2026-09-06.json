@@ -2021,8 +2021,8 @@
     },
     {
       "path": "docs/acceptance/ci-repair-2026-09-06.json",
-      "sha256": "715f465636df3816d9b8d9f09a2cd33d9fa233c0909a64d56877ec4d59b7fd62",
-      "bytes": 25982
+      "sha256": "77083cb692922c7f223f9a9e2cd0c1cf5a4068b3e4e14733bc48b16d652c7618",
+      "bytes": 26343
     },
     {
       "path": "docs/acceptance/current-execution-evidence.json",
@@ -2141,8 +2141,8 @@
     },
     {
       "path": "frontend/src/app/components/rbf-list/rbf-list.component.ts",
-      "sha256": "35183683082521f45f71ef8a3a883c52549961ff659ab69dcdfdadd24ac9b954",
-      "bytes": 2537
+      "sha256": "d668b65d6ce30778d72756d4357862ff5ed6e945959d2a5f6eadf1bb453af162",
+      "bytes": 2577
     },
     {
       "path": "frontend/src/app/components/server-health/server-health.component.ts",
@@ -4802,7 +4802,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/components/rbf-list/rbf-list.component.ts",
-          "sha256": "35183683082521f45f71ef8a3a883c52549961ff659ab69dcdfdadd24ac9b954"
+          "sha256": "d668b65d6ce30778d72756d4357862ff5ed6e945959d2a5f6eadf1bb453af162"
         }
       },
       {
@@ -37299,7 +37299,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01",
-          "sha256": "715f465636df3816d9b8d9f09a2cd33d9fa233c0909a64d56877ec4d59b7fd62"
+          "sha256": "77083cb692922c7f223f9a9e2cd0c1cf5a4068b3e4e14733bc48b16d652c7618"
         }
       ],
       "blockers": [
@@ -37365,7 +37365,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01",
-          "sha256": "715f465636df3816d9b8d9f09a2cd33d9fa233c0909a64d56877ec4d59b7fd62"
+          "sha256": "77083cb692922c7f223f9a9e2cd0c1cf5a4068b3e4e14733bc48b16d652c7618"
         }
       ],
       "blockers": [
@@ -37431,7 +37431,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01",
-          "sha256": "715f465636df3816d9b8d9f09a2cd33d9fa233c0909a64d56877ec4d59b7fd62"
+          "sha256": "77083cb692922c7f223f9a9e2cd0c1cf5a4068b3e4e14733bc48b16d652c7618"
         }
       ],
       "blockers": [
@@ -118276,7 +118276,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "715f465636df3816d9b8d9f09a2cd33d9fa233c0909a64d56877ec4d59b7fd62"
+          "sha256": "77083cb692922c7f223f9a9e2cd0c1cf5a4068b3e4e14733bc48b16d652c7618"
         }
       ],
       "blockers": [
@@ -118350,7 +118350,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "715f465636df3816d9b8d9f09a2cd33d9fa233c0909a64d56877ec4d59b7fd62"
+          "sha256": "77083cb692922c7f223f9a9e2cd0c1cf5a4068b3e4e14733bc48b16d652c7618"
         }
       ],
       "blockers": [
@@ -118424,7 +118424,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "715f465636df3816d9b8d9f09a2cd33d9fa233c0909a64d56877ec4d59b7fd62"
+          "sha256": "77083cb692922c7f223f9a9e2cd0c1cf5a4068b3e4e14733bc48b16d652c7618"
         }
       ],
       "blockers": [
@@ -118498,7 +118498,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "715f465636df3816d9b8d9f09a2cd33d9fa233c0909a64d56877ec4d59b7fd62"
+          "sha256": "77083cb692922c7f223f9a9e2cd0c1cf5a4068b3e4e14733bc48b16d652c7618"
         }
       ],
       "blockers": [
@@ -118572,7 +118572,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "715f465636df3816d9b8d9f09a2cd33d9fa233c0909a64d56877ec4d59b7fd62"
+          "sha256": "77083cb692922c7f223f9a9e2cd0c1cf5a4068b3e4e14733bc48b16d652c7618"
         }
       ],
       "blockers": [
@@ -118646,7 +118646,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "715f465636df3816d9b8d9f09a2cd33d9fa233c0909a64d56877ec4d59b7fd62"
+          "sha256": "77083cb692922c7f223f9a9e2cd0c1cf5a4068b3e4e14733bc48b16d652c7618"
         }
       ],
       "blockers": [
@@ -118720,7 +118720,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "715f465636df3816d9b8d9f09a2cd33d9fa233c0909a64d56877ec4d59b7fd62"
+          "sha256": "77083cb692922c7f223f9a9e2cd0c1cf5a4068b3e4e14733bc48b16d652c7618"
         }
       ],
       "blockers": [
@@ -118794,7 +118794,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "715f465636df3816d9b8d9f09a2cd33d9fa233c0909a64d56877ec4d59b7fd62"
+          "sha256": "77083cb692922c7f223f9a9e2cd0c1cf5a4068b3e4e14733bc48b16d652c7618"
         }
       ],
       "blockers": [
@@ -118868,7 +118868,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "715f465636df3816d9b8d9f09a2cd33d9fa233c0909a64d56877ec4d59b7fd62"
+          "sha256": "77083cb692922c7f223f9a9e2cd0c1cf5a4068b3e4e14733bc48b16d652c7618"
         }
       ],
       "blockers": [
@@ -118942,7 +118942,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "715f465636df3816d9b8d9f09a2cd33d9fa233c0909a64d56877ec4d59b7fd62"
+          "sha256": "77083cb692922c7f223f9a9e2cd0c1cf5a4068b3e4e14733bc48b16d652c7618"
         }
       ],
       "blockers": [
@@ -119016,7 +119016,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "715f465636df3816d9b8d9f09a2cd33d9fa233c0909a64d56877ec4d59b7fd62"
+          "sha256": "77083cb692922c7f223f9a9e2cd0c1cf5a4068b3e4e14733bc48b16d652c7618"
         }
       ],
       "blockers": [
@@ -119090,7 +119090,7 @@
         {
           "artifact": "docs/acceptance/ci-repair-2026-09-06.json",
           "note": "FIND-PRIVSUB-01 and the backend suite that asserts the unavailable behaviour",
-          "sha256": "715f465636df3816d9b8d9f09a2cd33d9fa233c0909a64d56877ec4d59b7fd62"
+          "sha256": "77083cb692922c7f223f9a9e2cd0c1cf5a4068b3e4e14733bc48b16d652c7618"
         }
       ],
       "blockers": [
