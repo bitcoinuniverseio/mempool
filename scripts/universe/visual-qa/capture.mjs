@@ -695,6 +695,7 @@ async function run() {
           viewport: { width: viewport.width, height: viewport.height },
           deviceScaleFactor: 1,
           reducedMotion: args.reducedMotion ? 'reduce' : 'no-preference',
+          serviceWorkers: 'block',
         });
         await installFixtures(context, state);
         await context.addInitScript(([t, saved]) => {
@@ -934,10 +935,10 @@ async function run() {
               unmatchedFixtures,
             });
           } finally {
-            await page.close();
+            await page.close().catch(() => undefined);
           }
         }
-        await context.close();
+        await context.close().catch(() => undefined);
       }
     }
   }

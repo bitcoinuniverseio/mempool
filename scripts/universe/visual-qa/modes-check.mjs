@@ -113,7 +113,7 @@ async function readStable(page, fn) {
 }
 
 async function sweep(label, contextOptions) {
-  const context = await browser.newContext(contextOptions);
+  const context = await browser.newContext({ ...contextOptions, serviceWorkers: 'block' });
   await installFixtures(context);
   for (const [id, path] of ROUTES) {
     const page = await context.newPage();
