@@ -270,5 +270,19 @@
     "Migrations and repositories against a real database, which needs the CI database service.",
     "The visual matrix and mobile shards, which are gated on the frontend job and run on the fleet.",
     "Universe production smoke, which is a live-origin check against production and is out of scope for a no-deployment task."
-  ]
+  ],
+  "requiredChecks": {
+    "branch": "develop",
+    "contexts": [
+      "Documentation gates",
+      "Backend build and test",
+      "Frontend build",
+      "Mobile and adaptive layout",
+      "WebKit and Firefox"
+    ],
+    "requiredApprovingReviews": 0,
+    "enforceAdmins": false,
+    "legacyWorkflowOwnership": "The legacy .github/workflows/ci.yml triggers only on master, and none of the five required contexts on develop belongs to it. It owns no required coverage here, so nothing was retargeted and no build matrix was duplicated.",
+    "noDeploymentOnMerge": "Merging to develop starts no deployment. universe-release-artifact.yml is workflow_dispatch only, universe-production-smoke.yml is dispatch or schedule against a live origin, docker.yml builds on version tags or master pull requests, and the legacy ci.yml is master only."
+  }
 }
