@@ -1,0 +1,188 @@
+{
+  "schemaVersion": "universe-ci-repair-v1",
+  "recordedAt": "2026-09-06T07:05:00.000Z",
+  "scope": "Root causes and repairs for the Universe CI failures on develop, each bound to the run and job that produced it. Executed on the Primcast self-hosted fleet. No deployment, no production mutation, no GitHub-hosted runner.",
+  "failingBaseline": {
+    "headSha": "b893ca60506d0e07e21dc40f71fc1fc47fc12ecc",
+    "branch": "develop",
+    "run": 34011046470,
+    "createdAt": "2026-09-06T04:15:32Z",
+    "lastGreenUniverseCiOnDevelop": { "run": 33755756813, "headSha": "0f3e5a19", "createdAt": "2026-09-03T12:32:00Z" }
+  },
+  "causes": [
+    {
+      "id": "CI-CAUSE-01",
+      "job": "Documentation gates",
+      "runnerName": "universe-linux-super-30",
+      "failingStep": "No raw interface colour outside the allowlist",
+      "command": "node scripts/universe/check-colors.mjs",
+      "firstCausalError": "3 raw interface colour literal(s) outside the allowlist: frontend/src/styles/_universe-portfolio-print.scss:14 #fff, :15 #111, :16 #444",
+      "class": "quality assertion",
+      "introducedBy": "b893ca60 fix(portfolio): scope report print layout",
+      "repair": "The print sheet includes the universe-light-tokens mixin for the mounted report and takes background, colour and the soft foreground from those tokens. A printed page is paper, so it uses the measured light palette whatever theme the reader is viewing in, rather than introducing print-only literals no contrast test covers.",
+      "files": ["frontend/src/styles/_universe-portfolio-print.scss"],
+      "verification": "node scripts/universe/check-colors.mjs passes; sass compiles the partial to 6058 bytes; all 18 Documentation gates steps pass locally and the job succeeds on run 34016760588."
+    },
+    {
+      "id": "CI-CAUSE-02",
+      "job": "Documentation gates",
+      "failingStep": "No obsolete upstream product marks / No third-party data origins",
+      "command": "node scripts/universe/check-branding.mjs; node scripts/universe/check-origins.mjs",
+      "reachedOnlyAfterFixing": "CI-CAUSE-01",
+      "firstCausalError": "Two third-party blockchain data origins, and the upstream product's name, in the private submission accelerator directory and in its visual-QA fixtures. The literal strings are deliberately not quoted here so this record does not itself trip the gates it describes; they are the two accelerator status endpoints removed from private-submission.service.ts in this change.",
+      "class": "product runtime defect surfaced by a quality assertion",
+      "introducedBy": "4886501c8 feat(intelligence): implement nine net-new explorer frontier products",
+      "repair": "The private submission reads no longer answer a failed request with an invented one. See the findings block below.",
+      "files": [
+        "backend/src/api/intelligence/private-submission/private-submission.service.ts",
+        "backend/src/api/intelligence/private-submission/private-submission.routes.ts",
+        "backend/src/api/intelligence/private-submission/private-submission.test.ts",
+        "frontend/src/app/universe/private-submission/private-submission.service.ts",
+        "frontend/src/app/universe/private-submission/private-submission-overview.component.ts",
+        "frontend/src/app/universe/private-submission/private-submission-accelerators.component.ts",
+        "frontend/src/app/universe/private-submission/private-submission-accelerator-detail.component.ts",
+        "frontend/src/app/universe/private-submission/private-submission-broadcast.component.ts",
+        "frontend/src/app/universe/private-submission/private-submission-receipts.component.ts",
+        "frontend/src/app/universe/private-submission/private-submission-ordering.component.ts",
+        "frontend/src/app/universe/private-submission/private-submission-ordering-tx.component.ts",
+        "frontend/src/app/universe/private-submission/private-submission-ordering-block.component.ts",
+        "scripts/universe/visual-qa/intelligence-fixtures.mjs"
+      ],
+      "verification": "node scripts/universe/check-branding.mjs and check-origins.mjs pass; the backend suite asserts the unavailable behaviour, 8 assertions."
+    },
+    {
+      "id": "CI-CAUSE-03",
+      "job": "Frontend build",
+      "runnerName": "universe-linux-super-187",
+      "failingStep": "Unit tests",
+      "command": "npm run test:ci (vitest run)",
+      "firstCausalError": "Cannot find module '../../../../../backend/node_modules/bitcoinjs-lib' required by src/app/universe/swaps/swaps-package.spec.ts:17",
+      "class": "test setup",
+      "repair": "bitcoinjs-lib ~6.1.3 and tiny-secp256k1 2.2.4 are frontend dev dependencies, pinned to the versions the backend already resolves, and the spec imports them normally instead of reaching into a sibling package's install tree the job never creates. No assertion changed.",
+      "files": ["frontend/package.json", "frontend/package-lock.json", "frontend/src/app/universe/swaps/swaps-package.spec.ts"],
+      "verification": "28 of 28 assertions in swaps-package.spec.ts pass; the full frontend suite passes 1497 tests across 92 files; the Frontend build job reached the production build and every downstream gate on run 34016760588."
+    },
+    {
+      "id": "CI-CAUSE-04",
+      "job": "Backend build and test",
+      "runnerName": "universe-linux-super-129",
+      "failingStep": "Repair a half-installed Rust toolchain before using it",
+      "command": "cargo metadata --format-version 1 --manifest-path rust/gbt/Cargo.toml",
+      "firstCausalError": "cargo in use: none; line 30: cargo: command not found; exit code 127",
+      "class": "environment startup",
+      "repair": "The step reported 'no rustup on this runner' and then ran cargo anyway. It installs the pinned stable toolchain with a minimal profile when a runner has none, then proves it can read rust/gbt/Cargo.toml as before.",
+      "files": [".github/workflows/universe-ci.yml"],
+      "verification": "Backend build and test completed successfully on run 34016760588, runner universe-linux-super-167."
+    },
+    {
+      "id": "CI-CAUSE-05",
+      "job": "Backend build and test",
+      "failingStep": "Lint",
+      "reachedOnlyAfterFixing": "CI-CAUSE-04",
+      "command": "npm run lint (eslint . --ext .ts)",
+      "firstCausalError": "8 errors: 2 unhandled promises and 6 awaits of non-@asyncSafe callees",
+      "class": "quality assertion",
+      "repair": "NatsJetStreamEventBusProvider.connect and ClickHouseAnalyticalProvider.init both catch every path already, so they carry @asyncSafe and their void call sites are honest. The event bus listener wraps its delivery bookkeeping, because an emitter does not await a listener and a rejection there would surface as an unhandled rejection. The six awaits are of callees that reject deliberately and whose route handler turns the rejection into an answer, so the awaiting contexts carry @asyncUnsafe, the annotation this repository already uses in 57 places.",
+      "files": [
+        "backend/src/api/intelligence/events/intelligence-event-bus.ts",
+        "backend/src/api/intelligence/storage/intelligence-storage.ts",
+        "backend/src/api/intelligence/policy-lab/bitcoin-core-policy-adapter.ts",
+        "backend/src/api/intelligence/policy-lab/policy-lab.service.ts",
+        "backend/src/api/intelligence/policy-lab/policy-lab.test.ts"
+      ],
+      "verification": "eslint reports 0 errors; backend unit suite passes 683 tests across 73 suites; the job succeeds on run 34016760588."
+    },
+    {
+      "id": "CI-CAUSE-06",
+      "job": "WebKit and Firefox",
+      "runnerName": "universe-linux-super-147",
+      "failingStep": "Every window a phone can be, on WebKit",
+      "command": "node mobile-check.mjs --browser=webkit",
+      "firstCausalError": "browserType.launch: Host system is missing dependencies to run browsers: libicu74, libxml2, libvpx9",
+      "class": "environment startup",
+      "measuredHostState": "31.14.40.195 runs Ubuntu 26.04 (resolute) and provides libicu78, libxml2-16 and libvpx12. libicu74, libxml2 and libvpx9 have no installation candidate on that release, so no apt install on the host satisfies the sonames Playwright's WebKit build links. The runner service account is github-runner and is in the docker group; Docker Engine 29.7.2 is active.",
+      "repair": "The job stays on the fleet and runs inside mcr.microsoft.com/playwright:v1.49.0-noble, pinned to the Playwright version in scripts/universe/visual-qa/package.json, which carries both engines and every library they link. This is the fleet running a matched container, not an escape to a GitHub-hosted runner.",
+      "files": [".github/workflows/universe-ci.yml"],
+      "verification": "On run 34016760588 the container initialised, the production build, harness install, engine fetch and gateway all succeeded, and WebKit launched and ran for seven minutes, which it could not previously do at all."
+    },
+    {
+      "id": "CI-CAUSE-07",
+      "job": "Frontend build",
+      "runnerName": "universe-linux-super-51",
+      "failingStep": "The parity regressions gate holds",
+      "reachedOnlyAfterFixing": "CI-CAUSE-03",
+      "command": "node --test parity-regressions.test.mjs",
+      "firstCausalError": "AssertionError: the mining navigation item exists (actual 0, expected true) at parity-regressions.test.mjs:26",
+      "class": "quality assertion, brittle selector",
+      "repair": "The gate matched the element on the exact class string 'nav-item mining'. The element carries mobile-primary as well, so the match returned nothing and the gate read as the item being absent rather than as it being ungated. It matches on id=\"btn-pools\" now, the way the charts case beside it already did. All three assertions on the element are unchanged and the element satisfies them: the item is shown when activeChain is not bitcoin, and it routes through chainRoute('mining').",
+      "files": ["scripts/universe/parity-regressions.test.mjs"],
+      "verification": "node --test scripts/universe/parity-regressions.test.mjs passes 10 of 10."
+    },
+    {
+      "id": "CI-CAUSE-08",
+      "job": "WebKit and Firefox",
+      "failingStep": "Every window a phone can be, on WebKit",
+      "reachedOnlyAfterFixing": "CI-CAUSE-06",
+      "run": 34016760588,
+      "firstCausalError": "browserContext.newPage: Target page, context or browser has been closed, after seven minutes of running checks",
+      "class": "environment resource",
+      "repair": "A container gets 64 MB of /dev/shm by default, which is where WebKit puts its shared buffers, and it does not degrade when that runs out. The container asks for --shm-size=2gb --ipc=host.",
+      "files": [".github/workflows/universe-ci.yml"],
+      "verification": "Pending the run on b68b106."
+    }
+  ],
+  "findings": [
+    {
+      "id": "FIND-PRIVSUB-01",
+      "severity": "counterfeit success on a user-facing operation",
+      "was": "PrivateSubmissionApiService answered every failed request with an invented response through catchError(() => of(...)). A private broadcast that never reached a relay returned a submission token and status 'relayed_to_pools'. A receipt verification returned verified: true and signature_valid: true. The accelerator directory returned two third-party providers. The transaction and block ordering pages substituted a fixed txid and block hash when the address named none.",
+      "backendWas": "The service returned constants for every read. verifyAcceleratorReceipt returned verified: true whenever four fields were non-empty, with no signature check of any kind. submitPrivate recorded a token in a Map that nothing relayed.",
+      "now": "Frontend reads return what the API returned or they error. The backend raises a typed SubmissionEvidenceError naming the integration it waits on: unavailable-relay, unavailable-registry or unavailable-source. The routes map that to 503 with the stage and the message. Each surface renders the failure. Receipt validation keeps its one real check, the structural one, reports a malformed receipt as 400 with its faults named, and reports a structurally complete receipt as unverified with stage unavailable-registry while there is no provider key to verify it against.",
+      "affectedMatrixRows": [
+        "API-0b1262738a26", "API-21b73dc215f0", "API-b890c5b18aa9", "API-501ebd9a571e",
+        "API-fc5873a9e610", "API-55036967e3c6", "API-e0f0abac5d30", "API-701fd1e7a970",
+        "API-ce2c51a268a0", "API-fdb340196a39", "API-f2fe08ad257d", "API-9de0ce16ccad",
+        "NAV-249", "NAV-250", "NAV-251"
+      ]
+    },
+    {
+      "id": "FIND-FALLBACK-01",
+      "severity": "same class, not repaired in this change",
+      "observation": "The catchError(() => of(<invented value>)) pattern appears in nineteen further files under frontend/src/app/universe. Each answers a failed request with a value no source produced. Only the private submission service is repaired here, because that is the one the failing gates identified. The remaining files are named so the finding is not lost.",
+      "files": [
+        "frontend/src/app/universe/ark/ark-dashboard.component.ts",
+        "frontend/src/app/universe/ark-vpack/ark-vpack.service.ts",
+        "frontend/src/app/universe/block-propagation/block-propagation.service.ts",
+        "frontend/src/app/universe/chain-dashboard/chain-mining.component.ts",
+        "frontend/src/app/universe/collaborative-privacy/collaborative-privacy.service.ts",
+        "frontend/src/app/universe/consensus-conformance/consensus-conformance.service.ts",
+        "frontend/src/app/universe/l2-observatory/l2-observatory.component.ts",
+        "frontend/src/app/universe/lightning-resilience/lightning-resilience.service.ts",
+        "frontend/src/app/universe/liquid-observatory/liquid-observatory.component.ts",
+        "frontend/src/app/universe/network-observatory/network-observatory.component.ts",
+        "frontend/src/app/universe/node-security/node-security.service.ts",
+        "frontend/src/app/universe/opentimestamps/opentimestamps.service.ts",
+        "frontend/src/app/universe/protocol-directory/protocol-directory.component.ts",
+        "frontend/src/app/universe/protocol-strip/protocol-strip.component.ts",
+        "frontend/src/app/universe/pwa/share-receiver.component.ts",
+        "frontend/src/app/universe/stratum-v2/stratum-v2.component.ts",
+        "frontend/src/app/universe/taproot-assets/lightning-standards.component.ts",
+        "frontend/src/app/universe/taproot-assets/taproot-assets.component.ts",
+        "frontend/src/app/universe/utxo-set/utxo-set.component.ts",
+        "frontend/src/app/universe/wildkin/wildkin-bloodlines.component.ts"
+      ]
+    }
+  ],
+  "localVerification": {
+    "toolchain": { "node": "24.19.0", "npm": "11.17.0" },
+    "documentationGates": "18 of 18 steps pass",
+    "frontend": { "typecheck": "clean", "lint": "0 errors", "tests": "1497 passed across 92 files" },
+    "backend": { "build": "clean", "lint": "0 errors", "tests": "683 passed, 4 skipped, across 73 suites" },
+    "visualQaSourceGates": "progress-gate, chain-page-audit, address-page-audit and parity-regressions all pass"
+  },
+  "notVerifiedHere": [
+    "Migrations and repositories against a real database, which needs the CI database service.",
+    "The visual matrix and mobile shards, which are gated on the frontend job and run on the fleet.",
+    "Universe production smoke, which is a live-origin check against production and is out of scope for a no-deployment task."
+  ]
+}
