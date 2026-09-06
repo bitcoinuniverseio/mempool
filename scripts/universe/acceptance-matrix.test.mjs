@@ -1,9 +1,40 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync, unlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { buildCommandMatrix, buildMatrix, tableIds, uniqueIds, validateMatrix } from './acceptance-matrix.mjs';
+import { buildCommandMatrix, buildMatrix, describeArtifact, tableIds, uniqueIds, validateMatrix } from './acceptance-matrix.mjs';
+
+test('current text source identities are portable across Git LF and CRLF checkouts but retain token changes', () => {
+  const lf = Buffer.from('export const state = "ready";\nexport const count = 1;\n');
+  const crlf = Buffer.from(lf.toString().replaceAll('\n', '\r\n'));
+  for (const path of ['frontend/src/app/example.ts', 'backend/src/config.ts', 'scripts/universe/acceptance-matrix.mjs']) {
+    const source = describeArtifact(path, lf);
+    assert.equal(source.sha256Encoding, 'utf8-lf');
+    assert.deepEqual(describeArtifact(path, crlf), source, path);
+    assert.equal(source.bytes, lf.length);
+    assert.notEqual(describeArtifact(path, Buffer.from(lf.toString().replace('count = 1', 'count = 2'))).sha256, source.sha256, path);
+  }
+});
+
+test('historical and execution evidence retain raw bytes including handoff scripts and explicitly submitted application files', () => {
+  const lf = Buffer.from('const assertion = "observed";\n');
+  const crlf = Buffer.from(lf.toString().replaceAll('\n', '\r\n'));
+  for (const [path, options] of [
+    ['docs/acceptance/health-runtime-2026-09-06/review.json', {}],
+    ['docs/acceptance/handoff/gateway-anima-regression.test.mjs', {}],
+    ['scripts/universe/visual-qa/mobile-check.mjs', {}],
+    ['backend/src/config.ts', { executionEvidence: true }],
+  ]) {
+    const artifact = describeArtifact(path, crlf, options);
+    assert.equal(artifact.sha256Encoding, 'raw-bytes', path);
+    assert.equal(artifact.sha256, createHash('sha256').update(crlf).digest('hex'), path);
+    assert.equal(artifact.bytes, crlf.length, path);
+    assert.equal(artifact.text, crlf.toString(), path);
+    assert.notEqual(artifact.sha256, describeArtifact(path, lf, options).sha256, path);
+  }
+});
 
 test('the regeneration command retains every reviewed execution assertion by default', () => {
   const evidence = JSON.parse(readFileSync(new URL('../../docs/acceptance/current-execution-evidence.json', import.meta.url), 'utf8'));
@@ -16,6 +47,10 @@ test('the regeneration command retains every reviewed execution assertion by def
     assert.equal(row.status, assertion.status, assertion.id);
     assert.equal(row.acceptanceScope, assertion.scope, assertion.id);
     assert(row.evidence.length > 0, assertion.id);
+    for (const entry of row.evidence) {
+      assert.equal(entry.sha256Encoding, 'raw-bytes');
+      assert.equal(entry.sha256, createHash('sha256').update(readFileSync(new URL('../../' + entry.artifact, import.meta.url))).digest('hex'));
+    }
   }
   assert.equal(matrix.operationDenominatorReconciled, false);
   assert.equal(matrix.realNetworkE2ePasses, 0);
@@ -52,6 +87,14 @@ test('current acceptance evidence must exist and keep its actual artifact hash l
     assert.match(accepted.evidence[0].sha256, /^[0-9a-f]{64}$/);
     accepted.evidence[0].sha256 = '0'.repeat(64);
     assert.throws(() => validateMatrix(matrix), /evidence hash lineage/);
+    // A source file submitted as concrete evidence must still use raw bytes,
+    // including the shared artifact entry referenced by other source rows.
+    const artifact = 'backend/src/config.ts';
+    row.evidence = [{ artifact, sha256: createHash('sha256').update(readFileSync(new URL('../../' + artifact, import.meta.url))).digest('hex') }];
+    writeFileSync(overlay, JSON.stringify({ schemaVersion: 'universe-operation-evidence-v1', rows: [row] }));
+    const sourceEvidence = buildMatrix({ evidencePath: overlay });
+    assert.equal(sourceEvidence.sources.find(entry => entry.path === artifact).sha256Encoding, 'raw-bytes');
+    assert.equal(sourceEvidence.rows.find(entry => entry.id === 'SP-05').evidence[0].sha256, row.evidence[0].sha256);
   } finally { unlinkSync(overlay); }
 });
 
