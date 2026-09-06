@@ -36,10 +36,11 @@ export class ClickHouseAnalyticalProvider implements IAnalyticalStorageProvider 
 
   constructor(private url: string = process.env.CLICKHOUSE_URL || 'http://localhost:8123') {
     if (process.env.INTELLIGENCE_ANALYTICAL_PROVIDER === 'clickhouse') {
-      this.init();
+      void this.init();
     }
   }
 
+  /** @asyncSafe The connection failure is caught and recorded here. */
   private async init(): Promise<void> {
     try {
       logger.info(`ClickHouseAnalyticalProvider: connecting to ${this.url}`);

@@ -158,6 +158,7 @@ export class BitcoinCorePolicyAdapter {
     return this.cachedProfile;
   }
 
+  /** @asyncUnsafe The route handler turns a rejection into an exact answer. */
   public async evaluatePackage(
     rawTxs: string[],
     providedNetwork = config.MEMPOOL.NETWORK

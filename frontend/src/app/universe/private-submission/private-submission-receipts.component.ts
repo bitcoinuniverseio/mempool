@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { PrivateSubmissionApiService } from './private-submission.service';
 
 @Component({
@@ -10,6 +11,9 @@ import { PrivateSubmissionApiService } from './private-submission.service';
   imports: [CommonModule, RouterModule, FormsModule],
   template: `
     <div class="container-xl py-4">
+      <div class="alert alert-warning" role="alert" *ngIf="loadError">
+        {{ loadError }}
+      </div>
       <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
           <h1 class="h2 mb-1">Accelerator Receipts & Cryptographic Proof Verification</h1>
@@ -66,26 +70,39 @@ import { PrivateSubmissionApiService } from './private-submission.service';
   `
 })
 export class PrivateSubmissionReceiptsComponent {
-  public receiptJson = '{\n  "receipt_id": "rcpt-984210",\n  "provider_id": "mempool-accelerate",\n  "txid": "9f8e7d6c5b4a392817263544fedcba09876543211234567890abcdef12345678",\n  "amount_paid_sats": 15000\n}';
+  public receiptJson = '';
   public verifying = false;
   public verificationResult: any = null;
+  public loadError: string | null = null;
 
   constructor(private api: PrivateSubmissionApiService) {}
 
   public verifyReceipt(): void {
     if (!this.receiptJson) return;
-    this.verifying = true;
+    let parsed: unknown;
     try {
-      const parsed = JSON.parse(this.receiptJson);
-      this.api.verifyReceipt$(parsed).subscribe(res => {
-        this.verificationResult = res;
-        this.verifying = false;
-      });
+      parsed = JSON.parse(this.receiptJson);
     } catch {
-      this.api.verifyReceipt$({}).subscribe(res => {
+      // Unreadable input is the reader's error to see. Sending an empty body
+      // instead, as the revision this replaces did, verified nothing and then
+      // rendered whatever came back as the verdict on their receipt.
+      this.verificationResult = null;
+      this.loadError = $localize`:@@submission.receipt.malformed:This is not readable JSON.`;
+      return;
+    }
+    this.verifying = true;
+    this.loadError = null;
+    this.verificationResult = null;
+    this.api.verifyReceipt$(parsed).subscribe({
+      next: res => {
         this.verificationResult = res;
         this.verifying = false;
-      });
-    }
+      },
+      error: err => {
+        this.verificationResult = null;
+        this.loadError = loadFailureMessage(classifyLoadFailure(err));
+        this.verifying = false;
+      },
+    });
   }
 }

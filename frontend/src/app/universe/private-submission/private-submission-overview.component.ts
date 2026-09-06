@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { PrivateSubmissionApiService, SubmissionOverview } from './private-submission.service';
 
 @Component({
@@ -10,6 +11,9 @@ import { PrivateSubmissionApiService, SubmissionOverview } from './private-submi
   imports: [CommonModule, RouterModule, FormsModule],
   template: `
     <div class="container-xl py-4">
+      <div class="alert alert-warning" role="alert" *ngIf="loadError">
+        {{ loadError }}
+      </div>
       <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
           <h1 class="h2 mb-1">Private Transaction Submission & Acceleration Center</h1>
@@ -112,21 +116,39 @@ export class PrivateSubmissionOverviewComponent implements OnInit {
   public inputTxid = '';
   public diagnosing = false;
   public diagnosticResult: any = null;
+  public loadError: string | null = null;
+  public diagnoseError: string | null = null;
 
   constructor(private api: PrivateSubmissionApiService) {}
 
   public ngOnInit(): void {
-    this.api.getOverview$().subscribe(res => {
-      this.overview = res;
+    this.api.getOverview$().subscribe({
+      next: res => {
+        this.overview = res;
+        this.loadError = null;
+      },
+      error: err => {
+        this.overview = null;
+        this.loadError = loadFailureMessage(classifyLoadFailure(err));
+      },
     });
   }
 
   public diagnose(): void {
     if (!this.inputTxid) return;
     this.diagnosing = true;
-    this.api.diagnose$(this.inputTxid).subscribe(res => {
-      this.diagnosticResult = res;
-      this.diagnosing = false;
+    this.diagnoseError = null;
+    this.diagnosticResult = null;
+    this.api.diagnose$(this.inputTxid).subscribe({
+      next: res => {
+        this.diagnosticResult = res;
+        this.diagnosing = false;
+      },
+      error: err => {
+        this.diagnosticResult = null;
+        this.diagnoseError = loadFailureMessage(classifyLoadFailure(err));
+        this.diagnosing = false;
+      },
     });
   }
 }

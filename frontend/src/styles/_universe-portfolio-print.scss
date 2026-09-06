@@ -1,3 +1,5 @@
+@use "universe-tokens" as universe;
+
 // The report is a document. Its screen ancestors reserve viewport space for
 // navigation and the footer; retaining those reservations prints a blank page.
 // Scope every override to the mounted report so other route printing is unchanged.
@@ -8,12 +10,18 @@
     min-height: 0 !important;
   }
 
+  // A printed page is paper, so the report prints on the light palette whatever
+  // theme the reader is viewing in. Restating the light tokens here keeps the
+  // ink and the surfaces on the same measured pairs the screen theme uses,
+  // rather than introducing print-only literals no contrast test covers.
   body:has(app-report-builder) {
+    @include universe.universe-light-tokens;
+
     margin: 0 !important;
     padding: 0 !important;
-    background: #fff !important;
-    color: #111 !important;
-    --u-fg-soft: #444;
+    background: var(--u-surface-raised) !important;
+    color: var(--u-text-primary) !important;
+    --u-fg-soft: var(--u-text-muted);
 
     app-master-page > .site-header,
     app-master-page .empty-sidenav,

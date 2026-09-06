@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { PrivateSubmissionApiService } from './private-submission.service';
 
 @Component({
@@ -10,6 +11,9 @@ import { PrivateSubmissionApiService } from './private-submission.service';
   imports: [CommonModule, RouterModule, FormsModule],
   template: `
     <div class="container-xl py-4">
+      <div class="alert alert-warning" role="alert" *ngIf="loadError">
+        {{ loadError }}
+      </div>
       <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
           <h1 class="h2 mb-1">Direct Miner Private Broadcast</h1>
@@ -84,15 +88,29 @@ export class PrivateSubmissionBroadcastComponent {
   public rawTxHex = '';
   public submitting = false;
   public broadcastReceipt: any = null;
+  public loadError: string | null = null;
 
   constructor(private api: PrivateSubmissionApiService) {}
 
   public submitPrivate(): void {
     if (!this.rawTxHex) return;
     this.submitting = true;
-    this.api.submitPrivate$({ raw_tx: this.rawTxHex }).subscribe(res => {
-      this.broadcastReceipt = res;
-      this.submitting = false;
+    this.loadError = null;
+    this.broadcastReceipt = null;
+    this.api.submitPrivate$({ raw_tx: this.rawTxHex }).subscribe({
+      next: res => {
+        this.broadcastReceipt = res;
+        this.submitting = false;
+      },
+      // A submission that did not reach the relay has not been relayed. The
+      // revision this replaces answered a failed request with a token and a
+      // status of "relayed_to_pools", which a reader could not tell from a
+      // real one.
+      error: err => {
+        this.broadcastReceipt = null;
+        this.loadError = loadFailureMessage(classifyLoadFailure(err));
+        this.submitting = false;
+      },
     });
   }
 }

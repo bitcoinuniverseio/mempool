@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createRequire } from 'node:module';
+import * as bitcoinjs from 'bitcoinjs-lib';
+import * as ecc from 'tiny-secp256k1';
 import { BehaviorSubject, Subject, of } from 'rxjs';
 import { convertToParamMap } from '@angular/router';
 import { publicSwapPackage, checkRecoveryArtifact } from './swaps-package';
@@ -13,9 +14,10 @@ import { SwapsInspectComponent } from './swaps-inspect.component';
 vi.mock('@app/shared/shared.module', () => ({ SharedModule: class {} }));
 
 // The fixture serializer is bitcoinjs, while the browser verification uses scure.
-const require = createRequire(import.meta.url);
-const { Psbt, Transaction, payments, networks, initEccLib, script, crypto } = require('../../../../../backend/node_modules/bitcoinjs-lib');
-const ecc = require('../../../../../backend/node_modules/tiny-secp256k1');
+// Both are declared frontend dev dependencies, so this spec resolves them from
+// its own package rather than reaching into a sibling package's install tree,
+// which the job that runs this spec never installs.
+const { Psbt, Transaction, payments, networks, initEccLib, script, crypto } = bitcoinjs;
 initEccLib(ecc);
 const secret = Buffer.alloc(32, 1), pub = Buffer.from(ecc.xOnlyPointFromScalar(secret));
 const leaf = script.compile([pub, script.OPS.OP_CHECKSIGVERIFY, script.number.encode(200), script.OPS.OP_CHECKLOCKTIMEVERIFY]);

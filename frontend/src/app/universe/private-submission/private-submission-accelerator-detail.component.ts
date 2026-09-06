@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { PrivateSubmissionApiService } from './private-submission.service';
 
 @Component({
@@ -8,6 +9,9 @@ import { PrivateSubmissionApiService } from './private-submission.service';
   standalone: true,
   imports: [CommonModule, RouterModule],
   template: `
+    <div class="container-xl py-4" *ngIf="loadError">
+      <div class="alert alert-warning" role="alert">{{ loadError }}</div>
+    </div>
     <div class="container-xl py-4" *ngIf="provider">
       <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
@@ -72,6 +76,7 @@ import { PrivateSubmissionApiService } from './private-submission.service';
 })
 export class PrivateSubmissionAcceleratorDetailComponent implements OnInit {
   public provider: any = null;
+  public loadError: string | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -80,9 +85,24 @@ export class PrivateSubmissionAcceleratorDetailComponent implements OnInit {
 
   public ngOnInit(): void {
     this.route.paramMap.subscribe(params => {
-      const providerId = params.get('providerId') || 'mempool-accelerate';
-      this.api.getAccelerator$(providerId).subscribe(res => {
-        this.provider = res;
+      const providerId = params.get('providerId');
+      this.provider = null;
+      if (!providerId) {
+        // An earlier revision substituted a named provider here, so the page
+        // read as that provider's record whatever address opened it.
+        this.loadError = $localize`:@@submission.provider.missing:This address does not name a provider.`;
+        return;
+      }
+      this.loadError = null;
+      this.api.getAccelerator$(providerId).subscribe({
+        next: res => {
+          this.provider = res;
+          this.loadError = null;
+        },
+        error: err => {
+          this.provider = null;
+          this.loadError = loadFailureMessage(classifyLoadFailure(err));
+        },
       });
     });
   }

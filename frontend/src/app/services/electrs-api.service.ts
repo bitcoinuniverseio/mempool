@@ -5,6 +5,7 @@ import { Transaction, Address, Outspend, Recent, Asset, ScriptHash, AddressTxSum
 import { StateService } from '@app/services/state.service';
 import { BlockExtended } from '@interfaces/node-api.interface';
 import { calcScriptHash$ } from '@app/bitcoin.utils';
+import { RequestCache } from '@app/services/request-cache';
 
 @Injectable({
   providedIn: 'root'
@@ -13,7 +14,10 @@ export class ElectrsApiService {
   private apiBaseUrl: string; // base URL is protocol, hostname, and port
   private apiBasePath: string; // network path is /testnet, etc. or '' for mainnet
 
-  private requestCache = new Map<string, { subject: BehaviorSubject<any>, expiry: number }>;
+  // One shared cache. The three services carried identical copies of this,
+  // and identical copies of its two faults: a key with no network in it, and
+  // an errored entry that suppressed the retry it was asked for.
+  private requestCache = new RequestCache();
 
   constructor(
     private httpClient: HttpClient,
@@ -29,44 +33,22 @@ export class ElectrsApiService {
     });
   }
 
-  private generateCacheKey(functionName: string, params: any[]): string {
-    return functionName + JSON.stringify(params);
-  }
-
-  // delete expired cache entries
-  private cleanExpiredCache(): void {
-    this.requestCache.forEach((value, key) => {
-      if (value.expiry < Date.now()) {
-        this.requestCache.delete(key);
-      }
-    });
-  }
-
   cachedRequest<T, F extends (...args: any[]) => Observable<T>>(
     apiFunction: F,
     expireAfter: number, // in ms
     ...params: Parameters<F>
   ): Observable<T> {
-    this.cleanExpiredCache();
-
-    const cacheKey = this.generateCacheKey(apiFunction.name, params);
-    if (!this.requestCache.has(cacheKey)) {
-      const subject = new BehaviorSubject<T | null>(null);
-      this.requestCache.set(cacheKey, { subject, expiry: Date.now() + expireAfter });
-
-      apiFunction.bind(this)(...params).pipe(
-        tap(data => {
-          subject.next(data as T);
-        }),
-        catchError((error) => {
-          subject.error(error);
-          return of(null);
-        }),
-        shareReplay(1),
-      ).subscribe();
-    }
-
-    return this.requestCache.get(cacheKey).subject.asObservable().pipe(filter(val => val !== null), take(1));
+    // Captured now, not read back in the response handler. The base path
+    // changes the moment the reader switches network, and a response labelled
+    // with whatever it had become would be labelled with the wrong network.
+    const namespace = this.apiBaseUrl + this.apiBasePath;
+    return this.requestCache.request<T>(
+      namespace,
+      apiFunction as never,
+      expireAfter,
+      params,
+      () => apiFunction.bind(this)(...params),
+    );
   }
 
   getBlock$(hash: string): Observable<BlockExtended> {
