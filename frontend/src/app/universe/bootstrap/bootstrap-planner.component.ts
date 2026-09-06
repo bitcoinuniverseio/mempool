@@ -35,8 +35,8 @@ import { BootstrapApiService } from './bootstrap.service';
             <h2 class="h5 mb-3">Hardware Profile</h2>
 
             <div class="mb-3">
-              <label class="form-label small text-muted">Storage Medium</label>
-              <select class="form-select" [(ngModel)]="storageType">
+              <label class="form-label small text-muted" for="bootstrap-planner-storage">Storage Medium</label>
+              <select class="form-select" id="bootstrap-planner-storage" [(ngModel)]="storageType">
                 <option value="nvme_fast">High-End NVMe SSD (PCIe 4.0+)</option>
                 <option value="sata_ssd">Standard SATA SSD</option>
                 <option value="hdd_spinning">Spinning Hard Disk (HDD)</option>
@@ -44,18 +44,18 @@ import { BootstrapApiService } from './bootstrap.service';
             </div>
 
             <div class="mb-3">
-              <label class="form-label small text-muted">CPU Thread Count</label>
-              <input type="number" class="form-control" [(ngModel)]="cpuThreads" />
+              <label class="form-label small text-muted" for="bootstrap-planner-cpu">CPU Thread Count</label>
+              <input type="number" class="form-control" id="bootstrap-planner-cpu" [(ngModel)]="cpuThreads" />
             </div>
 
             <div class="mb-3">
-              <label class="form-label small text-muted">Network Download Bandwidth (Mbps)</label>
-              <input type="number" class="form-control" [(ngModel)]="bandwidthMbps" />
+              <label class="form-label small text-muted" for="bootstrap-planner-bandwidth">Network Download Bandwidth (Mbps)</label>
+              <input type="number" class="form-control" id="bootstrap-planner-bandwidth" [(ngModel)]="bandwidthMbps" />
             </div>
 
             <div class="mb-3">
-              <label class="form-label small text-muted">Snapshot Target Height</label>
-              <input type="number" class="form-control" [(ngModel)]="targetHeight" />
+              <label class="form-label small text-muted" for="bootstrap-planner-height">Snapshot Target Height</label>
+              <input type="number" class="form-control" id="bootstrap-planner-height" [(ngModel)]="targetHeight" />
             </div>
 
             <button class="btn btn-primary w-100" (click)="calculatePlan()" [disabled]="calculating">

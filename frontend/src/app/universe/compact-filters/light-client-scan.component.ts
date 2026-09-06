@@ -35,8 +35,9 @@ import { FormsModule } from '@angular/forms';
             <h2 class="h5 mb-3">Scan Configuration</h2>
 
             <div class="mb-3">
-              <label class="form-label small text-muted">Public Descriptor or Address</label>
+              <label class="form-label small text-muted" for="light-client-scan-descriptor">Public Descriptor or Address</label>
               <textarea
+                id="light-client-scan-descriptor"
                 class="form-control font-monospace small"
                 rows="4"
                 [(ngModel)]="descriptor"
@@ -46,12 +47,12 @@ import { FormsModule } from '@angular/forms';
 
             <div class="row g-2 mb-3">
               <div class="col-6">
-                <label class="form-label small text-muted">Start Height</label>
-                <input type="number" class="form-control" [(ngModel)]="startHeight" />
+                <label class="form-label small text-muted" for="light-client-scan-start">Start Height</label>
+                <input type="number" class="form-control" id="light-client-scan-start" [(ngModel)]="startHeight" />
               </div>
               <div class="col-6">
-                <label class="form-label small text-muted">End Height</label>
-                <input type="number" class="form-control" [(ngModel)]="endHeight" />
+                <label class="form-label small text-muted" for="light-client-scan-end">End Height</label>
+                <input type="number" class="form-control" id="light-client-scan-end" [(ngModel)]="endHeight" />
               </div>
             </div>
 

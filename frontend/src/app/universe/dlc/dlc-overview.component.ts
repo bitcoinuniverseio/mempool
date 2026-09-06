@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRe
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { DlcApiService, DlcOverview } from './dlc.service';
+import { DlcApiService, DlcOverview, DlcOverviewAnnouncement } from './dlc.service';
 
 @Component({
   selector: 'app-dlc-overview',
@@ -15,7 +15,7 @@ import { DlcApiService, DlcOverview } from './dlc.service';
         <div class="title-row d-flex flex-wrap align-items-center justify-content-between gap-2">
           <h1 class="m-0">Discreet Log Contract and Oracle Verification Center</h1>
           <span class="badge bg-secondary" *ngIf="overview">
-            {{ overview.total_oracles }} Registered Oracles
+            {{ overview.total_oracles ?? 'Not reported' }} Registered Oracles
           </span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
@@ -44,29 +44,29 @@ import { DlcApiService, DlcOverview } from './dlc.service';
         <div class="col-12 col-md-3">
           <div class="card p-3 bg-body-tertiary border h-100">
             <div class="text-muted small">Registered Oracles</div>
-            <div class="fs-4 fw-bold mt-1">{{ overview.total_oracles }}</div>
-            <div class="small text-success mt-1">{{ overview.active_oracles }} currently active</div>
+            <div class="fs-4 fw-bold mt-1">{{ overview.total_oracles ?? 'Not reported' }}</div>
+            <div class="small text-muted mt-1">{{ overview.healthy_oracles ?? 'Not reported' }} currently healthy</div>
           </div>
         </div>
         <div class="col-12 col-md-3">
           <div class="card p-3 bg-body-tertiary border h-100">
             <div class="text-muted small">Observed Events</div>
-            <div class="fs-4 fw-bold mt-1">{{ overview.total_events }}</div>
+            <div class="fs-4 fw-bold mt-1">{{ overview.active_events ?? 'Not reported' }}</div>
             <div class="small text-muted mt-1">Enumerated and numeric</div>
           </div>
         </div>
         <div class="col-12 col-md-3">
           <div class="card p-3 bg-body-tertiary border h-100">
-            <div class="text-muted small">Verified Attestations</div>
-            <div class="fs-4 fw-bold mt-1">{{ overview.total_attestations }}</div>
+            <div class="text-muted small">Observed Attestations</div>
+            <div class="fs-4 fw-bold mt-1">{{ overview.total_attestations ?? 'Not reported' }}</div>
             <div class="small text-muted mt-1">BIP340 Schnorr signatures</div>
           </div>
         </div>
         <div class="col-12 col-md-3">
           <div class="card p-3 bg-body-tertiary border h-100">
             <div class="text-muted small">Equivocation Conflicts</div>
-            <div class="fs-4 fw-bold mt-1" [ngClass]="overview.conflicts_detected > 0 ? 'text-danger' : 'text-success'">
-              {{ overview.conflicts_detected }}
+            <div class="fs-4 fw-bold mt-1" [ngClass]="overview.verified_conflicts > 0 ? 'text-danger' : 'text-muted'">
+              {{ overview.verified_conflicts ?? 'Not reported' }}
             </div>
             <div class="small text-muted mt-1">Cryptographic proof records</div>
           </div>
@@ -97,11 +97,11 @@ import { DlcApiService, DlcOverview } from './dlc.service';
                       </a>
                     </td>
                     <td>{{ ev.oracle_id }}</td>
-                    <td><span class="badge bg-secondary">{{ ev.event_descriptor.descriptor_type }}</span></td>
-                    <td class="small">{{ ev.maturity_formatted }}</td>
+                    <td><span class="badge bg-secondary">{{ descriptorType(ev) }}</span></td>
+                    <td class="small">{{ ev.maturity_formatted || 'Not reported' }}</td>
                     <td>
-                      <span class="badge" [ngClass]="ev.verification_status === 'verified' ? 'bg-success' : 'bg-warning text-dark'">
-                        {{ ev.verification_status }}
+                      <span class="badge" [ngClass]="ev.verified === true ? 'bg-success' : 'bg-secondary'">
+                        {{ ev.verified === true ? 'Verified' : ev.verified === false ? 'Not verified' : 'Not reported' }}
                       </span>
                     </td>
                   </tr>
@@ -115,13 +115,8 @@ import { DlcApiService, DlcOverview } from './dlc.service';
           <div class="card p-4 bg-body-tertiary border h-100">
             <h2 class="h5 mb-3">Protocol Specifications</h2>
             <p class="small text-muted">
-              Supported Discreet Log Contract TLV revisions pinned for exact offline verification:
+              Supported revisions not reported by the overview API.
             </p>
-            <ul class="list-group list-group-flush mb-3">
-              <li *ngFor="let rev of overview.supported_tlv_revisions" class="list-group-item bg-transparent px-0 py-1 small font-monospace">
-                &bull; {{ rev }}
-              </li>
-            </ul>
             <div class="alert alert-info py-2 px-3 small m-0">
               Contract terms are private by design. On-chain relationship detection is only possible when a contract package is provided.
             </div>
@@ -142,6 +137,11 @@ export class DlcOverviewComponent implements OnInit, OnDestroy {
   private sub?: Subscription;
 
   constructor(private dlcApi: DlcApiService, private cdr: ChangeDetectorRef) {}
+
+  descriptorType(event: DlcOverviewAnnouncement): string {
+    const type = event?.event_descriptor?.type;
+    return type === 'enumerated' || type === 'numeric' ? type : 'Not reported';
+  }
 
   ngOnInit(): void {
     this.sub = this.dlcApi.getOverview$().subscribe({

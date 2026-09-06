@@ -35,8 +35,8 @@ import { DlcApiService } from './dlc.service';
             <h2 class="h5 mb-3">Simulation Configuration</h2>
 
             <div class="mb-3">
-              <label class="form-label small text-muted">Scenario Type</label>
-              <select class="form-select" [(ngModel)]="scenarioType">
+              <label class="form-label small text-muted" for="dlc-simulate-scenario">Scenario Type</label>
+              <select class="form-select" id="dlc-simulate-scenario" [(ngModel)]="scenarioType">
                 <option value="normal_cet_settlement">Normal Settlement (Outcome Attested)</option>
                 <option value="oracle_outage_refund">Oracle Outage (Unilateral Refund)</option>
                 <option value="conflicting_oracle_equivocation">Conflicting Oracle Equivocation</option>
@@ -44,16 +44,16 @@ import { DlcApiService } from './dlc.service';
             </div>
 
             <div class="mb-3">
-              <label class="form-label small text-muted">Oracle Selection</label>
-              <select class="form-select" [(ngModel)]="selectedOracle">
+              <label class="form-label small text-muted" for="dlc-simulate-oracle">Oracle Selection</label>
+              <select class="form-select" id="dlc-simulate-oracle" [(ngModel)]="selectedOracle">
                 <option value="oracle-kormir-rates">Kormir Public Reference Oracle</option>
                 <option value="oracle-crypto-equivocator">Simulated Equivocating Oracle</option>
               </select>
             </div>
 
             <div class="mb-3">
-              <label class="form-label small text-muted">Total Collateral (Satoshis)</label>
-              <input type="number" class="form-control" [(ngModel)]="collateralSat" />
+              <label class="form-label small text-muted" for="dlc-simulate-collateral">Total Collateral (Satoshis)</label>
+              <input type="number" class="form-control" id="dlc-simulate-collateral" [(ngModel)]="collateralSat" />
             </div>
 
             <button class="btn btn-primary w-100" (click)="runSimulation()" [disabled]="simulating">

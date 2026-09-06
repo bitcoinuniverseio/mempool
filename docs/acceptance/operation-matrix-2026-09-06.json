@@ -2344,8 +2344,8 @@
     },
     {
       "path": "frontend/src/app/components/block/block.component.ts",
-      "sha256": "465004be7b231ee15042869b21f84a5ca8feb28dca0095d49e76911de9b80382",
-      "bytes": 39075
+      "sha256": "5bb606d5fd055245770f985349b48cf3adec2dce4c21033fe218a91c754b1071",
+      "bytes": 38030
     },
     {
       "path": "frontend/src/app/components/blocks-list/blocks-list.component.ts",
@@ -2439,13 +2439,13 @@
     },
     {
       "path": "frontend/src/app/components/transaction/transaction-raw.component.ts",
-      "sha256": "a011ed511389f2b98f341d8cfb43d99c0759689d116f908913194781899fac86",
-      "bytes": 16350
+      "sha256": "887903ee3977b70d0ccec21ebe053032f1282c00eeb4eea53662ec656d90e14f",
+      "bytes": 15916
     },
     {
       "path": "frontend/src/app/components/transaction/transaction.component.ts",
-      "sha256": "8e3a51cd00bd73eb2a21c60e14069f8bc17f3c997c2d15b0fabe9007d1b2da07",
-      "bytes": 48075
+      "sha256": "04db138c9c9c3aeb14fbdf32bb9eea6fa01771a4033e9aa5d55cfcb100f751bf",
+      "bytes": 46825
     },
     {
       "path": "frontend/src/app/docs/docs/docs.component.ts",
@@ -2459,8 +2459,8 @@
     },
     {
       "path": "frontend/src/app/lightning/justice-list/justice-list.component.ts",
-      "sha256": "705ee1a0a68be19155bd1304a21709626b6f0a659513014268bc3fa08b63fcf4",
-      "bytes": 2193
+      "sha256": "9862c33ae9baad5172bfae27cbd88d7e0f6d273f723638f0b9524a9a067d76df",
+      "bytes": 2132
     },
     {
       "path": "frontend/src/app/lightning/lightning-dashboard/lightning-dashboard.component.ts",
@@ -2474,8 +2474,8 @@
     },
     {
       "path": "frontend/src/app/lightning/node/node.component.ts",
-      "sha256": "731ae1298b2d1974a51ef779a6cb299e037c0d7a170d3287dfa91a7ade285fa5",
-      "bytes": 5897
+      "sha256": "092c711e1adc92d56295e4ba21e77e7893f6ca785c62f4414db4ec72c1b0933a",
+      "bytes": 5719
     },
     {
       "path": "frontend/src/app/lightning/nodes-per-country/nodes-per-country.component.ts",
@@ -2529,8 +2529,8 @@
     },
     {
       "path": "frontend/src/app/universe/ark-vpack/ark-exit-simulate.component.ts",
-      "sha256": "55f879a80572d37f7f4f2450abc9d0b328e88be4b636f6dcef244a31a67c08ff",
-      "bytes": 2094
+      "sha256": "7e32b9fa0884bcbd5fd086934032a0b68f8e9052427192c580f8eda85dc49218",
+      "bytes": 2188
     },
     {
       "path": "frontend/src/app/universe/ark-vpack/ark-exit.component.ts",
@@ -2544,13 +2544,13 @@
     },
     {
       "path": "frontend/src/app/universe/ark-vpack/ark-vpack-overview.component.ts",
-      "sha256": "51f295e5a12f7f9916b558de5ab0a3e856237dba1f4488a40dc7e2a7bd95f052",
-      "bytes": 5645
+      "sha256": "2c081039003ccab51fc96afa0d6707991291b13866238590dd141b27dc26cd06",
+      "bytes": 5864
     },
     {
       "path": "frontend/src/app/universe/ark-vpack/ark-vpack-translate.component.ts",
-      "sha256": "1ac8667f229c9976a80bb2cfac5d7bdf08c04e1e9e6be2ac0d9d04757bcdb40c",
-      "bytes": 2659
+      "sha256": "62cb6c166bf358dd9147cab4e5fb9945c13b051cb0c522257bd53691fe264da4",
+      "bytes": 2826
     },
     {
       "path": "frontend/src/app/universe/ark-vpack/ark-vpack-verify.component.ts",
@@ -2579,8 +2579,8 @@
     },
     {
       "path": "frontend/src/app/universe/bitcoin-staking/staking-evidence.component.ts",
-      "sha256": "530de3b35efd1410ee90ad9317be5f5f28938c49cf9bd8792722421a334704f8",
-      "bytes": 8745
+      "sha256": "af6233e5e50dbc3c8c623882098d43952941e9640f4b42939e333d2fe2541d07",
+      "bytes": 9199
     },
     {
       "path": "frontend/src/app/universe/bitcoin-staking/staking-finality-provider-detail.component.ts",
@@ -2684,8 +2684,8 @@
     },
     {
       "path": "frontend/src/app/universe/bootstrap/bootstrap-planner.component.ts",
-      "sha256": "bb8df0038ef30c3e84ba3e4e6b0ae907cfe2693d2bc893e9a226d94115959637",
-      "bytes": 7379
+      "sha256": "f891b6b1a5fbd295b800eebe4f90dd7a628866378848a838519b0fa2e7ffc224",
+      "bytes": 7617
     },
     {
       "path": "frontend/src/app/universe/bootstrap/bootstrap-snapshot-detail.component.ts",
@@ -2699,8 +2699,8 @@
     },
     {
       "path": "frontend/src/app/universe/bootstrap/bootstrap-verify.component.ts",
-      "sha256": "1e86d43f301c704baec2d15f4867e0da5f35406269388c5bb7acc3d58340263f",
-      "bytes": 6713
+      "sha256": "13cdd9715cac62cb12ea19843637535512ede0164c956be0e6b9ba5a201b4e48",
+      "bytes": 6894
     },
     {
       "path": "frontend/src/app/universe/chain-dashboard/chain-dashboard.component.ts",
@@ -2764,8 +2764,8 @@
     },
     {
       "path": "frontend/src/app/universe/compact-filters/light-client-filters.component.ts",
-      "sha256": "7b772f895eb5a5c17d8654b38262e44afe3f177fc0fc0237ddf8039aba1cfd7b",
-      "bytes": 6048
+      "sha256": "d047b012dce76612877ed5a5390be3f89e31cecbe590bf36cbda8ee91dc7423f",
+      "bytes": 6111
     },
     {
       "path": "frontend/src/app/universe/compact-filters/light-client-overview.component.ts",
@@ -2789,18 +2789,18 @@
     },
     {
       "path": "frontend/src/app/universe/compact-filters/light-client-scan.component.ts",
-      "sha256": "ac3a4ffe76e7b9f91a2b57ccf4d2b3cbd8e5865a8b95cd953a98c3957f3ef08b",
-      "bytes": 8208
+      "sha256": "9f7c40ddefd15533be8a4e6eca2ceb9c536e2b8146fb4f2cf736791e93d6aea8",
+      "bytes": 8401
     },
     {
       "path": "frontend/src/app/universe/compact-filters/light-client-verify.component.ts",
-      "sha256": "204f707eacb008b147475e34e12c1ced29f8fbe1e0bb0f488427ca29c8606b29",
-      "bytes": 6812
+      "sha256": "bc0bf0794f813b088b98b60adc2b6bb4b54615b559659a007e7acb6139c22cb9",
+      "bytes": 6993
     },
     {
       "path": "frontend/src/app/universe/consensus-conformance/consensus-conformance-case-detail.component.ts",
-      "sha256": "9b1084167f53f2538941ef09ca7f22a831af39a3ab38b71c2841a78da7ff4498",
-      "bytes": 4906
+      "sha256": "62920a211069371031cd66ddd13bb9672f0f42ba92b00de8b465f9ce46b1eb8c",
+      "bytes": 4977
     },
     {
       "path": "frontend/src/app/universe/consensus-conformance/consensus-conformance-cases.component.ts",
@@ -2899,13 +2899,13 @@
     },
     {
       "path": "frontend/src/app/universe/dlc/dlc-overview.component.ts",
-      "sha256": "40f52c86169a375babcb15c2d3ed3699ebb76d4da27fbda41ed9882f92c4ef91",
-      "bytes": 7307
+      "sha256": "bb2b20e84d9e1553960f54b8456a49d35f1f00485ab59e94286d97da1796516d",
+      "bytes": 7353
     },
     {
       "path": "frontend/src/app/universe/dlc/dlc-simulate.component.ts",
-      "sha256": "33ebef5a3a4ea8ce79565c5d83304ac758518870de9f94ba582e11f52ef5ffaf",
-      "bytes": 7190
+      "sha256": "cec6f6807bc99cba773d065e3e55b47a14e9d1759d8d8aa2457476519c4d3cf5",
+      "bytes": 7349
     },
     {
       "path": "frontend/src/app/universe/ecash/ecash-cashu-detail.component.ts",
@@ -3119,13 +3119,13 @@
     },
     {
       "path": "frontend/src/app/universe/lightning-resilience/lightning-resilience-overview.component.ts",
-      "sha256": "81ed7ea3bad2b930e7044c8fa94f3f12ed7222a6368d90116baec83fb8036110",
-      "bytes": 7868
+      "sha256": "de724ce31024a6fcc53ae9abcd8ed1b09135c30c4e57ae76ad0650f08a2af813",
+      "bytes": 8030
     },
     {
       "path": "frontend/src/app/universe/lightning-resilience/lightning-resilience-simulate.component.ts",
-      "sha256": "018070ba79b0435a8c72d63795379260604f1ac009c4145118e35c23be510eba",
-      "bytes": 6006
+      "sha256": "56c6c04a6f61869c1a7c454f0ed5cc0efb61cda40a4239ff8999b8e8a3539f15",
+      "bytes": 6138
     },
     {
       "path": "frontend/src/app/universe/liquid-observatory/liquid-observatory.component.ts",
@@ -3229,8 +3229,8 @@
     },
     {
       "path": "frontend/src/app/universe/multiparty/multiparty-bsms.component.ts",
-      "sha256": "27ef37d830825196080dfe3de7b0988aea7d062e2312adbd635b10dcc10ad737",
-      "bytes": 4100
+      "sha256": "935a72509856b5178b354213b8e579300cbc478077f84cb64ef93f4a7fb195f5",
+      "bytes": 4183
     },
     {
       "path": "frontend/src/app/universe/multiparty/multiparty-compatibility.component.ts",
@@ -3239,8 +3239,8 @@
     },
     {
       "path": "frontend/src/app/universe/multiparty/multiparty-labels.component.ts",
-      "sha256": "f950598a0781abbc56da5f10916b2e881373e7ee9b25cf20e9fefa61e0978820",
-      "bytes": 3700
+      "sha256": "4a98ae067ba408ed1ed30a4a95c255d75975266ad62e7ef2c0f178f1b1352f92",
+      "bytes": 3767
     },
     {
       "path": "frontend/src/app/universe/multiparty/multiparty-musig2.component.ts",
@@ -3294,8 +3294,8 @@
     },
     {
       "path": "frontend/src/app/universe/node-security/node-security-configuration.component.ts",
-      "sha256": "a6f5f3afe71d2ccd30dd728c855497fcbef4ba39bb9c462e9c35b900810b85ea",
-      "bytes": 1874
+      "sha256": "fab80239d9924141ceb6b48e2817ca18cf9900052666d92e63216fe8250522f7",
+      "bytes": 1928
     },
     {
       "path": "frontend/src/app/universe/node-security/node-security-fleet.component.ts",
@@ -3319,13 +3319,13 @@
     },
     {
       "path": "frontend/src/app/universe/node-security/node-security-upgrade.component.ts",
-      "sha256": "13a64a8d22b493005de259399515d4356c98a61556a46d7594b88a9cacbf083a",
-      "bytes": 3678
+      "sha256": "5a9e1438b654a2eff7cf7960e90fdd64e54132780dde751ec2fee9f97bbcfcd7",
+      "bytes": 3747
     },
     {
       "path": "frontend/src/app/universe/offchain/coinswap-inspect.component.ts",
-      "sha256": "ee452a081a501a24617d1e6bd31f027044b7f75a2b2dcb47f601b93ddf2e5d11",
-      "bytes": 7075
+      "sha256": "e03108d64c231c317b770fcf9de874a38b10ca581679fd94ea9d462389260ad3",
+      "bytes": 7150
     },
     {
       "path": "frontend/src/app/universe/offchain/coinswap-overview.component.ts",
@@ -3334,8 +3334,8 @@
     },
     {
       "path": "frontend/src/app/universe/offchain/offchain-recovery.component.ts",
-      "sha256": "559da66f2d5cb0beb4f3cd3341a40a7fe3626214668410bddbc847292ad693b4",
-      "bytes": 7270
+      "sha256": "73709b11346356919d012330e97a433b9395bfece8537c563bd3f29c1b46e288",
+      "bytes": 7451
     },
     {
       "path": "frontend/src/app/universe/offchain/offchain-utxo.component.ts",
@@ -3344,8 +3344,8 @@
     },
     {
       "path": "frontend/src/app/universe/offchain/statechain-operator-detail.component.ts",
-      "sha256": "3c609d4aed85b058212a46bf257e2e5fd37ee65532f6d9c5f4baedaad2d6f543",
-      "bytes": 6032
+      "sha256": "2226c9e706d55af339c4a03ff38bcbeefee8613dd065aea528b1e1d9392488ca",
+      "bytes": 6255
     },
     {
       "path": "frontend/src/app/universe/offchain/statechain-operators.component.ts",
@@ -3354,8 +3354,8 @@
     },
     {
       "path": "frontend/src/app/universe/offchain/statechain-verify.component.ts",
-      "sha256": "faa2e053a8f45953b7aeee2ae39ce93336a754e569a213571fbc0fb6f0af7482",
-      "bytes": 7717
+      "sha256": "e21a174f31099542ac1e2cfd45a460fbb044cdda6728fe6f33a0810b1afb87c0",
+      "bytes": 7794
     },
     {
       "path": "frontend/src/app/universe/opentimestamps/opentimestamps-batches.component.ts",
@@ -3454,8 +3454,8 @@
     },
     {
       "path": "frontend/src/app/universe/payment-connectivity/payment-zaps.component.ts",
-      "sha256": "bc84c91c681ec2357f4ef36433107f99cd27b593ac891ab89990a712a3a477e8",
-      "bytes": 6894
+      "sha256": "48956232f776fd5700355221df2204cfde218716f08d5f3a2c868e3e81ec0f69",
+      "bytes": 7030
     },
     {
       "path": "frontend/src/app/universe/payment-studio/payment-studio.component.ts",
@@ -3739,18 +3739,18 @@
     },
     {
       "path": "frontend/src/app/universe/simplicity/simplicity-tools.component.ts",
-      "sha256": "5b7e47bc9af131dab1d06304b9e4435879dc3aa42606f230db2c0430afe0c9f8",
-      "bytes": 6212
+      "sha256": "f560dba4a2648c3b85b841003fefb0625758d9e2bebb2114d44752dbc24e4a87",
+      "bytes": 6285
     },
     {
       "path": "frontend/src/app/universe/simplicity/simplicity-tx.component.ts",
-      "sha256": "a3ec1fea6e0d6ced1b9a16ba95160863eeb9c10d52f0fe1e38586701b6e7923d",
-      "bytes": 6405
+      "sha256": "fd9c6f68b86ca9e77f26dc5e37b68d33a581933b2138b4a0a550ed6f39f4437a",
+      "bytes": 6557
     },
     {
       "path": "frontend/src/app/universe/simplicity/simplicity-verify.component.ts",
-      "sha256": "cebe3fd0562bb891d8704dd6f0c84935900aacaa912e7a3be0894d96b4687f1d",
-      "bytes": 6696
+      "sha256": "f017fbcb6aac42a3ec5bea6acc534012513fe5f61c5b976b1e67b492291ce76d",
+      "bytes": 6775
     },
     {
       "path": "frontend/src/app/universe/source-page/source-page.component.ts",
@@ -5667,7 +5667,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/bitcoin-staking/staking-evidence.component.ts",
-          "sha256": "530de3b35efd1410ee90ad9317be5f5f28938c49cf9bd8792722421a334704f8"
+          "sha256": "af6233e5e50dbc3c8c623882098d43952941e9640f4b42939e333d2fe2541d07"
         }
       },
       {
@@ -11618,7 +11618,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/dlc/dlc-overview.component.ts",
-          "sha256": "40f52c86169a375babcb15c2d3ed3699ebb76d4da27fbda41ed9882f92c4ef91"
+          "sha256": "bb2b20e84d9e1553960f54b8456a49d35f1f00485ab59e94286d97da1796516d"
         }
       },
       {
@@ -11948,7 +11948,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/dlc/dlc-simulate.component.ts",
-          "sha256": "33ebef5a3a4ea8ce79565c5d83304ac758518870de9f94ba582e11f52ef5ffaf"
+          "sha256": "cec6f6807bc99cba773d065e3e55b47a14e9d1759d8d8aa2457476519c4d3cf5"
         }
       },
       {
@@ -12094,7 +12094,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/simplicity/simplicity-tx.component.ts",
-          "sha256": "a3ec1fea6e0d6ced1b9a16ba95160863eeb9c10d52f0fe1e38586701b6e7923d"
+          "sha256": "fd9c6f68b86ca9e77f26dc5e37b68d33a581933b2138b4a0a550ed6f39f4437a"
         }
       },
       {
@@ -12199,7 +12199,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/simplicity/simplicity-tools.component.ts",
-          "sha256": "5b7e47bc9af131dab1d06304b9e4435879dc3aa42606f230db2c0430afe0c9f8"
+          "sha256": "f560dba4a2648c3b85b841003fefb0625758d9e2bebb2114d44752dbc24e4a87"
         }
       },
       {
@@ -12270,7 +12270,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/simplicity/simplicity-verify.component.ts",
-          "sha256": "cebe3fd0562bb891d8704dd6f0c84935900aacaa912e7a3be0894d96b4687f1d"
+          "sha256": "f017fbcb6aac42a3ec5bea6acc534012513fe5f61c5b976b1e67b492291ce76d"
         }
       },
       {
@@ -12432,7 +12432,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/offchain/statechain-operator-detail.component.ts",
-          "sha256": "3c609d4aed85b058212a46bf257e2e5fd37ee65532f6d9c5f4baedaad2d6f543"
+          "sha256": "2226c9e706d55af339c4a03ff38bcbeefee8613dd065aea528b1e1d9392488ca"
         }
       },
       {
@@ -12511,7 +12511,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/offchain/statechain-verify.component.ts",
-          "sha256": "faa2e053a8f45953b7aeee2ae39ce93336a754e569a213571fbc0fb6f0af7482"
+          "sha256": "e21a174f31099542ac1e2cfd45a460fbb044cdda6728fe6f33a0810b1afb87c0"
         }
       },
       {
@@ -12636,7 +12636,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/offchain/coinswap-inspect.component.ts",
-          "sha256": "ee452a081a501a24617d1e6bd31f027044b7f75a2b2dcb47f601b93ddf2e5d11"
+          "sha256": "e03108d64c231c317b770fcf9de874a38b10ca581679fd94ea9d462389260ad3"
         }
       },
       {
@@ -12707,7 +12707,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/offchain/offchain-recovery.component.ts",
-          "sha256": "559da66f2d5cb0beb4f3cd3341a40a7fe3626214668410bddbc847292ad693b4"
+          "sha256": "73709b11346356919d012330e97a433b9395bfece8537c563bd3f29c1b46e288"
         }
       },
       {
@@ -12936,7 +12936,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/compact-filters/light-client-filters.component.ts",
-          "sha256": "7b772f895eb5a5c17d8654b38262e44afe3f177fc0fc0237ddf8039aba1cfd7b"
+          "sha256": "d047b012dce76612877ed5a5390be3f89e31cecbe590bf36cbda8ee91dc7423f"
         }
       },
       {
@@ -13003,7 +13003,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/compact-filters/light-client-verify.component.ts",
-          "sha256": "204f707eacb008b147475e34e12c1ced29f8fbe1e0bb0f488427ca29c8606b29"
+          "sha256": "bc0bf0794f813b088b98b60adc2b6bb4b54615b559659a007e7acb6139c22cb9"
         }
       },
       {
@@ -13078,7 +13078,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/compact-filters/light-client-scan.component.ts",
-          "sha256": "ac3a4ffe76e7b9f91a2b57ccf4d2b3cbd8e5865a8b95cd953a98c3957f3ef08b"
+          "sha256": "9f7c40ddefd15533be8a4e6eca2ceb9c536e2b8146fb4f2cf736791e93d6aea8"
         }
       },
       {
@@ -13352,7 +13352,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/bootstrap/bootstrap-verify.component.ts",
-          "sha256": "1e86d43f301c704baec2d15f4867e0da5f35406269388c5bb7acc3d58340263f"
+          "sha256": "13cdd9715cac62cb12ea19843637535512ede0164c956be0e6b9ba5a201b4e48"
         }
       },
       {
@@ -13419,7 +13419,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/bootstrap/bootstrap-planner.component.ts",
-          "sha256": "bb8df0038ef30c3e84ba3e4e6b0ae907cfe2693d2bc893e9a226d94115959637"
+          "sha256": "f891b6b1a5fbd295b800eebe4f90dd7a628866378848a838519b0fa2e7ffc224"
         }
       },
       {
@@ -13665,7 +13665,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/multiparty/multiparty-bsms.component.ts",
-          "sha256": "27ef37d830825196080dfe3de7b0988aea7d062e2312adbd635b10dcc10ad737"
+          "sha256": "935a72509856b5178b354213b8e579300cbc478077f84cb64ef93f4a7fb195f5"
         }
       },
       {
@@ -13739,7 +13739,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/multiparty/multiparty-labels.component.ts",
-          "sha256": "f950598a0781abbc56da5f10916b2e881373e7ee9b25cf20e9fefa61e0978820"
+          "sha256": "4a98ae067ba408ed1ed30a4a95c255d75975266ad62e7ef2c0f178f1b1352f92"
         }
       },
       {
@@ -14515,7 +14515,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/payment-connectivity/payment-zaps.component.ts",
-          "sha256": "bc84c91c681ec2357f4ef36433107f99cd27b593ac891ab89990a712a3a477e8"
+          "sha256": "48956232f776fd5700355221df2204cfde218716f08d5f3a2c868e3e81ec0f69"
         }
       },
       {
@@ -16959,7 +16959,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/ark-vpack/ark-vpack-overview.component.ts",
-          "sha256": "51f295e5a12f7f9916b558de5ab0a3e856237dba1f4488a40dc7e2a7bd95f052"
+          "sha256": "2c081039003ccab51fc96afa0d6707991291b13866238590dd141b27dc26cd06"
         }
       },
       {
@@ -17065,7 +17065,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/ark-vpack/ark-vpack-translate.component.ts",
-          "sha256": "1ac8667f229c9976a80bb2cfac5d7bdf08c04e1e9e6be2ac0d9d04757bcdb40c"
+          "sha256": "62cb6c166bf358dd9147cab4e5fb9945c13b051cb0c522257bd53691fe264da4"
         }
       },
       {
@@ -17234,7 +17234,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/ark-vpack/ark-exit-simulate.component.ts",
-          "sha256": "55f879a80572d37f7f4f2450abc9d0b328e88be4b636f6dcef244a31a67c08ff"
+          "sha256": "7e32b9fa0884bcbd5fd086934032a0b68f8e9052427192c580f8eda85dc49218"
         }
       },
       {
@@ -17346,7 +17346,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/lightning-resilience/lightning-resilience-overview.component.ts",
-          "sha256": "81ed7ea3bad2b930e7044c8fa94f3f12ed7222a6368d90116baec83fb8036110"
+          "sha256": "de724ce31024a6fcc53ae9abcd8ed1b09135c30c4e57ae76ad0650f08a2af813"
         }
       },
       {
@@ -17525,7 +17525,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/lightning-resilience/lightning-resilience-simulate.component.ts",
-          "sha256": "018070ba79b0435a8c72d63795379260604f1ac009c4145118e35c23be510eba"
+          "sha256": "56c6c04a6f61869c1a7c454f0ed5cc0efb61cda40a4239ff8999b8e8a3539f15"
         }
       },
       {
@@ -18540,7 +18540,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/consensus-conformance/consensus-conformance-case-detail.component.ts",
-          "sha256": "9b1084167f53f2538941ef09ca7f22a831af39a3ab38b71c2841a78da7ff4498"
+          "sha256": "62920a211069371031cd66ddd13bb9672f0f42ba92b00de8b465f9ce46b1eb8c"
         }
       },
       {
@@ -18935,7 +18935,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/node-security/node-security-upgrade.component.ts",
-          "sha256": "13a64a8d22b493005de259399515d4356c98a61556a46d7594b88a9cacbf083a"
+          "sha256": "5a9e1438b654a2eff7cf7960e90fdd64e54132780dde751ec2fee9f97bbcfcd7"
         }
       },
       {
@@ -18952,7 +18952,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/node-security/node-security-configuration.component.ts",
-          "sha256": "a6f5f3afe71d2ccd30dd728c855497fcbef4ba39bb9c462e9c35b900810b85ea"
+          "sha256": "fab80239d9924141ceb6b48e2817ca18cf9900052666d92e63216fe8250522f7"
         }
       },
       {
@@ -22726,7 +22726,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/components/transaction/transaction-raw.component.ts",
-          "sha256": "a011ed511389f2b98f341d8cfb43d99c0759689d116f908913194781899fac86"
+          "sha256": "887903ee3977b70d0ccec21ebe053032f1282c00eeb4eea53662ec656d90e14f"
         }
       },
       {
@@ -23297,7 +23297,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/components/transaction/transaction.component.ts",
-          "sha256": "8e3a51cd00bd73eb2a21c60e14069f8bc17f3c997c2d15b0fabe9007d1b2da07"
+          "sha256": "04db138c9c9c3aeb14fbdf32bb9eea6fa01771a4033e9aa5d55cfcb100f751bf"
         }
       },
       {
@@ -23772,7 +23772,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/components/block/block.component.ts",
-          "sha256": "465004be7b231ee15042869b21f84a5ca8feb28dca0095d49e76911de9b80382"
+          "sha256": "5bb606d5fd055245770f985349b48cf3adec2dce4c21033fe218a91c754b1071"
         }
       },
       {
@@ -23966,7 +23966,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/lightning/node/node.component.ts",
-          "sha256": "731ae1298b2d1974a51ef779a6cb299e037c0d7a170d3287dfa91a7ade285fa5"
+          "sha256": "092c711e1adc92d56295e4ba21e77e7893f6ca785c62f4414db4ec72c1b0933a"
         }
       },
       {
@@ -24277,7 +24277,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/lightning/justice-list/justice-list.component.ts",
-          "sha256": "705ee1a0a68be19155bd1304a21709626b6f0a659513014268bc3fa08b63fcf4"
+          "sha256": "9862c33ae9baad5172bfae27cbd88d7e0f6d273f723638f0b9524a9a067d76df"
         }
       },
       {
@@ -24497,6 +24497,8 @@
       ],
       "found": [],
       "searchedDirectories": [
+        "D:/universe/mempool/audits",
+        "D:/universe/mempool/.tmp",
         "C:/Users/ordinalking.SERVER/.codex/attachments"
       ],
       "reason": "The described 243-row working ledger cannot be imported without its original IDs and files. No IDs or contents are reconstructed."
@@ -50596,7 +50598,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/bitcoin-staking/staking-evidence.component.ts",
-          "sha256": "530de3b35efd1410ee90ad9317be5f5f28938c49cf9bd8792722421a334704f8"
+          "sha256": "af6233e5e50dbc3c8c623882098d43952941e9640f4b42939e333d2fe2541d07"
         }
       ],
       "entry": null,
@@ -50683,7 +50685,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/bitcoin-staking/staking-evidence.component.ts",
-          "sha256": "530de3b35efd1410ee90ad9317be5f5f28938c49cf9bd8792722421a334704f8"
+          "sha256": "af6233e5e50dbc3c8c623882098d43952941e9640f4b42939e333d2fe2541d07"
         }
       ],
       "entry": null,
@@ -59166,7 +59168,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/dlc/dlc-simulate.component.ts",
-          "sha256": "33ebef5a3a4ea8ce79565c5d83304ac758518870de9f94ba582e11f52ef5ffaf"
+          "sha256": "cec6f6807bc99cba773d065e3e55b47a14e9d1759d8d8aa2457476519c4d3cf5"
         }
       ],
       "entry": null,
@@ -59237,7 +59239,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/simplicity/simplicity-tools.component.ts",
-          "sha256": "5b7e47bc9af131dab1d06304b9e4435879dc3aa42606f230db2c0430afe0c9f8"
+          "sha256": "f560dba4a2648c3b85b841003fefb0625758d9e2bebb2114d44752dbc24e4a87"
         }
       ],
       "entry": null,
@@ -59308,7 +59310,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/simplicity/simplicity-tools.component.ts",
-          "sha256": "5b7e47bc9af131dab1d06304b9e4435879dc3aa42606f230db2c0430afe0c9f8"
+          "sha256": "f560dba4a2648c3b85b841003fefb0625758d9e2bebb2114d44752dbc24e4a87"
         }
       ],
       "entry": null,
@@ -59379,7 +59381,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/simplicity/simplicity-verify.component.ts",
-          "sha256": "cebe3fd0562bb891d8704dd6f0c84935900aacaa912e7a3be0894d96b4687f1d"
+          "sha256": "f017fbcb6aac42a3ec5bea6acc534012513fe5f61c5b976b1e67b492291ce76d"
         }
       ],
       "entry": null,
@@ -59462,7 +59464,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/simplicity/simplicity-verify.component.ts",
-          "sha256": "cebe3fd0562bb891d8704dd6f0c84935900aacaa912e7a3be0894d96b4687f1d"
+          "sha256": "f017fbcb6aac42a3ec5bea6acc534012513fe5f61c5b976b1e67b492291ce76d"
         }
       ],
       "entry": null,
@@ -59545,7 +59547,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/offchain/statechain-verify.component.ts",
-          "sha256": "faa2e053a8f45953b7aeee2ae39ce93336a754e569a213571fbc0fb6f0af7482"
+          "sha256": "e21a174f31099542ac1e2cfd45a460fbb044cdda6728fe6f33a0810b1afb87c0"
         }
       ],
       "entry": null,
@@ -59628,7 +59630,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/offchain/statechain-verify.component.ts",
-          "sha256": "faa2e053a8f45953b7aeee2ae39ce93336a754e569a213571fbc0fb6f0af7482"
+          "sha256": "e21a174f31099542ac1e2cfd45a460fbb044cdda6728fe6f33a0810b1afb87c0"
         }
       ],
       "entry": null,
@@ -59711,7 +59713,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/offchain/coinswap-inspect.component.ts",
-          "sha256": "ee452a081a501a24617d1e6bd31f027044b7f75a2b2dcb47f601b93ddf2e5d11"
+          "sha256": "e03108d64c231c317b770fcf9de874a38b10ca581679fd94ea9d462389260ad3"
         }
       ],
       "entry": null,
@@ -59782,7 +59784,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/offchain/coinswap-inspect.component.ts",
-          "sha256": "ee452a081a501a24617d1e6bd31f027044b7f75a2b2dcb47f601b93ddf2e5d11"
+          "sha256": "e03108d64c231c317b770fcf9de874a38b10ca581679fd94ea9d462389260ad3"
         }
       ],
       "entry": null,
@@ -59853,7 +59855,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/offchain/offchain-recovery.component.ts",
-          "sha256": "559da66f2d5cb0beb4f3cd3341a40a7fe3626214668410bddbc847292ad693b4"
+          "sha256": "73709b11346356919d012330e97a433b9395bfece8537c563bd3f29c1b46e288"
         }
       ],
       "entry": null,
@@ -59924,7 +59926,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/compact-filters/light-client-filters.component.ts",
-          "sha256": "7b772f895eb5a5c17d8654b38262e44afe3f177fc0fc0237ddf8039aba1cfd7b"
+          "sha256": "d047b012dce76612877ed5a5390be3f89e31cecbe590bf36cbda8ee91dc7423f"
         }
       ],
       "entry": null,
@@ -60003,7 +60005,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/compact-filters/light-client-verify.component.ts",
-          "sha256": "204f707eacb008b147475e34e12c1ced29f8fbe1e0bb0f488427ca29c8606b29"
+          "sha256": "bc0bf0794f813b088b98b60adc2b6bb4b54615b559659a007e7acb6139c22cb9"
         }
       ],
       "entry": null,
@@ -60074,7 +60076,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/compact-filters/light-client-scan.component.ts",
-          "sha256": "ac3a4ffe76e7b9f91a2b57ccf4d2b3cbd8e5865a8b95cd953a98c3957f3ef08b"
+          "sha256": "9f7c40ddefd15533be8a4e6eca2ceb9c536e2b8146fb4f2cf736791e93d6aea8"
         }
       ],
       "entry": null,
@@ -60145,7 +60147,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/compact-filters/light-client-scan.component.ts",
-          "sha256": "ac3a4ffe76e7b9f91a2b57ccf4d2b3cbd8e5865a8b95cd953a98c3957f3ef08b"
+          "sha256": "9f7c40ddefd15533be8a4e6eca2ceb9c536e2b8146fb4f2cf736791e93d6aea8"
         }
       ],
       "entry": null,
@@ -60224,7 +60226,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/bootstrap/bootstrap-verify.component.ts",
-          "sha256": "1e86d43f301c704baec2d15f4867e0da5f35406269388c5bb7acc3d58340263f"
+          "sha256": "13cdd9715cac62cb12ea19843637535512ede0164c956be0e6b9ba5a201b4e48"
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
@@ -60319,7 +60321,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/bootstrap/bootstrap-planner.component.ts",
-          "sha256": "bb8df0038ef30c3e84ba3e4e6b0ae907cfe2693d2bc893e9a226d94115959637"
+          "sha256": "f891b6b1a5fbd295b800eebe4f90dd7a628866378848a838519b0fa2e7ffc224"
         },
         {
           "artifact": "docs/acceptance/current-execution-evidence.json",
@@ -60848,7 +60850,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/payment-connectivity/payment-zaps.component.ts",
-          "sha256": "bc84c91c681ec2357f4ef36433107f99cd27b593ac891ab89990a712a3a477e8"
+          "sha256": "48956232f776fd5700355221df2204cfde218716f08d5f3a2c868e3e81ec0f69"
         }
       ],
       "entry": null,
@@ -60923,7 +60925,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/payment-connectivity/payment-zaps.component.ts",
-          "sha256": "bc84c91c681ec2357f4ef36433107f99cd27b593ac891ab89990a712a3a477e8"
+          "sha256": "48956232f776fd5700355221df2204cfde218716f08d5f3a2c868e3e81ec0f69"
         }
       ],
       "entry": null,
@@ -67384,7 +67386,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/lightning-resilience/lightning-resilience-simulate.component.ts",
-          "sha256": "018070ba79b0435a8c72d63795379260604f1ac009c4145118e35c23be510eba"
+          "sha256": "56c6c04a6f61869c1a7c454f0ed5cc0efb61cda40a4239ff8999b8e8a3539f15"
         }
       ],
       "entry": null,
@@ -68067,7 +68069,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/consensus-conformance/consensus-conformance-case-detail.component.ts",
-          "sha256": "9b1084167f53f2538941ef09ca7f22a831af39a3ab38b71c2841a78da7ff4498"
+          "sha256": "62920a211069371031cd66ddd13bb9672f0f42ba92b00de8b465f9ce46b1eb8c"
         }
       ],
       "entry": null,
@@ -68150,7 +68152,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/node-security/node-security-upgrade.component.ts",
-          "sha256": "13a64a8d22b493005de259399515d4356c98a61556a46d7594b88a9cacbf083a"
+          "sha256": "5a9e1438b654a2eff7cf7960e90fdd64e54132780dde751ec2fee9f97bbcfcd7"
         }
       ],
       "entry": null,
@@ -78773,7 +78775,7 @@
         },
         {
           "artifact": "frontend/src/app/components/transaction/transaction-raw.component.ts",
-          "sha256": "a011ed511389f2b98f341d8cfb43d99c0759689d116f908913194781899fac86"
+          "sha256": "887903ee3977b70d0ccec21ebe053032f1282c00eeb4eea53662ec656d90e14f"
         }
       ],
       "entry": null,
@@ -78955,7 +78957,7 @@
         },
         {
           "artifact": "frontend/src/app/components/transaction/transaction-raw.component.ts",
-          "sha256": "a011ed511389f2b98f341d8cfb43d99c0759689d116f908913194781899fac86"
+          "sha256": "887903ee3977b70d0ccec21ebe053032f1282c00eeb4eea53662ec656d90e14f"
         }
       ],
       "entry": null,
@@ -79137,7 +79139,7 @@
         },
         {
           "artifact": "frontend/src/app/components/transaction/transaction-raw.component.ts",
-          "sha256": "a011ed511389f2b98f341d8cfb43d99c0759689d116f908913194781899fac86"
+          "sha256": "887903ee3977b70d0ccec21ebe053032f1282c00eeb4eea53662ec656d90e14f"
         }
       ],
       "entry": null,
@@ -79319,7 +79321,7 @@
         },
         {
           "artifact": "frontend/src/app/components/transaction/transaction-raw.component.ts",
-          "sha256": "a011ed511389f2b98f341d8cfb43d99c0759689d116f908913194781899fac86"
+          "sha256": "887903ee3977b70d0ccec21ebe053032f1282c00eeb4eea53662ec656d90e14f"
         }
       ],
       "entry": null,
@@ -79501,7 +79503,7 @@
         },
         {
           "artifact": "frontend/src/app/components/transaction/transaction-raw.component.ts",
-          "sha256": "a011ed511389f2b98f341d8cfb43d99c0759689d116f908913194781899fac86"
+          "sha256": "887903ee3977b70d0ccec21ebe053032f1282c00eeb4eea53662ec656d90e14f"
         }
       ],
       "entry": null,
@@ -79683,7 +79685,7 @@
         },
         {
           "artifact": "frontend/src/app/components/transaction/transaction-raw.component.ts",
-          "sha256": "a011ed511389f2b98f341d8cfb43d99c0759689d116f908913194781899fac86"
+          "sha256": "887903ee3977b70d0ccec21ebe053032f1282c00eeb4eea53662ec656d90e14f"
         }
       ],
       "entry": null,
@@ -79865,7 +79867,7 @@
         },
         {
           "artifact": "frontend/src/app/components/transaction/transaction-raw.component.ts",
-          "sha256": "a011ed511389f2b98f341d8cfb43d99c0759689d116f908913194781899fac86"
+          "sha256": "887903ee3977b70d0ccec21ebe053032f1282c00eeb4eea53662ec656d90e14f"
         }
       ],
       "entry": null,
@@ -80047,7 +80049,7 @@
         },
         {
           "artifact": "frontend/src/app/components/transaction/transaction-raw.component.ts",
-          "sha256": "a011ed511389f2b98f341d8cfb43d99c0759689d116f908913194781899fac86"
+          "sha256": "887903ee3977b70d0ccec21ebe053032f1282c00eeb4eea53662ec656d90e14f"
         }
       ],
       "entry": null,
@@ -80229,7 +80231,7 @@
         },
         {
           "artifact": "frontend/src/app/components/transaction/transaction.component.ts",
-          "sha256": "8e3a51cd00bd73eb2a21c60e14069f8bc17f3c997c2d15b0fabe9007d1b2da07"
+          "sha256": "04db138c9c9c3aeb14fbdf32bb9eea6fa01771a4033e9aa5d55cfcb100f751bf"
         }
       ],
       "entry": null,
@@ -80767,7 +80769,7 @@
         },
         {
           "artifact": "frontend/src/app/components/transaction/transaction.component.ts",
-          "sha256": "8e3a51cd00bd73eb2a21c60e14069f8bc17f3c997c2d15b0fabe9007d1b2da07"
+          "sha256": "04db138c9c9c3aeb14fbdf32bb9eea6fa01771a4033e9aa5d55cfcb100f751bf"
         }
       ],
       "entry": null,
@@ -81305,7 +81307,7 @@
         },
         {
           "artifact": "frontend/src/app/components/transaction/transaction.component.ts",
-          "sha256": "8e3a51cd00bd73eb2a21c60e14069f8bc17f3c997c2d15b0fabe9007d1b2da07"
+          "sha256": "04db138c9c9c3aeb14fbdf32bb9eea6fa01771a4033e9aa5d55cfcb100f751bf"
         }
       ],
       "entry": null,
@@ -81843,7 +81845,7 @@
         },
         {
           "artifact": "frontend/src/app/components/transaction/transaction.component.ts",
-          "sha256": "8e3a51cd00bd73eb2a21c60e14069f8bc17f3c997c2d15b0fabe9007d1b2da07"
+          "sha256": "04db138c9c9c3aeb14fbdf32bb9eea6fa01771a4033e9aa5d55cfcb100f751bf"
         }
       ],
       "entry": null,
@@ -82381,7 +82383,7 @@
         },
         {
           "artifact": "frontend/src/app/components/transaction/transaction.component.ts",
-          "sha256": "8e3a51cd00bd73eb2a21c60e14069f8bc17f3c997c2d15b0fabe9007d1b2da07"
+          "sha256": "04db138c9c9c3aeb14fbdf32bb9eea6fa01771a4033e9aa5d55cfcb100f751bf"
         }
       ],
       "entry": null,
@@ -82919,7 +82921,7 @@
         },
         {
           "artifact": "frontend/src/app/components/block/block.component.ts",
-          "sha256": "465004be7b231ee15042869b21f84a5ca8feb28dca0095d49e76911de9b80382"
+          "sha256": "5bb606d5fd055245770f985349b48cf3adec2dce4c21033fe218a91c754b1071"
         }
       ],
       "entry": null,
@@ -83309,7 +83311,7 @@
         },
         {
           "artifact": "frontend/src/app/components/block/block.component.ts",
-          "sha256": "465004be7b231ee15042869b21f84a5ca8feb28dca0095d49e76911de9b80382"
+          "sha256": "5bb606d5fd055245770f985349b48cf3adec2dce4c21033fe218a91c754b1071"
         }
       ],
       "entry": null,
@@ -83699,7 +83701,7 @@
         },
         {
           "artifact": "frontend/src/app/components/block/block.component.ts",
-          "sha256": "465004be7b231ee15042869b21f84a5ca8feb28dca0095d49e76911de9b80382"
+          "sha256": "5bb606d5fd055245770f985349b48cf3adec2dce4c21033fe218a91c754b1071"
         }
       ],
       "entry": null,
@@ -84089,7 +84091,7 @@
         },
         {
           "artifact": "frontend/src/app/components/block/block.component.ts",
-          "sha256": "465004be7b231ee15042869b21f84a5ca8feb28dca0095d49e76911de9b80382"
+          "sha256": "5bb606d5fd055245770f985349b48cf3adec2dce4c21033fe218a91c754b1071"
         }
       ],
       "entry": null,
@@ -84479,7 +84481,7 @@
         },
         {
           "artifact": "frontend/src/app/components/block/block.component.ts",
-          "sha256": "465004be7b231ee15042869b21f84a5ca8feb28dca0095d49e76911de9b80382"
+          "sha256": "5bb606d5fd055245770f985349b48cf3adec2dce4c21033fe218a91c754b1071"
         }
       ],
       "entry": null,
@@ -84869,7 +84871,7 @@
         },
         {
           "artifact": "frontend/src/app/components/block/block.component.ts",
-          "sha256": "465004be7b231ee15042869b21f84a5ca8feb28dca0095d49e76911de9b80382"
+          "sha256": "5bb606d5fd055245770f985349b48cf3adec2dce4c21033fe218a91c754b1071"
         }
       ],
       "entry": null,
@@ -85259,7 +85261,7 @@
         },
         {
           "artifact": "frontend/src/app/components/block/block.component.ts",
-          "sha256": "465004be7b231ee15042869b21f84a5ca8feb28dca0095d49e76911de9b80382"
+          "sha256": "5bb606d5fd055245770f985349b48cf3adec2dce4c21033fe218a91c754b1071"
         }
       ],
       "entry": null,
@@ -85649,7 +85651,7 @@
         },
         {
           "artifact": "frontend/src/app/components/block/block.component.ts",
-          "sha256": "465004be7b231ee15042869b21f84a5ca8feb28dca0095d49e76911de9b80382"
+          "sha256": "5bb606d5fd055245770f985349b48cf3adec2dce4c21033fe218a91c754b1071"
         }
       ],
       "entry": null,
@@ -86039,7 +86041,7 @@
         },
         {
           "artifact": "frontend/src/app/components/block/block.component.ts",
-          "sha256": "465004be7b231ee15042869b21f84a5ca8feb28dca0095d49e76911de9b80382"
+          "sha256": "5bb606d5fd055245770f985349b48cf3adec2dce4c21033fe218a91c754b1071"
         }
       ],
       "entry": null,
@@ -86429,7 +86431,7 @@
         },
         {
           "artifact": "frontend/src/app/components/block/block.component.ts",
-          "sha256": "465004be7b231ee15042869b21f84a5ca8feb28dca0095d49e76911de9b80382"
+          "sha256": "5bb606d5fd055245770f985349b48cf3adec2dce4c21033fe218a91c754b1071"
         }
       ],
       "entry": null,
@@ -86819,7 +86821,7 @@
         },
         {
           "artifact": "frontend/src/app/lightning/node/node.component.ts",
-          "sha256": "731ae1298b2d1974a51ef779a6cb299e037c0d7a170d3287dfa91a7ade285fa5"
+          "sha256": "092c711e1adc92d56295e4ba21e77e7893f6ca785c62f4414db4ec72c1b0933a"
         }
       ],
       "entry": null,
@@ -86905,7 +86907,7 @@
         },
         {
           "artifact": "frontend/src/app/lightning/node/node.component.ts",
-          "sha256": "731ae1298b2d1974a51ef779a6cb299e037c0d7a170d3287dfa91a7ade285fa5"
+          "sha256": "092c711e1adc92d56295e4ba21e77e7893f6ca785c62f4414db4ec72c1b0933a"
         }
       ],
       "entry": null,
@@ -86991,7 +86993,7 @@
         },
         {
           "artifact": "frontend/src/app/lightning/node/node.component.ts",
-          "sha256": "731ae1298b2d1974a51ef779a6cb299e037c0d7a170d3287dfa91a7ade285fa5"
+          "sha256": "092c711e1adc92d56295e4ba21e77e7893f6ca785c62f4414db4ec72c1b0933a"
         }
       ],
       "entry": null,
@@ -87077,7 +87079,7 @@
         },
         {
           "artifact": "frontend/src/app/lightning/node/node.component.ts",
-          "sha256": "731ae1298b2d1974a51ef779a6cb299e037c0d7a170d3287dfa91a7ade285fa5"
+          "sha256": "092c711e1adc92d56295e4ba21e77e7893f6ca785c62f4414db4ec72c1b0933a"
         }
       ],
       "entry": null,
@@ -87163,7 +87165,7 @@
         },
         {
           "artifact": "frontend/src/app/lightning/node/node.component.ts",
-          "sha256": "731ae1298b2d1974a51ef779a6cb299e037c0d7a170d3287dfa91a7ade285fa5"
+          "sha256": "092c711e1adc92d56295e4ba21e77e7893f6ca785c62f4414db4ec72c1b0933a"
         }
       ],
       "entry": null,
@@ -87249,7 +87251,7 @@
         },
         {
           "artifact": "frontend/src/app/lightning/node/node.component.ts",
-          "sha256": "731ae1298b2d1974a51ef779a6cb299e037c0d7a170d3287dfa91a7ade285fa5"
+          "sha256": "092c711e1adc92d56295e4ba21e77e7893f6ca785c62f4414db4ec72c1b0933a"
         }
       ],
       "entry": null,
@@ -87335,7 +87337,7 @@
         },
         {
           "artifact": "frontend/src/app/lightning/node/node.component.ts",
-          "sha256": "731ae1298b2d1974a51ef779a6cb299e037c0d7a170d3287dfa91a7ade285fa5"
+          "sha256": "092c711e1adc92d56295e4ba21e77e7893f6ca785c62f4414db4ec72c1b0933a"
         }
       ],
       "entry": null,
@@ -87421,7 +87423,7 @@
         },
         {
           "artifact": "frontend/src/app/lightning/node/node.component.ts",
-          "sha256": "731ae1298b2d1974a51ef779a6cb299e037c0d7a170d3287dfa91a7ade285fa5"
+          "sha256": "092c711e1adc92d56295e4ba21e77e7893f6ca785c62f4414db4ec72c1b0933a"
         }
       ],
       "entry": null,
@@ -87855,7 +87857,7 @@
         },
         {
           "artifact": "frontend/src/app/lightning/justice-list/justice-list.component.ts",
-          "sha256": "705ee1a0a68be19155bd1304a21709626b6f0a659513014268bc3fa08b63fcf4"
+          "sha256": "9862c33ae9baad5172bfae27cbd88d7e0f6d273f723638f0b9524a9a067d76df"
         }
       ],
       "entry": null,

@@ -33,8 +33,9 @@ import { SimplicityApiService } from './simplicity.service';
           <div class="card p-4 bg-body-tertiary border h-100">
             <h2 class="h5 mb-3">Source Expression</h2>
             <div class="mb-3">
-              <label class="form-label small text-muted">Simplicity High-Level (SimplicityHL) Source</label>
+              <label class="form-label small text-muted" for="simplicity-tools-source">Simplicity High-Level (SimplicityHL) Source</label>
               <textarea
+                id="simplicity-tools-source"
                 class="form-control font-monospace small"
                 rows="14"
                 [(ngModel)]="sourceCode"

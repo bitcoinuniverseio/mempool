@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRe
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { OffchainApiService, OffchainOperator } from './offchain.service';
+import { OffchainApiService, OffchainOperatorDetail } from './offchain.service';
 
 @Component({
   selector: 'app-statechain-operator-detail',
@@ -23,7 +23,7 @@ import { OffchainApiService, OffchainOperator } from './offchain.service';
             <div class="text-muted small font-monospace mt-1 text-break">{{ operator.operator_public_key }}</div>
           </div>
           <span class="badge" [ngClass]="operator.health === 'healthy' ? 'bg-success' : 'bg-warning text-dark'">
-            {{ operator.health | uppercase }}
+            {{ (operator.health || 'Not reported') | uppercase }}
           </span>
         </div>
       </header>
@@ -46,19 +46,19 @@ import { OffchainApiService, OffchainOperator } from './offchain.service';
               <dd class="col-sm-8 font-monospace small text-break">{{ operator.operator_public_key }}</dd>
 
               <dt class="col-sm-4 text-muted">Clearnet Endpoint</dt>
-              <dd class="col-sm-8 font-monospace small text-break">{{ operator.endpoint }}</dd>
+              <dd class="col-sm-8 font-monospace small text-break">{{ endpoint('clearnet') }}</dd>
 
-              <dt class="col-sm-4 text-muted" *ngIf="operator.tor_endpoint">Onion Service</dt>
-              <dd class="col-sm-8 font-monospace small text-break" *ngIf="operator.tor_endpoint">{{ operator.tor_endpoint }}</dd>
+              <dt class="col-sm-4 text-muted">Onion Service</dt>
+              <dd class="col-sm-8 font-monospace small text-break">{{ endpoint('tor_onion') }}</dd>
 
               <dt class="col-sm-4 text-muted">Protocol</dt>
               <dd class="col-sm-8"><span class="badge bg-secondary">{{ operator.protocol }}</span></dd>
 
               <dt class="col-sm-4 text-muted">Supported Versions</dt>
-              <dd class="col-sm-8 font-monospace small">{{ operator.supported_versions.join(', ') }}</dd>
+              <dd class="col-sm-8 font-monospace small">{{ supportedVersions() }}</dd>
 
               <dt class="col-sm-4 text-muted">Last Successful Probe</dt>
-              <dd class="col-sm-8 small">{{ operator.last_probe_at }}</dd>
+              <dd class="col-sm-8 small">Not reported</dd>
             </dl>
           </div>
 
@@ -78,19 +78,20 @@ import { OffchainApiService, OffchainOperator } from './offchain.service';
             <h2 class="h5 mb-3">Published Terms</h2>
             <div class="p-3 border rounded bg-body mb-3">
               <div class="text-muted small">Service Fee</div>
-              <div class="fs-4 fw-bold">{{ operator.published_terms.fee_rate_basis_points / 100 }}%</div>
-              <div class="small text-muted mt-1">{{ operator.published_terms.fee_rate_basis_points }} basis points per transfer</div>
+              <div class="fs-4 fw-bold">Not reported</div>
             </div>
 
             <div class="p-3 border rounded bg-body mb-3">
               <div class="text-muted small">Minimum Deposit</div>
-              <div class="fs-5 fw-bold">{{ operator.published_terms.min_amount_sat | number }} sat</div>
+              <div class="fs-5 fw-bold">Not reported</div>
             </div>
 
             <div class="p-3 border rounded bg-body mb-3">
               <div class="text-muted small">Maximum Deposit</div>
-              <div class="fs-5 fw-bold">{{ operator.published_terms.max_amount_sat | number }} sat</div>
+              <div class="fs-5 fw-bold">Not reported</div>
             </div>
+
+            <p class="small text-muted">The operator API does not report fees or deposit limits.</p>
 
             <div class="mt-auto pt-3 border-top">
               <a [routerLink]="['/offchain/statechains/verify']" class="btn btn-outline-primary w-100">
@@ -106,7 +107,7 @@ import { OffchainApiService, OffchainOperator } from './offchain.service';
 export class StatechainOperatorDetailComponent implements OnInit, OnDestroy {
   loading = true;
   error: string | null = null;
-  operator: OffchainOperator | null = null;
+  operator: OffchainOperatorDetail | null = null;
   private sub?: Subscription;
 
   constructor(
@@ -114,6 +115,18 @@ export class StatechainOperatorDetailComponent implements OnInit, OnDestroy {
     private offchainApi: OffchainApiService,
     private cdr: ChangeDetectorRef
   ) {}
+
+  endpoint(kind: 'clearnet' | 'tor_onion'): string {
+    const value = this.operator?.endpoints?.[kind];
+    return typeof value === 'string' && value.trim() ? value : 'Not reported';
+  }
+
+  supportedVersions(): string {
+    const versions = this.operator?.supported_versions;
+    return Array.isArray(versions) && versions.length > 0
+      && versions.every(version => typeof version === 'string' && version.trim())
+      ? versions.join(', ') : 'Not reported';
+  }
 
   ngOnInit(): void {
     const operatorId = this.route.snapshot.paramMap.get('operatorId') || 'sc-mercury-alpha';

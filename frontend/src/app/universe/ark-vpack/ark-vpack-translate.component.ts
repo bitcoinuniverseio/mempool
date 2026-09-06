@@ -27,23 +27,23 @@ import { RouterModule } from '@angular/router';
         <h5 class="mb-3">Dialect Translation Sandbox</h5>
         <div class="row g-3">
           <div class="col-md-6">
-            <label class="form-label small">Source Package Format</label>
-            <select class="form-select">
+            <label class="form-label small" for="ark-vpack-source-format">Source Package Format</label>
+            <select class="form-select" id="ark-vpack-source-format">
               <option value="arkade">Arkade Native (Rust libvpack)</option>
               <option value="bark">Bark Native (Go ASP)</option>
               <option value="mvv">Minimal Viable VTXO (MVV v0.1.0)</option>
             </select>
           </div>
           <div class="col-md-6">
-            <label class="form-label small">Target Output Format</label>
-            <select class="form-select">
+            <label class="form-label small" for="ark-vpack-target-format">Target Output Format</label>
+            <select class="form-select" id="ark-vpack-target-format">
               <option value="mvv">Minimal Viable VTXO (MVV v0.1.0)</option>
               <option value="arkade">Arkade Native</option>
               <option value="bark">Bark Native</option>
             </select>
           </div>
           <div class="col-12">
-            <textarea class="form-control font-monospace" rows="6" placeholder='{"vtxoId": "...", "amount": 500000, "aspKey": "..."}'></textarea>
+            <textarea class="form-control font-monospace" rows="6" aria-label="Source VTXO package JSON" i18n-aria-label placeholder='{"vtxoId": "...", "amount": 500000, "aspKey": "..."}'></textarea>
           </div>
           <div class="col-12">
             <button class="btn btn-primary">Translate & Verify Preserved Fields</button>

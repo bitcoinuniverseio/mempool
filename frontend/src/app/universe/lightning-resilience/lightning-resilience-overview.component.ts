@@ -106,7 +106,8 @@ import { LightningResilienceApiService, LightningResilienceOverview } from './li
                 <td>{{ ch.htlc_slots_in_use }} / {{ ch.htlc_slot_capacity }}</td>
                 <td>
                   <div class="progress" style="height: 16px;">
-                    <div class="progress-bar bg-danger" role="progressbar" [style.width.%]="ch.htlc_slot_utilization_pct">
+                    <div class="progress-bar bg-danger" role="progressbar" aria-label="HTLC slot utilization" i18n-aria-label
+                      aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="ch.htlc_slot_utilization_pct" [style.width.%]="ch.htlc_slot_utilization_pct">
                       {{ ch.htlc_slot_utilization_pct }}%
                     </div>
                   </div>

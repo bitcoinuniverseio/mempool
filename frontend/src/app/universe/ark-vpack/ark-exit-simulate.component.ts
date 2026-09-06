@@ -27,12 +27,12 @@ import { RouterModule } from '@angular/router';
         <h5 class="mb-3">Exit Simulation Parameters</h5>
         <div class="row g-3">
           <div class="col-md-6">
-            <label class="form-label small">Target Fee Rate (sat/vB)</label>
-            <input type="number" class="form-control" value="25" min="1">
+            <label class="form-label small" for="ark-exit-fee-rate">Target Fee Rate (sat/vB)</label>
+            <input type="number" class="form-control" id="ark-exit-fee-rate" value="25" min="1">
           </div>
           <div class="col-md-6">
-            <label class="form-label small">Tree Depth (Hops to Leaf)</label>
-            <input type="number" class="form-control" value="2" min="1" max="6">
+            <label class="form-label small" for="ark-exit-tree-depth">Tree Depth (Hops to Leaf)</label>
+            <input type="number" class="form-control" id="ark-exit-tree-depth" value="2" min="1" max="6">
           </div>
           <div class="col-12">
             <button class="btn btn-outline-primary">Compute Worst-Case Fee Impact</button>

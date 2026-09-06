@@ -39,8 +39,9 @@ import { OffchainApiService } from './offchain.service';
             </p>
 
             <div class="mb-3">
-              <label class="form-label small text-muted">Transfer Package JSON</label>
+              <label class="form-label small text-muted" for="statechain-verify-package">Transfer Package JSON</label>
               <textarea
+                id="statechain-verify-package"
                 class="form-control font-monospace small"
                 rows="14"
                 [(ngModel)]="packageInput"

@@ -51,6 +51,118 @@ test('a changed backend lock can build an independent release dependency tree', 
   assert.match(artifactWorkflow, /stage\/backend\/rust-gbt\/package\.json/);
 });
 
+// Install the real function into a disposable release tree. Package download,
+// ownership and archive extraction are host boundaries; Node's require and
+// WASM compilation are real. No production configuration or service is used.
+function runInstall(mode, reused = false) {
+  const fixture = mkdtempSync(join(workdir, 'install-fixture-'));
+  const backend = join(fixture, 'artifact', 'backend');
+  mkdirSync(join(backend, 'vendor'), { recursive: true });
+  mkdirSync(join(backend, 'rust-gbt'), { recursive: true });
+  writeFileSync(join(backend, 'package.json'), '{}');
+  writeFileSync(join(backend, 'package-lock.json'), 'new-lock');
+  for (const [name, code] of [
+    ['@bitcoinuniverse/ecosystem-contracts', "console.log('LOADED contracts');"],
+    ['rust-gbt', "console.log('LOADED rust-gbt');"],
+    ['tiny-secp256k1', `
+const fs = require('node:fs');
+const path = require('node:path');
+new WebAssembly.Module(fs.readFileSync(path.join(__dirname, 'secp256k1.wasm')));
+console.log('LOADED tiny-secp256k1 WASM');
+`],
+  ]) {
+    if (name === 'tiny-secp256k1' && mode === 'missing-tiny') {continue;}
+    const directory = join(fixture, 'dependencies', name);
+    mkdirSync(directory, { recursive: true });
+    writeFileSync(join(directory, 'index.js'), code);
+    if (name === 'tiny-secp256k1' && mode !== 'missing-wasm') {
+      writeFileSync(join(directory, 'secp256k1.wasm'), Buffer.from([0, 97, 115, 109, 1, 0, 0, 0]));
+    }
+  }
+  const install = script.match(/^cmd_install\(\) \{$[\s\S]*?^\}$/m)?.[0];
+  assert.ok(install, 'cmd_install must be executable from release.sh');
+  const releaseDir = script.match(/^release_dir\(\) \{[^\n]+\}$/m)?.[0];
+  const source = `
+set -euo pipefail
+ROOT=$(mktemp -d)
+RELEASES="$ROOT/releases"
+CURRENT="$ROOT/current"
+mkdir -p "$RELEASES/mempool-old/backend/node_modules"
+command cp -a "$INSTALL_FIXTURE/dependencies/." "$RELEASES/mempool-old/backend/node_modules/"
+printf '%s' "$OLD_LOCK" > "$RELEASES/mempool-old/backend/package-lock.json"
+printf '%s' "$RELEASES/mempool-old" > "$CURRENT"
+touch "$ROOT/artifact.tar.gz"
+trap 'status=$?; if [ -f "$RELEASES/mempool-new/RELEASE-SHA" ]; then printf "READY_MARKER=yes\\n"; else printf "READY_MARKER=no\\n"; fi; exit "$status"' EXIT
+log() { printf '%s\\n' "$*"; }
+fail() { printf 'FAILED: %s\\n' "$*" >&2; exit 1; }
+readlink() { cat "$2"; }
+tar() {
+  [ "$INSTALL_MODE" != archive-failure ] || return 51
+  command cp -a "$INSTALL_FIXTURE/artifact/." "$4/"
+}
+cp() {
+  if [ "$INSTALL_MODE" = copy-failure ] && [ "$1" = -al ]; then return 61; fi
+  command cp "$@"
+}
+cd() { [ "$INSTALL_MODE" != directory-failure ] || return 43; builtin cd "$@"; }
+npm() {
+  printf 'NPM_INSTALL\\n'
+  mkdir -p node_modules
+  command cp -a "$INSTALL_FIXTURE/dependencies/." node_modules/
+  [ "$INSTALL_MODE" != npm-failure ] || return 37
+}
+chown() { [ "$INSTALL_MODE" != owner-failure ] || return 67; }
+chmod() { return 0; }
+${releaseDir}
+${install}
+# Deliberately conditional: every mandatory install step must propagate its
+# error even when Bash's implicit errexit is disabled by the caller.
+if cmd_install new "$ROOT/artifact.tar.gz"; then exit 0; else exit $?; fi
+`;
+  return bash(source, {
+    INSTALL_FIXTURE: fixture.replaceAll('\\', '/'), INSTALL_MODE: mode,
+    OLD_LOCK: reused ? 'new-lock' : 'old-lock',
+  });
+}
+
+for (const reused of [false, true]) {
+  test(`${reused ? 'reused' : 'new'} dependencies are loaded before the release is marked installed`, () => {
+    const result = runInstall('ready', reused);
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    assert.match(result.stdout, /LOADED contracts[\s\S]*LOADED rust-gbt[\s\S]*LOADED tiny-secp256k1 WASM/);
+    assert.match(result.stdout, /installed .*mempool-new/);
+    assert.match(result.stdout, /READY_MARKER=yes/);
+    assert.equal(result.stdout.includes('NPM_INSTALL'), !reused);
+  });
+  for (const mode of ['missing-tiny', 'missing-wasm']) {
+    test(`${reused ? 'reused' : 'new'} dependencies with ${mode} cannot mark a release installed`, () => {
+      const result = runInstall(mode, reused);
+      assert.notEqual(result.status, 0, result.stdout + result.stderr);
+      assert.match(result.stdout + result.stderr, /tiny-secp256k1|secp256k1.wasm/);
+      assert.match(result.stdout, /READY_MARKER=no/);
+      assert.doesNotMatch(result.stdout, /installed .*mempool-new/);
+    });
+  }
+}
+
+for (const [mode, status, reused] of [
+  ['npm-failure', 37, false], ['directory-failure', 43, false],
+  ['archive-failure', 51, false], ['copy-failure', 61, true],
+]) {
+  test(`${mode} cannot be masked by a later successful runtime check`, () => {
+    const result = runInstall(mode, reused);
+    assert.equal(result.status, status, result.stdout + result.stderr);
+    assert.match(result.stdout, /READY_MARKER=no/);
+    assert.doesNotMatch(result.stdout, /LOADED|installed .*mempool-new/);
+  });
+}
+
+test('failed release ownership prevents reporting installation success', () => {
+  const result = runInstall('owner-failure');
+  assert.equal(result.status, 67, result.stdout + result.stderr);
+  assert.doesNotMatch(result.stdout, /installed .*mempool-new/);
+});
+
 // ------------------------------------------------- the listener parser ----
 
 // The exact pipeline the gate runs, with `ss -ltn` swapped for a fixture so
