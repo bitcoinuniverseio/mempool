@@ -1,6 +1,7 @@
 @use "sass:color";
 @use "styles/universe-tokens" as universe;
 @use "styles/universe-bootstrap-bridge" as universe-bridge;
+@use "styles/universe-portfolio-print";
 
 /* Theme */
 $bg: #0e0a13;

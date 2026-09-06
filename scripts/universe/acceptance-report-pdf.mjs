@@ -24,6 +24,7 @@ assert.equal(sha256(bytes), pdfRow.sha256, 'PDF bytes changed after browser gene
 const document = await pdfjs.getDocument({ data: new Uint8Array(bytes),
   standardFontDataUrl: join(pdfRoot, 'standard_fonts') + '/', cMapUrl: join(pdfRoot, 'cmaps') + '/',
   cMapPacked: true, useSystemFonts: true, isEvalSupported: false }).promise;
+assert.equal(document.numPages, 1, 'This three-row manual report must fit one A4 page without navigation/footer pages');
 const pages = [], text = [];
 mkdirSync(dirname(resolve(outputPath)), { recursive: true });
 for (let number = 1; number <= document.numPages; number++) {

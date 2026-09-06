@@ -1,0 +1,1891 @@
+{
+  "schemaVersion": "universe-silent-payment-contrast-v1",
+  "origin": "http://localhost:4310",
+  "scope": "Actual local sample form submissions, loaded theme styles, computed text contrast and viewport overflow; no chain, signing or broadcast acceptance",
+  "startedAt": "2026-09-06T04:12:13.988Z",
+  "realNetworkE2ePasses": 0,
+  "checks": [
+    {
+      "id": "SP-05-CONTRAST-default-390",
+      "route": "/payments/silent/address",
+      "theme": "default",
+      "width": 390,
+      "status": "PASS LOCAL",
+      "checkedAt": "2026-09-06T04:12:13.989Z",
+      "themeState": {
+        "selected": "default",
+        "disabled": false,
+        "stylesheets": [
+          {
+            "href": "http://localhost:4310/styles.f1ef826e4468be75.css",
+            "loaded": true,
+            "media": ""
+          }
+        ],
+        "tokens": {
+          "--u-brand": "#c40059",
+          "--u-brand-contrast": "#ffffff",
+          "--u-state-neutral": "#5e5769",
+          "--u-state-neutral-surface": "#edeaf1",
+          "--u-state-proven": "#0f6b3a",
+          "--u-state-proven-surface": "#e2f4e9"
+        }
+      },
+      "requests": {
+        "sample": {
+          "url": "http://localhost:4310/api/v1/intelligence/payments/silent/validate-address?chain=bitcoin&network=mainnet",
+          "method": "POST",
+          "status": 200,
+          "requestId": "5b8aca2f-b168-4339-ad9b-320a3de7042b",
+          "valid": true,
+          "network": "mainnet",
+          "bip375Present": null,
+          "bip376Present": null
+        },
+        "submit": {
+          "url": "http://localhost:4310/api/v1/intelligence/payments/silent/validate-address?chain=bitcoin&network=mainnet",
+          "method": "POST",
+          "status": 200,
+          "requestId": "034b32de-3f99-40b6-b925-57d7f71c152d",
+          "valid": true,
+          "network": "mainnet",
+          "bip375Present": null,
+          "bip376Present": null
+        }
+      },
+      "layout": {
+        "width": 390,
+        "scrollWidth": 390,
+        "bodyScrollWidth": 390,
+        "path": "/payments/silent/address"
+      },
+      "samples": [
+        {
+          "selector": ".nav-link.active",
+          "text": "Address Validator",
+          "color": "rgb(255, 255, 255)",
+          "fontSizePx": 16,
+          "fontWeight": 400,
+          "width": 149.234375,
+          "height": 44,
+          "layers": [
+            {
+              "tag": "A",
+              "backgroundColor": "rgb(196, 0, 89)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "NAV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "HEADER",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-SILENT-PAYMENTS-ADDRESS",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "MAIN",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-MASTER-PAGE",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-ROOT",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "BODY",
+              "backgroundColor": "rgb(247, 244, 248)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "HTML",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            }
+          ],
+          "ratio": 6.01476841693771,
+          "minimum": 4.5,
+          "passed": true,
+          "effectiveForeground": {
+            "r": 255,
+            "g": 255,
+            "b": 255,
+            "a": 1
+          },
+          "effectiveBackground": {
+            "r": 196,
+            "g": 0,
+            "b": 89,
+            "a": 1
+          }
+        },
+        {
+          "selector": ".badge.bg-primary",
+          "text": "Bech32m Stealth Standard",
+          "color": "rgb(255, 255, 255)",
+          "fontSizePx": 12,
+          "fontWeight": 700,
+          "width": 158.359375,
+          "height": 18,
+          "layers": [
+            {
+              "tag": "SPAN",
+              "backgroundColor": "rgb(196, 0, 89)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "HEADER",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-SILENT-PAYMENTS-ADDRESS",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "MAIN",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-MASTER-PAGE",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-ROOT",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "BODY",
+              "backgroundColor": "rgb(247, 244, 248)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "HTML",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            }
+          ],
+          "ratio": 6.01476841693771,
+          "minimum": 4.5,
+          "passed": true,
+          "effectiveForeground": {
+            "r": 255,
+            "g": 255,
+            "b": 255,
+            "a": 1
+          },
+          "effectiveBackground": {
+            "r": 196,
+            "g": 0,
+            "b": 89,
+            "a": 1
+          }
+        },
+        {
+          "selector": ".badge.bg-secondary",
+          "text": "MAINNET",
+          "color": "rgb(94, 87, 105)",
+          "fontSizePx": 12,
+          "fontWeight": 700,
+          "width": 65.8125,
+          "height": 18,
+          "layers": [
+            {
+              "tag": "SPAN",
+              "backgroundColor": "rgb(237, 234, 241)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgb(255, 255, 255)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-SILENT-PAYMENTS-ADDRESS",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "MAIN",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-MASTER-PAGE",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-ROOT",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "BODY",
+              "backgroundColor": "rgb(247, 244, 248)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "HTML",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            }
+          ],
+          "ratio": 5.796600175689398,
+          "minimum": 4.5,
+          "passed": true,
+          "effectiveForeground": {
+            "r": 94,
+            "g": 87,
+            "b": 105,
+            "a": 1
+          },
+          "effectiveBackground": {
+            "r": 237,
+            "g": 234,
+            "b": 241,
+            "a": 1
+          }
+        },
+        {
+          "selector": "h2.text-success",
+          "text": "✓ Valid BIP352 Address",
+          "color": "rgb(15, 107, 58)",
+          "fontSizePx": 18.4,
+          "fontWeight": 500,
+          "width": 194.421875,
+          "height": 22.078125,
+          "layers": [
+            {
+              "tag": "H2",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgb(255, 255, 255)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-SILENT-PAYMENTS-ADDRESS",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "MAIN",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-MASTER-PAGE",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-ROOT",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "BODY",
+              "backgroundColor": "rgb(247, 244, 248)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "HTML",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            }
+          ],
+          "ratio": 6.594468120327793,
+          "minimum": 4.5,
+          "passed": true,
+          "effectiveForeground": {
+            "r": 15,
+            "g": 107,
+            "b": 58,
+            "a": 1
+          },
+          "effectiveBackground": {
+            "r": 255,
+            "g": 255,
+            "b": 255,
+            "a": 1
+          }
+        }
+      ],
+      "screenshot": "D:\\universe\\mempool\\audits\\codex-acceptance-20260906\\silent-address-default-390.png"
+    },
+    {
+      "id": "SP-06-CONTRAST-default-390",
+      "route": "/payments/silent/psbt",
+      "theme": "default",
+      "width": 390,
+      "status": "PASS LOCAL",
+      "checkedAt": "2026-09-06T04:12:14.887Z",
+      "themeState": {
+        "selected": "default",
+        "disabled": false,
+        "stylesheets": [
+          {
+            "href": "http://localhost:4310/styles.f1ef826e4468be75.css",
+            "loaded": true,
+            "media": ""
+          }
+        ],
+        "tokens": {
+          "--u-brand": "#c40059",
+          "--u-brand-contrast": "#ffffff",
+          "--u-state-neutral": "#5e5769",
+          "--u-state-neutral-surface": "#edeaf1",
+          "--u-state-proven": "#0f6b3a",
+          "--u-state-proven-surface": "#e2f4e9"
+        }
+      },
+      "requests": {
+        "sample": {
+          "url": "http://localhost:4310/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+          "method": "POST",
+          "status": 200,
+          "requestId": "e652291b-0077-460b-8583-a60880809381",
+          "valid": true,
+          "network": null,
+          "bip375Present": true,
+          "bip376Present": false
+        },
+        "submit": {
+          "url": "http://localhost:4310/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+          "method": "POST",
+          "status": 200,
+          "requestId": "c01038ad-f304-4c14-a16e-4b053ea98559",
+          "valid": true,
+          "network": null,
+          "bip375Present": true,
+          "bip376Present": false
+        }
+      },
+      "layout": {
+        "width": 390,
+        "scrollWidth": 390,
+        "bodyScrollWidth": 390,
+        "path": "/payments/silent/psbt"
+      },
+      "samples": [
+        {
+          "selector": ".nav-link.active",
+          "text": "PSBT Inspector",
+          "color": "rgb(255, 255, 255)",
+          "fontSizePx": 16,
+          "fontWeight": 400,
+          "width": 129.90625,
+          "height": 44,
+          "layers": [
+            {
+              "tag": "A",
+              "backgroundColor": "rgb(196, 0, 89)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "NAV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "HEADER",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-SILENT-PAYMENTS-PSBT",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "MAIN",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-MASTER-PAGE",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-ROOT",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "BODY",
+              "backgroundColor": "rgb(247, 244, 248)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "HTML",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            }
+          ],
+          "ratio": 6.01476841693771,
+          "minimum": 4.5,
+          "passed": true,
+          "effectiveForeground": {
+            "r": 255,
+            "g": 255,
+            "b": 255,
+            "a": 1
+          },
+          "effectiveBackground": {
+            "r": 196,
+            "g": 0,
+            "b": 89,
+            "a": 1
+          }
+        },
+        {
+          "selector": ".badge.bg-primary",
+          "text": "Hardware & Multisig Interoperability",
+          "color": "rgb(255, 255, 255)",
+          "fontSizePx": 12,
+          "fontWeight": 700,
+          "width": 219.34375,
+          "height": 18,
+          "layers": [
+            {
+              "tag": "SPAN",
+              "backgroundColor": "rgb(196, 0, 89)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "HEADER",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-SILENT-PAYMENTS-PSBT",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "MAIN",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-MASTER-PAGE",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-ROOT",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "BODY",
+              "backgroundColor": "rgb(247, 244, 248)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "HTML",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            }
+          ],
+          "ratio": 6.01476841693771,
+          "minimum": 4.5,
+          "passed": true,
+          "effectiveForeground": {
+            "r": 255,
+            "g": 255,
+            "b": 255,
+            "a": 1
+          },
+          "effectiveBackground": {
+            "r": 196,
+            "g": 0,
+            "b": 89,
+            "a": 1
+          }
+        },
+        {
+          "selector": ".badge.bg-secondary",
+          "text": "Not Found",
+          "color": "rgb(94, 87, 105)",
+          "fontSizePx": 12,
+          "fontWeight": 700,
+          "width": 69.921875,
+          "height": 18,
+          "layers": [
+            {
+              "tag": "SPAN",
+              "backgroundColor": "rgb(237, 234, 241)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgb(255, 255, 255)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-SILENT-PAYMENTS-PSBT",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "MAIN",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-MASTER-PAGE",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-ROOT",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "BODY",
+              "backgroundColor": "rgb(247, 244, 248)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "HTML",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            }
+          ],
+          "ratio": 5.796600175689398,
+          "minimum": 4.5,
+          "passed": true,
+          "effectiveForeground": {
+            "r": 94,
+            "g": 87,
+            "b": 105,
+            "a": 1
+          },
+          "effectiveBackground": {
+            "r": 237,
+            "g": 234,
+            "b": 241,
+            "a": 1
+          }
+        },
+        {
+          "selector": ".badge.bg-success",
+          "text": "Detected",
+          "color": "rgb(15, 107, 58)",
+          "fontSizePx": 12,
+          "fontWeight": 700,
+          "width": 60.359375,
+          "height": 18,
+          "layers": [
+            {
+              "tag": "SPAN",
+              "backgroundColor": "rgb(226, 244, 233)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgb(255, 255, 255)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-SILENT-PAYMENTS-PSBT",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "MAIN",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-MASTER-PAGE",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-ROOT",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "BODY",
+              "backgroundColor": "rgb(247, 244, 248)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "HTML",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            }
+          ],
+          "ratio": 5.762516956711718,
+          "minimum": 4.5,
+          "passed": true,
+          "effectiveForeground": {
+            "r": 15,
+            "g": 107,
+            "b": 58,
+            "a": 1
+          },
+          "effectiveBackground": {
+            "r": 226,
+            "g": 244,
+            "b": 233,
+            "a": 1
+          }
+        }
+      ],
+      "screenshot": "D:\\universe\\mempool\\audits\\codex-acceptance-20260906\\silent-psbt-default-390.png"
+    },
+    {
+      "id": "SP-05-CONTRAST-dark-390",
+      "route": "/payments/silent/address",
+      "theme": "dark",
+      "width": 390,
+      "status": "PASS LOCAL",
+      "checkedAt": "2026-09-06T04:12:15.842Z",
+      "themeState": {
+        "selected": "dark",
+        "disabled": false,
+        "stylesheets": [
+          {
+            "href": "http://localhost:4310/styles.f1ef826e4468be75.css",
+            "loaded": true,
+            "media": ""
+          },
+          {
+            "href": "http://localhost:4310/dark.67b16cef42ec259c.css",
+            "loaded": true,
+            "media": "all"
+          }
+        ],
+        "tokens": {
+          "--u-brand": "#ff8ab8",
+          "--u-brand-contrast": "#2a0a18",
+          "--u-state-neutral": "#b3a8bf",
+          "--u-state-neutral-surface": "#251c30",
+          "--u-state-proven": "#5fd39a",
+          "--u-state-proven-surface": "#0f2a1f"
+        }
+      },
+      "requests": {
+        "sample": {
+          "url": "http://localhost:4310/api/v1/intelligence/payments/silent/validate-address?chain=bitcoin&network=mainnet",
+          "method": "POST",
+          "status": 200,
+          "requestId": "58d3945c-c463-428f-a891-7952a035fed8",
+          "valid": true,
+          "network": "mainnet",
+          "bip375Present": null,
+          "bip376Present": null
+        },
+        "submit": {
+          "url": "http://localhost:4310/api/v1/intelligence/payments/silent/validate-address?chain=bitcoin&network=mainnet",
+          "method": "POST",
+          "status": 200,
+          "requestId": "f23f4501-566b-4663-8721-1a9489f2bb2d",
+          "valid": true,
+          "network": "mainnet",
+          "bip375Present": null,
+          "bip376Present": null
+        }
+      },
+      "layout": {
+        "width": 390,
+        "scrollWidth": 390,
+        "bodyScrollWidth": 390,
+        "path": "/payments/silent/address"
+      },
+      "samples": [
+        {
+          "selector": ".nav-link.active",
+          "text": "Address Validator",
+          "color": "rgb(42, 10, 24)",
+          "fontSizePx": 16,
+          "fontWeight": 400,
+          "width": 149.234375,
+          "height": 44,
+          "layers": [
+            {
+              "tag": "A",
+              "backgroundColor": "rgb(255, 138, 184)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "NAV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "HEADER",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-SILENT-PAYMENTS-ADDRESS",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "MAIN",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-MASTER-PAGE",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-ROOT",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "BODY",
+              "backgroundColor": "rgb(14, 10, 19)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "HTML",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            }
+          ],
+          "ratio": 8.293576141935121,
+          "minimum": 4.5,
+          "passed": true,
+          "effectiveForeground": {
+            "r": 42,
+            "g": 10,
+            "b": 24,
+            "a": 1
+          },
+          "effectiveBackground": {
+            "r": 255,
+            "g": 138,
+            "b": 184,
+            "a": 1
+          }
+        },
+        {
+          "selector": ".badge.bg-primary",
+          "text": "Bech32m Stealth Standard",
+          "color": "rgb(42, 10, 24)",
+          "fontSizePx": 12,
+          "fontWeight": 700,
+          "width": 158.359375,
+          "height": 18,
+          "layers": [
+            {
+              "tag": "SPAN",
+              "backgroundColor": "rgb(255, 138, 184)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "HEADER",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-SILENT-PAYMENTS-ADDRESS",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "MAIN",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-MASTER-PAGE",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-ROOT",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "BODY",
+              "backgroundColor": "rgb(14, 10, 19)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "HTML",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            }
+          ],
+          "ratio": 8.293576141935121,
+          "minimum": 4.5,
+          "passed": true,
+          "effectiveForeground": {
+            "r": 42,
+            "g": 10,
+            "b": 24,
+            "a": 1
+          },
+          "effectiveBackground": {
+            "r": 255,
+            "g": 138,
+            "b": 184,
+            "a": 1
+          }
+        },
+        {
+          "selector": ".badge.bg-secondary",
+          "text": "MAINNET",
+          "color": "rgb(179, 168, 191)",
+          "fontSizePx": 12,
+          "fontWeight": 700,
+          "width": 65.8125,
+          "height": 18,
+          "layers": [
+            {
+              "tag": "SPAN",
+              "backgroundColor": "rgb(37, 28, 48)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgb(28, 21, 38)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-SILENT-PAYMENTS-ADDRESS",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "MAIN",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-MASTER-PAGE",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-ROOT",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "BODY",
+              "backgroundColor": "rgb(14, 10, 19)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "HTML",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            }
+          ],
+          "ratio": 7.20039663557892,
+          "minimum": 4.5,
+          "passed": true,
+          "effectiveForeground": {
+            "r": 179,
+            "g": 168,
+            "b": 191,
+            "a": 1
+          },
+          "effectiveBackground": {
+            "r": 37,
+            "g": 28,
+            "b": 48,
+            "a": 1
+          }
+        },
+        {
+          "selector": "h2.text-success",
+          "text": "✓ Valid BIP352 Address",
+          "color": "rgb(95, 211, 154)",
+          "fontSizePx": 18.4,
+          "fontWeight": 500,
+          "width": 194.421875,
+          "height": 22.078125,
+          "layers": [
+            {
+              "tag": "H2",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgb(28, 21, 38)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-SILENT-PAYMENTS-ADDRESS",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "MAIN",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-MASTER-PAGE",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-ROOT",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "BODY",
+              "backgroundColor": "rgb(14, 10, 19)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "HTML",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            }
+          ],
+          "ratio": 9.514285913630793,
+          "minimum": 4.5,
+          "passed": true,
+          "effectiveForeground": {
+            "r": 95,
+            "g": 211,
+            "b": 154,
+            "a": 1
+          },
+          "effectiveBackground": {
+            "r": 28,
+            "g": 21,
+            "b": 38,
+            "a": 1
+          }
+        }
+      ],
+      "screenshot": "D:\\universe\\mempool\\audits\\codex-acceptance-20260906\\silent-address-dark-390.png"
+    },
+    {
+      "id": "SP-06-CONTRAST-dark-390",
+      "route": "/payments/silent/psbt",
+      "theme": "dark",
+      "width": 390,
+      "status": "PASS LOCAL",
+      "checkedAt": "2026-09-06T04:12:17.132Z",
+      "themeState": {
+        "selected": "dark",
+        "disabled": false,
+        "stylesheets": [
+          {
+            "href": "http://localhost:4310/styles.f1ef826e4468be75.css",
+            "loaded": true,
+            "media": ""
+          },
+          {
+            "href": "http://localhost:4310/dark.67b16cef42ec259c.css",
+            "loaded": true,
+            "media": "all"
+          }
+        ],
+        "tokens": {
+          "--u-brand": "#ff8ab8",
+          "--u-brand-contrast": "#2a0a18",
+          "--u-state-neutral": "#b3a8bf",
+          "--u-state-neutral-surface": "#251c30",
+          "--u-state-proven": "#5fd39a",
+          "--u-state-proven-surface": "#0f2a1f"
+        }
+      },
+      "requests": {
+        "sample": {
+          "url": "http://localhost:4310/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+          "method": "POST",
+          "status": 200,
+          "requestId": "3b50b064-4bd4-4328-b33b-30aced1bbe49",
+          "valid": true,
+          "network": null,
+          "bip375Present": true,
+          "bip376Present": false
+        },
+        "submit": {
+          "url": "http://localhost:4310/api/v1/intelligence/payments/silent/validate-psbt?chain=bitcoin&network=mainnet",
+          "method": "POST",
+          "status": 200,
+          "requestId": "78ca97ef-8dc2-4d67-9152-2a9e140aa347",
+          "valid": true,
+          "network": null,
+          "bip375Present": true,
+          "bip376Present": false
+        }
+      },
+      "layout": {
+        "width": 390,
+        "scrollWidth": 390,
+        "bodyScrollWidth": 390,
+        "path": "/payments/silent/psbt"
+      },
+      "samples": [
+        {
+          "selector": ".nav-link.active",
+          "text": "PSBT Inspector",
+          "color": "rgb(42, 10, 24)",
+          "fontSizePx": 16,
+          "fontWeight": 400,
+          "width": 129.90625,
+          "height": 44,
+          "layers": [
+            {
+              "tag": "A",
+              "backgroundColor": "rgb(255, 138, 184)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "NAV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "HEADER",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-SILENT-PAYMENTS-PSBT",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "MAIN",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-MASTER-PAGE",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-ROOT",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "BODY",
+              "backgroundColor": "rgb(14, 10, 19)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "HTML",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            }
+          ],
+          "ratio": 8.293576141935121,
+          "minimum": 4.5,
+          "passed": true,
+          "effectiveForeground": {
+            "r": 42,
+            "g": 10,
+            "b": 24,
+            "a": 1
+          },
+          "effectiveBackground": {
+            "r": 255,
+            "g": 138,
+            "b": 184,
+            "a": 1
+          }
+        },
+        {
+          "selector": ".badge.bg-primary",
+          "text": "Hardware & Multisig Interoperability",
+          "color": "rgb(42, 10, 24)",
+          "fontSizePx": 12,
+          "fontWeight": 700,
+          "width": 219.34375,
+          "height": 18,
+          "layers": [
+            {
+              "tag": "SPAN",
+              "backgroundColor": "rgb(255, 138, 184)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "HEADER",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-SILENT-PAYMENTS-PSBT",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "MAIN",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-MASTER-PAGE",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-ROOT",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "BODY",
+              "backgroundColor": "rgb(14, 10, 19)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "HTML",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            }
+          ],
+          "ratio": 8.293576141935121,
+          "minimum": 4.5,
+          "passed": true,
+          "effectiveForeground": {
+            "r": 42,
+            "g": 10,
+            "b": 24,
+            "a": 1
+          },
+          "effectiveBackground": {
+            "r": 255,
+            "g": 138,
+            "b": 184,
+            "a": 1
+          }
+        },
+        {
+          "selector": ".badge.bg-secondary",
+          "text": "Not Found",
+          "color": "rgb(179, 168, 191)",
+          "fontSizePx": 12,
+          "fontWeight": 700,
+          "width": 69.921875,
+          "height": 18,
+          "layers": [
+            {
+              "tag": "SPAN",
+              "backgroundColor": "rgb(37, 28, 48)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgb(28, 21, 38)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-SILENT-PAYMENTS-PSBT",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "MAIN",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-MASTER-PAGE",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-ROOT",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "BODY",
+              "backgroundColor": "rgb(14, 10, 19)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "HTML",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            }
+          ],
+          "ratio": 7.20039663557892,
+          "minimum": 4.5,
+          "passed": true,
+          "effectiveForeground": {
+            "r": 179,
+            "g": 168,
+            "b": 191,
+            "a": 1
+          },
+          "effectiveBackground": {
+            "r": 37,
+            "g": 28,
+            "b": 48,
+            "a": 1
+          }
+        },
+        {
+          "selector": ".badge.bg-success",
+          "text": "Detected",
+          "color": "rgb(95, 211, 154)",
+          "fontSizePx": 12,
+          "fontWeight": 700,
+          "width": 60.359375,
+          "height": 18,
+          "layers": [
+            {
+              "tag": "SPAN",
+              "backgroundColor": "rgb(15, 42, 31)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgb(28, 21, 38)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-SILENT-PAYMENTS-PSBT",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "MAIN",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "DIV",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-MASTER-PAGE",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "APP-ROOT",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "BODY",
+              "backgroundColor": "rgb(14, 10, 19)",
+              "backgroundImage": "none",
+              "opacity": 1
+            },
+            {
+              "tag": "HTML",
+              "backgroundColor": "rgba(0, 0, 0, 0)",
+              "backgroundImage": "none",
+              "opacity": 1
+            }
+          ],
+          "ratio": 8.21923913133115,
+          "minimum": 4.5,
+          "passed": true,
+          "effectiveForeground": {
+            "r": 95,
+            "g": 211,
+            "b": 154,
+            "a": 1
+          },
+          "effectiveBackground": {
+            "r": 15,
+            "g": 42,
+            "b": 31,
+            "a": 1
+          }
+        }
+      ],
+      "screenshot": "D:\\universe\\mempool\\audits\\codex-acceptance-20260906\\silent-psbt-dark-390.png"
+    }
+  ]
+}

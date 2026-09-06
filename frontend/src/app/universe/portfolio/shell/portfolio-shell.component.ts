@@ -12,6 +12,7 @@ import { PortfoliosStore } from '../stores/portfolios.store';
 import { PortfolioSessionService } from '../stores/session.service';
 import { PortfolioDataService } from '../data/portfolio-data.service';
 import { PortfolioDataStateComponent } from '../shared/data-state.component';
+import { isLocalOnlyPortfolio } from '../shared/local-source-state';
 
 @Component({
   selector: 'app-portfolio-shell',
@@ -65,7 +66,11 @@ import { PortfolioDataStateComponent } from '../shared/data-state.component';
         <div class="controls">
           <span class="state-chip">
             @if (store.activePortfolio(); as portfolio) {
-              <app-portfolio-data-state [state]="data().aggregation?.state ?? 'pending'" />
+              @if (localOnly()) {
+                <span class="local-state" role="status" i18n="@@universe.portfolio.state.local-only">Local only</span>
+              } @else {
+                <app-portfolio-data-state [state]="data().aggregation?.state ?? 'pending'" />
+              }
             }
           </span>
           <button
@@ -156,6 +161,7 @@ import { PortfolioDataStateComponent } from '../shared/data-state.component';
         border-radius: 6px; padding: 4px 10px;
       }
       .shell-main { flex: 1; padding-top: 8px; }
+      .local-state { font-size: 12px; white-space: nowrap; }
       .privacy .control[aria-pressed='true'] { background: rgba(196, 0, 89, 0.08); }
       @media (max-width: 767px) {
         .shell-header { flex-direction: column; align-items: stretch; }
@@ -176,6 +182,7 @@ export class PortfolioShellComponent {
   readonly portfolioId = toSignal(combineLatest(this.route.pathFromRoot.map((route) => route.paramMap))
     .pipe(map((params) => params.map((value) => value.get('portfolioId')).find(Boolean) ?? '')), { initialValue: '' });
   readonly selectedPortfolio = computed(() => this.store.livePortfolios().find((portfolio) => portfolio.id === this.portfolioId()) ?? null);
+  readonly localOnly = computed(() => isLocalOnlyPortfolio(this.store.activePortfolio()));
   readonly data = this.dataService.state;
   readonly completedAtLabel = computed(() => {
     const at = this.data().completedAt;
