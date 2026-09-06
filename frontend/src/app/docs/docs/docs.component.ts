@@ -35,7 +35,6 @@ export class DocsComponent implements OnInit {
     this.showFaqTab = ( this.env.BASE_MODULE === 'mempool' ) ? true : false;
     this.showElectrsTab = this.stateService.env.OFFICIAL_MEMPOOL_SPACE;
 
-    document.querySelector<HTMLElement>( 'html' ).style.scrollBehavior = 'smooth';
   }
 
   ngDoCheck(): void {
@@ -69,7 +68,4 @@ export class DocsComponent implements OnInit {
     }
   }
 
-  ngOnDestroy(): void {
-    document.querySelector<HTMLElement>( 'html' ).style.scrollBehavior = 'auto';
-  }
 }

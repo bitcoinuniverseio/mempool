@@ -1,0 +1,81 @@
+// Keep long identifiers and action groups inside the narrow layouts measured
+// by the mobile audit. Tables keep their own horizontal scroll containers.
+@media (max-width: 575.98px) {
+  :is(app-light-client-provider-detail, app-staking-delegation-detail) {
+    .title-row > div {
+      min-width: 0;
+      max-width: 100%;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  :is(
+    app-opentimestamps-overview,
+    app-consensus-conformance-overview,
+    app-collaborative-privacy-overview,
+    app-lightning-resilience-overview,
+    app-private-submission-overview,
+    app-private-submission-ordering-block,
+    app-private-submission-ordering-tx,
+    app-block-propagation-block-detail
+  ) > .container-xl > .d-flex.border-bottom {
+    flex-wrap: wrap;
+    gap: var(--u-space-3);
+
+    > div {
+      min-width: 0;
+      max-width: 100%;
+      overflow-wrap: anywhere;
+    }
+
+    > .btn-group {
+      flex-wrap: wrap;
+
+      > .btn {
+        flex: 1 1 9rem;
+        min-width: 0;
+        white-space: normal;
+      }
+    }
+  }
+
+  app-lightning-resilience-channel-detail dd.font-monospace {
+    overflow-wrap: anywhere;
+  }
+
+  :is(app-vaults-designer, app-dlc-simulate, app-lightning-resilience-simulate) .form-select {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  app-consensus-proposals .card > .d-flex {
+    flex-wrap: wrap;
+
+    > .badge {
+      max-width: 100%;
+      white-space: normal;
+    }
+  }
+}
+
+// The visible checkbox and its words form one label, so the full row responds
+// to a tap while the checkbox keeps its normal appearance.
+@media (pointer: coarse), (max-width: 991.98px) {
+  :is(app-light-client-privacy, app-private-submission-broadcast) .touch-check-label {
+    display: flex;
+    align-items: center;
+    gap: var(--u-space-3);
+    min-height: 44px;
+    padding: var(--u-space-2) 0;
+
+    > .form-check-input {
+      flex: 0 0 auto;
+      margin: 0;
+    }
+
+    > .form-check-label {
+      min-width: 0;
+    }
+  }
+}

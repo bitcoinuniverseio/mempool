@@ -28,7 +28,7 @@ import { RouterModule } from '@angular/router';
         <div class="alert alert-info">
           Unilateral exit guarantees sovereign recovery even if the ASP vanishes or halts cooperative processing.
         </div>
-        <div class="table-responsive">
+        <div class="table-responsive" tabindex="0" role="region" aria-label="Exit Path Verification Matrix, scroll horizontally" i18n-aria-label>
           <table class="table table-hover align-middle mb-0">
             <thead>
               <tr>

@@ -141,7 +141,10 @@ export class ApiDocsComponent implements OnInit, AfterViewInit {
     const targetId = e.fragment;
     const vOffset = ( window.innerWidth <= 992 ) ? 100 : 60;
     window.scrollTo({
-      top: document.getElementById( targetId ).offsetTop - vOffset
+      top: document.getElementById( targetId ).offsetTop - vOffset,
+      // Animate a requested anchor jump, without changing every scroll on the
+      // route (including browser restoration and keyboard navigation).
+      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
     });
     window.history.pushState({}, null, document.location.href.split('#')[0] + '#' + targetId);
     this.openEndpointContainer( targetId );

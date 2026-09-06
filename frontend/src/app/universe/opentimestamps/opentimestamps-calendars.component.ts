@@ -25,7 +25,7 @@ import { OpenTimestampsApiService } from './opentimestamps.service';
         <div class="card-header border-secondary">
           <h5 class="card-title mb-0">Active Public Calendar Servers</h5>
         </div>
-        <div class="table-responsive">
+        <div class="table-responsive" tabindex="0" role="region" aria-label="Active Public Calendar Servers, scroll horizontally" i18n-aria-label>
           <table class="table table-dark table-hover mb-0">
             <thead>
               <tr>

@@ -84,7 +84,7 @@ import { BlockPropagationApiService, BlockPropagationOverview } from './block-pr
           <h5 class="card-title mb-0">Recent Block Propagation Events</h5>
           <span class="badge bg-secondary">{{ overview.recent_blocks.length }} Blocks</span>
         </div>
-        <div class="table-responsive">
+        <div class="table-responsive" tabindex="0" role="region" aria-label="Recent Block Propagation Events, scroll horizontally" i18n-aria-label>
           <table class="table table-dark table-hover mb-0">
             <thead>
               <tr>

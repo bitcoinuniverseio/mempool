@@ -2,6 +2,7 @@
 @use "styles/universe-tokens" as universe;
 @use "styles/universe-bootstrap-bridge" as universe-bridge;
 @use "styles/universe-portfolio-print";
+@use "styles/universe-responsive";
 
 /* Theme */
 $bg: #0e0a13;

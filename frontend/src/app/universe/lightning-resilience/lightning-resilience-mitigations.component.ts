@@ -25,7 +25,7 @@ import { LightningResilienceApiService } from './lightning-resilience.service';
         <div class="card-header border-secondary">
           <h5 class="card-title mb-0">Active Defense Strategies</h5>
         </div>
-        <div class="table-responsive">
+        <div class="table-responsive" tabindex="0" role="region" aria-label="Active Defense Strategies, scroll horizontally" i18n-aria-label>
           <table class="table table-dark table-hover mb-0">
             <thead>
               <tr>

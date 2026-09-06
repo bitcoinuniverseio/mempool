@@ -25,7 +25,7 @@ import { CollaborativePrivacyApiService } from './collaborative-privacy.service'
         <div class="card-header border-secondary">
           <h5 class="card-title mb-0">Active Timelocked Fidelity Bonds</h5>
         </div>
-        <div class="table-responsive">
+        <div class="table-responsive" tabindex="0" role="region" aria-label="Active Timelocked Fidelity Bonds, scroll horizontally" i18n-aria-label>
           <table class="table table-dark table-hover mb-0">
             <thead>
               <tr>

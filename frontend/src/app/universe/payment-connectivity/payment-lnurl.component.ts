@@ -43,7 +43,7 @@ import { PaymentConnectivityApiService, LnurlEndpoint } from './payment-connecti
       </div>
 
       <div *ngIf="!loading && providers.length > 0" class="card p-4 bg-body-tertiary border">
-        <div class="table-responsive">
+        <div class="table-responsive" tabindex="0" role="region" aria-label="LNURL Specifications &amp; Providers, scroll horizontally" i18n-aria-label>
           <table class="table table-hover align-middle">
             <thead>
               <tr>

@@ -42,7 +42,7 @@ import { QuantumApiService, QuantumRevealEvent } from './quantum.service';
       </div>
 
       <div *ngIf="!loading && events.length > 0" class="card bg-body-tertiary border">
-        <div class="table-responsive">
+        <div class="table-responsive" tabindex="0" role="region" aria-label="Public Key Reveal Timeline, scroll horizontally" i18n-aria-label>
           <table class="table table-hover align-middle mb-0">
             <thead>
               <tr>

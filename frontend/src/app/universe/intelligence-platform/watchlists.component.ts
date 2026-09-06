@@ -49,7 +49,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
 
           <!-- Watched Entities -->
           <h6 class="text-uppercase small text-muted mb-2">Blinded Monitored Entities</h6>
-          <div class="table-responsive mb-4">
+          <div class="table-responsive mb-4" tabindex="0" role="region" aria-label="Blinded Monitored Entities, scroll horizontally" i18n-aria-label>
             <table class="table table-sm table-hover mb-0">
               <thead>
                 <tr>
@@ -94,7 +94,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
         <div class="card-header">
           <h4 class="mb-0">Recent In-App Alert Notifications</h4>
         </div>
-        <div class="table-responsive">
+        <div class="table-responsive" tabindex="0" role="region" aria-label="Recent In-App Alert Notifications, scroll horizontally" i18n-aria-label>
           <table class="table table-hover mb-0">
             <thead>
               <tr>

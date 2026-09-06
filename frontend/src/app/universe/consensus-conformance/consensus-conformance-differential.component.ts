@@ -20,7 +20,7 @@ import { RouterModule } from '@angular/router';
         <div class="card-header border-secondary">
           <h5 class="card-title mb-0">Consensus Verification Targets</h5>
         </div>
-        <div class="table-responsive">
+        <div class="table-responsive" tabindex="0" role="region" aria-label="Consensus Verification Targets, scroll horizontally" i18n-aria-label>
           <table class="table table-dark table-hover mb-0">
             <thead>
               <tr>
