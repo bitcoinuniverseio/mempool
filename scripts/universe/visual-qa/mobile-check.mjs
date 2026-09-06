@@ -874,7 +874,9 @@ async function run() {
             if (page && !page.isClosed()) {
               // A fresh tab had empty session storage, while local storage and
               // cookies already belonged to the shared viewport context.
-              if (page.url() !== 'about:blank') await page.evaluate(() => sessionStorage.clear()).catch(() => undefined);
+              // A failed reset must leave this case incomplete; measuring with
+              // a prior route's session could hide its initial loading state.
+              if (page.url() !== 'about:blank') await page.evaluate(() => sessionStorage.clear());
               // Force a new document even when two route URLs differ only by
               // their hash. Keep the single tab and its viewport alive.
               await page.goto('about:blank', { waitUntil: 'domcontentloaded', timeout: 45_000 });

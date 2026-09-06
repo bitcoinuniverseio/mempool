@@ -1,9 +1,30 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { writeFileSync, unlinkSync } from 'node:fs';
+import { readFileSync, writeFileSync, unlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { buildMatrix, tableIds, uniqueIds, validateMatrix } from './acceptance-matrix.mjs';
+import { buildCommandMatrix, buildMatrix, tableIds, uniqueIds, validateMatrix } from './acceptance-matrix.mjs';
+
+test('the regeneration command retains every reviewed execution assertion by default', () => {
+  const evidence = JSON.parse(readFileSync(new URL('../../docs/acceptance/current-execution-evidence.json', import.meta.url), 'utf8'));
+  const matrix = buildCommandMatrix();
+  const byId = new Map(matrix.rows.map(row => [row.id, row]));
+  assert(evidence.rows.some(row => row.status === 'PASS LOCAL'));
+  assert(evidence.rows.some(row => row.status === 'BLOCKED'));
+  for (const assertion of evidence.rows) {
+    const row = byId.get(assertion.id);
+    assert.equal(row.status, assertion.status, assertion.id);
+    assert.equal(row.acceptanceScope, assertion.scope, assertion.id);
+    assert(row.evidence.length > 0, assertion.id);
+  }
+  assert.equal(matrix.operationDenominatorReconciled, false);
+  assert.equal(matrix.realNetworkE2ePasses, 0);
+});
+
+test('an incomplete evidence option cannot reset the ledger to source-only rows', () => {
+  assert.throws(() => buildCommandMatrix(['--evidence']), /requires a file path/);
+  assert.throws(() => buildCommandMatrix(['--evidence', '--check']), /requires a file path/);
+});
 
 test('markdown imports retain expanded ranges, compact IDs and separate operation/evidence identities', () => {
   assert.deepEqual(tableIds('OV-04 to OV-07'), ['OV-04', 'OV-05', 'OV-06', 'OV-07']);
