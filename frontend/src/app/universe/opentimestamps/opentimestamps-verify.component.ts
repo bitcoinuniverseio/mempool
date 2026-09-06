@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { OpenTimestampsApiService } from './opentimestamps.service';
 
 @Component({
@@ -10,6 +11,9 @@ import { OpenTimestampsApiService } from './opentimestamps.service';
   imports: [CommonModule, RouterModule, FormsModule],
   template: `
     <div class="container-xl py-4">
+      <div class="alert alert-warning" role="alert" *ngIf="loadError">
+        {{ loadError }}
+      </div>
       <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
           <h1 class="h2 mb-1">Verify OpenTimestamps Proof (.ots)</h1>
@@ -66,18 +70,31 @@ import { OpenTimestampsApiService } from './opentimestamps.service';
   `
 })
 export class OpenTimestampsVerifyComponent {
-  public proofBase64 = 'BAAAAAAAb3RzLXByb29m-mock-base64-data';
+  public proofBase64 = '';
   public verifying = false;
   public verificationResult: any = null;
+  public loadError: string | null = null;
 
   constructor(private api: OpenTimestampsApiService) {}
 
   public verifyProof(): void {
     if (!this.proofBase64) return;
     this.verifying = true;
-    this.api.verifyProof$({ proof: this.proofBase64 }).subscribe(res => {
-      this.verificationResult = res;
-      this.verifying = false;
+    this.loadError = null;
+    this.verificationResult = null;
+    // A proof that was not checked has not been verified. The revision this
+    // replaces answered a failed request with valid, a Bitcoin block height
+    // and a block hash, which is the whole of what this surface offers.
+    this.api.verifyProof$({ proof: this.proofBase64 }).subscribe({
+      next: res => {
+        this.verificationResult = res;
+        this.verifying = false;
+      },
+      error: err => {
+        this.verificationResult = null;
+        this.loadError = loadFailureMessage(classifyLoadFailure(err));
+        this.verifying = false;
+      },
     });
   }
 }

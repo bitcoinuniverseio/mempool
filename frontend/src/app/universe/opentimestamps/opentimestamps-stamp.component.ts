@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { OpenTimestampsApiService } from './opentimestamps.service';
 
 @Component({
@@ -10,6 +11,9 @@ import { OpenTimestampsApiService } from './opentimestamps.service';
   imports: [CommonModule, RouterModule, FormsModule],
   template: `
     <div class="container-xl py-4">
+      <div class="alert alert-warning" role="alert" *ngIf="loadError">
+        {{ loadError }}
+      </div>
       <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
           <h1 class="h2 mb-1">Create Bitcoin Timestamp Attestation</h1>
@@ -67,15 +71,28 @@ export class OpenTimestampsStampComponent {
   public digest = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
   public stamping = false;
   public stampResult: any = null;
+  public loadError: string | null = null;
 
   constructor(private api: OpenTimestampsApiService) {}
 
   public stamp(): void {
     if (!this.digest) return;
     this.stamping = true;
-    this.api.stampDigest$(this.digest).subscribe(res => {
-      this.stampResult = res;
-      this.stamping = false;
+    this.loadError = null;
+    this.stampResult = null;
+    // A digest that did not reach a calendar has not been stamped. The
+    // revision this replaces answered a failed request with a status of
+    // stamped_pending_block and a proof string whose own contents read mock.
+    this.api.stampDigest$(this.digest).subscribe({
+      next: res => {
+        this.stampResult = res;
+        this.stamping = false;
+      },
+      error: err => {
+        this.stampResult = null;
+        this.loadError = loadFailureMessage(classifyLoadFailure(err));
+        this.stamping = false;
+      },
     });
   }
 }
