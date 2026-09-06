@@ -147,6 +147,23 @@
         ".github/workflows/universe-ci.yml"
       ],
       "verification": "Pending the run on b68b106."
+    },
+    {
+      "id": "CI-CAUSE-09",
+      "job": "Frontend build, Mobile and adaptive layout, WebKit and Firefox",
+      "failingStep": "Every route renders and finishes, at a phone and a desktop width; Every window a phone can be",
+      "reachedOnlyAfterFixing": "CI-CAUSE-03 and CI-CAUSE-08",
+      "run": 34018259022,
+      "firstCausalError": "The step was still running at the job cap with no output written.",
+      "class": "capacity",
+      "measurement": "The shared route list in scripts/universe/visual-qa/capture.mjs held 32 entries at the last green run 0f3e5a19 and holds 244 now. The broad pass measured 5m50s at 32 routes; the same work at 244 does not fit a 45 minute job. mobile-check.mjs walks the same list, so the Chromium mobile job and the WebKit job carry the same growth.",
+      "repair": "capture.mjs and mobile-check.mjs take --shard=i/n, slicing by position so every route lands in exactly one shard. The three steps run three shards at once against the one gateway, each with its own output and log, and the step fails if any shard fails. The Playwright container asks for four gigabytes of shared memory because three engines now run at once.",
+      "files": [
+        "scripts/universe/visual-qa/capture.mjs",
+        "scripts/universe/visual-qa/mobile-check.mjs",
+        ".github/workflows/universe-ci.yml"
+      ],
+      "verification": "The partition was checked directly: 244 routes split 82, 81, 81, with every id present exactly once. All ten visual QA unit tests pass."
     }
   ],
   "findings": [
