@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { BehaviorSubject, Observable, catchError, combineLatest, map, of, shareReplay, switchMap, tap } from 'rxjs';
+import { BehaviorSubject, Observable, Subscription, catchError, combineLatest, map, of, shareReplay, switchMap, take, tap } from 'rxjs';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { UniverseLocalService } from '@app/universe/universe-local.service';
@@ -73,10 +73,13 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
   readonly activity$ = new BehaviorSubject<ProtocolActivityState>({ kind: 'idle' });
   private activityCursor: string | null = null;
   private activityPages: ExplorerProtocolActivityPage[] = [];
+  private activitySubscription?: Subscription;
 
   readonly objects$ = new BehaviorSubject<ProtocolObjectsState>({ kind: 'idle' });
   private objectCursor: string | null = null;
   private objectPages: ExplorerProtocolObjectsPage[] = [];
+  private objectSubscription?: Subscription;
+  private protocolChain = 'bitcoin';
 
   constructor(
     private route: ActivatedRoute,
@@ -89,16 +92,15 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.pulse.start();
 
-    const sources$ = this.api.getSources$().pipe(
-      map((response) => response.sources || []),
-      catchError(() => of([] as SourceEntry[])),
-    );
-
     // The protocol itself resolves once per navigation. Title and history are
     // recorded there, not in the live stream below, so a ticking pulse never
     // re-runs a page-level side effect.
     const protocol$ = this.route.paramMap.pipe(
       switchMap((params) => {
+        this.activitySubscription?.unsubscribe();
+        this.objectSubscription?.unsubscribe();
+        this.activity$.next({ kind: 'loading' });
+        this.objects$.next({ kind: 'loading' });
         const id = (params.get('id') || '').toLowerCase();
         return this.api.getProtocols$().pipe(
           map((registry) => findProtocol(registry.protocols || [], id)),
@@ -106,6 +108,7 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
       }),
       tap((protocol) => {
         if (!protocol) {return;}
+        this.protocolChain = protocol.chain;
         this.seo.setTitle(protocol.displayName);
         this.local.recordVisit({
           kind: 'protocol',
@@ -125,7 +128,10 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
           return of<ProtocolDetailViewModel>({ kind: 'missing' });
         }
         return combineLatest([
-          sources$,
+          this.api.getSources$(protocol.chain).pipe(
+            map((response) => response.sources || []),
+            catchError(() => of([] as SourceEntry[])),
+          ),
           this.pulse.state$,
           this.local.preferences$,
         ]).pipe(
@@ -149,6 +155,8 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.activitySubscription?.unsubscribe();
+    this.objectSubscription?.unsubscribe();
     this.pulse.stop();
   }
 
@@ -158,10 +166,11 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
    * failure of the explorer's own overlay lands here as an error.
    */
   loadActivity(protocolId: string): void {
+    this.activitySubscription?.unsubscribe();
     this.activityPages = [];
     this.activityCursor = null;
     this.activity$.next({ kind: 'loading' });
-    this.api.getProtocolActivity$(protocolId).subscribe({
+    this.activitySubscription = this.api.getProtocolActivity$(protocolId, undefined, 25, this.protocolChain).pipe(take(1)).subscribe({
       next: (page) => this.pushActivityPage(page),
       error: () => this.activity$.next({ kind: 'error' }),
     });
@@ -174,7 +183,7 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
       return;
     }
     this.activity$.next({ ...state, loadingMore: true });
-    this.api.getProtocolActivity$(protocolId, this.activityCursor).subscribe({
+    this.activitySubscription = this.api.getProtocolActivity$(protocolId, this.activityCursor, 25, this.protocolChain).pipe(take(1)).subscribe({
       next: (page) => this.pushActivityPage(page),
       error: () => this.activity$.next({ ...state, loadingMore: false }),
     });
@@ -203,10 +212,11 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
    * as the activity feed above.
    */
   loadObjects(protocolId: string): void {
+    this.objectSubscription?.unsubscribe();
     this.objectPages = [];
     this.objectCursor = null;
     this.objects$.next({ kind: 'loading' });
-    this.api.getProtocolObjects$(protocolId).subscribe({
+    this.objectSubscription = this.api.getProtocolObjects$(protocolId, undefined, 25, this.protocolChain).pipe(take(1)).subscribe({
       next: (page) => this.pushObjectsPage(page),
       error: () => this.objects$.next({ kind: 'error' }),
     });
@@ -218,7 +228,7 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
       return;
     }
     this.objects$.next({ ...state, loadingMore: true });
-    this.api.getProtocolObjects$(protocolId, this.objectCursor).subscribe({
+    this.objectSubscription = this.api.getProtocolObjects$(protocolId, this.objectCursor, 25, this.protocolChain).pipe(take(1)).subscribe({
       next: (page) => this.pushObjectsPage(page),
       error: () => this.objects$.next({ ...state, loadingMore: false }),
     });

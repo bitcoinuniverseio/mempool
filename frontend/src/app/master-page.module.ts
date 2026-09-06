@@ -25,7 +25,7 @@ const browserWindow = window || {};
 // @ts-ignore
 const browserWindowEnv = browserWindow.__env || {};
 
-const routes: Routes = [
+export const masterPageRoutes: Routes = [
   {
     path: '',
     component: MasterPageComponent,
@@ -102,10 +102,46 @@ const routes: Routes = [
         path: 'api',
         loadChildren: () => import('@app/docs/docs.module').then(m => m.DocsModule)
       },
+      // Product 9: Bitcoin Staking, Finality, and Slashing Evidence Observatory
       {
-        path: 'lightning',
-        loadChildren: () => import('@app/lightning/lightning.module').then(m => m.LightningModule),
-        data: { preload: browserWindowEnv && browserWindowEnv.LIGHTNING === true, networks: ['bitcoin'] },
+        path: 'protocols/bitcoin-staking',
+        loadComponent: () => import('@app/universe/bitcoin-staking/staking-overview.component').then(m => m.StakingOverviewComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'protocols/bitcoin-staking/delegations',
+        loadComponent: () => import('@app/universe/bitcoin-staking/staking-delegations.component').then(m => m.StakingDelegationsComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'protocols/bitcoin-staking/delegation/:delegationId',
+        loadComponent: () => import('@app/universe/bitcoin-staking/staking-delegation-detail.component').then(m => m.StakingDelegationDetailComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'protocols/bitcoin-staking/finality-providers',
+        loadComponent: () => import('@app/universe/bitcoin-staking/staking-finality-providers.component').then(m => m.StakingFinalityProvidersComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'protocols/bitcoin-staking/finality-provider/:providerId',
+        loadComponent: () => import('@app/universe/bitcoin-staking/staking-finality-provider-detail.component').then(m => m.StakingFinalityProviderDetailComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'protocols/bitcoin-staking/parameters',
+        loadComponent: () => import('@app/universe/bitcoin-staking/staking-parameters.component').then(m => m.StakingParametersComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'protocols/bitcoin-staking/evidence',
+        loadComponent: () => import('@app/universe/bitcoin-staking/staking-evidence.component').then(m => m.StakingEvidenceComponent),
+        data: { networks: ['bitcoin'] },
+      },
+      {
+        path: 'protocols/bitcoin-staking/reconciliation',
+        loadComponent: () => import('@app/universe/bitcoin-staking/staking-reconciliation.component').then(m => m.StakingReconciliationComponent),
+        data: { networks: ['bitcoin'] },
       },
       {
         path: 'protocols',
@@ -524,11 +560,6 @@ const routes: Routes = [
         data: { networks: ['bitcoin'] },
       },
       {
-        path: 'labs/consensus/:proposalId',
-        loadComponent: () => import('@app/universe/consensus/consensus-proposal-detail.component').then(m => m.ConsensusProposalDetailComponent),
-        data: { networks: ['bitcoin'] },
-      },
-      {
         path: 'labs/consensus/compare',
         loadComponent: () => import('@app/universe/consensus/consensus-compare.component').then(m => m.ConsensusCompareComponent),
         data: { networks: ['bitcoin'] },
@@ -904,47 +935,6 @@ const routes: Routes = [
         loadComponent: () => import('@app/universe/payment-connectivity/payment-zaps.component').then(m => m.PaymentZapsComponent),
         data: { networks: ['bitcoin'] },
       },
-      // Product 9: Bitcoin Staking, Finality, and Slashing Evidence Observatory
-      {
-        path: 'protocols/bitcoin-staking',
-        loadComponent: () => import('@app/universe/bitcoin-staking/staking-overview.component').then(m => m.StakingOverviewComponent),
-        data: { networks: ['bitcoin'] },
-      },
-      {
-        path: 'protocols/bitcoin-staking/delegations',
-        loadComponent: () => import('@app/universe/bitcoin-staking/staking-delegations.component').then(m => m.StakingDelegationsComponent),
-        data: { networks: ['bitcoin'] },
-      },
-      {
-        path: 'protocols/bitcoin-staking/delegation/:delegationId',
-        loadComponent: () => import('@app/universe/bitcoin-staking/staking-delegation-detail.component').then(m => m.StakingDelegationDetailComponent),
-        data: { networks: ['bitcoin'] },
-      },
-      {
-        path: 'protocols/bitcoin-staking/finality-providers',
-        loadComponent: () => import('@app/universe/bitcoin-staking/staking-finality-providers.component').then(m => m.StakingFinalityProvidersComponent),
-        data: { networks: ['bitcoin'] },
-      },
-      {
-        path: 'protocols/bitcoin-staking/finality-provider/:providerId',
-        loadComponent: () => import('@app/universe/bitcoin-staking/staking-finality-provider-detail.component').then(m => m.StakingFinalityProviderDetailComponent),
-        data: { networks: ['bitcoin'] },
-      },
-      {
-        path: 'protocols/bitcoin-staking/parameters',
-        loadComponent: () => import('@app/universe/bitcoin-staking/staking-parameters.component').then(m => m.StakingParametersComponent),
-        data: { networks: ['bitcoin'] },
-      },
-      {
-        path: 'protocols/bitcoin-staking/evidence',
-        loadComponent: () => import('@app/universe/bitcoin-staking/staking-evidence.component').then(m => m.StakingEvidenceComponent),
-        data: { networks: ['bitcoin'] },
-      },
-      {
-        path: 'protocols/bitcoin-staking/reconciliation',
-        loadComponent: () => import('@app/universe/bitcoin-staking/staking-reconciliation.component').then(m => m.StakingReconciliationComponent),
-        data: { networks: ['bitcoin'] },
-      },
       {
         path: 'utxo-set',
         loadComponent: () => import('@app/universe/utxo-set/utxo-set.component').then(m => m.UtxoSetComponent),
@@ -1265,6 +1255,11 @@ loadChildren: () => import('@app/universe/portfolio/portfolio.routes').then(m =>
         loadComponent: () => import('@app/universe/lightning-resilience/lightning-resilience-mitigations.component').then(m => m.LightningResilienceMitigationsComponent),
         data: { networks: ['bitcoin'] },
       },
+      {
+        path: 'lightning',
+        loadChildren: () => import('@app/lightning/lightning.module').then(m => m.LightningModule),
+        data: { preload: browserWindowEnv && browserWindowEnv.LIGHTNING === true, networks: ['bitcoin'] },
+      },
 
       // Frontier Product 4: Block Propagation, Compact-Block Reconstruction, and Fork-Race Observatory
       {
@@ -1428,6 +1423,11 @@ loadChildren: () => import('@app/universe/portfolio/portfolio.routes').then(m =>
         loadComponent: () => import('@app/universe/consensus-conformance/consensus-conformance-corpora.component').then(m => m.ConsensusConformanceCorporaComponent),
         data: { networks: ['bitcoin'] },
       },
+      {
+        path: 'labs/consensus/:proposalId',
+        loadComponent: () => import('@app/universe/consensus/consensus-proposal-detail.component').then(m => m.ConsensusProposalDetailComponent),
+        data: { networks: ['bitcoin'] },
+      },
 
       // Frontier Product 8: Node Software Security, Advisory, and Upgrade Readiness Center
       {
@@ -1522,18 +1522,18 @@ loadChildren: () => import('@app/universe/portfolio/portfolio.routes').then(m =>
 ];
 
 if (window['__env']?.OFFICIAL_MEMPOOL_SPACE) {
-  routes[0].children.push({
+  masterPageRoutes[0].children.push({
     path: 'monitoring',
     data: { networks: ['bitcoin', 'liquid'] },
     component: ServerHealthComponent
   });
-  routes[0].children.push({
+  masterPageRoutes[0].children.push({
     path: 'nodes',
     data: { networks: ['bitcoin', 'liquid'] },
     component: ServerStatusComponent
   });
   if (window['isMempoolSpaceBuild']) {
-    routes[0].children.push({
+    masterPageRoutes[0].children.push({
       path: 'faucet',
       canActivate: [(route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
         return state.url.startsWith('/testnet4/');
@@ -1550,14 +1550,14 @@ if (window['__env']?.OFFICIAL_MEMPOOL_SPACE) {
 }
 
 if (window['__env']?.customize?.dashboard?.widgets?.some(w => w.component ==='simpleproof')) {
-  routes[0].children.push({
+  masterPageRoutes[0].children.push({
     path: 'sp/verified',
     component: SimpleProofWidgetComponent,
   });
 }
 
 if (window['__env']?.customize?.dashboard?.widgets?.some(w => w.component ==='simpleproof_cubo')) {
-  routes[0].children.push({
+  masterPageRoutes[0].children.push({
     path: 'sp/cubo',
     component: SimpleProofCuboWidgetComponent,
   });
@@ -1565,7 +1565,7 @@ if (window['__env']?.customize?.dashboard?.widgets?.some(w => w.component ==='si
 
 @NgModule({
   imports: [
-    RouterModule.forChild(routes)
+    RouterModule.forChild(masterPageRoutes)
   ],
   exports: [
     RouterModule

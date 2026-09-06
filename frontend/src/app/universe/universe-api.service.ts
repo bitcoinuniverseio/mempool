@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, catchError, map, of, shareReplay, throwError } from 'rxjs';
+import { Observable, catchError, map, of, shareReplay, throwError, defer, distinctUntilChanged, startWith, switchMap, take } from 'rxjs';
 import { StateService } from '@app/services/state.service';
 import {
   BackendInfo,
@@ -21,6 +21,7 @@ import {
   ChainExplorerPayload,
   ChartSeriesView,
   ExplorerChain,
+  ExplorerNetwork,
   FeeRecommendationsView,
   MiningPoolsView,
   MiningSummaryView,
@@ -170,6 +171,7 @@ export class UniverseApiService {
   private apiBaseUrl: string; // base URL is protocol, hostname, and port
 
   private protocolsCache$: Observable<ProtocolsResponse> | null = null;
+  private protocolsCacheNetwork?: ExplorerNetwork;
 
   constructor(
     private httpClient: HttpClient,
@@ -181,20 +183,76 @@ export class UniverseApiService {
     }
   }
 
-  getProtocols$(): Observable<ProtocolsResponse> {
-    if (!this.protocolsCache$) {
-      this.protocolsCache$ = this.httpClient.get<ProtocolsResponse>(
-        this.apiBaseUrl + '/api/v1/universe/protocols'
-      ).pipe(
-        catchError((error) => {
-          // don't cache failures: allow the next subscriber to retry
-          this.protocolsCache$ = null;
-          return throwError(() => error);
-        }),
-        shareReplay({ bufferSize: 1, refCount: false }),
-      );
+  get network(): ExplorerNetwork {
+    const network = this.stateService.network || 'mainnet';
+    if (!['mainnet', 'testnet', 'testnet4', 'signet', 'regtest'].includes(network)) {
+      throw new Error('unsupported-overlay-network');
     }
-    return this.protocolsCache$;
+    return network as ExplorerNetwork;
+  }
+
+  private selectedNetwork$(): Observable<ExplorerNetwork> {
+    return defer(() => (this.stateService.networkChanged$ ?? of(this.stateService.network)).pipe(
+      startWith(this.stateService.network),
+      map(() => this.network),
+      distinctUntilChanged(),
+    ));
+  }
+
+  private requestForNetwork<T>(url: string, network: ExplorerNetwork, body?: unknown, chain = 'bitcoin'): Observable<T> {
+    const address = url + (url.includes('?') ? '&' : '?') + 'chain=' + encodeURIComponent(chain) + '&network=' + network;
+    const request = body === undefined ? this.httpClient.get<T>(address) : this.httpClient.post<T>(address, body);
+    return request.pipe(map((value) => {
+      this.assertResponseContext(value, network, chain);
+      return value;
+    }));
+  }
+
+  /** Re-subscribes at a network switch, cancelling the previous HTTP request. */
+  private scopedRequest<T>(url: string, body?: unknown, chain = 'bitcoin'): Observable<T> {
+    return this.selectedNetwork$().pipe(
+      // Other-chain protocol directory routes currently offer mainnet reads only.
+      map((network) => chain === 'bitcoin' ? network : 'mainnet' as ExplorerNetwork),
+      distinctUntilChanged(),
+      switchMap((network) => this.requestForNetwork<T>(url, network, body, chain)),
+    );
+  }
+
+  private assertResponseContext(value: unknown, network: ExplorerNetwork, chain = 'bitcoin'): void {
+    if (!value || typeof value !== 'object') {return;}
+    const row = value as Record<string, unknown>;
+    // A missing checkpoint remains unknown. Never promote it to block proof.
+    if ((row.chain !== undefined && row.chain !== null && row.chain !== chain)
+      || (row.network !== undefined && row.network !== null && row.network !== network)) {
+      throw new Error('authority-network-mismatch');
+    }
+    for (const key of ['checkpoint', 'flow', 'evidence', 'source']) {
+      if (row[key]) {this.assertResponseContext(row[key], network, chain);}
+    }
+    for (const key of ['results', 'positions', 'sources', 'inputs', 'outputs', 'actions', 'sourceEvidence', 'utxos']) {
+      if (Array.isArray(row[key])) {
+        for (const child of row[key] as unknown[]) {this.assertResponseContext(child, network, chain);}
+      }
+    }
+  }
+
+  getProtocols$(): Observable<ProtocolsResponse> {
+    return this.selectedNetwork$().pipe(switchMap((network) => {
+      if (!this.protocolsCache$ || this.protocolsCacheNetwork !== network) {
+        this.protocolsCacheNetwork = network;
+        this.protocolsCache$ = this.requestForNetwork<ProtocolsResponse>(
+          this.apiBaseUrl + '/api/v1/universe/protocols', network,
+        ).pipe(
+          catchError((error) => {
+            // Only clear the failed partition; a late failure cannot evict a newer network.
+            if (this.protocolsCacheNetwork === network) {this.protocolsCache$ = null;}
+            return throwError(() => error);
+          }),
+          shareReplay({ bufferSize: 1, refCount: true }),
+        );
+      }
+      return this.protocolsCache$;
+    }));
   }
 
   /**
@@ -202,11 +260,12 @@ export class UniverseApiService {
    * authority publishes no feed this explorer reads, which is a state to
    * render, not an error, so it resolves to an explicit unsupported page.
    */
-  getProtocolActivity$(protocolId: string, cursor?: string, limit = 25): Observable<ExplorerProtocolActivityPage> {
+  getProtocolActivity$(protocolId: string, cursor?: string, limit = 25, chain = 'bitcoin'): Observable<ExplorerProtocolActivityPage> {
     let query = '?limit=' + Math.min(Math.max(1, Math.floor(limit)), 200);
     if (cursor) {query += '&cursor=' + encodeURIComponent(cursor);}
-    return this.httpClient.get<ExplorerProtocolActivityPage>(
-      this.apiBaseUrl + '/api/v1/universe/protocols/' + encodeURIComponent(protocolId) + '/activity' + query
+    return this.scopedRequest<ExplorerProtocolActivityPage>(
+      this.apiBaseUrl + '/api/v1/universe/protocols/' + encodeURIComponent(protocolId) + '/activity' + query,
+      undefined, chain,
     ).pipe(
       map((page) => isActivityPage(page) ? page : unsupportedActivityPage(protocolId)),
       catchError((error) => {
@@ -219,11 +278,11 @@ export class UniverseApiService {
   }
 
   getStatus$(): Observable<StatusResponse> {
-    return this.httpClient.get<StatusResponse>(this.apiBaseUrl + '/api/v1/universe/status');
+    return this.scopedRequest<StatusResponse>(this.apiBaseUrl + '/api/v1/universe/status');
   }
 
-  getSources$(): Observable<SourcesResponse> {
-    return this.httpClient.get<SourcesResponse>(this.apiBaseUrl + '/api/v1/universe/sources');
+  getSources$(chain = 'bitcoin'): Observable<SourcesResponse> {
+    return this.scopedRequest<SourcesResponse>(this.apiBaseUrl + '/api/v1/universe/sources', undefined, chain);
   }
 
   /**
@@ -237,7 +296,7 @@ export class UniverseApiService {
 
   /** Protocol asset flow for one transaction. Never cached: state changes as the transaction confirms. */
   getTransactionFlow$(txid: string): Observable<ExplorerTransactionAssetFlow> {
-    return this.httpClient.get<ExplorerTransactionAssetFlow>(
+    return this.scopedRequest<ExplorerTransactionAssetFlow>(
       this.apiBaseUrl + '/api/v1/universe/transactions/' + txid
     );
   }
@@ -248,51 +307,51 @@ export class UniverseApiService {
    * issuing one request per transaction.
    */
   getTransactionFlows$(txids: string[]): Observable<TransactionBatchResponse> {
-    return this.httpClient.post<TransactionBatchResponse>(
+    return this.scopedRequest<TransactionBatchResponse>(
       this.apiBaseUrl + '/api/v1/universe/transactions/batch',
       { txids: txids.slice(0, UNIVERSE_TRANSACTION_BATCH_LIMIT) }
-    );
+    ).pipe(take(1));
   }
 
   /** Assets attached to one outpoint, with the evidence behind the answer. */
   getOutpoint$(txid: string, vout: number | string): Observable<OutpointEnrichment> {
-    return this.httpClient.get<OutpointEnrichment>(
+    return this.scopedRequest<OutpointEnrichment>(
       this.apiBaseUrl + '/api/v1/universe/outpoints/' + txid + '/' + vout
     );
   }
 
   /** Assets attached to up to {@link UNIVERSE_OUTPOINT_BATCH_LIMIT} outpoints. */
   getOutpoints$(outpoints: string[]): Observable<OutpointBatchResponse> {
-    return this.httpClient.post<OutpointBatchResponse>(
+    return this.scopedRequest<OutpointBatchResponse>(
       this.apiBaseUrl + '/api/v1/universe/outpoints/batch',
       { outpoints: outpoints.slice(0, UNIVERSE_OUTPOINT_BATCH_LIMIT) }
-    );
+    ).pipe(take(1));
   }
 
   /** One inscription, addressed by id or by inscription number. */
   getInscription$(reference: string): Observable<AssetLookupResult<OrdInscriptionView>> {
-    return this.httpClient.get<AssetLookupResult<OrdInscriptionView>>(
+    return this.scopedRequest<AssetLookupResult<OrdInscriptionView>>(
       this.apiBaseUrl + '/api/v1/universe/inscriptions/' + encodeURIComponent(reference)
     );
   }
 
   /** One rune, addressed by name or by rune id. */
   getRune$(reference: string): Observable<AssetLookupResult<OrdRuneView>> {
-    return this.httpClient.get<AssetLookupResult<OrdRuneView>>(
+    return this.scopedRequest<AssetLookupResult<OrdRuneView>>(
       this.apiBaseUrl + '/api/v1/universe/runes/' + encodeURIComponent(reference)
     );
   }
 
   /** One satoshi, addressed by its ordinal number. */
   getSat$(reference: string): Observable<AssetLookupResult<OrdSatView>> {
-    return this.httpClient.get<AssetLookupResult<OrdSatView>>(
+    return this.scopedRequest<AssetLookupResult<OrdSatView>>(
       this.apiBaseUrl + '/api/v1/universe/sats/' + encodeURIComponent(reference)
     );
   }
 
   /** Inscriptions revealed in one block. Paginated by the authority. */
   getBlockInscriptions$(height: number | string, page = 0): Observable<AssetLookupResult<OrdBlockInscriptionsView>> {
-    return this.httpClient.get<AssetLookupResult<OrdBlockInscriptionsView>>(
+    return this.scopedRequest<AssetLookupResult<OrdBlockInscriptionsView>>(
       this.apiBaseUrl + '/api/v1/universe/blocks/' + height + '/inscriptions?page=' + page
     );
   }
@@ -405,7 +464,7 @@ export class UniverseApiService {
 
   /** The Bitcoin address asset-holdings view from the universe overlay. */
   getAddressHoldings$(address: string, limit = 100, offset = 0): Observable<ChainExplorerPayload> {
-    return this.httpClient.get<ChainExplorerPayload>(
+    return this.scopedRequest<ChainExplorerPayload>(
       this.apiBaseUrl + '/api/v1/universe/addresses/' + encodeURIComponent(address) + '/holdings?limit=' + limit + '&offset=' + offset
     );
   }
@@ -555,11 +614,12 @@ export class UniverseApiService {
    * is not the documented page resolves to the same explicit state instead
    * of flowing into the page as object data.
    */
-  getProtocolObjects$(protocolId: string, cursor?: string, limit = 25): Observable<ExplorerProtocolObjectsPage> {
+  getProtocolObjects$(protocolId: string, cursor?: string, limit = 25, chain = 'bitcoin'): Observable<ExplorerProtocolObjectsPage> {
     let query = '?limit=' + Math.min(Math.max(1, Math.floor(limit)), 200);
     if (cursor) {query += '&cursor=' + encodeURIComponent(cursor);}
-    return this.httpClient.get<ExplorerProtocolObjectsPage>(
-      this.apiBaseUrl + '/api/v1/universe/protocols/' + encodeURIComponent(protocolId) + '/objects' + query
+    return this.scopedRequest<ExplorerProtocolObjectsPage>(
+      this.apiBaseUrl + '/api/v1/universe/protocols/' + encodeURIComponent(protocolId) + '/objects' + query,
+      undefined, chain,
     ).pipe(
       map((page) => isObjectsPage(page) ? page : unsupportedObjectsPage(protocolId)),
       catchError((error) => {
@@ -573,14 +633,14 @@ export class UniverseApiService {
 
   /** ANIMA protocol status, scanner readiness, and exact supply. */
   getAnimaStatus$(): Observable<AnimaStatusDocument> {
-    return this.httpClient.get<AnimaStatusDocument>(
+    return this.scopedRequest<AnimaStatusDocument>(
       this.apiBaseUrl + '/api/v1/anima/status'
     );
   }
 
   /** One page of the ANIMA logged transition list. */
   getAnimaEvents$(from = 0, limit = 50): Observable<AnimaEventsDocument> {
-    return this.httpClient.get<AnimaEventsDocument>(
+    return this.scopedRequest<AnimaEventsDocument>(
       this.apiBaseUrl + '/api/v1/anima/events?from=' + Math.max(0, Math.floor(from))
         + '&limit=' + Math.min(Math.max(1, Math.floor(limit)), 200)
     );
@@ -588,7 +648,7 @@ export class UniverseApiService {
 
   /** One ANIMA logged transition by the composite id this explorer issues. */
   getAnimaEvent$(eventId: string): Observable<AnimaEventDocument> {
-    return this.httpClient.get<AnimaEventDocument>(
+    return this.scopedRequest<AnimaEventDocument>(
       this.apiBaseUrl + '/api/v1/anima/events/' + encodeURIComponent(eventId)
     );
   }
@@ -598,21 +658,21 @@ export class UniverseApiService {
     let query = '?offset=' + Math.max(0, Math.floor(offset))
       + '&limit=' + Math.min(Math.max(1, Math.floor(limit)), 200);
     if (status) {query += '&status=' + encodeURIComponent(status);}
-    return this.httpClient.get<AnimaOrganismsDocument>(
+    return this.scopedRequest<AnimaOrganismsDocument>(
       this.apiBaseUrl + '/api/v1/anima/organisms' + query
     );
   }
 
   /** One ANIMA organism with its waymarks and achievements. */
   getAnimaOrganism$(organismId: string): Observable<AnimaOrganismDocument> {
-    return this.httpClient.get<AnimaOrganismDocument>(
+    return this.scopedRequest<AnimaOrganismDocument>(
       this.apiBaseUrl + '/api/v1/anima/organisms/' + encodeURIComponent(organismId)
     );
   }
 
   /** The transition history and lineage around one ANIMA organism. */
   getAnimaOrganismHistory$(organismId: string): Observable<AnimaOrganismHistoryDocument> {
-    return this.httpClient.get<AnimaOrganismHistoryDocument>(
+    return this.scopedRequest<AnimaOrganismHistoryDocument>(
       this.apiBaseUrl + '/api/v1/anima/organisms/' + encodeURIComponent(organismId) + '/history'
     );
   }

@@ -304,7 +304,7 @@ export function renderMarkdown(manifest) {
     (protocol) =>
       `| ${cell(protocol.id)} | ${cell(protocol.family)} | ${cell(protocol.chain)} | ` +
       `${cell(protocol.indexerAuthority ?? 'none')} | ${cell(protocol.releaseStatus)} | ` +
-      `${cell(coverageState(protocol.coverage))} |`,
+      `${cell(coverageState(protocol.coverage))} | ${cell((protocol.implementedReadOperations ?? []).join(', '))} |`,
   );
   return `# Protocol coverage
 
@@ -332,10 +332,10 @@ Pinned from ${cell(manifest.sourceRepository)} at commit ${cell(manifest.sourceS
 manifest schema ${cell(manifest.schemaVersion)}, registry version ${cell(manifest.registryVersion)},
 recorded ${cell(manifest.generatedAt)}.
 
-${readable.length} of ${manifest.protocols.length} protocols are readable today; the rest are recorded here but not yet served.
+${manifest.protocols.length} protocol identities are retained. ${readable.length} carry historical readable declarations; these are not current runtime or E2E passes. Operation descriptors identify implemented public reads and their owned authority routes; configuration and acceptance are separate. The registry is not the complete application operation inventory.
 
-| id | family | chain | authority | release status | coverage |
-|---|---|---|---|---|---|
+| id | family | chain | authority | historical declaration | coverage | implemented reads |
+|---|---|---|---|---|---|---|
 ${rows.join('\n')}
 `;
 }
@@ -364,7 +364,7 @@ export function renderReadmeBlock(manifest) {
   return [
     README_MARKER_OPEN,
     '',
-    `${readable.length} of the ${manifest.protocols.length} protocols in the registry are readable today:`,
+    `${readable.length} of the ${manifest.protocols.length} protocols carry historical readable declarations (not current E2E acceptance):`,
     '',
     ...lines,
     '',

@@ -22,9 +22,20 @@ export interface ExplorerProtocolDefinition {
   visualToken: string;
   implementedReadOperations: string[];
   authorizedReadOperations: string[];
+  readOperationDescriptors?: ExplorerReadOperation[];
   releaseStatus: string;
   indexerAuthority?: string;
   coverage: ProtocolCoverage | string | null;
+}
+
+/** Source-declared handler support, independent of configured authority or E2E acceptance. */
+export interface ExplorerReadOperation {
+  id: string;
+  method: 'GET' | 'POST';
+  route: string;
+  authorityPath: string | null;
+  evidence: 'source-contract';
+  acceptance: 'NOT TESTED';
 }
 
 export interface ProtocolsResponse {
@@ -37,6 +48,8 @@ export type SourceStatus =
   'ready' | 'stale' | 'unreachable' | 'unconfigured' | 'degraded';
 
 export interface SourceCheckpoint {
+  chain?: string;
+  network?: string;
   heightAtomic: string;
   blockHash: string;
   observedAt: string;
@@ -44,6 +57,8 @@ export interface SourceCheckpoint {
 
 export interface SourceEntry {
   authorityId: string;
+  chain?: string;
+  network?: string;
   protocols: string[];
   ready: boolean;
   status: SourceStatus | string;
@@ -301,7 +316,7 @@ export interface OrdBlockInscriptionsView {
 // --- Multi-chain explorer ---
 
 export type ExplorerChain = 'bitcoin' | 'dogecoin' | 'zcash';
-export type ExplorerNetwork = 'mainnet' | 'testnet' | 'regtest';
+export type ExplorerNetwork = 'mainnet' | 'testnet' | 'testnet4' | 'signet' | 'regtest';
 
 export interface ChainCapabilityProtocol {
   protocolId: string;

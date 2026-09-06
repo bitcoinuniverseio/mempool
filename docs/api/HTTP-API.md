@@ -8,8 +8,9 @@ per-field documentation for the inherited Bitcoin REST API is served by the
 application itself at `/docs/api/rest`, generated from
 `frontend/src/app/docs/api-docs/api-docs-data.ts`.
 
-Nothing on this surface takes an API key, a cookie, or a session. Every route
-below is read only with one exception: transaction broadcast.
+Authentication and side effects depend on the handler. Public explorer reads,
+local inspectors, portfolio persistence, sharing, and privileged admin adapters
+have different contracts. This reference does not grant mutation or admin access.
 `POST /api/v1/tx/push` is always mounted, and `POST /api/v1/tx` is mounted when
 the backend serves the transaction family itself. Both hand raw bytes to
 Bitcoin Core and store nothing.
@@ -31,8 +32,8 @@ flowchart LR
   fe["Built frontend<br/>SPA fallback"]
 
   client --> gw
-  gw -->|"/api/v1/universe/*<br/>/api/v1/chains<br/>/api/v1/bitcoin/*<br/>/api/v1/dogecoin/*<br/>/api/v1/zcash/*"| ov
-  gw -->|"everything else under /api/v1/"| be
+  gw -->|"/api/v1/universe/*<br/>/api/v2/universe/*<br/>chain and dedicated overlay prefixes"| ov
+  gw -->|"/api/v1/zcash/privacy/* first<br/>other backend routes under /api/v1/"| be
   gw -->|"/api/* with /api stripped"| idx
   gw -->|"everything else"| fe
 ```
@@ -40,8 +41,11 @@ flowchart LR
 | Path | Answered by | Notes |
 | --- | --- | --- |
 | `/api/v1/universe/**` | protocol overlay | Universe protocol domain |
+| `/api/v2/universe/**` | protocol overlay | Portfolio v2; forwarding does not prove every offered handler exists |
 | `/api/v1/chains` | protocol overlay | the chain roster |
+| `/api/v1/zcash/privacy` and its children | explorer backend | checked before the generic Zcash prefix; lookalike names do not match |
 | `/api/v1/bitcoin/**`, `/api/v1/dogecoin/**`, `/api/v1/zcash/**` | protocol overlay | per-chain domain surfaces |
+| `/api/v1/anima/**` | protocol overlay | status, transition events, items and item history |
 | everything else under `/api/v1/**` | explorer backend | the inherited Bitcoin API, plus the Universe capability report |
 | `/api/internal/**` | nobody | refused with `404` at the gateway when an index is configured, so index administration never reaches the public origin |
 | `/api/**` | the address index, with `/api` stripped | only when the deployment runs one; otherwise it is rewritten onto the backend's `/api/v1/` prefix |
@@ -51,7 +55,7 @@ Two consequences are worth stating plainly because both have caused confusion:
 
 - **Lookalike paths stay with the backend.** `/api/v1/chainstats` is not
   `/api/v1/chains`, and the prefix match is on a full segment. Anything under
-  `/api/v1/` that is not one of the five overlay prefixes is the backend's.
+  `/api/v1/` that does not match a dedicated overlay prefix is the backend's.
 - **With `MEMPOOL.BACKEND` set to `esplora` the backend does not mount the
   address, script hash, transaction, block, or mempool routes at all.** It
   expects the edge to send that whole family to the index. Point `/api/` at the
@@ -60,9 +64,49 @@ Two consequences are worth stating plainly because both have caused confusion:
 
 ## Universe endpoints
 
-These are the endpoints that exist because of this fork or because of the
-Universe overlay. Each one was verified against
-`https://explorer.bitcoinuniverse.io` on 2026-09-01.
+These endpoints exist in this fork or its Universe overlay. The examples below
+include historical observations from 2026-09-01 and are not current acceptance.
+The current operation ledger is in `docs/acceptance/`; a registry size or an
+HTTP success alone is not a full application coverage claim.
+
+### Selected chain and network
+
+Existing Universe asset, flow, holdings, outpoint, source, activity and objects
+routes accept `?chain=bitcoin&network=signet`. ANIMA reads use the same query
+contract. Both fields are required when either is supplied; omitting both
+intentionally retains Bitcoin mainnet. Invalid combinations return `400`.
+The legacy registry-only `?chain=...` filter remains supported.
+
+Protocol detail reads use the chain declared by the registry. Bitcoin follows
+the selected route network; the other-chain directory paths currently request
+their offered mainnet context. Switching Bitcoin to Signet does not select
+Signet for Dogecoin, Zcash or Fractal. Cached registry responses and nested
+source/transaction evidence are checked against the requested context.
+
+The authority identity is `(authorityId, chain, network)`. A missing Signet
+source reports unconfigured; it never borrows the mainnet source. Requests,
+checkpoint caches, enrichment caches and saved links preserve the selected
+context. A checkpoint whose context differs from the request is rejected by
+the frontend. A missing checkpoint does not establish block-level proof.
+
+| Read | Method and route |
+| --- | --- |
+| Inscription / rune / sat | `GET /api/v1/universe/{inscriptions,runes,sats}/:reference` |
+| Block inscriptions | `GET /api/v1/universe/blocks/:height/inscriptions?page=0` |
+| Transaction flow | `GET /api/v1/universe/transactions/:txid` |
+| Transaction batch | `POST /api/v1/universe/transactions/batch`, body `{ "txids": [...] }`, maximum 25 |
+| Address holdings | `GET /api/v1/universe/addresses/:address/holdings?limit=100&offset=0` |
+| Outpoint | `GET /api/v1/universe/outpoints/:txid/:vout` |
+| Outpoint batch | `POST /api/v1/universe/outpoints/batch`, body `{ "outpoints": [...] }`, maximum 50 |
+| Protocol activity / objects | `GET /api/v1/universe/protocols/:protocolId/{activity,objects}?limit=25&cursor=...` |
+
+Append context with `&chain=bitcoin&network=signet` when a route already has
+query parameters. Batch POSTs are reads, not broadcasts. Invalid entries retain
+their own result row. Registry aliases resolve through the owned registry.
+
+The OP inscriptions objects adapter reads its authority's existing
+`/api/op-inscriptions/inscriptions` endpoint and validates its offset pagination.
+An objects page is not an activity feed or proof of a mint/transfer operation.
 
 ### `GET /api/v1/capabilities`
 
@@ -163,7 +207,12 @@ unrecognized `network` query value is rejected rather than answered.
 
 Protocol overlay. The protocol roster: every protocol in the registry with its
 id, display name, family, chain, networks, release status, indexer authority,
-and coverage.
+and coverage. Registry 1.1.0 retains 39 identities, including ANIMA, and adds
+`readOperationDescriptors` plus populated `implementedReadOperations` and
+`authorizedReadOperations`. Descriptors name implemented handlers and source
+contracts; their `NOT TESTED` acceptance value and historical release flags
+must not be interpreted as a current E2E pass. Deployment configuration is
+reported separately by source/status reads.
 
 The roster is owned by `bitcoinuniverseio/backend-apis`. This repository pins a
 copy in `docs/protocols/PROTOCOL-COVERAGE.json` and renders it as a table in
@@ -196,6 +245,11 @@ Protocol overlay. The deployment's own release identity, used by the `/source`
 page to satisfy AGPL section 13. See `docs/legal/AGPL-COMPLIANCE.md`.
 
 ## The inherited Bitcoin API
+
+Browser GET requests accepting `text/html` for `/api`, `/api/faq`, and
+`/api/api/:type` reach the inherited Angular documentation routes. Other API
+requests retain the dispatch rules below, including versioned API requests
+that accept HTML.
 
 The explorer backend serves the upstream Mempool REST API under `/api/v1/`.
 The route table is registered in

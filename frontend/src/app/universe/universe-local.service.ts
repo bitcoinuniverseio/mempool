@@ -70,7 +70,7 @@ const ENTRY_KINDS = new Set<UniverseEntryKind>([
   'transaction', 'block', 'address', 'outpoint', 'inscription', 'rune', 'sat', 'protocol',
 ]);
 const CHAINS = new Set<ExplorerChain>(['bitcoin', 'dogecoin', 'zcash']);
-const NETWORKS = new Set<ExplorerNetwork>(['mainnet', 'testnet', 'regtest']);
+const NETWORKS = new Set<ExplorerNetwork>(['mainnet', 'testnet', 'testnet4', 'signet', 'regtest']);
 
 function entryKey(entry: Pick<UniverseEntry, 'chain' | 'network' | 'kind' | 'value'>): string {
   return `${entry.chain}:${entry.network}:${entry.kind}:${entry.value}`;
@@ -97,6 +97,17 @@ export class UniverseLocalService {
 
   private available(): boolean {
     return !!this.stateService?.isBrowser;
+  }
+
+  currentNetwork(): ExplorerNetwork {
+    const network = this.stateService.network || 'mainnet';
+    return NETWORKS.has(network as ExplorerNetwork) ? network as ExplorerNetwork : 'mainnet';
+  }
+
+  private newEntry(entry: UniverseEntryInput): UniverseEntry | null {
+    // Only new writes use current navigation state. Historical entries use their own path/provenance.
+    const network = entry.network ?? ((entry.chain ?? 'bitcoin') === 'bitcoin' ? this.currentNetwork() : 'mainnet');
+    return this.sanitizeEntry({ ...entry, network, at: Date.now() });
   }
 
   private read(key: string): unknown {
@@ -126,13 +137,16 @@ export class UniverseLocalService {
     const label = entry.label;
     const at = entry.at;
     const chain = entry.chain ?? 'bitcoin';
-    const network = entry.network ?? 'mainnet';
+    const pathNetwork = typeof path === 'string' ? /^\/(signet|testnet4|testnet|regtest)(?:\/|$)/.exec(path)?.[1] : undefined;
+    const network = entry.network ?? pathNetwork ?? 'mainnet';
     if (
       typeof kind !== 'string' || !ENTRY_KINDS.has(kind as UniverseEntryKind) ||
       typeof chain !== 'string' || !CHAINS.has(chain as ExplorerChain) ||
       typeof network !== 'string' || !NETWORKS.has(network as ExplorerNetwork) ||
       typeof value !== 'string' || !value || value.length > 200 ||
       typeof path !== 'string' || !path.startsWith('/') || path.length > 400 ||
+      (pathNetwork !== undefined && pathNetwork !== network) ||
+      (chain !== 'bitcoin' && (network === 'signet' || network === 'testnet4')) ||
       typeof label !== 'string' || !label ||
       typeof at !== 'number' || !Number.isFinite(at)
     ) {
@@ -143,7 +157,7 @@ export class UniverseLocalService {
       network: network as ExplorerNetwork,
       kind: kind as UniverseEntryKind,
       value,
-      path,
+      path: chain === 'bitcoin' && network !== 'mainnet' && !pathNetwork ? '/' + network + path : path,
       label: label.slice(0, MAXIMUM_LABEL_LENGTH),
       at,
     };
@@ -198,7 +212,7 @@ export class UniverseLocalService {
   /** Records a visit. Most recent first, duplicates collapse to one entry. */
   recordVisit(entry: UniverseEntryInput): void {
     if (!this.available()) {return;}
-    const sanitized = this.sanitizeEntry({ ...entry, at: Date.now() });
+    const sanitized = this.newEntry(entry);
     if (!sanitized) {return;}
     const id = entryKey(sanitized);
     const next = [
@@ -218,7 +232,7 @@ export class UniverseLocalService {
     kind: UniverseEntryKind,
     value: string,
     chain: ExplorerChain = 'bitcoin',
-    network: ExplorerNetwork = 'mainnet',
+    network: ExplorerNetwork = chain === 'bitcoin' ? this.currentNetwork() : 'mainnet',
   ): boolean {
     const id = entryKey({ chain, network, kind, value });
     return this.bookmarkSubject.value.some((item) => entryKey(item) === id);
@@ -227,7 +241,7 @@ export class UniverseLocalService {
   /** Adds or removes a bookmark. Returns the state after the change. */
   toggleBookmark(entry: UniverseEntryInput): boolean {
     if (!this.available()) {return false;}
-    const sanitized = this.sanitizeEntry({ ...entry, at: Date.now() });
+    const sanitized = this.newEntry(entry);
     if (!sanitized) {return false;}
     const id = entryKey(sanitized);
     const existing = this.bookmarkSubject.value;

@@ -20,6 +20,15 @@ function port(route) {
   return route === null ? null : route.upstream.port;
 }
 
+test('HTML documentation aliases reach the frontend while API consumers retain dispatch', () => {
+  for (const path of ['/api', '/api/faq', '/api/api/rest', '/api/api/websocket']) {
+    assert.equal(routeFor(path, path, true), null, path);
+    assert.notEqual(routeFor(path, path, false), null, path);
+  }
+  assert.equal(port(routeFor('/api/v1/universe/status', '/api/v1/universe/status', true)), OVERLAY_PORT);
+  assert.equal(port(routeFor('/api/v1/backend-info', '/api/v1/backend-info', true)), BACKEND_PORT);
+});
+
 test('protocol overlay routes reach the overlay unchanged', () => {
   for (const url of [
     '/api/v1/universe',
@@ -39,7 +48,7 @@ test('portfolio v2 routes reach the overlay unchanged', () => {
     '/api/v2/universe/portfolio/networks',
     '/api/v2/universe/portfolio/bitcoin/mainnet/bc1qexample/summary',
     '/api/v2/universe/portfolio/bitcoin/mainnet/bc1qexample/utxos?limit=25',
-    '/api/v2/universe/portfolio/share/some-share-id',
+    '/api/v2/universe/portfolio-share/some-share-id',
   ]) {
     const pathname = new URL(url, 'http://x.invalid').pathname;
     const route = routeFor(pathname, url);
@@ -67,6 +76,18 @@ test('chain-domain routes reach the overlay unchanged', () => {
     const pathname = new URL(url, 'http://x.invalid').pathname;
     const route = routeFor(pathname, url);
     assert.equal(port(route), OVERLAY_PORT, url);
+    assert.equal(route.path, url, url);
+  }
+});
+
+test('Zcash privacy belongs to the explorer backend before generic Zcash dispatch', () => {
+  for (const url of [
+    '/api/v1/zcash/privacy',
+    '/api/v1/zcash/privacy/status?network=mainnet',
+    '/api/v1/zcash/privacy/workspaces/example',
+  ]) {
+    const route = routeFor(new URL(url, 'http://x.invalid').pathname, url);
+    assert.equal(port(route), BACKEND_PORT, url);
     assert.equal(route.path, url, url);
   }
 });

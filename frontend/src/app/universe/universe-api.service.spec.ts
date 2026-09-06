@@ -44,11 +44,11 @@ describe('UniverseApiService addressing', () => {
     service.getBackendInfo$().subscribe();
     service.getTransactionFlow$('a'.repeat(64)).subscribe();
     expect(urls).toEqual([
-      '/api/v1/universe/protocols',
-      '/api/v1/universe/status',
-      '/api/v1/universe/sources',
+      '/api/v1/universe/protocols?chain=bitcoin&network=mainnet',
+      '/api/v1/universe/status?chain=bitcoin&network=mainnet',
+      '/api/v1/universe/sources?chain=bitcoin&network=mainnet',
       '/api/v1/backend-info',
-      '/api/v1/universe/transactions/' + 'a'.repeat(64),
+      '/api/v1/universe/transactions/' + 'a'.repeat(64) + '?chain=bitcoin&network=mainnet',
     ]);
   });
 
@@ -57,7 +57,7 @@ describe('UniverseApiService addressing', () => {
     service.getProtocols$().subscribe();
     service.getBackendInfo$().subscribe();
     expect(urls).toEqual([
-      'https://explorer.internal:443/api/v1/universe/protocols',
+      'https://explorer.internal:443/api/v1/universe/protocols?chain=bitcoin&network=mainnet',
       'https://explorer.internal:443/api/v1/backend-info',
     ]);
   });

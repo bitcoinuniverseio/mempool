@@ -228,7 +228,12 @@ const OVERLAY_CHAIN_PREFIXES = [
  * where the address family answers that it cannot be served rather than not
  * existing.
  */
-export function routeFor(pathname, originalUrl) {
+export function routeFor(pathname, originalUrl, acceptsHtml = false) {
+  // These inherited documentation aliases share the API prefix. Browser
+  // navigation must reach Angular; ordinary API consumers retain their route.
+  if (acceptsHtml && /^\/api(?:\/(?:faq|api(?:\/[^/]+)?))?\/?$/.test(pathname)) {
+    return null;
+  }
   if (pathname === '/api/v1/universe' || pathname.startsWith('/api/v1/universe/')) {
     return { upstream: OVERLAY, path: originalUrl };
   }
@@ -449,7 +454,8 @@ const server = http.createServer((request, response) => {
     return;
   }
 
-  const route = routeFor(pathname, request.url);
+  const route = routeFor(pathname, request.url,
+    request.method === 'GET' && (request.headers.accept || '').includes('text/html'));
   if (route) {
     // A route with no upstream is one this gateway refuses outright. It is
     // answered as absent rather than as forbidden, because saying "forbidden"
