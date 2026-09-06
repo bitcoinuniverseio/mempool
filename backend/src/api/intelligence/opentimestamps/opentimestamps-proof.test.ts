@@ -28,7 +28,7 @@ describe('official OpenTimestamps detached proof vectors', () => {
     getHeader.mockResolvedValue(HEADER.header);
   });
 
-  it('verifies the official hello-world proof against the captured owned Bitcoin header', async () => {
+  it('verifies the official hello-world proof against the captured owned Bitcoin header', /** @asyncUnsafe Jest awaits this test and reports its rejection. */ async () => {
     await expect(Promise.resolve().then(() => openTimestampsService.verifyProof({ proof: proof(), digest: DIGEST })))
       .resolves.toMatchObject({
         status: 'bitcoin_attestation_verified', verified: true, digest_matches: true,
@@ -41,20 +41,20 @@ describe('official OpenTimestamps detached proof vectors', () => {
     expect(getHeader).toHaveBeenCalledWith(HEADER.hash);
   });
 
-  it('rejects the official bad-stamp Bitcoin commitment even though its embedded digest matches the document', async () => {
+  it('rejects the official bad-stamp Bitcoin commitment even though its embedded digest matches the document', /** @asyncUnsafe Jest awaits this test and reports its rejection. */ async () => {
     await expect(Promise.resolve().then(() => openTimestampsService.verifyProof({
       proof: proof('bad-stamp.txt.ots'), digest: '7e3717bbe020f53cdc6c40154a1a8e55bddc13a28c8bb3c82e9ee64b81b44872',
     }))).resolves.toMatchObject({ status: 'bitcoin_attestation_invalid', verified: false, digest_matches: true });
     expect(getHeader).toHaveBeenCalledWith(HEADER.hash);
   });
 
-  it('does not confuse a supplied document digest mismatch with a bad Bitcoin commitment', async () => {
+  it('does not confuse a supplied document digest mismatch with a bad Bitcoin commitment', /** @asyncUnsafe Jest awaits this test and reports its rejection. */ async () => {
     await expect(openTimestampsService.verifyProof({ proof: proof(), digest: 'ff'.repeat(32) }))
       .resolves.toMatchObject({ status: 'file_mismatch', verified: false, digest_matches: false });
     expect(getHash).not.toHaveBeenCalled();
   });
 
-  it('reports the official incomplete proof as pending without fetching its calendar URL', async () => {
+  it('reports the official incomplete proof as pending without fetching its calendar URL', /** @asyncUnsafe Jest awaits this test and reports its rejection. */ async () => {
     await expect(Promise.resolve().then(() => openTimestampsService.verifyProof({ proof: proof('incomplete.txt.ots') })))
       .resolves.toMatchObject({ status: 'pending_calendar_attestation', verified: false, digest_matches: null,
         calendar_attestations: [expect.objectContaining({ status: 'pending' })] });
@@ -62,31 +62,31 @@ describe('official OpenTimestamps detached proof vectors', () => {
     expect(getHeader).not.toHaveBeenCalled();
   });
 
-  it('reports the official unknown-notary proof as unsupported', async () => {
+  it('reports the official unknown-notary proof as unsupported', /** @asyncUnsafe Jest awaits this test and reports its rejection. */ async () => {
     await expect(Promise.resolve().then(() => openTimestampsService.verifyProof({ proof: proof('unknown-notary.txt.ots') })))
       .resolves.toMatchObject({ status: 'unsupported_attestation', verified: false, digest_matches: null });
     expect(getHash).not.toHaveBeenCalled();
   });
 
-  it('verifies embedded-digest anchoring without claiming a separate file was checked', async () => {
+  it('verifies embedded-digest anchoring without claiming a separate file was checked', /** @asyncUnsafe Jest awaits this test and reports its rejection. */ async () => {
     await expect(openTimestampsService.verifyProof({ proof: proof() }))
       .resolves.toMatchObject({ status: 'bitcoin_attestation_verified', verified: true, digest_matches: null });
   });
 
-  it('binds the requested network to the configured reader before reading any headers', async () => {
+  it('binds the requested network to the configured reader before reading any headers', /** @asyncUnsafe Jest awaits this test and reports its rejection. */ async () => {
     await expect(openTimestampsService.verifyProof({ proof: proof(), network: 'signet' }))
       .resolves.toMatchObject({ status: 'network_mismatch', verified: false, network: 'mainnet' });
     expect(getHash).not.toHaveBeenCalled();
   });
 
-  it('checks the owned reader genesis rather than trusting its configured network name', async () => {
+  it('checks the owned reader genesis rather than trusting its configured network name', /** @asyncUnsafe Jest awaits this test and reports its rejection. */ async () => {
     const signet = new OpenTimestampsService({ reader: bitcoinApi, network: 'signet' });
     await expect(signet.verifyProof({ proof: proof(), network: 'signet' }))
       .resolves.toMatchObject({ status: 'network_mismatch', verified: false });
     expect(getHeader).not.toHaveBeenCalled();
   });
 
-  it('reports a reader failure as unavailable and does not reuse an earlier verified anchor', async () => {
+  it('reports a reader failure as unavailable and does not reuse an earlier verified anchor', /** @asyncUnsafe Jest awaits this test and reports its rejection. */ async () => {
     expect((await openTimestampsService.verifyProof({ proof: proof() })).verified).toBe(true);
     getHeader.mockRejectedValue(new Error('offline'));
     await expect(openTimestampsService.verifyProof({ proof: proof() }))
@@ -94,19 +94,19 @@ describe('official OpenTimestamps detached proof vectors', () => {
   });
 
   it.each(['00', 'zz'.repeat(80), HEADER.header.slice(0, -2) + '00'])(
-    'rejects malformed or mismatched owned headers rather than marking the proof invalid', async header => {
+    'rejects malformed or mismatched owned headers rather than marking the proof invalid', /** @asyncUnsafe Jest awaits this test and reports its rejection. */ async header => {
       getHeader.mockResolvedValue(header);
       await expect(openTimestampsService.verifyProof({ proof: proof() }))
         .rejects.toMatchObject({ code: 'unavailable-bitcoin-header', status: 503 });
     });
 
-  it('reports an active-chain change between the header reads as a reorg', async () => {
+  it('reports an active-chain change between the header reads as a reorg', /** @asyncUnsafe Jest awaits this test and reports its rejection. */ async () => {
     getHash.mockResolvedValueOnce(GENESIS).mockResolvedValueOnce(HEADER.hash).mockResolvedValueOnce('f'.repeat(64));
     await expect(openTimestampsService.verifyProof({ proof: proof() }))
       .resolves.toMatchObject({ status: 'bitcoin_attestation_reorg', verified: false });
   });
 
-  it('rechecks an earlier anchor after reading the other branches', async () => {
+  it('rechecks an earlier anchor after reading the other branches', /** @asyncUnsafe Jest awaits this test and reports its rejection. */ async () => {
     // Controlled reader race: both attestations use the same commitment. Once
     // the later branch is read, the first height no longer names its old hash.
     const commitment = Buffer.from(HEADER.header, 'hex').subarray(36, 68);
@@ -126,7 +126,7 @@ describe('official OpenTimestamps detached proof vectors', () => {
       .resolves.toMatchObject({ status: 'bitcoin_attestation_reorg', verified: false });
   });
 
-  it('rejects malformed block-hash responses with a typed unavailable state', async () => {
+  it('rejects malformed block-hash responses with a typed unavailable state', /** @asyncUnsafe Jest awaits this test and reports its rejection. */ async () => {
     getHash.mockResolvedValueOnce(GENESIS).mockResolvedValueOnce('not-a-hash');
     await expect(openTimestampsService.verifyProof({ proof: proof() }))
       .rejects.toMatchObject({ code: 'unavailable-bitcoin-header', status: 503 });

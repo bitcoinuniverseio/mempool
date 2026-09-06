@@ -16,7 +16,7 @@ import { MultipartyApiService, Musig2VerificationResult } from './multiparty.ser
       <header class="page-header mb-4">
         <div class="title-row d-flex flex-wrap align-items-center justify-content-between gap-2">
           <h1 class="m-0">MuSig2 Session Coordinator (BIP327)</h1>
-          <span class="badge bg-secondary">Public Transcript Verification</span>
+          <span class="badge badge-secondary">Public Transcript Verification</span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
           Verify an untweaked BIP327 public transcript. Keep participants, public nonces and partial signatures in the same order. Enter public data only.
@@ -126,7 +126,7 @@ import { MultipartyApiService, Musig2VerificationResult } from './multiparty.ser
   `,
   styles: [`
     .nav-link { color: inherit; padding: 0.4rem 0.8rem; border-radius: 0.375rem; }
-    .nav-link.active { background-color: var(--bs-primary); color: #fff; }
+    .nav-link.active { background-color: var(--u-brand); color: var(--u-brand-contrast); }
   `],
 })
 export class MultipartyMusig2Component implements OnDestroy {

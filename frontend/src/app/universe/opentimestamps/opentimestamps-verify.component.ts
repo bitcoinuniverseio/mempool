@@ -26,11 +26,11 @@ import { OpenTimestampsApiService, TimestampNetwork, TimestampVerificationResult
 
       <div class="row g-4">
         <div class="col-lg-6">
-          <div class="card bg-dark border-secondary p-3">
+          <div class="card p-3">
             <h5 class="card-title mb-3">Paste .ots Proof as Base64</h5>
             <div class="mb-3">
               <label for="ots-proof" class="form-label text-muted small text-uppercase">Proof Base64 Data</label>
-              <textarea id="ots-proof" class="form-control bg-black text-light border-secondary font-monospace" rows="8" placeholder="BAAAAAAAb3Rz..." [(ngModel)]="proofBase64" (ngModelChange)="clearVerification()"></textarea>
+              <textarea id="ots-proof" class="form-control font-monospace" rows="8" placeholder="BAAAAAAAb3Rz..." [(ngModel)]="proofBase64" (ngModelChange)="clearVerification()"></textarea>
             </div>
             <div class="mb-3">
               <label for="ots-digest" class="form-label">Expected file digest (optional)</label>
@@ -44,10 +44,10 @@ import { OpenTimestampsApiService, TimestampNetwork, TimestampVerificationResult
         </div>
 
         <div class="col-lg-6">
-          <div class="card bg-dark border-secondary p-4 h-100" *ngIf="verificationState" role="status" aria-live="polite">
+          <div class="card p-4 h-100" *ngIf="verificationState" role="status" aria-live="polite">
             <div class="d-flex justify-content-between align-items-center mb-3">
-              <h5 class="card-title mb-0" [class.text-success]="verificationState === 'verified'">{{ resultHeading }}</h5>
-              <span class="badge bg-success" *ngIf="verificationState === 'verified'">BITCOIN CONFIRMED</span>
+              <h5 class="card-title mb-0" [class.verification-success]="verificationState === 'verified'">{{ resultHeading }}</h5>
+              <span class="badge badge-success" *ngIf="verificationState === 'verified'">BITCOIN CONFIRMED</span>
             </div>
 
             <ng-container *ngIf="verificationResult as result">
@@ -57,22 +57,22 @@ import { OpenTimestampsApiService, TimestampNetwork, TimestampVerificationResult
             <p *ngIf="verificationState === 'invalid'">The verifier rejected this proof or its requested file/network binding.</p>
             <p *ngIf="verificationState === 'unavailable'">This proof could not be verified with the available verifier and authorities.</p>
             <p *ngFor="let notice of result.notices" class="text-muted">{{ notice }}</p>
-            <p *ngFor="let error of result.errors" class="text-warning">{{ error }}</p>
+            <p *ngFor="let error of result.errors" class="verification-warning">{{ error }}</p>
             <dl class="row mb-0" *ngIf="verificationState === 'verified'">
               <dt class="col-sm-4 text-muted">Bitcoin Network</dt>
               <dd class="col-sm-8">{{ result.network }}</dd>
 
               <dt class="col-sm-4 text-muted">Bitcoin Block Height</dt>
-              <dd class="col-sm-8 fw-bold text-info">{{ result.earliest_proven_block_height }}</dd>
+              <dd class="col-sm-8 fw-bold">{{ result.earliest_proven_block_height }}</dd>
 
               <dt class="col-sm-4 text-muted">Block Hash</dt>
               <dd class="col-sm-8 font-monospace text-break">{{ result.bitcoin_block_hash }}</dd>
 
               <dt class="col-sm-4 text-muted">Block Timestamp</dt>
-              <dd class="col-sm-8 text-light">{{ result.earliest_proven_time_utc }}</dd>
+              <dd class="col-sm-8">{{ result.earliest_proven_time_utc }}</dd>
 
               <dt class="col-sm-4 text-muted">Attestation Type</dt>
-              <dd class="col-sm-8"><span class="badge bg-secondary">{{ result.attestation_type }}</span></dd>
+              <dd class="col-sm-8"><span class="badge badge-secondary">{{ result.attestation_type }}</span></dd>
 
               <dt class="col-sm-4 text-muted">Embedded File Digest</dt>
               <dd class="col-sm-8 font-monospace text-break">{{ result.file_hash_algorithm }}: {{ result.file_digest }}</dd>
@@ -83,13 +83,18 @@ import { OpenTimestampsApiService, TimestampNetwork, TimestampVerificationResult
             </ng-container>
           </div>
 
-          <div class="card bg-dark border-secondary p-5 text-center h-100 d-flex justify-content-center" *ngIf="!verificationState">
+          <div class="card p-5 text-center h-100 d-flex justify-content-center" *ngIf="!verificationState">
             <p class="text-muted mb-0">Paste proof base64 to execute cryptographic verification against Bitcoin block headers.</p>
           </div>
         </div>
       </div>
     </div>
-  `
+  `,
+  styles: [`
+    .text-muted { color: var(--u-text-muted) !important; }
+    .verification-success { color: var(--u-state-proven); }
+    .verification-warning { color: var(--u-state-partial); }
+  `],
 })
 export class OpenTimestampsVerifyComponent implements OnDestroy {
   public proofBase64 = '';
