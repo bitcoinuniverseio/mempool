@@ -9,6 +9,7 @@ import { StorageService } from '@app/services/storage.service';
 import { ChainHealthService, ChainHealthState } from '@app/universe/chain-health.service';
 import { healthServiceSummary, nodeHealthLabel, readHealth } from '@app/universe/multichain-explorer/chain-health';
 import { UniverseLocalService } from '@app/universe/universe-local.service';
+import { mainReady } from '@app/universe/main-ready';
 import { UniverseViewportService } from '@app/universe/universe-viewport.service';
 import { ChainCapabilityEnvelope, ExplorerChain } from '@app/universe/universe.types';
 import {
@@ -50,6 +51,8 @@ export class MasterPageComponent implements OnInit, AfterViewInit, OnDestroy {
   activeChain: ExplorerChain = 'bitcoin';
   chainCapabilities$: Observable<ChainCapabilityEnvelope[]>;
   chainHealth$: Observable<ChainHealthState>;
+  /** See mainReady: the route waits for the first health reading so the sync notice cannot push it down. */
+  mainReady$: Observable<boolean>;
 
   enterpriseInfo: any;
   enterpriseInfo$: Subscription;
@@ -105,6 +108,7 @@ export class MasterPageComponent implements OnInit, AfterViewInit, OnDestroy {
     this.viewport.track();
     this.chainHealth$ = this.health.state$;
     this.chainCapabilities$ = this.chainHealth$.pipe(map(state => state.capabilities));
+    this.mainReady$ = mainReady(this.chainHealth$, this.stateService.isBrowser);
   }
 
   setDropdownVisibility(): void {
