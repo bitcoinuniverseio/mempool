@@ -357,13 +357,17 @@ raw = env.get('UNIVERSE_EXPLORER_SOURCES_JSON', '')
 sources = json.loads(raw) if raw else []
 assert isinstance(sources, list) and sources, 'no sources configured'
 for source in sources:
-    name = source['bearerTokenEnv']
-    token = env.get(name, '')
-    assert len(token.encode()) >= 32, f'token variable {name} is missing or too short'
+    # An authority without bearerTokenEnv is an open one, as the overlay's
+    # own loader allows: index-anima and chainbloom serve unauthenticated
+    # loopback reads. Only a declared token variable has to be present.
+    name = source.get('bearerTokenEnv')
+    if name is not None:
+        token = env.get(name, '')
+        assert len(token.encode()) >= 32, f'token variable {name} is missing or too short'
     assert re.match(r'^https?://', source['origin']), 'origin must be an http(s) origin'
-print(f'{len(sources)} sources parse, every token variable is present')
+print(f'{len(sources)} sources parse, every declared token variable is present')
 PY
-  log "overlay source registry parses with every token present"
+  log "overlay source registry parses with every declared token present"
 }
 
 # A protocol the registry calls readable must have an authority configured for
