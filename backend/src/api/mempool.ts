@@ -522,8 +522,10 @@ class Mempool {
       progress: 'begin $updateMempool',
       timer: null,
     };
-    state.timer = setTimeout(() => {
-      logger.err(`$updateMempool stalled at "${state.progress}"`);
+    // Repeats until cleared: a run that stays stuck keeps saying so, instead
+    // of one line two minutes in and then silence for the rest of the stall.
+    state.timer = setInterval(() => {
+      logger.err(`$updateMempool stalled at "${state.progress}" for ${Math.round((Date.now() - state.start) / 1000)} s`);
     }, this.mainLoopTimeout);
     return state;
   }
@@ -534,7 +536,7 @@ class Mempool {
 
   private clearTimer(state) {
     if (state.timer) {
-      clearTimeout(state.timer);
+      clearInterval(state.timer);
     }
   }
 

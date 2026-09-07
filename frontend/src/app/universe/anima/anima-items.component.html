@@ -21,16 +21,16 @@
         <p class="skeleton-line short"></p>
       </div>
 
-      <div *ngSwitchCase="'error'" class="panel state-panel degraded">
-        <h2 i18n="anima.overlay-error-title-2">The explorer overlay could not be read</h2>
-        <p i18n="anima.overlay-error-body-2">
-          The explorer could not reach its own overlay. Nothing about the ANIMA
-          protocol is inferred from the failure.
-        </p>
+      <div *ngSwitchCase="'error'" class="panel state-panel degraded" role="alert">
+        <h2>{{ vm.failure ? failureTitle(vm.failure) : failureTitle({ kind: 'transport' }) }}</h2>
+        <p>{{ vm.failure ? failureText(vm.failure) : failureText({ kind: 'transport' }) }}</p>
       </div>
 
-      <div *ngSwitchCase="'degraded'" class="panel state-panel degraded">
-        <h2 i18n="anima.items-degraded-title">The authority is not serving this page</h2>
+      <div *ngSwitchCase="'degraded'" class="panel state-panel degraded" role="status">
+        <h2 *ngIf="vm.failure; else authorityNotServing">{{ failureTitle(vm.failure) }}</h2>
+        <ng-template #authorityNotServing>
+          <h2 i18n="anima.items-degraded-title">The authority is not serving this page</h2>
+        </ng-template>
         <p>{{ vm.degradedReason }}</p>
       </div>
 
@@ -47,9 +47,14 @@
               <span class="height">created at block {{ organism.createdHeight }}</span>
             </li>
           </ul>
+          <p class="page-failure" role="alert" *ngIf="vm.pageFailure as pageFailure">
+            <span i18n="anima.items-page-failed">The next page could not be read. The {{ vm.organisms?.length }} organisms above are kept.</span>
+            {{ failureText(pageFailure) }}
+          </p>
           <button type="button" class="load-more" *ngIf="vm.canLoadMore"
                   (click)="more()" [disabled]="vm.loadingMore">
-            <ng-container *ngIf="!vm.loadingMore" i18n="anima.load-more-2">Load more</ng-container>
+            <ng-container *ngIf="!vm.loadingMore && !vm.pageFailure" i18n="anima.load-more-2">Load more</ng-container>
+            <ng-container *ngIf="!vm.loadingMore && vm.pageFailure" i18n="anima.retry-2">Retry</ng-container>
             <ng-container *ngIf="vm.loadingMore" i18n="anima.loading-2">Loading…</ng-container>
           </button>
         </section>
