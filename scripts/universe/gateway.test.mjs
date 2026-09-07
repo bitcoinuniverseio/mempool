@@ -399,3 +399,14 @@ test('with no index configured the backend still owns the whole api surface', ()
   // like any other rather than being answered here.
   assert.equal(port(routeFor('/api/internal/x', '/api/internal/x')), BACKEND_PORT);
 });
+
+test('the public health document states liveness and no filesystem path', async () => {
+  const { healthDocument } = await import('./gateway.mjs');
+  const document = healthDocument();
+  assert.deepEqual(document, { status: 'ok' });
+  assert.equal(Object.hasOwn(document, 'root'), false);
+  const text = JSON.stringify(document);
+  for (const marker of ['/opt/', '/srv/', ':\\']) {
+    assert.equal(text.includes(marker), false, marker);
+  }
+});

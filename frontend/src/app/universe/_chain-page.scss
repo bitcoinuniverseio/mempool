@@ -107,6 +107,26 @@
     @include u.universe-chip;
   }
 
+  // A status reading is a sentence, not a badge: "History unavailable · Address
+  // history needs attention · Mempool needs attention" ran past the right edge
+  // of a 390 pixel screen under the chip's nowrap, and the page shell clipped
+  // it with nothing to scroll to. The chip keeps its shape and lets the
+  // sentence wrap inside the reading's own width instead.
+  .status-rail .universe-chip {
+    min-width: 0;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: left;
+  }
+
+  @media (max-width: 575.98px) {
+    .status-rail .universe-chip {
+      flex: 1 1 auto;
+      text-align: right;
+    }
+  }
+
   .panel {
     @include u.universe-surface;
 
