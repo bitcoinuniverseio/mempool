@@ -191,12 +191,17 @@
     <app-universe-connectivity-banner></app-universe-connectivity-banner>
     <app-universe-command-palette></app-universe-command-palette>
 
-    <main id="main-content">
-      <router-outlet></router-outlet>
-    </main>
-
-    <div class="flex-grow-1"></div>
-    <app-global-footer *ngIf="footerVisible" [user]="user"></app-global-footer>
+    <!-- The route waits for the first health reading (see mainReady) so the
+         sync notice above takes its place before any content has painted. -->
+    <ng-container *ngIf="mainReady$ | async">
+      <main id="main-content">
+        <router-outlet></router-outlet>
+      </main>
+      <div class="flex-grow-1"></div>
+      <!-- The footer arrives with the route: alone in the column it would sit
+           in the viewport and then drop below the fold, which is a shift. -->
+      <app-global-footer *ngIf="footerVisible" [user]="user"></app-global-footer>
+    </ng-container>
   </div>
 </div>
 
