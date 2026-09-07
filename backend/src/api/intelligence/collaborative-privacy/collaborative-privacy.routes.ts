@@ -75,7 +75,7 @@ class CollaborativePrivacyRoutes {
     app.post('/api/v1/intelligence/collaborative/public-packages/verify', (req: Request, res: Response) => {
       try {
         const result = collaborativePrivacyService.verifyPublicPackage(req.body);
-        res.json(result);
+        res.status(result.stage === 'invalid-input' ? 400 : 503).json(result);
       } catch (err: any) {
         res.status(500).json({ error: err.message || 'Internal error' });
       }

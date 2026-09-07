@@ -356,6 +356,17 @@ describe('readHistoryCoverage', () => {
     expect(readings).toHaveLength(3);
     expect(readings.every((r) => r.tone === 'neutral')).toBe(true);
   });
+
+  it('discloses unavailable v2 history independently of its last known coverage', () => {
+    const health = sampleHealthV2();
+    health.address = { ...health.address, availability: 'unavailable', coverage: 'complete' };
+    const reading = readHistoryCoverage(capability({ health }), Date.parse('2026-08-29T05:00:01Z'))
+      .find((row) => row.id === 'addressHistory');
+    expect(reading?.stateLabel).toContain('Unavailable');
+    expect(reading?.stateLabel).toContain('Complete');
+    expect(reading?.stateLabel).toContain('last known coverage');
+    expect(reading?.tone).toBe('unavailable');
+  });
 });
 
 describe('readSourceDetails', () => {

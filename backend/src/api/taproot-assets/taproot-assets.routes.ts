@@ -50,12 +50,8 @@ class TaprootAssetsRoutes {
   private async $verifyProof(req: Request, res: Response): Promise<void> {
     try {
       const { assetId, proofData } = req.body || {};
-      if (!assetId || !proofData) {
-        res.status(400).json({ error: 'missing-asset-or-proof-data' });
-        return;
-      }
       const result = await taprootAssetsService.$verifyProof(assetId, proofData);
-      res.json(result);
+      res.status(result.stage === 'invalid-input' ? 400 : 503).json(result);
     } catch (e) {
         handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
     }

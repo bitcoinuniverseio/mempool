@@ -33,14 +33,17 @@ describe('NodeSecurityService', () => {
       sha256: '94aeec3feab29948831980839958102839485720192847582910485739201948',
       version: '28.0',
     });
-    expect(valid.verified).toBe(true);
-    expect(valid.state).toBe('official_checksum_matched');
+    expect(valid.verified).toBe(false);
+    expect(valid.state).toBe('unverified');
+    expect(valid.stage).toBe('unavailable-manifest');
+    expect(nodeSecurityService.verifyArtifact({ sha256: 'ab'.repeat(32), version: '28.0' })).toMatchObject({ verified: false, stage: 'unavailable-manifest' });
 
     const invalid = nodeSecurityService.verifyArtifact({
       sha256: 'bad_hash',
     });
-    expect(valid.verified).toBe(true);
+    expect(valid.verified).toBe(false);
     expect(invalid.verified).toBe(false);
+    expect(invalid.stage).toBe('invalid-input');
   });
 
   it('should generate multi-stage upgrade plan with intermediate hops and configuration updates', () => {

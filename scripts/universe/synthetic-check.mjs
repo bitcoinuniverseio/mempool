@@ -108,7 +108,9 @@ export async function executeSyntheticRequest({
   const url = `${origin}${reqPath}`;
   const safeUrl = url.replace(/([?&]token=)[^&]+/g, '$1[REDACTED]');
   let attempt = 0;
-  let lastError = null;
+  const started = performance.now();
+  const deadline = started + timeoutMs;
+  maxRetries = ['GET', 'HEAD'].includes(method) ? Math.min(2, Math.max(0, maxRetries)) : 0;
 
   while (attempt <= maxRetries) {
     attempt++;
@@ -116,31 +118,58 @@ export async function executeSyntheticRequest({
     const t0 = performance.now();
     let responseStatus = null;
     let safeExcerpt = '';
+    let stage = 'headers';
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      controller.abort(new DOMException(`Timeout of ${timeoutMs}ms exceeded`, 'TimeoutError'));
+    }, Math.max(0, deadline - performance.now()));
 
     try {
-      const controller = new AbortController();
-      const timer = setTimeout(() => {
-        controller.abort(new Error(`Timeout of ${timeoutMs}ms exceeded`));
-      }, timeoutMs);
-
       const response = await fetchFn(url, {
         method,
         headers,
         signal: controller.signal,
       });
-      clearTimeout(timer);
-
-      const totalMs = Math.round(performance.now() - t0);
       responseStatus = response.status;
-      const text = await response.text();
+      stage = 'body';
+      let text;
+      if (response.body?.getReader) {
+        const reader = response.body.getReader();
+        const chunks = [];
+        let bytes = 0;
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            bytes += value.byteLength;
+            if (bytes > 16 * 1024 * 1024) {
+              controller.abort(new Error('Response exceeds 16 MiB smoke limit'));
+              throw controller.signal.reason;
+            }
+            chunks.push(Buffer.from(value));
+          }
+          text = Buffer.concat(chunks).toString('utf8');
+        } finally {
+          if (controller.signal.aborted) await reader.cancel().catch(() => {});
+          reader.releaseLock();
+        }
+      } else {
+        text = await response.text();
+      }
       safeExcerpt = text.slice(0, 150).replace(/[\r\n\t]+/g, ' ');
 
       let body = null;
+      stage = 'parse';
       try {
         body = JSON.parse(text);
       } catch {
         body = null;
       }
+      if (performance.now() >= deadline) {
+        controller.abort(new DOMException(`Timeout of ${timeoutMs}ms exceeded`, 'TimeoutError'));
+        throw controller.signal.reason;
+      }
+      const totalMs = Math.round(performance.now() - t0);
 
       operationLog.push({
         checkName,
@@ -151,6 +180,8 @@ export async function executeSyntheticRequest({
         deadlineMs: timeoutMs,
         attempt,
         status: responseStatus,
+        httpStatus: responseStatus,
+        transportError: null,
         safeExcerpt,
         releaseIdentitySeen,
         lastSuccessfulPhase,
@@ -158,16 +189,16 @@ export async function executeSyntheticRequest({
       });
 
       // Deterministic 4xx or 2xx responses are NEVER retried
-      if (responseStatus < 500 || method !== 'GET' || attempt > maxRetries) {
-        return { status: responseStatus, body, text };
+      if (responseStatus < 500 || attempt > maxRetries || performance.now() + 100 * attempt >= deadline) {
+        return { status: responseStatus, httpStatus: responseStatus, body, text, transportError: null };
       }
 
-      // Retry transient 5xx on GET if attempts remain
+      // Retry transient 5xx on safe reads if attempts remain.
       await new Promise((r) => setTimeout(r, 100 * attempt));
     } catch (err) {
       const totalMs = Math.round(performance.now() - t0);
-      const isTimeout = err.name === 'TimeoutError' || err.name === 'AbortError' || (err.message && err.message.includes('Timeout'));
-      lastError = err;
+      const isTimeout = controller.signal.aborted && controller.signal.reason?.name === 'TimeoutError';
+      const transportError = { name: err.name, message: err.message, isTimeout, stage };
 
       operationLog.push({
         checkName,
@@ -178,6 +209,8 @@ export async function executeSyntheticRequest({
         deadlineMs: timeoutMs,
         attempt,
         status: null,
+        httpStatus: responseStatus,
+        transportError,
         safeExcerpt: null,
         releaseIdentitySeen,
         lastSuccessfulPhase,
@@ -188,22 +221,16 @@ export async function executeSyntheticRequest({
         },
       });
 
-      // Deterministic failure or non-timeout network errors without retries
-      if (!isTimeout || attempt > maxRetries) {
-        const failureReason = isTimeout
-          ? `TIMEOUT on ${method} ${safeUrl} after ${totalMs}ms (deadline: ${timeoutMs}ms, attempt ${attempt}/${maxRetries + 1}). Phase: "${checkName}". Last successful phase: "${lastSuccessfulPhase}". Reason: ${err.message}`
-          : `NETWORK FAILURE on ${method} ${safeUrl} after ${totalMs}ms (attempt ${attempt}/${maxRetries + 1}). Phase: "${checkName}". Reason: ${err.message}`;
-
-        fail(checkName, failureReason);
-        return { status: isTimeout ? 504 : 502, body: null, text: '', error: err };
-      }
-
-      // Transient timeout retry backoff
-      await new Promise((r) => setTimeout(r, 150 * attempt));
+      // A deadline has consumed the whole budget. Network failures are not retried.
+      const elapsedMs = Math.round(performance.now() - started);
+      const failureReason = `${isTimeout ? 'TIMEOUT' : 'NETWORK FAILURE'} on ${method} ${safeUrl} after ${elapsedMs}ms (deadline: ${timeoutMs}ms, attempt ${attempt}/${maxRetries + 1}). Phase: "${checkName}". Last successful phase: "${lastSuccessfulPhase}". Stage: ${stage}. Reason: ${err.message}`;
+      fail(checkName, failureReason);
+      return { status: null, httpStatus: responseStatus, body: null, text: '', error: err, transportError };
+    } finally {
+      clearTimeout(timer);
     }
   }
 
-  return { status: 504, body: null, text: '', error: lastError };
 }
 
 export async function get(path, customTimeoutMs) {
@@ -568,53 +595,82 @@ async function checkMiningHasContent() {
  * No protocol may be presented as readable while its authority cannot answer.
  * This is the Protocols page failure, checked at its source.
  */
-async function checkProtocolsAreTruthful() {
-  const protocols = await get('/api/v1/universe/protocols');
-  const sources = await get('/api/v1/universe/sources');
-  if (protocols.status !== 200 || !Array.isArray(protocols.body?.protocols)) {
-    fail('protocols', `the registry did not answer (HTTP ${protocols.status})`);
+export async function checkProtocolsAreTruthful(request = get) {
+  const registry = await request('/api/v1/universe/protocols');
+  if (registry.status !== 200 || !Array.isArray(registry.body?.protocols)) {
+    fail('protocols', `the registry did not answer (HTTP ${registry.status})`);
     return;
   }
-  if (sources.status !== 200 || !Array.isArray(sources.body?.sources)) {
-    fail('protocols', `the source snapshot did not answer (HTTP ${sources.status})`);
-    return;
-  }
-
-  const byAuthority = new Map(sources.body.sources.map((row) => [row.authorityId, row]));
-  for (const protocol of protocols.body.protocols) {
+  const contexts = new Map();
+  for (const protocol of registry.body.protocols) {
+    if (!protocol || typeof protocol !== 'object' || Array.isArray(protocol) ||
+        typeof protocol.id !== 'string' || !protocol.id ||
+        typeof protocol.releaseStatus !== 'string') {
+      fail('protocols', 'the registry contains a malformed protocol identity');
+      continue;
+    }
     if (!String(protocol.releaseStatus || '').toUpperCase().startsWith('VERIFIED')) continue;
-    const source = protocol.indexerAuthority ? byAuthority.get(protocol.indexerAuthority) : null;
-    if (!source) {
-      fail('protocols', `${protocol.id} is marked readable but its authority is not configured`);
+    if (typeof protocol.chain !== 'string' || !protocol.chain ||
+        !Array.isArray(protocol.networks) || !protocol.networks.length ||
+        protocol.networks.some((network) => typeof network !== 'string' || !network) ||
+        typeof protocol.indexerAuthority !== 'string' || !protocol.indexerAuthority) {
+      fail('protocols', `${protocol.id} has malformed advertised chain/network context`);
       continue;
     }
-    if (source.status === 'unreachable') {
-      fail('protocols', `${protocol.id} is marked readable but its authority is ${source.status}`);
-      continue;
+    // Use only explicitly advertised networks. Bitcoin does not imply Signet support.
+    for (const network of new Set(protocol.networks)) {
+      const key = JSON.stringify([protocol.chain, network]);
+      if (!contexts.has(key)) contexts.set(key, { chain: protocol.chain, network, protocols: [] });
+      contexts.get(key).protocols.push(protocol);
     }
-    if (source.status === 'degraded') {
-      pass('protocols', `${protocol.id} authority ${source.authorityId} is currently degraded, ${source.lagBlocks ?? 'unknown'} blocks behind`);
-      continue;
-    }
-    pass('protocols', `${protocol.id} authority ${source.authorityId} is ${source.status}, ${source.lagBlocks ?? 'unknown'} blocks behind`);
   }
-
-  const readableAuthorities = new Set(
-    protocols.body.protocols
-      .filter((p) => String(p.releaseStatus || '').toUpperCase().startsWith('VERIFIED'))
-      .map((p) => p.indexerAuthority)
-      .filter(Boolean),
-  );
-
-  for (const source of sources.body.sources) {
-    if (source.status === 'unconfigured' || source.status === 'unreachable') continue;
-    if (!readableAuthorities.has(source.authorityId) && source.status !== 'ready') continue;
-    if (!source.checkpoint && source.status === 'ready') {
-      fail('protocols', `${source.authorityId} is ready but published no checkpoint`);
+  for (const { chain, network, protocols } of contexts.values()) {
+    const label = `protocols:${chain}:${network}`;
+    const snapshot = await request(`/api/v1/universe/sources?${new URLSearchParams({ chain, network })}`);
+    if (snapshot.status !== 200 || !Array.isArray(snapshot.body?.sources)) {
+      fail(label, `the scoped source snapshot did not answer (HTTP ${snapshot.status})`);
+      continue;
+    }
+    const byAuthority = new Map();
+    for (const source of snapshot.body.sources) {
+      if (!source || typeof source !== 'object' || Array.isArray(source) ||
+          typeof source.authorityId !== 'string' || !source.authorityId) {
+        fail(label, 'the snapshot contains a malformed source identity');
+        continue;
+      }
+      if (source.chain !== chain || source.network !== network) {
+        fail(label, `${source.authorityId} returned a mismatched source context`);
+        continue;
+      }
+      if (byAuthority.has(source.authorityId)) {
+        fail(label, `duplicate authority ${source.authorityId} in one context`);
+        byAuthority.set(source.authorityId, null);
+      } else {
+        byAuthority.set(source.authorityId, source);
+      }
+      if (source.status === 'ready' && (!source.checkpoint ||
+          source.checkpoint.chain !== chain || source.checkpoint.network !== network)) {
+        fail(label, `${source.authorityId} is ready but published no matching checkpoint`);
+      }
+    }
+    for (const protocol of protocols) {
+      const source = byAuthority.get(protocol.indexerAuthority);
+      if (!source) {
+        fail(label, `${protocol.id} is marked readable but its authority is absent or ambiguous`);
+      } else if (!Array.isArray(source.protocols) || !source.protocols.includes(protocol.id)) {
+        fail(label, `${protocol.id} is not claimed by authority ${source.authorityId}`);
+      } else if (source.status === 'ready' && (!source.checkpoint ||
+          source.checkpoint.chain !== chain || source.checkpoint.network !== network)) {
+        // The source-level failure above already records the invalid checkpoint.
+        continue;
+      } else if (source.measurementPending || source.status !== 'ready' || source.ready !== true) {
+        fail(label, `${protocol.id} authority ${source.authorityId} is ${source.measurementPending ? 'measurement-pending' : source.status}, ${source.lagBlocks ?? 'unknown'} blocks behind`);
+      } else {
+        pass(label, `${protocol.id} authority ${source.authorityId} reports ready (source telemetry only)`);
+      }
     }
   }
 }
-
 /** Frontend, backend and the published release must be the same build. */
 async function checkReleaseAgreement() {
   const info = await get('/api/v1/backend-info');

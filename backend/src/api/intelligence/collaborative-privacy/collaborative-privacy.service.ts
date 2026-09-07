@@ -163,21 +163,16 @@ export class CollaborativePrivacyService {
     return { fidelity_bonds: this.fidelityBonds };
   }
 
-  public verifyPublicPackage(pkg: any): any {
-    const isWabiSabi = pkg.protocol === 'wabisabi';
+  public verifyPublicPackage(pkg: unknown): { verified: false; stage: 'invalid-input' | 'unavailable-verifier'; error: string } {
+    if (!pkg || typeof pkg !== 'object' || Array.isArray(pkg)
+      || typeof (pkg as { protocol?: unknown }).protocol !== 'string'
+      || !(pkg as { protocol: string }).protocol.trim()
+      || (pkg as { protocol: string }).protocol.length > 128) {
+      return { verified: false, stage: 'invalid-input', error: 'A public package object with a protocol identifier is required.' };
+    }
     return {
-      verified: true,
-      protocol: pkg.protocol || 'wabisabi',
-      classification: 'protocol_proven',
-      credential_conservation_valid: isWabiSabi,
-      equal_output_groups: 6,
-      effective_anonymity_set: 42,
-      deterministic_links_detected: 0,
-      ownership_inference: 'none (prohibited by privacy contract)',
-      findings: [
-        'No direct linkability between inputs and outputs observed in credential proofs.',
-        'CoinJoin transaction follows standard protocol credential balance rules.',
-      ],
+      verified: false, stage: 'unavailable-verifier',
+      error: 'The protocol credential verifier and authenticated public round evidence are not connected. No conservation, anonymity or linkability claim was verified.',
     };
   }
 }

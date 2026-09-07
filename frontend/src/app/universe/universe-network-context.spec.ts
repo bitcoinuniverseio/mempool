@@ -1,7 +1,7 @@
 // New WP01 regression tests. HTTP fixtures prove isolation, not real-network acceptance.
 import { describe, expect, it } from 'vitest';
 import { Observable, Subject, forkJoin, of, throwError } from 'rxjs';
-import { UniverseApiService } from './universe-api.service';
+import { UniverseApiService, UNIVERSE_OUTPOINT_BATCH_LIMIT, UNIVERSE_TRANSACTION_BATCH_LIMIT } from './universe-api.service';
 import { UniverseLocalService } from './universe-local.service';
 import { InscriptionComponent } from './inscription/inscription.component';
 import manifest from '../../../../docs/protocols/PROTOCOL-COVERAGE.json';
@@ -43,6 +43,33 @@ describe('NET-01 selected context', () => {
     let completed = false;
     forkJoin([api.getOutpoints$(['a'.repeat(64) + ':0'])]).subscribe({ complete: () => { completed = true; } });
     expect(completed).toBe(true);
+  });
+
+  it.each(['transactions', 'outpoints'] as const)('rejects oversized %s batches without silently losing inputs', (kind) => {
+    const calls: unknown[] = [];
+    const api = new UniverseApiService({ post: (_url: string, body: unknown) => {
+      calls.push(body);
+      return of({ results: [] });
+    } } as never, { isBrowser: true, network: 'signet' } as never);
+    const limit = kind === 'transactions' ? UNIVERSE_TRANSACTION_BATCH_LIMIT : UNIVERSE_OUTPOINT_BATCH_LIMIT;
+    const input = Array.from({ length: limit + 1 }, (_, i) => i.toString(16).padStart(64, '0') + (kind === 'outpoints' ? ':0' : ''));
+    let error: Error | undefined;
+    const request = kind === 'transactions' ? api.getTransactionFlows$(input) : api.getOutpoints$(input);
+    request.subscribe({ error: (failure) => { error = failure; } });
+    expect(error?.message).toBe(`universe-${kind}-batch-limit-exceeded`);
+    expect(calls).toEqual([]);
+  });
+
+  it.each(['transactions', 'outpoints'] as const)('sends every input at the %s batch ceiling', (kind) => {
+    const calls: unknown[] = [];
+    const api = new UniverseApiService({ post: (_url: string, body: unknown) => {
+      calls.push(body);
+      return of({ results: [] });
+    } } as never, { isBrowser: true, network: 'signet' } as never);
+    const limit = kind === 'transactions' ? UNIVERSE_TRANSACTION_BATCH_LIMIT : UNIVERSE_OUTPOINT_BATCH_LIMIT;
+    const input = Array.from({ length: limit }, (_, i) => i.toString(16).padStart(64, '0') + (kind === 'outpoints' ? ':0' : ''));
+    (kind === 'transactions' ? api.getTransactionFlows$(input) : api.getOutpoints$(input)).subscribe();
+    expect(calls).toEqual([kind === 'transactions' ? { txids: input } : { outpoints: input }]);
   });
 
   it.each(['sources', 'inputs', 'outputs', 'actions', 'sourceEvidence', 'utxos'])(

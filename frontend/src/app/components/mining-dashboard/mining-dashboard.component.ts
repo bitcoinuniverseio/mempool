@@ -1,4 +1,5 @@
-import { AfterViewInit, ChangeDetectionStrategy, Component, HostListener, OnInit } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component, HostListener, OnDestroy, OnInit } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { SeoService } from '@app/services/seo.service';
 import { OpenGraphService } from '@app/services/opengraph.service';
 import { WebsocketService } from '@app/services/websocket.service';
@@ -12,7 +13,8 @@ import { EventType, NavigationStart, Router } from '@angular/router';
   standalone: false,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MiningDashboardComponent implements OnInit, AfterViewInit {
+export class MiningDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
+  private navigationSubscription: Subscription;
   hashrateGraphHeight = 335;
   poolGraphHeight = 375;
 
@@ -33,13 +35,17 @@ export class MiningDashboardComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit(): void {
     this.stateService.focusSearchInputDesktop();
-    this.router.events.subscribe((e: NavigationStart) => {
+    this.navigationSubscription = this.router.events.subscribe((e: NavigationStart) => {
       if (e.type === EventType.NavigationStart) {
         if (e.url.indexOf('graphs') === -1) { // The mining dashboard and the graph component are part of the same module so we can't use ngAfterViewInit in graphs.component.ts to blur the input
           this.stateService.focusSearchInputDesktop();
         }
       }
     });
+  }
+
+  ngOnDestroy(): void {
+    this.navigationSubscription?.unsubscribe();
   }
 
   @HostListener('window:resize', ['$event'])

@@ -2,7 +2,8 @@ import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { BehaviorSubject, Observable, catchError, combineLatest, of } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, combineLatest, map, of } from 'rxjs';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { Bolt12Offer, LightningRfqQuote } from '@app/universe/universe.types';
@@ -11,6 +12,8 @@ interface StandardsViewModel {
   readonly kind: 'loading' | 'ready' | 'error';
   readonly offers?: Bolt12Offer[];
   readonly quotes?: LightningRfqQuote[];
+  readonly offersError?: string | null;
+  readonly quotesError?: string | null;
 }
 
 @Component({
@@ -38,15 +41,32 @@ export class LightningStandardsComponent implements OnInit {
 
   ngOnInit(): void {
     combineLatest([
-      this.api.getBolt12Offers$().pipe(catchError(() => of({ offers: [] }))),
-      this.api.getLightningRfq$().pipe(catchError(() => of({ quotes: [] }))),
+      this.api.getBolt12Offers$().pipe(
+        map(data => ({ offers: data.offers, error: null as string | null })),
+        catchError(error => of({ offers: [], error: loadFailureMessage(classifyLoadFailure(error)) }))),
+      this.api.getLightningRfq$().pipe(
+        map(data => ({ quotes: data.quotes, error: null as string | null })),
+        catchError(error => of({ quotes: [], error: loadFailureMessage(classifyLoadFailure(error)) }))),
     ]).subscribe(([offersData, rfqData]) => {
       this.state.next({
-        kind: 'ready',
+        kind: offersData.error || rfqData.error ? 'error' : 'ready',
         offers: offersData.offers,
         quotes: rfqData.quotes,
+        offersError: offersData.error,
+        quotesError: rfqData.error,
       });
     });
+  }
+
+  offerValidityLabel(valid: unknown): string {
+    return valid === true ? 'Source reports valid' : valid === false ? 'Source reports invalid' : 'Validity not reported';
+  }
+
+  quoteExpiry(validUntil: number): string {
+    // The owned RFQ API reports Unix seconds. Show its absolute value rather
+    // than inventing a fresh lifetime every time the row renders.
+    return Number.isSafeInteger(validUntil) && validUntil >= 0 && validUntil <= 8_640_000_000_000
+      ? new Date(validUntil * 1000).toISOString() : 'Not reported';
   }
 
   decode(): void {

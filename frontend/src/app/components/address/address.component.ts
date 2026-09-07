@@ -1,3 +1,4 @@
+import { fillTapTree } from '@app/shared/taproot-tree.utils';
 import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { UntypedFormBuilder, UntypedFormGroup } from '@angular/forms';
 import { ActivatedRoute, ParamMap } from '@angular/router';
@@ -15,7 +16,7 @@ import { AddressInformation } from '@interfaces/node-api.interface';
 import { AddressTypeInfo } from '@app/shared/address-utils';
 import { AddressCapabilityService, AddressLookupCapability } from '@app/services/address-capability.service';
 import { AddressFailure, classifyAddressFailure, shouldConsultCapability } from '@app/shared/address-error';
-import { extractTapLeaves, fillTapTree, convertTextToBuffer, PsbtKeyValue } from '@app/shared/transaction.utils';
+import { extractTapLeaves, convertTextToBuffer, PsbtKeyValue } from '@app/shared/transaction.utils';
 
 class AddressStats implements ChainStats {
   address: string;

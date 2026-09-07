@@ -1,10 +1,11 @@
 import { Component, Inject, LOCALE_ID, OnInit } from '@angular/core';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { map, shareReplay } from 'rxjs/operators';
 import { ApiService } from '@app/services/api.service';
 import { formatNumber } from '@angular/common';
 import { AmountShortenerPipe } from '@app/shared/pipes/amount-shortener.pipe';
 import { StateService } from '@app/services/state.service';
+import { LoadState, trackedLoadState } from '@app/shared/load-state';
 
 @Component({
   selector: 'app-difficulty-adjustments-table',
@@ -22,7 +23,8 @@ import { StateService } from '@app/services/state.service';
 })
 export class DifficultyAdjustmentsTable implements OnInit {
   hashrateObservable$: Observable<any>;
-  isLoading = true;
+  state$: Observable<LoadState<any[]>>;
+  private retry$ = new BehaviorSubject<void>(undefined);
   formatNumber = formatNumber;
 
   constructor(
@@ -52,10 +54,15 @@ export class DifficultyAdjustmentsTable implements OnInit {
               difficultyShorten: this.amountShortenerPipe.transform(adjustment[2], decimals)
             });
           }
-          this.isLoading = false;
           return tableData.slice(0, 6);
         }),
       );
+    this.state$ = trackedLoadState(this.retry$, () => this.hashrateObservable$)
+      .pipe(shareReplay({ bufferSize: 1, refCount: true }));
+  }
+
+  onRetry(): void {
+    this.retry$.next();
   }
 
   isMobile() {
