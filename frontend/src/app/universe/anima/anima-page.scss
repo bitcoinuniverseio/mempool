@@ -135,3 +135,20 @@
 
   &.short { width: 40%; }
 }
+
+// A failed next page is reported beside the button that retries it, and the
+// list above it stays exactly as it was: nothing already shown is taken back.
+.page-failure {
+  margin: var(--u-space-3) 0 var(--u-space-2);
+  padding: var(--u-space-2) var(--u-space-3);
+  border-left: 3px solid var(--universe-state-partial-border);
+  background: var(--universe-state-partial-surface);
+  color: var(--u-text-primary);
+  font-size: var(--u-text-sm);
+  overflow-wrap: anywhere;
+
+  span {
+    display: block;
+    font-weight: var(--u-weight-semibold);
+  }
+}

@@ -61,6 +61,18 @@ for (const upstream of [BACKEND, OVERLAY, ESPLORA].filter(Boolean)) {
 }
 const ROOT = resolve(process.env.UNIVERSE_GATEWAY_ROOT || 'frontend/dist/mempool/browser');
 
+/**
+ * The public health document: a liveness answer and nothing else.
+ *
+ * It used to carry the static root as an absolute filesystem path. The release
+ * script only waits for the route to answer, and a path on the host is not
+ * something a public origin should state. Deployment diagnostics stay with the
+ * host-side release tooling, which reads the symlink itself.
+ */
+export function healthDocument() {
+  return { status: 'ok' };
+}
+
 /** Upstream request budget. Long enough for a cold index read, short enough to fail fast. */
 const UPSTREAM_TIMEOUT_MS = 30_000;
 
@@ -460,7 +472,7 @@ const server = http.createServer((request, response) => {
       'content-type': 'application/json; charset=utf-8',
       'cache-control': 'no-store',
     });
-    response.end(JSON.stringify({ status: 'ok', root: ROOT }));
+    response.end(JSON.stringify(healthDocument()));
     return;
   }
 

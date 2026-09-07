@@ -157,12 +157,16 @@ export class ProtocolDirectoryComponent implements OnInit {
     sources: Map<string, SourceEntry> | null,
   ): ProtocolAvailability {
     const status = this.normalizeStatus(protocol);
-    if (status === 'blocked') return 'not-implemented';
     if (status === 'intentionally disabled') return 'disabled';
-    if (status !== 'verified read only' && status !== 'production verified') {
+    // A blocked release says acceptance has not been established. It says
+    // nothing about whether a reader exists: Mezcal was labelled "Not
+    // implemented" while its authority served a real activity page. Only a
+    // protocol that declares no read operation at all is not implemented.
+    if (status === 'blocked' && !this.hasReadOperations(protocol)) return 'not-implemented';
+    if (status !== 'blocked' && status !== 'verified read only' && status !== 'production verified') {
       return 'unknown';
     }
-    // The registry says this protocol is readable, so the authority decides.
+    // The registry says this protocol has a reader, so the authority decides.
     if (!sources) return 'unknown';
     const source = this.sourceFor(protocol, sources);
     if (!source) return 'unconfigured';
@@ -173,6 +177,19 @@ export class ProtocolDirectoryComponent implements OnInit {
       case 'unconfigured': return 'unconfigured';
       default: return 'degraded';
     }
+  }
+
+  /**
+   * Whether the registry declares a reader beyond the registry entry itself.
+   * Every protocol has a registry row; only a data read makes it implemented.
+   */
+  hasReadOperations(protocol: ExplorerProtocolDefinition): boolean {
+    const declared = new Set<string>([
+      ...(protocol.implementedReadOperations ?? []),
+      ...((protocol.readOperationDescriptors ?? []).map((operation) => operation.id)),
+    ]);
+    declared.delete('registry');
+    return declared.size > 0;
   }
 
   /** True only when the authority behind this protocol can answer right now. */
@@ -217,7 +234,10 @@ export class ProtocolDirectoryComponent implements OnInit {
     switch (this.normalizeStatus(protocol)) {
       case 'production verified': return $localize`:@@universe.protocols.capability-production:Read and verify`;
       case 'verified read only': return $localize`:@@universe.protocols.capability-read-only:Read only`;
-      case 'blocked': return $localize`:@@universe.protocols.capability-blocked:Not implemented`;
+      case 'blocked':
+        return this.hasReadOperations(protocol)
+          ? $localize`:@@universe.protocols.capability-unverified:Read only, not verified`
+          : $localize`:@@universe.protocols.capability-blocked:Not implemented`;
       case 'intentionally disabled': return $localize`:@@universe.protocols.capability-disabled:Disabled`;
       case '': return $localize`:@@universe.protocols.capability-unknown:Capability unknown`;
       default: return this.humanize(this.normalizeStatus(protocol));

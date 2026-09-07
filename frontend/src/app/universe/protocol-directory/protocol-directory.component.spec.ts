@@ -108,10 +108,33 @@ describe('ProtocolDirectoryComponent availability', () => {
   });
 
   it('lets the registry decide for a protocol that is not implemented at all', () => {
+    // No read operation beyond the registry row: nothing exists to be live.
     expect(subject.availability(protocol({ releaseStatus: 'BLOCKED' }), sourcesWith(source())))
+      .toBe('not-implemented');
+    expect(subject.availability(protocol({ releaseStatus: 'BLOCKED', implementedReadOperations: ['registry'] }), sourcesWith(source())))
       .toBe('not-implemented');
     expect(subject.availability(protocol({ releaseStatus: 'INTENTIONALLY DISABLED' }), null))
       .toBe('disabled');
+  });
+
+  it('does not read a blocked release as a missing implementation', () => {
+    // Mezcal: release BLOCKED, activity reader declared, authority serving.
+    const mezcal = protocol({
+      id: 'mezcal', releaseStatus: 'BLOCKED', indexerAuthority: 'index-mezcal',
+      implementedReadOperations: ['registry', 'activity'],
+      readOperationDescriptors: [
+        { id: 'registry', method: 'GET', route: '/api/v1/universe/protocols', authorityPath: null, evidence: 'source-contract', acceptance: 'NOT TESTED' },
+        { id: 'activity', method: 'GET', route: '/api/v1/universe/protocols/mezcal/activity', authorityPath: '/token-explorer/mezcal', evidence: 'source-contract', acceptance: 'NOT TESTED' },
+      ],
+    });
+    const mezcalSources = (entry: SourceEntry) => new Map([['index-mezcal', entry]]);
+    expect(subject.availability(mezcal, mezcalSources(source({ authorityId: 'index-mezcal', protocols: ['mezcal'] })))).toBe('available');
+    expect(subject.availability(mezcal, mezcalSources(source({ authorityId: 'index-mezcal', protocols: ['mezcal'], status: 'stale' })))).toBe('catching-up');
+    expect(subject.availability(mezcal, mezcalSources(source({ authorityId: 'index-mezcal', protocols: ['mezcal'], status: 'unreachable', checkpoint: null })))).toBe('unreachable');
+    expect(subject.availability(mezcal, new Map())).toBe('unconfigured');
+    expect(subject.availability(mezcal, null)).toBe('unknown');
+    // The blocked release still shows in the capability qualifier.
+    expect(subject.capabilityLabel(mezcal)).toBe('Read only, not verified');
   });
 
   it('claims nothing when the authority snapshot could not be read', () => {
