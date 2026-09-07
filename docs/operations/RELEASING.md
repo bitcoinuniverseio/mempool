@@ -160,6 +160,28 @@ node scripts/universe/protocol-contract.mjs --against https://explorer.bitcoinun
 The second one fails when a deployment serves a protocol roster that differs
 from the copy pinned in `docs/protocols/PROTOCOL-COVERAGE.json`.
 
+The source check requests each advertised chain/network separately. An authority
+must claim the protocol and return matching context and checkpoint evidence.
+Unconfigured, stale, degraded, pending and malformed source observations fail
+the availability check. A ready observation is source telemetry, not acceptance
+of the protocol's individual operations.
+
+Each synthetic request has one deadline spanning headers, body consumption,
+parsing and safe-read retries. Bodies are limited to 16 MiB. `httpStatus`
+preserves received headers; incomplete responses have `status: null` and a
+separate `transportError` with the failed stage. A client timeout is never an
+invented gateway 504. Writes are not retried.
+
+The production-smoke workflow installs its locked Chromium and runs
+`scripts/universe/visual-qa/browser-preflight.mjs` before browser journeys.
+The preflight must launch and close the browser. A missing browser is a failed
+prerequisite, not a page verdict; page checks remain required after provisioning.
+Run controlled regressions locally before any separately authorized release:
+
+```bash
+node --test scripts/universe/synthetic-check.test.mjs scripts/universe/synthetic-context.test.mjs scripts/universe/synthetic-deadline.test.mjs
+```
+
 ## Upstream releases are not ours
 
 Upstream tags are preserved in this repository because the complete upstream

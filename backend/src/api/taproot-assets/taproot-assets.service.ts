@@ -111,11 +111,16 @@ export class TaprootAssetsService {
 
   /** @asyncSafe */
 
-  public async $verifyProof(assetId: string, proofData: string): Promise<{ valid: boolean; rootHash: string; anchorBlockHeight: number }> {
+  public async $verifyProof(assetId: string, proofData: string): Promise<{
+    valid: false; stage: 'invalid-input' | 'unavailable-verifier'; error: string;
+  }> {
+    if (typeof assetId !== 'string' || !/^[0-9a-f]{64}$/i.test(assetId)
+      || typeof proofData !== 'string' || !proofData.trim() || proofData.length > 1024 * 1024) {
+      return { valid: false, stage: 'invalid-input', error: 'A 32-byte hexadecimal asset ID and a nonempty proof payload of at most 1 MiB are required.' };
+    }
     return {
-      valid: proofData.length > 20,
-      rootHash: 'e5765796c3d9efeb8152579df6461a6b18973b404d0938f36c535492d5272a0f',
-      anchorBlockHeight: 840000,
+      valid: false, stage: 'unavailable-verifier',
+      error: 'The Taproot Assets proof verifier and owned Bitcoin anchor reader are not connected. No asset commitment or anchor was verified.',
     };
   }
 }

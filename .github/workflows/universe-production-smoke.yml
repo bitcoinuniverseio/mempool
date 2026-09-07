@@ -51,6 +51,9 @@ jobs:
       - name: The served protocol roster matches the pinned one
         run: node scripts/universe/protocol-contract.mjs --against "${{ github.event.inputs.origin || 'https://explorer.bitcoinuniverse.io' }}"
 
+      - name: Source context and response deadlines reject incomplete observations
+        run: node --test scripts/universe/synthetic-check.test.mjs scripts/universe/synthetic-context.test.mjs scripts/universe/synthetic-deadline.test.mjs
+
       - name: Every advertised feature has routes, data, and a matching release
         run: node scripts/universe/synthetic-check.mjs "${{ github.event.inputs.origin || 'https://explorer.bitcoinuniverse.io' }}"
 
@@ -79,8 +82,19 @@ jobs:
         working-directory: scripts/universe/visual-qa
         run: node --test chain-page-audit.test.mjs
 
-      - name: The public chain pages say what the chain documents say
+      - name: Install the locked Chromium engine
         if: ${{ !cancelled() }}
+        working-directory: scripts/universe/visual-qa
+        run: npx --no-install playwright install chromium
+
+      - name: Launch the browser prerequisite
+        id: browser-preflight
+        if: ${{ !cancelled() }}
+        working-directory: scripts/universe/visual-qa
+        run: node browser-preflight.mjs
+
+      - name: The public chain pages say what the chain documents say
+        if: ${{ !cancelled() && steps.browser-preflight.outcome == 'success' }}
         working-directory: scripts/universe/visual-qa
         run: >-
           node chain-page-smoke.mjs
@@ -96,7 +110,7 @@ jobs:
         run: node --test address-page-audit.test.mjs
 
       - name: A real address page loads with real data and no false diagnosis
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.browser-preflight.outcome == 'success' }}
         working-directory: scripts/universe/visual-qa
         run: >-
           node address-page-smoke.mjs

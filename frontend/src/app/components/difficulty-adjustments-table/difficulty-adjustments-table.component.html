@@ -1,4 +1,5 @@
-<div style="min-height: 335px">
+<div style="min-height: 335px" *ngIf="state$ | async as state">
+  <app-load-status *ngIf="state.status !== 'data'" [state]="state" label="difficulty adjustments" (retry)="onRetry()"></app-load-status>
   <table class="table latest-adjustments">
     <thead>
       <tr>
@@ -8,8 +9,8 @@
         <th class="text-right" i18n="mining.change">Change</th>
       </tr>
     </thead>
-    <tbody *ngIf="(hashrateObservable$ | async) as data">
-      <tr *ngFor="let diffChange of data">
+    <tbody *ngIf="state.status === 'data' || state.status === 'stale'">
+      <tr *ngFor="let diffChange of state.value">
         <td class="">
           <a [routerLink]="['/block' | relativeUrl, diffChange.height]">{{ diffChange.height }}</a>
         </td>
@@ -22,7 +23,7 @@
         </td>
       </tr>
     </tbody>
-    <tbody *ngIf="isLoading">
+    <tbody *ngIf="state.status === 'loading'" aria-hidden="true">
       <tr *ngFor="let item of [1,2,3,4,5,6]">
         <td class=""><span class="skeleton-loader"></span></td>
         <td class="date text-left"><span class="skeleton-loader w-75"></span></td>

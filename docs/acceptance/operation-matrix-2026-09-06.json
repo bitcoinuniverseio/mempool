@@ -1959,9 +1959,9 @@
     },
     {
       "path": "backend/src/api/intelligence/collaborative-privacy/collaborative-privacy.routes.ts",
-      "sha256": "5ede7204d3b4d9f9cde4b1dd6302501fd54b87ea825880e9f877ff54150f2c93",
+      "sha256": "d6f83ea1b613657e6fa5ca2d9e39bb5467942b06fe59319fec43b7d402d7eea0",
       "sha256Encoding": "utf8-lf",
-      "bytes": 3165
+      "bytes": 3218
     },
     {
       "path": "backend/src/api/intelligence/compact-filters/compact-filters.routes.ts",
@@ -1971,9 +1971,9 @@
     },
     {
       "path": "backend/src/api/intelligence/consensus-conformance/consensus-conformance.routes.ts",
-      "sha256": "c658ae03dffdec72807ec73bb8e6b876b73af1fa3b0d40a6c1cdb70ec328876f",
+      "sha256": "b0f89f93e38ce822defe359c03c4ebcad57adaa98a39ecfc226c73b1941663d7",
       "sha256Encoding": "utf8-lf",
-      "bytes": 3544
+      "bytes": 3924
     },
     {
       "path": "backend/src/api/intelligence/consensus/consensus.routes.ts",
@@ -2043,9 +2043,9 @@
     },
     {
       "path": "backend/src/api/intelligence/node-security/node-security.routes.ts",
-      "sha256": "dc1ecd96e710444c847ab7b152214b659612283424a9820ad3cd3c54e57cac01",
+      "sha256": "9ada68da28fdbb0dcef689d85408245f67f9131fcd52a53b9d51b385425dda7e",
       "sha256Encoding": "utf8-lf",
-      "bytes": 3804
+      "bytes": 3857
     },
     {
       "path": "backend/src/api/intelligence/offchain/offchain.routes.ts",
@@ -2247,9 +2247,9 @@
     },
     {
       "path": "backend/src/api/taproot-assets/taproot-assets.routes.ts",
-      "sha256": "59726558ce2751b9ddde88ed352e7c35ae75fe18ba6e9e25e0ed29836ce41df2",
+      "sha256": "cae3fdf1ac59f3c69d2d119439eb9572f69d663a7991c7b5859d29aca2accbe3",
       "sha256Encoding": "utf8-lf",
-      "bytes": 3011
+      "bytes": 2932
     },
     {
       "path": "backend/src/api/utxo-set/utxo-set.routes.ts",
@@ -2406,6 +2406,12 @@
       "sha256": "687a2efcc696d37bf33993409e9148465badbd7ba67d433b469e433ad576c17b",
       "sha256Encoding": "raw-bytes",
       "bytes": 11437
+    },
+    {
+      "path": "docs/acceptance/STATUS-2026-09-07.md",
+      "sha256": "c4b0f52a22bf12ecd5bb089f167992f3d0ba66092d73d10b676b4a20b55776b0",
+      "sha256Encoding": "raw-bytes",
+      "bytes": 9253
     },
     {
       "path": "docs/acceptance/swaps-2026-09-05.md",
@@ -2853,9 +2859,9 @@
     },
     {
       "path": "frontend/src/app/universe/bootstrap/bootstrap-planner.component.ts",
-      "sha256": "9a8e69dd7bac32216bac6b9f943b2c813b0eb793bb98291223d3944ba29c9592",
+      "sha256": "0a389c46c72feb5dff4dfd0f9cb8fea9a88faac87fea35ac2b9cf4e420b7d952",
       "sha256Encoding": "utf8-lf",
-      "bytes": 7457
+      "bytes": 7665
     },
     {
       "path": "frontend/src/app/universe/bootstrap/bootstrap-snapshot-detail.component.ts",
@@ -4203,9 +4209,9 @@
     },
     {
       "path": "frontend/src/app/universe/taproot-assets/lightning-standards.component.ts",
-      "sha256": "2e55d325438787c57810ab36e94760c8cf8567fdb4719b9489a7c1e77e8b4df6",
+      "sha256": "2ed3c239bc4f940fa720d4d54d942bb4809fb82aa3f987a188a7b97f4271285a",
       "sha256Encoding": "utf8-lf",
-      "bytes": 2291
+      "bytes": 3404
     },
     {
       "path": "frontend/src/app/universe/taproot-assets/taproot-assets.component.ts",
@@ -4215,9 +4221,9 @@
     },
     {
       "path": "frontend/src/app/universe/universe-api.service.ts",
-      "sha256": "1e8fce8ca346c7d89eec725ced5369fd8a8e6822b733fc279658b762fb422a42",
+      "sha256": "0e430ad7a3b214a484463378d4bdfdec7b5652ab5bf61364d3547c627b75a7cc",
       "sha256Encoding": "utf8-lf",
-      "bytes": 36532
+      "bytes": 36769
     },
     {
       "path": "frontend/src/app/universe/utxo-set/utxo-set.component.ts",
@@ -7167,7 +7173,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/taproot-assets/lightning-standards.component.ts",
-          "sha256": "2e55d325438787c57810ab36e94760c8cf8567fdb4719b9489a7c1e77e8b4df6",
+          "sha256": "2ed3c239bc4f940fa720d4d54d942bb4809fb82aa3f987a188a7b97f4271285a",
           "sha256Encoding": "utf8-lf"
         }
       },
@@ -13953,7 +13959,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/bootstrap/bootstrap-planner.component.ts",
-          "sha256": "9a8e69dd7bac32216bac6b9f943b2c813b0eb793bb98291223d3944ba29c9592",
+          "sha256": "0a389c46c72feb5dff4dfd0f9cb8fea9a88faac87fea35ac2b9cf4e420b7d952",
           "sha256Encoding": "utf8-lf"
         }
       },
@@ -52481,7 +52487,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/taproot-assets/lightning-standards.component.ts",
-          "sha256": "2e55d325438787c57810ab36e94760c8cf8567fdb4719b9489a7c1e77e8b4df6",
+          "sha256": "2ed3c239bc4f940fa720d4d54d942bb4809fb82aa3f987a188a7b97f4271285a",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -61791,7 +61797,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/bootstrap/bootstrap-planner.component.ts",
-          "sha256": "9a8e69dd7bac32216bac6b9f943b2c813b0eb793bb98291223d3944ba29c9592",
+          "sha256": "0a389c46c72feb5dff4dfd0f9cb8fea9a88faac87fea35ac2b9cf4e420b7d952",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -104625,7 +104631,7 @@
         },
         {
           "artifact": "backend/src/api/taproot-assets/taproot-assets.routes.ts",
-          "sha256": "59726558ce2751b9ddde88ed352e7c35ae75fe18ba6e9e25e0ed29836ce41df2",
+          "sha256": "cae3fdf1ac59f3c69d2d119439eb9572f69d663a7991c7b5859d29aca2accbe3",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -104687,7 +104693,7 @@
         },
         {
           "artifact": "backend/src/api/taproot-assets/taproot-assets.routes.ts",
-          "sha256": "59726558ce2751b9ddde88ed352e7c35ae75fe18ba6e9e25e0ed29836ce41df2",
+          "sha256": "cae3fdf1ac59f3c69d2d119439eb9572f69d663a7991c7b5859d29aca2accbe3",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -104749,7 +104755,7 @@
         },
         {
           "artifact": "backend/src/api/taproot-assets/taproot-assets.routes.ts",
-          "sha256": "59726558ce2751b9ddde88ed352e7c35ae75fe18ba6e9e25e0ed29836ce41df2",
+          "sha256": "cae3fdf1ac59f3c69d2d119439eb9572f69d663a7991c7b5859d29aca2accbe3",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -104811,7 +104817,7 @@
         },
         {
           "artifact": "backend/src/api/taproot-assets/taproot-assets.routes.ts",
-          "sha256": "59726558ce2751b9ddde88ed352e7c35ae75fe18ba6e9e25e0ed29836ce41df2",
+          "sha256": "cae3fdf1ac59f3c69d2d119439eb9572f69d663a7991c7b5859d29aca2accbe3",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -104873,7 +104879,7 @@
         },
         {
           "artifact": "backend/src/api/taproot-assets/taproot-assets.routes.ts",
-          "sha256": "59726558ce2751b9ddde88ed352e7c35ae75fe18ba6e9e25e0ed29836ce41df2",
+          "sha256": "cae3fdf1ac59f3c69d2d119439eb9572f69d663a7991c7b5859d29aca2accbe3",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -104935,7 +104941,7 @@
         },
         {
           "artifact": "backend/src/api/taproot-assets/taproot-assets.routes.ts",
-          "sha256": "59726558ce2751b9ddde88ed352e7c35ae75fe18ba6e9e25e0ed29836ce41df2",
+          "sha256": "cae3fdf1ac59f3c69d2d119439eb9572f69d663a7991c7b5859d29aca2accbe3",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -126012,7 +126018,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/consensus-conformance/consensus-conformance.routes.ts",
-          "sha256": "c658ae03dffdec72807ec73bb8e6b876b73af1fa3b0d40a6c1cdb70ec328876f",
+          "sha256": "b0f89f93e38ce822defe359c03c4ebcad57adaa98a39ecfc226c73b1941663d7",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -126074,7 +126080,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/consensus-conformance/consensus-conformance.routes.ts",
-          "sha256": "c658ae03dffdec72807ec73bb8e6b876b73af1fa3b0d40a6c1cdb70ec328876f",
+          "sha256": "b0f89f93e38ce822defe359c03c4ebcad57adaa98a39ecfc226c73b1941663d7",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -126136,7 +126142,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/consensus-conformance/consensus-conformance.routes.ts",
-          "sha256": "c658ae03dffdec72807ec73bb8e6b876b73af1fa3b0d40a6c1cdb70ec328876f",
+          "sha256": "b0f89f93e38ce822defe359c03c4ebcad57adaa98a39ecfc226c73b1941663d7",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -126198,7 +126204,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/consensus-conformance/consensus-conformance.routes.ts",
-          "sha256": "c658ae03dffdec72807ec73bb8e6b876b73af1fa3b0d40a6c1cdb70ec328876f",
+          "sha256": "b0f89f93e38ce822defe359c03c4ebcad57adaa98a39ecfc226c73b1941663d7",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -126260,7 +126266,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/consensus-conformance/consensus-conformance.routes.ts",
-          "sha256": "c658ae03dffdec72807ec73bb8e6b876b73af1fa3b0d40a6c1cdb70ec328876f",
+          "sha256": "b0f89f93e38ce822defe359c03c4ebcad57adaa98a39ecfc226c73b1941663d7",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -126322,7 +126328,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/consensus-conformance/consensus-conformance.routes.ts",
-          "sha256": "c658ae03dffdec72807ec73bb8e6b876b73af1fa3b0d40a6c1cdb70ec328876f",
+          "sha256": "b0f89f93e38ce822defe359c03c4ebcad57adaa98a39ecfc226c73b1941663d7",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -126384,7 +126390,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/consensus-conformance/consensus-conformance.routes.ts",
-          "sha256": "c658ae03dffdec72807ec73bb8e6b876b73af1fa3b0d40a6c1cdb70ec328876f",
+          "sha256": "b0f89f93e38ce822defe359c03c4ebcad57adaa98a39ecfc226c73b1941663d7",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -126446,7 +126452,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/consensus-conformance/consensus-conformance.routes.ts",
-          "sha256": "c658ae03dffdec72807ec73bb8e6b876b73af1fa3b0d40a6c1cdb70ec328876f",
+          "sha256": "b0f89f93e38ce822defe359c03c4ebcad57adaa98a39ecfc226c73b1941663d7",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -126508,7 +126514,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/consensus-conformance/consensus-conformance.routes.ts",
-          "sha256": "c658ae03dffdec72807ec73bb8e6b876b73af1fa3b0d40a6c1cdb70ec328876f",
+          "sha256": "b0f89f93e38ce822defe359c03c4ebcad57adaa98a39ecfc226c73b1941663d7",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -126570,7 +126576,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/node-security/node-security.routes.ts",
-          "sha256": "dc1ecd96e710444c847ab7b152214b659612283424a9820ad3cd3c54e57cac01",
+          "sha256": "9ada68da28fdbb0dcef689d85408245f67f9131fcd52a53b9d51b385425dda7e",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -126632,7 +126638,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/node-security/node-security.routes.ts",
-          "sha256": "dc1ecd96e710444c847ab7b152214b659612283424a9820ad3cd3c54e57cac01",
+          "sha256": "9ada68da28fdbb0dcef689d85408245f67f9131fcd52a53b9d51b385425dda7e",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -126694,7 +126700,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/node-security/node-security.routes.ts",
-          "sha256": "dc1ecd96e710444c847ab7b152214b659612283424a9820ad3cd3c54e57cac01",
+          "sha256": "9ada68da28fdbb0dcef689d85408245f67f9131fcd52a53b9d51b385425dda7e",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -126756,7 +126762,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/node-security/node-security.routes.ts",
-          "sha256": "dc1ecd96e710444c847ab7b152214b659612283424a9820ad3cd3c54e57cac01",
+          "sha256": "9ada68da28fdbb0dcef689d85408245f67f9131fcd52a53b9d51b385425dda7e",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -126818,7 +126824,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/node-security/node-security.routes.ts",
-          "sha256": "dc1ecd96e710444c847ab7b152214b659612283424a9820ad3cd3c54e57cac01",
+          "sha256": "9ada68da28fdbb0dcef689d85408245f67f9131fcd52a53b9d51b385425dda7e",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -126880,7 +126886,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/node-security/node-security.routes.ts",
-          "sha256": "dc1ecd96e710444c847ab7b152214b659612283424a9820ad3cd3c54e57cac01",
+          "sha256": "9ada68da28fdbb0dcef689d85408245f67f9131fcd52a53b9d51b385425dda7e",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -126942,7 +126948,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/node-security/node-security.routes.ts",
-          "sha256": "dc1ecd96e710444c847ab7b152214b659612283424a9820ad3cd3c54e57cac01",
+          "sha256": "9ada68da28fdbb0dcef689d85408245f67f9131fcd52a53b9d51b385425dda7e",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -127004,7 +127010,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/node-security/node-security.routes.ts",
-          "sha256": "dc1ecd96e710444c847ab7b152214b659612283424a9820ad3cd3c54e57cac01",
+          "sha256": "9ada68da28fdbb0dcef689d85408245f67f9131fcd52a53b9d51b385425dda7e",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -127066,7 +127072,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/node-security/node-security.routes.ts",
-          "sha256": "dc1ecd96e710444c847ab7b152214b659612283424a9820ad3cd3c54e57cac01",
+          "sha256": "9ada68da28fdbb0dcef689d85408245f67f9131fcd52a53b9d51b385425dda7e",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -127128,7 +127134,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/node-security/node-security.routes.ts",
-          "sha256": "dc1ecd96e710444c847ab7b152214b659612283424a9820ad3cd3c54e57cac01",
+          "sha256": "9ada68da28fdbb0dcef689d85408245f67f9131fcd52a53b9d51b385425dda7e",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -127190,7 +127196,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/collaborative-privacy/collaborative-privacy.routes.ts",
-          "sha256": "5ede7204d3b4d9f9cde4b1dd6302501fd54b87ea825880e9f877ff54150f2c93",
+          "sha256": "d6f83ea1b613657e6fa5ca2d9e39bb5467942b06fe59319fec43b7d402d7eea0",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -127252,7 +127258,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/collaborative-privacy/collaborative-privacy.routes.ts",
-          "sha256": "5ede7204d3b4d9f9cde4b1dd6302501fd54b87ea825880e9f877ff54150f2c93",
+          "sha256": "d6f83ea1b613657e6fa5ca2d9e39bb5467942b06fe59319fec43b7d402d7eea0",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -127314,7 +127320,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/collaborative-privacy/collaborative-privacy.routes.ts",
-          "sha256": "5ede7204d3b4d9f9cde4b1dd6302501fd54b87ea825880e9f877ff54150f2c93",
+          "sha256": "d6f83ea1b613657e6fa5ca2d9e39bb5467942b06fe59319fec43b7d402d7eea0",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -127376,7 +127382,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/collaborative-privacy/collaborative-privacy.routes.ts",
-          "sha256": "5ede7204d3b4d9f9cde4b1dd6302501fd54b87ea825880e9f877ff54150f2c93",
+          "sha256": "d6f83ea1b613657e6fa5ca2d9e39bb5467942b06fe59319fec43b7d402d7eea0",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -127438,7 +127444,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/collaborative-privacy/collaborative-privacy.routes.ts",
-          "sha256": "5ede7204d3b4d9f9cde4b1dd6302501fd54b87ea825880e9f877ff54150f2c93",
+          "sha256": "d6f83ea1b613657e6fa5ca2d9e39bb5467942b06fe59319fec43b7d402d7eea0",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -127500,7 +127506,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/collaborative-privacy/collaborative-privacy.routes.ts",
-          "sha256": "5ede7204d3b4d9f9cde4b1dd6302501fd54b87ea825880e9f877ff54150f2c93",
+          "sha256": "d6f83ea1b613657e6fa5ca2d9e39bb5467942b06fe59319fec43b7d402d7eea0",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -127562,7 +127568,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/collaborative-privacy/collaborative-privacy.routes.ts",
-          "sha256": "5ede7204d3b4d9f9cde4b1dd6302501fd54b87ea825880e9f877ff54150f2c93",
+          "sha256": "d6f83ea1b613657e6fa5ca2d9e39bb5467942b06fe59319fec43b7d402d7eea0",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -127624,7 +127630,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/collaborative-privacy/collaborative-privacy.routes.ts",
-          "sha256": "5ede7204d3b4d9f9cde4b1dd6302501fd54b87ea825880e9f877ff54150f2c93",
+          "sha256": "d6f83ea1b613657e6fa5ca2d9e39bb5467942b06fe59319fec43b7d402d7eea0",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -127761,7 +127767,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "1e8fce8ca346c7d89eec725ced5369fd8a8e6822b733fc279658b762fb422a42",
+          "sha256": "0e430ad7a3b214a484463378d4bdfdec7b5652ab5bf61364d3547c627b75a7cc",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -127841,7 +127847,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "1e8fce8ca346c7d89eec725ced5369fd8a8e6822b733fc279658b762fb422a42",
+          "sha256": "0e430ad7a3b214a484463378d4bdfdec7b5652ab5bf61364d3547c627b75a7cc",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -127900,7 +127906,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "1e8fce8ca346c7d89eec725ced5369fd8a8e6822b733fc279658b762fb422a42",
+          "sha256": "0e430ad7a3b214a484463378d4bdfdec7b5652ab5bf61364d3547c627b75a7cc",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -127958,7 +127964,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "1e8fce8ca346c7d89eec725ced5369fd8a8e6822b733fc279658b762fb422a42",
+          "sha256": "0e430ad7a3b214a484463378d4bdfdec7b5652ab5bf61364d3547c627b75a7cc",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -128018,7 +128024,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "1e8fce8ca346c7d89eec725ced5369fd8a8e6822b733fc279658b762fb422a42",
+          "sha256": "0e430ad7a3b214a484463378d4bdfdec7b5652ab5bf61364d3547c627b75a7cc",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -128077,7 +128083,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "1e8fce8ca346c7d89eec725ced5369fd8a8e6822b733fc279658b762fb422a42",
+          "sha256": "0e430ad7a3b214a484463378d4bdfdec7b5652ab5bf61364d3547c627b75a7cc",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -128136,7 +128142,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "1e8fce8ca346c7d89eec725ced5369fd8a8e6822b733fc279658b762fb422a42",
+          "sha256": "0e430ad7a3b214a484463378d4bdfdec7b5652ab5bf61364d3547c627b75a7cc",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -128195,7 +128201,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "1e8fce8ca346c7d89eec725ced5369fd8a8e6822b733fc279658b762fb422a42",
+          "sha256": "0e430ad7a3b214a484463378d4bdfdec7b5652ab5bf61364d3547c627b75a7cc",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -128263,7 +128269,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "1e8fce8ca346c7d89eec725ced5369fd8a8e6822b733fc279658b762fb422a42",
+          "sha256": "0e430ad7a3b214a484463378d4bdfdec7b5652ab5bf61364d3547c627b75a7cc",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -128366,7 +128372,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "1e8fce8ca346c7d89eec725ced5369fd8a8e6822b733fc279658b762fb422a42",
+          "sha256": "0e430ad7a3b214a484463378d4bdfdec7b5652ab5bf61364d3547c627b75a7cc",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -128455,7 +128461,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "1e8fce8ca346c7d89eec725ced5369fd8a8e6822b733fc279658b762fb422a42",
+          "sha256": "0e430ad7a3b214a484463378d4bdfdec7b5652ab5bf61364d3547c627b75a7cc",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -128546,7 +128552,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "1e8fce8ca346c7d89eec725ced5369fd8a8e6822b733fc279658b762fb422a42",
+          "sha256": "0e430ad7a3b214a484463378d4bdfdec7b5652ab5bf61364d3547c627b75a7cc",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -128640,7 +128646,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "1e8fce8ca346c7d89eec725ced5369fd8a8e6822b733fc279658b762fb422a42",
+          "sha256": "0e430ad7a3b214a484463378d4bdfdec7b5652ab5bf61364d3547c627b75a7cc",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -128733,7 +128739,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "1e8fce8ca346c7d89eec725ced5369fd8a8e6822b733fc279658b762fb422a42",
+          "sha256": "0e430ad7a3b214a484463378d4bdfdec7b5652ab5bf61364d3547c627b75a7cc",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -128828,7 +128834,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "1e8fce8ca346c7d89eec725ced5369fd8a8e6822b733fc279658b762fb422a42",
+          "sha256": "0e430ad7a3b214a484463378d4bdfdec7b5652ab5bf61364d3547c627b75a7cc",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -128921,7 +128927,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "1e8fce8ca346c7d89eec725ced5369fd8a8e6822b733fc279658b762fb422a42",
+          "sha256": "0e430ad7a3b214a484463378d4bdfdec7b5652ab5bf61364d3547c627b75a7cc",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -129012,7 +129018,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "1e8fce8ca346c7d89eec725ced5369fd8a8e6822b733fc279658b762fb422a42",
+          "sha256": "0e430ad7a3b214a484463378d4bdfdec7b5652ab5bf61364d3547c627b75a7cc",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -129102,7 +129108,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "1e8fce8ca346c7d89eec725ced5369fd8a8e6822b733fc279658b762fb422a42",
+          "sha256": "0e430ad7a3b214a484463378d4bdfdec7b5652ab5bf61364d3547c627b75a7cc",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -129197,7 +129203,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "1e8fce8ca346c7d89eec725ced5369fd8a8e6822b733fc279658b762fb422a42",
+          "sha256": "0e430ad7a3b214a484463378d4bdfdec7b5652ab5bf61364d3547c627b75a7cc",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -129290,7 +129296,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "1e8fce8ca346c7d89eec725ced5369fd8a8e6822b733fc279658b762fb422a42",
+          "sha256": "0e430ad7a3b214a484463378d4bdfdec7b5652ab5bf61364d3547c627b75a7cc",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -129385,7 +129391,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "1e8fce8ca346c7d89eec725ced5369fd8a8e6822b733fc279658b762fb422a42",
+          "sha256": "0e430ad7a3b214a484463378d4bdfdec7b5652ab5bf61364d3547c627b75a7cc",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -130092,7 +130098,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "1e8fce8ca346c7d89eec725ced5369fd8a8e6822b733fc279658b762fb422a42",
+          "sha256": "0e430ad7a3b214a484463378d4bdfdec7b5652ab5bf61364d3547c627b75a7cc",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -130148,7 +130154,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "1e8fce8ca346c7d89eec725ced5369fd8a8e6822b733fc279658b762fb422a42",
+          "sha256": "0e430ad7a3b214a484463378d4bdfdec7b5652ab5bf61364d3547c627b75a7cc",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -130204,7 +130210,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "1e8fce8ca346c7d89eec725ced5369fd8a8e6822b733fc279658b762fb422a42",
+          "sha256": "0e430ad7a3b214a484463378d4bdfdec7b5652ab5bf61364d3547c627b75a7cc",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -130260,7 +130266,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "1e8fce8ca346c7d89eec725ced5369fd8a8e6822b733fc279658b762fb422a42",
+          "sha256": "0e430ad7a3b214a484463378d4bdfdec7b5652ab5bf61364d3547c627b75a7cc",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -130316,7 +130322,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "1e8fce8ca346c7d89eec725ced5369fd8a8e6822b733fc279658b762fb422a42",
+          "sha256": "0e430ad7a3b214a484463378d4bdfdec7b5652ab5bf61364d3547c627b75a7cc",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -130372,7 +130378,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "1e8fce8ca346c7d89eec725ced5369fd8a8e6822b733fc279658b762fb422a42",
+          "sha256": "0e430ad7a3b214a484463378d4bdfdec7b5652ab5bf61364d3547c627b75a7cc",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -130428,7 +130434,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "1e8fce8ca346c7d89eec725ced5369fd8a8e6822b733fc279658b762fb422a42",
+          "sha256": "0e430ad7a3b214a484463378d4bdfdec7b5652ab5bf61364d3547c627b75a7cc",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -130484,7 +130490,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "1e8fce8ca346c7d89eec725ced5369fd8a8e6822b733fc279658b762fb422a42",
+          "sha256": "0e430ad7a3b214a484463378d4bdfdec7b5652ab5bf61364d3547c627b75a7cc",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -130540,7 +130546,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "1e8fce8ca346c7d89eec725ced5369fd8a8e6822b733fc279658b762fb422a42",
+          "sha256": "0e430ad7a3b214a484463378d4bdfdec7b5652ab5bf61364d3547c627b75a7cc",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -130605,7 +130611,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "1e8fce8ca346c7d89eec725ced5369fd8a8e6822b733fc279658b762fb422a42",
+          "sha256": "0e430ad7a3b214a484463378d4bdfdec7b5652ab5bf61364d3547c627b75a7cc",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -130690,7 +130696,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "1e8fce8ca346c7d89eec725ced5369fd8a8e6822b733fc279658b762fb422a42",
+          "sha256": "0e430ad7a3b214a484463378d4bdfdec7b5652ab5bf61364d3547c627b75a7cc",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -130766,7 +130772,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "1e8fce8ca346c7d89eec725ced5369fd8a8e6822b733fc279658b762fb422a42",
+          "sha256": "0e430ad7a3b214a484463378d4bdfdec7b5652ab5bf61364d3547c627b75a7cc",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -130822,7 +130828,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "1e8fce8ca346c7d89eec725ced5369fd8a8e6822b733fc279658b762fb422a42",
+          "sha256": "0e430ad7a3b214a484463378d4bdfdec7b5652ab5bf61364d3547c627b75a7cc",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -130887,7 +130893,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "1e8fce8ca346c7d89eec725ced5369fd8a8e6822b733fc279658b762fb422a42",
+          "sha256": "0e430ad7a3b214a484463378d4bdfdec7b5652ab5bf61364d3547c627b75a7cc",
           "sha256Encoding": "utf8-lf"
         },
         {

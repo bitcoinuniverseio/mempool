@@ -26,9 +26,7 @@ describe('ConsensusConformanceService', () => {
     expect(retrieved).toBeDefined();
     expect(retrieved?.mismatch_class).toBeDefined();
 
-    const replayRes = consensusConformanceService.replayCase(first.case_id);
-    expect(replayRes.success).toBe(true);
-    expect(replayRes.divergence_reproduced).toBe(true);
+    expect(() => consensusConformanceService.replayCase(first.case_id)).toThrow(expect.objectContaining({ code: 'unavailable-runner', status: 503 }));
   });
 
   it('should list formal specification artifacts and machine-checked theorems', () => {
@@ -40,9 +38,10 @@ describe('ConsensusConformanceService', () => {
   });
 
   it('should start a deterministic campaign with bounded inputs', () => {
-    const campaign = consensusConformanceService.startCampaign('transaction_parse', 42);
-    expect(campaign.target_id).toBe('transaction_parse');
-    expect(campaign.total_inputs_evaluated).toBeGreaterThan(0);
-    expect(campaign.seed).toBe(42);
+    const before = consensusConformanceService.listCampaigns().campaigns.length;
+    expect(() => consensusConformanceService.startCampaign('transaction_parse', 0)).toThrow(expect.objectContaining({ code: 'unavailable-runner', status: 503 }));
+    expect(consensusConformanceService.listCampaigns().campaigns).toHaveLength(before);
+    expect(() => consensusConformanceService.startCampaign('unknown', 42)).toThrow(expect.objectContaining({ status: 400 }));
+    expect(() => consensusConformanceService.startCampaign('transaction_parse', -1)).toThrow(expect.objectContaining({ status: 400 }));
   });
 });

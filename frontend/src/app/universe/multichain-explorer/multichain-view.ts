@@ -732,7 +732,9 @@ export function readHistoryCoverage(
         ? (health.protocols.every(item => item.coverage === 'complete') ? 'complete' : 'partial') : 'unknown')
       : capability?.health ? 'unknown' : capability?.coverage?.[id];
     const available = !row || (row.availability === 'ready' && observationCurrent(row, now));
-    return { id, label, stateLabel: completenessLabel(state) + (available ? '' : ' (last known coverage)'), tone: available ? completenessTone(state) : 'neutral', detail };
+    const availability = row && row.availability !== 'ready' ? availabilityLabel(row.availability) + ' · ' : '';
+    return { id, label, stateLabel: availability + completenessLabel(state) + (available ? '' : ' (last known coverage)'),
+      tone: row?.availability === 'unavailable' ? 'unavailable' : available ? completenessTone(state) : 'neutral', detail };
   });
 }
 

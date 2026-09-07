@@ -7,6 +7,10 @@ import {
   ConformanceCampaign,
 } from './consensus-conformance.models';
 
+export class ConformanceEvidenceError extends Error {
+  constructor(public readonly code: string, message: string, public readonly status = 503) { super(message); }
+}
+
 export class ConsensusConformanceService {
   private implementations: ConsensusImplementation[] = [
     {
@@ -249,35 +253,19 @@ export class ConsensusConformanceService {
     return this.cases.find((c) => c.case_id === caseId);
   }
 
-  public startCampaign(targetId: string, seed = Date.now()): ConformanceCampaign {
-    const campaign: ConformanceCampaign = {
-      campaign_id: `camp-${Date.now()}`,
-      target_id: targetId,
-      total_inputs_evaluated: 10000,
-      divergences_found: 0,
-      crashes_detected: 0,
-      seed,
-      status: 'completed',
-      started_at_utc: new Date().toISOString(),
-      completed_at_utc: new Date().toISOString(),
-    };
-    this.campaigns.push(campaign);
-    return campaign;
+  public startCampaign(targetId: string, seed = Date.now()): never {
+    if (typeof targetId !== 'string' || !this.targets.some(target => target.target_id === targetId)
+      || !Number.isSafeInteger(seed) || seed < 0) {
+      throw new ConformanceEvidenceError('invalid-input', 'A supported target and a nonnegative safe integer seed are required.', 400);
+    }
+    throw new ConformanceEvidenceError('unavailable-runner', 'The isolated implementation runner and durable campaign result store are not connected. No inputs were evaluated and no campaign was started.');
   }
 
-  public replayCase(caseId: string): any {
-    const c = this.getCase(caseId);
-    if (!c) {
-      return { success: false, error: 'Case not found' };
+  public replayCase(caseId: string): never {
+    if (typeof caseId !== 'string' || !caseId.trim() || caseId.length > 256) {
+      throw new ConformanceEvidenceError('invalid-input', 'A nonempty bounded case identifier is required.', 400);
     }
-    return {
-      success: true,
-      case_id: caseId,
-      replayed_at_utc: new Date().toISOString(),
-      reproduction_verified: true,
-      divergence_reproduced: true,
-      outcomes: c.implementation_outcomes,
-    };
+    throw new ConformanceEvidenceError('unavailable-runner', 'The isolated implementation runner and authenticated case artifacts are not connected. No case was replayed and no divergence was reproduced.');
   }
 
   public listFormalArtifacts(): { formal_artifacts: FormalArtifact[] } {

@@ -984,23 +984,25 @@ async function run() {
 
   const report = { browser: BROWSER, base: BASE, screenshots: shots, findings };
   writeFileSync(join(OUT, `report-${BROWSER}.json`), JSON.stringify(report, null, 2));
-  const { blocking: stuck, contrastNotMeasured, unmatched } = summarise(report);
+  const summary = summarise(report);
+  const { blocking: stuck, contrastNotMeasured, unmatched, failed } = summary;
   if (stuck.length > 0) {
     console.error(`${stuck.length} page(s) never finished loading. This is the failure that shipped last time, so it fails the run.`);
-    process.exitCode = 1;
   }
   if (contrastNotMeasured.length > 0) {
     console.error(
       `${contrastNotMeasured.length} page(s) had no contrast measurement taken, so this run cannot claim their contrast is correct.`,
     );
-    process.exitCode = 1;
   }
   if (unmatched && unmatched.length > 0) {
     console.error(
       `${unmatched.length} page(s) had unmatched fixture requests that failed closed.`,
     );
-    process.exitCode = 1;
   }
+  if (failed.length > 0) {
+    console.error(`${failed.length} page(s) failed navigation or capture. This run did not complete its requested measurements.`);
+  }
+  if (captureGateFailed(summary)) process.exitCode = 1;
 }
 
 /**
@@ -1111,7 +1113,7 @@ export function progressFailures(report) {
   return failures;
 }
 
-function summarise(report) {
+export function summarise(report) {
   const overflow = report.findings.filter((f) => f.overflowBy > 0);
   const errors = report.findings.filter((f) => f.consoleErrors?.length);
   const images = report.findings.filter((f) => f.brokenImages?.length);
@@ -1291,7 +1293,11 @@ function summarise(report) {
     if (known.length > 40) console.log(`  ... and ${known.length - 40} more, see the report`);
   }
   console.log('');
-  return { blocking, contrastNotMeasured, unmatched };
+  return { blocking, contrastNotMeasured, unmatched, failed };
+}
+
+export function captureGateFailed({ blocking, contrastNotMeasured, unmatched, failed }) {
+  return blocking.length > 0 || contrastNotMeasured.length > 0 || unmatched.length > 0 || failed.length > 0;
 }
 
 // Only drive browsers when this file is the program. Importing it, as the

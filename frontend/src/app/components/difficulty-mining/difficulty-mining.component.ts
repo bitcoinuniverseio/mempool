@@ -1,7 +1,9 @@
 import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
-import { combineLatest, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { BehaviorSubject, combineLatest, merge, Observable } from 'rxjs';
+import { distinctUntilChanged, filter, map, shareReplay } from 'rxjs/operators';
 import { StateService } from '@app/services/state.service';
+import { WebsocketService } from '@app/services/websocket.service';
+import { LoadState, trackedLoadState } from '@app/shared/load-state';
 
 interface EpochProgress {
   base: string;
@@ -27,8 +29,9 @@ interface EpochProgress {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DifficultyMiningComponent implements OnInit {
-  isLoadingWebSocket$: Observable<boolean>;
   difficultyEpoch$: Observable<EpochProgress>;
+  epochState$: Observable<LoadState<EpochProgress>>;
+  private retry$ = new BehaviorSubject<void>(undefined);
   blocksUntilHalving: number | null = null;
   timeUntilHalving = 0;
   now = new Date().getTime();
@@ -39,10 +42,10 @@ export class DifficultyMiningComponent implements OnInit {
 
   constructor(
     public stateService: StateService,
+    private websocketService: WebsocketService,
   ) { }
 
   ngOnInit(): void {
-    this.isLoadingWebSocket$ = this.stateService.isLoadingWebSocket$;
     this.difficultyEpoch$ = combineLatest([
       this.stateService.blocks$,
       this.stateService.difficultyAdjustment$,
@@ -92,6 +95,16 @@ export class DifficultyMiningComponent implements OnInit {
         return data;
       })
     );
+    const connected$ = this.stateService.connectionState$.pipe(
+      distinctUntilChanged(), filter((state) => state === 2), map(() => undefined),
+    );
+    this.epochState$ = trackedLoadState(merge(this.retry$, connected$), () => this.difficultyEpoch$)
+      .pipe(shareReplay({ bufferSize: 1, refCount: true }));
+  }
+
+  onRetry(): void {
+    this.websocketService.reconnectWebsocket();
+    this.retry$.next();
   }
 
   isEllipsisActive(e): boolean {

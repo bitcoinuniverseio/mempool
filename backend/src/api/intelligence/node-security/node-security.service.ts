@@ -211,11 +211,16 @@ export class NodeSecurityService {
     };
   }
 
-  public verifyArtifact(artifact: { sha256?: string; version?: string }): { verified: boolean; state: ArtifactVerificationState } {
-    const matched = this.releases.some((r) => r.official_tarball_sha256 === artifact.sha256);
+  public verifyArtifact(artifact: { sha256?: string; version?: string }): {
+    verified: false; state: ArtifactVerificationState; stage: 'invalid-input' | 'unavailable-manifest'; error: string;
+  } {
+    if (!artifact || typeof artifact.sha256 !== 'string' || !/^[0-9a-f]{64}$/i.test(artifact.sha256)
+      || artifact.version !== undefined && (typeof artifact.version !== 'string' || !artifact.version.trim() || artifact.version.length > 128)) {
+      return { verified: false, state: 'unverified', stage: 'invalid-input', error: 'A 32-byte SHA256 checksum and, if supplied, a nonempty release version are required.' };
+    }
     return {
-      verified: matched,
-      state: matched ? 'official_checksum_matched' : 'unverified',
+      verified: false, state: 'unverified', stage: 'unavailable-manifest',
+      error: 'An authenticated release manifest, trusted signing keys and exact artifact/version binding are required. A supplied checksum matching a local catalogue entry does not verify an artifact.',
     };
   }
 

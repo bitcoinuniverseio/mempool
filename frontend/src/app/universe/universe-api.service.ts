@@ -253,9 +253,12 @@ export class UniverseApiService {
    * issuing one request per transaction.
    */
   getTransactionFlows$(txids: string[]): Observable<TransactionBatchResponse> {
+    if (txids.length > UNIVERSE_TRANSACTION_BATCH_LIMIT) {
+      return throwError(() => new Error('universe-transactions-batch-limit-exceeded'));
+    }
     return this.scopedRequest<TransactionBatchResponse>(
       this.apiBaseUrl + '/api/v1/universe/transactions/batch',
-      { txids: txids.slice(0, UNIVERSE_TRANSACTION_BATCH_LIMIT) }
+      { txids: txids.slice() }
     ).pipe(take(1));
   }
 
@@ -268,9 +271,12 @@ export class UniverseApiService {
 
   /** Assets attached to up to {@link UNIVERSE_OUTPOINT_BATCH_LIMIT} outpoints. */
   getOutpoints$(outpoints: string[]): Observable<OutpointBatchResponse> {
+    if (outpoints.length > UNIVERSE_OUTPOINT_BATCH_LIMIT) {
+      return throwError(() => new Error('universe-outpoints-batch-limit-exceeded'));
+    }
     return this.scopedRequest<OutpointBatchResponse>(
       this.apiBaseUrl + '/api/v1/universe/outpoints/batch',
-      { outpoints: outpoints.slice(0, UNIVERSE_OUTPOINT_BATCH_LIMIT) }
+      { outpoints: outpoints.slice() }
     ).pipe(take(1));
   }
 

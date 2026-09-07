@@ -2,6 +2,7 @@ import { Component, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { BootstrapApiService } from './bootstrap.service';
 
 @Component({
@@ -69,7 +70,11 @@ import { BootstrapApiService } from './bootstrap.service';
           <div class="card p-4 bg-body-tertiary border h-100">
             <h2 class="h5 mb-3">Sync Comparison Projection</h2>
 
-            <div *ngIf="!plan && !calculating" class="text-center py-5 text-muted">
+            <div *ngIf="failure" class="alert alert-warning" role="alert">
+              {{ failure }}
+            </div>
+
+            <div *ngIf="!plan && !calculating && !failure" class="text-center py-5 text-muted">
               Select your hardware profile and click Calculate Bootstrap Timeline.
             </div>
 
@@ -129,6 +134,7 @@ export class BootstrapPlannerComponent {
   targetHeight = 840000;
   calculating = false;
   plan: any = null;
+  failure: string | null = null;
 
   constructor(
     private bootstrapApi: BootstrapApiService,
@@ -140,6 +146,7 @@ export class BootstrapPlannerComponent {
   calculatePlan(): void {
     this.calculating = true;
     this.plan = null;
+    this.failure = null;
 
     this.bootstrapApi
       .generateBootstrapPlan$({
@@ -156,11 +163,8 @@ export class BootstrapPlannerComponent {
         },
         error: (err) => {
           this.calculating = false;
-          this.plan = {
-            assumeutxo_ready_hours: 1.2,
-            traditional_ibd_hours: 14.5,
-            background_validation_hours: 16.0,
-          };
+          this.plan = null;
+          this.failure = loadFailureMessage(classifyLoadFailure(err));
           this.cdr.markForCheck();
         },
       });

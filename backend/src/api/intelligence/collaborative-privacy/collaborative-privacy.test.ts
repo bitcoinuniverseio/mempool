@@ -34,8 +34,9 @@ describe('CollaborativePrivacyService', () => {
       protocol: 'wabisabi',
       round_id: 'rnd-ws-864205-01',
     });
-    expect(verification.verified).toBe(true);
-    expect(verification.ownership_inference).toContain('none');
+    expect(verification).toMatchObject({ verified: false, stage: 'unavailable-verifier' });
+    expect(verification).not.toHaveProperty('effective_anonymity_set');
+    expect(collaborativePrivacyService.verifyPublicPackage(null)).toMatchObject({ verified: false, stage: 'invalid-input' });
   });
 
   it('should list JoinMarket timelocked fidelity bonds', () => {

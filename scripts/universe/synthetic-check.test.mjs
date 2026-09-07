@@ -38,7 +38,7 @@ test('a slow named endpoint identifies itself in operation log and error report'
     fetchFn: mockFetch,
   });
 
-  assert.equal(res.status, 504);
+  assert.equal(res.status, null); assert.equal(res.transportError.isTimeout, true);
   assert.equal(failures.length, 1);
   const failureMsg = failures[0];
   assert.match(failureMsg, /TIMEOUT on GET http:\/\/127\.0\.0\.1:9999\/api\/address\/1Test\/txs/);
@@ -78,7 +78,7 @@ test('a hung endpoint terminates within its deadline', async () => {
   });
 
   const elapsed = Date.now() - start;
-  assert.equal(res.status, 504);
+  assert.equal(res.status, null); assert.equal(res.transportError.isTimeout, true);
   assert.ok(elapsed >= 70 && elapsed < 500, `Terminated promptly, elapsed: ${elapsed}ms`);
 });
 

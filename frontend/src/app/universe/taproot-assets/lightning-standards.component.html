@@ -46,10 +46,12 @@
   </ng-container>
 
   <ng-container *ngIf="vm$ | async as vm">
-    <ng-container *ngIf="vm.kind === 'ready'">
+    <ng-container *ngIf="vm.kind !== 'loading'">
+      <p *ngIf="vm.offersError" role="alert">Offers: {{ vm.offersError }}</p>
+      <p *ngIf="vm.quotesError" role="alert">RFQ quotes: {{ vm.quotesError }}</p>
       <!-- Active Offers -->
       <section class="panel" *ngIf="vm.offers?.length">
-        <h2>Active Verified BOLT12 Offers</h2>
+        <h2>BOLT12 Offers Reported by the Source</h2>
         <table class="data-table">
           <thead>
             <tr>
@@ -66,7 +68,7 @@
               <td>{{ o.issuer }}</td>
               <td class="mono">{{ o.amountMsat }}</td>
               <td>{{ o.blindRoutesCount }} paths</td>
-              <td><span class="badge badge-success">Valid</span></td>
+              <td><span class="badge">{{ offerValidityLabel(o.valid) }}</span></td>
             </tr>
           </tbody>
         </table>
@@ -82,7 +84,7 @@
               <th>Ask Rate</th>
               <th>Bid Rate</th>
               <th>Spread (bps)</th>
-              <th>Valid Until</th>
+              <th>Reported Expiry (UTC)</th>
             </tr>
           </thead>
           <tbody>
@@ -91,7 +93,7 @@
               <td class="mono">{{ q.askRate }}</td>
               <td class="mono">{{ q.bidRate }}</td>
               <td><span class="badge badge-info">{{ q.spreadBps }} bps</span></td>
-              <td>in 60s</td>
+              <td>{{ quoteExpiry(q.validUntil) }}</td>
             </tr>
           </tbody>
         </table>

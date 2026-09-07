@@ -1,5 +1,5 @@
 import { Application, Request, Response } from 'express';
-import consensusConformanceService from './consensus-conformance.service';
+import consensusConformanceService, { ConformanceEvidenceError } from './consensus-conformance.service';
 
 class ConsensusConformanceRoutes {
   public initRoutes(app: Application): void {
@@ -62,12 +62,12 @@ class ConsensusConformanceRoutes {
 
     app.post('/api/v1/intelligence/consensus-conformance/campaigns', (req: Request, res: Response) => {
       try {
-        const targetId = req.body.target_id || 'transaction_parse';
-        const seed = req.body.seed || Date.now();
+        const targetId = req.body?.target_id ?? 'transaction_parse';
+        const seed = req.body?.seed ?? Date.now();
         const campaign = consensusConformanceService.startCampaign(targetId, seed);
         res.json(campaign);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        res.status(err instanceof ConformanceEvidenceError ? err.status : 500).json({ stage: err instanceof ConformanceEvidenceError ? err.code : 'internal-error', error: err instanceof ConformanceEvidenceError ? err.message : 'Internal error' });
       }
     });
 
@@ -76,7 +76,7 @@ class ConsensusConformanceRoutes {
         const result = consensusConformanceService.replayCase(req.params.caseId);
         res.json(result);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        res.status(err instanceof ConformanceEvidenceError ? err.status : 500).json({ stage: err instanceof ConformanceEvidenceError ? err.code : 'internal-error', error: err instanceof ConformanceEvidenceError ? err.message : 'Internal error' });
       }
     });
 
