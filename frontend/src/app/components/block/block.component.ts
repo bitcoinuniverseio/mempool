@@ -17,7 +17,7 @@ import { PriceService, Price } from '@app/services/price.service';
 import { CacheService } from '@app/services/cache.service';
 import { ServicesApiServices } from '@app/services/services-api.service';
 import { PreloadService } from '@app/services/preload.service';
-import { identifyPrioritizedTransactions } from '@app/shared/transaction.utils';
+import { identifyPrioritizedTransactions } from '@app/shared/transaction-priority.utils';
 
 interface ComparisonStats {
   totalFees: number;

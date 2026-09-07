@@ -1,7 +1,8 @@
 import * as secp256k1 from '@noble/secp256k1';
 import { AddressTypeInfo } from './address-utils';
 import { ScriptInfo } from './script.utils';
-import { computeLeafHash, taggedHash, scriptPubKeyToAddress, ParsedTaproot, TapLeaf, convertScriptSigAsm, isInternalKeyNUMS } from './transaction.utils';
+import { ParsedTaproot, convertScriptSigAsm, isInternalKeyNUMS } from './transaction.utils';
+import { computeLeafHash, taggedHash, scriptPubKeyToAddress, TapLeaf } from './transaction-codec.utils';
 
 const SECP256K1_ORDER = BigInt('0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141');
 

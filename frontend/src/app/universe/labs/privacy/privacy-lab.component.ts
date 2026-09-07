@@ -6,7 +6,7 @@ import { Subscription } from 'rxjs';
 import { SeoService } from '@app/services/seo.service';
 import { ElectrsApiService } from '@app/services/electrs-api.service';
 import { StateService } from '@app/services/state.service';
-import { decodeRawTransaction } from '@app/shared/transaction.utils';
+import { decodeRawTransaction } from '@app/shared/transaction-codec.utils';
 import { Transaction } from '@interfaces/electrs.interface';
 import { looksLikeSecret } from '@app/universe/workbench/psbt-inspect';
 import { isCoinbase, toPrivacyTransaction } from './privacy-map';

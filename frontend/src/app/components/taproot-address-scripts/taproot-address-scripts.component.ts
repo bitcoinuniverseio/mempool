@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { EChartsOption } from '@app/graphs/echarts';
 import { ScriptInfo } from '@app/shared/script.utils';
-import { computeLeafHash, taggedHash, addressToScriptPubKey } from '@app/shared/transaction.utils';
+import { computeLeafHash, taggedHash, addressToScriptPubKey } from '@app/shared/transaction-codec.utils';
 import { StateService } from '@app/services/state.service';
 import { AsmStylerPipe } from '@app/shared/pipes/asm-styler/asm-styler.pipe';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
