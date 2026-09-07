@@ -1,5 +1,6 @@
 import config from '../../config';
 import Client from '@mempool/electrum-client';
+import { withElectrumDeadline } from './electrum-deadline';
 import { AbstractBitcoinApi } from './bitcoin-api-abstract-factory';
 import { IEsploraApi } from './esplora-api.interface';
 import { IElectrumApi } from './electrum-api.interface';
@@ -54,7 +55,7 @@ class BitcoindElectrsApi extends BitcoinApi implements AbstractBitcoinApi {
    */
   async $getIndexedTip(): Promise<number | null> {
     return readIndexedTip((method, params) =>
-      this.electrumClient.request(method, params),
+      withElectrumDeadline(this.electrumClient.request(method, params), method),
     );
   }
 
@@ -130,10 +131,10 @@ class BitcoindElectrsApi extends BitcoinApi implements AbstractBitcoinApi {
 
   async $getScriptHash(scripthash: string): Promise<IEsploraApi.ScriptHash> {
     try {
-      const balance = await this.electrumClient.blockchainScripthash_getBalance(scripthash);
+      const balance = await withElectrumDeadline(this.electrumClient.blockchainScripthash_getBalance(scripthash), 'blockchain.scripthash.get_balance');
       let history = memoryCache.get<IElectrumApi.ScriptHashHistory[]>('Scripthash_getHistory', scripthash);
       if (!history) {
-        history = await this.electrumClient.blockchainScripthash_getHistory(scripthash);
+        history = await withElectrumDeadline(this.electrumClient.blockchainScripthash_getHistory(scripthash), 'blockchain.scripthash.get_history');
         memoryCache.set('Scripthash_getHistory', scripthash, history, 2);
       }
 
@@ -178,7 +179,7 @@ class BitcoindElectrsApi extends BitcoinApi implements AbstractBitcoinApi {
 
       let history = memoryCache.get<IElectrumApi.ScriptHashHistory[]>('Scripthash_getHistory', scripthash);
       if (!history) {
-        history = await this.electrumClient.blockchainScripthash_getHistory(scripthash);
+        history = await withElectrumDeadline(this.electrumClient.blockchainScripthash_getHistory(scripthash), 'blockchain.scripthash.get_history');
         memoryCache.set('Scripthash_getHistory', scripthash, history, 2);
       }
       if (!history) {
@@ -243,17 +244,17 @@ class BitcoindElectrsApi extends BitcoinApi implements AbstractBitcoinApi {
   }
 
   private $getScriptHashUnspent(scriptHash: string): Promise<IElectrumApi.ScriptHashUtxos[]> {
-    return this.electrumClient.blockchainScripthash_listunspent(scriptHash);
+    return withElectrumDeadline(this.electrumClient.blockchainScripthash_listunspent(scriptHash), 'blockchain.scripthash.listunspent');
   }
 
   /** @asyncUnsafe */
   async $getTransactionMerkleProof(txId: string): Promise<IEsploraApi.MerkleProof> {
     const tx = await this.$getRawTransaction(txId);
-    return this.electrumClient.blockchainTransaction_getMerkle(txId, tx.status.block_height);
+    return withElectrumDeadline(this.electrumClient.blockchainTransaction_getMerkle(txId, tx.status.block_height), 'blockchain.transaction.get_merkle');
   }
 
   private $getScriptHashBalance(scriptHash: string): Promise<IElectrumApi.ScriptHashBalance> {
-    return this.electrumClient.blockchainScripthash_getBalance(this.encodeScriptHash(scriptHash));
+    return withElectrumDeadline(this.electrumClient.blockchainScripthash_getBalance(this.encodeScriptHash(scriptHash)), 'blockchain.scripthash.get_balance');
   }
 
   private $getScriptHashHistory(scriptHash: string): Promise<IElectrumApi.ScriptHashHistory[]> {
@@ -261,7 +262,7 @@ class BitcoindElectrsApi extends BitcoinApi implements AbstractBitcoinApi {
     if (fromCache) {
       return Promise.resolve(fromCache);
     }
-    return this.electrumClient.blockchainScripthash_getHistory(this.encodeScriptHash(scriptHash))
+    return withElectrumDeadline(this.electrumClient.blockchainScripthash_getHistory(this.encodeScriptHash(scriptHash)), 'blockchain.scripthash.get_history')
       .then((history) => {
         memoryCache.set('Scripthash_getHistory', scriptHash, history, 2);
         return history;

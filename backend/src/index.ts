@@ -8,6 +8,7 @@ import DB from './database';
 import config from './config';
 import blocks from './api/blocks';
 import memPool from './api/mempool';
+import { MainLoopWatchdog } from './api/main-loop-watchdog';
 import diskCache from './api/disk-cache';
 import statistics from './api/statistics/statistics';
 import websocketHandler from './api/websocket-handler';
@@ -286,6 +287,7 @@ class Server {
 
     if (config.MEMPOOL.ENABLED) {
       void this.runMainUpdateLoop();
+      setInterval(() => { this.mainLoopWatchdog.check(); }, 30_000);
     }
 
     setInterval(() => { this.healthCheck(); }, 2500);
@@ -315,9 +317,29 @@ class Server {
     void poolsUpdater.$startService();
   }
 
+  /**
+   * Watches each main loop run from outside it. Ten minutes without finishing
+   * is reported and marks the mempool out of sync; thirty minutes hands the
+   * process to the service manager, whose restart policy brings a fresh one
+   * back with the disk cache in well under that time.
+   */
+  private readonly mainLoopWatchdog = new MainLoopWatchdog({
+    stallAfterMs: 10 * 60_000,
+    exitAfterMs: 30 * 60_000,
+    onStall: (elapsedMs) => {
+      logger.err(`runMainUpdateLoop() has not finished for ${Math.round(elapsedMs / 1000)} s; marking the mempool out of sync`);
+      memPool.setOutOfSync();
+    },
+    onExit: (elapsedMs) => {
+      logger.err(`runMainUpdateLoop() has not finished for ${Math.round(elapsedMs / 1000)} s; exiting so the service manager restarts the backend`);
+      process.exit(70);
+    },
+  });
+
   /** @asyncSafe */
   async runMainUpdateLoop(): Promise<void> {
     const start = Date.now();
+    this.mainLoopWatchdog.begin();
     try {
       try {
         await memPool.$updateMemPoolInfo();
@@ -372,6 +394,7 @@ class Server {
       }
       setTimeout(this.runMainUpdateLoop.bind(this), 1000 * this.currentBackendRetryInterval);
     } finally {
+      this.mainLoopWatchdog.end();
       diskCache.unlock();
     }
   }

@@ -892,25 +892,37 @@ class BitcoinRoutes {
     }
   }
 
+  /**
+   * Both legacy tip routes read the same completed block, the newest one in
+   * the block cache. They used to come from two places: the height from the
+   * cache, the hash straight from Core. While the cache trailed Core by
+   * seventy blocks the pair named two different blocks, and a reader who
+   * fetched the hash's block found a height the height route denied.
+   * Core's own progress stays in /api/v1/backend-info under chainSync.
+   */
   private getBlockTipHeight(req: Request, res: Response) {
     try {
-      const result = blocks.getCurrentBlockHeight();
-      if (!result) {
+      const checkpoint = indexedCheckpoint(blocks.getBlocks(), config.MEMPOOL.NETWORK);
+      if (!checkpoint) {
         handleError(req, res, 503, `Service Temporarily Unavailable`);
         return;
       }
       res.setHeader('content-type', 'text/plain');
-      res.send(result.toString());
+      res.send(checkpoint.heightAtomic);
     } catch (e) {
       handleError(req, res, 500, 'Failed to get height at tip');
     }
   }
 
-  private async getBlockTipHash(req: Request, res: Response) {
+  private getBlockTipHash(req: Request, res: Response) {
     try {
-      const result = await bitcoinApi.$getBlockHashTip();
+      const checkpoint = indexedCheckpoint(blocks.getBlocks(), config.MEMPOOL.NETWORK);
+      if (!checkpoint) {
+        handleError(req, res, 503, `Service Temporarily Unavailable`);
+        return;
+      }
       res.setHeader('content-type', 'text/plain');
-      res.send(result);
+      res.send(checkpoint.blockHash);
     } catch (e) {
       handleError(req, res, 500, 'Failed to get hash at tip');
     }
