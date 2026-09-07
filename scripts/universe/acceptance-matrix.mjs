@@ -26,9 +26,11 @@ const cleanPath = value => value.replaceAll('\\', '/');
 
 export function describeArtifact(path, bytes, { executionEvidence = false } = {}) {
   path = cleanPath(path);
-  // Git may check current application text out as LF or CRLF. Historical
-  // artifacts and execution evidence retain their original byte identities.
+  // Source text (application code and acceptance Markdown) is identified by its
+  // UTF-8/LF content so Linux and Windows checkouts agree. Execution evidence
+  // and historical JSON artifacts keep their exact bytes.
   const currentTextSource = /^(?:frontend|backend)\/src\/.*\.(?:[cm]?[jt]sx?|html|s?css|sass|less|json|svg)$/.test(path)
+    || /^docs\/acceptance\/(?!handoff\/).*\.md$/.test(path)
     || path === 'scripts/universe/acceptance-matrix.mjs';
   const canonical = currentTextSource && !executionEvidence;
   const content = canonical ? Buffer.from(bytes.toString('utf8').replace(/\r\n/g, '\n'), 'utf8') : bytes;
@@ -437,8 +439,11 @@ export function buildMatrix({ evidencePath } = {}) {
       if (original.entry === `${row.method} ${row.route}`) link(row, original.id, 'exact recorded method and entry');
     }
   }
-  const searchedDirectories = [resolve(root, '../audits'), resolve(root, '../.tmp'),
-    resolve(process.env.USERPROFILE || root, '.codex/attachments')].filter(existsSync);
+  // Recorded by label, not absolute path, so the matrix does not change with
+  // the checkout location or user profile that regenerated it.
+  const searchedLocations = { '../audits': resolve(root, '../audits'), '../.tmp': resolve(root, '../.tmp'),
+    '~/.codex/attachments': resolve(process.env.USERPROFILE || root, '.codex/attachments') };
+  const searchedDirectories = Object.values(searchedLocations).filter(existsSync);
   let bundleMatches = [];
   if (searchedDirectories.length) {
     try { bundleMatches = execFileSync('rg', ['--files', '--hidden', ...bundleNames.flatMap(name => ['-g', name]), ...searchedDirectories], { encoding: 'utf8', windowsHide: true }).trim().split(/\r?\n/).filter(Boolean); }
@@ -461,7 +466,7 @@ export function buildMatrix({ evidencePath } = {}) {
     }
   }
   const missingBundleNames = bundleNames.filter(name => !bundleMatches.some(path => cleanPath(path).endsWith('/' + name)));
-  gaps.push({ id: 'G-COVERAGE-01', kind: 'missing-handoff-bundle', missing: missingBundleNames, found: bundleMatches.map(cleanPath), searchedDirectories: searchedDirectories.map(cleanPath),
+  gaps.push({ id: 'G-COVERAGE-01', kind: 'missing-handoff-bundle', missing: missingBundleNames, found: bundleMatches.map(cleanPath), searchedDirectories: Object.keys(searchedLocations),
     reason: 'The described 243-row working ledger cannot be imported without its original IDs and files. No IDs or contents are reconstructed.' });
   gaps.push({ id: 'G-COVERAGE-01', kind: 'unreconciled-semantics',
     reason: 'Conditional mounting, generic dispatch selectors, unresolved route expressions, query/event/role variants and exact UI-to-API dependencies remain to reconcile. Source sets overlap and are not an operation denominator.' });

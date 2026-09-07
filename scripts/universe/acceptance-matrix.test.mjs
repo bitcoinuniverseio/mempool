@@ -9,7 +9,8 @@ import { buildCommandMatrix, buildMatrix, describeArtifact, tableIds, uniqueIds,
 test('current text source identities are portable across Git LF and CRLF checkouts but retain token changes', () => {
   const lf = Buffer.from('export const state = "ready";\nexport const count = 1;\n');
   const crlf = Buffer.from(lf.toString().replaceAll('\n', '\r\n'));
-  for (const path of ['frontend/src/app/example.ts', 'backend/src/config.ts', 'scripts/universe/acceptance-matrix.mjs']) {
+  for (const path of ['frontend/src/app/example.ts', 'backend/src/config.ts', 'scripts/universe/acceptance-matrix.mjs',
+    'docs/acceptance/STATUS-2026-09-07.md', 'docs/acceptance/swaps-2026-09-05.md']) {
     const source = describeArtifact(path, lf);
     assert.equal(source.sha256Encoding, 'utf8-lf');
     assert.deepEqual(describeArtifact(path, crlf), source, path);
@@ -26,6 +27,7 @@ test('historical and execution evidence retain raw bytes including handoff scrip
     ['docs/acceptance/handoff/gateway-anima-regression.test.mjs', {}],
     ['scripts/universe/visual-qa/mobile-check.mjs', {}],
     ['backend/src/config.ts', { executionEvidence: true }],
+    ['docs/acceptance/STATUS-2026-09-07.md', { executionEvidence: true }],
   ]) {
     const artifact = describeArtifact(path, crlf, options);
     assert.equal(artifact.sha256Encoding, 'raw-bytes', path);
@@ -34,6 +36,14 @@ test('historical and execution evidence retain raw bytes including handoff scrip
     assert.equal(artifact.text, crlf.toString(), path);
     assert.notEqual(artifact.sha256, describeArtifact(path, lf, options).sha256, path);
   }
+});
+
+test('the checked-in STATUS Markdown identity matches its committed LF blob regardless of checkout line endings', () => {
+  const path = 'docs/acceptance/STATUS-2026-09-07.md';
+  const artifact = describeArtifact(path, readFileSync(new URL('../../' + path, import.meta.url)));
+  assert.equal(artifact.sha256Encoding, 'utf8-lf');
+  assert.equal(artifact.bytes, 9253);
+  assert.equal(artifact.sha256, 'c4b0f52a22bf12ecd5bb089f167992f3d0ba66092d73d10b676b4a20b55776b0');
 });
 
 test('the regeneration command retains every reviewed execution assertion by default', () => {

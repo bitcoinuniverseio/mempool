@@ -2295,9 +2295,9 @@
     },
     {
       "path": "docs/acceptance/BACKEND-CHECKPOINT-CONTRACT.md",
-      "sha256": "d78d6f1b0fb32d4725f5e72931588dfb43fbede0884cc8dd4abce30a810b6e57",
-      "sha256Encoding": "raw-bytes",
-      "bytes": 2597
+      "sha256": "c384137bb19b7d3e75575585e157a6e437c9490d3dd73d1ae6c84bedda8255f4",
+      "sha256Encoding": "utf8-lf",
+      "bytes": 2542
     },
     {
       "path": "docs/acceptance/ci-repair-2026-09-06.json",
@@ -2313,9 +2313,9 @@
     },
     {
       "path": "docs/acceptance/durable-portfolio-2026-09-06.md",
-      "sha256": "361781570404857209c13a8d956d5a8fe686e65b4bcbdc82182b1d0a232e2f62",
-      "sha256Encoding": "raw-bytes",
-      "bytes": 15295
+      "sha256": "413e69a374650e0a3ffe804740c5f85066d44af35712a8a28e58d9bd77514292",
+      "sha256Encoding": "utf8-lf",
+      "bytes": 15220
     },
     {
       "path": "docs/acceptance/engine-runtime-2026-09-06/review.json",
@@ -2331,9 +2331,9 @@
     },
     {
       "path": "docs/acceptance/HEALTH-REPAIR-2026-09-06.md",
-      "sha256": "2b3dc07cbce5d9b8f88a21d1f79e5bec1d4022d70f547fb63b741b4a60fb3018",
-      "sha256Encoding": "raw-bytes",
-      "bytes": 28079
+      "sha256": "81ce1dced449105b5eeb2331e6f0604b165c673d88a99bc132e464d7cc43b058",
+      "sha256Encoding": "utf8-lf",
+      "bytes": 27935
     },
     {
       "path": "docs/acceptance/health-runtime-2026-09-06/candidate-asset-binding.json",
@@ -2367,63 +2367,63 @@
     },
     {
       "path": "docs/acceptance/network-contract-2026-09-05.md",
-      "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-      "sha256Encoding": "raw-bytes",
-      "bytes": 19185
+      "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+      "sha256Encoding": "utf8-lf",
+      "bytes": 19065
     },
     {
       "path": "docs/acceptance/operation-matrix-2026-09-06.md",
-      "sha256": "a86842c105b88854fa6623d1eae36a40365a3e9252f42d4bc58dd0d376946e8e",
-      "sha256Encoding": "raw-bytes",
-      "bytes": 4593
+      "sha256": "bb8fc1773fa50ed5642561e8fdf988a324e9e6670fa2feac922f19d99408e4f3",
+      "sha256Encoding": "utf8-lf",
+      "bytes": 4544
     },
     {
       "path": "docs/acceptance/portfolio-sharing-2026-09-05.md",
-      "sha256": "8f0412298368e469bff39196b4e72cf4b3bc3809da7bb53f2f184d16786542b1",
-      "sha256Encoding": "raw-bytes",
-      "bytes": 7725
+      "sha256": "d6a8114155c3f2ea9069cc7cd89bdf2b5269b35becbdc5012ad1d65165b64ff3",
+      "sha256Encoding": "utf8-lf",
+      "bytes": 7666
     },
     {
       "path": "docs/acceptance/protected-operations-2026-09-05.md",
-      "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-      "sha256Encoding": "raw-bytes",
-      "bytes": 17033
+      "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+      "sha256Encoding": "utf8-lf",
+      "bytes": 16900
     },
     {
       "path": "docs/acceptance/silent-payments-2026-09-05.md",
-      "sha256": "c44a9a037a70112a0d33f896f828292e761df7b36cc7bc0592ad40aafd57a65c",
-      "sha256Encoding": "raw-bytes",
-      "bytes": 16485
+      "sha256": "c3a98ae654594ccc458a5172e96e68c55b9e1e6b8515f8f128b6989a9e3c00d1",
+      "sha256Encoding": "utf8-lf",
+      "bytes": 16400
     },
     {
       "path": "docs/acceptance/STATUS-2026-09-05.md",
-      "sha256": "ae1edc1fb01fdeec6264099e627f67bbf3535bec054bfab15dd1c8bc726687af",
-      "sha256Encoding": "raw-bytes",
-      "bytes": 18451
+      "sha256": "e3feb63c898fed70d49cef0f0132171534fbb38d32944b098bcf5057a34fa9d3",
+      "sha256Encoding": "utf8-lf",
+      "bytes": 18303
     },
     {
       "path": "docs/acceptance/STATUS-2026-09-06.md",
-      "sha256": "687a2efcc696d37bf33993409e9148465badbd7ba67d433b469e433ad576c17b",
-      "sha256Encoding": "raw-bytes",
-      "bytes": 11437
+      "sha256": "dc2f21ffc20ba18d75d0d99fde439b6fe8252bc8da3b723d111f8f0ae6765f4c",
+      "sha256Encoding": "utf8-lf",
+      "bytes": 11328
     },
     {
       "path": "docs/acceptance/STATUS-2026-09-07.md",
-      "sha256": "9a77e3577466b1b92d0d81d97317abbb586891d61003217de27f1173c946cd92",
-      "sha256Encoding": "raw-bytes",
-      "bytes": 9407
+      "sha256": "c4b0f52a22bf12ecd5bb089f167992f3d0ba66092d73d10b676b4a20b55776b0",
+      "sha256Encoding": "utf8-lf",
+      "bytes": 9253
     },
     {
       "path": "docs/acceptance/swaps-2026-09-05.md",
-      "sha256": "2fed3220d068ca4650b25a122f9705358b8404cb18b3f1486fd9dcfac7c89fa1",
-      "sha256Encoding": "raw-bytes",
-      "bytes": 16107
+      "sha256": "67485ecfda3772e8200d9931c13b89393d9e295babbceeaffc6fea9defd5b869",
+      "sha256Encoding": "utf8-lf",
+      "bytes": 16030
     },
     {
       "path": "docs/acceptance/swaps-2026-09-06.md",
-      "sha256": "3a8024a67153f8f82b3ed742bb544d2b43f8e422fdf132f3b80e1e6ac19ed9ac",
-      "sha256Encoding": "raw-bytes",
-      "bytes": 8419
+      "sha256": "37fd5f610c21d30cead18911b6dd5cac20b27a9fb6d103eba1eedca270b87954",
+      "sha256Encoding": "utf8-lf",
+      "bytes": 8361
     },
     {
       "path": "docs/acceptance/wp07-repair-2026-09-06.json",
@@ -4269,9 +4269,9 @@
     },
     {
       "path": "scripts/universe/acceptance-matrix.mjs",
-      "sha256": "48dc279a130ca9067f4267b3d36895dd29953658dd16a8a0c5ab06ead930bb7d",
+      "sha256": "eabe95f9ab7bf04f90333e9e07546bf165782ff7e67e6d92c71ebe47f1ebd5e1",
       "sha256Encoding": "utf8-lf",
-      "bytes": 43996
+      "bytes": 44374
     }
   ],
   "sourceCandidates": {
@@ -25210,9 +25210,9 @@
       ],
       "found": [],
       "searchedDirectories": [
-        "D:/universe/mempool/audits",
-        "D:/universe/mempool/.tmp",
-        "C:/Users/ordinalking.SERVER/.codex/attachments"
+        "../audits",
+        "../.tmp",
+        "~/.codex/attachments"
       ],
       "reason": "The described 243-row working ledger cannot be imported without its original IDs and files. No IDs or contents are reconstructed."
     },
@@ -44419,8 +44419,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 58,
           "originalIdCell": "PRO-01",
           "originalTableRow": "| PRO-01 | ordinals | bitcoin | ord | registry, outpoint, outpoints-batch, transaction-flow, transactions-batch, address-holdings, inscription, block-inscriptions | BLOCKED | Approved owned bitcoin:mainnet read fixture and changed-runtime wiring; old public deployment returns 404 for the probed page. |"
@@ -44469,8 +44469,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 59,
           "originalIdCell": "PRO-02",
           "originalTableRow": "| PRO-02 | rare_sats | bitcoin | ord | registry, outpoint, outpoints-batch, transaction-flow, transactions-batch, address-holdings, sat | BLOCKED | Approved owned bitcoin:mainnet read fixture and changed-runtime wiring; old public deployment returns 404 for the probed page. |"
@@ -44519,8 +44519,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 60,
           "originalIdCell": "PRO-03",
           "originalTableRow": "| PRO-03 | names | bitcoin | index-names | registry, objects | BLOCKED | Approved owned bitcoin:mainnet read fixture and changed-runtime wiring; old public deployment returns 404 for the probed page. |"
@@ -44569,8 +44569,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 61,
           "originalIdCell": "PRO-04",
           "originalTableRow": "| PRO-04 | bitmap | bitcoin | index-bitmap | registry, objects | BLOCKED | Approved owned bitcoin:mainnet read fixture and changed-runtime wiring; old public deployment returns 404 for the probed page. |"
@@ -44619,8 +44619,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 62,
           "originalIdCell": "PRO-05",
           "originalTableRow": "| PRO-05 | unat | bitcoin | index-unat | registry, objects | BLOCKED | Approved owned bitcoin:mainnet read fixture and changed-runtime wiring; old public deployment returns 404 for the probed page. |"
@@ -44669,8 +44669,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 63,
           "originalIdCell": "PRO-06",
           "originalTableRow": "| PRO-06 | runes | bitcoin | ord | registry, outpoint, outpoints-batch, transaction-flow, transactions-batch, address-holdings, rune | BLOCKED | Approved owned bitcoin:mainnet read fixture and changed-runtime wiring; old public deployment returns 404 for the probed page. |"
@@ -44719,8 +44719,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 64,
           "originalIdCell": "PRO-07",
           "originalTableRow": "| PRO-07 | alkanes | bitcoin | index-alkanes | registry, activity | BLOCKED | Approved owned bitcoin:mainnet read fixture and changed-runtime wiring; old public deployment returns 404 for the probed page. |"
@@ -44769,8 +44769,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 65,
           "originalIdCell": "PRO-08",
           "originalTableRow": "| PRO-08 | mezcal | bitcoin | index-mezcal | registry, activity | BLOCKED | Approved owned bitcoin:mainnet read fixture and changed-runtime wiring; old public deployment returns 404 for the probed page. |"
@@ -44819,8 +44819,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 66,
           "originalIdCell": "PRO-09",
           "originalTableRow": "| PRO-09 | stamps | bitcoin | index-stamps | registry, activity | BLOCKED | Approved owned bitcoin:mainnet read fixture and changed-runtime wiring; old public deployment returns 404 for the probed page. |"
@@ -44869,8 +44869,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 67,
           "originalIdCell": "PRO-10",
           "originalTableRow": "| PRO-10 | src20 | bitcoin | index-stamps | registry, activity | BLOCKED | Approved owned bitcoin:mainnet read fixture and changed-runtime wiring; old public deployment returns 404 for the probed page. |"
@@ -44919,8 +44919,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 68,
           "originalIdCell": "PRO-11",
           "originalTableRow": "| PRO-11 | src101 | bitcoin | index-stamps | registry, activity | BLOCKED | Approved owned bitcoin:mainnet read fixture and changed-runtime wiring; old public deployment returns 404 for the probed page. |"
@@ -44969,8 +44969,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 69,
           "originalIdCell": "PRO-12",
           "originalTableRow": "| PRO-12 | atomicals_nft | bitcoin | index-atomicals-nfts-and-realms | registry, activity, outpoint, outpoints-batch, transaction-flow, transactions-batch, address-holdings | BLOCKED | Approved owned bitcoin:mainnet read fixture and changed-runtime wiring; old public deployment returns 404 for the probed page. |"
@@ -45019,8 +45019,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 70,
           "originalIdCell": "PRO-13",
           "originalTableRow": "| PRO-13 | realms | bitcoin | index-atomicals-nfts-and-realms | registry, activity, outpoint, outpoints-batch, transaction-flow, transactions-batch, address-holdings | BLOCKED | Approved owned bitcoin:mainnet read fixture and changed-runtime wiring; old public deployment returns 404 for the probed page. |"
@@ -45069,8 +45069,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 71,
           "originalIdCell": "PRO-14",
           "originalTableRow": "| PRO-14 | subrealms | bitcoin | index-atomicals-nfts-and-realms | registry, outpoint, outpoints-batch, transaction-flow, transactions-batch, address-holdings | BLOCKED | Approved owned bitcoin:mainnet read fixture and changed-runtime wiring; old public deployment returns 404 for the probed page. |"
@@ -45119,8 +45119,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 72,
           "originalIdCell": "PRO-15",
           "originalTableRow": "| PRO-15 | arc20 | bitcoin | index-atomicals | registry, activity | BLOCKED | Approved owned bitcoin:mainnet read fixture and changed-runtime wiring; old public deployment returns 404 for the probed page. |"
@@ -45169,8 +45169,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 73,
           "originalIdCell": "PRO-16",
           "originalTableRow": "| PRO-16 | op_return | bitcoin | index-op20 | registry, activity | BLOCKED | Approved owned bitcoin:mainnet read fixture and changed-runtime wiring; old public deployment returns 404 for the probed page. |"
@@ -45219,8 +45219,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 74,
           "originalIdCell": "PRO-17",
           "originalTableRow": "| PRO-17 | op_names | bitcoin | index-op20 | registry, activity | BLOCKED | Approved owned bitcoin:mainnet read fixture and changed-runtime wiring; old public deployment returns 404 for the probed page. |"
@@ -45269,8 +45269,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 75,
           "originalIdCell": "PRO-18",
           "originalTableRow": "| PRO-18 | op_inscriptions | bitcoin | index-opinscriptions | registry, objects | BLOCKED | Approved owned bitcoin:mainnet read fixture and changed-runtime wiring; old public deployment returns 404 for the probed page. |"
@@ -45319,8 +45319,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 76,
           "originalIdCell": "PRO-19",
           "originalTableRow": "| PRO-19 | op_drop | bitcoin | index-drops-and-opdrop | registry, activity | BLOCKED | Approved owned bitcoin:mainnet read fixture and changed-runtime wiring; old public deployment returns 404 for the probed page. |"
@@ -45369,8 +45369,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 77,
           "originalIdCell": "PRO-20",
           "originalTableRow": "| PRO-20 | drops | bitcoin | index-drops-and-opdrop | registry, activity | BLOCKED | Approved owned bitcoin:mainnet read fixture and changed-runtime wiring; old public deployment returns 404 for the probed page. |"
@@ -45419,8 +45419,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 78,
           "originalIdCell": "PRO-21",
           "originalTableRow": "| PRO-21 | brc20 | bitcoin | index-brc20 | registry, activity | BLOCKED | Approved owned bitcoin:mainnet read fixture and changed-runtime wiring; old public deployment returns 404 for the probed page. |"
@@ -45469,8 +45469,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 79,
           "originalIdCell": "PRO-22",
           "originalTableRow": "| PRO-22 | tap | bitcoin | index-tap | registry, activity | BLOCKED | Approved owned bitcoin:mainnet read fixture and changed-runtime wiring; old public deployment returns 404 for the probed page. |"
@@ -45519,8 +45519,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 80,
           "originalIdCell": "PRO-23",
           "originalTableRow": "| PRO-23 | dmt | bitcoin | index-dmt | registry, activity | BLOCKED | Approved owned bitcoin:mainnet read fixture and changed-runtime wiring; old public deployment returns 404 for the probed page. |"
@@ -45569,8 +45569,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 81,
           "originalIdCell": "PRO-24",
           "originalTableRow": "| PRO-24 | dust20 | bitcoin | index-dust20 | registry, activity | BLOCKED | Approved owned bitcoin:mainnet read fixture and changed-runtime wiring; old public deployment returns 404 for the probed page. |"
@@ -45619,8 +45619,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 82,
           "originalIdCell": "PRO-25",
           "originalTableRow": "| PRO-25 | block20 | bitcoin | index-block20 | registry, activity | BLOCKED | Approved owned bitcoin:mainnet read fixture and changed-runtime wiring; old public deployment returns 404 for the probed page. |"
@@ -45669,8 +45669,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 83,
           "originalIdCell": "PRO-26",
           "originalTableRow": "| PRO-26 | chainbloom | bitcoin | index-chainbloom | registry, objects | BLOCKED | Approved owned bitcoin:mainnet read fixture and changed-runtime wiring; old public deployment returns 404 for the probed page. |"
@@ -45719,8 +45719,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 84,
           "originalIdCell": "PRO-27",
           "originalTableRow": "| PRO-27 | patina | bitcoin | index-patina | registry, objects | BLOCKED | Approved owned bitcoin:mainnet read fixture and changed-runtime wiring; old public deployment returns 404 for the probed page. |"
@@ -45769,8 +45769,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 85,
           "originalIdCell": "PRO-28",
           "originalTableRow": "| PRO-28 | witness_circles | bitcoin | index-witness-circles | registry, objects | BLOCKED | Approved owned bitcoin:mainnet read fixture and changed-runtime wiring; old public deployment returns 404 for the probed page. |"
@@ -45819,8 +45819,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 86,
           "originalIdCell": "PRO-29",
           "originalTableRow": "| PRO-29 | tandem | bitcoin | index-tandem | registry, objects | BLOCKED | Approved owned bitcoin:mainnet read fixture and changed-runtime wiring; old public deployment returns 404 for the probed page. |"
@@ -45869,8 +45869,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 87,
           "originalIdCell": "PRO-30",
           "originalTableRow": "| PRO-30 | cat20 | fractal | index-cat20 | registry, activity | BLOCKED | Approved owned fractal:mainnet read fixture and changed-runtime wiring; old public deployment returns 404 for the probed page. |"
@@ -45919,8 +45919,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 88,
           "originalIdCell": "PRO-31",
           "originalTableRow": "| PRO-31 | ordex | bitcoin | index-ordinals | registry | BLOCKED | Approved owned bitcoin:mainnet read fixture and changed-runtime wiring; old public deployment returns 404 for the probed page. |"
@@ -45969,8 +45969,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 89,
           "originalIdCell": "PRO-32",
           "originalTableRow": "| PRO-32 | anima | bitcoin | index-anima | registry, status, transitions, transition, items, item, item-history | BLOCKED | Approved owned bitcoin:mainnet read fixture and changed-runtime wiring; old public deployment returns 404 for the probed page. |"
@@ -46019,8 +46019,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 90,
           "originalIdCell": "PRO-33",
           "originalTableRow": "| PRO-33 | doginals | dogecoin | ord-dogecoin | registry, chain-list, chain-detail | BLOCKED | Approved owned dogecoin:mainnet read fixture and changed-runtime wiring; old public deployment returns 404 for the probed page. |"
@@ -46069,8 +46069,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 91,
           "originalIdCell": "PRO-34",
           "originalTableRow": "| PRO-34 | drc20 | dogecoin | ord-dogecoin | registry, chain-list, chain-detail, holders | BLOCKED | Approved owned dogecoin:mainnet read fixture and changed-runtime wiring; old public deployment returns 404 for the probed page. |"
@@ -46119,8 +46119,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 92,
           "originalIdCell": "PRO-35",
           "originalTableRow": "| PRO-35 | tap_doge | dogecoin | index-doge-tap | registry, activity | BLOCKED | Approved owned dogecoin:mainnet read fixture and changed-runtime wiring; old public deployment returns 404 for the probed page. |"
@@ -46169,8 +46169,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 93,
           "originalIdCell": "PRO-36",
           "originalTableRow": "| PRO-36 | dunes | dogecoin | ord-dogecoin | registry, chain-list, chain-detail | BLOCKED | Approved owned dogecoin:mainnet read fixture and changed-runtime wiring; old public deployment returns 404 for the probed page. |"
@@ -46219,8 +46219,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 94,
           "originalIdCell": "PRO-37",
           "originalTableRow": "| PRO-37 | zerdinals | zcash | index-zcash-metaprotocols | registry, chain-list, chain-detail | BLOCKED | Approved owned zcash:mainnet read fixture and changed-runtime wiring; old public deployment returns 404 for the probed page. |"
@@ -46269,8 +46269,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 95,
           "originalIdCell": "PRO-38",
           "originalTableRow": "| PRO-38 | zrunes | zcash | index-zcash-metaprotocols | registry, chain-list, chain-detail | BLOCKED | Approved owned zcash:mainnet read fixture and changed-runtime wiring; old public deployment returns 404 for the probed page. |"
@@ -46319,8 +46319,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 96,
           "originalIdCell": "PRO-39",
           "originalTableRow": "| PRO-39 | zrc20 | zcash | index-zcash-metaprotocols | registry, chain-list, chain-detail | BLOCKED | Approved owned zcash:mainnet read fixture and changed-runtime wiring; old public deployment returns 404 for the probed page. |"
@@ -46369,8 +46369,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 41,
           "originalIdCell": "OV-01",
           "originalTableRow": "| OV-01 | Registry / aliases / operation descriptors | BLOCKED E2E | Integration runtime serving new registry1.1.0 pin; source/local contract validation passes |"
@@ -46441,8 +46441,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 42,
           "originalIdCell": "OV-02, OV-03",
           "originalTableRow": "| OV-02, OV-03 | Status / source checkpoints | BLOCKED E2E | Correctly scoped owned source config and real checkpoint readback in changed overlay |"
@@ -46513,8 +46513,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 42,
           "originalIdCell": "OV-02, OV-03",
           "originalTableRow": "| OV-02, OV-03 | Status / source checkpoints | BLOCKED E2E | Correctly scoped owned source config and real checkpoint readback in changed overlay |"
@@ -46585,8 +46585,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 43,
           "originalIdCell": "OV-04 to OV-07",
           "originalTableRow": "| OV-04 to OV-07 | Inscription / rune / sat / block inscriptions | BLOCKED | Owned Signet ord with necessary enabled indexes and reference fixture |"
@@ -46657,8 +46657,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 43,
           "originalIdCell": "OV-04 to OV-07",
           "originalTableRow": "| OV-04 to OV-07 | Inscription / rune / sat / block inscriptions | BLOCKED | Owned Signet ord with necessary enabled indexes and reference fixture |"
@@ -46729,8 +46729,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 43,
           "originalIdCell": "OV-04 to OV-07",
           "originalTableRow": "| OV-04 to OV-07 | Inscription / rune / sat / block inscriptions | BLOCKED | Owned Signet ord with necessary enabled indexes and reference fixture |"
@@ -46801,8 +46801,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 43,
           "originalIdCell": "OV-04 to OV-07",
           "originalTableRow": "| OV-04 to OV-07 | Inscription / rune / sat / block inscriptions | BLOCKED | Owned Signet ord with necessary enabled indexes and reference fixture |"
@@ -46873,8 +46873,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 44,
           "originalIdCell": "OV-08 to OV-10",
           "originalTableRow": "| OV-08 to OV-10 | Transaction / batch / holdings | BLOCKED | Owned Signet mempool backend plus scoped enrichers, persisted chain/indexer reference and bounded account fixture |"
@@ -46945,8 +46945,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 44,
           "originalIdCell": "OV-08 to OV-10",
           "originalTableRow": "| OV-08 to OV-10 | Transaction / batch / holdings | BLOCKED | Owned Signet mempool backend plus scoped enrichers, persisted chain/indexer reference and bounded account fixture |"
@@ -47017,8 +47017,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 44,
           "originalIdCell": "OV-08 to OV-10",
           "originalTableRow": "| OV-08 to OV-10 | Transaction / batch / holdings | BLOCKED | Owned Signet mempool backend plus scoped enrichers, persisted chain/indexer reference and bounded account fixture |"
@@ -47089,8 +47089,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 45,
           "originalIdCell": "OV-11, OV-12",
           "originalTableRow": "| OV-11, OV-12 | Outpoint / batch | BLOCKED | Owned Signet outpoint source and known reference |"
@@ -47161,8 +47161,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 45,
           "originalIdCell": "OV-11, OV-12",
           "originalTableRow": "| OV-11, OV-12 | Outpoint / batch | BLOCKED | Owned Signet outpoint source and known reference |"
@@ -47233,8 +47233,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 46,
           "originalIdCell": "OV-13",
           "originalTableRow": "| OV-13 | Per-protocol feed | BLOCKED | Each protocol's own source/route/schema and real result, independently; one parameterization cannot cover another |"
@@ -47305,8 +47305,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 40,
           "originalIdCell": "NET-01, NET-02",
           "originalTableRow": "| NET-01, NET-02 | Selected network through authority, follow-up, reload | BLOCKED | Approved Signet ord/mempool sources plus known Signet asset reference and actual local consumer readback |"
@@ -47377,8 +47377,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 40,
           "originalIdCell": "NET-01, NET-02",
           "originalTableRow": "| NET-01, NET-02 | Selected network through authority, follow-up, reload | BLOCKED | Approved Signet ord/mempool sources plus known Signet asset reference and actual local consumer readback |"
@@ -47449,40 +47449,40 @@
         },
         {
           "artifact": "docs/acceptance/silent-payments-2026-09-05.md",
-          "sha256": "c44a9a037a70112a0d33f896f828292e761df7b36cc7bc0592ad40aafd57a65c",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "c3a98ae654594ccc458a5172e96e68c55b9e1e6b8515f8f128b6989a9e3c00d1",
+          "sha256Encoding": "utf8-lf",
           "line": 50,
           "originalIdCell": "SP-STORE-001 / SP-01,02,03",
           "originalTableRow": "| SP-STORE-001 / SP-01,02,03 | Shared callback to manifest/bundle readback | Local controlled transactional DB mock and controlled first-party source fixtures | One callback registration, deterministic bundle, idempotent replay and new service instance readback pass. | PASS, controlled tests; real MySQL/Signet BLOCKED |"
         },
         {
           "artifact": "docs/acceptance/silent-payments-2026-09-05.md",
-          "sha256": "c44a9a037a70112a0d33f896f828292e761df7b36cc7bc0592ad40aafd57a65c",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "c3a98ae654594ccc458a5172e96e68c55b9e1e6b8515f8f128b6989a9e3c00d1",
+          "sha256Encoding": "utf8-lf",
           "line": 51,
           "originalIdCell": "SP-STORE-002 / SP-01,02,03",
           "originalTableRow": "| SP-STORE-002 / SP-01,02,03 | Restart/retry/reorg/integrity | Same controlled dependencies, no production fault injection | Interrupted write leaves no row; retry writes complete row; displaced suffix replaced from common ancestor; corrupted bytes and wrong-chain reads rejected; missing/stale/unavailable separated. | PASS, controlled tests; live lifecycle BLOCKED |"
         },
         {
           "artifact": "docs/acceptance/silent-payments-2026-09-05.md",
-          "sha256": "c44a9a037a70112a0d33f896f828292e761df7b36cc7bc0592ad40aafd57a65c",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "c3a98ae654594ccc458a5172e96e68c55b9e1e6b8515f8f128b6989a9e3c00d1",
+          "sha256Encoding": "utf8-lf",
           "line": 56,
           "originalIdCell": "SP-STORE-003 / SP-01,02,03",
           "originalTableRow": "| SP-STORE-003 / SP-01,02,03 | Replay of older shared block | Controlled source/storage used above | Heights 12 and 13 persisted; replaying height 12 retains both rows and height 13 checkpoint without another write. | PASS, controlled test; MySQL/Signet lifecycle remains BLOCKED |"
         },
         {
           "artifact": "docs/acceptance/silent-payments-2026-09-05.md",
-          "sha256": "c44a9a037a70112a0d33f896f828292e761df7b36cc7bc0592ad40aafd57a65c",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "c3a98ae654594ccc458a5172e96e68c55b9e1e6b8515f8f128b6989a9e3c00d1",
+          "sha256Encoding": "utf8-lf",
           "line": 58,
           "originalIdCell": "SP-MYSQL-001 / SP-01,02,03",
           "originalTableRow": "| SP-MYSQL-001 / SP-01,02,03 | Disposable local MySQL persistence preflight | Existing Windows MySQL84 service, local port 3306 | Service/listener exists. No approved local credential source is configured for this checkout, so no SQL connection, schema creation or data mutation was attempted. | BLOCKED, local authentication/access prerequisite; distinct from missing real Signet input |"
         },
         {
           "artifact": "docs/acceptance/silent-payments-2026-09-05.md",
-          "sha256": "c44a9a037a70112a0d33f896f828292e761df7b36cc7bc0592ad40aafd57a65c",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "c3a98ae654594ccc458a5172e96e68c55b9e1e6b8515f8f128b6989a9e3c00d1",
+          "sha256Encoding": "utf8-lf",
           "line": 60,
           "originalIdCell": "SP-01,02,03 / Q04 live",
           "originalTableRow": "| SP-01,02,03 / Q04 live | Coverage to manifest to bundle to received-output readback | Requires configured owned Signet Core and matching shared transaction source with prevouts, approved MySQL, shared completed-block event and controlled receiver | No real Signet block ingestion, persisted MySQL readback, confirmed match, or real browser scanner journey established by this worker. | BLOCKED, exact infrastructure prerequisites above |"
@@ -47553,40 +47553,40 @@
         },
         {
           "artifact": "docs/acceptance/silent-payments-2026-09-05.md",
-          "sha256": "c44a9a037a70112a0d33f896f828292e761df7b36cc7bc0592ad40aafd57a65c",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "c3a98ae654594ccc458a5172e96e68c55b9e1e6b8515f8f128b6989a9e3c00d1",
+          "sha256Encoding": "utf8-lf",
           "line": 50,
           "originalIdCell": "SP-STORE-001 / SP-01,02,03",
           "originalTableRow": "| SP-STORE-001 / SP-01,02,03 | Shared callback to manifest/bundle readback | Local controlled transactional DB mock and controlled first-party source fixtures | One callback registration, deterministic bundle, idempotent replay and new service instance readback pass. | PASS, controlled tests; real MySQL/Signet BLOCKED |"
         },
         {
           "artifact": "docs/acceptance/silent-payments-2026-09-05.md",
-          "sha256": "c44a9a037a70112a0d33f896f828292e761df7b36cc7bc0592ad40aafd57a65c",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "c3a98ae654594ccc458a5172e96e68c55b9e1e6b8515f8f128b6989a9e3c00d1",
+          "sha256Encoding": "utf8-lf",
           "line": 51,
           "originalIdCell": "SP-STORE-002 / SP-01,02,03",
           "originalTableRow": "| SP-STORE-002 / SP-01,02,03 | Restart/retry/reorg/integrity | Same controlled dependencies, no production fault injection | Interrupted write leaves no row; retry writes complete row; displaced suffix replaced from common ancestor; corrupted bytes and wrong-chain reads rejected; missing/stale/unavailable separated. | PASS, controlled tests; live lifecycle BLOCKED |"
         },
         {
           "artifact": "docs/acceptance/silent-payments-2026-09-05.md",
-          "sha256": "c44a9a037a70112a0d33f896f828292e761df7b36cc7bc0592ad40aafd57a65c",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "c3a98ae654594ccc458a5172e96e68c55b9e1e6b8515f8f128b6989a9e3c00d1",
+          "sha256Encoding": "utf8-lf",
           "line": 56,
           "originalIdCell": "SP-STORE-003 / SP-01,02,03",
           "originalTableRow": "| SP-STORE-003 / SP-01,02,03 | Replay of older shared block | Controlled source/storage used above | Heights 12 and 13 persisted; replaying height 12 retains both rows and height 13 checkpoint without another write. | PASS, controlled test; MySQL/Signet lifecycle remains BLOCKED |"
         },
         {
           "artifact": "docs/acceptance/silent-payments-2026-09-05.md",
-          "sha256": "c44a9a037a70112a0d33f896f828292e761df7b36cc7bc0592ad40aafd57a65c",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "c3a98ae654594ccc458a5172e96e68c55b9e1e6b8515f8f128b6989a9e3c00d1",
+          "sha256Encoding": "utf8-lf",
           "line": 58,
           "originalIdCell": "SP-MYSQL-001 / SP-01,02,03",
           "originalTableRow": "| SP-MYSQL-001 / SP-01,02,03 | Disposable local MySQL persistence preflight | Existing Windows MySQL84 service, local port 3306 | Service/listener exists. No approved local credential source is configured for this checkout, so no SQL connection, schema creation or data mutation was attempted. | BLOCKED, local authentication/access prerequisite; distinct from missing real Signet input |"
         },
         {
           "artifact": "docs/acceptance/silent-payments-2026-09-05.md",
-          "sha256": "c44a9a037a70112a0d33f896f828292e761df7b36cc7bc0592ad40aafd57a65c",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "c3a98ae654594ccc458a5172e96e68c55b9e1e6b8515f8f128b6989a9e3c00d1",
+          "sha256Encoding": "utf8-lf",
           "line": 60,
           "originalIdCell": "SP-01,02,03 / Q04 live",
           "originalTableRow": "| SP-01,02,03 / Q04 live | Coverage to manifest to bundle to received-output readback | Requires configured owned Signet Core and matching shared transaction source with prevouts, approved MySQL, shared completed-block event and controlled receiver | No real Signet block ingestion, persisted MySQL readback, confirmed match, or real browser scanner journey established by this worker. | BLOCKED, exact infrastructure prerequisites above |"
@@ -47657,40 +47657,40 @@
         },
         {
           "artifact": "docs/acceptance/silent-payments-2026-09-05.md",
-          "sha256": "c44a9a037a70112a0d33f896f828292e761df7b36cc7bc0592ad40aafd57a65c",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "c3a98ae654594ccc458a5172e96e68c55b9e1e6b8515f8f128b6989a9e3c00d1",
+          "sha256Encoding": "utf8-lf",
           "line": 50,
           "originalIdCell": "SP-STORE-001 / SP-01,02,03",
           "originalTableRow": "| SP-STORE-001 / SP-01,02,03 | Shared callback to manifest/bundle readback | Local controlled transactional DB mock and controlled first-party source fixtures | One callback registration, deterministic bundle, idempotent replay and new service instance readback pass. | PASS, controlled tests; real MySQL/Signet BLOCKED |"
         },
         {
           "artifact": "docs/acceptance/silent-payments-2026-09-05.md",
-          "sha256": "c44a9a037a70112a0d33f896f828292e761df7b36cc7bc0592ad40aafd57a65c",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "c3a98ae654594ccc458a5172e96e68c55b9e1e6b8515f8f128b6989a9e3c00d1",
+          "sha256Encoding": "utf8-lf",
           "line": 51,
           "originalIdCell": "SP-STORE-002 / SP-01,02,03",
           "originalTableRow": "| SP-STORE-002 / SP-01,02,03 | Restart/retry/reorg/integrity | Same controlled dependencies, no production fault injection | Interrupted write leaves no row; retry writes complete row; displaced suffix replaced from common ancestor; corrupted bytes and wrong-chain reads rejected; missing/stale/unavailable separated. | PASS, controlled tests; live lifecycle BLOCKED |"
         },
         {
           "artifact": "docs/acceptance/silent-payments-2026-09-05.md",
-          "sha256": "c44a9a037a70112a0d33f896f828292e761df7b36cc7bc0592ad40aafd57a65c",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "c3a98ae654594ccc458a5172e96e68c55b9e1e6b8515f8f128b6989a9e3c00d1",
+          "sha256Encoding": "utf8-lf",
           "line": 56,
           "originalIdCell": "SP-STORE-003 / SP-01,02,03",
           "originalTableRow": "| SP-STORE-003 / SP-01,02,03 | Replay of older shared block | Controlled source/storage used above | Heights 12 and 13 persisted; replaying height 12 retains both rows and height 13 checkpoint without another write. | PASS, controlled test; MySQL/Signet lifecycle remains BLOCKED |"
         },
         {
           "artifact": "docs/acceptance/silent-payments-2026-09-05.md",
-          "sha256": "c44a9a037a70112a0d33f896f828292e761df7b36cc7bc0592ad40aafd57a65c",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "c3a98ae654594ccc458a5172e96e68c55b9e1e6b8515f8f128b6989a9e3c00d1",
+          "sha256Encoding": "utf8-lf",
           "line": 58,
           "originalIdCell": "SP-MYSQL-001 / SP-01,02,03",
           "originalTableRow": "| SP-MYSQL-001 / SP-01,02,03 | Disposable local MySQL persistence preflight | Existing Windows MySQL84 service, local port 3306 | Service/listener exists. No approved local credential source is configured for this checkout, so no SQL connection, schema creation or data mutation was attempted. | BLOCKED, local authentication/access prerequisite; distinct from missing real Signet input |"
         },
         {
           "artifact": "docs/acceptance/silent-payments-2026-09-05.md",
-          "sha256": "c44a9a037a70112a0d33f896f828292e761df7b36cc7bc0592ad40aafd57a65c",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "c3a98ae654594ccc458a5172e96e68c55b9e1e6b8515f8f128b6989a9e3c00d1",
+          "sha256Encoding": "utf8-lf",
           "line": 60,
           "originalIdCell": "SP-01,02,03 / Q04 live",
           "originalTableRow": "| SP-01,02,03 / Q04 live | Coverage to manifest to bundle to received-output readback | Requires configured owned Signet Core and matching shared transaction source with prevouts, approved MySQL, shared completed-block event and controlled receiver | No real Signet block ingestion, persisted MySQL readback, confirmed match, or real browser scanner journey established by this worker. | BLOCKED, exact infrastructure prerequisites above |"
@@ -47761,16 +47761,16 @@
         },
         {
           "artifact": "docs/acceptance/silent-payments-2026-09-05.md",
-          "sha256": "c44a9a037a70112a0d33f896f828292e761df7b36cc7bc0592ad40aafd57a65c",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "c3a98ae654594ccc458a5172e96e68c55b9e1e6b8515f8f128b6989a9e3c00d1",
+          "sha256Encoding": "utf8-lf",
           "line": 57,
           "originalIdCell": "SP-SUPPORT-001 / SP-04",
           "originalTableRow": "| SP-SUPPORT-001 / SP-04 | Persisted support record validation | Controlled public-evidence fixture through actual service reader | String-valued capability flags, missing names and malformed evidence URLs reject. Complete versioned records preserve explicit false capabilities. | PASS, local contract test; actual wallet evidence remains BLOCKED |"
         },
         {
           "artifact": "docs/acceptance/silent-payments-2026-09-05.md",
-          "sha256": "c44a9a037a70112a0d33f896f828292e761df7b36cc7bc0592ad40aafd57a65c",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "c3a98ae654594ccc458a5172e96e68c55b9e1e6b8515f8f128b6989a9e3c00d1",
+          "sha256Encoding": "utf8-lf",
           "line": 61,
           "originalIdCell": "SP-04 live",
           "originalTableRow": "| SP-04 live | Support registry | Requires stored versioned wallet support evidence | Old synthetic claims removed; empty evidence store does not mean wallets lack support. | BLOCKED, missing versioned capability evidence |"
@@ -47841,16 +47841,16 @@
         },
         {
           "artifact": "docs/acceptance/silent-payments-2026-09-05.md",
-          "sha256": "c44a9a037a70112a0d33f896f828292e761df7b36cc7bc0592ad40aafd57a65c",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "c3a98ae654594ccc458a5172e96e68c55b9e1e6b8515f8f128b6989a9e3c00d1",
+          "sha256Encoding": "utf8-lf",
           "line": 47,
           "originalIdCell": "SP-PARSER-001 / SP-05",
           "originalTableRow": "| SP-PARSER-001 / SP-05 | Address form service and registered POST `validate-address` handler | Local Node, official BIP352 address and independently specified public keys; no chain dependency | Correct public keys returned. Punctuation counterexample, checksum, mixed case, curve, padding, wrong family and reserved version rejected. | PASS, local parser/handler scope; actual browser/API acceptance recorded by integration owner |"
         },
         {
           "artifact": "docs/acceptance/silent-payments-2026-09-05.md",
-          "sha256": "c44a9a037a70112a0d33f896f828292e761df7b36cc7bc0592ad40aafd57a65c",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "c3a98ae654594ccc458a5172e96e68c55b9e1e6b8515f8f128b6989a9e3c00d1",
+          "sha256Encoding": "utf8-lf",
           "line": 54,
           "originalIdCell": "SP-PARSER-004 / SP-05",
           "originalTableRow": "| SP-PARSER-004 / SP-05 | Existing BIP321 address form and registered POST handler | Local component test and actual registered handler, official public address | Reproduced valid `bitcoin:?sp=...` rejection; complete URI now reaches the handler and decodes its SP keys. Nine malformed/unsupported URI cases reject. | PASS, local form/handler scope; browser verification belongs to integration owner |"
@@ -47954,24 +47954,24 @@
         },
         {
           "artifact": "docs/acceptance/silent-payments-2026-09-05.md",
-          "sha256": "c44a9a037a70112a0d33f896f828292e761df7b36cc7bc0592ad40aafd57a65c",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "c3a98ae654594ccc458a5172e96e68c55b9e1e6b8515f8f128b6989a9e3c00d1",
+          "sha256Encoding": "utf8-lf",
           "line": 48,
           "originalIdCell": "SP-PARSER-002 / SP-06",
           "originalTableRow": "| SP-PARSER-002 / SP-06 | PSBT form service and registered POST `validate-psbt` handler | Local Node, bitcoinjs-lib ordinary PSBT and official BIP375 vectors | All 20 valid official structural vectors pass; all 6 official malformed-structure vectors rejected. Both original false-positive payloads and truncation, duplicates, length overflow, Base64 and malformed known fields rejected. | PASS, local parser/handler scope |"
         },
         {
           "artifact": "docs/acceptance/silent-payments-2026-09-05.md",
-          "sha256": "c44a9a037a70112a0d33f896f828292e761df7b36cc7bc0592ad40aafd57a65c",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "c3a98ae654594ccc458a5172e96e68c55b9e1e6b8515f8f128b6989a9e3c00d1",
+          "sha256Encoding": "utf8-lf",
           "line": 49,
           "originalIdCell": "SP-PARSER-003 / SP-06",
           "originalTableRow": "| SP-PARSER-003 / SP-06 | BIP376 draft-field inspection | Local Node; draft BIP376 field definitions | Spend derivation and 32-byte tweak fields detected only in structurally valid v2 maps; malformed values rejected; crypto verification remains false. | PASS, draft structural scope; official BIP376 vectors are not published |"
         },
         {
           "artifact": "docs/acceptance/silent-payments-2026-09-05.md",
-          "sha256": "c44a9a037a70112a0d33f896f828292e761df7b36cc7bc0592ad40aafd57a65c",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "c3a98ae654594ccc458a5172e96e68c55b9e1e6b8515f8f128b6989a9e3c00d1",
+          "sha256Encoding": "utf8-lf",
           "line": 55,
           "originalIdCell": "SP-PARSER-005 / SP-06",
           "originalTableRow": "| SP-PARSER-005 / SP-06 | Ordinary fields inside a PSBTv2 container | Local actual parser and installed bitcoinjs-lib field decoders | Reproduced malformed BIP32 key accepted as valid; malformed derivation, Taproot derivation, signature bytes and preimage key now reject; all official BIP375 structural vectors still pass. | PASS, local parser scope |"
@@ -48097,16 +48097,16 @@
         },
         {
           "artifact": "docs/acceptance/swaps-2026-09-05.md",
-          "sha256": "2fed3220d068ca4650b25a122f9705358b8404cb18b3f1486fd9dcfac7c89fa1",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "67485ecfda3772e8200d9931c13b89393d9e295babbceeaffc6fea9defd5b869",
+          "sha256Encoding": "utf8-lf",
           "line": 56,
           "originalIdCell": "SW-01",
           "originalTableRow": "| SW-01 | GET `/api/v1/intelligence/swaps/overview` and `/swaps` | Durable actual observations; honest unavailable totals; reload after restart/reorg | BLOCKED, fabrication repaired | SWR-001/002. Configure accessible owned `intelligence_events` storage and real observations, then prove cold readback and reorg handling. Partial recorded checks are not a global swap count. |"
         },
         {
           "artifact": "docs/acceptance/swaps-2026-09-06.md",
-          "sha256": "3a8024a67153f8f82b3ed742bb544d2b43f8e422fdf132f3b80e1e6ac19ed9ac",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "37fd5f610c21d30cead18911b6dd5cac20b27a9fb6d103eba1eedca270b87954",
+          "sha256Encoding": "utf8-lf",
           "line": 37,
           "originalIdCell": "SW-01",
           "originalTableRow": "| SW-01 | BLOCKED; unknown totals retained | PRE-02 durable actual observation readback and PRE-01 real checkpoint/reorg evidence. |"
@@ -48177,16 +48177,16 @@
         },
         {
           "artifact": "docs/acceptance/swaps-2026-09-05.md",
-          "sha256": "2fed3220d068ca4650b25a122f9705358b8404cb18b3f1486fd9dcfac7c89fa1",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "67485ecfda3772e8200d9931c13b89393d9e295babbceeaffc6fea9defd5b869",
+          "sha256Encoding": "utf8-lf",
           "line": 57,
           "originalIdCell": "SW-02",
           "originalTableRow": "| SW-02 | GET `/api/v1/intelligence/swaps/protocols` | Catalog provenance and actual per-provider release/network support | BLOCKED, catalog explicitly qualified | Pinned script references cover only the two-leaf Bitcoin format. Authenticate the actual four provider protocol revisions and owned integrations. |"
         },
         {
           "artifact": "docs/acceptance/swaps-2026-09-06.md",
-          "sha256": "3a8024a67153f8f82b3ed742bb544d2b43f8e422fdf132f3b80e1e6ac19ed9ac",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "37fd5f610c21d30cead18911b6dd5cac20b27a9fb6d103eba1eedca270b87954",
+          "sha256Encoding": "utf8-lf",
           "line": 38,
           "originalIdCell": "SW-02",
           "originalTableRow": "| SW-02 | Catalog checks retained; authenticated provider revision/support BLOCKED | PRE-04 provider provenance and PRE-03 actual network support. Catalog declarations are not support acceptance. |"
@@ -48257,16 +48257,16 @@
         },
         {
           "artifact": "docs/acceptance/swaps-2026-09-05.md",
-          "sha256": "2fed3220d068ca4650b25a122f9705358b8404cb18b3f1486fd9dcfac7c89fa1",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "67485ecfda3772e8200d9931c13b89393d9e295babbceeaffc6fea9defd5b869",
+          "sha256Encoding": "utf8-lf",
           "line": 58,
           "originalIdCell": "SW-03",
           "originalTableRow": "| SW-03 | GET `/api/v1/intelligence/swaps/providers` and `/swaps/providers` | Authenticated manifests and observed health | BLOCKED, fake records removed | SWR-001. No provider identity registry, signed manifest source or health ingestion is configured. Empty directory is honest, not provider-health acceptance. |"
         },
         {
           "artifact": "docs/acceptance/swaps-2026-09-06.md",
-          "sha256": "3a8024a67153f8f82b3ed742bb544d2b43f8e422fdf132f3b80e1e6ac19ed9ac",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "37fd5f610c21d30cead18911b6dd5cac20b27a9fb6d103eba1eedca270b87954",
+          "sha256Encoding": "utf8-lf",
           "line": 39,
           "originalIdCell": "SW-03, SW-04, SW-05, SW-06",
           "originalTableRow": "| SW-03, SW-04, SW-05, SW-06 | BLOCKED; local unavailable/unknown error distinction repaired | PRE-04 registry, real health history and accepted signed-manifest contract. SW-05 also requires permitted durable storage. |"
@@ -48337,16 +48337,16 @@
         },
         {
           "artifact": "docs/acceptance/swaps-2026-09-05.md",
-          "sha256": "2fed3220d068ca4650b25a122f9705358b8404cb18b3f1486fd9dcfac7c89fa1",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "67485ecfda3772e8200d9931c13b89393d9e295babbceeaffc6fea9defd5b869",
+          "sha256Encoding": "utf8-lf",
           "line": 59,
           "originalIdCell": "SW-04",
           "originalTableRow": "| SW-04 | GET `/api/v1/intelligence/swaps/providers/:providerId` and `/swaps/provider/:providerId` | Recorded identity and provenance | BLOCKED, manufactured verification removed | SWR-001. Supply an authenticated provider manifest; unknown provider returns 404 with reason. |"
         },
         {
           "artifact": "docs/acceptance/swaps-2026-09-06.md",
-          "sha256": "3a8024a67153f8f82b3ed742bb544d2b43f8e422fdf132f3b80e1e6ac19ed9ac",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "37fd5f610c21d30cead18911b6dd5cac20b27a9fb6d103eba1eedca270b87954",
+          "sha256Encoding": "utf8-lf",
           "line": 39,
           "originalIdCell": "SW-03, SW-04, SW-05, SW-06",
           "originalTableRow": "| SW-03, SW-04, SW-05, SW-06 | BLOCKED; local unavailable/unknown error distinction repaired | PRE-04 registry, real health history and accepted signed-manifest contract. SW-05 also requires permitted durable storage. |"
@@ -48417,16 +48417,16 @@
         },
         {
           "artifact": "docs/acceptance/swaps-2026-09-05.md",
-          "sha256": "2fed3220d068ca4650b25a122f9705358b8404cb18b3f1486fd9dcfac7c89fa1",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "67485ecfda3772e8200d9931c13b89393d9e295babbceeaffc6fea9defd5b869",
+          "sha256Encoding": "utf8-lf",
           "line": 60,
           "originalIdCell": "SW-05",
           "originalTableRow": "| SW-05 | GET `/api/v1/intelligence/swaps/providers/:providerId/history` | Persisted provider-health history | BLOCKED, fake uptime/history removed | SWR-001. Add a real provider observation source and durable history; no constants substitute for it. |"
         },
         {
           "artifact": "docs/acceptance/swaps-2026-09-06.md",
-          "sha256": "3a8024a67153f8f82b3ed742bb544d2b43f8e422fdf132f3b80e1e6ac19ed9ac",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "37fd5f610c21d30cead18911b6dd5cac20b27a9fb6d103eba1eedca270b87954",
+          "sha256Encoding": "utf8-lf",
           "line": 39,
           "originalIdCell": "SW-03, SW-04, SW-05, SW-06",
           "originalTableRow": "| SW-03, SW-04, SW-05, SW-06 | BLOCKED; local unavailable/unknown error distinction repaired | PRE-04 registry, real health history and accepted signed-manifest contract. SW-05 also requires permitted durable storage. |"
@@ -48497,16 +48497,16 @@
         },
         {
           "artifact": "docs/acceptance/swaps-2026-09-05.md",
-          "sha256": "2fed3220d068ca4650b25a122f9705358b8404cb18b3f1486fd9dcfac7c89fa1",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "67485ecfda3772e8200d9931c13b89393d9e295babbceeaffc6fea9defd5b869",
+          "sha256Encoding": "utf8-lf",
           "line": 61,
           "originalIdCell": "SW-06",
           "originalTableRow": "| SW-06 | POST `/api/v1/intelligence/swaps/manifests/verify` | Actual signed representation, scheme, trust binding, domain/network and validity | BLOCKED, false-positive success repaired | SWR-001. Obtain the protocol-defined signed schema and authenticated provider identity/trust roots; unknown provenance remains unverified. |"
         },
         {
           "artifact": "docs/acceptance/swaps-2026-09-06.md",
-          "sha256": "3a8024a67153f8f82b3ed742bb544d2b43f8e422fdf132f3b80e1e6ac19ed9ac",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "37fd5f610c21d30cead18911b6dd5cac20b27a9fb6d103eba1eedca270b87954",
+          "sha256Encoding": "utf8-lf",
           "line": 39,
           "originalIdCell": "SW-03, SW-04, SW-05, SW-06",
           "originalTableRow": "| SW-03, SW-04, SW-05, SW-06 | BLOCKED; local unavailable/unknown error distinction repaired | PRE-04 registry, real health history and accepted signed-manifest contract. SW-05 also requires permitted durable storage. |"
@@ -48577,16 +48577,16 @@
         },
         {
           "artifact": "docs/acceptance/swaps-2026-09-05.md",
-          "sha256": "2fed3220d068ca4650b25a122f9705358b8404cb18b3f1486fd9dcfac7c89fa1",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "67485ecfda3772e8200d9931c13b89393d9e295babbceeaffc6fea9defd5b869",
+          "sha256Encoding": "utf8-lf",
           "line": 62,
           "originalIdCell": "SW-07",
           "originalTableRow": "| SW-07 | POST `/api/v1/intelligence/swaps/public-receipts/verify`, lockup stage | Correct configured Core network, raw tx/output, active checkpoint/value/script | BLOCKED on real Signet acceptance; local implementation passes | SWR-001. An accessible owned Signet node and controlled Boltz-format lockup are unavailable in integration preflight. |"
         },
         {
           "artifact": "docs/acceptance/swaps-2026-09-06.md",
-          "sha256": "3a8024a67153f8f82b3ed742bb544d2b43f8e422fdf132f3b80e1e6ac19ed9ac",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "37fd5f610c21d30cead18911b6dd5cac20b27a9fb6d103eba1eedca270b87954",
+          "sha256Encoding": "utf8-lf",
           "line": 40,
           "originalIdCell": "SW-07, SW-08, SW-09",
           "originalTableRow": "| SW-07, SW-08, SW-09 | BLOCKED; existing local lockup/claim/refund verification regression passes | PRE-01 owned supported node and actual controlled lockup or confirmed claim/refund with public commitments. |"
@@ -48657,16 +48657,16 @@
         },
         {
           "artifact": "docs/acceptance/swaps-2026-09-05.md",
-          "sha256": "2fed3220d068ca4650b25a122f9705358b8404cb18b3f1486fd9dcfac7c89fa1",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "67485ecfda3772e8200d9931c13b89393d9e295babbceeaffc6fea9defd5b869",
+          "sha256Encoding": "utf8-lf",
           "line": 63,
           "originalIdCell": "SW-08",
           "originalTableRow": "| SW-08 | Same POST, claim stage | Confirmed actual spend, witness/preimage/signature, destination and fee | BLOCKED on real Signet acceptance; local signature verification passes | SWR-001. Supply approved real confirmed claim evidence and its public commitments; Lightning receipt remains a separate dependency. |"
         },
         {
           "artifact": "docs/acceptance/swaps-2026-09-06.md",
-          "sha256": "3a8024a67153f8f82b3ed742bb544d2b43f8e422fdf132f3b80e1e6ac19ed9ac",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "37fd5f610c21d30cead18911b6dd5cac20b27a9fb6d103eba1eedca270b87954",
+          "sha256Encoding": "utf8-lf",
           "line": 40,
           "originalIdCell": "SW-07, SW-08, SW-09",
           "originalTableRow": "| SW-07, SW-08, SW-09 | BLOCKED; existing local lockup/claim/refund verification regression passes | PRE-01 owned supported node and actual controlled lockup or confirmed claim/refund with public commitments. |"
@@ -48737,16 +48737,16 @@
         },
         {
           "artifact": "docs/acceptance/swaps-2026-09-05.md",
-          "sha256": "2fed3220d068ca4650b25a122f9705358b8404cb18b3f1486fd9dcfac7c89fa1",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "67485ecfda3772e8200d9931c13b89393d9e295babbceeaffc6fea9defd5b869",
+          "sha256Encoding": "utf8-lf",
           "line": 64,
           "originalIdCell": "SW-09",
           "originalTableRow": "| SW-09 | Same POST, refund stage | Actual confirmed spend, script/control path, maturity, sequence, signature/destination/fee | BLOCKED on real Signet acceptance; local signature verification passes | SWR-001. Supply approved real confirmed refund evidence. A mature unspent outpoint alone is not a refund. |"
         },
         {
           "artifact": "docs/acceptance/swaps-2026-09-06.md",
-          "sha256": "3a8024a67153f8f82b3ed742bb544d2b43f8e422fdf132f3b80e1e6ac19ed9ac",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "37fd5f610c21d30cead18911b6dd5cac20b27a9fb6d103eba1eedca270b87954",
+          "sha256Encoding": "utf8-lf",
           "line": 40,
           "originalIdCell": "SW-07, SW-08, SW-09",
           "originalTableRow": "| SW-07, SW-08, SW-09 | BLOCKED; existing local lockup/claim/refund verification regression passes | PRE-01 owned supported node and actual controlled lockup or confirmed claim/refund with public commitments. |"
@@ -48817,16 +48817,16 @@
         },
         {
           "artifact": "docs/acceptance/swaps-2026-09-05.md",
-          "sha256": "2fed3220d068ca4650b25a122f9705358b8404cb18b3f1486fd9dcfac7c89fa1",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "67485ecfda3772e8200d9931c13b89393d9e295babbceeaffc6fea9defd5b869",
+          "sha256Encoding": "utf8-lf",
           "line": 65,
           "originalIdCell": "SW-10",
           "originalTableRow": "| SW-10 | POST `/api/v1/intelligence/swaps/chain-context` | Trusted current outpoint/checkpoint and real unsigned PSBT | BLOCKED on authority journey; local unsigned generator and controlled signer pass | SWR-001/002. Connect owned Signet Core and use an actual controlled matching lockup; no placeholder is returned while blocked. |"
         },
         {
           "artifact": "docs/acceptance/swaps-2026-09-06.md",
-          "sha256": "3a8024a67153f8f82b3ed742bb544d2b43f8e422fdf132f3b80e1e6ac19ed9ac",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "37fd5f610c21d30cead18911b6dd5cac20b27a9fb6d103eba1eedca270b87954",
+          "sha256Encoding": "utf8-lf",
           "line": 41,
           "originalIdCell": "SW-10, SW-12",
           "originalTableRow": "| SW-10, SW-12 | BLOCKED; local unsigned generator and independent decoder regressions pass | PRE-01 real controlled lockup, selected authoritative checkpoint and compatible controlled signer; actual UI copy/download/reload proof belongs to the integration owner. Refund broadcast is not required for these rows. |"
@@ -48897,16 +48897,16 @@
         },
         {
           "artifact": "docs/acceptance/swaps-2026-09-05.md",
-          "sha256": "2fed3220d068ca4650b25a122f9705358b8404cb18b3f1486fd9dcfac7c89fa1",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "67485ecfda3772e8200d9931c13b89393d9e295babbceeaffc6fea9defd5b869",
+          "sha256Encoding": "utf8-lf",
           "line": 66,
           "originalIdCell": "SW-11",
           "originalTableRow": "| SW-11 | Same POST, reconciliation | Authenticated per-swap offchain receipt plus independent chain evidence | BLOCKED, fabricated fully-reconciled result removed | SWR-001. No accepted private settlement receipt integration is available; response is `insufficient_private_evidence`. |"
         },
         {
           "artifact": "docs/acceptance/swaps-2026-09-06.md",
-          "sha256": "3a8024a67153f8f82b3ed742bb544d2b43f8e422fdf132f3b80e1e6ac19ed9ac",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "37fd5f610c21d30cead18911b6dd5cac20b27a9fb6d103eba1eedca270b87954",
+          "sha256Encoding": "utf8-lf",
           "line": 42,
           "originalIdCell": "SW-11",
           "originalTableRow": "| SW-11 | BLOCKED; truthful `insufficient_private_evidence` retained | PRE-04 authenticated specific settlement receipt plus independent chain evidence. |"
@@ -48977,16 +48977,16 @@
         },
         {
           "artifact": "docs/acceptance/swaps-2026-09-05.md",
-          "sha256": "2fed3220d068ca4650b25a122f9705358b8404cb18b3f1486fd9dcfac7c89fa1",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "67485ecfda3772e8200d9931c13b89393d9e295babbceeaffc6fea9defd5b869",
+          "sha256Encoding": "utf8-lf",
           "line": 67,
           "originalIdCell": "SW-12",
           "originalTableRow": "| SW-12 | `/swaps/recover`, generate, decode, copy/download | Real frontend/handler/node journey and downloaded usable unsigned artifact | BLOCKED on actual Signet fixture and authority | SWR-002 proves local handlers/independent decode. Integration owner records localhost visual/error proof separately; actual Signet download/readback/signing-readiness requires SW-10 prerequisites. |"
         },
         {
           "artifact": "docs/acceptance/swaps-2026-09-06.md",
-          "sha256": "3a8024a67153f8f82b3ed742bb544d2b43f8e422fdf132f3b80e1e6ac19ed9ac",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "37fd5f610c21d30cead18911b6dd5cac20b27a9fb6d103eba1eedca270b87954",
+          "sha256Encoding": "utf8-lf",
           "line": 41,
           "originalIdCell": "SW-10, SW-12",
           "originalTableRow": "| SW-10, SW-12 | BLOCKED; local unsigned generator and independent decoder regressions pass | PRE-01 real controlled lockup, selected authoritative checkpoint and compatible controlled signer; actual UI copy/download/reload proof belongs to the integration owner. Refund broadcast is not required for these rows. |"
@@ -49234,8 +49234,8 @@
         },
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 47,
           "originalIdCell": "DOC-01",
           "originalTableRow": "| DOC-01 | Dispatch / manifest contract | PASS LOCAL CONTRACT | Root owns gateway boundary tests; documentation names v2 overlay and privacy-before-Zcash exception |"
@@ -131668,8 +131668,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/STATUS-2026-09-05.md",
-          "sha256": "ae1edc1fb01fdeec6264099e627f67bbf3535bec054bfab15dd1c8bc726687af",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "e3feb63c898fed70d49cef0f0132171534fbb38d32944b098bcf5057a34fa9d3",
+          "sha256Encoding": "utf8-lf",
           "line": 59,
           "originalIdCell": "Q01",
           "originalTableRow": "| Q01 | PARTIAL. Local preflight records refused connections at backend `127.0.0.1:8996` and overlay `127.0.0.1:3400`; isolated port 4310 responds with no node/persistence. | Read actual configured candidate backend-info/status, network and revision through approved dependencies. These local refusals do not establish remote service failure. |"
@@ -131694,8 +131694,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/STATUS-2026-09-05.md",
-          "sha256": "ae1edc1fb01fdeec6264099e627f67bbf3535bec054bfab15dd1c8bc726687af",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "e3feb63c898fed70d49cef0f0132171534fbb38d32944b098bcf5057a34fa9d3",
+          "sha256Encoding": "utf8-lf",
           "line": 60,
           "originalIdCell": "Q02",
           "originalTableRow": "| Q02 | PARTIAL INVENTORY. All 351 entries checked; 304 UI candidates extracted from 1569 controls and 344 handler bindings. Browser outcomes and narrow handler evidence are linked in the saved ledgers. | Execute remaining exact controls and variants with valid authoritative/test-owned IDs and relevant states. Complete every candidate's operation fields and evidence. |"
@@ -131720,8 +131720,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/STATUS-2026-09-05.md",
-          "sha256": "ae1edc1fb01fdeec6264099e627f67bbf3535bec054bfab15dd1c8bc726687af",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "e3feb63c898fed70d49cef0f0132171534fbb38d32944b098bcf5057a34fa9d3",
+          "sha256Encoding": "utf8-lf",
           "line": 61,
           "originalIdCell": "Q03",
           "originalTableRow": "| Q03 | PASS LOCAL DESCRIPTORS; 39 real authority journeys BLOCKED. [Protocol rows](network-contract-2026-09-05.md) name methods and owned sources. | Actual supported-network list/detail/activity/holdings/outpoint/flow read per offered dimension. Directory-only identity and health checks cannot substitute for those reads. |"
@@ -131746,40 +131746,40 @@
       "sources": [
         {
           "artifact": "docs/acceptance/STATUS-2026-09-05.md",
-          "sha256": "ae1edc1fb01fdeec6264099e627f67bbf3535bec054bfab15dd1c8bc726687af",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "e3feb63c898fed70d49cef0f0132171534fbb38d32944b098bcf5057a34fa9d3",
+          "sha256Encoding": "utf8-lf",
           "line": 62,
           "originalIdCell": "Q04",
           "originalTableRow": "| Q04 | SOURCE DEFECT REPAIRED; PASS LOCAL COMPUTATION/PRIVACY TESTS. Timer/demo scanner replaced with BIP352 receiver computation and public bundle requests. | Real persisted Signet bundles, actual controlled matches, final browser privacy/cancellation/reload evidence. Private scan capability remains client-side. |"
         },
         {
           "artifact": "docs/acceptance/silent-payments-2026-09-05.md",
-          "sha256": "c44a9a037a70112a0d33f896f828292e761df7b36cc7bc0592ad40aafd57a65c",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "c3a98ae654594ccc458a5172e96e68c55b9e1e6b8515f8f128b6989a9e3c00d1",
+          "sha256Encoding": "utf8-lf",
           "line": 52,
           "originalIdCell": "SP-SCAN-001 / Q04",
           "originalTableRow": "| SP-SCAN-001 / Q04 | Existing scanner component and pure browser computation | Local Vitest, ephemeral generated test identities, OpenSSL sender ECDH cross-check | Actual receiver algorithm finds independently constructed base/change-label outputs; another receiver returns no matches; corruption/cancellation/wrong-network rejected. | PASS, controlled local computation; Signet match BLOCKED |"
         },
         {
           "artifact": "docs/acceptance/silent-payments-2026-09-05.md",
-          "sha256": "c44a9a037a70112a0d33f896f828292e761df7b36cc7bc0592ad40aafd57a65c",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "c3a98ae654594ccc458a5172e96e68c55b9e1e6b8515f8f128b6989a9e3c00d1",
+          "sha256Encoding": "utf8-lf",
           "line": 53,
           "originalIdCell": "SP-SCAN-002 / Q04",
           "originalTableRow": "| SP-SCAN-002 / Q04 | Scanner API consumer | Local actual component with observed API method arguments | Only height and public bundle requests observed. Scan capability cleared on completion. Network switch cancels late API data. | PASS, component privacy check; deployed browser traffic not claimed |"
         },
         {
           "artifact": "docs/acceptance/silent-payments-2026-09-05.md",
-          "sha256": "c44a9a037a70112a0d33f896f828292e761df7b36cc7bc0592ad40aafd57a65c",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "c3a98ae654594ccc458a5172e96e68c55b9e1e6b8515f8f128b6989a9e3c00d1",
+          "sha256Encoding": "utf8-lf",
           "line": 59,
           "originalIdCell": "SP-SCAN-003 / Q04",
           "originalTableRow": "| SP-SCAN-003 / Q04 | Requested checkpoint and cancellation | Actual component/API consumer and local bundle verifier | Different returned height rejects; cancelling pending manifest read unsubscribes it, requests no bundle, clears key/results and leaves completion false. | PASS, local consumer checks |"
         },
         {
           "artifact": "docs/acceptance/silent-payments-2026-09-05.md",
-          "sha256": "c44a9a037a70112a0d33f896f828292e761df7b36cc7bc0592ad40aafd57a65c",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "c3a98ae654594ccc458a5172e96e68c55b9e1e6b8515f8f128b6989a9e3c00d1",
+          "sha256Encoding": "utf8-lf",
           "line": 60,
           "originalIdCell": "SP-01,02,03 / Q04 live",
           "originalTableRow": "| SP-01,02,03 / Q04 live | Coverage to manifest to bundle to received-output readback | Requires configured owned Signet Core and matching shared transaction source with prevouts, approved MySQL, shared completed-block event and controlled receiver | No real Signet block ingestion, persisted MySQL readback, confirmed match, or real browser scanner journey established by this worker. | BLOCKED, exact infrastructure prerequisites above |"
@@ -131804,8 +131804,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/STATUS-2026-09-05.md",
-          "sha256": "ae1edc1fb01fdeec6264099e627f67bbf3535bec054bfab15dd1c8bc726687af",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "e3feb63c898fed70d49cef0f0132171534fbb38d32944b098bcf5057a34fa9d3",
+          "sha256Encoding": "utf8-lf",
           "line": 63,
           "originalIdCell": "Q05",
           "originalTableRow": "| Q05 | PARTIAL REPAIR. [Protected operation rows](protected-operations-2026-09-05.md) cover P01 through P36. [Sharing evidence](portfolio-sharing-2026-09-05.md) supersedes the old missing-handler finding: encrypted owner flow, GET/POST/DELETE handler and additive migration now exist. | Two independent vault identities; account/network/reload isolation; each export/import; real MySQL share create/read/revoke/expiry and restart readback. Sharing defaults disabled until configured with storage. Public address reads need no fabricated owner restriction. |"
@@ -131830,8 +131830,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/STATUS-2026-09-05.md",
-          "sha256": "ae1edc1fb01fdeec6264099e627f67bbf3535bec054bfab15dd1c8bc726687af",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "e3feb63c898fed70d49cef0f0132171534fbb38d32944b098bcf5057a34fa9d3",
+          "sha256Encoding": "utf8-lf",
           "line": 64,
           "originalIdCell": "Q06",
           "originalTableRow": "| Q06 | BLOCKED/NOT TESTED. ANIMA and multichain route/contract identities are retained. | Six distinct ANIMA reads, Wildkin, Fractal CAT-20, Dogecoin, Zcash and Liquid consumers with supported owned data. No Bitcoin pass covers another chain or Lightning/provider path. |"
@@ -131856,8 +131856,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/STATUS-2026-09-05.md",
-          "sha256": "ae1edc1fb01fdeec6264099e627f67bbf3535bec054bfab15dd1c8bc726687af",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "e3feb63c898fed70d49cef0f0132171534fbb38d32944b098bcf5057a34fa9d3",
+          "sha256Encoding": "utf8-lf",
           "line": 65,
           "originalIdCell": "Q07",
           "originalTableRow": "| Q07 | PARTIAL. 546 API candidates extracted. Private adapter raw-body signing and signed elevation repaired; [caller evidence](protected-operations-2026-09-05.md#q07-caller-compatibility) records 14 passing Inscribe tests. | All offered API variants, BASE-01 broadcast/readback, BASE-02 allowed/denied RPC, BASE-03 WebSocket reconnect, actual authorized admin side effects/audit/retry, and registered SSE behavior. No privileged operation or durable admin journey passed. |"
@@ -131882,8 +131882,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/STATUS-2026-09-05.md",
-          "sha256": "ae1edc1fb01fdeec6264099e627f67bbf3535bec054bfab15dd1c8bc726687af",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "e3feb63c898fed70d49cef0f0132171534fbb38d32944b098bcf5057a34fa9d3",
+          "sha256Encoding": "utf8-lf",
           "line": 66,
           "originalIdCell": "Q08",
           "originalTableRow": "| Q08 | PARTIAL SOURCE EXPANSION. Referenced lazy modules and 55 extra declarations are recorded. [Feature snapshot](browser-feature-config-2026-09-05.json) includes raw globals and the five false router conditions in this local build. | Conditional child operations remain required under their intended configurations. These local values prove no deployment-wide exclusion. |"
@@ -131908,8 +131908,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/STATUS-2026-09-05.md",
-          "sha256": "ae1edc1fb01fdeec6264099e627f67bbf3535bec054bfab15dd1c8bc726687af",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "e3feb63c898fed70d49cef0f0132171534fbb38d32944b098bcf5057a34fa9d3",
+          "sha256Encoding": "utf8-lf",
           "line": 67,
           "originalIdCell": "Q09",
           "originalTableRow": "| Q09 | BLOCKED for actual durable/source lifecycle. Local fixtures cover focused network, duplicate, retry and reorg behavior. | Approved disposable MySQL, actual migrations/schema/readback, selected queue/worker/node/indexer revisions and per-dependent restart/recovery checks. No shared production state may be changed to obtain evidence. |"
@@ -131934,8 +131934,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/STATUS-2026-09-05.md",
-          "sha256": "ae1edc1fb01fdeec6264099e627f67bbf3535bec054bfab15dd1c8bc726687af",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "e3feb63c898fed70d49cef0f0132171534fbb38d32944b098bcf5057a34fa9d3",
+          "sha256Encoding": "utf8-lf",
           "line": 120,
           "originalIdCell": "PRE-01",
           "originalTableRow": "| PRE-01 | Accessible owned Signet Core plus matching mempool/ord sources, declared networks, active checkpoint, required indexes/prevouts and known controlled references. | NET-01/02, OV-04 through OV-12, SP-01 through SP-03, Q04, SW-07 through SW-12, BASE-01. |"
@@ -131960,8 +131960,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/STATUS-2026-09-05.md",
-          "sha256": "ae1edc1fb01fdeec6264099e627f67bbf3535bec054bfab15dd1c8bc726687af",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "e3feb63c898fed70d49cef0f0132171534fbb38d32944b098bcf5057a34fa9d3",
+          "sha256Encoding": "utf8-lf",
           "line": 121,
           "originalIdCell": "PRE-02",
           "originalTableRow": "| PRE-02 | Approved local credential loader allowed to create/drop a uniquely named disposable MySQL database. MySQL84 listener existence alone supplies no credentials. | SP persistence/replay/reorg, swap observations, portfolio shares and admin durable run/audit tests. Existing checked-in Docker fixture credentials must not be applied to shared MySQL. |"
@@ -131986,8 +131986,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/STATUS-2026-09-05.md",
-          "sha256": "ae1edc1fb01fdeec6264099e627f67bbf3535bec054bfab15dd1c8bc726687af",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "e3feb63c898fed70d49cef0f0132171534fbb38d32944b098bcf5057a34fa9d3",
+          "sha256Encoding": "utf8-lf",
           "line": 122,
           "originalIdCell": "PRE-03",
           "originalTableRow": "| PRE-03 | Actual supported-network method/schema, test-owned/public identifier and source-to-consumer result for each authority row. | PRO-01 through PRO-39, OV-13, ANIMA and all Q06 chain variants. Mainnet declarations apply to supported read configuration, not an extra mainnet gate after a valid Signet pass. |"
@@ -132012,8 +132012,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/STATUS-2026-09-05.md",
-          "sha256": "ae1edc1fb01fdeec6264099e627f67bbf3535bec054bfab15dd1c8bc726687af",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "e3feb63c898fed70d49cef0f0132171534fbb38d32944b098bcf5057a34fa9d3",
+          "sha256Encoding": "utf8-lf",
           "line": 123,
           "originalIdCell": "PRE-04",
           "originalTableRow": "| PRE-04 | Authenticated provider identity registry, accepted signed manifest representation/trust roots, observed health/history, private settlement integration where offered, and each distinct protocol adapter. | SW-02 through SW-06 and SW-11; boltz_chain_v1, lightning_loop_v1, ark_vhtlc_v1, Liquid PSET and cooperative/key-path paths. Missing implementation is not merely missing access. |"
@@ -132038,8 +132038,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/STATUS-2026-09-05.md",
-          "sha256": "ae1edc1fb01fdeec6264099e627f67bbf3535bec054bfab15dd1c8bc726687af",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "e3feb63c898fed70d49cef0f0132171534fbb38d32944b098bcf5057a34fa9d3",
+          "sha256Encoding": "utf8-lf",
           "line": 124,
           "originalIdCell": "PRE-05",
           "originalTableRow": "| PRE-05 | Real authorized Control Center entry with compatible sender/Explorer revisions, disposable audit DB, approved safe operation, second unauthorized identity and durable run/readback. | Q07-A01 through Q07-A12 and each catalog operation variant in the protected ledger. High-risk restart/reindex/rollback have not been performed. |"
@@ -132064,8 +132064,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/STATUS-2026-09-05.md",
-          "sha256": "ae1edc1fb01fdeec6264099e627f67bbf3535bec054bfab15dd1c8bc726687af",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "e3feb63c898fed70d49cef0f0132171534fbb38d32944b098bcf5057a34fa9d3",
+          "sha256Encoding": "utf8-lf",
           "line": 125,
           "originalIdCell": "ART-01",
           "originalTableRow": "| ART-01 | Complete operation matrix linking source candidates and scoped evidence to every required method/query/event/network/role variant, with no unexplained omissions. | Q02/Q03/Q05/Q06/Q07/Q08 and final denominator. Baseline/source JSON files intentionally do not claim this artifact is finished. |"
@@ -132090,8 +132090,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/STATUS-2026-09-05.md",
-          "sha256": "ae1edc1fb01fdeec6264099e627f67bbf3535bec054bfab15dd1c8bc726687af",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "e3feb63c898fed70d49cef0f0132171534fbb38d32944b098bcf5057a34fa9d3",
+          "sha256Encoding": "utf8-lf",
           "line": 126,
           "originalIdCell": "ART-02",
           "originalTableRow": "| ART-02 | DELIVERED for the recorded local scope: tests/build hashes, browser rendering, responsive/theme checks, recovery keyboard/history and actual local vault lifecycle. | Remaining per-operation and authority-dependent UI states are retained in ART-01 and domain ledgers. |"
@@ -132116,8 +132116,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/STATUS-2026-09-05.md",
-          "sha256": "ae1edc1fb01fdeec6264099e627f67bbf3535bec054bfab15dd1c8bc726687af",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "e3feb63c898fed70d49cef0f0132171534fbb38d32944b098bcf5057a34fa9d3",
+          "sha256Encoding": "utf8-lf",
           "line": 127,
           "originalIdCell": "ART-03",
           "originalTableRow": "| ART-03 | Actual candidate service revision/network snapshot plus transaction/checkpoint and durable DB/restart evidence for each accepted external journey. | Q01/Q09 and every claimed real-network pass. There are currently no such passes. |"
@@ -132142,8 +132142,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/STATUS-2026-09-05.md",
-          "sha256": "ae1edc1fb01fdeec6264099e627f67bbf3535bec054bfab15dd1c8bc726687af",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "e3feb63c898fed70d49cef0f0132171534fbb38d32944b098bcf5057a34fa9d3",
+          "sha256Encoding": "utf8-lf",
           "line": 128,
           "originalIdCell": "ART-04",
           "originalTableRow": "| ART-04 | DELIVERED: local product commits below; this evidence record is committed separately. | Remote integration remains subject to PRE-06. |"
@@ -132168,8 +132168,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/STATUS-2026-09-05.md",
-          "sha256": "ae1edc1fb01fdeec6264099e627f67bbf3535bec054bfab15dd1c8bc726687af",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "e3feb63c898fed70d49cef0f0132171534fbb38d32944b098bcf5057a34fa9d3",
+          "sha256Encoding": "utf8-lf",
           "line": 129,
           "originalIdCell": "PRE-06",
           "originalTableRow": "| PRE-06 | Repository integration compatible with the user's explicit no-CI/no-runner/no-deployment boundary. Current documented push/PR triggers conflict with that boundary. | Remote push/PR/merge remains BLOCKED; preserve completed local commits without changing unrelated workflow policy. |"
@@ -132194,8 +132194,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 25,
           "originalIdCell": "NET-LOCAL-01",
           "originalTableRow": "| NET-LOCAL-01 | Context boundary | New backend contracts/explorer-context.spec.ts: valid Signet, rejected partial/unknown/array/wrong-chain pairs | PASS LOCAL FIXTURE |"
@@ -132220,8 +132220,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 26,
           "originalIdCell": "NET-LOCAL-02",
           "originalTableRow": "| NET-LOCAL-02 | Authority/cache separation | Same block reference and same txid across mainnet/Signet configured fixtures; missing/wrong network never fetches fallback source | PASS LOCAL FIXTURE |"
@@ -132246,8 +132246,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 27,
           "originalIdCell": "NET-LOCAL-03",
           "originalTableRow": "| NET-LOCAL-03 | Checkpoint boundary | Source client rejects declared mainnet checkpoint for Signet, selects only correct network partition | PASS LOCAL FIXTURE |"
@@ -132272,8 +132272,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 28,
           "originalIdCell": "NET-LOCAL-04",
           "originalTableRow": "| NET-LOCAL-04 | Browser consumer contract | New frontend universe-network-context.spec.ts: pending cancellation, stale result ignored, wrong checkpoint rejection, forkJoin completion, saved-link reload | PASS LOCAL FIXTURE |"
@@ -132298,8 +132298,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 29,
           "originalIdCell": "NET-LOCAL-05",
           "originalTableRow": "| NET-LOCAL-05 | Source/dependent regressions | Backend assets/outpoints/transactions/sources/feed/objects/registry/controller/ANIMA suites, lint, typecheck and build | PASS LOCAL; final counts below |"
@@ -132324,8 +132324,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 30,
           "originalIdCell": "PRO-LOCAL-01",
           "originalTableRow": "| PRO-LOCAL-01 | All 39 protocol identities | New explorer-read-operations.spec.ts has a separate parameterized assertion per identity; aliases and truthful implementation/availability semantics | PASS LOCAL CONTRACT |"
@@ -132350,8 +132350,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 31,
           "originalIdCell": "PRO-LOCAL-02",
           "originalTableRow": "| PRO-LOCAL-02 | OP inscriptions | Valid pagination and preserved atomic strings; bad cursor/wrong offset rejected against owned schema fixture | PASS LOCAL FIXTURE |"
@@ -132376,8 +132376,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 32,
           "originalIdCell": "PRO-LIVE-01",
           "originalTableRow": "| PRO-LIVE-01 | Older owned public deployment | 39 read-only page probes, limit=1, four bounded concurrent requests; every result HTTP404. JSON artifact includes route/time/revision. | OBSERVED OLD DEPLOYMENT FAILURE; NOT NEW-CODE E2E |"
@@ -132402,8 +132402,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/network-contract-2026-09-05.md",
-          "sha256": "62586f7555782d1e1b4fca4f8c6e588fbc900247849c0fa415a01bcdb973d0bd",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "0c18114dcec6cc2fa71d4c6cacadb5a946c77f6a8cf4a27833cad0cf0d59b401",
+          "sha256Encoding": "utf8-lf",
           "line": 48,
           "originalIdCell": "Q05-SHARE",
           "originalTableRow": "| Q05-SHARE | Encrypted portfolio share read/create/revoke | PASS LOCAL HANDLER; BLOCKED MYSQL E2E | The missing owner flow and backend handler are now implemented with an additive migration; see [portfolio sharing evidence](portfolio-sharing-2026-09-05.md). Feature defaults disabled. Approved disposable MySQL access, migration execution, restart/readback and real owner/recipient browser acceptance remain required. |"
@@ -132433,8 +132433,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 16,
           "originalIdCell": "Q07-A01",
           "originalTableRow": "| Q07-A01 | GET `/manifest` | Actual service/network/revision and declared capabilities. Needs accessible private adapter and actual service dependencies. |"
@@ -132472,8 +132472,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 17,
           "originalIdCell": "Q07-A02",
           "originalTableRow": "| Q07-A02 | GET `/snapshot` | Real node/database/cache/process observations and explicit unavailable fields. Needs real private process and controlled dependencies. |"
@@ -132511,8 +132511,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 18,
           "originalIdCell": "Q07-A03",
           "originalTableRow": "| Q07-A03 | GET `/resources?kind=...&q=...&limit=...` | Independently check each advertised kind: service, dependency, indexer, node, database, run, release; filter, bound, truncation and invalid kind. |"
@@ -132550,8 +132550,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 19,
           "originalIdCell": "Q07-A04",
           "originalTableRow": "| Q07-A04 | GET `/resources/:kind/:id` | Correct matching resource and 404; same seven kinds. No live detail read passed. |"
@@ -132589,8 +132589,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 20,
           "originalIdCell": "Q07-A05",
           "originalTableRow": "| Q07-A05 | GET `/search?q=...&limit=...` | Search across service/dependency/indexer/run/release, bounded result and unavailable source. |"
@@ -132628,8 +132628,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 21,
           "originalIdCell": "Q07-A06",
           "originalTableRow": "| Q07-A06 | GET `/operations` | Correct catalog, current availability, risk and postconditions. Catalog unit checks passed; live capability verification remains open. |"
@@ -132667,8 +132667,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 22,
           "originalIdCell": "Q07-A07",
           "originalTableRow": "| Q07-A07 | POST `/operations/:operationId/preview` | Every catalog operation separately, input validation and honest preconditions. Parser/signature handling passes locally; no real dependency preview executed. |"
@@ -132706,8 +132706,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 23,
           "originalIdCell": "Q07-A08",
           "originalTableRow": "| Q07-A08 | POST `/operations/:operationId/execute` | Signed authorization, operation availability, idempotency/locks, actual postcondition and persisted run. Needs controlled audit database and separately authorized safe operation. No real operation executed. |"
@@ -132745,8 +132745,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 24,
           "originalIdCell": "Q07-A09",
           "originalTableRow": "| Q07-A09 | GET `/runs/:runId` | Persistent readback, unknown run, restart and current terminal stage. Needs disposable database and actual controlled run. |"
@@ -132784,8 +132784,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 25,
           "originalIdCell": "Q07-A10",
           "originalTableRow": "| Q07-A10 | POST `/runs/:runId/cancel` | Cancellable versus non-cancellable/terminal/unknown run, durable readback. Needs controlled run; no cancellation performed. |"
@@ -132823,8 +132823,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 26,
           "originalIdCell": "Q07-A11",
           "originalTableRow": "| Q07-A11 | GET `/audit?limit=...&offset=...` | Correct operation, outcome, correlation and pagination after restart. Needs controlled audited operations. |"
@@ -132862,8 +132862,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 27,
           "originalIdCell": "Q07-A12",
           "originalTableRow": "| Q07-A12 | GET `/events` | Authenticated SSE; actual `explorer.tick` every 10 seconds, stream reconnect and close cleanup. Source has no replay cursor/Last-Event-ID implementation. No live SSE connection passed. |"
@@ -132896,8 +132896,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 92,
           "originalIdCell": "Q05-P01",
           "originalTableRow": "| Q05-P01 | Create from one public address | Onboarding/store source; actual encrypted save, refresh and two-vault isolation remain required. |"
@@ -132922,8 +132922,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 93,
           "originalIdCell": "Q05-P02",
           "originalTableRow": "| Q05-P02 | Connect Bitcoin xpub/ypub/zpub | Existing derivation and secret-detection tests; actual public-address discovery/data readback remains required. |"
@@ -132948,8 +132948,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 94,
           "originalIdCell": "Q05-P03",
           "originalTableRow": "| Q05-P03 | Connect public descriptor | Existing descriptor checksum/derivation tests; actual local account save and first-party reads remain required. |"
@@ -132974,8 +132974,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 95,
           "originalIdCell": "Q05-P04",
           "originalTableRow": "| Q05-P04 | Import address list, CSV | Existing `workspace-import.spec.ts`; real form/import persistence remains required. |"
@@ -133000,8 +133000,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 96,
           "originalIdCell": "Q05-P05",
           "originalTableRow": "| Q05-P05 | Import address list, JSON | Existing importer tests; actual form/import persistence remains required. |"
@@ -133026,8 +133026,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 97,
           "originalIdCell": "Q05-P06",
           "originalTableRow": "| Q05-P06 | Create manual-only portfolio | Local store path; truthful separation from authoritative holdings and reload remain required. |"
@@ -133052,8 +133052,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 98,
           "originalIdCell": "Q05-P07",
           "originalTableRow": "| Q05-P07 | Open public address without saving | Ephemeral component/public data route; no record persistence and actual source readback remain required. |"
@@ -133078,8 +133078,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 99,
           "originalIdCell": "Q05-P08",
           "originalTableRow": "| Q05-P08 | Rename local portfolio | Encrypted store mutation; two-vault isolation and reload remain required. |"
@@ -133104,8 +133104,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 100,
           "originalIdCell": "Q05-P09",
           "originalTableRow": "| Q05-P09 | Duplicate portfolio settings | Source explicitly duplicates settings, not accounts; actual save/readback remains required. |"
@@ -133130,8 +133130,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 101,
           "originalIdCell": "Q05-P10",
           "originalTableRow": "| Q05-P10 | Archive | Local mutation; reload and active-portfolio handling remain required. |"
@@ -133156,8 +133156,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 102,
           "originalIdCell": "Q05-P11",
           "originalTableRow": "| Q05-P11 | Restore archive | Local mutation; reload and active-portfolio handling remain required. |"
@@ -133182,8 +133182,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 103,
           "originalIdCell": "Q05-P12",
           "originalTableRow": "| Q05-P12 | Delete local portfolio | Local two-step action; controlled disposable data only, durable deletion/isolation remain required. |"
@@ -133208,8 +133208,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 104,
           "originalIdCell": "Q05-P13",
           "originalTableRow": "| Q05-P13 | Create/unlock/lock encrypted vault | Actual browser crypto/storage; wrong passphrase and second isolated identity must not reveal first vault's names/accounts. No backend login is implied. |"
@@ -133234,8 +133234,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 105,
           "originalIdCell": "Q05-P14",
           "originalTableRow": "| Q05-P14 | Change vault passphrase | Existing vault method; old/new passphrase and reload proof remain required. |"
@@ -133260,8 +133260,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 106,
           "originalIdCell": "Q05-P15",
           "originalTableRow": "| Q05-P15 | Export encrypted backup | Existing vault/settings action; actual exported artifact and independent import proof remain required. |"
@@ -133286,8 +133286,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 107,
           "originalIdCell": "Q05-P16",
           "originalTableRow": "| Q05-P16 | Validate/import encrypted backup | Existing vault/settings action; failed validation must preserve prior data, accepted import must survive refresh. |"
@@ -133312,8 +133312,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 108,
           "originalIdCell": "Q05-P17",
           "originalTableRow": "| Q05-P17 | GET `/networks` | v2 service/contract tests cover roster and capabilities; actual configured authority support remains required. |"
@@ -133346,8 +133346,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 109,
           "originalIdCell": "Q05-P18",
           "originalTableRow": "| Q05-P18 | GET `/:chain/:network/:address/summary` | Existing service tests cover aggregate states and unknown networks; real scoped data required. |"
@@ -133380,8 +133380,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 110,
           "originalIdCell": "Q05-P19",
           "originalTableRow": "| Q05-P19 | GET `.../holdings?cursor=&limit=` | Existing service tests cover exact holdings, custody rows and pagination; real data/network isolation required. |"
@@ -133414,8 +133414,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 111,
           "originalIdCell": "Q05-P20",
           "originalTableRow": "| Q05-P20 | GET `.../activity?cursor=` | Existing service tests cover unavailable/unsupported; actual events and cursor readback required. |"
@@ -133448,8 +133448,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 112,
           "originalIdCell": "Q05-P21",
           "originalTableRow": "| Q05-P21 | GET `.../performance` | Existing FIFO/valuation engines; actual authority/history/price completeness and UI output required. |"
@@ -133482,8 +133482,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 113,
           "originalIdCell": "Q05-P22",
           "originalTableRow": "| Q05-P22 | GET `.../snapshot?timestamp=...` or `?height=...` | Existing snapshot guards/engine tests; each historical-point variant needs actual supported data. |"
@@ -133516,8 +133516,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 114,
           "originalIdCell": "Q05-P23",
           "originalTableRow": "| Q05-P23 | GET `.../delta?fromTimestamp=&fromHeight=&toTimestamp=&toHeight=` | Existing delta engine; actual valid point pairs/partial coverage required. |"
@@ -133550,8 +133550,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 115,
           "originalIdCell": "Q05-P24",
           "originalTableRow": "| Q05-P24 | GET `.../utxos?cursor=&limit=` | Existing tests cover evidence, unsupported chain and source failure; actual output status required. |"
@@ -133584,8 +133584,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 116,
           "originalIdCell": "Q05-P25",
           "originalTableRow": "| Q05-P25 | GET `.../counterparties?cursor=&limit=` | Existing deterministic folding tests; actual raw-address aggregation required. |"
@@ -133618,8 +133618,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 117,
           "originalIdCell": "Q05-P26",
           "originalTableRow": "| Q05-P26 | GET `.../coverage` | Existing coverage source/contract tests; actual sources must remain distinguishable from unavailable data. |"
@@ -133652,8 +133652,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 118,
           "originalIdCell": "Q05-P27",
           "originalTableRow": "| Q05-P27 | Insights | Existing local insight helpers; UI facts from actual loaded evidence required. |"
@@ -133678,8 +133678,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 119,
           "originalIdCell": "Q05-P28",
           "originalTableRow": "| Q05-P28 | Report preview and print/PDF | Existing report builder consumes loaded state locally; actual redaction/print artifact proof required. |"
@@ -133704,8 +133704,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 120,
           "originalIdCell": "Q05-P29",
           "originalTableRow": "| Q05-P29 | Local report CSV download | Existing report action; actual exported rows/redaction proof required. |"
@@ -133730,8 +133730,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 121,
           "originalIdCell": "Q05-P30",
           "originalTableRow": "| Q05-P30 | GET `.../export?format=assets-csv` | Existing export serialization tests; actual downloaded authoritative holdings required. |"
@@ -133767,8 +133767,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 122,
           "originalIdCell": "Q05-P31",
           "originalTableRow": "| Q05-P31 | GET `.../export?format=activity-csv` | Existing serialization tests; actual downloaded activity and pagination limits required. |"
@@ -133804,8 +133804,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 123,
           "originalIdCell": "Q05-P32",
           "originalTableRow": "| Q05-P32 | GET `.../export?format=utxos-csv` | Existing serialization tests; actual downloaded UTXOs required. |"
@@ -133841,8 +133841,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 124,
           "originalIdCell": "Q05-P33",
           "originalTableRow": "| Q05-P33 | GET `.../export?format=evidence-json` | Existing serialization tests; actual checkpoint/source-bearing artifact required. |"
@@ -133878,8 +133878,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 125,
           "originalIdCell": "Q05-P34",
           "originalTableRow": "| Q05-P34 | Open `/portfolio/share/:shareId#key=...` | Missing GET handler repaired. Local viewer checks cover AES-GCM decryption, malformed plaintext, fragment privacy, revoked/upstream error states and stale responses. The backend now returns bounded encrypted envelopes with expiry/revocation checks. PASS LOCAL HANDLER; actual MySQL and owner/recipient browser readback remain BLOCKED. |"
@@ -133904,8 +133904,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 126,
           "originalIdCell": "Q05-P35",
           "originalTableRow": "| Q05-P35 | Create encrypted share | Missing report owner flow and POST handler repaired. Real WebCrypto encrypts a limited snapshot; the owner vault saves the pending request before upload and reuses it after an uncertain response. An additive migration supplies ciphertext/nonce/expiry storage. PASS LOCAL HANDLER; actual migration, constraints, restart and browser creation remain BLOCKED. |"
@@ -133930,8 +133930,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/protected-operations-2026-09-05.md",
-          "sha256": "0b5046cbf1373602c153d16ed34b88864cf2cfac2f0489beb5679a91eb1c8d56",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "a003387cbeab75fcb091aada8c96d59601c1d193d562bb3294285a511c49e7b2",
+          "sha256Encoding": "utf8-lf",
           "line": 127,
           "originalIdCell": "Q05-P36",
           "originalTableRow": "| Q05-P36 | Revoke encrypted share | Missing owner action and DELETE handler repaired. The browser keeps the opaque owner capability in its encrypted vault; the server stores its hash and checks it for revocation. Local capability/retry tests pass with a persistence double. Actual wrong-owner rejection and durable revocation through MySQL/browser remain BLOCKED. |"
@@ -133956,8 +133956,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/silent-payments-2026-09-05.md",
-          "sha256": "c44a9a037a70112a0d33f896f828292e761df7b36cc7bc0592ad40aafd57a65c",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "c3a98ae654594ccc458a5172e96e68c55b9e1e6b8515f8f128b6989a9e3c00d1",
+          "sha256Encoding": "utf8-lf",
           "line": 47,
           "originalIdCell": "SP-PARSER-001 / SP-05",
           "originalTableRow": "| SP-PARSER-001 / SP-05 | Address form service and registered POST `validate-address` handler | Local Node, official BIP352 address and independently specified public keys; no chain dependency | Correct public keys returned. Punctuation counterexample, checksum, mixed case, curve, padding, wrong family and reserved version rejected. | PASS, local parser/handler scope; actual browser/API acceptance recorded by integration owner |"
@@ -133982,8 +133982,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/silent-payments-2026-09-05.md",
-          "sha256": "c44a9a037a70112a0d33f896f828292e761df7b36cc7bc0592ad40aafd57a65c",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "c3a98ae654594ccc458a5172e96e68c55b9e1e6b8515f8f128b6989a9e3c00d1",
+          "sha256Encoding": "utf8-lf",
           "line": 48,
           "originalIdCell": "SP-PARSER-002 / SP-06",
           "originalTableRow": "| SP-PARSER-002 / SP-06 | PSBT form service and registered POST `validate-psbt` handler | Local Node, bitcoinjs-lib ordinary PSBT and official BIP375 vectors | All 20 valid official structural vectors pass; all 6 official malformed-structure vectors rejected. Both original false-positive payloads and truncation, duplicates, length overflow, Base64 and malformed known fields rejected. | PASS, local parser/handler scope |"
@@ -134008,8 +134008,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/silent-payments-2026-09-05.md",
-          "sha256": "c44a9a037a70112a0d33f896f828292e761df7b36cc7bc0592ad40aafd57a65c",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "c3a98ae654594ccc458a5172e96e68c55b9e1e6b8515f8f128b6989a9e3c00d1",
+          "sha256Encoding": "utf8-lf",
           "line": 49,
           "originalIdCell": "SP-PARSER-003 / SP-06",
           "originalTableRow": "| SP-PARSER-003 / SP-06 | BIP376 draft-field inspection | Local Node; draft BIP376 field definitions | Spend derivation and 32-byte tweak fields detected only in structurally valid v2 maps; malformed values rejected; crypto verification remains false. | PASS, draft structural scope; official BIP376 vectors are not published |"
@@ -134034,8 +134034,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/silent-payments-2026-09-05.md",
-          "sha256": "c44a9a037a70112a0d33f896f828292e761df7b36cc7bc0592ad40aafd57a65c",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "c3a98ae654594ccc458a5172e96e68c55b9e1e6b8515f8f128b6989a9e3c00d1",
+          "sha256Encoding": "utf8-lf",
           "line": 50,
           "originalIdCell": "SP-STORE-001 / SP-01,02,03",
           "originalTableRow": "| SP-STORE-001 / SP-01,02,03 | Shared callback to manifest/bundle readback | Local controlled transactional DB mock and controlled first-party source fixtures | One callback registration, deterministic bundle, idempotent replay and new service instance readback pass. | PASS, controlled tests; real MySQL/Signet BLOCKED |"
@@ -134060,8 +134060,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/silent-payments-2026-09-05.md",
-          "sha256": "c44a9a037a70112a0d33f896f828292e761df7b36cc7bc0592ad40aafd57a65c",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "c3a98ae654594ccc458a5172e96e68c55b9e1e6b8515f8f128b6989a9e3c00d1",
+          "sha256Encoding": "utf8-lf",
           "line": 51,
           "originalIdCell": "SP-STORE-002 / SP-01,02,03",
           "originalTableRow": "| SP-STORE-002 / SP-01,02,03 | Restart/retry/reorg/integrity | Same controlled dependencies, no production fault injection | Interrupted write leaves no row; retry writes complete row; displaced suffix replaced from common ancestor; corrupted bytes and wrong-chain reads rejected; missing/stale/unavailable separated. | PASS, controlled tests; live lifecycle BLOCKED |"
@@ -134086,8 +134086,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/silent-payments-2026-09-05.md",
-          "sha256": "c44a9a037a70112a0d33f896f828292e761df7b36cc7bc0592ad40aafd57a65c",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "c3a98ae654594ccc458a5172e96e68c55b9e1e6b8515f8f128b6989a9e3c00d1",
+          "sha256Encoding": "utf8-lf",
           "line": 52,
           "originalIdCell": "SP-SCAN-001 / Q04",
           "originalTableRow": "| SP-SCAN-001 / Q04 | Existing scanner component and pure browser computation | Local Vitest, ephemeral generated test identities, OpenSSL sender ECDH cross-check | Actual receiver algorithm finds independently constructed base/change-label outputs; another receiver returns no matches; corruption/cancellation/wrong-network rejected. | PASS, controlled local computation; Signet match BLOCKED |"
@@ -134112,8 +134112,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/silent-payments-2026-09-05.md",
-          "sha256": "c44a9a037a70112a0d33f896f828292e761df7b36cc7bc0592ad40aafd57a65c",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "c3a98ae654594ccc458a5172e96e68c55b9e1e6b8515f8f128b6989a9e3c00d1",
+          "sha256Encoding": "utf8-lf",
           "line": 53,
           "originalIdCell": "SP-SCAN-002 / Q04",
           "originalTableRow": "| SP-SCAN-002 / Q04 | Scanner API consumer | Local actual component with observed API method arguments | Only height and public bundle requests observed. Scan capability cleared on completion. Network switch cancels late API data. | PASS, component privacy check; deployed browser traffic not claimed |"
@@ -134138,8 +134138,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/silent-payments-2026-09-05.md",
-          "sha256": "c44a9a037a70112a0d33f896f828292e761df7b36cc7bc0592ad40aafd57a65c",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "c3a98ae654594ccc458a5172e96e68c55b9e1e6b8515f8f128b6989a9e3c00d1",
+          "sha256Encoding": "utf8-lf",
           "line": 54,
           "originalIdCell": "SP-PARSER-004 / SP-05",
           "originalTableRow": "| SP-PARSER-004 / SP-05 | Existing BIP321 address form and registered POST handler | Local component test and actual registered handler, official public address | Reproduced valid `bitcoin:?sp=...` rejection; complete URI now reaches the handler and decodes its SP keys. Nine malformed/unsupported URI cases reject. | PASS, local form/handler scope; browser verification belongs to integration owner |"
@@ -134164,8 +134164,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/silent-payments-2026-09-05.md",
-          "sha256": "c44a9a037a70112a0d33f896f828292e761df7b36cc7bc0592ad40aafd57a65c",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "c3a98ae654594ccc458a5172e96e68c55b9e1e6b8515f8f128b6989a9e3c00d1",
+          "sha256Encoding": "utf8-lf",
           "line": 55,
           "originalIdCell": "SP-PARSER-005 / SP-06",
           "originalTableRow": "| SP-PARSER-005 / SP-06 | Ordinary fields inside a PSBTv2 container | Local actual parser and installed bitcoinjs-lib field decoders | Reproduced malformed BIP32 key accepted as valid; malformed derivation, Taproot derivation, signature bytes and preimage key now reject; all official BIP375 structural vectors still pass. | PASS, local parser scope |"
@@ -134190,8 +134190,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/silent-payments-2026-09-05.md",
-          "sha256": "c44a9a037a70112a0d33f896f828292e761df7b36cc7bc0592ad40aafd57a65c",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "c3a98ae654594ccc458a5172e96e68c55b9e1e6b8515f8f128b6989a9e3c00d1",
+          "sha256Encoding": "utf8-lf",
           "line": 56,
           "originalIdCell": "SP-STORE-003 / SP-01,02,03",
           "originalTableRow": "| SP-STORE-003 / SP-01,02,03 | Replay of older shared block | Controlled source/storage used above | Heights 12 and 13 persisted; replaying height 12 retains both rows and height 13 checkpoint without another write. | PASS, controlled test; MySQL/Signet lifecycle remains BLOCKED |"
@@ -134216,8 +134216,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/silent-payments-2026-09-05.md",
-          "sha256": "c44a9a037a70112a0d33f896f828292e761df7b36cc7bc0592ad40aafd57a65c",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "c3a98ae654594ccc458a5172e96e68c55b9e1e6b8515f8f128b6989a9e3c00d1",
+          "sha256Encoding": "utf8-lf",
           "line": 57,
           "originalIdCell": "SP-SUPPORT-001 / SP-04",
           "originalTableRow": "| SP-SUPPORT-001 / SP-04 | Persisted support record validation | Controlled public-evidence fixture through actual service reader | String-valued capability flags, missing names and malformed evidence URLs reject. Complete versioned records preserve explicit false capabilities. | PASS, local contract test; actual wallet evidence remains BLOCKED |"
@@ -134242,8 +134242,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/silent-payments-2026-09-05.md",
-          "sha256": "c44a9a037a70112a0d33f896f828292e761df7b36cc7bc0592ad40aafd57a65c",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "c3a98ae654594ccc458a5172e96e68c55b9e1e6b8515f8f128b6989a9e3c00d1",
+          "sha256Encoding": "utf8-lf",
           "line": 58,
           "originalIdCell": "SP-MYSQL-001 / SP-01,02,03",
           "originalTableRow": "| SP-MYSQL-001 / SP-01,02,03 | Disposable local MySQL persistence preflight | Existing Windows MySQL84 service, local port 3306 | Service/listener exists. No approved local credential source is configured for this checkout, so no SQL connection, schema creation or data mutation was attempted. | BLOCKED, local authentication/access prerequisite; distinct from missing real Signet input |"
@@ -134268,8 +134268,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/silent-payments-2026-09-05.md",
-          "sha256": "c44a9a037a70112a0d33f896f828292e761df7b36cc7bc0592ad40aafd57a65c",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "c3a98ae654594ccc458a5172e96e68c55b9e1e6b8515f8f128b6989a9e3c00d1",
+          "sha256Encoding": "utf8-lf",
           "line": 59,
           "originalIdCell": "SP-SCAN-003 / Q04",
           "originalTableRow": "| SP-SCAN-003 / Q04 | Requested checkpoint and cancellation | Actual component/API consumer and local bundle verifier | Different returned height rejects; cancelling pending manifest read unsubscribes it, requests no bundle, clears key/results and leaves completion false. | PASS, local consumer checks |"
@@ -134294,8 +134294,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/swaps-2026-09-05.md",
-          "sha256": "2fed3220d068ca4650b25a122f9705358b8404cb18b3f1486fd9dcfac7c89fa1",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "67485ecfda3772e8200d9931c13b89393d9e295babbceeaffc6fea9defd5b869",
+          "sha256Encoding": "utf8-lf",
           "line": 38,
           "originalIdCell": "SWR-001",
           "originalTableRow": "| SWR-001 | Backend `node node_modules/jest/bin/jest.js src/api/intelligence/swaps/swaps.test.ts --runInBand --coverage=false` | 38 tests passed. Original fake lockup/manifest/caller-height cases rejected. Exact output, fee, maturity, spent-state, signer, claim/refund signatures, reverse tree, context, active-chain and bounded concurrency checks passed. | 2026-09-05 22:37 |"
@@ -134320,8 +134320,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/swaps-2026-09-05.md",
-          "sha256": "2fed3220d068ca4650b25a122f9705358b8404cb18b3f1486fd9dcfac7c89fa1",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "67485ecfda3772e8200d9931c13b89393d9e295babbceeaffc6fea9defd5b869",
+          "sha256Encoding": "utf8-lf",
           "line": 39,
           "originalIdCell": "SWR-002",
           "originalTableRow": "| SWR-002 | Frontend `node node_modules/vitest/vitest.mjs run src/app/universe/swaps/swaps-package.spec.ts src/app/universe/swaps/swaps-simulation.spec.ts` | 22 tests passed. Independent bitcoinjs-to-scure decode, altered artifact commitments, actual form handlers, error propagation, cancellation and local simulation passed. | 2026-09-05 22:37 |"
@@ -134346,8 +134346,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/swaps-2026-09-05.md",
-          "sha256": "2fed3220d068ca4650b25a122f9705358b8404cb18b3f1486fd9dcfac7c89fa1",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "67485ecfda3772e8200d9931c13b89393d9e295babbceeaffc6fea9defd5b869",
+          "sha256Encoding": "utf8-lf",
           "line": 40,
           "originalIdCell": "SWR-003",
           "originalTableRow": "| SWR-003 | Backend `node node_modules/typescript/bin/tsc -p tsconfig.build.json --noEmit` | Passed after final scoped source edits; integration owner performs the final combined AOT/runtime checks. | 2026-09-05 |"
@@ -134372,8 +134372,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/swaps-2026-09-05.md",
-          "sha256": "2fed3220d068ca4650b25a122f9705358b8404cb18b3f1486fd9dcfac7c89fa1",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "67485ecfda3772e8200d9931c13b89393d9e295babbceeaffc6fea9defd5b869",
+          "sha256Encoding": "utf8-lf",
           "line": 41,
           "originalIdCell": "SWR-004",
           "originalTableRow": "| SWR-004 | Frontend `node node_modules/typescript/bin/tsc -p tsconfig.app.json --noEmit` | Passed after final recovery/inspector/simulator and scoped contrast edits. Final shared AOT/browser verification belongs to integration owner. | 2026-09-05 22:35 |"
@@ -134398,8 +134398,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/swaps-2026-09-05.md",
-          "sha256": "2fed3220d068ca4650b25a122f9705358b8404cb18b3f1486fd9dcfac7c89fa1",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "67485ecfda3772e8200d9931c13b89393d9e295babbceeaffc6fea9defd5b869",
+          "sha256Encoding": "utf8-lf",
           "line": 42,
           "originalIdCell": "SWR-005",
           "originalTableRow": "| SWR-005 | `git diff --check` on owned backend/frontend/dependency files | Passed. | 2026-09-05 |"
@@ -134424,8 +134424,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/swaps-2026-09-05.md",
-          "sha256": "2fed3220d068ca4650b25a122f9705358b8404cb18b3f1486fd9dcfac7c89fa1",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "67485ecfda3772e8200d9931c13b89393d9e295babbceeaffc6fea9defd5b869",
+          "sha256Encoding": "utf8-lf",
           "line": 43,
           "originalIdCell": "SWR-006",
           "originalTableRow": "| SWR-006 | New regressions through the existing backend/frontend tests, before follow-up fixes | Reproduced five false-positive cases: absent node UTXO result; different refund key/lockup; altered refund leaf; altered control block; absent complete prevout data. | 2026-09-05 22:56 |"
@@ -134450,8 +134450,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/swaps-2026-09-05.md",
-          "sha256": "2fed3220d068ca4650b25a122f9705358b8404cb18b3f1486fd9dcfac7c89fa1",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "67485ecfda3772e8200d9931c13b89393d9e295babbceeaffc6fea9defd5b869",
+          "sha256Encoding": "utf8-lf",
           "line": 44,
           "originalIdCell": "SWR-007",
           "originalTableRow": "| SWR-007 | Backend targeted Jest selection `-t 'Configured first-party node authority'` | 6 passed; 33 unchanged tests skipped. Missing UTXO data cannot establish unspent status. | 2026-09-05 22:57 |"
@@ -134476,8 +134476,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/swaps-2026-09-05.md",
-          "sha256": "2fed3220d068ca4650b25a122f9705358b8404cb18b3f1486fd9dcfac7c89fa1",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "67485ecfda3772e8200d9931c13b89393d9e295babbceeaffc6fea9defd5b869",
+          "sha256Encoding": "utf8-lf",
           "line": 45,
           "originalIdCell": "SWR-008",
           "originalTableRow": "| SWR-008 | Frontend targeted `swaps-package.spec.ts`; subsequent file-import and sighash selections | Independent contract/prevout checks and valid artifact passed in the 18-test run; 2 new file import tests and 2 sighash/valid-artifact checks passed separately. Final frontend `tsc -p tsconfig.app.json --noEmit` passed. | 2026-09-05 22:58-23:00 |"
@@ -134502,8 +134502,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/swaps-2026-09-05.md",
-          "sha256": "2fed3220d068ca4650b25a122f9705358b8404cb18b3f1486fd9dcfac7c89fa1",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "67485ecfda3772e8200d9931c13b89393d9e295babbceeaffc6fea9defd5b869",
+          "sha256Encoding": "utf8-lf",
           "line": 46,
           "originalIdCell": "SWR-009",
           "originalTableRow": "| SWR-009 | Backend `eslint src/api/intelligence/swaps --ext .ts --quiet` and scoped `git diff --check` | Passed with zero lint errors. Accurate async propagation/error-boundary annotations satisfy the repository rule; no rule was disabled. Existing style warnings remain. | 2026-09-05 23:02 |"
@@ -134528,16 +134528,16 @@
       "sources": [
         {
           "artifact": "docs/acceptance/swaps-2026-09-05.md",
-          "sha256": "2fed3220d068ca4650b25a122f9705358b8404cb18b3f1486fd9dcfac7c89fa1",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "67485ecfda3772e8200d9931c13b89393d9e295babbceeaffc6fea9defd5b869",
+          "sha256Encoding": "utf8-lf",
           "line": 68,
           "originalIdCell": "SW-UI-INSPECT",
           "originalTableRow": "| SW-UI-INSPECT | `/swaps/inspect`, local check and public evidence action | No private fields sent; local parsing separate from chain proof | Local handler implemented; chain action BLOCKED with SW-07 | Public form is operational. Independent invalid input checks pass; actual Signet evidence remains unavailable. |"
         },
         {
           "artifact": "docs/acceptance/swaps-2026-09-06.md",
-          "sha256": "3a8024a67153f8f82b3ed742bb544d2b43f8e422fdf132f3b80e1e6ac19ed9ac",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "37fd5f610c21d30cead18911b6dd5cac20b27a9fb6d103eba1eedca270b87954",
+          "sha256Encoding": "utf8-lf",
           "line": 43,
           "originalIdCell": "SW-UI-INSPECT",
           "originalTableRow": "| SW-UI-INSPECT | PASS, LOCAL HANDLER for public JSON validation; chain action BLOCKED | SWR-011 proves local operation, private-field rejection and request cancellation. Actual chain action needs SW-07. Browser evidence remains separate. |"
@@ -134562,16 +134562,16 @@
       "sources": [
         {
           "artifact": "docs/acceptance/swaps-2026-09-05.md",
-          "sha256": "2fed3220d068ca4650b25a122f9705358b8404cb18b3f1486fd9dcfac7c89fa1",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "67485ecfda3772e8200d9931c13b89393d9e295babbceeaffc6fea9defd5b869",
+          "sha256Encoding": "utf8-lf",
           "line": 69,
           "originalIdCell": "SW-UI-SIM",
           "originalTableRow": "| SW-UI-SIM | `/swaps/simulate`, Run local simulation | Pure hypothetical rollback calculation; no network request or authority claim | PASS, LOCAL LOGIC; browser record by integration owner | SWR-002 includes eight model/form tests. This pass does not cover any actual reorg, eviction or recovery. |"
         },
         {
           "artifact": "docs/acceptance/swaps-2026-09-06.md",
-          "sha256": "3a8024a67153f8f82b3ed742bb544d2b43f8e422fdf132f3b80e1e6ac19ed9ac",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "37fd5f610c21d30cead18911b6dd5cac20b27a9fb6d103eba1eedca270b87954",
+          "sha256Encoding": "utf8-lf",
           "line": 44,
           "originalIdCell": "SW-UI-SIM",
           "originalTableRow": "| SW-UI-SIM | PASS, LOCAL LOGIC/HANDLER | SWR-011. No actual reorg, eviction or recovery is inferred. |"
@@ -134596,8 +134596,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/swaps-2026-09-06.md",
-          "sha256": "3a8024a67153f8f82b3ed742bb544d2b43f8e422fdf132f3b80e1e6ac19ed9ac",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "37fd5f610c21d30cead18911b6dd5cac20b27a9fb6d103eba1eedca270b87954",
+          "sha256Encoding": "utf8-lf",
           "line": 26,
           "originalIdCell": "SWR-010",
           "originalTableRow": "| SWR-010 | Backend `node node_modules/jest/bin/jest.js src/api/intelligence/swaps/swaps.test.ts --runInBand --coverage=false` | 48 passed. Existing two-leaf lockup/spend/recovery/signing tests plus 503 registry, reserved 404, malformed manifest and self-declared-key regressions. |"
@@ -134622,8 +134622,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/swaps-2026-09-06.md",
-          "sha256": "3a8024a67153f8f82b3ed742bb544d2b43f8e422fdf132f3b80e1e6ac19ed9ac",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "37fd5f610c21d30cead18911b6dd5cac20b27a9fb6d103eba1eedca270b87954",
+          "sha256Encoding": "utf8-lf",
           "line": 27,
           "originalIdCell": "SWR-011",
           "originalTableRow": "| SWR-011 | Frontend `node node_modules/vitest/vitest.mjs run src/app/universe/swaps/swaps-package.spec.ts src/app/universe/swaps/swaps-simulation.spec.ts` | 36 passed. Independent artifact decode, real inspector/recovery/provider handlers, route/network cancellation and error recovery, and local simulation. Shared visual dependencies are isolated for handler tests; this is not browser evidence. |"
@@ -134648,8 +134648,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/swaps-2026-09-06.md",
-          "sha256": "3a8024a67153f8f82b3ed742bb544d2b43f8e422fdf132f3b80e1e6ac19ed9ac",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "37fd5f610c21d30cead18911b6dd5cac20b27a9fb6d103eba1eedca270b87954",
+          "sha256Encoding": "utf8-lf",
           "line": 28,
           "originalIdCell": "SWR-012",
           "originalTableRow": "| SWR-012 | Backend `node node_modules/typescript/bin/tsc -p tsconfig.build.json --noEmit`; frontend `node node_modules/typescript/bin/tsc -p tsconfig.app.json --noEmit` | Both passed. |"
@@ -134674,8 +134674,8 @@
       "sources": [
         {
           "artifact": "docs/acceptance/swaps-2026-09-06.md",
-          "sha256": "3a8024a67153f8f82b3ed742bb544d2b43f8e422fdf132f3b80e1e6ac19ed9ac",
-          "sha256Encoding": "raw-bytes",
+          "sha256": "37fd5f610c21d30cead18911b6dd5cac20b27a9fb6d103eba1eedca270b87954",
+          "sha256Encoding": "utf8-lf",
           "line": 29,
           "originalIdCell": "SWR-013",
           "originalTableRow": "| SWR-013 | Backend `node node_modules/eslint/bin/eslint.js src/api/intelligence/swaps --ext .ts --quiet`; scoped `git diff --check` | Both passed. |"
