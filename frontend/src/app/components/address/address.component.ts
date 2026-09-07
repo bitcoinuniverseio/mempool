@@ -16,7 +16,7 @@ import { AddressInformation } from '@interfaces/node-api.interface';
 import { AddressTypeInfo } from '@app/shared/address-utils';
 import { AddressCapabilityService, AddressLookupCapability } from '@app/services/address-capability.service';
 import { AddressFailure, classifyAddressFailure, shouldConsultCapability } from '@app/shared/address-error';
-import { extractTapLeaves, convertTextToBuffer, PsbtKeyValue } from '@app/shared/transaction.utils';
+import { extractTapLeaves, convertTextToBuffer, PsbtKeyValue } from '@app/shared/transaction-codec.utils';
 
 class AddressStats implements ChainStats {
   address: string;
