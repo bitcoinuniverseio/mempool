@@ -687,7 +687,7 @@ export interface ChainDashboardView {
 
 export interface UniverseSearchResult {
   chain: ExplorerChain;
-  network: 'mainnet';
+  network: ExplorerNetwork;
   kind: string;
   reference: string;
   label: string;
@@ -703,7 +703,7 @@ export interface UniverseSearchResponse {
   scope: 'active' | 'all';
   groups: Array<{
     chain: ExplorerChain;
-    network: 'mainnet';
+    network: ExplorerNetwork;
     results: UniverseSearchResult[];
   }>;
   failures: Array<{

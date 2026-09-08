@@ -43,9 +43,12 @@ export class TaprootAssetsComponent implements OnInit {
             catchError(() => of<TaprootViewModel>({ kind: 'error' }))
           );
         }
+        // No per-read fallback: a directory the source could not answer is an
+        // error, not an empty directory. The two are different facts, and the
+        // page has an error state for the first.
         return combineLatest([
-          this.api.getTaprootAssets$().pipe(catchError(() => of({ assets: [] }))),
-          this.api.getTaprootAssetGroups$().pipe(catchError(() => of({ groups: [] }))),
+          this.api.getTaprootAssets$(),
+          this.api.getTaprootAssetGroups$(),
         ]).pipe(
           switchMap(([assetsData, groupsData]) => of<TaprootViewModel>({
             kind: 'ready',

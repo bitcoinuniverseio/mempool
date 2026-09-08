@@ -5,112 +5,68 @@ import {
   TaprootAssetItem,
 } from './taproot-assets.types';
 
-const ASSETS: TaprootAssetItem[] = [
-  {
-    assetId: '4a19b872019842fbc9e19842a98712344a19b872019842fbc9e19842a9871234',
-    assetType: 'normal',
-    name: 'Tether USD (Taproot)',
-    groupKey: '028471928374918273918273918273918273918273918273918273918273918273',
-    genesisPoint: 'e5765796c3d9efeb8152579df6461a6b18973b404d0938f36c535492d5272a0f:0',
-    genesisHeight: 840000,
-    totalAmountAtomic: '500000000000',
-    anchorTxid: 'e5765796c3d9efeb8152579df6461a6b18973b404d0938f36c535492d5272a0f',
-    anchorOutpoint: 'e5765796c3d9efeb8152579df6461a6b18973b404d0938f36c535492d5272a0f:0',
-    scriptKey: '023847192837491827391827391827391827391827391827391827391827391827',
-    hasProofFile: true,
-    mintTime: 1713571200,
-  },
-  {
-    assetId: '7f91827391827391827391827391827391827391827391827391827391827391',
-    assetType: 'collectible',
-    name: 'Taproot Glyph #001',
-    groupKey: '039182739182739182739182739182739182739182739182739182739182739182',
-    genesisPoint: 'b198374291847eabcf9817294817294817294817294817294817294817294817:1',
-    genesisHeight: 845200,
-    totalAmountAtomic: '1',
-    anchorTxid: 'b198374291847eabcf9817294817294817294817294817294817294817294817',
-    anchorOutpoint: 'b198374291847eabcf9817294817294817294817294817294817294817294817:1',
-    scriptKey: '038472918273918273918273918273918273918273918273918273918273918273',
-    hasProofFile: true,
-    mintTime: 1714200000,
-  },
-];
+/**
+ * Raised when a read has no source behind it. The routes map the code to a
+ * 503, so an absent integration is reported as an absent integration rather
+ * than as an answer.
+ */
+export class TaprootAssetsEvidenceError extends Error {
+  constructor(public readonly code: string, message: string, public readonly status = 503) {
+    super(message);
+  }
+}
 
-const GROUPS: TaprootAssetGroup[] = [
-  {
-    groupKey: '028471928374918273918273918273918273918273918273918273918273918273',
-    name: 'Tether Issuance Tranche A',
-    totalAssetsCount: 1,
-    totalCirculatingSupplyAtomic: '500000000000',
-  },
-  {
-    groupKey: '039182739182739182739182739182739182739182739182739182739182739182',
-    name: 'Taproot Glyphs Collection',
-    totalAssetsCount: 100,
-    totalCirculatingSupplyAtomic: '100',
-  },
-];
+const universeUnavailable =
+  'Taproot Assets observations are unavailable. Asset, group and proof reads require the owned asset Universe (tapd) and Bitcoin anchor reader, which are not connected on this deployment.';
 
-const OFFERS: Bolt12Offer[] = [
-  {
-    offerId: 'lno1pg257enxv4ezqcneype82um50ynhxgrwdajx283q890cdse444n894v69n0q2sxve80q',
-    offerString: 'lno1pg257enxv4ezqcneype82um50ynhxgrwdajx283q890cdse444n894v69n0q2sxve80q',
-    description: 'Universe Explorer Premium Feed Subscription (30 Days)',
-    issuer: 'Universe Foundation',
-    amountMsat: '25000000',
-    currency: 'msat',
-    blindRoutesCount: 3,
-    valid: true,
-  },
-];
+const offersUnavailable =
+  'BOLT12 offer observations are unavailable. Offer decoding and validity require the owned Lightning node offer source, which is not connected on this deployment.';
 
-const RFQ_QUOTES: LightningRfqQuote[] = [
-  {
-    quoteId: 'rfq-quote-849102',
-    baseAsset: 'BTC',
-    quoteAsset: 'USDt',
-    askRate: '64520.50',
-    bidRate: '64490.20',
-    spreadBps: 4.7,
-    validUntil: Math.floor(Date.now() / 1000) + 60,
-  },
-];
+const rfqUnavailable =
+  'Lightning RFQ observations are unavailable. Quotes require the owned RFQ price source with actual expiry, which is not connected on this deployment.';
 
+/**
+ * Taproot Assets, BOLT12 offers and Lightning RFQ evidence.
+ *
+ * The revision this replaces answered the five reads from constants: two
+ * assets with invented genesis points and anchors, two groups, one offer that
+ * claimed to be valid with nothing having decoded it, and one quote whose
+ * expiry was fixed when the module loaded and so was stale for the life of
+ * the process. A reader could not tell those from observations, and the
+ * offer's validity and the quote's expiry are exactly the fields a reader
+ * acts on.
+ *
+ * Each read now names the integration it is waiting on. An empty directory
+ * and an absent directory are different answers: this deployment can give
+ * neither for assets, so it says so rather than returning an empty list.
+ */
 export class TaprootAssetsService {
   /** @asyncSafe */
   public async $getAssets(): Promise<TaprootAssetItem[]> {
-    return ASSETS;
+    throw new TaprootAssetsEvidenceError('unavailable-universe', universeUnavailable);
   }
 
   /** @asyncSafe */
-
-  public async $getAsset(assetId: string): Promise<TaprootAssetItem | null> {
-    const match = ASSETS.find(
-      (a) => a.assetId.toLowerCase() === assetId.toLowerCase() || a.name.toLowerCase() === assetId.toLowerCase()
-    );
-    return match || null;
+  public async $getAsset(_assetId: string): Promise<TaprootAssetItem | null> {
+    throw new TaprootAssetsEvidenceError('unavailable-universe', universeUnavailable);
   }
 
   /** @asyncSafe */
-
   public async $getGroups(): Promise<TaprootAssetGroup[]> {
-    return GROUPS;
+    throw new TaprootAssetsEvidenceError('unavailable-universe', universeUnavailable);
   }
 
   /** @asyncSafe */
-
   public async $getOffers(): Promise<Bolt12Offer[]> {
-    return OFFERS;
+    throw new TaprootAssetsEvidenceError('unavailable-offer-source', offersUnavailable);
   }
 
   /** @asyncSafe */
-
   public async $getRfqQuotes(): Promise<LightningRfqQuote[]> {
-    return RFQ_QUOTES;
+    throw new TaprootAssetsEvidenceError('unavailable-rfq-source', rfqUnavailable);
   }
 
   /** @asyncSafe */
-
   public async $verifyProof(assetId: string, proofData: string): Promise<{
     valid: false; stage: 'invalid-input' | 'unavailable-verifier'; error: string;
   }> {
