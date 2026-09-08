@@ -414,7 +414,7 @@ export function protocolCopyIds(source) {
 /** The chain protocol paths the API client will call, by chain. */
 export function apiAllowlist(source) {
   const match = source.match(
-    /const allowed = chain === '(\w+)'\s*\?\s*\[([^\]]*)\]\s*:\s*\[([^\]]*)\];/,
+    /const\s+allowed\s*=\s*chain\s*===\s*'(\w+)'\s*\?\s*\[([^\]]*)\]\s*:\s*\[([^\]]*)\];/,
   );
   if (!match) {
     throw new GateFailure(

@@ -15,10 +15,9 @@ permissions:
 concurrency:
   group: universe-ci-${{ github.ref }}
   # A superseded commit on a pull request proves nothing about the commit that
-  # replaced it, and while its run continues it holds one of the six ultra
-  # runners the replacement is queued for. Pushing three times to a branch
-  # under review used to mean three full matrix runs in a queue, and only the
-  # last one was worth waiting for.
+  # replaced it and still consumes an ephemeral GCP runner. Pushing three
+  # times to a branch under review used to mean three full matrix runs, and
+  # only the last one was worth waiting for.
   #
   # Pushes to develop and main are never cancelled. Every commit on those is
   # validated on its own, because promotion reads per-commit check results and
@@ -28,12 +27,9 @@ concurrency:
 jobs:
   docs:
     name: Documentation gates
-    # Any runner in the fleet. This job is a checkout, a Node install and a set
-    # of Node scripts: no browser, no Rust, no Docker. Pinned to `linux-ultra`
-    # it competed for the six runners that are the only ones able to run the
-    # visual matrix, while eight runners carrying `universe-ci` sat idle, and a
-    # three minute job held a slot the fifty minute one was queued for.
-    runs-on: [self-hosted, linux, x64, universe, gcp, universe-gcp-medium]
+    # This job needs Node only. The small GCP class avoids reserving browser,
+    # Rust, or Docker capacity for static checks.
+    runs-on: [self-hosted, linux, x64, universe, gcp, universe-gcp-small]
     timeout-minutes: 10
     steps:
       - name: Checkout
@@ -223,14 +219,9 @@ jobs:
 
   frontend:
     name: Frontend build
-    # universe-linux-ultra, not linux-ultra: only the six PowerVPS runners
-    # carry the narrower label, and every job that measures pixels in a
-    # browser has to run on hosts with one font stack. The broader label
-    # spread to the OVH runners, whose fonts size a content-width link a half
-    # pixel differently, and the same commit then passes or fails the target
-    # floor depending on which machine measured it. The mobile and visual
-    # jobs below are pinned for the same reason; the backend job is not,
-    # because nothing it runs measures a glyph.
+    # Pixel gates require the browser libraries and fixed font stack baked
+    # into the GCP Playwright image. The mobile and visual jobs use the same
+    # class so glyph metrics stay deterministic across the matrix.
     runs-on: [self-hosted, linux, x64, universe, gcp, universe-gcp-medium]
     # This builds, gates the bundle, and walks every route once at a phone and
     # a desktop width. The deep pass that used to follow it now runs beside it,
@@ -311,6 +302,13 @@ jobs:
         working-directory: scripts/universe/visual-qa
         run: node --test address-page-audit.test.mjs
 
+      # One registry feeds every browser gate. This static check compares it
+      # with Angular route declarations and navigation targets, verifies fixed
+      # valid and invalid parameter examples, and checks missing-fixture failure.
+      - name: Production route scenarios match the Angular router
+        working-directory: scripts/universe/visual-qa
+        run: node --test route-scenarios.test.mjs
+
       # Structural facts of the multichain parity release: navigation not
       # gated back to Bitcoin, the route registry whole, the dashboard
       # requesting real data, cubes carrying heights, chain-native units.
@@ -365,7 +363,7 @@ jobs:
       # The shards take this instead of building their own copy. See the note
       # on the `visual` job below for why that matters.
       - name: Keep the build for the visual shards
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: frontend/dist
           key: universe-dist-${{ github.sha }}
@@ -453,7 +451,7 @@ jobs:
 
       - name: Take the build the frontend job made
         id: dist
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: frontend/dist
           key: universe-dist-${{ github.sha }}
@@ -589,7 +587,7 @@ jobs:
 
       - name: Take the build the frontend job made
         id: dist
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: frontend/dist
           key: universe-dist-${{ github.sha }}
@@ -671,36 +669,14 @@ jobs:
             scripts/universe/visual-qa/artifacts-perf
           retention-days: 3
 
-  # The two engines the fleet cannot run.
-  #
-  # WebKit needs a set of system libraries a Chromium-only host has never had,
-  # and it does not degrade without them: it refuses to launch and prints the
-  # list. Installing them is one apt command, and the fleet's runner user has
-  # no passwordless sudo, so `playwright install --with-deps` fails there with
-  # "sudo: a password is required". Measured on universe-linux-ultra-03.
-  #
-  # So this one job runs on a hosted runner, where that command works. It is
-  # the exception to using the fleet, and it is here rather than folded into
-  # the job above so the exception is visible and so a hosted outage cannot
-  # take the Chromium gate down with it.
-  #
-  # It is worth the exception. WebKit is what Safari and Chrome on iOS are both
-  # built on, and dvh, safe-area insets and the pointer media feature are
-  # exactly the rules where engines disagree: a Chromium-only run proves
-  # nothing about the platform half this work was written for.
-  #
-  # When the fleet's image gains those libraries, delete this job and put the
-  # two steps back in the one above, which is where they belong.
+  # WebKit and Firefox stay separate from the Chromium matrix so one engine
+  # failure cannot erase the others' evidence. The self-managed GCP Playwright
+  # class carries the system libraries each engine needs. The install step
+  # below resolves the exact browser build named by the lockfile.
   mobile-engines:
     name: WebKit and Firefox
-    # The Windows browser fleet can run both engines without a privileged
-    # system package install. The job uses Git Bash so it shares one script
-    # with the Linux browser checks.
-    runs-on: [self-hosted, Windows, X64, universe-router]
+    runs-on: [self-hosted, linux, x64, universe, gcp, universe-gcp-medium]
     timeout-minutes: 45
-    defaults:
-      run:
-        shell: bash
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4

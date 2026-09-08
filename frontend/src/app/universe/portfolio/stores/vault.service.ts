@@ -15,20 +15,25 @@
  */
 
 import { Injectable, NgZone, OnDestroy } from '@angular/core';
-import type {
-  KdfError,
-  KdfOk,
-  KdfRequest,
-} from '../workers/vault-kdf.worker';
+import { StateService } from '@app/services/state.service';
+import type { KdfError, KdfOk, KdfRequest } from '../workers/vault-kdf.worker';
 
 export const VAULT_DB_NAME = 'universe-portfolio-vault';
 export const VAULT_DB_VERSION = 1;
-export const VAULT_FORMAT_VERSION = 1;
+export const VAULT_FORMAT_VERSION = 2;
 
 const ARGON2ID_MEMORY_KIB = 65536;
 const ARGON2ID_TIME_COST = 3;
 const ARGON2ID_PARALLELISM = 4;
 const PBKDF2_ITERATIONS = 600_000;
+const ARGON2ID_MEMORY_KIB_MIN = 8_192;
+const ARGON2ID_MEMORY_KIB_MAX = 131_072;
+const ARGON2ID_TIME_COST_MIN = 1;
+const ARGON2ID_TIME_COST_MAX = 10;
+const ARGON2ID_PARALLELISM_MIN = 1;
+const ARGON2ID_PARALLELISM_MAX = 8;
+const PBKDF2_ITERATIONS_MIN = 100_000;
+const PBKDF2_ITERATIONS_MAX = 2_000_000;
 const VERIFIER_PLAINTEXT = 'universe-portfolio-vault-verifier-v1';
 
 export type VaultKdfKind = 'argon2id' | 'pbkdf2';
@@ -58,7 +63,7 @@ export interface VaultRecord {
 
 export interface EncryptedBackup {
   readonly format: 'universe-portfolio';
-  readonly formatVersion: 1;
+  readonly formatVersion: 1 | 2;
   readonly kdf: VaultKdfKind;
   readonly kdfParams: VaultMeta['kdfParams'];
   readonly saltB64: string;
@@ -83,17 +88,24 @@ export type VaultState =
 @Injectable({ providedIn: 'root' })
 export class PortfolioVaultService implements OnDestroy {
   private worker: Worker | null = null;
-  private workerRequests = new Map<number, { resolve: (value: KdfOk) => void; reject: (error: Error) => void }>();
+  private workerRequests = new Map<
+    number,
+    { resolve: (value: KdfOk) => void; reject: (error: Error) => void }
+  >();
   private workerNextId = 1;
   private key: CryptoKey | null = null;
   private meta: VaultMeta | null = null;
   private autoLockMinutes = 15;
   private lockTimer: ReturnType<typeof setTimeout> | null = null;
   private visibilityListener = (() => {
-    if (document.visibilityState === 'hidden') this.scheduleImmediateLockIfConfigured();
+    if (document.visibilityState === 'hidden')
+      this.scheduleImmediateLockIfConfigured();
   }) as unknown as EventListener;
 
-  constructor(private readonly zone: NgZone) {}
+  constructor(
+    private readonly zone: NgZone,
+    private readonly stateService: StateService
+  ) {}
 
   // ------------------------------------------------------------- lifecycle
 
@@ -119,14 +131,16 @@ export class PortfolioVaultService implements OnDestroy {
       throw new Error('A vault already exists on this device.');
     }
     const salt = crypto.getRandomValues(new Uint8Array(16));
-    const kdf: VaultKdfKind = (await this.canRunArgon2id()) ? 'argon2id' : 'pbkdf2';
+    const kdf: VaultKdfKind = (await this.canRunArgon2id())
+      ? 'argon2id'
+      : 'pbkdf2';
     const key = await this.deriveKey(kdf, passphrase, this.saltB64(salt), {
       memoryKiB: ARGON2ID_MEMORY_KIB,
       timeCost: ARGON2ID_TIME_COST,
       parallelism: ARGON2ID_PARALLELISM,
       iterations: PBKDF2_ITERATIONS,
     });
-    const verifier = await this.encryptBytes(key, new TextEncoder().encode(VERIFIER_PLAINTEXT));
+    const verifier = await this.encryptVerifier(key);
     const now = new Date().toISOString();
     const meta: VaultMeta = {
       version: 1,
@@ -158,15 +172,24 @@ export class PortfolioVaultService implements OnDestroy {
     if (meta === null || passphrase.length === 0) return false;
     let key: CryptoKey;
     try {
-      key = await this.deriveKey(meta.kdf, passphrase, meta.saltB64, meta.kdfParams);
+      key = await this.deriveKey(
+        meta.kdf,
+        passphrase,
+        meta.saltB64,
+        meta.kdfParams
+      );
     } catch {
       return false;
     }
+    let plaintext: Uint8Array | null = null;
     try {
-      const plaintext = await this.decryptBytes(key, meta.verifier);
-      if (new TextDecoder().decode(plaintext) !== VERIFIER_PLAINTEXT) return false;
+      plaintext = await this.decryptBytes(key, meta.verifier);
+      if (new TextDecoder().decode(plaintext) !== VERIFIER_PLAINTEXT)
+        return false;
     } catch {
       return false;
+    } finally {
+      plaintext?.fill(0);
     }
     this.key = key;
     this.meta = meta;
@@ -185,30 +208,58 @@ export class PortfolioVaultService implements OnDestroy {
     if (this.key === null || this.meta === null) {
       throw new Error('The vault must be unlocked to change its passphrase.');
     }
-    // Re-encrypting every record under a fresh salted key.
+    const previousMeta = this.meta;
+    // Prepare every replacement before opening the write transaction. A
+    // failed derivation or encryption therefore leaves the existing vault
+    // untouched and readable with its existing key.
     const records = await this.readAllRecords();
     const decrypted: { id: string; type: string; plaintext: Uint8Array }[] = [];
-    for (const record of records) {
-      decrypted.push({
-        id: record.id,
-        type: record.type,
-        plaintext: await this.decryptBytes(this.key, record.envelope),
+    try {
+      for (const record of records) {
+        decrypted.push({
+          id: record.id,
+          type: record.type,
+          plaintext: await this.decryptBytes(this.key, record.envelope),
+        });
+      }
+      const salt = crypto.getRandomValues(new Uint8Array(16));
+      const key = await this.deriveKey(
+        previousMeta.kdf,
+        next,
+        this.saltB64(salt),
+        previousMeta.kdfParams
+      );
+      const verifier = await this.encryptVerifier(key);
+      const now = new Date().toISOString();
+      const meta: VaultMeta = {
+        ...previousMeta,
+        saltB64: this.saltB64(salt),
+        verifier,
+        updatedAt: now,
+      };
+      const replacements: VaultRecord[] = [];
+      for (const item of decrypted) {
+        replacements.push({
+          id: item.id,
+          type: item.type,
+          envelope: await this.encryptBytes(key, item.plaintext),
+          updatedAt: now,
+        });
+      }
+      const db = await this.open();
+      await this.transaction(db, ['meta', 'records'], 'readwrite', (stores) => {
+        stores['meta'].put(meta, 'vault');
+        for (const record of replacements) {
+          stores['records'].put(record);
+        }
       });
-    }
-    const salt = crypto.getRandomValues(new Uint8Array(16));
-    const key = await this.deriveKey(this.meta.kdf, next, this.saltB64(salt), this.meta.kdfParams);
-    const verifier = await this.encryptBytes(key, new TextEncoder().encode(VERIFIER_PLAINTEXT));
-    const meta: VaultMeta = { ...this.meta, saltB64: this.saltB64(salt), verifier, updatedAt: new Date().toISOString() };
-    const db = await this.open();
-    await this.transaction(db, ['meta'], 'readwrite', (stores) => {
-      stores['meta'].put(meta, 'vault');
-    });
-    this.meta = meta;
-    this.key = key;
-    for (const item of decrypted) {
-      const envelope = await this.encryptBytes(key, item.plaintext);
-      await this.putRecord({ id: item.id, type: item.type, envelope, updatedAt: new Date().toISOString() });
-      item.plaintext.fill(0);
+      this.meta = meta;
+      this.key = key;
+      this.armAutoLock();
+    } finally {
+      for (const item of decrypted) {
+        item.plaintext.fill(0);
+      }
     }
   }
 
@@ -217,19 +268,35 @@ export class PortfolioVaultService implements OnDestroy {
   async put(type: string, id: string, plaintext: unknown): Promise<void> {
     const key = this.requireKey();
     const bytes = new TextEncoder().encode(JSON.stringify(plaintext));
-    const envelope = await this.encryptBytes(key, bytes);
-    await this.putRecord({ id, type, envelope, updatedAt: new Date().toISOString() });
+    try {
+      const envelope = await this.encryptBytes(key, bytes);
+      await this.putRecord({
+        id,
+        type,
+        envelope,
+        updatedAt: new Date().toISOString(),
+      });
+    } finally {
+      bytes.fill(0);
+    }
   }
 
   async get<T>(id: string): Promise<T | null> {
     const key = this.requireKey();
     const db = await this.open();
-    const record = await this.transaction(db, ['records'], 'readonly', (stores) =>
-      this.requestAsPromise(stores['records'].get(id)),
-    ) as VaultRecord | undefined;
+    const record = (await this.transaction(
+      db,
+      ['records'],
+      'readonly',
+      (stores) => this.requestAsPromise(stores['records'].get(id))
+    )) as VaultRecord | undefined;
     if (record === undefined) return null;
     const bytes = await this.decryptBytes(key, record.envelope);
-    return JSON.parse(new TextDecoder().decode(bytes)) as T;
+    try {
+      return JSON.parse(new TextDecoder().decode(bytes)) as T;
+    } finally {
+      bytes.fill(0);
+    }
   }
 
   async deleteRecord(id: string): Promise<void> {
@@ -242,47 +309,60 @@ export class PortfolioVaultService implements OnDestroy {
   async listByType(type: string): Promise<{ id: string; value: unknown }[]> {
     const key = this.requireKey();
     const db = await this.open();
-    const records = (await this.transaction(db, ['records'], 'readonly', (stores) =>
-      this.requestAsPromise(stores['records'].getAll()),
+    const records = (await this.transaction(
+      db,
+      ['records'],
+      'readonly',
+      (stores) => this.requestAsPromise(stores['records'].getAll())
     )) as VaultRecord[];
     const values: { id: string; value: unknown }[] = [];
     for (const record of records) {
       if (record.type !== type) continue;
       const bytes = await this.decryptBytes(key, record.envelope);
-      values.push({ id: record.id, value: JSON.parse(new TextDecoder().decode(bytes)) });
+      try {
+        values.push({
+          id: record.id,
+          value: JSON.parse(new TextDecoder().decode(bytes)),
+        });
+      } finally {
+        bytes.fill(0);
+      }
     }
     return values;
   }
 
   // ------------------------------------------------------- backup/restore
 
-  async exportEncrypted(applicationRelease = 'unknown'): Promise<EncryptedBackup> {
+  async exportEncrypted(): Promise<EncryptedBackup> {
     const meta = this.meta;
-    if (meta === null) throw new Error('The vault must be unlocked to export it.');
+    if (meta === null)
+      throw new Error('The vault must be unlocked to export it.');
     const records = await this.readAllRecords();
     const recordCounts: Record<string, number> = {};
-    const checksumInput: string[] = [];
     for (const record of records) {
       recordCounts[record.type] = (recordCounts[record.type] ?? 0) + 1;
-      checksumInput.push(record.envelope.ctB64);
     }
-    const payloadChecksum = await sha256Hex(checksumInput.join('|'));
+    const exportRecords = records.map((record) => ({
+      id: record.id,
+      type: record.type,
+      nonceB64: record.envelope.nonceB64,
+      ctB64: record.envelope.ctB64,
+    }));
+    const payloadChecksum = await backupPayloadChecksum(
+      exportRecords,
+      VAULT_FORMAT_VERSION
+    );
     return {
       format: 'universe-portfolio',
       formatVersion: VAULT_FORMAT_VERSION,
       kdf: meta.kdf,
       kdfParams: meta.kdfParams,
       saltB64: meta.saltB64,
-      records: records.map((record) => ({
-        id: record.id,
-        type: record.type,
-        nonceB64: record.envelope.nonceB64,
-        ctB64: record.envelope.ctB64,
-      })),
+      records: exportRecords,
       recordCounts,
       payloadChecksum,
       createdAt: new Date().toISOString(),
-      applicationRelease,
+      applicationRelease: this.stateService.env.GIT_COMMIT_HASH,
       migrationCompatibilityRange: [1, VAULT_FORMAT_VERSION],
     };
   }
@@ -293,64 +373,94 @@ export class PortfolioVaultService implements OnDestroy {
    */
   async importEncrypted(
     backup: unknown,
-    passphrase: string,
+    passphrase: string
   ): Promise<{ importedRecords: number }> {
     if (typeof backup !== 'object' || backup === null) {
       throw new Error('That file is not a Universe portfolio backup.');
     }
     const candidate = backup as Partial<EncryptedBackup>;
-    if (candidate.format !== 'universe-portfolio' || candidate.formatVersion !== 1) {
+    if (
+      candidate.format !== 'universe-portfolio' ||
+      (candidate.formatVersion !== 1 && candidate.formatVersion !== 2)
+    ) {
       throw new Error('That backup format version is not supported.');
     }
-    if (!Array.isArray(candidate.records) || typeof candidate.saltB64 !== 'string') {
+    if (
+      !Array.isArray(candidate.records) ||
+      !candidate.records.every(isEncryptedBackupRecord) ||
+      typeof candidate.saltB64 !== 'string' ||
+      typeof candidate.payloadChecksum !== 'string'
+    ) {
       throw new Error('That backup is incomplete or corrupted.');
     }
-    const checksum = await sha256Hex(candidate.records.map((r) => r.ctB64).join('|'));
+    const checksum = await backupPayloadChecksum(
+      candidate.records,
+      candidate.formatVersion
+    );
     if (checksum !== candidate.payloadChecksum) {
       throw new Error('The backup payload failed its integrity check.');
     }
-    // Passphrase proof: derive under the backup's own KDF parameters and
-    // try to open the first record. Only then is anything written.
-    const key = await this.deriveKey(candidate.kdf ?? 'argon2id', passphrase, candidate.saltB64, candidate.kdfParams ?? {});
+    const { kdf, kdfParams } = this.normalizeImportedKdf(
+      candidate.kdf,
+      candidate.kdfParams
+    );
+    // Passphrase proof: derive under bounded backup KDF parameters and try
+    // to open every record. Only then is anything written.
+    const key = await this.deriveKey(
+      kdf,
+      passphrase,
+      candidate.saltB64,
+      kdfParams
+    );
     let validated = 0;
     for (const record of candidate.records) {
+      let plaintext: Uint8Array | null = null;
       try {
-        await this.decryptBytes(key, { nonceB64: record.nonceB64, ctB64: record.ctB64 });
+        plaintext = await this.decryptBytes(key, {
+          nonceB64: record.nonceB64,
+          ctB64: record.ctB64,
+        });
         validated += 1;
       } catch {
         throw new Error('The passphrase did not open this backup.');
+      } finally {
+        plaintext?.fill(0);
       }
     }
     if (validated !== candidate.records.length) {
       throw new Error('The passphrase did not open this backup.');
     }
-    // Replace current contents atomically.
-    const db = await this.open();
-    await this.transaction(db, ['meta', 'records'], 'readwrite', (stores) => {
-      stores['records'].clear();
-    });
-    for (const record of candidate.records) {
-      await this.putRecord({
-        id: record.id,
-        type: record.type,
-        envelope: { nonceB64: record.nonceB64, ctB64: record.ctB64 },
-        updatedAt: new Date().toISOString(),
-      });
-    }
+    const now = new Date().toISOString();
     const meta: VaultMeta = {
       version: 1,
-      kdf: candidate.kdf ?? 'argon2id',
-      kdfParams: candidate.kdfParams ?? {},
+      kdf,
+      kdfParams,
       saltB64: candidate.saltB64,
-      verifier: { nonceB64: candidate.records[0]?.nonceB64 ?? '', ctB64: candidate.records[0]?.ctB64 ?? '' },
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      verifier: {
+        nonceB64: candidate.records[0]?.nonceB64 ?? '',
+        ctB64: candidate.records[0]?.ctB64 ?? '',
+      },
+      createdAt: now,
+      updatedAt: now,
     };
     // The backup has no live verifier; derive one under the new key so the
     // imported vault answers future unlock attempts.
-    const freshVerifier = await this.encryptBytes(key, new TextEncoder().encode(VERIFIER_PLAINTEXT));
+    const freshVerifier = await this.encryptVerifier(key);
     const finalMeta = { ...meta, verifier: freshVerifier };
-    await this.writeMeta(finalMeta);
+    const records: VaultRecord[] = candidate.records.map((record) => ({
+      id: record.id,
+      type: record.type,
+      envelope: { nonceB64: record.nonceB64, ctB64: record.ctB64 },
+      updatedAt: now,
+    }));
+    const db = await this.open();
+    await this.transaction(db, ['meta', 'records'], 'readwrite', (stores) => {
+      stores['records'].clear();
+      for (const record of records) {
+        stores['records'].put(record);
+      }
+      stores['meta'].put(finalMeta, 'vault');
+    });
     this.meta = finalMeta;
     this.key = key;
     this.armAutoLock();
@@ -386,7 +496,10 @@ export class PortfolioVaultService implements OnDestroy {
     if (this.lockTimer !== null) clearTimeout(this.lockTimer);
     if (this.key === null) return;
     if (this.autoLockMinutes <= 0) return;
-    this.lockTimer = setTimeout(() => this.lock(), this.autoLockMinutes * 60_000);
+    this.lockTimer = setTimeout(
+      () => this.lock(),
+      this.autoLockMinutes * 60_000
+    );
   }
 
   private scheduleImmediateLockIfConfigured(): void {
@@ -414,6 +527,81 @@ export class PortfolioVaultService implements OnDestroy {
     return btoa(binary);
   }
 
+  private normalizeImportedKdf(
+    inputKdf: unknown,
+    inputParams: unknown
+  ): { kdf: VaultKdfKind; kdfParams: VaultMeta['kdfParams'] } {
+    const kdf = inputKdf ?? 'argon2id';
+    if (kdf !== 'argon2id' && kdf !== 'pbkdf2') {
+      throw new Error('That backup uses an unsupported key derivation method.');
+    }
+    if (
+      inputParams !== undefined &&
+      inputParams !== null &&
+      (typeof inputParams !== 'object' || Array.isArray(inputParams))
+    ) {
+      throw new Error('That backup has unsupported key derivation parameters.');
+    }
+    const params = (inputParams ?? {}) as Record<string, unknown>;
+    const memoryKiB = boundedKdfInteger(
+      params['memoryKiB'],
+      ARGON2ID_MEMORY_KIB_MIN,
+      ARGON2ID_MEMORY_KIB_MAX
+    );
+    const timeCost = boundedKdfInteger(
+      params['timeCost'],
+      ARGON2ID_TIME_COST_MIN,
+      ARGON2ID_TIME_COST_MAX
+    );
+    const parallelism = boundedKdfInteger(
+      params['parallelism'],
+      ARGON2ID_PARALLELISM_MIN,
+      ARGON2ID_PARALLELISM_MAX
+    );
+    const iterations = boundedKdfInteger(
+      params['iterations'],
+      PBKDF2_ITERATIONS_MIN,
+      PBKDF2_ITERATIONS_MAX
+    );
+    const kdfParams: {
+      memoryKiB?: number;
+      timeCost?: number;
+      parallelism?: number;
+      iterations?: number;
+    } = {};
+    if (memoryKiB !== undefined) {
+      kdfParams.memoryKiB = memoryKiB;
+    }
+    if (timeCost !== undefined) {
+      kdfParams.timeCost = timeCost;
+    }
+    if (parallelism !== undefined) {
+      kdfParams.parallelism = parallelism;
+    }
+    if (iterations !== undefined) {
+      kdfParams.iterations = iterations;
+    }
+    if (kdf === 'argon2id') {
+      kdfParams.memoryKiB ??= ARGON2ID_MEMORY_KIB;
+      kdfParams.timeCost ??= ARGON2ID_TIME_COST;
+      kdfParams.parallelism ??= ARGON2ID_PARALLELISM;
+    } else {
+      kdfParams.iterations ??= PBKDF2_ITERATIONS;
+    }
+    return { kdf, kdfParams };
+  }
+
+  private async encryptVerifier(
+    key: CryptoKey
+  ): Promise<{ nonceB64: string; ctB64: string }> {
+    const plaintext = new TextEncoder().encode(VERIFIER_PLAINTEXT);
+    try {
+      return await this.encryptBytes(key, plaintext);
+    } finally {
+      plaintext.fill(0);
+    }
+  }
+
   private async canRunArgon2id(): Promise<boolean> {
     try {
       await this.runKdf({
@@ -433,20 +621,26 @@ export class PortfolioVaultService implements OnDestroy {
 
   private ensureWorker(): Worker {
     if (this.worker === null) {
-      this.worker = new Worker(new URL('../workers/vault-kdf.worker.ts', import.meta.url), {
-        type: 'module',
-      });
-      this.worker.addEventListener('message', (event: MessageEvent<KdfOk | KdfError>) => {
-        const data = event.data;
-        const pending = this.workerRequests.get(data.id);
-        if (pending === undefined) return;
-        this.workerRequests.delete(data.id);
-        if (data.ok) {
-          pending.resolve(data);
-        } else {
-          pending.reject(new Error((data as KdfError).error));
+      this.worker = new Worker(
+        new URL('../workers/vault-kdf.worker', import.meta.url),
+        {
+          type: 'module',
         }
-      });
+      );
+      this.worker.addEventListener(
+        'message',
+        (event: MessageEvent<KdfOk | KdfError>) => {
+          const data = event.data;
+          const pending = this.workerRequests.get(data.id);
+          if (pending === undefined) return;
+          this.workerRequests.delete(data.id);
+          if (data.ok) {
+            pending.resolve(data);
+          } else {
+            pending.reject(new Error((data as KdfError).error));
+          }
+        }
+      );
     }
     return this.worker;
   }
@@ -463,38 +657,47 @@ export class PortfolioVaultService implements OnDestroy {
     kdf: VaultKdfKind,
     passphrase: string,
     saltB64: string,
-    params: VaultMeta['kdfParams'],
+    params: VaultMeta['kdfParams']
   ): Promise<CryptoKey> {
-    let bits: Uint8Array;
+    let bits: Uint8Array | null = null;
     try {
-      const result = await this.runKdf({
-        id: this.workerNextId++,
-        op: kdf === 'argon2id' ? 'argon2id' : 'pbkdf2',
-        passphrase,
-        saltB64,
-        memoryKiB: params.memoryKiB,
-        timeCost: params.timeCost,
-        parallelism: params.parallelism,
-        iterations: params.iterations,
-      });
-      bits = Uint8Array.from(atob(result.bitsB64), (character) => character.charCodeAt(0));
-    } catch {
-      // Environment refused the primary KDF: fall back rather than fail.
-      const result = await this.runKdf({
-        id: this.workerNextId++,
-        op: 'pbkdf2',
-        passphrase,
-        saltB64,
-        iterations: PBKDF2_ITERATIONS,
-      });
-      bits = Uint8Array.from(atob(result.bitsB64), (character) => character.charCodeAt(0));
+      try {
+        const result = await this.runKdf({
+          id: this.workerNextId++,
+          op: kdf === 'argon2id' ? 'argon2id' : 'pbkdf2',
+          passphrase,
+          saltB64,
+          memoryKiB: params.memoryKiB,
+          timeCost: params.timeCost,
+          parallelism: params.parallelism,
+          iterations: params.iterations,
+        });
+        bits = Uint8Array.from(atob(result.bitsB64), (character) =>
+          character.charCodeAt(0)
+        );
+      } catch {
+        // Environment refused the primary KDF: fall back rather than fail.
+        const result = await this.runKdf({
+          id: this.workerNextId++,
+          op: 'pbkdf2',
+          passphrase,
+          saltB64,
+          iterations: PBKDF2_ITERATIONS,
+        });
+        bits = Uint8Array.from(atob(result.bitsB64), (character) =>
+          character.charCodeAt(0)
+        );
+      }
+      return await crypto.subtle.importKey(
+        'raw',
+        bits as BufferSource,
+        'AES-GCM',
+        false,
+        ['encrypt', 'decrypt']
+      );
+    } finally {
+      bits?.fill(0);
     }
-    const key = await crypto.subtle.importKey('raw', bits as BufferSource, 'AES-GCM', false, [
-      'encrypt',
-      'decrypt',
-    ]);
-    bits.fill(0);
-    return key;
   }
 
   private async encryptBytes(key: CryptoKey, plaintext: Uint8Array) {
@@ -502,21 +705,28 @@ export class PortfolioVaultService implements OnDestroy {
     const ct = await crypto.subtle.encrypt(
       { name: 'AES-GCM', iv: nonce as BufferSource },
       key,
-      plaintext as BufferSource,
+      plaintext as BufferSource
     );
-    return { nonceB64: this.saltB64(nonce), ctB64: this.saltB64(new Uint8Array(ct)) };
+    return {
+      nonceB64: this.saltB64(nonce),
+      ctB64: this.saltB64(new Uint8Array(ct)),
+    };
   }
 
   private async decryptBytes(
     key: CryptoKey,
-    envelope: { nonceB64: string; ctB64: string },
+    envelope: { nonceB64: string; ctB64: string }
   ): Promise<Uint8Array> {
-    const nonce = Uint8Array.from(atob(envelope.nonceB64), (character) => character.charCodeAt(0));
-    const ct = Uint8Array.from(atob(envelope.ctB64), (character) => character.charCodeAt(0));
+    const nonce = Uint8Array.from(atob(envelope.nonceB64), (character) =>
+      character.charCodeAt(0)
+    );
+    const ct = Uint8Array.from(atob(envelope.ctB64), (character) =>
+      character.charCodeAt(0)
+    );
     const plaintext = await crypto.subtle.decrypt(
       { name: 'AES-GCM', iv: nonce as BufferSource },
       key,
-      ct as BufferSource,
+      ct as BufferSource
     );
     return new Uint8Array(plaintext);
   }
@@ -527,10 +737,12 @@ export class PortfolioVaultService implements OnDestroy {
       request.onupgradeneeded = () => {
         const db = request.result;
         if (!db.objectStoreNames.contains('meta')) db.createObjectStore('meta');
-        if (!db.objectStoreNames.contains('records')) db.createObjectStore('records', { keyPath: 'id' });
+        if (!db.objectStoreNames.contains('records'))
+          db.createObjectStore('records', { keyPath: 'id' });
       };
       request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error ?? new Error('IndexedDB refused to open.'));
+      request.onerror = () =>
+        reject(request.error ?? new Error('IndexedDB refused to open.'));
     });
   }
 
@@ -538,7 +750,7 @@ export class PortfolioVaultService implements OnDestroy {
     db: IDBDatabase,
     names: string[],
     mode: IDBTransactionMode,
-    body: (stores: Record<string, IDBObjectStore>) => Promise<T> | T,
+    body: (stores: Record<string, IDBObjectStore>) => Promise<T> | T
   ): Promise<T> {
     return new Promise<T>((resolve, reject) => {
       const tx = db.transaction(names, mode);
@@ -546,34 +758,54 @@ export class PortfolioVaultService implements OnDestroy {
       for (const name of names) stores[name] = tx.objectStore(name);
       let result: T;
       let errored = false;
-      void Promise.resolve(body(stores))
+      let bodyResult: Promise<T> | T;
+      try {
+        bodyResult = body(stores);
+      } catch (error) {
+        errored = true;
+        try {
+          tx.abort();
+        } catch {
+          // The transaction already failed; keep the original write error.
+        }
+        reject(error);
+        return;
+      }
+      void Promise.resolve(bodyResult)
         .then((value) => {
           result = value;
         })
         .catch((error) => {
           errored = true;
+          try {
+            tx.abort();
+          } catch {
+            // The transaction already failed; keep the original body error.
+          }
           reject(error);
-          tx.abort();
         });
       tx.oncomplete = () => {
         if (!errored) resolve(result as T);
       };
-      tx.onerror = () => reject(tx.error ?? new Error('IndexedDB transaction failed.'));
-      tx.onabort = () => reject(tx.error ?? new Error('IndexedDB transaction aborted.'));
+      tx.onerror = () =>
+        reject(tx.error ?? new Error('IndexedDB transaction failed.'));
+      tx.onabort = () =>
+        reject(tx.error ?? new Error('IndexedDB transaction aborted.'));
     });
   }
 
   private requestAsPromise<T>(request: IDBRequest<T>): Promise<T> {
     return new Promise<T>((resolve, reject) => {
       request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error ?? new Error('IndexedDB request failed.'));
+      request.onerror = () =>
+        reject(request.error ?? new Error('IndexedDB request failed.'));
     });
   }
 
   private async readMeta(): Promise<VaultMeta | null> {
     const db = await this.open();
     const meta = (await this.transaction(db, ['meta'], 'readonly', (stores) =>
-      this.requestAsPromise(stores['meta'].get('vault')),
+      this.requestAsPromise(stores['meta'].get('vault'))
     )) as VaultMeta | undefined;
     return meta ?? null;
   }
@@ -595,12 +827,75 @@ export class PortfolioVaultService implements OnDestroy {
   private async readAllRecords(): Promise<VaultRecord[]> {
     const db = await this.open();
     return (await this.transaction(db, ['records'], 'readonly', (stores) =>
-      this.requestAsPromise(stores['records'].getAll()),
+      this.requestAsPromise(stores['records'].getAll())
     )) as VaultRecord[];
   }
 }
 
 async function sha256Hex(value: string): Promise<string> {
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
-  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
+  const bytes = new TextEncoder().encode(value);
+  try {
+    const digest = await crypto.subtle.digest('SHA-256', bytes);
+    return [...new Uint8Array(digest)]
+      .map((byte) => byte.toString(16).padStart(2, '0'))
+      .join('');
+  } finally {
+    bytes.fill(0);
+  }
+}
+
+function boundedKdfInteger(
+  value: unknown,
+  minimum: number,
+  maximum: number
+): number | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  if (
+    !Number.isSafeInteger(value) ||
+    (value as number) < minimum ||
+    (value as number) > maximum
+  ) {
+    throw new Error('That backup has unsupported key derivation parameters.');
+  }
+  return value as number;
+}
+
+type EncryptedBackupRecord = EncryptedBackup['records'][number];
+
+function isEncryptedBackupRecord(
+  value: unknown
+): value is EncryptedBackupRecord {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+  const record = value as Record<string, unknown>;
+  return (
+    typeof record['id'] === 'string' &&
+    typeof record['type'] === 'string' &&
+    typeof record['nonceB64'] === 'string' &&
+    typeof record['ctB64'] === 'string'
+  );
+}
+
+async function backupPayloadChecksum(
+  records: readonly EncryptedBackupRecord[],
+  formatVersion: 1 | 2
+): Promise<string> {
+  if (formatVersion === 1) {
+    // Version 1 covered ciphertext only. Keep reading it so existing backups
+    // remain importable while every new export uses the stronger version 2.
+    return sha256Hex(records.map((record) => record.ctB64).join('|'));
+  }
+  return sha256Hex(
+    JSON.stringify(
+      records.map((record) => [
+        record.id,
+        record.type,
+        record.nonceB64,
+        record.ctB64,
+      ])
+    )
+  );
 }

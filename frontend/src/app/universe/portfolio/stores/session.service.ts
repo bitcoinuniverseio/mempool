@@ -1,14 +1,13 @@
 /**
- * The portfolio session: vault state, privacy mode, and global display
- * preferences exposed as signals. Privacy mode is one global control:
- * when active, absolute values never render into the DOM at all -
- * components bind masked placeholders instead of blurring real numbers.
+ * The portfolio session: vault state, a binary value mask, and global
+ * display preferences exposed as signals. When the mask is active,
+ * components bind placeholders instead of absolute values.
  */
 
 import { Injectable, computed, signal } from '@angular/core';
 import { PortfoliosStore } from './portfolios.store';
 
-export type PrivacyLevel = 'open' | 'values-hidden' | 'presentation';
+export type PrivacyLevel = 'open' | 'values-hidden';
 
 @Injectable({ providedIn: 'root' })
 export class PortfolioSessionService {
@@ -19,20 +18,12 @@ export class PortfolioSessionService {
   readonly privacyLevel = this._privacyLevel.asReadonly();
   readonly activeSection = this._activeSection.asReadonly();
   readonly refreshing = this._refreshing.asReadonly();
-  readonly valuesHidden = computed(
-    () => this._privacyLevel() !== 'open',
-  );
-  readonly identifiersHidden = computed(
-    () => this._privacyLevel() === 'presentation' || this._privacyLevel() === 'values-hidden' && this.currentHideIdentifiers(),
-  );
-
-  private currentHideIdentifiers = signal(false);
-
+  readonly valuesHidden = computed(() => this._privacyLevel() !== 'open');
   constructor(private readonly store: PortfoliosStore) {}
 
   cyclePrivacy(): void {
     this._privacyLevel.update((current) =>
-      current === 'open' ? 'values-hidden' : current === 'values-hidden' ? 'presentation' : 'open',
+      current === 'open' ? 'values-hidden' : 'open'
     );
   }
 
@@ -51,11 +42,6 @@ export class PortfolioSessionService {
 
   setRefreshing(refreshing: boolean): void {
     this._refreshing.set(refreshing);
-  }
-
-  /** Wires portfolio-level privacy defaults when a portfolio opens. */
-  adoptPortfolioPrivacy(hideIdentifiers: boolean): void {
-    this.currentHideIdentifiers.set(hideIdentifiers);
   }
 
   lockNow(): void {

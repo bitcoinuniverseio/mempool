@@ -20,6 +20,7 @@ interface DataStudioViewModel {
   readonly selectedDataset?: DatasetManifest;
   readonly queryResult?: QueryResult;
   readonly executing?: boolean;
+  readonly queryError?: boolean;
 }
 
 @Component({
@@ -34,25 +35,30 @@ export class DataStudioComponent implements OnInit {
   selectedDatasetId = 'bitcoin.blocks';
   queryLimit = 20;
 
-  private readonly state = new BehaviorSubject<DataStudioViewModel>({ kind: 'loading' });
+  private readonly state = new BehaviorSubject<DataStudioViewModel>({
+    kind: 'loading',
+  });
   readonly vm$: Observable<DataStudioViewModel> = this.state.asObservable();
 
   constructor(
     private api: UniverseApiService,
-    private seo: SeoService,
+    private seo: SeoService
   ) {
     this.seo.setTitle('Universe Data Studio & Developer Platform');
   }
 
   ngOnInit(): void {
-    this.api.getDataCatalog$()
+    this.api
+      .getDataCatalog$()
       .pipe(catchError(() => of(null)))
       .subscribe((catalog) => {
         if (!catalog) {
           this.state.next({ kind: 'error' });
           return;
         }
-        const selected = catalog.datasets.find((d) => d.id === this.selectedDatasetId) || catalog.datasets[0];
+        const selected =
+          catalog.datasets.find((d) => d.id === this.selectedDatasetId) ||
+          catalog.datasets[0];
         this.state.next({
           kind: 'ready',
           datasets: catalog.datasets,
@@ -76,20 +82,37 @@ export class DataStudioComponent implements OnInit {
 
   runQuery(): void {
     const current = this.state.getValue();
-    this.state.next({ ...current, executing: true });
-
-    this.api.executeDataQuery$({
-      datasetId: this.selectedDatasetId,
-      limit: this.queryLimit,
-    }).pipe(
-      catchError(() => of(null))
-    ).subscribe((queryResult) => {
-      const stateNow = this.state.getValue();
-      this.state.next({
-        ...stateNow,
-        executing: false,
-        queryResult: queryResult || undefined,
-      });
+    this.state.next({
+      ...current,
+      executing: true,
+      queryResult: undefined,
+      queryError: false,
     });
+
+    this.api
+      .executeDataQuery$({
+        datasetId: this.selectedDatasetId,
+        limit: this.queryLimit,
+      })
+      .subscribe({
+        next: (queryResult) => {
+          const stateNow = this.state.getValue();
+          this.state.next({
+            ...stateNow,
+            executing: false,
+            queryResult,
+            queryError: false,
+          });
+        },
+        error: () => {
+          const stateNow = this.state.getValue();
+          this.state.next({
+            ...stateNow,
+            executing: false,
+            queryResult: undefined,
+            queryError: true,
+          });
+        },
+      });
   }
 }

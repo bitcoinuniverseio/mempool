@@ -5,13 +5,8 @@ import { RouterModule } from '@angular/router';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { SeoService } from '@app/services/seo.service';
 
-interface RgbValidationResult {
-  readonly valid: boolean;
-  readonly schemaId: string;
-  readonly contractId: string;
-  readonly genesisTxid: string;
-  readonly transitionsCount: number;
-  readonly sealsCount: number;
+export interface RgbValidationResult {
+  readonly kind: 'invalid-input' | 'unavailable';
   readonly statusMessage: string;
 }
 
@@ -25,7 +20,6 @@ interface RgbValidationResult {
 })
 export class RgbStudioComponent {
   consignmentHex = '';
-  validating = false;
 
   private readonly resultSubject = new BehaviorSubject<RgbValidationResult | null>(null);
   readonly result$: Observable<RgbValidationResult | null> = this.resultSubject.asObservable();
@@ -35,20 +29,21 @@ export class RgbStudioComponent {
   }
 
   validate(): void {
-    if (!this.consignmentHex.trim()) return;
-    this.validating = true;
-
-    setTimeout(() => {
-      this.validating = false;
+    const input = this.consignmentHex.trim();
+    if (!input) {
       this.resultSubject.next({
-        valid: true,
-        schemaId: 'rgb:schema:RGB20-Subschema-v1',
-        contractId: 'rgb:contract:8492019482019482019482019482019482019482',
-        genesisTxid: 'e5765796c3d9efeb8152579df6461a6b18973b404d0938f36c535492d5272a0f',
-        transitionsCount: 8,
-        sealsCount: 12,
-        statusMessage: 'Client-side validation succeeded. All single-use seals and transition DAG hashes match Bitcoin commitments.',
+        kind: 'invalid-input',
+        statusMessage: 'Enter an RGB consignment before checking it.',
       });
-    }, 450);
+      return;
+    }
+    const isHex = input.length % 2 === 0 && /^[0-9a-f]+$/i.test(input);
+    const isArmored = /^rgb:[0-9a-z:_-]+$/i.test(input);
+    this.resultSubject.next({
+      kind: isHex || isArmored ? 'unavailable' : 'invalid-input',
+      statusMessage: isHex || isArmored
+        ? 'RGB protocol verification is unavailable in this build. No seals, transitions, or Bitcoin commitments were validated.'
+        : 'The input is not hexadecimal or a recognizable armored RGB string.',
+    });
   }
 }

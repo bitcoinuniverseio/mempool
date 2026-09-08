@@ -14,20 +14,13 @@ reusable workflow `.github-private/.github/workflows/route.yml` with
 
 **Verdict: superseded, with one part deliberately rejected.**
 
-- The label changes themselves are already on `develop`: `ci.yml`,
-  `backend-integration.yml`, `docker.yml`, `e2e_parameterized.yml` and the
-  other upstream workflows now target the RunsOn Spot expression
-  (`runs-on=<run_id>-<job>/runner=universe-hosted/...`), and
-  `universe-ci.yml` pins its jobs to the self-hosted fleet with
-  `mobile-engines` on RunsOn. Compare the branch diff to the same files on
-  `develop`: every `runs-on` value the branch introduces is present.
-- The router mechanism is not ported, on purpose. A public repository
-  cannot call a private reusable workflow: the run dies at
-  `startup_failure` before any job exists, which is exactly what took
-  `backend-apis` down on 2026-08-30. It also violates the shared-actions
-  policy (no private references from public repositories, no
-  `secrets: inherit`). The routing intent lives on as static per-job
-  targets instead of a single point of failure.
+- The old provider targets have since been replaced by direct, explicit GCP
+  class labels. Every elastic job now stays on the Universe-owned ephemeral
+  GCP platform.
+- The local router adapter had no repository or organization consumers and
+  still advertised the retired provider path. It was removed on 2026-09-03.
+  Static per-job GCP labels keep routing visible and avoid a private reusable
+  workflow dependency from this public repository.
 
 ## add-utxo-endpoint (`b92414245`, 1 ahead / 952 behind)
 

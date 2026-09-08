@@ -58,6 +58,13 @@ build step can leave the previous output in place. Both have already produced a
 measurement that described a build nobody was running. A runner starts from a
 clean checkout, so the artifact matches the commit it names.
 
+The archive carries the compiled backend, built frontend, gateway, release
+manifest, and the exact pruned backend dependency tree produced by that job.
+The deployment host verifies the archive checksum and installs those bytes. It
+does not rebuild production dependencies during promotion. The archive and
+release directory use the full 40-character commit, and install refuses a
+manifest that names anything else.
+
 ### `RELEASE-MANIFEST.json`
 
 Every artifact carries one at its root, generated from the commit being built
@@ -69,8 +76,9 @@ It deliberately does not pin the protocol overlay's commit. The overlay is
 built from `bitcoinuniverseio/backend-apis` on its own release train, and a
 manifest that pinned it would either be wrong every time that train moved or
 would couple two releases that are not coupled. What the manifest requires of
-the overlay is the contract version and an identity it can state; the commit it
-reports is recorded rather than required.
+the overlay is the contract version and an identity it can state. The cutover
+command separately takes the required live overlay SHA and checks that exact
+identity before and after the Explorer switch.
 
 ```bash
 node scripts/universe/release-manifest.mjs verify \
@@ -101,11 +109,19 @@ guaranteed for every deployed version.
    runs, listed in `CONTRIBUTING.md`. CI answers from fixtures, so passing it is
    necessary and not sufficient.
 2. **Promote `develop` to `main`** through a pull request.
-3. **Build the artifact** by dispatching the release artifact workflow against
-   the commit being released.
+3. **Build the artifacts** by dispatching the Explorer release artifact
+   workflow against the commit being released. When the release adds an
+   overlay route, first dispatch the `backend-apis` overlay artifact workflow
+   against its release commit.
 4. **Install, preflight, cut over** with `scripts/universe/release.sh`, which is
    installed on the deployment host. It installs the release beside the running
-   one and switches only after every gate passes.
+   one and switches only after every gate passes. Every cutover must set
+   `UNIVERSE_EXPLORER_REQUIRED_OVERLAY_SHA` to the full live overlay commit. For
+   the first paired change, establish the gateway-only dynamic-route baseline
+   described in `DEPLOYMENT.md`. Then install and preflight the overlay, cut it
+   over with `--defer-gateway`, cut over Explorer, and finish with the overlay
+   script's strict `verify` command. The release tools share one deployment lock
+   and accept only full 40-character release SHAs.
 5. **Tag and publish.** Tag the released commit `universe-YYYY.MM.DD`, adding
    `.N` if it is not the first release that day, and publish a GitHub release
    from that tag.
@@ -113,6 +129,16 @@ guaranteed for every deployed version.
    where a release's measurements are written down.
 
 `docs/operations/DEPLOYMENT.md` has the full procedure with the exact commands.
+
+### Workflow roles
+
+`.github/workflows/universe-ci.yml` is the automatic code and release gate for
+`develop` and `main`. The legacy `ci.yml` and `backend-integration.yml` checks
+are manual upstream compatibility diagnostics, so they do not repeat that
+automatic work. `e2e_parameterized.yml` is a manual browser diagnostic for a
+specific ref and host pair. `docker.yml` tests and publishes tagged builds, or
+pull request builds explicitly selected with the `docker-push` label, on the
+release runner class.
 
 ## What the gates check
 
@@ -124,7 +150,7 @@ machine, and nothing in a fixture suite can see that.
 
 | Gate | What it refuses |
 | --- | --- |
-| release present | an artifact missing the backend build, the frontend build, the gateway, the bundled mining pool metadata, or its own manifest |
+| release present | an artifact missing the backend build, production dependencies, frontend build, gateway, gateway socket pair, bundled mining pool metadata, or its own manifest |
 | manifest matches | a manifest and a release directory that name different commits |
 | configuration coherent | statistics on with the database off, statistics on with the mempool backend off, block indexing set with the database off. Each of those advertises a feature nothing would serve |
 | database | a configured database that does not accept a connection |
@@ -132,13 +158,22 @@ machine, and nothing in a fixture suite can see that.
 | sources parse | a protocol source registry that does not parse. Parsing is all or nothing, so one invalid descriptor disables the whole registry rather than serving partially trusted data |
 | readable protocols have authorities | a protocol the build presents as readable with no authority behind it |
 | private listeners | a service listening on a public interface that has not been declared |
+| required overlay | a paired overlay whose direct v2 route, contract, or full release SHA differs before cutover, or whose route is not exposed through the new gateway after cutover |
 
 After the switch, the cutover verifies a live address lookup, a live socket,
 and that the three components report the identities the manifest expects. A
 failure at that point rolls back rather than standing.
 
-Rollback is a single flip back to the previous release directory, because a
-release is installed beside the running one rather than over it.
+Paired rollback is deliberately not a single flip. Roll back Explorer first.
+It keeps the current Portfolio v2 state while the exact rollback frontend,
+backend, and gateway become healthy, then hides v2. A failed target restores
+the exact prior Explorer tree and route state. Next, roll back the overlay with
+`--gateway-first`; that command refuses the reverse order. Both commands gate
+the exact rollback tree and live release identity before completing. Releases
+older than the socket and dynamic route baseline are not safe rollback targets
+and are rejected.
+For the first paired release, Explorer may be rolled back while the additive
+overlay stays live but hidden until a passive overlay rollback floor exists.
 
 ## Between releases
 

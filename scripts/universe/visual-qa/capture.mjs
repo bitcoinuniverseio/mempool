@@ -29,138 +29,61 @@
  *   node capture.mjs --out=<dir>          where to write
  */
 
-import { mkdirSync, writeFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import AxeBuilder from '@axe-core/playwright';
-import * as playwright from 'playwright';
-import { addressFixtures, detailFixtures, fixtures, sampleIds, stateOverrides } from './fixtures.mjs';
-import { chainFixtures, chainSampleIds, chainStateOverrides, chainStateScope } from './chain-fixtures.mjs';
-import { assetFixtures, assetSampleIds, savedStorageSeed } from './asset-fixtures.mjs';
-import { contrastProbe } from './contrast-probe.mjs';
-import { progressProbe } from './progress-probe.mjs';
+import { mkdirSync, writeFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import AxeBuilder from "@axe-core/playwright";
+import * as playwright from "playwright";
+import {
+  addressFixtures,
+  detailFixtures,
+  fixtures,
+  sampleIds,
+  stateOverrides,
+} from "./fixtures.mjs";
+import {
+  chainFixtures,
+  chainStateOverrides,
+  chainStateScope,
+} from "./chain-fixtures.mjs";
+import { assetFixtures, savedStorageSeed } from "./asset-fixtures.mjs";
+import { captureFailureMessages } from "./browser-gate-results.mjs";
+import { contrastProbe } from "./contrast-probe.mjs";
+import { matchFixtureRequest } from "./fixture-match.mjs";
+import { progressProbe } from "./progress-probe.mjs";
+import {
+  seedPortfolioVault,
+  unlockPortfolioRoute,
+} from "./portfolio-fixture.mjs";
+import { routesFor } from "./route-scenarios.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
 const args = Object.fromEntries(
   process.argv.slice(2).map((a) => {
-    const [k, v] = a.replace(/^--/, '').split('=');
+    const [k, v] = a.replace(/^--/, "").split("=");
     return [k, v ?? true];
   }),
 );
 
-const BASE = args.base || 'http://localhost:4200';
-const OUT = resolve(args.out || join(HERE, 'artifacts'));
-const BROWSER = args.browser || 'chromium';
+const BASE = args.base || "http://localhost:4200";
+const OUT = resolve(args.out || join(HERE, "artifacts"));
+const BROWSER = args.browser || "chromium";
 
-/**
- * Routes under review. `wide` marks pages that legitimately scroll a table.
- *
- * Exported so the mobile gate walks the same list against the same fixtures.
- * Two gates with two route lists is two gates that disagree about what the
- * product is, and the one nobody edits is the one that goes stale.
- */
-export const ROUTES = [
-  { id: 'home', path: '/', name: 'Homepage' },
-  { id: 'blocks', path: '/blocks', name: 'Blocks list' },
-  { id: 'block', path: `/block/${sampleIds.BLOCK_HASH}`, name: 'Block detail' },
-  { id: 'mempool-block', path: '/mempool-block/0', name: 'Projected block' },
-  { id: 'tx', path: `/tx/${sampleIds.TXID_A}`, name: 'Transaction detail' },
-  { id: 'address', path: `/address/${sampleIds.ADDRESS}`, name: 'Address' },
-  { id: 'protocols', path: '/protocols', name: 'Protocol directory' },
-  { id: 'pulse', path: '/pulse', name: 'Universe Pulse' },
-  { id: 'rbf', path: '/rbf', name: 'Replacements' },
-  { id: 'graphs', path: '/graphs/mempool', name: 'Graphs' },
-  { id: 'mining', path: '/mining', name: 'Mining dashboard' },
-  { id: 'docs', path: '/docs/api', name: 'API docs' },
-  { id: 'source', path: '/source', name: 'Source and licenses' },
-
-  // The chain-domain routes. They shipped with no coverage here at all, which
-  // is how eleven routes reached production without one screenshot, contrast
-  // probe or unfinished-page check ever looking at them.
-  { id: 'dogecoin', path: '/dogecoin', name: 'Dogecoin dashboard' },
-  { id: 'dogecoin-mining', path: '/dogecoin/mining', name: 'Dogecoin mining' },
-  { id: 'dogecoin-graphs', path: '/dogecoin/graphs/mempool', name: 'Dogecoin charts' },
-  { id: 'dogecoin-graphs-pools', path: '/dogecoin/graphs/mining/pools', name: 'Dogecoin pool ranking' },
-  { id: 'dogecoin-docs', path: '/dogecoin/docs', name: 'Dogecoin docs' },
-  { id: 'dogecoin-mempool', path: '/dogecoin/mempool', name: 'Dogecoin pending' },
-  { id: 'dogecoin-tx', path: `/dogecoin/tx/${chainSampleIds.DOGE_TXID}`, name: 'Dogecoin transaction' },
-  { id: 'dogecoin-block', path: `/dogecoin/block/${chainSampleIds.DOGE_BLOCK}`, name: 'Dogecoin block' },
-  { id: 'dogecoin-address', path: `/dogecoin/address/${chainSampleIds.DOGE_ADDRESS}`, name: 'Dogecoin address' },
-  { id: 'dogecoin-protocols', path: '/dogecoin/protocols', name: 'Dogecoin protocols' },
-  { id: 'dogecoin-drc20', path: '/dogecoin/protocols/drc20', name: 'DRC-20 assets' },
-  // Dunes carry their own divisibility, so the pages exist to shift by it.
-  { id: 'dogecoin-dunes', path: '/dogecoin/protocols/dunes', name: 'Dune catalog' },
-  { id: 'dogecoin-dune', path: `/dogecoin/protocols/dunes/${chainSampleIds.DOGE_DUNE_ID}`, name: 'Dune' },
-  { id: 'zcash', path: '/zcash', name: 'Zcash dashboard' },
-  { id: 'zcash-mining', path: '/zcash/mining', name: 'Zcash mining' },
-  { id: 'zcash-graphs', path: '/zcash/graphs/mempool', name: 'Zcash charts' },
-  { id: 'zcash-graphs-hashrate', path: '/zcash/graphs/mining/hashrate-difficulty', name: 'Zcash hashrate chart' },
-  { id: 'zcash-docs', path: '/zcash/docs', name: 'Zcash docs' },
-  { id: 'zcash-mempool', path: '/zcash/mempool', name: 'Zcash pending' },
-  { id: 'zcash-tx', path: `/zcash/tx/${chainSampleIds.ZEC_TXID}`, name: 'Zcash transaction' },
-  // Zcash's block response is not Dogecoin's, and nothing here had ever asked
-  // for one. It reached production as a generic field table.
-  { id: 'zcash-block', path: `/zcash/block/${chainSampleIds.ZEC_BLOCK}`, name: 'Zcash block' },
-  { id: 'zcash-address', path: `/zcash/address/${chainSampleIds.ZEC_ADDRESS}`, name: 'Zcash address' },
-  { id: 'zcash-protocols', path: '/zcash/protocols', name: 'Zcash protocols' },
-  // The ZRC-20 pages carry a ledger reported under two rulesets that are
-  // allowed to disagree. They reached production as a JSON string in a cell.
-  { id: 'zcash-zrc20', path: '/zcash/protocols/zrc20', name: 'ZRC-20 tokens' },
-  { id: 'zcash-zrc20-token', path: `/zcash/protocols/zrc20/${chainSampleIds.ZEC_ZRC20}`, name: 'ZRC-20 token' },
-
-  // Universe-authored routes that had no coverage either. The saved page is
-  // seeded through localStorage below, because its state was never a request.
-  { id: 'outpoint', path: `/outpoint/${assetSampleIds.OUTPOINT_TXID}/1`, name: 'Output' },
-  { id: 'inscription', path: `/inscription/${assetSampleIds.INSCRIPTION_ID}`, name: 'Inscription' },
-  { id: 'rune', path: `/rune/${assetSampleIds.RUNE_NAME}`, name: 'Rune' },
-  { id: 'sat', path: `/sat/${assetSampleIds.SAT_NUMBER}`, name: 'Sat' },
-  { id: 'saved', path: '/saved', name: 'Saved in this browser' },
-
-  // The ANIMA evidence explorer. Its pages read their own authority, so the
-  // capture serves them the same unavailable document every other gate sees:
-  // the pages must render that state, not spin or go blank.
-  { id: 'anima-protocol', path: '/protocols/anima', name: 'ANIMA protocol page' },
-  { id: 'anima-transitions', path: '/anima/transitions', name: 'ANIMA transitions' },
-  { id: 'anima-items', path: '/anima/items', name: 'ANIMA organisms' },
-
-  // The chain switcher, open. Nothing here had ever opened a menu, so the one
-  // surface that decides which chain a visitor is looking at was measured only
-  // while closed. It was collapsed: the header's own `.dropdown-item` rule,
-  // written for the network rows, outranked the switcher's two-column grid and
-  // ran each chain's name, state and detail into a single line.
-  {
-    id: 'chain-menu',
-    path: '/',
-    name: 'Chain switcher, open',
-    open: '.chain-toggle',
-    // An open menu deliberately covers what is under it. axe reads a covered
-    // control as a target too small to hit, and at 320 and 375 it reads the
-    // search field behind this menu that way. That is a real measurement of a
-    // state that is not the one the rule is about: the field is not a target
-    // while a dismissible menu is over it, and the same field at the same
-    // widths passes on the `home` route, which is this path with the menu
-    // closed and is measured in full in every run.
-    //
-    // So obscuring findings on this route are reported on their own line
-    // rather than counted, and every other rule still fails the run. The line
-    // prints what was obscured, because a rule that is quietly not counted is
-    // a rule nobody sees again.
-    overlayObscures: true,
-  },
-];
+/** Routes included in visual QA by the shared production scenario registry. */
+export const ROUTES = routesFor("visual");
 
 const VIEWPORTS = [
-  { id: '320', width: 320, height: 900 },
-  { id: '375', width: 375, height: 900 },
-  { id: '768', width: 768, height: 1024 },
-  { id: '1024', width: 1024, height: 900 },
-  { id: '1280', width: 1280, height: 900 },
-  { id: '1440', width: 1440, height: 900 },
-  { id: '1920', width: 1920, height: 1080 },
+  { id: "320", width: 320, height: 900 },
+  { id: "375", width: 375, height: 900 },
+  { id: "768", width: 768, height: 1024 },
+  { id: "1024", width: 1024, height: 900 },
+  { id: "1280", width: 1280, height: 900 },
+  { id: "1440", width: 1440, height: 900 },
+  { id: "1920", width: 1920, height: 1080 },
 ];
 
-const THEMES = ['default', 'dark', 'contrast'];
+const THEMES = ["default", "dark", "contrast"];
 
 /**
  * How long a page may take to stop showing loaders before the run calls it
@@ -179,65 +102,67 @@ const FAILURE_SETTLE_DEADLINE_MS = 4_000;
 
 const ALL_OVERRIDES = { ...stateOverrides, ...chainStateOverrides };
 
-const STATES = ['populated', ...Object.keys(ALL_OVERRIDES)];
+const STATES = ["populated", ...Object.keys(ALL_OVERRIDES)];
 
 /** True when a state is worth measuring on a route. Unscoped states run everywhere. */
 function stateApplies(state, routeId) {
+  const route = ROUTES.find((candidate) => candidate.id === routeId);
+  if (route?.requiresPortfolioVault === true) return state === "populated";
   const scope = chainStateScope[state];
-  return !scope || scope.some((prefix) => routeId === prefix || routeId.startsWith(`${prefix}-`));
+  return (
+    !scope ||
+    scope.some(
+      (prefix) => routeId === prefix || routeId.startsWith(`${prefix}-`),
+    )
+  );
 }
 
-function pick(list, key, idKey = 'id') {
+function pick(list, key, idKey = "id") {
   if (!args[key]) return list;
-  const wanted = String(args[key]).split(',');
-  return list.filter((entry) => wanted.includes(typeof entry === 'string' ? entry : entry[idKey]));
+  const wanted = String(args[key]).split(",");
+  return list.filter((entry) =>
+    wanted.includes(typeof entry === "string" ? entry : entry[idKey]),
+  );
 }
 
 /** Answer every API call from fixtures, applying the state's overrides. */
 export async function installFixtures(context, state) {
   const overrides = ALL_OVERRIDES[state] || {};
-  const table = { ...fixtures, ...detailFixtures, ...addressFixtures, ...chainFixtures, ...assetFixtures };
+  const table = {
+    ...fixtures,
+    ...detailFixtures,
+    ...addressFixtures,
+    ...chainFixtures,
+    ...assetFixtures,
+  };
+  const unmatched = new Set();
+  const expectedFailures = new Set();
 
-  await context.route('**/api/**', async (route) => {
+  await context.route("**/api/**", async (route) => {
     const url = new URL(route.request().url());
     const path = url.pathname;
-
-    if (overrides['**']?.hang) return; // never fulfil: hold the loading state
-
-    const override =
-      overrides[path] ??
-      Object.entries(overrides).find(([k]) => k !== '**' && path.startsWith(k))?.[1];
-
-    if (override) {
-      if (override.hang) return;
-      if (override.status) {
-        return route.fulfill({ status: override.status, contentType: 'text/plain', body: 'fixture error' });
-      }
-      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(override.body) });
-    }
-
-    const exact = table[path];
-    if (exact !== undefined) {
-      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(exact) });
-    }
-
-    const prefix = Object.keys(table).find((k) => path.startsWith(k));
-    if (prefix) {
-      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(table[prefix]) });
-    }
-
-    // Anything not pinned returns an empty list rather than reaching the
-    // network, so a run is never at the mercy of a live backend.
-    if (process.env.LOG_UNMATCHED) console.log('unmatched: ' + path);
-    return route.fulfill({ status: 200, contentType: 'application/json', body: '[]' });
+    const match = matchFixtureRequest({
+      path,
+      method: route.request().method(),
+      table,
+      overrides,
+    });
+    if (match.kind === "hang") return;
+    if (match.kind === "missing") unmatched.add(match.request);
+    if (match.expectedFailure) expectedFailures.add(path);
+    return route.fulfill({
+      status: match.status,
+      contentType: match.contentType,
+      body: match.body,
+    });
   });
 
   // Most live surfaces on this product are fed by the socket, not by REST, so
   // a screenshot with the socket cut is a screenshot of skeletons. Answer it
   // from the same fixtures instead: the client sends {action:'want'}, and one
   // push carries the whole initial state.
-  const down = state === 'chain-down' || overrides['**']?.hang;
-  await context.routeWebSocket('**/api/v1/ws', (ws) => {
+  const down = state === "chain-down" || overrides["**"]?.hang;
+  await context.routeWebSocket("**/api/v1/ws", (ws) => {
     if (down) return; // connected but silent: the reconnecting and loading states
     const push = () => ws.send(JSON.stringify(socketState(state)));
     ws.onMessage((raw) => {
@@ -246,16 +171,22 @@ export async function installFixtures(context, state) {
       // tracking. Without this the product's signature view is a grey square in
       // every screenshot, which is the one thing a design review cannot skip.
       let message;
-      try { message = JSON.parse(String(raw)); } catch { return; }
-      const index = message?.['track-mempool-block'];
-      if (typeof index === 'number' && index >= 0) {
-        ws.send(JSON.stringify({
-          'projected-block-transactions': {
-            index,
-            sequence: 1,
-            blockTransactions: projectedBlockTransactions(),
-          },
-        }));
+      try {
+        message = JSON.parse(String(raw));
+      } catch {
+        return;
+      }
+      const index = message?.["track-mempool-block"];
+      if (typeof index === "number" && index >= 0) {
+        ws.send(
+          JSON.stringify({
+            "projected-block-transactions": {
+              index,
+              sequence: 1,
+              blockTransactions: projectedBlockTransactions(),
+            },
+          }),
+        );
       }
     });
     push();
@@ -268,34 +199,62 @@ export async function installFixtures(context, state) {
   // The client subscribes to three channels at once and expects one envelope
   // per channel. Sequence numbers stay fixed so a rerun produces the same
   // screenshot; the client only uses them to resume after a drop.
-  await context.routeWebSocket('**/api/v1/universe/ws', (ws) => {
+  await context.routeWebSocket("**/api/v1/universe/ws", (ws) => {
     if (down) return; // connected but silent, which is the reconnecting state
     ws.onMessage((raw) => {
       let message;
-      try { message = JSON.parse(String(raw)); } catch { return; }
-      if (message?.type !== 'subscribe' || !Array.isArray(message.subscriptions)) {
+      try {
+        message = JSON.parse(String(raw));
+      } catch {
+        return;
+      }
+      if (
+        message?.type !== "subscribe" ||
+        !Array.isArray(message.subscriptions)
+      ) {
         return;
       }
       for (const subscription of message.subscriptions) {
         const chain = subscription?.chain;
         const channel = subscription?.channel;
         if (!chain || !channel) continue;
-        ws.send(JSON.stringify({
-          schemaVersion: 'universe-websocket-v1',
-          chain,
-          network: 'mainnet',
-          channel,
-          snapshotId: 'snap-4812',
-          sequenceAtomic: '148201',
-          observedAt: '2026-08-29T05:03:00.000Z',
-          tip: chainFixtures[`/api/v1/${chain}/status`]?.tip ?? null,
-          reorg: null,
-          completeness: 'complete',
-          data: {},
-        }));
+        ws.send(
+          JSON.stringify({
+            schemaVersion: "universe-websocket-v1",
+            chain,
+            network: "mainnet",
+            channel,
+            snapshotId: "snap-4812",
+            sequenceAtomic: "148201",
+            observedAt: "2026-08-29T05:03:00.000Z",
+            tip: chainFixtures[`/api/v1/${chain}/status`]?.tip ?? null,
+            reorg: null,
+            completeness: "complete",
+            data: {},
+          }),
+        );
       }
     });
   });
+
+  return {
+    unmatched,
+    expectedFailures,
+    assertComplete(scope = "fixture run") {
+      if (!unmatched.size) return;
+      throw new Error(
+        `${scope} made unmatched fixture requests:\n  ${[...unmatched].sort().join("\n  ")}`,
+      );
+    },
+    isExpectedFailure(url) {
+      if (!url) return false;
+      try {
+        return expectedFailures.has(new URL(url).pathname);
+      } catch {
+        return false;
+      }
+    },
+  };
 }
 
 /**
@@ -312,7 +271,7 @@ function projectedBlockTransactions() {
     const vsize = big ? 2200 + (i % 11) * 400 : 140 + (i % 17) * 24;
     const rate = 2 + ((i * 7) % 46) + (big ? 12 : 0);
     txs.push([
-      (i.toString(16).padStart(8, '0')).repeat(8).slice(0, 64),
+      i.toString(16).padStart(8, "0").repeat(8).slice(0, 64),
       Math.round(rate * vsize),
       vsize,
       50_000 + (i % 53) * 90_000,
@@ -331,18 +290,39 @@ function socketState(state) {
   // number on the page against this, so it has to be exercised: without it the
   // synchronisation notice never renders and never gets reviewed.
   const chainSync =
-    state === 'catching-up'
-      ? { blocks: 819_435, headers: 887_412, initialBlockDownload: true, verificationProgress: 0.663316, checkedAt: '2026-08-27T00:00:00.000Z' }
-      : { blocks: 887_412, headers: 887_412, initialBlockDownload: false, verificationProgress: 1, checkedAt: '2026-08-27T00:00:00.000Z' };
+    state === "catching-up"
+      ? {
+          blocks: 819_435,
+          headers: 887_412,
+          initialBlockDownload: true,
+          verificationProgress: 0.663316,
+          checkedAt: "2026-08-27T00:00:00.000Z",
+        }
+      : {
+          blocks: 887_412,
+          headers: 887_412,
+          initialBlockDownload: false,
+          verificationProgress: 1,
+          checkedAt: "2026-08-27T00:00:00.000Z",
+        };
   return {
-    mempoolInfo: { loaded: true, size: 31_204, bytes: 118_442_881, usage: 118_442_881, maxmempool: 300_000_000, mempoolminfee: 0.00001, minrelaytxfee: 0.00001, fullrbf: true },
+    mempoolInfo: {
+      loaded: true,
+      size: 31_204,
+      bytes: 118_442_881,
+      usage: 118_442_881,
+      maxmempool: 300_000_000,
+      mempoolminfee: 0.00001,
+      minrelaytxfee: 0.00001,
+      fullrbf: true,
+    },
     vBytesPerSecond: 1_884,
-    fees: fixtures['/api/v1/fees/recommended'],
-    da: fixtures['/api/v1/difficulty-adjustment'],
-    blocks: fixtures['/api/v1/blocks'],
-    'mempool-blocks': fixtures['/api/v1/fees/mempool-blocks'],
-    transactions: fixtures['/api/mempool/recent'],
-    rbfLatestSummary: fixtures['rbf-latest-summary'],
+    fees: fixtures["/api/v1/fees/recommended"],
+    da: fixtures["/api/v1/difficulty-adjustment"],
+    blocks: fixtures["/api/v1/blocks"],
+    "mempool-blocks": fixtures["/api/v1/fees/mempool-blocks"],
+    transactions: fixtures["/api/mempool/recent"],
+    rbfLatestSummary: fixtures["rbf-latest-summary"],
     conversions: { USD: 96_400, EUR: 89_100, time: 1_772_100_000 },
     loadingIndicators: {
       mempool: 100,
@@ -353,9 +333,17 @@ function socketState(state) {
       // transaction-list wait would render its skeletons and no bar at all,
       // and the bar would go on being unreviewed for the same reason the
       // branch itself was.
-      ...(state === 'address-txs-loading' ? { [`address-${sampleIds.ADDRESS}`]: 62 } : {}),
+      ...(state === "address-txs-loading"
+        ? { [`address-${sampleIds.ADDRESS}`]: 62 }
+        : {}),
     },
-    backendInfo: { hostname: 'universe-explorer', version: '3.3.1', gitCommit: 'fixture0', lightning: false, chainSync },
+    backendInfo: {
+      hostname: "universe-explorer",
+      version: "3.3.1",
+      gitCommit: "fixture0",
+      lightning: false,
+      chainSync,
+    },
   };
 }
 
@@ -364,15 +352,21 @@ function bundleIdentity(html) {
   return [...html.matchAll(/(?:runtime|main|polyfills)\.[a-f0-9]{8,}\.js/g)]
     .map((match) => match[0])
     .sort()
-    .join(' ');
+    .join(" ");
 }
 
 async function run() {
-  let bundleAtStart = '';
-  const routes = pick(ROUTES, 'routes');
-  const viewports = pick(VIEWPORTS, 'viewports');
-  const themes = pick(THEMES.map((id) => ({ id })), 'themes').map((t) => t.id);
-  const states = pick(STATES.map((id) => ({ id })), 'states').map((s) => s.id);
+  let bundleAtStart = "";
+  const routes = pick(ROUTES, "routes");
+  const viewports = pick(VIEWPORTS, "viewports");
+  const themes = pick(
+    THEMES.map((id) => ({ id })),
+    "themes",
+  ).map((t) => t.id);
+  const states = pick(
+    STATES.map((id) => ({ id })),
+    "states",
+  ).map((s) => s.id);
 
   // Confirm the base URL is actually serving this application before measuring
   // anything. A run against a blank page, a stale build, or something else that
@@ -381,20 +375,22 @@ async function run() {
   // happened: a port collision put a different product on the address and the
   // matrix cheerfully passed 39 blank screenshots.
   {
-    const probe = await fetch(BASE, { redirect: 'follow' }).catch((e) => {
+    const probe = await fetch(BASE, { redirect: "follow" }).catch((e) => {
       throw new Error(`cannot reach ${BASE}: ${e.message}`);
     });
     if (!probe.ok) throw new Error(`${BASE} answered ${probe.status}`);
     const html = await probe.text();
     if (!/<title>[^<]*Universe Explorer/i.test(html)) {
-      const title = (html.match(/<title>([^<]*)/i) || [, '(none)'])[1].trim();
+      const title = (html.match(/<title>([^<]*)/i) || [, "(none)"])[1].trim();
       throw new Error(
         `${BASE} is not serving Universe Explorer (title: "${title}").` +
-          ' Check the port, and that the build under test is the one being served.',
+          " Check the port, and that the build under test is the one being served.",
       );
     }
     if (!/(runtime|main)\.[a-f0-9]{8,}\.js/.test(html)) {
-      throw new Error(`${BASE} served no hashed application bundle; the build output looks incomplete.`);
+      throw new Error(
+        `${BASE} served no hashed application bundle; the build output looks incomplete.`,
+      );
     }
     bundleAtStart = bundleIdentity(html);
   }
@@ -405,9 +401,14 @@ async function run() {
   // software rasteriser the product's signature view is a grey rectangle in
   // every screenshot and the one thing worth reviewing goes unreviewed.
   const browser = await playwright[BROWSER].launch({
-    args: BROWSER === 'chromium'
-      ? ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader']
-      : [],
+    args:
+      BROWSER === "chromium"
+        ? [
+            "--use-gl=angle",
+            "--use-angle=swiftshader",
+            "--enable-unsafe-swiftshader",
+          ]
+        : [],
   });
   const findings = [];
   let shots = 0;
@@ -418,33 +419,49 @@ async function run() {
         const context = await browser.newContext({
           viewport: { width: viewport.width, height: viewport.height },
           deviceScaleFactor: 1,
-          reducedMotion: args.reducedMotion ? 'reduce' : 'no-preference',
+          reducedMotion: args.reducedMotion ? "reduce" : "no-preference",
         });
-        await installFixtures(context, state);
-        await context.addInitScript(([t, saved]) => {
-          try {
-            localStorage.setItem('theme-preference', t);
-            // The saved page has an empty face and a populated one, and only
-            // the empty one appears without this. Its state lives in the
-            // browser, so the fixture goes in the browser.
-            for (const [key, value] of Object.entries(saved)) {
-              localStorage.setItem(key, JSON.stringify(value));
+        const fixtureAudit = await installFixtures(context, state);
+        await context.addInitScript(
+          ([t, saved]) => {
+            try {
+              localStorage.setItem("theme-preference", t);
+              // The saved page has an empty face and a populated one, and only
+              // the empty one appears without this. Its state lives in the
+              // browser, so the fixture goes in the browser.
+              for (const [key, value] of Object.entries(saved)) {
+                localStorage.setItem(key, JSON.stringify(value));
+              }
+            } catch {
+              /* private mode: the default theme is fine */
             }
-          } catch { /* private mode: the default theme is fine */ }
 
-          // A WebGL drawing buffer is cleared once the frame is presented, so
-          // reading the Lens back afterwards returns nothing at all. Asking for
-          // it to be preserved is what makes the product's signature view
-          // measurable rather than a rectangle nobody checks. This only ever
-          // runs in the harness; the application asks for the default.
-          const getContext = HTMLCanvasElement.prototype.getContext;
-          HTMLCanvasElement.prototype.getContext = function (type, attributes) {
-            if (type === 'webgl' || type === 'webgl2' || type === 'experimental-webgl') {
-              return getContext.call(this, type, { ...(attributes || {}), preserveDrawingBuffer: true });
-            }
-            return getContext.call(this, type, attributes);
-          };
-        }, [theme, savedStorageSeed]);
+            // A WebGL drawing buffer is cleared once the frame is presented, so
+            // reading the Lens back afterwards returns nothing at all. Asking for
+            // it to be preserved is what makes the product's signature view
+            // measurable rather than a rectangle nobody checks. This only ever
+            // runs in the harness; the application asks for the default.
+            const getContext = HTMLCanvasElement.prototype.getContext;
+            HTMLCanvasElement.prototype.getContext = function (
+              type,
+              attributes,
+            ) {
+              if (
+                type === "webgl" ||
+                type === "webgl2" ||
+                type === "experimental-webgl"
+              ) {
+                return getContext.call(this, type, {
+                  ...(attributes || {}),
+                  preserveDrawingBuffer: true,
+                });
+              }
+              return getContext.call(this, type, attributes);
+            };
+          },
+          [theme, savedStorageSeed],
+        );
+        await seedPortfolioVault(context, BASE, routes);
 
         for (const route of routes) {
           if (!stateApplies(state, route.id)) continue;
@@ -463,21 +480,44 @@ async function run() {
           // override, only for the browser's own resource line, and every one
           // is printed. Anything the application throws still counts, and so
           // does a resource failure on a state that asked for none.
-          const stateFailsRequests = Object.values(ALL_OVERRIDES[state] ?? {})
-            .some((override) => override && override.status);
+          const stateFailsRequests = Object.values(
+            ALL_OVERRIDES[state] ?? {},
+          ).some((override) => override && override.status);
           const isRefusedFetch = (textLine) =>
-            stateFailsRequests
-            && /Failed to load resource: the server responded with a status of \d+/.test(textLine);
-          page.on('console', (m) => {
-            if (m.type() !== 'error') return;
-            (isRefusedFetch(m.text()) ? expectedFetchErrors : consoleErrors).push(m.text());
+            (stateFailsRequests || fixtureAudit.expectedFailures.size > 0) &&
+            /Failed to load resource: the server responded with a status of \d+/.test(
+              textLine,
+            );
+          page.on("console", (m) => {
+            if (m.type() !== "error") return;
+            const expected =
+              fixtureAudit.isExpectedFailure(m.location().url) ||
+              isRefusedFetch(m.text());
+            (expected ? expectedFetchErrors : consoleErrors).push(m.text());
           });
-          page.on('pageerror', (e) => consoleErrors.push(String(e)));
+          page.on("pageerror", (e) => consoleErrors.push(String(e)));
 
           const label = `${route.id}__${state}__${theme}__${viewport.id}`;
           try {
-            await page.goto(BASE + route.path, { waitUntil: 'domcontentloaded', timeout: 45_000 });
-            await page.waitForTimeout(state === 'loading' ? 1_200 : 2_600);
+            await page.goto(BASE + route.path, {
+              waitUntil: "domcontentloaded",
+              timeout: 45_000,
+            });
+            await unlockPortfolioRoute(page, route);
+            await page.waitForTimeout(state === "loading" ? 1_200 : 2_600);
+
+            const landed =
+              new URL(page.url()).pathname.replace(/\/+$/, "") || "/";
+            const expected =
+              (route.redirectTo || route.path).replace(/\/+$/, "") || "/";
+            if (
+              landed !== expected &&
+              !(route.redirectTo && landed.startsWith(`${expected}/`))
+            ) {
+              throw new Error(
+                `route ${route.path} landed on ${landed}, expected ${expected}`,
+              );
+            }
 
             // A route may name a control to open before anything is measured.
             // A menu that never opens is a menu nothing checks. When the
@@ -490,8 +530,10 @@ async function run() {
               if (await control.count()) {
                 await control.click();
                 await page.waitForTimeout(400);
-              } else if (state === 'populated') {
-                throw new Error(`${route.open} is not on the page, so this route measured the closed page instead of the open one`);
+              } else if (state === "populated") {
+                throw new Error(
+                  `${route.open} is not on the page, so this route measured the closed page instead of the open one`,
+                );
               }
             }
 
@@ -503,7 +545,9 @@ async function run() {
 
             const brokenImages = await page.evaluate(() =>
               Array.from(document.images)
-                .filter((i) => i.complete && i.naturalWidth === 0 && i.currentSrc)
+                .filter(
+                  (i) => i.complete && i.naturalWidth === 0 && i.currentSrc,
+                )
                 .map((i) => i.currentSrc),
             );
 
@@ -512,19 +556,29 @@ async function run() {
             if (!args.skipAxe) {
               try {
                 const axe = await new AxeBuilder({ page })
-                  .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+                  .withTags([
+                    "wcag2a",
+                    "wcag2aa",
+                    "wcag21a",
+                    "wcag21aa",
+                    "wcag22aa",
+                  ])
                   .analyze();
                 violations = axe.violations.map((v) => ({
                   id: v.id,
                   impact: v.impact,
                   count: v.nodes.length,
                   help: v.help,
-                  sample: v.nodes[0]?.target?.join(' ') ?? '',
+                  sample: v.nodes[0]?.target?.join(" ") ?? "",
                   // Every failing node, not just the first. A rule that reports
                   // "25 places" cannot be acted on without knowing which 25.
                   nodes: v.nodes.slice(0, 40).map((n) => ({
-                    target: (n.target ?? []).join(' '),
-                    detail: (n.any?.[0]?.message ?? n.failureSummary ?? '').slice(0, 200),
+                    target: (n.target ?? []).join(" "),
+                    detail: (
+                      n.any?.[0]?.message ??
+                      n.failureSummary ??
+                      ""
+                    ).slice(0, 200),
                   })),
                 }));
 
@@ -534,17 +588,31 @@ async function run() {
                 // small still fails here as it does everywhere else.
                 if (route.overlayObscures) {
                   for (const violation of violations) {
-                    if (violation.id !== 'target-size') continue;
-                    const covered = violation.nodes.filter((n) => /obscured/i.test(n.detail));
+                    if (violation.id !== "target-size") continue;
+                    const covered = violation.nodes.filter((n) =>
+                      /obscured/i.test(n.detail),
+                    );
                     if (!covered.length) continue;
                     obscured.push({ id: violation.id, nodes: covered });
-                    violation.nodes = violation.nodes.filter((n) => !/obscured/i.test(n.detail));
+                    violation.nodes = violation.nodes.filter(
+                      (n) => !/obscured/i.test(n.detail),
+                    );
                     violation.count -= covered.length;
                   }
-                  violations = violations.filter((violation) => violation.nodes.length > 0);
+                  violations = violations.filter(
+                    (violation) => violation.nodes.length > 0,
+                  );
                 }
               } catch (e) {
-                violations = [{ id: 'axe-failed', impact: 'unknown', count: 0, help: String(e).slice(0, 200), sample: '' }];
+                violations = [
+                  {
+                    id: "axe-failed",
+                    impact: "unknown",
+                    count: 0,
+                    help: String(e).slice(0, 200),
+                    sample: "",
+                  },
+                ];
               }
             }
 
@@ -555,7 +623,13 @@ async function run() {
             try {
               contrast = await page.evaluate(contrastProbe);
             } catch (e) {
-              contrast = { text: [], painted: [], canvas: [], sampled: 0, error: String(e).slice(0, 200) };
+              contrast = {
+                text: [],
+                painted: [],
+                canvas: [],
+                sampled: 0,
+                error: String(e).slice(0, 200),
+              };
             }
 
             // Trigger anything the page defers until it is scrolled to.
@@ -589,7 +663,10 @@ async function run() {
                 // walked end to end to trigger the deferred blocks near the top
                 // of it. Anything past thirty screens is below every
                 // `@defer (on viewport)` boundary in the product.
-                const step = Math.max(200, Math.floor(window.innerHeight * 0.8));
+                const step = Math.max(
+                  200,
+                  Math.floor(window.innerHeight * 0.8),
+                );
                 const end = Math.min(document.body.scrollHeight, step * 30);
                 for (let y = 0; y < end; y += step) {
                   window.scrollTo(0, y);
@@ -598,7 +675,9 @@ async function run() {
                 window.scrollTo(0, 0);
                 await new Promise((done) => setTimeout(done, 250));
               });
-            } catch { /* a page that navigated mid-scroll is judged as it lands */ }
+            } catch {
+              /* a page that navigated mid-scroll is judged as it lands */
+            }
 
             // A fixed pause is a race, not a deadline: on a loaded machine a
             // page that finishes perfectly well can still be mid-render when
@@ -608,27 +687,57 @@ async function run() {
             let progress;
             let settledAfterMs = null;
             try {
-              const budget = state === 'populated' ? SETTLE_DEADLINE_MS : FAILURE_SETTLE_DEADLINE_MS;
+              const budget =
+                state === "populated"
+                  ? SETTLE_DEADLINE_MS
+                  : FAILURE_SETTLE_DEADLINE_MS;
               const deadline = Date.now() + budget;
               for (;;) {
                 progress = await page.evaluate(progressProbe);
-                const busy = (progress.spinners?.length ?? 0) > 0 || (progress.skeletons ?? 0) > 0;
+                const busy =
+                  (progress.spinners?.length ?? 0) > 0 ||
+                  (progress.skeletons ?? 0) > 0;
                 if (!busy || Date.now() >= deadline) {
-                  settledAfterMs = busy ? null : Date.now() - (deadline - budget);
+                  settledAfterMs = busy
+                    ? null
+                    : Date.now() - (deadline - budget);
                   break;
                 }
                 await page.waitForTimeout(250);
               }
             } catch (e) {
-              progress = { spinners: [], skeletons: 0, charts: [], statusPanels: [], loadingAnnouncements: [], textLength: 0, error: String(e).slice(0, 200) };
+              progress = {
+                spinners: [],
+                skeletons: 0,
+                charts: [],
+                statusPanels: [],
+                loadingAnnouncements: [],
+                textLength: 0,
+                error: String(e).slice(0, 200),
+              };
             }
 
-            await page.screenshot({ path: join(OUT, `${label}.png`), fullPage: Boolean(args.fullPage) });
+            await page.screenshot({
+              path: join(OUT, `${label}.png`),
+              fullPage: Boolean(args.fullPage),
+            });
             shots++;
 
             findings.push({
-              route: route.id, routeName: route.name, state, theme, viewport: viewport.id,
-              overflowBy, consoleErrors, expectedFetchErrors, brokenImages, violations, obscured, contrast, progress, settledAfterMs,
+              route: route.id,
+              routeName: route.name,
+              state,
+              theme,
+              viewport: viewport.id,
+              overflowBy,
+              consoleErrors,
+              expectedFetchErrors,
+              brokenImages,
+              violations,
+              obscured,
+              contrast,
+              progress,
+              settledAfterMs,
             });
           } catch (error) {
             // A server that has gone away is not a page that failed. Reporting
@@ -646,13 +755,18 @@ async function run() {
               process.exit(2);
             }
             findings.push({
-              route: route.id, routeName: route.name, state, theme, viewport: viewport.id,
+              route: route.id,
+              routeName: route.name,
+              state,
+              theme,
+              viewport: viewport.id,
               error: String(error).slice(0, 400),
             });
           } finally {
             await page.close();
           }
         }
+        fixtureAudit.assertComplete(`${state}/${theme}/${viewport.id}`);
         await context.close();
       }
     }
@@ -680,34 +794,42 @@ async function run() {
   // one proves the right thing was being measured; this one proves it stayed
   // the right thing for the whole run.
   {
-    const after = await fetch(BASE, { redirect: 'follow' })
-      .then((response) => (response.ok ? response.text() : ''))
-      .catch(() => '');
+    const after = await fetch(BASE, { redirect: "follow" })
+      .then((response) => (response.ok ? response.text() : ""))
+      .catch(() => "");
     const bundleAtEnd = bundleIdentity(after);
     if (bundleAtStart && bundleAtEnd && bundleAtEnd !== bundleAtStart) {
       throw new Error(
         [
-          'the build changed while the matrix was running, so these results',
-          'measure two different builds and some of them measure neither.',
+          "the build changed while the matrix was running, so these results",
+          "measure two different builds and some of them measure neither.",
           `  at the start: ${bundleAtStart}`,
           `  at the end:   ${bundleAtEnd}`,
-          'Rebuild, then run the matrix with nothing else writing to the output.',
-        ].join('\n'),
+          "Rebuild, then run the matrix with nothing else writing to the output.",
+        ].join("\n"),
       );
     }
   }
 
   const report = { browser: BROWSER, base: BASE, screenshots: shots, findings };
-  writeFileSync(join(OUT, `report-${BROWSER}.json`), JSON.stringify(report, null, 2));
-  const { blocking: stuck, contrastNotMeasured } = summarise(report);
-  if (stuck.length > 0) {
-    console.error(`${stuck.length} page(s) never finished loading. This is the failure that shipped last time, so it fails the run.`);
-    process.exitCode = 1;
-  }
-  if (contrastNotMeasured.length > 0) {
+  writeFileSync(
+    join(OUT, `report-${BROWSER}.json`),
+    JSON.stringify(report, null, 2),
+  );
+  const progress = progressFailures(report);
+  summarise(report);
+  const failures = captureFailureMessages(report, progress);
+  if (failures.length > 0) {
     console.error(
-      `${contrastNotMeasured.length} page(s) had no contrast measurement taken, so this run cannot claim their contrast is correct.`,
+      `${failures.length} recorded visual QA failure(s) fail this run:`,
     );
+    for (const failure of failures.slice(0, 80))
+      console.error(`  FAIL  ${failure}`);
+    if (failures.length > 80) {
+      console.error(
+        `  ... and ${failures.length - 80} more; see report-${BROWSER}.json`,
+      );
+    }
     process.exitCode = 1;
   }
 }
@@ -725,30 +847,13 @@ async function run() {
  * Routes whose request lifecycle has been reviewed and is expected to reach a
  * terminal state. A finding on one of these fails the run.
  *
- * The gate reports findings on every route, but only blocks on these. Adding a
- * route here is how a finding on an uncovered route gets finished: fix the
- * page, add the route, and the gate holds it forever after. Home, blocks,
- * transaction and address joined once their waiting and failure states said
- * something instead of holding a bare placeholder.
+ * The registry makes this decision beside each route scenario. A route cannot
+ * enter visual QA without also declaring whether unfinished content blocks the
+ * run, which keeps this gate from drifting into a second route list.
  */
-export const GATED_ROUTES = new Set([
-  'graphs', 'mining', 'protocols', 'home', 'blocks', 'tx', 'address',
-  // The chain routes join once their status rail, their failure copy and their
-  // empty state all say something. Every one of them reaches a terminal state:
-  // the rail renders all five readings even with no status at all, and a
-  // failed lookup prints why rather than waiting.
-  'dogecoin', 'dogecoin-mempool', 'dogecoin-tx', 'dogecoin-block',
-  'dogecoin-address', 'dogecoin-protocols', 'dogecoin-drc20',
-  'dogecoin-dunes', 'dogecoin-dune',
-  'zcash', 'zcash-mempool', 'zcash-tx', 'zcash-protocols',
-  'zcash-zrc20', 'zcash-zrc20-token',
-  // The parity surfaces: dashboard timelines, mining, charts, and docs. The
-  // whole point of this release is that these exist and hold the same bar.
-  'dogecoin-mining', 'dogecoin-graphs', 'dogecoin-graphs-pools', 'dogecoin-docs',
-  'zcash-mining', 'zcash-graphs', 'zcash-graphs-hashrate', 'zcash-docs',
-  // The single-asset pages and the local-state page, for the same reason.
-  'outpoint', 'inscription', 'rune', 'sat', 'saved',
-]);
+export const GATED_ROUTES = new Set(
+  ROUTES.filter((route) => route.gateProgress).map((route) => route.id),
+);
 
 /**
  * Fixtures that hold a request open on purpose, to photograph a wait.
@@ -760,7 +865,7 @@ export const GATED_ROUTES = new Set([
  * transaction list, which is the wait pagination leaves behind and the one the
  * blanket fixture can never reach.
  */
-const WAITING_STATES = new Set(['loading', 'address-txs-loading']);
+const WAITING_STATES = new Set(["loading", "address-txs-loading"]);
 
 export function progressFailures(report) {
   const failures = [];
@@ -769,19 +874,25 @@ export function progressFailures(report) {
     if (!progress) continue;
     const where = `${f.route}/${f.state}/${f.theme}@${f.viewport}`;
 
-    if (f.state === 'populated') {
+    if (f.state === "populated") {
       if (progress.spinners?.length) {
-        failures.push(`${where}: never stopped loading (${progress.spinners.join(', ')})`);
+        failures.push(
+          `${where}: never stopped loading (${progress.spinners.join(", ")})`,
+        );
       }
       if (progress.skeletons > 0) {
-        failures.push(`${where}: ${progress.skeletons} skeleton(s) never resolved`);
+        failures.push(
+          `${where}: ${progress.skeletons} skeleton(s) never resolved`,
+        );
       }
       if (progress.skeletonOnly) {
         failures.push(`${where}: the page is placeholders and almost no text`);
       }
       for (const chart of progress.charts ?? []) {
         if (chart.drewNothing) {
-          failures.push(`${where}: chart ${chart.selector} (${chart.width}x${chart.height}) drew nothing`);
+          failures.push(
+            `${where}: chart ${chart.selector} (${chart.width}x${chart.height}) drew nothing`,
+          );
         }
       }
     } else if (WAITING_STATES.has(f.state)) {
@@ -795,9 +906,10 @@ export function progressFailures(report) {
       // with nothing to fetch renders normally under this fixture and owes the
       // reader no loader at all.
       const waiting = (progress.skeletons ?? 0) > 0;
-      const announced = progress.spinners?.length
-        || progress.statusPanels?.length
-        || progress.loadingAnnouncements?.length;
+      const announced =
+        progress.spinners?.length ||
+        progress.statusPanels?.length ||
+        progress.loadingAnnouncements?.length;
       if (waiting && !announced) {
         failures.push(`${where}: waiting with nothing on screen that says so`);
       }
@@ -836,7 +948,12 @@ function summarise(report) {
   // evidence of contrast being correct either.
   const contrastNoSamples = [];
   for (const f of report.findings) {
-    const where = { route: f.route, state: f.state, theme: f.theme, viewport: f.viewport };
+    const where = {
+      route: f.route,
+      state: f.state,
+      theme: f.theme,
+      viewport: f.viewport,
+    };
     if (f.contrast?.error) {
       contrastNotMeasured.push({ ...where, error: f.contrast.error });
     } else if (f.contrast && (f.contrast.sampled ?? 0) === 0 && !f.error) {
@@ -854,26 +971,39 @@ function summarise(report) {
   const byRule = new Map();
   for (const f of a11y) {
     for (const v of f.violations) {
-      const e = byRule.get(v.id) || { id: v.id, impact: v.impact, help: v.help, places: 0, routes: new Set() };
+      const e = byRule.get(v.id) || {
+        id: v.id,
+        impact: v.impact,
+        help: v.help,
+        places: 0,
+        routes: new Set(),
+      };
       e.places += v.count;
       e.routes.add(f.route);
       byRule.set(v.id, e);
     }
   }
 
-  console.log(`\n=== ${report.browser} : ${report.screenshots} screenshots -> ${OUT}\n`);
+  console.log(
+    `\n=== ${report.browser} : ${report.screenshots} screenshots -> ${OUT}\n`,
+  );
   console.log(`horizontal overflow : ${overflow.length}`);
   console.log(`console errors      : ${errors.length}`);
 
   // Printed, never counted. A state that asked a request to fail got one line
   // per refusal, and a rule that is quietly not counted is a rule nobody sees.
   const refused = report.findings.flatMap((f) =>
-    (f.expectedFetchErrors ?? []).map((line) => `${f.route}/${f.state} ${line}`),
+    (f.expectedFetchErrors ?? []).map(
+      (line) => `${f.route}/${f.state} ${line}`,
+    ),
   );
   if (refused.length) {
-    console.log(`refused by a failure fixture : ${refused.length}  (asked for, not counted)`);
+    console.log(
+      `refused by a failure fixture : ${refused.length}  (asked for, not counted)`,
+    );
     for (const line of refused.slice(0, 8)) console.log(`    ${line}`);
-    if (refused.length > 8) console.log(`    ... and ${refused.length - 8} more`);
+    if (refused.length > 8)
+      console.log(`    ... and ${refused.length - 8} more`);
   }
   console.log(`broken images       : ${images.length}`);
   console.log(`navigation failures : ${failed.length}`);
@@ -888,68 +1018,87 @@ function summarise(report) {
     ),
   );
   if (covered.length) {
-    console.log(`obscured by an open overlay : ${covered.length}  (expected, not counted)`);
+    console.log(
+      `obscured by an open overlay : ${covered.length}  (expected, not counted)`,
+    );
     for (const line of covered.slice(0, 12)) console.log(`    ${line}`);
-    if (covered.length > 12) console.log(`    ... and ${covered.length - 12} more`);
+    if (covered.length > 12)
+      console.log(`    ... and ${covered.length - 12} more`);
   }
-  console.log('');
+  console.log("");
 
   console.log(`contrast failures   : ${contrastFailures.length}`);
   if (contrastNotMeasured.length) {
-    console.log(`contrast NOT MEASURED: ${contrastNotMeasured.length}  (the probe threw; the zero above is not a result)`);
+    console.log(
+      `contrast NOT MEASURED: ${contrastNotMeasured.length}  (the probe threw; the zero above is not a result)`,
+    );
   }
   if (contrastNoSamples.length) {
-    console.log(`contrast no samples : ${contrastNoSamples.length}  (ran, found no text to measure)`);
+    console.log(
+      `contrast no samples : ${contrastNoSamples.length}  (ran, found no text to measure)`,
+    );
   }
   console.log(`blank canvases      : ${blankCanvases.length}`);
 
   if (contrastFailures.length) {
     console.log();
-    console.log('-- measured contrast failures, worst first --');
+    console.log("-- measured contrast failures, worst first --");
     for (const f of contrastFailures.slice(0, 40)) {
       console.log(
         `  ${String(f.ratio).padStart(6)}:1 (needs ${f.required}:1)  ` +
           `${f.route}/${f.state}/${f.theme}@${f.viewport}` +
-          `${f.overPaintedSurface ? '  [over a painted surface]' : ''}`,
+          `${f.overPaintedSurface ? "  [over a painted surface]" : ""}`,
       );
       console.log(`         "${f.text}"`);
-      console.log(`         ${f.foreground} on ${f.background}   ${f.selector}`);
+      console.log(
+        `         ${f.foreground} on ${f.background}   ${f.selector}`,
+      );
     }
     if (contrastFailures.length > 40) {
-      console.log(`  ... and ${contrastFailures.length - 40} more, see the report`);
+      console.log(
+        `  ... and ${contrastFailures.length - 40} more, see the report`,
+      );
     }
   }
 
   if (contrastNotMeasured.length) {
     console.log();
-    console.log('-- pages where the contrast probe did not run --');
+    console.log("-- pages where the contrast probe did not run --");
     for (const f of contrastNotMeasured.slice(0, 20)) {
-      console.log(`  ${f.route}/${f.state}/${f.theme}@${f.viewport}: ${f.error}`);
+      console.log(
+        `  ${f.route}/${f.state}/${f.theme}@${f.viewport}: ${f.error}`,
+      );
     }
   }
 
   if (blankCanvases.length) {
     console.log();
-    console.log('-- canvases that drew nothing --');
+    console.log("-- canvases that drew nothing --");
     for (const c of blankCanvases.slice(0, 10)) {
-      console.log(`  ${c.route}/${c.state}/${c.theme}@${c.viewport}  ${c.selector}  ${c.w}x${c.h}`);
+      console.log(
+        `  ${c.route}/${c.state}/${c.theme}@${c.viewport}  ${c.selector}  ${c.w}x${c.h}`,
+      );
     }
   }
   if (overflow.length) {
-    console.log('-- overflow --');
+    console.log("-- overflow --");
     for (const f of overflow.slice(0, 20)) {
-      console.log(`  ${f.route} ${f.state} ${f.theme} @${f.viewport}px overflows by ${f.overflowBy}px`);
+      console.log(
+        `  ${f.route} ${f.state} ${f.theme} @${f.viewport}px overflows by ${f.overflowBy}px`,
+      );
     }
   }
   if (byRule.size) {
-    console.log('\n-- accessibility --');
+    console.log("\n-- accessibility --");
     for (const r of [...byRule.values()].sort((a, b) => b.places - a.places)) {
-      console.log(`  ${String(r.impact).padEnd(8)} ${r.id.padEnd(34)} ${String(r.places).padStart(4)} places  [${[...r.routes].join(', ')}]`);
+      console.log(
+        `  ${String(r.impact).padEnd(8)} ${r.id.padEnd(34)} ${String(r.places).padStart(4)} places  [${[...r.routes].join(", ")}]`,
+      );
       console.log(`           ${r.help}`);
     }
   }
   if (errors.length) {
-    console.log('\n-- console --');
+    console.log("\n-- console --");
     const seen = new Set();
     for (const f of errors) {
       for (const e of f.consoleErrors) {
@@ -961,34 +1110,47 @@ function summarise(report) {
     }
   }
   if (failed.length) {
-    console.log('\n-- navigation --');
-    for (const f of failed.slice(0, 15)) console.log(`  ${f.route} ${f.state} ${f.theme} @${f.viewport}: ${f.error}`);
+    console.log("\n-- navigation --");
+    for (const f of failed.slice(0, 15))
+      console.log(
+        `  ${f.route} ${f.state} ${f.theme} @${f.viewport}: ${f.error}`,
+      );
   }
 
   const stuck = progressFailures(report);
-  const blocking = stuck.filter((line) => GATED_ROUTES.has(line.split('/')[0]));
-  const known = stuck.filter((line) => !GATED_ROUTES.has(line.split('/')[0]));
+  const blocking = stuck.filter((line) => GATED_ROUTES.has(line.split("/")[0]));
+  const known = stuck.filter((line) => !GATED_ROUTES.has(line.split("/")[0]));
 
-  console.log(`\nunfinished pages    : ${stuck.length}  (blocking ${blocking.length})`);
+  console.log(
+    `\nunfinished pages    : ${stuck.length}  (blocking ${blocking.length})`,
+  );
   if (blocking.length) {
-    console.log('-- pages that never finished, on routes this gate holds --');
+    console.log("-- pages that never finished, on routes this gate holds --");
     for (const line of blocking.slice(0, 40)) console.log(`  ${line}`);
-    if (blocking.length > 40) console.log(`  ... and ${blocking.length - 40} more, see the report`);
+    if (blocking.length > 40)
+      console.log(`  ... and ${blocking.length - 40} more, see the report`);
   }
   if (known.length) {
     // Printed every run, never suppressed. These are real, they were found by
     // this gate, and they are waiting for the same treatment the gated routes
     // have had.
-    console.log('-- the same fault on routes not yet covered, known work --');
+    console.log("-- the same fault on routes not yet covered, known work --");
     for (const line of known.slice(0, 40)) console.log(`  ${line}`);
-    if (known.length > 40) console.log(`  ... and ${known.length - 40} more, see the report`);
+    if (known.length > 40)
+      console.log(`  ... and ${known.length - 40} more, see the report`);
   }
-  console.log('');
+  console.log("");
   return { blocking, contrastNotMeasured };
 }
 
 // Only drive browsers when this file is the program. Importing it, as the
 // gate's own test does, must not launch the matrix.
-if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))) {
-  run().catch((e) => { console.error(e); process.exit(1); });
+if (
+  process.argv[1] &&
+  resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))
+) {
+  run().catch((e) => {
+    console.error(e);
+    process.exit(1);
+  });
 }

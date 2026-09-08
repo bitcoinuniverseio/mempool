@@ -18,11 +18,7 @@ import {
  * could not be established: a chain that never answered has not answered "no".
  */
 export type EvidenceTone =
-  | 'proven'
-  | 'partial'
-  | 'pending'
-  | 'unavailable'
-  | 'neutral';
+  'proven' | 'partial' | 'pending' | 'unavailable' | 'neutral';
 
 export interface EvidenceView {
   readonly tone: EvidenceTone;
@@ -95,12 +91,14 @@ export interface ProtocolGroup {
 }
 
 export function groupPositionsByProtocol(
-  positions: readonly ExplorerOutpointPosition[],
+  positions: readonly ExplorerOutpointPosition[]
 ): ProtocolGroup[] {
   const groups = new Map<string, ExplorerOutpointPosition[]>();
   for (const position of positions ?? []) {
     const id = position.asset?.protocolId || 'unknown';
-    if (!groups.has(id)) {groups.set(id, []);}
+    if (!groups.has(id)) {
+      groups.set(id, []);
+    }
     groups.get(id).push(position);
   }
   return [...groups.entries()]
@@ -117,7 +115,9 @@ export function formatAtomicAmount(atomic: string, decimals = 0): string {
   // Negatives are accepted because one real amount in the contract is signed:
   // a Zcash transaction's value balance, the net movement between the
   // transparent and shielded pools. Rejecting it printed nothing at all.
-  if (typeof atomic !== 'string' || !/^-?(0|[1-9][0-9]*)$/.test(atomic)) {return '';}
+  if (typeof atomic !== 'string' || !/^-?(0|[1-9][0-9]*)$/.test(atomic)) {
+    return '';
+  }
   const negative = atomic.startsWith('-');
   const digits = negative ? atomic.slice(1) : atomic;
   const sign = negative ? '-' : '';
@@ -132,12 +132,27 @@ export function formatAtomicAmount(atomic: string, decimals = 0): string {
     : sign + groupDigits(whole);
 }
 
+/** Converts a BIP21 BTC decimal to grouped satoshis without floating point. */
+export function formatBtcAmountAsSats(amountBtc: string): string {
+  if (
+    typeof amountBtc !== 'string' ||
+    !/^(?:0|[1-9][0-9]*)(?:\.[0-9]{1,8})?$/.test(amountBtc)
+  ) {
+    return '';
+  }
+  const [whole, fraction = ''] = amountBtc.split('.');
+  const sats = `${whole}${fraction.padEnd(8, '0')}`.replace(/^0+(?=[0-9])/, '');
+  return groupDigits(sats);
+}
+
 function groupDigits(value: string): string {
   return value.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
 /** Short, readable form of a 64 character identifier. */
 export function shortenIdentifier(value: string, keep = 8): string {
-  if (typeof value !== 'string' || value.length <= keep * 2 + 1) {return value ?? '';}
+  if (typeof value !== 'string' || value.length <= keep * 2 + 1) {
+    return value ?? '';
+  }
   return `${value.slice(0, keep)}…${value.slice(-keep)}`;
 }

@@ -38,10 +38,15 @@ export class StratumV2Component implements OnInit {
 
   ngOnInit(): void {
     combineLatest([
-      this.api.getStratumV2Network$().pipe(catchError(() => of({ roles: [] }))),
-      this.api.getStratumV2Templates$().pipe(catchError(() => of({ templates: [] }))),
-      this.api.getStratumV2Declarations$().pipe(catchError(() => of({ declarations: [] }))),
-    ]).subscribe(([networkData, tmplData, declData]) => {
+      this.api.getStratumV2Network$(),
+      this.api.getStratumV2Templates$(),
+      this.api.getStratumV2Declarations$(),
+    ]).pipe(catchError(() => of(null))).subscribe((result) => {
+      if (!result) {
+        this.state.next({ kind: 'error' });
+        return;
+      }
+      const [networkData, tmplData, declData] = result;
       this.state.next({
         kind: 'ready',
         roles: networkData.roles,

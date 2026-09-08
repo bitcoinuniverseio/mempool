@@ -41,7 +41,8 @@ import { mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'f
 import { dirname, join, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
-import { ROUTES, installFixtures } from './capture.mjs';
+import { installFixtures } from './capture.mjs';
+import { routesFor } from './route-scenarios.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
@@ -57,7 +58,8 @@ const OUT = resolve(args.out || join(HERE, 'artifacts-perf'));
 const DIST = resolve(args.dist || join(HERE, '..', '..', '..', 'frontend', 'dist', 'mempool', 'browser'));
 const CPU_THROTTLE = Number(args.cpu || 4);
 
-const PERF_ROUTE_IDS = args.routes ? String(args.routes).split(',') : ['home', 'tx', 'blocks', 'dogecoin-tx'];
+const ROUTES = routesFor('performance');
+const PERF_ROUTE_IDS = args.routes ? String(args.routes).split(',') : ROUTES.map((route) => route.id);
 
 /**
  * Budgets.
@@ -262,7 +264,7 @@ async function run() {
       hasTouch: true,
       isMobile: true,
     });
-    await installFixtures(context, 'populated');
+    const fixtureAudit = await installFixtures(context, 'populated');
     await context.addInitScript(observeVitals);
     const page = await context.newPage();
 
@@ -320,7 +322,11 @@ async function run() {
 
     } finally {
       await page.close().catch(() => undefined);
-      await context.close().catch(() => undefined);
+      try {
+        fixtureAudit.assertComplete(`performance/${route.id}`);
+      } finally {
+        await context.close().catch(() => undefined);
+      }
     }
   };
 

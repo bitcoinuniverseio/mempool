@@ -1,6 +1,6 @@
 <div class="container-xl product-page">
   <header class="page-head">
-    <nav class="crumbs">
+    <nav class="crumbs" aria-label="Breadcrumb" i18n-aria-label="universe.breadcrumb-label">
       <a [routerLink]="['/']">Home</a>
       <span class="divider">/</span>
       <a [routerLink]="['/data']">Data Studio</a>
@@ -13,9 +13,9 @@
     </p>
   </header>
 
-  <nav class="nav-tabs">
+  <nav class="nav-tabs" aria-label="Product sections" i18n-aria-label="universe.product-sections-label">
     <a [routerLink]="['/data']">Datasets & Query Studio</a>
-    <a [routerLink]="['/data/live']" class="active">Live Streams</a>
+    <a [routerLink]="['/data/live']" class="active" aria-current="page">Live Streams</a>
   </nav>
 
   <ng-container *ngIf="vm$ | async as vm">
@@ -26,7 +26,8 @@
     <ng-container *ngIf="vm.kind === 'ready' && vm.streams">
       <section class="panel">
         <h2>Available Event Streams</h2>
-        <table class="data-table">
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Available event streams" i18n-aria-label="universe.data.stream-table">
+          <table class="data-table">
           <thead>
             <tr>
               <th>Stream Name</th>
@@ -47,7 +48,8 @@
               <td><span class="badge badge-success">Active</span></td>
             </tr>
           </tbody>
-        </table>
+          </table>
+        </div>
       </section>
 
       <section class="panel">

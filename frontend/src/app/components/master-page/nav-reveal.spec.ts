@@ -29,6 +29,7 @@ function navList(opts: {
   clientWidth: number;
   active?: Rect;
   listRect?: Rect;
+  activeSelector?: string;
 }): { el: HTMLElement; moved: () => number } {
   const active = opts.active
     ? { getBoundingClientRect: (): Rect => opts.active }
@@ -38,7 +39,7 @@ function navList(opts: {
     clientWidth: opts.clientWidth,
     scrollLeft: 0,
     getBoundingClientRect: (): Rect => opts.listRect ?? { left: 0, right: opts.clientWidth },
-    querySelector: (sel: string): unknown => (sel === '.nav-item.active' ? active : null),
+    querySelector: (sel: string): unknown => (sel === (opts.activeSelector ?? '.nav-item.active') ? active : null),
   } as unknown as HTMLElement;
   return { el, moved: () => el.scrollLeft };
 }
@@ -57,6 +58,11 @@ function component(isBrowser: boolean, list: HTMLElement | null): MasterPageComp
 
 function reveal(c: MasterPageComponent): void {
   (c as unknown as { revealActiveDestination(): void }).revealActiveDestination();
+}
+
+function revealItem(c: MasterPageComponent, list: HTMLElement, selector: string): void {
+  (c as unknown as { revealActiveItem(target: HTMLElement, query: string): void })
+    .revealActiveItem(list, selector);
 }
 
 /** requestAnimationFrame, run immediately, so the assertion sees the effect. */
@@ -113,6 +119,20 @@ describe('the bottom bar reveals the current destination', () => {
     withImmediateFrame(() => reveal(component(true, el)));
 
     expect(moved()).toBe(0);
+  });
+
+  it('reveals the selected product tab with the same local-only movement', () => {
+    const selector = 'a.active, [aria-current="page"]';
+    const { el, moved } = navList({
+      scrollWidth: 620,
+      clientWidth: 320,
+      active: { left: 420, right: 560 },
+      activeSelector: selector,
+    });
+
+    revealItem(component(true, el), el, selector);
+
+    expect(moved()).toBe(264);
   });
 
   it('leaves the wide layout alone', () => {

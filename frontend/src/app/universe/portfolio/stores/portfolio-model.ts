@@ -2,17 +2,12 @@
  * The local portfolio model.
  *
  * Everything here is client-private: it lives in the encrypted vault and
- * never leaves the browser except through an explicit encrypted backup or
- * a client-encrypted share. Only public derived addresses are ever sent
- * to the first-party portfolio API.
+ * never leaves the browser except through an explicit encrypted backup.
+ * Only explicit public addresses are sent to the first-party portfolio API.
  */
 
 export type AccountSourceKind =
-  | 'address'
-  | 'addresses'
-  | 'xpub'
-  | 'descriptor'
-  | 'manual';
+  'address' | 'addresses' | 'xpub' | 'descriptor' | 'manual';
 
 export type ScriptKind = 'p2pkh' | 'p2sh-p2wpkh' | 'p2wpkh' | 'p2tr';
 
@@ -75,12 +70,8 @@ export interface LocalManualEntry {
 }
 
 export interface PrivacySettings {
-  /** Hide absolute values everywhere (percentages still allowed). */
+  /** Hide absolute values everywhere. Percentages remain available. */
   readonly hideValues: boolean;
-  /** Additionally hide names, addresses, and identifiers. */
-  readonly hideIdentifiers: boolean;
-  /** Presentation mode: percentages and allocation only. */
-  readonly presentationMode: boolean;
   readonly relockWhenHiddenMinutes: number;
 }
 
@@ -92,11 +83,7 @@ export interface SnapshotPolicy {
 export interface SavedView {
   readonly id: string;
   readonly section:
-    | 'holdings'
-    | 'activity'
-    | 'utxos'
-    | 'performance'
-    | 'insights';
+    'holdings' | 'activity' | 'utxos' | 'performance' | 'insights';
   readonly name: string;
   readonly filters: Readonly<Record<string, string>>;
   readonly sort?: string;
@@ -163,23 +150,33 @@ export interface LocalPortfolio {
   readonly dashboard: readonly DashboardWidgetLayout[];
   readonly pinnedAssetKeys: readonly string[];
   readonly hiddenAssetKeys: readonly string[];
-  readonly annotations: Readonly<Record<string, {
-    readonly note?: string;
-    readonly category?: string;
-    readonly counterpartyLabel?: string;
-    readonly tags?: readonly string[];
-    readonly reviewed?: boolean;
-    readonly excludedFromViews?: readonly string[];
-  }>>;
-  readonly utxoProtections: Readonly<Record<string, {
-    readonly protected: boolean;
-    readonly label?: string;
-    readonly tags?: readonly string[];
-    readonly purpose?: string;
-    readonly doNotCombineGroup?: string;
-    readonly privacyGroup?: string;
-    readonly reviewStatus?: 'unreviewed' | 'reviewed';
-  }>>;
+  readonly annotations: Readonly<
+    Record<
+      string,
+      {
+        readonly note?: string;
+        readonly category?: string;
+        readonly counterpartyLabel?: string;
+        readonly tags?: readonly string[];
+        readonly reviewed?: boolean;
+        readonly excludedFromViews?: readonly string[];
+      }
+    >
+  >;
+  readonly utxoProtections: Readonly<
+    Record<
+      string,
+      {
+        readonly protected: boolean;
+        readonly label?: string;
+        readonly tags?: readonly string[];
+        readonly purpose?: string;
+        readonly doNotCombineGroup?: string;
+        readonly privacyGroup?: string;
+        readonly reviewStatus?: 'unreviewed' | 'reviewed';
+      }
+    >
+  >;
   readonly defaultAccountId?: string;
   readonly createdAt: string;
   readonly updatedAt: string;
@@ -189,8 +186,6 @@ export interface LocalPortfolio {
 export function emptyPrivacy(): PrivacySettings {
   return {
     hideValues: false,
-    hideIdentifiers: false,
-    presentationMode: false,
     relockWhenHiddenMinutes: 0,
   };
 }
@@ -198,7 +193,7 @@ export function emptyPrivacy(): PrivacySettings {
 export function emptyPortfolio(
   id: string,
   name: string,
-  now: string,
+  now: string
 ): LocalPortfolio {
   return {
     id,
@@ -230,7 +225,7 @@ export interface AddressDuplication {
 }
 
 export function findDuplicateAddresses(
-  portfolio: LocalPortfolio,
+  portfolio: LocalPortfolio
 ): AddressDuplication[] {
   const byAddress = new Map<string, Set<string>>();
   for (const account of portfolio.accounts) {
@@ -283,13 +278,14 @@ export type InclusionPolicy = Readonly<Record<string, string>>;
 
 export function resolveIncludedAddresses(
   portfolio: LocalPortfolio,
-  policy: InclusionPolicy,
+  policy: InclusionPolicy
 ): { readonly address: string; readonly accountId: string }[] {
   const included: { address: string; accountId: string }[] = [];
   for (const account of portfolio.accounts) {
     for (const address of accountAddresses(account)) {
       const owner = policy[address] ?? account.id;
-      if (owner === account.id) included.push({ address, accountId: account.id });
+      if (owner === account.id)
+        included.push({ address, accountId: account.id });
     }
   }
   return included;

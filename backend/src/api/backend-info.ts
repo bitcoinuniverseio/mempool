@@ -6,12 +6,12 @@ import config from '../config';
 import bitcoinClient from './bitcoin/bitcoin-client';
 import logger from '../logger';
 
-class BackendInfo {
+export class BackendInfo {
   private backendInfo: IBackendInfo;
-  private timer;
-  private syncTimer;
+  private timer?: NodeJS.Timeout;
+  private syncTimer?: NodeJS.Timeout;
 
-  constructor() {
+  constructor(startRefresh = process.env.NODE_ENV !== 'test') {
     // This file is created by ./fetch-version.ts during building
     const versionFile = path.join(__dirname, 'version.json');
     let versionInfo;
@@ -21,7 +21,7 @@ class BackendInfo {
       // Use dummy values if `versionFile` doesn't exist (e.g., during testing)
       versionInfo = {
         version: '?',
-        gitCommit: '?'
+        gitCommit: '?',
       };
     }
     this.backendInfo = {
@@ -35,13 +35,28 @@ class BackendInfo {
       chainSync: null,
     };
 
-    this.timer = setInterval(async () => {
-      try {
-        await this.$updateCoreVersion();
-      } catch (e) {
-        logger.err(`Exception in $updateCoreVersion. Reason: ${(e instanceof Error ? e.message : e)}`);
-      }
-    }, 10 * 60 * 1000); // every 10 minutes
+    // Importing a route in a unit test must not open real Bitcoin RPC
+    // requests in the background. Production and ordinary local starts keep
+    // the immediate observations and recurring refreshes below.
+    if (!startRefresh) {
+      return;
+    }
+
+    this.timer = setInterval(
+      async () => {
+        try {
+          await this.$updateCoreVersion();
+        } catch (e) {
+          logger.err(
+            `Exception in $updateCoreVersion. Reason: ${
+              e instanceof Error ? e.message : e
+            }`
+          );
+        }
+      },
+      10 * 60 * 1000
+    ); // every 10 minutes
+    this.timer.unref();
     void this.$updateCoreVersion(); // starting immediately
 
     // Sync state changes far more often than the version does, and a stale
@@ -49,6 +64,7 @@ class BackendInfo {
     this.syncTimer = setInterval(async () => {
       await this.$updateChainSync();
     }, 30 * 1000);
+    this.syncTimer.unref();
     void this.$updateChainSync();
   }
 
@@ -58,7 +74,11 @@ class BackendInfo {
       const networkInfo = await bitcoinClient.getNetworkInfo();
       this.backendInfo.coreVersion = networkInfo.subversion;
     } catch (e) {
-      logger.err(`Exception in $updateCoreVersion. Reason: ${(e instanceof Error ? e.message : e)}`);
+      logger.err(
+        `Exception in $updateCoreVersion. Reason: ${
+          e instanceof Error ? e.message : e
+        }`
+      );
     }
   }
 
@@ -80,7 +100,11 @@ class BackendInfo {
         checkedAt: new Date().toISOString(),
       };
     } catch (e) {
-      logger.debug(`Could not read chain sync state. Reason: ${(e instanceof Error ? e.message : e)}`);
+      logger.debug(
+        `Could not read chain sync state. Reason: ${
+          e instanceof Error ? e.message : e
+        }`
+      );
     }
   }
 

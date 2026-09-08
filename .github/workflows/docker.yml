@@ -11,7 +11,7 @@ on:
       - v[0-9]+.[0-9]+.[0-9]+
       - v[0-9]+.[0-9]+.[0-9]+-*
   pull_request:
-    branches: [master]
+    branches: [develop, main]
     types: [opened, synchronize, reopened, labeled]
 
 permissions:
@@ -19,13 +19,16 @@ permissions:
 
 jobs:
   test-images:
-    # Always run on tag pushes and all pull requests
-    runs-on: [self-hosted, linux, x64, universe, gcp, universe-gcp-small]
+    # Test tag builds and explicitly requested pull request images.
+    if: >-
+      github.event_name == 'push' ||
+      contains(github.event.pull_request.labels.*.name, 'docker-push')
+    runs-on: [self-hosted, linux, x64, universe, gcp, universe-gcp-release]
     timeout-minutes: 30
     name: Test built Docker images
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Add SHORT_SHA env property with commit short sha
         run: |
@@ -60,7 +63,7 @@ jobs:
         run: docker/init.sh "$TAG"
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
 
       - name: Build frontend image locally
         run: |
@@ -233,7 +236,7 @@ jobs:
         service:
           - frontend
           - backend
-    runs-on: [self-hosted, linux, x64, universe, gcp, universe-gcp-small]
+    runs-on: [self-hosted, linux, x64, universe, gcp, universe-gcp-release]
     timeout-minutes: 120
     name: Build and push to DockerHub
     outputs:
@@ -289,13 +292,13 @@ jobs:
 
 
       - name: Login to Docker for building
-        uses: docker/login-action@v3
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       # For PRs: use package.json version + short sha as TAG
       - name: Set TAG from service package.json for pull requests
@@ -320,13 +323,13 @@ jobs:
         run: docker/init.sh "$TAG"
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3
         with:
           platforms: linux/amd64,linux/arm64
         id: qemu
 
       - name: Setup Docker buildx action
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
         with:
           platforms: linux/amd64,linux/arm64
           driver-opts: |
@@ -337,7 +340,7 @@ jobs:
         run: echo ${{ steps.buildx.outputs.platforms }}
 
       - name: Cache Docker layers
-        uses: actions/cache@v3
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         id: cache
         with:
           path: /tmp/.buildx-cache
@@ -363,7 +366,7 @@ jobs:
     needs: build
     # Only for successful tag pushes (not PRs with docker-push label) and only for "plain" versions (no '-')
     if: ${{ needs.build.result == 'success' && github.event_name == 'push' && !contains(github.ref_name, '-') }}
-    runs-on: [self-hosted, linux, x64, universe, gcp, universe-gcp-small]
+    runs-on: [self-hosted, linux, x64, universe, gcp, universe-gcp-release]
     timeout-minutes: 30
     name: Tag release build as latest
     strategy:
@@ -376,19 +379,19 @@ jobs:
         run: echo "TAG=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3
         with:
           platforms: linux/amd64,linux/arm64
 
       - name: Setup Docker buildx action
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
         with:
           platforms: linux/amd64,linux/arm64
           driver-opts: |
             network=host
 
       - name: Login to Docker Hub
-        uses: docker/login-action@v3
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}

@@ -86,6 +86,7 @@ interface IConfig {
     USERNAME: string;
     PASSWORD: string;
     TIMEOUT: number;
+    MAX_SOCKETS: number;
     COOKIE: boolean;
     COOKIE_PATH: string;
     DEBUG_LOG_PATH: string;
@@ -96,6 +97,7 @@ interface IConfig {
     USERNAME: string;
     PASSWORD: string;
     TIMEOUT: number;
+    MAX_SOCKETS: number;
     COOKIE: boolean;
     COOKIE_PATH: string;
   };
@@ -243,6 +245,7 @@ const defaults: IConfig = {
     'USERNAME': 'mempool',
     'PASSWORD': 'mempool',
     'TIMEOUT': 60000,
+    'MAX_SOCKETS': 8,
     'COOKIE': false,
     'COOKIE_PATH': '/bitcoin/.cookie',
     'DEBUG_LOG_PATH': '',
@@ -253,6 +256,7 @@ const defaults: IConfig = {
     'USERNAME': 'mempool',
     'PASSWORD': 'mempool',
     'TIMEOUT': 60000,
+    'MAX_SOCKETS': 8,
     'COOKIE': false,
     'COOKIE_PATH': '/bitcoin/.cookie'
   },

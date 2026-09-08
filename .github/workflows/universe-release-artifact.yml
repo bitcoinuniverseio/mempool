@@ -24,28 +24,43 @@ permissions:
 jobs:
   artifact:
     name: Build and pack
-    runs-on: [self-hosted, linux, x64, universe, gcp, universe-gcp-large]
+    runs-on: [self-hosted, linux, x64, universe, gcp, universe-gcp-release]
     timeout-minutes: 90
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
 
       - name: Record what is being built
         id: sha
         run: |
+          set -euo pipefail
           sha=$(git rev-parse HEAD)
           printf 'sha=%s\n' "$sha" >> "$GITHUB_OUTPUT"
-          printf 'short=%s\n' "${sha:0:9}" >> "$GITHUB_OUTPUT"
           printf 'Building %s (%s)\n' "$sha" "$(git log -1 --format=%s)"
+          test "$(git status --porcelain)" = ''
 
-      - name: Setup Node
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-        with:
-          node-version: '24.19.0'
+      - name: Prepare pinned Node environment
+        uses: bitcoinuniverseio/universe-ci-actions/universe-node-env@8e24bc760556caa5ec8c7c497baaad2e9adcc912 # v1
+
+      - name: Verify pinned runtime
+        run: |
+          test "$(node --version)" = v24.19.0
+          test "$(npm --version)" = 11.17.0
 
       - name: Install backend
         working-directory: backend
         run: npm ci
+
+      - name: Verify bounded Bitcoin RPC behavior
+        working-directory: backend
+        run: |
+          npm run test:build-source
+          node node_modules/jest/bin/jest.js --runInBand --coverage=false \
+            src/api/bitcoin/bitcoin-api.rpc-cache.test.ts \
+            src/rpc-api/jsonrpc.pool.test.ts
 
       - name: Build backend
         working-directory: backend
@@ -58,6 +73,22 @@ jobs:
       - name: Build frontend
         working-directory: frontend
         run: npm run build:universe
+
+      - name: Verify release controls
+        run: |
+          python3 --version
+          bash -n scripts/universe/release.sh
+          UNIVERSE_TEST_PYTHON=python3 node --test \
+            scripts/universe/release-gates.test.mjs \
+            scripts/universe/gateway.test.mjs \
+            scripts/universe/gateway-overlay-handoff.test.mjs \
+            scripts/universe/gateway-restart.test.mjs
+
+      - name: Keep backend production dependencies only
+        working-directory: backend
+        run: |
+          npm prune --omit=dev
+          git diff --exit-code -- package.json package-lock.json
 
       # The same gates the CI run applies to a build, applied to the build that
       # is about to be shipped. A green CI run on the same commit does not prove
@@ -78,32 +109,24 @@ jobs:
         run: node --test scripts/universe/release-manifest.test.mjs
 
       # release.sh reads the frontend from frontend/build, the backend from
-      # backend/dist, and the gateway from scripts/universe. node_modules and
-      # the compiled gbt module are not packed: install hard-links them from the
-      # running release, which is correct only while the dependency tree is
-      # unchanged. The lock file is packed so that release.sh install can
-      # compare it against the running release and refuse the hard link when it
-      # differs. That check belongs there, where both trees are visible; here
-      # only one of them is.
+      # backend/dist, and the gateway from scripts/universe. The exact
+      # production dependency tree is packed too. A deployment must install
+      # these tested bytes instead of rebuilding dependencies on the live host.
       - name: Pack
         id: pack
         run: |
           set -euo pipefail
-          sha='${{ steps.sha.outputs.short }}'
+          sha='${{ steps.sha.outputs.sha }}'
           stage=$(mktemp -d)
+          trap 'rm -rf "$stage"' EXIT
           mkdir -p "$stage/backend" "$stage/frontend" "$stage/scripts"
           cp -a backend/dist "$stage/backend/dist"
+          cp -a backend/node_modules "$stage/backend/node_modules"
           cp -a backend/package.json "$stage/backend/package.json"
           cp -a backend/package-lock.json "$stage/backend/package-lock.json"
-          # The lock file names a first-party dependency by path,
-          # `file:vendor/...tgz`, and the compiled gbt module is reached
-          # through a symlink into the backend directory. Without both, a
-          # release whose dependency tree changed cannot be installed at
-          # all: `npm ci` fails on the missing tarball, and the symlink
-          # dangles. The install hard-links node_modules from the running
-          # release when the lock is unchanged, which is why this went
-          # unnoticed until a release actually added a dependency, and then
-          # it had to be assembled by hand on the host.
+          # Keep the local package inputs beside the resolved production tree.
+          # They make the dependency provenance auditable and keep the
+          # release self-contained if its tree ever needs offline inspection.
           cp -a backend/vendor "$stage/backend/vendor"
           cp -a backend/rust-gbt "$stage/backend/rust-gbt"
           cp -a frontend/dist/mempool/browser "$stage/frontend/build"
@@ -115,7 +138,9 @@ jobs:
           # the artifact there.
           mkdir -p "$stage/production"
           cp -a production/linux "$stage/production/linux"
+          chmod 0755 "$stage/scripts/universe/release.sh"
           test -f "$stage/production/linux/universe-explorer-gateway.socket"
+          test -f "$stage/production/linux/universe-explorer-gateway.service.d/10-socket.conf"
           # What this release is, written down once and carried with it. The
           # frontend, the explorer backend and the gateway in this artifact are
           # one commit, and stating so is what makes an origin serving two of
@@ -125,11 +150,15 @@ jobs:
           node scripts/universe/release-manifest.mjs emit --commit='${{ steps.sha.outputs.sha }}' --out="$stage/RELEASE-MANIFEST.json"
           test -f "$stage/RELEASE-MANIFEST.json"
           test -f "$stage/backend/dist/index.js"
+          test -f "$stage/backend/dist/api/bitcoin/bitcoin-api.js"
+          test -f "$stage/backend/dist/rpc-api/jsonrpc.js"
+          test -d "$stage/backend/node_modules/@nestjs/core"
+          test -e "$stage/backend/node_modules/rust-gbt"
           test -f "$stage/backend/vendor/bitcoinuniverse-ecosystem-contracts-1.2.0.tgz"
           test -f "$stage/backend/rust-gbt/package.json"
           test -f "$stage/frontend/build/index.html"
           test -f "$stage/scripts/universe/gateway.mjs"
-          out="$PWD/mempool-$sha.tar.gz"
+          out="mempool-$sha.tar.gz"
           tar -czf "$out" -C "$stage" backend frontend scripts production RELEASE-MANIFEST.json
           sha256sum "$out" | tee "$out.sha256"
           printf 'name=mempool-%s\n' "$sha" >> "$GITHUB_OUTPUT"
@@ -139,7 +168,7 @@ jobs:
         with:
           name: ${{ steps.pack.outputs.name }}
           path: |
-            mempool-*.tar.gz
-            mempool-*.tar.gz.sha256
+            mempool-${{ steps.sha.outputs.sha }}.tar.gz
+            mempool-${{ steps.sha.outputs.sha }}.tar.gz.sha256
           retention-days: 14
           if-no-files-found: error

@@ -1,6 +1,6 @@
 <div class="container-xl product-page">
   <header class="page-head">
-    <nav class="crumbs">
+    <nav class="crumbs" aria-label="Breadcrumb" i18n-aria-label="universe.breadcrumb-label">
       <a [routerLink]="['/protocols']">Protocols</a>
       <span class="divider">/</span>
       <a [routerLink]="['/wildkin']">Wildkin</a>
@@ -13,16 +13,21 @@
     </p>
   </header>
 
-  <nav class="nav-tabs">
+  <nav class="nav-tabs" aria-label="Product sections" i18n-aria-label="universe.product-sections-label">
     <a [routerLink]="['/wildkin']">Overview</a>
     <a [routerLink]="['/wildkin/creatures']">Creatures</a>
-    <a [routerLink]="['/wildkin/bloodlines']" class="active">Bloodlines & Braids</a>
+    <a [routerLink]="['/wildkin/bloodlines']" class="active" aria-current="page">Bloodlines & Braids</a>
   </nav>
 
   <ng-container *ngIf="vm$ | async as vm">
     <div *ngIf="vm.kind === 'loading'" class="panel" aria-busy="true">
       <p>Loading braid ceremony history...</p>
     </div>
+
+    <section *ngIf="vm.kind === 'error'" class="panel" role="alert">
+      <h2>Bloodline data unavailable</h2>
+      <p>No authoritative first-party Wildkin provider is configured. The explorer will not substitute example ceremonies or validation results.</p>
+    </section>
 
     <ng-container *ngIf="vm.kind === 'ready'">
       <section class="panel">
@@ -31,7 +36,10 @@
           A transaction is a valid braid when it spends the binding UTXO of both named parents, commits the inheritance manifest hash, and inscribes exactly one heir creature as a child of both parents.
         </p>
 
-        <table class="data-table" *ngIf="vm.braids?.length">
+        <p *ngIf="!vm.braids?.length">The configured provider returned no settled ceremonies.</p>
+
+        <div class="table-wrap" *ngIf="vm.braids?.length" tabindex="0" role="region" aria-label="Wildkin bloodline braids" i18n-aria-label="universe.wildkin.bloodline-table">
+          <table class="data-table">
           <thead>
             <tr>
               <th>Braid Txid</th>
@@ -40,21 +48,26 @@
               <th>Parent Beta</th>
               <th>Inheritance Manifest</th>
               <th>Block</th>
-              <th>Validity</th>
+              <th>Provider Status</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let b of vm.braids">
-              <td class="mono"><a [routerLink]="['/tx', b.braidTxid]">{{ b.braidTxid.slice(0, 16) }}...</a></td>
-              <td class="mono"><strong><a [routerLink]="['/wildkin/creature', b.heirCreatureId]">{{ b.heirCreatureId }}</a></strong></td>
-              <td class="mono"><a [routerLink]="['/wildkin/creature', b.parentAId]">{{ b.parentAId }}</a></td>
-              <td class="mono"><a [routerLink]="['/wildkin/creature', b.parentBId]">{{ b.parentBId }}</a></td>
-              <td class="mono">{{ b.inheritanceManifestHash.slice(0, 14) }}...</td>
+              <td class="mono"><app-universe-identifier [value]="b.braidTxid" label="braid transaction" [link]="['/tx', b.braidTxid]"></app-universe-identifier></td>
+              <td class="mono"><app-universe-identifier [value]="b.heirCreatureId" label="heir creature" [link]="['/wildkin/creature', b.heirCreatureId]"></app-universe-identifier></td>
+              <td class="mono"><app-universe-identifier [value]="b.parentAId" label="first parent" [link]="['/wildkin/creature', b.parentAId]"></app-universe-identifier></td>
+              <td class="mono"><app-universe-identifier [value]="b.parentBId" label="second parent" [link]="['/wildkin/creature', b.parentBId]"></app-universe-identifier></td>
+              <td class="mono"><app-universe-identifier [value]="b.inheritanceManifestHash" label="inheritance manifest hash"></app-universe-identifier></td>
               <td>{{ b.blockHeight }}</td>
-              <td><span class="badge badge-success">Valid Braid</span></td>
+              <td>
+                <span class="badge" [class.badge-success]="b.valid" [class.badge-warning]="!b.valid">
+                  {{ b.valid ? 'Provider reports valid' : 'Provider reports invalid' }}
+                </span>
+              </td>
             </tr>
           </tbody>
-        </table>
+          </table>
+        </div>
       </section>
     </ng-container>
   </ng-container>

@@ -1,24 +1,31 @@
 import { arkService } from './ark.service';
 
+const unavailable = {
+  name: 'FirstPartyDataUnavailableError',
+  code: 'first-party-data-unavailable',
+  statusCode: 503,
+  capability: 'ark',
+};
+
 describe('ArkService', () => {
-  it('returns registered Ark server providers', async () => {
-    const operators = await arkService.$getOperators();
-    expect(operators.length).toBeGreaterThan(0);
-    expect(operators[0].aspPubkey).toBeDefined();
-    expect(operators[0].status).toBe('online');
-  });
+  it('never substitutes production fixtures for missing first-party data', () =>
+    Promise.all([
+      expect(arkService.$getOperators()).rejects.toMatchObject(unavailable),
+      expect(arkService.$getBatches()).rejects.toMatchObject(unavailable),
+      expect(arkService.$getBatch('batch-id')).rejects.toMatchObject(
+        unavailable
+      ),
+      expect(arkService.$getVtxo('vtxo-id')).rejects.toMatchObject(unavailable),
+      expect(arkService.$getVirtualTxs()).rejects.toMatchObject(unavailable),
+    ]));
 
-  it('provides on-chain settlement batches with merkle roots', async () => {
-    const batches = await arkService.$getBatches();
-    expect(batches.length).toBeGreaterThan(0);
-    expect(batches[0].anchorTxid).toHaveLength(64);
-    expect(batches[0].status).toBe('settled');
-  });
-
-  it('tracks VTXO tree indices and timelocks', async () => {
-    const vtxo = await arkService.$getVtxo('vtxo-78192a83918273918273918273918273');
-    expect(vtxo).not.toBeNull();
-    expect(vtxo?.status).toBe('spendable');
-    expect(vtxo?.timelockExpiryBlocks).toBe(2016);
-  });
+  it('fails proof verification closed without a semantic verifier', () =>
+    Promise.all([
+      expect(arkService.$verifyProof('vtxo-id', [])).rejects.toMatchObject(
+        unavailable
+      ),
+      expect(
+        arkService.$verifyProof('vtxo-id', ['plausible-node'])
+      ).rejects.toMatchObject(unavailable),
+    ]));
 });

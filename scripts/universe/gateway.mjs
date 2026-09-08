@@ -23,6 +23,10 @@
  *   UNIVERSE_GATEWAY_PORT     default 8099
  *   UNIVERSE_GATEWAY_BACKEND  default http://127.0.0.1:8996
  *   UNIVERSE_GATEWAY_OVERLAY  default http://127.0.0.1:3400
+ *   UNIVERSE_GATEWAY_OVERLAY_ROUTE_FILE
+ *                                persistent atomic overlay handoff state
+ *   UNIVERSE_GATEWAY_PORTFOLIO_V2
+ *                                safe fallback, 1 enables, default 0
  *   UNIVERSE_GATEWAY_ESPLORA  unset; the local mempool/electrs Esplora API
  *   UNIVERSE_GATEWAY_ROOT     default ./frontend/dist/mempool/browser
  */
@@ -36,7 +40,75 @@ import { extname, join, normalize, resolve, sep } from 'node:path';
 const HOST = process.env.UNIVERSE_GATEWAY_HOST || '127.0.0.1';
 const PORT = Number(process.env.UNIVERSE_GATEWAY_PORT || 8099);
 const BACKEND = new URL(process.env.UNIVERSE_GATEWAY_BACKEND || 'http://127.0.0.1:8996');
-const OVERLAY = new URL(process.env.UNIVERSE_GATEWAY_OVERLAY || 'http://127.0.0.1:3400');
+const OVERLAY_FALLBACK = new URL(process.env.UNIVERSE_GATEWAY_OVERLAY || 'http://127.0.0.1:3400');
+const OVERLAY_ROUTE_FILE =
+  process.env.UNIVERSE_GATEWAY_OVERLAY_ROUTE_FILE ||
+  '/var/lib/universe-explorer/overlay-route.json';
+const OVERLAY_ROUTE_SCHEMA = 'universe-overlay-route-v1';
+const FULL_RELEASE_SHA = /^[0-9a-f]{40}$/;
+const OVERLAY_V2_DEFAULT = String(process.env.UNIVERSE_GATEWAY_PORTFOLIO_V2 ?? '0').trim() === '1';
+
+let lastOverlayRoute = {
+  upstream: OVERLAY_FALLBACK,
+  slot: 'environment',
+  releaseSha: null,
+  portfolioV2: OVERLAY_V2_DEFAULT,
+};
+
+function parsedOverlayRoute(text) {
+  const value = JSON.parse(text);
+  if (
+    value?.schemaVersion !== OVERLAY_ROUTE_SCHEMA ||
+    !['candidate', 'live'].includes(value.slot) ||
+    !FULL_RELEASE_SHA.test(value.releaseSha) ||
+    typeof value.portfolioV2 !== 'boolean'
+  ) {
+    throw new Error('overlay route state is invalid');
+  }
+  const upstream = new URL(value.origin);
+  if (
+    upstream.protocol !== 'http:' ||
+    upstream.hostname !== '127.0.0.1' ||
+    !upstream.port ||
+    upstream.pathname !== '/' ||
+    upstream.search ||
+    upstream.hash ||
+    upstream.username ||
+    upstream.password
+  ) {
+    throw new Error('overlay route origin must be a loopback HTTP origin');
+  }
+  return {
+    upstream,
+    slot: value.slot,
+    releaseSha: value.releaseSha,
+    portfolioV2: value.portfolioV2,
+  };
+}
+
+/**
+ * Resolve the overlay for this request.
+ *
+ * The release tool replaces the state file atomically. A malformed or
+ * temporarily unreadable file never redirects traffic somewhere new: the
+ * gateway retains the last fully validated route. Removing the file restores
+ * the configured live origin, which is also the safe state after a reboot.
+ */
+export function currentOverlayRoute() {
+  try {
+    lastOverlayRoute = parsedOverlayRoute(readFileSync(OVERLAY_ROUTE_FILE, 'utf8'));
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      lastOverlayRoute = {
+        upstream: OVERLAY_FALLBACK,
+        slot: 'environment',
+        releaseSha: null,
+        portfolioV2: OVERLAY_V2_DEFAULT,
+      };
+    }
+  }
+  return lastOverlayRoute;
+}
 /**
  * The first-party Esplora index, when this deployment runs one.
  *
@@ -230,19 +302,30 @@ const OVERLAY_CHAIN_PREFIXES = [
  */
 export function routeFor(pathname, originalUrl) {
   if (pathname === '/api/v1/universe' || pathname.startsWith('/api/v1/universe/')) {
-    return { upstream: OVERLAY, path: originalUrl };
+    return {
+      upstream: currentOverlayRoute().upstream,
+      path: originalUrl,
+      dynamicOverlay: true,
+    };
   }
   // Portfolio API v2 registers its own versioned prefix on the overlay, so
   // it is routed by that prefix rather than by the shared v1 family.
   if (pathname === '/api/v2/universe' || pathname.startsWith('/api/v2/universe/')) {
-    return { upstream: OVERLAY, path: originalUrl };
+    const overlay = currentOverlayRoute();
+    return overlay.portfolioV2
+      ? { upstream: overlay.upstream, path: originalUrl, dynamicOverlay: true }
+      : { upstream: null, status: 404 };
   }
   if (pathname === '/api/v1/zcash/privacy' || pathname.startsWith('/api/v1/zcash/privacy/')) {
     return { upstream: BACKEND, path: originalUrl };
   }
   for (const prefix of OVERLAY_CHAIN_PREFIXES) {
     if (pathname === prefix || pathname.startsWith(`${prefix}/`)) {
-      return { upstream: OVERLAY, path: originalUrl };
+      return {
+        upstream: currentOverlayRoute().upstream,
+        path: originalUrl,
+        dynamicOverlay: true,
+      };
     }
   }
   if (pathname === '/api/v1' || pathname.startsWith('/api/v1/')) {
@@ -267,7 +350,7 @@ export function routeFor(pathname, originalUrl) {
 }
 
 export function websocketUpstreamFor(pathname) {
-  return pathname === '/api/v1/universe/ws' ? OVERLAY : BACKEND;
+  return pathname === '/api/v1/universe/ws' ? currentOverlayRoute().upstream : BACKEND;
 }
 
 /**
@@ -288,7 +371,6 @@ function upstreamIsRestarting(error) {
 }
 
 function proxy(request, response, route) {
-  const upstream = route.upstream;
   // Only a request with no body can be replayed. Everything this gateway
   // proxies that changes state carries one, so this never retries a write.
   const replayable = request.method === 'GET' || request.method === 'HEAD';
@@ -325,6 +407,7 @@ function proxy(request, response, route) {
 
   const send = () => {
     if (clientGone) return;
+    const upstream = route.dynamicOverlay ? currentOverlayRoute().upstream : route.upstream;
     const options = {
       protocol: upstream.protocol,
       hostname: upstream.hostname,
@@ -446,6 +529,24 @@ const server = http.createServer((request, response) => {
       'cache-control': 'no-store',
     });
     response.end(JSON.stringify({ status: 'ok', root: ROOT }));
+    return;
+  }
+
+  if (pathname === '/__gateway/overlay-route') {
+    const overlay = currentOverlayRoute();
+    response.writeHead(200, {
+      'content-type': 'application/json; charset=utf-8',
+      'cache-control': 'no-store',
+    });
+    response.end(
+      JSON.stringify({
+        schemaVersion: OVERLAY_ROUTE_SCHEMA,
+        dynamic: true,
+        slot: overlay.slot,
+        releaseSha: overlay.releaseSha,
+        portfolioV2: overlay.portfolioV2,
+      }),
+    );
     return;
   }
 
@@ -584,12 +685,13 @@ export function inheritedListenerFd(env = process.env, pid = process.pid) {
 if (process.env.UNIVERSE_GATEWAY_NO_LISTEN !== '1') {
   const inherited = inheritedListenerFd();
   const announce = () => {
+    const overlay = currentOverlayRoute();
     process.stdout.write(
       `Universe Explorer gateway listening on ${
         inherited === null ? `${HOST}:${PORT}` : `the socket systemd passed on fd ${inherited}`
       }
 ` +
-      `  overlay  ${OVERLAY.origin}
+      `  overlay  ${overlay.upstream.origin}
 ` +
       `  backend  ${BACKEND.origin}
 ` +

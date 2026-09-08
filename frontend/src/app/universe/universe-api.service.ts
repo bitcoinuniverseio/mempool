@@ -36,7 +36,6 @@ import {
   AnimaOrganismHistoryDocument,
   ArkBatch,
   ArkOperator,
-  ArkVirtualTx,
   ArkVtxo,
   BlockTemplateComparison,
   Bolt12Offer,
@@ -73,7 +72,6 @@ import {
   WildkinCreature,
   WildkinStatusSummary,
   ZcashNetworkUpgrade,
-  ZcashPoolFlow,
   ZcashPrivacySummary,
   ZcashValuePool,
 } from '@app/universe/universe.types';
@@ -94,20 +92,102 @@ import {
 export const UNIVERSE_OUTPOINT_BATCH_LIMIT = 50;
 export const UNIVERSE_TRANSACTION_BATCH_LIMIT = 25;
 
-const ACTIVITY_STATES = ['served', 'unconfigured', 'unavailable', 'unsupported'];
+const ACTIVITY_STATES = [
+  'served',
+  'unconfigured',
+  'unavailable',
+  'unsupported',
+];
+
+type RequiredFieldType = 'array' | 'boolean' | 'number' | 'object' | 'string';
+type RequiredFields = Readonly<Record<string, RequiredFieldType>>;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function hasRequiredFields(
+  value: unknown,
+  fields: RequiredFields
+): value is Record<string, unknown> {
+  if (!isRecord(value)) {
+    return false;
+  }
+  return Object.entries(fields).every(([field, kind]) => {
+    const member = value[field];
+    switch (kind) {
+      case 'array':
+        return Array.isArray(member);
+      case 'boolean':
+        return typeof member === 'boolean';
+      case 'number':
+        return typeof member === 'number' && Number.isFinite(member);
+      case 'object':
+        return isRecord(member);
+      default:
+        return typeof member === 'string';
+    }
+  });
+}
+
+function requireResponse<T>(
+  value: unknown,
+  label: string,
+  fields: RequiredFields
+): T {
+  if (!hasRequiredFields(value, fields)) {
+    throw new Error(`malformed-${label}-response`);
+  }
+  return value as T;
+}
+
+function requireListResponse<T, K extends string>(
+  value: unknown,
+  label: string,
+  key: K,
+  itemFields: RequiredFields
+): Record<K, T[]> & { total: number } {
+  const envelope = requireResponse<Record<string, unknown>>(value, label, {
+    [key]: 'array',
+    total: 'number',
+  });
+  const items = envelope[key];
+  if (
+    !Array.isArray(items) ||
+    !items.every((item) => hasRequiredFields(item, itemFields))
+  ) {
+    throw new Error(`malformed-${label}-response`);
+  }
+  return envelope as Record<K, T[]> & { total: number };
+}
 
 /**
  * Guards the activity envelope before it reaches a component. A response
  * that is not the documented document (a gateway's HTML, an array, an older
- * release) resolves to the explicit unsupported page rather than flowing
- * into the page as if it were feed data.
+ * release) fails closed rather than flowing into the page as if it were feed
+ * data. A real 404 remains an explicit unsupported capability.
  */
 function isActivityPage(value: unknown): value is ExplorerProtocolActivityPage {
-  return typeof value === 'object' && value !== null && !Array.isArray(value)
-    && ACTIVITY_STATES.includes((value as ExplorerProtocolActivityPage).state);
+  return (
+    hasRequiredFields(value, {
+      schemaVersion: 'string',
+      protocolId: 'string',
+      state: 'string',
+      assets: 'array',
+      events: 'array',
+      invalidations: 'array',
+      holderSnapshots: 'array',
+      hasMore: 'boolean',
+      observedAt: 'string',
+    }) &&
+    value.schemaVersion === 'universe-protocol-activity-v1' &&
+    ACTIVITY_STATES.includes(value.state as string)
+  );
 }
 
-function unsupportedActivityPage(protocolId: string): ExplorerProtocolActivityPage {
+function unsupportedActivityPage(
+  protocolId: string
+): ExplorerProtocolActivityPage {
   return {
     schemaVersion: 'universe-protocol-activity-v1',
     protocolId,
@@ -130,11 +210,22 @@ function unsupportedActivityPage(protocolId: string): ExplorerProtocolActivityPa
 const OBJECTS_STATES = ['served', 'unconfigured', 'unavailable', 'unsupported'];
 
 function isObjectsPage(value: unknown): value is ExplorerProtocolObjectsPage {
-  return typeof value === 'object' && value !== null && !Array.isArray(value)
-    && OBJECTS_STATES.includes((value as ExplorerProtocolObjectsPage).state);
+  return (
+    hasRequiredFields(value, {
+      schemaVersion: 'string',
+      protocolId: 'string',
+      state: 'string',
+      items: 'array',
+      observedAt: 'string',
+    }) &&
+    value.schemaVersion === 'universe-protocol-objects-v1' &&
+    OBJECTS_STATES.includes(value.state as string)
+  );
 }
 
-function unsupportedObjectsPage(protocolId: string): ExplorerProtocolObjectsPage {
+function unsupportedObjectsPage(
+  protocolId: string
+): ExplorerProtocolObjectsPage {
   return {
     schemaVersion: 'universe-protocol-objects-v1',
     protocolId,
@@ -158,13 +249,16 @@ function unsupportedObjectsPage(protocolId: string): ExplorerProtocolObjectsPage
  * every fixture answered whatever it was asked, so the bound is enforced
  * here, once, where the request is built.
  */
-export const CHAIN_MEMPOOL_LIMIT: Record<Exclude<ExplorerChain, 'bitcoin'>, number> = {
+export const CHAIN_MEMPOOL_LIMIT: Record<
+  Exclude<ExplorerChain, 'bitcoin'>,
+  number
+> = {
   dogecoin: 1000,
   zcash: 200,
 };
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class UniverseApiService {
   private apiBaseUrl: string; // base URL is protocol, hostname, and port
@@ -173,26 +267,32 @@ export class UniverseApiService {
 
   constructor(
     private httpClient: HttpClient,
-    private stateService: StateService,
+    private stateService: StateService
   ) {
     this.apiBaseUrl = ''; // use relative (same-origin) URL by default
-    if (!stateService.isBrowser) { // except when inside AU SSR process
-      this.apiBaseUrl = this.stateService.env.NGINX_PROTOCOL + '://' + this.stateService.env.NGINX_HOSTNAME + ':' + this.stateService.env.NGINX_PORT;
+    if (!stateService.isBrowser) {
+      // except when inside AU SSR process
+      this.apiBaseUrl =
+        this.stateService.env.NGINX_PROTOCOL +
+        '://' +
+        this.stateService.env.NGINX_HOSTNAME +
+        ':' +
+        this.stateService.env.NGINX_PORT;
     }
   }
 
   getProtocols$(): Observable<ProtocolsResponse> {
     if (!this.protocolsCache$) {
-      this.protocolsCache$ = this.httpClient.get<ProtocolsResponse>(
-        this.apiBaseUrl + '/api/v1/universe/protocols'
-      ).pipe(
-        catchError((error) => {
-          // don't cache failures: allow the next subscriber to retry
-          this.protocolsCache$ = null;
-          return throwError(() => error);
-        }),
-        shareReplay({ bufferSize: 1, refCount: false }),
-      );
+      this.protocolsCache$ = this.httpClient
+        .get<ProtocolsResponse>(this.apiBaseUrl + '/api/v1/universe/protocols')
+        .pipe(
+          catchError((error) => {
+            // don't cache failures: allow the next subscriber to retry
+            this.protocolsCache$ = null;
+            return throwError(() => error);
+          }),
+          shareReplay({ bufferSize: 1, refCount: false })
+        );
     }
     return this.protocolsCache$;
   }
@@ -202,28 +302,49 @@ export class UniverseApiService {
    * authority publishes no feed this explorer reads, which is a state to
    * render, not an error, so it resolves to an explicit unsupported page.
    */
-  getProtocolActivity$(protocolId: string, cursor?: string, limit = 25): Observable<ExplorerProtocolActivityPage> {
+  getProtocolActivity$(
+    protocolId: string,
+    cursor?: string,
+    limit = 25
+  ): Observable<ExplorerProtocolActivityPage> {
     let query = '?limit=' + Math.min(Math.max(1, Math.floor(limit)), 200);
-    if (cursor) {query += '&cursor=' + encodeURIComponent(cursor);}
-    return this.httpClient.get<ExplorerProtocolActivityPage>(
-      this.apiBaseUrl + '/api/v1/universe/protocols/' + encodeURIComponent(protocolId) + '/activity' + query
-    ).pipe(
-      map((page) => isActivityPage(page) ? page : unsupportedActivityPage(protocolId)),
-      catchError((error) => {
-        if (error?.status === 404) {
-          return of(unsupportedActivityPage(protocolId));
-        }
-        return throwError(() => error);
-      }),
-    );
+    if (cursor) {
+      query += '&cursor=' + encodeURIComponent(cursor);
+    }
+    return this.httpClient
+      .get<ExplorerProtocolActivityPage>(
+        this.apiBaseUrl +
+          '/api/v1/universe/protocols/' +
+          encodeURIComponent(protocolId) +
+          '/activity' +
+          query
+      )
+      .pipe(
+        map((page) => {
+          if (!isActivityPage(page)) {
+            throw new Error('malformed-protocol-activity-response');
+          }
+          return page;
+        }),
+        catchError((error) => {
+          if (error?.status === 404) {
+            return of(unsupportedActivityPage(protocolId));
+          }
+          return throwError(() => error);
+        })
+      );
   }
 
   getStatus$(): Observable<StatusResponse> {
-    return this.httpClient.get<StatusResponse>(this.apiBaseUrl + '/api/v1/universe/status');
+    return this.httpClient.get<StatusResponse>(
+      this.apiBaseUrl + '/api/v1/universe/status'
+    );
   }
 
   getSources$(): Observable<SourcesResponse> {
-    return this.httpClient.get<SourcesResponse>(this.apiBaseUrl + '/api/v1/universe/sources');
+    return this.httpClient.get<SourcesResponse>(
+      this.apiBaseUrl + '/api/v1/universe/sources'
+    );
   }
 
   /**
@@ -232,7 +353,9 @@ export class UniverseApiService {
    * the overlay calls rather than a bare relative path.
    */
   getBackendInfo$(): Observable<BackendInfo> {
-    return this.httpClient.get<BackendInfo>(this.apiBaseUrl + '/api/v1/backend-info');
+    return this.httpClient.get<BackendInfo>(
+      this.apiBaseUrl + '/api/v1/backend-info'
+    );
   }
 
   /** Protocol asset flow for one transaction. Never cached: state changes as the transaction confirms. */
@@ -255,7 +378,10 @@ export class UniverseApiService {
   }
 
   /** Assets attached to one outpoint, with the evidence behind the answer. */
-  getOutpoint$(txid: string, vout: number | string): Observable<OutpointEnrichment> {
+  getOutpoint$(
+    txid: string,
+    vout: number | string
+  ): Observable<OutpointEnrichment> {
     return this.httpClient.get<OutpointEnrichment>(
       this.apiBaseUrl + '/api/v1/universe/outpoints/' + txid + '/' + vout
     );
@@ -270,16 +396,22 @@ export class UniverseApiService {
   }
 
   /** One inscription, addressed by id or by inscription number. */
-  getInscription$(reference: string): Observable<AssetLookupResult<OrdInscriptionView>> {
+  getInscription$(
+    reference: string
+  ): Observable<AssetLookupResult<OrdInscriptionView>> {
     return this.httpClient.get<AssetLookupResult<OrdInscriptionView>>(
-      this.apiBaseUrl + '/api/v1/universe/inscriptions/' + encodeURIComponent(reference)
+      this.apiBaseUrl +
+        '/api/v1/universe/inscriptions/' +
+        encodeURIComponent(reference)
     );
   }
 
   /** One rune, addressed by name or by rune id. */
   getRune$(reference: string): Observable<AssetLookupResult<OrdRuneView>> {
     return this.httpClient.get<AssetLookupResult<OrdRuneView>>(
-      this.apiBaseUrl + '/api/v1/universe/runes/' + encodeURIComponent(reference)
+      this.apiBaseUrl +
+        '/api/v1/universe/runes/' +
+        encodeURIComponent(reference)
     );
   }
 
@@ -291,9 +423,16 @@ export class UniverseApiService {
   }
 
   /** Inscriptions revealed in one block. Paginated by the authority. */
-  getBlockInscriptions$(height: number | string, page = 0): Observable<AssetLookupResult<OrdBlockInscriptionsView>> {
+  getBlockInscriptions$(
+    height: number | string,
+    page = 0
+  ): Observable<AssetLookupResult<OrdBlockInscriptionsView>> {
     return this.httpClient.get<AssetLookupResult<OrdBlockInscriptionsView>>(
-      this.apiBaseUrl + '/api/v1/universe/blocks/' + height + '/inscriptions?page=' + page
+      this.apiBaseUrl +
+        '/api/v1/universe/blocks/' +
+        height +
+        '/inscriptions?page=' +
+        page
     );
   }
 
@@ -309,85 +448,166 @@ export class UniverseApiService {
     );
   }
 
-  search$(query: string, activeChain: ExplorerChain, allChains = false): Observable<UniverseSearchResponse> {
+  search$(
+    query: string,
+    activeChain: ExplorerChain,
+    allChains = false
+  ): Observable<UniverseSearchResponse> {
     return this.httpClient.get<UniverseSearchResponse>(
-      this.apiBaseUrl + '/api/v1/universe/search?q=' + encodeURIComponent(query)
-        + '&chain=' + activeChain + '&all=' + allChains
+      this.apiBaseUrl +
+        '/api/v1/universe/search?q=' +
+        encodeURIComponent(query) +
+        '&chain=' +
+        activeChain +
+        '&all=' +
+        allChains
     );
   }
 
-  getChainMempool$(chain: Exclude<ExplorerChain, 'bitcoin'>, limit = 100): Observable<ChainExplorerPayload> {
+  getChainMempool$(
+    chain: Exclude<ExplorerChain, 'bitcoin'>,
+    limit = 100
+  ): Observable<ChainExplorerPayload> {
     return this.httpClient.get<ChainExplorerPayload>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/mempool?network=mainnet&limit='
-        + Math.min(Math.max(1, Math.floor(limit)), CHAIN_MEMPOOL_LIMIT[chain])
+      this.apiBaseUrl +
+        '/api/v1/' +
+        chain +
+        '/mempool?network=mainnet&limit=' +
+        Math.min(Math.max(1, Math.floor(limit)), CHAIN_MEMPOOL_LIMIT[chain])
     );
   }
 
-  getChainCandidateBuckets$(chain: Exclude<ExplorerChain, 'bitcoin'>): Observable<ChainExplorerPayload> {
+  getChainCandidateBuckets$(
+    chain: Exclude<ExplorerChain, 'bitcoin'>
+  ): Observable<ChainExplorerPayload> {
     return this.httpClient.get<ChainExplorerPayload>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/candidate-buckets?network=mainnet'
+      this.apiBaseUrl +
+        '/api/v1/' +
+        chain +
+        '/candidate-buckets?network=mainnet'
     );
   }
 
   /** The one-call dashboard aggregate: blocks, buckets, fees, mempool, mining. */
-  getChainDashboard$(chain: Exclude<ExplorerChain, 'bitcoin'>): Observable<ChainDashboardView> {
+  getChainDashboard$(
+    chain: Exclude<ExplorerChain, 'bitcoin'>
+  ): Observable<ChainDashboardView> {
     return this.httpClient.get<ChainDashboardView>(
       this.apiBaseUrl + '/api/v1/' + chain + '/dashboard?network=mainnet'
     );
   }
 
-  getChainRecentBlocks$(chain: Exclude<ExplorerChain, 'bitcoin'>, limit = 15): Observable<RecentBlocksView> {
+  getChainRecentBlocks$(
+    chain: Exclude<ExplorerChain, 'bitcoin'>,
+    limit = 15
+  ): Observable<RecentBlocksView> {
     return this.httpClient.get<RecentBlocksView>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/blocks/recent?network=mainnet&limit=' + limit
+      this.apiBaseUrl +
+        '/api/v1/' +
+        chain +
+        '/blocks/recent?network=mainnet&limit=' +
+        limit
     );
   }
 
-  getChainFees$(chain: Exclude<ExplorerChain, 'bitcoin'>): Observable<FeeRecommendationsView> {
+  getChainFees$(
+    chain: Exclude<ExplorerChain, 'bitcoin'>
+  ): Observable<FeeRecommendationsView> {
     return this.httpClient.get<FeeRecommendationsView>(
       this.apiBaseUrl + '/api/v1/' + chain + '/fees?network=mainnet'
     );
   }
 
-  getChainMining$(chain: Exclude<ExplorerChain, 'bitcoin'>): Observable<MiningSummaryView> {
+  getChainMining$(
+    chain: Exclude<ExplorerChain, 'bitcoin'>
+  ): Observable<MiningSummaryView> {
     return this.httpClient.get<MiningSummaryView>(
       this.apiBaseUrl + '/api/v1/' + chain + '/mining?network=mainnet'
     );
   }
 
-  getChainMiningPools$(chain: Exclude<ExplorerChain, 'bitcoin'>, window = '1w'): Observable<MiningPoolsView> {
+  getChainMiningPools$(
+    chain: Exclude<ExplorerChain, 'bitcoin'>,
+    window = '1w'
+  ): Observable<MiningPoolsView> {
     return this.httpClient.get<MiningPoolsView>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/mining/pools?network=mainnet&window=' + encodeURIComponent(window)
+      this.apiBaseUrl +
+        '/api/v1/' +
+        chain +
+        '/mining/pools?network=mainnet&window=' +
+        encodeURIComponent(window)
     );
   }
 
-  getChainChartSeries$(chain: Exclude<ExplorerChain, 'bitcoin'>, seriesId: string, range = '1w'): Observable<ChartSeriesView> {
+  getChainChartSeries$(
+    chain: Exclude<ExplorerChain, 'bitcoin'>,
+    seriesId: string,
+    range = '1w'
+  ): Observable<ChartSeriesView> {
     return this.httpClient.get<ChartSeriesView>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/charts/' + encodeURIComponent(seriesId)
-        + '?network=mainnet&range=' + encodeURIComponent(range)
+      this.apiBaseUrl +
+        '/api/v1/' +
+        chain +
+        '/charts/' +
+        encodeURIComponent(seriesId) +
+        '?network=mainnet&range=' +
+        encodeURIComponent(range)
     );
   }
 
-  getChainTransaction$(chain: Exclude<ExplorerChain, 'bitcoin'>, txid: string): Observable<ChainExplorerPayload> {
+  getChainTransaction$(
+    chain: Exclude<ExplorerChain, 'bitcoin'>,
+    txid: string
+  ): Observable<ChainExplorerPayload> {
     return this.httpClient.get<ChainExplorerPayload>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/tx/' + encodeURIComponent(txid) + '?network=mainnet'
+      this.apiBaseUrl +
+        '/api/v1/' +
+        chain +
+        '/tx/' +
+        encodeURIComponent(txid) +
+        '?network=mainnet'
     );
   }
 
-  getChainBlock$(chain: Exclude<ExplorerChain, 'bitcoin'>, reference: string, limit = 100, offset = 0): Observable<ChainExplorerPayload> {
-    const paging = chain === 'dogecoin'
-      ? '&page=' + (Math.floor(offset / limit) + 1) + '&limit=' + limit
-      : '&limit=' + limit + '&offset=' + offset;
+  getChainBlock$(
+    chain: Exclude<ExplorerChain, 'bitcoin'>,
+    reference: string,
+    limit = 100,
+    offset = 0
+  ): Observable<ChainExplorerPayload> {
+    const paging =
+      chain === 'dogecoin'
+        ? '&page=' + (Math.floor(offset / limit) + 1) + '&limit=' + limit
+        : '&limit=' + limit + '&offset=' + offset;
     return this.httpClient.get<ChainExplorerPayload>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/block/' + encodeURIComponent(reference) + '?network=mainnet' + paging
+      this.apiBaseUrl +
+        '/api/v1/' +
+        chain +
+        '/block/' +
+        encodeURIComponent(reference) +
+        '?network=mainnet' +
+        paging
     );
   }
 
-  getChainAddress$(chain: Exclude<ExplorerChain, 'bitcoin'>, address: string, limit = 100, offset = 0): Observable<ChainExplorerPayload> {
-    const paging = chain === 'dogecoin'
-      ? '&page=' + (Math.floor(offset / limit) + 1) + '&limit=' + limit
-      : '&limit=' + limit + '&offset=' + offset;
+  getChainAddress$(
+    chain: Exclude<ExplorerChain, 'bitcoin'>,
+    address: string,
+    limit = 100,
+    offset = 0
+  ): Observable<ChainExplorerPayload> {
+    const paging =
+      chain === 'dogecoin'
+        ? '&page=' + (Math.floor(offset / limit) + 1) + '&limit=' + limit
+        : '&limit=' + limit + '&offset=' + offset;
     return this.httpClient.get<ChainExplorerPayload>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/address/' + encodeURIComponent(address) + '?network=mainnet' + paging
+      this.apiBaseUrl +
+        '/api/v1/' +
+        chain +
+        '/address/' +
+        encodeURIComponent(address) +
+        '?network=mainnet' +
+        paging
     );
   }
 
@@ -397,32 +617,74 @@ export class UniverseApiService {
    * exact aggregates. Served beside the base address view so a failure here
    * degrades the asset sections without taking the address page down.
    */
-  getChainAddressHoldings$(chain: Exclude<ExplorerChain, 'bitcoin'>, address: string, limit = 50, offset = 0): Observable<ChainExplorerPayload> {
+  getChainAddressHoldings$(
+    chain: Exclude<ExplorerChain, 'bitcoin'>,
+    address: string,
+    limit = 50,
+    offset = 0
+  ): Observable<ChainExplorerPayload> {
     return this.httpClient.get<ChainExplorerPayload>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/address/' + encodeURIComponent(address) + '/holdings?network=mainnet&limit=' + limit + '&offset=' + offset
+      this.apiBaseUrl +
+        '/api/v1/' +
+        chain +
+        '/address/' +
+        encodeURIComponent(address) +
+        '/holdings?network=mainnet&limit=' +
+        limit +
+        '&offset=' +
+        offset
     );
   }
 
   /** The Bitcoin address asset-holdings view from the universe overlay. */
-  getAddressHoldings$(address: string, limit = 100, offset = 0): Observable<ChainExplorerPayload> {
+  getAddressHoldings$(
+    address: string,
+    limit = 100,
+    offset = 0
+  ): Observable<ChainExplorerPayload> {
     return this.httpClient.get<ChainExplorerPayload>(
-      this.apiBaseUrl + '/api/v1/universe/addresses/' + encodeURIComponent(address) + '/holdings?limit=' + limit + '&offset=' + offset
+      this.apiBaseUrl +
+        '/api/v1/universe/addresses/' +
+        encodeURIComponent(address) +
+        '/holdings?limit=' +
+        limit +
+        '&offset=' +
+        offset
     );
   }
 
-  getChainOutpoint$(chain: Exclude<ExplorerChain, 'bitcoin'>, txid: string, vout: string): Observable<ChainExplorerPayload> {
+  getChainOutpoint$(
+    chain: Exclude<ExplorerChain, 'bitcoin'>,
+    txid: string,
+    vout: string
+  ): Observable<ChainExplorerPayload> {
     return this.httpClient.get<ChainExplorerPayload>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/outpoint/' + encodeURIComponent(txid) + '/' + encodeURIComponent(vout) + '?network=mainnet'
+      this.apiBaseUrl +
+        '/api/v1/' +
+        chain +
+        '/outpoint/' +
+        encodeURIComponent(txid) +
+        '/' +
+        encodeURIComponent(vout) +
+        '?network=mainnet'
     );
   }
 
-  getChainProtocols$(chain: Exclude<ExplorerChain, 'bitcoin'>): Observable<ChainExplorerPayload> {
+  getChainProtocols$(
+    chain: Exclude<ExplorerChain, 'bitcoin'>
+  ): Observable<ChainExplorerPayload> {
     return this.httpClient.get<ChainExplorerPayload>(
       this.apiBaseUrl + '/api/v1/' + chain + '/protocols?network=mainnet'
     );
   }
 
-  getChainProtocolList$(chain: Exclude<ExplorerChain, 'bitcoin'>, protocol: string, limit = 100, offset = 0, ruleset?: string): Observable<ChainExplorerPayload> {
+  getChainProtocolList$(
+    chain: Exclude<ExplorerChain, 'bitcoin'>,
+    protocol: string,
+    limit = 100,
+    offset = 0,
+    ruleset?: string
+  ): Observable<ChainExplorerPayload> {
     const path = this.protocolPath(chain, protocol);
     let query = '?network=mainnet&limit=' + limit;
     if (chain === 'dogecoin' && protocol !== 'doge-tap') {
@@ -430,31 +692,63 @@ export class UniverseApiService {
     } else if (chain === 'dogecoin') {
       query += '&offset=' + offset;
     }
-    if (ruleset) {query += '&ruleset=' + encodeURIComponent(ruleset);}
+    if (ruleset) {
+      query += '&ruleset=' + encodeURIComponent(ruleset);
+    }
     return this.httpClient.get<ChainExplorerPayload>(
       this.apiBaseUrl + '/api/v1/' + chain + '/protocols/' + path + query
     );
   }
 
-  getChainProtocolDetail$(chain: Exclude<ExplorerChain, 'bitcoin'>, protocol: string, reference: string, ruleset?: string): Observable<ChainExplorerPayload> {
+  getChainProtocolDetail$(
+    chain: Exclude<ExplorerChain, 'bitcoin'>,
+    protocol: string,
+    reference: string,
+    ruleset?: string
+  ): Observable<ChainExplorerPayload> {
     const path = this.protocolPath(chain, protocol);
     let query = '?network=mainnet';
-    if (ruleset) {query += '&ruleset=' + encodeURIComponent(ruleset);}
+    if (ruleset) {
+      query += '&ruleset=' + encodeURIComponent(ruleset);
+    }
     return this.httpClient.get<ChainExplorerPayload>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/protocols/' + path + '/' + encodeURIComponent(reference) + query
+      this.apiBaseUrl +
+        '/api/v1/' +
+        chain +
+        '/protocols/' +
+        path +
+        '/' +
+        encodeURIComponent(reference) +
+        query
     );
   }
 
-  getChainProtocolSection$(chain: 'dogecoin', protocol: string, reference: string, section: 'holders' | 'events', limit = 100, offset = 0): Observable<ChainExplorerPayload> {
+  getChainProtocolSection$(
+    chain: 'dogecoin',
+    protocol: string,
+    reference: string,
+    section: 'holders' | 'events',
+    limit = 100,
+    offset = 0
+  ): Observable<ChainExplorerPayload> {
     const path = this.protocolPath(chain, protocol);
-    const paging = protocol === 'drc20'
-      ? '&cursor=' + offset
-      : '&offset=' + offset;
+    const paging =
+      protocol === 'drc20' ? '&cursor=' + offset : '&offset=' + offset;
     return this.httpClient.get<ChainExplorerPayload>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/protocols/' + path + '/' + encodeURIComponent(reference) + '/' + section + '?network=mainnet&limit=' + limit + paging
+      this.apiBaseUrl +
+        '/api/v1/' +
+        chain +
+        '/protocols/' +
+        path +
+        '/' +
+        encodeURIComponent(reference) +
+        '/' +
+        section +
+        '?network=mainnet&limit=' +
+        limit +
+        paging
     );
   }
-
 
   /**
    * Clusters in this node mempool, highest fee rate first.
@@ -462,17 +756,28 @@ export class UniverseApiService {
    * The response carries the age of the snapshot it was built from, so a
    * caller renders how old the answer is rather than implying it is live.
    */
-  getMempoolClusters$(offset = 0, limit = 50, minTxCount = 1): Observable<ClusterListResponse> {
+  getMempoolClusters$(
+    offset = 0,
+    limit = 50,
+    minTxCount = 1
+  ): Observable<ClusterListResponse> {
     return this.httpClient.get<ClusterListResponse>(
-      this.apiBaseUrl + '/api/v1/mempool/clusters?offset=' + offset + '&limit=' + limit
-        + '&minTxCount=' + minTxCount
+      this.apiBaseUrl +
+        '/api/v1/mempool/clusters?offset=' +
+        offset +
+        '&limit=' +
+        limit +
+        '&minTxCount=' +
+        minTxCount
     );
   }
 
   /** One cluster in full, addressed by its id or by any member txid. */
   getMempoolCluster$(reference: string): Observable<ClusterResponse> {
     return this.httpClient.get<ClusterResponse>(
-      this.apiBaseUrl + '/api/v1/mempool/clusters/' + encodeURIComponent(reference)
+      this.apiBaseUrl +
+        '/api/v1/mempool/clusters/' +
+        encodeURIComponent(reference)
     );
   }
 
@@ -500,7 +805,7 @@ export class UniverseApiService {
   simulatePackage$(rawTxs: string[]): Observable<PackageSimulation> {
     return this.httpClient.post<PackageSimulation>(
       this.apiBaseUrl + '/api/v1/mempool/simulate',
-      { rawTxs },
+      { rawTxs }
     );
   }
 
@@ -512,19 +817,26 @@ export class UniverseApiService {
    */
   getBumpPlan$(txid: string, targetFeerate: number): Observable<BumpPlan> {
     return this.httpClient.get<BumpPlan>(
-      this.apiBaseUrl + '/api/v1/mempool/bump/' + encodeURIComponent(txid)
-        + '?targetFeerate=' + encodeURIComponent(String(targetFeerate)),
+      this.apiBaseUrl +
+        '/api/v1/mempool/bump/' +
+        encodeURIComponent(txid) +
+        '?targetFeerate=' +
+        encodeURIComponent(String(targetFeerate))
     );
   }
 
   /** What this node is, section by section, each with its own state. */
   getNodeOverview$(): Observable<NodeOverview> {
-    return this.httpClient.get<NodeOverview>(this.apiBaseUrl + '/api/v1/node/overview');
+    return this.httpClient.get<NodeOverview>(
+      this.apiBaseUrl + '/api/v1/node/overview'
+    );
   }
 
   /** The only node methods the console will call. */
   getRpcCatalog$(): Observable<RpcCatalog> {
-    return this.httpClient.get<RpcCatalog>(this.apiBaseUrl + '/api/v1/node/rpc/catalog');
+    return this.httpClient.get<RpcCatalog>(
+      this.apiBaseUrl + '/api/v1/node/rpc/catalog'
+    );
   }
 
   /**
@@ -537,15 +849,21 @@ export class UniverseApiService {
   callNodeRpc$(method: string, args: unknown[]): Observable<RpcResult> {
     return this.httpClient.post<RpcResult>(
       this.apiBaseUrl + '/api/v1/node/rpc',
-      { method, args },
+      { method, args }
     );
   }
 
-  private protocolPath(chain: Exclude<ExplorerChain, 'bitcoin'>, protocol: string): string {
-    const allowed = chain === 'dogecoin'
-      ? ['doginals', 'drc20', 'doge-tap', 'dunes']
-      : ['zerdinals', 'zrunes', 'zrc20'];
-    if (!allowed.includes(protocol)) {throw new Error('unsupported-chain-protocol');}
+  private protocolPath(
+    chain: Exclude<ExplorerChain, 'bitcoin'>,
+    protocol: string
+  ): string {
+    const allowed =
+      chain === 'dogecoin'
+        ? ['doginals', 'drc20', 'doge-tap', 'dunes']
+        : ['zerdinals', 'zrunes', 'zrc20'];
+    if (!allowed.includes(protocol)) {
+      throw new Error('unsupported-chain-protocol');
+    }
     return protocol;
   }
 
@@ -555,20 +873,37 @@ export class UniverseApiService {
    * is not the documented page resolves to the same explicit state instead
    * of flowing into the page as object data.
    */
-  getProtocolObjects$(protocolId: string, cursor?: string, limit = 25): Observable<ExplorerProtocolObjectsPage> {
+  getProtocolObjects$(
+    protocolId: string,
+    cursor?: string,
+    limit = 25
+  ): Observable<ExplorerProtocolObjectsPage> {
     let query = '?limit=' + Math.min(Math.max(1, Math.floor(limit)), 200);
-    if (cursor) {query += '&cursor=' + encodeURIComponent(cursor);}
-    return this.httpClient.get<ExplorerProtocolObjectsPage>(
-      this.apiBaseUrl + '/api/v1/universe/protocols/' + encodeURIComponent(protocolId) + '/objects' + query
-    ).pipe(
-      map((page) => isObjectsPage(page) ? page : unsupportedObjectsPage(protocolId)),
-      catchError((error) => {
-        if (error?.status === 404) {
-          return of(unsupportedObjectsPage(protocolId));
-        }
-        return throwError(() => error);
-      }),
-    );
+    if (cursor) {
+      query += '&cursor=' + encodeURIComponent(cursor);
+    }
+    return this.httpClient
+      .get<ExplorerProtocolObjectsPage>(
+        this.apiBaseUrl +
+          '/api/v1/universe/protocols/' +
+          encodeURIComponent(protocolId) +
+          '/objects' +
+          query
+      )
+      .pipe(
+        map((page) => {
+          if (!isObjectsPage(page)) {
+            throw new Error('malformed-protocol-objects-response');
+          }
+          return page;
+        }),
+        catchError((error) => {
+          if (error?.status === 404) {
+            return of(unsupportedObjectsPage(protocolId));
+          }
+          return throwError(() => error);
+        })
+      );
   }
 
   /** ANIMA protocol status, scanner readiness, and exact supply. */
@@ -581,8 +916,11 @@ export class UniverseApiService {
   /** One page of the ANIMA logged transition list. */
   getAnimaEvents$(from = 0, limit = 50): Observable<AnimaEventsDocument> {
     return this.httpClient.get<AnimaEventsDocument>(
-      this.apiBaseUrl + '/api/v1/anima/events?from=' + Math.max(0, Math.floor(from))
-        + '&limit=' + Math.min(Math.max(1, Math.floor(limit)), 200)
+      this.apiBaseUrl +
+        '/api/v1/anima/events?from=' +
+        Math.max(0, Math.floor(from)) +
+        '&limit=' +
+        Math.min(Math.max(1, Math.floor(limit)), 200)
     );
   }
 
@@ -594,10 +932,19 @@ export class UniverseApiService {
   }
 
   /** One page of the ANIMA organism list. */
-  getAnimaOrganisms$(offset = 0, limit = 50, status?: string): Observable<AnimaOrganismsDocument> {
-    let query = '?offset=' + Math.max(0, Math.floor(offset))
-      + '&limit=' + Math.min(Math.max(1, Math.floor(limit)), 200);
-    if (status) {query += '&status=' + encodeURIComponent(status);}
+  getAnimaOrganisms$(
+    offset = 0,
+    limit = 50,
+    status?: string
+  ): Observable<AnimaOrganismsDocument> {
+    let query =
+      '?offset=' +
+      Math.max(0, Math.floor(offset)) +
+      '&limit=' +
+      Math.min(Math.max(1, Math.floor(limit)), 200);
+    if (status) {
+      query += '&status=' + encodeURIComponent(status);
+    }
     return this.httpClient.get<AnimaOrganismsDocument>(
       this.apiBaseUrl + '/api/v1/anima/organisms' + query
     );
@@ -606,14 +953,21 @@ export class UniverseApiService {
   /** One ANIMA organism with its waymarks and achievements. */
   getAnimaOrganism$(organismId: string): Observable<AnimaOrganismDocument> {
     return this.httpClient.get<AnimaOrganismDocument>(
-      this.apiBaseUrl + '/api/v1/anima/organisms/' + encodeURIComponent(organismId)
+      this.apiBaseUrl +
+        '/api/v1/anima/organisms/' +
+        encodeURIComponent(organismId)
     );
   }
 
   /** The transition history and lineage around one ANIMA organism. */
-  getAnimaOrganismHistory$(organismId: string): Observable<AnimaOrganismHistoryDocument> {
+  getAnimaOrganismHistory$(
+    organismId: string
+  ): Observable<AnimaOrganismHistoryDocument> {
     return this.httpClient.get<AnimaOrganismHistoryDocument>(
-      this.apiBaseUrl + '/api/v1/anima/organisms/' + encodeURIComponent(organismId) + '/history'
+      this.apiBaseUrl +
+        '/api/v1/anima/organisms/' +
+        encodeURIComponent(organismId) +
+        '/history'
     );
   }
 
@@ -621,270 +975,715 @@ export class UniverseApiService {
   // Product Verticals API Methods
   // ---------------------------------------------------------------------------
 
-  getFractalTip$(): Observable<{ height: number; hash: string; time: number; network: string }> {
-    return this.httpClient.get<{ height: number; hash: string; time: number; network: string }>(
-      this.apiBaseUrl + '/api/v1/fractal/tip'
-    );
+  private getChecked$<T>(
+    path: string,
+    label: string,
+    fields: RequiredFields
+  ): Observable<T> {
+    return this.httpClient
+      .get<unknown>(this.apiBaseUrl + path)
+      .pipe(map((value) => requireResponse<T>(value, label, fields)));
+  }
+
+  private getCheckedList$<T, K extends string>(
+    path: string,
+    label: string,
+    key: K,
+    itemFields: RequiredFields
+  ): Observable<Record<K, T[]> & { total: number }> {
+    return this.httpClient
+      .get<unknown>(this.apiBaseUrl + path)
+      .pipe(
+        map((value) => requireListResponse<T, K>(value, label, key, itemFields))
+      );
+  }
+
+  getFractalTip$(): Observable<{
+    height: number;
+    hash: string;
+    time: number;
+    network: string;
+  }> {
+    return this.getChecked$('/api/v1/fractal/tip', 'fractal-tip', {
+      height: 'number',
+      hash: 'string',
+      time: 'number',
+      network: 'string',
+    });
   }
 
   getFractalMempool$(): Observable<FractalMempoolOverview> {
-    return this.httpClient.get<FractalMempoolOverview>(
-      this.apiBaseUrl + '/api/v1/fractal/mempool'
-    );
+    return this.getChecked$('/api/v1/fractal/mempool', 'fractal-mempool', {
+      count: 'number',
+      totalBytes: 'number',
+      totalWeight: 'number',
+      minFeeRate: 'number',
+      maxFeeRate: 'number',
+      medianFeeRate: 'number',
+      pendingCat20TxCount: 'number',
+    });
   }
 
   getFractalBlock$(hash: string): Observable<FractalBlockSummary> {
-    return this.httpClient.get<FractalBlockSummary>(
-      this.apiBaseUrl + '/api/v1/fractal/block/' + encodeURIComponent(hash)
+    return this.getChecked$(
+      '/api/v1/fractal/block/' + encodeURIComponent(hash),
+      'fractal-block',
+      {
+        hash: 'string',
+        height: 'number',
+        time: 'number',
+        txCount: 'number',
+        size: 'number',
+        weight: 'number',
+        merkleRoot: 'string',
+        difficulty: 'number',
+      }
     );
   }
 
   getFractalTx$(txid: string): Observable<FractalTransactionView> {
-    return this.httpClient.get<FractalTransactionView>(
-      this.apiBaseUrl + '/api/v1/fractal/tx/' + encodeURIComponent(txid)
+    return this.getChecked$(
+      '/api/v1/fractal/tx/' + encodeURIComponent(txid),
+      'fractal-transaction',
+      {
+        txid: 'string',
+        hash: 'string',
+        version: 'number',
+        size: 'number',
+        weight: 'number',
+        locktime: 'number',
+        vin: 'array',
+        vout: 'array',
+        feeAtomic: 'string',
+      }
     );
   }
 
   getCat20Tokens$(): Observable<{ tokens: Cat20Token[]; total: number }> {
-    return this.httpClient.get<{ tokens: Cat20Token[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/fractal/cat20/tokens'
+    return this.getCheckedList$(
+      '/api/v1/fractal/cat20/tokens',
+      'cat20-tokens',
+      'tokens',
+      {
+        tokenId: 'string',
+        name: 'string',
+        symbol: 'string',
+        decimals: 'number',
+        maxSupplyAtomic: 'string',
+        circulatingSupplyAtomic: 'string',
+        mintLimitAtomic: 'string',
+        deployTxid: 'string',
+        deployHeight: 'number',
+        minterAddress: 'string',
+        minterType: 'string',
+        holderCount: 'number',
+        transferCount: 'number',
+        state: 'string',
+      }
     );
   }
 
   getCat20Token$(tokenId: string): Observable<Cat20Token> {
-    return this.httpClient.get<Cat20Token>(
-      this.apiBaseUrl + '/api/v1/fractal/cat20/tokens/' + encodeURIComponent(tokenId)
+    return this.getChecked$(
+      '/api/v1/fractal/cat20/tokens/' + encodeURIComponent(tokenId),
+      'cat20-token',
+      {
+        tokenId: 'string',
+        name: 'string',
+        symbol: 'string',
+        decimals: 'number',
+        maxSupplyAtomic: 'string',
+        circulatingSupplyAtomic: 'string',
+        mintLimitAtomic: 'string',
+        deployTxid: 'string',
+        deployHeight: 'number',
+        minterAddress: 'string',
+        minterType: 'string',
+        holderCount: 'number',
+        transferCount: 'number',
+        state: 'string',
+      }
     );
   }
 
-  getCat20Holders$(tokenId: string): Observable<{ holders: Cat20Holder[]; total: number }> {
-    return this.httpClient.get<{ holders: Cat20Holder[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/fractal/cat20/tokens/' + encodeURIComponent(tokenId) + '/holders'
+  getCat20Holders$(
+    tokenId: string
+  ): Observable<{ holders: Cat20Holder[]; total: number }> {
+    return this.getCheckedList$(
+      '/api/v1/fractal/cat20/tokens/' +
+        encodeURIComponent(tokenId) +
+        '/holders',
+      'cat20-holders',
+      'holders',
+      { address: 'string', balanceAtomic: 'string', percentage: 'string' }
     );
   }
 
   getZcashPrivacySummary$(): Observable<ZcashPrivacySummary> {
-    return this.httpClient.get<ZcashPrivacySummary>(
-      this.apiBaseUrl + '/api/v1/zcash/privacy/summary'
+    return this.getChecked$(
+      '/api/v1/zcash/privacy/summary',
+      'zcash-privacy-summary',
+      {
+        tipHeight: 'number',
+        totalCirculatingSupplyZat: 'string',
+        totalShieldedSupplyZat: 'string',
+        shieldedPercentage: 'string',
+        pools: 'array',
+        recentFlows: 'array',
+        upgrades: 'array',
+      }
     );
   }
 
   getZcashPools$(): Observable<{ pools: ZcashValuePool[]; total: number }> {
-    return this.httpClient.get<{ pools: ZcashValuePool[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/zcash/privacy/pools'
+    return this.getCheckedList$(
+      '/api/v1/zcash/privacy/pools',
+      'zcash-pools',
+      'pools',
+      {
+        id: 'string',
+        name: 'string',
+        balanceZat: 'string',
+        shielded: 'boolean',
+      }
     );
   }
 
-  getZcashUpgrades$(): Observable<{ upgrades: ZcashNetworkUpgrade[]; total: number }> {
-    return this.httpClient.get<{ upgrades: ZcashNetworkUpgrade[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/zcash/privacy/upgrades'
+  getZcashUpgrades$(): Observable<{
+    upgrades: ZcashNetworkUpgrade[];
+    total: number;
+  }> {
+    return this.getCheckedList$(
+      '/api/v1/zcash/privacy/upgrades',
+      'zcash-upgrades',
+      'upgrades',
+      {
+        name: 'string',
+        activationHeight: 'number',
+        branchId: 'string',
+        features: 'array',
+      }
     );
   }
 
   getLiquidObservatorySummary$(): Observable<LiquidObservatorySummary> {
-    return this.httpClient.get<LiquidObservatorySummary>(
-      this.apiBaseUrl + '/api/v1/liquid/observatory/summary'
+    return this.getChecked$(
+      '/api/v1/liquid/observatory/summary',
+      'liquid-observatory-summary',
+      {
+        blockHeight: 'number',
+        blockHash: 'string',
+        dynamicFederation: 'object',
+        peggedReserveSats: 'string',
+        activeAssetCount: 'number',
+        confidentialTxPercentage: 'string',
+        recentPegs: 'array',
+      }
     );
   }
 
-  getLiquidAssets$(): Observable<{ assets: LiquidAssetRecord[]; total: number }> {
-    return this.httpClient.get<{ assets: LiquidAssetRecord[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/liquid/observatory/assets'
+  getLiquidAssets$(): Observable<{
+    assets: LiquidAssetRecord[];
+    total: number;
+  }> {
+    return this.getCheckedList$(
+      '/api/v1/liquid/observatory/assets',
+      'liquid-assets',
+      'assets',
+      {
+        assetId: 'string',
+        name: 'string',
+        ticker: 'string',
+        precision: 'number',
+        isConfidential: 'boolean',
+        hasProof: 'boolean',
+      }
     );
   }
 
   getLiquidAsset$(assetId: string): Observable<LiquidAssetRecord> {
-    return this.httpClient.get<LiquidAssetRecord>(
-      this.apiBaseUrl + '/api/v1/liquid/observatory/assets/' + encodeURIComponent(assetId)
+    return this.getChecked$(
+      '/api/v1/liquid/observatory/assets/' + encodeURIComponent(assetId),
+      'liquid-asset',
+      {
+        assetId: 'string',
+        name: 'string',
+        ticker: 'string',
+        precision: 'number',
+        isConfidential: 'boolean',
+        hasProof: 'boolean',
+      }
     );
   }
 
   getLiquidPegs$(): Observable<{ pegs: LiquidPegRecord[]; total: number }> {
-    return this.httpClient.get<{ pegs: LiquidPegRecord[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/liquid/observatory/pegs'
+    return this.getCheckedList$(
+      '/api/v1/liquid/observatory/pegs',
+      'liquid-pegs',
+      'pegs',
+      {
+        id: 'string',
+        type: 'string',
+        bitcoinTxid: 'string',
+        liquidTxid: 'string',
+        amountSats: 'string',
+        status: 'string',
+      }
     );
   }
 
   getLiquidFederation$(): Observable<LiquidFederationEpoch> {
-    return this.httpClient.get<LiquidFederationEpoch>(
-      this.apiBaseUrl + '/api/v1/liquid/observatory/federation'
+    return this.getChecked$(
+      '/api/v1/liquid/observatory/federation',
+      'liquid-federation',
+      {
+        epochNumber: 'number',
+        signblockscript: 'string',
+        activeSigners: 'number',
+        totalSigners: 'number',
+        threshold: 'number',
+        startHeight: 'number',
+        blockSignerCounts: 'object',
+      }
     );
   }
 
-  getDataCatalog$(): Observable<{ datasets: DatasetManifest[]; streams: StreamManifest[]; mcpTools: McpToolDeclaration[] }> {
-    return this.httpClient.get<{ datasets: DatasetManifest[]; streams: StreamManifest[]; mcpTools: McpToolDeclaration[] }>(
-      this.apiBaseUrl + '/api/v1/data/catalog'
-    );
+  getDataCatalog$(): Observable<{
+    datasets: DatasetManifest[];
+    streams: StreamManifest[];
+    mcpTools: McpToolDeclaration[];
+  }> {
+    return this.getChecked$('/api/v1/data/catalog', 'data-catalog', {
+      datasets: 'array',
+      streams: 'array',
+      mcpTools: 'array',
+    });
   }
 
-  executeDataQuery$(query: any): Observable<QueryResult> {
-    return this.httpClient.post<QueryResult>(
-      this.apiBaseUrl + '/api/v1/data/query',
-      query
-    );
+  executeDataQuery$(query: {
+    readonly datasetId: string;
+    readonly limit: number;
+  }): Observable<QueryResult> {
+    return this.httpClient
+      .post<unknown>(this.apiBaseUrl + '/api/v1/data/query', query)
+      .pipe(
+        map((value) =>
+          requireResponse<QueryResult>(value, 'data-query', {
+            datasetId: 'string',
+            rowCount: 'number',
+            totalAvailable: 'number',
+            executionTimeMs: 'number',
+            columns: 'array',
+            rows: 'array',
+          })
+        )
+      );
   }
 
   getObserverNodes$(): Observable<{ nodes: ObserverNode[]; total: number }> {
-    return this.httpClient.get<{ nodes: ObserverNode[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/network/nodes'
+    return this.getCheckedList$(
+      '/api/v1/network/nodes',
+      'network-nodes',
+      'nodes',
+      { id: 'string', name: 'string', region: 'string', status: 'string' }
     );
   }
 
-  getPropagationObservation$(txid?: string): Observable<PropagationObservation> {
+  getPropagationObservation$(
+    txid?: string
+  ): Observable<PropagationObservation> {
     const path = txid
       ? '/api/v1/network/propagation/' + encodeURIComponent(txid)
       : '/api/v1/network/propagation';
-    return this.httpClient.get<PropagationObservation>(this.apiBaseUrl + path);
+    return this.getChecked$(path, 'network-propagation', {
+      txid: 'string',
+      firstSeenTimestamp: 'number',
+      nodeObservations: 'array',
+      medianLatencyMs: 'number',
+      p95LatencyMs: 'number',
+      spreadDeltaMs: 'number',
+    });
   }
 
   getBlockTemplateComparison$(): Observable<BlockTemplateComparison> {
-    return this.httpClient.get<BlockTemplateComparison>(
-      this.apiBaseUrl + '/api/v1/network/templates'
-    );
+    return this.getChecked$('/api/v1/network/templates', 'network-templates', {
+      blockHeight: 'number',
+      generatedAt: 'number',
+      candidateTemplates: 'array',
+      consensusMempoolTxCount: 'number',
+      missingFromLocalCount: 'number',
+      feeRateSpreadSatVb: 'number',
+    });
   }
 
-  getTaprootAssets$(): Observable<{ assets: TaprootAssetItem[]; total: number }> {
-    return this.httpClient.get<{ assets: TaprootAssetItem[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/taproot-assets/assets'
+  getTaprootAssets$(): Observable<{
+    assets: TaprootAssetItem[];
+    total: number;
+  }> {
+    return this.getCheckedList$(
+      '/api/v1/taproot-assets/assets',
+      'taproot-assets',
+      'assets',
+      {
+        assetId: 'string',
+        assetType: 'string',
+        name: 'string',
+        genesisPoint: 'string',
+        genesisHeight: 'number',
+        totalAmountAtomic: 'string',
+        anchorTxid: 'string',
+        anchorOutpoint: 'string',
+        scriptKey: 'string',
+        hasProofFile: 'boolean',
+        mintTime: 'number',
+      }
     );
   }
 
   getTaprootAsset$(assetId: string): Observable<TaprootAssetItem> {
-    return this.httpClient.get<TaprootAssetItem>(
-      this.apiBaseUrl + '/api/v1/taproot-assets/assets/' + encodeURIComponent(assetId)
+    return this.getChecked$(
+      '/api/v1/taproot-assets/assets/' + encodeURIComponent(assetId),
+      'taproot-asset',
+      {
+        assetId: 'string',
+        assetType: 'string',
+        name: 'string',
+        genesisPoint: 'string',
+        genesisHeight: 'number',
+        totalAmountAtomic: 'string',
+        anchorTxid: 'string',
+        anchorOutpoint: 'string',
+        scriptKey: 'string',
+        hasProofFile: 'boolean',
+        mintTime: 'number',
+      }
     );
   }
 
-  getTaprootAssetGroups$(): Observable<{ groups: TaprootAssetGroup[]; total: number }> {
-    return this.httpClient.get<{ groups: TaprootAssetGroup[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/taproot-assets/groups'
+  getTaprootAssetGroups$(): Observable<{
+    groups: TaprootAssetGroup[];
+    total: number;
+  }> {
+    return this.getCheckedList$(
+      '/api/v1/taproot-assets/groups',
+      'taproot-asset-groups',
+      'groups',
+      {
+        groupKey: 'string',
+        name: 'string',
+        totalAssetsCount: 'number',
+        totalCirculatingSupplyAtomic: 'string',
+      }
     );
   }
 
   getBolt12Offers$(): Observable<{ offers: Bolt12Offer[]; total: number }> {
-    return this.httpClient.get<{ offers: Bolt12Offer[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/lightning/offers'
+    return this.getCheckedList$(
+      '/api/v1/lightning/offers',
+      'bolt12-offers',
+      'offers',
+      {
+        offerId: 'string',
+        offerString: 'string',
+        description: 'string',
+        blindRoutesCount: 'number',
+        valid: 'boolean',
+      }
     );
   }
 
-  getLightningRfq$(): Observable<{ quotes: LightningRfqQuote[]; total: number }> {
-    return this.httpClient.get<{ quotes: LightningRfqQuote[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/lightning/rfq'
+  getLightningRfq$(): Observable<{
+    quotes: LightningRfqQuote[];
+    total: number;
+  }> {
+    return this.getCheckedList$(
+      '/api/v1/lightning/rfq',
+      'lightning-rfq',
+      'quotes',
+      {
+        quoteId: 'string',
+        baseAsset: 'string',
+        quoteAsset: 'string',
+        askRate: 'string',
+        bidRate: 'string',
+        validUntil: 'number',
+      }
     );
   }
 
   getArkOperators$(): Observable<{ operators: ArkOperator[]; total: number }> {
-    return this.httpClient.get<{ operators: ArkOperator[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/ark/operators'
+    return this.getCheckedList$(
+      '/api/v1/ark/operators',
+      'ark-operators',
+      'operators',
+      { id: 'string', name: 'string', aspPubkey: 'string', status: 'string' }
     );
   }
 
   getArkBatches$(): Observable<{ batches: ArkBatch[]; total: number }> {
-    return this.httpClient.get<{ batches: ArkBatch[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/ark/batches'
+    return this.getCheckedList$(
+      '/api/v1/ark/batches',
+      'ark-batches',
+      'batches',
+      {
+        batchId: 'string',
+        operatorId: 'string',
+        anchorTxid: 'string',
+        rootHash: 'string',
+        status: 'string',
+      }
     );
   }
 
   getArkBatch$(batchId: string): Observable<ArkBatch> {
-    return this.httpClient.get<ArkBatch>(
-      this.apiBaseUrl + '/api/v1/ark/batches/' + encodeURIComponent(batchId)
+    return this.getChecked$(
+      '/api/v1/ark/batches/' + encodeURIComponent(batchId),
+      'ark-batch',
+      {
+        batchId: 'string',
+        operatorId: 'string',
+        anchorTxid: 'string',
+        rootHash: 'string',
+        status: 'string',
+      }
     );
   }
 
   getArkVtxo$(vtxoId: string): Observable<ArkVtxo> {
-    return this.httpClient.get<ArkVtxo>(
-      this.apiBaseUrl + '/api/v1/ark/vtxos/' + encodeURIComponent(vtxoId)
+    return this.getChecked$(
+      '/api/v1/ark/vtxos/' + encodeURIComponent(vtxoId),
+      'ark-vtxo',
+      {
+        vtxoId: 'string',
+        batchId: 'string',
+        amountSats: 'string',
+        userPubkey: 'string',
+        aspPubkey: 'string',
+        status: 'string',
+      }
     );
   }
 
-  getStratumV2Network$(): Observable<{ roles: StratumV2RoleStatus[]; total: number }> {
-    return this.httpClient.get<{ roles: StratumV2RoleStatus[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/stratum-v2/network'
+  getStratumV2Network$(): Observable<{
+    roles: StratumV2RoleStatus[];
+    total: number;
+  }> {
+    return this.getCheckedList$(
+      '/api/v1/stratum-v2/network',
+      'stratum-v2-network',
+      'roles',
+      {
+        role: 'string',
+        name: 'string',
+        endpoint: 'string',
+        noiseProtocolSecured: 'boolean',
+        status: 'string',
+      }
     );
   }
 
-  getStratumV2Templates$(): Observable<{ templates: StratumV2Template[]; total: number }> {
-    return this.httpClient.get<{ templates: StratumV2Template[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/stratum-v2/templates'
+  getStratumV2Templates$(): Observable<{
+    templates: StratumV2Template[];
+    total: number;
+  }> {
+    return this.getCheckedList$(
+      '/api/v1/stratum-v2/templates',
+      'stratum-v2-templates',
+      'templates',
+      {
+        templateId: 'string',
+        blockHeight: 'number',
+        status: 'string',
+        generatedAt: 'number',
+      }
     );
   }
 
-  getStratumV2Declarations$(): Observable<{ declarations: StratumV2JobDeclaration[]; total: number }> {
-    return this.httpClient.get<{ declarations: StratumV2JobDeclaration[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/stratum-v2/declarations'
+  getStratumV2Declarations$(): Observable<{
+    declarations: StratumV2JobDeclaration[];
+    total: number;
+  }> {
+    return this.getCheckedList$(
+      '/api/v1/stratum-v2/declarations',
+      'stratum-v2-declarations',
+      'declarations',
+      {
+        jobId: 'string',
+        templateId: 'string',
+        declaratorId: 'string',
+        minerDeclaredTxids: 'array',
+        poolModifiedTxids: 'array',
+        acceptedByPool: 'boolean',
+      }
     );
   }
 
   getL2Systems$(): Observable<{ systems: L2BridgeSystem[]; total: number }> {
-    return this.httpClient.get<{ systems: L2BridgeSystem[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/l2/systems'
-    );
+    return this.getCheckedList$('/api/v1/l2/systems', 'l2-systems', 'systems', {
+      id: 'string',
+      name: 'string',
+      architecture: 'string',
+      trustModel: 'string',
+      status: 'string',
+    });
   }
 
   getL2System$(systemId: string): Observable<L2BridgeSystem> {
-    return this.httpClient.get<L2BridgeSystem>(
-      this.apiBaseUrl + '/api/v1/l2/systems/' + encodeURIComponent(systemId)
+    return this.getChecked$(
+      '/api/v1/l2/systems/' + encodeURIComponent(systemId),
+      'l2-system',
+      {
+        id: 'string',
+        name: 'string',
+        architecture: 'string',
+        trustModel: 'string',
+        status: 'string',
+      }
     );
   }
 
-  getL2Challenges$(systemId?: string): Observable<{ challenges: L2Challenge[]; total: number }> {
+  getL2Challenges$(
+    systemId?: string
+  ): Observable<{ challenges: L2Challenge[]; total: number }> {
     const query = systemId ? '?systemId=' + encodeURIComponent(systemId) : '';
-    return this.httpClient.get<{ challenges: L2Challenge[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/l2/challenges' + query
+    return this.getCheckedList$(
+      '/api/v1/l2/challenges' + query,
+      'l2-challenges',
+      'challenges',
+      {
+        challengeId: 'string',
+        systemId: 'string',
+        assertionTxid: 'string',
+        challengeTxid: 'string',
+        status: 'string',
+      }
     );
   }
 
   getL2ReserveAudit$(systemId: string): Observable<L2ReserveAudit> {
-    return this.httpClient.get<L2ReserveAudit>(
-      this.apiBaseUrl + '/api/v1/l2/reserves/' + encodeURIComponent(systemId)
+    return this.getChecked$(
+      '/api/v1/l2/reserves/' + encodeURIComponent(systemId),
+      'l2-reserve-audit',
+      {
+        systemId: 'string',
+        totalLockedReserveSats: 'string',
+        reportedL2SupplySats: 'string',
+        reserveRatio: 'string',
+        lastAuditHeight: 'number',
+        reserveOutpoints: 'array',
+      }
     );
   }
 
-  getUtxoCheckpoints$(): Observable<{ checkpoints: UtxoCheckpoint[]; total: number }> {
-    return this.httpClient.get<{ checkpoints: UtxoCheckpoint[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/utxo-set/checkpoints'
+  getUtxoCheckpoints$(): Observable<{
+    checkpoints: UtxoCheckpoint[];
+    total: number;
+  }> {
+    return this.getCheckedList$(
+      '/api/v1/utxo-set/checkpoints',
+      'utxo-checkpoints',
+      'checkpoints',
+      {
+        blockHeight: 'number',
+        blockHash: 'string',
+        muhashHex: 'string',
+        totalAmountSats: 'string',
+      }
     );
   }
 
-  getUtxoDistribution$(): Observable<{ valueCohorts: SupplyCohort[]; scriptTypes: ScriptTypeDistribution[] }> {
-    return this.httpClient.get<{ valueCohorts: SupplyCohort[]; scriptTypes: ScriptTypeDistribution[] }>(
-      this.apiBaseUrl + '/api/v1/utxo-set/distribution'
+  getUtxoDistribution$(): Observable<{
+    valueCohorts: SupplyCohort[];
+    scriptTypes: ScriptTypeDistribution[];
+  }> {
+    return this.getChecked$(
+      '/api/v1/utxo-set/distribution',
+      'utxo-distribution',
+      { valueCohorts: 'array', scriptTypes: 'array' }
     );
   }
 
   getProtocolBearingUtxos$(): Observable<ProtocolBearingUtxos> {
-    return this.httpClient.get<ProtocolBearingUtxos>(
-      this.apiBaseUrl + '/api/v1/utxo-set/protocols'
+    return this.getChecked$(
+      '/api/v1/utxo-set/protocols',
+      'protocol-bearing-utxos',
+      {
+        ordinalsBearingCount: 'number',
+        runesBearingCount: 'number',
+        stampsBearingCount: 'number',
+        multiProtocolCount: 'number',
+        pureBitcoinCount: 'number',
+      }
     );
   }
 
   getUtreexoRoots$(): Observable<UtreexoRootsView> {
-    return this.httpClient.get<UtreexoRootsView>(
-      this.apiBaseUrl + '/api/v1/utreexo/roots'
-    );
+    return this.getChecked$('/api/v1/utreexo/roots', 'utreexo-roots', {
+      blockHeight: 'number',
+      numLeaves: 'number',
+      roots: 'array',
+      forestRows: 'number',
+    });
   }
 
   getWildkinStatus$(): Observable<WildkinStatusSummary> {
-    return this.httpClient.get<WildkinStatusSummary>(
-      this.apiBaseUrl + '/api/v1/wildkin/status'
-    );
+    return this.getChecked$('/api/v1/wildkin/status', 'wildkin-status', {
+      ruleset: 'string',
+      activationStatus: 'string',
+      totalCreaturesCount: 'number',
+      totalBraidsCount: 'number',
+      maxAncestryDepth: 'number',
+      latestCreatures: 'array',
+    });
   }
 
-  getWildkinCreatures$(): Observable<{ creatures: WildkinCreature[]; total: number }> {
-    return this.httpClient.get<{ creatures: WildkinCreature[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/wildkin/creatures'
+  getWildkinCreatures$(): Observable<{
+    creatures: WildkinCreature[];
+    total: number;
+  }> {
+    return this.getCheckedList$(
+      '/api/v1/wildkin/creatures',
+      'wildkin-creatures',
+      'creatures',
+      {
+        creatureId: 'string',
+        inscriptionId: 'string',
+        name: 'string',
+        bindingUtxo: 'string',
+        status: 'string',
+      }
     );
   }
 
   getWildkinCreature$(id: string): Observable<WildkinCreature> {
-    return this.httpClient.get<WildkinCreature>(
-      this.apiBaseUrl + '/api/v1/wildkin/creatures/' + encodeURIComponent(id)
+    return this.getChecked$(
+      '/api/v1/wildkin/creatures/' + encodeURIComponent(id),
+      'wildkin-creature',
+      {
+        creatureId: 'string',
+        inscriptionId: 'string',
+        name: 'string',
+        bindingUtxo: 'string',
+        status: 'string',
+      }
     );
   }
 
-  getWildkinBraids$(): Observable<{ braids: WildkinBraidCeremony[]; total: number }> {
-    return this.httpClient.get<{ braids: WildkinBraidCeremony[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/wildkin/braids'
+  getWildkinBraids$(): Observable<{
+    braids: WildkinBraidCeremony[];
+    total: number;
+  }> {
+    return this.getCheckedList$(
+      '/api/v1/wildkin/braids',
+      'wildkin-braids',
+      'braids',
+      {
+        braidTxid: 'string',
+        heirCreatureId: 'string',
+        parentAId: 'string',
+        parentBId: 'string',
+        valid: 'boolean',
+      }
     );
   }
 }

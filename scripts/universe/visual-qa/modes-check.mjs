@@ -42,8 +42,8 @@ import { fileURLToPath } from 'node:url';
 
 import playwright from 'playwright';
 
-import { addressFixtures, detailFixtures, fixtures, sampleIds } from './fixtures.mjs';
-import { chainFixtures } from './chain-fixtures.mjs';
+import { installFixtures } from './capture.mjs';
+import { routesFor } from './route-scenarios.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const args = Object.fromEntries(
@@ -56,33 +56,7 @@ const args = Object.fromEntries(
 const BASE = args.base || 'http://127.0.0.1:8171';
 const OUT = resolve(args.out || join(HERE, 'artifacts-modes'));
 
-const ROUTES = [
-  ['home', '/'],
-  ['tx', `/tx/${sampleIds.TXID_A}`],
-  ['blocks', '/blocks'],
-  ['protocols', '/protocols'],
-  ['graphs', '/graphs/mempool'],
-
-  // The two chain overviews. They were absent, so the pages this suite most
-  // recently redesigned were the ones nothing measured under a replaced
-  // palette or at 200 percent, and both carry a status rail, a coverage block
-  // and a disclosure that a halved viewport has to reflow rather than clip.
-  ['dogecoin', '/dogecoin'],
-  ['zcash', '/zcash'],
-];
-
-/** Answer every API call from the same table the matrix uses. */
-async function installFixtures(context) {
-  const table = { ...fixtures, ...detailFixtures, ...addressFixtures, ...chainFixtures };
-  await context.route('**/api/**', async (route) => {
-    const path = new URL(route.request().url()).pathname;
-    const body = table[path] ?? Object.entries(table).find(([k]) => path.startsWith(k))?.[1];
-    if (body === undefined) {
-      return route.fulfill({ status: 200, contentType: 'application/json', body: '[]' });
-    }
-    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
-  });
-}
+const ROUTES = routesFor('modes');
 
 mkdirSync(OUT, { recursive: true });
 
@@ -114,13 +88,21 @@ async function readStable(page, fn) {
 
 async function sweep(label, contextOptions) {
   const context = await browser.newContext(contextOptions);
-  await installFixtures(context);
-  for (const [id, path] of ROUTES) {
+  const fixtureAudit = await installFixtures(context, 'populated');
+  for (const { id, path, redirectTo } of ROUTES) {
     const page = await context.newPage();
     await page.goto(BASE + path, { waitUntil: 'networkidle', timeout: 45000 }).catch(() => {});
     // Let the router finish before anything is measured.
     await page.waitForSelector('app-root', { timeout: 20000 }).catch(() => {});
     await page.waitForTimeout(1500);
+
+    const landed = new URL(page.url()).pathname.replace(/\/+$/, '') || '/';
+    const expected = (redirectTo || path).replace(/\/+$/, '') || '/';
+    if (landed !== expected && !(redirectTo && landed.startsWith(`${expected}/`))) {
+      findings.push({ label, id, overflow: 0, painted: 0, chars: 0, routeError: `landed on ${landed}` });
+      await page.close();
+      continue;
+    }
 
     const report = await readStable(page, () => {
       const doc = document.documentElement;
@@ -143,6 +125,7 @@ async function sweep(label, contextOptions) {
     await page.screenshot({ path: join(OUT, `${id}__${label}.png`) });
     await page.close();
   }
+  fixtureAudit.assertComplete(`modes/${label}`);
   await context.close();
 }
 
@@ -165,6 +148,7 @@ console.log('mode           route       overflow  text-on-itself  body chars');
 const failures = [];
 for (const f of findings) {
   const problems = [];
+  if (f.routeError) problems.push(f.routeError);
   if (f.overflow > 1) problems.push('OVERFLOW');
   if (f.painted > 0) problems.push('TEXT ON ITSELF');
   if (f.chars < 200) problems.push('NO CONTENT');

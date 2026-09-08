@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { BehaviorSubject, Observable, catchError, of } from 'rxjs';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
+import { UniverseIdentifierComponent } from '@app/universe/universe-identifier.component';
 import { WildkinBraidCeremony } from '@app/universe/universe.types';
 
 interface BloodlinesViewModel {
@@ -16,7 +17,7 @@ interface BloodlinesViewModel {
   templateUrl: './wildkin-bloodlines.component.html',
   styleUrls: ['../product-page.scss'],
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, UniverseIdentifierComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WildkinBloodlinesComponent implements OnInit {
@@ -32,8 +33,12 @@ export class WildkinBloodlinesComponent implements OnInit {
 
   ngOnInit(): void {
     this.api.getWildkinBraids$()
-      .pipe(catchError(() => of({ braids: [] })))
+      .pipe(catchError(() => of(null)))
       .subscribe((data) => {
+        if (!data) {
+          this.state.next({ kind: 'error' });
+          return;
+        }
         this.state.next({ kind: 'ready', braids: data.braids });
       });
   }

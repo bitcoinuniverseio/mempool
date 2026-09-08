@@ -21,7 +21,7 @@
       <ng-container *ngSwitchCase="'ready'">
         <header class="page-head">
           <div class="title-block">
-            <nav class="crumbs">
+            <nav class="crumbs" aria-label="Breadcrumb" i18n-aria-label="universe.breadcrumb-label">
               <a [routerLink]="['/anima', 'items']" i18n="anima.crumb-items-2">ANIMA organisms</a>
               <span class="divider">/</span>
               <span>{{ shorten(vm.organism.organism.id, 16) }}</span>

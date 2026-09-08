@@ -71,11 +71,26 @@ two halves of one decision.
 ### `CORE_RPC` and `SECOND_CORE_RPC`
 
 Bitcoin Core RPC. `HOST`, `PORT`, `USERNAME`, `PASSWORD`, `TIMEOUT`, and either
-credentials or `COOKIE: true` with `COOKIE_PATH`.
+credentials or `COOKIE: true` with `COOKIE_PATH`. `MAX_SOCKETS` is enforced at
+`2..8` for `CORE_RPC` and `1..8` for `SECOND_CORE_RPC`. The aggregate primary
+budget is eight sockets divided across cluster workers. A configuration that
+cannot reserve at least one primary priority socket fails instead of starting
+with a starved control path. An active same-node secondary takes one socket
+from that same aggregate budget.
 
-Core needs `txindex=1` and `server=1`. `SECOND_CORE_RPC` is used only when
-`MEMPOOL.USE_SECOND_NODE_FOR_MINFEE` is on, to read a minimum relay fee from a
-second node.
+Raw transaction work uses at most 75 percent of the primary pool. Admission is
+bounded, waits at most five seconds for a slot, and gives active work a
+20-second deadline.
+
+Identical transaction reads that overlap are coalesced, and confirmed converted
+transactions are held in a bounded 30-second process cache. This prevents route
+refreshes and concurrent visitors from multiplying the same Core work while
+keeping reorg-sensitive data short-lived.
+
+Core needs `txindex=1` and `server=1`. On Liquid and Liquid testnet,
+`SECOND_CORE_RPC` supplies Bitcoin peg and audit reads in `elements-parser.ts`.
+On Bitcoin networks it also reads the minimum relay fee from a second node when
+`MEMPOOL.USE_SECOND_NODE_FOR_MINFEE` is on.
 
 `DEBUG_LOG_PATH` points at Core's `debug.log` and is read for block template
 auditing. Leave it empty when auditing is off.
@@ -159,6 +174,8 @@ loopback.
 | `UNIVERSE_GATEWAY_PORT` | `8099` | Listener port |
 | `UNIVERSE_GATEWAY_BACKEND` | `http://127.0.0.1:8996` | The explorer backend |
 | `UNIVERSE_GATEWAY_OVERLAY` | `http://127.0.0.1:3400` | The protocol overlay. Leave unset if you are not running one |
+| `UNIVERSE_GATEWAY_OVERLAY_ROUTE_FILE` | `/var/lib/universe-explorer/overlay-route.json` | Persistent atomic state for the active overlay slot, exact release SHA, and Portfolio v2 exposure |
+| `UNIVERSE_GATEWAY_PORTFOLIO_V2` | `0` | Safe fallback when no valid route state exists. Set to `1` only for controlled recovery of an already paired release |
 | `UNIVERSE_GATEWAY_ESPLORA` | unset | The first-party Esplora-compatible index. Unset means the explorer backend keeps the whole `/api/` family |
 | `UNIVERSE_GATEWAY_ROOT` | `frontend/dist/mempool/browser` | The built frontend to serve |
 

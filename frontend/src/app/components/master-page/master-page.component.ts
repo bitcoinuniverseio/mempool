@@ -178,32 +178,39 @@ export class MasterPageComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!this.stateService.isBrowser) {
       return;
     }
-    const list = this.navList?.nativeElement;
-    if (!list || typeof list.scrollWidth !== 'number') {
-      return;
-    }
-    // Nothing to reveal when the bar is not a scroller, which is every width
-    // at and above the breakpoint.
+    // After the router has swapped the active class on, not before it.
+    requestAnimationFrame(() => {
+      const list = this.navList?.nativeElement;
+      if (list && typeof list.scrollWidth === 'number') {
+        this.revealActiveItem(list, '.nav-item.active');
+      }
+
+      if (typeof document !== 'undefined') {
+        for (const tabs of document.querySelectorAll<HTMLElement>('.nav-tabs')) {
+          this.revealActiveItem(tabs, 'a.active, [aria-current="page"]');
+        }
+      }
+    });
+  }
+
+  /** Keep one selected item visible without moving any ancestor scroller. */
+  private revealActiveItem(list: HTMLElement, selector: string): void {
     if (list.scrollWidth <= list.clientWidth) {
       return;
     }
-    // After the router has swapped the active class on, not before it.
-    requestAnimationFrame(() => {
-      const active = list.querySelector('.nav-item.active');
-      if (!active) {
-        return;
-      }
-      const item = active.getBoundingClientRect();
-      const bar = list.getBoundingClientRect();
-      // A margin so the revealed destination does not sit flush against the
-      // edge looking like the last one, when it is only the last one visible.
-      const margin = 24;
-      if (item.left < bar.left) {
-        list.scrollLeft -= (bar.left - item.left) + margin;
-      } else if (item.right > bar.right) {
-        list.scrollLeft += (item.right - bar.right) + margin;
-      }
-    });
+    const active = list.querySelector<HTMLElement>(selector);
+    if (!active) {
+      return;
+    }
+    const item = active.getBoundingClientRect();
+    const bar = list.getBoundingClientRect();
+    // Keep enough space to show that more destinations may follow.
+    const margin = 24;
+    if (item.left < bar.left) {
+      list.scrollLeft -= (bar.left - item.left) + margin;
+    } else if (item.right > bar.right) {
+      list.scrollLeft += (item.right - bar.right) + margin;
+    }
   }
 
   collapse(): void {

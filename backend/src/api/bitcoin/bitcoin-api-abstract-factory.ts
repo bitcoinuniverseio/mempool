@@ -44,6 +44,7 @@ export interface BitcoinRpcCredentials {
   user: string;
   pass: string;
   timeout: number;
+  maxSockets?: number;
   cookie?: string;
 }
 

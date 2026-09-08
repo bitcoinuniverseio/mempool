@@ -1,13 +1,18 @@
 <div class="container-xl product-page">
   <header class="page-head">
-    <nav class="crumbs">
+    <nav
+      class="crumbs"
+      aria-label="Breadcrumb"
+      i18n-aria-label="universe.breadcrumb-label"
+    >
       <a [routerLink]="['/']">Home</a>
       <span class="divider">/</span>
       <span>Network Intelligence</span>
     </nav>
     <h1>Cross-Node Mempool, Relay, Policy & Block-Template Observatory</h1>
     <p class="summary">
-      Observer fleet topology, first-seen timelines, multi-node acceptance matrix, local vs pool block-template comparisons.
+      Observer fleet topology, first-seen timelines, multi-node acceptance
+      matrix, local vs pool block-template comparisons.
     </p>
   </header>
 
@@ -16,9 +21,12 @@
       <p>Reading cross-node observer metrics...</p>
     </div>
 
-    <div *ngIf="vm.kind === 'error'" class="panel">
-      <h2>Network Observatory Error</h2>
-      <p>Could not fetch node propagation or block-template data.</p>
+    <div *ngIf="vm.kind === 'error'" class="panel" role="alert">
+      <h2>Network Observatory unavailable</h2>
+      <p>
+        At least one required provider did not answer. No partial result was
+        presented as complete.
+      </p>
     </div>
 
     <ng-container *ngIf="vm.kind === 'ready' && vm.propagation && vm.templates">
@@ -30,96 +38,160 @@
         </div>
         <div class="metric-card">
           <span class="metric-label">Median Latency</span>
-          <span class="metric-value">{{ vm.propagation.medianLatencyMs }} ms</span>
-          <span class="metric-sub">P95: {{ vm.propagation.p95LatencyMs }} ms</span>
+          <span class="metric-value"
+            >{{ vm.propagation.medianLatencyMs }} ms</span
+          >
+          <span class="metric-sub"
+            >P95: {{ vm.propagation.p95LatencyMs }} ms</span
+          >
         </div>
         <div class="metric-card">
           <span class="metric-label">Propagation Spread</span>
-          <span class="metric-value">{{ vm.propagation.spreadDeltaMs }} ms</span>
+          <span class="metric-value"
+            >{{ vm.propagation.spreadDeltaMs }} ms</span
+          >
           <span class="metric-sub">Global delta</span>
         </div>
         <div class="metric-card">
           <span class="metric-label">Template Spread</span>
-          <span class="metric-value">{{ vm.templates.feeRateSpreadSatVb }} sat/vB</span>
-          <span class="metric-sub">{{ vm.templates.candidateTemplates.length }} Candidates</span>
+          <span class="metric-value"
+            >{{ vm.templates.feeRateSpreadSatVb }} sat/vB</span
+          >
+          <span class="metric-sub"
+            >{{ vm.templates.candidateTemplates.length }} Candidates</span
+          >
         </div>
       </div>
 
       <!-- Fleet Matrix -->
       <section class="panel">
         <h2>Universe Observer Fleet & Relay Policies</h2>
-        <table class="data-table" *ngIf="vm.nodes?.length">
-          <thead>
-            <tr>
-              <th>Node Name</th>
-              <th>Region</th>
-              <th>Client Software</th>
-              <th>Full-RBF</th>
-              <th>Min Relay Fee</th>
-              <th>Clock Drift</th>
-              <th>Mempool Size</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let n of vm.nodes">
-              <td><strong>{{ n.name }}</strong></td>
-              <td>{{ n.region }}</td>
-              <td class="mono">{{ n.clientVersion }}</td>
-              <td><span class="badge" [ngClass]="n.fullRbf ? 'badge-success' : 'badge-warning'">{{ n.fullRbf ? 'Active' : 'Opt-in' }}</span></td>
-              <td>{{ n.minRelayFeeRate }} sat/vB</td>
-              <td>{{ n.clockOffsetMs }} ms</td>
-              <td>{{ n.mempoolTxCount }} txs</td>
-              <td><span class="badge badge-success">{{ n.status }}</span></td>
-            </tr>
-          </tbody>
-        </table>
+        <div
+          class="table-wrap"
+          *ngIf="vm.nodes?.length"
+          tabindex="0"
+          role="region"
+          aria-label="Observer fleet and relay policies"
+          i18n-aria-label="universe.network.fleet-table"
+        >
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Node Name</th>
+                <th>Region</th>
+                <th>Client Software</th>
+                <th>Full-RBF</th>
+                <th>Min Relay Fee</th>
+                <th>Clock Drift</th>
+                <th>Mempool Size</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let n of vm.nodes">
+                <td>
+                  <strong>{{ n.name }}</strong>
+                </td>
+                <td>{{ n.region }}</td>
+                <td class="mono">{{ n.clientVersion }}</td>
+                <td>
+                  <span
+                    class="badge"
+                    [ngClass]="n.fullRbf ? 'badge-success' : 'badge-warning'"
+                    >{{ n.fullRbf ? "Active" : "Opt-in" }}</span
+                  >
+                </td>
+                <td>{{ n.minRelayFeeRate }} sat/vB</td>
+                <td>{{ n.clockOffsetMs }} ms</td>
+                <td>{{ n.mempoolTxCount }} txs</td>
+                <td>
+                  <span class="badge badge-success">{{ n.status }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p *ngIf="!vm.nodes?.length">
+          The provider answered successfully and returned no observer nodes.
+        </p>
       </section>
 
       <!-- First-Seen Propagation Timeline -->
       <section class="panel">
-        <h2>Sample Transaction Propagation Timeline (<span class="mono">{{ vm.propagation.txid.slice(0, 16) }}...</span>)</h2>
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Observer Node</th>
-              <th>Arrival Delta (ms)</th>
-              <th>Accepted</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let o of vm.propagation.nodeObservations">
-              <td><strong>{{ o.nodeName }}</strong></td>
-              <td>+{{ o.deltaFromFirstMs }} ms</td>
-              <td><span class="badge badge-success">Accepted</span></td>
-            </tr>
-          </tbody>
-        </table>
+        <h2>Transaction Propagation Timeline</h2>
+        <p class="mono">
+          <app-universe-identifier
+            [value]="vm.propagation.txid"
+            label="observed transaction"
+          ></app-universe-identifier>
+        </p>
+        <div
+          class="table-wrap"
+          tabindex="0"
+          role="region"
+          aria-label="Transaction propagation timeline"
+          i18n-aria-label="universe.network.propagation-table"
+        >
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Observer Node</th>
+                <th>Arrival Delta (ms)</th>
+                <th>Accepted</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let o of vm.propagation.nodeObservations">
+                <td>
+                  <strong>{{ o.nodeName }}</strong>
+                </td>
+                <td>+{{ o.deltaFromFirstMs }} ms</td>
+                <td><span class="badge badge-success">Accepted</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p *ngIf="vm.templates.candidateTemplates.length === 0">
+          The provider answered successfully and returned no candidate block
+          templates.
+        </p>
       </section>
 
       <!-- Block Template Observatory -->
       <section class="panel">
-        <h2>Candidate Block Templates (Height #{{ vm.templates.blockHeight }})</h2>
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Template Source</th>
-              <th>Transaction Count</th>
-              <th>Total Weight</th>
-              <th>Total Fees (sats)</th>
-              <th>Median Fee Rate</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let t of vm.templates.candidateTemplates">
-              <td><strong>{{ t.poolName }}</strong></td>
-              <td>{{ t.txCount }}</td>
-              <td>{{ t.totalWeight }} WU</td>
-              <td class="mono">{{ t.totalFeesSats }}</td>
-              <td>{{ t.expectedMedianFeeRate }} sat/vB</td>
-            </tr>
-          </tbody>
-        </table>
+        <h2>
+          Candidate Block Templates (Height #{{ vm.templates.blockHeight }})
+        </h2>
+        <div
+          class="table-wrap"
+          tabindex="0"
+          role="region"
+          aria-label="Candidate block templates"
+          i18n-aria-label="universe.network.template-table"
+        >
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Template Source</th>
+                <th>Transaction Count</th>
+                <th>Total Weight</th>
+                <th>Total Fees (sats)</th>
+                <th>Median Fee Rate</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let t of vm.templates.candidateTemplates">
+                <td>
+                  <strong>{{ t.poolName }}</strong>
+                </td>
+                <td>{{ t.txCount }}</td>
+                <td>{{ t.totalWeight }} WU</td>
+                <td class="mono">{{ t.totalFeesSats }}</td>
+                <td>{{ t.expectedMedianFeeRate }} sat/vB</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </section>
     </ng-container>
   </ng-container>

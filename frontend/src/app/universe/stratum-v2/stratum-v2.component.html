@@ -1,6 +1,6 @@
 <div class="container-xl product-page">
   <header class="page-head">
-    <nav class="crumbs">
+    <nav class="crumbs" aria-label="Breadcrumb" i18n-aria-label="universe.breadcrumb-label">
       <a [routerLink]="['/']">Home</a>
       <span class="divider">/</span>
       <a [routerLink]="['/mining']">Mining</a>
@@ -18,11 +18,21 @@
       <p>Reading Stratum V2 telemetry...</p>
     </div>
 
+    <section *ngIf="vm.kind === 'error'" class="panel" role="alert">
+      <h2>Stratum V2 telemetry unavailable</h2>
+      <p>No authoritative first-party Stratum V2 provider is configured. This page will not invent endpoint or template activity.</p>
+    </section>
+
     <ng-container *ngIf="vm.kind === 'ready'">
+      <section class="panel" *ngIf="!vm.roles?.length && !vm.templates?.length && !vm.declarations?.length">
+        <h2>No Stratum V2 activity found</h2>
+        <p>The configured provider returned no endpoints, templates, or declarations.</p>
+      </section>
       <!-- Roles -->
       <section class="panel" *ngIf="vm.roles?.length">
         <h2>Active Stratum V2 Endpoints</h2>
-        <table class="data-table">
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Active Stratum V2 endpoints" i18n-aria-label="universe.stratum.endpoint-table">
+          <table class="data-table">
           <thead>
             <tr>
               <th>Role</th>
@@ -43,13 +53,15 @@
               <td><span class="badge badge-success">{{ r.status }}</span></td>
             </tr>
           </tbody>
-        </table>
+          </table>
+        </div>
       </section>
 
       <!-- Templates -->
       <section class="panel" *ngIf="vm.templates?.length">
         <h2>Declared Block Templates</h2>
-        <table class="data-table">
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Declared block templates" i18n-aria-label="universe.stratum.template-table">
+          <table class="data-table">
           <thead>
             <tr>
               <th>Template ID</th>
@@ -72,7 +84,8 @@
               <td><span class="badge badge-success">{{ t.status }}</span></td>
             </tr>
           </tbody>
-        </table>
+          </table>
+        </div>
       </section>
     </ng-container>
   </ng-container>

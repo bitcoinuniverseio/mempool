@@ -15,7 +15,7 @@ jobs:
     runs-on: [self-hosted, linux, x64, universe, gcp, universe-gcp-small]
     steps:
       - name: Update Project Board
-        uses: actions/github-script@v7
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           # Use the PAT stored in repository secrets (has project write access)
           github-token: ${{ secrets.PROJECT_TOKEN }}

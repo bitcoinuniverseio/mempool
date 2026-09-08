@@ -1,9 +1,17 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { BehaviorSubject, Observable, catchError, combineLatest, of } from 'rxjs';
+import {
+  BehaviorSubject,
+  Observable,
+  catchError,
+  combineLatest,
+  of,
+} from 'rxjs';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
+import { formatAtomicAmount } from '@app/universe/universe-evidence';
+import { UniverseIdentifierComponent } from '@app/universe/universe-identifier.component';
 import {
   ProtocolBearingUtxos,
   ScriptTypeDistribution,
@@ -26,37 +34,45 @@ interface UtxoViewModel {
   templateUrl: './utxo-set.component.html',
   styleUrls: ['../product-page.scss'],
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, UniverseIdentifierComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UtxoSetComponent implements OnInit {
-  // Templates format raw strings through the Number global; AOT needs it bound.
-  protected readonly Number = Number;
-  private readonly state = new BehaviorSubject<UtxoViewModel>({ kind: 'loading' });
+  protected readonly formatAtomicAmount = formatAtomicAmount;
+  private readonly state = new BehaviorSubject<UtxoViewModel>({
+    kind: 'loading',
+  });
   readonly vm$: Observable<UtxoViewModel> = this.state.asObservable();
 
   constructor(
     private api: UniverseApiService,
-    private seo: SeoService,
+    private seo: SeoService
   ) {
     this.seo.setTitle('UTXO-Set, Supply & Utreexo Observatory');
   }
 
   ngOnInit(): void {
     combineLatest([
-      this.api.getUtxoCheckpoints$().pipe(catchError(() => of({ checkpoints: [] }))),
-      this.api.getUtxoDistribution$().pipe(catchError(() => of({ valueCohorts: [], scriptTypes: [] }))),
-      this.api.getProtocolBearingUtxos$().pipe(catchError(() => of(null))),
-      this.api.getUtreexoRoots$().pipe(catchError(() => of(null))),
-    ]).subscribe(([checkpointsData, distData, protocolUtxos, utreexo]) => {
-      this.state.next({
-        kind: 'ready',
-        checkpoints: checkpointsData.checkpoints,
-        valueCohorts: distData.valueCohorts,
-        scriptTypes: distData.scriptTypes,
-        protocolUtxos: protocolUtxos || undefined,
-        utreexo: utreexo || undefined,
+      this.api.getUtxoCheckpoints$(),
+      this.api.getUtxoDistribution$(),
+      this.api.getProtocolBearingUtxos$(),
+      this.api.getUtreexoRoots$(),
+    ])
+      .pipe(catchError(() => of(null)))
+      .subscribe((result) => {
+        if (!result) {
+          this.state.next({ kind: 'error' });
+          return;
+        }
+        const [checkpointsData, distData, protocolUtxos, utreexo] = result;
+        this.state.next({
+          kind: 'ready',
+          checkpoints: checkpointsData.checkpoints,
+          valueCohorts: distData.valueCohorts,
+          scriptTypes: distData.scriptTypes,
+          protocolUtxos: protocolUtxos || undefined,
+          utreexo: utreexo || undefined,
+        });
       });
-    });
   }
 }

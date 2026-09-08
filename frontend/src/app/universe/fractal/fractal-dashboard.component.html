@@ -1,18 +1,29 @@
 <div class="container-xl product-page">
   <header class="page-head">
-    <nav class="crumbs">
+    <nav
+      class="crumbs"
+      aria-label="Breadcrumb"
+      i18n-aria-label="universe.breadcrumb-label"
+    >
       <a [routerLink]="['/']">Home</a>
       <span class="divider">/</span>
       <span>Fractal Bitcoin</span>
     </nav>
     <h1>Fractal Bitcoin Explorer</h1>
     <p class="summary">
-      Fractal Bitcoin consensus chain, block templates, sub-30-second cadence, and native CAT-20 covenants.
+      Fractal Bitcoin consensus chain, block templates, sub-30-second cadence,
+      and native CAT-20 covenants.
     </p>
   </header>
 
-  <nav class="nav-tabs">
-    <a [routerLink]="['/fractal']" class="active">Chain Overview</a>
+  <nav
+    class="nav-tabs"
+    aria-label="Product sections"
+    i18n-aria-label="universe.product-sections-label"
+  >
+    <a [routerLink]="['/fractal']" class="active" aria-current="page"
+      >Chain Overview</a
+    >
     <a [routerLink]="['/fractal/cat20']">CAT-20 Center</a>
   </nav>
 
@@ -21,12 +32,14 @@
       <p>Reading Fractal consensus node...</p>
     </div>
 
-    <div *ngIf="vm.kind === 'error'" class="panel">
+    <div *ngIf="vm.kind === 'error'" class="panel" role="alert">
       <h2>Fractal Node Unavailable</h2>
       <p>Could not connect to Universe first-party Fractal Bitcoin node.</p>
     </div>
 
-    <ng-container *ngIf="vm.kind === 'ready' && vm.tip && vm.mempool && vm.latestBlock">
+    <ng-container
+      *ngIf="vm.kind === 'ready' && vm.tip && vm.mempool && vm.latestBlock"
+    >
       <div class="metrics-grid">
         <div class="metric-card">
           <span class="metric-label">Chain Tip</span>
@@ -36,12 +49,19 @@
         <div class="metric-card">
           <span class="metric-label">Mempool Count</span>
           <span class="metric-value">{{ vm.mempool.count }} txs</span>
-          <span class="metric-sub">{{ vm.mempool.pendingCat20TxCount }} CAT-20</span>
+          <span class="metric-sub"
+            >{{ vm.mempool.pendingCat20TxCount }} CAT-20</span
+          >
         </div>
         <div class="metric-card">
           <span class="metric-label">Median Fee Rate</span>
-          <span class="metric-value">{{ vm.mempool.medianFeeRate }} sat/vB</span>
-          <span class="metric-sub">Min: {{ vm.mempool.minFeeRate }} | Max: {{ vm.mempool.maxFeeRate }}</span>
+          <span class="metric-value"
+            >{{ vm.mempool.medianFeeRate }} sat/vB</span
+          >
+          <span class="metric-sub"
+            >Min: {{ vm.mempool.minFeeRate }} | Max:
+            {{ vm.mempool.maxFeeRate }}</span
+          >
         </div>
         <div class="metric-card">
           <span class="metric-label">Difficulty</span>
@@ -52,30 +72,48 @@
 
       <section class="panel">
         <h2>Latest Confirmed Block</h2>
-        <table class="data-table">
-          <tbody>
-            <tr>
-              <td><strong>Height</strong></td>
-              <td>#{{ vm.latestBlock.height }}</td>
-            </tr>
-            <tr>
-              <td><strong>Hash</strong></td>
-              <td class="mono">{{ vm.latestBlock.hash }}</td>
-            </tr>
-            <tr>
-              <td><strong>Transactions</strong></td>
-              <td>{{ vm.latestBlock.txCount }} txs</td>
-            </tr>
-            <tr>
-              <td><strong>Weight</strong></td>
-              <td>{{ vm.latestBlock.weight }} WU ({{ (vm.latestBlock.size / 1000).toFixed(1) }} kB)</td>
-            </tr>
-            <tr>
-              <td><strong>Miner</strong></td>
-              <td>{{ vm.latestBlock.miner }}</td>
-            </tr>
-          </tbody>
-        </table>
+        <div
+          class="table-wrap"
+          tabindex="0"
+          role="region"
+          aria-label="Latest confirmed block"
+          i18n-aria-label="universe.fractal.block-table"
+        >
+          <table class="data-table">
+            <tbody>
+              <tr>
+                <td><strong>Height</strong></td>
+                <td>#{{ vm.latestBlock.height }}</td>
+              </tr>
+              <tr>
+                <td><strong>Hash</strong></td>
+                <td class="mono">
+                  <app-universe-identifier
+                    [value]="vm.latestBlock.hash"
+                    label="block hash"
+                  ></app-universe-identifier>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Transactions</strong></td>
+                <td>{{ vm.latestBlock.txCount }} txs</td>
+              </tr>
+              <tr>
+                <td><strong>Weight</strong></td>
+                <td>
+                  {{ vm.latestBlock.weight }} WU ({{
+                    (vm.latestBlock.size / 1000).toFixed(1)
+                  }}
+                  kB)
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Miner</strong></td>
+                <td>{{ vm.latestBlock.miner }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </section>
     </ng-container>
   </ng-container>
