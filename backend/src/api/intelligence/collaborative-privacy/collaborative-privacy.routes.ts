@@ -1,5 +1,11 @@
 import { Application, Request, Response } from 'express';
-import collaborativePrivacyService from './collaborative-privacy.service';
+import collaborativePrivacyService, { CollaborativeEvidenceError } from './collaborative-privacy.service';
+
+/** An absent source is a 503 that names the source, never a 500 and never an answer. */
+function fail(res: Response, err: unknown): Response {
+  if (err instanceof CollaborativeEvidenceError) return res.status(err.status).json({ stage: err.code, error: err.message });
+  return res.status(500).json({ error: err instanceof Error && err.message ? err.message : 'Internal error' });
+}
 
 class CollaborativePrivacyRoutes {
   public initRoutes(app: Application): void {
@@ -8,7 +14,7 @@ class CollaborativePrivacyRoutes {
         const overview = collaborativePrivacyService.getOverview();
         res.json(overview);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -17,7 +23,7 @@ class CollaborativePrivacyRoutes {
         const protocols = collaborativePrivacyService.listProtocols();
         res.json(protocols);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -26,7 +32,7 @@ class CollaborativePrivacyRoutes {
         const coordinators = collaborativePrivacyService.listCoordinators();
         res.json(coordinators);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -38,7 +44,7 @@ class CollaborativePrivacyRoutes {
         }
         res.json(coordinator);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -47,7 +53,7 @@ class CollaborativePrivacyRoutes {
         const rounds = collaborativePrivacyService.listRounds();
         res.json(rounds);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -59,7 +65,7 @@ class CollaborativePrivacyRoutes {
         }
         res.json(round);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -68,7 +74,7 @@ class CollaborativePrivacyRoutes {
         const bonds = collaborativePrivacyService.listFidelityBonds();
         res.json(bonds);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -77,7 +83,7 @@ class CollaborativePrivacyRoutes {
         const result = collaborativePrivacyService.verifyPublicPackage(req.body);
         res.status(result.stage === 'invalid-input' ? 400 : 503).json(result);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
   }
