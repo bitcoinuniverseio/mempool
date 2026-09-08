@@ -1,6 +1,9 @@
 import config from '../../config';
 const bitcoin = require('../../rpc-api/index');
 import { BitcoinRpcCredentials } from './bitcoin-api-abstract-factory';
+import { allocateRpcSockets } from './rpc-connection-budget';
+
+const socketAllocation = allocateRpcSockets(config);
 
 const nodeRpcCredentials: BitcoinRpcCredentials = {
   host: config.CORE_RPC.HOST,
@@ -8,6 +11,7 @@ const nodeRpcCredentials: BitcoinRpcCredentials = {
   user: config.CORE_RPC.USERNAME,
   pass: config.CORE_RPC.PASSWORD,
   timeout: config.CORE_RPC.TIMEOUT,
+  maxSockets: socketAllocation.primary,
   cookie: config.CORE_RPC.COOKIE ? config.CORE_RPC.COOKIE_PATH : undefined,
 };
 

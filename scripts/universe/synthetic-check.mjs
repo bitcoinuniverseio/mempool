@@ -65,10 +65,16 @@ function pass(check, detail) {
 }
 
 async function get(path) {
-  const response = await fetch(`${ORIGIN}${path}`, {
-    headers: { accept: 'application/json' },
-    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-  });
+  let response;
+  try {
+    response = await fetch(`${ORIGIN}${path}`, {
+      headers: { accept: 'application/json' },
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    throw new Error(`${path} request failed: ${detail}`);
+  }
   const text = await response.text();
   let body = null;
   try {

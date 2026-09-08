@@ -2,13 +2,18 @@
  * The onboarding wizard.
  *
  * Entry choices: open one public address without saving, create a
- * portfolio from one address, add a Bitcoin watch-only wallet (xpub /
- * descriptor), import an address list, or create a manual-only portfolio.
+ * portfolio from one address, or import an address list. Planned entry modes
+ * remain visibly unavailable until their complete production paths exist.
  * Private credentials are detected and rejected locally before any
  * network request, and the wizard never fakes progress or data.
  */
 
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
 import { Router } from '@angular/router';
 import { PortfoliosStore } from '../stores/portfolios.store';
 import {
@@ -17,25 +22,50 @@ import {
   looksLikePublicExtendedKey,
   looksLikeDescriptor,
 } from '../shared/secret-detection';
+import { classifyDescriptor, classifyExtendedKey } from '../shared/derivation';
+import type {
+  LocalAccount,
+  LocalPortfolio,
+  ScriptKind,
+} from '../stores/portfolio-model';
 import {
-  classifyDescriptor,
-  classifyExtendedKey,
-} from '../shared/derivation';
-import type { LocalAccount, LocalPortfolio, ScriptKind } from '../stores/portfolio-model';
-import { importCsv, importJson, type ImportEntry } from '../workspace/workspace-import';
+  importCsv,
+  importJson,
+  type ImportEntry,
+} from '../workspace/workspace-import';
 
-type EntryChoice =
-  | 'ephemeral'
-  | 'address'
-  | 'watch-only'
-  | 'list'
-  | 'manual';
+type EntryChoice = 'ephemeral' | 'address' | 'watch-only' | 'list' | 'manual';
 
-const ADDRESS_PATTERNS: readonly { chain: string; network: string; pattern: RegExp; label: string }[] = [
-  { chain: 'bitcoin', network: 'mainnet', pattern: /^bc1[02-9ac-hj-np-z]{11,71}$/, label: 'Bitcoin (native SegWit)' },
-  { chain: 'bitcoin', network: 'mainnet', pattern: /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$/, label: 'Bitcoin (legacy / SegWit)' },
-  { chain: 'dogecoin', network: 'mainnet', pattern: /^[DA9][1-9A-HJ-NP-Za-km-z]{20,60}$/, label: 'Dogecoin' },
-  { chain: 'zcash', network: 'mainnet', pattern: /^t[13][a-km-zA-HJ-NP-Z1-9]{25,60}$/, label: 'Zcash (transparent)' },
+const ADDRESS_PATTERNS: readonly {
+  chain: string;
+  network: string;
+  pattern: RegExp;
+  label: string;
+}[] = [
+  {
+    chain: 'bitcoin',
+    network: 'mainnet',
+    pattern: /^bc1[02-9ac-hj-np-z]{11,71}$/,
+    label: 'Bitcoin (native SegWit)',
+  },
+  {
+    chain: 'bitcoin',
+    network: 'mainnet',
+    pattern: /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$/,
+    label: 'Bitcoin (legacy / SegWit)',
+  },
+  {
+    chain: 'dogecoin',
+    network: 'mainnet',
+    pattern: /^[DA9][1-9A-HJ-NP-Za-km-z]{20,60}$/,
+    label: 'Dogecoin',
+  },
+  {
+    chain: 'zcash',
+    network: 'mainnet',
+    pattern: /^t[13][a-km-zA-HJ-NP-Z1-9]{25,60}$/,
+    label: 'Zcash (transparent)',
+  },
 ];
 
 @Component({
@@ -45,10 +75,12 @@ const ADDRESS_PATTERNS: readonly { chain: string; network: string; pattern: RegE
   template: `
     <div class="wrap">
       <header>
-        <h1 i18n="@@universe.portfolio.onboarding.title">Create your portfolio</h1>
+        <h1 i18n="@@universe.portfolio.onboarding.title">
+          Create your portfolio
+        </h1>
         <p class="soft" i18n="@@universe.portfolio.onboarding.copy">
-          Everything private stays in this browser, encrypted. Watch-only: seed phrases and
-          private keys are never accepted.
+          Everything private stays in this browser, encrypted. Watch-only: seed
+          phrases and private keys are never accepted.
         </p>
       </header>
 
@@ -56,46 +88,108 @@ const ADDRESS_PATTERNS: readonly { chain: string; network: string; pattern: RegE
         @case ('choose') {
           <section class="choices" aria-label="Entry choices">
             <button type="button" (click)="choose('address')">
-              <strong i18n="@@universe.portfolio.onboarding.from-address">Create from one address</strong>
-              <span i18n="@@universe.portfolio.onboarding.from-address-copy">Track one public address with labels and history.</span>
+              <strong i18n="@@universe.portfolio.onboarding.from-address"
+                >Create from one address</strong
+              >
+              <span i18n="@@universe.portfolio.onboarding.from-address-copy"
+                >Track one public address with labels and history.</span
+              >
             </button>
-            <button type="button" (click)="choose('watch-only')">
-              <strong i18n="@@universe.portfolio.onboarding.watch-only">Add a Bitcoin watch-only wallet</strong>
-              <span i18n="@@universe.portfolio.onboarding.watch-only-copy">Derive addresses from an xpub, ypub, zpub, or descriptor. The key never leaves this browser.</span>
+            <button type="button" disabled aria-describedby="watch-only-status">
+              <strong i18n="@@universe.portfolio.onboarding.watch-only"
+                >Add a Bitcoin watch-only wallet</strong
+              >
+              <span
+                id="watch-only-status"
+                i18n="@@universe.portfolio.onboarding.watch-only-copy"
+                >Not available in this release. Use a public address or address
+                list.</span
+              >
             </button>
             <button type="button" (click)="choose('list')">
-              <strong i18n="@@universe.portfolio.onboarding.list">Import an address list</strong>
-              <span i18n="@@universe.portfolio.onboarding.list-copy">Paste one public address per line.</span>
+              <strong i18n="@@universe.portfolio.onboarding.list"
+                >Import an address list</strong
+              >
+              <span i18n="@@universe.portfolio.onboarding.list-copy"
+                >Paste one public address per line.</span
+              >
             </button>
-            <button type="button" (click)="choose('manual')">
-              <strong i18n="@@universe.portfolio.onboarding.manual">Create a manual-only portfolio</strong>
-              <span i18n="@@universe.portfolio.onboarding.manual-copy">Keep explicit, user-entered positions. Clearly separated from chain facts.</span>
+            <button type="button" disabled aria-describedby="manual-status">
+              <strong i18n="@@universe.portfolio.onboarding.manual"
+                >Create a manual-only portfolio</strong
+              >
+              <span
+                id="manual-status"
+                i18n="@@universe.portfolio.onboarding.manual-copy"
+                >Not available in this release. Manual positions are not stored
+                or included in totals.</span
+              >
             </button>
             <button type="button" (click)="choose('ephemeral')">
-              <strong i18n="@@universe.portfolio.onboarding.ephemeral">Open one address without saving</strong>
-              <span i18n="@@universe.portfolio.onboarding.ephemeral-copy">No vault, no record, no history.</span>
+              <strong i18n="@@universe.portfolio.onboarding.ephemeral"
+                >Open one address without saving</strong
+              >
+              <span i18n="@@universe.portfolio.onboarding.ephemeral-copy"
+                >No vault, no record, no history.</span
+              >
             </button>
+            @if (error(); as message) {
+              <p class="error" role="alert">{{ message }}</p>
+            }
           </section>
         }
         @case ('vault') {
           <section class="panel">
-            <h2 i18n="@@universe.portfolio.onboarding.vault-title">Protect your portfolio</h2>
+            <h2 i18n="@@universe.portfolio.onboarding.vault-title">
+              Protect your portfolio
+            </h2>
             <p class="soft" i18n="@@universe.portfolio.onboarding.vault-copy">
-              Choose a passphrase. It derives the encryption key in this browser and is never stored
-              or sent. Losing it means losing local access to these definitions - the blockchain is untouched.
+              Choose a passphrase. It derives the encryption key in this browser
+              and is never stored or sent. Losing it means losing local access
+              to these definitions - the blockchain is untouched.
             </p>
             <label>
-              <span i18n="@@universe.portfolio.onboarding.passphrase">Passphrase</span>
-              <input #passInput type="password" autocomplete="new-password" required minlength="8" />
+              <span i18n="@@universe.portfolio.onboarding.passphrase"
+                >Passphrase</span
+              >
+              <input
+                #passInput
+                type="password"
+                autocomplete="new-password"
+                required
+                minlength="8"
+              />
             </label>
             <label>
-              <span i18n="@@universe.portfolio.onboarding.passphrase-repeat">Repeat passphrase</span>
-              <input #repeatInput type="password" autocomplete="new-password" required />
+              <span i18n="@@universe.portfolio.onboarding.passphrase-repeat"
+                >Repeat passphrase</span
+              >
+              <input
+                #repeatInput
+                type="password"
+                autocomplete="new-password"
+                required
+              />
             </label>
-            @if (error(); as message) { <p class="error" role="alert">{{ message }}</p> }
+            @if (error(); as message) {
+              <p class="error" role="alert">{{ message }}</p>
+            }
             <div class="actions">
-              <button type="button" class="primary" (click)="createVault(passInput.value, repeatInput.value)" i18n="@@universe.portfolio.onboarding.vault-create">Create encrypted vault</button>
-              <button type="button" (click)="step.set('choose')" i18n="@@universe.portfolio.onboarding.back">Back</button>
+              <button
+                type="button"
+                class="primary"
+                (click)="createVault(passInput.value, repeatInput.value)"
+                i18n="@@universe.portfolio.onboarding.vault-create"
+              >
+                Create encrypted vault
+              </button>
+              <button
+                type="button"
+                (click)="step.set('choose')"
+                i18n="@@universe.portfolio.onboarding.back"
+              >
+                Back
+              </button>
             </div>
           </section>
         }
@@ -105,26 +199,67 @@ const ADDRESS_PATTERNS: readonly { chain: string; network: string; pattern: RegE
             <label>
               <span>{{ inputLabel() }}</span>
               @if (stepChoice() === 'watch-only') {
-                <textarea #materialInput rows="3" (input)="validateMaterial(materialInput.value)"></textarea>
+                <textarea
+                  #materialInput
+                  rows="3"
+                  (input)="validateMaterial(materialInput.value)"
+                ></textarea>
               } @else {
-                <textarea #materialInput rows="4" (input)="validateMaterial(materialInput.value)"></textarea>
+                <textarea
+                  #materialInput
+                  rows="4"
+                  (input)="validateMaterial(materialInput.value)"
+                ></textarea>
               }
             </label>
-            @if (rejection(); as message) { <p class="error" role="alert">{{ message }}</p> }
-            @if (validation(); as validation) { <p class="ok">{{ validation }}</p> }
-            <p class="soft" i18n="@@universe.portfolio.onboarding.input-note">
-              Detection runs locally before anything is sent or stored. Rejected input is discarded immediately.
-            </p>
+            @if (rejection(); as message) {
+              <p class="error" role="alert">{{ message }}</p>
+            }
+            @if (validation(); as validation) {
+              <p class="notice">{{ validation }}</p>
+            }
+            @if (stepChoice() === 'ephemeral') {
+              <p class="soft">
+                The address is opened from this input and is not added to a
+                portfolio or vault.
+              </p>
+            } @else {
+              <p class="soft" i18n="@@universe.portfolio.onboarding.input-note">
+                Detection runs locally before anything is sent or stored.
+                Rejected input is discarded immediately.
+              </p>
+            }
             <div class="actions">
-              <button type="button" class="primary" [disabled]="!valid()" (click)="save()" i18n="@@universe.portfolio.onboarding.save">Save portfolio</button>
-              <button type="button" (click)="step.set('choose')" i18n="@@universe.portfolio.onboarding.back">Back</button>
+              <button
+                type="button"
+                class="primary"
+                [disabled]="!valid()"
+                (click)="save()"
+              >
+                {{
+                  stepChoice() === 'ephemeral'
+                    ? 'Open address'
+                    : 'Save portfolio'
+                }}
+              </button>
+              <button
+                type="button"
+                (click)="step.set('choose')"
+                i18n="@@universe.portfolio.onboarding.back"
+              >
+                Back
+              </button>
             </div>
           </section>
         }
         @case ('done') {
           <section class="panel" role="status">
-            <h2 i18n="@@universe.portfolio.onboarding.created">Portfolio created</h2>
-            <p class="soft" i18n="@@universe.portfolio.onboarding.created-copy">Opening the overview…</p>
+            <h2 i18n="@@universe.portfolio.onboarding.created">
+              Portfolio created
+            </h2>
+            <p class="soft" i18n="@@universe.portfolio.onboarding.created-copy">
+              Opening the overview…
+            </p>
           </section>
         }
       }
@@ -132,24 +267,111 @@ const ADDRESS_PATTERNS: readonly { chain: string; network: string; pattern: RegE
   `,
   styles: [
     `
-      .wrap { max-width: 560px; margin: 0 auto; padding: 16px 8px; display: flex; flex-direction: column; gap: 16px; }
-      .choices { display: flex; flex-direction: column; gap: 10px; }
-      .choices button, .panel { text-align: left; padding: 16px; border-radius: 12px; border: 1px solid var(--u-separator, rgba(0,0,0,0.1)); background: var(--u-surface, #fff); cursor: pointer; display: flex; flex-direction: column; gap: 4px; min-height: 44px; }
-      .choices button strong { font-size: 14.5px; }
-      .choices button span { font-size: 12.5px; color: var(--u-fg-soft, inherit); }
-      .panel { cursor: default; }
-      h1 { margin: 0; font-size: 20px; }
-      h2 { margin: 0 0 8px; font-size: 16px; }
-      label { display: flex; flex-direction: column; gap: 4px; margin: 10px 0; font-size: 13px; }
-      input, textarea { padding: 10px; border-radius: 8px; border: 1px solid var(--u-separator, rgba(0,0,0,0.16)); font: inherit; }
-      textarea { font-family: monospace; font-size: 12.5px; }
-      .actions { display: flex; gap: 10px; margin-top: 8px; }
-      button.primary, button { border-radius: 9px; border: 1px solid var(--u-separator, rgba(0,0,0,0.14)); background: transparent; padding: 10px 16px; min-height: 44px; cursor: pointer; }
-      button.primary { background: var(--u-brand, #c40059); color: #fff; border: none; font-weight: 600; }
-      button:disabled { opacity: 0.5; cursor: not-allowed; }
-      .error { color: #a02020; font-size: 13px; }
-      .ok { color: #1c7c31; font-size: 13px; }
-      .soft { font-size: 12.5px; color: var(--u-fg-soft, inherit); }
+      .wrap {
+        max-width: 560px;
+        margin: 0 auto;
+        padding: 16px 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .choices {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .choices button,
+      .panel {
+        text-align: left;
+        padding: 16px;
+        border-radius: 12px;
+        border: 1px solid var(--u-separator, rgba(0, 0, 0, 0.1));
+        background: var(--u-surface, #fff);
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-height: 44px;
+      }
+      .choices button strong {
+        font-size: 14.5px;
+      }
+      .choices button span {
+        font-size: 12.5px;
+        color: var(--u-fg-soft, inherit);
+      }
+      .panel {
+        cursor: default;
+      }
+      h1 {
+        margin: 0;
+        font-size: 20px;
+      }
+      h2 {
+        margin: 0 0 8px;
+        font-size: 16px;
+      }
+      label {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin: 10px 0;
+        font-size: 13px;
+      }
+      input,
+      textarea {
+        min-height: 44px;
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid var(--u-separator, rgba(0, 0, 0, 0.16));
+        font: inherit;
+      }
+      textarea {
+        font-family: monospace;
+        font-size: 12.5px;
+      }
+      .actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 8px;
+      }
+      button.primary,
+      button {
+        border-radius: 9px;
+        border: 1px solid var(--u-separator, rgba(0, 0, 0, 0.14));
+        background: transparent;
+        padding: 10px 16px;
+        min-height: 44px;
+        cursor: pointer;
+      }
+      button.primary {
+        background: var(--u-brand, #c40059);
+        color: #fff;
+        border: none;
+        font-weight: 600;
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .error {
+        color: #a02020;
+        font-size: 13px;
+      }
+      .notice {
+        color: var(--u-fg-soft, inherit);
+        font-size: 13px;
+      }
+      .soft {
+        font-size: 12.5px;
+        color: var(--u-fg-soft, inherit);
+      }
+      @media (max-width: 767px) {
+        input,
+        textarea {
+          font-size: 16px;
+        }
+      }
     `,
   ],
 })
@@ -169,13 +391,17 @@ export class OnboardingComponent {
   private material = '';
 
   protected choose(choice: EntryChoice): void {
-    this.stepChoice.set(choice);
-    if (choice === 'ephemeral') {
-      void this.router.navigate(['/portfolio/bitcoin/mainnet/bc1qexample000000000000000']);
+    if (choice === 'watch-only' || choice === 'manual') {
+      this.error.set(
+        $localize`:@@universe.portfolio.onboarding.unavailable-entry:That entry mode is not available in this release. Use a public address or address list.`
+      );
+      this.step.set('choose');
       return;
     }
-    if (choice === 'manual') {
-      void this.finishManual();
+    this.error.set('');
+    this.stepChoice.set(choice);
+    if (choice === 'ephemeral') {
+      this.step.set('input');
       return;
     }
     this.step.set(this.store.vaultKind() === 'unlocked' ? 'input' : 'vault');
@@ -183,6 +409,8 @@ export class OnboardingComponent {
 
   protected inputTitle(): string {
     switch (this.stepChoice()) {
+      case 'ephemeral':
+        return $localize`:@@universe.portfolio.onboarding.ephemeral-title:Open one public address`;
       case 'address':
         return $localize`:@@universe.portfolio.onboarding.address-title:Add one public address`;
       case 'watch-only':
@@ -194,6 +422,8 @@ export class OnboardingComponent {
 
   protected inputLabel(): string {
     switch (this.stepChoice()) {
+      case 'ephemeral':
+        return $localize`:@@universe.portfolio.onboarding.ephemeral-label:Public address`;
       case 'watch-only':
         return $localize`:@@universe.portfolio.onboarding.watch-label:Extended public key or output descriptor`;
       default:
@@ -203,11 +433,15 @@ export class OnboardingComponent {
 
   protected createVault(passphrase: string, repeat: string): void {
     if (passphrase.length < 8) {
-      this.error.set($localize`:@@universe.portfolio.onboarding.passphrase-short:Use at least 8 characters.`);
+      this.error.set(
+        $localize`:@@universe.portfolio.onboarding.passphrase-short:Use at least 8 characters.`
+      );
       return;
     }
     if (passphrase !== repeat) {
-      this.error.set($localize`:@@universe.portfolio.onboarding.passphrase-mismatch:The passphrases do not match.`);
+      this.error.set(
+        $localize`:@@universe.portfolio.onboarding.passphrase-mismatch:The passphrases do not match.`
+      );
       return;
     }
     this.error.set('');
@@ -220,6 +454,7 @@ export class OnboardingComponent {
    */
   protected validateMaterial(value: string): void {
     this.material = value;
+    this.importedEntries = [];
     this.rejection.set('');
     this.validation.set('');
     this.valid.set(false);
@@ -237,40 +472,56 @@ export class OnboardingComponent {
         : null;
       if (extended !== null) {
         this.validation.set(
-          $localize`:@@universe.portfolio.onboarding.xpub-ok:Extended public key accepted (${extended.script}:SCRIPT:).`,
+          $localize`:@@universe.portfolio.onboarding.xpub-ok:Extended public key accepted (${extended.script}:SCRIPT:).`
         );
         this.valid.set(true);
         return;
       }
-      const descriptor = looksLikeDescriptor(text) ? classifyDescriptor(text) : null;
+      const descriptor = looksLikeDescriptor(text)
+        ? classifyDescriptor(text)
+        : null;
       if (descriptor !== null) {
         this.validation.set(
           descriptor.checksumValid === false
             ? $localize`:@@universe.portfolio.onboarding.descriptor-bad-checksum:The descriptor parses but its checksum is not valid - check for typos.`
-            : $localize`:@@universe.portfolio.onboarding.descriptor-ok:Descriptor accepted.`,
+            : $localize`:@@universe.portfolio.onboarding.descriptor-ok:Descriptor accepted.`
         );
         this.valid.set(descriptor.checksumValid !== false);
         return;
       }
       this.rejection.set(
-        $localize`:@@universe.portfolio.onboarding.watch-bad:That is not a recognized extended public key or public descriptor.`,
+        $localize`:@@universe.portfolio.onboarding.watch-bad:That is not a recognized extended public key or public descriptor.`
       );
       return;
     }
     const imported = this.parseList(text);
     const addresses = imported.entries.map((entry) => entry.address);
-    const unknown = addresses.filter(
-      (candidate) => !ADDRESS_PATTERNS.some((entry) => entry.pattern.test(candidate)),
-    );
-    if (addresses.length === 0 || unknown.length > 0) {
+    const unknown = imported.entries.filter((entry) => {
+      const match = ADDRESS_PATTERNS.find((candidate) =>
+        candidate.pattern.test(entry.address)
+      );
+      return (
+        match === undefined ||
+        (entry.chain.length > 0 && entry.chain !== match.chain) ||
+        (entry.network.length > 0 && entry.network !== match.network)
+      );
+    });
+    if (
+      addresses.length === 0 ||
+      unknown.length > 0 ||
+      imported.rejected > 0 ||
+      (this.stepChoice() === 'ephemeral' && addresses.length !== 1)
+    ) {
       this.rejection.set(
-        $localize`:@@universe.portfolio.onboarding.addresses-bad:Some entries are not recognized public addresses on a supported chain.`,
+        this.stepChoice() === 'ephemeral' && addresses.length !== 1
+          ? $localize`:@@universe.portfolio.onboarding.ephemeral-one:Enter exactly one public address.`
+          : $localize`:@@universe.portfolio.onboarding.addresses-bad:Some entries do not match a supported public-address format or declare the wrong chain or network.`
       );
       return;
     }
     this.importedEntries = imported.entries;
     this.validation.set(
-      $localize`:@@universe.portfolio.onboarding.addresses-ok:${addresses.length}:count: address(es) recognized.`,
+      $localize`:@@universe.portfolio.onboarding.addresses-ok:${addresses.length}:count: address format(s) matched. This local form does not verify address checksums. Check every address before continuing.`
     );
     this.valid.set(true);
   }
@@ -280,7 +531,10 @@ export class OnboardingComponent {
    * list with labels, groups, CSV headers, or JSON shape carries its
    * labels into the new portfolio. Plain whitespace lists still work.
    */
-  private parseList(text: string): { entries: ImportEntry[]; rejected: number } {
+  private parseList(text: string): {
+    entries: ImportEntry[];
+    rejected: number;
+  } {
     if (/^[[{]/.test(text) || /(?:^|,)\s*(?:chain|address)/im.test(text)) {
       const asJson = importJson(text);
       if (asJson.entries.length > 0 || asJson.rejections.length > 0) {
@@ -310,15 +564,43 @@ export class OnboardingComponent {
   }
 
   protected async save(): Promise<void> {
+    if (this.stepChoice() === 'watch-only' || this.stepChoice() === 'manual') {
+      this.valid.set(false);
+      this.rejection.set(
+        $localize`:@@universe.portfolio.onboarding.unavailable-save:This entry mode cannot be saved because its production data path is not available.`
+      );
+      return;
+    }
+    if (this.stepChoice() === 'ephemeral') {
+      const entry = this.importedEntries[0];
+      const match =
+        entry === undefined
+          ? undefined
+          : ADDRESS_PATTERNS.find((candidate) =>
+              candidate.pattern.test(entry.address)
+            );
+      if (entry === undefined || match === undefined) {
+        this.valid.set(false);
+        this.rejection.set(
+          $localize`:@@universe.portfolio.onboarding.ephemeral-invalid:The address could not be opened. Check it and try again.`
+        );
+        return;
+      }
+      await this.router.navigate(
+        portfolioEphemeralRoute(match.chain, match.network, entry.address)
+      );
+      return;
+    }
+
     const portfolio =
-      this.portfolio ??
-      (await this.store.createPortfolio(this.defaultName()));
+      this.portfolio ?? (await this.store.createPortfolio(this.defaultName()));
     this.portfolio = portfolio;
     const now = new Date().toISOString();
     const accounts: LocalAccount[] = [...portfolio.accounts];
     if (this.stepChoice() === 'watch-only') {
       const extended = classifyExtendedKey(this.material);
-      const descriptor = extended === null ? classifyDescriptor(this.material) : null;
+      const descriptor =
+        extended === null ? classifyDescriptor(this.material) : null;
       if (extended !== null) {
         accounts.push({
           id: crypto.randomUUID(),
@@ -326,7 +608,13 @@ export class OnboardingComponent {
           chain: 'bitcoin',
           network: extended.testnet ? 'testnet' : 'mainnet',
           kind: 'xpub',
-          xpub: { key: extended.key, script: extended.script as ScriptKind, account: 0, gapLimit: 20, branches: ['external'] },
+          xpub: {
+            key: extended.key,
+            script: extended.script as ScriptKind,
+            account: 0,
+            gapLimit: 20,
+            branches: ['external'],
+          },
           tags: [],
           createdAt: now,
         });
@@ -345,11 +633,16 @@ export class OnboardingComponent {
     } else {
       const imported = this.parseList(this.material);
       for (const entry of imported.entries) {
-        const match = ADDRESS_PATTERNS.find((candidate) => candidate.pattern.test(entry.address));
+        const match = ADDRESS_PATTERNS.find((candidate) =>
+          candidate.pattern.test(entry.address)
+        );
         if (match === undefined) continue;
         accounts.push({
           id: crypto.randomUUID(),
-          name: entry.label.length > 0 ? entry.label : entry.address.slice(0, 12) + '…',
+          name:
+            entry.label.length > 0
+              ? entry.label
+              : entry.address.slice(0, 12) + '…',
           chain: entry.chain.length > 0 ? entry.chain : match.chain,
           network: entry.network.length > 0 ? entry.network : match.network,
           kind: imported.entries.length > 1 ? 'addresses' : 'address',
@@ -359,21 +652,10 @@ export class OnboardingComponent {
         });
       }
     }
-    await this.store.updatePortfolio(portfolio.id, (current) => ({ ...current, accounts }));
-    this.step.set('done');
-    void this.router.navigate(['/portfolio/p', portfolio.id, 'overview']);
-  }
-
-  private async finishManual(): Promise<void> {
-    const portfolio =
-      this.portfolio ??
-      (await this.store.createPortfolio(
-        this.store.vaultKind() === 'unlocked'
-          ? $localize`:@@universe.portfolio.onboarding.manual-name:Manual portfolio`
-          : '',
-        { sessionOnly: this.store.vaultKind() !== 'unlocked' },
-      ));
-    this.portfolio = portfolio;
+    await this.store.updatePortfolio(portfolio.id, (current) => ({
+      ...current,
+      accounts,
+    }));
     this.step.set('done');
     void this.router.navigate(['/portfolio/p', portfolio.id, 'overview']);
   }
@@ -388,4 +670,12 @@ export class OnboardingComponent {
         return $localize`:@@universe.portfolio.onboarding.default-address:My portfolio`;
     }
   }
+}
+
+export function portfolioEphemeralRoute(
+  chain: string,
+  network: string,
+  address: string
+): string[] {
+  return ['/portfolio', chain, network, address];
 }

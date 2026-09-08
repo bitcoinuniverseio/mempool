@@ -127,3 +127,62 @@ jobs:
           name: universe-chain-page-smoke
           path: scripts/universe/visual-qa/artifacts-chain-smoke
           retention-days: 3
+
+  # These route sweeps run beside the focused API and chain smoke above. A
+  # failure in one check must not prevent the other checks from examining the
+  # same production origin.
+  acceptance:
+    name: Every production route passes acceptance
+    runs-on: [self-hosted, linux, x64, universe, gcp, universe-gcp-medium]
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24.19.0'
+
+      - name: Install the browser harness
+        working-directory: scripts/universe/visual-qa
+        run: npm ci
+
+      - name: Run production route acceptance
+        working-directory: scripts/universe/visual-qa
+        run: node acceptance.mjs "${{ github.event.inputs.origin || 'https://explorer.bitcoinuniverse.io' }}"
+
+  live-browser:
+    name: Every production route passes live browser checks
+    runs-on: [self-hosted, linux, x64, universe, gcp, universe-gcp-medium]
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24.19.0'
+
+      - name: Install the browser harness
+        working-directory: scripts/universe/visual-qa
+        run: npm ci
+
+      - name: Run production live browser contracts
+        working-directory: scripts/universe/visual-qa
+        run: >-
+          node live-e2e.mjs
+          --local="${{ github.event.inputs.origin || 'https://explorer.bitcoinuniverse.io' }}"
+          --live="${{ github.event.inputs.origin || 'https://explorer.bitcoinuniverse.io' }}"
+          --out=artifacts-live-production
+
+      - name: Keep live route screenshots on failure
+        if: failure()
+        continue-on-error: true
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: universe-live-browser-smoke
+          path: scripts/universe/visual-qa/artifacts-live-production
+          if-no-files-found: ignore
+          retention-days: 3

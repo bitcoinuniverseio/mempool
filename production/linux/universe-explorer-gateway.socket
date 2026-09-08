@@ -12,9 +12,9 @@
 #
 #   systemctl enable --now universe-explorer-gateway.socket
 #
-# Adopting it on a gateway that is already running costs one brief interruption,
-# because the old process holds the port without SO_REUSEPORT and the socket
-# unit cannot bind underneath it. Every deploy after that is seamless.
+# Never bind this underneath a gateway that already owns the port. The first
+# adoption must use the edge-assisted two-slot procedure in DEPLOYMENT.md so
+# traffic remains on a verified listener while ownership moves to this unit.
 
 # It deliberately does not declare PartOf=universe-explorer-gateway.service.
 # PartOf propagates stop and restart from the named unit to this one, so a

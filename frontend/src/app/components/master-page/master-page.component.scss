@@ -416,7 +416,7 @@
   @media (min-width: 992px) {
     flex-direction: row;
     gap: var(--u-space-2);
-    min-height: 40px;
+    min-height: var(--u-touch-target);
     padding: var(--u-space-2) var(--u-space-3);
   }
 }

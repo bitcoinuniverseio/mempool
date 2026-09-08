@@ -8,6 +8,17 @@
 
 .product-page {
   padding-block: 1.25rem 3rem;
+  min-width: 0;
+  max-width: 100%;
+
+  &, * {
+    box-sizing: border-box;
+  }
+
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--u-accent);
+    outline-offset: 2px;
+  }
 }
 
 .page-head {
@@ -25,6 +36,7 @@
     max-width: 72ch;
     color: var(--u-text-muted);
     line-height: 1.5;
+    overflow-wrap: anywhere;
   }
 }
 
@@ -34,6 +46,9 @@
   margin-bottom: 0.4rem;
   .divider { margin: 0 0.35rem; }
   a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
     color: var(--u-accent);
     text-decoration: none;
     &:hover { text-decoration: underline; }
@@ -42,13 +57,35 @@
 
 .nav-tabs {
   display: flex;
+  max-width: 100%;
   gap: 0.5rem;
   margin-bottom: 1rem;
   border-bottom: 1px solid var(--u-divider);
-  padding-bottom: 0.5rem;
+  padding: 0 12px 0.5rem;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scroll-padding-inline: 0.25rem;
+  background-image:
+    linear-gradient(to right, var(--u-surface-raised) 60%, rgba(0, 0, 0, 0)),
+    linear-gradient(to left, var(--u-surface-raised) 60%, rgba(0, 0, 0, 0)),
+    linear-gradient(to right, var(--u-nav-scroll-shadow), rgba(0, 0, 0, 0)),
+    linear-gradient(to left, var(--u-nav-scroll-shadow), rgba(0, 0, 0, 0));
+  background-position: left center, right center, left center, right center;
+  background-repeat: no-repeat;
+  background-size: 28px 100%, 28px 100%, 12px 100%, 12px 100%;
+  background-attachment: local, local, scroll, scroll;
+  scrollbar-color: var(--u-border) transparent;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
 
   a {
-    padding: 0.4rem 0.8rem;
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0.5rem 0.8rem;
     border-radius: var(--u-radius-sm, 3px);
     color: var(--u-text-muted);
     text-decoration: none;
@@ -66,6 +103,8 @@
   @include u.universe-surface;
   padding: 1.25rem;
   margin-bottom: 1rem;
+  min-width: 0;
+  max-width: 100%;
   border-radius: var(--u-radius-md, 5px);
 
   h2 {
@@ -79,6 +118,7 @@
     margin: 0 0 0.5rem;
     max-width: 76ch;
     color: var(--u-text-secondary);
+    overflow-wrap: anywhere;
   }
 }
 
@@ -92,6 +132,7 @@
 .metric-card {
   @include u.universe-surface;
   padding: 1rem;
+  min-width: 0;
   border-radius: var(--u-radius-md, 5px);
   display: flex;
   flex-direction: column;
@@ -109,12 +150,44 @@
     font-weight: 700;
     color: var(--u-text-primary);
     font-family: var(--font-family-monospace, monospace);
+    overflow-wrap: anywhere;
   }
 
   .metric-sub {
     font-size: 0.8rem;
     color: var(--u-text-muted);
     margin-top: 0.25rem;
+  }
+}
+
+.table-wrap {
+  width: 100%;
+  max-width: 100%;
+  margin-top: 0.5rem;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  background-image:
+    linear-gradient(to right, var(--u-surface-raised) 60%, rgba(0, 0, 0, 0)),
+    linear-gradient(to left, var(--u-surface-raised) 60%, rgba(0, 0, 0, 0)),
+    linear-gradient(to right, var(--u-nav-scroll-shadow), rgba(0, 0, 0, 0)),
+    linear-gradient(to left, var(--u-nav-scroll-shadow), rgba(0, 0, 0, 0));
+  background-position: left center, right center, left center, right center;
+  background-repeat: no-repeat;
+  background-size: 24px 100%, 24px 100%, 10px 100%, 10px 100%;
+  background-attachment: local, local, scroll, scroll;
+  scrollbar-color: var(--u-border) transparent;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+
+  > .data-table {
+    min-width: max-content;
+    margin-top: 0;
+  }
+
+  th,
+  td {
+    white-space: nowrap;
   }
 }
 
@@ -145,6 +218,7 @@
 
   .mono {
     font-family: var(--font-family-monospace, monospace);
+    overflow-wrap: anywhere;
   }
 }
 
@@ -176,6 +250,11 @@
 }
 
 .btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
   background: var(--u-brand);
   color: var(--u-brand-contrast);
   border: none;
@@ -188,6 +267,11 @@
 }
 
 .btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
   background: var(--u-surface-sunken);
   color: var(--u-text-primary);
   border: 1px solid var(--u-border);
@@ -208,28 +292,80 @@
   }
   input, textarea, select {
     width: 100%;
+    min-height: 44px;
     padding: 0.6rem 0.75rem;
     background: var(--u-surface-sunken);
     border: 1px solid var(--u-border);
     border-radius: var(--u-radius-sm, 3px);
     color: var(--u-text-primary);
     font-family: inherit;
-    font-size: 0.9rem;
+    font-size: 1rem;
     &:focus {
-      outline: none;
       border-color: var(--u-accent);
     }
+  }
+
+  textarea {
+    min-height: 7rem;
+    resize: vertical;
   }
 }
 
 .code-block {
+  max-width: 100%;
   background: var(--u-surface-sunken);
   padding: 1rem;
   border-radius: var(--u-radius-sm, 3px);
   overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-color: var(--u-border) transparent;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
   color: var(--u-text-primary);
 }
 
 .text-success {
   color: var(--universe-state-confirmed);
+}
+
+@media (max-width: 767px) {
+  .product-page {
+    padding-block: 0.75rem 2rem;
+  }
+
+  .page-head h1 {
+    font-size: clamp(1.35rem, 7vw, 1.6rem);
+    overflow-wrap: anywhere;
+  }
+
+  .panel {
+    padding: 1rem;
+  }
+
+  .metrics-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.75rem;
+  }
+
+  .table-wrap .data-table th,
+  .table-wrap .data-table td {
+    padding: 0.6rem;
+  }
+}
+
+@media (forced-colors: active) {
+  .product-page :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline-color: Highlight;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-page *,
+  .product-page *::before,
+  .product-page *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }

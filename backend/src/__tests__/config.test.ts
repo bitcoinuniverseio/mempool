@@ -75,6 +75,7 @@ describe('Mempool Backend Config', () => {
         USERNAME: 'mempool',
         PASSWORD: 'mempool',
         TIMEOUT: 60000,
+        MAX_SOCKETS: 8,
         COOKIE: false,
         COOKIE_PATH: '/bitcoin/.cookie',
         DEBUG_LOG_PATH: '',
@@ -86,6 +87,7 @@ describe('Mempool Backend Config', () => {
         USERNAME: 'mempool',
         PASSWORD: 'mempool',
         TIMEOUT: 60000,
+        MAX_SOCKETS: 8,
         COOKIE: false,
         COOKIE_PATH: '/bitcoin/.cookie'
       });

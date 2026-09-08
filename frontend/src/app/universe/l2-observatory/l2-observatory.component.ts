@@ -1,13 +1,18 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { BehaviorSubject, Observable, catchError, combineLatest, of } from 'rxjs';
+import {
+  BehaviorSubject,
+  Observable,
+  catchError,
+  combineLatest,
+  of,
+} from 'rxjs';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
-import {
-  L2BridgeSystem,
-  L2Challenge,
-} from '@app/universe/universe.types';
+import { formatAtomicAmount } from '@app/universe/universe-evidence';
+import { UniverseIdentifierComponent } from '@app/universe/universe-identifier.component';
+import { L2BridgeSystem, L2Challenge } from '@app/universe/universe.types';
 
 interface L2ViewModel {
   readonly kind: 'loading' | 'ready' | 'error';
@@ -20,32 +25,37 @@ interface L2ViewModel {
   templateUrl: './l2-observatory.component.html',
   styleUrls: ['../product-page.scss'],
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, UniverseIdentifierComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class L2ObservatoryComponent implements OnInit {
-  // Templates format raw strings through the Number global; AOT needs it bound.
-  protected readonly Number = Number;
-  private readonly state = new BehaviorSubject<L2ViewModel>({ kind: 'loading' });
+  protected readonly formatAtomicAmount = formatAtomicAmount;
+  private readonly state = new BehaviorSubject<L2ViewModel>({
+    kind: 'loading',
+  });
   readonly vm$: Observable<L2ViewModel> = this.state.asObservable();
 
   constructor(
     private api: UniverseApiService,
-    private seo: SeoService,
+    private seo: SeoService
   ) {
     this.seo.setTitle('BitVM & Bitcoin L2 Bridge Observatory');
   }
 
   ngOnInit(): void {
-    combineLatest([
-      this.api.getL2Systems$().pipe(catchError(() => of({ systems: [] }))),
-      this.api.getL2Challenges$().pipe(catchError(() => of({ challenges: [] }))),
-    ]).subscribe(([systemsData, challengesData]) => {
-      this.state.next({
-        kind: 'ready',
-        systems: systemsData.systems,
-        challenges: challengesData.challenges,
+    combineLatest([this.api.getL2Systems$(), this.api.getL2Challenges$()])
+      .pipe(catchError(() => of(null)))
+      .subscribe((result) => {
+        if (!result) {
+          this.state.next({ kind: 'error' });
+          return;
+        }
+        const [systemsData, challengesData] = result;
+        this.state.next({
+          kind: 'ready',
+          systems: systemsData.systems,
+          challenges: challengesData.challenges,
+        });
       });
-    });
   }
 }

@@ -5,16 +5,28 @@
  * supporting regions rather than a wall of equal boxes.
  */
 
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { NgxEchartsDirective } from 'ngx-echarts';
+import { NgxEchartsDirective, provideEchartsCore } from 'ngx-echarts';
 import type { EChartsOption } from '@app/graphs/echarts';
 import { chartChrome } from '@app/shared/chart-theme';
 import { PortfolioDataService } from '../data/portfolio-data.service';
 import { PortfoliosStore } from '../stores/portfolios.store';
 import { PortfolioSessionService } from '../stores/session.service';
 import { PortfolioDataStateComponent } from '../shared/data-state.component';
-import { atomicToDisplay, formatExact, maskedValue, truncateIdentifier } from '../shared/exact';
+import {
+  atomicToDisplay,
+  formatExact,
+  maskedValue,
+  truncateIdentifier,
+} from '../shared/exact';
 
 type RangeKey = '24h' | '7d' | '30d' | '90d' | '1y' | 'all';
 
@@ -22,13 +34,24 @@ type RangeKey = '24h' | '7d' | '30d' | '90d' | '1y' | 'all';
   selector: 'app-portfolio-overview',
   standalone: true,
   imports: [NgxEchartsDirective, PortfolioDataStateComponent, RouterLink],
+  providers: [
+    provideEchartsCore({
+      echarts: () =>
+        import('@app/graphs/echarts').then((module) => module.echarts),
+    }),
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="overview">
       <!-- Primary region: the value hero. -->
       <section class="hero" aria-label="Portfolio value">
         <div class="hero-main">
-          <p class="hero-label" i18n="@@universe.portfolio.overview.portfolio-value">Portfolio value</p>
+          <p
+            class="hero-label"
+            i18n="@@universe.portfolio.overview.portfolio-value"
+          >
+            Portfolio value
+          </p>
           <p class="hero-value" aria-live="polite">
             @if (session.valuesHidden()) {
               <span class="masked">{{ masked() }}</span>
@@ -39,26 +62,37 @@ type RangeKey = '24h' | '7d' | '30d' | '90d' | '1y' | 'all';
           </p>
           <p class="hero-sub">
             <app-portfolio-data-state [state]="state()" />
-            <span class="coverage" i18n="@@universe.portfolio.overview.coverage">
+            <span
+              class="coverage"
+              i18n="@@universe.portfolio.overview.coverage"
+            >
               {{ coverageLabel() }}
             </span>
           </p>
         </div>
         <dl class="hero-stats">
           <div>
-            <dt i18n="@@universe.portfolio.overview.accounts">Tracked accounts</dt>
+            <dt i18n="@@universe.portfolio.overview.accounts">
+              Tracked accounts
+            </dt>
             <dd>{{ data().accounts.length }}</dd>
           </div>
           <div>
-            <dt i18n="@@universe.portfolio.overview.unpriced">Unpriced holdings</dt>
+            <dt i18n="@@universe.portfolio.overview.unpriced">
+              Unpriced holdings
+            </dt>
             <dd>{{ aggregation()?.unpricedCount ?? 0 }}</dd>
           </div>
           <div>
-            <dt i18n="@@universe.portfolio.overview.internal-moves">Internal transfers</dt>
+            <dt i18n="@@universe.portfolio.overview.internal-moves">
+              Internal transfers
+            </dt>
             <dd>{{ aggregation()?.internalTransfers?.length ?? 0 }}</dd>
           </div>
           <div>
-            <dt i18n="@@universe.portfolio.overview.last-refresh">Last complete refresh</dt>
+            <dt i18n="@@universe.portfolio.overview.last-refresh">
+              Last complete refresh
+            </dt>
             <dd>{{ completedLabel() }}</dd>
           </div>
         </dl>
@@ -74,17 +108,25 @@ type RangeKey = '24h' | '7d' | '30d' | '90d' | '1y' | 'all';
               [attr.aria-selected]="selectedRange() === range"
               [class.active]="selectedRange() === range"
               (click)="selectedRange.set(range)"
-            >{{ range.toUpperCase() }}</button>
+            >
+              {{ range.toUpperCase() }}
+            </button>
           }
         </div>
-        <div
-          class="chart"
-          echarts
-          [options]="chartOptions()"
-          [merge]="chartMerge()"
-          aria-label="Net value history chart; the table below carries the same data"
-          role="img"
-        ></div>
+        @if (session.valuesHidden()) {
+          <div class="chart chart-hidden" role="status">
+            Chart values are hidden.
+          </div>
+        } @else {
+          <div
+            class="chart"
+            echarts
+            [options]="chartOptions()"
+            [merge]="chartMerge()"
+            aria-label="Net value history chart; the table below carries the same data"
+            role="img"
+          ></div>
+        }
       </section>
 
       <!-- Secondary regions. -->
@@ -92,11 +134,24 @@ type RangeKey = '24h' | '7d' | '30d' | '90d' | '1y' | 'all';
         <section class="panel" aria-label="Allocation">
           <h2 i18n="@@universe.portfolio.overview.allocation">Allocation</h2>
           <table class="allocation-table">
-            <caption class="visually-hidden" i18n="@@universe.portfolio.overview.allocation-caption">
+            <caption
+              class="visually-hidden"
+              i18n="@@universe.portfolio.overview.allocation-caption"
+            >
               Allocation by asset with exact values and percentages
             </caption>
             <thead>
-              <tr><th scope="col" i18n="@@universe.portfolio.overview.asset">Asset</th><th scope="col" i18n="@@universe.portfolio.overview.share">Share</th><th scope="col" i18n="@@universe.portfolio.overview.value">Value</th></tr>
+              <tr>
+                <th scope="col" i18n="@@universe.portfolio.overview.asset">
+                  Asset
+                </th>
+                <th scope="col" i18n="@@universe.portfolio.overview.share">
+                  Share
+                </th>
+                <th scope="col" i18n="@@universe.portfolio.overview.value">
+                  Value
+                </th>
+              </tr>
             </thead>
             <tbody>
               @for (row of allocation(); track row.assetKey) {
@@ -121,7 +176,9 @@ type RangeKey = '24h' | '7d' | '30d' | '90d' | '1y' | 'all';
             @for (driver of drivers(); track driver.label) {
               <li>
                 <span class="driver-label">{{ driver.label }}</span>
-                <span class="driver-value">{{ session.valuesHidden() ? masked() : driver.value }}</span>
+                <span class="driver-value">{{
+                  session.valuesHidden() ? masked() : driver.value
+                }}</span>
               </li>
             }
           </ul>
@@ -130,16 +187,26 @@ type RangeKey = '24h' | '7d' | '30d' | '90d' | '1y' | 'all';
         <section class="panel" aria-label="UTXO health">
           <h2 i18n="@@universe.portfolio.overview.utxo-health">UTXO health</h2>
           <p class="soft">
-            <a routerLink="utxos" i18n="@@universe.portfolio.overview.open-utxo">Open the UTXO center</a>
+            <a routerLink="utxos" i18n="@@universe.portfolio.overview.open-utxo"
+              >Open the UTXO center</a
+            >
             <span> · </span>
-            <a routerLink="holdings" i18n="@@universe.portfolio.overview.open-holdings">Holdings</a>
+            <a
+              routerLink="holdings"
+              i18n="@@universe.portfolio.overview.open-holdings"
+              >Holdings</a
+            >
           </p>
         </section>
 
         <section class="panel" aria-label="Source confidence">
           <h2 i18n="@@universe.portfolio.overview.sources">Data confidence</h2>
           <p class="soft">
-            <a routerLink="sources" i18n="@@universe.portfolio.overview.open-sources">What every source answered</a>
+            <a
+              routerLink="sources"
+              i18n="@@universe.portfolio.overview.open-sources"
+              >What every source answered</a
+            >
           </p>
         </section>
       </div>
@@ -147,41 +214,162 @@ type RangeKey = '24h' | '7d' | '30d' | '90d' | '1y' | 'all';
   `,
   styles: [
     `
-      .overview { display: flex; flex-direction: column; gap: 20px; }
+      .overview {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+      .chart-hidden {
+        display: grid;
+        place-items: center;
+        color: var(--u-fg-soft, inherit);
+      }
       .hero {
-        display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap;
-        padding: 24px; border-radius: 16px;
-        background: var(--u-hero-surface, linear-gradient(160deg, rgba(128,128,128,0.05), transparent 60%));
-        border: 1px solid var(--u-separator, rgba(0,0,0,0.06));
+        display: flex;
+        justify-content: space-between;
+        gap: 24px;
+        flex-wrap: wrap;
+        padding: 24px;
+        border-radius: 16px;
+        background: var(
+          --u-hero-surface,
+          linear-gradient(160deg, rgba(128, 128, 128, 0.05), transparent 60%)
+        );
+        border: 1px solid var(--u-separator, rgba(0, 0, 0, 0.06));
       }
-      .hero-label { margin: 0 0 4px; font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--u-fg-soft, inherit); }
-      .hero-value { margin: 0; font-size: 34px; font-variant-numeric: tabular-nums; }
-      .hero-value .quote { font-size: 14px; margin-left: 6px; color: var(--u-fg-soft, inherit); }
-      .masked { letter-spacing: 2px; }
-      .hero-sub { display: flex; gap: 10px; align-items: center; margin: 8px 0 0; }
-      .hero-stats { display: grid; grid-template-columns: repeat(2, auto); gap: 8px 28px; margin: 0; align-content: center; }
-      .hero-stats dt { font-size: 11.5px; color: var(--u-fg-soft, inherit); }
-      .hero-stats dd { margin: 2px 0 0; font-size: 15px; font-variant-numeric: tabular-nums; }
-      .chart-region { padding: 8px 4px; }
-      .range-picker { display: flex; gap: 4px; margin-bottom: 6px; }
+      .hero-label {
+        margin: 0 0 4px;
+        font-size: 12.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--u-fg-soft, inherit);
+      }
+      .hero-value {
+        margin: 0;
+        font-size: 34px;
+        font-variant-numeric: tabular-nums;
+      }
+      .hero-value .quote {
+        font-size: 14px;
+        margin-left: 6px;
+        color: var(--u-fg-soft, inherit);
+      }
+      .masked {
+        letter-spacing: 2px;
+      }
+      .hero-sub {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin: 8px 0 0;
+      }
+      .hero-stats {
+        display: grid;
+        grid-template-columns: repeat(2, auto);
+        gap: 8px 28px;
+        margin: 0;
+        align-content: center;
+      }
+      .hero-stats dt {
+        font-size: 11.5px;
+        color: var(--u-fg-soft, inherit);
+      }
+      .hero-stats dd {
+        margin: 2px 0 0;
+        font-size: 15px;
+        font-variant-numeric: tabular-nums;
+      }
+      .chart-region {
+        padding: 8px 4px;
+      }
+      .range-picker {
+        display: flex;
+        gap: 4px;
+        margin-bottom: 6px;
+      }
       .range-picker button {
-        min-height: 32px; padding: 4px 10px; border: none; background: transparent;
-        border-radius: 6px; font-size: 12px; cursor: pointer; color: var(--u-fg-soft, inherit);
+        min-height: 44px;
+        min-width: 44px;
+        padding: 4px 10px;
+        border: none;
+        background: transparent;
+        border-radius: 6px;
+        font-size: 12px;
+        cursor: pointer;
+        color: var(--u-fg-soft, inherit);
       }
-      .range-picker button.active { background: var(--u-selected-bg, rgba(128,128,128,0.1)); color: var(--u-brand, var(--u-primary, inherit)); font-weight: 600; }
-      .chart { height: 320px; }
-      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
-      .panel { border: 1px solid var(--u-separator, rgba(0,0,0,0.07)); border-radius: 12px; padding: 14px 16px; }
-      .panel h2 { margin: 0 0 10px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--u-fg-soft, inherit); }
-      table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 13.5px; }
-      th, td { text-align: left; padding: 5px 4px; }
-      th { font-size: 11.5px; color: var(--u-fg-soft, inherit); font-weight: 500; }
-      .drivers { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; }
-      .drivers li { display: flex; justify-content: space-between; gap: 10px; }
-      .driver-value { font-variant-numeric: tabular-nums; }
-      .soft { font-size: 13px; color: var(--u-fg-soft, inherit); }
-      .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-      a { color: var(--u-brand, var(--u-primary, inherit)); }
+      .range-picker button.active {
+        background: var(--u-selected-bg, rgba(128, 128, 128, 0.1));
+        color: var(--u-brand, var(--u-primary, inherit));
+        font-weight: 600;
+      }
+      .chart {
+        height: 320px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 16px;
+      }
+      .panel {
+        border: 1px solid var(--u-separator, rgba(0, 0, 0, 0.07));
+        border-radius: 12px;
+        padding: 14px 16px;
+      }
+      .panel h2 {
+        margin: 0 0 10px;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--u-fg-soft, inherit);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-variant-numeric: tabular-nums;
+        font-size: 13.5px;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 5px 4px;
+      }
+      th {
+        font-size: 11.5px;
+        color: var(--u-fg-soft, inherit);
+        font-weight: 500;
+      }
+      .drivers {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        font-size: 13.5px;
+      }
+      .drivers li {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      .driver-value {
+        font-variant-numeric: tabular-nums;
+      }
+      .soft {
+        font-size: 13px;
+        color: var(--u-fg-soft, inherit);
+      }
+      .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+      }
+      a {
+        color: var(--u-brand, var(--u-primary, inherit));
+      }
     `,
   ],
 })
@@ -192,7 +380,14 @@ export class OverviewComponent {
   readonly portfolioId = input<string>('');
 
   readonly selectedRange = signal<RangeKey>('30d');
-  readonly ranges: readonly RangeKey[] = ['24h', '7d', '30d', '90d', '1y', 'all'];
+  readonly ranges: readonly RangeKey[] = [
+    '24h',
+    '7d',
+    '30d',
+    '90d',
+    '1y',
+    'all',
+  ];
   readonly chartMerge = signal<Record<string, unknown>>({});
 
   readonly aggregation = computed(() => this.data().aggregation);
@@ -226,7 +421,10 @@ export class OverviewComponent {
     if (aggregation === null) return [];
     const total = aggregation.pricedTotal;
     return aggregation.holdings.map((holding) => {
-      const label = holding.displayName ?? holding.ticker ?? holding.assetKey.split(':').slice(-1)[0];
+      const label =
+        holding.displayName ??
+        holding.ticker ??
+        holding.assetKey.split(':').slice(-1)[0];
       const value = holding.pricedValue;
       let share = '-';
       if (value !== null && total !== null && total !== '0') {
@@ -236,7 +434,10 @@ export class OverviewComponent {
         assetKey: holding.assetKey,
         label,
         share,
-        value: value === null ? $localize`:@@universe.portfolio.overview.unpriced-value:Unpriced` : formatExact(value, 'en'),
+        value:
+          value === null
+            ? $localize`:@@universe.portfolio.overview.unpriced-value:Unpriced`
+            : formatExact(value, 'en'),
       };
     });
   });
@@ -264,13 +465,23 @@ export class OverviewComponent {
     if (aggregation.duplicateAddresses.length > 0) {
       drivers.push({
         label: $localize`:@@universe.portfolio.overview.driver-duplicates:Duplicated addresses`,
-        value: aggregation.duplicateAddresses.map((address) => truncateIdentifier(address)).join(', '),
+        value: aggregation.duplicateAddresses
+          .map((address) => truncateIdentifier(address))
+          .join(', '),
       });
     }
     return drivers;
   });
 
   readonly chartOptions = computed<EChartsOption>(() => {
+    if (this.session.valuesHidden()) {
+      return {
+        tooltip: { show: false },
+        xAxis: { show: false, data: [] },
+        yAxis: { show: false },
+        series: [],
+      };
+    }
     const aggregation = this.aggregation();
     const total = aggregation?.pricedTotal ?? null;
     const series: number[] = total === null ? [] : [Number(total)];
@@ -316,8 +527,13 @@ function percent(part: string, total: string): string {
   const scale = (value: string): bigint => BigInt(value.replace('.', ''));
   const partScale = part.split('.')[1]?.length ?? 0;
   const totalScale = total.split('.')[1]?.length ?? 0;
-  const scaled = (scale(part) * 10n ** BigInt(Math.max(0, totalScale - partScale) + 8)) / scale(total);
+  const scaled =
+    (scale(part) * 10n ** BigInt(Math.max(0, totalScale - partScale) + 8)) /
+    scale(total);
   const whole = scaled / 100_000_000n;
-  const fraction = (scaled % 100_000_000n).toString().padStart(8, '0').replace(/0+$/, '');
+  const fraction = (scaled % 100_000_000n)
+    .toString()
+    .padStart(8, '0')
+    .replace(/0+$/, '');
   return fraction.length === 0 ? `${whole}` : `${whole}.${fraction}`;
 }

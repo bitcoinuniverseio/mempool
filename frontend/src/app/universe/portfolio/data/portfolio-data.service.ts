@@ -11,6 +11,11 @@
 
 import { Injectable, NgZone, computed, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
+import {
+  foldDataStates,
+  PORTFOLIO_NATIVE_ASSET_KEY,
+  type PortfolioDataState as PortfolioEvidenceState,
+} from '@app/shared/universe-portfolio-v2.types';
 import { PortfolioV2ApiService } from '../data/portfolio-v2-api.service';
 import { PortfoliosStore } from '../stores/portfolios.store';
 import {
@@ -32,6 +37,7 @@ export interface AccountLoadState {
   readonly state: 'idle' | 'loading' | 'ok' | 'failed';
   readonly aggregateState: string;
   readonly errorMessage?: string;
+  readonly retryable?: boolean;
 }
 
 export interface PortfolioDataState {
@@ -66,29 +72,41 @@ export class PortfolioDataService {
    */
   async loadPortfolio(
     portfolio: LocalPortfolio,
-    options: { readonly includeAccounts?: readonly string[] } = {},
+    options: { readonly includeAccounts?: readonly string[] } = {}
   ): Promise<void> {
     const sequence = ++this.loadSequence;
     const policy = inclusionPolicyOf(portfolio);
     const targets: { account: LocalAccount; address: string }[] = [];
-    for (const account of portfolio.accounts) {
-      if (
-        options.includeAccounts !== undefined &&
-        !options.includeAccounts.includes(account.id)
-      ) {
+    const selectedAccounts = portfolio.accounts.filter(
+      (account) =>
+        options.includeAccounts === undefined ||
+        options.includeAccounts.includes(account.id)
+    );
+    const accountStates: AccountLoadState[] = [];
+    for (const account of selectedAccounts) {
+      const addresses = accountAddresses(account);
+      if (addresses.length === 0) {
+        accountStates.push(unreadableAccountState(account));
         continue;
       }
-      for (const address of accountAddresses(account)) {
+      for (const address of addresses) {
         targets.push({ account, address });
+        accountStates.push({
+          accountId: account.id,
+          address,
+          state: 'loading',
+          aggregateState: 'pending',
+          retryable: true,
+        });
       }
     }
-
-    const accountStates: AccountLoadState[] = targets.map(({ account, address }) => ({
-      accountId: account.id,
-      address,
-      state: 'loading',
-      aggregateState: 'pending',
-    }));
+    if (
+      selectedAccounts.length === 0 &&
+      portfolio.accounts.length === 0 &&
+      options.includeAccounts === undefined
+    ) {
+      accountStates.push(emptyPortfolioState(portfolio.id));
+    }
     this._state.set({
       loading: true,
       accounts: accountStates,
@@ -103,13 +121,13 @@ export class PortfolioDataService {
       if (sequence !== this.loadSequence) return;
       const chunk = targets.slice(index, index + CHUNK);
       const results = await Promise.allSettled(
-        chunk.map(({ account, address }) => this.loadAddress(account, address)),
+        chunk.map(({ account, address }) => this.loadAddress(account, address))
       );
       for (let offset = 0; offset < results.length; offset += 1) {
         const result = results[offset];
         const { account, address } = chunk[offset];
         const stateIndex = accountStates.findIndex(
-          (entry) => entry.accountId === account.id && entry.address === address,
+          (entry) => entry.accountId === account.id && entry.address === address
         );
         if (result.status === 'fulfilled') {
           snapshots.push(result.value.snapshot);
@@ -140,7 +158,10 @@ export class PortfolioDataService {
     }
 
     if (sequence !== this.loadSequence) return;
-    const aggregation = this.aggregate(snapshots, events, policy, options.includeAccounts);
+    const aggregation = reflectAccountFailures(
+      this.aggregate(snapshots, events, policy, options.includeAccounts),
+      accountStates
+    );
     this._state.set({
       loading: false,
       accounts: accountStates,
@@ -151,20 +172,26 @@ export class PortfolioDataService {
 
   private async loadAddress(
     account: LocalAccount,
-    address: string,
+    address: string
   ): Promise<{
     snapshot: AddressSnapshot;
     protocolSnapshots: AddressSnapshot[];
     events: PortfolioEventInput[];
   }> {
     const summary = await firstValueFrom(
-      this.api.getSummary$(account.chain, account.network, address),
+      this.api.getSummary$(account.chain, account.network, address)
     );
     const holdingsPage = await firstValueFrom(
-      this.api.getHoldings$(account.chain, account.network, address, undefined, 250),
+      this.api.getHoldings$(
+        account.chain,
+        account.network,
+        address,
+        undefined,
+        250
+      )
     );
     const activityPage = await firstValueFrom(
-      this.api.getActivity$(account.chain, account.network, address),
+      this.api.getActivity$(account.chain, account.network, address)
     );
     const snapshot: AddressSnapshot = {
       chain: account.chain,
@@ -180,7 +207,7 @@ export class PortfolioDataService {
         })),
       },
       holdings: {
-        assetKey: 'bitcoin:mainnet:base:native:bitcoin',
+        assetKey: portfolioNativeAssetKey(account),
         quantityAtomic: summary.nativeBalance?.quantityAtomic ?? null,
         value: summary.nativeBalance?.value,
         valuationState: summary.nativeBalance?.valuationState ?? 'unpriced',
@@ -188,7 +215,8 @@ export class PortfolioDataService {
         displayName: summary.nativeBalance?.displayName,
         ticker: summary.nativeBalance?.ticker,
         decimals: summary.nativeBalance?.decimals,
-        sourceState: summary.nativeBalance?.sourceState ?? summary.aggregateState,
+        sourceState:
+          summary.nativeBalance?.sourceState ?? summary.aggregateState,
         protocol: 'base',
         assetType: 'native',
         accountId: account.id,
@@ -258,7 +286,7 @@ export class PortfolioDataService {
     snapshots: AddressSnapshot[],
     events: PortfolioEventInput[],
     policy: InclusionPolicy,
-    includeAccounts?: readonly string[],
+    includeAccounts?: readonly string[]
   ): AggregationResult {
     this.zone.runOutsideAngular(() => {
       // Budget marker: the pure engine is O(holdings + events); it stays
@@ -284,6 +312,74 @@ export class PortfolioDataService {
     this.loadSequence += 1;
     this._state.set(EMPTY_STATE);
   }
+}
+
+/**
+ * A missing account answer is evidence about the aggregate, not an empty
+ * balance. Partial success keeps the proven subtotal and marks it partial;
+ * total failure clears the synthetic zero produced by summing no holdings.
+ */
+export function reflectAccountFailures(
+  aggregation: AggregationResult,
+  accounts: readonly Pick<AccountLoadState, 'state'>[]
+): AggregationResult {
+  const failedCount = accounts.filter(
+    (account) => account.state === 'failed'
+  ).length;
+  if (failedCount === 0) {
+    return aggregation;
+  }
+
+  const successfulCount = accounts.filter(
+    (account) => account.state === 'ok'
+  ).length;
+  const failureState: PortfolioEvidenceState =
+    successfulCount === 0 ? 'unavailable' : 'partial';
+  return {
+    ...aggregation,
+    pricedTotal: successfulCount === 0 ? null : aggregation.pricedTotal,
+    state: foldDataStates([aggregation.state, failureState]),
+    unknownValueBucket: 'present',
+  };
+}
+
+/**
+ * Stored accounts without a usable public address are unavailable evidence.
+ * They must never flow into the aggregation engine as an empty balance.
+ */
+export function unreadableAccountState(
+  account: Pick<LocalAccount, 'id' | 'kind'>
+): AccountLoadState {
+  const needsDiscovery =
+    account.kind === 'xpub' || account.kind === 'descriptor';
+  return {
+    accountId: account.id,
+    address: '',
+    state: 'failed',
+    aggregateState: 'unavailable',
+    retryable: false,
+    errorMessage: needsDiscovery
+      ? 'Address discovery is not available in this release. Add explicit public addresses instead.'
+      : 'This account has no readable public addresses. Add an address before reading its balance.',
+  };
+}
+
+export function emptyPortfolioState(portfolioId: string): AccountLoadState {
+  return {
+    accountId: portfolioId,
+    address: '',
+    state: 'failed',
+    aggregateState: 'unavailable',
+    retryable: false,
+    errorMessage:
+      'This portfolio has no readable public accounts. Add a public address before reading a balance.',
+  };
+}
+
+export function portfolioNativeAssetKey(
+  account: Pick<LocalAccount, 'chain' | 'network'>
+): string {
+  return PORTFOLIO_NATIVE_ASSET_KEY(account.chain, account.network);
 }
 
 /** Reads the stored per-address inclusion policy from annotations. */

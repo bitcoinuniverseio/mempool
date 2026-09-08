@@ -1,24 +1,39 @@
 import { taprootAssetsService } from './taproot-assets.service';
 
+const unavailable = {
+  name: 'FirstPartyDataUnavailableError',
+  code: 'first-party-data-unavailable',
+  statusCode: 503,
+  capability: 'taproot-assets',
+};
+
 describe('TaprootAssetsService', () => {
-  it('returns taproot assets list with exact integer amounts', async () => {
-    const assets = await taprootAssetsService.$getAssets();
-    expect(assets.length).toBeGreaterThan(0);
-    const usdt = assets.find((a) => a.name.includes('Tether'));
-    expect(usdt).toBeDefined();
-    expect(usdt?.totalAmountAtomic).toBe('500000000000');
-  });
+  it('never returns asset, offer, or quote fixtures', () =>
+    Promise.all([
+      expect(taprootAssetsService.$getAssets()).rejects.toMatchObject(
+        unavailable
+      ),
+      expect(taprootAssetsService.$getAsset('asset-id')).rejects.toMatchObject(
+        unavailable
+      ),
+      expect(taprootAssetsService.$getGroups()).rejects.toMatchObject(
+        unavailable
+      ),
+      expect(taprootAssetsService.$getOffers()).rejects.toMatchObject(
+        unavailable
+      ),
+      expect(taprootAssetsService.$getRfqQuotes()).rejects.toMatchObject(
+        unavailable
+      ),
+    ]));
 
-  it('provides BOLT12 offer decodings and blind route counts', async () => {
-    const offers = await taprootAssetsService.$getOffers();
-    expect(offers.length).toBeGreaterThan(0);
-    expect(offers[0].offerString.startsWith('lno1')).toBe(true);
-    expect(offers[0].valid).toBe(true);
-  });
-
-  it('provides Lightning RFQ pricing spreads', async () => {
-    const quotes = await taprootAssetsService.$getRfqQuotes();
-    expect(quotes.length).toBeGreaterThan(0);
-    expect(quotes[0].spreadBps).toBeGreaterThan(0);
-  });
+  it('fails proof verification closed without a semantic verifier', () =>
+    Promise.all([
+      expect(
+        taprootAssetsService.$verifyProof('asset-id', '')
+      ).rejects.toMatchObject(unavailable),
+      expect(
+        taprootAssetsService.$verifyProof('asset-id', 'plausible-proof-data')
+      ).rejects.toMatchObject(unavailable),
+    ]));
 });

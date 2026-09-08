@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 // Importing the gateway must not open a socket.
 process.env.UNIVERSE_GATEWAY_NO_LISTEN = '1';
+process.env.UNIVERSE_GATEWAY_PORTFOLIO_V2 = '1';
 const { routeFor, websocketUpstreamFor, inheritedListenerFd, contentSecurityPolicy } =
   await import('./gateway.mjs');
 
@@ -133,6 +134,111 @@ test('the Universe live socket reaches the overlay while the Bitcoin socket stay
   assert.equal(websocketUpstreamFor('/api/v1/ws').port, BACKEND_PORT);
 });
 
+test('portfolio v2 stays hidden when no route state or explicit default enables it', async () => {
+  const { mkdtempSync, rmSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+
+  const directory = mkdtempSync(join(tmpdir(), 'gateway-missing-route-'));
+  try {
+    process.env.UNIVERSE_GATEWAY_OVERLAY_ROUTE_FILE = join(directory, 'overlay-route.json');
+    delete process.env.UNIVERSE_GATEWAY_PORTFOLIO_V2;
+    const gateway = await import(`./gateway.mjs?missing-route=${Date.now()}`);
+    assert.deepEqual(
+      gateway.routeFor(
+        '/api/v2/universe/portfolio/networks',
+        '/api/v2/universe/portfolio/networks',
+      ),
+      { upstream: null, status: 404 },
+    );
+  } finally {
+    delete process.env.UNIVERSE_GATEWAY_OVERLAY_ROUTE_FILE;
+    process.env.UNIVERSE_GATEWAY_PORTFOLIO_V2 = '1';
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test('an atomic route file moves new HTTP and WebSocket traffic between overlay processes', async () => {
+  const { mkdtempSync, renameSync, unlinkSync, writeFileSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+
+  const directory = mkdtempSync(join(tmpdir(), 'gateway-overlay-route-'));
+  const routeFile = join(directory, 'overlay-route.json');
+  const pending = `${routeFile}.new`;
+  process.env.UNIVERSE_GATEWAY_OVERLAY = 'http://127.0.0.1:3401';
+  process.env.UNIVERSE_GATEWAY_OVERLAY_ROUTE_FILE = routeFile;
+  process.env.UNIVERSE_GATEWAY_NO_LISTEN = '1';
+  const gateway = await import(`./gateway.mjs?overlay-route=${Date.now()}`);
+
+  assert.equal(
+    gateway.routeFor('/api/v1/universe/status', '/api/v1/universe/status').upstream.port,
+    '3401',
+  );
+
+  const sha = 'a'.repeat(40);
+  writeFileSync(
+    pending,
+    `${JSON.stringify({
+      schemaVersion: 'universe-overlay-route-v1',
+      slot: 'candidate',
+      origin: 'http://127.0.0.1:35427',
+      releaseSha: sha,
+      portfolioV2: true,
+    })}\n`,
+  );
+  renameSync(pending, routeFile);
+
+  const moved = gateway.routeFor('/api/v1/universe/status', '/api/v1/universe/status');
+  assert.equal(moved.upstream.port, '35427');
+  assert.equal(gateway.websocketUpstreamFor('/api/v1/universe/ws').port, '35427');
+  assert.deepEqual(
+    {
+      slot: gateway.currentOverlayRoute().slot,
+      releaseSha: gateway.currentOverlayRoute().releaseSha,
+      portfolioV2: gateway.currentOverlayRoute().portfolioV2,
+    },
+    { slot: 'candidate', releaseSha: sha, portfolioV2: true },
+  );
+
+  writeFileSync(
+    pending,
+    `${JSON.stringify({
+      schemaVersion: 'universe-overlay-route-v1',
+      slot: 'candidate',
+      origin: 'http://127.0.0.1:35427',
+      releaseSha: sha,
+      portfolioV2: false,
+    })}\n`,
+  );
+  renameSync(pending, routeFile);
+  assert.deepEqual(
+    gateway.routeFor('/api/v2/universe/portfolio/networks', '/api/v2/universe/portfolio/networks'),
+    { upstream: null, status: 404 },
+  );
+  assert.equal(
+    gateway.routeFor('/api/v1/universe/status', '/api/v1/universe/status').upstream.port,
+    '35427',
+  );
+
+  writeFileSync(routeFile, '{broken');
+  assert.equal(
+    gateway.routeFor('/api/v1/universe/status', '/api/v1/universe/status').upstream.port,
+    '35427',
+    'invalid state must retain the last validated route',
+  );
+
+  unlinkSync(routeFile);
+  assert.equal(
+    gateway.routeFor('/api/v1/universe/status', '/api/v1/universe/status').upstream.port,
+    '3401',
+    'removing transient handoff state restores the configured live origin',
+  );
+
+  delete process.env.UNIVERSE_GATEWAY_OVERLAY;
+  delete process.env.UNIVERSE_GATEWAY_OVERLAY_ROUTE_FILE;
+});
+
 /**
  * A gateway restart used to be the one part of a deploy nothing could bridge.
  * Reading the handover wrong does not fail loudly: the process either binds its
@@ -184,8 +290,7 @@ test('the content policy follows the build behind the static root', async () => 
   // imported at the top of this file is bound to the default root.
   const gateway = await import(`./gateway.mjs?csp=${Date.now()}`);
 
-  const hashOf = (body) =>
-    `'sha256-${createHash('sha256').update(body, 'utf8').digest('base64')}'`;
+  const hashOf = (body) => `'sha256-${createHash('sha256').update(body, 'utf8').digest('base64')}'`;
 
   const first = 'window.__a=1;';
   writeFileSync(join(root, 'index.html'), `<html><script>${first}</script></html>`);
@@ -249,7 +354,10 @@ test('the whole Esplora address family reaches the index with the api prefix str
     [`/api/address/${address}`, `/address/${address}`],
     [`/api/address/${address}/txs`, `/address/${address}/txs`],
     [`/api/address/${address}/txs/chain`, `/address/${address}/txs/chain`],
-    [`/api/address/${address}/txs/chain/${'e'.repeat(64)}`, `/address/${address}/txs/chain/${'e'.repeat(64)}`],
+    [
+      `/api/address/${address}/txs/chain/${'e'.repeat(64)}`,
+      `/address/${address}/txs/chain/${'e'.repeat(64)}`,
+    ],
     [`/api/address/${address}/txs/mempool`, `/address/${address}/txs/mempool`],
     [`/api/address/${address}/utxo`, `/address/${address}/utxo`],
     [`/api/scripthash/${scripthash}`, `/scripthash/${scripthash}`],

@@ -5,17 +5,10 @@ import { RouterModule } from '@angular/router';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { SeoService } from '@app/services/seo.service';
 
-interface ScriptExecutionStep {
-  readonly opcode: string;
-  readonly stackBefore: readonly string[];
-  readonly stackAfter: readonly string[];
-}
-
-interface ScriptResult {
-  readonly disassembled: readonly string[];
-  readonly executionSteps: readonly ScriptExecutionStep[];
-  readonly satisfactionValid: boolean;
-  readonly derivedAddress?: string;
+export interface ScriptResult {
+  readonly kind: 'invalid-input' | 'unavailable';
+  readonly tokens: readonly string[];
+  readonly message: string;
 }
 
 @Component({
@@ -27,7 +20,7 @@ interface ScriptResult {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ScriptStudioComponent {
-  scriptInput = 'OP_DUP OP_HASH160 89abcdefabbaabbaabbaabbaabbaabbaabbaabba OP_EQUALVERIFY OP_CHECKSIG';
+  scriptInput = '';
   profile: 'standard' | 'covenant-cat' | 'ctv' = 'standard';
 
   private readonly resultSubject = new BehaviorSubject<ScriptResult | null>(null);
@@ -35,39 +28,17 @@ export class ScriptStudioComponent {
 
   constructor(private seo: SeoService) {
     this.seo.setTitle('Bitcoin Script, Miniscript & Taproot Studio');
-    this.trace();
   }
 
   trace(): void {
-    const tokens = this.scriptInput.trim().split(/\s+/);
-    const steps: ScriptExecutionStep[] = [];
-    let stack: string[] = ['<sig>', '<pubkey>'];
-
-    for (const token of tokens) {
-      const before = [...stack];
-      if (token === 'OP_DUP') {
-        stack.push(stack[stack.length - 1] || '<empty>');
-      } else if (token === 'OP_HASH160') {
-        stack.pop();
-        stack.push('89abcdefabbaabbaabbaabbaabbaabbaabbaabba');
-      } else if (token === 'OP_EQUALVERIFY') {
-        stack.pop();
-        stack.pop();
-      } else if (token === 'OP_CHECKSIG') {
-        stack.pop();
-        stack.pop();
-        stack.push('1');
-      } else {
-        stack.push(token);
-      }
-      steps.push({ opcode: token, stackBefore: before, stackAfter: [...stack] });
-    }
-
+    const input = this.scriptInput.trim();
+    const tokens = input ? input.split(/\s+/) : [];
     this.resultSubject.next({
-      disassembled: tokens,
-      executionSteps: steps,
-      satisfactionValid: stack[stack.length - 1] === '1',
-      derivedAddress: 'bc1q89abcdefabbaabbaabbaabbaabbaabbaabba',
+      kind: tokens.length > 0 ? 'unavailable' : 'invalid-input',
+      tokens,
+      message: tokens.length > 0
+        ? 'Bitcoin Script execution and address derivation are unavailable in this build. The input was tokenized only and was not evaluated.'
+        : 'Enter a script before inspecting it.',
     });
   }
 }

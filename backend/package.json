@@ -22,6 +22,7 @@
   "main": "index.ts",
   "scripts": {
     "tsc": "tsc -p tsconfig.build.json",
+    "prebuild": "node scripts/check-build-source.mjs",
     "build": "npm run tsc && npm run create-resources",
     "clean": "node scripts/clean-build.mjs",
     "create-resources": "node scripts/create-resources.mjs",
@@ -35,6 +36,7 @@
     "test": "jest --coverage",
     "test:ci": "jest --coverage --ci",
     "test:integration": "jest --config=jest.integration.config.ts --runInBand --forceExit",
+    "test:build-source": "node --test scripts/check-build-source.test.mjs",
     "test:with-db": "bash ./scripts/test-with-db.sh",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",

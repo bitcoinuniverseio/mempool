@@ -35,29 +35,36 @@
  *   node mobile-check.mjs --base=http://127.0.0.1:8080
  *   node mobile-check.mjs --base=... --routes=home,tx --viewports=phone-320
  */
-import { chromium, devices, firefox, webkit } from 'playwright';
-import { mkdirSync, writeFileSync } from 'fs';
-import { dirname, join, resolve } from 'path';
-import { fileURLToPath } from 'url';
+import { chromium, devices, firefox, webkit } from "playwright";
+import { mkdirSync, writeFileSync } from "fs";
+import { dirname, join, resolve } from "path";
+import { fileURLToPath } from "url";
 
-import { ROUTES, installFixtures } from './capture.mjs';
+import { installFixtures } from "./capture.mjs";
+import {
+  seedPortfolioVault,
+  unlockPortfolioRoute,
+} from "./portfolio-fixture.mjs";
+import { routesFor } from "./route-scenarios.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
 const args = Object.fromEntries(
   process.argv.slice(2).map((a) => {
-    const [k, v] = a.replace(/^--/, '').split('=');
+    const [k, v] = a.replace(/^--/, "").split("=");
     return [k, v ?? true];
   }),
 );
 
-const BASE = args.base || 'http://localhost:4200';
-const OUT = resolve(args.out || join(HERE, 'artifacts-mobile'));
+const BASE = args.base || "http://localhost:4200";
+const OUT = resolve(args.out || join(HERE, "artifacts-mobile"));
 const ENGINES = { chromium, webkit, firefox };
-const ENGINE_NAME = args.browser || 'chromium';
+const ENGINE_NAME = args.browser || "chromium";
 const BROWSER = ENGINES[ENGINE_NAME];
 if (!BROWSER) {
-  throw new Error(`unknown browser "${ENGINE_NAME}"; expected one of ${Object.keys(ENGINES).join(', ')}`);
+  throw new Error(
+    `unknown browser "${ENGINE_NAME}"; expected one of ${Object.keys(ENGINES).join(", ")}`,
+  );
 }
 
 /**
@@ -73,7 +80,7 @@ if (!BROWSER) {
  * shape of a Firefox mobile check from a desktop harness, and it is stated in
  * the run's own header rather than left for a reader to assume.
  */
-const CAN_EMULATE_MOBILE = ENGINE_NAME !== 'firefox';
+const CAN_EMULATE_MOBILE = ENGINE_NAME !== "firefox";
 
 /**
  * The window sizes that change the answer, not the phones that are popular.
@@ -86,11 +93,15 @@ const CAN_EMULATE_MOBILE = ENGINE_NAME !== 'firefox';
  *   320   the narrowest width still in use, and the one every reflow rule is
  *         written against
  *   360   the most common Android width
+ *   375   the established compact iPhone width
  *   390   the most common iPhone width
+ *   412   a common wide Android width
  *   430   the widest phone, where a two-column compact layout starts to pay
  *   844   a phone on its side: a compact width with almost no height, which is
  *         the state that breaks a header and a bottom bar at the same time
  *   768   the tablet width where the shell is still in its compact form
+ *   1024  the same tablet turned sideways, with a coarse pointer above the
+ *         shell breakpoint
  *   1024  the first width above the shell breakpoint, kept as the control: a
  *         mobile fix that regresses the desktop shell fails here
  *
@@ -101,13 +112,35 @@ const CAN_EMULATE_MOBILE = ENGINE_NAME !== 'firefox';
  * zero, rather than whether env() works.
  */
 const VIEWPORTS = [
-  { id: 'phone-320', width: 320, height: 568, compact: true },
-  { id: 'phone-360', width: 360, height: 740, compact: true },
-  { id: 'phone-390', width: 390, height: 844, compact: true, insets: { top: 59, bottom: 34, left: 0, right: 0 } },
-  { id: 'phone-430', width: 430, height: 932, compact: true },
-  { id: 'phone-landscape', width: 844, height: 390, compact: true, landscape: true, insets: { top: 0, bottom: 21, left: 59, right: 59 } },
-  { id: 'tablet-768', width: 768, height: 1024, compact: true },
-  { id: 'desktop-1024', width: 1024, height: 900, compact: false },
+  { id: "phone-320", width: 320, height: 568, compact: true },
+  { id: "phone-360", width: 360, height: 740, compact: true },
+  { id: "phone-375", width: 375, height: 812, compact: true },
+  {
+    id: "phone-390",
+    width: 390,
+    height: 844,
+    compact: true,
+    insets: { top: 59, bottom: 34, left: 0, right: 0 },
+  },
+  { id: "phone-412", width: 412, height: 915, compact: true },
+  { id: "phone-430", width: 430, height: 932, compact: true },
+  {
+    id: "phone-landscape",
+    width: 844,
+    height: 390,
+    compact: true,
+    landscape: true,
+    insets: { top: 0, bottom: 21, left: 59, right: 59 },
+  },
+  { id: "tablet-768", width: 768, height: 1024, compact: true },
+  {
+    id: "tablet-landscape",
+    width: 1024,
+    height: 768,
+    compact: true,
+    landscape: true,
+  },
+  { id: "desktop-1024", width: 1024, height: 900, compact: false },
 ];
 
 /**
@@ -148,32 +181,37 @@ const FIELD_FLOOR = 16;
  * expectations. The cost is real, so it is paid where it buys something: see
  * FULL_SWEEP_ROUTE_IDS below.
  */
-const MOBILE_ROUTE_IDS = args.routes ? String(args.routes).split(',') : ROUTES.map((r) => r.id);
+const ROUTES = routesFor("mobile");
+const MOBILE_ROUTE_IDS = args.routes
+  ? String(args.routes).split(",")
+  : ROUTES.map((r) => r.id);
 
 /**
  * The routes that take every window size rather than the narrow three.
  *
- * Seven windows on forty-four routes is three hundred page loads, which is a
- * gate nobody will wait for. Two tiers instead:
+ * Ten windows on every route creates a gate nobody will wait for. Two tiers
+ * keep the broad route coverage while testing every required viewport class:
  *
  *  * Every route is measured at 320, at 390 and in landscape. Those are the
  *    three that change the answer: the narrowest phone still in use, an
  *    ordinary modern one with a cutout, and the rotation where the bar and the
  *    header are both fighting for the same 390 pixels of height.
  *
- *  * The routes below add 360, 430, the tablet and the desktop control. They
- *    are one of each thing the product is made of, so a breakpoint that goes
- *    wrong between the phone widths, or a wide layout regressed by a mobile
- *    fix, is still caught by something.
+ *  * The routes below add 360, 375, 412, 430, both tablet orientations and the
+ *    desktop control. They are one of each thing the product is made of, so a
+ *    breakpoint that goes wrong between the phone widths, or a wide layout
+ *    regressed by a mobile fix, is still caught by something.
  */
-const FULL_SWEEP_ROUTE_IDS = new Set([
-  'home', 'tx', 'address', 'blocks', 'block', 'graphs', 'protocols',
-  'dogecoin-tx', 'zcash-block', 'docs', 'chain-menu',
-  'dogecoin', 'zcash-mining', 'dogecoin-graphs', 'zcash-docs',
-]);
+const FULL_SWEEP_ROUTE_IDS = new Set(
+  ROUTES.filter((route) => route.fullMobileSweep).map((route) => route.id),
+);
 
 /** The three window sizes every route is held to. */
-const NARROW_VIEWPORT_IDS = new Set(['phone-320', 'phone-390', 'phone-landscape']);
+const NARROW_VIEWPORT_IDS = new Set([
+  "phone-320",
+  "phone-390",
+  "phone-landscape",
+]);
 
 const findings = [];
 const passes = [];
@@ -211,15 +249,20 @@ async function mobileProbe(floors) {
   // dropped for the same reason: they change on every build and identify
   // nothing.
   const describe = (el) => {
-    if (!el) return '(none)';
-    const id = el.id ? `#${el.id}` : '';
-    const classes = typeof el.className === 'string' && el.className
-      ? el.className.trim().split(/\s+/).filter((c) => !c.startsWith('ng-')).slice(0, 3)
-      : [];
-    const cls = classes.length ? `.${classes.join('.')}` : '';
+    if (!el) return "(none)";
+    const id = el.id ? `#${el.id}` : "";
+    const classes =
+      typeof el.className === "string" && el.className
+        ? el.className
+            .trim()
+            .split(/\s+/)
+            .filter((c) => !c.startsWith("ng-"))
+            .slice(0, 3)
+        : [];
+    const cls = classes.length ? `.${classes.join(".")}` : "";
     let host = el.parentElement;
-    while (host && !host.tagName.startsWith('APP-')) host = host.parentElement;
-    const owner = host ? `${host.tagName.toLowerCase()} ` : '';
+    while (host && !host.tagName.startsWith("APP-")) host = host.parentElement;
+    const owner = host ? `${host.tagName.toLowerCase()} ` : "";
     return `${owner}${el.tagName.toLowerCase()}${id}${cls}`;
   };
 
@@ -233,15 +276,21 @@ async function mobileProbe(floors) {
   const viewportWidth = doc.clientWidth;
   const culprits = [];
   if (overflowBy > 0) {
-    for (const el of document.querySelectorAll('body *')) {
+    for (const el of document.querySelectorAll("body *")) {
       const rect = el.getBoundingClientRect();
       if (rect.width === 0 && rect.height === 0) continue;
       // Only the elements that actually reach past the right edge, and only
       // the outermost of them: a wide table makes every cell inside it look
       // guilty, and naming the cells buries the table.
       if (rect.right <= viewportWidth + 1) continue;
-      if (el.parentElement && el.parentElement.getBoundingClientRect().right > viewportWidth + 1) continue;
-      culprits.push(`${describe(el)} reaches ${round(rect.right)} of ${viewportWidth}`);
+      if (
+        el.parentElement &&
+        el.parentElement.getBoundingClientRect().right > viewportWidth + 1
+      )
+        continue;
+      culprits.push(
+        `${describe(el)} reaches ${round(rect.right)} of ${viewportWidth}`,
+      );
       if (culprits.length >= 8) break;
     }
   }
@@ -252,23 +301,26 @@ async function mobileProbe(floors) {
   // is an element that scrolls sideways without saying so, because a clipped
   // row with no affordance is content that is present and unreachable.
   const scrollers = [];
-  for (const el of document.querySelectorAll('body *')) {
+  for (const el of document.querySelectorAll("body *")) {
     if (el.scrollWidth - el.clientWidth <= 1) continue;
     const style = getComputedStyle(el);
-    if (style.overflowX !== 'auto' && style.overflowX !== 'scroll') continue;
+    if (style.overflowX !== "auto" && style.overflowX !== "scroll") continue;
     scrollers.push({
       el: describe(el),
       // Declared either by a scrollbar the platform paints, by the product's
       // own affordance class, or by a role that says it is a scrollable
       // region to a screen reader.
       declared: Boolean(
-        el.closest('[data-scroll-region]')
-        || el.matches('.nav-list')
-        || el.getAttribute('tabindex') !== null
-        || el.getAttribute('role') === 'region',
+        el.closest("[data-scroll-region]") ||
+        el.matches(".nav-list") ||
+        el.getAttribute("tabindex") !== null ||
+        el.getAttribute("role") === "region",
       ),
-      keyboardReachable: el.getAttribute('tabindex') !== null
-        || Boolean(el.querySelector('a, button, input, select, textarea, [tabindex]')),
+      keyboardReachable:
+        el.getAttribute("tabindex") !== null ||
+        Boolean(
+          el.querySelector("a, button, input, select, textarea, [tabindex]"),
+        ),
     });
   }
 
@@ -303,30 +355,32 @@ async function mobileProbe(floors) {
   //    fault only when something outside the deliberate machinery is what
   //    sticks out of it.
   const clippers = [];
-  for (const el of document.querySelectorAll('body *')) {
+  for (const el of document.querySelectorAll("body *")) {
     const hidden = el.scrollWidth - el.clientWidth;
     if (hidden <= 2) continue;
     if (el.clientWidth < 40) continue;
     const style = getComputedStyle(el);
-    if (style.overflowX !== 'hidden' && style.overflowX !== 'clip') continue;
-    if (style.textOverflow === 'ellipsis') continue;
-    if (el.closest('app-truncate, [data-clip-ok]')) continue;
+    if (style.overflowX !== "hidden" && style.overflowX !== "clip") continue;
+    if (style.textOverflow === "ellipsis") continue;
+    if (el.closest("app-truncate, [data-clip-ok]")) continue;
     //
     // A wrapper around a deliberate truncation is deliberate too. The link in
     // a dashboard table cell holds one `app-truncate` and nothing else, so its
     // box is the truncation's box and blaming it says the same thing twice.
     const deliberate = (node) => {
-      if (node.closest('app-truncate, [data-clip-ok]')) return true;
+      if (node.closest("app-truncate, [data-clip-ok]")) return true;
       const children = Array.from(node.children);
-      return children.length > 0
-        && children.every((c) => c.matches('app-truncate, [data-clip-ok]'));
+      return (
+        children.length > 0 &&
+        children.every((c) => c.matches("app-truncate, [data-clip-ok]"))
+      );
     };
     const edge = el.getBoundingClientRect().right;
     // Every culprit, not the first one. Naming one element per run turned a
     // single overhang into three rounds of fix, push and wait, each round
     // revealing the next thing past the edge.
     const blamed = [];
-    for (const child of el.querySelectorAll('*')) {
+    for (const child of el.querySelectorAll("*")) {
       if (deliberate(child)) continue;
       const rect = child.getBoundingClientRect();
       if (rect.width === 0 && rect.height === 0) continue;
@@ -335,7 +389,7 @@ async function mobileProbe(floors) {
       // last position between hovers, and its box sticking past an edge hides
       // nothing anyone could see. The same reasoning as the zero-size check,
       // one visibility state along.
-      if (getComputedStyle(child).visibility === 'hidden') continue;
+      if (getComputedStyle(child).visibility === "hidden") continue;
       if (rect.right > edge + 2) {
         blamed.push(describe(child));
         if (blamed.length >= 3) break;
@@ -343,15 +397,17 @@ async function mobileProbe(floors) {
     }
     if (!blamed.length) continue;
     clippers.push(
-      `${describe(el)} hides ${round(hidden)}px of its content sideways with no way to reach it`
-      + ` (${blamed.join(', ')} reach past its edge)`,
+      `${describe(el)} hides ${round(hidden)}px of its content sideways with no way to reach it` +
+        ` (${blamed.join(", ")} reach past its edge)`,
     );
     if (clippers.length >= 6) break;
   }
 
   // --- Fields that open a keyboard ----------------------------------------
   const smallFields = [];
-  for (const el of document.querySelectorAll('input:not([type=hidden]):not([type=checkbox]):not([type=radio]), textarea, select')) {
+  for (const el of document.querySelectorAll(
+    "input:not([type=hidden]):not([type=checkbox]):not([type=radio]), textarea, select",
+  )) {
     const rect = el.getBoundingClientRect();
     if (rect.width === 0 && rect.height === 0) continue;
     const size = parseFloat(getComputedStyle(el).fontSize);
@@ -389,25 +445,35 @@ async function mobileProbe(floors) {
   const seenTargets = new Set();
 
   const candidates = Array.from(
-    document.querySelectorAll('a[href], button, [role=button], input[type=checkbox], input[type=radio], summary'),
+    document.querySelectorAll(
+      "a[href], button, [role=button], input[type=checkbox], input[type=radio], summary",
+    ),
   ).filter((el) => {
     const rect = el.getBoundingClientRect();
     if (rect.width === 0 || rect.height === 0) return false;
     if (rect.bottom < 0 || rect.top > window.innerHeight * 4) return false;
     const style = getComputedStyle(el);
-    return style.visibility !== 'hidden' && style.display !== 'none' && style.opacity !== '0';
+    return (
+      style.visibility !== "hidden" &&
+      style.display !== "none" &&
+      style.opacity !== "0"
+    );
   });
 
   // How many times each control shape appears. A signature is the tag and its
   // classes, which is what makes one row of a list look like every other row.
   const signatures = new Map();
-  const signatureOf = (el) => `${el.tagName}.${typeof el.className === 'string' ? el.className.trim() : ''}`;
+  const signatureOf = (el) =>
+    `${el.tagName}.${typeof el.className === "string" ? el.className.trim() : ""}`;
   for (const el of candidates) {
     const s = signatureOf(el);
     signatures.set(s, (signatures.get(s) || 0) + 1);
   }
 
-  const boxes = candidates.map((el) => ({ el, rect: el.getBoundingClientRect() }));
+  const boxes = candidates.map((el) => ({
+    el,
+    rect: el.getBoundingClientRect(),
+  }));
 
   for (const { el, rect } of boxes) {
     const min = Math.min(rect.width, rect.height);
@@ -418,19 +484,26 @@ async function mobileProbe(floors) {
     // browser's own link controls. Only for a link whose parent really is a
     // run of text longer than the link itself.
     const parent = el.parentElement;
-    const inSentence = el.tagName === 'A' && parent
-      && /^(P|LI|TD|SPAN|DIV|H1|H2|H3|H4|H5|H6)$/.test(parent.tagName)
-      && (parent.textContent || '').trim().length > (el.textContent || '').trim().length + 12;
+    const inSentence =
+      el.tagName === "A" &&
+      parent &&
+      /^(P|LI|TD|SPAN|DIV|H1|H2|H3|H4|H5|H6)$/.test(parent.tagName) &&
+      (parent.textContent || "").trim().length >
+        (el.textContent || "").trim().length + 12;
     if (inSentence) continue;
 
     // A checkbox inside its own label is as large as the label, because
     // pressing the words activates it. Measuring the 18px box and calling it
     // too small describes markup rather than the target, and the fix it asks
     // for, a giant checkbox beside its text, is worse than what is there.
-    const label = el.closest('label');
-    const effective = label && (el.type === 'checkbox' || el.type === 'radio')
-      ? (() => { const lr = label.getBoundingClientRect(); return Math.min(lr.width, lr.height); })()
-      : min;
+    const label = el.closest("label");
+    const effective =
+      label && (el.type === "checkbox" || el.type === "radio")
+        ? (() => {
+            const lr = label.getBoundingClientRect();
+            return Math.min(lr.width, lr.height);
+          })()
+        : min;
 
     const key = `${describe(el)}@${round(rect.width)}x${round(rect.height)}`;
 
@@ -440,7 +513,8 @@ async function mobileProbe(floors) {
       const cx = rect.left + rect.width / 2;
       const cy = rect.top + rect.height / 2;
       const crowded = boxes.some(({ el: other, rect: o }) => {
-        if (other === el || el.contains(other) || other.contains(el)) return false;
+        if (other === el || el.contains(other) || other.contains(el))
+          return false;
         // Closest point of the other target to this one's centre, against the
         // 12px radius of a 24px circle.
         const dx = Math.max(o.left - cx, 0, cx - o.right);
@@ -456,19 +530,23 @@ async function mobileProbe(floors) {
 
     // Tier two.
     if (effective >= touchFloor) continue;
-    const isShell = Boolean(el.closest('.site-header, .primary-nav, .pagination, app-search-form, .chain-menu'));
+    const isShell = Boolean(
+      el.closest(
+        ".site-header, .primary-nav, .pagination, app-search-form, .chain-menu",
+      ),
+    );
     const isRepeated = (signatures.get(signatureOf(el)) || 0) >= 3;
     if (!isShell && !isRepeated) continue;
     if (seenTargets.has(`platform:${key}`)) continue;
     seenTargets.add(`platform:${key}`);
-    targetsBelowPlatform.push(`${key}${isShell ? ' (shell)' : ' (repeated)'}`);
+    targetsBelowPlatform.push(`${key}${isShell ? " (shell)" : " (repeated)"}`);
   }
 
   // --- What the fixed layers cover ----------------------------------------
-  const bar = document.querySelector('.primary-nav');
+  const bar = document.querySelector(".primary-nav");
   const barRect = bar ? bar.getBoundingClientRect() : null;
-  const barIsFixed = bar ? getComputedStyle(bar).position === 'fixed' : false;
-  const header = document.querySelector('.site-header');
+  const barIsFixed = bar ? getComputedStyle(bar).position === "fixed" : false;
+  const header = document.querySelector(".site-header");
   const headerRect = header ? header.getBoundingClientRect() : null;
 
   // The last thing on the page has to be reachable. Scroll to the bottom and
@@ -494,10 +572,17 @@ async function mobileProbe(floors) {
     if (document.body.scrollHeight === before) break;
   }
   window.scrollTo(0, document.body.scrollHeight);
-  await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
-  const atBottom = { hidden: [], barTop: barIsFixed && barRect ? round(barRect.top) : null };
+  await new Promise((done) =>
+    requestAnimationFrame(() => requestAnimationFrame(done)),
+  );
+  const atBottom = {
+    hidden: [],
+    barTop: barIsFixed && barRect ? round(barRect.top) : null,
+  };
   if (barIsFixed && barRect) {
-    const candidates = document.querySelectorAll('main a[href], main button, main td, main p, main h2, main h3');
+    const candidates = document.querySelectorAll(
+      "main a[href], main button, main td, main p, main h2, main h3",
+    );
     for (const el of candidates) {
       const rect = el.getBoundingClientRect();
       if (rect.height === 0 || rect.width === 0) continue;
@@ -514,12 +599,15 @@ async function mobileProbe(floors) {
         let pinned = null;
         while (anc && anc !== document.body) {
           const pos = getComputedStyle(anc).position;
-          if (pos === 'fixed' || pos === 'sticky') { pinned = `${describe(anc)} is ${pos}`; break; }
+          if (pos === "fixed" || pos === "sticky") {
+            pinned = `${describe(anc)} is ${pos}`;
+            break;
+          }
           anc = anc.parentElement;
         }
         atBottom.hidden.push(
-          `${describe(el)} runs ${round(rect.bottom - barRect.top)}px under the bar`
-          + (pinned ? ` (pinned: ${pinned})` : ' (in flow)'),
+          `${describe(el)} runs ${round(rect.bottom - barRect.top)}px under the bar` +
+            (pinned ? ` (pinned: ${pinned})` : " (in flow)"),
         );
         if (atBottom.hidden.length >= 6) break;
       }
@@ -534,16 +622,24 @@ async function mobileProbe(floors) {
   // one still mentions env(); what matters is whether the painted element
   // actually reserved the room.
   const insets = {
-    top: getComputedStyle(doc).getPropertyValue('--u-safe-top').trim(),
-    bottom: getComputedStyle(doc).getPropertyValue('--u-safe-bottom').trim(),
-    left: getComputedStyle(doc).getPropertyValue('--u-safe-left').trim(),
-    right: getComputedStyle(doc).getPropertyValue('--u-safe-right').trim(),
+    top: getComputedStyle(doc).getPropertyValue("--u-safe-top").trim(),
+    bottom: getComputedStyle(doc).getPropertyValue("--u-safe-bottom").trim(),
+    left: getComputedStyle(doc).getPropertyValue("--u-safe-left").trim(),
+    right: getComputedStyle(doc).getPropertyValue("--u-safe-right").trim(),
   };
   const chrome = {
-    headerPadTop: header ? round(parseFloat(getComputedStyle(header).paddingTop)) : null,
-    barPadBottom: bar ? round(parseFloat(getComputedStyle(bar).paddingBottom)) : null,
-    barPadLeft: bar ? round(parseFloat(getComputedStyle(bar).paddingLeft)) : null,
-    barPadRight: bar ? round(parseFloat(getComputedStyle(bar).paddingRight)) : null,
+    headerPadTop: header
+      ? round(parseFloat(getComputedStyle(header).paddingTop))
+      : null,
+    barPadBottom: bar
+      ? round(parseFloat(getComputedStyle(bar).paddingBottom))
+      : null,
+    barPadLeft: bar
+      ? round(parseFloat(getComputedStyle(bar).paddingLeft))
+      : null,
+    barPadRight: bar
+      ? round(parseFloat(getComputedStyle(bar).paddingRight))
+      : null,
     headerBottom: headerRect ? round(headerRect.bottom) : null,
   };
 
@@ -552,24 +648,32 @@ async function mobileProbe(floors) {
   // A menu that is taller than the window is a menu whose last option cannot
   // be chosen, because a positioned surface does not scroll with the page.
   const overflowingSurfaces = [];
-  for (const el of document.querySelectorAll('.dropdown-menu.show, .dropdown-menu[style*="transform"], [role=dialog], [role=listbox]')) {
+  for (const el of document.querySelectorAll(
+    '.dropdown-menu.show, .dropdown-menu[style*="transform"], [role=dialog], [role=listbox]',
+  )) {
     const rect = el.getBoundingClientRect();
     if (rect.height === 0) continue;
     const style = getComputedStyle(el);
-    const scrolls = style.overflowY === 'auto' || style.overflowY === 'scroll';
+    const scrolls = style.overflowY === "auto" || style.overflowY === "scroll";
     if (rect.height > window.innerHeight && !scrolls) {
-      overflowingSurfaces.push(`${describe(el)} is ${round(rect.height)}px tall in a ${window.innerHeight}px window and does not scroll`);
+      overflowingSurfaces.push(
+        `${describe(el)} is ${round(rect.height)}px tall in a ${window.innerHeight}px window and does not scroll`,
+      );
     }
     if (rect.bottom > window.innerHeight + 1 && !scrolls) {
-      overflowingSurfaces.push(`${describe(el)} ends ${round(rect.bottom - window.innerHeight)}px below the window`);
+      overflowingSurfaces.push(
+        `${describe(el)} ends ${round(rect.bottom - window.innerHeight)}px below the window`,
+      );
     }
     if (rect.right > viewportWidth + 1 || rect.left < -1) {
-      overflowingSurfaces.push(`${describe(el)} runs outside the window sideways`);
+      overflowingSurfaces.push(
+        `${describe(el)} runs outside the window sideways`,
+      );
     }
   }
 
   // --- The bottom bar's own state -----------------------------------------
-  const navList = document.querySelector('.nav-list');
+  const navList = document.querySelector(".nav-list");
   const nav = navList
     ? {
         scrolls: navList.scrollWidth - navList.clientWidth > 1,
@@ -579,23 +683,33 @@ async function mobileProbe(floors) {
         // right edge is a bar that disagrees with the page about where the
         // visitor is.
         activeVisible: (() => {
-          const active = navList.querySelector('.nav-item.active');
+          const active = navList.querySelector(".nav-item.active");
           if (!active) return null;
           const a = active.getBoundingClientRect();
           const l = navList.getBoundingClientRect();
           return a.left >= l.left - 1 && a.right <= l.right + 1;
         })(),
-        hasActive: Boolean(navList.querySelector('.nav-item.active')),
+        hasActive: Boolean(navList.querySelector(".nav-item.active")),
         // The scroll affordance. Painted as background layers rather than as
         // an element, so it is read off the computed style.
-        affordance: getComputedStyle(navList).backgroundImage !== 'none',
+        affordance: getComputedStyle(navList).backgroundImage !== "none",
       }
     : null;
 
   return {
-    overflowBy, viewportWidth, culprits, scrollers, clippers, smallFields,
-    targetsBelowWcag, targetsBelowPlatform,
-    atBottom, insets, chrome, overflowingSurfaces, nav,
+    overflowBy,
+    viewportWidth,
+    culprits,
+    scrollers,
+    clippers,
+    smallFields,
+    targetsBelowWcag,
+    targetsBelowPlatform,
+    atBottom,
+    insets,
+    chrome,
+    overflowingSurfaces,
+    nav,
     innerHeight: window.innerHeight,
     docHeight: document.body.scrollHeight,
   };
@@ -628,26 +742,31 @@ async function mobileProbe(floors) {
 async function focusWalk(page, steps) {
   return page.evaluate(async (limit) => {
     const round = (n) => Math.round(n * 100) / 100;
-    const header = document.querySelector('.site-header');
-    const bar = document.querySelector('.primary-nav');
-    const barFixed = bar && getComputedStyle(bar).position === 'fixed';
-    const headerSticky = header && ['sticky', 'fixed'].includes(getComputedStyle(header).position);
+    const header = document.querySelector(".site-header");
+    const bar = document.querySelector(".primary-nav");
+    const barFixed = bar && getComputedStyle(bar).position === "fixed";
+    const headerSticky =
+      header && ["sticky", "fixed"].includes(getComputedStyle(header).position);
     const hidden = [];
     const grazed = [];
     const focusables = Array.from(
-      document.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]):not([type=hidden]), select, textarea, [tabindex]:not([tabindex="-1"])'),
-    ).filter((el) => {
-      const r = el.getBoundingClientRect();
-      if (r.width === 0 || r.height === 0) return false;
-      // A control inside the header is not obscured by the header, and a
-      // destination inside the bottom bar is not obscured by the bottom bar.
-      // Measuring them against the layer they are part of reported the search
-      // field as hidden behind the search field's own header, which is both
-      // false and loud enough to bury the real findings underneath it.
-      if (header && header.contains(el)) return false;
-      if (bar && bar.contains(el)) return false;
-      return true;
-    }).slice(0, limit);
+      document.querySelectorAll(
+        'a[href], button:not([disabled]), input:not([disabled]):not([type=hidden]), select, textarea, [tabindex]:not([tabindex="-1"])',
+      ),
+    )
+      .filter((el) => {
+        const r = el.getBoundingClientRect();
+        if (r.width === 0 || r.height === 0) return false;
+        // A control inside the header is not obscured by the header, and a
+        // destination inside the bottom bar is not obscured by the bottom bar.
+        // Measuring them against the layer they are part of reported the search
+        // field as hidden behind the search field's own header, which is both
+        // false and loud enough to bury the real findings underneath it.
+        if (header && header.contains(el)) return false;
+        if (bar && bar.contains(el)) return false;
+        return true;
+      })
+      .slice(0, limit);
 
     for (const el of focusables) {
       el.focus({ preventScroll: false });
@@ -655,12 +774,18 @@ async function focusWalk(page, steps) {
       // Give the browser its own scroll-into-view a frame to happen, which is
       // the behaviour scroll-padding modifies and therefore the behaviour
       // being tested.
-      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+      await new Promise((r) =>
+        requestAnimationFrame(() => requestAnimationFrame(r)),
+      );
       const rect = el.getBoundingClientRect();
       if (rect.height === 0) continue;
-      const name = `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ''}`;
-      const headerBottom = headerSticky ? header.getBoundingClientRect().bottom : 0;
-      const barTop = barFixed ? bar.getBoundingClientRect().top : window.innerHeight;
+      const name = `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ""}`;
+      const headerBottom = headerSticky
+        ? header.getBoundingClientRect().bottom
+        : 0;
+      const barTop = barFixed
+        ? bar.getBoundingClientRect().top
+        : window.innerHeight;
       // The room a focused thing can be scrolled into. An element taller than
       // this cannot avoid touching a layer no matter where it is scrolled to,
       // and WCAG 2.2 AA asks that the focused element not be entirely hidden,
@@ -682,7 +807,9 @@ async function focusWalk(page, steps) {
         // describes where the page is scrolled rather than anything about the
         // layer.
         if (fits && rect.bottom > b.top + 2 && rect.top < b.bottom) {
-          grazed.push(`${name} overlaps the bottom bar by ${round(rect.bottom - b.top)}px`);
+          grazed.push(
+            `${name} overlaps the bottom bar by ${round(rect.bottom - b.top)}px`,
+          );
           continue;
         }
       }
@@ -691,7 +818,9 @@ async function focusWalk(page, steps) {
         if (rect.bottom <= h.bottom + 2) {
           hidden.push(`${name} rests entirely behind the header`);
         } else if (fits && rect.top < h.bottom - 2 && rect.bottom > h.top) {
-          grazed.push(`${name} overlaps the header by ${round(h.bottom - rect.top)}px`);
+          grazed.push(
+            `${name} overlaps the header by ${round(h.bottom - rect.top)}px`,
+          );
         }
       }
     }
@@ -704,18 +833,22 @@ async function run() {
 
   const routes = ROUTES.filter((r) => MOBILE_ROUTE_IDS.includes(r.id));
   if (routes.length !== MOBILE_ROUTE_IDS.length) {
-    const missing = MOBILE_ROUTE_IDS.filter((id) => !routes.some((r) => r.id === id));
-    throw new Error(`these route ids are not in the shared route list: ${missing.join(', ')}`);
+    const missing = MOBILE_ROUTE_IDS.filter(
+      (id) => !routes.some((r) => r.id === id),
+    );
+    throw new Error(
+      `these route ids are not in the shared route list: ${missing.join(", ")}`,
+    );
   }
   const viewports = args.viewports
-    ? VIEWPORTS.filter((v) => String(args.viewports).split(',').includes(v.id))
+    ? VIEWPORTS.filter((v) => String(args.viewports).split(",").includes(v.id))
     : VIEWPORTS;
-  if (!viewports.length) throw new Error('no viewport matched --viewports');
+  if (!viewports.length) throw new Error("no viewport matched --viewports");
 
   // The same guard the matrix uses. A run against a blank page or against
   // something else that happens to be on the port reports no failures at all,
   // which reads exactly like success.
-  const probe = await fetch(BASE, { redirect: 'follow' }).catch((e) => {
+  const probe = await fetch(BASE, { redirect: "follow" }).catch((e) => {
     throw new Error(`cannot reach ${BASE}: ${e.message}`);
   });
   if (!probe.ok) throw new Error(`${BASE} answered ${probe.status}`);
@@ -723,28 +856,41 @@ async function run() {
   if (!/<title>[^<]*Universe Explorer/i.test(html)) {
     throw new Error(`${BASE} is not serving Universe Explorer`);
   }
-  const build = (html.match(/main\.([a-f0-9]{8,})\.js/) || [, 'unknown'])[1];
+  const build = (html.match(/main\.([a-f0-9]{8,})\.js/) || [, "unknown"])[1];
 
   // The viewport meta is a single line that decides whether the safe-area rules
   // in the stylesheet can do anything at all, and whether the visitor is
   // allowed to zoom. Both have been wrong here before, and neither shows up in
   // a screenshot.
-  const meta = (html.match(/<meta[^>]+name=["']viewport["'][^>]*>/i) || [''])[0];
+  const meta = (html.match(/<meta[^>]+name=["']viewport["'][^>]*>/i) || [
+    "",
+  ])[0];
   if (!/viewport-fit\s*=\s*cover/i.test(meta)) {
-    fail('viewport', 'the viewport meta does not ask for viewport-fit=cover, so safe-area insets are all zero and the shell cannot reach the edges of the screen');
+    fail(
+      "viewport",
+      "the viewport meta does not ask for viewport-fit=cover, so safe-area insets are all zero and the shell cannot reach the edges of the screen",
+    );
   } else {
-    pass('viewport', 'viewport-fit=cover is asked for');
+    pass("viewport", "viewport-fit=cover is asked for");
   }
   if (/user-scalable\s*=\s*no|maximum-scale\s*=\s*(1|1\.0)\b/i.test(meta)) {
-    fail('viewport', 'the viewport meta disables zoom, which takes the page away from everyone who enlarges it to read');
+    fail(
+      "viewport",
+      "the viewport meta disables zoom, which takes the page away from everyone who enlarges it to read",
+    );
   } else {
-    pass('viewport', 'zoom is not restricted');
+    pass("viewport", "zoom is not restricted");
   }
 
   const browser = await BROWSER.launch({
-    args: ENGINE_NAME === 'chromium'
-      ? ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader']
-      : [],
+    args:
+      ENGINE_NAME === "chromium"
+        ? [
+            "--use-gl=angle",
+            "--use-angle=swiftshader",
+            "--enable-unsafe-swiftshader",
+          ]
+        : [],
   });
 
   const report = [];
@@ -763,9 +909,11 @@ async function run() {
       // which is the environment those rules are written for.
       hasTouch: viewport.compact && CAN_EMULATE_MOBILE,
       ...(CAN_EMULATE_MOBILE ? { isMobile: viewport.compact } : {}),
-      ...(viewport.compact && CAN_EMULATE_MOBILE ? { userAgent: devices['Pixel 7']?.userAgent } : {}),
+      ...(viewport.compact && CAN_EMULATE_MOBILE
+        ? { userAgent: devices["Pixel 7"]?.userAgent }
+        : {}),
     });
-    await installFixtures(context, 'populated');
+    const fixtureAudit = await installFixtures(context, "populated");
 
     // A cutout the browser cannot supply.
     //
@@ -777,28 +925,55 @@ async function run() {
     // whether env() parses.
     if (viewport.insets) {
       const { top, bottom, left, right } = viewport.insets;
-      await context.addInitScript(([t, b, l, r]) => {
-        const style = document.createElement('style');
-        style.textContent = `:root{--u-safe-top:${t}px;--u-safe-bottom:${b}px;--u-safe-left:${l}px;--u-safe-right:${r}px;}`;
-        const attach = () => document.head?.appendChild(style);
-        if (document.head) attach();
-        else document.addEventListener('DOMContentLoaded', attach, { once: true });
-      }, [top, bottom, left, right]);
+      await context.addInitScript(
+        ([t, b, l, r]) => {
+          const style = document.createElement("style");
+          style.textContent = `:root{--u-safe-top:${t}px;--u-safe-bottom:${b}px;--u-safe-left:${l}px;--u-safe-right:${r}px;}`;
+          const attach = () => document.head?.appendChild(style);
+          if (document.head) attach();
+          else
+            document.addEventListener("DOMContentLoaded", attach, {
+              once: true,
+            });
+        },
+        [top, bottom, left, right],
+      );
     }
+    await seedPortfolioVault(context, BASE, routes);
 
     for (const route of routes) {
       // The second tier. A route outside the full sweep is measured at the
       // three narrow windows only; asking for a viewport explicitly overrides
       // the tiering, because a run with --viewports is someone chasing one
       // thing and it should measure exactly what was asked for.
-      if (!args.viewports && !FULL_SWEEP_ROUTE_IDS.has(route.id) && !NARROW_VIEWPORT_IDS.has(viewport.id)) {
+      if (
+        !args.viewports &&
+        !FULL_SWEEP_ROUTE_IDS.has(route.id) &&
+        !NARROW_VIEWPORT_IDS.has(viewport.id)
+      ) {
         continue;
       }
       const page = await context.newPage();
       const scope = `${route.id}@${viewport.id}`;
       try {
-        await page.goto(BASE + route.path, { waitUntil: 'domcontentloaded', timeout: 45_000 });
+        await page.goto(BASE + route.path, {
+          waitUntil: "domcontentloaded",
+          timeout: 45_000,
+        });
+        await unlockPortfolioRoute(page, route);
         await page.waitForTimeout(2_400);
+
+        const landed = new URL(page.url()).pathname.replace(/\/+$/, "") || "/";
+        const expected =
+          (route.redirectTo || route.path).replace(/\/+$/, "") || "/";
+        if (
+          landed !== expected &&
+          !(route.redirectTo && landed.startsWith(`${expected}/`))
+        ) {
+          throw new Error(
+            `route ${route.path} landed on ${landed}, expected ${expected}`,
+          );
+        }
 
         if (route.open) {
           const control = page.locator(route.open).first();
@@ -808,22 +983,34 @@ async function run() {
           }
         }
 
-        const m = await page.evaluate(mobileProbe, { touchFloor: TOUCH_FLOOR, fieldFloor: FIELD_FLOOR });
+        const m = await page.evaluate(mobileProbe, {
+          touchFloor: TOUCH_FLOOR,
+          fieldFloor: FIELD_FLOOR,
+        });
         report.push({ route: route.id, viewport: viewport.id, ...m });
 
         // --- overflow ---
         if (m.overflowBy > 0) {
-          fail(scope, `the page scrolls sideways by ${m.overflowBy}px at ${m.viewportWidth}px`
-            + (m.culprits.length ? ` (${m.culprits.join('; ')})` : ''));
+          fail(
+            scope,
+            `the page scrolls sideways by ${m.overflowBy}px at ${m.viewportWidth}px` +
+              (m.culprits.length ? ` (${m.culprits.join("; ")})` : ""),
+          );
         }
         for (const c of m.clippers) {
           fail(scope, c);
         }
         for (const s of m.scrollers) {
           if (!s.declared) {
-            fail(scope, `${s.el} scrolls sideways without saying so, so whatever is past its edge is present and unreachable`);
+            fail(
+              scope,
+              `${s.el} scrolls sideways without saying so, so whatever is past its edge is present and unreachable`,
+            );
           } else if (!s.keyboardReachable) {
-            fail(scope, `${s.el} scrolls sideways and holds nothing focusable, so a keyboard cannot reach past its edge`);
+            fail(
+              scope,
+              `${s.el} scrolls sideways and holds nothing focusable, so a keyboard cannot reach past its edge`,
+            );
           }
         }
 
@@ -834,16 +1021,25 @@ async function run() {
         // layout, and a 14px field on a desktop with a mouse zooms nothing.
         if (viewport.compact) {
           for (const f of m.smallFields) {
-            fail(scope, `${f}, under the ${FIELD_FLOOR}px at which iOS Safari zooms the page in on focus and leaves it zoomed`);
+            fail(
+              scope,
+              `${f}, under the ${FIELD_FLOOR}px at which iOS Safari zooms the page in on focus and leaves it zoomed`,
+            );
           }
         }
 
         // --- targets ---
         if (viewport.compact && m.targetsBelowWcag.length) {
-          fail(scope, `${m.targetsBelowWcag.length} targets under 24px with another target inside the 24px circle around them, which is a WCAG 2.2 target-size failure: ${m.targetsBelowWcag.slice(0, 8).join(', ')}`);
+          fail(
+            scope,
+            `${m.targetsBelowWcag.length} targets under 24px with another target inside the 24px circle around them, which is a WCAG 2.2 target-size failure: ${m.targetsBelowWcag.slice(0, 8).join(", ")}`,
+          );
         }
         if (viewport.compact && m.targetsBelowPlatform.length) {
-          fail(scope, `${m.targetsBelowPlatform.length} shell or repeated controls under ${TOUCH_FLOOR}px: ${m.targetsBelowPlatform.slice(0, 8).join(', ')}`);
+          fail(
+            scope,
+            `${m.targetsBelowPlatform.length} shell or repeated controls under ${TOUCH_FLOOR}px: ${m.targetsBelowPlatform.slice(0, 8).join(", ")}`,
+          );
         }
 
         // --- fixed layers ---
@@ -859,25 +1055,52 @@ async function run() {
         // --- the bar ---
         if (viewport.compact && m.nav) {
           if (m.nav.scrolls && !m.nav.affordance) {
-            fail(scope, 'the bottom bar scrolls sideways with nothing to say that it does');
+            fail(
+              scope,
+              "the bottom bar scrolls sideways with nothing to say that it does",
+            );
           }
           if (m.nav.hasActive && m.nav.activeVisible === false) {
-            fail(scope, 'the current destination is scrolled out of sight in the bottom bar, so the bar disagrees with the page about where the visitor is');
+            fail(
+              scope,
+              "the current destination is scrolled out of sight in the bottom bar, so the bar disagrees with the page about where the visitor is",
+            );
           }
         }
 
         // --- safe areas ---
         if (viewport.insets) {
           const { top, bottom, left, right } = viewport.insets;
-          if (bottom > 0 && m.chrome.barPadBottom !== null && m.chrome.barPadBottom < bottom) {
-            fail(scope, `the bottom bar reserves ${m.chrome.barPadBottom}px for a ${bottom}px home indicator, so its targets are in the gesture area`);
+          if (
+            bottom > 0 &&
+            m.chrome.barPadBottom !== null &&
+            m.chrome.barPadBottom < bottom
+          ) {
+            fail(
+              scope,
+              `the bottom bar reserves ${m.chrome.barPadBottom}px for a ${bottom}px home indicator, so its targets are in the gesture area`,
+            );
           }
-          if (top > 0 && m.chrome.headerPadTop !== null && m.chrome.headerPadTop < top) {
-            fail(scope, `the header reserves ${m.chrome.headerPadTop}px for a ${top}px cutout, so it renders underneath it`);
+          if (
+            top > 0 &&
+            m.chrome.headerPadTop !== null &&
+            m.chrome.headerPadTop < top
+          ) {
+            fail(
+              scope,
+              `the header reserves ${m.chrome.headerPadTop}px for a ${top}px cutout, so it renders underneath it`,
+            );
           }
           const side = Math.max(left, right);
-          if (side > 0 && m.chrome.barPadLeft !== null && Math.max(m.chrome.barPadLeft, m.chrome.barPadRight) < side) {
-            fail(scope, `the bottom bar reserves ${m.chrome.barPadLeft}px at the sides for a ${side}px cutout, so a destination sits under it in landscape`);
+          if (
+            side > 0 &&
+            m.chrome.barPadLeft !== null &&
+            Math.max(m.chrome.barPadLeft, m.chrome.barPadRight) < side
+          ) {
+            fail(
+              scope,
+              `the bottom bar reserves ${m.chrome.barPadLeft}px at the sides for a ${side}px cutout, so a destination sits under it in landscape`,
+            );
           }
         }
 
@@ -888,7 +1111,7 @@ async function run() {
         // the shell rather than to any one page, so it is measured on the
         // routes where the shell is all there is, and on the tallest and
         // shortest windows where it actually bites.
-        if (viewport.compact && (route.id === 'home' || route.id === 'tx')) {
+        if (viewport.compact && (route.id === "home" || route.id === "tx")) {
           const focus = await focusWalk(page, 60);
           for (const o of focus.hidden) {
             fail(scope, `${o}, which is a WCAG 2.2 AA focus-obscured failure`);
@@ -905,27 +1128,54 @@ async function run() {
         // the reading position all survived. A shell that rebuilds itself on
         // resize loses all three, and it is invisible in a screenshot because
         // every individual frame looks correct.
-        if (viewport.compact && route.id === 'tx') {
-          await page.evaluate(() => window.scrollTo(0, Math.min(600, document.body.scrollHeight)));
+        if (viewport.compact && route.id === "tx") {
+          await page.evaluate(() =>
+            window.scrollTo(0, Math.min(600, document.body.scrollHeight)),
+          );
           await page.waitForTimeout(250);
-          const before = await page.evaluate(() => ({ url: location.pathname + location.search, y: window.scrollY }));
-          await page.setViewportSize({ width: viewport.height, height: viewport.width });
+          const before = await page.evaluate(() => ({
+            url: location.pathname + location.search,
+            y: window.scrollY,
+          }));
+          await page.setViewportSize({
+            width: viewport.height,
+            height: viewport.width,
+          });
           await page.waitForTimeout(500);
-          await page.setViewportSize({ width: viewport.width, height: viewport.height });
+          await page.setViewportSize({
+            width: viewport.width,
+            height: viewport.height,
+          });
           await page.waitForTimeout(500);
-          const after = await page.evaluate(() => ({ url: location.pathname + location.search, y: window.scrollY }));
+          const after = await page.evaluate(() => ({
+            url: location.pathname + location.search,
+            y: window.scrollY,
+          }));
           if (before.url !== after.url) {
-            fail(scope, `rotating the device navigated from ${before.url} to ${after.url}`);
-          } else if (Math.abs(before.y - after.y) > Math.max(200, viewport.height * 0.5)) {
-            fail(scope, `rotating the device moved the reading position from ${before.y} to ${after.y}`);
+            fail(
+              scope,
+              `rotating the device navigated from ${before.url} to ${after.url}`,
+            );
+          } else if (
+            Math.abs(before.y - after.y) > Math.max(200, viewport.height * 0.5)
+          ) {
+            fail(
+              scope,
+              `rotating the device moved the reading position from ${before.y} to ${after.y}`,
+            );
           } else {
-            pass(scope, 'a rotation and a rotation back keep the route and the reading position');
+            pass(
+              scope,
+              "a rotation and a rotation back keep the route and the reading position",
+            );
           }
         }
       } catch (error) {
         if (/ERR_CONNECTION_REFUSED|ECONNREFUSED/.test(String(error))) {
           await browser.close().catch(() => undefined);
-          console.error(`\nThe server at ${BASE} stopped answering at ${scope}. Nothing after that point was measured, so this run proves nothing.`);
+          console.error(
+            `\nThe server at ${BASE} stopped answering at ${scope}. Nothing after that point was measured, so this run proves nothing.`,
+          );
           process.exit(1);
         }
         fail(scope, `could not be measured: ${String(error).slice(0, 200)}`);
@@ -933,42 +1183,75 @@ async function run() {
         await page.close().catch(() => undefined);
       }
     }
+    fixtureAudit.assertComplete(`mobile/${viewport.id}`);
     await context.close();
   }
 
   await browser.close();
 
-  writeFileSync(join(OUT, 'mobile-report.json'), JSON.stringify({ base: BASE, browser: ENGINE_NAME, build, report, findings, grazes, passes }, null, 2));
+  writeFileSync(
+    join(OUT, "mobile-report.json"),
+    JSON.stringify(
+      {
+        base: BASE,
+        browser: ENGINE_NAME,
+        build,
+        report,
+        findings,
+        grazes,
+        passes,
+      },
+      null,
+      2,
+    ),
+  );
 
   console.log(`\nMobile gate, build ${build}`);
-  console.log(`${routes.length} routes across ${viewports.length} window sizes, ${report.length} measured pages\n`);
+  console.log(
+    `${routes.length} routes across ${viewports.length} window sizes, ${report.length} measured pages\n`,
+  );
   if (passes.length) {
-    console.log(`-- ${passes.length} checks with something to say that passed --`);
+    console.log(
+      `-- ${passes.length} checks with something to say that passed --`,
+    );
     for (const p of passes.slice(0, 12)) console.log(`  ${p}`);
-    console.log('');
+    console.log("");
   }
   if (grazes.length) {
     // Printed every run, never suppressed. This is the difference between the
     // engines, and a reader who cannot see it cannot judge it.
-    console.log(`-- ${grazes.length} focused controls landing partly under a fixed layer --`);
-    console.log('   AA asks that focus not be entirely hidden, which holds everywhere. This is the');
-    console.log('   AAA rule, and it is where the engines differ on re-scrolling something already');
-    console.log('   partly in view.');
+    console.log(
+      `-- ${grazes.length} focused controls landing partly under a fixed layer --`,
+    );
+    console.log(
+      "   AA asks that focus not be entirely hidden, which holds everywhere. This is the",
+    );
+    console.log(
+      "   AAA rule, and it is where the engines differ on re-scrolling something already",
+    );
+    console.log("   partly in view.");
     for (const g of grazes.slice(0, 20)) console.log(`  ${g}`);
-    if (grazes.length > 20) console.log(`  ... and ${grazes.length - 20} more, see the report`);
-    console.log('');
+    if (grazes.length > 20)
+      console.log(`  ... and ${grazes.length - 20} more, see the report`);
+    console.log("");
   }
   if (findings.length) {
     console.log(`-- ${findings.length} failures --`);
     for (const f of findings) console.log(`  ${f}`);
-    console.log('');
+    console.log("");
     process.exit(1);
   }
-  console.log('No mobile failures.\n');
+  console.log("No mobile failures.\n");
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))) {
-  run().catch((e) => { console.error(e); process.exit(1); });
+if (
+  process.argv[1] &&
+  resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))
+) {
+  run().catch((e) => {
+    console.error(e);
+    process.exit(1);
+  });
 }
 
 export { VIEWPORTS, TOUCH_FLOOR, FIELD_FLOOR, mobileProbe };

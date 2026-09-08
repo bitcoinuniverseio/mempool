@@ -13,6 +13,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
+import { routesFor } from './visual-qa/route-scenarios.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -110,12 +111,12 @@ test('Zcash ordering is never presented as deterministic', () => {
 });
 
 test('the visual gate covers the parity routes', () => {
-  const capture = read('scripts/universe/visual-qa/capture.mjs');
+  const visualRouteIds = new Set(routesFor('visual').map((route) => route.id));
   for (const id of [
     'dogecoin-mining', 'dogecoin-graphs', 'dogecoin-docs',
     'zcash-mining', 'zcash-graphs', 'zcash-docs',
   ]) {
-    assert.ok(capture.includes(`'${id}'`), `capture gate covers ${id}`);
+    assert.ok(visualRouteIds.has(id), `visual gate covers ${id}`);
   }
 });
 

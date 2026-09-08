@@ -1,6 +1,6 @@
 <div class="container-xl product-page">
   <header class="page-head">
-    <nav class="crumbs">
+    <nav class="crumbs" aria-label="Breadcrumb" i18n-aria-label="universe.breadcrumb-label">
       <a [routerLink]="['/protocols']">Protocols</a>
       <span class="divider">/</span>
       <span>Wildkin</span>
@@ -11,8 +11,8 @@
     </p>
   </header>
 
-  <nav class="nav-tabs">
-    <a [routerLink]="['/wildkin']" class="active">Overview</a>
+  <nav class="nav-tabs" aria-label="Product sections" i18n-aria-label="universe.product-sections-label">
+    <a [routerLink]="['/wildkin']" class="active" aria-current="page">Overview</a>
     <a [routerLink]="['/wildkin/creatures']">Creatures</a>
     <a [routerLink]="['/wildkin/bloodlines']">Bloodlines & Braids</a>
   </nav>
@@ -37,7 +37,7 @@
         <div class="metric-card">
           <span class="metric-label">Settled Creatures</span>
           <span class="metric-value">{{ vm.status.totalCreaturesCount }}</span>
-          <span class="metric-sub">Inscription-verified</span>
+          <span class="metric-sub">Reported by the Wildkin authority</span>
         </div>
         <div class="metric-card">
           <span class="metric-label">Braid Ceremonies</span>
@@ -53,7 +53,8 @@
 
       <section class="panel">
         <h2>Recent Settled Creatures</h2>
-        <table class="data-table">
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Recent settled creatures" i18n-aria-label="universe.wildkin.recent-table">
+          <table class="data-table">
           <thead>
             <tr>
               <th>ID</th>
@@ -66,15 +67,16 @@
           </thead>
           <tbody>
             <tr *ngFor="let c of vm.status.latestCreatures">
-              <td class="mono"><a [routerLink]="['/wildkin/creature', c.creatureId]">{{ c.creatureId }}</a></td>
+              <td class="mono"><app-universe-identifier [value]="c.creatureId" label="creature ID" [link]="['/wildkin/creature', c.creatureId]"></app-universe-identifier></td>
               <td><strong>{{ c.name }}</strong></td>
               <td>Gen {{ c.generation }}</td>
               <td><span class="badge badge-success">{{ c.status }}</span></td>
-              <td class="mono">{{ c.bindingUtxo.slice(0, 16) }}...</td>
+              <td class="mono"><app-universe-identifier [value]="c.bindingUtxo" label="binding UTXO"></app-universe-identifier></td>
               <td>{{ c.birthBlockHeight }}</td>
             </tr>
           </tbody>
-        </table>
+          </table>
+        </div>
       </section>
     </ng-container>
   </ng-container>

@@ -4,6 +4,7 @@ import { ActivatedRoute, RouterModule } from '@angular/router';
 import { BehaviorSubject, Observable, catchError, of, switchMap } from 'rxjs';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
+import { UniverseIdentifierComponent } from '@app/universe/universe-identifier.component';
 import { Cat20Holder, Cat20Token } from '@app/universe/universe.types';
 
 interface Cat20ViewModel {
@@ -18,41 +19,54 @@ interface Cat20ViewModel {
   templateUrl: './cat20-center.component.html',
   styleUrls: ['../product-page.scss'],
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, UniverseIdentifierComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Cat20CenterComponent implements OnInit {
-  private readonly state = new BehaviorSubject<Cat20ViewModel>({ kind: 'loading' });
+  private readonly state = new BehaviorSubject<Cat20ViewModel>({
+    kind: 'loading',
+  });
   readonly vm$: Observable<Cat20ViewModel> = this.state.asObservable();
 
   constructor(
     private api: UniverseApiService,
     private route: ActivatedRoute,
-    private seo: SeoService,
+    private seo: SeoService
   ) {
     this.seo.setTitle('Fractal CAT-20 Center');
   }
 
   ngOnInit(): void {
-    this.route.paramMap.pipe(
-      switchMap((params) => {
-        const tokenId = params.get('tokenId');
-        if (tokenId) {
-          return this.api.getCat20Token$(tokenId).pipe(
-            switchMap((token) => {
-              return this.api.getCat20Holders$(token.tokenId).pipe(
-                switchMap((h) => of<Cat20ViewModel>({ kind: 'detail', selected: token, holders: h.holders })),
-                catchError(() => of<Cat20ViewModel>({ kind: 'detail', selected: token, holders: [] }))
-              );
-            }),
+    this.route.paramMap
+      .pipe(
+        switchMap((params) => {
+          const tokenId = params.get('tokenId');
+          if (tokenId) {
+            return this.api.getCat20Token$(tokenId).pipe(
+              switchMap((token) => {
+                return this.api
+                  .getCat20Holders$(token.tokenId)
+                  .pipe(
+                    switchMap((h) =>
+                      of<Cat20ViewModel>({
+                        kind: 'detail',
+                        selected: token,
+                        holders: h.holders,
+                      })
+                    )
+                  );
+              }),
+              catchError(() => of<Cat20ViewModel>({ kind: 'error' }))
+            );
+          }
+          return this.api.getCat20Tokens$().pipe(
+            switchMap((data) =>
+              of<Cat20ViewModel>({ kind: 'ready', tokens: data.tokens })
+            ),
             catchError(() => of<Cat20ViewModel>({ kind: 'error' }))
           );
-        }
-        return this.api.getCat20Tokens$().pipe(
-          switchMap((data) => of<Cat20ViewModel>({ kind: 'ready', tokens: data.tokens })),
-          catchError(() => of<Cat20ViewModel>({ kind: 'error' }))
-        );
-      })
-    ).subscribe((vm) => this.state.next(vm));
+        })
+      )
+      .subscribe((vm) => this.state.next(vm));
   }
 }

@@ -23,7 +23,7 @@
       <ng-container *ngSwitchCase="'ready'">
         <header class="page-head">
           <div class="title-block">
-            <nav class="crumbs">
+            <nav class="crumbs" aria-label="Breadcrumb" i18n-aria-label="universe.breadcrumb-label">
               <a [routerLink]="['/anima', 'transitions']" i18n="anima.crumb-transitions">ANIMA transitions</a>
               <span class="divider">/</span>
               <span>{{ vm.event.event.eventId }}</span>

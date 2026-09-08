@@ -11,9 +11,9 @@ you exactly how much of it is proven.**
 
 Two halves, both load-bearing:
 
-- *While it is still forming* is the reason to open it. The mempool and the
+- _While it is still forming_ is the reason to open it. The mempool and the
   projected blocks are the part of Bitcoin that has not become history yet.
-- *How much of it is proven* is the reason to trust it. The product reads
+- _How much of it is proven_ is the reason to trust it. The product reads
   protocol assets through named authorities with stated coverage, and it says
   when it cannot prove something rather than filling the gap.
 
@@ -21,15 +21,15 @@ Nothing in the interface may claim more than the second half allows.
 
 ## The organising idea
 
-The word *Universe* is expressed through **scale, relationship, and motion**,
+The word _Universe_ is expressed through **scale, relationship, and motion**,
 never through galaxy imagery, star fields, or cosmic gradients.
 
 The axis the whole product turns on is **arriving to settled**:
 
-| | Arriving | Settled |
-|---|---|---|
-| What it is | in the mempool, projected, provisional | confirmed, in a block, history |
-| How it looks | lighter, unfinished, in motion | deep, solid, still |
+|                  | Arriving                                  | Settled                              |
+| ---------------- | ----------------------------------------- | ------------------------------------ |
+| What it is       | in the mempool, projected, provisional    | confirmed, in a block, history       |
+| How it looks     | lighter, unfinished, in motion            | deep, solid, still                   |
 | Where you see it | projected blocks, the Lens, incoming feed | confirmed blocks, transaction status |
 
 A visitor should feel which side of that line something is on before reading a
@@ -66,7 +66,7 @@ to compete with the colours that mean something about Bitcoin.
 **Filling a bar is not carrying a quantity.** A progress bar, a block fullness
 bar, or a single-series area chart may be brand pink, because the value is
 carried by the length or the height and the fill is just the mark. What is
-forbidden is colour that *encodes* the value: a fee band, a status, a protocol,
+forbidden is colour that _encodes_ the value: a fee band, a status, a protocol,
 a heat scale. If changing the number would change the colour, the colour is not
 allowed to be the brand.
 
@@ -78,20 +78,20 @@ either one closer fails the build.
 
 ### Colour roles
 
-| Token | Value, light | Value, dark | Role |
-|---|---|---|---|
-| `--u-brand` | `#c40059` | `#ff8ab8` | The working pink. Readable as text and as a fill. |
-| `--u-brand-hover` | `#a80049` | `#ffb3d1` | Hover of the above. |
-| `--u-brand-contrast` | `#ffffff` | `#2a0a18` | The foreground every brand fill declares. |
-| `--u-brand-accent` | `#ff0066` | `#ff2a85` | The identity anchor. Borders, rings, rules, display type. |
-| `--u-brand-subtle` | `#fde9f1` | `#2e1226` | Brand-tinted surface. |
-| `--u-magenta` | `#a3006b` | `#ff6fd0` | Second stop of the house sweep. |
-| `--u-fuchsia` | `#8b2fb5` | `#d98cf5` | Third stop of the house sweep. |
-| `--u-lavender` | `#5b2fa6` | `#c4a7ff` | The secondary accent, and the focus ring. |
-| `--u-chrome` | `#6b6280` | `#b9bed6` | Metal, as readable ink. |
-| `--u-chrome-rim` | `#c9cddf` | `#4a4560` | Metal, as a hairline. Carries no text. |
-| `--u-pearl` | `#fff6fa` | `#fff6fa` | The light ground, and ink on brand tiles. |
-| `--u-blush` | `#ffd8e7` | `#ffd8e7` | The softest brand tint. |
+| Token                | Value, light | Value, dark | Role                                                      |
+| -------------------- | ------------ | ----------- | --------------------------------------------------------- |
+| `--u-brand`          | `#c40059`    | `#ff8ab8`   | The working pink. Readable as text and as a fill.         |
+| `--u-brand-hover`    | `#a80049`    | `#ffb3d1`   | Hover of the above.                                       |
+| `--u-brand-contrast` | `#ffffff`    | `#2a0a18`   | The foreground every brand fill declares.                 |
+| `--u-brand-accent`   | `#ff0066`    | `#ff2a85`   | The identity anchor. Borders, rings, rules, display type. |
+| `--u-brand-subtle`   | `#fde9f1`    | `#2e1226`   | Brand-tinted surface.                                     |
+| `--u-magenta`        | `#a3006b`    | `#ff6fd0`   | Second stop of the house sweep.                           |
+| `--u-fuchsia`        | `#8b2fb5`    | `#d98cf5`   | Third stop of the house sweep.                            |
+| `--u-lavender`       | `#5b2fa6`    | `#c4a7ff`   | The secondary accent, and the focus ring.                 |
+| `--u-chrome`         | `#6b6280`    | `#b9bed6`   | Metal, as readable ink.                                   |
+| `--u-chrome-rim`     | `#c9cddf`    | `#4a4560`   | Metal, as a hairline. Carries no text.                    |
+| `--u-pearl`          | `#fff6fa`    | `#fff6fa`   | The light ground, and ink on brand tiles.                 |
+| `--u-blush`          | `#ffd8e7`    | `#ffd8e7`   | The softest brand tint.                                   |
 
 `#ff0066` is the value the rest of Bitcoin Universe is built on, and it is the
 value this product uses for identity. It is not a button fill: white on it
@@ -116,13 +116,13 @@ the gloss is 0.16.
 
 Three finishes, and a rule for each.
 
-| Token | What it is | Where it is allowed |
-|---|---|---|
-| `--u-gradient-brand` | hot pink to magenta to fuchsia | The mark, the primary action, live surfaces |
-| `--u-gloss` | a top specular highlight | Filled brand controls only |
-| `--u-glow-brand` | a soft brand shadow | The primary action, and singleton surfaces |
-| `--u-gradient-chrome` | pearl to chrome to steel | Metallic frames, never behind body text |
-| `--u-gradient-pride` | a refined spectrum | At most one rule per screen, never a fill |
+| Token                 | What it is                     | Where it is allowed                         |
+| --------------------- | ------------------------------ | ------------------------------------------- |
+| `--u-gradient-brand`  | hot pink to magenta to fuchsia | The mark, the primary action, live surfaces |
+| `--u-gloss`           | a top specular highlight       | Filled brand controls only                  |
+| `--u-glow-brand`      | a soft brand shadow            | The primary action, and singleton surfaces  |
+| `--u-gradient-chrome` | pearl to chrome to steel       | Metallic frames, never behind body text     |
+| `--u-gradient-pride`  | a refined spectrum             | At most one rule per screen, never a fill   |
 
 The pride rule is a rule, not a wash. It appears as a hairline under a single
 divider and nowhere else. Applied broadly it stops meaning anything.
@@ -190,13 +190,13 @@ properties. A theme swap is a variable swap.
 
 ### Evidence states
 
-| Token | Means |
-|---|---|
-| `--u-state-proven` | An authority proved this, with coverage |
-| `--u-state-partial` | Partly proven; a stated gap remains |
-| `--u-state-pending` | Not settled yet; the answer may change |
+| Token                   | Means                                               |
+| ----------------------- | --------------------------------------------------- |
+| `--u-state-proven`      | An authority proved this, with coverage             |
+| `--u-state-partial`     | Partly proven; a stated gap remains                 |
+| `--u-state-pending`     | Not settled yet; the answer may change              |
 | `--u-state-unavailable` | The authority could not be reached or has no answer |
-| `--u-state-neutral` | A fact with no evidence claim attached |
+| `--u-state-neutral`     | A fact with no evidence claim attached              |
 
 Every state token comes with a `-surface` and a `-border` so a status treatment
 is a tinted, bordered, worded object rather than coloured text. That keeps it
@@ -315,13 +315,13 @@ the answer a visitor requested is the first chain-specific reading they reach.
 Every chain page opens with the same instrument: five readings, always the same
 five, always in this order.
 
-| Reading | Answers |
-|---|---|
-| Chain | Is this chain answering at all |
-| Chain tip | Which block is the present |
-| Behind tip | How far back the figures on this page are true as of |
-| Last observed | When the reading was taken |
-| Pending coverage | How complete the unconfirmed set is |
+| Reading          | Answers                                              |
+| ---------------- | ---------------------------------------------------- |
+| Chain            | Is this chain answering at all                       |
+| Chain tip        | Which block is the present                           |
+| Behind tip       | How far back the figures on this page are true as of |
+| Last observed    | When the reading was taken                           |
+| Pending coverage | How complete the unconfirmed set is                  |
 
 Three rules hold it.
 
@@ -384,7 +384,7 @@ Precise, direct, calm under uncertainty. Say what is true and no more.
 
 - Explain a term at the moment it matters, not in a glossary.
 - Never restate a status the reader can already see. If a chip says the evidence
-  is incomplete, the sentence beneath it says what that means for *this*
+  is incomplete, the sentence beneath it says what that means for _this_
   transaction.
 - Distinguish "there is none" from "we could not tell". These are different
   facts and the interface must never collapse them.
@@ -421,6 +421,25 @@ themes, viewports, and data states, answering every request including the
 WebSocket from fixtures so a difference between runs means the interface
 changed rather than the chain moving.
 
+Every browser gate selects routes from
+`scripts/universe/visual-qa/route-scenarios.mjs`. Each route class has fixed
+valid and invalid parameter values plus an inclusion or a written exclusion
+for visual, mobile, mode, keyboard, live API, acceptance, and performance QA.
+`route-scenarios.test.mjs` compares that registry with Angular route
+declarations and static navigation targets. A route added on either side alone
+fails Universe CI.
+
+### Adding a production route
+
+1. Add the Angular route and every navigation target that reaches it.
+2. Add its class to `route-scenarios.mjs`, including fixed valid and invalid
+   values for each parameter.
+3. Record an inclusion or a specific exclusion for every QA class.
+4. Add exact request fixtures for each included local browser check. Prefix or
+   catch-all fixture responses are not accepted.
+5. Run `node --test scripts/universe/visual-qa/route-scenarios.test.mjs` before
+   the browser matrix.
+
 ## The adaptive window
 
 The layout responds to the window it is in, never to the device it believes it
@@ -430,11 +449,11 @@ chrome, whether it is sharing the screen and whether it is folded.
 
 ### Widths
 
-| Range | Shape |
-|---|---|
-| under 600px | header wraps to two rows, search on its own beneath the brand and the pickers; bottom bar |
-| 600 to 991px | header on one row; bottom bar |
-| 992px and above | header and navigation on one row, navigation returns to the top |
+| Range           | Shape                                                                                     |
+| --------------- | ----------------------------------------------------------------------------------------- |
+| under 600px     | header wraps to two rows, search on its own beneath the brand and the pickers; bottom bar |
+| 600 to 991px    | header on one row; bottom bar                                                             |
+| 992px and above | header and navigation on one row, navigation returns to the top                           |
 
 The one shell breakpoint is 992px. Everything else is fluid, wraps, or uses a
 minmax grid. New component rules should prefer a container query to a media
@@ -478,11 +497,11 @@ shows as a gap under the text reads as a mistake.
 indicator rather than sitting in a letterbox. That is only safe because
 everything that touches an edge reserves the inset:
 
-| Token | Where it is spent |
-|---|---|
-| `--u-safe-top` | the header's own top padding, so its background reaches under the status bar |
-| `--u-safe-bottom` | the bottom bar's padding, and everything reserving room for the bar |
-| `--u-safe-left`, `--u-safe-right` | the header row, the bottom bar, and the content column |
+| Token                             | Where it is spent                                                            |
+| --------------------------------- | ---------------------------------------------------------------------------- |
+| `--u-safe-top`                    | the header's own top padding, so its background reaches under the status bar |
+| `--u-safe-bottom`                 | the bottom bar's padding, and everything reserving room for the bar          |
+| `--u-safe-left`, `--u-safe-right` | the header row, the bottom bar, and the content column                       |
 
 Two rules go with them. Use them through `max()`, so a phone with no cutout
 keeps its ordinary padding rather than losing it to an inset of zero. And put
@@ -536,10 +555,10 @@ the fix for it.
 Two mixins in `src/app/universe/_universe-tokens.scss` write both shapes, so a
 component does not restate the numbers:
 
-| Mixin | For |
-|---|---|
-| `universe-touch-box($min)` | a control that already has a background or a border |
-| `universe-touch-line($line)` | a text link that is the whole value of a line |
+| Mixin                        | For                                                 |
+| ---------------------------- | --------------------------------------------------- |
+| `universe-touch-box($min)`   | a control that already has a background or a border |
+| `universe-touch-line($line)` | a text link that is the whole value of a line       |
 
 Whole families of control are handled once in `styles.scss` rather than
 component by component, because the pattern is what identifies them and not the
@@ -667,22 +686,26 @@ targets, a replacement timeline scrolling sideways with nothing to say so. A
 gate that measures the pages someone thought to list measures the author's
 expectations.
 
-The cost is paid where it buys something. Every route is measured at 320, at 390
-and in landscape, which are the three windows that change the answer. The
-fifteen that are one of each thing the product is made of add the other four,
-so a breakpoint that goes wrong between the phone widths, or a wide layout
-regressed by a mobile fix, is still caught. Forty-four routes comes to about ten
-minutes, against the matrix's sixty.
+The cost is paid where it buys something. Every selected route is measured at
+320, at 390 and in mobile landscape, which are the three windows that change
+the answer. Representative routes add 360, 375, 412, 430, both tablet
+orientations and the desktop control, so a breakpoint that goes wrong between
+the phone widths, or a wide layout regressed by a mobile fix, is still caught.
+The shared route registry defines and prints the current count, so this
+document cannot become a second route inventory.
 
-| Window | Why it is in the set |
-|---|---|
-| 320 x 568 | narrowest width still in use; every reflow rule is written against it |
-| 360 x 740 | the most common Android width |
-| 390 x 844 | the most common iPhone width, and the one carrying a simulated cutout |
-| 430 x 932 | the widest phone |
-| 844 x 390 | a phone on its side: compact width, almost no height |
-| 768 x 1024 | tablet, where the shell is still in its compact form |
-| 1024 x 900 | the desktop control: a mobile fix that regresses the wide layout fails here |
+| Window     | Why it is in the set                                                           |
+| ---------- | ------------------------------------------------------------------------------ |
+| 320 x 568  | narrowest width still in use; every reflow rule is written against it          |
+| 360 x 740  | the most common Android width                                                  |
+| 375 x 812  | established compact iPhone width                                               |
+| 390 x 844  | the most common iPhone width, and the one carrying a simulated cutout          |
+| 412 x 915  | common wide Android width                                                      |
+| 430 x 932  | the widest phone                                                               |
+| 844 x 390  | a phone on its side: compact width, almost no height                           |
+| 768 x 1024 | tablet, where the shell is still in its compact form                           |
+| 1024 x 768 | the same tablet in landscape, with a coarse pointer above the shell breakpoint |
+| 1024 x 900 | the desktop control: a mobile fix that regresses the wide layout fails here    |
 
 Compact windows are run with `isMobile`, which is what makes Chromium and
 WebKit report a coarse pointer. `hasTouch` alone does not, and without it every
@@ -690,12 +713,11 @@ WebKit report a coarse pointer. `hasTouch` alone does not, and without it every
 to be covered.
 
 Three engines, with `--browser`, across two CI jobs. The `mobile` job runs
-Chromium and the performance gate on the runner fleet. The `mobile-engines` job
-runs WebKit and Firefox on a hosted runner, and that split is not a preference:
-WebKit needs system libraries a Chromium-only host has never had, it refuses to
-launch without them rather than degrading, and the fleet's runner user has no
-passwordless sudo to install them. When the fleet image gains those libraries,
-the two jobs should become one again.
+Chromium and the performance gate on a self-managed GCP large runner. The
+`mobile-engines` job runs WebKit and Firefox on a self-managed GCP medium
+runner whose image carries the required Playwright system libraries. Keeping
+the jobs separate preserves independent engine evidence and lets them run in
+parallel.
 
 WebKit is the engine Safari is built on, and Chrome on iOS with it, which is
 the closest an automated run gets to an iPhone. Firefox cannot be put into
@@ -744,8 +766,8 @@ node scripts/universe/visual-qa/mobile-check.mjs --base=http://127.0.0.1:8080
 `--routes` and `--viewports` narrow it while working on one thing. Passing
 `--viewports` also turns off the tiering, because a run with it is someone
 chasing one thing and should measure exactly what was asked for. Route ids come
-from the same list the visual matrix walks, so the two gates cannot disagree
-about what the product is.
+from the production scenario registry, as do the routes used by the other
+browser gates.
 
 ## Performance budgets
 
@@ -755,10 +777,10 @@ window with the processor throttled four times and the network at slow 4G.
 Two numbers are gated, and they are the two that are properties of the build
 rather than of the machine:
 
-| Budget | Value | Why it is gateable |
-|---|---|---|
-| eager payload, compressed | 480kB | the same commit gives the same number anywhere |
-| cumulative layout shift | 0.1 | mostly the stylesheet, and the load can only add to it |
+| Budget                    | Value | Why it is gateable                                     |
+| ------------------------- | ----- | ------------------------------------------------------ |
+| eager payload, compressed | 480kB | the same commit gives the same number anywhere         |
+| cumulative layout shift   | 0.1   | mostly the stylesheet, and the load can only add to it |
 
 The eager payload is runtime, polyfills, main and styles: what a browser must
 have before the shell exists. Measured at `bea93c1ec`, develop was 463kB
@@ -803,25 +825,28 @@ rotation, back navigation, and a live update arriving.
 
 ## Where things live
 
-| Path | What |
-|---|---|
-| `frontend/src/styles/_universe-tokens.scss` | every token, light and dark |
-| `frontend/src/styles/_universe-bootstrap-bridge.scss` | the inherited Bootstrap layer, repainted |
-| `frontend/src/theme-dark.scss`, `theme-contrast.scss` | the alternate themes |
-| `frontend/src/app/universe/_universe-tokens.scss` | Universe surface mixins, delegating to the tokens above |
-| `frontend/src/app/universe/multichain-explorer/multichain-view.ts` | the chain presentation model: exact numbers, evidence tones, shape readings |
-| `scripts/universe/visual-qa/chain-fixtures.mjs` | the chain states the matrix holds: at tip, behind tip, authority unreachable, object missing |
-| `scripts/universe/check-text.mjs` | the em dash gate, over source and over the built output |
-| `scripts/universe/check-colors.mjs` | no raw interface colour, including in style and attribute bindings |
-| `scripts/universe/check-palettes.mjs` | every dynamic palette, role separation, theme parity, retired values |
-| `scripts/universe/check-fills.mjs` | every filled surface that carries text declares its ink |
-| `scripts/universe/check-branding.mjs` | the upstream mark gate |
-| `scripts/universe/visual-qa/capture.mjs` | the route matrix: themes, widths, and data states |
-| `scripts/universe/visual-qa/modes-check.mjs` | forced colours and 200 percent zoom |
-| `scripts/universe/visual-qa/mobile-check.mjs` | the mobile gate: windows, insets, targets, fixed layers, rotation |
-| `scripts/universe/visual-qa/mobile-perf.mjs` | the payload, the layout shift, and the table for recording a route that is over budget |
-| `frontend/src/app/universe/universe-viewport.service.ts` | the visual viewport, published as CSS, for the software keyboard |
-| `scripts/universe/visual-qa/fixtures.mjs` | the data every reviewed route renders from |
+| Path                                                               | What                                                                                         |
+| ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| `frontend/src/styles/_universe-tokens.scss`                        | every token, light and dark                                                                  |
+| `frontend/src/styles/_universe-bootstrap-bridge.scss`              | the inherited Bootstrap layer, repainted                                                     |
+| `frontend/src/theme-dark.scss`, `theme-contrast.scss`              | the alternate themes                                                                         |
+| `frontend/src/app/universe/_universe-tokens.scss`                  | Universe surface mixins, delegating to the tokens above                                      |
+| `frontend/src/app/universe/multichain-explorer/multichain-view.ts` | the chain presentation model: exact numbers, evidence tones, shape readings                  |
+| `scripts/universe/visual-qa/chain-fixtures.mjs`                    | the chain states the matrix holds: at tip, behind tip, authority unreachable, object missing |
+| `scripts/universe/check-text.mjs`                                  | the em dash gate, over source and over the built output                                      |
+| `scripts/universe/check-colors.mjs`                                | no raw interface colour, including in style and attribute bindings                           |
+| `scripts/universe/check-palettes.mjs`                              | every dynamic palette, role separation, theme parity, retired values                         |
+| `scripts/universe/check-fills.mjs`                                 | every filled surface that carries text declares its ink                                      |
+| `scripts/universe/check-branding.mjs`                              | the upstream mark gate                                                                       |
+| `scripts/universe/visual-qa/route-scenarios.mjs`                   | production route classes, fixed parameters, and QA inclusion decisions                       |
+| `scripts/universe/visual-qa/route-scenarios.test.mjs`              | static Angular route and navigation parity gate                                              |
+| `scripts/universe/visual-qa/fixture-match.mjs`                     | exact fixture matching and missing-fixture failures                                          |
+| `scripts/universe/visual-qa/capture.mjs`                           | the route matrix: themes, widths, and data states                                            |
+| `scripts/universe/visual-qa/modes-check.mjs`                       | forced colours and 200 percent zoom                                                          |
+| `scripts/universe/visual-qa/mobile-check.mjs`                      | the mobile gate: windows, insets, targets, fixed layers, rotation                            |
+| `scripts/universe/visual-qa/mobile-perf.mjs`                       | the payload, the layout shift, and the table for recording a route that is over budget       |
+| `frontend/src/app/universe/universe-viewport.service.ts`           | the visual viewport, published as CSS, for the software keyboard                             |
+| `scripts/universe/visual-qa/fixtures.mjs`                          | the data every reviewed route renders from                                                   |
 
 ## A note on the fixtures
 
@@ -834,9 +859,14 @@ throwing on a response of the wrong shape, the release identity page rendering
 blank, and a depth chart whose entire palette collapsed into one band because
 the numbers were four orders of magnitude too small.
 
-A route that renders nothing passes every automated check. When a fixture is
-missing or wrong, the review it feeds is not weaker; it is absent, and it
-reports success.
+Fixture matching is exact. A request with no declared fixture receives a 501
+response, is recorded by the active gate, and fails the run. It never becomes
+an empty 200 response. Invalid route parameters use the registry's fixed
+`qa-invalid-*` values and receive an explicit 404 fixture.
+
+Previously, a route that rendered nothing could pass the automated checks.
+Now a missing or wrong fixture stops the run, because its review evidence is
+absent.
 
 The sixth case was a whole surface rather than a defect. The Dogecoin and Zcash
 routes shipped with no fixture and no route entry, so eleven pages reached

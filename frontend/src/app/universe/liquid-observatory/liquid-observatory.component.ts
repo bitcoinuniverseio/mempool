@@ -1,9 +1,18 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { BehaviorSubject, Observable, catchError, combineLatest, of } from 'rxjs';
+import {
+  BehaviorSubject,
+  Observable,
+  catchError,
+  combineLatest,
+  map,
+  of,
+} from 'rxjs';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
+import { formatAtomicAmount } from '@app/universe/universe-evidence';
+import { UniverseIdentifierComponent } from '@app/universe/universe-identifier.component';
 import {
   LiquidAssetRecord,
   LiquidFederationEpoch,
@@ -24,40 +33,42 @@ interface LiquidViewModel {
   templateUrl: './liquid-observatory.component.html',
   styleUrls: ['../product-page.scss'],
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, UniverseIdentifierComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LiquidObservatoryComponent implements OnInit {
-  // Templates format raw strings through the Number global; AOT needs it bound.
-  protected readonly Number = Number;
-  private readonly state = new BehaviorSubject<LiquidViewModel>({ kind: 'loading' });
+  protected readonly formatAtomicAmount = formatAtomicAmount;
+  private readonly state = new BehaviorSubject<LiquidViewModel>({
+    kind: 'loading',
+  });
   readonly vm$: Observable<LiquidViewModel> = this.state.asObservable();
 
   constructor(
     private api: UniverseApiService,
-    private seo: SeoService,
+    private seo: SeoService
   ) {
-    this.seo.setTitle('Liquid Confidential-Asset, Peg, and Federation Observatory');
+    this.seo.setTitle(
+      'Liquid Confidential-Asset, Peg, and Federation Observatory'
+    );
   }
 
   ngOnInit(): void {
     combineLatest([
-      this.api.getLiquidObservatorySummary$().pipe(catchError(() => of(null))),
-      this.api.getLiquidAssets$().pipe(catchError(() => of({ assets: [] }))),
-      this.api.getLiquidPegs$().pipe(catchError(() => of({ pegs: [] }))),
-      this.api.getLiquidFederation$().pipe(catchError(() => of(null))),
-    ]).subscribe(([summary, assetsData, pegsData, federation]) => {
-      if (!summary || !federation) {
-        this.state.next({ kind: 'error' });
-        return;
-      }
-      this.state.next({
-        kind: 'ready',
-        summary,
-        assets: assetsData.assets,
-        pegs: pegsData.pegs,
-        federation,
-      });
-    });
+      this.api.getLiquidObservatorySummary$(),
+      this.api.getLiquidAssets$(),
+      this.api.getLiquidPegs$(),
+      this.api.getLiquidFederation$(),
+    ])
+      .pipe(
+        map(([summary, assetsData, pegsData, federation]): LiquidViewModel => ({
+          kind: 'ready',
+          summary,
+          assets: assetsData.assets,
+          pegs: pegsData.pegs,
+          federation,
+        })),
+        catchError(() => of<LiquidViewModel>({ kind: 'error' }))
+      )
+      .subscribe((vm) => this.state.next(vm));
   }
 }

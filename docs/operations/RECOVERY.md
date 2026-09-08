@@ -7,9 +7,10 @@ Read the journal first. Known causes:
 - **Database refused**: the MariaDB container is down or still initializing.
   Upstream migrations use MariaDB-only syntax; a MySQL 8.4 container fails at
   `DROP FOREIGN KEY IF EXISTS` during the first migration. Use MariaDB.
-- **Core RPC unreachable**: check the bounded RPC pool
-  (`universe-explorer-rpc-pool`), then Core itself. Never bypass the pool by
-  pointing the backend straight at Core.
+- **Core RPC unreachable**: check Core itself, then inspect the Explorer backend
+  logs for pool timeouts, queue saturation, or invalid socket-budget settings.
+  The bounded pool is an in-process HTTP agent, not a separate service. Never
+  disable its connection and admission limits to bypass a failure.
 - **Pools metadata fetch failing**: the local mirror service must be running.
   The explorer never falls back to a public host.
 

@@ -4,7 +4,14 @@
  * as movement and never as economic flow.
  */
 
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
 import { PortfolioDataService } from '../data/portfolio-data.service';
 import { PortfolioSessionService } from '../stores/session.service';
 import { PortfolioDataStateComponent } from '../shared/data-state.component';
@@ -27,13 +34,16 @@ type EventKind = 'all' | 'in' | 'out' | 'internal' | 'pending';
             [class.active]="filter() === kind.value"
             [attr.aria-pressed]="filter() === kind.value"
             (click)="filter.set(kind.value)"
-          >{{ kind.label }}</button>
+          >
+            {{ kind.label }}
+          </button>
         }
       </header>
 
       @if (rows().length === 0) {
         <p class="soft" i18n="@@universe.portfolio.activity.empty">
-          No events in this filter yet. Activity appears as the included accounts confirm movements.
+          No events in this filter yet. Activity appears as the included
+          accounts confirm movements.
         </p>
       } @else {
         <ul class="timeline">
@@ -50,9 +60,13 @@ type EventKind = 'all' | 'in' | 'out' | 'internal' | 'pending';
               <div class="meta">
                 <app-portfolio-data-state [state]="row.state" />
                 <span class="mono">{{ row.txid }}</span>
-                @if (row.timestamp !== null) { <time>{{ row.timestamp }}</time> }
+                @if (row.timestamp !== null) {
+                  <time>{{ row.timestamp }}</time>
+                }
                 @if (row.fee !== null) {
-                  <span i18n="@@universe.portfolio.activity.fee">Fee {{ row.fee }}</span>
+                  <span i18n="@@universe.portfolio.activity.fee"
+                    >Fee {{ row.fee }}</span
+                  >
                 }
               </div>
             </li>
@@ -63,17 +77,67 @@ type EventKind = 'all' | 'in' | 'out' | 'internal' | 'pending';
   `,
   styles: [
     `
-      .activity { display: flex; flex-direction: column; gap: 12px; }
-      .toolbar { display: flex; gap: 6px; flex-wrap: wrap; }
-      .toolbar button { min-height: 34px; padding: 4px 12px; border-radius: 999px; border: 1px solid var(--u-separator, rgba(0,0,0,0.12)); background: transparent; cursor: pointer; font-size: 12.5px; }
-      .toolbar button.active { border-color: var(--u-brand, #c40059); color: var(--u-brand, #c40059); font-weight: 600; }
-      .timeline { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
-      .timeline li { padding: 10px 4px; border-bottom: 1px solid var(--u-separator, rgba(0,0,0,0.06)); }
-      .row { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; }
-      .value { font-variant-numeric: tabular-nums; }
-      .meta { display: flex; gap: 10px; align-items: center; margin-top: 4px; font-size: 12px; color: var(--u-fg-soft, inherit); flex-wrap: wrap; }
-      .mono { font-family: monospace; }
-      .soft { color: var(--u-fg-soft, inherit); font-size: 13px; }
+      .activity {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .toolbar {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .toolbar button {
+        min-height: 44px;
+        min-width: 44px;
+        padding: 4px 12px;
+        border-radius: 999px;
+        border: 1px solid var(--u-separator, rgba(0, 0, 0, 0.12));
+        background: transparent;
+        cursor: pointer;
+        font-size: 12.5px;
+      }
+      .toolbar button.active {
+        border-color: var(--u-brand, #c40059);
+        color: var(--u-brand, #c40059);
+        font-weight: 600;
+      }
+      .timeline {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .timeline li {
+        padding: 10px 4px;
+        border-bottom: 1px solid var(--u-separator, rgba(0, 0, 0, 0.06));
+      }
+      .row {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        font-size: 14px;
+      }
+      .value {
+        font-variant-numeric: tabular-nums;
+      }
+      .meta {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-top: 4px;
+        font-size: 12px;
+        color: var(--u-fg-soft, inherit);
+        flex-wrap: wrap;
+      }
+      .mono {
+        font-family: monospace;
+      }
+      .soft {
+        color: var(--u-fg-soft, inherit);
+        font-size: 13px;
+      }
     `,
   ],
 })
@@ -86,10 +150,22 @@ export class ActivityComponent {
 
   readonly kinds: readonly { value: EventKind; label: string }[] = [
     { value: 'all', label: $localize`:@@universe.portfolio.activity.all:All` },
-    { value: 'in', label: $localize`:@@universe.portfolio.activity.incoming:Incoming` },
-    { value: 'out', label: $localize`:@@universe.portfolio.activity.outgoing:Outgoing` },
-    { value: 'internal', label: $localize`:@@universe.portfolio.activity.internal:Internal` },
-    { value: 'pending', label: $localize`:@@universe.portfolio.activity.pending:Pending` },
+    {
+      value: 'in',
+      label: $localize`:@@universe.portfolio.activity.incoming:Incoming`,
+    },
+    {
+      value: 'out',
+      label: $localize`:@@universe.portfolio.activity.outgoing:Outgoing`,
+    },
+    {
+      value: 'internal',
+      label: $localize`:@@universe.portfolio.activity.internal:Internal`,
+    },
+    {
+      value: 'pending',
+      label: $localize`:@@universe.portfolio.activity.pending:Pending`,
+    },
   ];
 
   // The aggregation service holds transfers; the events themselves are the
@@ -112,11 +188,17 @@ export class ActivityComponent {
       rows.push({
         key: `internal:${transfer.txid}`,
         description: $localize`:@@universe.portfolio.activity.internal-row:Internal transfer between tracked accounts (movement, not a gain or loss)`,
-        value: transfer.quantityAtomic === null ? null : `${formatExact(atomicToDisplay(transfer.quantityAtomic, 8) ?? '', 'en')} BTC`,
+        value:
+          transfer.quantityAtomic === null
+            ? null
+            : `${formatExact(atomicToDisplay(transfer.quantityAtomic, 8) ?? '', 'en')} BTC`,
         state: 'proven' as const,
         txid: transfer.txid,
         timestamp: transfer.timestamp,
-        fee: transfer.feeAtomic === null ? null : `${formatExact(atomicToDisplay(transfer.feeAtomic, 8) ?? '', 'en')} BTC fee`,
+        fee:
+          transfer.feeAtomic === null
+            ? null
+            : `${formatExact(atomicToDisplay(transfer.feeAtomic, 8) ?? '', 'en')} BTC fee`,
         kind: 'internal',
       });
     }
@@ -136,8 +218,13 @@ export class ActivityComponent {
       rows.push({
         key: flow.kind,
         description: flow.label,
-        value: flow.value === null ? null : `${formatExact(atomicToDisplay(flow.value, 8) ?? '', 'en')} BTC`,
-        state: (flow.value === null ? 'partial' : 'proven') as PortfolioDataState,
+        value:
+          flow.value === null
+            ? null
+            : `${formatExact(atomicToDisplay(flow.value, 8) ?? '', 'en')} BTC`,
+        state: (flow.value === null
+          ? 'partial'
+          : 'proven') as PortfolioDataState,
         txid: '',
         timestamp: null,
         fee: null,

@@ -49,6 +49,7 @@ __CORE_RPC_PORT__=${CORE_RPC_PORT:=8332}
 __CORE_RPC_USERNAME__=${CORE_RPC_USERNAME:=mempool}
 __CORE_RPC_PASSWORD__=${CORE_RPC_PASSWORD:=mempool}
 __CORE_RPC_TIMEOUT__=${CORE_RPC_TIMEOUT:=60000}
+__CORE_RPC_MAX_SOCKETS__=${CORE_RPC_MAX_SOCKETS:=8}
 __CORE_RPC_COOKIE__=${CORE_RPC_COOKIE:=false}
 __CORE_RPC_COOKIE_PATH__=${CORE_RPC_COOKIE_PATH:=""}
 __CORE_RPC_DEBUG_LOG_PATH__=${CORE_RPC_DEBUG_LOG_PATH:=""}
@@ -74,6 +75,7 @@ __SECOND_CORE_RPC_PORT__=${SECOND_CORE_RPC_PORT:=8332}
 __SECOND_CORE_RPC_USERNAME__=${SECOND_CORE_RPC_USERNAME:=mempool}
 __SECOND_CORE_RPC_PASSWORD__=${SECOND_CORE_RPC_PASSWORD:=mempool}
 __SECOND_CORE_RPC_TIMEOUT__=${SECOND_CORE_RPC_TIMEOUT:=60000}
+__SECOND_CORE_RPC_MAX_SOCKETS__=${SECOND_CORE_RPC_MAX_SOCKETS:=8}
 __SECOND_CORE_RPC_COOKIE__=${SECOND_CORE_RPC_COOKIE:=false}
 __SECOND_CORE_RPC_COOKIE_PATH__=${SECOND_CORE_RPC_COOKIE_PATH:=""}
 
@@ -214,6 +216,7 @@ sed -i "s!__CORE_RPC_PORT__!${__CORE_RPC_PORT__}!g" mempool-config.json
 sed -i "s!__CORE_RPC_USERNAME__!${__CORE_RPC_USERNAME__}!g" mempool-config.json
 sed -i "s!__CORE_RPC_PASSWORD__!${__CORE_RPC_PASSWORD__}!g" mempool-config.json
 sed -i "s!__CORE_RPC_TIMEOUT__!${__CORE_RPC_TIMEOUT__}!g" mempool-config.json
+sed -i "s!__CORE_RPC_MAX_SOCKETS__!${__CORE_RPC_MAX_SOCKETS__}!g" mempool-config.json
 sed -i "s!__CORE_RPC_COOKIE__!${__CORE_RPC_COOKIE__}!g" mempool-config.json
 sed -i "s!__CORE_RPC_COOKIE_PATH__!${__CORE_RPC_COOKIE_PATH__}!g" mempool-config.json
 sed -i "s!__CORE_RPC_DEBUG_LOG_PATH__!${__CORE_RPC_DEBUG_LOG_PATH__}!g" mempool-config.json
@@ -236,6 +239,7 @@ sed -i "s!__SECOND_CORE_RPC_PORT__!${__SECOND_CORE_RPC_PORT__}!g" mempool-config
 sed -i "s!__SECOND_CORE_RPC_USERNAME__!${__SECOND_CORE_RPC_USERNAME__}!g" mempool-config.json
 sed -i "s!__SECOND_CORE_RPC_PASSWORD__!${__SECOND_CORE_RPC_PASSWORD__}!g" mempool-config.json
 sed -i "s!__SECOND_CORE_RPC_TIMEOUT__!${__SECOND_CORE_RPC_TIMEOUT__}!g" mempool-config.json
+sed -i "s!__SECOND_CORE_RPC_MAX_SOCKETS__!${__SECOND_CORE_RPC_MAX_SOCKETS__}!g" mempool-config.json
 sed -i "s!__SECOND_CORE_RPC_COOKIE__!${__SECOND_CORE_RPC_COOKIE__}!g" mempool-config.json
 sed -i "s!__SECOND_CORE_RPC_COOKIE_PATH__!${__SECOND_CORE_RPC_COOKIE_PATH__}!g" mempool-config.json
 

@@ -1,13 +1,18 @@
 <div class="container-xl product-page">
   <header class="page-head">
-    <nav class="crumbs">
+    <nav
+      class="crumbs"
+      aria-label="Breadcrumb"
+      i18n-aria-label="universe.breadcrumb-label"
+    >
       <a [routerLink]="['/']">Home</a>
       <span class="divider">/</span>
       <span>Tools</span>
     </nav>
     <h1>Payment Standards & Private-Discovery Studio</h1>
     <p class="summary">
-      BIP21 multi-protocol payment URIs, BIP353 DNSSEC name resolution, Payjoin v2 proposals, and Silent Payments (BIP352) scanners.
+      Inspect BIP21 payment URI fields and check which payment-resolution
+      capabilities are available in this build.
     </p>
   </header>
 
@@ -16,55 +21,105 @@
     <h2>BIP21 Multi-Protocol Payment URI Inspector</h2>
     <div class="form-group">
       <label for="bip21Input">BIP21 URI String</label>
-      <input id="bip21Input" type="text" [(ngModel)]="bip21Uri" />
+      <input
+        id="bip21Input"
+        type="text"
+        [(ngModel)]="bip21Uri"
+        placeholder="bitcoin:&lt;address&gt;?amount=0.001"
+      />
     </div>
-    <button type="button" class="btn-primary" (click)="parseBip21()">Parse URI</button>
+    <button type="button" class="btn-primary" (click)="parseBip21()">
+      Parse URI
+    </button>
+    <p *ngIf="bip21Notice" role="status">{{ bip21Notice }}</p>
 
-    <div *ngIf="parsedBip21$ | async as p" style="margin-top: 1rem;">
-      <table class="data-table">
-        <tbody>
-          <tr>
-            <td><strong>On-Chain Address</strong></td>
-            <td class="mono">{{ p.address }}</td>
-          </tr>
-          <tr *ngIf="p.amountBtc">
-            <td><strong>Amount (BTC)</strong></td>
-            <td>{{ p.amountBtc }} BTC ({{ (Number(p.amountBtc) * 1e8).toLocaleString() }} sats)</td>
-          </tr>
-          <tr *ngIf="p.label">
-            <td><strong>Label</strong></td>
-            <td>{{ p.label }}</td>
-          </tr>
-          <tr *ngIf="p.lightning">
-            <td><strong>Lightning Offer / Invoice</strong></td>
-            <td class="mono">{{ p.lightning.slice(0, 32) }}...</td>
-          </tr>
-          <tr *ngIf="p.pj">
-            <td><strong>Payjoin Endpoint</strong></td>
-            <td class="mono">{{ p.pj }}</td>
-          </tr>
-          <tr *ngIf="p.silentPayment">
-            <td><strong>Silent Payment (BIP352)</strong></td>
-            <td class="mono">{{ p.silentPayment }}</td>
-          </tr>
-        </tbody>
-      </table>
+    <div *ngIf="parsedBip21$ | async as p" style="margin-top: 1rem">
+      <div
+        class="table-wrap"
+        tabindex="0"
+        role="region"
+        aria-label="Parsed payment URI fields"
+        i18n-aria-label="universe.payment-fields-label"
+      >
+        <table class="data-table">
+          <tbody>
+            <tr>
+              <td><strong>On-Chain Address</strong></td>
+              <td class="mono">
+                <app-universe-identifier
+                  [value]="p.address"
+                  label="on-chain address"
+                />
+              </td>
+            </tr>
+            <tr *ngIf="p.amountBtc">
+              <td><strong>Amount (BTC)</strong></td>
+              <td>
+                {{ p.amountBtc }} BTC ({{
+                  formatBtcAmountAsSats(p.amountBtc) || "Unavailable"
+                }}
+                sats)
+              </td>
+            </tr>
+            <tr *ngIf="p.label">
+              <td><strong>Label</strong></td>
+              <td>{{ p.label }}</td>
+            </tr>
+            <tr *ngIf="p.lightning">
+              <td><strong>Lightning Offer / Invoice</strong></td>
+              <td class="mono">
+                <app-universe-identifier
+                  [value]="p.lightning"
+                  label="Lightning offer or invoice"
+                />
+              </td>
+            </tr>
+            <tr *ngIf="p.pj">
+              <td><strong>Payjoin Endpoint</strong></td>
+              <td class="mono">
+                <app-universe-identifier
+                  [value]="p.pj"
+                  label="Payjoin endpoint"
+                />
+              </td>
+            </tr>
+            <tr *ngIf="p.silentPayment">
+              <td><strong>Silent Payment (BIP352)</strong></td>
+              <td class="mono">
+                <app-universe-identifier
+                  [value]="p.silentPayment"
+                  label="silent payment identifier"
+                />
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </section>
 
   <!-- BIP353 Section -->
   <section class="panel">
-    <h2>BIP353 DNSSEC Human-Readable Name Resolver</h2>
+    <h2>BIP353 DNSSEC Name Resolution</h2>
     <div class="form-group">
       <label for="bip353Input">BIP353 Name (user@domain)</label>
       <input id="bip353Input" type="text" [(ngModel)]="bip353Name" />
     </div>
-    <button type="button" class="btn-primary" (click)="resolveBip353()">Resolve DNSSEC Name</button>
+    <button type="button" class="btn-primary" (click)="resolveBip353()">
+      Resolve DNSSEC Name
+    </button>
 
-    <div *ngIf="bip353$ | async as b" style="margin-top: 1rem;">
-      <p><strong>Resolved Address:</strong> <span class="mono">{{ b.resolvedAddress }}</span></p>
-      <p><strong>DNS TXT Record:</strong> <span class="mono">{{ b.txtRecord }}</span></p>
-      <p><span class="badge badge-success">DNSSEC Validated</span> Cryptographic DNS root signatures verified.</p>
+    <div *ngIf="bip353$ | async as b" style="margin-top: 1rem">
+      <p>
+        <strong>Requested name:</strong>
+        <span class="mono">{{ b.humanName }}</span>
+      </p>
+      <p role="status">
+        <span class="badge badge-warning">{{
+          b.kind === "unavailable" ? "Verification unavailable" : "Invalid name"
+        }}</span>
+        {{ b.message }}
+      </p>
     </div>
   </section>
 </div>

@@ -38,21 +38,25 @@ const ROOT = join(HERE, '..', '..', 'frontend', 'dist', 'mempool', 'browser');
 // step says so: a fixed port once had it measuring another job's build. Moving
 // this job onto the shared runner pool turned a rare collision into a likely
 // one, which is a good change finding an old fault rather than causing one.
-function freePort() {
-  const server = createServer();
-  server.listen(0, '127.0.0.1');
-  return new Promise((resolve, reject) => {
-    server.once('listening', () => {
-      const { port } = server.address();
-      server.close(() => resolve(port));
-    });
-    server.once('error', reject);
-  });
-}
-
-async function reservePorts() {
-  const [gatewayPort, upstreamPort] = await Promise.all([freePort(), freePort()]);
-  return { gatewayPort, upstreamPort };
+async function reservePorts(includeEsplora = false) {
+  const servers = Array.from({ length: includeEsplora ? 3 : 2 }, () => createServer());
+  await Promise.all(
+    servers.map(
+      (server) =>
+        new Promise((resolve, reject) => {
+          server.once('listening', resolve);
+          server.once('error', reject);
+          server.listen(0, '127.0.0.1');
+        }),
+    ),
+  );
+  const ports = servers.map((server) => server.address().port);
+  await Promise.all(servers.map((server) => new Promise((resolve) => server.close(resolve))));
+  return {
+    gatewayPort: ports[0],
+    upstreamPort: ports[1],
+    ...(includeEsplora ? { esploraPort: ports[2] } : {}),
+  };
 }
 
 /**
@@ -95,13 +99,34 @@ function startGateway({ gatewayPort, upstreamPort, esploraPort }) {
   });
 }
 
+async function waitForGateway(gateway, port, timeoutMs = 10_000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    assert.equal(gateway.exitCode, null, 'gateway exited before its listener became ready');
+    const listening = await new Promise((resolve) => {
+      const socket = connect({ host: '127.0.0.1', port });
+      const done = (answer) => {
+        socket.destroy();
+        resolve(answer);
+      };
+      socket.once('connect', () => done(true));
+      socket.once('error', () => done(false));
+    });
+    if (listening) return;
+    await sleep(50);
+  }
+  assert.fail(`gateway did not listen on port ${port} within ${timeoutMs}ms`);
+}
+
 function ask(gatewayPort, path = '/api/v1/backend-info') {
   return new Promise((resolve) => {
     const started = Date.now();
     http
       .get({ host: '127.0.0.1', port: gatewayPort, path }, (response) => {
         response.resume();
-        response.on('end', () => resolve({ status: response.statusCode, ms: Date.now() - started }));
+        response.on('end', () =>
+          resolve({ status: response.statusCode, ms: Date.now() - started }),
+        );
       })
       .on('error', (error) => resolve({ status: 0, error: error.code, ms: Date.now() - started }));
   });
@@ -111,7 +136,7 @@ test('a request waits for an upstream that is restarting, rather than failing', 
   const ports = await reservePorts();
   const gateway = startGateway(ports);
   t.after(() => gateway.kill());
-  await sleep(1200);
+  await waitForGateway(gateway, ports.gatewayPort);
 
   // Nothing is listening yet, exactly as during a restart.
   const inFlight = ask(ports.gatewayPort);
@@ -133,10 +158,14 @@ test('an upstream that is genuinely gone is still reported, and promptly', async
   await assertNothingIsListening(ports.upstreamPort);
   const gateway = startGateway(ports);
   t.after(() => gateway.kill());
-  await sleep(1200);
+  await waitForGateway(gateway, ports.gatewayPort);
 
   const dead = await ask(ports.gatewayPort);
-  assert.equal(dead.status, 502, 'a dead upstream must be a gateway failure, never an empty success');
+  assert.equal(
+    dead.status,
+    502,
+    'a dead upstream must be a gateway failure, never an empty success',
+  );
   // Bounded well inside the page's own request budget, so the interface still
   // reaches a terminal state quickly.
   assert.ok(dead.ms < 12_000, `gave up after ${dead.ms}ms, which is too long to hold a reader`);
@@ -149,10 +178,14 @@ test('a reader who leaves mid-retry does not take the gateway down', async (t) =
   const ports = await reservePorts();
   const gateway = startGateway(ports);
   t.after(() => gateway.kill());
-  await sleep(1200);
+  await waitForGateway(gateway, ports.gatewayPort);
 
   for (let i = 0; i < 6; i++) {
-    const request = http.get({ host: '127.0.0.1', port: ports.gatewayPort, path: '/api/v1/backend-info' });
+    const request = http.get({
+      host: '127.0.0.1',
+      port: ports.gatewayPort,
+      path: '/api/v1/backend-info',
+    });
     request.on('error', () => undefined);
     // Abandon the request while it is still waiting on a refused upstream.
     await sleep(300);
@@ -178,8 +211,8 @@ test('a reader who leaves mid-retry does not take the gateway down', async (t) =
  * would turn a bounded degradation into an outage.
  */
 test('an index restart is bridged, and only address traffic waits for it', async (t) => {
-  const ports = await reservePorts();
-  const esploraPort = await freePort();
+  const ports = await reservePorts(true);
+  const { esploraPort } = ports;
   await assertNothingIsListening(esploraPort);
 
   const backend = http.createServer((_, response) => {
@@ -191,7 +224,7 @@ test('an index restart is bridged, and only address traffic waits for it', async
 
   const gateway = startGateway({ ...ports, esploraPort });
   t.after(() => gateway.kill());
-  await sleep(1200);
+  await waitForGateway(gateway, ports.gatewayPort);
 
   // The index is down. An address request enters the retry loop.
   const address = ask(ports.gatewayPort, '/api/address/1Q2TWHE3GMdB6BZKafqwxXtWAWgFt5Jvm3');
@@ -200,11 +233,18 @@ test('an index restart is bridged, and only address traffic waits for it', async
   const backendInfo = await ask(ports.gatewayPort, '/api/v1/backend-info');
   assert.equal(backendInfo.status, 200, 'a down index must not take the explorer backend with it');
   const document = await ask(ports.gatewayPort, '/');
-  assert.ok(document.status === 200 || document.status === 503, 'the frontend must still be served');
+  assert.ok(
+    document.status === 200 || document.status === 503,
+    'the frontend must still be served',
+  );
 
   // The index comes back, and the waiting request is answered rather than failed.
   const index = http.createServer((request, response) => {
-    assert.equal(request.url, '/address/1Q2TWHE3GMdB6BZKafqwxXtWAWgFt5Jvm3', 'the /api prefix must be stripped');
+    assert.equal(
+      request.url,
+      '/address/1Q2TWHE3GMdB6BZKafqwxXtWAWgFt5Jvm3',
+      'the /api prefix must be stripped',
+    );
     response.writeHead(200, { 'content-type': 'application/json' });
     response.end('{"address":"1Q2TWHE3GMdB6BZKafqwxXtWAWgFt5Jvm3"}');
   });
@@ -212,17 +252,21 @@ test('an index restart is bridged, and only address traffic waits for it', async
   t.after(() => index.close());
 
   const bridged = await address;
-  assert.equal(bridged.status, 200, 'an index restart should be bridged, not reported as a failure');
+  assert.equal(
+    bridged.status,
+    200,
+    'an index restart should be bridged, not reported as a failure',
+  );
 });
 
 test('an index that is genuinely gone is reported as unavailable, not as an empty address', async (t) => {
-  const ports = await reservePorts();
-  const esploraPort = await freePort();
+  const ports = await reservePorts(true);
+  const { esploraPort } = ports;
   await assertNothingIsListening(esploraPort);
 
   const gateway = startGateway({ ...ports, esploraPort });
   t.after(() => gateway.kill());
-  await sleep(1200);
+  await waitForGateway(gateway, ports.gatewayPort);
 
   const dead = await ask(ports.gatewayPort, '/api/address/1Q2TWHE3GMdB6BZKafqwxXtWAWgFt5Jvm3');
   // Never 200 with an empty body. An address page that renders a zero balance
@@ -232,8 +276,8 @@ test('an index that is genuinely gone is reported as unavailable, not as an empt
 });
 
 test('the index administrative surface is refused rather than proxied', async (t) => {
-  const ports = await reservePorts();
-  const esploraPort = await freePort();
+  const ports = await reservePorts(true);
+  const { esploraPort } = ports;
 
   let reachedTheIndex = false;
   const index = http.createServer((_, response) => {
@@ -246,7 +290,7 @@ test('the index administrative surface is refused rather than proxied', async (t
 
   const gateway = startGateway({ ...ports, esploraPort });
   t.after(() => gateway.kill());
-  await sleep(1200);
+  await waitForGateway(gateway, ports.gatewayPort);
 
   const internal = await ask(ports.gatewayPort, '/api/internal/txs');
   assert.equal(internal.status, 404, 'the index administrative routes must not be public');

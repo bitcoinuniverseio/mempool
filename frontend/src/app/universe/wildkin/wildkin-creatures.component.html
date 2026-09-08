@@ -1,6 +1,6 @@
 <div class="container-xl product-page">
   <header class="page-head">
-    <nav class="crumbs">
+    <nav class="crumbs" aria-label="Breadcrumb" i18n-aria-label="universe.breadcrumb-label">
       <a [routerLink]="['/protocols']">Protocols</a>
       <span class="divider">/</span>
       <a [routerLink]="['/wildkin']">Wildkin</a>
@@ -13,9 +13,9 @@
     </p>
   </header>
 
-  <nav class="nav-tabs">
+  <nav class="nav-tabs" aria-label="Product sections" i18n-aria-label="universe.product-sections-label">
     <a [routerLink]="['/wildkin']">Overview</a>
-    <a [routerLink]="['/wildkin/creatures']" class="active">Creatures</a>
+    <a [routerLink]="['/wildkin/creatures']" class="active" aria-current="page">Creatures</a>
     <a [routerLink]="['/wildkin/bloodlines']">Bloodlines & Braids</a>
   </nav>
 
@@ -53,14 +53,14 @@
         </div>
 
         <div style="margin-top: 1rem;">
-          <p><strong>Binding UTXO:</strong> <span class="mono">{{ vm.selected.bindingUtxo }}</span></p>
-          <p><strong>Owner:</strong> <span class="mono">{{ vm.selected.ownerAddress }}</span></p>
+          <p><strong>Binding UTXO:</strong> <span class="mono"><app-universe-identifier [value]="vm.selected.bindingUtxo" label="binding UTXO"></app-universe-identifier></span></p>
+          <p><strong>Owner:</strong> <span class="mono"><app-universe-identifier [value]="vm.selected.ownerAddress" label="owner address"></app-universe-identifier></span></p>
           <p *ngIf="vm.selected.parentAId">
             <strong>Parentage:</strong>
             <a [routerLink]="['/wildkin/creature', vm.selected.parentAId]">{{ vm.selected.parentAId }}</a> and
             <a [routerLink]="['/wildkin/creature', vm.selected.parentBId]">{{ vm.selected.parentBId }}</a>
           </p>
-          <p><strong>Genome Hex (CBOR):</strong> <span class="mono">{{ vm.selected.genomeHex }}</span></p>
+          <p><strong>Genome Hex (CBOR):</strong> <span class="mono"><app-universe-identifier [value]="vm.selected.genomeHex" label="genome data"></app-universe-identifier></span></p>
           <p><strong>Ruleset Version:</strong> v{{ vm.selected.rulesetVersion }} (draft)</p>
         </div>
       </section>
@@ -69,7 +69,8 @@
     <!-- List View -->
     <ng-container *ngIf="vm.kind === 'ready' && vm.creatures">
       <section class="panel">
-        <table class="data-table">
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Wildkin creatures" i18n-aria-label="universe.wildkin.creatures-table">
+          <table class="data-table">
           <thead>
             <tr>
               <th>Creature ID</th>
@@ -82,15 +83,16 @@
           </thead>
           <tbody>
             <tr *ngFor="let c of vm.creatures">
-              <td class="mono"><a [routerLink]="['/wildkin/creature', c.creatureId]">{{ c.creatureId }}</a></td>
+              <td class="mono"><app-universe-identifier [value]="c.creatureId" label="creature ID" [link]="['/wildkin/creature', c.creatureId]"></app-universe-identifier></td>
               <td><strong>{{ c.name }}</strong></td>
               <td>Gen {{ c.generation }}</td>
               <td><span class="badge badge-success">{{ c.status }}</span></td>
-              <td class="mono">{{ c.bindingUtxo.slice(0, 16) }}...</td>
+              <td class="mono"><app-universe-identifier [value]="c.bindingUtxo" label="binding UTXO"></app-universe-identifier></td>
               <td>{{ c.parentAId ? (c.parentAId + ' + ' + c.parentBId) : 'Gen 0 Alpha' }}</td>
             </tr>
           </tbody>
-        </table>
+          </table>
+        </div>
       </section>
     </ng-container>
   </ng-container>

@@ -16,9 +16,9 @@
  * two sides disagree about, and it belongs between a green matrix and a
  * cutover rather than after one.
  *
- * It reports what each page rendered rather than asserting: the deployment
- * it reads is live, so a chain in a genuine outage would fail assertions
- * for telling the truth. Read the output, and the screenshots beside it.
+ * It reports what each page rendered and fails when a page cannot load, its
+ * document or API requests fail, or the browser records a console/runtime
+ * error. A live outage is a failed production check, not a passing report.
  *
  * Usage:
  *   node live-e2e.mjs [--local=URL] [--live=URL] [--out=DIR] <path>...
@@ -29,6 +29,8 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import playwright from 'playwright';
+import { liveFailureMessages } from './browser-gate-results.mjs';
+import { routesFor } from './route-scenarios.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const args = [];
@@ -45,7 +47,10 @@ for (const argument of process.argv.slice(2)) {
 const LOCAL = (options.local || 'http://127.0.0.1:8123').replace(/\/+$/, '');
 const LIVE = (options.live || 'https://explorer.bitcoinuniverse.io').replace(/\/+$/, '');
 const OUT = resolve(options.out || join(HERE, 'artifacts-live'));
-const PATHS = args.length ? args : ['dogecoin', 'zcash'];
+const LOCAL_ORIGIN = new URL(LOCAL).origin;
+const PATHS = args.length
+  ? args.map((path) => ({ id: path || 'root', path: `/${path}` }))
+  : routesFor('live');
 
 mkdirSync(OUT, { recursive: true });
 
@@ -97,9 +102,13 @@ function readPage() {
 }
 
 console.log(`local ${LOCAL}, API from ${LIVE}`);
-for (const path of PATHS) {
+const results = [];
+for (const route of PATHS) {
+  const path = route.path;
   const page = await context.newPage();
   const errors = [];
+  const failedResponses = [];
+  const failures = [];
   page.on('console', (message) => {
     // A websocket to the local gateway has no upstream here and its refusal
     // is a fact about this harness, not about the build.
@@ -109,24 +118,43 @@ for (const path of PATHS) {
     }
   });
   page.on('pageerror', (error) => errors.push(`pageerror: ${String(error).slice(0, 140)}`));
+  page.on('response', (response) => {
+    const url = new URL(response.url());
+    const relevant = url.origin === LOCAL_ORIGIN
+      && (url.pathname.startsWith('/api/') || response.request().resourceType() === 'document');
+    if (relevant && response.status() >= 400) {
+      failedResponses.push(`${response.status()} ${url.pathname}${url.search}`);
+    }
+  });
   try {
-    await page.goto(`${LOCAL}/${path}`, { waitUntil: 'networkidle', timeout: 60_000 });
+    await page.goto(`${LOCAL}${path}`, { waitUntil: 'networkidle', timeout: 60_000 });
     await page.waitForTimeout(3_500);
     const facts = await page.evaluate(readPage);
     await page.screenshot({
-      path: join(OUT, `${path.replace(/[^a-z0-9]+/gi, '_') || 'root'}.png`),
+      path: join(OUT, `${route.id.replace(/[^a-z0-9]+/gi, '_') || 'root'}.png`),
     });
-    console.log(`\n--- /${path}`);
+    console.log(`\n--- ${path}`);
     console.log(JSON.stringify(facts, null, 1));
   } catch (error) {
-    console.log(`\n--- /${path}`);
-    console.log(`  did not load: ${String(error).slice(0, 140)}`);
+    console.log(`\n--- ${path}`);
+    const message = `did not load (${String(error).slice(0, 140)})`;
+    console.log(`  ${message}`);
+    failures.push(message);
   }
   if (errors.length) {
     console.log('  console errors:', errors.slice(0, 4));
+    failures.push(...errors.map((error) => `console error (${error})`));
   }
+  if (failedResponses.length) {
+    console.log('  failed responses:', failedResponses.slice(0, 6));
+    failures.push(...failedResponses.map((response) => `failed response (${response})`));
+  }
+  results.push({ path, failures });
   await page.close();
 }
 
 await browser.close();
 console.log(`\nscreenshots in ${OUT}`);
+const failures = liveFailureMessages(results);
+for (const failure of failures) console.error(`  FAIL  ${failure}`);
+process.exitCode = failures.length ? 1 : 0;

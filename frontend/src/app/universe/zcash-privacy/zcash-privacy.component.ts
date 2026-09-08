@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { BehaviorSubject, Observable, catchError, of } from 'rxjs';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
+import { formatAtomicAmount } from '@app/universe/universe-evidence';
 import { ZcashPrivacySummary } from '@app/universe/universe.types';
 
 interface PrivacyViewModel {
@@ -20,20 +21,22 @@ interface PrivacyViewModel {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ZcashPrivacyComponent implements OnInit {
-  // Templates format raw strings through the Number global; AOT needs it bound.
-  protected readonly Number = Number;
-  private readonly state = new BehaviorSubject<PrivacyViewModel>({ kind: 'loading' });
+  protected readonly formatAtomicAmount = formatAtomicAmount;
+  private readonly state = new BehaviorSubject<PrivacyViewModel>({
+    kind: 'loading',
+  });
   readonly vm$: Observable<PrivacyViewModel> = this.state.asObservable();
 
   constructor(
     private api: UniverseApiService,
-    private seo: SeoService,
+    private seo: SeoService
   ) {
     this.seo.setTitle('Zcash Privacy Observatory');
   }
 
   ngOnInit(): void {
-    this.api.getZcashPrivacySummary$()
+    this.api
+      .getZcashPrivacySummary$()
       .pipe(catchError(() => of(null)))
       .subscribe((summary) => {
         if (!summary) {

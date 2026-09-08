@@ -2,14 +2,33 @@ const http = require('http');
 const https = require('https');
 import { readFileSync } from 'fs';
 
-const JsonRPC = function (opts) {
+const JsonRPC = function (this: any, opts: any) {
   // @ts-ignore
   this.opts = opts || {};
   // @ts-ignore
   this.http = this.opts.ssl ? https : http;
+  const requestedMaxSockets = this.opts.maxSockets === undefined
+    ? 8
+    : Number(this.opts.maxSockets);
+  if (!Number.isInteger(requestedMaxSockets) || requestedMaxSockets < 1 || requestedMaxSockets > 8) {
+    throw new Error('Bitcoin RPC maxSockets must be an integer from 1 to 8');
+  }
+  const maxSockets = requestedMaxSockets;
+  // One bounded pool is shared by every call made through this client. Core is
+  // a shared service, so opening a new socket for each RPC call both wastes
+  // connection capacity and lets bursty page loads overwhelm other users.
+  // @ts-ignore
+  this.agent = new this.http.Agent({
+    keepAlive: true,
+    keepAliveMsecs: 1000,
+    maxSockets,
+    maxTotalSockets: maxSockets,
+    maxFreeSockets: Math.min(maxSockets, 4),
+    scheduling: 'lifo',
+  });
 };
 
-JsonRPC.prototype.call = function (method, params) {
+JsonRPC.prototype.call = function (method, params, callOptions) {
   return new Promise((resolve, reject) => {
     const time = Date.now();
     let requestJSON;
@@ -44,9 +63,9 @@ JsonRPC.prototype.call = function (method, params) {
       path: '/',
       headers: {
         'Host': this.opts.host || 'localhost',
-        'Content-Length': requestJSON.length
+        'Content-Length': Buffer.byteLength(requestJSON, 'utf8')
       },
-      agent: false,
+      agent: this.agent,
       rejectUnauthorized: this.opts.ssl && this.opts.sslStrict !== false
     };
 
@@ -70,43 +89,65 @@ JsonRPC.prototype.call = function (method, params) {
     // Now we'll make a request to the server
     let cbCalled = false;
     const request = this.http.request(requestOptions);
+    const configuredTimeout = Number(this.opts.timeout);
+    const defaultTimeout = Number.isFinite(configuredTimeout) && configuredTimeout > 0
+      ? configuredTimeout
+      : 30000;
+    const requestedTimeout = Number(callOptions?.timeout);
+    const requestTimeout = callOptions && typeof callOptions === 'object' &&
+      Number.isFinite(requestedTimeout) && requestedTimeout > 0
+      ? Math.min(defaultTimeout, requestedTimeout)
+      : defaultTimeout;
+    const rejectOnce = (error: Error, destroyRequest = false) => {
+      if (cbCalled) {return;}
+      cbCalled = true;
+      clearTimeout(reqTimeout);
+      if (destroyRequest) {
+        request.destroy();
+      }
+      reject(error);
+    };
 
     // start request timeout timer
     const reqTimeout = setTimeout(function () {
-      if (cbCalled) {return;}
-      cbCalled = true;
-      request.abort();
       const err = new Error('ETIMEDOUT');
       // @ts-ignore
       err.code = 'ETIMEDOUT';
-      reject(err);
-    }, this.opts.timeout || 30000);
+      rejectOnce(err, true);
+    }, requestTimeout);
 
     // set additional timeout on socket in case of remote freeze after sending headers
-    request.setTimeout(this.opts.timeout || 30000, function () {
-      if (cbCalled) {return;}
-      cbCalled = true;
-      request.abort();
+    request.setTimeout(requestTimeout, function () {
       const err = new Error('ESOCKETTIMEDOUT');
       // @ts-ignore
       err.code = 'ESOCKETTIMEDOUT';
-      reject(err);
+      rejectOnce(err, true);
     });
 
     request.on('error', function (err) {
-      if (cbCalled) {return;}
-      cbCalled = true;
-      clearTimeout(reqTimeout);
-      reject(err);
+      rejectOnce(err);
     });
 
     request.on('response', (response) => {
-      clearTimeout(reqTimeout);
-
       // We need to buffer the response chunks in a nonblocking way.
       let buffer = '';
       response.on('data', function (chunk) {
         buffer = buffer + chunk;
+      });
+      response.on('aborted', () => {
+        const err = new Error('Bitcoin RPC response aborted');
+        // @ts-ignore
+        err.code = 'ECONNRESET';
+        rejectOnce(err, true);
+      });
+      response.on('error', (err) => rejectOnce(err, true));
+      response.on('close', () => {
+        if (!response.complete) {
+          const err = new Error('Bitcoin RPC response closed before completion');
+          // @ts-ignore
+          err.code = 'ECONNRESET';
+          rejectOnce(err, true);
+        }
       });
       // When all the responses are finished, we decode the JSON and
       // depending on whether it's got a result or an error, we call
@@ -116,6 +157,7 @@ JsonRPC.prototype.call = function (method, params) {
 
         if (cbCalled) {return;}
         cbCalled = true;
+        clearTimeout(reqTimeout);
 
         try {
           var decoded = JSON.parse(buffer);

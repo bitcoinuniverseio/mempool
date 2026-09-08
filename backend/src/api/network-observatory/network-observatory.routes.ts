@@ -1,6 +1,6 @@
 import { Application, Request, Response } from 'express';
 import config from '../../config';
-import { handleError } from '../../utils/api';
+import { handleFailClosedError as handleError } from '../_shared/first-party-data';
 import { networkObservatoryService } from './network-observatory.service';
 
 class NetworkObservatoryRoutes {

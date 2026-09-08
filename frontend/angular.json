@@ -165,6 +165,7 @@
             "main": "src/main.ts",
             "polyfills": "src/polyfills.ts",
             "tsConfig": "tsconfig.app.json",
+            "webWorkerTsConfig": "tsconfig.worker.json",
             "assets": [
               "src/favicon.ico",
               "src/resources",
@@ -193,9 +194,7 @@
             "sourceMap": true,
             "optimization": false,
             "namedChunks": true,
-            "allowedCommonJsDependencies": [
-              "qrcode"
-            ]
+            "allowedCommonJsDependencies": ["qrcode"]
           },
           "configurations": {
             "production": {
@@ -345,9 +344,7 @@
           "options": {
             "browserTarget": "mempool:build:production",
             "serverTarget": "mempool:server:production",
-            "routes": [
-              "/"
-            ]
+            "routes": ["/"]
           },
           "configurations": {
             "production": {}

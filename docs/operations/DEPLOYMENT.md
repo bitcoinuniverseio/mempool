@@ -15,6 +15,7 @@ explorer.bitcoinuniverse.io          public origin, TLS terminated at the gatewa
        /api/v1/bitcoin/*   ->  universe-explorer-overlay   127.0.0.1:3400
        /api/v1/dogecoin/*  ->  universe-explorer-overlay   127.0.0.1:3400
        /api/v1/zcash/*     ->  universe-explorer-overlay   127.0.0.1:3400
+       /api/v2/universe/*  ->  universe-explorer-overlay   127.0.0.1:3400
        /api/v1/*           ->  universe-explorer-backend   127.0.0.1:8996
        /api/internal/*     ->  refused here, never proxied
        /api/*              ->  universe-explorer-electrs   127.0.0.1:3001
@@ -361,8 +362,9 @@ suite can see that.
    (`.github/workflows/universe-ci.yml`), including the branding, origin, and
    text gates against both the source tree and `frontend/dist`, the backend
    integration tests against a real database, and the visual matrix.
-2. Build on the runner fleet and pack `backend/dist`, `frontend/dist`, and
-   `scripts/universe` into one artifact.
+2. Build on the release runner class and pack `backend/dist`, the pruned
+   production dependency tree, `frontend/dist`, `scripts/universe`, and the
+   service units into one artifact named with the full 40-character commit.
 2b. Refresh `/usr/local/bin/universe-explorer-release` from the artifact
    before using it. It is a copy, not a symlink, so it does not travel with a
    release and will otherwise run the previous release's gates against the new
@@ -371,19 +373,32 @@ suite can see that.
    existed.
 
    ```bash
-   tar -xzOf mempool-<sha>.tar.gz scripts/universe/release.sh      > /usr/local/bin/universe-explorer-release.new
-   chmod 0755 /usr/local/bin/universe-explorer-release.new
-   mv -f /usr/local/bin/universe-explorer-release.new /usr/local/bin/universe-explorer-release
+   (
+     set -euo pipefail
+     explorer_sha='<explorer-full-sha>'
+     artifact="mempool-$explorer_sha.tar.gz"
+     tool_tmp=$(mktemp /usr/local/bin/universe-explorer-release.XXXXXX)
+     trap 'rm -f "$tool_tmp"' EXIT
+
+     sha256sum -c "$artifact.sha256"
+     tar -xzOf "$artifact" scripts/universe/release.sh > "$tool_tmp"
+     chmod 0755 "$tool_tmp"
+     mv -f "$tool_tmp" /usr/local/bin/universe-explorer-release
+
+     universe-explorer-release install "$explorer_sha" "$artifact"
+     universe-explorer-release preflight "$explorer_sha"
+   )
    ```
 
    Taking it from the tarball rather than a checkout keeps the tool and the
    release it installs on the same commit.
 
-3. `universe-explorer-release install <sha> <artifact>` unpacks it beside the
-   running release under `/opt/universe-explorer/releases/mempool-<sha>/` and
-   hard-links the dependency tree from the release in use. A release directory
-   is never overwritten in place.
-4. `universe-explorer-release preflight <sha>` runs the gates and changes
+3. `universe-explorer-release install <full-sha> <artifact>` checks the paired
+   checksum, unpacks into a private staging directory, checks the manifest and
+   production dependencies, then moves the staged tree into
+   `/opt/universe-explorer/releases/mempool-<full-sha>/`. It does not build,
+   install packages, reuse a prior dependency tree, or overwrite a release.
+4. `universe-explorer-release preflight <full-sha>` runs the gates and changes
    nothing. It refuses a release whose build is incomplete, whose manifest is
    missing or names a different commit from the one being installed, whose
    configuration would advertise a feature it cannot serve, whose database does
@@ -401,16 +416,18 @@ suite can see that.
    query for a known address. Every configured source, fallbacks included, has
    to be loopback or a Unix socket, so a third-party API cannot be introduced
    through the one path nobody watches.
-5. `universe-explorer-release cutover <sha>` runs the gates again, swaps the
+5. `universe-explorer-release cutover <full-sha>` runs the gates again, swaps the
    `current` symlink atomically, restarts what has to restart, and verifies.
+   Set `UNIVERSE_EXPLORER_REQUIRED_OVERLAY_SHA` to the full commit in
+   `current-overlay` for every cutover. The command refuses to move the link
+   without it and requires that identity both directly and through the gateway.
 
-   The backend and the overlay run from a path baked into their unit at exec
-   time, so they always restart; they take a few seconds to listen again, and
-   the gateway waits for them rather than answering 502. The gateway resolves
-   its static root per request, so a new frontend reaches it through the
-   symlink with no restart, and it is restarted only when its own file
-   changed. A cutover was probed once a second through the restart window and
-   every request returned 200.
+   The backend runs from a path baked into its unit at exec time, so it
+   restarts and the gateway waits for it rather than answering 502. The
+   overlay uses `current-overlay` and its own release script. An Explorer
+   cutover never restarts or changes it. The gateway resolves its static root
+   per request, so a new frontend reaches it through the symlink with no
+   restart. The gateway restarts only when its own file changed.
 
    When the gateway does change, it restarts before the backend, and that
    order matters as soon as a release moves which upstream owns a path.
@@ -439,11 +456,16 @@ suite can see that.
    under a probe every 20 milliseconds returned 200 on all 400 requests while
    the process id changed underneath. The handover is not an assumption.
 
-   Adopting it on a gateway that is already running costs one brief
-   interruption, since the running process holds the port without
-   `SO_REUSEPORT` and the socket unit cannot bind underneath it. Every deploy
-   after that is seamless. The cutover log states which of the two cases
-   applies rather than leaving a reader to assume.
+   Never bind the socket underneath a gateway that already owns port 8099.
+   For the one-time adoption, start the new gateway on a second loopback port,
+   put that verified port behind a second edge upstream, and switch the edge to
+   it first. Only then stop the old 8099 process, install and enable the socket
+   unit and service drop-in, start the new gateway through that socket, and
+   verify 8099 directly. Switch the edge back only after the direct health,
+   address, identity, and WebSocket probes pass. Keep the second gateway alive
+   through the edge connection drain, then stop it. At every point one verified
+   listener owns new traffic, so first adoption has no refused-connection
+   interval.
 
    Once the socket owns the port it outlives the service, so stopping the
    service alone does not take the gateway down: the next connection starts it
@@ -518,12 +540,10 @@ suite can see that.
    Internet, and Chrome on iPhone.
 9. Keep the previous release directory until the stability window closes.
 
-Rolling back to a release from before the socket handover needs the port back,
-because such a gateway opens 8099 itself and dies on bind while systemd holds
-it. `release.sh rollback` detects that case by looking for `inheritedListenerFd`
-in the target release and disables the socket first. That is worth knowing by
-hand too, since the rollback path is reached exactly when something has already
-gone wrong.
+Do not roll back below the first socket and dynamic-route baseline. Such a tree
+cannot accept the inherited listener or preserve paired overlay state.
+`release.sh rollback` rejects it before moving the link. Keep that verified
+baseline as the rollback floor until every later stability window closes.
 
 ## Database growth and retention
 
@@ -567,11 +587,15 @@ backend reporting different builds. The same script runs hourly in CI through
 ## Rollback
 
 ```bash
-universe-explorer-release rollback <previous-sha>
+UNIVERSE_EXPLORER_REQUIRED_OVERLAY_SHA=<current-overlay-full-sha> \
+  universe-explorer-release rollback <explorer-rollback-full-sha>
 ```
 
-It points the symlink back, restarts the three units, and verifies the result,
-failing loudly if the rollback target does not come back either.
+It gates the current and target trees, changes the symlink, restarts the
+Explorer backend, restarts the gateway only when its code differs, and verifies
+the exact result before hiding Portfolio v2. It does not restart the separately
+released overlay. Complete the paired sequence below before changing that
+overlay.
 
 Configuration lives outside the release directory, so a rollback carries the
 configuration forward. Database migrations do not roll back: they are additive,
@@ -649,10 +673,10 @@ Every artifact carries `RELEASE-MANIFEST.json` at its root, generated from the
 commit being built by `scripts/universe/release-manifest.mjs`. It names the one
 commit the frontend, the explorer backend and the gateway in that artifact all
 come from, and the contract versions this frontend reads. It deliberately does
-not pin the overlay commit: the overlay is built from another repository on its
-own release train, so what the manifest requires of it is the contract and an
-identity it can state, and the commit it reports is recorded rather than
-required.
+not pin the overlay commit because the overlay is built from another repository
+on its own release train. The cutover command separately takes the required
+live overlay SHA and checks that exact identity directly before the switch and
+through the gateway afterwards.
 
 ```bash
 node scripts/universe/release-manifest.mjs verify   --manifest=/opt/universe-explorer/current/RELEASE-MANIFEST.json   --origin=https://explorer.bitcoinuniverse.io
@@ -673,17 +697,119 @@ neither was visible from anything that was being checked:
   the service started, so the only signal was a word on a public page.
 
 The overlay now reads its own release directory's `RELEASE-SHA` when the
-variable is absent, which is an identity that cannot drift from the artifact,
-and with `NODE_ENV=production` it refuses to start when neither is a commit.
-Installing an overlay release therefore has one requirement beyond unpacking it:
+variable is absent, which is an identity that cannot drift from the artifact.
+With `NODE_ENV=production` it refuses to start when neither source contains a
+full commit.
+
+Build the overlay through `backend-apis/.github/workflows/universe-explorer-overlay-release.yml`.
+That job installs from the lock file, checks the generated contracts, builds,
+prunes development dependencies, starts the staged artifact, and checks the
+public v2 path and release identity. It emits a checksum beside an archive
+named with the full commit.
+
+### First dynamic-route migration
+
+The first paired release needs a gateway that understands the atomic overlay
+route file before the overlay can use two live slots. If
+`/__gateway/overlay-route` does not report `dynamic: true`, first build an
+Explorer baseline whose only runtime changes are the gateway and release
+controls. Install it normally, make sure
+`universe-explorer-gateway.socket` is already active, then run:
 
 ```bash
-printf '%s
-' "<sha>" > /opt/universe-explorer/releases/backend-apis-<sha>/RELEASE-SHA
-ln -sfn /opt/universe-explorer/releases/backend-apis-<sha> /opt/universe-explorer/current-overlay.new
-mv -Tf /opt/universe-explorer/current-overlay.new /opt/universe-explorer/current-overlay
-systemctl restart universe-explorer-overlay
+UNIVERSE_EXPLORER_REQUIRED_OVERLAY_SHA=<current-overlay-full-sha> \
+  universe-explorer-release cutover <baseline-explorer-full-sha> \
+  --gateway-baseline
 ```
+
+Baseline mode requires the exact current overlay identity, a changed gateway,
+the dynamic route schema, and the active socket. It compares the old and new
+frontend behavior, backend build, lock file, and production dependency tree,
+and refuses any feature-bearing baseline. The commit-only frontend config may
+differ. Systemd keeps the listener bound while the gateway process changes, so
+new connections queue until the new process accepts them. Only after the new
+gateway is healthy does the command create the persistent route state with
+Portfolio v2 hidden. If any step fails, it restores the exact prior Explorer
+tree while the socket continues accepting connections.
+
+If the socket itself has not been adopted, complete the edge-assisted two-slot
+procedure in step 5 first. Never stop the only public gateway to bind the socket.
+
+### Paired forward release
+
+Use this order for the release that first exposes Portfolio v2 and for every
+later paired overlay change:
+
+```bash
+(
+  set -euo pipefail
+  overlay_sha='<overlay-full-sha>'
+  artifact="backend-apis-$overlay_sha.tar.zst"
+  tool_tmp=$(mktemp /usr/local/bin/universe-explorer-overlay-release.XXXXXX)
+  trap 'rm -f "$tool_tmp"' EXIT
+
+  sha256sum -c "$artifact.sha256"
+  tar --zstd -xOf "$artifact" \
+    scripts/universe-explorer-overlay-release.sh > "$tool_tmp"
+  chmod 0755 "$tool_tmp"
+  mv -f "$tool_tmp" /usr/local/bin/universe-explorer-overlay-release
+  universe-explorer-overlay-release install "$overlay_sha" "$artifact"
+  universe-explorer-overlay-release preflight "$overlay_sha"
+)
+
+universe-explorer-overlay-release cutover <overlay-full-sha> --defer-gateway
+
+UNIVERSE_EXPLORER_REQUIRED_OVERLAY_SHA=<overlay-full-sha> \
+  universe-explorer-release cutover <explorer-full-sha>
+universe-explorer-overlay-release verify <overlay-full-sha>
+```
+
+Overlay preflight starts the exact installed tree on a spare loopback port in
+explicit candidate mode. It removes persistent path variables, makes the
+system tree read-only, disables every bootstrap poller and interval, and checks
+v1 identity, the public v2 contract, and direct v2 refusal. It cannot mutate
+production state.
+
+The deferred cutover starts a read-only candidate against the production read
+stores, proves its exact SHA, and atomically sends new HTTP and WebSocket
+traffic to it. The old process keeps existing sockets for an explicit drain
+interval, then closes them gracefully with WebSocket code 1012. The candidate
+continues serving while the stable process starts and is not stopped until the
+gateway has moved back to the verified stable port. Portfolio v2 preserves its
+prior gateway state during this command. It stays hidden on the first rollout
+and stays available during later compatible upgrades.
+
+The Explorer cutover checks the required overlay directly, enables v2 while
+the old frontend is still live, then verifies the same full SHA through the
+gateway. The route state lives at
+`/var/lib/universe-explorer/overlay-route.json` and survives reboot. Both
+release tools take `/run/lock/universe-explorer-deploy.lock`, so paired commands
+must run sequentially.
+
+### Paired rollback
+
+Rollback order is fixed:
+
+```bash
+UNIVERSE_EXPLORER_REQUIRED_OVERLAY_SHA=<current-overlay-full-sha> \
+  universe-explorer-release rollback <explorer-rollback-full-sha>
+universe-explorer-overlay-release rollback <overlay-rollback-full-sha> \
+  --gateway-first
+```
+
+The Explorer rollback preserves the current Portfolio v2 state while it moves
+to and verifies the exact rollback frontend, backend, and gateway. New gateway
+code stays in front of the rollback backend until that backend is accepting;
+the socket holds the listener if gateway code must then restart. Only after the
+rollback Explorer is healthy does the command hide Portfolio v2. A failed
+target restores the exact prior Explorer tree and its prior route state.
+
+The overlay rollback refuses to start until it observes that hidden state,
+then gates the exact rollback tree and uses the same two-slot handoff. An
+overlay tree without passive candidate support is rejected. On the first
+release, roll back Explorer and leave the additive overlay live but hidden
+until a candidate-safe overlay rollback floor exists. Never roll back the
+overlay first. Never use an abbreviated SHA.
 
 `synthetic-check.mjs` fails the release when any chain document reports
 `development`, reports something that is not a commit, or when the three chains

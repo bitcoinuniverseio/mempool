@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { BehaviorSubject, Observable, catchError, of } from 'rxjs';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
+import { UniverseIdentifierComponent } from '@app/universe/universe-identifier.component';
 import { WildkinStatusSummary } from '@app/universe/universe.types';
 
 interface WildkinViewModel {
@@ -16,7 +17,7 @@ interface WildkinViewModel {
   templateUrl: './wildkin.component.html',
   styleUrls: ['../product-page.scss'],
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, UniverseIdentifierComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WildkinComponent implements OnInit {
