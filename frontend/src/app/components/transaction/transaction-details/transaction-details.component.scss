@@ -155,9 +155,15 @@
   }
 }
 
-.accelerateDeepMempool {
+.btn.accelerateDeepMempool {
   background-color: var(--tertiary);
+  color: var(--u-text-inverse);
   margin-left: 5px;
+
+  &:hover,
+  &:focus {
+    color: var(--u-text-inverse);
+  }
 }
 
 .lens-icon {
