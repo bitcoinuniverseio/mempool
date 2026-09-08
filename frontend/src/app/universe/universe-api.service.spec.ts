@@ -112,8 +112,55 @@ describe('UniverseApiService addressing', () => {
       '/api/v1/chains?network=mainnet',
       '/api/v1/dogecoin/status?network=mainnet',
       '/api/v1/zcash/tx/' + 'a'.repeat(64) + '?network=mainnet',
-      '/api/v1/universe/search?q=tick%20%26%20rune&chain=zcash&all=true',
+      '/api/v1/universe/search?q=tick%20%26%20rune&chain=zcash&all=true&network=mainnet',
     ]);
+  });
+
+  it('searches the selected Bitcoin network and keeps other chains on mainnet', () => {
+    const urls: string[] = [];
+    const state = { isBrowser: true, env: {}, network: 'signet' } as unknown as StateService;
+    const service = new UniverseApiService({ get: (url: string) => {
+      urls.push(url);
+      return of({ activeChain: url.includes('chain=bitcoin') ? 'bitcoin' : 'dogecoin', groups: [] });
+    } } as unknown as HttpClient, state);
+    service.search$('abc', 'bitcoin', false).subscribe();
+    service.search$('abc', 'dogecoin', true).subscribe();
+    expect(urls).toEqual([
+      '/api/v1/universe/search?q=abc&chain=bitcoin&all=false&network=signet',
+      '/api/v1/universe/search?q=abc&chain=dogecoin&all=true&network=mainnet',
+    ]);
+  });
+
+  it('rejects a search answered from another network', () => {
+    const state = { isBrowser: true, env: {}, network: 'signet' } as unknown as StateService;
+    const service = new UniverseApiService({ get: () => of({
+      activeChain: 'bitcoin',
+      groups: [{ chain: 'bitcoin', network: 'mainnet', results: [] }],
+    }) } as unknown as HttpClient, state);
+    let failure: Error | undefined;
+    service.search$('abc', 'bitcoin', false).subscribe({ error: error => failure = error });
+    expect(failure?.message).toBe('authority-network-mismatch');
+  });
+
+  it('cancels a search in flight when the network changes', () => {
+    const changed = new BehaviorSubject('signet');
+    const state = { isBrowser: true, env: {}, network: 'signet', networkChanged$: changed } as unknown as StateService;
+    const pending = new Map<string, Subject<unknown>>();
+    const service = new UniverseApiService({ get: (url: string) => {
+      const response = new Subject<unknown>();
+      pending.set(url, response);
+      return response;
+    } } as unknown as HttpClient, state);
+    const received: unknown[] = [];
+    const subscription = service.search$('abc', 'bitcoin', false).subscribe(value => received.push(value));
+    state.network = 'testnet4'; changed.next('testnet4');
+    pending.get('/api/v1/universe/search?q=abc&chain=bitcoin&all=false&network=signet')
+      ?.next({ activeChain: 'bitcoin', groups: [{ chain: 'bitcoin', network: 'signet', results: [] }] });
+    expect(received).toEqual([]);
+    const answer = { activeChain: 'bitcoin', groups: [{ chain: 'bitcoin', network: 'testnet4', results: [] }] };
+    pending.get('/api/v1/universe/search?q=abc&chain=bitcoin&all=false&network=testnet4')?.next(answer);
+    expect(received).toEqual([answer]);
+    subscription.unsubscribe();
   });
 
   it('uses only allowlisted protocol route segments', () => {

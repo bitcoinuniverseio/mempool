@@ -1,7 +1,16 @@
 import { Application, Request, Response } from 'express';
 import config from '../../config';
 import { handleError } from '../../utils/api';
-import { taprootAssetsService } from './taproot-assets.service';
+import { TaprootAssetsEvidenceError, taprootAssetsService } from './taproot-assets.service';
+
+/** An absent source is a 503 that names the source, never a 500 and never an empty list. */
+function fail(req: Request, res: Response, e: unknown): void {
+  if (e instanceof TaprootAssetsEvidenceError) {
+    res.status(e.status).json({ stage: e.code, error: e.message });
+    return;
+  }
+  handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+}
 
 class TaprootAssetsRoutes {
   public initRoutes(app: Application): void {
@@ -21,7 +30,7 @@ class TaprootAssetsRoutes {
       const assets = await taprootAssetsService.$getAssets();
       res.json({ assets, total: assets.length });
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -34,7 +43,7 @@ class TaprootAssetsRoutes {
       }
       res.json(asset);
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -43,7 +52,7 @@ class TaprootAssetsRoutes {
       const groups = await taprootAssetsService.$getGroups();
       res.json({ groups, total: groups.length });
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -53,7 +62,7 @@ class TaprootAssetsRoutes {
       const result = await taprootAssetsService.$verifyProof(assetId, proofData);
       res.status(result.stage === 'invalid-input' ? 400 : 503).json(result);
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -62,7 +71,7 @@ class TaprootAssetsRoutes {
       const offers = await taprootAssetsService.$getOffers();
       res.json({ offers, total: offers.length });
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -71,7 +80,7 @@ class TaprootAssetsRoutes {
       const quotes = await taprootAssetsService.$getRfqQuotes();
       res.json({ quotes, total: quotes.length });
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 }

@@ -12,6 +12,8 @@
  *   /api/v1/anima/*     ->  the protocol overlay
  *   /api/v1/*           ->  the explorer backend, including WebSocket upgrades
  *   /api/*              ->  the first-party Esplora index, with /api stripped
+ *   /<network>/api/*    ->  that network's own backend and index, or a
+ *                           structured error when none is configured
  *   everything else     ->  the built frontend, with SPA fallback
  *
  * It exists so the public origin has a single upstream to point at, and so the
@@ -26,6 +28,10 @@
  *   UNIVERSE_GATEWAY_OVERLAY  default http://127.0.0.1:3400
  *   UNIVERSE_GATEWAY_ESPLORA  unset; the local mempool/electrs Esplora API
  *   UNIVERSE_GATEWAY_ROOT     default ./frontend/dist/mempool/browser
+ *   UNIVERSE_GATEWAY_BACKEND_SIGNET, _TESTNET, _TESTNET4
+ *                             unset; the explorer backend for that network
+ *   UNIVERSE_GATEWAY_ESPLORA_SIGNET, _TESTNET, _TESTNET4
+ *                             unset; the Esplora index for that network
  */
 
 import http from 'node:http';
@@ -54,7 +60,35 @@ const OVERLAY = new URL(process.env.UNIVERSE_GATEWAY_OVERLAY || 'http://127.0.0.
 const ESPLORA = process.env.UNIVERSE_GATEWAY_ESPLORA
   ? new URL(process.env.UNIVERSE_GATEWAY_ESPLORA)
   : null;
-for (const upstream of [BACKEND, OVERLAY, ESPLORA].filter(Boolean)) {
+/**
+ * The networks a path may name ahead of `/api/`, and their upstreams.
+ *
+ * The frontend addresses any network other than the root one by prefixing the
+ * path: `/signet/api/v1/fees/recommended`, `/testnet/api/tx/<txid>`. Each of
+ * those is a different chain, so each needs its own backend and, where one is
+ * run, its own index. The prefix is only ever stripped on the way to an
+ * upstream that was configured for exactly that network. It is never stripped
+ * and sent to the root backend, because that would answer a Signet question
+ * with mainnet data and nothing in the response would say so. And a prefix
+ * with no upstream is answered with a structured error rather than with the
+ * SPA document, because the caller is an API consumer, not a browser.
+ */
+const NETWORK_PREFIXES = ['signet', 'testnet4', 'testnet'];
+const NETWORK_UPSTREAMS = new Map(NETWORK_PREFIXES.map((network) => {
+  const key = network.toUpperCase();
+  const backend = process.env[`UNIVERSE_GATEWAY_BACKEND_${key}`];
+  const esplora = process.env[`UNIVERSE_GATEWAY_ESPLORA_${key}`];
+  return [network, {
+    backend: backend ? new URL(backend) : null,
+    esplora: esplora ? new URL(esplora) : null,
+  }];
+}));
+const NETWORK_API_PATH = new RegExp(`^/(${NETWORK_PREFIXES.join('|')})(/api(?:/|$)|/api$)`);
+
+for (const upstream of [
+  BACKEND, OVERLAY, ESPLORA,
+  ...[...NETWORK_UPSTREAMS.values()].flatMap((entry) => [entry.backend, entry.esplora]),
+].filter(Boolean)) {
   if (!['http:', 'https:'].includes(upstream.protocol)) {
     throw new Error('Gateway authorities must use HTTP or HTTPS.');
   }
@@ -250,9 +284,19 @@ const OVERLAY_CHAIN_PREFIXES = [
  * existing.
  */
 export function routeFor(pathname, originalUrl, acceptsHtml = false) {
+  const network = NETWORK_API_PATH.exec(pathname);
+  if (network) {
+    const prefix = `/${network[1]}`;
+    return networkRouteFor(
+      network[1],
+      pathname.slice(prefix.length),
+      originalUrl.slice(prefix.length),
+      acceptsHtml,
+    );
+  }
   // These inherited documentation aliases share the API prefix. Browser
   // navigation must reach Angular; ordinary API consumers retain their route.
-  if (acceptsHtml && /^\/api(?:\/(?:faq|api(?:\/[^/]+)?))?\/?$/.test(pathname)) {
+  if (acceptsHtml && DOCUMENTATION_ALIAS.test(pathname)) {
     return null;
   }
   if (pathname === '/api/v1/universe' || pathname.startsWith('/api/v1/universe/')) {
@@ -292,8 +336,62 @@ export function routeFor(pathname, originalUrl, acceptsHtml = false) {
   return null;
 }
 
+const DOCUMENTATION_ALIAS = /^\/api(?:\/(?:faq|api(?:\/[^/]+)?))?\/?$/;
+
+/**
+ * Dispatch for a path under a network prefix, with the prefix already removed.
+ *
+ * The shape mirrors the root table: `/api/v1/` to that network's backend, the
+ * rest of `/api/` to that network's index where one is configured and to the
+ * backend's own prefix otherwise. There is no overlay entry: the overlay is
+ * addressed by query, `?chain=&network=`, never by path prefix.
+ */
+function networkRouteFor(network, pathname, originalUrl, acceptsHtml) {
+  if (acceptsHtml && DOCUMENTATION_ALIAS.test(pathname)) {
+    return null;
+  }
+  const upstreams = NETWORK_UPSTREAMS.get(network);
+  const refuse = (status, error) => ({ upstream: null, status, body: { error, network } });
+  if (!upstreams?.backend) {
+    return refuse(503, 'network-unconfigured');
+  }
+  if (pathname === '/api/v1' || pathname.startsWith('/api/v1/')) {
+    return { upstream: upstreams.backend, path: originalUrl };
+  }
+  if (upstreams.esplora && (pathname === '/api/internal' || pathname.startsWith('/api/internal/'))) {
+    return refuse(404, 'not-found');
+  }
+  if (pathname.startsWith('/api/')) {
+    return upstreams.esplora
+      ? { upstream: upstreams.esplora, path: `/${originalUrl.slice('/api/'.length)}` }
+      : { upstream: upstreams.backend, path: `/api/v1/${originalUrl.slice('/api/'.length)}` };
+  }
+  return { upstream: upstreams.backend, path: '/api/v1/' };
+}
+
+/**
+ * Which upstream a WebSocket upgrade reaches, and the path it should see.
+ *
+ * A network-prefixed socket, `/signet/api/v1/ws`, belongs to that network's
+ * backend with the prefix removed, exactly as its HTTP family does. With no
+ * backend configured for the network the upgrade is refused: the alternative,
+ * the root backend's socket, would stream mainnet blocks to a Signet page.
+ */
+export function websocketRouteFor(pathname, originalUrl = pathname) {
+  const network = NETWORK_API_PATH.exec(pathname);
+  if (network) {
+    const backend = NETWORK_UPSTREAMS.get(network[1])?.backend ?? null;
+    const prefix = `/${network[1]}`;
+    return backend ? { upstream: backend, path: originalUrl.slice(prefix.length) } : null;
+  }
+  return {
+    upstream: pathname === '/api/v1/universe/ws' ? OVERLAY : BACKEND,
+    path: originalUrl,
+  };
+}
+
 export function websocketUpstreamFor(pathname) {
-  return pathname === '/api/v1/universe/ws' ? OVERLAY : BACKEND;
+  return websocketRouteFor(pathname)?.upstream ?? null;
 }
 
 /**
@@ -487,7 +585,7 @@ const server = http.createServer((request, response) => {
         'content-type': 'application/json; charset=utf-8',
         'cache-control': 'no-store',
       });
-      response.end(JSON.stringify({ error: 'not-found' }));
+      response.end(JSON.stringify(route.body || { error: 'not-found' }));
       return;
     }
     proxy(request, response, route);
@@ -546,9 +644,14 @@ server.on('upgrade', (request, socket, head) => {
     socket.destroy();
     return;
   }
-  const upstream = websocketUpstreamFor(pathname);
+  const route = websocketRouteFor(pathname, request.url || '/');
+  if (!route) {
+    socket.destroy();
+    return;
+  }
+  const upstream = route.upstream;
   const connected = () => {
-    const lines = [`${request.method} ${request.url} HTTP/1.1`];
+    const lines = [`${request.method} ${route.path} HTTP/1.1`];
     for (const [name, value] of Object.entries(request.headers)) {
       if (name.toLowerCase() === 'host') continue;
       for (const item of Array.isArray(value) ? value : [value]) {
