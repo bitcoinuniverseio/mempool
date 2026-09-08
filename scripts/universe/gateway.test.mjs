@@ -410,3 +410,136 @@ test('the public health document states liveness and no filesystem path', async 
     assert.equal(text.includes(marker), false, marker);
   }
 });
+
+/**
+ * Network-prefixed API families.
+ *
+ * The frontend addresses any network other than the root one by path prefix,
+ * `/signet/api/...`, and the Angular routes expose those paths. Before this
+ * table existed a prefixed request fell through to the SPA fallback and was
+ * answered with index.html. Worse would be the obvious fix of stripping the
+ * prefix and asking the root backend, which answers a Signet question with
+ * mainnet data. Neither may happen: the prefix reaches only an upstream that
+ * was configured for that network, and an unconfigured network is a
+ * structured error.
+ */
+
+const SIGNET_BACKEND_PORT = '8997';
+const SIGNET_ESPLORA_PORT = '3002';
+const TESTNET_BACKEND_PORT = '8998';
+
+const withNetworks = await (async () => {
+  process.env.UNIVERSE_GATEWAY_BACKEND_SIGNET = `http://127.0.0.1:${SIGNET_BACKEND_PORT}`;
+  process.env.UNIVERSE_GATEWAY_ESPLORA_SIGNET = `http://127.0.0.1:${SIGNET_ESPLORA_PORT}`;
+  process.env.UNIVERSE_GATEWAY_BACKEND_TESTNET = `http://127.0.0.1:${TESTNET_BACKEND_PORT}`;
+  process.env.UNIVERSE_GATEWAY_NO_LISTEN = '1';
+  const module = await import('./gateway.mjs?networks=1');
+  delete process.env.UNIVERSE_GATEWAY_BACKEND_SIGNET;
+  delete process.env.UNIVERSE_GATEWAY_ESPLORA_SIGNET;
+  delete process.env.UNIVERSE_GATEWAY_BACKEND_TESTNET;
+  return module;
+})();
+
+function networkRoute(url, acceptsHtml = false) {
+  return withNetworks.routeFor(new URL(url, 'http://x.invalid').pathname, url, acceptsHtml);
+}
+
+test('a network v1 path reaches that network backend with the prefix removed', () => {
+  const cases = [
+    ['/signet/api/v1/fees/recommended', SIGNET_BACKEND_PORT, '/api/v1/fees/recommended'],
+    ['/signet/api/v1/blocks/0', SIGNET_BACKEND_PORT, '/api/v1/blocks/0'],
+    ['/signet/api/v1/transaction-times?txId=' + 'a'.repeat(64), SIGNET_BACKEND_PORT, '/api/v1/transaction-times?txId=' + 'a'.repeat(64)],
+    ['/signet/api/v1', SIGNET_BACKEND_PORT, '/api/v1'],
+    ['/testnet/api/v1/fees/recommended', TESTNET_BACKEND_PORT, '/api/v1/fees/recommended'],
+  ];
+  for (const [url, expectedPort, expectedPath] of cases) {
+    const route = networkRoute(url);
+    assert.equal(port(route), expectedPort, url);
+    assert.equal(route.path, expectedPath, url);
+  }
+});
+
+test('a network Esplora path reaches that network index, or its backend prefix without one', () => {
+  const address = 'tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx';
+  const signet = [
+    [`/signet/api/address/${address}`, SIGNET_ESPLORA_PORT, `/address/${address}`],
+    [`/signet/api/address/${address}/txs?after_txid=abc`, SIGNET_ESPLORA_PORT, `/address/${address}/txs?after_txid=abc`],
+    ['/signet/api/blocks/tip/height', SIGNET_ESPLORA_PORT, '/blocks/tip/height'],
+    [`/signet/api/tx/${'b'.repeat(64)}`, SIGNET_ESPLORA_PORT, `/tx/${'b'.repeat(64)}`],
+  ];
+  for (const [url, expectedPort, expectedPath] of signet) {
+    const route = networkRoute(url);
+    assert.equal(port(route), expectedPort, url);
+    assert.equal(route.path, expectedPath, url);
+  }
+  // Testnet has a backend and no index, so its Esplora family is rewritten
+  // onto the backend prefix, as the root network's is without an index.
+  const route = networkRoute(`/testnet/api/address/${address}`);
+  assert.equal(port(route), TESTNET_BACKEND_PORT);
+  assert.equal(route.path, `/api/v1/address/${address}`);
+});
+
+test('a network prefix never reaches the root backend, overlay or index', () => {
+  for (const url of [
+    '/signet/api/v1/fees/recommended',
+    '/signet/api/blocks/tip/height',
+    '/testnet/api/v1/backend-info',
+    '/signet/api/v1/universe/protocols',
+  ]) {
+    const route = networkRoute(url);
+    assert.ok(route, url);
+    assert.notEqual(port(route), BACKEND_PORT, url);
+    assert.notEqual(port(route), OVERLAY_PORT, url);
+    assert.notEqual(port(route), ESPLORA_PORT, url);
+  }
+});
+
+test('an unconfigured network is a structured error, not the SPA document and not mainnet', () => {
+  for (const url of [
+    '/testnet4/api/v1/fees/recommended',
+    '/testnet4/api/blocks/tip/height',
+    '/testnet4/api',
+  ]) {
+    const route = networkRoute(url);
+    assert.ok(route, url);
+    assert.equal(route.upstream, null, url);
+    assert.equal(route.status, 503, url);
+    assert.deepEqual(route.body, { error: 'network-unconfigured', network: 'testnet4' }, url);
+  }
+  // The module bound to no network configuration at all refuses every prefix.
+  const route = routeFor('/signet/api/v1/fees/recommended', '/signet/api/v1/fees/recommended');
+  assert.equal(route.upstream, null);
+  assert.equal(route.status, 503);
+  assert.deepEqual(route.body, { error: 'network-unconfigured', network: 'signet' });
+});
+
+test('network page routes and documentation aliases still reach the frontend', () => {
+  for (const url of ['/signet', '/signet/', '/signet/tx/abc', '/testnet4/address/tb1qexample', '/signetx/api/v1']) {
+    const pathname = new URL(url, 'http://x.invalid').pathname;
+    assert.equal(port(withNetworks.routeFor(pathname, url)) ?? null, port(routeFor(pathname, url)) ?? null, url);
+    assert.ok(withNetworks.routeFor(pathname, url) === null || url === '/signetx/api/v1', url);
+  }
+  for (const url of ['/signet/api', '/signet/api/faq', '/signet/api/api/rest']) {
+    assert.equal(networkRoute(url, true), null, url);
+    assert.notEqual(networkRoute(url, false), null, url);
+  }
+});
+
+test('the network index administrative surface is refused rather than proxied', () => {
+  for (const url of ['/signet/api/internal', '/signet/api/internal/precache-scripts']) {
+    const route = networkRoute(url);
+    assert.equal(route.upstream, null, url);
+    assert.equal(route.status, 404, url);
+  }
+});
+
+test('a network socket reaches that network backend with the prefix removed, or is refused', () => {
+  const signet = withNetworks.websocketRouteFor('/signet/api/v1/ws', '/signet/api/v1/ws');
+  assert.equal(signet.upstream.port, SIGNET_BACKEND_PORT);
+  assert.equal(signet.path, '/api/v1/ws');
+  assert.equal(withNetworks.websocketRouteFor('/testnet4/api/v1/ws'), null);
+  assert.equal(websocketUpstreamFor('/signet/api/v1/ws'), null);
+  // Root sockets are unchanged.
+  assert.equal(withNetworks.websocketRouteFor('/api/v1/ws').upstream.port, BACKEND_PORT);
+  assert.equal(withNetworks.websocketRouteFor('/api/v1/universe/ws').upstream.port, OVERLAY_PORT);
+});

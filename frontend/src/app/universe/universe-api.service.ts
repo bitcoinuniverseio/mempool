@@ -342,10 +342,27 @@ export class UniverseApiService {
     );
   }
 
+  /**
+   * A search carries the selected network, and a network switch cancels the
+   * request in flight. Without the network the overlay answered every search
+   * from mainnet, so a Signet reader was sent to mainnet pages; without the
+   * switch a late mainnet answer could land on a page that had moved on.
+   */
   search$(query: string, activeChain: ExplorerChain, allChains = false): Observable<UniverseSearchResponse> {
-    return this.httpClient.get<UniverseSearchResponse>(
-      this.apiBaseUrl + '/api/v1/universe/search?q=' + encodeURIComponent(query)
-        + '&chain=' + activeChain + '&all=' + allChains
+    return this.selectedNetwork$().pipe(
+      map(network => activeChain === 'bitcoin' ? network : 'mainnet' as ExplorerNetwork),
+      distinctUntilChanged(),
+      switchMap(network => this.httpClient.get<UniverseSearchResponse>(
+        this.apiBaseUrl + '/api/v1/universe/search?q=' + encodeURIComponent(query)
+          + '&chain=' + activeChain + '&all=' + allChains + '&network=' + network,
+      ).pipe(map(response => {
+        const active = (response.groups ?? []).find(group => group.chain === activeChain);
+        if ((response.activeChain !== undefined && response.activeChain !== activeChain)
+          || (active && active.network !== network)) {
+          throw new Error('authority-network-mismatch');
+        }
+        return response;
+      }))),
     );
   }
 
