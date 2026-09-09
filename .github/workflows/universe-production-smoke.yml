@@ -80,7 +80,7 @@ jobs:
       - name: The gate can still tell a bad page from a good one
         if: ${{ !cancelled() }}
         working-directory: scripts/universe/visual-qa
-        run: node --test chain-page-audit.test.mjs
+        run: node --test chain-page-audit.test.mjs runner-network.test.mjs
 
       - name: Install the locked Chromium engine
         if: ${{ !cancelled() }}
