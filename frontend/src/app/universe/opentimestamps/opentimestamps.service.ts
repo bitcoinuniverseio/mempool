@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 export interface TimestampsOverview {
   total_proofs_tracked: number;
@@ -64,12 +65,14 @@ export class OpenTimestampsApiService {
     return this.http.get<TimestampsOverview>(`${this.baseUrl}/overview`);
   }
 
+  /** The allowlisted calendars as the backend last observed them. */
   public getCalendars$(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/calendars`);
+    return this.http.get<{ calendars: any[] }>(`${this.baseUrl}/calendars`).pipe(map(res => res?.calendars ?? []));
   }
 
+  /** Bitcoin blocks that anchored proofs stamped through this deployment. */
   public getBatches$(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/anchors`);
+    return this.http.get<{ anchors: any[] }>(`${this.baseUrl}/anchors`).pipe(map(res => res?.anchors ?? []));
   }
 
   public stampDigest$(digest: string): Observable<any> {
