@@ -1,56 +1,391 @@
+import { randomUUID } from 'crypto';
 import {
   TimestampOverview, TimestampCalendar, TimestampBatch, TimestampAnchorTransaction, TimestampVerificationResult,
+  TimestampStampResult, TimestampUpgradeResult,
 } from './opentimestamps.models';
 import config from '../../../config';
+import logger from '../../../logger';
 import { TimestampEvidenceError } from './opentimestamps-errors';
 import { TimestampBitcoinReader, TimestampProofRequest, verifyDetachedProof } from './opentimestamps-proof';
+import { CalendarClient, CalendarDirectoryEntry, calendarDirectoryFromEnvironment } from './ots-calendar-client';
+import {
+  OtsTimestamp, mergeTimestamps, nonceCommitment, parseDetachedProofTree, serializeDetachedProof, walkTimestamp,
+} from './ots-timestamp';
+import { TimestampRecord, TimestampRecordStore, defaultTimestampRecordStore } from './opentimestamps-store';
 export { TimestampEvidenceError } from './opentimestamps-errors';
 
-const unavailable = (code: string, prerequisite: string): never => {
-  throw new TimestampEvidenceError(code, 'Timestamp evidence is unavailable. ' + prerequisite);
-};
+interface CalendarHealthObservation {
+  calendar_id: string;
+  health_status: 'online' | 'degraded' | 'offline';
+  observed_at: string;
+  detail: string;
+}
 
+export interface OpenTimestampsServiceOptions {
+  reader?: TimestampBitcoinReader;
+  network?: string;
+  calendars?: CalendarClient;
+  store?: TimestampRecordStore;
+  now?: () => Date;
+  /** How long a stamp must be pending before the service asks calendars about it again. */
+  upgradeAfterMs?: number;
+  healthProbeTtlMs?: number;
+}
+
+/**
+ * OpenTimestamps for this deployment.
+ *
+ * Stamping submits a nonced commitment to every allowlisted calendar and keeps
+ * the proof the calendars returned. Upgrading asks those same calendars for the
+ * Bitcoin attestation they promised, grafts it into the proof and verifies the
+ * result with the owned Bitcoin reader. Overview, anchors and batches are
+ * derived from the records this created, and from nothing else: a calendar's
+ * own batch and transaction bookkeeping is not visible through its protocol,
+ * so nothing here claims to know it.
+ */
 export class OpenTimestampsService {
-  constructor(private readonly options: { reader?: TimestampBitcoinReader; network?: string } = {}) {}
-  public getOverview(): TimestampOverview {
-    return unavailable('unavailable-calendar-source', 'The owned calendar, batch and Bitcoin anchor sources are not connected.');
+  private readonly calendars: CalendarClient;
+  private readonly store: TimestampRecordStore;
+  private readonly now: () => Date;
+  private readonly upgradeAfterMs: number;
+  private readonly healthProbeTtlMs: number;
+  private health = new Map<string, CalendarHealthObservation>();
+  private healthProbedAt = 0;
+  private reconciledAt = 0;
+
+  constructor(private readonly options: OpenTimestampsServiceOptions = {}) {
+    this.calendars = options.calendars ?? new CalendarClient(calendarDirectoryFromEnvironment());
+    this.store = options.store ?? defaultTimestampRecordStore();
+    this.now = options.now ?? (() => new Date());
+    this.upgradeAfterMs = options.upgradeAfterMs ?? 30 * 60 * 1000;
+    this.healthProbeTtlMs = options.healthProbeTtlMs ?? 60 * 1000;
   }
 
-  public listCalendars(): { calendars: TimestampCalendar[] } {
-    return unavailable('unavailable-calendar-source', 'No owned calendar directory or health observation source is connected.');
+  private get network(): string {
+    return this.options.network ?? config.MEMPOOL.NETWORK;
   }
 
-  public getCalendar(_calendarId: string): TimestampCalendar | undefined {
-    return unavailable('unavailable-calendar-source', 'No owned calendar directory or health observation source is connected.');
-  }
-
-  public listAnchors(): { anchors: TimestampAnchorTransaction[] } {
-    return unavailable('unavailable-anchor-source', 'No owned Bitcoin anchor reader is connected.');
-  }
-
-  public getBatch(_batchId: string): TimestampBatch | undefined {
-    return unavailable('unavailable-calendar-source', 'No owned calendar batch reader is connected.');
-  }
-
-  public stampDigest(digestHex: string): never {
-    if (typeof digestHex !== 'string' || !/^[0-9a-f]{64}$/i.test(digestHex)) {
-      throw new TimestampEvidenceError('invalid-input', 'A 32-byte SHA256 digest in hexadecimal is required.', 400);
-    }
-    return unavailable('unavailable-calendar', 'An owned calendar submission client and its actual returned attestation are required. No digest was submitted and no proof was created.');
-  }
-
-  public async verifyProof(proofPayload: TimestampProofRequest): Promise<TimestampVerificationResult> {
-    this.requireProof(proofPayload);
-    const reader = this.options.reader ?? {
+  private get reader(): TimestampBitcoinReader {
+    return this.options.reader ?? {
       $getBlockHash: (height: number) => import('../../bitcoin/bitcoin-api-factory').then(module => module.default.$getBlockHash(height)),
       $getBlockHeader: (hash: string) => import('../../bitcoin/bitcoin-api-factory').then(module => module.default.$getBlockHeader(hash)),
     };
-    return verifyDetachedProof(proofPayload, reader, this.options.network ?? config.MEMPOOL.NETWORK);
   }
 
-  public upgradeProof(proofData: { ots_proof?: string; proof?: string }): never {
+  /** @asyncUnsafe The route turns a rejection into an exact HTTP answer. */
+  public async getOverview(): Promise<TimestampOverview> {
+    await this.reconcilePending();
+    const [stats, calendars, anchors, recent] = await Promise.all([
+      this.store.stats(), this.listCalendars(), this.listAnchors(), this.store.recent(10),
+    ]);
+    const active = calendars.calendars.filter(calendar => calendar.health_status !== 'offline');
+    return {
+      total_active_calendars: active.length,
+      total_verified_anchors_count: stats.anchored,
+      total_digests_stamped_24h: stats.stamped_24h,
+      latest_bitcoin_anchor_height: stats.latest_anchor_height ?? 0,
+      active_calendars: active,
+      recent_batches: recent.map(toBatch),
+      recent_anchors: anchors.anchors.slice(0, 10),
+      total_proofs_tracked: stats.total,
+      bitcoin_confirmed_proofs: stats.anchored,
+      pending_calendar_attestations: stats.pending,
+      failed_submissions: stats.failed,
+      active_calendar_servers: active.length,
+      latest_anchored_block_height: stats.latest_anchor_height,
+      network: this.network,
+      storage: this.store.kind,
+      generated_at: this.now().toISOString(),
+    };
+  }
+
+  /** @asyncUnsafe The route turns a rejection into an exact HTTP answer. */
+  public async listCalendars(): Promise<{ calendars: TimestampCalendar[] }> {
+    await this.probeHealth();
+    const anchored = await this.store.anchored(200);
+    return { calendars: this.calendars.list().map(entry => this.describeCalendar(entry, anchored)) };
+  }
+
+  /** @asyncUnsafe The route turns a rejection into an exact HTTP answer. */
+  public async getCalendar(calendarId: string): Promise<TimestampCalendar | undefined> {
+    const entry = this.calendars.byId(calendarId);
+    if (!entry) {return undefined;}
+    await this.probeHealth();
+    return this.describeCalendar(entry, await this.store.anchored(200));
+  }
+
+  /**
+   * Bitcoin blocks that anchored a proof made here, one row per calendar and
+   * block. An OpenTimestamps proof commits to a block's Merkle root and does
+   * not name the transaction, so no txid is reported. @asyncUnsafe */
+  public async listAnchors(): Promise<{ anchors: TimestampAnchorTransaction[] }> {
+    await this.reconcilePending();
+    const records = await this.store.anchored(500);
+    const byKey = new Map<string, TimestampAnchorTransaction>();
+    for (const record of records) {
+      if (record.anchor_block_height === undefined || !record.anchor_block_hash) {continue;}
+      for (const contact of record.calendars.filter(contact => contact.status === 'anchored')) {
+        const key = `${contact.calendar_id}:${record.anchor_block_height}`;
+        const existing = byKey.get(key);
+        if (existing) {
+          existing.batch_count += 1;
+          existing.leaf_count += 1;
+          continue;
+        }
+        byKey.set(key, {
+          batch_id: key,
+          block_hash: record.anchor_block_hash,
+          block_height: record.anchor_block_height,
+          block_timestamp_utc: record.anchor_time_utc ?? '',
+          anchored_at: record.anchor_time_utc ?? record.updated_at,
+          calendar_id: contact.calendar_id,
+          batch_count: 1,
+          leaf_count: 1,
+          merkle_root: record.commitment_hex,
+        });
+      }
+    }
+    return { anchors: [...byKey.values()].sort((a, b) => b.block_height - a.block_height) };
+  }
+
+  /** @asyncUnsafe The route turns a rejection into an exact HTTP answer. */
+  public async getBatch(batchId: string): Promise<TimestampBatch | undefined> {
+    if (typeof batchId !== 'string' || !/^[0-9a-f-]{36}$/i.test(batchId)) {return undefined;}
+    const record = await this.store.get(batchId);
+    return record ? toBatch(record) : undefined;
+  }
+
+  /** Submit a sha256 digest to every allowlisted calendar and keep the proof. @asyncUnsafe */
+  public async stampDigest(digestHex: string): Promise<TimestampStampResult> {
+    if (typeof digestHex !== 'string' || !/^[0-9a-f]{64}$/i.test(digestHex)) {
+      throw new TimestampEvidenceError('invalid-input', 'A 32-byte SHA256 digest in hexadecimal is required.', 400);
+    }
+    const digest = Buffer.from(digestHex.toLowerCase(), 'hex');
+    const { commitment, timestamp } = nonceCommitment(digest);
+    const leaf = timestamp.operations[0].result.operations[0].result;
+    const submittedAt = this.now().toISOString();
+    const contacts: TimestampRecord['calendars'] = [];
+    const answers = await Promise.all(this.calendars.list().map(async entry => {
+      try {
+        const answer = await this.calendars.submit(entry, commitment);
+        contacts.push({ calendar_id: entry.calendar_id, url: entry.url, status: 'pending', contacted_at: this.now().toISOString() });
+        this.observeHealth(entry, 'online', 'accepted a digest submission');
+        return answer;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        contacts.push({ calendar_id: entry.calendar_id, url: entry.url, status: 'unreachable', contacted_at: this.now().toISOString(), error: message });
+        this.observeHealth(entry, 'offline', message);
+        return null;
+      }
+    }));
+    const accepted = answers.filter((answer): answer is OtsTimestamp => answer !== null);
+    if (!accepted.length) {
+      throw new TimestampEvidenceError('calendar-unreachable', `No allowlisted calendar accepted the digest: ${contacts.map(contact => `${contact.calendar_id} (${contact.error})`).join('; ')}. No proof was created.`);
+    }
+    for (const answer of accepted) {mergeTimestamps(leaf, answer);}
+    const proof = serializeDetachedProof(digest, timestamp);
+    const record: TimestampRecord = {
+      record_id: randomUUID(), digest_hex: digestHex.toLowerCase(), algorithm: 'sha256', network: this.network,
+      commitment_hex: commitment.toString('hex'), proof_base64: proof.toString('base64'), status: 'pending',
+      calendars: contacts, submitted_at: submittedAt, updated_at: submittedAt,
+    };
+    await this.store.insert(record);
+    return {
+      record_id: record.record_id, batch_id: record.record_id, digest: record.digest_hex, network: record.network,
+      commitment: record.commitment_hex, ots_proof_base64: record.proof_base64, status: 'pending',
+      calendars_contacted: contacts.map(contact => ({ calendar_id: contact.calendar_id, url: contact.url, status: contact.status === 'unreachable' ? 'unreachable' as const : 'pending' as const, error: contact.error })),
+      timestamp: submittedAt,
+      notices: [
+        'The calendars have promised a Bitcoin attestation and have not yet made one. Upgrade this proof after the calendars have anchored, typically within a few hours.',
+        ...(contacts.some(contact => contact.status === 'unreachable') ? ['At least one allowlisted calendar did not accept the submission; the proof carries the calendars that did.'] : []),
+      ],
+    };
+  }
+
+  /** @asyncUnsafe The route turns a rejection into an exact HTTP answer. */
+  public async verifyProof(proofPayload: TimestampProofRequest): Promise<TimestampVerificationResult> {
+    this.requireProof(proofPayload);
+    return verifyDetachedProof(proofPayload, this.reader, this.network);
+  }
+
+  /**
+   * Replace pending calendar promises in a proof with the attestations those
+   * calendars now hold, then verify the result. Only allowlisted calendars are
+   * contacted; a promise from any other host stays in the proof untouched and
+   * is reported as unreachable. @asyncUnsafe */
+  public async upgradeProof(proofData: { ots_proof?: string; proof?: string; digest?: string; network?: string }): Promise<TimestampUpgradeResult> {
     this.requireProof(proofData);
-    return unavailable('unavailable-calendar', 'Proof upgrade requires an actual owned calendar response and validation of the returned proof. No proof was upgraded.');
+    const encoded = (proofData.ots_proof ?? proofData.proof ?? '').replace(/[ \t\r\n]/g, '');
+    if (!/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(encoded) || !encoded) {
+      throw new TimestampEvidenceError('invalid-proof', 'The .ots proof is not valid base64.', 400);
+    }
+    const bytes = Buffer.from(encoded, 'base64');
+    const parsed = parseDetachedProofTree(bytes);
+    const before = bytes.toString('base64');
+    const outcome = await this.upgradeTree(parsed.timestamp);
+    const upgradedBytes = serializeDetachedProof(parsed.digest, parsed.timestamp);
+    const request: TimestampProofRequest = { ots_proof: upgradedBytes.toString('base64') };
+    if (proofData.digest !== undefined) {request.digest = proofData.digest;}
+    if (proofData.network !== undefined) {request.network = proofData.network;}
+    const verification = await verifyDetachedProof(request, this.reader, this.network);
+    if (parsed.algorithm === 'sha256') {
+      for (const record of await this.store.findByDigest(parsed.digest.toString('hex'), this.network)) {
+        if (record.status === 'pending' && verification.verified) {
+          await this.markAnchored(record, request.ots_proof as string, verification, outcome.calendars);
+        }
+      }
+    }
+    return {
+      upgraded: outcome.upgraded,
+      changed: request.ots_proof !== before,
+      ots_proof_base64: request.ots_proof as string,
+      status: verification.status,
+      verified: verification.verified,
+      verification,
+      calendars: outcome.calendars,
+      notices: outcome.notices,
+    };
+  }
+
+  /**
+   * Ask calendars about stamps that have waited long enough. Bounded so a read
+   * never turns into a crawl: a handful of records, at most once every few
+   * minutes, and each calendar call has its own deadline. @asyncUnsafe */
+  public async reconcilePending(): Promise<{ examined: number; anchored: number }> {
+    const nowMs = this.now().getTime();
+    if (nowMs - this.reconciledAt < 5 * 60 * 1000) {return { examined: 0, anchored: 0 };}
+    this.reconciledAt = nowMs;
+    const olderThan = new Date(nowMs - this.upgradeAfterMs).toISOString();
+    let examined = 0;
+    let anchored = 0;
+    let pending: TimestampRecord[];
+    try {
+      pending = await this.store.pendingForUpgrade(olderThan, 10);
+    } catch (error) {
+      logger.warn(`OpenTimestamps reconciliation could not read pending records: ${error instanceof Error ? error.message : error}`);
+      return { examined, anchored };
+    }
+    for (const record of pending) {
+      examined += 1;
+      try {
+        const tree = parseDetachedProofTree(Buffer.from(record.proof_base64, 'base64'));
+        const outcome = await this.upgradeTree(tree.timestamp);
+        record.last_upgrade_attempt_at = this.now().toISOString();
+        if (outcome.upgraded) {
+          const proof = serializeDetachedProof(tree.digest, tree.timestamp).toString('base64');
+          const verification = await verifyDetachedProof({ ots_proof: proof }, this.reader, this.network);
+          if (verification.verified) {
+            await this.markAnchored(record, proof, verification, outcome.calendars);
+            anchored += 1;
+            continue;
+          }
+          record.proof_base64 = proof;
+        }
+        record.updated_at = this.now().toISOString();
+        await this.store.update(record);
+      } catch (error) {
+        record.last_error = error instanceof Error ? error.message : String(error);
+        record.last_upgrade_attempt_at = this.now().toISOString();
+        record.updated_at = record.last_upgrade_attempt_at;
+        await this.store.update(record).catch(() => undefined);
+      }
+    }
+    return { examined, anchored };
+  }
+
+  /** @asyncUnsafe The route turns a rejection into an exact HTTP answer. */
+  private async upgradeTree(root: OtsTimestamp): Promise<{ upgraded: boolean; calendars: TimestampUpgradeResult['calendars']; notices: string[] }> {
+    const targets: { node: OtsTimestamp; uri: string; entry: CalendarDirectoryEntry | undefined }[] = [];
+    walkTimestamp(root, node => {
+      for (const attestation of node.attestations) {
+        if (attestation.kind === 'pending') {targets.push({ node, uri: attestation.uri, entry: this.calendars.match(attestation.uri) });}
+      }
+    });
+    const calendars: TimestampUpgradeResult['calendars'] = [];
+    const notices: string[] = [];
+    let upgraded = false;
+    if (!targets.length) {notices.push('The proof carries no pending calendar attestation to upgrade.');}
+    for (const target of targets) {
+      if (!target.entry) {
+        calendars.push({ calendar_url: target.uri, status: 'unreachable', detail: 'not on the calendar allowlist; not contacted' });
+        continue;
+      }
+      try {
+        const answer = await this.calendars.upgrade(target.entry, target.node.message);
+        if (!answer) {
+          calendars.push({ calendar_id: target.entry.calendar_id, calendar_url: target.uri, status: 'pending', detail: 'the calendar has not anchored this commitment yet' });
+          this.observeHealth(target.entry, 'online', 'answered an upgrade request');
+          continue;
+        }
+        target.node.attestations = target.node.attestations.filter(attestation => !(attestation.kind === 'pending' && attestation.uri === target.uri));
+        mergeTimestamps(target.node, answer);
+        upgraded = true;
+        calendars.push({ calendar_id: target.entry.calendar_id, calendar_url: target.uri, status: 'verified', detail: 'returned its Bitcoin attestation' });
+        this.observeHealth(target.entry, 'online', 'returned an attestation');
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        calendars.push({ calendar_id: target.entry.calendar_id, calendar_url: target.uri, status: 'unreachable', detail: message });
+        this.observeHealth(target.entry, 'offline', message);
+      }
+    }
+    return { upgraded, calendars, notices };
+  }
+
+  /** @asyncUnsafe The route turns a rejection into an exact HTTP answer. */
+  private async markAnchored(record: TimestampRecord, proof: string, verification: TimestampVerificationResult, calendars: TimestampUpgradeResult['calendars']): Promise<void> {
+    record.proof_base64 = proof;
+    record.status = 'anchored';
+    record.anchor_block_height = verification.earliest_proven_block_height;
+    record.anchor_block_hash = verification.bitcoin_block_hash;
+    record.anchor_time_utc = verification.earliest_proven_time_utc;
+    record.updated_at = this.now().toISOString();
+    record.last_upgrade_attempt_at = record.updated_at;
+    delete record.last_error;
+    for (const contact of record.calendars) {
+      const outcome = calendars.find(calendar => calendar.calendar_id === contact.calendar_id);
+      if (outcome?.status === 'verified') {contact.status = 'anchored';}
+    }
+    await this.store.update(record);
+  }
+
+  /** A calendar answers 404 for a commitment it never saw; that answer proves reachability without a side effect. @asyncUnsafe */
+  private async probeHealth(): Promise<void> {
+    const nowMs = this.now().getTime();
+    if (nowMs - this.healthProbedAt < this.healthProbeTtlMs) {return;}
+    this.healthProbedAt = nowMs;
+    await Promise.all(this.calendars.list().map(async entry => {
+      try {
+        await this.calendars.upgrade(entry, Buffer.alloc(32));
+        this.observeHealth(entry, 'online', 'answered a reachability probe');
+      } catch (error) {
+        this.observeHealth(entry, 'offline', error instanceof Error ? error.message : String(error));
+      }
+    }));
+  }
+
+  private observeHealth(entry: CalendarDirectoryEntry, health: 'online' | 'offline', detail: string): void {
+    this.health.set(entry.calendar_id, { calendar_id: entry.calendar_id, health_status: health, observed_at: this.now().toISOString(), detail });
+  }
+
+  private describeCalendar(entry: CalendarDirectoryEntry, anchored: TimestampRecord[]): TimestampCalendar {
+    const observation = this.health.get(entry.calendar_id);
+    const mine = anchored.filter(record => record.calendars.some(contact => contact.calendar_id === entry.calendar_id && contact.status === 'anchored'));
+    const latest = mine.reduce<TimestampRecord | null>((best, record) => (!best || (record.anchor_block_height ?? 0) > (best.anchor_block_height ?? 0)) ? record : best, null);
+    return {
+      calendar_id: entry.calendar_id,
+      name: entry.name,
+      url: entry.url,
+      protocol_revision: 'opentimestamps-calendar-v1',
+      health_status: observation?.health_status ?? 'degraded',
+      health_observed_at: observation?.observed_at ?? null,
+      health_detail: observation?.detail ?? 'not yet observed',
+      pending_attestations_count: 0,
+      anchored_proofs_count: mine.length,
+      average_anchor_lag_blocks: null,
+      last_anchor_block_height: latest?.anchor_block_height ?? null,
+      last_anchor_txid: null,
+      mirror_calendars: [],
+    };
   }
 
   private requireProof(value: { ots_proof?: string; proof?: string }): void {
@@ -59,6 +394,22 @@ export class OpenTimestampsService {
       throw new TimestampEvidenceError('invalid-input', 'A nonempty .ots proof is required.', 400);
     }
   }
+}
+
+function toBatch(record: TimestampRecord): TimestampBatch {
+  return {
+    batch_id: record.record_id,
+    calendar_id: record.calendars.filter(contact => contact.status !== 'unreachable').map(contact => contact.calendar_id).join(','),
+    merkle_root: record.commitment_hex,
+    leaf_count: 1,
+    created_at_utc: record.submitted_at,
+    anchor_block_height: record.anchor_block_height,
+    anchor_block_hash: record.anchor_block_hash,
+    status: record.status,
+    digest: record.digest_hex,
+    network: record.network,
+    last_error: record.last_error,
+  };
 }
 
 export default new OpenTimestampsService();
