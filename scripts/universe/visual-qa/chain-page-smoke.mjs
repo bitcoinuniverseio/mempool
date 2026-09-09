@@ -20,7 +20,8 @@
  * Usage:
  *   node chain-page-smoke.mjs [--origin=URL] [--release=SHA] [--out=DIR]
  */
-import { mkdirSync, writeFileSync } from 'node:fs';
+import {
+import { navigateTolerantly } from './runner-network.mjs'; mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -209,7 +210,7 @@ async function visitAndCollect(context, path, screenshotName, reader) {
     // Playwright to call idle. The navigation then timed out before any
     // assertion ran and a rendered page was reported as an empty one. What
     // the page must contain is asserted by the selector waits below.
-    await page.goto(`${ORIGIN}${path}`, { waitUntil: 'load', timeout: 45_000 });
+    notes.push(...(await navigateTolerantly(page, `${ORIGIN}${path}`, { waitUntil: 'load', timeout: 45_000 }, consoleErrors)).notes);
     await page
       .waitForSelector('main h1, .chain-page h1, .title-block h1', { timeout: 15_000 })
       .catch(() => {});
@@ -299,7 +300,7 @@ async function checkChain(browser, chain) {
 
   try {
     // Load event only; see visitAndCollect for why idle is never reached.
-    await page.goto(`${ORIGIN}/${chain}`, { waitUntil: 'load', timeout: 45_000 });
+    notes.push(...(await navigateTolerantly(page, `${ORIGIN}/${chain}`, { waitUntil: 'load', timeout: 45_000 }, consoleErrors)).notes);
     // The labelled status rail is this dashboard's own structure. An origin
     // still serving the dashboard it replaced loads perfectly and has no such
     // element, which is exactly the state that had to be caught by hand, so a
