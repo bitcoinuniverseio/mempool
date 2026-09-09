@@ -11,7 +11,10 @@
  * in an index recovery must go through.
  */
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
 import test from 'node:test';
+import { fileURLToPath } from 'node:url';
 
 import {
   auditChainPage,
@@ -485,4 +488,13 @@ test('an origin serving a different build than the release names is detected', (
     auditRelease('521a091', 'bea93c1ec7f608313').failures[0].includes('this run expected'),
   );
   assert.ok(auditRelease(null, null).failures[0].includes('publishes no frontend commit'));
+});
+
+test('the smoke navigates on the load event, never on network idle', () => {
+  // The app polls and holds a WebSocket for the life of every page. Waiting
+  // for idle on a slow origin times the navigation out before a single
+  // assertion runs, and the run then reports a rendered page as empty.
+  const source = fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), 'chain-page-smoke.mjs'), 'utf8');
+  assert.equal(source.includes("'networkidle'"), false);
+  assert.ok(source.includes("waitUntil: 'load'"));
 });

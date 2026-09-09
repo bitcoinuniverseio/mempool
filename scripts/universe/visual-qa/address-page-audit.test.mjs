@@ -57,3 +57,12 @@ test('bitcoin.routes.ts implements getAddressTransactionSummary correctly', () =
   assert.match(fnBody, /bitcoinApi\.\$getAddressTransactionSummary\(req\.params\.address\)/, 'calls bitcoinApi.$getAddressTransactionSummary');
   assert.match(fnBody, /res\.json\(summary\)/, 'responds with json summary');
 });
+
+test('the smoke navigates on the load event, never on network idle', () => {
+  // The app polls and holds a WebSocket for the life of every page. Waiting
+  // for idle on a slow origin times the navigation out before a single
+  // assertion runs, and the run then reports a rendered page as empty.
+  const source = fs.readFileSync(path.join(__dirname, 'address-page-smoke.mjs'), 'utf8');
+  assert.equal(source.includes("'networkidle'"), false);
+  assert.ok(source.includes("waitUntil: 'load'"));
+});
