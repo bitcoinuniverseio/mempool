@@ -29,7 +29,11 @@ concurrency:
 jobs:
   smoke:
     name: Live origin answers with real content
-    runs-on: [self-hosted, linux, x64, universe-super]
+    # The PowerVPS pool. The Primcast pool's runners changed their own network
+    # interface mid-run on 9 September 2026 (Chromium: net::ERR_NETWORK_CHANGED)
+    # on super-20, super-23, super-46 and super-185 within one afternoon, and a
+    # browser step cannot tell that from an origin that stopped answering.
+    runs-on: [self-hosted, linux, x64, universe-linux-ultra]
     # Ten was for a job that only read the API. It now installs the browser
     # harness and loads two pages in a real browser, which is the only way to
     # see what the origin renders.
