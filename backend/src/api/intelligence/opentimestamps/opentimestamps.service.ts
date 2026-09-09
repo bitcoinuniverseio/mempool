@@ -65,6 +65,21 @@ export class OpenTimestampsService {
     return this.options.network ?? config.MEMPOOL.NETWORK;
   }
 
+  /**
+   * Every record read or write goes through here so a database that is down
+   * answers as an unavailable record store, not as an internal error.
+   * @asyncUnsafe The route turns the rejection into an exact HTTP answer.
+   */
+  private async records<T>(operation: () => Promise<T>): Promise<T> {
+    try {
+      return await operation();
+    } catch (error) {
+      if (error instanceof TimestampEvidenceError) {throw error;}
+      logger.warn(`OpenTimestamps record store failed: ${error instanceof Error ? error.message : error}`);
+      throw new TimestampEvidenceError('unavailable-record-store', 'Timestamp evidence is unavailable. The timestamp record store did not answer.');
+    }
+  }
+
   private get reader(): TimestampBitcoinReader {
     return this.options.reader ?? {
       $getBlockHash: (height: number) => import('../../bitcoin/bitcoin-api-factory').then(module => module.default.$getBlockHash(height)),
@@ -76,7 +91,7 @@ export class OpenTimestampsService {
   public async getOverview(): Promise<TimestampOverview> {
     await this.reconcilePending();
     const [stats, calendars, anchors, recent] = await Promise.all([
-      this.store.stats(), this.listCalendars(), this.listAnchors(), this.store.recent(10),
+      this.records(() => this.store.stats()), this.listCalendars(), this.listAnchors(), this.records(() => this.store.recent(10)),
     ]);
     const active = calendars.calendars.filter(calendar => calendar.health_status !== 'offline');
     return {
@@ -102,7 +117,7 @@ export class OpenTimestampsService {
   /** @asyncUnsafe The route turns a rejection into an exact HTTP answer. */
   public async listCalendars(): Promise<{ calendars: TimestampCalendar[] }> {
     await this.probeHealth();
-    const anchored = await this.store.anchored(200);
+    const anchored = await this.records(() => this.store.anchored(200));
     return { calendars: this.calendars.list().map(entry => this.describeCalendar(entry, anchored)) };
   }
 
@@ -111,7 +126,7 @@ export class OpenTimestampsService {
     const entry = this.calendars.byId(calendarId);
     if (!entry) {return undefined;}
     await this.probeHealth();
-    return this.describeCalendar(entry, await this.store.anchored(200));
+    return this.describeCalendar(entry, await this.records(() => this.store.anchored(200)));
   }
 
   /**
@@ -120,7 +135,7 @@ export class OpenTimestampsService {
    * not name the transaction, so no txid is reported. @asyncUnsafe */
   public async listAnchors(): Promise<{ anchors: TimestampAnchorTransaction[] }> {
     await this.reconcilePending();
-    const records = await this.store.anchored(500);
+    const records = await this.records(() => this.store.anchored(500));
     const byKey = new Map<string, TimestampAnchorTransaction>();
     for (const record of records) {
       if (record.anchor_block_height === undefined || !record.anchor_block_hash) {continue;}
@@ -151,7 +166,7 @@ export class OpenTimestampsService {
   /** @asyncUnsafe The route turns a rejection into an exact HTTP answer. */
   public async getBatch(batchId: string): Promise<TimestampBatch | undefined> {
     if (typeof batchId !== 'string' || !/^[0-9a-f-]{36}$/i.test(batchId)) {return undefined;}
-    const record = await this.store.get(batchId);
+    const record = await this.records(() => this.store.get(batchId));
     return record ? toBatch(record) : undefined;
   }
 
@@ -189,7 +204,7 @@ export class OpenTimestampsService {
       commitment_hex: commitment.toString('hex'), proof_base64: proof.toString('base64'), status: 'pending',
       calendars: contacts, submitted_at: submittedAt, updated_at: submittedAt,
     };
-    await this.store.insert(record);
+    await this.records(() => this.store.insert(record));
     return {
       record_id: record.record_id, batch_id: record.record_id, digest: record.digest_hex, network: record.network,
       commitment: record.commitment_hex, ots_proof_base64: record.proof_base64, status: 'pending',
@@ -229,7 +244,7 @@ export class OpenTimestampsService {
     if (proofData.network !== undefined) {request.network = proofData.network;}
     const verification = await verifyDetachedProof(request, this.reader, this.network);
     if (parsed.algorithm === 'sha256') {
-      for (const record of await this.store.findByDigest(parsed.digest.toString('hex'), this.network)) {
+      for (const record of await this.records(() => this.store.findByDigest(parsed.digest.toString('hex'), this.network))) {
         if (record.status === 'pending' && verification.verified) {
           await this.markAnchored(record, request.ots_proof as string, verification, outcome.calendars);
         }
@@ -345,7 +360,7 @@ export class OpenTimestampsService {
       const outcome = calendars.find(calendar => calendar.calendar_id === contact.calendar_id);
       if (outcome?.status === 'verified') {contact.status = 'anchored';}
     }
-    await this.store.update(record);
+    await this.records(() => this.store.update(record));
   }
 
   /** A calendar answers 404 for a commitment it never saw; that answer proves reachability without a side effect. @asyncUnsafe */
@@ -412,4 +427,16 @@ function toBatch(record: TimestampRecord): TimestampBatch {
   };
 }
 
-export default new OpenTimestampsService();
+/**
+ * Built on first use, so the calendar allowlist and the record store are read
+ * when the process is configured rather than when this module is imported.
+ */
+let instance: OpenTimestampsService | undefined;
+const lazy = new Proxy({} as OpenTimestampsService, {
+  get(_target, property: keyof OpenTimestampsService) {
+    instance ??= new OpenTimestampsService();
+    const value = instance[property];
+    return typeof value === 'function' ? (value as (...args: unknown[]) => unknown).bind(instance) : value;
+  },
+});
+export default lazy;
