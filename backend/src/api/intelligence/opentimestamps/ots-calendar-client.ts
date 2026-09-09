@@ -24,12 +24,6 @@ export interface CalendarDirectoryEntry {
   url: string;
 }
 
-export const DEFAULT_CALENDARS: CalendarDirectoryEntry[] = [
-  { calendar_id: 'alice-btc', name: 'OpenTimestamps Alice', url: 'https://alice.btc.calendar.opentimestamps.org' },
-  { calendar_id: 'bob-btc', name: 'OpenTimestamps Bob', url: 'https://bob.btc.calendar.opentimestamps.org' },
-  { calendar_id: 'finney-eternitywall', name: 'Eternity Wall Finney', url: 'https://finney.calendar.eternitywall.com' },
-];
-
 const ACCEPT = 'application/vnd.opentimestamps.v1';
 const USER_AGENT = 'universe-explorer-opentimestamps/1.0';
 const RESPONSE_LIMIT_BYTES = 64 * 1024;
@@ -57,9 +51,14 @@ const axiosHttp: CalendarHttp = {
   },
 };
 
-/** Read the allowlist from the environment, falling back to the public calendars. */
+/**
+ * Read the allowlist from the environment. There is no default: a deployment
+ * names the calendars it runs or trusts for its own network, and one that
+ * names none has no calendar. The service reports that as unconfigured rather
+ * than quietly submitting digests to a public calendar on another network.
+ */
 export function calendarDirectoryFromEnvironment(value: string | undefined = process.env.UNIVERSE_OPENTIMESTAMPS_CALENDARS): CalendarDirectoryEntry[] {
-  if (value === undefined || value.trim() === '') {return DEFAULT_CALENDARS.map(entry => ({ ...entry }));}
+  if (value === undefined || value.trim() === '') {return [];}
   const entries: CalendarDirectoryEntry[] = [];
   for (const raw of value.split(',')) {
     const item = raw.trim();
@@ -72,7 +71,6 @@ export function calendarDirectoryFromEnvironment(value: string | undefined = pro
     const id = (left?.trim() || url.hostname).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     entries.push({ calendar_id: id, name: left?.trim() || url.hostname, url: normalized });
   }
-  if (!entries.length) {throw new Error('UNIVERSE_OPENTIMESTAMPS_CALENDARS names no calendar.');}
   return entries;
 }
 
@@ -81,8 +79,11 @@ export class CalendarClient {
     private readonly directory: CalendarDirectoryEntry[],
     private readonly http: CalendarHttp = axiosHttp,
     private readonly timeoutMs = 10000,
-  ) {
-    if (!directory.length) {throw new Error('The calendar directory is empty.');}
+  ) {}
+
+  /** False when the deployment named no calendar; nothing is contacted then. */
+  public get configured(): boolean {
+    return this.directory.length > 0;
   }
 
   public list(): CalendarDirectoryEntry[] {

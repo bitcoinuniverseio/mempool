@@ -60,7 +60,8 @@ class TaprootAssetsRoutes {
     try {
       const { assetId, proofData } = req.body || {};
       const result = await taprootAssetsService.$verifyProof(assetId, proofData);
-      res.status(result.stage === 'invalid-input' ? 400 : 503).json(result);
+      // A completed verdict, valid or not, is a 200; only bad input and an absent verifier are not answers.
+      res.status(result.stage === 'invalid-input' ? 400 : result.stage === 'unavailable-verifier' ? 503 : 200).json(result);
     } catch (e) {
       fail(req, res, e);
     }
