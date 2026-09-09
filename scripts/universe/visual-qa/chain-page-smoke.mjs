@@ -20,12 +20,13 @@
  * Usage:
  *   node chain-page-smoke.mjs [--origin=URL] [--release=SHA] [--out=DIR]
  */
-import {
-import { navigateTolerantly } from './runner-network.mjs'; mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import playwright from 'playwright';
+
+import { navigateTolerantly } from './runner-network.mjs';
 
 import {
   CHAIN_NAMES,
