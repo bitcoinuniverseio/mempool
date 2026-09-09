@@ -89,8 +89,13 @@ async function openAddress(context, address) {
   page.on('pageerror', (error) => consoleErrors.push(error.message));
 
   try {
+    // The load event, not network idle: the app polls its authorities and
+    // holds a WebSocket for the life of the page, so on a slow origin the
+    // network never goes quiet, the navigation timed out, and a page that
+    // had rendered every transaction was reported as naming nothing. The
+    // waits below hold the page to its content instead.
     await page.goto(`${ORIGIN}/address/${address}`, {
-      waitUntil: 'networkidle',
+      waitUntil: 'load',
       timeout: REQUEST_TIMEOUT_MS,
     });
     // The address panel resolves asynchronously. Wait for either the data or
