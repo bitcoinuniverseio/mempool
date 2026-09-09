@@ -3,13 +3,62 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
+export interface TimestampAnchor {
+  batch_id: string;
+  calendar_id: string;
+  block_height: number;
+  block_hash: string;
+  anchored_at: string;
+  leaf_count: number;
+  merkle_root: string;
+}
+
+export interface TimestampCalendar {
+  calendar_id: string;
+  name: string;
+  url: string;
+  health_status: 'online' | 'degraded' | 'offline';
+  health_observed_at: string | null;
+  health_detail: string;
+  anchored_proofs_count: number;
+  last_anchor_block_height: number | null;
+}
+
 export interface TimestampsOverview {
   total_proofs_tracked: number;
   bitcoin_confirmed_proofs: number;
   pending_calendar_attestations: number;
+  failed_submissions: number;
   active_calendar_servers: number;
-  latest_anchored_block_height: number;
-  recent_anchors: any[];
+  latest_anchored_block_height: number | null;
+  active_calendars: TimestampCalendar[];
+  recent_anchors: TimestampAnchor[];
+  network: string;
+  storage: 'mysql' | 'memory';
+  generated_at: string;
+}
+
+export interface TimestampStampResult {
+  record_id: string;
+  digest: string;
+  network: string;
+  commitment: string;
+  ots_proof_base64: string;
+  status: 'pending';
+  calendars_contacted: { calendar_id: string; url: string; status: 'pending' | 'unreachable'; error?: string }[];
+  timestamp: string;
+  notices: string[];
+}
+
+export interface TimestampUpgradeResult {
+  upgraded: boolean;
+  changed: boolean;
+  ots_proof_base64: string;
+  status: TimestampVerificationResult['status'];
+  verified: boolean;
+  verification: TimestampVerificationResult;
+  calendars: { calendar_id?: string; calendar_url: string; status: 'pending' | 'verified' | 'unreachable'; detail: string }[];
+  notices: string[];
 }
 
 export type TimestampNetwork = 'mainnet' | 'testnet' | 'testnet4' | 'signet' | 'regtest';
@@ -66,24 +115,24 @@ export class OpenTimestampsApiService {
   }
 
   /** The allowlisted calendars as the backend last observed them. */
-  public getCalendars$(): Observable<any[]> {
-    return this.http.get<{ calendars: any[] }>(`${this.baseUrl}/calendars`).pipe(map(res => res?.calendars ?? []));
+  public getCalendars$(): Observable<TimestampCalendar[]> {
+    return this.http.get<{ calendars: TimestampCalendar[] }>(`${this.baseUrl}/calendars`).pipe(map(res => res?.calendars ?? []));
   }
 
   /** Bitcoin blocks that anchored proofs stamped through this deployment. */
-  public getBatches$(): Observable<any[]> {
-    return this.http.get<{ anchors: any[] }>(`${this.baseUrl}/anchors`).pipe(map(res => res?.anchors ?? []));
+  public getBatches$(): Observable<TimestampAnchor[]> {
+    return this.http.get<{ anchors: TimestampAnchor[] }>(`${this.baseUrl}/anchors`).pipe(map(res => res?.anchors ?? []));
   }
 
-  public stampDigest$(digest: string): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/digests/stamp`, { digest });
+  public stampDigest$(digest: string): Observable<TimestampStampResult> {
+    return this.http.post<TimestampStampResult>(`${this.baseUrl}/digests/stamp`, { digest });
   }
 
   public verifyProof$(proofData: TimestampVerifyRequest): Observable<TimestampVerificationResult> {
     return this.http.post<TimestampVerificationResult>(`${this.baseUrl}/proofs/verify`, proofData);
   }
 
-  public upgradeProof$(proofData: any): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/proofs/upgrade`, proofData);
+  public upgradeProof$(proofData: { ots_proof: string; digest?: string }): Observable<TimestampUpgradeResult> {
+    return this.http.post<TimestampUpgradeResult>(`${this.baseUrl}/proofs/upgrade`, proofData);
   }
 }
