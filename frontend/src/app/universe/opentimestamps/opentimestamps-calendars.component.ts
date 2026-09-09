@@ -31,9 +31,9 @@ import { OpenTimestampsApiService } from './opentimestamps.service';
               <tr>
                 <th>Calendar ID</th>
                 <th>Endpoint URL</th>
-                <th>Pending Commitments</th>
-                <th>Latest Anchored Block</th>
-                <th>Uptime</th>
+                <th>Proofs anchored here</th>
+                <th>Latest anchored block</th>
+                <th>Last observation</th>
                 <th>Status</th>
               </tr>
             </thead>
@@ -41,10 +41,10 @@ import { OpenTimestampsApiService } from './opentimestamps.service';
               <tr *ngFor="let c of calendars">
                 <td class="fw-bold text-info">{{ c.calendar_id }}</td>
                 <td class="font-monospace text-muted">{{ c.url }}</td>
-                <td>{{ c.pending_commitments }} hashes</td>
-                <td class="fw-bold">{{ c.last_btc_block_anchored }}</td>
-                <td class="text-success">{{ c.uptime_pct }}%</td>
-                <td><span class="badge bg-success">{{ c.status | uppercase }}</span></td>
+                <td>{{ c.anchored_proofs_count }}</td>
+                <td class="fw-bold">{{ c.last_anchor_block_height ?? 'none yet' }}</td>
+                <td class="text-muted small">{{ c.health_detail }}</td>
+                <td><span class="badge" [class.bg-success]="c.health_status === 'online'" [class.bg-warning]="c.health_status === 'degraded'" [class.bg-danger]="c.health_status === 'offline'">{{ c.health_status | uppercase }}</span></td>
               </tr>
             </tbody>
           </table>
