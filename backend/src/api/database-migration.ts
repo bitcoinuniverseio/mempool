@@ -7,7 +7,7 @@ import cpfpRepository from '../repositories/CpfpRepository';
 import { RowDataPacket } from 'mysql2';
 
 class DatabaseMigration {
-  private static currentVersion = 107;
+  private static currentVersion = 108;
   private queryTimeout = 3600_000;
   private statisticsAddedIndexed = false;
   private uniqueLogs: string[] = [];
@@ -1245,6 +1245,28 @@ class DatabaseMigration {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
       await this.updateToSchemaVersion(107);
     }
+    if (databaseSchemaVersion < 108) {
+      // Every digest stamped through the OpenTimestamps surface, with the proof
+      // the calendars returned and what the upgrade found afterwards. The
+      // document carries the record; the columns exist for the reads.
+      await this.$executeQuery(`CREATE TABLE IF NOT EXISTS universe_timestamp_records (
+        record_id CHAR(36) NOT NULL,
+        digest_hex CHAR(64) NOT NULL,
+        network VARCHAR(16) NOT NULL,
+        commitment_hex CHAR(64) NOT NULL,
+        status VARCHAR(16) NOT NULL,
+        submitted_at DATETIME(3) NOT NULL,
+        updated_at DATETIME(3) NOT NULL,
+        anchor_block_height INT UNSIGNED NULL,
+        document JSON NOT NULL,
+        PRIMARY KEY (record_id),
+        INDEX universe_timestamp_records_digest (digest_hex, network),
+        INDEX universe_timestamp_records_status (status, submitted_at),
+        INDEX universe_timestamp_records_anchor (anchor_block_height)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`);
+      await this.updateToSchemaVersion(108);
+    }
+
     if (databaseSchemaVersion < 106 && config.MEMPOOL.NETWORK === 'liquid') {
       // In a specific setup it's possible that 3G6neksSBMp51kHJ2if8SeDUrzT8iVETWT and bc1qwnevjp8nsq7adu3hxlvdvslrf242q4vuavfg0y929jp2zntp3vgq7cq6z2
       // were set with a timelock of 2016 instead of 4032

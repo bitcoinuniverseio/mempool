@@ -13,19 +13,29 @@ export type TimestampProofStatus =
   | 'network_mismatch'
   | 'conflicting_attestations';
 
+/**
+ * A calendar on the allowlist, as this deployment has observed it. Health is
+ * what the last contact found; the anchor figures count proofs made here that
+ * the calendar anchored. A calendar's own queue depth and transactions are not
+ * visible through its protocol, so those fields are null rather than guessed.
+ */
 export interface TimestampCalendar {
   calendar_id: string;
   name: string;
   url: string;
   protocol_revision: string;
   health_status: 'online' | 'degraded' | 'offline';
+  health_observed_at: string | null;
+  health_detail: string;
   pending_attestations_count: number;
-  average_anchor_lag_blocks: number;
-  last_anchor_block_height: number;
-  last_anchor_txid: string;
+  anchored_proofs_count: number;
+  average_anchor_lag_blocks: number | null;
+  last_anchor_block_height: number | null;
+  last_anchor_txid: string | null;
   mirror_calendars: string[];
 }
 
+/** One stamp made here: a batch of one digest, keyed by its record id. */
 export interface TimestampBatch {
   batch_id: string;
   calendar_id: string;
@@ -33,18 +43,52 @@ export interface TimestampBatch {
   leaf_count: number;
   created_at_utc: string;
   anchor_block_height?: number;
-  anchor_txid?: string;
-  status: 'pending' | 'anchored';
+  anchor_block_hash?: string;
+  status: 'pending' | 'anchored' | 'failed';
+  digest: string;
+  network: string;
+  last_error?: string;
 }
 
+/**
+ * A Bitcoin block that anchored proofs made here through one calendar. An
+ * OpenTimestamps proof commits to the block's Merkle root and never names the
+ * calendar's transaction, so there is no txid to report.
+ */
 export interface TimestampAnchorTransaction {
-  txid: string;
+  batch_id: string;
   block_hash: string;
   block_height: number;
   block_timestamp_utc: string;
-  op_return_payload_hex: string;
+  anchored_at: string;
   calendar_id: string;
   batch_count: number;
+  leaf_count: number;
+  merkle_root: string;
+}
+
+export interface TimestampStampResult {
+  record_id: string;
+  batch_id: string;
+  digest: string;
+  network: string;
+  commitment: string;
+  ots_proof_base64: string;
+  status: 'pending';
+  calendars_contacted: { calendar_id: string; url: string; status: 'pending' | 'unreachable'; error?: string }[];
+  timestamp: string;
+  notices: string[];
+}
+
+export interface TimestampUpgradeResult {
+  upgraded: boolean;
+  changed: boolean;
+  ots_proof_base64: string;
+  status: TimestampProofStatus;
+  verified: boolean;
+  verification: TimestampVerificationResult;
+  calendars: { calendar_id?: string; calendar_url: string; status: 'pending' | 'verified' | 'unreachable'; detail: string }[];
+  notices: string[];
 }
 
 export interface TimestampVerificationResult {
@@ -77,4 +121,14 @@ export interface TimestampOverview {
   active_calendars: TimestampCalendar[];
   recent_batches: TimestampBatch[];
   recent_anchors: TimestampAnchorTransaction[];
+  total_proofs_tracked: number;
+  bitcoin_confirmed_proofs: number;
+  pending_calendar_attestations: number;
+  failed_submissions: number;
+  active_calendar_servers: number;
+  latest_anchored_block_height: number | null;
+  network: string;
+  /** Where the records live. Memory records do not survive a restart. */
+  storage: 'mysql' | 'memory';
+  generated_at: string;
 }
