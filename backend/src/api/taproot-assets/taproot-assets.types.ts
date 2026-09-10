@@ -8,7 +8,8 @@ export interface TaprootAssetItem {
   readonly name: string;
   readonly groupKey?: string;
   readonly genesisPoint: string;
-  readonly genesisHeight: number;
+  /** The genesis block height when this proof is the genesis output, null when the anchor is a later transfer. */
+  readonly genesisHeight: number | null;
   readonly totalAmountAtomic: string;
   readonly anchorTxid: string;
   readonly anchorOutpoint: string;
@@ -40,8 +41,9 @@ export interface LightningRfqQuote {
   readonly quoteId: string;
   readonly baseAsset: string;
   readonly quoteAsset: string;
-  readonly askRate: string;
-  readonly bidRate: string;
-  readonly spreadBps: number;
+  /** A quote is one-sided: a buy quote carries an ask rate, a sell quote a bid rate. */
+  readonly askRate: string | null;
+  readonly bidRate: string | null;
+  readonly spreadBps: number | null;
   readonly validUntil: number;
 }

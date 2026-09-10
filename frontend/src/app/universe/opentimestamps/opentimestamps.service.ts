@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, defer, of } from 'rxjs';
+import { distinctUntilChanged, map, startWith, switchMap } from 'rxjs/operators';
+import { StateService } from '@app/services/state.service';
 
 export interface TimestampAnchor {
   batch_id: string;
@@ -34,6 +35,8 @@ export interface TimestampsOverview {
   active_calendars: TimestampCalendar[];
   recent_anchors: TimestampAnchor[];
   network: string;
+  /** False when the deployment names no calendar for this network; stamping is unavailable then. */
+  calendars_configured: boolean;
   storage: 'mysql' | 'memory';
   generated_at: string;
 }
@@ -57,7 +60,8 @@ export interface TimestampUpgradeResult {
   status: TimestampVerificationResult['status'];
   verified: boolean;
   verification: TimestampVerificationResult;
-  calendars: { calendar_id?: string; calendar_url: string; status: 'pending' | 'verified' | 'unreachable'; detail: string }[];
+  /** `upgraded` is an attestation the calendar returned that the owned reader did not verify. */
+  calendars: { calendar_id?: string; calendar_url: string; status: 'pending' | 'upgraded' | 'verified' | 'unreachable'; detail: string }[];
   notices: string[];
 }
 
@@ -102,37 +106,73 @@ export interface TimestampVerificationResult {
  * something existed; a reader who cannot tell a checked proof from an unchecked
  * one has nothing.
  */
+/**
+ * Every request goes to the backend of the selected Bitcoin network, the way
+ * the rest of the explorer does: `/api/v1/...` for the root network and
+ * `/signet/api/v1/...` for Signet, which the gateway routes to that network's
+ * own backend, calendar and record store. Reads follow a network switch and
+ * cancel the previous request; a stamp or upgrade is sent to the network that
+ * was selected when the user acted and is never replayed.
+ */
 @Injectable({
   providedIn: 'root',
 })
 export class OpenTimestampsApiService {
-  private readonly baseUrl = '/api/v1/intelligence/timestamps';
+  constructor(private http: HttpClient, private stateService: StateService) {}
 
-  constructor(private http: HttpClient) {}
+  /** The selected Bitcoin network, as the API names it. */
+  public get network(): TimestampNetwork {
+    return (this.stateService.network || 'mainnet') as TimestampNetwork;
+  }
 
   public getOverview$(): Observable<TimestampsOverview> {
-    return this.http.get<TimestampsOverview>(`${this.baseUrl}/overview`);
+    return this.scoped((base, network) => this.http.get<TimestampsOverview>(`${base}/overview`).pipe(map(res => this.sameNetwork(res, network))));
   }
 
   /** The allowlisted calendars as the backend last observed them. */
   public getCalendars$(): Observable<TimestampCalendar[]> {
-    return this.http.get<{ calendars: TimestampCalendar[] }>(`${this.baseUrl}/calendars`).pipe(map(res => res?.calendars ?? []));
+    return this.scoped(base => this.http.get<{ calendars: TimestampCalendar[] }>(`${base}/calendars`).pipe(map(res => res?.calendars ?? [])));
   }
 
   /** Bitcoin blocks that anchored proofs stamped through this deployment. */
   public getBatches$(): Observable<TimestampAnchor[]> {
-    return this.http.get<{ anchors: TimestampAnchor[] }>(`${this.baseUrl}/anchors`).pipe(map(res => res?.anchors ?? []));
+    return this.scoped(base => this.http.get<{ anchors: TimestampAnchor[] }>(`${base}/anchors`).pipe(map(res => res?.anchors ?? [])));
   }
 
   public stampDigest$(digest: string): Observable<TimestampStampResult> {
-    return this.http.post<TimestampStampResult>(`${this.baseUrl}/digests/stamp`, { digest });
+    const network = this.network;
+    return this.http.post<TimestampStampResult>(`${this.baseFor(network)}/digests/stamp`, { digest }).pipe(map(res => this.sameNetwork(res, network)));
   }
 
   public verifyProof$(proofData: TimestampVerifyRequest): Observable<TimestampVerificationResult> {
-    return this.http.post<TimestampVerificationResult>(`${this.baseUrl}/proofs/verify`, proofData);
+    return this.http.post<TimestampVerificationResult>(`${this.baseFor(this.network)}/proofs/verify`, proofData);
   }
 
+  /** The upgrade names the selected network so the verifier answers `network_mismatch` rather than a foreign verdict. */
   public upgradeProof$(proofData: { ots_proof: string; digest?: string }): Observable<TimestampUpgradeResult> {
-    return this.http.post<TimestampUpgradeResult>(`${this.baseUrl}/proofs/upgrade`, proofData);
+    const network = this.network;
+    return this.http.post<TimestampUpgradeResult>(`${this.baseFor(network)}/proofs/upgrade`, { ...proofData, network });
+  }
+
+  private baseFor(network: string): string {
+    const prefix = network && network !== 'mainnet' && network !== this.stateService.env?.ROOT_NETWORK ? '/' + network : '';
+    return `${prefix}/api/v1/intelligence/timestamps`;
+  }
+
+  /** Re-subscribes at a network switch, cancelling the previous request. */
+  private scoped<T>(request: (base: string, network: TimestampNetwork) => Observable<T>): Observable<T> {
+    return defer(() => (this.stateService.networkChanged$ ?? of(this.stateService.network)).pipe(
+      startWith(this.stateService.network),
+      map(() => this.network),
+      distinctUntilChanged(),
+      switchMap(network => request(this.baseFor(network), network)),
+    ));
+  }
+
+  private sameNetwork<T extends { network?: string }>(value: T, network: TimestampNetwork): T {
+    if (value?.network !== undefined && value.network !== network) {
+      throw new Error('timestamp-network-mismatch');
+    }
+    return value;
   }
 }
