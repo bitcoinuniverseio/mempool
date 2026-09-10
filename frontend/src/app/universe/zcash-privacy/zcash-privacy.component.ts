@@ -5,6 +5,7 @@ import { BehaviorSubject, Observable, catchError, of } from 'rxjs';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { ZcashPrivacySummary } from '@app/universe/universe.types';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 interface PrivacyViewModel {
   readonly kind: 'loading' | 'ready' | 'error';
@@ -16,7 +17,7 @@ interface PrivacyViewModel {
   templateUrl: './zcash-privacy.component.html',
   styleUrls: ['../product-page.scss'],
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ZcashPrivacyComponent implements OnInit {

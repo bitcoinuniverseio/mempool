@@ -234,7 +234,7 @@
         </dl>
         <p class="panel-link">
           <a
-            [routerLink]="['/', chain, 'mining']"
+            [routerLink]="['/' | relativeUrl, chain, 'mining']"
             i18n="universe.dash.mining-link"
             >Open the mining dashboard</a
           >
@@ -289,7 +289,7 @@
         </div>
         <p class="panel-link">
           <a
-            [routerLink]="['/', chain, 'mempool']"
+            [routerLink]="['/' | relativeUrl, chain, 'mempool']"
             i18n="universe.dash.mempool-link"
             >Open pending transactions</a
           >
@@ -332,7 +332,7 @@
               <td>
                 <a
                   class="identifier"
-                  [routerLink]="['/', chain, 'block', block.hash]"
+                  [routerLink]="['/' | relativeUrl, chain, 'block', block.hash]"
                   *ngIf="heightFormatted(block) as height"
                   [attr.title]="block.hash"
                   >{{ height.display }}</a
@@ -407,7 +407,7 @@
               <td>
                 <a
                   class="identifier"
-                  [routerLink]="['/', chain, 'tx', item.txid]"
+                  [routerLink]="['/' | relativeUrl, chain, 'tx', item.txid]"
                   >{{ item.txid.slice(0, 20) }}&#8230;</a
                 >
               </td>
@@ -446,7 +446,7 @@
         <li *ngFor="let protocol of vm.protocols; trackBy: trackByProtocol">
           <a
             *ngIf="protocol.routeId; else protocolNoPage"
-            [routerLink]="['/', chain, 'protocols', protocol.routeId]"
+            [routerLink]="['/' | relativeUrl, chain, 'protocols', protocol.routeId]"
             >{{ protocol.label }}</a
           >
           <ng-template #protocolNoPage
@@ -464,7 +464,7 @@
       </ng-template>
       <p class="panel-link">
         <a
-          [routerLink]="['/', chain, 'protocols']"
+          [routerLink]="['/' | relativeUrl, chain, 'protocols']"
           i18n="universe.dash.protocols-link"
           >Open protocols</a
         >

@@ -3,17 +3,18 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { OffchainApiService, OffchainOperatorDetail } from './offchain.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-statechain-operator-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
       <header class="page-header mb-4">
         <div class="mb-2">
-          <a routerLink="/offchain/statechains/operators" class="btn btn-sm btn-outline-secondary">
+          <a [routerLink]="'/offchain/statechains/operators' | relativeUrl" class="btn btn-sm btn-outline-secondary">
             &larr; Back to Operators
           </a>
         </div>
@@ -94,7 +95,7 @@ import { OffchainApiService, OffchainOperatorDetail } from './offchain.service';
             <p class="small text-muted">The operator API does not report fees or deposit limits.</p>
 
             <div class="mt-auto pt-3 border-top">
-              <a [routerLink]="['/offchain/statechains/verify']" class="btn btn-outline-primary w-100">
+              <a [routerLink]="['/offchain/statechains/verify' | relativeUrl]" class="btn btn-outline-primary w-100">
                 Verify Transfer Package with this Operator
               </a>
             </div>

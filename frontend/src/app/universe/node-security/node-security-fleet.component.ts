@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { NodeSecurityApiService } from './node-security.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-node-security-fleet',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4">
       <div class="alert alert-warning" role="alert" *ngIf="loadError">
@@ -18,7 +19,7 @@ import { NodeSecurityApiService } from './node-security.service';
           <h1 class="h2 mb-1">Node Fleet Security Posture</h1>
           <p class="text-muted mb-0">Telemetry status of enterprise and community Bitcoin node fleet deployments.</p>
         </div>
-        <a routerLink="/node/security" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
+        <a [routerLink]="'/node/security' | relativeUrl" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
       </div>
 
       <div class="card bg-dark border-secondary mb-4">
@@ -41,7 +42,7 @@ import { NodeSecurityApiService } from './node-security.service';
             <tbody>
               <tr *ngFor="let node of fleet">
                 <td class="font-monospace">
-                  <a [routerLink]="['/node/security/node', node.node_id]" class="text-info">{{ node.node_id }}</a>
+                  <a [routerLink]="['/node/security/node' | relativeUrl, node.node_id]" class="text-info">{{ node.node_id }}</a>
                 </td>
                 <td>{{ node.client_name }}</td>
                 <td class="fw-bold">{{ node.version }}</td>
@@ -57,7 +58,7 @@ import { NodeSecurityApiService } from './node-security.service';
                   </span>
                 </td>
                 <td>
-                  <a [routerLink]="['/node/security/node', node.node_id]" class="btn btn-sm btn-outline-primary">Audit Node</a>
+                  <a [routerLink]="['/node/security/node' | relativeUrl, node.node_id]" class="btn btn-sm btn-outline-primary">Audit Node</a>
                 </td>
               </tr>
             </tbody>

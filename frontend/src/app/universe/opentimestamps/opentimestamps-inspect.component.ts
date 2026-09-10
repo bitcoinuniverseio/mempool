@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 /**
  * The proof bytecode inspector.
@@ -14,7 +15,7 @@ import { FormsModule } from '@angular/forms';
 @Component({
   selector: 'app-opentimestamps-inspect',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule, FormsModule],
   template: `
     <div class="container-xl py-4">
       <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
@@ -22,7 +23,7 @@ import { FormsModule } from '@angular/forms';
           <h1 class="h2 mb-1">OpenTimestamps Proof Bytecode Inspector</h1>
           <p class="text-muted mb-0">Step through the cryptographic opcodes inside an OTS proof stream.</p>
         </div>
-        <a routerLink="/tools/timestamp" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
+        <a [routerLink]="'/tools/timestamp' | relativeUrl" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
       </div>
 
       <div class="alert alert-warning" role="alert">

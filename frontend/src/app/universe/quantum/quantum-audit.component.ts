@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { QuantumApiService, QuantumPubkeyExposure } from './quantum.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-quantum-audit',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -22,11 +23,11 @@ import { QuantumApiService, QuantumPubkeyExposure } from './quantum.service';
 
         <!-- Navigation Tabs -->
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/intelligence/quantum">Overview</a>
-          <a class="nav-link" routerLink="/intelligence/quantum/exposure">Script Cohorts</a>
-          <a class="nav-link" routerLink="/intelligence/quantum/history">Reveal Timeline</a>
-          <a class="nav-link active" routerLink="/intelligence/quantum/audit">Local Public Audit</a>
-          <a class="nav-link" routerLink="/intelligence/quantum/migration">Migration Planner</a>
+          <a class="nav-link" [routerLink]="'/intelligence/quantum' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/intelligence/quantum/exposure' | relativeUrl">Script Cohorts</a>
+          <a class="nav-link" [routerLink]="'/intelligence/quantum/history' | relativeUrl">Reveal Timeline</a>
+          <a class="nav-link active" [routerLink]="'/intelligence/quantum/audit' | relativeUrl">Local Public Audit</a>
+          <a class="nav-link" [routerLink]="'/intelligence/quantum/migration' | relativeUrl">Migration Planner</a>
         </nav>
       </header>
 
@@ -112,7 +113,7 @@ import { QuantumApiService, QuantumPubkeyExposure } from './quantum.service';
         </div>
 
         <div *ngIf="result.is_exposed" class="d-flex justify-content-end">
-          <a routerLink="/intelligence/quantum/migration" class="btn btn-warning text-dark">
+          <a [routerLink]="'/intelligence/quantum/migration' | relativeUrl" class="btn btn-warning text-dark">
             Generate Migration Plan &rarr;
           </a>
         </div>

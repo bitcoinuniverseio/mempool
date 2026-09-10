@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { ConsensusConformanceApiService, ConformanceOverview } from './consensus-conformance.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-consensus-conformance-overview',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4">
       <div class="alert alert-warning" role="alert" *ngIf="loadError">
@@ -19,30 +20,30 @@ import { ConsensusConformanceApiService, ConformanceOverview } from './consensus
           <p class="text-muted mb-0">Cross-client differential fuzzing, divergence reproduction, and machine-checked Lean/Coq specifications.</p>
         </div>
         <div class="btn-group">
-          <a routerLink="/labs/consensus/differential" class="btn btn-primary btn-sm">Differential Matrix</a>
-          <a routerLink="/labs/consensus/formal" class="btn btn-outline-primary btn-sm">Formal Proofs</a>
+          <a [routerLink]="'/labs/consensus/differential' | relativeUrl" class="btn btn-primary btn-sm">Differential Matrix</a>
+          <a [routerLink]="'/labs/consensus/formal' | relativeUrl" class="btn btn-outline-primary btn-sm">Formal Proofs</a>
         </div>
       </div>
 
       <!-- Navigation Tabs -->
       <ul class="nav nav-tabs mb-4">
         <li class="nav-item">
-          <a class="nav-link active" routerLink="/labs/consensus/conformance">Overview</a>
+          <a class="nav-link active" [routerLink]="'/labs/consensus/conformance' | relativeUrl">Overview</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/labs/consensus/differential">Differential Fuzzing</a>
+          <a class="nav-link" [routerLink]="'/labs/consensus/differential' | relativeUrl">Differential Fuzzing</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/labs/consensus/cases">Discrepancy Cases</a>
+          <a class="nav-link" [routerLink]="'/labs/consensus/cases' | relativeUrl">Discrepancy Cases</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/labs/consensus/formal">Formal Verification</a>
+          <a class="nav-link" [routerLink]="'/labs/consensus/formal' | relativeUrl">Formal Verification</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/labs/consensus/specifications">BIP Specifications</a>
+          <a class="nav-link" [routerLink]="'/labs/consensus/specifications' | relativeUrl">BIP Specifications</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/labs/consensus/corpora">Corpora & Fuzz Seeds</a>
+          <a class="nav-link" [routerLink]="'/labs/consensus/corpora' | relativeUrl">Corpora & Fuzz Seeds</a>
         </li>
       </ul>
 
@@ -135,13 +136,13 @@ import { ConsensusConformanceApiService, ConformanceOverview } from './consensus
             <tbody>
               <tr *ngFor="let c of overview.recent_divergences">
                 <td class="font-monospace text-info">
-                  <a [routerLink]="['/labs/consensus/case', c.case_id]">{{ c.case_id }}</a>
+                  <a [routerLink]="['/labs/consensus/case' | relativeUrl, c.case_id]">{{ c.case_id }}</a>
                 </td>
                 <td>{{ c.title }}</td>
                 <td><span class="badge bg-secondary">{{ c.bip_reference }}</span></td>
                 <td><span class="badge bg-danger">{{ c.severity | uppercase }}</span></td>
                 <td>
-                  <a [routerLink]="['/labs/consensus/case', c.case_id]" class="btn btn-sm btn-outline-danger">Inspect & Replay</a>
+                  <a [routerLink]="['/labs/consensus/case' | relativeUrl, c.case_id]" class="btn btn-sm btn-outline-danger">Inspect & Replay</a>
                 </td>
               </tr>
             </tbody>

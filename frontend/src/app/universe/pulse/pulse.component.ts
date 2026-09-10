@@ -13,6 +13,7 @@ import {
   SourcesResponse,
 } from '@app/universe/universe.types';
 import { shortenIdentifier } from '@app/universe/universe-evidence';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 interface ProtocolShare {
   readonly protocolId: string;
@@ -40,7 +41,7 @@ interface PulseViewModel {
 @Component({
   selector: 'app-universe-pulse',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   templateUrl: './pulse.component.html',
   styleUrls: ['./pulse.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

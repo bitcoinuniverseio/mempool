@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { DecentralizedMiningApiService, MiningShare } from './decentralized-mining.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-decentralized-mining-p2pool',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -23,11 +24,11 @@ import { DecentralizedMiningApiService, MiningShare } from './decentralized-mini
         </p>
 
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/mining/decentralized">Overview</a>
-          <a class="nav-link" routerLink="/mining/decentralized/datum">DATUM</a>
-          <a class="nav-link active" routerLink="/mining/decentralized/p2pool">P2Pool v2</a>
-          <a class="nav-link" routerLink="/mining/decentralized/braidpool">Braidpool</a>
-          <a class="nav-link" routerLink="/mining/decentralized/compare">Template Autonomy</a>
+          <a class="nav-link" [routerLink]="'/mining/decentralized' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/mining/decentralized/datum' | relativeUrl">DATUM</a>
+          <a class="nav-link active" [routerLink]="'/mining/decentralized/p2pool' | relativeUrl">P2Pool v2</a>
+          <a class="nav-link" [routerLink]="'/mining/decentralized/braidpool' | relativeUrl">Braidpool</a>
+          <a class="nav-link" [routerLink]="'/mining/decentralized/compare' | relativeUrl">Template Autonomy</a>
         </nav>
       </header>
 
@@ -59,7 +60,7 @@ import { DecentralizedMiningApiService, MiningShare } from './decentralized-mini
                 <td class="font-monospace small text-truncate" style="max-width: 250px;">{{ s.payout_script }}</td>
                 <td class="font-monospace small">{{ s.difficulty_target }}</td>
                 <td>
-                  <a [routerLink]="['/mining/decentralized/share', s.share_id]" class="btn btn-sm btn-outline-primary">
+                  <a [routerLink]="['/mining/decentralized/share' | relativeUrl, s.share_id]" class="btn btn-sm btn-outline-primary">
                     Inspect
                   </a>
                 </td>

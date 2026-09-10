@@ -5,6 +5,8 @@ import { RouterModule } from '@angular/router';
 import { BehaviorSubject, Observable, catchError, of } from 'rxjs';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
+
 import {
   DatasetManifest,
   McpToolDeclaration,
@@ -27,7 +29,7 @@ interface DataStudioViewModel {
   templateUrl: './data-studio.component.html',
   styleUrls: ['../product-page.scss', './data-studio.component.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, FormsModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DataStudioComponent implements OnInit {

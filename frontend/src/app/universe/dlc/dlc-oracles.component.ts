@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { DlcApiService, DlcOracle } from './dlc.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-dlc-oracles',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -23,11 +24,11 @@ import { DlcApiService, DlcOracle } from './dlc.service';
         </p>
 
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/contracts/dlc">Overview</a>
-          <a class="nav-link active" routerLink="/contracts/dlc/oracles">Oracles</a>
-          <a class="nav-link" routerLink="/contracts/dlc/events">Events</a>
-          <a class="nav-link" routerLink="/contracts/dlc/inspect">Contract Inspector</a>
-          <a class="nav-link" routerLink="/contracts/dlc/simulate">Regtest Simulator</a>
+          <a class="nav-link" [routerLink]="'/contracts/dlc' | relativeUrl">Overview</a>
+          <a class="nav-link active" [routerLink]="'/contracts/dlc/oracles' | relativeUrl">Oracles</a>
+          <a class="nav-link" [routerLink]="'/contracts/dlc/events' | relativeUrl">Events</a>
+          <a class="nav-link" [routerLink]="'/contracts/dlc/inspect' | relativeUrl">Contract Inspector</a>
+          <a class="nav-link" [routerLink]="'/contracts/dlc/simulate' | relativeUrl">Regtest Simulator</a>
         </nav>
       </header>
 
@@ -80,7 +81,7 @@ import { DlcApiService, DlcOracle } from './dlc.service';
 
             <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
               <span class="small text-muted font-monospace text-break">{{ o.endpoint }}</span>
-              <a [routerLink]="['/contracts/dlc/oracle', o.oracle_id]" class="btn btn-sm btn-outline-primary">
+              <a [routerLink]="['/contracts/dlc/oracle' | relativeUrl, o.oracle_id]" class="btn btn-sm btn-outline-primary">
                 Inspect Oracle
               </a>
             </div>

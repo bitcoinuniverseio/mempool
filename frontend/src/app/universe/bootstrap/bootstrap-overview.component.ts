@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { BootstrapApiService, BootstrapOverview } from './bootstrap.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-bootstrap-overview',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -23,11 +24,11 @@ import { BootstrapApiService, BootstrapOverview } from './bootstrap.service';
         </p>
 
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link active" routerLink="/node/bootstrap">Overview</a>
-          <a class="nav-link" routerLink="/node/bootstrap/snapshots">Snapshots</a>
-          <a class="nav-link" routerLink="/node/bootstrap/verify">Integrity Verifier</a>
-          <a class="nav-link" routerLink="/node/bootstrap/planner">Bootstrap Planner</a>
-          <a class="nav-link" routerLink="/node/bootstrap/chainstates">Dual Chainstates</a>
+          <a class="nav-link active" [routerLink]="'/node/bootstrap' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/node/bootstrap/snapshots' | relativeUrl">Snapshots</a>
+          <a class="nav-link" [routerLink]="'/node/bootstrap/verify' | relativeUrl">Integrity Verifier</a>
+          <a class="nav-link" [routerLink]="'/node/bootstrap/planner' | relativeUrl">Bootstrap Planner</a>
+          <a class="nav-link" [routerLink]="'/node/bootstrap/chainstates' | relativeUrl">Dual Chainstates</a>
         </nav>
       </header>
 
@@ -74,7 +75,7 @@ import { BootstrapApiService, BootstrapOverview } from './bootstrap.service';
           <div class="card p-4 bg-body-tertiary border h-100">
             <div class="d-flex justify-content-between align-items-center mb-3">
               <h2 class="h5 m-0">Pinned AssumeUTXO Snapshots</h2>
-              <a routerLink="/node/bootstrap/snapshots" class="small text-decoration-none">View All &rarr;</a>
+              <a [routerLink]="'/node/bootstrap/snapshots' | relativeUrl" class="small text-decoration-none">View All &rarr;</a>
             </div>
             <div class="table-responsive" tabindex="0" role="region" aria-label="Pinned AssumeUTXO Snapshots, scroll horizontally" i18n-aria-label>
               <table class="table table-sm table-hover align-middle">
@@ -90,7 +91,7 @@ import { BootstrapApiService, BootstrapOverview } from './bootstrap.service';
                 <tbody>
                   <tr *ngFor="let s of overview.featured_snapshots">
                     <td>
-                      <a [routerLink]="['/node/bootstrap/snapshot', s.height]" class="fw-bold font-monospace text-decoration-none">
+                      <a [routerLink]="['/node/bootstrap/snapshot' | relativeUrl, s.height]" class="fw-bold font-monospace text-decoration-none">
                         #{{ s.height }}
                       </a>
                     </td>
@@ -118,7 +119,7 @@ import { BootstrapApiService, BootstrapOverview } from './bootstrap.service';
             <p class="small text-muted mb-3">
               AssumeUTXO loads an authentic serialized UTXO set at a hard-coded checkpoint block. The node can immediately participate in consensus and serve requests from the snapshot height while simultaneously running full validation of historical blocks from the genesis block in the background.
             </p>
-            <a routerLink="/node/bootstrap/planner" class="btn btn-outline-primary btn-sm w-100">
+            <a [routerLink]="'/node/bootstrap/planner' | relativeUrl" class="btn btn-outline-primary btn-sm w-100">
               Calculate Bootstrap Time &rarr;
             </a>
           </div>

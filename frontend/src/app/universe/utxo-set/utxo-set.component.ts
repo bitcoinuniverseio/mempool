@@ -4,6 +4,8 @@ import { RouterModule } from '@angular/router';
 import { BehaviorSubject, Observable, catchError, combineLatest, of } from 'rxjs';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
+
 import {
   ProtocolBearingUtxos,
   ScriptTypeDistribution,
@@ -26,7 +28,7 @@ interface UtxoViewModel {
   templateUrl: './utxo-set.component.html',
   styleUrls: ['../product-page.scss'],
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UtxoSetComponent implements OnInit {

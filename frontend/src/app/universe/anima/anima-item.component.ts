@@ -7,6 +7,7 @@ import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { AnimaOrganismDocument } from '@app/universe/universe.types';
 import { shortenIdentifier } from '@app/universe/universe-evidence';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 interface AnimaItemViewModel {
   readonly kind: 'loading' | 'error' | 'missing' | 'ready';
@@ -22,7 +23,7 @@ interface AnimaItemViewModel {
   templateUrl: './anima-item.component.html',
   styleUrls: ['./anima-page.scss'],
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AnimaItemComponent implements OnInit {

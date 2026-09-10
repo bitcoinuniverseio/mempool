@@ -4,11 +4,12 @@ import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { PrivateSubmissionApiService, SubmissionOverview } from './private-submission.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-private-submission-overview',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule, FormsModule],
   template: `
     <div class="container-xl py-4">
       <div class="alert alert-warning" role="alert" *ngIf="loadError">
@@ -20,27 +21,27 @@ import { PrivateSubmissionApiService, SubmissionOverview } from './private-submi
           <p class="text-muted mb-0">Direct miner relays, out-of-band acceleration diagnostics, and block ordering verification.</p>
         </div>
         <div class="btn-group">
-          <a routerLink="/mempool/private-broadcast" class="btn btn-primary btn-sm">Direct Miner Broadcast</a>
-          <a routerLink="/mempool/accelerators" class="btn btn-outline-primary btn-sm">Accelerator Directory</a>
+          <a [routerLink]="'/mempool/private-broadcast' | relativeUrl" class="btn btn-primary btn-sm">Direct Miner Broadcast</a>
+          <a [routerLink]="'/mempool/accelerators' | relativeUrl" class="btn btn-outline-primary btn-sm">Accelerator Directory</a>
         </div>
       </div>
 
       <!-- Quick Nav Tabs -->
       <ul class="nav nav-tabs mb-4">
         <li class="nav-item">
-          <a class="nav-link active" routerLink="/mempool/submission">Overview & Diagnose</a>
+          <a class="nav-link active" [routerLink]="'/mempool/submission' | relativeUrl">Overview & Diagnose</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/mempool/private-broadcast">Private Broadcast</a>
+          <a class="nav-link" [routerLink]="'/mempool/private-broadcast' | relativeUrl">Private Broadcast</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/mempool/accelerators">Accelerators</a>
+          <a class="nav-link" [routerLink]="'/mempool/accelerators' | relativeUrl">Accelerators</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/mempool/receipts">Receipt Verification</a>
+          <a class="nav-link" [routerLink]="'/mempool/receipts' | relativeUrl">Receipt Verification</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/intelligence/ordering">Ordering Evidence</a>
+          <a class="nav-link" [routerLink]="'/intelligence/ordering' | relativeUrl">Ordering Evidence</a>
         </li>
       </ul>
 

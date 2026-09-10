@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { ReservesApiService, ReservesOverview } from './reserves.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-reserves-overview',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -24,9 +25,9 @@ import { ReservesApiService, ReservesOverview } from './reserves.service';
 
         <!-- Navigation Tabs -->
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link active" routerLink="/intelligence/reserves">Overview</a>
-          <a class="nav-link" routerLink="/intelligence/reserves/providers">Providers Directory</a>
-          <a class="nav-link" routerLink="/intelligence/reserves/verify">Verify Proof</a>
+          <a class="nav-link active" [routerLink]="'/intelligence/reserves' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/intelligence/reserves/providers' | relativeUrl">Providers Directory</a>
+          <a class="nav-link" [routerLink]="'/intelligence/reserves/verify' | relativeUrl">Verify Proof</a>
         </nav>
       </header>
 
@@ -76,7 +77,7 @@ import { ReservesApiService, ReservesOverview } from './reserves.service';
         <section class="card p-4 bg-body-tertiary border mb-4">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h2 class="h5 m-0">Custodial and Exchange Attestations</h2>
-            <a class="btn btn-sm btn-outline-primary" routerLink="/intelligence/reserves/providers">View All Providers</a>
+            <a class="btn btn-sm btn-outline-primary" [routerLink]="'/intelligence/reserves/providers' | relativeUrl">View All Providers</a>
           </div>
           <div class="table-responsive" tabindex="0" role="region" aria-label="Custodial and Exchange Attestations, scroll horizontally" i18n-aria-label>
             <table class="table table-hover align-middle mb-0">
@@ -111,7 +112,7 @@ import { ReservesApiService, ReservesOverview } from './reserves.service';
                     </span>
                   </td>
                   <td class="text-end">
-                    <a class="btn btn-sm btn-primary" [routerLink]="['/intelligence/reserves/provider', p.provider_id]">
+                    <a class="btn btn-sm btn-primary" [routerLink]="['/intelligence/reserves/provider' | relativeUrl, p.provider_id]">
                       Inspect
                     </a>
                   </td>
@@ -144,7 +145,7 @@ import { ReservesApiService, ReservesOverview } from './reserves.service';
                   <td>{{ s.signature_count | number }}</td>
                   <td class="text-end fw-semibold">{{ (s.total_reserve_sats / 100000000).toFixed(2) | number }} BTC</td>
                   <td class="text-end">
-                    <a class="btn btn-sm btn-outline-secondary" [routerLink]="['/intelligence/reserves/snapshot', s.snapshot_id]">
+                    <a class="btn btn-sm btn-outline-secondary" [routerLink]="['/intelligence/reserves/snapshot' | relativeUrl, s.snapshot_id]">
                       Details
                     </a>
                   </td>

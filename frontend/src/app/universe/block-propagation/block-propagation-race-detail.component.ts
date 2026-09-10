@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { BlockPropagationApiService } from './block-propagation.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-block-propagation-race-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4" *ngIf="race">
       <div class="alert alert-warning" role="alert" *ngIf="loadError">
@@ -18,7 +19,7 @@ import { BlockPropagationApiService } from './block-propagation.service';
           <h1 class="h2 mb-1">Fork Race: <span class="text-info">{{ race.race_id }}</span> (Height {{ race.height }})</h1>
           <p class="text-muted mb-0">Observed at {{ race.observed_at }} with {{ race.time_difference_ms }} ms arrival spread.</p>
         </div>
-        <a routerLink="/network/fork-races" class="btn btn-outline-secondary btn-sm">Back to Fork Races</a>
+        <a [routerLink]="'/network/fork-races' | relativeUrl" class="btn btn-outline-secondary btn-sm">Back to Fork Races</a>
       </div>
 
       <div class="row g-4 mb-4">

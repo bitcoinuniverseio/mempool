@@ -1,11 +1,12 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-consensus-conformance-specifications',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4">
       <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
@@ -13,7 +14,7 @@ import { RouterModule } from '@angular/router';
           <h1 class="h2 mb-1">Bitcoin Consensus BIP Specifications</h1>
           <p class="text-muted mb-0">Unambiguous formal definitions of Bitcoin Improvement Proposals governing valid state transitions.</p>
         </div>
-        <a routerLink="/labs/consensus/conformance" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
+        <a [routerLink]="'/labs/consensus/conformance' | relativeUrl" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
       </div>
 
       <div class="card bg-dark border-secondary mb-4">

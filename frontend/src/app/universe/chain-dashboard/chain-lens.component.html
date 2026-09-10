@@ -62,7 +62,7 @@
         </thead>
         <tbody>
           <tr *ngFor="let item of tableRows">
-            <td><a class="identifier" [routerLink]="['/', chain, 'tx', item.txid]">{{ item.txid.slice(0, 20) }}&#8230;</a></td>
+            <td><a class="identifier" [routerLink]="['/' | relativeUrl, chain, 'tx', item.txid]">{{ item.txid.slice(0, 20) }}&#8230;</a></td>
             <td class="numeric">{{ item.sizeBytes }}</td>
             <td class="numeric" [class.secondary]="!feeDisplay(item)">
               <ng-container *ngIf="feeDisplay(item) as fee; else noFee">{{ fee.display }} {{ ticker }}</ng-container>

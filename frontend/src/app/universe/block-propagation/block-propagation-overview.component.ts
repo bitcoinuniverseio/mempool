@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { BlockPropagationApiService, BlockPropagationOverview } from './block-propagation.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-block-propagation-overview',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4">
       <div class="alert alert-warning" role="alert" *ngIf="loadError">
@@ -19,30 +20,30 @@ import { BlockPropagationApiService, BlockPropagationOverview } from './block-pr
           <p class="text-muted mb-0">Global telemetry on block announcement speed, FIBRE relays, compact-block reconstruction, and fork races.</p>
         </div>
         <div class="btn-group">
-          <a routerLink="/network/blocks/live" class="btn btn-outline-primary btn-sm">Live Stream</a>
-          <a routerLink="/network/fork-races" class="btn btn-primary btn-sm">Fork Races</a>
+          <a [routerLink]="'/network/blocks/live' | relativeUrl" class="btn btn-outline-primary btn-sm">Live Stream</a>
+          <a [routerLink]="'/network/fork-races' | relativeUrl" class="btn btn-primary btn-sm">Fork Races</a>
         </div>
       </div>
 
       <!-- Navigation Tabs -->
       <ul class="nav nav-tabs mb-4">
         <li class="nav-item">
-          <a class="nav-link active" routerLink="/network/blocks">Overview</a>
+          <a class="nav-link active" [routerLink]="'/network/blocks' | relativeUrl">Overview</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/network/blocks/live">Live Propagation</a>
+          <a class="nav-link" [routerLink]="'/network/blocks/live' | relativeUrl">Live Propagation</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/network/compact-blocks">Compact Blocks (BIP152)</a>
+          <a class="nav-link" [routerLink]="'/network/compact-blocks' | relativeUrl">Compact Blocks (BIP152)</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/network/fork-races">Fork Races</a>
+          <a class="nav-link" [routerLink]="'/network/fork-races' | relativeUrl">Fork Races</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/network/stale-tips">Stale Tips</a>
+          <a class="nav-link" [routerLink]="'/network/stale-tips' | relativeUrl">Stale Tips</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/network/fibre">FIBRE Relay Network</a>
+          <a class="nav-link" [routerLink]="'/network/fibre' | relativeUrl">FIBRE Relay Network</a>
         </li>
       </ul>
 
@@ -103,7 +104,7 @@ import { BlockPropagationApiService, BlockPropagationOverview } from './block-pr
               <tr *ngFor="let b of overview.recent_blocks">
                 <td class="fw-bold">{{ b.height }}</td>
                 <td class="font-monospace">
-                  <a [routerLink]="['/network/blocks', b.hash]" class="text-info">{{ b.hash | slice:0:16 }}...</a>
+                  <a [routerLink]="['/network/blocks' | relativeUrl, b.hash]" class="text-info">{{ b.hash | slice:0:16 }}...</a>
                 </td>
                 <td><span class="badge bg-secondary">{{ b.miner }}</span></td>
                 <td>{{ b.tx_count | number }}</td>
@@ -120,7 +121,7 @@ import { BlockPropagationApiService, BlockPropagationOverview } from './block-pr
                   </span>
                 </td>
                 <td>
-                  <a [routerLink]="['/network/blocks', b.hash]" class="btn btn-outline-info btn-sm">Inspect</a>
+                  <a [routerLink]="['/network/blocks' | relativeUrl, b.hash]" class="btn btn-outline-info btn-sm">Inspect</a>
                 </td>
               </tr>
             </tbody>

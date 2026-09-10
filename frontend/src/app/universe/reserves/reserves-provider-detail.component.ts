@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { ReservesApiService, ReserveProvider, ReserveSnapshot } from './reserves.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-reserves-provider-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -24,9 +25,9 @@ import { ReservesApiService, ReserveProvider, ReserveSnapshot } from './reserves
 
         <!-- Navigation Tabs -->
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/intelligence/reserves">Overview</a>
-          <a class="nav-link active" routerLink="/intelligence/reserves/providers">Providers Directory</a>
-          <a class="nav-link" routerLink="/intelligence/reserves/verify">Verify Proof</a>
+          <a class="nav-link" [routerLink]="'/intelligence/reserves' | relativeUrl">Overview</a>
+          <a class="nav-link active" [routerLink]="'/intelligence/reserves/providers' | relativeUrl">Providers Directory</a>
+          <a class="nav-link" [routerLink]="'/intelligence/reserves/verify' | relativeUrl">Verify Proof</a>
         </nav>
       </header>
 
@@ -90,7 +91,7 @@ import { ReservesApiService, ReserveProvider, ReserveSnapshot } from './reserves
                   <td class="text-end">{{ (s.total_liability_sats / 100000000).toFixed(2) | number }} BTC</td>
                   <td class="text-end fw-bold text-success">{{ (s.solvency_ratio * 100).toFixed(2) }}%</td>
                   <td class="text-end">
-                    <a class="btn btn-sm btn-outline-primary" [routerLink]="['/intelligence/reserves/snapshot', s.snapshot_id]">
+                    <a class="btn btn-sm btn-outline-primary" [routerLink]="['/intelligence/reserves/snapshot' | relativeUrl, s.snapshot_id]">
                       Inspect Proof
                     </a>
                   </td>

@@ -1,17 +1,18 @@
 import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-ark-vtxo-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
       <header class="page-header mb-4">
         <div class="d-flex align-items-center gap-2 mb-2">
-          <a routerLink="/ark/vpack" class="btn btn-sm btn-outline-secondary">← Back to Ark V-PACK</a>
+          <a [routerLink]="'/ark/vpack' | relativeUrl" class="btn btn-sm btn-outline-secondary">← Back to Ark V-PACK</a>
         </div>
         <h1>VTXO Inspector: <span class="font-monospace fs-4">{{ vtxoId }}</span></h1>
         <p class="text-muted">Lifecycle status, round anchor outpoint, and unilateral exit capability.</p>

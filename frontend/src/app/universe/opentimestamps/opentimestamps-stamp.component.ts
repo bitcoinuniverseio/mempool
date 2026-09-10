@@ -7,6 +7,7 @@ import { distinctUntilChanged } from 'rxjs/operators';
 import { StateService } from '@app/services/state.service';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { OpenTimestampsApiService, TimestampStampResult, TimestampUpgradeResult } from './opentimestamps.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 const DIGEST = /^[0-9a-f]{64}$/i;
 
@@ -23,7 +24,7 @@ const DIGEST = /^[0-9a-f]{64}$/i;
 @Component({
   selector: 'app-opentimestamps-stamp',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule, FormsModule],
   template: `
     <div class="container-xl py-4">
       <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-4 pb-2 border-bottom">
@@ -31,7 +32,7 @@ const DIGEST = /^[0-9a-f]{64}$/i;
           <h1 class="h2 mb-1">Stamp a digest</h1>
           <p class="text-muted mb-0">The file is hashed here; only its SHA-256 is sent to the calendars.</p>
         </div>
-        <a routerLink="/tools/timestamp" class="btn btn-outline-secondary btn-sm">Overview</a>
+        <a [routerLink]="'/tools/timestamp' | relativeUrl" class="btn btn-outline-secondary btn-sm">Overview</a>
       </div>
 
       <div class="alert alert-warning" role="alert" *ngIf="loadError">{{ loadError }}</div>

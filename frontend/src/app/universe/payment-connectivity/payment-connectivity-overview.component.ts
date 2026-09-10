@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { PaymentConnectivityApiService, PaymentConnectivityOverview } from './payment-connectivity.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-payment-connectivity-overview',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -23,13 +24,13 @@ import { PaymentConnectivityApiService, PaymentConnectivityOverview } from './pa
         </p>
 
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link active" routerLink="/payments">Overview</a>
-          <a class="nav-link" routerLink="/payments/nwc">NWC Directory</a>
-          <a class="nav-link" routerLink="/payments/nwc/inspect">NWC URI Inspector</a>
-          <a class="nav-link" routerLink="/payments/nwc/compatibility">NWC Standards</a>
-          <a class="nav-link" routerLink="/payments/lnurl">LNURL Specifications</a>
-          <a class="nav-link" routerLink="/payments/lightning-address">Lightning Address</a>
-          <a class="nav-link" routerLink="/payments/zaps">NIP-57 Zaps</a>
+          <a class="nav-link active" [routerLink]="'/payments' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/payments/nwc' | relativeUrl">NWC Directory</a>
+          <a class="nav-link" [routerLink]="'/payments/nwc/inspect' | relativeUrl">NWC URI Inspector</a>
+          <a class="nav-link" [routerLink]="'/payments/nwc/compatibility' | relativeUrl">NWC Standards</a>
+          <a class="nav-link" [routerLink]="'/payments/lnurl' | relativeUrl">LNURL Specifications</a>
+          <a class="nav-link" [routerLink]="'/payments/lightning-address' | relativeUrl">Lightning Address</a>
+          <a class="nav-link" [routerLink]="'/payments/zaps' | relativeUrl">NIP-57 Zaps</a>
         </nav>
       </header>
 
@@ -117,7 +118,7 @@ import { PaymentConnectivityApiService, PaymentConnectivityOverview } from './pa
               Connection strings contain private client secrets in their query parameters. The NWC URI Inspector redacts secrets before logging or rendering to prevent credential leakage.
             </p>
             <div class="mt-3">
-              <a routerLink="/payments/nwc/inspect" class="btn btn-outline-primary btn-sm w-100">
+              <a [routerLink]="'/payments/nwc/inspect' | relativeUrl" class="btn btn-outline-primary btn-sm w-100">
                 Inspect NWC Connection URI &rarr;
               </a>
             </div>
