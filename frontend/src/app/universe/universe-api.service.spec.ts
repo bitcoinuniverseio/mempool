@@ -249,3 +249,34 @@ describe('UniverseApiService protocol registry cache', () => {
     expect(get).toHaveBeenCalledTimes(2);
   });
 });
+
+describe('UniverseApiService backend route network prefix', () => {
+  function buildOn(network: string): Recorder {
+    const urls: string[] = [];
+    const httpClient = { get: (url: string) => { urls.push(url); return of({ assets: [], groups: [], offers: [], quotes: [], total: 0 }); }, post: (url: string) => { urls.push(url); return of({}); } } as unknown as HttpClient;
+    const stateService = { isBrowser: true, network, env: { ROOT_NETWORK: 'mainnet' } } as unknown as StateService;
+    return { service: new UniverseApiService(httpClient, stateService), urls };
+  }
+
+  it('sends backend-owned routes to the selected network backend, as the gateway expects', () => {
+    const { service, urls } = buildOn('signet');
+    service.getTaprootAssets$().subscribe();
+    service.getTaprootAssetGroups$().subscribe();
+    service.getBolt12Offers$().subscribe();
+    service.getLightningRfq$().subscribe();
+    service.getTaprootAsset$('ab'.repeat(32)).subscribe();
+    expect(urls).toEqual([
+      '/signet/api/v1/taproot-assets/assets',
+      '/signet/api/v1/taproot-assets/groups',
+      '/signet/api/v1/lightning/offers',
+      '/signet/api/v1/lightning/rfq',
+      '/signet/api/v1/taproot-assets/assets/' + 'ab'.repeat(32),
+    ]);
+  });
+
+  it.each(['', 'mainnet'])('keeps the root backend for the root network %j', network => {
+    const { service, urls } = buildOn(network);
+    service.getTaprootAssets$().subscribe();
+    expect(urls).toEqual(['/api/v1/taproot-assets/assets']);
+  });
+});
