@@ -34,6 +34,7 @@ import { OpenTimestampsApiService, TimestampCalendar } from './opentimestamps.se
               <tr>
                 <th>Calendar</th>
                 <th>Status</th>
+                <th>Promised, not anchored</th>
                 <th>Anchored here</th>
                 <th>Latest block</th>
                 <th>Last observed</th>
@@ -50,6 +51,7 @@ import { OpenTimestampsApiService, TimestampCalendar } from './opentimestamps.se
                     {{ c.health_status | uppercase }}
                   </span>
                 </td>
+                <td>{{ c.pending_attestations_count | number }}</td>
                 <td>{{ c.anchored_proofs_count | number }}</td>
                 <td class="fw-bold">{{ c.last_anchor_block_height ?? 'none yet' }}</td>
                 <td class="small text-muted">{{ c.health_observed_at ? (c.health_observed_at | date:'short') : 'not yet' }}</td>
