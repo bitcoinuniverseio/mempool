@@ -116,3 +116,13 @@ describe('Bitcoin staking HTTP responses', () => {
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ stage: 'unavailable-consumer-chain' }));
   });
 });
+
+describe('EOTS evidence verdicts', () => {
+  it('never proves an equivocation without the owned EOTS verifier', () => {
+    expect(() => bitcoinStakingService.verifySlashingEvidence({
+      eots_pk: '02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5',
+      nonce_point: '028888888888888888888888888888888888888888888888888888888888888888',
+      message_a: 'block-a', message_b: 'block-b', signature_a: 'aa'.repeat(64), signature_b: 'bb'.repeat(64),
+    })).toThrow(expect.objectContaining({ code: 'unavailable-eots-verifier', status: 503 }));
+  });
+});

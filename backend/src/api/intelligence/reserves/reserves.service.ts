@@ -76,32 +76,27 @@ export class ReservesService {
         };
       }
 
-      let totalSats = 0;
-      let validCount = 0;
-
       for (const item of req.bip127_proof.items) {
         if (!item.signature || !item.public_key || !item.txid) {
           errors.push(`Malformed proof item for outpoint ${item.txid}:${item.vout}`);
-          continue;
         }
-        totalSats += item.amount_sats;
-        validCount++;
       }
-
-      const hash = crypto.createHash('sha256');
-      hash.update(req.bip127_proof.expected_message || '');
-      hash.update(totalSats.toString());
-      const digest = hash.digest('hex');
-
-      return {
-        verified: errors.length === 0 && validCount > 0,
-        proof_type: 'bip127',
-        total_verified_sats: totalSats,
-        verified_items_count: validCount,
-        errors,
-        attestation_digest: digest,
-        evaluated_at: evaluatedAt,
-      };
+      if (errors.length) {
+        return {
+          verified: false,
+          proof_type: 'bip127',
+          total_verified_sats: 0,
+          verified_items_count: 0,
+          errors,
+          attestation_digest: '',
+          evaluated_at: evaluatedAt,
+        };
+      }
+      // A well-formed item is not a verified one: the signature has to be checked
+      // against its key and the outpoint against the owned UTXO set, and neither
+      // verifier is connected here. Reporting a total as verified would invent it.
+      throw new ReservesEvidenceError('unavailable-verifier',
+        'BIP127 attestations are not verified on this deployment. Checking each item signature against its public key and each outpoint against the owned Bitcoin UTXO reader requires the owned attestation verifier, which is not connected. No reserve was verified.');
     }
 
     if (req.proof_type === 'merkle_inclusion') {

@@ -107,3 +107,12 @@ describe('Reserves HTTP responses', () => {
     }
   });
 });
+
+describe('BIP127 verdicts', () => {
+  it('never reports a well-formed attestation as verified without the owned verifier', () => {
+    expect(() => reservesService.verifyProof({
+      proof_type: 'bip127',
+      bip127_proof: { expected_message: 'reserves', items: [{ txid: 'ab'.repeat(32), vout: 0, amount_sats: 1000, signature: 'sig', public_key: '02' + 'cd'.repeat(32) } as never] },
+    })).toThrow(expect.objectContaining({ code: 'unavailable-verifier', status: 503 }));
+  });
+});

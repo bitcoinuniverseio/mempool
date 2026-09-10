@@ -114,3 +114,9 @@ describe('Simplicity HTTP responses', () => {
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ stage: 'unavailable-runtime' }));
   });
 });
+
+describe('Simplicity decoding verdicts', () => {
+  it('never returns commitments or jets for a program without the owned decoder', () => {
+    expect(() => simplicityService.decodeProgram('c8'.repeat(16))).toThrow(expect.objectContaining({ code: 'unavailable-decoder', status: 503 }));
+  });
+});
