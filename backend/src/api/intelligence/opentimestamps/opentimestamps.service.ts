@@ -52,6 +52,7 @@ export class OpenTimestampsService {
   private health = new Map<string, CalendarHealthObservation>();
   private healthProbedAt = 0;
   private reconciledAt = 0;
+  private reconciling: Promise<{ examined: number; anchored: number }> | null = null;
 
   constructor(private readonly options: OpenTimestampsServiceOptions = {}) {
     this.calendars = options.calendars ?? new CalendarClient(calendarDirectoryFromEnvironment());
@@ -89,7 +90,7 @@ export class OpenTimestampsService {
 
   /** @asyncUnsafe The route turns a rejection into an exact HTTP answer. */
   public async getOverview(): Promise<TimestampOverview> {
-    await this.reconcilePending();
+    this.scheduleReconciliation();
     const [stats, calendars, anchors, recent] = await Promise.all([
       this.records(() => this.store.stats()), this.listCalendars(), this.listAnchors(), this.records(() => this.store.recent(10)),
     ]);
@@ -109,6 +110,7 @@ export class OpenTimestampsService {
       active_calendar_servers: active.length,
       latest_anchored_block_height: stats.latest_anchor_height,
       network: this.network,
+      calendars_configured: this.calendars.configured,
       storage: this.store.kind,
       generated_at: this.now().toISOString(),
     };
@@ -117,8 +119,8 @@ export class OpenTimestampsService {
   /** @asyncUnsafe The route turns a rejection into an exact HTTP answer. */
   public async listCalendars(): Promise<{ calendars: TimestampCalendar[] }> {
     await this.probeHealth();
-    const anchored = await this.records(() => this.store.anchored(200));
-    return { calendars: this.calendars.list().map(entry => this.describeCalendar(entry, anchored)) };
+    const [anchored, pending] = await this.recordsForCalendars();
+    return { calendars: this.calendars.list().map(entry => this.describeCalendar(entry, anchored, pending)) };
   }
 
   /** @asyncUnsafe The route turns a rejection into an exact HTTP answer. */
@@ -126,7 +128,16 @@ export class OpenTimestampsService {
     const entry = this.calendars.byId(calendarId);
     if (!entry) {return undefined;}
     await this.probeHealth();
-    return this.describeCalendar(entry, await this.records(() => this.store.anchored(200)));
+    const [anchored, pending] = await this.recordsForCalendars();
+    return this.describeCalendar(entry, anchored, pending);
+  }
+
+  /** @asyncUnsafe The route turns a rejection into an exact HTTP answer. */
+  private recordsForCalendars(): Promise<[TimestampRecord[], TimestampRecord[]]> {
+    return Promise.all([
+      this.records(() => this.store.anchored(200)),
+      this.records(() => this.store.pendingForUpgrade(this.now().toISOString(), 500)),
+    ]);
   }
 
   /**
@@ -134,7 +145,7 @@ export class OpenTimestampsService {
    * block. An OpenTimestamps proof commits to a block's Merkle root and does
    * not name the transaction, so no txid is reported. @asyncUnsafe */
   public async listAnchors(): Promise<{ anchors: TimestampAnchorTransaction[] }> {
-    await this.reconcilePending();
+    this.scheduleReconciliation();
     const records = await this.records(() => this.store.anchored(500));
     const byKey = new Map<string, TimestampAnchorTransaction>();
     for (const record of records) {
@@ -175,6 +186,7 @@ export class OpenTimestampsService {
     if (typeof digestHex !== 'string' || !/^[0-9a-f]{64}$/i.test(digestHex)) {
       throw new TimestampEvidenceError('invalid-input', 'A 32-byte SHA256 digest in hexadecimal is required.', 400);
     }
+    this.requireCalendars();
     const digest = Buffer.from(digestHex.toLowerCase(), 'hex');
     const { commitment, timestamp } = nonceCommitment(digest);
     const leaf = timestamp.operations[0].result.operations[0].result;
@@ -243,10 +255,11 @@ export class OpenTimestampsService {
     if (proofData.digest !== undefined) {request.digest = proofData.digest;}
     if (proofData.network !== undefined) {request.network = proofData.network;}
     const verification = await verifyDetachedProof(request, this.reader, this.network);
+    const calendars = settleCalendars(outcome.calendars, verification.verified);
     if (parsed.algorithm === 'sha256') {
       for (const record of await this.records(() => this.store.findByDigest(parsed.digest.toString('hex'), this.network))) {
         if (record.status === 'pending' && verification.verified) {
-          await this.markAnchored(record, request.ots_proof as string, verification, outcome.calendars);
+          await this.markAnchored(record, request.ots_proof as string, verification, calendars);
         }
       }
     }
@@ -257,9 +270,28 @@ export class OpenTimestampsService {
       status: verification.status,
       verified: verification.verified,
       verification,
-      calendars: outcome.calendars,
+      calendars,
       notices: outcome.notices,
     };
+  }
+
+  /**
+   * Run reconciliation once in the background. A read that triggers it
+   * answers from the records as they are, so a slow calendar can never hold
+   * an overview past the gateway's deadline; the next read sees the result.
+   */
+  private scheduleReconciliation(): void {
+    if (this.reconciling) {return;}
+    this.reconciling = this.reconcilePending().catch(error => {
+      logger.warn(`OpenTimestamps reconciliation failed: ${error instanceof Error ? error.message : error}`);
+      return { examined: 0, anchored: 0 };
+    }).finally(() => { this.reconciling = null; });
+  }
+
+  private requireCalendars(): void {
+    if (!this.calendars.configured) {
+      throw new TimestampEvidenceError('unconfigured-calendar', 'Stamping is unavailable. This deployment names no OpenTimestamps calendar for its network (UNIVERSE_OPENTIMESTAMPS_CALENDARS), and no public calendar is substituted.');
+    }
   }
 
   /**
@@ -290,7 +322,7 @@ export class OpenTimestampsService {
           const proof = serializeDetachedProof(tree.digest, tree.timestamp).toString('base64');
           const verification = await verifyDetachedProof({ ots_proof: proof }, this.reader, this.network);
           if (verification.verified) {
-            await this.markAnchored(record, proof, verification, outcome.calendars);
+            await this.markAnchored(record, proof, verification, settleCalendars(outcome.calendars, true));
             anchored += 1;
             continue;
           }
@@ -335,7 +367,8 @@ export class OpenTimestampsService {
         target.node.attestations = target.node.attestations.filter(attestation => !(attestation.kind === 'pending' && attestation.uri === target.uri));
         mergeTimestamps(target.node, answer);
         upgraded = true;
-        calendars.push({ calendar_id: target.entry.calendar_id, calendar_url: target.uri, status: 'verified', detail: 'returned its Bitcoin attestation' });
+        // The attestation is in the proof now; whether it holds is the verifier's answer, not the calendar's.
+        calendars.push({ calendar_id: target.entry.calendar_id, calendar_url: target.uri, status: 'upgraded', detail: 'returned a Bitcoin attestation, not yet verified' });
         this.observeHealth(target.entry, 'online', 'returned an attestation');
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
@@ -382,9 +415,10 @@ export class OpenTimestampsService {
     this.health.set(entry.calendar_id, { calendar_id: entry.calendar_id, health_status: health, observed_at: this.now().toISOString(), detail });
   }
 
-  private describeCalendar(entry: CalendarDirectoryEntry, anchored: TimestampRecord[]): TimestampCalendar {
+  private describeCalendar(entry: CalendarDirectoryEntry, anchored: TimestampRecord[], pending: TimestampRecord[]): TimestampCalendar {
     const observation = this.health.get(entry.calendar_id);
     const mine = anchored.filter(record => record.calendars.some(contact => contact.calendar_id === entry.calendar_id && contact.status === 'anchored'));
+    const promised = pending.filter(record => record.calendars.some(contact => contact.calendar_id === entry.calendar_id && contact.status === 'pending'));
     const latest = mine.reduce<TimestampRecord | null>((best, record) => (!best || (record.anchor_block_height ?? 0) > (best.anchor_block_height ?? 0)) ? record : best, null);
     return {
       calendar_id: entry.calendar_id,
@@ -394,7 +428,7 @@ export class OpenTimestampsService {
       health_status: observation?.health_status ?? 'degraded',
       health_observed_at: observation?.observed_at ?? null,
       health_detail: observation?.detail ?? 'not yet observed',
-      pending_attestations_count: 0,
+      pending_attestations_count: promised.length,
       anchored_proofs_count: mine.length,
       average_anchor_lag_blocks: null,
       last_anchor_block_height: latest?.anchor_block_height ?? null,
@@ -409,6 +443,17 @@ export class OpenTimestampsService {
       throw new TimestampEvidenceError('invalid-input', 'A nonempty .ots proof is required.', 400);
     }
   }
+}
+
+/**
+ * A calendar's contribution is `verified` only once the whole upgraded proof
+ * verified against the owned reader; verification checks every Bitcoin
+ * attestation in the proof, so a failure leaves each contribution at `upgraded`.
+ */
+function settleCalendars(calendars: TimestampUpgradeResult['calendars'], verified: boolean): TimestampUpgradeResult['calendars'] {
+  return calendars.map(calendar => calendar.status === 'upgraded' && verified
+    ? { ...calendar, status: 'verified' as const, detail: 'returned its Bitcoin attestation, verified against the owned reader' }
+    : calendar);
 }
 
 function toBatch(record: TimestampRecord): TimestampBatch {

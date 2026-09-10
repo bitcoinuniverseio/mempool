@@ -1,6 +1,9 @@
 import { Application, Request, Response } from 'express';
 import taprootAssetsRoutes from './taproot-assets.routes';
-import { TaprootAssetsEvidenceError, taprootAssetsService } from './taproot-assets.service';
+import { TaprootAssetsEvidenceError, TaprootAssetsService } from './taproot-assets.service';
+
+// A deployment that named no tapd.
+const taprootAssetsService = new TaprootAssetsService({ authority: null });
 
 /**
  * These assertions replace a suite that asserted the constants the service used
@@ -59,7 +62,8 @@ describe('Taproot Assets proof verification boundary', () => {
   it.each(['long-enough-to-have-been-accepted-before', 'ab'.repeat(100), Buffer.from('not a Taproot Assets proof').toString('base64')])(
     'never verifies long or encoded junk without an actual proof engine', async (proofData) => {
       const result = await taprootAssetsService.$verifyProof('ab'.repeat(32), proofData);
-      expect(result).toMatchObject({ valid: false, stage: 'unavailable-verifier' });
+      expect(result.valid).toBe(false);
+      expect(['invalid-input', 'unavailable-verifier']).toContain(result.stage);
       expect(result).not.toHaveProperty('rootHash');
       expect(result).not.toHaveProperty('anchorBlockHeight');
     },
@@ -82,7 +86,8 @@ describe('Taproot Assets HTTP responses', () => {
 
   it.each([
     [{}, 400, 'invalid-input'],
-    [{ assetId: 'ab'.repeat(32), proofData: 'long-enough-to-have-been-accepted-before' }, 503, 'unavailable-verifier'],
+    [{ assetId: 'ab'.repeat(32), proofData: 'ab'.repeat(100) }, 503, 'unavailable-verifier'],
+    [{ assetId: 'ab'.repeat(32), proofData: 'not base64!' }, 400, 'invalid-input'],
   ])('never returns successful verification for missing or unverified proof data', async (body, status, stage) => {
     const { post } = mount();
     const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };

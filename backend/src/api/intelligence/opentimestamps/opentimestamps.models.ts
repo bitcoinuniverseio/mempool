@@ -27,6 +27,7 @@ export interface TimestampCalendar {
   health_status: 'online' | 'degraded' | 'offline';
   health_observed_at: string | null;
   health_detail: string;
+  /** Stamps made here that this calendar promised and has not yet anchored. */
   pending_attestations_count: number;
   anchored_proofs_count: number;
   average_anchor_lag_blocks: number | null;
@@ -87,7 +88,12 @@ export interface TimestampUpgradeResult {
   status: TimestampProofStatus;
   verified: boolean;
   verification: TimestampVerificationResult;
-  calendars: { calendar_id?: string; calendar_url: string; status: 'pending' | 'verified' | 'unreachable'; detail: string }[];
+  /**
+   * Per calendar: `pending` while it holds only a promise, `upgraded` when it
+   * returned a Bitcoin attestation that the owned reader has not verified,
+   * `verified` only after that attestation verified, `unreachable` otherwise.
+   */
+  calendars: { calendar_id?: string; calendar_url: string; status: 'pending' | 'upgraded' | 'verified' | 'unreachable'; detail: string }[];
   notices: string[];
 }
 
@@ -128,6 +134,8 @@ export interface TimestampOverview {
   active_calendar_servers: number;
   latest_anchored_block_height: number | null;
   network: string;
+  /** False when the deployment named no calendar; stamping is unavailable then. */
+  calendars_configured: boolean;
   /** Where the records live. Memory records do not survive a restart. */
   storage: 'mysql' | 'memory';
   generated_at: string;

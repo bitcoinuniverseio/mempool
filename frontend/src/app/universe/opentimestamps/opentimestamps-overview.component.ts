@@ -41,6 +41,9 @@ import { OpenTimestampsApiService, TimestampsOverview } from './opentimestamps.s
         <div class="alert alert-secondary small" role="note" *ngIf="overview.storage === 'memory'">
           Records on this deployment are kept in memory and do not survive a restart.
         </div>
+        <div class="alert alert-warning small" role="alert" *ngIf="!overview.calendars_configured">
+          No calendar is configured for {{ overview.network }} on this deployment. Stamping is unavailable until the operator names one; verification still works.
+        </div>
 
         <div class="row g-3 mb-4">
           <div class="col-6 col-md-3">
