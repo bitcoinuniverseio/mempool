@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+import { NgModule, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Routes, RouterModule } from '@angular/router';
 import { TransactionComponent } from '@components/transaction/transaction.component';
@@ -10,11 +10,14 @@ import { GraphsModule } from '@app/graphs/graphs.module';
 import { UniverseSharedModule } from '@app/universe/universe-shared.module';
 import { TransactionRawComponent } from '@components/transaction/transaction-raw.component';
 import { CpfpInfoComponent } from '@components/transaction/cpfp-info.component';
+import { StateService } from '@app/services/state.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 const routes: Routes = [
   {
     path: '',
-    redirectTo: '/',
+    // A bare /tx goes home on the selected network, not to the root network.
+    redirectTo: () => new RelativeUrlPipe(inject(StateService)).transform('/'),
     pathMatch: 'full',
   },
   {
