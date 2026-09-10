@@ -1,5 +1,11 @@
 import { Application, Request, Response } from 'express';
-import paymentConnectivityService from './payment-connectivity.service';
+import paymentConnectivityService, { PaymentConnectivityEvidenceError } from './payment-connectivity.service';
+
+/** An absent source is a 503 that names the source, never a 500 and never an empty list. */
+function fail(res: Response, err: unknown, status = 500): Response {
+  if (err instanceof PaymentConnectivityEvidenceError) return res.status(err.status).json({ stage: err.code, error: err.message });
+  return res.status(status).json({ error: err instanceof Error && err.message ? err.message : 'Internal error' });
+}
 
 class PaymentConnectivityRoutes {
   public initRoutes(app: Application): void {
@@ -8,7 +14,7 @@ class PaymentConnectivityRoutes {
         const overview = paymentConnectivityService.getOverview();
         res.json(overview);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -17,7 +23,7 @@ class PaymentConnectivityRoutes {
         const products = paymentConnectivityService.listProducts();
         res.json(products);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -26,7 +32,7 @@ class PaymentConnectivityRoutes {
         const compatibility = paymentConnectivityService.getCompatibility();
         res.json(compatibility);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -35,7 +41,7 @@ class PaymentConnectivityRoutes {
         const relays = paymentConnectivityService.listRelays();
         res.json(relays);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -47,7 +53,7 @@ class PaymentConnectivityRoutes {
         }
         res.json(relay);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -56,19 +62,15 @@ class PaymentConnectivityRoutes {
         const providers = paymentConnectivityService.listLnurlProviders();
         res.json(providers);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
     app.post('/api/v1/intelligence/payment-connectivity/manifests/verify', (req: Request, res: Response) => {
       try {
-        res.json({
-          verified: true,
-          product_id: req.body.product_id || 'unnamed-product',
-          message: 'Capability manifest signature validated',
-        });
+        res.json(paymentConnectivityService.verifyManifest());
       } catch (err: any) {
-        res.status(400).json({ error: err.message || 'Manifest verification error' });
+        fail(res, err, 400);
       }
     });
 
@@ -77,7 +79,7 @@ class PaymentConnectivityRoutes {
         const result = paymentConnectivityService.verifyPublicEndpoint(req.body.endpoint_url);
         res.json(result);
       } catch (err: any) {
-        res.status(400).json({ error: err.message || 'Endpoint verification error' });
+        fail(res, err, 400);
       }
     });
 
@@ -86,7 +88,7 @@ class PaymentConnectivityRoutes {
         const result = paymentConnectivityService.verifyZap(req.body);
         res.json(result);
       } catch (err: any) {
-        res.status(400).json({ error: err.message || 'Zap verification error' });
+        fail(res, err, 400);
       }
     });
   }

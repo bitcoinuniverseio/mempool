@@ -2,6 +2,7 @@ import { Component, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { CompactFiltersApiService } from './compact-filters.service';
 
 @Component({
@@ -61,7 +62,11 @@ import { CompactFiltersApiService } from './compact-filters.service';
           <div class="card p-4 bg-body-tertiary border h-100">
             <h2 class="h5 mb-3">Multi-Peer Cross-Check Result</h2>
 
-            <div *ngIf="!report && !verifying" class="text-center py-5 text-muted">
+            <div *ngIf="error" class="alert alert-warning" role="alert">
+              {{ error }}
+            </div>
+
+            <div *ngIf="!report && !verifying && !error" class="text-center py-5 text-muted">
               Select range and run verification to check cross-peer agreement.
             </div>
 
@@ -121,6 +126,7 @@ export class LightClientVerifyComponent {
   peerCount = 4;
   verifying = false;
   report: any = null;
+  error: string | null = null;
 
   constructor(
     private cfApi: CompactFiltersApiService,
@@ -130,6 +136,7 @@ export class LightClientVerifyComponent {
   runVerification(): void {
     this.verifying = true;
     this.report = null;
+    this.error = null;
 
     this.cfApi
       .executeVerification$({
@@ -145,13 +152,7 @@ export class LightClientVerifyComponent {
         },
         error: (err) => {
           this.verifying = false;
-          this.report = {
-            consensus_reached: true,
-            peers_agreeing: 4,
-            total_peers_queried: 4,
-            headers_verified: 1000,
-            manifest_hash: '9f8e7d6c5b4a392817263544a1b2c3d4e5f67890123456789abcdef012345678',
-          };
+          this.error = loadFailureMessage(classifyLoadFailure(err));
           this.cdr.markForCheck();
         },
       });
