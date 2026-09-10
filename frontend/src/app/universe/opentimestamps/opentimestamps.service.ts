@@ -21,6 +21,8 @@ export interface TimestampCalendar {
   health_status: 'online' | 'degraded' | 'offline';
   health_observed_at: string | null;
   health_detail: string;
+  /** Stamps made here that this calendar promised and has not yet anchored. */
+  pending_attestations_count: number;
   anchored_proofs_count: number;
   last_anchor_block_height: number | null;
 }
