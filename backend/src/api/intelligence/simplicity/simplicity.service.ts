@@ -91,24 +91,11 @@ export class SimplicityService {
       };
     }
 
-    const cmr = crypto.createHash('sha256').update(bytesHex + ':cmr').digest('hex');
-    const imr = crypto.createHash('sha256').update(bytesHex + ':imr').digest('hex');
-    const amr = crypto.createHash('sha256').update(bytesHex + ':amr').digest('hex');
-
-    return {
-      success: true,
-      cmr,
-      imr,
-      amr,
-      program_type: '2 -> 1',
-      jets: ['jet_bip0340_verify', 'jet_current_locktime'],
-      resource_bounds: {
-        max_cost_weight: 420,
-        max_memory_cells: 64,
-        max_call_depth: 6,
-      },
-      errors,
-    };
+    // A CMR, IMR and AMR are commitments over the decoded program tree. The
+    // sha256 of the hex string is none of those, and a fixed jet list is not a
+    // decoding. Decoding needs the owned Simplicity library.
+    throw new SimplicityEvidenceError('unavailable-decoder',
+      'Simplicity program decoding is unavailable. Computing the CMR, IMR and AMR, the program type, its jets and its resource bounds requires the owned libsimplicity decoder, which is not connected on this deployment.');
   }
 
   public executeProgram(data: {

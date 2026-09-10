@@ -145,21 +145,12 @@ export class BitcoinStakingService {
       };
     }
 
-    // Cryptographically simulate EOTS scalar extraction:
-    // With two distinct Schnorr/EOTS signatures under the same nonce R, secret scalar x is computed as:
-    // x = (s1 - s2) / (e1 - e2) mod n
-    // We derive the authoritative secret hash as evidence without exposing raw secret in cleartext.
-    const combinedDigest = crypto
-      .createHash('sha256')
-      .update(evidence.eots_pk + evidence.nonce_point + evidence.signature_a + evidence.signature_b)
-      .digest('hex');
-
-    return {
-      verified: true,
-      status: 'equivocation_proven',
-      reason: 'Dual signatures on identical nonce point mathematically demonstrate EOTS private scalar equivocation',
-      recovered_secret_hash: combinedDigest,
-    };
+    // Two distinct messages with two signatures are the shape of an equivocation,
+    // not a proof of one: proving it means checking both Schnorr signatures under
+    // the same nonce point and extracting the scalar, which needs the owned EOTS
+    // verifier. A sha256 over the inputs proves nothing.
+    throw new BitcoinStakingEvidenceError('unavailable-eots-verifier',
+      'EOTS equivocation evidence is not verified on this deployment. Checking both signatures against the finality provider key and nonce point and extracting the secret scalar requires the owned EOTS verifier, which is not connected.');
   }
 
   public reconcileWithConsumerPoS(_chainName: string): CrossChainReconciliationResult {
