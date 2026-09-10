@@ -1,5 +1,11 @@
 import { Application, Request, Response } from 'express';
-import compactFiltersService from './compact-filters.service';
+import compactFiltersService, { CompactFiltersEvidenceError } from './compact-filters.service';
+
+/** An absent source is a 503 that names the source, never a 500 and never an empty list. */
+function fail(res: Response, err: unknown, status = 500): Response {
+  if (err instanceof CompactFiltersEvidenceError) return res.status(err.status).json({ stage: err.code, error: err.message });
+  return res.status(status).json({ error: err instanceof Error && err.message ? err.message : 'Internal error' });
+}
 
 class CompactFiltersRoutes {
   public initRoutes(app: Application): void {
@@ -8,7 +14,7 @@ class CompactFiltersRoutes {
         const overview = compactFiltersService.getOverview();
         res.json(overview);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -17,7 +23,7 @@ class CompactFiltersRoutes {
         const providers = compactFiltersService.listProviders();
         res.json(providers);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -29,7 +35,7 @@ class CompactFiltersRoutes {
         }
         res.json(provider);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -38,7 +44,7 @@ class CompactFiltersRoutes {
         const history = compactFiltersService.getProviderHistory(req.params.providerId);
         res.json(history);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -47,7 +53,7 @@ class CompactFiltersRoutes {
         const checkpoints = compactFiltersService.listCheckpoints();
         res.json(checkpoints);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -59,7 +65,7 @@ class CompactFiltersRoutes {
         }
         res.json(filter);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -68,7 +74,7 @@ class CompactFiltersRoutes {
         const ranges = compactFiltersService.getRanges();
         res.json(ranges);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -77,7 +83,7 @@ class CompactFiltersRoutes {
         const run = compactFiltersService.createVerification(req.body);
         res.json(run);
       } catch (err: any) {
-        res.status(400).json({ error: err.message || 'Verification execution failed' });
+        fail(res, err, 400);
       }
     });
 
@@ -89,7 +95,7 @@ class CompactFiltersRoutes {
         }
         res.json(run);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
   }

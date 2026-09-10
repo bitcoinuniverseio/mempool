@@ -25,6 +25,7 @@
     <div *ngIf="vm.kind === 'error'" class="panel">
       <h2>Authority Offline</h2>
       <p>The first-party Wildkin indexer authority could not be reached.</p>
+      <p role="alert">{{ vm.message }}</p>
     </div>
 
     <ng-container *ngIf="vm.kind === 'ready' && vm.status">

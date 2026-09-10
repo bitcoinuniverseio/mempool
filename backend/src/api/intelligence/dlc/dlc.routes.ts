@@ -1,5 +1,14 @@
 import { Application, Request, Response } from 'express';
-import dlcService from './dlc.service';
+import dlcService, { DlcEvidenceError } from './dlc.service';
+
+/** An absent source is a 503 that names the source, never a 500 and never an empty list. */
+function fail(res: Response, err: unknown, status: number, fallback: string): void {
+  if (err instanceof DlcEvidenceError) {
+    res.status(err.status).json({ stage: err.code, error: err.message });
+    return;
+  }
+  res.status(status).json({ error: err instanceof Error && err.message ? err.message : fallback });
+}
 
 class DlcRoutes {
   public initRoutes(app: Application): void {
@@ -7,8 +16,8 @@ class DlcRoutes {
       try {
         const overview = dlcService.getOverview();
         res.json(overview);
-      } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+      } catch (err) {
+        fail(res, err, 500, 'Internal error');
       }
     });
 
@@ -16,8 +25,8 @@ class DlcRoutes {
       try {
         const oracles = dlcService.listOracles();
         res.json(oracles);
-      } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+      } catch (err) {
+        fail(res, err, 500, 'Internal error');
       }
     });
 
@@ -28,8 +37,8 @@ class DlcRoutes {
           return res.status(404).json({ error: 'Oracle not found' });
         }
         res.json(oracle);
-      } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+      } catch (err) {
+        fail(res, err, 500, 'Internal error');
       }
     });
 
@@ -37,8 +46,8 @@ class DlcRoutes {
       try {
         const history = dlcService.getOracleHistory(req.params.oracleId);
         res.json(history);
-      } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+      } catch (err) {
+        fail(res, err, 500, 'Internal error');
       }
     });
 
@@ -46,8 +55,8 @@ class DlcRoutes {
       try {
         const events = dlcService.listEvents();
         res.json(events);
-      } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+      } catch (err) {
+        fail(res, err, 500, 'Internal error');
       }
     });
 
@@ -58,8 +67,8 @@ class DlcRoutes {
           return res.status(404).json({ error: 'Event not found' });
         }
         res.json(event);
-      } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+      } catch (err) {
+        fail(res, err, 500, 'Internal error');
       }
     });
 
@@ -67,8 +76,8 @@ class DlcRoutes {
       try {
         const attestations = dlcService.getEventAttestations(req.params.eventId);
         res.json(attestations);
-      } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+      } catch (err) {
+        fail(res, err, 500, 'Internal error');
       }
     });
 
@@ -76,8 +85,8 @@ class DlcRoutes {
       try {
         const conflicts = dlcService.listConflicts();
         res.json(conflicts);
-      } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+      } catch (err) {
+        fail(res, err, 500, 'Internal error');
       }
     });
 
@@ -85,8 +94,8 @@ class DlcRoutes {
       try {
         const result = dlcService.verifyAnnouncement(req.body);
         res.json(result);
-      } catch (err: any) {
-        res.status(400).json({ error: err.message || 'Invalid announcement request' });
+      } catch (err) {
+        fail(res, err, 400, 'Invalid announcement request');
       }
     });
 
@@ -94,8 +103,8 @@ class DlcRoutes {
       try {
         const result = dlcService.verifyAttestation(req.body);
         res.json(result);
-      } catch (err: any) {
-        res.status(400).json({ error: err.message || 'Invalid attestation request' });
+      } catch (err) {
+        fail(res, err, 400, 'Invalid attestation request');
       }
     });
 
@@ -103,8 +112,8 @@ class DlcRoutes {
       try {
         const result = dlcService.verifyContractPackage(req.body);
         res.json(result);
-      } catch (err: any) {
-        res.status(400).json({ error: err.message || 'Invalid contract package' });
+      } catch (err) {
+        fail(res, err, 400, 'Invalid contract package');
       }
     });
 
@@ -112,8 +121,8 @@ class DlcRoutes {
       try {
         const sim = dlcService.createSimulation(req.body);
         res.json(sim);
-      } catch (err: any) {
-        res.status(400).json({ error: err.message || 'Simulation execution failed' });
+      } catch (err) {
+        fail(res, err, 400, 'Simulation execution failed');
       }
     });
 
@@ -124,8 +133,8 @@ class DlcRoutes {
           return res.status(404).json({ error: 'Simulation not found' });
         }
         res.json(sim);
-      } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+      } catch (err) {
+        fail(res, err, 500, 'Internal error');
       }
     });
   }

@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { BehaviorSubject, Observable, catchError, of } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, map, of } from 'rxjs';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { WildkinBraidCeremony } from '@app/universe/universe.types';
@@ -10,6 +11,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
 interface BloodlinesViewModel {
   readonly kind: 'loading' | 'ready' | 'error';
   readonly braids?: WildkinBraidCeremony[];
+  readonly message?: string;
 }
 
 @Component({
@@ -32,10 +34,11 @@ export class WildkinBloodlinesComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.api.getWildkinBraids$()
-      .pipe(catchError(() => of({ braids: [] })))
-      .subscribe((data) => {
-        this.state.next({ kind: 'ready', braids: data.braids });
-      });
+    // A braid history the source could not answer is an error with its
+    // reason, not an empty history.
+    this.api.getWildkinBraids$().pipe(
+      map((data): BloodlinesViewModel => ({ kind: 'ready', braids: data.braids })),
+      catchError((error) => of<BloodlinesViewModel>({ kind: 'error', message: loadFailureMessage(classifyLoadFailure(error)) })),
+    ).subscribe((vm) => this.state.next(vm));
   }
 }

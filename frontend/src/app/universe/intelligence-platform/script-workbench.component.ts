@@ -1,6 +1,7 @@
 import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { IntelligenceApiService } from './intelligence-api.service';
 
 @Component({
@@ -37,6 +38,10 @@ import { IntelligenceApiService } from './intelligence-api.service';
       <div *ngIf="loading" class="card p-4 text-center mb-4" role="status">
         <div class="spinner-border text-primary mx-auto" role="status"></div>
         <p class="mt-2 text-muted mb-0">Analyzing transaction payload...</p>
+      </div>
+
+      <div *ngIf="loadError" class="alert alert-danger mb-4" role="alert">
+        {{ loadError }}
       </div>
 
       <!-- Script Analyzer Tab -->
@@ -250,6 +255,7 @@ export class ScriptWorkbenchComponent implements OnInit {
   psbtInput = '';
 
   loading = false;
+  loadError: string | null = null;
   scriptResult: any = null;
   descriptorResult: any = null;
   psbtResult: any = null;
@@ -283,13 +289,15 @@ export class ScriptWorkbenchComponent implements OnInit {
     this.loading = true;
     this.cdr.markForCheck();
 
+    this.loadError = null;
     this.api.analyzeScript$(this.scriptInput).subscribe({
       next: (res) => {
         this.scriptResult = res;
         this.loading = false;
         this.cdr.markForCheck();
       },
-      error: () => {
+      error: (err) => {
+        this.loadError = err?.error?.error || loadFailureMessage(classifyLoadFailure(err));
         this.loading = false;
         this.cdr.markForCheck();
       },
@@ -301,13 +309,15 @@ export class ScriptWorkbenchComponent implements OnInit {
     this.loading = true;
     this.cdr.markForCheck();
 
+    this.loadError = null;
     this.api.parseDescriptor$(this.descriptorInput).subscribe({
       next: (res) => {
         this.descriptorResult = res;
         this.loading = false;
         this.cdr.markForCheck();
       },
-      error: () => {
+      error: (err) => {
+        this.loadError = err?.error?.error || loadFailureMessage(classifyLoadFailure(err));
         this.loading = false;
         this.cdr.markForCheck();
       },
@@ -319,13 +329,15 @@ export class ScriptWorkbenchComponent implements OnInit {
     this.loading = true;
     this.cdr.markForCheck();
 
+    this.loadError = null;
     this.api.analyzePsbt$(this.psbtInput).subscribe({
       next: (res) => {
         this.psbtResult = res;
         this.loading = false;
         this.cdr.markForCheck();
       },
-      error: () => {
+      error: (err) => {
+        this.loadError = err?.error?.error || loadFailureMessage(classifyLoadFailure(err));
         this.loading = false;
         this.cdr.markForCheck();
       },

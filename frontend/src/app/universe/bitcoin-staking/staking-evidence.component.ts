@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { BitcoinStakingApiService, EotsSlashingEvidence } from './bitcoin-staking.service';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
@@ -33,6 +34,10 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           <a class="nav-link" [routerLink]="'/protocols/bitcoin-staking/reconciliation' | relativeUrl">PoS Reconciliation</a>
         </nav>
       </header>
+
+      <div *ngIf="error" class="alert alert-warning" role="alert">
+        {{ error }}
+      </div>
 
       <div class="row g-4">
         <div class="col-12 col-lg-6">
@@ -130,6 +135,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
 })
 export class StakingEvidenceComponent implements OnInit, OnDestroy {
   evidenceList: EotsSlashingEvidence[] = [];
+  error: string | null = null;
   eotsPk = '02e4d94d3b64c679b3ee38734fe0d15e9858df34ab941b38f15d2a937964177d61';
   noncePoint = '028888888888888888888888888888888888888888888888888888888888888888';
   msgA = 'vote_block_alpha_height_858102';
@@ -151,7 +157,10 @@ export class StakingEvidenceComponent implements OnInit, OnDestroy {
         this.evidenceList = data;
         this.cdr.markForCheck();
       },
-      error: () => {},
+      error: (err) => {
+        this.error = loadFailureMessage(classifyLoadFailure(err));
+        this.cdr.markForCheck();
+      },
     });
   }
 

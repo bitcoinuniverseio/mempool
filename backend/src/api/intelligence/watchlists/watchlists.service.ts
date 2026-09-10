@@ -1,6 +1,19 @@
 import * as crypto from 'crypto';
 import { EventEnvelopeValidator } from '../events/event-envelope';
-import { eventBus } from '../events/intelligence-event-bus';
+
+/**
+ * Raised when a read has no source behind it. The routes map the code to a
+ * 503, so an absent integration is reported as an absent integration rather
+ * than as an answer.
+ */
+export class WatchlistsEvidenceError extends Error {
+  constructor(public readonly code: string, message: string, public readonly status = 503) {
+    super(message);
+  }
+}
+
+const matcherUnavailable =
+  'Watchlist notifications are unavailable. Alerts require the owned watchlist matcher that evaluates rules against the owned mempool and chain readers (UNIVERSE_WATCHLIST_MATCHER_ORIGIN), which is not connected on this deployment.';
 
 export interface WatchlistEntity {
   entity_id: string;
@@ -45,73 +58,22 @@ export interface UserWatchlist {
   updated_at: string;
 }
 
+/**
+ * Watchlists hold what callers submitted and stay answerable. Notifications
+ * used to come from a seeded sample alert about a transfer nobody observed;
+ * no owned matcher is connected, so they report the source they would need.
+ */
 export class WatchlistsService {
   private static instance: WatchlistsService;
   private watchlists: Map<string, UserWatchlist> = new Map();
-  private notifications: Map<string, WatchlistNotification> = new Map();
 
-  private constructor() {
-    this.seedDefaultWatchlist();
-  }
+  private constructor() {}
 
   public static getInstance(): WatchlistsService {
     if (!WatchlistsService.instance) {
       WatchlistsService.instance = new WatchlistsService();
     }
     return WatchlistsService.instance;
-  }
-
-  private seedDefaultWatchlist(): void {
-    const wId = 'wl-sample-01';
-    const ruleId = 'rule-sample-01';
-    const address = 'bc1q751e76e8199196d454941c45d1b3a323f1433bd6';
-    const blinded = crypto.createHash('sha256').update(address).digest('hex');
-
-    const watchlist: UserWatchlist = {
-      watchlist_id: wId,
-      user_id: 'user-default',
-      name: 'Cold Storage Vault Monitoring',
-      privacy_mode: 'blinded',
-      entities: [
-        {
-          entity_id: 'ent-01',
-          entity_type: 'address',
-          blinded_hash: blinded,
-          label: 'Primary Vault Output',
-          added_at_utc: new Date().toISOString(),
-        },
-      ],
-      rules: [
-        {
-          rule_id: ruleId,
-          watchlist_id: wId,
-          condition_type: 'value_transfer',
-          threshold_value: 1000000, // 0.01 BTC in sats
-          delivery_channel: 'in_app',
-          enabled: true,
-          rate_limit_per_hour: 10,
-        },
-      ],
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-
-    this.watchlists.set(wId, watchlist);
-
-    // Default notification
-    const notifId = 'notif-sample-01';
-    this.notifications.set(notifId, {
-      notification_id: notifId,
-      watchlist_id: wId,
-      rule_id: ruleId,
-      title: 'Transfer Alert',
-      message: 'Observed transfer of 2,500,000 satoshis matching watched blinded entity.',
-      severity: 'info',
-      entity_type: 'address',
-      blinded_hash: blinded,
-      acknowledged: false,
-      created_at_utc: new Date(Date.now() - 3600000).toISOString(),
-    });
   }
 
   public createWatchlist(
@@ -200,18 +162,13 @@ export class WatchlistsService {
   }
 
   public getNotifications(watchlistId?: string): WatchlistNotification[] {
-    const list = Array.from(this.notifications.values());
-    if (watchlistId) {
-      return list.filter((n) => n.watchlist_id === watchlistId);
-    }
-    return list;
+    void watchlistId;
+    throw new WatchlistsEvidenceError('unavailable-watchlist-matcher', matcherUnavailable);
   }
 
   public acknowledgeNotification(notifId: string): boolean {
-    const n = this.notifications.get(notifId);
-    if (!n) return false;
-    n.acknowledged = true;
-    return true;
+    void notifId;
+    throw new WatchlistsEvidenceError('unavailable-watchlist-matcher', matcherUnavailable);
   }
 
   public deleteWatchlist(id: string): boolean {

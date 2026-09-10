@@ -1,7 +1,16 @@
 import { Application, Request, Response } from 'express';
 import config from '../../config';
 import { handleError } from '../../utils/api';
-import { wildkinService } from './wildkin.service';
+import { WildkinEvidenceError, wildkinService } from './wildkin.service';
+
+/** An absent source is a 503 that names the source, never a 500 and never an empty list. */
+function fail(req: Request, res: Response, e: unknown): void {
+  if (e instanceof WildkinEvidenceError) {
+    res.status(e.status).json({ stage: e.code, error: e.message });
+    return;
+  }
+  handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+}
 
 class WildkinRoutes {
   public initRoutes(app: Application): void {
@@ -19,7 +28,7 @@ class WildkinRoutes {
       const status = await wildkinService.$getStatus();
       res.json(status);
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -28,7 +37,7 @@ class WildkinRoutes {
       const creatures = await wildkinService.$getCreatures();
       res.json({ creatures, total: creatures.length });
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -41,7 +50,7 @@ class WildkinRoutes {
       }
       res.json(creature);
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -50,7 +59,7 @@ class WildkinRoutes {
       const braids = await wildkinService.$getBraids();
       res.json({ braids, total: braids.length });
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 }

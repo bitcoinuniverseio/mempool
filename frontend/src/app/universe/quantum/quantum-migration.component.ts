@@ -2,6 +2,7 @@ import { Component, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { QuantumApiService, QuantumMigrationPlanResult } from './quantum.service';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
@@ -69,6 +70,10 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
         </form>
       </div>
 
+      <div *ngIf="errorMessage" class="alert alert-danger mb-4" role="alert">
+        {{ errorMessage }}
+      </div>
+
       <!-- Result View -->
       <div *ngIf="result" class="card p-4 bg-body-tertiary border">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 border-bottom pb-2">
@@ -125,6 +130,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
 export class QuantumMigrationComponent {
   rawOutpoints = '';
   planning = false;
+  errorMessage: string | null = null;
   result: QuantumMigrationPlanResult | null = null;
 
   constructor(
@@ -140,6 +146,7 @@ export class QuantumMigrationComponent {
   generatePlan(): void {
     if (!this.rawOutpoints) return;
     this.planning = true;
+    this.errorMessage = null;
     this.result = null;
 
     const outpoints = this.rawOutpoints.split('\n').map(s => s.trim()).filter(Boolean);
@@ -150,7 +157,8 @@ export class QuantumMigrationComponent {
         this.planning = false;
         this.cd.markForCheck();
       },
-      error: () => {
+      error: err => {
+        this.errorMessage = loadFailureMessage(classifyLoadFailure(err));
         this.planning = false;
         this.cd.markForCheck();
       },
