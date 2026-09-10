@@ -5,6 +5,7 @@ import { BehaviorSubject, Observable, catchError, of, switchMap } from 'rxjs';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { WildkinCreature } from '@app/universe/universe.types';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 interface CreaturesViewModel {
   readonly kind: 'loading' | 'ready' | 'detail' | 'error';
@@ -17,7 +18,7 @@ interface CreaturesViewModel {
   templateUrl: './wildkin-creatures.component.html',
   styleUrls: ['../product-page.scss'],
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WildkinCreaturesComponent implements OnInit {

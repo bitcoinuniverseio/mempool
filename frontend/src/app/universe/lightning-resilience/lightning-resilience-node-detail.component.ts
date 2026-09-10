@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { LightningResilienceApiService } from './lightning-resilience.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-lightning-resilience-node-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4" *ngIf="loadError">
       <div class="alert alert-warning" role="alert">{{ loadError }}</div>
@@ -18,7 +19,7 @@ import { LightningResilienceApiService } from './lightning-resilience.service';
           <h1 class="h2 mb-1">Node Resilience Profile: <span class="text-info">{{ node.alias }}</span></h1>
           <p class="text-muted mb-0">Hop defense configurations, circuit breakers, and peer reputation posture.</p>
         </div>
-        <a routerLink="/lightning/resilience" class="btn btn-outline-secondary btn-sm">Back to Resilience Center</a>
+        <a [routerLink]="'/lightning/resilience' | relativeUrl" class="btn btn-outline-secondary btn-sm">Back to Resilience Center</a>
       </div>
 
       <div class="row g-3 mb-4">

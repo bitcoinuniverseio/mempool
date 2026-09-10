@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { PayjoinApiService, PayjoinDirectory } from './payjoin.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-payjoin-directory',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -24,11 +25,11 @@ import { PayjoinApiService, PayjoinDirectory } from './payjoin.service';
 
         <!-- Navigation Tabs -->
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/payments/payjoin">Overview</a>
-          <a class="nav-link" routerLink="/payments/payjoin/analyze">Proposal Analyzer</a>
-          <a class="nav-link active" routerLink="/payments/payjoin/directory">Directory Observatory</a>
-          <a class="nav-link" routerLink="/payments/payjoin/compatibility">Compatibility Matrix</a>
-          <a class="nav-link" routerLink="/payments/payjoin/playground">Interactive Playground</a>
+          <a class="nav-link" [routerLink]="'/payments/payjoin' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/payments/payjoin/analyze' | relativeUrl">Proposal Analyzer</a>
+          <a class="nav-link active" [routerLink]="'/payments/payjoin/directory' | relativeUrl">Directory Observatory</a>
+          <a class="nav-link" [routerLink]="'/payments/payjoin/compatibility' | relativeUrl">Compatibility Matrix</a>
+          <a class="nav-link" [routerLink]="'/payments/payjoin/playground' | relativeUrl">Interactive Playground</a>
         </nav>
       </header>
 

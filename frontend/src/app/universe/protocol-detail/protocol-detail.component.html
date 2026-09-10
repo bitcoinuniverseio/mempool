@@ -7,7 +7,7 @@
       <p i18n="universe.detail.missing-body">
         The registry has no entry with that id or alias.
       </p>
-      <a [routerLink]="['/protocols']" i18n="universe.detail.back">Back to all protocols</a>
+      <a [routerLink]="['/protocols' | relativeUrl]" i18n="universe.detail.back">Back to all protocols</a>
     </div>
 
     <div *ngSwitchCase="'error'" class="panel state-panel">
@@ -23,7 +23,7 @@
       <header class="page-head">
         <div class="title-block">
           <nav class="crumbs">
-            <a [routerLink]="['/protocols']" i18n="universe.detail.crumb">Protocols</a>
+            <a [routerLink]="['/protocols' | relativeUrl]" i18n="universe.detail.crumb">Protocols</a>
           </nav>
           <h1>
             {{ vm.protocol.displayName }}
@@ -94,7 +94,7 @@
 
         <ul class="event-list" *ngIf="vm.events?.length; else noEvents">
           <li *ngFor="let event of vm.events; trackBy: trackByEvent">
-            <a class="identifier" [routerLink]="['/tx', event.txid]">{{ shorten(event.txid, 10) }}</a>
+            <a class="identifier" [routerLink]="['/tx' | relativeUrl, event.txid]">{{ shorten(event.txid, 10) }}</a>
           </li>
         </ul>
         <ng-template #noEvents>
@@ -103,7 +103,7 @@
           </p>
         </ng-template>
 
-        <a [routerLink]="['/pulse']" i18n="universe.detail.open-pulse">Open the live protocol feed</a>
+        <a [routerLink]="['/pulse' | relativeUrl]" i18n="universe.detail.open-pulse">Open the live protocol feed</a>
       </section>
 
       <section class="panel authority-objects" aria-labelledby="detail-authority-objects-heading">
@@ -162,7 +162,7 @@
               <ul class="authority-event-list" *ngIf="activity.rows.length; else activityEmpty">
                 <li *ngFor="let row of activity.rows; trackBy: trackByRow">
                   <span class="kind" *ngIf="row.kind">{{ row.kind }}</span>
-                  <a class="identifier" *ngIf="row.txid; else rowIdentity" [routerLink]="['/tx', row.txid]">{{ shorten(row.txid, 10) }}</a>
+                  <a class="identifier" *ngIf="row.txid; else rowIdentity" [routerLink]="['/tx' | relativeUrl, row.txid]">{{ shorten(row.txid, 10) }}</a>
                   <ng-template #rowIdentity>
                     <span class="identifier">{{ row.id ? shorten(row.id, 16) : '' }}</span>
                   </ng-template>

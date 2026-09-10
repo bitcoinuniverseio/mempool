@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { BlockPropagationApiService } from './block-propagation.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-block-propagation-compact-blocks',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4">
       <div class="alert alert-warning" role="alert" *ngIf="loadError">
@@ -18,7 +19,7 @@ import { BlockPropagationApiService } from './block-propagation.service';
           <h1 class="h2 mb-1">BIP152 Compact Block Reconstruction Intelligence</h1>
           <p class="text-muted mb-0">Analysis of mempool pre-fill efficiency, short-id collisions, and getblocktxn roundtrips.</p>
         </div>
-        <a routerLink="/network/blocks" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
+        <a [routerLink]="'/network/blocks' | relativeUrl" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
       </div>
 
       <div class="card bg-dark border-secondary mb-4">
@@ -42,7 +43,7 @@ import { BlockPropagationApiService } from './block-propagation.service';
               <tr *ngFor="let cb of compactBlocks">
                 <td class="fw-bold">{{ cb.block_height }}</td>
                 <td class="font-monospace text-info">
-                  <a [routerLink]="['/network/blocks', cb.block_hash]">{{ cb.block_hash | slice:0:18 }}...</a>
+                  <a [routerLink]="['/network/blocks' | relativeUrl, cb.block_hash]">{{ cb.block_hash | slice:0:18 }}...</a>
                 </td>
                 <td>{{ cb.short_ids_matched | number }}</td>
                 <td>

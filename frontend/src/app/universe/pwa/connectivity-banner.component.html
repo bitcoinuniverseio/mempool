@@ -18,7 +18,7 @@
       </p>
     </div>
 
-    <a class="action" routerLink="/offline" i18n="universe.pwa.offline.manage">Manage stored data</a>
+    <a class="action" [routerLink]="'/offline' | relativeUrl" i18n="universe.pwa.offline.manage">Manage stored data</a>
   </div>
 
   <div class="banner update" role="status" *ngIf="state === 'update'">

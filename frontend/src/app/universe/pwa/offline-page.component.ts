@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { map } from 'rxjs/operators';
 import { PwaService } from './pwa.service';
 import { formatBytes, storageSentence } from './storage-format';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 /**
  * The offline page, and with it the controls for everything this explorer
@@ -18,7 +19,7 @@ import { formatBytes, storageSentence } from './storage-format';
 @Component({
   selector: 'app-universe-offline-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, AsyncPipe, DecimalPipe],
+  imports: [RelativeUrlPipe, CommonModule, RouterLink, AsyncPipe, DecimalPipe],
   templateUrl: './offline-page.component.html',
   styleUrls: ['./offline-page.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

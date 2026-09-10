@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { SimplicityApiService, SimplicityProgram } from './simplicity.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-simplicity-contracts',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -23,10 +24,10 @@ import { SimplicityApiService, SimplicityProgram } from './simplicity.service';
         </p>
 
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/liquid/simplicity">Overview</a>
-          <a class="nav-link active" routerLink="/liquid/simplicity/contracts">Contract Programs</a>
-          <a class="nav-link" routerLink="/tools/simplicity">Compiler Workbench</a>
-          <a class="nav-link" routerLink="/tools/simplicity/verify">Formal Proof Verifier</a>
+          <a class="nav-link" [routerLink]="'/liquid/simplicity' | relativeUrl">Overview</a>
+          <a class="nav-link active" [routerLink]="'/liquid/simplicity/contracts' | relativeUrl">Contract Programs</a>
+          <a class="nav-link" [routerLink]="'/tools/simplicity' | relativeUrl">Compiler Workbench</a>
+          <a class="nav-link" [routerLink]="'/tools/simplicity/verify' | relativeUrl">Formal Proof Verifier</a>
         </nav>
       </header>
 
@@ -71,7 +72,7 @@ import { SimplicityApiService, SimplicityProgram } from './simplicity.service';
                   </span>
                 </td>
                 <td>
-                  <a [routerLink]="['/liquid/simplicity/program', p.program_id]" class="btn btn-sm btn-outline-primary">
+                  <a [routerLink]="['/liquid/simplicity/program' | relativeUrl, p.program_id]" class="btn btn-sm btn-outline-primary">
                     Inspect
                   </a>
                 </td>

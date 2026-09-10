@@ -4,6 +4,8 @@ import { RouterModule } from '@angular/router';
 import { BehaviorSubject, Observable, catchError, combineLatest, of } from 'rxjs';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
+
 import {
   ArkBatch,
   ArkOperator,
@@ -24,7 +26,7 @@ interface ArkViewModel {
   templateUrl: './ark-dashboard.component.html',
   styleUrls: ['../product-page.scss'],
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ArkDashboardComponent implements OnInit {

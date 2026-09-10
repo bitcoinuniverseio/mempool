@@ -5,6 +5,7 @@ import { BehaviorSubject, Observable, catchError, combineLatest, of } from 'rxjs
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { FractalBlockSummary, FractalMempoolOverview } from '@app/universe/universe.types';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 interface FractalViewModel {
   readonly kind: 'loading' | 'ready' | 'error';
@@ -18,7 +19,7 @@ interface FractalViewModel {
   templateUrl: './fractal-dashboard.component.html',
   styleUrls: ['../product-page.scss'],
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FractalDashboardComponent implements OnInit {

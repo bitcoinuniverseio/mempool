@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { SeoService } from '@app/services/seo.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 interface ScanResult {
   readonly addressType: 'unified' | 'sapling' | 'transparent' | 'invalid';
@@ -18,7 +19,7 @@ interface ScanResult {
   templateUrl: './zcash-viewing-key-workspace.component.html',
   styleUrls: ['../product-page.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, FormsModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ZcashViewingKeyWorkspaceComponent {

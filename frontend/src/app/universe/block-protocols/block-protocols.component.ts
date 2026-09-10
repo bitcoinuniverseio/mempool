@@ -6,6 +6,7 @@ import { Observable, catchError, map, of, startWith } from 'rxjs';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { AssetLookupResult, OrdBlockInscriptionsView } from '@app/universe/universe.types';
 import { shortenIdentifier } from '@app/universe/universe-evidence';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 interface BlockProtocolsState {
   readonly kind: 'loading' | 'ready' | 'unavailable' | 'skipped';
@@ -27,7 +28,7 @@ const VISIBLE_LIMIT = 24;
 @Component({
   selector: 'app-universe-block-protocols',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   templateUrl: './block-protocols.component.html',
   styleUrls: ['./block-protocols.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

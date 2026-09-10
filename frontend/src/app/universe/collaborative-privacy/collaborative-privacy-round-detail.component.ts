@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { CollaborativePrivacyApiService } from './collaborative-privacy.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-collaborative-privacy-round-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4" *ngIf="round">
       <div class="alert alert-warning" role="alert" *ngIf="loadError">
@@ -18,7 +19,7 @@ import { CollaborativePrivacyApiService } from './collaborative-privacy.service'
           <h1 class="h2 mb-1">Round Audit: <span class="text-info font-monospace">{{ round.round_id }}</span></h1>
           <p class="text-muted mb-0">{{ round.protocol }} coordinated by {{ round.coordinator }}</p>
         </div>
-        <a routerLink="/privacy/collaborative" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
+        <a [routerLink]="'/privacy/collaborative' | relativeUrl" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
       </div>
 
       <div class="row g-3 mb-4">

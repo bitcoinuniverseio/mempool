@@ -32,6 +32,8 @@ import {
   formatSeconds,
 } from '@app/universe/chain-dashboard/chain-dashboard-format';
 import { readCandidateBuckets } from '@app/universe/multichain-explorer/candidate-buckets';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
+
 import {
   ChainProfile,
   ExactNumber,
@@ -91,7 +93,7 @@ const EVIDENCE_LABELS: Record<string, string> = {
 @Component({
   selector: 'app-chain-mining',
   standalone: true,
-  imports: [CommonModule, RouterModule, ChainTimelineComponent],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule, ChainTimelineComponent],
   templateUrl: './chain-mining.component.html',
   styleUrls: ['./chain-mining.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

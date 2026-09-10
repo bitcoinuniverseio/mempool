@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { OffchainApiService, OffchainOverview } from './offchain.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-offchain-utxo',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -23,12 +24,12 @@ import { OffchainApiService, OffchainOverview } from './offchain.service';
         </p>
 
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link active" routerLink="/offchain/utxo">Overview</a>
-          <a class="nav-link" routerLink="/offchain/statechains/operators">Statechains</a>
-          <a class="nav-link" routerLink="/offchain/statechains/verify">Transfer Verifier</a>
-          <a class="nav-link" routerLink="/offchain/coinswap">CoinSwap</a>
-          <a class="nav-link" routerLink="/offchain/coinswap/inspect">CoinSwap Inspector</a>
-          <a class="nav-link" routerLink="/offchain/recovery">Recovery Planner</a>
+          <a class="nav-link active" [routerLink]="'/offchain/utxo' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/offchain/statechains/operators' | relativeUrl">Statechains</a>
+          <a class="nav-link" [routerLink]="'/offchain/statechains/verify' | relativeUrl">Transfer Verifier</a>
+          <a class="nav-link" [routerLink]="'/offchain/coinswap' | relativeUrl">CoinSwap</a>
+          <a class="nav-link" [routerLink]="'/offchain/coinswap/inspect' | relativeUrl">CoinSwap Inspector</a>
+          <a class="nav-link" [routerLink]="'/offchain/recovery' | relativeUrl">Recovery Planner</a>
         </nav>
       </header>
 
@@ -68,7 +69,7 @@ import { OffchainApiService, OffchainOverview } from './offchain.service';
           <div class="card p-4 bg-body-tertiary border h-100">
             <div class="d-flex justify-content-between align-items-center mb-3">
               <h2 class="h5 m-0">Observed Protocol Operators</h2>
-              <a routerLink="/offchain/statechains/operators" class="small text-decoration-none">View All &rarr;</a>
+              <a [routerLink]="'/offchain/statechains/operators' | relativeUrl" class="small text-decoration-none">View All &rarr;</a>
             </div>
             <div class="table-responsive" tabindex="0" role="region" aria-label="Observed Protocol Operators, scroll horizontally" i18n-aria-label>
               <table class="table table-sm table-hover align-middle">
@@ -84,7 +85,7 @@ import { OffchainApiService, OffchainOverview } from './offchain.service';
                 <tbody>
                   <tr *ngFor="let op of overview.featured_operators">
                     <td>
-                      <a [routerLink]="['/offchain/statechains/operator', op.operator_id]" class="fw-bold text-decoration-none">
+                      <a [routerLink]="['/offchain/statechains/operator' | relativeUrl, op.operator_id]" class="fw-bold text-decoration-none">
                         {{ op.display_name }}
                       </a>
                     </td>

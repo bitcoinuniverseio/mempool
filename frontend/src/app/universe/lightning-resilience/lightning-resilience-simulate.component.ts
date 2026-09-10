@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { LightningResilienceApiService } from './lightning-resilience.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-lightning-resilience-simulate',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule, FormsModule],
   template: `
     <div class="container-xl py-4">
       <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
@@ -15,7 +16,7 @@ import { LightningResilienceApiService } from './lightning-resilience.service';
           <h1 class="h2 mb-1">Lightning Jamming Attack & Mitigation Simulator</h1>
           <p class="text-muted mb-0">Evaluate channel survival rates against slow-hold attacks, slot-exhaustion, and onion storms.</p>
         </div>
-        <a routerLink="/lightning/resilience" class="btn btn-outline-secondary btn-sm">Back to Resilience Center</a>
+        <a [routerLink]="'/lightning/resilience' | relativeUrl" class="btn btn-outline-secondary btn-sm">Back to Resilience Center</a>
       </div>
 
       <div class="row g-4">

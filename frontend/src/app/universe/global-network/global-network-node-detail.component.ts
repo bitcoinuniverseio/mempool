@@ -3,17 +3,18 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { GlobalNetworkApiService, GlobalNetworkObservation } from './global-network.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-global-network-node-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
       <header class="page-header mb-4">
         <div class="d-flex align-items-center gap-2 mb-2">
-          <a routerLink="/network/global/nodes" class="btn btn-sm btn-outline-secondary">
+          <a [routerLink]="'/network/global/nodes' | relativeUrl" class="btn btn-sm btn-outline-secondary">
             &larr; Back to Nodes
           </a>
           <span class="text-muted small">Global Bitcoin Network Observatory</span>
@@ -115,7 +116,7 @@ import { GlobalNetworkApiService, GlobalNetworkObservation } from './global-netw
             <div class="fw-semibold">Verify this Node Directly</div>
             <div class="small text-muted">Execute a privacy-preserving probe from Universe sensor probes.</div>
           </div>
-          <a routerLink="/network/global/self-check" class="btn btn-primary">
+          <a [routerLink]="'/network/global/self-check' | relativeUrl" class="btn btn-primary">
             Run Probe Self-Check
           </a>
         </div>

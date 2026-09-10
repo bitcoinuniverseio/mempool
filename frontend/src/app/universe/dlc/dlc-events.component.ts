@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { DlcApiService, DlcEvent } from './dlc.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-dlc-events',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -23,11 +24,11 @@ import { DlcApiService, DlcEvent } from './dlc.service';
         </p>
 
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/contracts/dlc">Overview</a>
-          <a class="nav-link" routerLink="/contracts/dlc/oracles">Oracles</a>
-          <a class="nav-link active" routerLink="/contracts/dlc/events">Events</a>
-          <a class="nav-link" routerLink="/contracts/dlc/inspect">Contract Inspector</a>
-          <a class="nav-link" routerLink="/contracts/dlc/simulate">Regtest Simulator</a>
+          <a class="nav-link" [routerLink]="'/contracts/dlc' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/contracts/dlc/oracles' | relativeUrl">Oracles</a>
+          <a class="nav-link active" [routerLink]="'/contracts/dlc/events' | relativeUrl">Events</a>
+          <a class="nav-link" [routerLink]="'/contracts/dlc/inspect' | relativeUrl">Contract Inspector</a>
+          <a class="nav-link" [routerLink]="'/contracts/dlc/simulate' | relativeUrl">Regtest Simulator</a>
         </nav>
       </header>
 
@@ -58,7 +59,7 @@ import { DlcApiService, DlcEvent } from './dlc.service';
               <tr *ngFor="let ev of events">
                 <td class="font-monospace fw-bold">{{ ev.event_id }}</td>
                 <td>
-                  <a [routerLink]="['/contracts/dlc/oracle', ev.oracle_id]" class="text-decoration-none">
+                  <a [routerLink]="['/contracts/dlc/oracle' | relativeUrl, ev.oracle_id]" class="text-decoration-none">
                     {{ ev.oracle_id }}
                   </a>
                 </td>
@@ -74,7 +75,7 @@ import { DlcApiService, DlcEvent } from './dlc.service';
                   <span *ngIf="!ev.attestation" class="badge bg-secondary">Pending</span>
                 </td>
                 <td>
-                  <a [routerLink]="['/contracts/dlc/event', ev.event_id]" class="btn btn-sm btn-outline-primary">
+                  <a [routerLink]="['/contracts/dlc/event' | relativeUrl, ev.event_id]" class="btn btn-sm btn-outline-primary">
                     Inspect
                   </a>
                 </td>

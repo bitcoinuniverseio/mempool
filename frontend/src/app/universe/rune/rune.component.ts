@@ -17,6 +17,7 @@ import {
   utcFromSeconds,
 } from '@app/universe/asset-lookup';
 import { formatAtomicAmount, shortenIdentifier } from '@app/universe/universe-evidence';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 /**
  * One rune, with its mint terms and current progress stated exactly as the
@@ -29,7 +30,7 @@ import { formatAtomicAmount, shortenIdentifier } from '@app/universe/universe-ev
 @Component({
   selector: 'app-universe-rune',
   standalone: true,
-  imports: [CommonModule, RouterModule, BookmarkButtonComponent],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule, BookmarkButtonComponent],
   templateUrl: './rune.component.html',
   styleUrls: ['./rune.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -1,7 +1,7 @@
 <div class="container-xl product-page">
   <header class="page-head">
     <nav class="crumbs">
-      <a [routerLink]="['/']">Home</a>
+      <a [routerLink]="['/' | relativeUrl]">Home</a>
       <span class="divider">/</span>
       <span>Layer 2 & Bridges</span>
     </nav>
@@ -64,8 +64,8 @@
             <tr *ngFor="let c of vm.challenges">
               <td class="mono l2-primary" data-label="Challenge"><strong>{{ c.challengeId }}</strong></td>
               <td data-label="System">{{ c.systemId }}</td>
-              <td class="mono l2-wide" data-label="Assertion transaction"><a [routerLink]="['/tx', c.assertionTxid]">{{ c.assertionTxid.slice(0, 14) }}...</a></td>
-              <td class="mono l2-wide" data-label="Challenge transaction"><a [routerLink]="['/tx', c.challengeTxid]">{{ c.challengeTxid.slice(0, 14) }}...</a></td>
+              <td class="mono l2-wide" data-label="Assertion transaction"><a [routerLink]="['/tx' | relativeUrl, c.assertionTxid]">{{ c.assertionTxid.slice(0, 14) }}...</a></td>
+              <td class="mono l2-wide" data-label="Challenge transaction"><a [routerLink]="['/tx' | relativeUrl, c.challengeTxid]">{{ c.challengeTxid.slice(0, 14) }}...</a></td>
               <td data-label="Timeout">Block #{{ c.timeoutBlockHeight }}</td>
               <td data-label="Status"><span class="badge badge-warning">{{ c.status }}</span></td>
             </tr>

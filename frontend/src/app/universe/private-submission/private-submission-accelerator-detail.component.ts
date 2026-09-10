@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { PrivateSubmissionApiService } from './private-submission.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-private-submission-accelerator-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4" *ngIf="loadError">
       <div class="alert alert-warning" role="alert">{{ loadError }}</div>
@@ -18,7 +19,7 @@ import { PrivateSubmissionApiService } from './private-submission.service';
           <h1 class="h2 mb-1">Accelerator: <span class="text-info">{{ provider.name }}</span></h1>
           <p class="text-muted mb-0 font-monospace">Provider ID: {{ provider.provider_id }}</p>
         </div>
-        <a routerLink="/mempool/accelerators" class="btn btn-outline-secondary btn-sm">Back to Directory</a>
+        <a [routerLink]="'/mempool/accelerators' | relativeUrl" class="btn btn-outline-secondary btn-sm">Back to Directory</a>
       </div>
 
       <div class="row g-3 mb-4">

@@ -12,6 +12,7 @@ import {
   OutpointEnrichment,
 } from '@app/universe/universe.types';
 import { formatAtomicAmount, shortenIdentifier } from '@app/universe/universe-evidence';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 /**
  * Outputs resolved per address view. Two batches is enough to cover almost
@@ -52,7 +53,7 @@ interface AddressAssetsState {
 @Component({
   selector: 'app-universe-address-assets',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   templateUrl: './address-assets.component.html',
   styleUrls: ['./address-assets.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

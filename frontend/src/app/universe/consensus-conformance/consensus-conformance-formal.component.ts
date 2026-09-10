@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { ConsensusConformanceApiService } from './consensus-conformance.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-consensus-conformance-formal',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4">
       <div class="alert alert-warning" role="alert" *ngIf="loadError">
@@ -18,7 +19,7 @@ import { ConsensusConformanceApiService } from './consensus-conformance.service'
           <h1 class="h2 mb-1">Formal Specification & Machine-Checked Proofs</h1>
           <p class="text-muted mb-0">Mathematically proven consensus properties in Lean 4 and Coq/Rocq provers.</p>
         </div>
-        <a routerLink="/labs/consensus/conformance" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
+        <a [routerLink]="'/labs/consensus/conformance' | relativeUrl" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
       </div>
 
       <div class="card bg-dark border-secondary mb-4">

@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { EcashApiService, EcashOverview } from './ecash.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-ecash-overview',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -24,10 +25,10 @@ import { EcashApiService, EcashOverview } from './ecash.service';
 
         <!-- Navigation Tabs -->
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link active" routerLink="/ecash">Overview</a>
-          <a class="nav-link" routerLink="/ecash/cashu">Cashu Mints</a>
-          <a class="nav-link" routerLink="/ecash/fedimint">Fedimint Federations</a>
-          <a class="nav-link" routerLink="/ecash/inspect">Offline Token Inspector</a>
+          <a class="nav-link active" [routerLink]="'/ecash' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/ecash/cashu' | relativeUrl">Cashu Mints</a>
+          <a class="nav-link" [routerLink]="'/ecash/fedimint' | relativeUrl">Fedimint Federations</a>
+          <a class="nav-link" [routerLink]="'/ecash/inspect' | relativeUrl">Offline Token Inspector</a>
         </nav>
       </header>
 
@@ -77,7 +78,7 @@ import { EcashApiService, EcashOverview } from './ecash.service';
         <section class="card p-4 bg-body-tertiary border mb-4">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h2 class="h5 m-0">Cashu Mints</h2>
-            <a routerLink="/ecash/cashu" class="btn btn-sm btn-outline-primary">View All Mints</a>
+            <a [routerLink]="'/ecash/cashu' | relativeUrl" class="btn btn-sm btn-outline-primary">View All Mints</a>
           </div>
           <div class="table-responsive" tabindex="0" role="region" aria-label="Cashu Mints, scroll horizontally" i18n-aria-label>
             <table class="table table-hover align-middle mb-0">
@@ -99,7 +100,7 @@ import { EcashApiService, EcashOverview } from './ecash.service';
                   </td>
                   <td>{{ m.active_keysets_count }} active</td>
                   <td class="text-end">
-                    <a [routerLink]="['/ecash/cashu', m.mint_id]" class="btn btn-sm btn-outline-primary">
+                    <a [routerLink]="['/ecash/cashu' | relativeUrl, m.mint_id]" class="btn btn-sm btn-outline-primary">
                       Inspect
                     </a>
                   </td>
@@ -113,7 +114,7 @@ import { EcashApiService, EcashOverview } from './ecash.service';
         <section class="card p-4 bg-body-tertiary border mb-4">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h2 class="h5 m-0">Fedimint Federations</h2>
-            <a routerLink="/ecash/fedimint" class="btn btn-sm btn-outline-primary">View All Federations</a>
+            <a [routerLink]="'/ecash/fedimint' | relativeUrl" class="btn btn-sm btn-outline-primary">View All Federations</a>
           </div>
           <div class="table-responsive" tabindex="0" role="region" aria-label="Fedimint Federations, scroll horizontally" i18n-aria-label>
             <table class="table table-hover align-middle mb-0">
@@ -135,7 +136,7 @@ import { EcashApiService, EcashOverview } from './ecash.service';
                   </td>
                   <td>Epoch {{ f.current_epoch | number }}</td>
                   <td class="text-end">
-                    <a [routerLink]="['/ecash/fedimint', f.federation_id]" class="btn btn-sm btn-outline-primary">
+                    <a [routerLink]="['/ecash/fedimint' | relativeUrl, f.federation_id]" class="btn btn-sm btn-outline-primary">
                       Inspect
                     </a>
                   </td>
