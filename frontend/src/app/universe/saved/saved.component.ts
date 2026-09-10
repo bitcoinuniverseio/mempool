@@ -5,6 +5,8 @@ import { Observable, combineLatest, map } from 'rxjs';
 import { SeoService } from '@app/services/seo.service';
 import { ExplorerChain } from '@app/universe/universe.types';
 import { explorerChainName } from '@app/universe/universe-chain-routing';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
+
 import {
   UniverseEntry,
   UniverseEntryKind,
@@ -25,7 +27,7 @@ interface SavedViewModel {
 @Component({
   selector: 'app-universe-saved',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   templateUrl: './saved.component.html',
   styleUrls: ['./saved.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

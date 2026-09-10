@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { OpenTimestampsApiService, TimestampCalendar } from './opentimestamps.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 /**
  * The allowlisted calendars, as this deployment last observed them. A
@@ -12,7 +13,7 @@ import { OpenTimestampsApiService, TimestampCalendar } from './opentimestamps.se
 @Component({
   selector: 'app-opentimestamps-calendars',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4">
       <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-4 pb-2 border-bottom">
@@ -20,7 +21,7 @@ import { OpenTimestampsApiService, TimestampCalendar } from './opentimestamps.se
           <h1 class="h2 mb-1">Calendars</h1>
           <p class="text-muted mb-0">The calendar servers this deployment submits digests to.</p>
         </div>
-        <a routerLink="/tools/timestamp" class="btn btn-outline-secondary btn-sm">Overview</a>
+        <a [routerLink]="'/tools/timestamp' | relativeUrl" class="btn btn-outline-secondary btn-sm">Overview</a>
       </div>
 
       <div class="alert alert-warning" role="alert" *ngIf="loadError">{{ loadError }}</div>

@@ -19,7 +19,7 @@
 
       <ul class="inscription-list" *ngIf="state.result.value.ids.length">
         <li *ngFor="let id of visible(state.result.value.ids)">
-          <a class="identifier" [routerLink]="['/inscription', id]">{{ shorten(id, 8) }}</a>
+          <a class="identifier" [routerLink]="['/inscription' | relativeUrl, id]">{{ shorten(id, 8) }}</a>
         </li>
       </ul>
 

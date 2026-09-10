@@ -39,7 +39,7 @@
 
       <ul class="holding-list" *ngIf="state.holdings.length">
         <li *ngFor="let holding of state.holdings; trackBy: trackByHolding">
-          <a class="protocol" [routerLink]="['/protocols', holding.protocolId]">{{ holding.protocolId }}</a>
+          <a class="protocol" [routerLink]="['/protocols' | relativeUrl, holding.protocolId]">{{ holding.protocolId }}</a>
           <span class="asset">{{ holding.displayName }}</span>
           <span class="quantity" *ngIf="holding.quantityAtomic">{{ amount(holding.quantityAtomic) }}</span>
           <span class="outputs">

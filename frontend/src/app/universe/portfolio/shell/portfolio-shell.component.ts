@@ -13,11 +13,12 @@ import { PortfolioSessionService } from '../stores/session.service';
 import { PortfolioDataService } from '../data/portfolio-data.service';
 import { PortfolioDataStateComponent } from '../shared/data-state.component';
 import { isLocalOnlyPortfolio } from '../shared/local-source-state';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-portfolio-shell',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, PortfolioDataStateComponent],
+  imports: [RelativeUrlPipe, RouterOutlet, RouterLink, PortfolioDataStateComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="shell" [class.privacy]="session.valuesHidden()">
@@ -39,13 +40,13 @@ import { isLocalOnlyPortfolio } from '../shared/local-source-state';
             <ul class="selector-menu" role="listbox" (focusout)="selectorOpen.set(false)">
               @for (portfolio of store.livePortfolios(); track portfolio.id) {
                 <li role="option" [attr.aria-selected]="portfolio.id === store.activePortfolioId()">
-                  <a [routerLink]="['/portfolio/p', portfolio.id, 'overview']" (click)="selectorOpen.set(false)">
+                  <a [routerLink]="['/portfolio/p' | relativeUrl, portfolio.id, 'overview']" (click)="selectorOpen.set(false)">
                     {{ portfolio.name }}
                   </a>
                 </li>
               }
-              <li><a routerLink="/portfolio/manage" i18n="@@universe.portfolio.shell.manage">Manage portfolios…</a></li>
-              <li><a routerLink="/portfolio/new" i18n="@@universe.portfolio.shell.new">New portfolio…</a></li>
+              <li><a [routerLink]="'/portfolio/manage' | relativeUrl" i18n="@@universe.portfolio.shell.manage">Manage portfolios…</a></li>
+              <li><a [routerLink]="'/portfolio/new' | relativeUrl" i18n="@@universe.portfolio.shell.new">New portfolio…</a></li>
             </ul>
           }
         </div>
@@ -53,7 +54,7 @@ import { isLocalOnlyPortfolio } from '../shared/local-source-state';
         <nav class="sections" aria-label="Portfolio sections" i18n-aria-label="@@universe.portfolio.shell.sections-label">
           @for (section of sections; track section.path) {
             <a
-              [routerLink]="['/portfolio/p', portfolioId(), section.path]"
+              [routerLink]="['/portfolio/p' | relativeUrl, portfolioId(), section.path]"
               class="section-link"
               [class.active]="session.activeSection() === section.path"
               [attr.aria-current]="session.activeSection() === section.path ? 'page' : null"
@@ -91,8 +92,8 @@ import { isLocalOnlyPortfolio } from '../shared/local-source-state';
           >
             {{ data().loading ? 'Refreshing…' : 'Refresh' }}
           </button>
-          <a class="control" routerLink="/portfolio/manage" i18n="@@universe.portfolio.shell.manage-link">Manage portfolios</a>
-          <a class="control" routerLink="/portfolio/settings" i18n="@@universe.portfolio.shell.settings">Settings</a>
+          <a class="control" [routerLink]="'/portfolio/manage' | relativeUrl" i18n="@@universe.portfolio.shell.manage-link">Manage portfolios</a>
+          <a class="control" [routerLink]="'/portfolio/settings' | relativeUrl" i18n="@@universe.portfolio.shell.settings">Settings</a>
           <button type="button" class="control" (click)="session.lockNow()" i18n="@@universe.portfolio.shell.lock">Lock</button>
         </div>
       </header>
@@ -108,7 +109,7 @@ import { isLocalOnlyPortfolio } from '../shared/local-source-state';
           <router-outlet />
         } @else {
           <p role="status">{{ store.vaultKind() === 'unlocked' ? 'This portfolio is not available in this vault.' : 'Unlock the portfolio vault to open this portfolio.' }}</p>
-          <a routerLink="/portfolio" [queryParams]="{ portfolioId: portfolioId() }">Open portfolios</a>
+          <a [routerLink]="'/portfolio' | relativeUrl" [queryParams]="{ portfolioId: portfolioId() }">Open portfolios</a>
         }
       </main>
     </div>

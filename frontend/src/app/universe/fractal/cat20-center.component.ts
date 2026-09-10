@@ -5,6 +5,7 @@ import { BehaviorSubject, Observable, catchError, of, switchMap } from 'rxjs';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { Cat20Holder, Cat20Token } from '@app/universe/universe.types';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 interface Cat20ViewModel {
   readonly kind: 'loading' | 'ready' | 'detail' | 'error';
@@ -18,7 +19,7 @@ interface Cat20ViewModel {
   templateUrl: './cat20-center.component.html',
   styleUrls: ['../product-page.scss'],
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Cat20CenterComponent implements OnInit {

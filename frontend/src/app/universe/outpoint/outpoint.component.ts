@@ -7,6 +7,8 @@ import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { UniverseLocalService } from '@app/universe/universe-local.service';
 import { BookmarkButtonComponent } from '@app/universe/bookmark-button/bookmark-button.component';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
+
 import {
   ExplorerNotableSat,
   ExplorerOutpointPosition,
@@ -44,7 +46,7 @@ const VOUT = /^(0|[1-9][0-9]{0,9})$/;
 @Component({
   selector: 'app-universe-outpoint',
   standalone: true,
-  imports: [CommonModule, RouterModule, BookmarkButtonComponent],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule, BookmarkButtonComponent],
   templateUrl: './outpoint.component.html',
   styleUrls: ['./outpoint.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

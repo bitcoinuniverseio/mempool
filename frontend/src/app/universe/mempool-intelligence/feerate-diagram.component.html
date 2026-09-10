@@ -113,7 +113,7 @@
   </ng-container>
 
   <p class="link-out">
-    <a routerLink="/mempool/clusters" i18n="mempool.diagram.clusters-link">
+    <a [routerLink]="'/mempool/clusters' | relativeUrl" i18n="mempool.diagram.clusters-link">
       Browse the clusters this curve is built from
     </a>
   </p>

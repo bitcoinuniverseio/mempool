@@ -136,7 +136,7 @@
             <th scope="row"><code>{{ short(conflict.outpoint) }}</code></th>
             <td><code>{{ short(conflict.candidateTxid) }}</code></td>
             <td>
-              <a [routerLink]="['/tx', conflict.incumbentTxid]">
+              <a [routerLink]="['/tx' | relativeUrl, conflict.incumbentTxid]">
                 <code>{{ short(conflict.incumbentTxid) }}</code>
               </a>
             </td>

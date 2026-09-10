@@ -3,17 +3,18 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { EcashApiService, FedimintFederation } from './ecash.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-ecash-fedimint-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
       <header class="page-header mb-4">
         <div class="d-flex align-items-center gap-2 mb-2">
-          <a routerLink="/ecash/fedimint" class="btn btn-sm btn-outline-secondary">
+          <a [routerLink]="'/ecash/fedimint' | relativeUrl" class="btn btn-sm btn-outline-secondary">
             &larr; Back to Fedimint Federations
           </a>
           <span class="text-muted small">Fedimint Observatory</span>
@@ -93,7 +94,7 @@ import { EcashApiService, FedimintFederation } from './ecash.service';
           </code>
           <div class="d-flex justify-content-between align-items-center">
             <span class="small text-muted">Inspect structure offline without contacting federation peers.</span>
-            <a routerLink="/ecash/inspect" class="btn btn-sm btn-outline-primary">
+            <a [routerLink]="'/ecash/inspect' | relativeUrl" class="btn btn-sm btn-outline-primary">
               Inspect in Offline Inspector
             </a>
           </div>

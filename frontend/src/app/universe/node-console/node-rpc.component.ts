@@ -7,6 +7,7 @@ import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { RpcMethod, RpcResult } from './node-console.types';
 import { firstArgumentProblem, groupByCategory, searchMethods } from './node-view';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 /**
  * The read only method catalog, and a way to call one.
@@ -22,7 +23,7 @@ import { firstArgumentProblem, groupByCategory, searchMethods } from './node-vie
 @Component({
   selector: 'app-node-rpc',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, FormsModule, RouterModule],
   templateUrl: './node-rpc.component.html',
   styleUrls: ['./node-console.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

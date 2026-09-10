@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { CollaborativePrivacyApiService, CollaborativeOverview } from './collaborative-privacy.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-collaborative-privacy-overview',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4">
       <div class="alert alert-warning" role="alert" *ngIf="loadError">
@@ -19,33 +20,33 @@ import { CollaborativePrivacyApiService, CollaborativeOverview } from './collabo
           <p class="text-muted mb-0">Cross-protocol privacy telemetry, anonymity set calculation, coordinator auditing, and fidelity bond tracking.</p>
         </div>
         <div class="btn-group">
-          <a routerLink="/privacy/collaborative/inspect" class="btn btn-primary btn-sm">Inspect Transaction</a>
-          <a routerLink="/privacy/collaborative/coordinators" class="btn btn-outline-primary btn-sm">Coordinator Registry</a>
+          <a [routerLink]="'/privacy/collaborative/inspect' | relativeUrl" class="btn btn-primary btn-sm">Inspect Transaction</a>
+          <a [routerLink]="'/privacy/collaborative/coordinators' | relativeUrl" class="btn btn-outline-primary btn-sm">Coordinator Registry</a>
         </div>
       </div>
 
       <!-- Navigation Tabs -->
       <ul class="nav nav-tabs mb-4">
         <li class="nav-item">
-          <a class="nav-link active" routerLink="/privacy/collaborative">Overview</a>
+          <a class="nav-link active" [routerLink]="'/privacy/collaborative' | relativeUrl">Overview</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/privacy/collaborative/inspect">Inspect Transaction</a>
+          <a class="nav-link" [routerLink]="'/privacy/collaborative/inspect' | relativeUrl">Inspect Transaction</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/privacy/collaborative/wabisabi">WabiSabi</a>
+          <a class="nav-link" [routerLink]="'/privacy/collaborative/wabisabi' | relativeUrl">WabiSabi</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/privacy/collaborative/joinmarket">JoinMarket</a>
+          <a class="nav-link" [routerLink]="'/privacy/collaborative/joinmarket' | relativeUrl">JoinMarket</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/privacy/collaborative/whirlpool">Whirlpool</a>
+          <a class="nav-link" [routerLink]="'/privacy/collaborative/whirlpool' | relativeUrl">Whirlpool</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/privacy/collaborative/coordinators">Coordinators</a>
+          <a class="nav-link" [routerLink]="'/privacy/collaborative/coordinators' | relativeUrl">Coordinators</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/privacy/collaborative/fidelity-bonds">Fidelity Bonds</a>
+          <a class="nav-link" [routerLink]="'/privacy/collaborative/fidelity-bonds' | relativeUrl">Fidelity Bonds</a>
         </li>
       </ul>
 
@@ -109,7 +110,7 @@ import { CollaborativePrivacyApiService, CollaborativeOverview } from './collabo
                 <td><span class="badge bg-success">{{ r.anonymity_set }} anonset</span></td>
                 <td class="fw-bold">{{ r.total_btc }} BTC</td>
                 <td>
-                  <a [routerLink]="['/privacy/collaborative/round', r.round_id]" class="btn btn-sm btn-outline-info">Audit Round</a>
+                  <a [routerLink]="['/privacy/collaborative/round' | relativeUrl, r.round_id]" class="btn btn-sm btn-outline-info">Audit Round</a>
                 </td>
               </tr>
             </tbody>

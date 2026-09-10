@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { NodeSecurityApiService } from './node-security.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-node-security-advisories',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4">
       <div class="alert alert-warning" role="alert" *ngIf="loadError">
@@ -18,7 +19,7 @@ import { NodeSecurityApiService } from './node-security.service';
           <h1 class="h2 mb-1">Bitcoin Security Advisories & Vulnerability Database</h1>
           <p class="text-muted mb-0">Public disclosure archives, severity assessments, affected versions, and patch guidelines.</p>
         </div>
-        <a routerLink="/node/security" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
+        <a [routerLink]="'/node/security' | relativeUrl" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
       </div>
 
       <div class="card bg-dark border-secondary mb-4">
@@ -47,7 +48,7 @@ import { NodeSecurityApiService } from './node-security.service';
                 <td><span class="badge bg-success">{{ adv.fixed_version }}</span></td>
                 <td><span class="badge bg-danger">{{ adv.severity | uppercase }}</span></td>
                 <td>
-                  <a [routerLink]="['/node/security/advisory', adv.advisory_id]" class="btn btn-sm btn-outline-info">View Advisory</a>
+                  <a [routerLink]="['/node/security/advisory' | relativeUrl, adv.advisory_id]" class="btn btn-sm btn-outline-info">View Advisory</a>
                 </td>
               </tr>
             </tbody>

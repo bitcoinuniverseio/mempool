@@ -1,7 +1,7 @@
 <div class="container-xl product-page">
   <header class="page-head">
     <nav class="crumbs">
-      <a [routerLink]="['/']">Home</a>
+      <a [routerLink]="['/' | relativeUrl]">Home</a>
       <span class="divider">/</span>
       <span>Developer Platform</span>
     </nav>
@@ -12,8 +12,8 @@
   </header>
 
   <nav class="nav-tabs">
-    <a [routerLink]="['/data']" class="active">Datasets & Query Studio</a>
-    <a [routerLink]="['/data/live']">Live Streams</a>
+    <a [routerLink]="['/data' | relativeUrl]" class="active">Datasets & Query Studio</a>
+    <a [routerLink]="['/data/live' | relativeUrl]">Live Streams</a>
   </nav>
 
   <ng-container *ngIf="vm$ | async as vm">

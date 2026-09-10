@@ -6,11 +6,12 @@ import { Subscription } from 'rxjs';
 import { StateService } from '@app/services/state.service';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { OpenTimestampsApiService, TimestampNetwork, TimestampVerificationResult, TimestampVerifyRequest } from './opentimestamps.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-opentimestamps-verify',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule, FormsModule],
   template: `
     <div class="container-xl py-4">
       <div class="alert alert-warning" role="alert" *ngIf="loadError">
@@ -21,7 +22,7 @@ import { OpenTimestampsApiService, TimestampNetwork, TimestampVerificationResult
           <h1 class="h2 mb-1">Verify OpenTimestamps Proof (.ots)</h1>
           <p class="text-muted mb-0">Cryptographically evaluate Merkle branching operations up to the Bitcoin Block Header Merkle Root.</p>
         </div>
-        <a routerLink="/tools/timestamp" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
+        <a [routerLink]="'/tools/timestamp' | relativeUrl" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
       </div>
 
       <div class="row g-4">

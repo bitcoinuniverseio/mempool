@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { OpenTimestampsApiService, TimestampAnchor } from './opentimestamps.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 /**
  * Bitcoin blocks that anchored proofs stamped through this deployment, one
@@ -12,7 +13,7 @@ import { OpenTimestampsApiService, TimestampAnchor } from './opentimestamps.serv
 @Component({
   selector: 'app-opentimestamps-batches',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4">
       <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-4 pb-2 border-bottom">
@@ -20,7 +21,7 @@ import { OpenTimestampsApiService, TimestampAnchor } from './opentimestamps.serv
           <h1 class="h2 mb-1">Anchors</h1>
           <p class="text-muted mb-0">Bitcoin blocks that anchored proofs stamped here.</p>
         </div>
-        <a routerLink="/tools/timestamp" class="btn btn-outline-secondary btn-sm">Overview</a>
+        <a [routerLink]="'/tools/timestamp' | relativeUrl" class="btn btn-outline-secondary btn-sm">Overview</a>
       </div>
 
       <div class="alert alert-warning" role="alert" *ngIf="loadError">{{ loadError }}</div>
@@ -43,7 +44,7 @@ import { OpenTimestampsApiService, TimestampAnchor } from './opentimestamps.serv
             <tbody>
               <tr *ngFor="let a of anchors">
                 <td>{{ a.calendar_id }}</td>
-                <td class="fw-bold"><a [routerLink]="['/block', a.block_hash]">{{ a.block_height }}</a></td>
+                <td class="fw-bold"><a [routerLink]="['/block' | relativeUrl, a.block_hash]">{{ a.block_height }}</a></td>
                 <td class="font-monospace text-muted" [title]="a.block_hash">{{ a.block_hash | slice:0:16 }}&hellip;</td>
                 <td>{{ a.leaf_count | number }}</td>
                 <td class="font-monospace text-muted" [title]="a.merkle_root">{{ a.merkle_root | slice:0:16 }}&hellip;</td>

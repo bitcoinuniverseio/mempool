@@ -7,6 +7,7 @@ import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { AnimaOrganismHistoryDocument } from '@app/universe/universe.types';
 import { shortenIdentifier } from '@app/universe/universe-evidence';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 interface AnimaHistoryViewModel {
   readonly kind: 'loading' | 'error' | 'missing' | 'ready';
@@ -22,7 +23,7 @@ interface AnimaHistoryViewModel {
   templateUrl: './anima-item-history.component.html',
   styleUrls: ['./anima-page.scss'],
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AnimaItemHistoryComponent implements OnInit {

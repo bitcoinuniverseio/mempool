@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { SimplicityApiService } from './simplicity.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-simplicity-tools',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -21,10 +22,10 @@ import { SimplicityApiService } from './simplicity.service';
         </p>
 
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/liquid/simplicity">Overview</a>
-          <a class="nav-link" routerLink="/liquid/simplicity/contracts">Contract Programs</a>
-          <a class="nav-link active" routerLink="/tools/simplicity">Compiler Workbench</a>
-          <a class="nav-link" routerLink="/tools/simplicity/verify">Formal Proof Verifier</a>
+          <a class="nav-link" [routerLink]="'/liquid/simplicity' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/liquid/simplicity/contracts' | relativeUrl">Contract Programs</a>
+          <a class="nav-link active" [routerLink]="'/tools/simplicity' | relativeUrl">Compiler Workbench</a>
+          <a class="nav-link" [routerLink]="'/tools/simplicity/verify' | relativeUrl">Formal Proof Verifier</a>
         </nav>
       </header>
 

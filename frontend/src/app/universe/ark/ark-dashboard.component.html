@@ -1,7 +1,7 @@
 <div class="container-xl product-page">
   <header class="page-head">
     <nav class="crumbs">
-      <a [routerLink]="['/']">Home</a>
+      <a [routerLink]="['/' | relativeUrl]">Home</a>
       <span class="divider">/</span>
       <span>Ark Explorer</span>
     </nav>
@@ -58,7 +58,7 @@
           <tbody>
             <tr *ngFor="let b of vm.batches">
               <td class="mono"><strong>{{ b.batchId }}</strong></td>
-              <td class="mono"><a [routerLink]="['/tx', b.anchorTxid]">{{ b.anchorTxid.slice(0, 16) }}...</a></td>
+              <td class="mono"><a [routerLink]="['/tx' | relativeUrl, b.anchorTxid]">{{ b.anchorTxid.slice(0, 16) }}...</a></td>
               <td class="mono">{{ b.rootHash.slice(0, 16) }}...</td>
               <td>{{ b.vtxoCount }}</td>
               <td>{{ (Number(b.totalAmountSats) / 1e8).toFixed(4) }}</td>

@@ -1,7 +1,7 @@
 <div class="container-xl product-page">
   <header class="page-head">
     <nav class="crumbs">
-      <a [routerLink]="['/']">Home</a>
+      <a [routerLink]="['/' | relativeUrl]">Home</a>
       <span class="divider">/</span>
       <span>Fractal Bitcoin</span>
     </nav>
@@ -12,8 +12,8 @@
   </header>
 
   <nav class="nav-tabs">
-    <a [routerLink]="['/fractal']" class="active">Chain Overview</a>
-    <a [routerLink]="['/fractal/cat20']">CAT-20 Center</a>
+    <a [routerLink]="['/fractal' | relativeUrl]" class="active">Chain Overview</a>
+    <a [routerLink]="['/fractal/cat20' | relativeUrl]">CAT-20 Center</a>
   </nav>
 
   <ng-container *ngIf="vm$ | async as vm">

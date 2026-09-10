@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { OpenTimestampsApiService, TimestampsOverview } from './opentimestamps.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 /**
  * The timestamps overview. Every figure is this deployment's own record: the
@@ -12,7 +13,7 @@ import { OpenTimestampsApiService, TimestampsOverview } from './opentimestamps.s
 @Component({
   selector: 'app-opentimestamps-overview',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4">
       <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3 pb-2 border-bottom">
@@ -21,17 +22,17 @@ import { OpenTimestampsApiService, TimestampsOverview } from './opentimestamps.s
           <p class="text-muted mb-0">Anchor a document digest in Bitcoin and verify a proof.</p>
         </div>
         <div class="d-flex gap-2">
-          <a routerLink="/tools/timestamp/stamp" class="btn btn-primary btn-sm">Stamp a digest</a>
-          <a routerLink="/tools/timestamp/verify" class="btn btn-outline-primary btn-sm">Verify a proof</a>
+          <a [routerLink]="'/tools/timestamp/stamp' | relativeUrl" class="btn btn-primary btn-sm">Stamp a digest</a>
+          <a [routerLink]="'/tools/timestamp/verify' | relativeUrl" class="btn btn-outline-primary btn-sm">Verify a proof</a>
         </div>
       </div>
 
       <nav class="nav nav-tabs mb-4" aria-label="Timestamp pages">
-        <a class="nav-link active" routerLink="/tools/timestamp" aria-current="page">Overview</a>
-        <a class="nav-link" routerLink="/tools/timestamp/stamp">Stamp</a>
-        <a class="nav-link" routerLink="/tools/timestamp/verify">Verify</a>
-        <a class="nav-link" routerLink="/intelligence/timestamps/calendars">Calendars</a>
-        <a class="nav-link" routerLink="/intelligence/timestamps/batches">Anchors</a>
+        <a class="nav-link active" [routerLink]="'/tools/timestamp' | relativeUrl" aria-current="page">Overview</a>
+        <a class="nav-link" [routerLink]="'/tools/timestamp/stamp' | relativeUrl">Stamp</a>
+        <a class="nav-link" [routerLink]="'/tools/timestamp/verify' | relativeUrl">Verify</a>
+        <a class="nav-link" [routerLink]="'/intelligence/timestamps/calendars' | relativeUrl">Calendars</a>
+        <a class="nav-link" [routerLink]="'/intelligence/timestamps/batches' | relativeUrl">Anchors</a>
       </nav>
 
       <div class="alert alert-warning" role="alert" *ngIf="loadError">{{ loadError }}</div>
@@ -76,7 +77,7 @@ import { OpenTimestampsApiService, TimestampsOverview } from './opentimestamps.s
         <div class="card mb-4">
           <div class="card-header d-flex justify-content-between align-items-center">
             <h2 class="h5 mb-0">Recent anchors</h2>
-            <a routerLink="/intelligence/timestamps/batches" class="small">All anchors</a>
+            <a [routerLink]="'/intelligence/timestamps/batches' | relativeUrl" class="small">All anchors</a>
           </div>
           <p class="text-muted p-3 mb-0" *ngIf="!overview.recent_anchors?.length">No proof stamped here has been anchored yet.</p>
           <div class="table-responsive" tabindex="0" role="region" aria-label="Recent anchors, scroll horizontally" i18n-aria-label *ngIf="overview.recent_anchors?.length">

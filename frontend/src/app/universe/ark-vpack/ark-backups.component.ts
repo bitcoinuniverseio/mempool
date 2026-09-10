@@ -1,11 +1,12 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-ark-backups',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -13,13 +14,13 @@ import { RouterModule } from '@angular/router';
         <h1>Encrypted Portable V-PACK Backups</h1>
         <p class="text-muted">Export and restore client-side encrypted VTXO package envelopes with zero plaintext leakage.</p>
         <nav class="nav nav-pills gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/ark/vpack">Overview</a>
-          <a class="nav-link" routerLink="/ark/vpack/verify">Verify Anchor</a>
-          <a class="nav-link" routerLink="/ark/vpack/translate">Translate Dialect</a>
-          <a class="nav-link active" routerLink="/ark/backups">Encrypted Backups</a>
-          <a class="nav-link" routerLink="/ark/exit">Unilateral Exit</a>
-          <a class="nav-link" routerLink="/ark/exit/simulate">Exit Simulator</a>
-          <a class="nav-link" routerLink="/ark/providers">ASP Registry</a>
+          <a class="nav-link" [routerLink]="'/ark/vpack' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/ark/vpack/verify' | relativeUrl">Verify Anchor</a>
+          <a class="nav-link" [routerLink]="'/ark/vpack/translate' | relativeUrl">Translate Dialect</a>
+          <a class="nav-link active" [routerLink]="'/ark/backups' | relativeUrl">Encrypted Backups</a>
+          <a class="nav-link" [routerLink]="'/ark/exit' | relativeUrl">Unilateral Exit</a>
+          <a class="nav-link" [routerLink]="'/ark/exit/simulate' | relativeUrl">Exit Simulator</a>
+          <a class="nav-link" [routerLink]="'/ark/providers' | relativeUrl">ASP Registry</a>
         </nav>
       </header>
 

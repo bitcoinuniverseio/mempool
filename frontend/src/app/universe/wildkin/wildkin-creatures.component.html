@@ -1,9 +1,9 @@
 <div class="container-xl product-page">
   <header class="page-head">
     <nav class="crumbs">
-      <a [routerLink]="['/protocols']">Protocols</a>
+      <a [routerLink]="['/protocols' | relativeUrl]">Protocols</a>
       <span class="divider">/</span>
-      <a [routerLink]="['/wildkin']">Wildkin</a>
+      <a [routerLink]="['/wildkin' | relativeUrl]">Wildkin</a>
       <span class="divider">/</span>
       <span>Creatures</span>
     </nav>
@@ -14,9 +14,9 @@
   </header>
 
   <nav class="nav-tabs">
-    <a [routerLink]="['/wildkin']">Overview</a>
-    <a [routerLink]="['/wildkin/creatures']" class="active">Creatures</a>
-    <a [routerLink]="['/wildkin/bloodlines']">Bloodlines & Braids</a>
+    <a [routerLink]="['/wildkin' | relativeUrl]">Overview</a>
+    <a [routerLink]="['/wildkin/creatures' | relativeUrl]" class="active">Creatures</a>
+    <a [routerLink]="['/wildkin/bloodlines' | relativeUrl]">Bloodlines & Braids</a>
   </nav>
 
   <ng-container *ngIf="vm$ | async as vm">
@@ -57,8 +57,8 @@
           <p><strong>Owner:</strong> <span class="mono">{{ vm.selected.ownerAddress }}</span></p>
           <p *ngIf="vm.selected.parentAId">
             <strong>Parentage:</strong>
-            <a [routerLink]="['/wildkin/creature', vm.selected.parentAId]">{{ vm.selected.parentAId }}</a> and
-            <a [routerLink]="['/wildkin/creature', vm.selected.parentBId]">{{ vm.selected.parentBId }}</a>
+            <a [routerLink]="['/wildkin/creature' | relativeUrl, vm.selected.parentAId]">{{ vm.selected.parentAId }}</a> and
+            <a [routerLink]="['/wildkin/creature' | relativeUrl, vm.selected.parentBId]">{{ vm.selected.parentBId }}</a>
           </p>
           <p><strong>Genome Hex (CBOR):</strong> <span class="mono">{{ vm.selected.genomeHex }}</span></p>
           <p><strong>Ruleset Version:</strong> v{{ vm.selected.rulesetVersion }} (draft)</p>
@@ -82,7 +82,7 @@
           </thead>
           <tbody>
             <tr *ngFor="let c of vm.creatures">
-              <td class="mono"><a [routerLink]="['/wildkin/creature', c.creatureId]">{{ c.creatureId }}</a></td>
+              <td class="mono"><a [routerLink]="['/wildkin/creature' | relativeUrl, c.creatureId]">{{ c.creatureId }}</a></td>
               <td><strong>{{ c.name }}</strong></td>
               <td>Gen {{ c.generation }}</td>
               <td><span class="badge badge-success">{{ c.status }}</span></td>

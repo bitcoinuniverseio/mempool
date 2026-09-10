@@ -12,6 +12,7 @@ import {
 } from '@app/universe/universe.types';
 import { shortenIdentifier } from '@app/universe/universe-evidence';
 import { AnimaFailure, animaFailureFrom, animaFailureText, animaFailureTitle } from './anima-failure';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 export interface AnimaTransitionsViewModel {
   readonly kind: 'loading' | 'ready' | 'degraded' | 'error';
@@ -39,7 +40,7 @@ export interface AnimaTransitionsViewModel {
   templateUrl: './anima-transitions.component.html',
   styleUrls: ['./anima-page.scss'],
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AnimaTransitionsComponent implements OnInit {

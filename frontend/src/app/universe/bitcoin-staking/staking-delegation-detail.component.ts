@@ -3,17 +3,18 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { BitcoinStakingApiService, StakingDelegation } from './bitcoin-staking.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-staking-delegation-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
       <header class="page-header mb-4">
         <div class="mb-2">
-          <a routerLink="/protocols/bitcoin-staking/delegations" class="btn btn-sm btn-outline-secondary">
+          <a [routerLink]="'/protocols/bitcoin-staking/delegations' | relativeUrl" class="btn btn-sm btn-outline-secondary">
             &larr; Back to Delegations
           </a>
         </div>

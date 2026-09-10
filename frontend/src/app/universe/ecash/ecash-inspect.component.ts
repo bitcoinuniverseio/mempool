@@ -2,6 +2,7 @@ import { Component, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 interface ParsedCashuToken {
   type: 'cashu';
@@ -22,7 +23,7 @@ interface ParsedFedimintInvite {
 @Component({
   selector: 'app-ecash-inspect',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -37,10 +38,10 @@ interface ParsedFedimintInvite {
 
         <!-- Navigation Tabs -->
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/ecash">Overview</a>
-          <a class="nav-link" routerLink="/ecash/cashu">Cashu Mints</a>
-          <a class="nav-link" routerLink="/ecash/fedimint">Fedimint Federations</a>
-          <a class="nav-link active" routerLink="/ecash/inspect">Offline Token Inspector</a>
+          <a class="nav-link" [routerLink]="'/ecash' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/ecash/cashu' | relativeUrl">Cashu Mints</a>
+          <a class="nav-link" [routerLink]="'/ecash/fedimint' | relativeUrl">Fedimint Federations</a>
+          <a class="nav-link active" [routerLink]="'/ecash/inspect' | relativeUrl">Offline Token Inspector</a>
         </nav>
       </header>
 
