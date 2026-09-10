@@ -1,70 +1,45 @@
-import { reservesService } from './reserves.service';
+import { Application, Request, Response } from 'express';
 import crypto from 'crypto';
+import reservesRoutes from './reserves.routes';
+import { ReservesEvidenceError, reservesService } from './reserves.service';
 
+/**
+ * These assertions replace a suite that asserted the constants the service used
+ * to return: three providers with invented names, snapshots that were verified
+ * on chain because the constant said so, and a solvency ratio that was above
+ * 100 percent by construction. Passing those proved the constants were present,
+ * not that any attestation had been observed.
+ */
 describe('ReservesService', () => {
-  it('should return reserves overview with solvency metrics', () => {
-    const overview = reservesService.getOverview();
-    expect(overview).toBeDefined();
-    expect(overview.total_tracked_reserve_sats).toBeGreaterThan(0);
-    expect(overview.total_tracked_liability_sats).toBeGreaterThan(0);
-    expect(overview.overall_solvency_percentage).toBeGreaterThanOrEqual(100);
-    expect(overview.providers.length).toBeGreaterThan(0);
-    expect(overview.recent_snapshots.length).toBeGreaterThan(0);
+  const unavailable = expect.objectContaining({ code: 'unavailable-attestation-ingest', status: 503 });
+
+  it('reports the missing attestation ingest rather than a directory of invented providers', () => {
+    expect(() => reservesService.getOverview()).toThrow(unavailable);
+    expect(() => reservesService.getProviders()).toThrow(unavailable);
+    expect(() => reservesService.getProviderById('prov-bitreserve-custody')).toThrow(unavailable);
+    expect(() => reservesService.getSnapshots()).toThrow(unavailable);
+    expect(() => reservesService.getSnapshots('prov-apex-exchange')).toThrow(unavailable);
+    expect(() => reservesService.getSnapshotById('snap-860395-bitreserve')).toThrow(unavailable);
   });
 
-  it('should retrieve providers and single provider by id', () => {
-    const providers = reservesService.getProviders();
-    expect(providers.length).toBeGreaterThanOrEqual(3);
-
-    const first = providers[0];
-    const found = reservesService.getProviderById(first.provider_id);
-    expect(found).toBeDefined();
-    expect(found?.name).toBe(first.name);
-
-    const notFound = reservesService.getProviderById('nonexistent-id');
-    expect(notFound).toBeUndefined();
+  it('never resolves an absent source as an empty directory', () => {
+    for (const read of [
+      () => reservesService.getOverview(),
+      () => reservesService.getProviders(),
+      () => reservesService.getSnapshots(),
+    ]) {
+      let resolved: unknown = 'unresolved';
+      try {
+        resolved = read();
+      } catch (e) {
+        expect(e).toBeInstanceOf(ReservesEvidenceError);
+        continue;
+      }
+      throw new Error(`resolved with ${JSON.stringify(resolved)}`);
+    }
   });
 
-  it('should retrieve snapshots and filter by provider', () => {
-    const snapshots = reservesService.getSnapshots();
-    expect(snapshots.length).toBeGreaterThan(0);
-
-    const first = snapshots[0];
-    const filtered = reservesService.getSnapshots(first.provider_id);
-    expect(filtered.length).toBeGreaterThan(0);
-    expect(filtered.every(s => s.provider_id === first.provider_id)).toBe(true);
-
-    const single = reservesService.getSnapshotById(first.snapshot_id);
-    expect(single).toBeDefined();
-    expect(single?.snapshot_id).toBe(first.snapshot_id);
-  });
-
-  it('should verify BIP127 proof package', () => {
-    const res = reservesService.verifyProof({
-      proof_type: 'bip127',
-      bip127_proof: {
-        expected_message: 'ProofOfReserves-2026-09-04',
-        items: [
-          {
-            txid: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
-            vout: 0,
-            amount_sats: 50000000,
-            address: 'bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq',
-            message: 'ProofOfReserves-2026-09-04',
-            signature: '30440220...sig...',
-            public_key: '0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798',
-          },
-        ],
-      },
-    });
-
-    expect(res.verified).toBe(true);
-    expect(res.proof_type).toBe('bip127');
-    expect(res.total_verified_sats).toBe(50000000);
-    expect(res.attestation_digest).toBeDefined();
-  });
-
-  it('should verify Merkle inclusion proof', () => {
+  it('still verifies a Merkle inclusion proof supplied by the caller', () => {
     const leaf = crypto.createHash('sha256').update('leaf-data').digest('hex');
     const sibling = crypto.createHash('sha256').update('sibling-data').digest('hex');
 
@@ -91,7 +66,7 @@ describe('ReservesService', () => {
     expect(res.total_verified_sats).toBe(1000000);
   });
 
-  it('should reject invalid proof packages', () => {
+  it('rejects invalid proof packages', () => {
     const res = reservesService.verifyProof({
       proof_type: 'bip127',
       bip127_proof: {
@@ -101,5 +76,34 @@ describe('ReservesService', () => {
     });
     expect(res.verified).toBe(false);
     expect(res.errors.length).toBeGreaterThan(0);
+  });
+});
+
+describe('Reserves HTTP responses', () => {
+  type Handler = (req: Request, res: Response) => Promise<void>;
+
+  function mount(): Map<string, Handler> {
+    const gets = new Map<string, Handler>();
+    const app = {
+      get: jest.fn((path: string, callback: Handler) => { gets.set(path, callback); return app; }),
+      post: jest.fn(() => app),
+    };
+    reservesRoutes.initRoutes(app as unknown as Application);
+    return gets;
+  }
+
+  it('answers every observation read with a 503 that names the missing source', async () => {
+    const gets = mount();
+    expect(gets.size).toBe(5);
+    for (const handler of gets.values()) {
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+      await handler({ params: { providerId: 'p', snapshotId: 's' }, query: {} } as unknown as Request, res as unknown as Response);
+      expect(res.status).toHaveBeenCalledWith(503);
+      const body = res.json.mock.calls[0][0];
+      expect(body.stage).toBe('unavailable-attestation-ingest');
+      expect(typeof body.error).toBe('string');
+      expect(body).not.toHaveProperty('providers');
+      expect(body).not.toHaveProperty('recent_snapshots');
+    }
   });
 });

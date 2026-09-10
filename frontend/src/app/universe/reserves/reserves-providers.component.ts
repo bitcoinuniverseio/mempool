@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRe
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { ReservesApiService, ReserveProvider } from './reserves.service';
 
 @Component({
@@ -105,7 +106,7 @@ export class ReservesProvidersComponent implements OnInit, OnDestroy {
         this.cd.markForCheck();
       },
       error: (err) => {
-        this.error = err?.message || 'Failed to load reserve providers';
+        this.error = loadFailureMessage(classifyLoadFailure(err));
         this.loading = false;
         this.cd.markForCheck();
       },
