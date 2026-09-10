@@ -1,25 +1,55 @@
-import dlcService from './dlc.service';
+import { Application, Request, Response } from 'express';
+import dlcRoutes from './dlc.routes';
+import dlcService, { DlcEvidenceError } from './dlc.service';
 
+/**
+ * These assertions replace a suite that asserted the constants the service used
+ * to return: two healthy oracles nobody probed, an equivocation proof nobody
+ * produced, and a settlement simulation whose funding transaction was fixed
+ * hex. Passing those proved the constants were present, not that any oracle
+ * had been observed.
+ */
 describe('DlcService', () => {
-  it('should return overview with active oracles and verified events', () => {
-    const overview = dlcService.getOverview();
-    expect(overview.total_oracles).toBeGreaterThanOrEqual(2);
-    expect(overview.healthy_oracles).toBeGreaterThanOrEqual(2);
-    expect(overview.recent_events.length).toBeGreaterThanOrEqual(2);
-    expect(overview.active_conflicts.length).toBeGreaterThanOrEqual(1);
+  const unavailable = (code: string) => expect.objectContaining({ code, status: 503 });
+
+  it('reports the missing oracle registry rather than a directory of invented oracles', () => {
+    expect(() => dlcService.getOverview()).toThrow(unavailable('unavailable-oracle-registry'));
+    expect(() => dlcService.listOracles()).toThrow(unavailable('unavailable-oracle-registry'));
+    expect(() => dlcService.getOracle('oracle-kormir-alpha')).toThrow(unavailable('unavailable-oracle-registry'));
+    expect(() => dlcService.getOracleHistory('oracle-kormir-alpha')).toThrow(unavailable('unavailable-oracle-registry'));
+    expect(() => dlcService.listEvents()).toThrow(unavailable('unavailable-oracle-registry'));
+    expect(() => dlcService.getEvent('bitcoin-difficulty-period-42')).toThrow(unavailable('unavailable-oracle-registry'));
+    expect(() => dlcService.getEventAttestations('bitcoin-difficulty-period-42')).toThrow(unavailable('unavailable-oracle-registry'));
+    expect(() => dlcService.listConflicts()).toThrow(unavailable('unavailable-oracle-registry'));
   });
 
-  it('should list oracles and retrieve single oracle by ID', () => {
-    const oracles = dlcService.listOracles();
-    expect(oracles.length).toBeGreaterThanOrEqual(2);
-
-    const first = oracles[0];
-    const retrieved = dlcService.getOracle(first.oracle_id);
-    expect(retrieved).toBeDefined();
-    expect(retrieved?.oracle_public_key).toBe(first.oracle_public_key);
+  it('reports the missing regtest harness rather than a simulation with fixed transaction hex', () => {
+    expect(() => dlcService.createSimulation({ scenario: 'settlement', contract_id: 'contract-test-01', oracle_ids: [] }))
+      .toThrow(unavailable('unavailable-dlc-simulator'));
+    expect(() => dlcService.getSimulation('sim-1')).toThrow(unavailable('unavailable-dlc-simulator'));
   });
 
-  it('should verify valid oracle announcement and reject duplicate nonces', () => {
+  it('never resolves an absent source as an empty directory', () => {
+    for (const read of [
+      () => dlcService.getOverview(),
+      () => dlcService.listOracles(),
+      () => dlcService.getOracleHistory('oracle-kormir-alpha'),
+      () => dlcService.listEvents(),
+      () => dlcService.getEventAttestations('bitcoin-difficulty-period-42'),
+      () => dlcService.listConflicts(),
+    ]) {
+      let resolved: unknown = 'unresolved';
+      try {
+        resolved = read();
+      } catch (e) {
+        expect(e).toBeInstanceOf(DlcEvidenceError);
+        continue;
+      }
+      throw new Error(`resolved with ${JSON.stringify(resolved)}`);
+    }
+  });
+
+  it('still checks the structure of a caller-supplied announcement and rejects duplicate nonces', () => {
     const valid = dlcService.verifyAnnouncement({
       oracle_public_key: '0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798',
       event_id: 'test-event-01',
@@ -46,7 +76,7 @@ describe('DlcService', () => {
     expect(invalid.errors).toContain('Duplicate nonce points detected in announcement');
   });
 
-  it('should verify contract package collateral conservation', () => {
+  it('still checks a caller-supplied contract package for collateral conservation', () => {
     const validPkg = dlcService.verifyContractPackage({
       parties: [
         {
@@ -98,26 +128,42 @@ describe('DlcService', () => {
     expect(invalidPkg.valid).toBe(false);
     expect(invalidPkg.errors).toContain('DLC contract package requires exactly two parties');
   });
+});
 
-  it('should create and retrieve regtest simulations for settlement and outage', () => {
-    const settlementSim = dlcService.createSimulation({
-      scenario: 'settlement',
-      contract_id: 'contract-test-01',
-      oracle_ids: ['oracle-kormir-alpha'],
-      outcome: 'increase_gt_5pct',
-    });
-    expect(settlementSim.status).toBe('simulated_success');
-    expect(settlementSim.adaptor_signatures_valid).toBe(true);
+describe('DLC HTTP responses', () => {
+  type Handler = (req: Request, res: Response) => unknown;
 
-    const outageSim = dlcService.createSimulation({
-      scenario: 'oracle_outage',
-      contract_id: 'contract-test-02',
-      oracle_ids: ['oracle-crypto-data-feed'],
-    });
-    expect(outageSim.status).toBe('simulated_refund');
+  function mount(): { gets: Map<string, Handler>; posts: Map<string, Handler> } {
+    const gets = new Map<string, Handler>();
+    const posts = new Map<string, Handler>();
+    const app = {
+      get: jest.fn((path: string, callback: Handler) => { gets.set(path, callback); return app; }),
+      post: jest.fn((path: string, callback: Handler) => { posts.set(path, callback); return app; }),
+    };
+    dlcRoutes.initRoutes(app as unknown as Application);
+    return { gets, posts };
+  }
 
-    const retrieved = dlcService.getSimulation(settlementSim.simulation_id);
-    expect(retrieved).toBeDefined();
-    expect(retrieved?.simulation_id).toBe(settlementSim.simulation_id);
+  it('answers every observation read with a 503 that names the missing source', async () => {
+    const { gets } = mount();
+    expect(gets.size).toBe(9);
+    for (const handler of gets.values()) {
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+      await handler({ params: { oracleId: 'oracle-1', eventId: 'event-1', simulationId: 'sim-1' } } as unknown as Request, res as unknown as Response);
+      expect(res.status).toHaveBeenCalledWith(503);
+      const body = res.json.mock.calls[0][0];
+      expect(body.stage).toMatch(/^unavailable-/);
+      expect(typeof body.error).toBe('string');
+      expect(body).not.toHaveProperty('recent_events');
+      expect(Array.isArray(body)).toBe(false);
+    }
+  });
+
+  it('answers a simulation request with a 503 that names the regtest harness', async () => {
+    const { posts } = mount();
+    const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+    await posts.get('/api/v1/intelligence/dlc/simulations')!({ body: { scenario: 'settlement', contract_id: 'c', oracle_ids: [] } } as Request, res as unknown as Response);
+    expect(res.status).toHaveBeenCalledWith(503);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ stage: 'unavailable-dlc-simulator' }));
   });
 });

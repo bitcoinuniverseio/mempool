@@ -1,14 +1,16 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { BehaviorSubject, Observable, catchError, of } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { SeoService } from '@app/services/seo.service';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { ZcashPrivacySummary } from '@app/universe/universe.types';
 
 interface PrivacyViewModel {
   readonly kind: 'loading' | 'ready' | 'error';
   readonly summary?: ZcashPrivacySummary;
+  readonly message?: string;
 }
 
 @Component({
@@ -33,14 +35,18 @@ export class ZcashPrivacyComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.api.getZcashPrivacySummary$()
-      .pipe(catchError(() => of(null)))
-      .subscribe((summary) => {
+    this.api.getZcashPrivacySummary$().subscribe({
+      next: (summary) => {
         if (!summary) {
-          this.state.next({ kind: 'error' });
+          this.state.next({ kind: 'error', message: loadFailureMessage('malformed') });
           return;
         }
         this.state.next({ kind: 'ready', summary });
-      });
+      },
+      // A 503 carries the name of the source the backend is missing; show it rather than a fixed line.
+      error: (err) => {
+        this.state.next({ kind: 'error', message: err?.error?.error || loadFailureMessage(classifyLoadFailure(err)) });
+      },
+    });
   }
 }
