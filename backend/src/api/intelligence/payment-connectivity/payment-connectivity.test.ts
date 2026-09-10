@@ -1,12 +1,60 @@
-import paymentConnectivityService from './payment-connectivity.service';
+import { Application, Request, Response } from 'express';
+import paymentConnectivityRoutes from './payment-connectivity.routes';
+import paymentConnectivityService, { PaymentConnectivityEvidenceError } from './payment-connectivity.service';
 
+/**
+ * These assertions replace a suite that asserted the constants the service used
+ * to return: three wallet products with invented compliance scores, two relays
+ * that were reachable because the constant said so, an LNURL provider with
+ * every capability flag set, and a zap verdict whose recipient, payment hash
+ * and amount were the same constants for every input. Passing those proved
+ * the constants were present, not that any relay or zap had been observed.
+ */
 describe('PaymentConnectivityService', () => {
-  it('should return overview with products and reachable relays', () => {
-    const overview = paymentConnectivityService.getOverview();
-    expect(overview.total_products).toBeGreaterThanOrEqual(3);
-    expect(overview.active_relays).toBeGreaterThanOrEqual(2);
-    expect(overview.lnurl_providers.length).toBeGreaterThanOrEqual(1);
-    expect(overview.verified_zaps_count).toBeGreaterThanOrEqual(1);
+  const unavailable = (code: string) => expect.objectContaining({ code, status: 503 });
+
+  it('reports the missing product directory rather than invented compliance scores', () => {
+    expect(() => paymentConnectivityService.getOverview()).toThrow(unavailable('unavailable-product-directory'));
+    expect(() => paymentConnectivityService.listProducts()).toThrow(unavailable('unavailable-product-directory'));
+  });
+
+  it('reports the missing relay prober rather than relays that are reachable by constant', () => {
+    expect(() => paymentConnectivityService.listRelays()).toThrow(unavailable('unavailable-relay-prober'));
+    expect(() => paymentConnectivityService.getRelay('relay-damus-io')).toThrow(unavailable('unavailable-relay-prober'));
+  });
+
+  it('reports the missing LNURL prober rather than a provider with every capability', () => {
+    expect(() => paymentConnectivityService.listLnurlProviders()).toThrow(unavailable('unavailable-lnurl-prober'));
+  });
+
+  it('reports the missing zap verifier and vendor trust rather than a verdict', () => {
+    expect(() => paymentConnectivityService.verifyZap({ zap_request_json: '{}', invoice_description_hash: 'x', zap_receipt_signature: 'y' }))
+      .toThrow(unavailable('unavailable-zap-verifier'));
+    expect(() => paymentConnectivityService.verifyManifest()).toThrow(unavailable('unavailable-vendor-trust'));
+  });
+
+  it('never resolves an absent source as an empty directory', () => {
+    for (const read of [
+      () => paymentConnectivityService.getOverview(),
+      () => paymentConnectivityService.listProducts(),
+      () => paymentConnectivityService.listRelays(),
+      () => paymentConnectivityService.listLnurlProviders(),
+    ]) {
+      let resolved: unknown = 'unresolved';
+      try {
+        resolved = read();
+      } catch (e) {
+        expect(e).toBeInstanceOf(PaymentConnectivityEvidenceError);
+        continue;
+      }
+      throw new Error(`resolved with ${JSON.stringify(resolved)}`);
+    }
+  });
+
+  it('keeps the protocol compatibility table, which is specification constants', () => {
+    const compatibility = paymentConnectivityService.getCompatibility();
+    expect(compatibility.nip57_zaps.request_kind).toBe(9734);
+    expect(compatibility.nwc_protocols.events.request).toBe(23194);
   });
 
   it('should inspect and mask NWC URI without exposing secret in return value', () => {
@@ -41,32 +89,47 @@ describe('PaymentConnectivityService', () => {
     expect(ssrfMetadata.valid).toBe(false);
     expect(ssrfMetadata.ssrf_safe).toBe(false);
   });
+});
 
-  it('should verify NIP57 zap request and invoice description hash linkage', () => {
-    const zapReqJson = JSON.stringify({
-      pubkey: '3bf0c63fcb93463407af97b5e097194fd1871b737112046479fe523e42b0f0c7',
-      created_at: 1788500000,
-      kind: 9734,
-      tags: [['amount', '1000']],
-    });
+describe('Payment connectivity HTTP responses', () => {
+  type Handler = (req: Request, res: Response) => void;
 
-    const crypto = require('crypto');
-    const expectedHash = crypto.createHash('sha256').update(zapReqJson).digest('hex');
+  function mount(): { gets: Map<string, Handler>; posts: Map<string, Handler> } {
+    const gets = new Map<string, Handler>();
+    const posts = new Map<string, Handler>();
+    const app = {
+      get: jest.fn((path: string, callback: Handler) => { gets.set(path, callback); return app; }),
+      post: jest.fn((path: string, callback: Handler) => { posts.set(path, callback); return app; }),
+    };
+    paymentConnectivityRoutes.initRoutes(app as unknown as Application);
+    return { gets, posts };
+  }
 
-    const validZap = paymentConnectivityService.verifyZap({
-      zap_request_json: zapReqJson,
-      invoice_description_hash: expectedHash,
-      zap_receipt_signature: 'sig_valid_receipt_64_bytes_hex_string_representing_valid_schnorr',
-    });
-    expect(validZap.is_valid_zap).toBe(true);
-    expect(validZap.description_hash_matches_request).toBe(true);
+  it('answers every observation read with a 503 that names the missing source', () => {
+    const { gets } = mount();
+    expect(gets.size).toBe(6);
+    for (const [path, handler] of gets) {
+      if (path.endsWith('/compatibility')) continue;
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+      handler({ params: { relayId: 'relay' } } as unknown as Request, res as unknown as Response);
+      expect(res.status).toHaveBeenCalledWith(503);
+      const body = res.json.mock.calls[0][0];
+      expect(body.stage).toMatch(/^unavailable-/);
+      expect(typeof body.error).toBe('string');
+      expect(body).not.toHaveProperty('products');
+      expect(body).not.toHaveProperty('relays');
+    }
+  });
 
-    const mismatchedZap = paymentConnectivityService.verifyZap({
-      zap_request_json: zapReqJson,
-      invoice_description_hash: 'wrong_hash',
-      zap_receipt_signature: 'sig_valid',
-    });
-    expect(mismatchedZap.is_valid_zap).toBe(false);
-    expect(mismatchedZap.description_hash_matches_request).toBe(false);
+  it.each([
+    ['/api/v1/intelligence/payment-connectivity/manifests/verify', { product_id: 'alby-hub' }, 'unavailable-vendor-trust'],
+    ['/api/v1/intelligence/payment-connectivity/zaps/verify', { zap_request_json: '{}', invoice_description_hash: 'x', zap_receipt_signature: 'y' }, 'unavailable-zap-verifier'],
+  ])('never returns a verified verdict from %s without a verifier', (path, body, stage) => {
+    const { posts } = mount();
+    const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+    posts.get(path)!({ body } as unknown as Request, res as unknown as Response);
+    expect(res.status).toHaveBeenCalledWith(503);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ stage }));
+    expect(res.json.mock.calls[0][0]).not.toHaveProperty('verified', true);
   });
 });

@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { ConsensusConformanceApiService } from './consensus-conformance.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-consensus-conformance-cases',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4">
       <div class="alert alert-warning" role="alert" *ngIf="loadError">
@@ -18,7 +19,7 @@ import { ConsensusConformanceApiService } from './consensus-conformance.service'
           <h1 class="h2 mb-1">Consensus Discrepancy Cases</h1>
           <p class="text-muted mb-0">Catalog of transactions and blocks that produce diverging outcomes across different node implementations.</p>
         </div>
-        <a routerLink="/labs/consensus/conformance" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
+        <a [routerLink]="'/labs/consensus/conformance' | relativeUrl" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
       </div>
 
       <div class="card bg-dark border-secondary mb-4">
@@ -47,7 +48,7 @@ import { ConsensusConformanceApiService } from './consensus-conformance.service'
                 </td>
                 <td><span class="badge bg-danger">{{ c.severity | uppercase }}</span></td>
                 <td>
-                  <a [routerLink]="['/labs/consensus/case', c.case_id]" class="btn btn-sm btn-outline-info">Replay Case</a>
+                  <a [routerLink]="['/labs/consensus/case' | relativeUrl, c.case_id]" class="btn btn-sm btn-outline-info">Replay Case</a>
                 </td>
               </tr>
             </tbody>

@@ -1,7 +1,16 @@
 import { Application, Request, Response } from 'express';
 import config from '../../config';
 import { handleError } from '../../utils/api';
-import { fractalService } from './fractal.service';
+import { FractalEvidenceError, fractalService } from './fractal.service';
+
+/** An absent source is a 503 that names the source, never a 500 and never an empty list. */
+function fail(req: Request, res: Response, e: unknown): void {
+  if (e instanceof FractalEvidenceError) {
+    res.status(e.status).json({ stage: e.code, error: e.message });
+    return;
+  }
+  handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+}
 
 class FractalRoutes {
   public initRoutes(app: Application): void {
@@ -22,7 +31,7 @@ class FractalRoutes {
       const tip = await fractalService.$getTip();
       res.json(tip);
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -31,7 +40,7 @@ class FractalRoutes {
       const mempool = await fractalService.$getMempool();
       res.json(mempool);
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -44,7 +53,7 @@ class FractalRoutes {
       }
       res.json(block);
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -57,7 +66,7 @@ class FractalRoutes {
       }
       res.json(tx);
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -66,7 +75,7 @@ class FractalRoutes {
       const tokens = await fractalService.$getCat20Tokens();
       res.json({ tokens, total: tokens.length });
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -79,7 +88,7 @@ class FractalRoutes {
       }
       res.json(token);
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -88,7 +97,7 @@ class FractalRoutes {
       const holders = await fractalService.$getCat20Holders(req.params.tokenId);
       res.json({ holders, total: holders.length });
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 }

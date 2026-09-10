@@ -2,12 +2,14 @@ import { Component, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { QuantumApiService, QuantumMigrationPlanResult } from './quantum.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-quantum-migration',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -22,11 +24,11 @@ import { QuantumApiService, QuantumMigrationPlanResult } from './quantum.service
 
         <!-- Navigation Tabs -->
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/intelligence/quantum">Overview</a>
-          <a class="nav-link" routerLink="/intelligence/quantum/exposure">Script Cohorts</a>
-          <a class="nav-link" routerLink="/intelligence/quantum/history">Reveal Timeline</a>
-          <a class="nav-link" routerLink="/intelligence/quantum/audit">Local Public Audit</a>
-          <a class="nav-link active" routerLink="/intelligence/quantum/migration">Migration Planner</a>
+          <a class="nav-link" [routerLink]="'/intelligence/quantum' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/intelligence/quantum/exposure' | relativeUrl">Script Cohorts</a>
+          <a class="nav-link" [routerLink]="'/intelligence/quantum/history' | relativeUrl">Reveal Timeline</a>
+          <a class="nav-link" [routerLink]="'/intelligence/quantum/audit' | relativeUrl">Local Public Audit</a>
+          <a class="nav-link active" [routerLink]="'/intelligence/quantum/migration' | relativeUrl">Migration Planner</a>
         </nav>
       </header>
 
@@ -66,6 +68,10 @@ import { QuantumApiService, QuantumMigrationPlanResult } from './quantum.service
             </button>
           </div>
         </form>
+      </div>
+
+      <div *ngIf="errorMessage" class="alert alert-danger mb-4" role="alert">
+        {{ errorMessage }}
       </div>
 
       <!-- Result View -->
@@ -124,6 +130,7 @@ import { QuantumApiService, QuantumMigrationPlanResult } from './quantum.service
 export class QuantumMigrationComponent {
   rawOutpoints = '';
   planning = false;
+  errorMessage: string | null = null;
   result: QuantumMigrationPlanResult | null = null;
 
   constructor(
@@ -139,6 +146,7 @@ export class QuantumMigrationComponent {
   generatePlan(): void {
     if (!this.rawOutpoints) return;
     this.planning = true;
+    this.errorMessage = null;
     this.result = null;
 
     const outpoints = this.rawOutpoints.split('\n').map(s => s.trim()).filter(Boolean);
@@ -149,7 +157,8 @@ export class QuantumMigrationComponent {
         this.planning = false;
         this.cd.markForCheck();
       },
-      error: () => {
+      error: err => {
+        this.errorMessage = loadFailureMessage(classifyLoadFailure(err));
         this.planning = false;
         this.cd.markForCheck();
       },

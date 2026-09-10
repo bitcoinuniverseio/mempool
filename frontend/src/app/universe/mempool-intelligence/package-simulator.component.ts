@@ -16,6 +16,7 @@ import {
 } from './package-input';
 import { formatFeerate, formatSats, formatVsize, shorten } from './cluster-format';
 import { looksLikeSecret } from '@app/universe/workbench/psbt-inspect';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 /**
  * What this node would do with a package, before it is sent to one.
@@ -32,7 +33,7 @@ import { looksLikeSecret } from '@app/universe/workbench/psbt-inspect';
 @Component({
   selector: 'app-package-simulator',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, FormsModule, RouterModule],
   templateUrl: './package-simulator.component.html',
   styleUrls: ['./package-simulator.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

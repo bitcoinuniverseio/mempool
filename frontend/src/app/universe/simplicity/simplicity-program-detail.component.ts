@@ -2,18 +2,20 @@ import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRe
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { SimplicityApiService, SimplicityProgram } from './simplicity.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-simplicity-program-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
       <header class="page-header mb-4">
         <div class="mb-2">
-          <a routerLink="/liquid/simplicity/contracts" class="btn btn-sm btn-outline-secondary">
+          <a [routerLink]="'/liquid/simplicity/contracts' | relativeUrl" class="btn btn-sm btn-outline-secondary">
             &larr; Back to Programs
           </a>
         </div>
@@ -107,10 +109,10 @@ import { SimplicityApiService, SimplicityProgram } from './simplicity.service';
             </dl>
 
             <div class="mt-4 pt-3 border-top d-flex gap-2">
-              <a [routerLink]="['/tools/simplicity']" class="btn btn-sm btn-outline-primary">
+              <a [routerLink]="['/tools/simplicity' | relativeUrl]" class="btn btn-sm btn-outline-primary">
                 Open in Workbench
               </a>
-              <a [routerLink]="['/tools/simplicity/verify']" class="btn btn-sm btn-outline-secondary">
+              <a [routerLink]="['/tools/simplicity/verify' | relativeUrl]" class="btn btn-sm btn-outline-secondary">
                 Verify Proof Artifact
               </a>
             </div>
@@ -141,7 +143,7 @@ export class SimplicityProgramDetailComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
       },
       error: (err) => {
-        this.error = err.message || 'Failed to load program detail';
+        this.error = loadFailureMessage(classifyLoadFailure(err));
         this.loading = false;
         this.cdr.markForCheck();
       },

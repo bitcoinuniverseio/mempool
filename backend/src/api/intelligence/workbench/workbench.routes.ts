@@ -1,6 +1,15 @@
 import { Application, Request, Response } from 'express';
-import { workbenchService } from './workbench.service';
+import { WorkbenchEvidenceError, workbenchService } from './workbench.service';
 import { handleError } from '../../../utils/api';
+
+/** An absent engine is a 503 that names the engine, never a 500 and never an invented analysis. */
+function fail(req: Request, res: Response, e: unknown, fallback: string): void {
+  if (e instanceof WorkbenchEvidenceError) {
+    res.status(e.status).json({ stage: e.code, error: e.message });
+    return;
+  }
+  handleError(req, res, 500, e instanceof Error ? e.message : fallback);
+}
 
 class WorkbenchRoutes {
   public initRoutes(app: Application): void {
@@ -25,7 +34,7 @@ class WorkbenchRoutes {
       const result = workbenchService.analyzeScript(hex);
       res.json(result);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Script analysis failed');
+      fail(req, res, e, 'Script analysis failed');
     }
   }
 
@@ -36,7 +45,7 @@ class WorkbenchRoutes {
       const steps = workbenchService.simulateStack(hex, witness);
       res.json({ steps, count: steps.length });
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Simulation failed');
+      fail(req, res, e, 'Simulation failed');
     }
   }
 
@@ -46,7 +55,7 @@ class WorkbenchRoutes {
       const compiled = workbenchService.compileMiniscript(policy);
       res.json(compiled);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Miniscript compilation failed');
+      fail(req, res, e, 'Miniscript compilation failed');
     }
   }
 
@@ -60,7 +69,7 @@ class WorkbenchRoutes {
       const parsed = workbenchService.parseDescriptor(desc);
       res.json(parsed);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Descriptor parse failed');
+      fail(req, res, e, 'Descriptor parse failed');
     }
   }
 
@@ -70,7 +79,7 @@ class WorkbenchRoutes {
       const parsed = workbenchService.parseDescriptor(desc);
       res.json({ derived: parsed.derived_samples, count: parsed.derived_samples.length });
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Derivation failed');
+      fail(req, res, e, 'Derivation failed');
     }
   }
 
@@ -84,7 +93,7 @@ class WorkbenchRoutes {
       const analyzed = workbenchService.analyzePsbt(psbt);
       res.json(analyzed);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'PSBT analysis failed');
+      fail(req, res, e, 'PSBT analysis failed');
     }
   }
 }

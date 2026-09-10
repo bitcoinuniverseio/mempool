@@ -7,6 +7,7 @@ import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { ClusterListResponse, ClusterSummary } from './mempool-intelligence.types';
 import { describeFreshness, FreshnessView, formatFeerate, formatSats, formatVsize } from './cluster-format';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 /** How often the list reloads while the page is open. */
 const REFRESH_MS = 10_000;
@@ -24,7 +25,7 @@ const PAGE_SIZE = 50;
 @Component({
   selector: 'app-cluster-list',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   templateUrl: './cluster-list.component.html',
   styleUrls: ['./cluster-list.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

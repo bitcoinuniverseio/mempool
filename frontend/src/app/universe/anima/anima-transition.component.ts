@@ -7,6 +7,7 @@ import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { AnimaEventDocument } from '@app/universe/universe.types';
 import { shortenIdentifier } from '@app/universe/universe-evidence';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 interface AnimaTransitionViewModel {
   readonly kind: 'loading' | 'error' | 'missing' | 'ready';
@@ -25,7 +26,7 @@ const EVENT_ID_PATTERN = /^a\d+:\d+$/;
   templateUrl: './anima-transition.component.html',
   styleUrls: ['./anima-page.scss'],
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AnimaTransitionComponent implements OnInit {

@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { OffchainApiService, OffchainOperator } from './offchain.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-statechain-operators',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -23,12 +24,12 @@ import { OffchainApiService, OffchainOperator } from './offchain.service';
         </p>
 
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/offchain/utxo">Overview</a>
-          <a class="nav-link active" routerLink="/offchain/statechains/operators">Statechains</a>
-          <a class="nav-link" routerLink="/offchain/statechains/verify">Transfer Verifier</a>
-          <a class="nav-link" routerLink="/offchain/coinswap">CoinSwap</a>
-          <a class="nav-link" routerLink="/offchain/coinswap/inspect">CoinSwap Inspector</a>
-          <a class="nav-link" routerLink="/offchain/recovery">Recovery Planner</a>
+          <a class="nav-link" [routerLink]="'/offchain/utxo' | relativeUrl">Overview</a>
+          <a class="nav-link active" [routerLink]="'/offchain/statechains/operators' | relativeUrl">Statechains</a>
+          <a class="nav-link" [routerLink]="'/offchain/statechains/verify' | relativeUrl">Transfer Verifier</a>
+          <a class="nav-link" [routerLink]="'/offchain/coinswap' | relativeUrl">CoinSwap</a>
+          <a class="nav-link" [routerLink]="'/offchain/coinswap/inspect' | relativeUrl">CoinSwap Inspector</a>
+          <a class="nav-link" [routerLink]="'/offchain/recovery' | relativeUrl">Recovery Planner</a>
         </nav>
       </header>
 
@@ -75,7 +76,7 @@ import { OffchainApiService, OffchainOperator } from './offchain.service';
 
             <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
               <span class="small text-muted font-monospace text-break">{{ op.endpoint }}</span>
-              <a [routerLink]="['/offchain/statechains/operator', op.operator_id]" class="btn btn-sm btn-outline-primary">
+              <a [routerLink]="['/offchain/statechains/operator' | relativeUrl, op.operator_id]" class="btn btn-sm btn-outline-primary">
                 Operator Details
               </a>
             </div>

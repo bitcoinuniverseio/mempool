@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { NodeSecurityApiService } from './node-security.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-node-security-node-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4" *ngIf="node">
       <div class="alert alert-warning" role="alert" *ngIf="loadError">
@@ -18,7 +19,7 @@ import { NodeSecurityApiService } from './node-security.service';
           <h1 class="h2 mb-1">Node Security Profile: <span class="text-info">{{ node.node_id }}</span></h1>
           <p class="text-muted mb-0">{{ node.client_name }} {{ node.version }} running on {{ node.network }}</p>
         </div>
-        <a routerLink="/node/security/fleet" class="btn btn-outline-secondary btn-sm">Back to Fleet</a>
+        <a [routerLink]="'/node/security/fleet' | relativeUrl" class="btn btn-outline-secondary btn-sm">Back to Fleet</a>
       </div>
 
       <div class="row g-3 mb-4">

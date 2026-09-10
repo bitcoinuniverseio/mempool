@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { ConsensusApiService, ConsensusProposal } from './consensus.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-consensus-compare',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -22,11 +23,11 @@ import { ConsensusApiService, ConsensusProposal } from './consensus.service';
 
         <!-- Navigation Tabs -->
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/labs/consensus">Consensus Proposals</a>
-          <a class="nav-link active" routerLink="/labs/consensus/compare">Compare Matrix</a>
-          <a class="nav-link" routerLink="/labs/vaults">Vaults Overview</a>
-          <a class="nav-link" routerLink="/labs/vaults/designer">Vault Designer</a>
-          <a class="nav-link" routerLink="/labs/vaults/simulate">Covenant Simulator</a>
+          <a class="nav-link" [routerLink]="'/labs/consensus' | relativeUrl">Consensus Proposals</a>
+          <a class="nav-link active" [routerLink]="'/labs/consensus/compare' | relativeUrl">Compare Matrix</a>
+          <a class="nav-link" [routerLink]="'/labs/vaults' | relativeUrl">Vaults Overview</a>
+          <a class="nav-link" [routerLink]="'/labs/vaults/designer' | relativeUrl">Vault Designer</a>
+          <a class="nav-link" [routerLink]="'/labs/vaults/simulate' | relativeUrl">Covenant Simulator</a>
         </nav>
       </header>
 
@@ -82,7 +83,7 @@ import { ConsensusApiService, ConsensusProposal } from './consensus.service';
                 </td>
                 <td class="small text-muted">{{ p.activation_mechanism }}</td>
                 <td class="text-end">
-                  <a [routerLink]="['/labs/consensus', p.proposal_id]" class="btn btn-sm btn-outline-primary">
+                  <a [routerLink]="['/labs/consensus' | relativeUrl, p.proposal_id]" class="btn btn-sm btn-outline-primary">
                     Inspect
                   </a>
                 </td>

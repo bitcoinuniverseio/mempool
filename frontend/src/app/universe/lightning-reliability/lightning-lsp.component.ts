@@ -2,12 +2,14 @@ import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRe
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { LightningReliabilityApiService, LightningLspProvider } from './lightning-reliability.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-lightning-lsp',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -24,9 +26,9 @@ import { LightningReliabilityApiService, LightningLspProvider } from './lightnin
 
         <!-- Navigation Tabs -->
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/lightning/reliability">Reliability Overview</a>
-          <a class="nav-link" routerLink="/lightning/liquidity">Liquidity Simulation</a>
-          <a class="nav-link active" routerLink="/lightning/lsp">LSP Directory</a>
+          <a class="nav-link" [routerLink]="'/lightning/reliability' | relativeUrl">Reliability Overview</a>
+          <a class="nav-link" [routerLink]="'/lightning/liquidity' | relativeUrl">Liquidity Simulation</a>
+          <a class="nav-link active" [routerLink]="'/lightning/lsp' | relativeUrl">LSP Directory</a>
         </nav>
       </header>
 
@@ -68,7 +70,7 @@ import { LightningReliabilityApiService, LightningLspProvider } from './lightnin
 
             <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
               <span class="small text-muted font-monospace" *ngIf="lsp.endpoint_url">{{ lsp.endpoint_url }}</span>
-              <a [routerLink]="['/lightning/node', lsp.node_pubkey, 'reliability']" class="btn btn-sm btn-outline-primary ms-auto">
+              <a [routerLink]="['/lightning/node' | relativeUrl, lsp.node_pubkey, 'reliability']" class="btn btn-sm btn-outline-primary ms-auto">
                 Probe Reliability
               </a>
             </div>
@@ -109,7 +111,7 @@ export class LightningLspComponent implements OnInit, OnDestroy {
           this.cd.markForCheck();
         },
         error: err => {
-          this.error = err?.message || 'Failed to load LSP providers';
+          this.error = err?.error?.error || loadFailureMessage(classifyLoadFailure(err));
           this.loading = false;
           this.cd.markForCheck();
         },

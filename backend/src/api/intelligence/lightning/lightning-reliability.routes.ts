@@ -1,6 +1,15 @@
 import { Application, Request, Response } from 'express';
-import { lightningReliabilityService } from './lightning-reliability.service';
+import { LightningReliabilityEvidenceError, lightningReliabilityService } from './lightning-reliability.service';
 import { handleError } from '../../../utils/api';
+
+/** An absent source is a 503 that names the source, never a 500 and never an empty list. */
+function fail(req: Request, res: Response, e: unknown, fallback: string): void {
+  if (e instanceof LightningReliabilityEvidenceError) {
+    res.status(e.status).json({ stage: e.code, error: e.message });
+    return;
+  }
+  handleError(req, res, 500, e instanceof Error ? e.message : fallback);
+}
 
 class LightningReliabilityRoutes {
   public initRoutes(app: Application): void {
@@ -20,7 +29,7 @@ class LightningReliabilityRoutes {
       const overview = lightningReliabilityService.getOverview();
       res.json(overview);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch lightning reliability overview');
+      fail(req, res, e, 'Failed to fetch lightning reliability overview');
     }
   }
 
@@ -34,7 +43,7 @@ class LightningReliabilityRoutes {
       }
       res.json(node);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch node reliability');
+      fail(req, res, e, 'Failed to fetch node reliability');
     }
   }
 
@@ -48,7 +57,7 @@ class LightningReliabilityRoutes {
       }
       res.json(channel);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch channel lifecycle');
+      fail(req, res, e, 'Failed to fetch channel lifecycle');
     }
   }
 
@@ -62,7 +71,7 @@ class LightningReliabilityRoutes {
       }
       res.json(closure);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch closure forensics');
+      fail(req, res, e, 'Failed to fetch closure forensics');
     }
   }
 
@@ -71,7 +80,7 @@ class LightningReliabilityRoutes {
       const lsps = lightningReliabilityService.getLspProviders();
       res.json(lsps);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch LSP providers');
+      fail(req, res, e, 'Failed to fetch LSP providers');
     }
   }
 
@@ -85,6 +94,10 @@ class LightningReliabilityRoutes {
       });
       res.json(result);
     } catch (e) {
+      if (e instanceof LightningReliabilityEvidenceError) {
+        res.status(e.status).json({ stage: e.code, error: e.message });
+        return;
+      }
       res.status(400).json({ error: e instanceof Error ? e.message : 'Liquidity simulation failed' });
     }
   }

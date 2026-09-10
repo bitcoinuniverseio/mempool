@@ -2,12 +2,14 @@ import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRe
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { DlcApiService, DlcOverview, DlcOverviewAnnouncement } from './dlc.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-dlc-overview',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -23,11 +25,11 @@ import { DlcApiService, DlcOverview, DlcOverviewAnnouncement } from './dlc.servi
         </p>
 
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link active" routerLink="/contracts/dlc">Overview</a>
-          <a class="nav-link" routerLink="/contracts/dlc/oracles">Oracles</a>
-          <a class="nav-link" routerLink="/contracts/dlc/events">Events</a>
-          <a class="nav-link" routerLink="/contracts/dlc/inspect">Contract Inspector</a>
-          <a class="nav-link" routerLink="/contracts/dlc/simulate">Regtest Simulator</a>
+          <a class="nav-link active" [routerLink]="'/contracts/dlc' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/contracts/dlc/oracles' | relativeUrl">Oracles</a>
+          <a class="nav-link" [routerLink]="'/contracts/dlc/events' | relativeUrl">Events</a>
+          <a class="nav-link" [routerLink]="'/contracts/dlc/inspect' | relativeUrl">Contract Inspector</a>
+          <a class="nav-link" [routerLink]="'/contracts/dlc/simulate' | relativeUrl">Regtest Simulator</a>
         </nav>
       </header>
 
@@ -76,7 +78,7 @@ import { DlcApiService, DlcOverview, DlcOverviewAnnouncement } from './dlc.servi
           <div class="card p-4 bg-body-tertiary border h-100">
             <div class="d-flex justify-content-between align-items-center mb-3">
               <h2 class="h5 m-0">Recent Oracle Announcements</h2>
-              <a routerLink="/contracts/dlc/events" class="small text-decoration-none">View All &rarr;</a>
+              <a [routerLink]="'/contracts/dlc/events' | relativeUrl" class="small text-decoration-none">View All &rarr;</a>
             </div>
             <div class="table-responsive" tabindex="0" role="region" aria-label="Recent Oracle Announcements, scroll horizontally" i18n-aria-label>
               <table class="table table-sm table-hover align-middle">
@@ -92,7 +94,7 @@ import { DlcApiService, DlcOverview, DlcOverviewAnnouncement } from './dlc.servi
                 <tbody>
                   <tr *ngFor="let ev of overview.recent_events">
                     <td>
-                      <a [routerLink]="['/contracts/dlc/event', ev.event_id]" class="font-monospace text-decoration-none">
+                      <a [routerLink]="['/contracts/dlc/event' | relativeUrl, ev.event_id]" class="font-monospace text-decoration-none">
                         {{ ev.event_id }}
                       </a>
                     </td>
@@ -151,7 +153,7 @@ export class DlcOverviewComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
       },
       error: (err) => {
-        this.error = err.message || 'Failed to load DLC overview';
+        this.error = err?.error?.error || loadFailureMessage(classifyLoadFailure(err));
         this.loading = false;
         this.cdr.markForCheck();
       },

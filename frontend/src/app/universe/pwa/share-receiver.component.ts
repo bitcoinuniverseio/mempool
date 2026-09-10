@@ -7,6 +7,7 @@ import { Network } from '@app/shared/regex.utils';
 import { Observable, of } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { routeForSharedValue, SharedTarget } from './share-target';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 /**
  * Where the operating system lands a share.
@@ -26,7 +27,7 @@ type Resolution =
 @Component({
   selector: 'app-universe-share-receiver',
   standalone: true,
-  imports: [CommonModule, RouterLink, AsyncPipe],
+  imports: [RelativeUrlPipe, CommonModule, RouterLink, AsyncPipe],
   templateUrl: './share-receiver.component.html',
   styleUrls: ['./share-receiver.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

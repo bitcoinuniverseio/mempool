@@ -7,18 +7,19 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { Router, RouterLink } from '@angular/router';
 import { PortfoliosStore } from '../stores/portfolios.store';
 import { findDuplicateAddresses } from '../stores/portfolio-model';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-manage-portfolios',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RelativeUrlPipe, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="manage">
       <header class="head">
         <h1 i18n="@@universe.portfolio.manage.title">Manage portfolios</h1>
-        <a routerLink="/portfolio/settings" i18n="@@universe.portfolio.manage.settings">Settings</a>
-        <a class="primary" routerLink="/portfolio/new" i18n="@@universe.portfolio.manage.new">New portfolio</a>
+        <a [routerLink]="'/portfolio/settings' | relativeUrl" i18n="@@universe.portfolio.manage.settings">Settings</a>
+        <a class="primary" [routerLink]="'/portfolio/new' | relativeUrl" i18n="@@universe.portfolio.manage.new">New portfolio</a>
       </header>
 
       @if (store.vaultKind() !== 'unlocked') {
@@ -45,7 +46,7 @@ import { findDuplicateAddresses } from '../stores/portfolio-model';
               </div>
               <div class="actions">
                 @if (!portfolio.archived) {
-                  <a [routerLink]="['/portfolio/p', portfolio.id, 'overview']" i18n="@@universe.portfolio.manage.open">Open</a>
+                  <a [routerLink]="['/portfolio/p' | relativeUrl, portfolio.id, 'overview']" i18n="@@universe.portfolio.manage.open">Open</a>
                 }
                 <button type="button" (click)="renaming.set(portfolio.id)" i18n="@@universe.portfolio.manage.rename">Rename</button>
                 <button type="button" (click)="duplicate(portfolio)" i18n="@@universe.portfolio.manage.duplicate">Duplicate</button>

@@ -3,17 +3,18 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { EcashApiService, CashuMint } from './ecash.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-ecash-cashu-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
       <header class="page-header mb-4">
         <div class="d-flex align-items-center gap-2 mb-2">
-          <a routerLink="/ecash/cashu" class="btn btn-sm btn-outline-secondary">
+          <a [routerLink]="'/ecash/cashu' | relativeUrl" class="btn btn-sm btn-outline-secondary">
             &larr; Back to Cashu Mints
           </a>
           <span class="text-muted small">Cashu Observatory</span>

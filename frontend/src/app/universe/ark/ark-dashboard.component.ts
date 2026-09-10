@@ -1,14 +1,16 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { BehaviorSubject, Observable, catchError, combineLatest, of } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, combineLatest, map, of } from 'rxjs';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
+
 import {
   ArkBatch,
   ArkOperator,
   ArkVirtualTx,
-  ArkVtxo,
 } from '@app/universe/universe.types';
 
 interface ArkViewModel {
@@ -16,7 +18,7 @@ interface ArkViewModel {
   readonly operators?: ArkOperator[];
   readonly batches?: ArkBatch[];
   readonly virtualTxs?: ArkVirtualTx[];
-  readonly selectedVtxo?: ArkVtxo;
+  readonly message?: string;
 }
 
 @Component({
@@ -24,7 +26,7 @@ interface ArkViewModel {
   templateUrl: './ark-dashboard.component.html',
   styleUrls: ['../product-page.scss'],
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ArkDashboardComponent implements OnInit {
@@ -41,17 +43,20 @@ export class ArkDashboardComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // No per-read fallback: an operator or batch table the source could not
+    // answer is an error with its reason, not an empty table. The revision
+    // this replaces also inspected a VTXO by a fixed invented ID and labelled
+    // its exit proof verified; nothing here names a VTXO the source did not.
     combineLatest([
-      this.api.getArkOperators$().pipe(catchError(() => of({ operators: [] }))),
-      this.api.getArkBatches$().pipe(catchError(() => of({ batches: [] }))),
-      this.api.getArkVtxo$('vtxo-78192a83918273918273918273918273').pipe(catchError(() => of(null))),
-    ]).subscribe(([opsData, batchesData, vtxo]) => {
-      this.state.next({
+      this.api.getArkOperators$(),
+      this.api.getArkBatches$(),
+    ]).pipe(
+      map(([opsData, batchesData]): ArkViewModel => ({
         kind: 'ready',
         operators: opsData.operators,
         batches: batchesData.batches,
-        selectedVtxo: vtxo || undefined,
-      });
-    });
+      })),
+      catchError((error) => of<ArkViewModel>({ kind: 'error', message: loadFailureMessage(classifyLoadFailure(error)) })),
+    ).subscribe((vm) => this.state.next(vm));
   }
 }

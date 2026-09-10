@@ -5,6 +5,7 @@ import { BehaviorSubject, Observable, catchError, combineLatest, of, switchMap }
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { TaprootAssetGroup, TaprootAssetItem } from '@app/universe/universe.types';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 interface TaprootViewModel {
   readonly kind: 'loading' | 'ready' | 'detail' | 'error';
@@ -18,7 +19,7 @@ interface TaprootViewModel {
   templateUrl: './taproot-assets.component.html',
   styleUrls: ['../product-page.scss'],
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TaprootAssetsComponent implements OnInit {

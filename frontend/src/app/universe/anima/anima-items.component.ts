@@ -8,6 +8,7 @@ import { UniverseApiService } from '@app/universe/universe-api.service';
 import { AnimaOrganism } from '@app/universe/universe.types';
 import { shortenIdentifier } from '@app/universe/universe-evidence';
 import { AnimaFailure, animaFailureFrom, animaFailureText, animaFailureTitle } from './anima-failure';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 export interface AnimaItemsViewModel {
   readonly kind: 'loading' | 'ready' | 'degraded' | 'error';
@@ -32,7 +33,7 @@ export interface AnimaItemsViewModel {
   templateUrl: './anima-items.component.html',
   styleUrls: ['./anima-page.scss'],
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AnimaItemsComponent implements OnInit {

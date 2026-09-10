@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { BlockPropagationApiService } from './block-propagation.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-block-propagation-fibre',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4">
       <div class="alert alert-warning" role="alert" *ngIf="loadError">
@@ -18,7 +19,7 @@ import { BlockPropagationApiService } from './block-propagation.service';
           <h1 class="h2 mb-1">FIBRE (Fast Internet Bitcoin Relay Engine) Relay Status</h1>
           <p class="text-muted mb-0">High-speed UDP relay network telemetry with forward error correction (FEC).</p>
         </div>
-        <a routerLink="/network/blocks" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
+        <a [routerLink]="'/network/blocks' | relativeUrl" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
       </div>
 
       <div class="row g-3 mb-4" *ngIf="fibre">

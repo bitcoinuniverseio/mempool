@@ -1,7 +1,16 @@
 import { Application, Request, Response } from 'express';
 import config from '../../config';
 import { handleError } from '../../utils/api';
-import { stratumV2Service } from './stratum-v2.service';
+import { StratumV2EvidenceError, stratumV2Service } from './stratum-v2.service';
+
+/** An absent source is a 503 that names the source, never a 500 and never an empty list. */
+function fail(req: Request, res: Response, e: unknown): void {
+  if (e instanceof StratumV2EvidenceError) {
+    res.status(e.status).json({ stage: e.code, error: e.message });
+    return;
+  }
+  handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+}
 
 class StratumV2Routes {
   public initRoutes(app: Application): void {
@@ -18,7 +27,7 @@ class StratumV2Routes {
       const roles = await stratumV2Service.$getRoles();
       res.json({ roles, total: roles.length });
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -27,7 +36,7 @@ class StratumV2Routes {
       const templates = await stratumV2Service.$getTemplates();
       res.json({ templates, total: templates.length });
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -36,7 +45,7 @@ class StratumV2Routes {
       const declarations = await stratumV2Service.$getDeclarations();
       res.json({ declarations, total: declarations.length });
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 }

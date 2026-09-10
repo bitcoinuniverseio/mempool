@@ -2,12 +2,14 @@ import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRe
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { ReservesApiService, ReserveSnapshot } from './reserves.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-reserves-snapshot-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -24,9 +26,9 @@ import { ReservesApiService, ReserveSnapshot } from './reserves.service';
 
         <!-- Navigation Tabs -->
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/intelligence/reserves">Overview</a>
-          <a class="nav-link active" routerLink="/intelligence/reserves/providers">Providers Directory</a>
-          <a class="nav-link" routerLink="/intelligence/reserves/verify">Verify Proof</a>
+          <a class="nav-link" [routerLink]="'/intelligence/reserves' | relativeUrl">Overview</a>
+          <a class="nav-link active" [routerLink]="'/intelligence/reserves/providers' | relativeUrl">Providers Directory</a>
+          <a class="nav-link" [routerLink]="'/intelligence/reserves/verify' | relativeUrl">Verify Proof</a>
         </nav>
       </header>
 
@@ -79,10 +81,10 @@ import { ReservesApiService, ReserveSnapshot } from './reserves.service';
         </div>
 
         <div class="d-flex gap-2">
-          <a class="btn btn-outline-secondary" [routerLink]="['/intelligence/reserves/provider', snapshot.provider_id]">
+          <a class="btn btn-outline-secondary" [routerLink]="['/intelligence/reserves/provider' | relativeUrl, snapshot.provider_id]">
             Back to Provider
           </a>
-          <a class="btn btn-primary" routerLink="/intelligence/reserves/verify">
+          <a class="btn btn-primary" [routerLink]="'/intelligence/reserves/verify' | relativeUrl">
             Verify Inclusion in this Snapshot
           </a>
         </div>
@@ -126,7 +128,7 @@ export class ReservesSnapshotDetailComponent implements OnInit, OnDestroy {
           this.cd.markForCheck();
         },
         error: (err) => {
-          this.error = err?.message || 'Failed to load snapshot';
+          this.error = loadFailureMessage(classifyLoadFailure(err));
           this.loading = false;
           this.cd.markForCheck();
         }

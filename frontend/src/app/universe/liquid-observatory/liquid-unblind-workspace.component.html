@@ -1,9 +1,9 @@
 <div class="container-xl product-page">
   <header class="page-head">
     <nav class="crumbs">
-      <a [routerLink]="['/']">Home</a>
+      <a [routerLink]="['/' | relativeUrl]">Home</a>
       <span class="divider">/</span>
-      <a [routerLink]="['/liquid/observatory']">Liquid Network</a>
+      <a [routerLink]="['/liquid/observatory' | relativeUrl]">Liquid Network</a>
       <span class="divider">/</span>
       <span>Unblind Workspace</span>
     </nav>
@@ -14,8 +14,8 @@
   </header>
 
   <nav class="nav-tabs">
-    <a [routerLink]="['/liquid/observatory']">Observatory</a>
-    <a [routerLink]="['/liquid/unblind']" class="active">Unblinding Workspace</a>
+    <a [routerLink]="['/liquid/observatory' | relativeUrl]">Observatory</a>
+    <a [routerLink]="['/liquid/unblind' | relativeUrl]" class="active">Unblinding Workspace</a>
   </nav>
 
   <section class="panel">

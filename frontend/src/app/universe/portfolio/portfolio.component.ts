@@ -38,6 +38,8 @@ import { BookmarkButtonComponent } from '@app/universe/bookmark-button/bookmark-
 import { ExplorerChain, ExplorerNetwork } from '@app/universe/universe.types';
 import { PortfolioAlertsService } from '@app/universe/portfolio/portfolio-alerts.service';
 import { PortfolioAlert } from '@app/universe/portfolio/portfolio-alerts';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
+
 import {
   MAXIMUM_GROUP_LENGTH,
   MAXIMUM_LABEL_LENGTH,
@@ -123,7 +125,7 @@ interface PortfolioPageState {
 @Component({
   selector: 'app-universe-portfolio',
   standalone: true,
-  imports: [CommonModule, RouterModule, BookmarkButtonComponent],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule, BookmarkButtonComponent],
   templateUrl: './portfolio.component.html',
   styleUrls: ['./portfolio.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

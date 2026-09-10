@@ -84,6 +84,8 @@ import {
   readCandidateBuckets,
 } from '@app/universe/multichain-explorer/candidate-buckets';
 import { ThemeService } from '@app/services/theme.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
+
 import {
   ProtocolIndexReading,
   readProtocolIndex,
@@ -220,7 +222,7 @@ const PRESENTED_FIELDS: Partial<Record<ChainShape, readonly string[]>> = {
 @Component({
   selector: 'app-multichain-explorer',
   standalone: true,
-  imports: [CommonModule, RouterModule, ChainHealthDetailsComponent],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule, ChainHealthDetailsComponent],
   templateUrl: './multichain-explorer.component.html',
   styleUrls: ['./multichain-explorer.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

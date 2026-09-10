@@ -1,7 +1,7 @@
 <div class="container-xl product-page">
   <header class="page-head">
     <nav class="crumbs">
-      <a [routerLink]="['/']">Home</a>
+      <a [routerLink]="['/' | relativeUrl]">Home</a>
       <span class="divider">/</span>
       <span>Taproot Assets</span>
     </nav>
@@ -12,8 +12,8 @@
   </header>
 
   <nav class="nav-tabs">
-    <a [routerLink]="['/taproot-assets']" class="active">Assets & Groups</a>
-    <a [routerLink]="['/lightning/offers']">Lightning BOLT12 & RFQ</a>
+    <a [routerLink]="['/taproot-assets' | relativeUrl]" class="active">Assets & Groups</a>
+    <a [routerLink]="['/lightning/offers' | relativeUrl]">Lightning BOLT12 & RFQ</a>
   </nav>
 
   <ng-container *ngIf="vm$ | async as vm">
@@ -52,7 +52,7 @@
         <div style="margin-top: 1rem;">
           <p><strong>Asset ID:</strong> <span class="mono">{{ vm.selected.assetId }}</span></p>
           <p *ngIf="vm.selected.groupKey"><strong>Group Key:</strong> <span class="mono">{{ vm.selected.groupKey }}</span></p>
-          <p><strong>Anchor Txid:</strong> <span class="mono"><a [routerLink]="['/tx', vm.selected.anchorTxid]">{{ vm.selected.anchorTxid }}</a></span></p>
+          <p><strong>Anchor Txid:</strong> <span class="mono"><a [routerLink]="['/tx' | relativeUrl, vm.selected.anchorTxid]">{{ vm.selected.anchorTxid }}</a></span></p>
           <p><strong>Genesis Outpoint:</strong> <span class="mono">{{ vm.selected.genesisPoint }}</span></p>
           <p><strong>Script Key:</strong> <span class="mono">{{ vm.selected.scriptKey }}</span></p>
         </div>
@@ -76,11 +76,11 @@
           </thead>
           <tbody>
             <tr *ngFor="let a of vm.assets">
-              <td><strong><a [routerLink]="['/taproot-assets/asset', a.assetId]">{{ a.name }}</a></strong></td>
+              <td><strong><a [routerLink]="['/taproot-assets/asset' | relativeUrl, a.assetId]">{{ a.name }}</a></strong></td>
               <td><span class="badge" [ngClass]="a.assetType === 'normal' ? 'badge-info' : 'badge-warning'">{{ a.assetType | uppercase }}</span></td>
               <td class="mono">{{ a.totalAmountAtomic }}</td>
               <td>{{ a.genesisHeight === null ? 'not in this proof' : '#' + a.genesisHeight }}</td>
-              <td class="mono"><a [routerLink]="['/tx', a.anchorTxid]">{{ a.anchorTxid.slice(0, 16) }}...</a></td>
+              <td class="mono"><a [routerLink]="['/tx' | relativeUrl, a.anchorTxid]">{{ a.anchorTxid.slice(0, 16) }}...</a></td>
               <td><span class="badge badge-success">Proved</span></td>
             </tr>
           </tbody>

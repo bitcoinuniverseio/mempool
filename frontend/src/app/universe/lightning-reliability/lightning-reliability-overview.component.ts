@@ -2,12 +2,14 @@ import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRe
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { LightningReliabilityApiService, LightningReliabilityOverview } from './lightning-reliability.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-lightning-reliability-overview',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -24,9 +26,9 @@ import { LightningReliabilityApiService, LightningReliabilityOverview } from './
 
         <!-- Navigation Tabs -->
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link active" routerLink="/lightning/reliability">Reliability Overview</a>
-          <a class="nav-link" routerLink="/lightning/liquidity">Liquidity Simulation</a>
-          <a class="nav-link" routerLink="/lightning/lsp">LSP Directory</a>
+          <a class="nav-link active" [routerLink]="'/lightning/reliability' | relativeUrl">Reliability Overview</a>
+          <a class="nav-link" [routerLink]="'/lightning/liquidity' | relativeUrl">Liquidity Simulation</a>
+          <a class="nav-link" [routerLink]="'/lightning/lsp' | relativeUrl">LSP Directory</a>
         </nav>
       </header>
 
@@ -102,7 +104,7 @@ import { LightningReliabilityApiService, LightningReliabilityOverview } from './
                   <td class="text-end fw-semibold text-success">{{ node.score.toFixed(1) }}%</td>
                   <td class="text-end">{{ node.uptime.toFixed(2) }}%</td>
                   <td class="text-end">
-                    <a [routerLink]="['/lightning/node', node.pubkey, 'reliability']" class="btn btn-sm btn-outline-primary">
+                    <a [routerLink]="['/lightning/node' | relativeUrl, node.pubkey, 'reliability']" class="btn btn-sm btn-outline-primary">
                       Inspect Reliability
                     </a>
                   </td>
@@ -146,7 +148,7 @@ export class LightningReliabilityOverviewComponent implements OnInit, OnDestroy 
           this.cd.markForCheck();
         },
         error: err => {
-          this.error = err?.message || 'Failed to load lightning reliability overview';
+          this.error = err?.error?.error || loadFailureMessage(classifyLoadFailure(err));
           this.loading = false;
           this.cd.markForCheck();
         },

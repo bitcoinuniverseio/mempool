@@ -1,9 +1,12 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { BehaviorSubject, Observable, catchError, combineLatest, of } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, combineLatest, map, of } from 'rxjs';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
+
 import {
   LiquidAssetRecord,
   LiquidFederationEpoch,
@@ -17,6 +20,7 @@ interface LiquidViewModel {
   readonly assets?: LiquidAssetRecord[];
   readonly pegs?: LiquidPegRecord[];
   readonly federation?: LiquidFederationEpoch;
+  readonly message?: string;
 }
 
 @Component({
@@ -24,7 +28,7 @@ interface LiquidViewModel {
   templateUrl: './liquid-observatory.component.html',
   styleUrls: ['../product-page.scss'],
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LiquidObservatoryComponent implements OnInit {
@@ -41,23 +45,22 @@ export class LiquidObservatoryComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // No per-read fallback: an asset or peg table the source could not answer
+    // is an error with its reason, not an empty table.
     combineLatest([
-      this.api.getLiquidObservatorySummary$().pipe(catchError(() => of(null))),
-      this.api.getLiquidAssets$().pipe(catchError(() => of({ assets: [] }))),
-      this.api.getLiquidPegs$().pipe(catchError(() => of({ pegs: [] }))),
-      this.api.getLiquidFederation$().pipe(catchError(() => of(null))),
-    ]).subscribe(([summary, assetsData, pegsData, federation]) => {
-      if (!summary || !federation) {
-        this.state.next({ kind: 'error' });
-        return;
-      }
-      this.state.next({
+      this.api.getLiquidObservatorySummary$(),
+      this.api.getLiquidAssets$(),
+      this.api.getLiquidPegs$(),
+      this.api.getLiquidFederation$(),
+    ]).pipe(
+      map(([summary, assetsData, pegsData, federation]): LiquidViewModel => ({
         kind: 'ready',
         summary,
         assets: assetsData.assets,
         pegs: pegsData.pegs,
         federation,
-      });
-    });
+      })),
+      catchError((error) => of<LiquidViewModel>({ kind: 'error', message: loadFailureMessage(classifyLoadFailure(error)) })),
+    ).subscribe((vm) => this.state.next(vm));
   }
 }

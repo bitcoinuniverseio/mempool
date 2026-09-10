@@ -16,6 +16,8 @@ import { detectWebGL } from '@app/shared/graphs.utils';
 import { StateService } from '@app/services/state.service';
 import { ThemeService } from '@app/services/theme.service';
 import { TransactionStripped } from '@interfaces/node-api.interface';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
+
 import {
   LensFilter,
   LensFilterId,
@@ -45,7 +47,7 @@ import {
 @Component({
   selector: 'app-chain-lens',
   standalone: true,
-  imports: [CommonModule, RouterModule, SharedModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule, SharedModule],
   templateUrl: './chain-lens.component.html',
   styleUrls: ['./chain-lens.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

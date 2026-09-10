@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { PrivateSubmissionApiService } from './private-submission.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-private-submission-ordering-block',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4" *ngIf="loadError">
       <div class="alert alert-warning" role="alert">{{ loadError }}</div>
@@ -18,7 +19,7 @@ import { PrivateSubmissionApiService } from './private-submission.service';
           <h1 class="h2 mb-1">Block {{ blockOrdering.height }} Transaction Ordering Audit</h1>
           <p class="text-muted mb-0 font-monospace">{{ blockOrdering.block_hash }}</p>
         </div>
-        <a routerLink="/intelligence/ordering" class="btn btn-outline-secondary btn-sm">Back to Ordering Evidence</a>
+        <a [routerLink]="'/intelligence/ordering' | relativeUrl" class="btn btn-outline-secondary btn-sm">Back to Ordering Evidence</a>
       </div>
 
       <div class="row g-3 mb-4">
@@ -63,13 +64,13 @@ import { PrivateSubmissionApiService } from './private-submission.service';
             <tbody>
               <tr *ngFor="let tx of blockOrdering.anomalous_txs">
                 <td class="font-monospace text-info">
-                  <a [routerLink]="['/intelligence/ordering/tx', tx.txid]">{{ tx.txid }}</a>
+                  <a [routerLink]="['/intelligence/ordering/tx' | relativeUrl, tx.txid]">{{ tx.txid }}</a>
                 </td>
                 <td class="font-monospace fw-bold text-danger">#{{ tx.actual_index }}</td>
                 <td class="text-warning">{{ tx.fee_rate }} sat/vB</td>
                 <td class="text-muted">{{ tx.median_fee_rate }} sat/vB</td>
                 <td>
-                  <a [routerLink]="['/intelligence/ordering/tx', tx.txid]" class="btn btn-sm btn-outline-primary">View Evidence</a>
+                  <a [routerLink]="['/intelligence/ordering/tx' | relativeUrl, tx.txid]" class="btn btn-sm btn-outline-primary">View Evidence</a>
                 </td>
               </tr>
             </tbody>

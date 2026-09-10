@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { LightningResilienceApiService, LightningResilienceOverview } from './lightning-resilience.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-lightning-resilience-overview',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4">
       <div class="alert alert-warning" role="alert" *ngIf="loadError">
@@ -19,27 +20,27 @@ import { LightningResilienceApiService, LightningResilienceOverview } from './li
           <p class="text-muted mb-0">Real-time telemetry on channel slot pressure, liquidity pinning, onion queue depths, and proactive jamming mitigations.</p>
         </div>
         <div class="btn-group">
-          <a routerLink="/lightning/resilience/simulate" class="btn btn-outline-primary btn-sm">Jamming Simulator</a>
-          <a routerLink="/lightning/resilience/mitigations" class="btn btn-primary btn-sm">Mitigations Matrix</a>
+          <a [routerLink]="'/lightning/resilience/simulate' | relativeUrl" class="btn btn-outline-primary btn-sm">Jamming Simulator</a>
+          <a [routerLink]="'/lightning/resilience/mitigations' | relativeUrl" class="btn btn-primary btn-sm">Mitigations Matrix</a>
         </div>
       </div>
 
       <!-- Nav Tabs -->
       <ul class="nav nav-tabs mb-4">
         <li class="nav-item">
-          <a class="nav-link active" routerLink="/lightning/resilience">Overview</a>
+          <a class="nav-link active" [routerLink]="'/lightning/resilience' | relativeUrl">Overview</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/lightning/resilience/htlcs">HTLC Slot Allocation</a>
+          <a class="nav-link" [routerLink]="'/lightning/resilience/htlcs' | relativeUrl">HTLC Slot Allocation</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/lightning/resilience/onion-messages">Onion Messaging Queue</a>
+          <a class="nav-link" [routerLink]="'/lightning/resilience/onion-messages' | relativeUrl">Onion Messaging Queue</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/lightning/resilience/simulate">Simulation Engine</a>
+          <a class="nav-link" [routerLink]="'/lightning/resilience/simulate' | relativeUrl">Simulation Engine</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/lightning/resilience/mitigations">Defensive Mitigations</a>
+          <a class="nav-link" [routerLink]="'/lightning/resilience/mitigations' | relativeUrl">Defensive Mitigations</a>
         </li>
       </ul>
 
@@ -98,7 +99,7 @@ import { LightningResilienceApiService, LightningResilienceOverview } from './li
             <tbody>
               <tr *ngFor="let ch of overview.top_congested_channels">
                 <td>
-                  <a [routerLink]="['/lightning/resilience/channel', ch.short_channel_id]" class="text-info font-monospace">
+                  <a [routerLink]="['/lightning/resilience/channel' | relativeUrl, ch.short_channel_id]" class="text-info font-monospace">
                     {{ ch.short_channel_id }}
                   </a>
                 </td>
@@ -116,7 +117,7 @@ import { LightningResilienceApiService, LightningResilienceOverview } from './li
                   <span class="badge bg-danger">{{ ch.resilience_band }}</span>
                 </td>
                 <td>
-                  <a [routerLink]="['/lightning/resilience/channel', ch.short_channel_id]" class="btn btn-outline-info btn-sm">Inspect Channel</a>
+                  <a [routerLink]="['/lightning/resilience/channel' | relativeUrl, ch.short_channel_id]" class="btn btn-outline-info btn-sm">Inspect Channel</a>
                 </td>
               </tr>
             </tbody>

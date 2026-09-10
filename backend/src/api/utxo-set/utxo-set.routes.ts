@@ -1,7 +1,16 @@
 import { Application, Request, Response } from 'express';
 import config from '../../config';
 import { handleError } from '../../utils/api';
-import { utxoSetService } from './utxo-set.service';
+import { UtxoSetEvidenceError, utxoSetService } from './utxo-set.service';
+
+/** An absent source is a 503 that names the source, never a 500 and never an empty list. */
+function fail(req: Request, res: Response, e: unknown): void {
+  if (e instanceof UtxoSetEvidenceError) {
+    res.status(e.status).json({ stage: e.code, error: e.message });
+    return;
+  }
+  handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+}
 
 class UtxoSetRoutes {
   public initRoutes(app: Application): void {
@@ -20,7 +29,7 @@ class UtxoSetRoutes {
       const checkpoints = await utxoSetService.$getCheckpoints();
       res.json({ checkpoints, total: checkpoints.length });
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -29,7 +38,7 @@ class UtxoSetRoutes {
       const distribution = await utxoSetService.$getDistribution();
       res.json(distribution);
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -38,7 +47,7 @@ class UtxoSetRoutes {
       const data = await utxoSetService.$getProtocolUtxos();
       res.json(data);
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -47,17 +56,18 @@ class UtxoSetRoutes {
       const roots = await utxoSetService.$getUtreexoRoots();
       res.json(roots);
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
   private async $verifyUtreexo(req: Request, res: Response): Promise<void> {
     try {
       const { proof } = req.body || {};
-      const result = await utxoSetService.$verifyUtreexoProof(proof || []);
-      res.json(result);
+      const result = await utxoSetService.$verifyUtreexoProof(proof);
+      // Only bad input and an absent verifier are not answers.
+      res.status(result.stage === 'invalid-input' ? 400 : 503).json(result);
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 }

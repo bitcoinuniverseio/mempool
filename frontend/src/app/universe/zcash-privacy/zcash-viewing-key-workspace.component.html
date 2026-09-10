@@ -1,11 +1,11 @@
 <div class="container-xl product-page">
   <header class="page-head">
     <nav class="crumbs">
-      <a [routerLink]="['/']">Home</a>
+      <a [routerLink]="['/' | relativeUrl]">Home</a>
       <span class="divider">/</span>
-      <a [routerLink]="['/zcash']">Zcash</a>
+      <a [routerLink]="['/zcash' | relativeUrl]">Zcash</a>
       <span class="divider">/</span>
-      <a [routerLink]="['/zcash/privacy']">Privacy Observatory</a>
+      <a [routerLink]="['/zcash/privacy' | relativeUrl]">Privacy Observatory</a>
       <span class="divider">/</span>
       <span>Workspace</span>
     </nav>
@@ -16,8 +16,8 @@
   </header>
 
   <nav class="nav-tabs">
-    <a [routerLink]="['/zcash/privacy']">Pools & Upgrades</a>
-    <a [routerLink]="['/zcash/privacy/workspace']" class="active">Viewing-Key Workspace</a>
+    <a [routerLink]="['/zcash/privacy' | relativeUrl]">Pools & Upgrades</a>
+    <a [routerLink]="['/zcash/privacy/workspace' | relativeUrl]" class="active">Viewing-Key Workspace</a>
   </nav>
 
   <section class="panel">

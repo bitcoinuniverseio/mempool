@@ -1,9 +1,9 @@
 <div class="container-xl product-page">
   <header class="page-head">
     <nav class="crumbs">
-      <a [routerLink]="['/protocols']">Protocols</a>
+      <a [routerLink]="['/protocols' | relativeUrl]">Protocols</a>
       <span class="divider">/</span>
-      <a [routerLink]="['/wildkin']">Wildkin</a>
+      <a [routerLink]="['/wildkin' | relativeUrl]">Wildkin</a>
       <span class="divider">/</span>
       <span>Bloodlines</span>
     </nav>
@@ -14,14 +14,19 @@
   </header>
 
   <nav class="nav-tabs">
-    <a [routerLink]="['/wildkin']">Overview</a>
-    <a [routerLink]="['/wildkin/creatures']">Creatures</a>
-    <a [routerLink]="['/wildkin/bloodlines']" class="active">Bloodlines & Braids</a>
+    <a [routerLink]="['/wildkin' | relativeUrl]">Overview</a>
+    <a [routerLink]="['/wildkin/creatures' | relativeUrl]">Creatures</a>
+    <a [routerLink]="['/wildkin/bloodlines' | relativeUrl]" class="active">Bloodlines & Braids</a>
   </nav>
 
   <ng-container *ngIf="vm$ | async as vm">
     <div *ngIf="vm.kind === 'loading'" class="panel" aria-busy="true">
       <p>Loading braid ceremony history...</p>
+    </div>
+
+    <div *ngIf="vm.kind === 'error'" class="panel">
+      <h2>Braid History Unavailable</h2>
+      <p role="alert">{{ vm.message }}</p>
     </div>
 
     <ng-container *ngIf="vm.kind === 'ready'">
@@ -45,10 +50,10 @@
           </thead>
           <tbody>
             <tr *ngFor="let b of vm.braids">
-              <td class="mono"><a [routerLink]="['/tx', b.braidTxid]">{{ b.braidTxid.slice(0, 16) }}...</a></td>
-              <td class="mono"><strong><a [routerLink]="['/wildkin/creature', b.heirCreatureId]">{{ b.heirCreatureId }}</a></strong></td>
-              <td class="mono"><a [routerLink]="['/wildkin/creature', b.parentAId]">{{ b.parentAId }}</a></td>
-              <td class="mono"><a [routerLink]="['/wildkin/creature', b.parentBId]">{{ b.parentBId }}</a></td>
+              <td class="mono"><a [routerLink]="['/tx' | relativeUrl, b.braidTxid]">{{ b.braidTxid.slice(0, 16) }}...</a></td>
+              <td class="mono"><strong><a [routerLink]="['/wildkin/creature' | relativeUrl, b.heirCreatureId]">{{ b.heirCreatureId }}</a></strong></td>
+              <td class="mono"><a [routerLink]="['/wildkin/creature' | relativeUrl, b.parentAId]">{{ b.parentAId }}</a></td>
+              <td class="mono"><a [routerLink]="['/wildkin/creature' | relativeUrl, b.parentBId]">{{ b.parentBId }}</a></td>
               <td class="mono">{{ b.inheritanceManifestHash.slice(0, 14) }}...</td>
               <td>{{ b.blockHeight }}</td>
               <td><span class="badge badge-success">Valid Braid</span></td>

@@ -1,8 +1,8 @@
 <div class="container-xl bump">
   <header class="page-head">
     <nav class="crumbs" aria-label="Breadcrumb" i18n-aria-label="mempool.bump.crumbs-label">
-      <a [routerLink]="['/tx', txid]" i18n="mempool.bump.back-tx">This transaction</a>
-      <a [routerLink]="['/tx', txid, 'package']" i18n="mempool.bump.back-package">Its package</a>
+      <a [routerLink]="['/tx' | relativeUrl, txid]" i18n="mempool.bump.back-tx">This transaction</a>
+      <a [routerLink]="['/tx' | relativeUrl, txid, 'package']" i18n="mempool.bump.back-package">Its package</a>
     </nav>
     <h1 i18n="mempool.bump.heading">Fee bump planner</h1>
     <p class="lede" i18n="mempool.bump.lede">
@@ -111,7 +111,7 @@
             <h3 i18n="mempool.bump.evicted-heading">What it removes</h3>
             <ul>
               <li *ngFor="let evicted of p.rbf.evictedTxids; trackBy: trackByIndex">
-                <a [routerLink]="['/tx', evicted]"><code>{{ short(evicted) }}</code></a>
+                <a [routerLink]="['/tx' | relativeUrl, evicted]"><code>{{ short(evicted) }}</code></a>
               </li>
             </ul>
             <p class="field-help" i18n="mempool.bump.evicted-note">
@@ -135,7 +135,7 @@
             <div>
               <dt i18n="mempool.bump.cpfp-output">Output it would spend</dt>
               <dd>
-                <a [routerLink]="['/tx', txid]">
+                <a [routerLink]="['/tx' | relativeUrl, txid]">
                   <code>{{ short(txid) }}:{{ p.cpfp.spendOutputIndex }}</code>
                 </a>
                 <span class="note">{{ sats(p.cpfp.spendValueSats) }} <ng-container i18n="mempool.bump.unit-sat">sat</ng-container></span>
@@ -173,7 +173,7 @@
       </p>
       <ul class="outpoints">
         <li *ngFor="let index of p.outputsToCheckForAssets; trackBy: trackByIndex">
-          <a [routerLink]="['/outpoint', txid, index]">
+          <a [routerLink]="['/outpoint' | relativeUrl, txid, index]">
             <code>{{ short(txid) }}:{{ index }}</code>
           </a>
         </li>

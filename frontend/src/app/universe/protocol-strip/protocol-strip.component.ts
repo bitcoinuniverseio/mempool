@@ -5,6 +5,7 @@ import { Observable, catchError, combineLatest, map, of } from 'rxjs';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { PulseState, UniversePulseService } from '@app/universe/universe-pulse.service';
 import { ExplorerProtocolDefinition, ProtocolsResponse } from '@app/universe/universe.types';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 interface StripEntry {
   readonly protocolId: string;
@@ -31,7 +32,7 @@ interface StripViewModel {
 @Component({
   selector: 'app-universe-protocol-strip',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   templateUrl: './protocol-strip.component.html',
   styleUrls: ['./protocol-strip.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

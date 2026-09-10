@@ -6,6 +6,7 @@ import { ZONE_SERVICE } from '@app/injection-tokens';
 import { AppModule } from './app.module';
 import { AppComponent } from '@components/app/app.component';
 import { HttpCacheInterceptor } from '@app/services/http-cache.interceptor';
+import { NetworkPrefixInterceptor } from '@app/services/network-prefix.interceptor';
 import { ZoneService } from '@app/services/zone.service';
 
 
@@ -15,6 +16,7 @@ import { ZoneService } from '@app/services/zone.service';
     ServerModule,
   ],
   providers: [
+    { provide: HTTP_INTERCEPTORS, useClass: NetworkPrefixInterceptor, multi: true },
     { provide: HTTP_INTERCEPTORS, useClass: HttpCacheInterceptor, multi: true },
     { provide: ZONE_SERVICE, useClass: ZoneService },
   ],

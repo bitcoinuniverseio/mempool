@@ -2,18 +2,20 @@ import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRe
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { BitcoinStakingApiService, FinalityProvider } from './bitcoin-staking.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-staking-finality-provider-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
       <header class="page-header mb-4">
         <div class="mb-2">
-          <a routerLink="/protocols/bitcoin-staking/finality-providers" class="btn btn-sm btn-outline-secondary">
+          <a [routerLink]="'/protocols/bitcoin-staking/finality-providers' | relativeUrl" class="btn btn-sm btn-outline-secondary">
             &larr; Back to Finality Providers
           </a>
         </div>
@@ -87,7 +89,7 @@ import { BitcoinStakingApiService, FinalityProvider } from './bitcoin-staking.se
             </div>
 
             <div class="mt-auto pt-3 border-top">
-              <a [routerLink]="['/protocols/bitcoin-staking/delegations']" class="btn btn-outline-primary w-100">
+              <a [routerLink]="['/protocols/bitcoin-staking/delegations' | relativeUrl]" class="btn btn-outline-primary w-100">
                 View Active Delegations
               </a>
             </div>
@@ -118,7 +120,7 @@ export class StakingFinalityProviderDetailComponent implements OnInit, OnDestroy
         this.cdr.markForCheck();
       },
       error: (err) => {
-        this.error = err.message || 'Failed to load provider details';
+        this.error = loadFailureMessage(classifyLoadFailure(err));
         this.loading = false;
         this.cdr.markForCheck();
       },

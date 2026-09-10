@@ -1,6 +1,15 @@
 import { Application, Request, Response } from 'express';
-import { reservesService } from './reserves.service';
+import { ReservesEvidenceError, reservesService } from './reserves.service';
 import { handleError } from '../../../utils/api';
+
+/** An absent source is a 503 that names the source, never a 500 and never an empty list. */
+function fail(req: Request, res: Response, e: unknown, fallback: string): void {
+  if (e instanceof ReservesEvidenceError) {
+    res.status(e.status).json({ stage: e.code, error: e.message });
+    return;
+  }
+  handleError(req, res, 500, e instanceof Error ? e.message : fallback);
+}
 
 class ReservesRoutes {
   public initRoutes(app: Application): void {
@@ -20,7 +29,7 @@ class ReservesRoutes {
       const overview = reservesService.getOverview();
       res.json(overview);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch reserves overview');
+      fail(req, res, e, 'Failed to fetch reserves overview');
     }
   }
 
@@ -29,7 +38,7 @@ class ReservesRoutes {
       const providers = reservesService.getProviders();
       res.json(providers);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch reserve providers');
+      fail(req, res, e, 'Failed to fetch reserve providers');
     }
   }
 
@@ -43,7 +52,7 @@ class ReservesRoutes {
       }
       res.json(provider);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch reserve provider');
+      fail(req, res, e, 'Failed to fetch reserve provider');
     }
   }
 
@@ -53,7 +62,7 @@ class ReservesRoutes {
       const snapshots = reservesService.getSnapshots(providerId);
       res.json(snapshots);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch reserve snapshots');
+      fail(req, res, e, 'Failed to fetch reserve snapshots');
     }
   }
 
@@ -67,7 +76,7 @@ class ReservesRoutes {
       }
       res.json(snapshot);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch reserve snapshot');
+      fail(req, res, e, 'Failed to fetch reserve snapshot');
     }
   }
 
@@ -77,7 +86,7 @@ class ReservesRoutes {
       const result = reservesService.verifyProof(body);
       res.json(result);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to verify proof');
+      fail(req, res, e, 'Failed to verify proof');
     }
   }
 }

@@ -2,9 +2,9 @@
   <header class="page-head">
     <div class="title-block">
       <nav class="crumbs">
-        <a [routerLink]="['/protocols']" i18n="anima.crumb-items">Protocols</a>
+        <a [routerLink]="['/protocols' | relativeUrl]" i18n="anima.crumb-items">Protocols</a>
         <span class="divider">/</span>
-        <a [routerLink]="['/protocols', 'anima']">ANIMA</a>
+        <a [routerLink]="['/protocols' | relativeUrl, 'anima']">ANIMA</a>
       </nav>
       <h1 i18n="anima.items-title">ANIMA organisms</h1>
       <p class="summary" i18n="anima.items-summary">
@@ -41,7 +41,7 @@
           </p>
           <ul class="event-list" *ngIf="vm.organisms?.length">
             <li *ngFor="let organism of vm.organisms">
-              <a class="identifier" [routerLink]="['/anima', 'item', organism.id]">{{ shorten(organism.id, 16) }}</a>
+              <a class="identifier" [routerLink]="['/anima' | relativeUrl, 'item', organism.id]">{{ shorten(organism.id, 16) }}</a>
               <span class="kind">{{ organism.status }}</span>
               <span class="kind">{{ organism.origin }}</span>
               <span class="height">created at block {{ organism.createdHeight }}</span>
