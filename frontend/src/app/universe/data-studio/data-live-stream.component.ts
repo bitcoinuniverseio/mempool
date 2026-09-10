@@ -1,13 +1,15 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { BehaviorSubject, Observable, catchError, of } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { SeoService } from '@app/services/seo.service';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { StreamManifest } from '@app/universe/universe.types';
 
 interface LiveStreamViewModel {
   readonly kind: 'loading' | 'ready' | 'error';
+  readonly message?: string;
   readonly streams?: StreamManifest[];
 }
 
@@ -31,14 +33,14 @@ export class DataLiveStreamComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.api.getDataCatalog$()
-      .pipe(catchError(() => of(null)))
-      .subscribe((catalog) => {
-        if (!catalog) {
-          this.state.next({ kind: 'error' });
-          return;
-        }
+    this.api.getDataCatalog$().subscribe({
+      next: (catalog) => {
         this.state.next({ kind: 'ready', streams: catalog.streams });
-      });
+      },
+      // A failed read is an error, not an empty stream registry.
+      error: (err) => {
+        this.state.next({ kind: 'error', message: loadFailureMessage(classifyLoadFailure(err)) });
+      },
+    });
   }
 }
