@@ -77,7 +77,7 @@
     <h2 id="saved-pinned-heading" i18n="universe.saved.pinned-title">Pinned protocols</h2>
     <ul class="entry-list">
       <li *ngFor="let protocolId of vm.pinnedProtocols">
-        <a class="entry-label" [routerLink]="['/protocols', protocolId]">{{ protocolLabel(protocolId) }}</a>
+        <a class="entry-label" [routerLink]="['/protocols' | relativeUrl, protocolId]">{{ protocolLabel(protocolId) }}</a>
         <button type="button" class="remove" (click)="unpin(protocolId)">
           <ng-container i18n="universe.saved.unpin">Unpin</ng-container>
         </button>

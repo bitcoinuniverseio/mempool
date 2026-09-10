@@ -3,17 +3,18 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { BootstrapApiService, AssumeUtxoSnapshot } from './bootstrap.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-bootstrap-snapshot-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
       <header class="page-header mb-4">
         <div class="mb-2">
-          <a routerLink="/node/bootstrap/snapshots" class="btn btn-sm btn-outline-secondary">
+          <a [routerLink]="'/node/bootstrap/snapshots' | relativeUrl" class="btn btn-sm btn-outline-secondary">
             &larr; Back to Snapshots
           </a>
         </div>
@@ -103,10 +104,10 @@ import { BootstrapApiService, AssumeUtxoSnapshot } from './bootstrap.service';
             </dl>
 
             <div class="mt-auto pt-3 border-top">
-              <a [routerLink]="['/node/bootstrap/verify']" class="btn btn-outline-primary w-100 mb-2">
+              <a [routerLink]="['/node/bootstrap/verify' | relativeUrl]" class="btn btn-outline-primary w-100 mb-2">
                 Verify File Checksum
               </a>
-              <a [routerLink]="['/node/bootstrap/planner']" class="btn btn-outline-secondary w-100">
+              <a [routerLink]="['/node/bootstrap/planner' | relativeUrl]" class="btn btn-outline-secondary w-100">
                 Simulate Hardware IBD Timeline
               </a>
             </div>

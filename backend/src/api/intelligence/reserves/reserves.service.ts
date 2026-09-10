@@ -1,6 +1,4 @@
 import crypto from 'crypto';
-import logger from '../../../logger';
-import { IntelligenceEventBus } from '../events/intelligence-event-bus';
 import {
   ReserveProvider,
   ReserveSnapshot,
@@ -9,16 +7,30 @@ import {
   ReservesOverview,
 } from './reserves.models';
 
+/**
+ * Raised when a read has no source behind it. The routes map the code to a
+ * 503, so an absent integration is reported as an absent integration rather
+ * than as an answer.
+ */
+export class ReservesEvidenceError extends Error {
+  constructor(public readonly code: string, message: string, public readonly status = 503) {
+    super(message);
+  }
+}
+
+const attestationsUnavailable =
+  'Reserve observations are unavailable. Provider directories, attestation snapshots and solvency ratios require the owned attestation ingest (signed BIP127 and Merkle-sum attestations checked against the owned Bitcoin UTXO reader), which is not connected on this deployment.';
+
+/**
+ * Proof-of-reserves evidence.
+ *
+ * Providers, snapshots and solvency figures are observations and need the
+ * owned attestation ingest; a deployment without one gets a 503 that names it.
+ * The proof verifier stays: it computes over the caller's own payload and
+ * observes nothing.
+ */
 export class ReservesService {
   private static instance: ReservesService;
-  private eventBus = IntelligenceEventBus.getInstance();
-
-  private providers: ReserveProvider[] = [];
-  private snapshots: ReserveSnapshot[] = [];
-
-  private constructor() {
-    this.seedInitialData();
-  }
 
   public static getInstance(): ReservesService {
     if (!ReservesService.instance) {
@@ -27,131 +39,24 @@ export class ReservesService {
     return ReservesService.instance;
   }
 
-  private seedInitialData(): void {
-    this.providers = [
-      {
-        provider_id: 'prov-bitreserve-custody',
-        name: 'BitReserve Custody Ltd',
-        category: 'custodian',
-        attestation_frequency: 'daily',
-        total_reserve_sats: 450000000000,
-        total_liability_sats: 442000000000,
-        solvency_ratio_percentage: 101.81,
-        last_attestation_height: 860395,
-        last_attestation_utc: new Date(Date.now() - 3600000).toISOString(),
-        proof_standard: 'bip127',
-        website_url: 'https://bitreserve.example.com',
-        status: 'active',
-      },
-      {
-        provider_id: 'prov-apex-exchange',
-        name: 'Apex Global Exchange',
-        category: 'exchange',
-        attestation_frequency: 'daily',
-        total_reserve_sats: 1250000000000,
-        total_liability_sats: 1245000000000,
-        solvency_ratio_percentage: 100.4,
-        last_attestation_height: 860390,
-        last_attestation_utc: new Date(Date.now() - 7200000).toISOString(),
-        proof_standard: 'merkle_sum_tree',
-        website_url: 'https://apex.example.com',
-        status: 'active',
-      },
-      {
-        provider_id: 'prov-wrapped-sats-bridge',
-        name: 'Wrapped Bitcoin Federated Bridge',
-        category: 'wrapped_token_custody',
-        attestation_frequency: 'daily',
-        total_reserve_sats: 82000000000,
-        total_liability_sats: 82000000000,
-        solvency_ratio_percentage: 100.0,
-        last_attestation_height: 860400,
-        last_attestation_utc: new Date(Date.now() - 1800000).toISOString(),
-        proof_standard: 'bip127',
-        website_url: 'https://wbridge.example.com',
-        status: 'active',
-      },
-    ];
-
-    this.snapshots = [
-      {
-        snapshot_id: 'snap-860395-bitreserve',
-        provider_id: 'prov-bitreserve-custody',
-        block_height: 860395,
-        block_hash: '000000000000000000018a38b556b2cfd29cfd7b2787e38466b0f02359489ef0',
-        timestamp_utc: new Date(Date.now() - 3600000).toISOString(),
-        total_reserve_sats: 450000000000,
-        total_liability_sats: 442000000000,
-        solvency_ratio: 1.0181,
-        merkle_root: '7e8f52f360982bb8a7e025816d28c89b70b5ee682ad4e031b40280f53f669db6',
-        utxo_count: 320,
-        signature_count: 320,
-        verified_onchain: true,
-      },
-      {
-        snapshot_id: 'snap-860390-apex',
-        provider_id: 'prov-apex-exchange',
-        block_height: 860390,
-        block_hash: '000000000000000000021c479e43b1aa05fbe6089cd88f39105437894ea74c21',
-        timestamp_utc: new Date(Date.now() - 7200000).toISOString(),
-        total_reserve_sats: 1250000000000,
-        total_liability_sats: 1245000000000,
-        solvency_ratio: 1.004,
-        merkle_root: '89a71b26859e0a293678da40179a9ef1c9b6342890cd18f6735ae15849cfb288',
-        utxo_count: 850,
-        signature_count: 850,
-        verified_onchain: true,
-      },
-      {
-        snapshot_id: 'snap-860400-wbridge',
-        provider_id: 'prov-wrapped-sats-bridge',
-        block_height: 860400,
-        block_hash: '000000000000000000030da42345ef1300998341df9043219082348a94bcdd99',
-        timestamp_utc: new Date(Date.now() - 1800000).toISOString(),
-        total_reserve_sats: 82000000000,
-        total_liability_sats: 82000000000,
-        solvency_ratio: 1.0,
-        merkle_root: 'a1b2c3d4e5f60718293a4b5c6d7e8f90123456789abcdef0123456789abcdef0',
-        utxo_count: 42,
-        signature_count: 42,
-        verified_onchain: true,
-      },
-    ];
-  }
-
   public getOverview(): ReservesOverview {
-    const totalReserves = this.providers.reduce((sum, p) => sum + p.total_reserve_sats, 0);
-    const totalLiabilities = this.providers.reduce((sum, p) => sum + p.total_liability_sats, 0);
-    const overallRatio = totalLiabilities > 0 ? (totalReserves / totalLiabilities) * 100 : 100;
-
-    return {
-      total_tracked_reserve_sats: totalReserves,
-      total_tracked_liability_sats: totalLiabilities,
-      overall_solvency_percentage: Math.round(overallRatio * 100) / 100,
-      active_providers_count: this.providers.filter(p => p.status === 'active').length,
-      recent_snapshots: this.snapshots,
-      providers: this.providers,
-      last_updated: new Date().toISOString(),
-    };
+    throw new ReservesEvidenceError('unavailable-attestation-ingest', attestationsUnavailable);
   }
 
   public getProviders(): ReserveProvider[] {
-    return this.providers;
+    throw new ReservesEvidenceError('unavailable-attestation-ingest', attestationsUnavailable);
   }
 
-  public getProviderById(providerId: string): ReserveProvider | undefined {
-    return this.providers.find(p => p.provider_id === providerId);
+  public getProviderById(_providerId: string): ReserveProvider | undefined {
+    throw new ReservesEvidenceError('unavailable-attestation-ingest', attestationsUnavailable);
   }
 
-  public getSnapshots(providerId?: string): ReserveSnapshot[] {
-    if (providerId) {
-      return this.snapshots.filter(s => s.provider_id === providerId);
-    }
-    return this.snapshots;
+  public getSnapshots(_providerId?: string): ReserveSnapshot[] {
+    throw new ReservesEvidenceError('unavailable-attestation-ingest', attestationsUnavailable);
   }
 
-  public getSnapshotById(snapshotId: string): ReserveSnapshot | undefined {
-    return this.snapshots.find(s => s.snapshot_id === snapshotId);
+  public getSnapshotById(_snapshotId: string): ReserveSnapshot | undefined {
+    throw new ReservesEvidenceError('unavailable-attestation-ingest', attestationsUnavailable);
   }
 
   public verifyProof(req: VerificationRequest): VerificationResult {
@@ -171,32 +76,27 @@ export class ReservesService {
         };
       }
 
-      let totalSats = 0;
-      let validCount = 0;
-
       for (const item of req.bip127_proof.items) {
         if (!item.signature || !item.public_key || !item.txid) {
           errors.push(`Malformed proof item for outpoint ${item.txid}:${item.vout}`);
-          continue;
         }
-        totalSats += item.amount_sats;
-        validCount++;
       }
-
-      const hash = crypto.createHash('sha256');
-      hash.update(req.bip127_proof.expected_message || '');
-      hash.update(totalSats.toString());
-      const digest = hash.digest('hex');
-
-      return {
-        verified: errors.length === 0 && validCount > 0,
-        proof_type: 'bip127',
-        total_verified_sats: totalSats,
-        verified_items_count: validCount,
-        errors,
-        attestation_digest: digest,
-        evaluated_at: evaluatedAt,
-      };
+      if (errors.length) {
+        return {
+          verified: false,
+          proof_type: 'bip127',
+          total_verified_sats: 0,
+          verified_items_count: 0,
+          errors,
+          attestation_digest: '',
+          evaluated_at: evaluatedAt,
+        };
+      }
+      // A well-formed item is not a verified one: the signature has to be checked
+      // against its key and the outpoint against the owned UTXO set, and neither
+      // verifier is connected here. Reporting a total as verified would invent it.
+      throw new ReservesEvidenceError('unavailable-verifier',
+        'BIP127 attestations are not verified on this deployment. Checking each item signature against its public key and each outpoint against the owned Bitcoin UTXO reader requires the owned attestation verifier, which is not connected. No reserve was verified.');
     }
 
     if (req.proof_type === 'merkle_inclusion') {

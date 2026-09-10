@@ -4,11 +4,12 @@ import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { ArkVpackApiService, isVpackOverview, VpackOverview } from './ark-vpack.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-ark-vpack-overview',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -27,13 +28,13 @@ import { ArkVpackApiService, isVpackOverview, VpackOverview } from './ark-vpack.
         </p>
 
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link active" routerLink="/ark/vpack">Overview</a>
-          <a class="nav-link" routerLink="/ark/vpack/verify">Verify Anchor</a>
-          <a class="nav-link" routerLink="/ark/vpack/translate">Translate Dialect</a>
-          <a class="nav-link" routerLink="/ark/backups">Encrypted Backups</a>
-          <a class="nav-link" routerLink="/ark/exit">Unilateral Exit</a>
-          <a class="nav-link" routerLink="/ark/exit/simulate">Exit Simulator</a>
-          <a class="nav-link" routerLink="/ark/providers">ASP Registry</a>
+          <a class="nav-link active" [routerLink]="'/ark/vpack' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/ark/vpack/verify' | relativeUrl">Verify Anchor</a>
+          <a class="nav-link" [routerLink]="'/ark/vpack/translate' | relativeUrl">Translate Dialect</a>
+          <a class="nav-link" [routerLink]="'/ark/backups' | relativeUrl">Encrypted Backups</a>
+          <a class="nav-link" [routerLink]="'/ark/exit' | relativeUrl">Unilateral Exit</a>
+          <a class="nav-link" [routerLink]="'/ark/exit/simulate' | relativeUrl">Exit Simulator</a>
+          <a class="nav-link" [routerLink]="'/ark/providers' | relativeUrl">ASP Registry</a>
         </nav>
       </header>
 
@@ -83,7 +84,7 @@ import { ArkVpackApiService, isVpackOverview, VpackOverview } from './ark-vpack.
                     <span class="badge bg-primary">{{ impl.implementation_revision }}</span>
                   </div>
                   <p class="small text-muted mb-2">Supported V-PACK versions: {{ impl.supported_vpack_versions.join(', ') }}</p>
-                  <a routerLink="/ark/vpack/translate" class="btn btn-sm btn-outline-secondary">Translate to MVV</a>
+                  <a [routerLink]="'/ark/vpack/translate' | relativeUrl" class="btn btn-sm btn-outline-secondary">Translate to MVV</a>
                 </div>
               </div>
             </div>

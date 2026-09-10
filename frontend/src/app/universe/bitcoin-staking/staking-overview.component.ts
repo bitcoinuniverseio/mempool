@@ -2,12 +2,14 @@ import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRe
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { BitcoinStakingApiService, BitcoinStakingOverview } from './bitcoin-staking.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-staking-overview',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -23,12 +25,12 @@ import { BitcoinStakingApiService, BitcoinStakingOverview } from './bitcoin-stak
         </p>
 
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link active" routerLink="/protocols/bitcoin-staking">Overview</a>
-          <a class="nav-link" routerLink="/protocols/bitcoin-staking/delegations">Delegations</a>
-          <a class="nav-link" routerLink="/protocols/bitcoin-staking/finality-providers">Finality Providers</a>
-          <a class="nav-link" routerLink="/protocols/bitcoin-staking/parameters">Parameters</a>
-          <a class="nav-link" routerLink="/protocols/bitcoin-staking/evidence">Slashing Evidence</a>
-          <a class="nav-link" routerLink="/protocols/bitcoin-staking/reconciliation">PoS Reconciliation</a>
+          <a class="nav-link active" [routerLink]="'/protocols/bitcoin-staking' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/protocols/bitcoin-staking/delegations' | relativeUrl">Delegations</a>
+          <a class="nav-link" [routerLink]="'/protocols/bitcoin-staking/finality-providers' | relativeUrl">Finality Providers</a>
+          <a class="nav-link" [routerLink]="'/protocols/bitcoin-staking/parameters' | relativeUrl">Parameters</a>
+          <a class="nav-link" [routerLink]="'/protocols/bitcoin-staking/evidence' | relativeUrl">Slashing Evidence</a>
+          <a class="nav-link" [routerLink]="'/protocols/bitcoin-staking/reconciliation' | relativeUrl">PoS Reconciliation</a>
         </nav>
       </header>
 
@@ -77,7 +79,7 @@ import { BitcoinStakingApiService, BitcoinStakingOverview } from './bitcoin-stak
           <div class="card p-4 bg-body-tertiary border h-100">
             <div class="d-flex justify-content-between align-items-center mb-3">
               <h2 class="h5 m-0">Delegation Lifecycle States (18 States Tracked)</h2>
-              <a routerLink="/protocols/bitcoin-staking/delegations" class="small text-decoration-none">Inspect Delegations &rarr;</a>
+              <a [routerLink]="'/protocols/bitcoin-staking/delegations' | relativeUrl" class="small text-decoration-none">Inspect Delegations &rarr;</a>
             </div>
             <div class="row g-2">
               <div *ngFor="let state of delegationStates" class="col-6 col-md-4">
@@ -100,7 +102,7 @@ import { BitcoinStakingApiService, BitcoinStakingOverview } from './bitcoin-stak
               Bitcoin staking locks BTC in pure Bitcoin script trees (timelock path, unbonding path, and covenant-governed slashing burn path). Stakers never bridge funds to wrapped tokens or third-party custody.
             </p>
             <div class="mt-3">
-              <a routerLink="/protocols/bitcoin-staking/evidence" class="btn btn-outline-danger btn-sm w-100">
+              <a [routerLink]="'/protocols/bitcoin-staking/evidence' | relativeUrl" class="btn btn-outline-danger btn-sm w-100">
                 Inspect EOTS Slashing Evidence &rarr;
               </a>
             </div>
@@ -153,7 +155,7 @@ export class StakingOverviewComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
       },
       error: (err) => {
-        this.error = err.message || 'Failed to load staking overview';
+        this.error = loadFailureMessage(classifyLoadFailure(err));
         this.loading = false;
         this.cdr.markForCheck();
       },

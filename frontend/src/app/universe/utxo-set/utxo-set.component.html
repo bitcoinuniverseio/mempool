@@ -1,7 +1,7 @@
 <div class="container-xl product-page">
   <header class="page-head">
     <nav class="crumbs">
-      <a [routerLink]="['/']">Home</a>
+      <a [routerLink]="['/' | relativeUrl]">Home</a>
       <span class="divider">/</span>
       <span>UTXO Intelligence</span>
     </nav>
@@ -14,6 +14,11 @@
   <ng-container *ngIf="vm$ | async as vm">
     <div *ngIf="vm.kind === 'loading'" class="panel" aria-busy="true">
       <p>Reading UTXO-set checkpoints and accumulator state...</p>
+    </div>
+
+    <div *ngIf="vm.kind === 'error'" class="panel">
+      <h2>UTXO-Set Observatory Unavailable</h2>
+      <p role="alert">{{ vm.message }}</p>
     </div>
 
     <ng-container *ngIf="vm.kind === 'ready'">

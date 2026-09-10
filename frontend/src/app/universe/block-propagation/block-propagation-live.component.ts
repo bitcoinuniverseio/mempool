@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { BlockPropagationApiService } from './block-propagation.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-block-propagation-live',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4">
       <div class="alert alert-warning" role="alert" *ngIf="loadError">
@@ -18,7 +19,7 @@ import { BlockPropagationApiService } from './block-propagation.service';
           <h1 class="h2 mb-1">Live Block Announcement Stream</h1>
           <p class="text-muted mb-0">Real-time p2p gossip observation across geographic listening probe nodes.</p>
         </div>
-        <a routerLink="/network/blocks" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
+        <a [routerLink]="'/network/blocks' | relativeUrl" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
       </div>
 
       <div class="alert alert-info bg-dark border-info d-flex align-items-center mb-4">
@@ -47,7 +48,7 @@ import { BlockPropagationApiService } from './block-propagation.service';
               <tr *ngFor="let b of liveData.live_blocks">
                 <td class="fw-bold">{{ b.height }}</td>
                 <td class="font-monospace text-info">
-                  <a [routerLink]="['/network/blocks', b.hash]">{{ b.hash | slice:0:18 }}...</a>
+                  <a [routerLink]="['/network/blocks' | relativeUrl, b.hash]">{{ b.hash | slice:0:18 }}...</a>
                 </td>
                 <td><code>{{ b.first_seen_sensor }}</code></td>
                 <td class="text-success font-monospace">{{ b.time_to_50_pct_nodes_ms }} ms</td>

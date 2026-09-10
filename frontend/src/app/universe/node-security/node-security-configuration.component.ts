@@ -1,11 +1,12 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-node-security-configuration',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4">
       <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
@@ -13,7 +14,7 @@ import { RouterModule } from '@angular/router';
           <h1 class="h2 mb-1">Hardened bitcoin.conf Configuration Generator</h1>
           <p class="text-muted mb-0">Best-practice security configurations protecting against RPC exposure, peer fingerprinting, and memory exhaustion.</p>
         </div>
-        <a routerLink="/node/security" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
+        <a [routerLink]="'/node/security' | relativeUrl" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
       </div>
 
       <div class="card bg-dark border-secondary mb-4">

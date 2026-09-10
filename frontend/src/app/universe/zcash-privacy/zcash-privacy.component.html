@@ -1,9 +1,9 @@
 <div class="container-xl product-page">
   <header class="page-head">
     <nav class="crumbs">
-      <a [routerLink]="['/']">Home</a>
+      <a [routerLink]="['/' | relativeUrl]">Home</a>
       <span class="divider">/</span>
-      <a [routerLink]="['/zcash']">Zcash</a>
+      <a [routerLink]="['/zcash' | relativeUrl]">Zcash</a>
       <span class="divider">/</span>
       <span>Privacy Observatory</span>
     </nav>
@@ -14,8 +14,8 @@
   </header>
 
   <nav class="nav-tabs">
-    <a [routerLink]="['/zcash/privacy']" class="active">Pools & Upgrades</a>
-    <a [routerLink]="['/zcash/privacy/workspace']">Viewing-Key Workspace</a>
+    <a [routerLink]="['/zcash/privacy' | relativeUrl]" class="active">Pools & Upgrades</a>
+    <a [routerLink]="['/zcash/privacy/workspace' | relativeUrl]">Viewing-Key Workspace</a>
   </nav>
 
   <ng-container *ngIf="vm$ | async as vm">
@@ -23,9 +23,9 @@
       <p>Reading Zcash privacy pool ledger...</p>
     </div>
 
-    <div *ngIf="vm.kind === 'error'" class="panel">
-      <h2>Zcash Node Offline</h2>
-      <p>Could not connect to Universe first-party Zcash consensus node.</p>
+    <div *ngIf="vm.kind === 'error'" class="panel" role="alert">
+      <h2>Zcash privacy data unavailable</h2>
+      <p>{{ vm.message }}</p>
     </div>
 
     <ng-container *ngIf="vm.kind === 'ready' && vm.summary">

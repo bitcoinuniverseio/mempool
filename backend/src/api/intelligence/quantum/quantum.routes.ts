@@ -1,6 +1,15 @@
 import { Application, Request, Response } from 'express';
-import { quantumService } from './quantum.service';
+import { QuantumEvidenceError, quantumService } from './quantum.service';
 import { handleError } from '../../../utils/api';
+
+/** An absent source is a 503 that names the source, never a 500 and never an empty list. */
+function fail(req: Request, res: Response, e: unknown, fallback: string): void {
+  if (e instanceof QuantumEvidenceError) {
+    res.status(e.status).json({ stage: e.code, error: e.message });
+    return;
+  }
+  handleError(req, res, 500, e instanceof Error ? e.message : fallback);
+}
 
 class QuantumRoutes {
   public initRoutes(app: Application): void {
@@ -19,7 +28,7 @@ class QuantumRoutes {
       const overview = quantumService.getOverview();
       res.json(overview);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch quantum overview');
+      fail(req, res, e, 'Failed to fetch quantum overview');
     }
   }
 
@@ -28,7 +37,7 @@ class QuantumRoutes {
       const cohorts = quantumService.getCohorts();
       res.json(cohorts);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch quantum cohorts');
+      fail(req, res, e, 'Failed to fetch quantum cohorts');
     }
   }
 
@@ -37,17 +46,17 @@ class QuantumRoutes {
       const history = quantumService.getRecentReveals();
       res.json(history);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch quantum reveal history');
+      fail(req, res, e, 'Failed to fetch quantum reveal history');
     }
   }
 
   private async $postAudit(req: Request, res: Response): Promise<void> {
     try {
-      const { identifier } = req.body;
+      const { identifier } = req.body || {};
       const result = quantumService.auditAddressOrOutpoint(identifier);
       res.json(result);
     } catch (e) {
-      res.status(400).json({ error: e instanceof Error ? e.message : 'Failed to audit identifier' });
+      fail(req, res, e, 'Failed to audit identifier');
     }
   }
 
@@ -56,7 +65,7 @@ class QuantumRoutes {
       const result = quantumService.generateMigrationPlan(req.body);
       res.json(result);
     } catch (e) {
-      res.status(400).json({ error: e instanceof Error ? e.message : 'Failed to generate migration plan' });
+      fail(req, res, e, 'Failed to generate migration plan');
     }
   }
 }

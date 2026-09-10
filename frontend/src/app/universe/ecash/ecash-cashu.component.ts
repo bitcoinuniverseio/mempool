@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { EcashApiService, CashuMint } from './ecash.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-ecash-cashu',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -24,10 +25,10 @@ import { EcashApiService, CashuMint } from './ecash.service';
 
         <!-- Navigation Tabs -->
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/ecash">Overview</a>
-          <a class="nav-link active" routerLink="/ecash/cashu">Cashu Mints</a>
-          <a class="nav-link" routerLink="/ecash/fedimint">Fedimint Federations</a>
-          <a class="nav-link" routerLink="/ecash/inspect">Offline Token Inspector</a>
+          <a class="nav-link" [routerLink]="'/ecash' | relativeUrl">Overview</a>
+          <a class="nav-link active" [routerLink]="'/ecash/cashu' | relativeUrl">Cashu Mints</a>
+          <a class="nav-link" [routerLink]="'/ecash/fedimint' | relativeUrl">Fedimint Federations</a>
+          <a class="nav-link" [routerLink]="'/ecash/inspect' | relativeUrl">Offline Token Inspector</a>
         </nav>
       </header>
 
@@ -71,7 +72,7 @@ import { EcashApiService, CashuMint } from './ecash.service';
 
             <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
               <span class="small text-muted">Heartbeat: {{ m.last_heartbeat | date:'short' }}</span>
-              <a [routerLink]="['/ecash/cashu', m.mint_id]" class="btn btn-sm btn-outline-primary">
+              <a [routerLink]="['/ecash/cashu' | relativeUrl, m.mint_id]" class="btn btn-sm btn-outline-primary">
                 Inspect Mint Keysets
               </a>
             </div>

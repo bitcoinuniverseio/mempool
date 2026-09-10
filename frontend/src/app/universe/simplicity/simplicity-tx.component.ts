@@ -2,18 +2,20 @@ import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRe
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { SimplicityApiService } from './simplicity.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-simplicity-tx',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
       <header class="page-header mb-4">
         <div class="mb-2">
-          <a routerLink="/liquid/simplicity" class="btn btn-sm btn-outline-secondary">
+          <a [routerLink]="'/liquid/simplicity' | relativeUrl" class="btn btn-sm btn-outline-secondary">
             &larr; Back to Simplicity Overview
           </a>
         </div>
@@ -44,7 +46,7 @@ import { SimplicityApiService } from './simplicity.service';
             <dl class="row mb-0">
               <dt class="col-sm-4 text-muted">Program ID</dt>
               <dd class="col-sm-8 font-monospace small">
-                <a *ngIf="execution.program_id; else programUnavailable" [routerLink]="['/liquid/simplicity/program', execution.program_id]" class="text-decoration-none">
+                <a *ngIf="execution.program_id; else programUnavailable" [routerLink]="['/liquid/simplicity/program' | relativeUrl, execution.program_id]" class="text-decoration-none">
                   {{ execution.program_id }}
                 </a>
                 <ng-template #programUnavailable><span i18n>Program unavailable</span></ng-template>
@@ -140,7 +142,7 @@ export class SimplicityTxComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
       },
       error: (err) => {
-        this.error = err.message || 'Failed to load transaction execution trace';
+        this.error = loadFailureMessage(classifyLoadFailure(err));
         this.loading = false;
         this.cdr.markForCheck();
       },

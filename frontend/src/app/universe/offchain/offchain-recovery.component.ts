@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { OffchainApiService } from './offchain.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-offchain-recovery',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -21,12 +22,12 @@ import { OffchainApiService } from './offchain.service';
         </p>
 
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/offchain/utxo">Overview</a>
-          <a class="nav-link" routerLink="/offchain/statechains/operators">Statechains</a>
-          <a class="nav-link" routerLink="/offchain/statechains/verify">Transfer Verifier</a>
-          <a class="nav-link" routerLink="/offchain/coinswap">CoinSwap</a>
-          <a class="nav-link" routerLink="/offchain/coinswap/inspect">CoinSwap Inspector</a>
-          <a class="nav-link active" routerLink="/offchain/recovery">Recovery Planner</a>
+          <a class="nav-link" [routerLink]="'/offchain/utxo' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/offchain/statechains/operators' | relativeUrl">Statechains</a>
+          <a class="nav-link" [routerLink]="'/offchain/statechains/verify' | relativeUrl">Transfer Verifier</a>
+          <a class="nav-link" [routerLink]="'/offchain/coinswap' | relativeUrl">CoinSwap</a>
+          <a class="nav-link" [routerLink]="'/offchain/coinswap/inspect' | relativeUrl">CoinSwap Inspector</a>
+          <a class="nav-link active" [routerLink]="'/offchain/recovery' | relativeUrl">Recovery Planner</a>
         </nav>
       </header>
 
@@ -109,7 +110,7 @@ import { OffchainApiService } from './offchain.service';
               </div>
 
               <div class="d-flex gap-2">
-                <a routerLink="/tools/workbench" class="btn btn-outline-primary btn-sm">
+                <a [routerLink]="'/tools/workbench' | relativeUrl" class="btn btn-outline-primary btn-sm">
                   Send to PSBT Workbench &rarr;
                 </a>
               </div>

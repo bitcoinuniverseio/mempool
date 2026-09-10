@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { BlockPropagationApiService } from './block-propagation.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-block-propagation-block-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4" *ngIf="block">
       <div class="alert alert-warning" role="alert" *ngIf="loadError">
@@ -18,7 +19,7 @@ import { BlockPropagationApiService } from './block-propagation.service';
           <h1 class="h2 mb-1">Block {{ block.height }} Propagation Analysis</h1>
           <p class="text-muted mb-0 font-monospace">{{ block.hash }}</p>
         </div>
-        <a routerLink="/network/blocks" class="btn btn-outline-secondary btn-sm">Back to Observatory</a>
+        <a [routerLink]="'/network/blocks' | relativeUrl" class="btn btn-outline-secondary btn-sm">Back to Observatory</a>
       </div>
 
       <div class="row g-3 mb-4">

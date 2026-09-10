@@ -16,6 +16,7 @@ import {
   docsSectionsFor,
 } from '@app/universe/chain-docs/chain-docs-content';
 import { ExplorerChain } from '@app/universe/universe.types';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 /**
  * The chain docs page: every section rendered on one page so deep links and
@@ -25,7 +26,7 @@ import { ExplorerChain } from '@app/universe/universe.types';
 @Component({
   selector: 'app-chain-docs',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   templateUrl: './chain-docs.component.html',
   styleUrls: ['./chain-docs.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -1,9 +1,9 @@
 <div class="container-xl product-page">
   <header class="page-head">
     <nav class="crumbs">
-      <a [routerLink]="['/']">Home</a>
+      <a [routerLink]="['/' | relativeUrl]">Home</a>
       <span class="divider">/</span>
-      <a [routerLink]="['/taproot-assets']">Taproot Assets</a>
+      <a [routerLink]="['/taproot-assets' | relativeUrl]">Taproot Assets</a>
       <span class="divider">/</span>
       <span>Lightning Standards</span>
     </nav>
@@ -14,8 +14,8 @@
   </header>
 
   <nav class="nav-tabs">
-    <a [routerLink]="['/taproot-assets']">Assets & Groups</a>
-    <a [routerLink]="['/lightning/offers']" class="active">Lightning BOLT12 & RFQ</a>
+    <a [routerLink]="['/taproot-assets' | relativeUrl]">Assets & Groups</a>
+    <a [routerLink]="['/lightning/offers' | relativeUrl]" class="active">Lightning BOLT12 & RFQ</a>
   </nav>
 
   <!-- Decoder Section -->

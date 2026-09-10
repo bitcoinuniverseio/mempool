@@ -15,6 +15,7 @@ import {
   warningsFor,
 } from './bump-view';
 import { formatFeerate, formatSats, formatVsize, shorten } from './cluster-format';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 /**
  * What it would cost to make an unconfirmed transaction confirm sooner.
@@ -29,7 +30,7 @@ import { formatFeerate, formatSats, formatVsize, shorten } from './cluster-forma
 @Component({
   selector: 'app-bump',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, FormsModule, RouterModule],
   templateUrl: './bump.component.html',
   styleUrls: ['./bump.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

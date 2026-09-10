@@ -1,7 +1,7 @@
 <div class="container-xl product-page">
   <header class="page-head">
     <nav class="crumbs">
-      <a [routerLink]="['/']">Home</a>
+      <a [routerLink]="['/' | relativeUrl]">Home</a>
       <span class="divider">/</span>
       <span>Developer Platform</span>
     </nav>
@@ -12,8 +12,8 @@
   </header>
 
   <nav class="nav-tabs">
-    <a [routerLink]="['/data']" class="active">Datasets & Query Studio</a>
-    <a [routerLink]="['/data/live']">Live Streams</a>
+    <a [routerLink]="['/data' | relativeUrl]" class="active">Datasets & Query Studio</a>
+    <a [routerLink]="['/data/live' | relativeUrl]">Live Streams</a>
   </nav>
 
   <ng-container *ngIf="vm$ | async as vm">
@@ -21,9 +21,9 @@
       <p>Reading Data Studio catalog...</p>
     </div>
 
-    <div *ngIf="vm.kind === 'error'" class="panel">
+    <div *ngIf="vm.kind === 'error'" class="panel" role="alert">
       <h2>Data Service Offline</h2>
-      <p>Could not reach the Universe Data Studio catalog.</p>
+      <p>{{ vm.message }}</p>
     </div>
 
     <ng-container *ngIf="vm.kind === 'ready' && vm.datasets">
@@ -45,6 +45,11 @@
             {{ vm.executing ? 'Executing...' : 'Run Query' }}
           </button>
         </div>
+      </section>
+
+      <section class="panel" *ngIf="vm.queryError" role="alert">
+        <h2>Query Not Answered</h2>
+        <p>{{ vm.queryError }}</p>
       </section>
 
       <!-- Results Table -->

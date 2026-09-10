@@ -2,12 +2,14 @@ import { Component, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { CompactFiltersApiService } from './compact-filters.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-light-client-filters',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -21,12 +23,12 @@ import { CompactFiltersApiService } from './compact-filters.service';
         </p>
 
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/network/light-client">Overview</a>
-          <a class="nav-link" routerLink="/network/light-client/providers">Providers</a>
-          <a class="nav-link active" routerLink="/network/light-client/filters">Filter Explorer</a>
-          <a class="nav-link" routerLink="/network/light-client/verify">Header Verifier</a>
-          <a class="nav-link" routerLink="/network/light-client/scan">Local Scanner</a>
-          <a class="nav-link" routerLink="/network/light-client/privacy">Privacy Controls</a>
+          <a class="nav-link" [routerLink]="'/network/light-client' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/network/light-client/providers' | relativeUrl">Providers</a>
+          <a class="nav-link active" [routerLink]="'/network/light-client/filters' | relativeUrl">Filter Explorer</a>
+          <a class="nav-link" [routerLink]="'/network/light-client/verify' | relativeUrl">Header Verifier</a>
+          <a class="nav-link" [routerLink]="'/network/light-client/scan' | relativeUrl">Local Scanner</a>
+          <a class="nav-link" [routerLink]="'/network/light-client/privacy' | relativeUrl">Privacy Controls</a>
         </nav>
       </header>
 
@@ -51,7 +53,11 @@ import { CompactFiltersApiService } from './compact-filters.service';
           <div class="card p-4 bg-body-tertiary border h-100">
             <h2 class="h5 mb-3">Filter Details</h2>
 
-            <div *ngIf="!filter && !fetching" class="text-center py-5 text-muted">
+            <div *ngIf="error" class="alert alert-warning" role="alert">
+              {{ error }}
+            </div>
+
+            <div *ngIf="!filter && !fetching && !error" class="text-center py-5 text-muted">
               Enter a block hash and click Inspect Block Filter.
             </div>
 
@@ -109,6 +115,7 @@ export class LightClientFiltersComponent {
   blockHash = '000000000000000000021b379b37c02b54bf9cf7ff2ecdf44a6c4b2a8d5f3089';
   fetching = false;
   filter: any = null;
+  error: string | null = null;
 
   constructor(
     private cfApi: CompactFiltersApiService,
@@ -120,6 +127,7 @@ export class LightClientFiltersComponent {
   fetchFilter(): void {
     this.fetching = true;
     this.filter = null;
+    this.error = null;
 
     this.cfApi.getBlockFilter$(this.blockHash).subscribe({
       next: (res) => {
@@ -129,14 +137,7 @@ export class LightClientFiltersComponent {
       },
       error: (err) => {
         this.fetching = false;
-        this.filter = {
-          block_hash: this.blockHash,
-          filter_type: 'basic_0x00',
-          element_count: 2840,
-          filter_size_bytes: 4210,
-          filter_hash: '9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b',
-          filter_header: '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
-        };
+        this.error = loadFailureMessage(classifyLoadFailure(err));
         this.cdr.markForCheck();
       },
     });

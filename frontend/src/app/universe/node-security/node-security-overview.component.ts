@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { NodeSecurityApiService, NodeSecurityOverview } from './node-security.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-node-security-overview',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4">
       <div class="alert alert-warning" role="alert" *ngIf="loadError">
@@ -19,33 +20,33 @@ import { NodeSecurityApiService, NodeSecurityOverview } from './node-security.se
           <p class="text-muted mb-0">Fleet vulnerability monitoring, security advisory tracking, Guix artifact integrity, and configuration audits.</p>
         </div>
         <div class="btn-group">
-          <a routerLink="/node/security/fleet" class="btn btn-primary btn-sm">Fleet Status</a>
-          <a routerLink="/node/security/upgrade" class="btn btn-outline-primary btn-sm">Upgrade Readiness</a>
+          <a [routerLink]="'/node/security/fleet' | relativeUrl" class="btn btn-primary btn-sm">Fleet Status</a>
+          <a [routerLink]="'/node/security/upgrade' | relativeUrl" class="btn btn-outline-primary btn-sm">Upgrade Readiness</a>
         </div>
       </div>
 
       <!-- Navigation Tabs -->
       <ul class="nav nav-tabs mb-4">
         <li class="nav-item">
-          <a class="nav-link active" routerLink="/node/security">Overview</a>
+          <a class="nav-link active" [routerLink]="'/node/security' | relativeUrl">Overview</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/node/security/fleet">Node Fleet</a>
+          <a class="nav-link" [routerLink]="'/node/security/fleet' | relativeUrl">Node Fleet</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/node/security/advisories">Security Advisories</a>
+          <a class="nav-link" [routerLink]="'/node/security/advisories' | relativeUrl">Security Advisories</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/node/security/releases">Release Lifecycle</a>
+          <a class="nav-link" [routerLink]="'/node/security/releases' | relativeUrl">Release Lifecycle</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/node/security/artifacts">Guix Verification</a>
+          <a class="nav-link" [routerLink]="'/node/security/artifacts' | relativeUrl">Guix Verification</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/node/security/upgrade">Upgrade Planner</a>
+          <a class="nav-link" [routerLink]="'/node/security/upgrade' | relativeUrl">Upgrade Planner</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/node/security/configuration">Hardened Config</a>
+          <a class="nav-link" [routerLink]="'/node/security/configuration' | relativeUrl">Hardened Config</a>
         </li>
       </ul>
 
@@ -102,14 +103,14 @@ import { NodeSecurityApiService, NodeSecurityOverview } from './node-security.se
             <tbody>
               <tr *ngFor="let adv of overview.critical_advisories">
                 <td class="font-monospace text-info">
-                  <a [routerLink]="['/node/security/advisory', adv.advisory_id]">{{ adv.advisory_id }}</a>
+                  <a [routerLink]="['/node/security/advisory' | relativeUrl, adv.advisory_id]">{{ adv.advisory_id }}</a>
                 </td>
                 <td><span class="badge bg-danger">{{ adv.cve_id }}</span></td>
                 <td class="fw-semibold">{{ adv.title }}</td>
                 <td><code class="text-warning">{{ adv.affected_versions.join(', ') }}</code></td>
                 <td><span class="badge bg-success">{{ adv.fixed_version }}</span></td>
                 <td>
-                  <a [routerLink]="['/node/security/advisory', adv.advisory_id]" class="btn btn-sm btn-outline-info">Inspect</a>
+                  <a [routerLink]="['/node/security/advisory' | relativeUrl, adv.advisory_id]" class="btn btn-sm btn-outline-info">Inspect</a>
                 </td>
               </tr>
             </tbody>

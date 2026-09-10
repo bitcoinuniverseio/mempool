@@ -1,9 +1,9 @@
 <div class="container-xl product-page">
   <header class="page-head">
     <nav class="crumbs">
-      <a [routerLink]="['/']">Home</a>
+      <a [routerLink]="['/' | relativeUrl]">Home</a>
       <span class="divider">/</span>
-      <a [routerLink]="['/data']">Data Studio</a>
+      <a [routerLink]="['/data' | relativeUrl]">Data Studio</a>
       <span class="divider">/</span>
       <span>Live Streams</span>
     </nav>
@@ -14,13 +14,18 @@
   </header>
 
   <nav class="nav-tabs">
-    <a [routerLink]="['/data']">Datasets & Query Studio</a>
-    <a [routerLink]="['/data/live']" class="active">Live Streams</a>
+    <a [routerLink]="['/data' | relativeUrl]">Datasets & Query Studio</a>
+    <a [routerLink]="['/data/live' | relativeUrl]" class="active">Live Streams</a>
   </nav>
 
   <ng-container *ngIf="vm$ | async as vm">
     <div *ngIf="vm.kind === 'loading'" class="panel" aria-busy="true">
       <p>Loading live stream manifest...</p>
+    </div>
+
+    <div *ngIf="vm.kind === 'error'" class="panel" role="alert">
+      <h2>Stream Registry Offline</h2>
+      <p>{{ vm.message }}</p>
     </div>
 
     <ng-container *ngIf="vm.kind === 'ready' && vm.streams">

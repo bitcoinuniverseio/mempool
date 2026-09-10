@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ConsensusApiService, CovenantSimulationResult } from './consensus.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-vaults-simulate',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -22,11 +23,11 @@ import { ConsensusApiService, CovenantSimulationResult } from './consensus.servi
 
         <!-- Navigation Tabs -->
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/labs/consensus">Consensus Proposals</a>
-          <a class="nav-link" routerLink="/labs/consensus/compare">Compare Matrix</a>
-          <a class="nav-link" routerLink="/labs/vaults">Vaults Overview</a>
-          <a class="nav-link" routerLink="/labs/vaults/designer">Vault Designer</a>
-          <a class="nav-link active" routerLink="/labs/vaults/simulate">Covenant Simulator</a>
+          <a class="nav-link" [routerLink]="'/labs/consensus' | relativeUrl">Consensus Proposals</a>
+          <a class="nav-link" [routerLink]="'/labs/consensus/compare' | relativeUrl">Compare Matrix</a>
+          <a class="nav-link" [routerLink]="'/labs/vaults' | relativeUrl">Vaults Overview</a>
+          <a class="nav-link" [routerLink]="'/labs/vaults/designer' | relativeUrl">Vault Designer</a>
+          <a class="nav-link active" [routerLink]="'/labs/vaults/simulate' | relativeUrl">Covenant Simulator</a>
         </nav>
       </header>
 

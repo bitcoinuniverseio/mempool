@@ -2,12 +2,14 @@ import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRe
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { SimplicityApiService, SimplicityOverview } from './simplicity.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-simplicity-overview',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -23,10 +25,10 @@ import { SimplicityApiService, SimplicityOverview } from './simplicity.service';
         </p>
 
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link active" routerLink="/liquid/simplicity">Overview</a>
-          <a class="nav-link" routerLink="/liquid/simplicity/contracts">Contract Programs</a>
-          <a class="nav-link" routerLink="/tools/simplicity">Compiler Workbench</a>
-          <a class="nav-link" routerLink="/tools/simplicity/verify">Formal Proof Verifier</a>
+          <a class="nav-link active" [routerLink]="'/liquid/simplicity' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/liquid/simplicity/contracts' | relativeUrl">Contract Programs</a>
+          <a class="nav-link" [routerLink]="'/tools/simplicity' | relativeUrl">Compiler Workbench</a>
+          <a class="nav-link" [routerLink]="'/tools/simplicity/verify' | relativeUrl">Formal Proof Verifier</a>
         </nav>
       </header>
 
@@ -73,7 +75,7 @@ import { SimplicityApiService, SimplicityOverview } from './simplicity.service';
           <div class="card p-4 bg-body-tertiary border h-100">
             <div class="d-flex justify-content-between align-items-center mb-3">
               <h2 class="h5 m-0">Featured Simplicity Contracts</h2>
-              <a routerLink="/liquid/simplicity/contracts" class="small text-decoration-none">View All &rarr;</a>
+              <a [routerLink]="'/liquid/simplicity/contracts' | relativeUrl" class="small text-decoration-none">View All &rarr;</a>
             </div>
             <div class="table-responsive" tabindex="0">
               <table class="table table-sm table-hover align-middle">
@@ -89,7 +91,7 @@ import { SimplicityApiService, SimplicityOverview } from './simplicity.service';
                 <tbody>
                   <tr *ngFor="let p of overview.featured_programs">
                     <td>
-                      <a [routerLink]="['/liquid/simplicity/program', p.program_id]" class="fw-bold text-decoration-none">
+                      <a [routerLink]="['/liquid/simplicity/program' | relativeUrl, p.program_id]" class="fw-bold text-decoration-none">
                         {{ p.source_name || p.program_id }}
                       </a>
                       <div class="font-monospace text-muted small text-truncate" style="max-width: 220px;">
@@ -158,7 +160,7 @@ export class SimplicityOverviewComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
       },
       error: (err) => {
-        this.error = err.message || 'Failed to load Simplicity overview';
+        this.error = loadFailureMessage(classifyLoadFailure(err));
         this.loading = false;
         this.cdr.markForCheck();
       },

@@ -4,11 +4,12 @@ import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { PrivateSubmissionApiService } from './private-submission.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-private-submission-broadcast',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule, FormsModule],
   template: `
     <div class="container-xl py-4">
       <div class="alert alert-warning" role="alert" *ngIf="loadError">
@@ -19,7 +20,7 @@ import { PrivateSubmissionApiService } from './private-submission.service';
           <h1 class="h2 mb-1">Direct Miner Private Broadcast</h1>
           <p class="text-muted mb-0">Direct encrypted injection to participating mining pools, bypassing public gossip relays to protect against MEV front-running.</p>
         </div>
-        <a routerLink="/mempool/submission" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
+        <a [routerLink]="'/mempool/submission' | relativeUrl" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
       </div>
 
       <div class="row g-4">

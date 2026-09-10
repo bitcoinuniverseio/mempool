@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { ConsensusConformanceApiService } from './consensus-conformance.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-consensus-conformance-case-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4" *ngIf="caseRecord">
       <div class="alert alert-warning" role="alert" *ngIf="loadError">
@@ -22,7 +23,7 @@ import { ConsensusConformanceApiService } from './consensus-conformance.service'
           <button class="btn btn-danger btn-sm" (click)="replayCase()" [disabled]="replaying">
             {{ replaying ? 'Replaying in Isolated Sandboxes...' : 'Replay Differential Execution' }}
           </button>
-          <a routerLink="/labs/consensus/cases" class="btn btn-outline-secondary btn-sm">Back to Catalog</a>
+          <a [routerLink]="'/labs/consensus/cases' | relativeUrl" class="btn btn-outline-secondary btn-sm">Back to Catalog</a>
         </div>
       </div>
 

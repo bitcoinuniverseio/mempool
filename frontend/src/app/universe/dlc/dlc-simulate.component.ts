@@ -2,12 +2,14 @@ import { Component, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { DlcApiService } from './dlc.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-dlc-simulate',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -21,11 +23,11 @@ import { DlcApiService } from './dlc.service';
         </p>
 
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/contracts/dlc">Overview</a>
-          <a class="nav-link" routerLink="/contracts/dlc/oracles">Oracles</a>
-          <a class="nav-link" routerLink="/contracts/dlc/events">Events</a>
-          <a class="nav-link" routerLink="/contracts/dlc/inspect">Contract Inspector</a>
-          <a class="nav-link active" routerLink="/contracts/dlc/simulate">Regtest Simulator</a>
+          <a class="nav-link" [routerLink]="'/contracts/dlc' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/contracts/dlc/oracles' | relativeUrl">Oracles</a>
+          <a class="nav-link" [routerLink]="'/contracts/dlc/events' | relativeUrl">Events</a>
+          <a class="nav-link" [routerLink]="'/contracts/dlc/inspect' | relativeUrl">Contract Inspector</a>
+          <a class="nav-link active" [routerLink]="'/contracts/dlc/simulate' | relativeUrl">Regtest Simulator</a>
         </nav>
       </header>
 
@@ -160,7 +162,7 @@ export class DlcSimulateComponent {
           this.simulating = false;
           this.result = {
             status: 'error',
-            error: err.message || 'Simulation execution failed',
+            error: err?.error?.error || loadFailureMessage(classifyLoadFailure(err)),
           };
           this.cdr.markForCheck();
         },

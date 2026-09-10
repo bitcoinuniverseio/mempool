@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { LightningResilienceApiService } from './lightning-resilience.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-lightning-resilience-channel-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4" *ngIf="loadError">
       <div class="alert alert-warning" role="alert">{{ loadError }}</div>
@@ -18,7 +19,7 @@ import { LightningResilienceApiService } from './lightning-resilience.service';
           <h1 class="h2 mb-1">Channel Diagnostics: <span class="font-monospace text-info">{{ channel.short_channel_id }}</span></h1>
           <p class="text-muted mb-0">Detailed slot reservation, hold latency distributions, and peer jamming evaluation.</p>
         </div>
-        <a routerLink="/lightning/resilience" class="btn btn-outline-secondary btn-sm">Back to Resilience Center</a>
+        <a [routerLink]="'/lightning/resilience' | relativeUrl" class="btn btn-outline-secondary btn-sm">Back to Resilience Center</a>
       </div>
 
       <div class="row g-3 mb-4">
@@ -53,12 +54,12 @@ import { LightningResilienceApiService } from './lightning-resilience.service';
           <dl class="row mb-0">
             <dt class="col-sm-3 text-muted">Node 1 Public Key</dt>
             <dd class="col-sm-9 font-monospace">
-              <a [routerLink]="['/lightning/resilience/node', channel.node_1_pubkey]" class="text-info">{{ channel.node_1_pubkey }}</a>
+              <a [routerLink]="['/lightning/resilience/node' | relativeUrl, channel.node_1_pubkey]" class="text-info">{{ channel.node_1_pubkey }}</a>
             </dd>
 
             <dt class="col-sm-3 text-muted">Node 2 Public Key</dt>
             <dd class="col-sm-9 font-monospace">
-              <a [routerLink]="['/lightning/resilience/node', channel.node_2_pubkey]" class="text-info">{{ channel.node_2_pubkey }}</a>
+              <a [routerLink]="['/lightning/resilience/node' | relativeUrl, channel.node_2_pubkey]" class="text-info">{{ channel.node_2_pubkey }}</a>
             </dd>
 
             <dt class="col-sm-3 text-muted">Resilience Band</dt>

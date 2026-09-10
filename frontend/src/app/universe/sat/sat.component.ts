@@ -15,6 +15,7 @@ import {
   utcFromSeconds,
 } from '@app/universe/asset-lookup';
 import { formatAtomicAmount, shortenIdentifier } from '@app/universe/universe-evidence';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 /**
  * One satoshi.
@@ -26,7 +27,7 @@ import { formatAtomicAmount, shortenIdentifier } from '@app/universe/universe-ev
 @Component({
   selector: 'app-universe-sat',
   standalone: true,
-  imports: [CommonModule, RouterModule, BookmarkButtonComponent],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule, BookmarkButtonComponent],
   templateUrl: './sat.component.html',
   styleUrls: ['./sat.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
