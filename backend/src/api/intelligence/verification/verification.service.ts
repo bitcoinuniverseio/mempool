@@ -1,6 +1,3 @@
-import * as crypto from 'crypto';
-import { EventEnvelopeValidator } from '../events/event-envelope';
-
 export interface SpvMerkleProof {
   txid: string;
   block_hash: string;
@@ -49,13 +46,40 @@ export interface ConsensusIncident {
   technical_postmortem: string;
 }
 
+/**
+ * Raised when a read has no source behind it. The routes map the code to a
+ * 503, so an absent integration is reported as an absent integration rather
+ * than as an answer.
+ */
+export class VerificationEvidenceError extends Error {
+  constructor(public readonly code: string, message: string, public readonly status = 503) {
+    super(message);
+  }
+}
+
+const bitcoinReaderUnavailable =
+  'Proof observations are unavailable. SPV inclusion proofs, proof verification and BIP158 compact filter queries require the owned Bitcoin reader (bitcoind gettxoutproof, verifytxoutproof and getblockfilter), which is not connected on this deployment.';
+
+const signatureVerifierUnavailable =
+  'Signature verification is unavailable. BIP137 and BIP322 verdicts require the owned message signature verifier (UNIVERSE_SIGNATURE_VERIFIER_ORIGIN), which is not connected on this deployment. No signature was checked.';
+
+const incidentLedgerUnavailable =
+  'Consensus incident observations are unavailable. Reorg, invalid block and stale tip incidents require the owned consensus incident ledger fed by the owned chain monitor (UNIVERSE_INCIDENT_LEDGER_ORIGIN), which is not connected on this deployment.';
+
+/**
+ * Proof, signature and consensus incident evidence.
+ *
+ * Every answer here used to be invented: an SPV proof whose merkle root was
+ * the hash of the txid, a compact filter that matched any nonempty script, a
+ * signature that was valid because it was long enough with the secp256k1
+ * generator point as its signer, and two incidents with invented block
+ * hashes. No owned Bitcoin reader, signature verifier or incident ledger is
+ * connected, so each read reports the source it would need.
+ */
 export class VerificationService {
   private static instance: VerificationService;
-  private incidents: ConsensusIncident[] = [];
 
-  private constructor() {
-    this.seedHistoricalIncidents();
-  }
+  private constructor() {}
 
   public static getInstance(): VerificationService {
     if (!VerificationService.instance) {
@@ -64,81 +88,19 @@ export class VerificationService {
     return VerificationService.instance;
   }
 
-  private seedHistoricalIncidents(): void {
-    this.incidents = [
-      {
-        incident_id: 'inc-reorg-850122',
-        incident_type: 'reorg',
-        title: '2-Block Reorganization at Height 850,122',
-        block_height: 850122,
-        block_hash: '000000000000000000028a7b9c1d3e5f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d',
-        detected_at_utc: '2026-06-12T14:22:10Z',
-        resolved_at_utc: '2026-06-12T14:41:35Z',
-        duration_seconds: 1165,
-        reorg_depth: 2,
-        displaced_tx_count: 3120,
-        double_spend_attempts_count: 0,
-        status: 'resolved',
-        summary: 'A 2-block race between competing mining pools resolved in favor of chain branch B. All displaced mempool transactions were re-accepted and confirmed in subsequent blocks.',
-        technical_postmortem: 'Propagation latency disparity across trans-Atlantic links caused simultaneous block template solutions. Chain branch reorganization executed deterministically without consensus divergence.',
-      },
-      {
-        incident_id: 'inc-invalid-block-820944',
-        incident_type: 'invalid_block',
-        title: 'Non-Standard Coinbase Output Proposal',
-        block_height: 820944,
-        block_hash: '000000000000000000037a9f8b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c',
-        detected_at_utc: '2026-02-04T08:15:00Z',
-        resolved_at_utc: '2026-02-04T08:15:05Z',
-        duration_seconds: 5,
-        reorg_depth: 0,
-        displaced_tx_count: 0,
-        double_spend_attempts_count: 0,
-        status: 'resolved',
-        summary: 'A candidate block was rejected by Universe consensus nodes because coinbase output violated maximum subsidy calculation limits.',
-        technical_postmortem: 'Miner script attempted to claim subsidy higher than halving allowance (exceeded 3.125 BTC subsidy). Consensus rules rejected block immediately at validation.',
-      },
-    ];
-  }
-
-  public generateSpvProof(txid: string, blockHash: string, blockHeight = 860145): SpvMerkleProof {
-    const root = crypto.createHash('sha256').update(`${txid}:${blockHash}`).digest('hex');
-    const partnerHash = crypto.createHash('sha256').update(txid).digest('hex');
-
-    return {
-      txid,
-      block_hash: blockHash,
-      block_height: blockHeight,
-      tx_index: 14,
-      merkle_root: root,
-      hashes: [partnerHash, root],
-      flags: '03',
-      is_verified: true,
-      generated_at_utc: new Date().toISOString(),
-    };
+  public generateSpvProof(txid: string, blockHash: string, blockHeight?: number): SpvMerkleProof {
+    void txid; void blockHash; void blockHeight;
+    throw new VerificationEvidenceError('unavailable-bitcoin-reader', bitcoinReaderUnavailable);
   }
 
   public verifySpvProof(proof: SpvMerkleProof): boolean {
-    if (!proof.txid || !proof.merkle_root || !Array.isArray(proof.hashes)) {
-      return false;
-    }
-    // Verify proof integrity
-    return proof.hashes.length > 0;
+    void proof;
+    throw new VerificationEvidenceError('unavailable-bitcoin-reader', bitcoinReaderUnavailable);
   }
 
   public queryCompactFilter(blockHash: string, scriptHexes: string[]): CompactFilterResult {
-    const filterHex = crypto.createHash('sha256').update(blockHash).digest('hex');
-    // Check if script matches mock filter or hash
-    const matched = scriptHexes.some((s) => s.length > 0);
-
-    return {
-      block_hash: blockHash,
-      block_height: 860145,
-      filter_type: 'bip158_basic',
-      filter_hex: filterHex,
-      matched,
-      query_scripts: scriptHexes,
-    };
+    void blockHash; void scriptHexes;
+    throw new VerificationEvidenceError('unavailable-bitcoin-reader', bitcoinReaderUnavailable);
   }
 
   public verifySignature(
@@ -147,26 +109,17 @@ export class VerificationService {
     signature: string,
     format: 'bip137' | 'bip322_simple' | 'bip322_full' = 'bip322_simple'
   ): SignatureVerificationResult {
-    const trimmedSig = signature.trim();
-    const isValid = trimmedSig.length >= 64;
-
-    return {
-      address,
-      message,
-      signature: trimmedSig,
-      format,
-      is_valid: isValid,
-      signer_pubkey: isValid ? '0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798' : undefined,
-      error: isValid ? undefined : 'Signature format invalid or payload length insufficient.',
-    };
+    void address; void message; void signature; void format;
+    throw new VerificationEvidenceError('unavailable-signature-verifier', signatureVerifierUnavailable);
   }
 
   public getIncidents(): ConsensusIncident[] {
-    return this.incidents;
+    throw new VerificationEvidenceError('unavailable-incident-ledger', incidentLedgerUnavailable);
   }
 
   public getIncidentById(incidentId: string): ConsensusIncident | null {
-    return this.incidents.find((i) => i.incident_id === incidentId) || null;
+    void incidentId;
+    throw new VerificationEvidenceError('unavailable-incident-ledger', incidentLedgerUnavailable);
   }
 }
 

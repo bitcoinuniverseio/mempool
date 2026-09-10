@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRe
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { LightningReliabilityApiService, LightningLspProvider } from './lightning-reliability.service';
 
 @Component({
@@ -109,7 +110,7 @@ export class LightningLspComponent implements OnInit, OnDestroy {
           this.cd.markForCheck();
         },
         error: err => {
-          this.error = err?.message || 'Failed to load LSP providers';
+          this.error = err?.error?.error || loadFailureMessage(classifyLoadFailure(err));
           this.loading = false;
           this.cd.markForCheck();
         },

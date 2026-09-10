@@ -1,6 +1,15 @@
 import { Application, Request, Response } from 'express';
-import { verificationService } from './verification.service';
+import { VerificationEvidenceError, verificationService } from './verification.service';
 import { handleError } from '../../../utils/api';
+
+/** An absent source is a 503 that names the source, never a 500 and never an invented verdict. */
+function fail(req: Request, res: Response, e: unknown, fallback: string): void {
+  if (e instanceof VerificationEvidenceError) {
+    res.status(e.status).json({ stage: e.code, error: e.message });
+    return;
+  }
+  handleError(req, res, 500, e instanceof Error ? e.message : fallback);
+}
 
 class VerificationRoutes {
   public initRoutes(app: Application): void {
@@ -26,7 +35,7 @@ class VerificationRoutes {
       const proof = verificationService.generateSpvProof(txid, block_hash, block_height);
       res.json(proof);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'SPV proof generation failed');
+      fail(req, res, e, 'SPV proof generation failed');
     }
   }
 
@@ -36,7 +45,7 @@ class VerificationRoutes {
       const valid = verificationService.verifySpvProof(proof);
       res.json({ is_valid: valid, verified_at_utc: new Date().toISOString() });
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'SPV verification failed');
+      fail(req, res, e, 'SPV verification failed');
     }
   }
 
@@ -50,7 +59,7 @@ class VerificationRoutes {
       const filterResult = verificationService.queryCompactFilter(block_hash, scripts);
       res.json(filterResult);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Compact filter query failed');
+      fail(req, res, e, 'Compact filter query failed');
     }
   }
 
@@ -64,7 +73,7 @@ class VerificationRoutes {
       const result = verificationService.verifySignature(address, message, signature, format);
       res.json(result);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Signature verification failed');
+      fail(req, res, e, 'Signature verification failed');
     }
   }
 
@@ -73,7 +82,7 @@ class VerificationRoutes {
       const incidents = verificationService.getIncidents();
       res.json({ incidents, count: incidents.length });
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch incidents');
+      fail(req, res, e, 'Failed to fetch incidents');
     }
   }
 
@@ -86,7 +95,7 @@ class VerificationRoutes {
       }
       res.json(incident);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch incident');
+      fail(req, res, e, 'Failed to fetch incident');
     }
   }
 }
