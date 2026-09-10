@@ -2,8 +2,9 @@ import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { BehaviorSubject, Observable, catchError, of } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { SeoService } from '@app/services/seo.service';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import {
   DatasetManifest,
@@ -14,11 +15,13 @@ import {
 
 interface DataStudioViewModel {
   readonly kind: 'loading' | 'ready' | 'error';
+  readonly message?: string;
   readonly datasets?: DatasetManifest[];
   readonly streams?: StreamManifest[];
   readonly mcpTools?: McpToolDeclaration[];
   readonly selectedDataset?: DatasetManifest;
   readonly queryResult?: QueryResult;
+  readonly queryError?: string;
   readonly executing?: boolean;
 }
 
@@ -45,13 +48,8 @@ export class DataStudioComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.api.getDataCatalog$()
-      .pipe(catchError(() => of(null)))
-      .subscribe((catalog) => {
-        if (!catalog) {
-          this.state.next({ kind: 'error' });
-          return;
-        }
+    this.api.getDataCatalog$().subscribe({
+      next: (catalog) => {
         const selected = catalog.datasets.find((d) => d.id === this.selectedDatasetId) || catalog.datasets[0];
         this.state.next({
           kind: 'ready',
@@ -61,7 +59,13 @@ export class DataStudioComponent implements OnInit {
           selectedDataset: selected,
         });
         this.runQuery();
-      });
+      },
+      // A failed read is an error, not an empty catalog. The two are different
+      // facts, and the page has an error state for the first.
+      error: (err) => {
+        this.state.next({ kind: 'error', message: loadFailureMessage(classifyLoadFailure(err)) });
+      },
+    });
   }
 
   onDatasetChange(id: string): void {
@@ -76,20 +80,25 @@ export class DataStudioComponent implements OnInit {
 
   runQuery(): void {
     const current = this.state.getValue();
-    this.state.next({ ...current, executing: true });
+    this.state.next({ ...current, executing: true, queryError: undefined });
 
     this.api.executeDataQuery$({
       datasetId: this.selectedDatasetId,
       limit: this.queryLimit,
-    }).pipe(
-      catchError(() => of(null))
-    ).subscribe((queryResult) => {
-      const stateNow = this.state.getValue();
-      this.state.next({
-        ...stateNow,
-        executing: false,
-        queryResult: queryResult || undefined,
-      });
+    }).subscribe({
+      next: (queryResult) => {
+        const stateNow = this.state.getValue();
+        this.state.next({ ...stateNow, executing: false, queryResult });
+      },
+      error: (err) => {
+        const stateNow = this.state.getValue();
+        this.state.next({
+          ...stateNow,
+          executing: false,
+          queryResult: undefined,
+          queryError: loadFailureMessage(classifyLoadFailure(err)),
+        });
+      },
     });
   }
 }

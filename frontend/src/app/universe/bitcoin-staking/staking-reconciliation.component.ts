@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRe
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { BitcoinStakingApiService } from './bitcoin-staking.service';
 
 @Component({
@@ -14,7 +15,7 @@ import { BitcoinStakingApiService } from './bitcoin-staking.service';
       <header class="page-header mb-4">
         <div class="title-row d-flex flex-wrap align-items-center justify-content-between gap-2">
           <h1 class="m-0">Cross-Chain PoS Reconciliation Engine</h1>
-          <span class="badge bg-success">Synchronized</span>
+          <span class="badge bg-success" *ngIf="result">Synchronized</span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
           Reconciles Bitcoin Layer 1 timelocked UTXOs with Babylon consumer Proof-of-Stake voting power and unbonding state machines.
@@ -29,6 +30,10 @@ import { BitcoinStakingApiService } from './bitcoin-staking.service';
           <a class="nav-link active" routerLink="/protocols/bitcoin-staking/reconciliation">PoS Reconciliation</a>
         </nav>
       </header>
+
+      <div *ngIf="error" class="alert alert-warning" role="alert">
+        {{ error }}
+      </div>
 
       <div *ngIf="loading" class="text-center py-5 text-muted">
         <div class="spinner-border text-primary mb-2" role="status"></div>
@@ -109,6 +114,7 @@ import { BitcoinStakingApiService } from './bitcoin-staking.service';
 })
 export class StakingReconciliationComponent implements OnInit, OnDestroy {
   loading = true;
+  error: string | null = null;
   result: any = null;
   private sub?: Subscription;
 
@@ -124,18 +130,8 @@ export class StakingReconciliationComponent implements OnInit, OnDestroy {
         this.loading = false;
         this.cdr.markForCheck();
       },
-      error: () => {
-        this.result = {
-          reconciled: true,
-          chain_name: 'babylon-pos-hub-1',
-          btc_tip_height: 859420,
-          consumer_app_height: 1205300,
-          active_stake_match: true,
-          total_btc_stake_sat: 83000000000,
-          total_consumer_voting_power_sat: 83000000000,
-          unbonding_sync_status: 'synchronized',
-          discrepancies: [],
-        };
+      error: (err) => {
+        this.error = loadFailureMessage(classifyLoadFailure(err));
         this.loading = false;
         this.cdr.markForCheck();
       },
