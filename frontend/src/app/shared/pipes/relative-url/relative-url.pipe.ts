@@ -2,9 +2,9 @@ import { Pipe, PipeTransform, inject } from '@angular/core';
 import { StateService } from '@app/services/state.service';
 
 /**
- * Resolved outside the constructor: in the running app the StateService
- * already exists; in a component test that provides none, the pipe renders
- * the plain path instead of failing the whole template.
+ * Resolved outside the constructor argument: in the running app the
+ * StateService already exists; in a component test that provides none, the
+ * pipe renders the plain path instead of failing the whole template.
  */
 function resolveStateService(): StateService | null {
   try {
@@ -20,7 +20,15 @@ function resolveStateService(): StateService | null {
 })
 export class RelativeUrlPipe implements PipeTransform {
 
-  private stateService = resolveStateService();
+  /** The JIT test build strips decorator metadata; the service is resolved inside the constructor instead. */
+  static ctorParameters = (): unknown[] => [];
+
+  private readonly stateService: StateService | null;
+
+  /** Components that build a URL outside a template pass the service in. */
+  constructor(stateService?: StateService) {
+    this.stateService = stateService ?? resolveStateService();
+  }
 
   transform(value: string, swapNetwork?: string): string {
     if (!this.stateService) {return value;}
