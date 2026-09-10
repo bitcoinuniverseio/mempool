@@ -1,7 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
+import { distinctUntilChanged } from 'rxjs/operators';
+import { StateService } from '@app/services/state.service';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { OpenTimestampsApiService, TimestampStampResult, TimestampUpgradeResult } from './opentimestamps.service';
 
@@ -32,6 +35,7 @@ const DIGEST = /^[0-9a-f]{64}$/i;
       </div>
 
       <div class="alert alert-warning" role="alert" *ngIf="loadError">{{ loadError }}</div>
+      <p class="small text-muted" role="note">Network: {{ api.network }}</p>
 
       <div class="row g-4">
         <div class="col-lg-6">
@@ -45,7 +49,7 @@ const DIGEST = /^[0-9a-f]{64}$/i;
             <div class="mb-3">
               <label for="ots-digest" class="form-label">SHA-256 digest</label>
               <input id="ots-digest" type="text" class="form-control font-monospace" placeholder="64 hexadecimal characters"
-                [(ngModel)]="digest" (ngModelChange)="reset()" autocomplete="off" spellcheck="false" [attr.aria-invalid]="digest && !digestValid ? true : null">
+                [(ngModel)]="digest" (ngModelChange)="digestEdited()" autocomplete="off" spellcheck="false" [attr.aria-invalid]="digest && !digestValid ? true : null">
               <p class="small text-muted mt-2 mb-0" *ngIf="digest && !digestValid">A SHA-256 digest has 64 hexadecimal characters.</p>
             </div>
             <button class="btn btn-primary w-100" (click)="stamp()" [disabled]="stamping || hashing || !digestValid">
@@ -74,7 +78,7 @@ const DIGEST = /^[0-9a-f]{64}$/i;
 
             <ul class="list-unstyled mb-3 small">
               <li *ngFor="let calendar of calendarRows" class="d-flex align-items-center gap-2 py-1">
-                <span class="status-dot" [class.dot-ok]="calendar.status === 'verified'" [class.dot-wait]="calendar.status === 'pending'" [class.dot-bad]="calendar.status === 'unreachable'" aria-hidden="true"></span>
+                <span class="status-dot" [class.dot-ok]="calendar.status === 'verified'" [class.dot-wait]="calendar.status === 'pending' || calendar.status === 'upgraded'" [class.dot-bad]="calendar.status === 'unreachable'" aria-hidden="true"></span>
                 <span class="flex-grow-1">{{ calendar.calendar_id }}</span>
                 <span class="text-muted">{{ calendarLabel(calendar.status) }}</span>
               </li>
@@ -109,7 +113,7 @@ const DIGEST = /^[0-9a-f]{64}$/i;
     .dot-bad { background: var(--u-state-unavailable, #c0392b); }
   `],
 })
-export class OpenTimestampsStampComponent {
+export class OpenTimestampsStampComponent implements OnDestroy {
   public digest = '';
   public fileName = '';
   public fileSize = 0;
@@ -121,8 +125,19 @@ export class OpenTimestampsStampComponent {
   public upgrade: TimestampUpgradeResult | null = null;
   public upgradeNote: string | null = null;
   public loadError: string | null = null;
+  /** Bumped on every file choice or digest edit; a late hash result for an older input is dropped. */
+  private selection = 0;
+  private readonly networkSubscription: Subscription;
 
-  constructor(private api: OpenTimestampsApiService) {}
+  constructor(public api: OpenTimestampsApiService, private stateService: StateService) {
+    // A result belongs to the network it was stamped on. A switch clears the
+    // display; the proof the user downloaded is theirs and is unaffected.
+    this.networkSubscription = this.stateService.networkChanged$.pipe(distinctUntilChanged()).subscribe(() => this.reset());
+  }
+
+  public ngOnDestroy(): void {
+    this.networkSubscription.unsubscribe();
+  }
 
   public get digestValid(): boolean {
     return DIGEST.test(this.digest.trim());
@@ -141,7 +156,7 @@ export class OpenTimestampsStampComponent {
   }
 
   /** Calendar rows from the upgrade when one ran, otherwise from the stamp. */
-  public get calendarRows(): { calendar_id: string; status: 'pending' | 'verified' | 'unreachable' }[] {
+  public get calendarRows(): { calendar_id: string; status: 'pending' | 'upgraded' | 'verified' | 'unreachable' }[] {
     if (this.upgrade) {
       return this.upgrade.calendars.map(c => ({ calendar_id: c.calendar_id ?? c.calendar_url, status: c.status }));
     }
@@ -149,7 +164,12 @@ export class OpenTimestampsStampComponent {
   }
 
   public calendarLabel(status: string): string {
-    return status === 'verified' ? 'anchored' : status === 'pending' ? 'promised' : 'did not answer';
+    switch (status) {
+      case 'verified': return 'anchored';
+      case 'upgraded': return 'answered, not verified';
+      case 'pending': return 'promised';
+      default: return 'did not answer';
+    }
   }
 
   public reset(): void {
@@ -159,60 +179,92 @@ export class OpenTimestampsStampComponent {
     this.copied = false;
   }
 
+  /** A digest the user typed belongs to no chosen file. */
+  public digestEdited(): void {
+    this.selection += 1;
+    this.fileName = '';
+    this.fileSize = 0;
+    this.hashing = false;
+    this.reset();
+  }
+
+  /**
+   * The digest and the file it came from change together. Choosing a file
+   * clears the previous digest before the hash starts, a failed hash leaves
+   * no file and no digest, and a hash that finishes after a newer choice is
+   * dropped, so the Stamp button can never send one file's digest under
+   * another file's name.
+   */
   public async hashFile(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
+    const selection = ++this.selection;
     this.hashing = true;
     this.fileName = file.name;
     this.fileSize = file.size;
+    this.digest = '';
+    this.loadError = null;
     this.reset();
     try {
       const bytes = await file.arrayBuffer();
       const hash = await crypto.subtle.digest('SHA-256', bytes);
+      if (selection !== this.selection) return;
       this.digest = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
-      this.loadError = null;
     } catch {
-      this.loadError = 'The file could not be hashed in this browser.';
+      if (selection !== this.selection) return;
+      this.fileName = '';
+      this.fileSize = 0;
+      this.digest = '';
+      this.loadError = 'The file could not be read and hashed in this browser. Choose it again, or paste its SHA-256 digest.';
     } finally {
-      this.hashing = false;
+      if (selection === this.selection) this.hashing = false;
     }
   }
 
   public stamp(): void {
     if (!this.digestValid) return;
+    const digest = this.digest.trim().toLowerCase();
+    const network = this.api.network;
     this.stamping = true;
     this.loadError = null;
     this.reset();
     // A digest that did not reach a calendar has not been stamped: the API
     // answers an error, never an invented proof, and this page shows that.
-    this.api.stampDigest$(this.digest.trim().toLowerCase()).subscribe({
+    // The request is bound to the network selected now; a switch while it is
+    // in flight discards the answer instead of showing it under the new one.
+    this.api.stampDigest$(digest).subscribe({
       next: res => {
-        this.stampResult = res;
         this.stamping = false;
+        if (this.api.network !== network) return;
+        this.stampResult = res;
       },
       error: err => {
+        this.stamping = false;
+        if (this.api.network !== network) return;
         this.stampResult = null;
         this.loadError = loadFailureMessage(classifyLoadFailure(err));
-        this.stamping = false;
       },
     });
   }
 
   public checkAttestation(): void {
     if (!this.currentProof) return;
+    const network = this.api.network;
     this.upgrading = true;
     this.upgradeNote = null;
     this.api.upgradeProof$({ ots_proof: this.currentProof, digest: this.digest.trim().toLowerCase() }).subscribe({
       next: res => {
-        this.upgrade = res;
         this.upgrading = false;
+        if (this.api.network !== network || !this.stampResult && !this.upgrade) return;
+        this.upgrade = res;
         if (!res.verified) {
           this.upgradeNote = res.upgraded ? 'A calendar answered, but the attestation did not verify: ' + (res.verification.errors[0] ?? res.status) : 'No calendar has anchored this digest yet.';
         }
       },
       error: err => {
         this.upgrading = false;
+        if (this.api.network !== network) return;
         this.upgradeNote = loadFailureMessage(classifyLoadFailure(err));
       },
     });

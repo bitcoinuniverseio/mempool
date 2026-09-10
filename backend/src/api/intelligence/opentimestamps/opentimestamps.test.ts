@@ -1,7 +1,7 @@
 import { createHash } from 'crypto';
 import { Block } from 'bitcoinjs-lib';
 import { OpenTimestampsService, TimestampEvidenceError } from './opentimestamps.service';
-import { CalendarClient, CalendarHttp, DEFAULT_CALENDARS, calendarDirectoryFromEnvironment } from './ots-calendar-client';
+import { CalendarClient, CalendarDirectoryEntry, CalendarHttp, calendarDirectoryFromEnvironment } from './ots-calendar-client';
 import { MemoryTimestampRecordStore } from './opentimestamps-store';
 import { ATTESTATION_BITCOIN, ATTESTATION_PENDING, applyOperation } from './ots-timestamp';
 import { parseDetachedProof } from './opentimestamps-proof';
@@ -183,6 +183,48 @@ describe('OpenTimestampsService', () => {
     expect(overview).toMatchObject({ total_proofs_tracked: 1, bitcoin_confirmed_proofs: 1, pending_calendar_attestations: 0, latest_anchored_block_height: 864205, storage: 'memory' });
   });
 
+  it('counts the stamps each calendar promised and has not anchored', async () => {
+    const alice = new FakeCalendar('https://alice.example');
+    const bob = new FakeCalendar('https://bob.example');
+    bob.offline = true;
+    const { service: ots } = service([alice, bob]);
+    await ots.stampDigest('01'.repeat(32));
+    await ots.stampDigest('02'.repeat(32));
+    const calendars = (await ots.listCalendars()).calendars;
+    expect(calendars.map(calendar => [calendar.calendar_id, calendar.pending_attestations_count, calendar.anchored_proofs_count])).toEqual([['alice', 2, 0], ['bob', 0, 0]]);
+  });
+
+  it('labels a returned attestation upgraded, not verified, when the owned reader rejects it', async () => {
+    const alice = new FakeCalendar('https://alice.example');
+    const { service: initial } = service([alice]);
+    const digest = sha256(Buffer.from('foreign anchor')).toString('hex');
+    const stamped = await initial.stampDigest(digest);
+    alice.anchoredHeight = 864206;
+    // The block at that height commits to something else entirely.
+    const chain = fakeReader(864206, Buffer.alloc(32, 7));
+    const { service: ots, store } = service([alice], chain.reader);
+    await store.insert({
+      record_id: stamped.record_id, digest_hex: digest, algorithm: 'sha256', network: 'mainnet', commitment_hex: alice.submissions[0].toString('hex'),
+      proof_base64: stamped.ots_proof_base64, status: 'pending', calendars: stamped.calendars_contacted.map(contact => ({ ...contact, contacted_at: stamped.timestamp })),
+      submitted_at: stamped.timestamp, updated_at: stamped.timestamp,
+    });
+    const result = await ots.upgradeProof({ ots_proof: stamped.ots_proof_base64, digest });
+    expect(result).toMatchObject({ upgraded: true, verified: false, status: 'bitcoin_attestation_invalid' });
+    expect(result.calendars).toEqual([{ calendar_id: 'alice', calendar_url: 'https://alice.example', status: 'upgraded', detail: expect.stringContaining('not yet verified') }]);
+    expect((await store.get(stamped.record_id))?.status).toBe('pending');
+    expect((await ots.listAnchors()).anchors).toEqual([]);
+  });
+
+  it('refuses to stamp and contacts nothing when the deployment names no calendar', async () => {
+    const store = new MemoryTimestampRecordStore();
+    const http: CalendarHttp = { async post() { throw new Error('must not be called'); }, async get() { throw new Error('must not be called'); } };
+    const ots = new OpenTimestampsService({ calendars: new CalendarClient([], http, 10), store, network: 'signet' });
+    await expect(ots.stampDigest('ab'.repeat(32))).rejects.toMatchObject({ code: 'unconfigured-calendar', status: 503 });
+    expect((await ots.listCalendars()).calendars).toEqual([]);
+    expect(await ots.getOverview()).toMatchObject({ calendars_configured: false, network: 'signet', total_proofs_tracked: 0 });
+    expect((await store.stats()).total).toBe(0);
+  });
+
   it('leaves a proof unchanged while the calendar is still pending', async () => {
     const alice = new FakeCalendar('https://alice.example');
     const { service: ots } = service([alice]);
@@ -244,8 +286,16 @@ describe('OpenTimestampsService', () => {
 });
 
 describe('calendar directory', () => {
-  it('defaults to the public OpenTimestamps calendars', () => {
-    expect(calendarDirectoryFromEnvironment(undefined)).toEqual(DEFAULT_CALENDARS);
+  const PUBLIC_CALENDARS: CalendarDirectoryEntry[] = [
+    { calendar_id: 'alice-btc', name: 'alice-btc', url: 'https://alice.btc.calendar.opentimestamps.org' },
+    { calendar_id: 'bob-btc', name: 'bob-btc', url: 'https://bob.btc.calendar.opentimestamps.org' },
+  ];
+
+  it('is unconfigured, not a public calendar, when the environment names none', () => {
+    expect(calendarDirectoryFromEnvironment(undefined)).toEqual([]);
+    expect(calendarDirectoryFromEnvironment('  ')).toEqual([]);
+    expect(new CalendarClient([], fakeHttp([]), 10).configured).toBe(false);
+    expect(new CalendarClient(PUBLIC_CALENDARS, fakeHttp([]), 10).configured).toBe(true);
   });
 
   it('reads an allowlist from the environment and rejects anything that is not http(s)', () => {
@@ -258,7 +308,7 @@ describe('calendar directory', () => {
   });
 
   it('matches pending attestation URIs only against the allowlist', () => {
-    const client = new CalendarClient(DEFAULT_CALENDARS, fakeHttp([]), 10);
+    const client = new CalendarClient(PUBLIC_CALENDARS, fakeHttp([]), 10);
     expect(client.match('https://alice.btc.calendar.opentimestamps.org')?.calendar_id).toBe('alice-btc');
     expect(client.match('https://alice.btc.calendar.opentimestamps.org.evil.example')).toBeUndefined();
     expect(client.match('not a uri')).toBeUndefined();
@@ -266,9 +316,9 @@ describe('calendar directory', () => {
 
   it('rejects a calendar answer that does not parse as a timestamp', async () => {
     const http: CalendarHttp = { async post() { return { status: 200, body: Buffer.from('<html>not a timestamp</html>') }; }, async get() { return { status: 500, body: Buffer.alloc(0) }; } };
-    const client = new CalendarClient(DEFAULT_CALENDARS, http, 10);
-    await expect(client.submit(DEFAULT_CALENDARS[0], Buffer.alloc(32, 1))).rejects.toMatchObject({ code: 'calendar-invalid-answer' });
-    await expect(client.upgrade(DEFAULT_CALENDARS[0], Buffer.alloc(32, 1))).rejects.toMatchObject({ code: 'calendar-unreachable' });
+    const client = new CalendarClient(PUBLIC_CALENDARS, http, 10);
+    await expect(client.submit(PUBLIC_CALENDARS[0], Buffer.alloc(32, 1))).rejects.toMatchObject({ code: 'calendar-invalid-answer' });
+    await expect(client.upgrade(PUBLIC_CALENDARS[0], Buffer.alloc(32, 1))).rejects.toMatchObject({ code: 'calendar-unreachable' });
     await expect(client.submit({ calendar_id: 'x', name: 'x', url: 'https://x.example' }, Buffer.alloc(32))).rejects.toMatchObject({ code: 'calendar-not-allowlisted', status: 400 });
   });
 });
