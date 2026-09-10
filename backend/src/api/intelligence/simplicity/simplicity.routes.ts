@@ -1,5 +1,11 @@
 import { Application, Request, Response } from 'express';
-import simplicityService from './simplicity.service';
+import simplicityService, { SimplicityEvidenceError } from './simplicity.service';
+
+/** An absent source is a 503 that names the source, never a 500 and never an empty list. */
+function fail(res: Response, err: unknown, status = 500): Response {
+  if (err instanceof SimplicityEvidenceError) return res.status(err.status).json({ stage: err.code, error: err.message });
+  return res.status(status).json({ error: err instanceof Error && err.message ? err.message : 'Internal error' });
+}
 
 class SimplicityRoutes {
   public initRoutes(app: Application): void {
@@ -8,7 +14,7 @@ class SimplicityRoutes {
         const overview = simplicityService.getOverview();
         res.json(overview);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -17,7 +23,7 @@ class SimplicityRoutes {
         const progs = simplicityService.listPrograms();
         res.json(progs);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -29,7 +35,7 @@ class SimplicityRoutes {
         }
         res.json(prog);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -38,7 +44,7 @@ class SimplicityRoutes {
         const occurrences = simplicityService.getProgramOccurrences(req.params.programId);
         res.json(occurrences);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -47,7 +53,7 @@ class SimplicityRoutes {
         const tx = simplicityService.getTransaction(req.params.txid);
         res.json(tx);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -56,7 +62,7 @@ class SimplicityRoutes {
         const toolchains = simplicityService.listToolchains();
         res.json(toolchains);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -66,7 +72,7 @@ class SimplicityRoutes {
         const decoded = simplicityService.decodeProgram(bytesHex);
         res.json(decoded);
       } catch (err: any) {
-        res.status(400).json({ error: err.message || 'Decoding failed' });
+        fail(res, err, 400);
       }
     });
 
@@ -75,7 +81,7 @@ class SimplicityRoutes {
         const result = simplicityService.executeProgram(req.body);
         res.json(result);
       } catch (err: any) {
-        res.status(400).json({ error: err.message || 'Execution simulation failed' });
+        fail(res, err, 400);
       }
     });
 
@@ -84,7 +90,7 @@ class SimplicityRoutes {
         const result = simplicityService.verifyFormalArtifact(req.body);
         res.json(result);
       } catch (err: any) {
-        res.status(400).json({ error: err.message || 'Formal artifact verification error' });
+        fail(res, err, 400);
       }
     });
   }

@@ -1,4 +1,3 @@
-import crypto from 'crypto';
 import {
   PaymentConnectivityProduct,
   NwcRelay,
@@ -7,132 +6,49 @@ import {
   PaymentConnectivityOverviewResponse,
 } from './payment-connectivity.models';
 
+/**
+ * Raised when a read has no source behind it. The routes map the code to a
+ * 503, so an absent integration is reported as an absent integration rather
+ * than as an answer.
+ */
+export class PaymentConnectivityEvidenceError extends Error {
+  constructor(public readonly code: string, message: string, public readonly status = 503) {
+    super(message);
+  }
+}
+
+const productDirectoryUnavailable =
+  'Payment product observations are unavailable. Product and overview reads require the owned wallet product directory with version-specific NWC, LNURL and zap test results, which is not connected on this deployment.';
+
+const relayProberUnavailable =
+  'NWC relay observations are unavailable. Relay reads require the owned Nostr relay prober (NIP-11 fetch and reachability probe from the backend network), which is not connected on this deployment.';
+
+const lnurlProberUnavailable =
+  'LNURL provider observations are unavailable. Provider reads require the owned LNURL endpoint prober (LUD capability fetch over HTTPS from the backend network), which is not connected on this deployment.';
+
+const zapVerifierUnavailable =
+  'Zap verification is unavailable. Verifying a NIP-57 zap requires the owned Nostr relay reader for the receipt event, the owned Lightning invoice decoder for the payment hash and amount, and a Schnorr signature check, which are not connected on this deployment.';
+
+const vendorTrustUnavailable =
+  'Capability manifest verification is unavailable. It requires the owned vendor signing-key directory, which is not connected on this deployment.';
+
+/**
+ * NWC, LNURL and zap connectivity evidence.
+ *
+ * Products, relays and LNURL providers come from the owned directory and
+ * probers. A deployment that has none gets a 503 that names them: an empty
+ * relay directory and an absent one are different answers, and this never
+ * turns the second into the first. The protocol compatibility table is a set
+ * of specification constants, and URI and endpoint inspection are
+ * computations on caller-supplied input; those stay answerable.
+ */
 export class PaymentConnectivityService {
-  private products: Map<string, PaymentConnectivityProduct> = new Map();
-  private relays: Map<string, NwcRelay> = new Map();
-  private lnurlProviders: Map<string, LnurlEndpoint> = new Map();
-  private zaps: Map<string, ZapPublicVerification> = new Map();
-
-  constructor() {
-    this.seedReferenceFixtures();
-  }
-
-  private seedReferenceFixtures(): void {
-    const p1: PaymentConnectivityProduct = {
-      product_id: 'alby-hub',
-      name: 'Alby Hub',
-      vendor: 'Alby',
-      nwc_client: true,
-      nwc_wallet_service: true,
-      lnurl_pay: true,
-      lnurl_withdraw: true,
-      nip57_zaps: true,
-      compliance_score: 99.5,
-      last_verified_at: '2026-08-30T00:00:00Z',
-    };
-
-    const p2: PaymentConnectivityProduct = {
-      product_id: 'mutiny-wallet',
-      name: 'Mutiny Wallet',
-      vendor: 'Mutiny',
-      nwc_client: true,
-      nwc_wallet_service: true,
-      lnurl_pay: true,
-      lnurl_withdraw: false,
-      nip57_zaps: true,
-      compliance_score: 96.0,
-      last_verified_at: '2026-08-25T00:00:00Z',
-    };
-
-    const p3: PaymentConnectivityProduct = {
-      product_id: 'damus-ios',
-      name: 'Damus iOS',
-      vendor: 'Damus',
-      nwc_client: true,
-      nwc_wallet_service: false,
-      lnurl_pay: true,
-      lnurl_withdraw: false,
-      nip57_zaps: true,
-      compliance_score: 98.0,
-      last_verified_at: '2026-08-28T00:00:00Z',
-    };
-
-    this.products.set(p1.product_id, p1);
-    this.products.set(p2.product_id, p2);
-    this.products.set(p3.product_id, p3);
-
-    const relay1: NwcRelay = {
-      relay_id: 'relay-damus-io',
-      url: 'wss://relay.damus.io',
-      nip11_supported: true,
-      software_version: 'strfry/0.9.8',
-      is_reachable: true,
-      latency_ms: 38,
-      last_probe_at: '2026-09-04T05:00:00Z',
-    };
-
-    const relay2: NwcRelay = {
-      relay_id: 'relay-primal-net',
-      url: 'wss://relay.primal.net',
-      nip11_supported: true,
-      software_version: 'custom-primal-cache',
-      is_reachable: true,
-      latency_ms: 25,
-      last_probe_at: '2026-09-04T05:00:00Z',
-    };
-
-    this.relays.set(relay1.relay_id, relay1);
-    this.relays.set(relay2.relay_id, relay2);
-
-    const provider1: LnurlEndpoint = {
-      endpoint_id: 'lnurl-stacker-news',
-      domain: 'stacker.news',
-      lightning_address_sample: 'user@stacker.news',
-      capabilities: {
-        lud01_base_spec: true,
-        lud06_pay: true,
-        lud03_withdraw: true,
-        lud04_auth: true,
-        lud16_lightning_address: true,
-        lud18_payer_data: true,
-        lud21_payment_verification: true,
-      },
-      is_https: true,
-      ssrf_safe: true,
-      last_validated_at: '2026-09-04T04:00:00Z',
-    };
-
-    this.lnurlProviders.set(provider1.endpoint_id, provider1);
-
-    const zap1: ZapPublicVerification = {
-      verification_id: 'zap-vfy-88910',
-      zap_request_id: '4a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b',
-      zap_receipt_id: '9f82a1c002138914801984019284012984012984019284019284019284019284',
-      recipient_nostr_pubkey: '3bf0c63fcb93463407af97b5e097194fd1871b737112046479fe523e42b0f0c7',
-      invoice_payment_hash: '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
-      invoice_description_hash: '5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b',
-      description_hash_matches_request: true,
-      amount_sats: 2100,
-      receipt_signature_valid: true,
-      is_valid_zap: true,
-      verified_at: '2026-09-04T04:55:00Z',
-    };
-    this.zaps.set(zap1.verification_id, zap1);
-  }
-
   public getOverview(): PaymentConnectivityOverviewResponse {
-    return {
-      total_products: this.products.size,
-      active_relays: Array.from(this.relays.values()).filter((r) => r.is_reachable).length,
-      verified_zaps_count: this.zaps.size,
-      products: Array.from(this.products.values()),
-      relays: Array.from(this.relays.values()),
-      lnurl_providers: Array.from(this.lnurlProviders.values()),
-    };
+    throw new PaymentConnectivityEvidenceError('unavailable-product-directory', productDirectoryUnavailable);
   }
 
   public listProducts(): PaymentConnectivityProduct[] {
-    return Array.from(this.products.values());
+    throw new PaymentConnectivityEvidenceError('unavailable-product-directory', productDirectoryUnavailable);
   }
 
   public getCompatibility(): any {
@@ -164,15 +80,19 @@ export class PaymentConnectivityService {
   }
 
   public listRelays(): NwcRelay[] {
-    return Array.from(this.relays.values());
+    throw new PaymentConnectivityEvidenceError('unavailable-relay-prober', relayProberUnavailable);
   }
 
-  public getRelay(relayId: string): NwcRelay | undefined {
-    return this.relays.get(relayId);
+  public getRelay(_relayId: string): NwcRelay | undefined {
+    throw new PaymentConnectivityEvidenceError('unavailable-relay-prober', relayProberUnavailable);
   }
 
   public listLnurlProviders(): LnurlEndpoint[] {
-    return Array.from(this.lnurlProviders.values());
+    throw new PaymentConnectivityEvidenceError('unavailable-lnurl-prober', lnurlProberUnavailable);
+  }
+
+  public verifyManifest(): never {
+    throw new PaymentConnectivityEvidenceError('unavailable-vendor-trust', vendorTrustUnavailable);
   }
 
   public inspectNwcUri(uri: string): {
@@ -309,32 +229,12 @@ export class PaymentConnectivityService {
     }
   }
 
-  public verifyZap(data: {
+  public verifyZap(_data: {
     zap_request_json: string;
     invoice_description_hash: string;
     zap_receipt_signature: string;
   }): ZapPublicVerification {
-    const reqHash = crypto.createHash('sha256').update(data.zap_request_json || '').digest('hex');
-    const matches = reqHash === data.invoice_description_hash;
-    const sigValid = Boolean(data.zap_receipt_signature && data.zap_receipt_signature.length >= 64);
-    const overall = matches && sigValid;
-
-    const vfy: ZapPublicVerification = {
-      verification_id: `zap-vfy-${Date.now()}`,
-      zap_request_id: `req-${reqHash.substring(0, 16)}`,
-      zap_receipt_id: `rcpt-${Date.now()}`,
-      recipient_nostr_pubkey: '3bf0c63fcb93463407af97b5e097194fd1871b737112046479fe523e42b0f0c7',
-      invoice_payment_hash: '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
-      invoice_description_hash: data.invoice_description_hash,
-      description_hash_matches_request: matches,
-      amount_sats: 1000,
-      receipt_signature_valid: sigValid,
-      is_valid_zap: overall,
-      verified_at: new Date().toISOString(),
-    };
-
-    this.zaps.set(vfy.verification_id, vfy);
-    return vfy;
+    throw new PaymentConnectivityEvidenceError('unavailable-zap-verifier', zapVerifierUnavailable);
   }
 }
 

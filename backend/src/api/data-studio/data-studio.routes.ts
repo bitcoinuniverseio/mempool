@@ -1,7 +1,16 @@
 import { Application, Request, Response } from 'express';
 import config from '../../config';
 import { handleError } from '../../utils/api';
-import { dataStudioService } from './data-studio.service';
+import { DataStudioEvidenceError, dataStudioService } from './data-studio.service';
+
+/** An absent source is a 503 that names the source, never a 500 and never an empty list. */
+function fail(req: Request, res: Response, e: unknown): void {
+  if (e instanceof DataStudioEvidenceError) {
+    res.status(e.status).json({ stage: e.code, error: e.message });
+    return;
+  }
+  handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+}
 
 class DataStudioRoutes {
   public initRoutes(app: Application): void {
@@ -18,7 +27,7 @@ class DataStudioRoutes {
       const catalog = await dataStudioService.$getCatalog();
       res.json(catalog);
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -32,7 +41,7 @@ class DataStudioRoutes {
       const result = await dataStudioService.$executeQuery(req.body);
       res.json(result);
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -41,7 +50,7 @@ class DataStudioRoutes {
       const catalog = await dataStudioService.$getCatalog();
       res.json({ tools: catalog.mcpTools });
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 }
