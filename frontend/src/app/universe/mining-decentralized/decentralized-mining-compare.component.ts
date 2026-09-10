@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRe
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { DecentralizedMiningApiService } from './decentralized-mining.service';
 
 @Component({
@@ -34,7 +35,11 @@ import { DecentralizedMiningApiService } from './decentralized-mining.service';
         <div>Calculating template autonomy metrics...</div>
       </div>
 
-      <div *ngIf="!loading" class="row g-4">
+      <div *ngIf="error" class="alert alert-danger my-3" role="alert">
+        {{ error }}
+      </div>
+
+      <div *ngIf="!loading && !error" class="row g-4">
         <div class="col-12 col-md-4">
           <div class="card p-3 bg-body-tertiary border h-100">
             <div class="text-muted small">Template Autonomy Score</div>
@@ -108,6 +113,7 @@ import { DecentralizedMiningApiService } from './decentralized-mining.service';
 })
 export class DecentralizedMiningCompareComponent implements OnInit, OnDestroy {
   loading = false;
+  error: string | null = null;
   comparison: any = null;
   private sub?: Subscription;
 
@@ -123,7 +129,8 @@ export class DecentralizedMiningCompareComponent implements OnInit, OnDestroy {
         this.loading = false;
         this.cdr.markForCheck();
       },
-      error: () => {
+      error: (err) => {
+        this.error = loadFailureMessage(classifyLoadFailure(err));
         this.loading = false;
         this.cdr.markForCheck();
       },
