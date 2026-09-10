@@ -1,7 +1,16 @@
 import { Application, Request, Response } from 'express';
 import config from '../../config';
 import { handleError } from '../../utils/api';
-import { liquidObservatoryService } from './liquid-observatory.service';
+import { LiquidObservatoryEvidenceError, liquidObservatoryService } from './liquid-observatory.service';
+
+/** An absent source is a 503 that names the source, never a 500 and never an empty list. */
+function fail(req: Request, res: Response, e: unknown): void {
+  if (e instanceof LiquidObservatoryEvidenceError) {
+    res.status(e.status).json({ stage: e.code, error: e.message });
+    return;
+  }
+  handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+}
 
 class LiquidObservatoryRoutes {
   public initRoutes(app: Application): void {
@@ -20,7 +29,7 @@ class LiquidObservatoryRoutes {
       const summary = await liquidObservatoryService.$getSummary();
       res.json(summary);
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -29,7 +38,7 @@ class LiquidObservatoryRoutes {
       const assets = await liquidObservatoryService.$getAssets();
       res.json({ assets, total: assets.length });
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -42,7 +51,7 @@ class LiquidObservatoryRoutes {
       }
       res.json(asset);
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -51,7 +60,7 @@ class LiquidObservatoryRoutes {
       const pegs = await liquidObservatoryService.$getPegs();
       res.json({ pegs, total: pegs.length });
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -60,7 +69,7 @@ class LiquidObservatoryRoutes {
       const federation = await liquidObservatoryService.$getFederation();
       res.json(federation);
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 }
