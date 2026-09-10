@@ -90,9 +90,9 @@
           <tbody>
             <tr *ngFor="let q of vm.quotes">
               <td><strong>{{ q.baseAsset }} / {{ q.quoteAsset }}</strong></td>
-              <td class="mono">{{ q.askRate }}</td>
-              <td class="mono">{{ q.bidRate }}</td>
-              <td><span class="badge badge-info">{{ q.spreadBps }} bps</span></td>
+              <td class="mono">{{ q.askRate ?? 'not quoted' }}</td>
+              <td class="mono">{{ q.bidRate ?? 'not quoted' }}</td>
+              <td><span class="badge badge-info">{{ q.spreadBps === null ? 'one-sided' : q.spreadBps + ' bps' }}</span></td>
               <td>{{ quoteExpiry(q.validUntil) }}</td>
             </tr>
           </tbody>

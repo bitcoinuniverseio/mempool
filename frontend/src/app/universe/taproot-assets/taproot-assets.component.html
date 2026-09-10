@@ -41,7 +41,7 @@
           </div>
           <div class="metric-card">
             <span class="metric-label">Genesis Block</span>
-            <span class="metric-value">#{{ vm.selected.genesisHeight }}</span>
+            <span class="metric-value">{{ vm.selected.genesisHeight === null ? 'not in this proof' : '#' + vm.selected.genesisHeight }}</span>
           </div>
           <div class="metric-card">
             <span class="metric-label">Proof File</span>
@@ -79,7 +79,7 @@
               <td><strong><a [routerLink]="['/taproot-assets/asset', a.assetId]">{{ a.name }}</a></strong></td>
               <td><span class="badge" [ngClass]="a.assetType === 'normal' ? 'badge-info' : 'badge-warning'">{{ a.assetType | uppercase }}</span></td>
               <td class="mono">{{ a.totalAmountAtomic }}</td>
-              <td>#{{ a.genesisHeight }}</td>
+              <td>{{ a.genesisHeight === null ? 'not in this proof' : '#' + a.genesisHeight }}</td>
               <td class="mono"><a [routerLink]="['/tx', a.anchorTxid]">{{ a.anchorTxid.slice(0, 16) }}...</a></td>
               <td><span class="badge badge-success">Proved</span></td>
             </tr>

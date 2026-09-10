@@ -9,36 +9,36 @@ function fail(res: Response, err: unknown): Response {
 
 class CollaborativePrivacyRoutes {
   public initRoutes(app: Application): void {
-    app.get('/api/v1/intelligence/collaborative/overview', (_req: Request, res: Response) => {
+    app.get('/api/v1/intelligence/collaborative/overview', async (_req: Request, res: Response) => {
       try {
-        const overview = collaborativePrivacyService.getOverview();
+        const overview = await collaborativePrivacyService.getOverview();
         res.json(overview);
       } catch (err: any) {
         fail(res, err);
       }
     });
 
-    app.get('/api/v1/intelligence/collaborative/protocols', (_req: Request, res: Response) => {
+    app.get('/api/v1/intelligence/collaborative/protocols', async (_req: Request, res: Response) => {
       try {
-        const protocols = collaborativePrivacyService.listProtocols();
+        const protocols = await collaborativePrivacyService.listProtocols();
         res.json(protocols);
       } catch (err: any) {
         fail(res, err);
       }
     });
 
-    app.get('/api/v1/intelligence/collaborative/coordinators', (_req: Request, res: Response) => {
+    app.get('/api/v1/intelligence/collaborative/coordinators', async (_req: Request, res: Response) => {
       try {
-        const coordinators = collaborativePrivacyService.listCoordinators();
+        const coordinators = await collaborativePrivacyService.listCoordinators();
         res.json(coordinators);
       } catch (err: any) {
         fail(res, err);
       }
     });
 
-    app.get('/api/v1/intelligence/collaborative/coordinators/:coordinatorId', (req: Request, res: Response) => {
+    app.get('/api/v1/intelligence/collaborative/coordinators/:coordinatorId', async (req: Request, res: Response) => {
       try {
-        const coordinator = collaborativePrivacyService.getCoordinator(req.params.coordinatorId);
+        const coordinator = await collaborativePrivacyService.getCoordinator(req.params.coordinatorId);
         if (!coordinator) {
           return res.status(404).json({ error: 'Coordinator not found' });
         }
@@ -48,18 +48,18 @@ class CollaborativePrivacyRoutes {
       }
     });
 
-    app.get('/api/v1/intelligence/collaborative/rounds', (_req: Request, res: Response) => {
+    app.get('/api/v1/intelligence/collaborative/rounds', async (_req: Request, res: Response) => {
       try {
-        const rounds = collaborativePrivacyService.listRounds();
+        const rounds = await collaborativePrivacyService.listRounds();
         res.json(rounds);
       } catch (err: any) {
         fail(res, err);
       }
     });
 
-    app.get('/api/v1/intelligence/collaborative/rounds/:roundId', (req: Request, res: Response) => {
+    app.get('/api/v1/intelligence/collaborative/rounds/:roundId', async (req: Request, res: Response) => {
       try {
-        const round = collaborativePrivacyService.getRound(req.params.roundId);
+        const round = await collaborativePrivacyService.getRound(req.params.roundId);
         if (!round) {
           return res.status(404).json({ error: 'Round not found' });
         }
@@ -69,18 +69,18 @@ class CollaborativePrivacyRoutes {
       }
     });
 
-    app.get('/api/v1/intelligence/collaborative/fidelity-bonds', (_req: Request, res: Response) => {
+    app.get('/api/v1/intelligence/collaborative/fidelity-bonds', async (_req: Request, res: Response) => {
       try {
-        const bonds = collaborativePrivacyService.listFidelityBonds();
+        const bonds = await collaborativePrivacyService.listFidelityBonds();
         res.json(bonds);
       } catch (err: any) {
         fail(res, err);
       }
     });
 
-    app.post('/api/v1/intelligence/collaborative/public-packages/verify', (req: Request, res: Response) => {
+    app.post('/api/v1/intelligence/collaborative/public-packages/verify', async (req: Request, res: Response) => {
       try {
-        const result = collaborativePrivacyService.verifyPublicPackage(req.body);
+        const result = await collaborativePrivacyService.verifyPublicPackage(req.body);
         res.status(result.stage === 'invalid-input' ? 400 : 503).json(result);
       } catch (err: any) {
         fail(res, err);
