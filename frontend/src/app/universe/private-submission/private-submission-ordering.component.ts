@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { PrivateSubmissionApiService } from './private-submission.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-private-submission-ordering',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4">
       <div class="alert alert-warning" role="alert" *ngIf="loadError">
@@ -18,7 +19,7 @@ import { PrivateSubmissionApiService } from './private-submission.service';
           <h1 class="h2 mb-1">Transaction Ordering Evidence & MEV Detection</h1>
           <p class="text-muted mb-0">Empirical observation of block inclusion ordering discrepancies, fee-rate violations, and private flow evidence.</p>
         </div>
-        <a routerLink="/mempool/submission" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
+        <a [routerLink]="'/mempool/submission' | relativeUrl" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
       </div>
 
       <div class="card bg-dark border-secondary mb-4">
@@ -42,7 +43,7 @@ import { PrivateSubmissionApiService } from './private-submission.service';
             <tbody>
               <tr *ngFor="let f of findings">
                 <td class="font-monospace text-info">
-                  <a [routerLink]="['/intelligence/ordering/tx', f.txid]">{{ f.txid | slice:0:16 }}...</a>
+                  <a [routerLink]="['/intelligence/ordering/tx' | relativeUrl, f.txid]">{{ f.txid | slice:0:16 }}...</a>
                 </td>
                 <td class="fw-bold">{{ f.block_height }}</td>
                 <td class="text-danger font-monospace">{{ f.fee_rate_sat_vb }} sat/vB</td>
@@ -51,7 +52,7 @@ import { PrivateSubmissionApiService } from './private-submission.service';
                 <td><span class="badge bg-secondary">{{ f.miner_pool }}</span></td>
                 <td><span class="badge bg-danger">{{ f.severity | uppercase }}</span></td>
                 <td>
-                  <a [routerLink]="['/intelligence/ordering/tx', f.txid]" class="btn btn-sm btn-outline-info">Inspect Proof</a>
+                  <a [routerLink]="['/intelligence/ordering/tx' | relativeUrl, f.txid]" class="btn btn-sm btn-outline-info">Inspect Proof</a>
                 </td>
               </tr>
             </tbody>

@@ -1,9 +1,9 @@
 <div class="container-xl product-page">
   <header class="page-head">
     <nav class="crumbs">
-      <a [routerLink]="['/']">Home</a>
+      <a [routerLink]="['/' | relativeUrl]">Home</a>
       <span class="divider">/</span>
-      <a [routerLink]="['/fractal']">Fractal Bitcoin</a>
+      <a [routerLink]="['/fractal' | relativeUrl]">Fractal Bitcoin</a>
       <span class="divider">/</span>
       <span>CAT-20</span>
     </nav>
@@ -14,8 +14,8 @@
   </header>
 
   <nav class="nav-tabs">
-    <a [routerLink]="['/fractal']">Chain Overview</a>
-    <a [routerLink]="['/fractal/cat20']" class="active">CAT-20 Center</a>
+    <a [routerLink]="['/fractal' | relativeUrl]">Chain Overview</a>
+    <a [routerLink]="['/fractal/cat20' | relativeUrl]" class="active">CAT-20 Center</a>
   </nav>
 
   <ng-container *ngIf="vm$ | async as vm">
@@ -99,7 +99,7 @@
           </thead>
           <tbody>
             <tr *ngFor="let t of vm.tokens">
-              <td class="mono"><a [routerLink]="['/fractal/cat20/token', t.tokenId]">{{ t.tokenId.slice(0, 16) }}...</a></td>
+              <td class="mono"><a [routerLink]="['/fractal/cat20/token' | relativeUrl, t.tokenId]">{{ t.tokenId.slice(0, 16) }}...</a></td>
               <td><strong>{{ t.symbol }}</strong></td>
               <td>{{ t.name }}</td>
               <td class="mono">{{ t.maxSupplyAtomic }}</td>

@@ -15,16 +15,16 @@
           The authority tracks no organism with this id, so there is no history
           to show.
         </p>
-        <a [routerLink]="['/anima', 'items']" i18n="anima.history-back">Back to organisms</a>
+        <a [routerLink]="['/anima' | relativeUrl, 'items']" i18n="anima.history-back">Back to organisms</a>
       </div>
 
       <ng-container *ngSwitchCase="'ready'">
         <header class="page-head">
           <div class="title-block">
             <nav class="crumbs">
-              <a [routerLink]="['/anima', 'items']" i18n="anima.crumb-history">ANIMA organisms</a>
+              <a [routerLink]="['/anima' | relativeUrl, 'items']" i18n="anima.crumb-history">ANIMA organisms</a>
               <span class="divider">/</span>
-              <a [routerLink]="['/anima', 'item', vm.history.organism.id]">{{ shorten(vm.history.organism.id, 16) }}</a>
+              <a [routerLink]="['/anima' | relativeUrl, 'item', vm.history.organism.id]">{{ shorten(vm.history.organism.id, 16) }}</a>
               <span class="divider">/</span>
               <span i18n="anima.crumb-history-self">history</span>
             </nav>
@@ -51,7 +51,7 @@
             <dd>
               <ng-container *ngIf="lineage.parents.length; else noParents">
                 <a class="identifier" *ngFor="let parent of lineage.parents"
-                   [routerLink]="['/anima', 'item', parent]">{{ shorten(parent, 14) }}</a>
+                   [routerLink]="['/anima' | relativeUrl, 'item', parent]">{{ shorten(parent, 14) }}</a>
               </ng-container>
               <ng-template #noParents><span i18n="anima.lineage-none">none</span></ng-template>
             </dd>
@@ -59,7 +59,7 @@
             <dd>
               <ng-container *ngIf="lineage.children.length; else noChildren">
                 <a class="identifier" *ngFor="let child of lineage.children"
-                   [routerLink]="['/anima', 'item', child]">{{ shorten(child, 14) }}</a>
+                   [routerLink]="['/anima' | relativeUrl, 'item', child]">{{ shorten(child, 14) }}</a>
               </ng-container>
               <ng-template #noChildren><span i18n="anima.lineage-none-2">none</span></ng-template>
             </dd>

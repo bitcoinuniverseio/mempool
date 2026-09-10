@@ -11,6 +11,8 @@ import { PortfolioV2ApiService } from '../data/portfolio-v2-api.service';
 import { PortfolioSessionService } from '../stores/session.service';
 import { PortfolioDataStateComponent } from '../shared/data-state.component';
 import { atomicToDisplay, formatExact, maskedValue, truncateIdentifier } from '../shared/exact';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
+
 import type {
   PortfolioSemanticActivityPage,
   PortfolioV2HoldingsPage,
@@ -20,13 +22,13 @@ import type {
 @Component({
   selector: 'app-ephemeral-portfolio',
   standalone: true,
-  imports: [RouterLink, PortfolioDataStateComponent],
+  imports: [RelativeUrlPipe, RouterLink, PortfolioDataStateComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="wrap">
       <header class="head">
         <p class="crumb">
-          <a routerLink="/portfolio" i18n="@@universe.portfolio.ephemeral.back">Portfolio Intelligence</a>
+          <a [routerLink]="'/portfolio' | relativeUrl" i18n="@@universe.portfolio.ephemeral.back">Portfolio Intelligence</a>
           <span> · </span>
           <span i18n="@@universe.portfolio.ephemeral.mode">Ephemeral view - nothing is saved</span>
         </p>
@@ -36,7 +38,7 @@ import type {
 
       @if (failure(); as failure) {
         <p class="error" role="alert">{{ failure }}</p>
-        <a routerLink="/portfolio" i18n="@@universe.portfolio.ephemeral.back-home">Back to Portfolio Intelligence</a>
+        <a [routerLink]="'/portfolio' | relativeUrl" i18n="@@universe.portfolio.ephemeral.back-home">Back to Portfolio Intelligence</a>
       } @else if (summary(); as summary) {
         <section class="hero">
           <div>
@@ -90,7 +92,7 @@ import type {
             </ul>
           }
           <p class="soft" i18n="@@universe.portfolio.ephemeral.save-hint">
-            Want this address tracked with labels, history, and a vault? <a routerLink="/portfolio/new">Create a portfolio</a>.
+            Want this address tracked with labels, history, and a vault? <a [routerLink]="'/portfolio/new' | relativeUrl">Create a portfolio</a>.
           </p>
         </section>
       } @else {

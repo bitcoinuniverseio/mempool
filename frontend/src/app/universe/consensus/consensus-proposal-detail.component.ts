@@ -3,17 +3,18 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { ConsensusApiService, ConsensusProposal } from './consensus.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-consensus-proposal-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
       <header class="page-header mb-4">
         <div class="d-flex align-items-center gap-2 mb-2">
-          <a routerLink="/labs/consensus" class="btn btn-sm btn-outline-secondary">
+          <a [routerLink]="'/labs/consensus' | relativeUrl" class="btn btn-sm btn-outline-secondary">
             &larr; Back to Proposals
           </a>
           <span class="text-muted small">Consensus Upgrade Lab</span>
@@ -85,7 +86,7 @@ import { ConsensusApiService, ConsensusProposal } from './consensus.service';
             <div class="fw-semibold">Simulate this Proposal in a Vault</div>
             <div class="small text-muted">Test custody state transitions and emergency clawback mechanics.</div>
           </div>
-          <a routerLink="/labs/vaults/simulate" class="btn btn-primary">
+          <a [routerLink]="'/labs/vaults/simulate' | relativeUrl" class="btn btn-primary">
             Launch Covenant Simulator
           </a>
         </div>

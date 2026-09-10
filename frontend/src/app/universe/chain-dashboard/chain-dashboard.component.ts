@@ -54,6 +54,8 @@ import {
   readStatusRail,
 } from '@app/universe/multichain-explorer/multichain-view';
 import { ChainReasonReading } from '@app/universe/multichain-explorer/chain-reasons';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
+
 import {
   ChainBlockSummary,
   ChainCapabilityEnvelope,
@@ -130,7 +132,7 @@ const FEE_BASIS_LABELS: Record<string, string> = {
 @Component({
   selector: 'app-chain-dashboard',
   standalone: true,
-  imports: [
+  imports: [RelativeUrlPipe, 
     CommonModule,
     RouterModule,
     ChainTimelineComponent,

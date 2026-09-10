@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { GlobalNetworkApiService, GlobalNetworkSnapshot } from './global-network.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-global-network-snapshots',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -24,11 +25,11 @@ import { GlobalNetworkApiService, GlobalNetworkSnapshot } from './global-network
 
         <!-- Sub-navigation tabs -->
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/network/global">Overview</a>
-          <a class="nav-link" routerLink="/network/global/nodes">Reachable Nodes</a>
-          <a class="nav-link active" routerLink="/network/global/snapshots">Snapshots Archive</a>
-          <a class="nav-link" routerLink="/network/global/seeds">DNS Seeds</a>
-          <a class="nav-link" routerLink="/network/global/self-check">Node Self-Check</a>
+          <a class="nav-link" [routerLink]="'/network/global' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/network/global/nodes' | relativeUrl">Reachable Nodes</a>
+          <a class="nav-link active" [routerLink]="'/network/global/snapshots' | relativeUrl">Snapshots Archive</a>
+          <a class="nav-link" [routerLink]="'/network/global/seeds' | relativeUrl">DNS Seeds</a>
+          <a class="nav-link" [routerLink]="'/network/global/self-check' | relativeUrl">Node Self-Check</a>
         </nav>
       </header>
 

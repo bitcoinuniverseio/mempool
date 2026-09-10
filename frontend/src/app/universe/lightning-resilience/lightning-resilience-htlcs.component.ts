@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { LightningResilienceApiService } from './lightning-resilience.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-lightning-resilience-htlcs',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4">
       <div class="alert alert-warning" role="alert" *ngIf="loadError">
@@ -18,7 +19,7 @@ import { LightningResilienceApiService } from './lightning-resilience.service';
           <h1 class="h2 mb-1">HTLC / PTLC Slot Pressure & Liquidity Locking</h1>
           <p class="text-muted mb-0">Detailed breakdown of in-flight commitment transaction slots, pending holds, and slow forwarders.</p>
         </div>
-        <a routerLink="/lightning/resilience" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
+        <a [routerLink]="'/lightning/resilience' | relativeUrl" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
       </div>
 
       <div class="card bg-dark border-secondary mb-4">
@@ -41,7 +42,7 @@ import { LightningResilienceApiService } from './lightning-resilience.service';
             <tbody>
               <tr *ngFor="let ch of channels">
                 <td>
-                  <a [routerLink]="['/lightning/resilience/channel', ch.short_channel_id]" class="text-info font-monospace">
+                  <a [routerLink]="['/lightning/resilience/channel' | relativeUrl, ch.short_channel_id]" class="text-info font-monospace">
                     {{ ch.short_channel_id }}
                   </a>
                 </td>
@@ -61,7 +62,7 @@ import { LightningResilienceApiService } from './lightning-resilience.service';
                   </span>
                 </td>
                 <td>
-                  <a [routerLink]="['/lightning/resilience/channel', ch.short_channel_id]" class="btn btn-sm btn-outline-info">Inspect</a>
+                  <a [routerLink]="['/lightning/resilience/channel' | relativeUrl, ch.short_channel_id]" class="btn btn-sm btn-outline-info">Inspect</a>
                 </td>
               </tr>
             </tbody>

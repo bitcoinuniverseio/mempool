@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { BootstrapApiService, NodeChainstateObservation } from './bootstrap.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-bootstrap-chainstates',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -23,11 +24,11 @@ import { BootstrapApiService, NodeChainstateObservation } from './bootstrap.serv
         </p>
 
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/node/bootstrap">Overview</a>
-          <a class="nav-link" routerLink="/node/bootstrap/snapshots">Snapshots</a>
-          <a class="nav-link" routerLink="/node/bootstrap/verify">Integrity Verifier</a>
-          <a class="nav-link" routerLink="/node/bootstrap/planner">Bootstrap Planner</a>
-          <a class="nav-link active" routerLink="/node/bootstrap/chainstates">Dual Chainstates</a>
+          <a class="nav-link" [routerLink]="'/node/bootstrap' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/node/bootstrap/snapshots' | relativeUrl">Snapshots</a>
+          <a class="nav-link" [routerLink]="'/node/bootstrap/verify' | relativeUrl">Integrity Verifier</a>
+          <a class="nav-link" [routerLink]="'/node/bootstrap/planner' | relativeUrl">Bootstrap Planner</a>
+          <a class="nav-link active" [routerLink]="'/node/bootstrap/chainstates' | relativeUrl">Dual Chainstates</a>
         </nav>
       </header>
 

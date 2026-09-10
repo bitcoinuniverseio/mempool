@@ -4,6 +4,8 @@ import { RouterModule } from '@angular/router';
 import { BehaviorSubject, Observable, catchError, combineLatest, of } from 'rxjs';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
+
 import {
   L2BridgeSystem,
   L2Challenge,
@@ -20,7 +22,7 @@ interface L2ViewModel {
   templateUrl: './l2-observatory.component.html',
   styleUrls: ['../product-page.scss', './l2-observatory.component.scss'],
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class L2ObservatoryComponent implements OnInit {

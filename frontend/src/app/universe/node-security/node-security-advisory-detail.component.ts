@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { NodeSecurityApiService } from './node-security.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-node-security-advisory-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4" *ngIf="advisory">
       <div class="alert alert-warning" role="alert" *ngIf="loadError">
@@ -18,7 +19,7 @@ import { NodeSecurityApiService } from './node-security.service';
           <h1 class="h2 mb-1">Security Advisory: <span class="text-danger">{{ advisory.advisory_id }}</span></h1>
           <p class="text-muted mb-0">{{ advisory.title }} ({{ advisory.cve_id }})</p>
         </div>
-        <a routerLink="/node/security/advisories" class="btn btn-outline-secondary btn-sm">Back to Advisories</a>
+        <a [routerLink]="'/node/security/advisories' | relativeUrl" class="btn btn-outline-secondary btn-sm">Back to Advisories</a>
       </div>
 
       <div class="row g-3 mb-4">

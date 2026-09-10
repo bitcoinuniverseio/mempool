@@ -91,11 +91,11 @@
 
   <nav class="protocol-nav" *ngIf="isProtocolPage()"
        aria-label="Protocol families" i18n-aria-label="universe.chain.protocol-nav-label">
-    <a [routerLink]="['/', chain, 'protocols']"
+    <a [routerLink]="['/' | relativeUrl, chain, 'protocols']"
        [class.current]="page === 'protocols'"
        i18n="universe.chain.protocol-nav-all">All protocols</a>
     <a *ngFor="let protocol of profile.protocols; trackBy: trackById"
-       [routerLink]="['/', chain, 'protocols', protocol.id]"
+       [routerLink]="['/' | relativeUrl, chain, 'protocols', protocol.id]"
        [class.current]="activeProtocolId() === protocol.id">{{ protocol.label }}</a>
   </nav>
 
@@ -167,7 +167,7 @@
         <div *ngIf="tx.block">
           <dt i18n="universe.chain.tx-block">In block</dt>
           <dd>
-            <a class="identifier" [routerLink]="['/', chain, 'block', tx.block.hash]">{{ short(tx.block.hash) }}</a>
+            <a class="identifier" [routerLink]="['/' | relativeUrl, chain, 'block', tx.block.hash]">{{ short(tx.block.hash) }}</a>
             <span class="secondary" *ngIf="tx.block.height" [attr.title]="tx.block.height.exact"> {{ tx.block.height.display }}</span>
           </dd>
         </div>
@@ -260,11 +260,11 @@
       <h2 id="tx-warning-heading" i18n="universe.chain.tx-warning-title">Why this transaction may never confirm</h2>
       <p *ngIf="tx.replacedByTxid">
         <ng-container i18n="universe.chain.tx-replaced-by">Replaced by</ng-container>
-        <a class="identifier" [routerLink]="['/', chain, 'tx', tx.replacedByTxid]"> {{ short(tx.replacedByTxid) }}</a>
+        <a class="identifier" [routerLink]="['/' | relativeUrl, chain, 'tx', tx.replacedByTxid]"> {{ short(tx.replacedByTxid) }}</a>
       </p>
       <ul class="conflict-list" *ngIf="tx.conflicts.length">
         <li *ngFor="let conflict of tx.conflicts; trackBy: trackByIndex">
-          <a class="identifier" [routerLink]="['/', chain, 'tx', conflict.txid]">{{ short(conflict.txid) }}</a>
+          <a class="identifier" [routerLink]="['/' | relativeUrl, chain, 'tx', conflict.txid]">{{ short(conflict.txid) }}</a>
           <span class="secondary"> {{ conflict.reason }}</span>
         </li>
       </ul>
@@ -289,7 +289,7 @@
               <div class="party-main">
                 <span class="party-address">
                   <a class="identifier" *ngIf="party.address; else partyNoAddress"
-                     [routerLink]="['/', chain, 'address', party.address]">{{ short(party.address, 12) }}</a>
+                     [routerLink]="['/' | relativeUrl, chain, 'address', party.address]">{{ short(party.address, 12) }}</a>
                   <ng-template #partyNoAddress>
                     <span class="secondary" *ngIf="party.coinbase; else partyUnknown" i18n="universe.chain.tx-coinbase">Newly issued by the block</span>
                     <ng-template #partyUnknown><span class="secondary" i18n="universe.chain.tx-no-address">No standard address</span></ng-template>
@@ -318,10 +318,10 @@
               <div class="party-main">
                 <span class="party-address">
                   <a class="identifier" *ngIf="party.address; else outputNoAddress"
-                     [routerLink]="['/', chain, 'address', party.address]">{{ short(party.address, 12) }}</a>
+                     [routerLink]="['/' | relativeUrl, chain, 'address', party.address]">{{ short(party.address, 12) }}</a>
                   <ng-template #outputNoAddress><span class="secondary" i18n="universe.chain.tx-no-address-out">No standard address</span></ng-template>
                   <a class="universe-chip state-neutral outpoint-link" *ngIf="party.outpoint"
-                     [routerLink]="['/', chain, 'outpoint', party.outpoint.split(':')[0], party.outpoint.split(':')[1]]"
+                     [routerLink]="['/' | relativeUrl, chain, 'outpoint', party.outpoint.split(':')[0], party.outpoint.split(':')[1]]"
                      i18n-title="universe.chain.tx-outpoint-title" title="Open this output"
                      i18n="universe.chain.tx-outpoint">#{{ party.index }}</a>
                   <span class="universe-chip state-neutral" *ngIf="party.spent === true" i18n="universe.chain.tx-output-spent">Spent</span>
@@ -371,7 +371,7 @@
           {{ action.quantity.display }}<ng-container *ngIf="action.assetTicker"> {{ action.assetTicker }}</ng-container>
         </span>
         <a class="action-outpoint identifier" *ngFor="let op of action.outputOutpoints; trackBy: trackByIndex"
-           [routerLink]="['/', chain, 'outpoint', op.split(':')[0], op.split(':')[1]]">{{ short(op, 6) }}</a>
+           [routerLink]="['/' | relativeUrl, chain, 'outpoint', op.split(':')[0], op.split(':')[1]]">{{ short(op, 6) }}</a>
         <span class="universe-chip" [ngClass]="'state-' + action.tone">{{ action.stateLabel }}</span>
       </ng-template>
 
@@ -442,9 +442,9 @@
       </dl>
 
       <nav class="block-nav" aria-label="Adjacent blocks" i18n-aria-label="universe.chain.block-nav-label">
-        <a *ngIf="blk.previousBlockHash" [routerLink]="['/', chain, 'block', blk.previousBlockHash]"
+        <a *ngIf="blk.previousBlockHash" [routerLink]="['/' | relativeUrl, chain, 'block', blk.previousBlockHash]"
            i18n="universe.chain.block-previous">Previous block</a>
-        <a *ngIf="blk.nextBlockHash" [routerLink]="['/', chain, 'block', blk.nextBlockHash]"
+        <a *ngIf="blk.nextBlockHash" [routerLink]="['/' | relativeUrl, chain, 'block', blk.nextBlockHash]"
            i18n="universe.chain.block-next">Next block</a>
       </nav>
     </section>
@@ -453,7 +453,7 @@
       <h2 id="block-txs-heading" i18n="universe.chain.block-txs-title">Transactions in this block</h2>
       <ul class="identifier-list">
         <li *ngFor="let txid of blk.txids; trackBy: trackByText">
-          <a class="identifier" [routerLink]="['/', chain, 'tx', txid]">{{ txid }}</a>
+          <a class="identifier" [routerLink]="['/' | relativeUrl, chain, 'tx', txid]">{{ txid }}</a>
         </li>
       </ul>
       <ng-container *ngTemplateOutlet="pager; context: { $implicit: blk.paging }"></ng-container>
@@ -590,7 +590,7 @@
           <tbody>
             <tr *ngFor="let utxo of addr.utxos; trackBy: trackByIndex">
               <td>
-                <a class="identifier" [routerLink]="['/', chain, 'outpoint', utxo.txid, utxo.vout]">{{ short(utxo.txid) }}:{{ utxo.vout }}</a>
+                <a class="identifier" [routerLink]="['/' | relativeUrl, chain, 'outpoint', utxo.txid, utxo.vout]">{{ short(utxo.txid) }}:{{ utxo.vout }}</a>
               </td>
               <td class="numeric" [class.secondary]="!utxo.amount" [attr.title]="utxo.amount?.exact">
                 <ng-container *ngIf="utxo.amount; else utxoNoAmount">{{ utxo.amount.display }}</ng-container>
@@ -618,7 +618,7 @@
       <h2 id="address-txs-heading" i18n="universe.chain.address-txs-title">Transaction history</h2>
       <ul class="identifier-list">
         <li *ngFor="let txid of addr.txids; trackBy: trackByText">
-          <a class="identifier" [routerLink]="['/', chain, 'tx', txid]">{{ txid }}</a>
+          <a class="identifier" [routerLink]="['/' | relativeUrl, chain, 'tx', txid]">{{ txid }}</a>
         </li>
       </ul>
       <ng-container *ngTemplateOutlet="pager; context: { $implicit: addr.paging }"></ng-container>
@@ -634,7 +634,7 @@
     <dl class="facts">
       <div>
         <dt i18n="universe.chain.outpoint-transaction">Transaction</dt>
-        <dd><a class="identifier" [routerLink]="['/', chain, 'tx', out.txid]">{{ out.txid }}</a></dd>
+        <dd><a class="identifier" [routerLink]="['/' | relativeUrl, chain, 'tx', out.txid]">{{ out.txid }}</a></dd>
       </div>
       <div>
         <dt i18n="universe.chain.outpoint-index">Output index</dt>
@@ -646,7 +646,7 @@
       </div>
       <div *ngIf="out.address">
         <dt i18n="universe.chain.outpoint-address">Address</dt>
-        <dd><a class="identifier" [routerLink]="['/', chain, 'address', out.address]">{{ out.address }}</a></dd>
+        <dd><a class="identifier" [routerLink]="['/' | relativeUrl, chain, 'address', out.address]">{{ out.address }}</a></dd>
       </div>
       <div *ngIf="out.spent !== null">
         <dt i18n="universe.chain.outpoint-state">State</dt>
@@ -771,7 +771,7 @@
         <tbody>
           <tr *ngFor="let row of list.rows; trackBy: trackByIndex" [class.diverges]="row.diverges">
             <td>
-              <a class="identifier" [routerLink]="['/', chain, 'protocols', activeProtocolId(), row.tick]">{{ row.tick }}</a>
+              <a class="identifier" [routerLink]="['/' | relativeUrl, chain, 'protocols', activeProtocolId(), row.tick]">{{ row.tick }}</a>
             </td>
             <td *ngFor="let cell of row.cells; trackBy: trackByKey"
                 [class.numeric]="cell.figure?.kind !== 'word'"
@@ -832,7 +832,7 @@
             <tr *ngFor="let row of index.rows; trackBy: trackById">
               <td>
                 <a *ngIf="row.routeId; else indexNoPage"
-                   [routerLink]="['/', chain, 'protocols', row.routeId]">{{ row.displayName }}</a>
+                   [routerLink]="['/' | relativeUrl, chain, 'protocols', row.routeId]">{{ row.displayName }}</a>
                 <ng-template #indexNoPage>{{ row.displayName }}</ng-template>
               </td>
               <td><span class="universe-chip" [ngClass]="'state-' + row.releaseTone">{{ row.releaseLabel }}</span></td>
@@ -889,7 +889,7 @@
       </div>
       <div *ngIf="dune.etchingTxid">
         <dt i18n="universe.chain.dune-etching">Etched in</dt>
-        <dd><a class="identifier" [routerLink]="['/', chain, 'tx', dune.etchingTxid]">{{ short(dune.etchingTxid) }}</a></dd>
+        <dd><a class="identifier" [routerLink]="['/' | relativeUrl, chain, 'tx', dune.etchingTxid]">{{ short(dune.etchingTxid) }}</a></dd>
       </div>
       <div *ngIf="dune.etchedAt">
         <dt i18n="universe.chain.dune-etched-at">Etched</dt>
@@ -951,7 +951,7 @@
         <tbody>
           <tr *ngFor="let row of list.rows; trackBy: trackByIndex">
             <td>
-              <a class="identifier" [routerLink]="['/', chain, 'protocols', activeProtocolId(), row.reading.duneId]">{{ row.reading.dune }}</a>
+              <a class="identifier" [routerLink]="['/' | relativeUrl, chain, 'protocols', activeProtocolId(), row.reading.duneId]">{{ row.reading.dune }}</a>
               <span class="dune-symbol" *ngIf="row.reading.symbol">{{ row.reading.symbol }}</span>
             </td>
             <td class="numeric" *ngFor="let cell of row.cells; trackBy: trackByKey"
@@ -1028,7 +1028,7 @@
         </thead>
         <tbody>
           <tr *ngFor="let row of list.rows; trackBy: trackByTxid">
-            <td><a class="identifier" [routerLink]="['/', chain, 'tx', row.txid]">{{ short(row.txid) }}</a></td>
+            <td><a class="identifier" [routerLink]="['/' | relativeUrl, chain, 'tx', row.txid]">{{ short(row.txid) }}</a></td>
             <td><span class="universe-chip" [ngClass]="'state-' + row.statusTone">{{ row.statusLabel }}</span></td>
             <td [class.secondary]="!row.firstSeenAt" [attr.title]="row.firstSeenAt?.exact">
               <ng-container *ngIf="row.firstSeenAt; else noSeen">{{ row.firstSeenAt.display }}</ng-container>

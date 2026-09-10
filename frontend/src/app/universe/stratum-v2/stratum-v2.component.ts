@@ -4,6 +4,8 @@ import { RouterModule } from '@angular/router';
 import { BehaviorSubject, Observable, catchError, combineLatest, of } from 'rxjs';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
+
 import {
   StratumV2JobDeclaration,
   StratumV2RoleStatus,
@@ -22,7 +24,7 @@ interface StratumViewModel {
   templateUrl: './stratum-v2.component.html',
   styleUrls: ['../product-page.scss'],
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StratumV2Component implements OnInit {

@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { LightningReliabilityApiService, LightningLiquiditySimulationResult } from './lightning-reliability.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-lightning-liquidity',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -22,9 +23,9 @@ import { LightningReliabilityApiService, LightningLiquiditySimulationResult } fr
 
         <!-- Navigation Tabs -->
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/lightning/reliability">Reliability Overview</a>
-          <a class="nav-link active" routerLink="/lightning/liquidity">Liquidity Simulation</a>
-          <a class="nav-link" routerLink="/lightning/lsp">LSP Directory</a>
+          <a class="nav-link" [routerLink]="'/lightning/reliability' | relativeUrl">Reliability Overview</a>
+          <a class="nav-link active" [routerLink]="'/lightning/liquidity' | relativeUrl">Liquidity Simulation</a>
+          <a class="nav-link" [routerLink]="'/lightning/lsp' | relativeUrl">LSP Directory</a>
         </nav>
       </header>
 

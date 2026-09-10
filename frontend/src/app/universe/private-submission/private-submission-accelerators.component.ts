@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { PrivateSubmissionApiService } from './private-submission.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-private-submission-accelerators',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4">
       <div class="alert alert-warning" role="alert" *ngIf="loadError">
@@ -18,7 +19,7 @@ import { PrivateSubmissionApiService } from './private-submission.service';
           <h1 class="h2 mb-1">Transaction Accelerator Providers Directory</h1>
           <p class="text-muted mb-0">Verified miner acceleration gateways, supported hashrate coverage, and pricing models.</p>
         </div>
-        <a routerLink="/mempool/submission" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
+        <a [routerLink]="'/mempool/submission' | relativeUrl" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
       </div>
 
       <div class="card bg-dark border-secondary mb-4">
@@ -41,7 +42,7 @@ import { PrivateSubmissionApiService } from './private-submission.service';
             <tbody>
               <tr *ngFor="let p of providers">
                 <td>
-                  <a [routerLink]="['/mempool/accelerator', p.provider_id]" class="fw-bold text-info">
+                  <a [routerLink]="['/mempool/accelerator' | relativeUrl, p.provider_id]" class="fw-bold text-info">
                     {{ p.name }}
                   </a>
                 </td>
@@ -60,7 +61,7 @@ import { PrivateSubmissionApiService } from './private-submission.service';
                 <td class="text-success fw-bold">{{ p.success_rate_pct }}%</td>
                 <td><span class="badge bg-success">{{ p.status | uppercase }}</span></td>
                 <td>
-                  <a [routerLink]="['/mempool/accelerator', p.provider_id]" class="btn btn-sm btn-outline-primary">View Details</a>
+                  <a [routerLink]="['/mempool/accelerator' | relativeUrl, p.provider_id]" class="btn btn-sm btn-outline-primary">View Details</a>
                 </td>
               </tr>
             </tbody>

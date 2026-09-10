@@ -3,17 +3,18 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { CompactFiltersApiService, CompactFilterProvider } from './compact-filters.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-light-client-provider-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
       <header class="page-header mb-4">
         <div class="mb-2">
-          <a routerLink="/network/light-client/providers" class="btn btn-sm btn-outline-secondary">
+          <a [routerLink]="'/network/light-client/providers' | relativeUrl" class="btn btn-sm btn-outline-secondary">
             &larr; Back to Providers
           </a>
         </div>
@@ -96,7 +97,7 @@ import { CompactFiltersApiService, CompactFilterProvider } from './compact-filte
             </div>
 
             <div class="mt-auto pt-3 border-top">
-              <a [routerLink]="['/network/light-client/verify']" class="btn btn-outline-primary w-100">
+              <a [routerLink]="['/network/light-client/verify' | relativeUrl]" class="btn btn-outline-primary w-100">
                 Verify Filter Chain Against this Peer
               </a>
             </div>

@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { BlockPropagationApiService } from './block-propagation.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-block-propagation-fork-races',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4">
       <div class="alert alert-warning" role="alert" *ngIf="loadError">
@@ -18,7 +19,7 @@ import { BlockPropagationApiService } from './block-propagation.service';
           <h1 class="h2 mb-1">Block Fork-Race Observatory</h1>
           <p class="text-muted mb-0">Analysis of near-simultaneous block discoveries, geographic split propagation, and resolution outcomes.</p>
         </div>
-        <a routerLink="/network/blocks" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
+        <a [routerLink]="'/network/blocks' | relativeUrl" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
       </div>
 
       <div class="card bg-dark border-secondary mb-4">
@@ -53,7 +54,7 @@ import { BlockPropagationApiService } from './block-propagation.service';
                 </td>
                 <td class="font-monospace text-warning">{{ r.time_difference_ms }} ms</td>
                 <td>
-                  <a [routerLink]="['/network/fork-races', r.race_id]" class="btn btn-outline-info btn-sm">Inspect Race</a>
+                  <a [routerLink]="['/network/fork-races' | relativeUrl, r.race_id]" class="btn btn-outline-info btn-sm">Inspect Race</a>
                 </td>
               </tr>
             </tbody>

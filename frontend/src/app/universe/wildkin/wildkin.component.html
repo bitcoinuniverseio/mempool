@@ -1,7 +1,7 @@
 <div class="container-xl product-page">
   <header class="page-head">
     <nav class="crumbs">
-      <a [routerLink]="['/protocols']">Protocols</a>
+      <a [routerLink]="['/protocols' | relativeUrl]">Protocols</a>
       <span class="divider">/</span>
       <span>Wildkin</span>
     </nav>
@@ -12,9 +12,9 @@
   </header>
 
   <nav class="nav-tabs">
-    <a [routerLink]="['/wildkin']" class="active">Overview</a>
-    <a [routerLink]="['/wildkin/creatures']">Creatures</a>
-    <a [routerLink]="['/wildkin/bloodlines']">Bloodlines & Braids</a>
+    <a [routerLink]="['/wildkin' | relativeUrl]" class="active">Overview</a>
+    <a [routerLink]="['/wildkin/creatures' | relativeUrl]">Creatures</a>
+    <a [routerLink]="['/wildkin/bloodlines' | relativeUrl]">Bloodlines & Braids</a>
   </nav>
 
   <ng-container *ngIf="vm$ | async as vm">
@@ -66,7 +66,7 @@
           </thead>
           <tbody>
             <tr *ngFor="let c of vm.status.latestCreatures">
-              <td class="mono"><a [routerLink]="['/wildkin/creature', c.creatureId]">{{ c.creatureId }}</a></td>
+              <td class="mono"><a [routerLink]="['/wildkin/creature' | relativeUrl, c.creatureId]">{{ c.creatureId }}</a></td>
               <td><strong>{{ c.name }}</strong></td>
               <td>Gen {{ c.generation }}</td>
               <td><span class="badge badge-success">{{ c.status }}</span></td>
