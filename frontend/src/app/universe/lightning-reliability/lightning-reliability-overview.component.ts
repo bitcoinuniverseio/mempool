@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRe
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { LightningReliabilityApiService, LightningReliabilityOverview } from './lightning-reliability.service';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
@@ -147,7 +148,7 @@ export class LightningReliabilityOverviewComponent implements OnInit, OnDestroy 
           this.cd.markForCheck();
         },
         error: err => {
-          this.error = err?.message || 'Failed to load lightning reliability overview';
+          this.error = err?.error?.error || loadFailureMessage(classifyLoadFailure(err));
           this.loading = false;
           this.cd.markForCheck();
         },

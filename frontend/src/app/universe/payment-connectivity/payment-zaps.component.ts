@@ -2,6 +2,7 @@ import { Component, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { PaymentConnectivityApiService } from './payment-connectivity.service';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
@@ -68,7 +69,11 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           <div class="card p-4 bg-body-tertiary border h-100">
             <h2 class="h5 mb-3">Verification Findings</h2>
 
-            <div *ngIf="!report && !verifying" class="text-center py-5 text-muted">
+            <div *ngIf="error" class="alert alert-warning" role="alert">
+              {{ error }}
+            </div>
+
+            <div *ngIf="!report && !verifying && !error" class="text-center py-5 text-muted">
               Submit a zap request and invoice description hash to verify cryptographic proof.
             </div>
 
@@ -126,6 +131,7 @@ export class PaymentZapsComponent {
   descriptionHash = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
   verifying = false;
   report: any = null;
+  error: string | null = null;
 
   constructor(
     private paymentApi: PaymentConnectivityApiService,
@@ -147,6 +153,7 @@ export class PaymentZapsComponent {
   verifyZap(): void {
     this.verifying = true;
     this.report = null;
+    this.error = null;
 
     this.paymentApi
       .verifyZap$({
@@ -162,10 +169,7 @@ export class PaymentZapsComponent {
         },
         error: (err) => {
           this.verifying = false;
-          this.report = {
-            is_valid_zap: true,
-            computed_hash: this.descriptionHash,
-          };
+          this.error = loadFailureMessage(classifyLoadFailure(err));
           this.cdr.markForCheck();
         },
       });

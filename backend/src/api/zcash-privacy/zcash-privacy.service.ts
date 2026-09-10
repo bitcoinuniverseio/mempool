@@ -1,10 +1,24 @@
 import {
   ZcashNetworkUpgrade,
-  ZcashPoolFlow,
   ZcashPrivacySummary,
   ZcashValuePool,
 } from './zcash-privacy.types';
 
+/**
+ * Raised when a read has no source behind it. The routes map the code to a
+ * 503, so an absent integration is reported as an absent integration rather
+ * than as an answer.
+ */
+export class ZcashPrivacyEvidenceError extends Error {
+  constructor(public readonly code: string, message: string, public readonly status = 503) {
+    super(message);
+  }
+}
+
+const zcashNodeUnavailable =
+  'Zcash privacy observations are unavailable. Pool balances, shielded supply, the chain tip and recent pool flows require the owned Zcash node (zcashd getblockchaininfo valuePools, UNIVERSE_ZCASH_RPC_ORIGIN), which is not connected on this deployment.';
+
+/** Activation facts from the Zcash protocol specification; a reference, not an observation. */
 const NETWORK_UPGRADES: ZcashNetworkUpgrade[] = [
   {
     name: 'Overwinter',
@@ -50,114 +64,27 @@ const NETWORK_UPGRADES: ZcashNetworkUpgrade[] = [
   },
 ];
 
-const VALUE_POOLS: ZcashValuePool[] = [
-  {
-    id: 'transparent',
-    name: 'Transparent Pool',
-    balanceZat: '1185421050000000',
-    balanceZec: '11854210.50',
-    percentageOfSupply: '72.63',
-    txCount: 14892011,
-    description: 'Publicly visible addresses (t-addresses) following Bitcoin UTXO semantics.',
-    shielded: false,
-    deprecationStatus: 'active',
-  },
-  {
-    id: 'orchard',
-    name: 'Orchard Pool (NU5)',
-    balanceZat: '298514200000000',
-    balanceZec: '2985142.00',
-    percentageOfSupply: '18.29',
-    txCount: 2194820,
-    description: 'Trustless Halo 2 zero-knowledge shielded pool introduced in Network Upgrade 5.',
-    shielded: true,
-    deprecationStatus: 'active',
-  },
-  {
-    id: 'sapling',
-    name: 'Sapling Pool',
-    balanceZat: '144298100000000',
-    balanceZec: '1442981.00',
-    percentageOfSupply: '8.84',
-    txCount: 8492015,
-    description: 'High-performance Groth16 shielded pool with decoupled spending and viewing keys.',
-    shielded: true,
-    deprecationStatus: 'active',
-  },
-  {
-    id: 'sprout',
-    name: 'Sprout Pool (Legacy)',
-    balanceZat: '3941000000000',
-    balanceZec: '39410.00',
-    percentageOfSupply: '0.24',
-    txCount: 142089,
-    description: 'Original BCTV14 shielded pool. Inflows are permanently closed; migration turnstile is active.',
-    shielded: true,
-    deprecationStatus: 'retiring',
-  },
-  {
-    id: 'lockbox',
-    name: 'Lockbox Fund',
-    balanceZat: '0',
-    balanceZec: '0.00',
-    percentageOfSupply: '0.00',
-    txCount: 0,
-    description: 'On-chain reserve pool for unallocated block subsidies.',
-    shielded: false,
-    deprecationStatus: 'active',
-  },
-];
-
+/**
+ * Zcash privacy evidence.
+ *
+ * The summary and the pools used to answer from constants: a tip height, a
+ * circulating supply and five pool balances that no node reported, and two
+ * recent flows with invented block hashes. No owned Zcash node is connected,
+ * so those reads report the source they would need. The network upgrade
+ * catalogue is protocol reference and stays answerable.
+ */
 export class ZcashPrivacyService {
   /** @asyncSafe */
   public async $getSummary(): Promise<ZcashPrivacySummary> {
-    const tipHeight = 2598410;
-    const totalCirculatingSupplyZat = '1632174350000000';
-    const totalShieldedSupplyZat = '446753300000000';
-    const shieldedPercentage = '27.37';
-
-    const recentFlows: ZcashPoolFlow[] = [
-      {
-        height: tipHeight - 1,
-        blockHash: '0000000001847293847291837492817492817492817492817492817492817492',
-        timestamp: Math.floor(Date.now() / 1000) - 75,
-        pool: 'orchard',
-        inflowZat: '12500000000',
-        outflowZat: '8200000000',
-        netChangeZat: '4300000000',
-        transactionCount: 18,
-      },
-      {
-        height: tipHeight - 2,
-        blockHash: '0000000002938472918273918273918273918273918273918273918273918273',
-        timestamp: Math.floor(Date.now() / 1000) - 150,
-        pool: 'sapling',
-        inflowZat: '5000000000',
-        outflowZat: '7500000000',
-        netChangeZat: '-2500000000',
-        transactionCount: 12,
-      },
-    ];
-
-    return {
-      tipHeight,
-      totalCirculatingSupplyZat,
-      totalShieldedSupplyZat,
-      shieldedPercentage,
-      pools: VALUE_POOLS,
-      recentFlows,
-      upgrades: NETWORK_UPGRADES,
-    };
+    throw new ZcashPrivacyEvidenceError('unavailable-zcash-node', zcashNodeUnavailable);
   }
 
   /** @asyncSafe */
-
   public async $getPools(): Promise<ZcashValuePool[]> {
-    return VALUE_POOLS;
+    throw new ZcashPrivacyEvidenceError('unavailable-zcash-node', zcashNodeUnavailable);
   }
 
   /** @asyncSafe */
-
   public async $getUpgrades(): Promise<ZcashNetworkUpgrade[]> {
     return NETWORK_UPGRADES;
   }

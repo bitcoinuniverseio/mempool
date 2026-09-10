@@ -1,7 +1,16 @@
 import { Application, Request, Response } from 'express';
-import { queryStudioService } from './query-studio.service';
+import { QueryStudioEvidenceError, queryStudioService, usageMetricsUnavailable } from './query-studio.service';
 import { DeveloperIdentityManager } from '../identity/developer-identity';
 import { handleError } from '../../../utils/api';
+
+/** An absent source is a 503 that names the source, never a 500 and never an invented row. */
+function fail(req: Request, res: Response, e: unknown, status: number, fallback: string): void {
+  if (e instanceof QueryStudioEvidenceError) {
+    res.status(e.status).json({ stage: e.code, error: e.message });
+    return;
+  }
+  handleError(req, res, status, e instanceof Error ? e.message : fallback);
+}
 
 class QueryStudioRoutes {
   public initRoutes(app: Application): void {
@@ -56,16 +65,9 @@ class QueryStudioRoutes {
 
   private async $getUsage(req: Request, res: Response): Promise<void> {
     try {
-      res.json({
-        period: '30d',
-        requests_total: 124500,
-        requests_remaining: 875500,
-        quota_limit: 1000000,
-        p95_latency_ms: 42,
-        error_rate_percent: 0.02,
-      });
+      throw new QueryStudioEvidenceError('unavailable-usage-metrics', usageMetricsUnavailable);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch usage metrics');
+      fail(req, res, e, 500, 'Failed to fetch usage metrics');
     }
   }
 
@@ -104,7 +106,7 @@ class QueryStudioRoutes {
       const result = queryStudioService.executeQuery(sql, maxRows);
       res.json(result);
     } catch (e) {
-      handleError(req, res, 400, e instanceof Error ? e.message : 'Query execution error');
+      fail(req, res, e, 400, 'Query execution error');
     }
   }
 
@@ -113,7 +115,7 @@ class QueryStudioRoutes {
       const schema = queryStudioService.getSchema();
       res.json({ tables: schema, count: schema.length });
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch schema');
+      fail(req, res, e, 500, 'Failed to fetch schema');
     }
   }
 

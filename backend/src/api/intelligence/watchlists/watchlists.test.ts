@@ -1,7 +1,19 @@
-import { watchlistsService } from './watchlists.service';
+import { Application, Request, Response } from 'express';
+import watchlistsRoutes from './watchlists.routes';
+import { WatchlistsEvidenceError, watchlistsService } from './watchlists.service';
 
+/**
+ * The notification assertions replace ones that asserted a seeded alert about
+ * a 2,500,000 satoshi transfer nobody observed. Watchlists themselves hold
+ * what callers submit, so those assertions stay, minus the seeded sample.
+ */
 describe('Product 10: Privacy-First Watchlists, Rules, and Alerts', () => {
   const userId = 'user-privacy-01';
+
+  it('starts with no watchlists that nobody created', () => {
+    expect(watchlistsService.getWatchlists('user-default')).toEqual([]);
+    expect(watchlistsService.getWatchlistById('wl-sample-01')).toBeNull();
+  });
 
   it('creates privacy-first blinded watchlists and hashes sensitive entities', () => {
     const wl = watchlistsService.createWatchlist(userId, 'Cold Multisig Watchlist', 'blinded');
@@ -35,18 +47,22 @@ describe('Product 10: Privacy-First Watchlists, Rules, and Alerts', () => {
     expect(rule?.rate_limit_per_hour).toBeGreaterThan(0);
   });
 
-  it('manages notifications and handles acknowledgement', () => {
-    const notifs = watchlistsService.getNotifications();
-    expect(notifs.length).toBeGreaterThan(0);
+  it('reports the missing matcher rather than a seeded alert', () => {
+    const unavailable = expect.objectContaining({ code: 'unavailable-watchlist-matcher', status: 503 });
+    expect(() => watchlistsService.getNotifications()).toThrow(unavailable);
+    expect(() => watchlistsService.getNotifications('wl-sample-01')).toThrow(unavailable);
+    expect(() => watchlistsService.acknowledgeNotification('notif-sample-01')).toThrow(unavailable);
+  });
 
-    const first = notifs[0];
-    const initialAck = first.acknowledged;
-
-    const acked = watchlistsService.acknowledgeNotification(first.notification_id);
-    expect(acked).toBe(true);
-
-    const updated = watchlistsService.getNotifications().find((n) => n.notification_id === first.notification_id);
-    expect(updated?.acknowledged).toBe(true);
+  it('never resolves an absent matcher as an empty inbox', () => {
+    let resolved: unknown = 'unresolved';
+    try {
+      resolved = watchlistsService.getNotifications();
+    } catch (e) {
+      expect(e).toBeInstanceOf(WatchlistsEvidenceError);
+      return;
+    }
+    throw new Error(`resolved with ${JSON.stringify(resolved)}`);
   });
 
   it('supports watchlist deletion and cleans up references', () => {
@@ -56,5 +72,36 @@ describe('Product 10: Privacy-First Watchlists, Rules, and Alerts', () => {
     const deleted = watchlistsService.deleteWatchlist(tempWl.watchlist_id);
     expect(deleted).toBe(true);
     expect(watchlistsService.getWatchlistById(tempWl.watchlist_id)).toBeNull();
+  });
+});
+
+describe('Watchlist HTTP responses', () => {
+  type Handler = (req: Request, res: Response) => Promise<void>;
+
+  function mount(): { gets: Map<string, Handler>; posts: Map<string, Handler> } {
+    const gets = new Map<string, Handler>();
+    const posts = new Map<string, Handler>();
+    const app = {
+      get: jest.fn((path: string, callback: Handler) => { gets.set(path, callback); return app; }),
+      post: jest.fn((path: string, callback: Handler) => { posts.set(path, callback); return app; }),
+      delete: jest.fn(() => app),
+    };
+    watchlistsRoutes.initRoutes(app as unknown as Application);
+    return { gets, posts };
+  }
+
+  it('answers the notification reads with a 503 that names the missing matcher', async () => {
+    const { gets, posts } = mount();
+    for (const handler of [
+      gets.get('/api/v1/intelligence/watchlists/:id/notifications')!,
+      posts.get('/api/v1/intelligence/watchlists/notifications/:notifId/ack')!,
+    ]) {
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+      await handler({ params: { id: 'wl-1', notifId: 'n-1' } } as unknown as Request, res as unknown as Response);
+      expect(res.status).toHaveBeenCalledWith(503);
+      const body = res.json.mock.calls[0][0];
+      expect(body.stage).toBe('unavailable-watchlist-matcher');
+      expect(body).not.toHaveProperty('notifications');
+    }
   });
 });

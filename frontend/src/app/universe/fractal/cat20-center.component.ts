@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { BehaviorSubject, Observable, catchError, of, switchMap } from 'rxjs';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { Cat20Holder, Cat20Token } from '@app/universe/universe.types';
@@ -12,7 +13,11 @@ interface Cat20ViewModel {
   readonly tokens?: Cat20Token[];
   readonly selected?: Cat20Token;
   readonly holders?: Cat20Holder[];
+  readonly message?: string;
 }
+
+const failed = (error: unknown): Observable<Cat20ViewModel> =>
+  of({ kind: 'error', message: loadFailureMessage(classifyLoadFailure(error)) });
 
 @Component({
   selector: 'app-cat20-center',
@@ -39,19 +44,18 @@ export class Cat20CenterComponent implements OnInit {
       switchMap((params) => {
         const tokenId = params.get('tokenId');
         if (tokenId) {
+          // A holder table the source could not answer is an error, not an
+          // empty table under a token that claims a holder count.
           return this.api.getCat20Token$(tokenId).pipe(
-            switchMap((token) => {
-              return this.api.getCat20Holders$(token.tokenId).pipe(
-                switchMap((h) => of<Cat20ViewModel>({ kind: 'detail', selected: token, holders: h.holders })),
-                catchError(() => of<Cat20ViewModel>({ kind: 'detail', selected: token, holders: [] }))
-              );
-            }),
-            catchError(() => of<Cat20ViewModel>({ kind: 'error' }))
+            switchMap((token) => this.api.getCat20Holders$(token.tokenId).pipe(
+              switchMap((h) => of<Cat20ViewModel>({ kind: 'detail', selected: token, holders: h.holders })),
+            )),
+            catchError(failed)
           );
         }
         return this.api.getCat20Tokens$().pipe(
           switchMap((data) => of<Cat20ViewModel>({ kind: 'ready', tokens: data.tokens })),
-          catchError(() => of<Cat20ViewModel>({ kind: 'error' }))
+          catchError(failed)
         );
       })
     ).subscribe((vm) => this.state.next(vm));

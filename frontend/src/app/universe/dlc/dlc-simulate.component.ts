@@ -2,6 +2,7 @@ import { Component, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { DlcApiService } from './dlc.service';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
@@ -161,7 +162,7 @@ export class DlcSimulateComponent {
           this.simulating = false;
           this.result = {
             status: 'error',
-            error: err.message || 'Simulation execution failed',
+            error: err?.error?.error || loadFailureMessage(classifyLoadFailure(err)),
           };
           this.cdr.markForCheck();
         },

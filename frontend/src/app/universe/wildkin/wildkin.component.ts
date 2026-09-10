@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { BehaviorSubject, Observable, catchError, of } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, map, of } from 'rxjs';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { WildkinStatusSummary } from '@app/universe/universe.types';
@@ -10,6 +11,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
 interface WildkinViewModel {
   readonly kind: 'loading' | 'ready' | 'error';
   readonly status?: WildkinStatusSummary;
+  readonly message?: string;
 }
 
 @Component({
@@ -32,14 +34,9 @@ export class WildkinComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.api.getWildkinStatus$()
-      .pipe(catchError(() => of(null)))
-      .subscribe((status) => {
-        if (!status) {
-          this.state.next({ kind: 'error' });
-          return;
-        }
-        this.state.next({ kind: 'ready', status });
-      });
+    this.api.getWildkinStatus$().pipe(
+      map((status): WildkinViewModel => ({ kind: 'ready', status })),
+      catchError((error) => of<WildkinViewModel>({ kind: 'error', message: loadFailureMessage(classifyLoadFailure(error)) })),
+    ).subscribe((vm) => this.state.next(vm));
   }
 }

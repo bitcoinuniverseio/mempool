@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { BehaviorSubject, Observable, catchError, combineLatest, of } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, combineLatest, map, of } from 'rxjs';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
@@ -21,6 +22,7 @@ interface UtxoViewModel {
   readonly scriptTypes?: ScriptTypeDistribution[];
   readonly protocolUtxos?: ProtocolBearingUtxos;
   readonly utreexo?: UtreexoRootsView;
+  readonly message?: string;
 }
 
 @Component({
@@ -45,20 +47,23 @@ export class UtxoSetComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // No per-read fallback: a checkpoint or cohort table the source could not
+    // answer is an error with its reason, not an empty table.
     combineLatest([
-      this.api.getUtxoCheckpoints$().pipe(catchError(() => of({ checkpoints: [] }))),
-      this.api.getUtxoDistribution$().pipe(catchError(() => of({ valueCohorts: [], scriptTypes: [] }))),
-      this.api.getProtocolBearingUtxos$().pipe(catchError(() => of(null))),
-      this.api.getUtreexoRoots$().pipe(catchError(() => of(null))),
-    ]).subscribe(([checkpointsData, distData, protocolUtxos, utreexo]) => {
-      this.state.next({
+      this.api.getUtxoCheckpoints$(),
+      this.api.getUtxoDistribution$(),
+      this.api.getProtocolBearingUtxos$(),
+      this.api.getUtreexoRoots$(),
+    ]).pipe(
+      map(([checkpointsData, distData, protocolUtxos, utreexo]): UtxoViewModel => ({
         kind: 'ready',
         checkpoints: checkpointsData.checkpoints,
         valueCohorts: distData.valueCohorts,
         scriptTypes: distData.scriptTypes,
-        protocolUtxos: protocolUtxos || undefined,
-        utreexo: utreexo || undefined,
-      });
-    });
+        protocolUtxos,
+        utreexo,
+      })),
+      catchError((error) => of<UtxoViewModel>({ kind: 'error', message: loadFailureMessage(classifyLoadFailure(error)) })),
+    ).subscribe((vm) => this.state.next(vm));
   }
 }

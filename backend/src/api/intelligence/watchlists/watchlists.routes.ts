@@ -1,6 +1,15 @@
 import { Application, Request, Response } from 'express';
-import { watchlistsService } from './watchlists.service';
+import { WatchlistsEvidenceError, watchlistsService } from './watchlists.service';
 import { handleError } from '../../../utils/api';
+
+/** An absent source is a 503 that names the source, never a 500 and never an empty list. */
+function fail(req: Request, res: Response, e: unknown, fallback: string): void {
+  if (e instanceof WatchlistsEvidenceError) {
+    res.status(e.status).json({ stage: e.code, error: e.message });
+    return;
+  }
+  handleError(req, res, 500, e instanceof Error ? e.message : fallback);
+}
 
 class WatchlistsRoutes {
   public initRoutes(app: Application): void {
@@ -119,7 +128,7 @@ class WatchlistsRoutes {
       const notifs = watchlistsService.getNotifications(req.params.id);
       res.json({ notifications: notifs, count: notifs.length });
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch notifications');
+      fail(req, res, e, 'Failed to fetch notifications');
     }
   }
 
@@ -128,7 +137,7 @@ class WatchlistsRoutes {
       const acked = watchlistsService.acknowledgeNotification(req.params.notifId);
       res.json({ acknowledged: acked });
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to ack notification');
+      fail(req, res, e, 'Failed to ack notification');
     }
   }
 }

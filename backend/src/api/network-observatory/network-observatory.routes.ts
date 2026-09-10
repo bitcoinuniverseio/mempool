@@ -1,7 +1,16 @@
 import { Application, Request, Response } from 'express';
 import config from '../../config';
 import { handleError } from '../../utils/api';
-import { networkObservatoryService } from './network-observatory.service';
+import { NetworkObservatoryEvidenceError, networkObservatoryService } from './network-observatory.service';
+
+/** An absent source is a 503 that names the source, never a 500 and never an empty list. */
+function fail(req: Request, res: Response, e: unknown): void {
+  if (e instanceof NetworkObservatoryEvidenceError) {
+    res.status(e.status).json({ stage: e.code, error: e.message });
+    return;
+  }
+  handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+}
 
 class NetworkObservatoryRoutes {
   public initRoutes(app: Application): void {
@@ -19,7 +28,7 @@ class NetworkObservatoryRoutes {
       const nodes = await networkObservatoryService.$getNodes();
       res.json({ nodes, total: nodes.length });
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -28,7 +37,7 @@ class NetworkObservatoryRoutes {
       const data = await networkObservatoryService.$getPropagation();
       res.json(data);
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -37,7 +46,7 @@ class NetworkObservatoryRoutes {
       const data = await networkObservatoryService.$getPropagation(req.params.txid);
       res.json(data);
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -46,7 +55,7 @@ class NetworkObservatoryRoutes {
       const templates = await networkObservatoryService.$getTemplates();
       res.json(templates);
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 }
