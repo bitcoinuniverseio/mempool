@@ -16,6 +16,11 @@
       <p>Reading UTXO-set checkpoints and accumulator state...</p>
     </div>
 
+    <div *ngIf="vm.kind === 'error'" class="panel">
+      <h2>UTXO-Set Observatory Unavailable</h2>
+      <p role="alert">{{ vm.message }}</p>
+    </div>
+
     <ng-container *ngIf="vm.kind === 'ready'">
       <!-- Protocol Bearing Summary -->
       <div class="metrics-grid" *ngIf="vm.protocolUtxos">

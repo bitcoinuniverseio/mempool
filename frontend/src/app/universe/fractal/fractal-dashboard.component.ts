@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { BehaviorSubject, Observable, catchError, combineLatest, of } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, combineLatest, map, of, switchMap } from 'rxjs';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { FractalBlockSummary, FractalMempoolOverview } from '@app/universe/universe.types';
@@ -11,6 +12,7 @@ interface FractalViewModel {
   readonly tip?: { height: number; hash: string; time: number; network: string };
   readonly mempool?: FractalMempoolOverview;
   readonly latestBlock?: FractalBlockSummary;
+  readonly message?: string;
 }
 
 @Component({
@@ -33,21 +35,17 @@ export class FractalDashboardComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    combineLatest([
-      this.api.getFractalTip$().pipe(catchError(() => of(null))),
-      this.api.getFractalMempool$().pipe(catchError(() => of(null))),
-      this.api.getFractalBlock$('482910').pipe(catchError(() => of(null))),
-    ]).subscribe(([tip, mempool, latestBlock]) => {
-      if (!tip || !mempool || !latestBlock) {
-        this.state.next({ kind: 'error' });
-        return;
-      }
-      this.state.next({
-        kind: 'ready',
-        tip,
-        mempool,
-        latestBlock,
-      });
-    });
+    // The latest block is the one at the reported tip, not a fixed height.
+    // A read the source could not answer is an error with its reason, never
+    // a blank panel.
+    this.api.getFractalTip$().pipe(
+      switchMap((tip) => combineLatest([
+        of(tip),
+        this.api.getFractalMempool$(),
+        this.api.getFractalBlock$(String(tip.height)),
+      ])),
+      map(([tip, mempool, latestBlock]): FractalViewModel => ({ kind: 'ready', tip, mempool, latestBlock })),
+      catchError((error) => of<FractalViewModel>({ kind: 'error', message: loadFailureMessage(classifyLoadFailure(error)) })),
+    ).subscribe((vm) => this.state.next(vm));
   }
 }

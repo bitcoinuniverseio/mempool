@@ -16,6 +16,11 @@
       <p>Reading Ark ASP round state...</p>
     </div>
 
+    <div *ngIf="vm.kind === 'error'" class="panel">
+      <h2>Ark Provider Unavailable</h2>
+      <p role="alert">{{ vm.message }}</p>
+    </div>
+
     <ng-container *ngIf="vm.kind === 'ready'">
       <!-- Operator Stats -->
       <div class="metrics-grid" *ngIf="vm.operators?.length">
@@ -66,38 +71,6 @@
             </tr>
           </tbody>
         </table>
-      </section>
-
-      <!-- VTXO Detail Sample -->
-      <section class="panel" *ngIf="vm.selectedVtxo">
-        <h2>VTXO Inspection (<span class="mono">{{ vm.selectedVtxo.vtxoId }}</span>)</h2>
-        <div class="metrics-grid">
-          <div class="metric-card">
-            <span class="metric-label">Amount</span>
-            <span class="metric-value">{{ (Number(vm.selectedVtxo.amountSats) / 1e8).toFixed(4) }} BTC</span>
-            <span class="metric-sub">{{ vm.selectedVtxo.amountSats }} sats</span>
-          </div>
-          <div class="metric-card">
-            <span class="metric-label">Tree Position</span>
-            <span class="metric-value">Depth {{ vm.selectedVtxo.treeDepth }}</span>
-            <span class="metric-sub">Index {{ vm.selectedVtxo.treeIndex }}</span>
-          </div>
-          <div class="metric-card">
-            <span class="metric-label">Timelock Expiry</span>
-            <span class="metric-value">{{ vm.selectedVtxo.timelockExpiryBlocks }} Blocks</span>
-            <span class="metric-sub">Unilateral exit timeout</span>
-          </div>
-          <div class="metric-card">
-            <span class="metric-label">Status</span>
-            <span class="metric-value text-success">{{ vm.selectedVtxo.status | uppercase }}</span>
-          </div>
-        </div>
-
-        <div style="margin-top: 1rem;">
-          <p><strong>Owner Pubkey:</strong> <span class="mono">{{ vm.selectedVtxo.userPubkey }}</span></p>
-          <p><strong>ASP Server Pubkey:</strong> <span class="mono">{{ vm.selectedVtxo.aspPubkey }}</span></p>
-          <p><span class="badge badge-success">Exit Proof Verified</span> Unilateral exit tree path matches batch anchor root.</p>
-        </div>
       </section>
     </ng-container>
   </ng-container>

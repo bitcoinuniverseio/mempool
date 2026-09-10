@@ -4,71 +4,43 @@ import {
   StratumV2Template,
 } from './stratum-v2.types';
 
-const ROLES: StratumV2RoleStatus[] = [
-  {
-    role: 'job-declarator',
-    name: 'Universe SV2 Job Declarator (Frankfurt)',
-    endpoint: 'sv2.eu.bitcoinuniverse.io:34255',
-    noiseProtocolSecured: true,
-    negotiatedSubprotocols: ['mining', 'job-declaration', 'template-distribution'],
-    connectedDownstreams: 42,
-    uptimeSec: 894000,
-    status: 'active',
-  },
-  {
-    role: 'template-provider',
-    name: 'Universe Local Node Template Provider',
-    endpoint: '127.0.0.1:8442',
-    noiseProtocolSecured: true,
-    negotiatedSubprotocols: ['template-distribution'],
-    connectedDownstreams: 4,
-    uptimeSec: 894000,
-    status: 'active',
-  },
-];
+/**
+ * Raised when a read has no source behind it. The routes map the code to a
+ * 503, so an absent integration is reported as an absent integration rather
+ * than as an answer.
+ */
+export class StratumV2EvidenceError extends Error {
+  constructor(public readonly code: string, message: string, public readonly status = 503) {
+    super(message);
+  }
+}
 
-const TEMPLATES: StratumV2Template[] = [
-  {
-    templateId: 'sv2-tmpl-860143-01',
-    blockHeight: 860143,
-    coinbaseTxValueSats: '317420194',
-    declaredTxCount: 3215,
-    poolSelectedTxCount: 3210,
-    feeRateDeltaSatVb: 0.2,
-    totalWeight: 3993800,
-    status: 'mining',
-    generatedAt: Math.floor(Date.now() / 1000) - 25,
-  },
-];
+const rolesUnavailable =
+  'Stratum V2 observations are unavailable. Role, template and job-declaration reads require the owned SV2 roles (template provider on the owned Bitcoin node and job declarator) with their telemetry export, which are not connected on this deployment.';
 
-const DECLARATIONS: StratumV2JobDeclaration[] = [
-  {
-    jobId: 'sv2-job-948102',
-    templateId: 'sv2-tmpl-860143-01',
-    declaratorId: 'Universe SV2 Job Declarator (Frankfurt)',
-    minerDeclaredTxids: ['e5765796c3d9efeb8152579df6461a6b18973b404d0938f36c535492d5272a0f'],
-    poolModifiedTxids: [],
-    acceptedByPool: true,
-    latencyMs: 14,
-  },
-];
-
+/**
+ * Stratum V2 role, template and job-declaration evidence.
+ *
+ * Every read here needs owned SV2 roles that export their state. None is
+ * connected, so each read reports the absent source. The revision this
+ * replaces answered from constants: two roles marked active with invented
+ * endpoints and uptimes, a template generated at request time, and a job
+ * declaration accepted by a pool that had never seen it.
+ */
 export class StratumV2Service {
   /** @asyncSafe */
   public async $getRoles(): Promise<StratumV2RoleStatus[]> {
-    return ROLES;
+    throw new StratumV2EvidenceError('unavailable-sv2-roles', rolesUnavailable);
   }
 
   /** @asyncSafe */
-
   public async $getTemplates(): Promise<StratumV2Template[]> {
-    return TEMPLATES;
+    throw new StratumV2EvidenceError('unavailable-sv2-roles', rolesUnavailable);
   }
 
   /** @asyncSafe */
-
   public async $getDeclarations(): Promise<StratumV2JobDeclaration[]> {
-    return DECLARATIONS;
+    throw new StratumV2EvidenceError('unavailable-sv2-roles', rolesUnavailable);
   }
 }
 
