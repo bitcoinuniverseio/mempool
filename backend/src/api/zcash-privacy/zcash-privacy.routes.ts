@@ -1,7 +1,16 @@
 import { Application, Request, Response } from 'express';
 import config from '../../config';
 import { handleError } from '../../utils/api';
-import { zcashPrivacyService } from './zcash-privacy.service';
+import { ZcashPrivacyEvidenceError, zcashPrivacyService } from './zcash-privacy.service';
+
+/** An absent source is a 503 that names the source, never a 500 and never an empty list. */
+function fail(req: Request, res: Response, e: unknown): void {
+  if (e instanceof ZcashPrivacyEvidenceError) {
+    res.status(e.status).json({ stage: e.code, error: e.message });
+    return;
+  }
+  handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+}
 
 class ZcashPrivacyRoutes {
   public initRoutes(app: Application): void {
@@ -18,7 +27,7 @@ class ZcashPrivacyRoutes {
       const summary = await zcashPrivacyService.$getSummary();
       res.json(summary);
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -27,7 +36,7 @@ class ZcashPrivacyRoutes {
       const pools = await zcashPrivacyService.$getPools();
       res.json({ pools, total: pools.length });
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -36,7 +45,7 @@ class ZcashPrivacyRoutes {
       const upgrades = await zcashPrivacyService.$getUpgrades();
       res.json({ upgrades, total: upgrades.length });
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 }
