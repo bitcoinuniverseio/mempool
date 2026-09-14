@@ -356,6 +356,9 @@ const OVERLAY_CHAIN_PREFIXES = [
  * existing.
  */
 export function routeFor(pathname, originalUrl, acceptsHtml = false) {
+  if (pathname === '/v2/universe' || pathname.startsWith('/v2/universe/')) {
+    return { upstream: null, status: 404 };
+  }
   const network = NETWORK_API_PATH.exec(pathname);
   if (network) {
     const prefix = `/${network[1]}`;
