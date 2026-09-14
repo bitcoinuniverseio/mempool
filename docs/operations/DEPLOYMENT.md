@@ -729,7 +729,8 @@ The gateway reads the root-owned `overlay-route.json` in the Explorer state
 folder for each new HTTP request and WebSocket upgrade. Atomic replacement
 moves new traffic between the live and passive overlay slots. Requests and
 sockets already assigned to the prior slot keep that upstream. Portfolio v2
-remains enabled by default, preserving existing installations.
+remains enabled by default, preserving existing installations. Unprefixed
+`/v2/universe` paths return 404 instead of the application shell.
 
 A gateway-only update may use a versioned component directory under
 `/opt/universe-explorer/gateway-components/<source-sha>` and a service override
