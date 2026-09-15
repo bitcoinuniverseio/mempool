@@ -20,10 +20,10 @@ describe('CompactFiltersService', () => {
     expect(() => compactFiltersService.getProviderHistory('filter-peer-us-east')).toThrow(unavailable('unavailable-filter-peers'));
   });
 
-  it('reports the missing filter index rather than a filter for any block hash', () => {
-    expect(() => compactFiltersService.getBlockFilter('00'.repeat(32))).toThrow(unavailable('unavailable-filter-index'));
-    expect(() => compactFiltersService.listCheckpoints()).toThrow(unavailable('unavailable-filter-index'));
-    expect(() => compactFiltersService.getRanges()).toThrow(unavailable('unavailable-filter-index'));
+  it('reports the missing filter index rather than a filter for any block hash', async () => {
+    await expect(compactFiltersService.getBlockFilter('00'.repeat(32))).rejects.toThrow(unavailable('unavailable-filter-index'));
+    await expect(compactFiltersService.listCheckpoints()).rejects.toThrow(unavailable('unavailable-filter-index'));
+    await expect(compactFiltersService.getRanges()).rejects.toThrow(unavailable('unavailable-filter-index'));
   });
 
   it('reports the missing prober rather than a verification run decided by provider names', () => {
@@ -32,7 +32,7 @@ describe('CompactFiltersService', () => {
     expect(() => compactFiltersService.getVerification('vrun-1')).toThrow(unavailable('unavailable-filter-peers'));
   });
 
-  it('never resolves an absent source as an empty directory', () => {
+  it('never resolves an absent source as an empty directory', async () => {
     for (const read of [
       () => compactFiltersService.getOverview(),
       () => compactFiltersService.listProviders(),
@@ -42,7 +42,7 @@ describe('CompactFiltersService', () => {
     ]) {
       let resolved: unknown = 'unresolved';
       try {
-        resolved = read();
+        resolved = await read();
       } catch (e) {
         expect(e).toBeInstanceOf(CompactFiltersEvidenceError);
         continue;
@@ -66,12 +66,12 @@ describe('Compact filters HTTP responses', () => {
     return { gets, posts };
   }
 
-  it('answers every observation read with a 503 that names the missing source', () => {
+  it('answers every observation read with a 503 that names the missing source', async () => {
     const { gets } = mount();
     expect(gets.size).toBe(8);
     for (const handler of gets.values()) {
       const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
-      handler({ params: { providerId: 'peer', blockHash: '00'.repeat(32), verificationId: 'vrun' } } as unknown as Request,
+      await handler({ params: { providerId: 'peer', blockHash: '00'.repeat(32), verificationId: 'vrun' } } as unknown as Request,
         res as unknown as Response);
       expect(res.status).toHaveBeenCalledWith(503);
       const body = res.json.mock.calls[0][0];
@@ -82,10 +82,10 @@ describe('Compact filters HTTP responses', () => {
     }
   });
 
-  it('answers a verification request with a 503 rather than a run that never queried a peer', () => {
+  it('answers a verification request with a 503 rather than a run that never queried a peer', async () => {
     const { posts } = mount();
     const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
-    posts.get('/api/v1/intelligence/compact-filters/verifications')!(
+    await posts.get('/api/v1/intelligence/compact-filters/verifications')!(
       { body: { start_height: 1, end_height: 2, providers: [] } } as unknown as Request, res as unknown as Response);
     expect(res.status).toHaveBeenCalledWith(503);
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ stage: 'unavailable-filter-peers' }));

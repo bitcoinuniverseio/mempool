@@ -1,3 +1,4 @@
+import { coreFilterSource } from './core-filter-source';
 import {
   CompactFilterProvider,
   CompactFilterCheckpoint,
@@ -18,7 +19,7 @@ export class CompactFiltersEvidenceError extends Error {
 }
 
 const filterIndexUnavailable =
-  'BIP158 filter observations are unavailable. Block filter, checkpoint and range reads require the owned bitcoind with blockfilterindex=1 (getblockfilter and getblockfilterheader RPC), which is not connected on this deployment.';
+  'BIP158 filter observations are unavailable. Block filter, checkpoint and range reads require the owned bitcoind with blockfilterindex=1 (getblockfilter RPC, which returns both filter and header), which is not connected on this deployment.';
 
 const filterPeersUnavailable =
   'Compact filter provider observations are unavailable. Provider, conflict and cross-peer verification reads require the owned P2P filter prober that samples NODE_COMPACT_FILTERS peers from the backend network, which is not connected on this deployment.';
@@ -49,17 +50,11 @@ export class CompactFiltersService {
     throw new CompactFiltersEvidenceError('unavailable-filter-peers', filterPeersUnavailable);
   }
 
-  public listCheckpoints(): CompactFilterCheckpoint[] {
-    throw new CompactFiltersEvidenceError('unavailable-filter-index', filterIndexUnavailable);
-  }
+  public listCheckpoints(network = 'main') { return coreFilterSource.checkpoints(network); }
 
-  public getBlockFilter(_blockHash: string): CompactFilter | undefined {
-    throw new CompactFiltersEvidenceError('unavailable-filter-index', filterIndexUnavailable);
-  }
+  public getBlockFilter(blockHash: string, network = 'main') { return coreFilterSource.getBlock(blockHash, network); }
 
-  public getRanges(): Array<{ range_start: number; range_end: number; filter_type: string; status: string }> {
-    throw new CompactFiltersEvidenceError('unavailable-filter-index', filterIndexUnavailable);
-  }
+  public getRanges(start?: number, end?: number, network = 'main') { return coreFilterSource.range(start, end, network); }
 
   public createVerification(_params: {
     start_height: number;
