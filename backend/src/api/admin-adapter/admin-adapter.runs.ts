@@ -297,14 +297,12 @@ class AdminAdapterRunStore {
   }
 
   /** @asyncUnsafe */
-  async list(limit = 50): Promise<AdminRun[]> {
-    if (!this.available()) {
-      return [];
-    }
-    const bounded = Math.max(1, Math.min(200, limit));
+  async list(limit = 50, query = ''): Promise<AdminRun[]> {
+    this.assertAvailable();
+    const bounded = Number.isFinite(limit) ? Math.max(1, Math.min(200, Math.trunc(limit))) : 50;
     const [rows]: any[] = await DB.query(
-      'SELECT * FROM admin_adapter_runs ORDER BY queued_at DESC LIMIT ?',
-      [bounded],
+      "SELECT * FROM admin_adapter_runs WHERE LOCATE(?, LOWER(CONCAT_WS(' ', run_id, operation_id, target))) > 0 ORDER BY queued_at DESC LIMIT ?",
+      [query.trim().toLowerCase().slice(0, 200), bounded],
     );
     return rows.map((row: any) => toRun(row));
   }
@@ -312,11 +310,9 @@ class AdminAdapterRunStore {
   /** Audit rows are derived from runs, so the two can never disagree. */
   /** @asyncUnsafe */
   async auditEntries(limit = 50, offset = 0): Promise<AdminRun[]> {
-    if (!this.available()) {
-      return [];
-    }
-    const boundedLimit = Math.max(1, Math.min(200, limit));
-    const boundedOffset = Math.max(0, offset);
+    this.assertAvailable();
+    const boundedLimit = Number.isFinite(limit) ? Math.max(1, Math.min(200, Math.trunc(limit))) : 50;
+    const boundedOffset = Number.isSafeInteger(offset) ? Math.max(0, offset) : 0;
     const [rows]: any[] = await DB.query(
       'SELECT * FROM admin_adapter_runs ORDER BY queued_at DESC LIMIT ? OFFSET ?',
       [boundedLimit, boundedOffset],

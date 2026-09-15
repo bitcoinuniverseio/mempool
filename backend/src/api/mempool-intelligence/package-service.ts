@@ -3,6 +3,7 @@ import bitcoinApi from '../bitcoin/bitcoin-api-factory';
 import mempool from '../mempool';
 import { MempoolTransactionExtended } from '../../mempool.interfaces';
 import intelligence from './mempool-intelligence';
+import { incrementalFeeFrom, MempoolSourceUnavailable } from './source-unavailable';
 import {
   simulatePackage,
   type CandidateTx,
@@ -56,8 +57,9 @@ export function chunksFromDiagram(
 
 /** Satoshis from a Bitcoin Core amount, which is stated in whole bitcoin. */
 function toSats(btc: number | undefined | null): number | null {
-  if (btc === undefined || btc === null || !Number.isFinite(btc)) { return null; }
-  return Math.round(btc * 100_000_000);
+  if (typeof btc !== 'number' || !Number.isFinite(btc) || btc < 0 || btc > 21_000_000) { return null; }
+  const sats = Math.round(btc * 100_000_000);
+  return Number.isSafeInteger(sats) && Math.abs(btc * 100_000_000 - sats) <= Math.max(1e-7, sats * Number.EPSILON) ? sats : null;
 }
 
 /**
@@ -89,7 +91,7 @@ export function validateRawTxs(raw: unknown): PackageRequestError | null {
       return { status: 400, message: 'Every entry must be an even number of hexadecimal characters.' };
     }
   }
-  const seen = new Set(raw as string[]);
+  const seen = new Set((raw as string[]).map(hex => hex.toLowerCase()));
   if (seen.size !== raw.length) {
     return { status: 400, message: 'The same transaction appears twice in this package.' };
   }
@@ -155,18 +157,18 @@ function lookupFor(
  *
  * Read from the node rather than assumed, because it is a configurable and a
  * replacement calculation built on the wrong one is wrong by exactly the
- * amount that matters. One sat per vbyte is the default and the fallback.
+ * amount that matters. Unavailable policy is not replaced with a default.
  *
- * @asyncSafe Falls back to the default rather than rejecting.
+ * @asyncUnsafe Callers report unavailable policy explicitly.
  */
 export async function $incrementalRelayFeeSatPerVb(): Promise<number> {
   try {
     const info = await bitcoinClient.getMempoolInfo();
     // Stated in bitcoin per kilo virtual byte.
-    const perVb = (info?.incrementalrelayfee ?? 0) * 100_000_000 / 1000;
-    return perVb > 0 ? perVb : 1;
+    return incrementalFeeFrom(info);
   } catch (e) {
-    return 1;
+    if (e instanceof MempoolSourceUnavailable) throw e;
+    throw new MempoolSourceUnavailable('The node incremental relay fee could not be read; package planning is unavailable.');
   }
 }
 
@@ -179,9 +181,24 @@ export async function $incrementalRelayFeeSatPerVb(): Promise<number> {
  * saying nothing, which is the wrong answer to a caller's malformed input.
  */
 export async function $simulate(rawTxs: string[]): Promise<PackageSimulation> {
-  const decoded = await Promise.all(
-    rawTxs.map((hex) => bitcoinClient.decodeRawTransaction(hex)),
-  );
+  const decoded = await Promise.all(rawTxs.map(async (hex) => {
+    try { return await bitcoinClient.decodeRawTransaction(hex); }
+    catch (error: any) {
+      if (error?.code === -22) throw error;
+      throw new MempoolSourceUnavailable('The node decoder is unavailable; transaction validity is unknown.');
+    }
+  }));
+  const txidShape = (value: unknown): value is string => typeof value === 'string' && /^[0-9a-f]{64}$/.test(value);
+  for (const tx of decoded as any[]) {
+    if (!tx || !txidShape(tx.txid) || !Number.isSafeInteger(tx.vsize) || tx.vsize <= 0
+      || !Number.isSafeInteger(tx.weight) || tx.weight <= 0 || Math.ceil(tx.weight / 4) !== tx.vsize
+      || !Array.isArray(tx.vin) || tx.vin.length === 0
+      || !tx.vin.every((vin: any) => vin && (typeof vin.coinbase === 'string' || (txidShape(vin.txid) && Number.isSafeInteger(vin.vout) && vin.vout >= 0 && vin.vout <= 0xffffffff)))
+      || !Array.isArray(tx.vout) || tx.vout.length === 0
+      || !tx.vout.every((vout: any) => vout && toSats(vout.value) !== null)) {
+      throw new MempoolSourceUnavailable('The node decoder returned an incomplete transaction schema; package analysis is unavailable.');
+    }
+  }
 
   const candidates: CandidateTx[] = decoded.map((tx: any) => ({
     txid: tx.txid,
@@ -191,15 +208,24 @@ export async function $simulate(rawTxs: string[]): Promise<PackageSimulation> {
       // A coinbase input has no previous output to point at.
       .filter((vin: any) => typeof vin?.txid === 'string')
       .map((vin: any) => ({ txid: vin.txid, vout: vin.vout })),
-    outputValuesSats: (tx.vout ?? []).map((vout: any) => toSats(vout?.value) ?? 0),
+    outputValuesSats: tx.vout.map((vout: any) => toSats(vout.value) as number),
   }));
 
-  // A failed test is not a failed request. The node refusing to judge the
-  // package is itself the answer, and it is reported as a verdict on every
-  // transaction rather than as a five hundred.
+  // A source failure is not a transaction rejection. Require a distinct,
+  // explicit node verdict for each decoded transaction before deriving results.
   let verdicts: NodeVerdict[];
   try {
     const results = await bitcoinApi.$testMempoolAccept(rawTxs);
+    const expected = new Set(candidates.map(tx => tx.txid));
+    if (!Array.isArray(results) || results.length !== candidates.length || expected.size !== candidates.length
+      || new Set(results.map(result => result?.txid)).size !== candidates.length
+      || results.some(result => !result || !expected.has(result.txid) || typeof result.allowed !== 'boolean'
+        || (result.vsize !== undefined && (!Number.isSafeInteger(result.vsize) || result.vsize <= 0))
+        || (result.fees?.base !== undefined && toSats(result.fees.base) === null)
+        || (result.fees?.['effective-feerate'] !== undefined && (typeof result.fees['effective-feerate'] !== 'number' || !Number.isFinite(result.fees['effective-feerate']) || result.fees['effective-feerate'] < 0 || result.fees['effective-feerate'] > 21_000_000))
+        || (result.fees?.['effective-includes'] !== undefined && (!Array.isArray(result.fees['effective-includes']) || !result.fees['effective-includes'].every(txidShape))))) {
+      throw new MempoolSourceUnavailable('The node did not supply a complete transaction-bound acceptance verdict; package acceptance is unknown.');
+    }
     verdicts = results.map((result) => ({
       txid: result.txid,
       allowed: result.allowed === true,
@@ -207,21 +233,13 @@ export async function $simulate(rawTxs: string[]): Promise<PackageSimulation> {
       vsize: result.vsize ?? null,
       feeSats: toSats(result.fees?.base),
       effectiveFeerate: result.fees?.['effective-feerate'] !== undefined
-        ? (toSats(result.fees['effective-feerate']) ?? 0) / 1000
+        ? result.fees['effective-feerate'] * 100_000
         : null,
       effectiveIncludes: result.fees?.['effective-includes'] ?? [],
     }));
   } catch (e: any) {
-    const reason = e?.message ? String(e.message) : 'The node did not judge this package.';
-    verdicts = candidates.map((tx) => ({
-      txid: tx.txid,
-      allowed: false,
-      rejectReason: reason,
-      vsize: null,
-      feeSats: null,
-      effectiveFeerate: null,
-      effectiveIncludes: [],
-    }));
+    if (e instanceof MempoolSourceUnavailable) throw e;
+    throw new MempoolSourceUnavailable('The node could not judge this package; acceptance is unknown.');
   }
 
   const pool = mempool.getMempool();

@@ -1,6 +1,7 @@
 import config from '../../config';
 import { Application, Request, Response } from 'express';
 import channelsApi from './channels.api';
+import bitcoinApi from '../bitcoin/bitcoin-api-factory';
 import { handleError } from '../../utils/api';
 
 const TXID_REGEX = /^[a-f0-9]{64}$/i;
@@ -82,10 +83,15 @@ class ChannelsRoutes {
         handleError(req, res, 400, 'invalid txId format');
         return;
       }
+      const values = Object.values(req.query.txId);
+      if (values.length === 0 || values.length > 50 || values.some(value => typeof value !== 'string' || !TXID_REGEX.test(value))) {
+        handleError(req, res, 400, 'Expected between 1 and 50 valid transaction ids');
+        return;
+      }
       const txIds: string[] = [];
       for (const txid of Object.values(req.query.txId)) {
         if (typeof txid === 'string' && TXID_REGEX.test(txid)) {
-          txIds.push(txid);
+          txIds.push(txid.toLowerCase());
         }
       }
       const channels = await channelsApi.$getChannelsByTransactionId(txIds);
@@ -93,10 +99,20 @@ class ChannelsRoutes {
       for (const txid of txIds) {
         const inputs: any = {};
         const outputs: any = {};
-        // Assuming that we only have one lightning close input in each transaction. This may not be true in the future
-        const foundChannelsFromInput = channels.find((channel) => channel.closing_transaction_id === txid);
-        if (foundChannelsFromInput) {
-          inputs[0] = foundChannelsFromInput;
+        const closingChannels = channels.filter(channel => channel.closing_transaction_id === txid);
+        if (closingChannels.length) {
+          const transaction = await bitcoinApi.$getRawTransaction(txid);
+          if (!transaction || transaction.txid !== txid || !Array.isArray(transaction.vin)) {
+            throw new Error('Spending transaction unavailable');
+          }
+          for (const channel of closingChannels) {
+            const matches = transaction.vin.map((input, index) => ({ input, index })).filter(({ input }) =>
+              input.txid === channel.transaction_id && input.vout === channel.transaction_vout);
+            if (matches.length !== 1 || inputs[matches[0].index]) {
+              throw new Error('Channel funding outpoint does not uniquely match spending transaction');
+            }
+            inputs[matches[0].index] = channel;
+          }
         }
         const foundChannelsFromOutputs = channels.filter((channel) => channel.transaction_id === txid);
         for (const output of foundChannelsFromOutputs) {
@@ -110,7 +126,7 @@ class ChannelsRoutes {
 
       res.json(result);
     } catch (e) {
-      handleError(req, res, 500, 'Failed to get channels by transaction ids');
+      handleError(req, res, 503, 'Channel transaction observations unavailable');
     }
   }
 

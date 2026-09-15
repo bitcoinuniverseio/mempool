@@ -1507,7 +1507,7 @@ class Blocks {
         await this.$indexBlockByHeight(fromHeight);
         block = await blocksRepository.$getBlockByHeight(fromHeight);
         if (!block) {
-          continue;
+          throw new Error(`Block source unavailable at height ${fromHeight} after indexing attempt`);
         }
       }
 
@@ -1579,24 +1579,16 @@ class Blocks {
         }
       }
 
-      cleanBlock.fee_amt_percentiles = {
-        'min': cleanBlock.fee_amt_percentiles[0],
-        'perc_10': cleanBlock.fee_amt_percentiles[1],
-        'perc_25': cleanBlock.fee_amt_percentiles[2],
-        'perc_50': cleanBlock.fee_amt_percentiles[3],
-        'perc_75': cleanBlock.fee_amt_percentiles[4],
-        'perc_90': cleanBlock.fee_amt_percentiles[5],
-        'max': cleanBlock.fee_amt_percentiles[6],
-      };
-      cleanBlock.fee_rate_percentiles = {
-        'min': cleanBlock.fee_rate_percentiles[0],
-        'perc_10': cleanBlock.fee_rate_percentiles[1],
-        'perc_25': cleanBlock.fee_rate_percentiles[2],
-        'perc_50': cleanBlock.fee_rate_percentiles[3],
-        'perc_75': cleanBlock.fee_rate_percentiles[4],
-        'perc_90': cleanBlock.fee_rate_percentiles[5],
-        'max': cleanBlock.fee_rate_percentiles[6],
-      };
+      for (const field of ['fee_amt_percentiles', 'fee_rate_percentiles']) {
+        const values = cleanBlock[field];
+        // Missing or malformed distribution evidence is unknown, never zeros.
+        cleanBlock[field] = Array.isArray(values) && values.length === 7
+          && values.every((value, index) => typeof value === 'number' && Number.isFinite(value)
+            && value >= 0 && (index === 0 || value >= values[index - 1]))
+          ? { min: values[0], perc_10: values[1], perc_25: values[2], perc_50: values[3],
+              perc_75: values[4], perc_90: values[5], max: values[6] }
+          : null;
+      }
 
       // Re-org can happen after indexing so we need to always get the
       // latest state from core

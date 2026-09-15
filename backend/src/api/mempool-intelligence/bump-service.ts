@@ -3,6 +3,7 @@ import mempool from '../mempool';
 import { MempoolTransactionExtended } from '../../mempool.interfaces';
 import intelligence from './mempool-intelligence';
 import { descendantsOf } from './package-service';
+import { incrementalFeeFrom, MempoolSourceUnavailable } from './source-unavailable';
 import {
   planBump,
   signalsReplacement,
@@ -56,11 +57,8 @@ export function readTargetFeerate(raw: unknown): number | null {
 /**
  * Reads the two policy values a bump depends on.
  *
- * `fullrbf` is absent on a node old enough not to have the setting, and its
- * absence is read as off. That is what it meant on those releases, and
- * reading it as on would report a route as open that the node would refuse.
- *
- * @asyncSafe Falls back to the conservative pair rather than rejecting.
+ * Missing policy fields cannot establish the policy of this node.
+ * @asyncUnsafe Callers map missing policy evidence to unavailable.
  */
 export async function $bumpPolicy(): Promise<{
   incrementalRelayFeeSatPerVb: number;
@@ -68,13 +66,17 @@ export async function $bumpPolicy(): Promise<{
 }> {
   try {
     const info: any = await bitcoinClient.getMempoolInfo();
-    const perVb = (info?.incrementalrelayfee ?? 0) * 100_000_000 / 1000;
+    const perVb = incrementalFeeFrom(info);
+    if (typeof info?.fullrbf !== 'boolean') {
+      throw new MempoolSourceUnavailable('The node did not report its replacement policy; bump planning is unavailable.');
+    }
     return {
-      incrementalRelayFeeSatPerVb: perVb > 0 ? perVb : 1,
+      incrementalRelayFeeSatPerVb: perVb,
       fullReplacementEnabled: info?.fullrbf === true,
     };
   } catch (e) {
-    return { incrementalRelayFeeSatPerVb: 1, fullReplacementEnabled: false };
+    if (e instanceof MempoolSourceUnavailable) throw e;
+    throw new MempoolSourceUnavailable('The node replacement policy could not be read; bump planning is unavailable.');
   }
 }
 
@@ -92,10 +94,18 @@ export function buildTarget(
 ): BumpTarget | null {
   const tx = pool[txid];
   if (!tx) { return null; }
+  const validSats = (value: unknown): value is number => Number.isSafeInteger(value) && (value as number) >= 0 && (value as number) <= 2_100_000_000_000_000;
+  const size = tx.adjustedVsize ?? tx.weight / 4;
+  if (tx.txid !== txid || !validSats(tx.fee) || !Number.isSafeInteger(tx.weight) || tx.weight <= 0
+    || !Number.isFinite(size) || size <= 0 || size > Number.MAX_SAFE_INTEGER
+    || !Array.isArray(tx.vout) || tx.vout.length === 0 || !tx.vout.every(output => output && validSats(output.value))
+    || !Array.isArray(tx.vin) || tx.vin.length === 0 || !tx.vin.every(input => input && Number.isSafeInteger(input.sequence) && input.sequence >= 0 && input.sequence <= 0xffffffff)) {
+    throw new MempoolSourceUnavailable('Transaction fee, size, output or replacement evidence is unavailable.');
+  }
 
   const outputs: BumpOutput[] = (tx.vout ?? []).map((vout: any, index: number) => ({
     index,
-    valueSats: vout?.value ?? 0,
+    valueSats: vout.value,
     type: spendableTypeOf(vout?.scriptpubkey_type),
     spent: spendMap.has(`${txid}:${index}`),
   }));
@@ -112,17 +122,22 @@ export function buildTarget(
   const view = cluster?.cluster.transactions.find((entry) => entry.txid === txid);
 
   const vsize = tx.adjustedVsize ?? tx.weight / 4;
+  if (!view || !Number.isFinite(view.ancestorVsize) || view.ancestorVsize < vsize
+    || !validSats(view.ancestorFeeSats) || view.ancestorFeeSats < tx.fee
+    || descendants.some(entry => !validSats(entry.feeSats) || !Number.isFinite(entry.vsize) || entry.vsize <= 0)) {
+    throw new MempoolSourceUnavailable('Ancestor or descendant fee evidence is unavailable.');
+  }
   return {
     txid,
     vsize,
     weight: tx.weight,
     feeSats: tx.fee,
     signalsReplacement: signalsReplacement(
-      (tx.vin ?? []).map((vin: any) => vin?.sequence ?? 0xffffffff),
+      tx.vin.map((vin: any) => vin.sequence),
     ),
     outputs,
-    ancestorVsize: view?.ancestorVsize ?? vsize,
-    ancestorFeeSats: view?.ancestorFeeSats ?? tx.fee,
+    ancestorVsize: view.ancestorVsize,
+    ancestorFeeSats: view.ancestorFeeSats,
     descendants,
   };
 }
