@@ -57,7 +57,7 @@ describe('Liquid observatory HTTP responses', () => {
 
   it('answers every read with a 503 that names the missing source', async () => {
     const gets = mount();
-    expect(gets.size).toBe(5);
+    expect(gets.size).toBe(6);
     for (const handler of gets.values()) {
       const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
       await handler({ params: { assetId: 'L-BTC' } } as unknown as Request, res as unknown as Response);

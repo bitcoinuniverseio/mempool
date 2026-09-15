@@ -2,6 +2,7 @@ import { Application, Request, Response } from 'express';
 import config from '../../config';
 import { handleError } from '../../utils/api';
 import { ZcashPrivacyEvidenceError, zcashPrivacyService } from './zcash-privacy.service';
+import { zcashBlockSource } from './zcash-block-source';
 
 /** An absent source is a 503 that names the source, never a 500 and never an empty list. */
 function fail(req: Request, res: Response, e: unknown): void {
@@ -15,6 +16,14 @@ function fail(req: Request, res: Response, e: unknown): void {
 class ZcashPrivacyRoutes {
   public initRoutes(app: Application): void {
     const prefix = config.MEMPOOL.API_URL_PREFIX + 'zcash/privacy/';
+
+    app.get(prefix + 'blocks', async (req: Request, res: Response) => {
+      try {
+        if (Object.keys(req.query).some(key => !['network','start','end','previous'].includes(key)) || !/^[1-9][0-9]{0,9}$/.test(String(req.query.start)) || !/^[1-9][0-9]{0,9}$/.test(String(req.query.end))) throw new ZcashPrivacyEvidenceError('invalid-query', 'Only a public network, bounded height interval and optional prior block hash are accepted.', 400);
+        const result = await zcashBlockSource.range(String(req.query.network), Number(req.query.start), Number(req.query.end), req.query.previous === undefined ? undefined : String(req.query.previous));
+        res.setHeader('Cache-Control', 'no-store'); res.json(result);
+      } catch (error) { fail(req, res, error); }
+    });
 
     app
       .get(prefix + 'summary', this.$getSummary)
