@@ -36,7 +36,7 @@ export const CONDITION_TYPES = ['confirmation', 'value_transfer', 'rbf_replaceme
 
       <div *ngIf="!hasKey" class="alert alert-warning mb-4">
         Watchlists belong to an owner key. Create or paste one in the
-        <a [routerLink]="'/intelligence/developer' | relativeUrl">Developer Platform</a> first.
+        <a class="text-decoration-underline" [routerLink]="'/intelligence/developer' | relativeUrl">Developer Platform</a> first.
       </div>
 
       <ng-container *ngIf="hasKey">
