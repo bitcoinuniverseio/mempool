@@ -79,7 +79,8 @@ describe('Product 9: Developer Data Platform and Query Studio', () => {
   it('blocks SSRF attempts in developer webhook registration', async () => {
     useOwnerStore(new MemoryOwnerStore());
     developerIdentity.resetForTests();
-    developerIdentity.resolver = async () => [{ address: '203.0.113.9', family: 4 }];
+    // Resolver seam only; no outbound request. Documentation networks are blocked.
+    developerIdentity.resolver = async () => [{ address: '8.8.8.8', family: 4 }];
     const key = await developerIdentity.bootstrapOwner('dev', '203.0.113.3');
     const owner = (await developerIdentity.authenticateKey(key.secret_key))!;
     await expect(developerIdentity.registerWebhook(owner, 'http://169.254.169.254/latest/meta-data/', ['mempool.evaluated'])).rejects.toMatchObject({ code: 'invalid_url' });

@@ -74,9 +74,9 @@ class PaymentConnectivityRoutes {
       }
     });
 
-    app.post('/api/v1/intelligence/payment-connectivity/public-endpoints/verify', (req: Request, res: Response) => {
+    app.post('/api/v1/intelligence/payment-connectivity/public-endpoints/verify', async (req: Request, res: Response) => {
       try {
-        const result = paymentConnectivityService.verifyPublicEndpoint(req.body.endpoint_url);
+        const result = await paymentConnectivityService.verifyPublicEndpoint(req.body?.endpoint_url);
         res.json(result);
       } catch (err: any) {
         fail(res, err, 400);

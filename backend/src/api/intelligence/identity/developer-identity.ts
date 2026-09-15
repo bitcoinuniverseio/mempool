@@ -115,34 +115,28 @@ export type DeliveryTransport = (input: {
 }) => Promise<DeliveryOutcome>;
 
 /** True for loopback, private, link-local, CGNAT, multicast, reserved and IPv4-mapped equivalents. */
+const blockedDestinations = new net.BlockList();
+// Nonpublic and special-purpose destinations are not webhook/probe targets.
+// https://www.iana.org/assignments/iana-ipv4-special-registry/
+// https://www.iana.org/assignments/iana-ipv6-special-registry/
+for (const [address, prefix] of [
+  ['0.0.0.0', 8], ['10.0.0.0', 8], ['100.64.0.0', 10], ['127.0.0.0', 8],
+  ['169.254.0.0', 16], ['172.16.0.0', 12], ['192.0.0.0', 24], ['192.0.2.0', 24],
+  ['192.88.99.0', 24], ['192.168.0.0', 16], ['198.18.0.0', 15],
+  ['198.51.100.0', 24], ['203.0.113.0', 24], ['224.0.0.0', 3],
+] as const) blockedDestinations.addSubnet(address, prefix, 'ipv4');
+for (const [address, prefix] of [
+  ['::', 96], ['64:ff9b::', 96], ['64:ff9b:1::', 48], ['100::', 64],
+  ['100:0:0:1::', 64], ['2001::', 23], ['2001:db8::', 32], ['2002::', 16],
+  ['3fff::', 20], ['5f00::', 16], ['fc00::', 7], ['fe80::', 10], ['fec0::', 10], ['ff00::', 8],
+] as const) blockedDestinations.addSubnet(address, prefix, 'ipv6');
+
 export function isPrivateAddress(address: string): boolean {
   const kind = net.isIP(address);
-  if (kind === 4) {
-    const parts = address.split('.').map(Number);
-    if (parts.some(part => Number.isNaN(part))) { return true; }
-    const [a, b] = parts;
-    if (a === 0 || a === 10 || a === 127) { return true; }
-    if (a === 100 && b >= 64 && b <= 127) { return true; }
-    if (a === 169 && b === 254) { return true; }
-    if (a === 172 && b >= 16 && b <= 31) { return true; }
-    if (a === 192 && b === 168) { return true; }
-    if (a === 192 && b === 0 && parts[2] === 0) { return true; }
-    if (a === 198 && (b === 18 || b === 19)) { return true; }
-    if (a >= 224) { return true; }
-    return false;
-  }
-  if (kind === 6) {
-    const lower = address.toLowerCase();
-    if (lower === '::' || lower === '::1') { return true; }
-    if (lower.startsWith('fe80:') || lower.startsWith('fc') || lower.startsWith('fd')) { return true; }
-    if (lower.startsWith('ff')) { return true; }
-    const mapped = lower.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
-    if (mapped) { return isPrivateAddress(mapped[1]); }
-    if (lower.startsWith('64:ff9b:')) { return true; }
-    if (lower.startsWith('2001:db8:')) { return true; }
-    return false;
-  }
-  return true;
+  if (!kind || address.includes('%')) return true;
+  // Node's binary subnet matcher also handles expanded IPv6, the whole
+  // link-local /10 and IPv4-mapped IPv6 (including hexadecimal notation).
+  return blockedDestinations.check(address, kind === 4 ? 'ipv4' : 'ipv6');
 }
 
 export function validateWebhookUrl(raw: string): URL {
@@ -157,7 +151,7 @@ export function validateWebhookUrl(raw: string): URL {
   if (parsed.username || parsed.password) {
     throw new IdentityError('invalid_url', 'target_url must not carry credentials', 400);
   }
-  const host = parsed.hostname.replace(/^\[|\]$/g, '');
+  const host = parsed.hostname.replace(/^\[|\]$/g, '').replace(/\.$/, '').toLowerCase();
   if (host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.local') || host.endsWith('.internal') || net.isIP(host) !== 0 && isPrivateAddress(host)) {
     throw new IdentityError('invalid_url', 'target_url resolves to a private, loopback or link-local destination', 400);
   }
@@ -171,6 +165,7 @@ const defaultResolver: Resolver = async hostname => {
   const results = await dns.promises.lookup(hostname, { all: true, verbatim: true });
   return results.map(result => ({ address: result.address, family: result.family as 4 | 6 }));
 };
+let activeDestinationResolutions = 0;
 
 /** Resolves the host and refuses if any answer is private; returns the pinned public address. */
 export async function resolvePublicAddress(url: URL, resolver: Resolver = defaultResolver): Promise<{ address: string; family: 4 | 6 }> {
@@ -180,10 +175,22 @@ export async function resolvePublicAddress(url: URL, resolver: Resolver = defaul
     return { address: host, family: net.isIP(host) as 4 | 6 };
   }
   let answers: { address: string; family: 4 | 6 }[];
-  try { answers = await resolver(host); } catch { throw new IdentityError('unresolvable', `${host} does not resolve`, 400); }
-  if (answers.length === 0) { throw new IdentityError('unresolvable', `${host} does not resolve`, 400); }
+  if (activeDestinationResolutions >= 32) throw new IdentityError('resolution_busy', 'Destination resolution capacity is exhausted', 503);
+  activeDestinationResolutions++;
+  let timer: NodeJS.Timeout | undefined;
+  // Keep the capacity occupied until the underlying resolver settles, even if
+  // the caller times out. Otherwise slow DNS can accumulate unbounded jobs.
+  const lookup = Promise.resolve().then(() => resolver(host)).finally(() => { activeDestinationResolutions--; });
+  try {
+    answers = await Promise.race([lookup, new Promise<never>((_resolve, reject) => {
+      timer = setTimeout(() => reject(new Error('timeout')), 4000);
+      timer.unref();
+    })]);
+  } catch { throw new IdentityError('unresolvable', 'Destination did not resolve within the time limit', 400); }
+  finally { if (timer) clearTimeout(timer); }
+  if (!Array.isArray(answers) || answers.length === 0 || answers.length > 512) { throw new IdentityError('unresolvable', 'Destination returned no usable address set', 400); }
   for (const answer of answers) {
-    if (isPrivateAddress(answer.address)) {
+    if (isPrivateAddress(answer.address) || net.isIP(answer.address) !== answer.family) {
       throw new IdentityError('blocked_destination', `${host} resolves to a private address`, 400);
     }
   }
