@@ -1,3 +1,6 @@
+import { SpvProofReader } from './spv-proof';
+import { VerificationEvidenceError } from './verification-errors';
+export { VerificationEvidenceError } from './verification-errors';
 export interface SpvMerkleProof {
   txid: string;
   block_hash: string;
@@ -51,11 +54,6 @@ export interface ConsensusIncident {
  * 503, so an absent integration is reported as an absent integration rather
  * than as an answer.
  */
-export class VerificationEvidenceError extends Error {
-  constructor(public readonly code: string, message: string, public readonly status = 503) {
-    super(message);
-  }
-}
 
 const bitcoinReaderUnavailable =
   'Proof observations are unavailable. SPV inclusion proofs, proof verification and BIP158 compact filter queries require the owned Bitcoin reader (bitcoind gettxoutproof, verifytxoutproof and getblockfilter), which is not connected on this deployment.';
@@ -73,8 +71,8 @@ const incidentLedgerUnavailable =
  * the hash of the txid, a compact filter that matched any nonempty script, a
  * signature that was valid because it was long enough with the secp256k1
  * generator point as its signer, and two incidents with invented block
- * hashes. No owned Bitcoin reader, signature verifier or incident ledger is
- * connected, so each read reports the source it would need.
+ * hashes. SPV inclusion uses owned Core and an independent Merkle decoder.
+ * Signature and incident capabilities retain explicit unavailable states.
  */
 export class VerificationService {
   private static instance: VerificationService;
@@ -88,14 +86,12 @@ export class VerificationService {
     return VerificationService.instance;
   }
 
-  public generateSpvProof(txid: string, blockHash: string, blockHeight?: number): SpvMerkleProof {
-    void txid; void blockHash; void blockHeight;
-    throw new VerificationEvidenceError('unavailable-bitcoin-reader', bitcoinReaderUnavailable);
+  public async generateSpvProof(txid: string, blockHash: string, blockHeight?: number, network?: string) {
+    return new SpvProofReader().generate({ txid, block_hash: blockHash, block_height: blockHeight, network });
   }
 
-  public verifySpvProof(proof: SpvMerkleProof): boolean {
-    void proof;
-    throw new VerificationEvidenceError('unavailable-bitcoin-reader', bitcoinReaderUnavailable);
+  public async verifySpvProof(proof: unknown) {
+    return new SpvProofReader().verify(proof);
   }
 
   public queryCompactFilter(blockHash: string, scriptHexes: string[]): CompactFilterResult {
