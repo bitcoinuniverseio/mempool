@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map, startWith, distinctUntilChanged } from 'rxjs';
 import { StateService } from '@app/services/state.service';
 
 export interface StakingProtocolParameters {
@@ -86,14 +86,17 @@ export interface BitcoinStakingOverview {
   providedIn: 'root',
 })
 export class BitcoinStakingApiService {
-  private apiBaseUrl = '';
+  private origin = '';
+  get network(): string {return this.stateService.network || 'mainnet';}
+  get networkChanges$(): Observable<string> {return this.stateService.networkChanged$.pipe(startWith(this.stateService.network),map(n => n || 'mainnet'),distinctUntilChanged());}
+  private get apiBaseUrl(): string {return this.origin + (this.network === 'mainnet' ? '' : '/' + this.network);}
 
   constructor(
     private httpClient: HttpClient,
     private stateService: StateService
   ) {
     if (!this.stateService.isBrowser && this.stateService.env) {
-      this.apiBaseUrl =
+      this.origin =
         this.stateService.env.NGINX_PROTOCOL +
         '://' +
         this.stateService.env.NGINX_HOSTNAME +
@@ -102,47 +105,57 @@ export class BitcoinStakingApiService {
     }
   }
 
+  private bound<T>(request: Observable<T>, id?: [string,string]): Observable<T> {
+    const network = this.network;
+    return request.pipe(map(value => {
+      const rows = Array.isArray(value) ? value : [value];
+      if (rows.length > 10000) throw Error('Staking response exceeds the bounded row limit.');
+      if (this.network !== network || rows.some((r: any) => !r || r.network !== network || (id && r[id[0]] !== id[1]))) throw Error('Staking response is not bound to the requested network and identity.');
+      return value;
+    }));
+  }
+
   getOverview$(): Observable<BitcoinStakingOverview> {
-    return this.httpClient.get<BitcoinStakingOverview>(
+    return this.bound(this.httpClient.get<BitcoinStakingOverview>(
       `${this.apiBaseUrl}/api/v1/intelligence/bitcoin-staking/overview`
-    );
+    ));
   }
 
   getParameters$(): Observable<StakingProtocolParameters[]> {
-    return this.httpClient.get<StakingProtocolParameters[]>(
+    return this.bound(this.httpClient.get<StakingProtocolParameters[]>(
       `${this.apiBaseUrl}/api/v1/intelligence/bitcoin-staking/parameters`
-    );
+    ));
   }
 
   getDelegations$(state?: string): Observable<StakingDelegation[]> {
     const url = state
       ? `${this.apiBaseUrl}/api/v1/intelligence/bitcoin-staking/delegations?state=${encodeURIComponent(state)}`
       : `${this.apiBaseUrl}/api/v1/intelligence/bitcoin-staking/delegations`;
-    return this.httpClient.get<StakingDelegation[]>(url);
+    return this.bound(this.httpClient.get<StakingDelegation[]>(url));
   }
 
   getDelegationById$(delegationId: string): Observable<StakingDelegation> {
-    return this.httpClient.get<StakingDelegation>(
+    return this.bound(this.httpClient.get<StakingDelegation>(
       `${this.apiBaseUrl}/api/v1/intelligence/bitcoin-staking/delegation/${encodeURIComponent(delegationId)}`
-    );
+    ), ['delegation_id', delegationId]);
   }
 
   getFinalityProviders$(): Observable<FinalityProvider[]> {
-    return this.httpClient.get<FinalityProvider[]>(
+    return this.bound(this.httpClient.get<FinalityProvider[]>(
       `${this.apiBaseUrl}/api/v1/intelligence/bitcoin-staking/finality-providers`
-    );
+    ));
   }
 
   getFinalityProviderById$(providerId: string): Observable<FinalityProvider> {
-    return this.httpClient.get<FinalityProvider>(
+    return this.bound(this.httpClient.get<FinalityProvider>(
       `${this.apiBaseUrl}/api/v1/intelligence/bitcoin-staking/finality-provider/${encodeURIComponent(providerId)}`
-    );
+    ), ['provider_id', providerId]);
   }
 
   getEvidence$(): Observable<EotsSlashingEvidence[]> {
-    return this.httpClient.get<EotsSlashingEvidence[]>(
+    return this.bound(this.httpClient.get<EotsSlashingEvidence[]>(
       `${this.apiBaseUrl}/api/v1/intelligence/bitcoin-staking/evidence`
-    );
+    ));
   }
 
   verifyTransaction$(req: any): Observable<any> {
@@ -160,9 +173,9 @@ export class BitcoinStakingApiService {
   }
 
   reconcile$(chainName: string): Observable<any> {
-    return this.httpClient.post<any>(
+    return this.bound(this.httpClient.post<any>(
       `${this.apiBaseUrl}/api/v1/intelligence/bitcoin-staking/reconcile`,
       { chain_name: chainName }
-    );
+    ), ['chain_name', chainName]);
   }
 }

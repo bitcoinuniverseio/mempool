@@ -54,7 +54,7 @@ const spends: Record<string, IEsploraApi.Outspend[]> = {
 
 let fetches: string[] = [];
 const fixtureIndex: GraphIndex = {
-  transaction: async txid => { fetches.push('tx:' + txid); const tx = txs.get(txid); if (!tx) { throw Object.assign(new Error('not found'), { response: { status: 404 } }); } return tx; },
+  transaction: async txid => { fetches.push('tx:' + txid); const tx = txs.get(txid); if (!tx) { throw Object.assign(new Error('not found'), { response: { status: 404, data: 'Transaction not found' } }); } return tx; },
   outspends: async txid => { fetches.push('spends:' + txid); return spends[txid] ?? []; },
   addressTransactions: async address => { fetches.push('addr:' + address); const list = [...txs.values()].filter(tx => tx.vout.some(v => v.scriptpubkey_address === address) || tx.vin.some(v => v.prevout?.scriptpubkey_address === address)); if (!list.length) { throw new Error('404'); } return list; },
 };
@@ -146,7 +146,8 @@ describe('transaction graph over the index', () => {
     expect(found.path_found).toBe(true);
     expect(found.node_sequence).toEqual([id('a'), id('b'), id('c'), id('d')]);
     expect(found.total_hops).toBe(3);
-    expect(found.total_value_transferred_sats).toBe(2900);
+    expect(found.total_value_transferred_sats).toBeNull();
+    expect(found.value_upper_bound_sats).toBe(2900);
     const missing = await txGraphService.findShortestPath(id('d'), id('a'));
     expect(missing).toMatchObject({ path_found: false, total_hops: 0, node_sequence: [], edge_sequence: [] });
     expect(missing.search_exhausted).toBe(false);
@@ -205,4 +206,31 @@ describe('graph cases belong to their owner', () => {
     await expect(txGraphService.saveCase(alice, 'x', 'unknown!!', 2, {}, {}, '', 0)).rejects.toThrow(GraphInputError);
     await expect(txGraphService.saveCase(alice, 'x', id('b'), 2, {}, {}, 'n'.repeat(5000), 0)).rejects.toMatchObject({ code: 'invalid_notes' });
   });
+});
+
+describe('graph completeness and exact evidence',()=>{
+ beforeEach(()=>{txGraphService.index=fixtureIndex;});
+ it.each([{code:-5},{response:{status:404}},{response:{status:404,data:'upstream route missing'}}])('preserves ambiguous source error as503: %p',error=>{
+  txGraphService.index={...fixtureIndex,transaction:async()=>{throw error;}};
+  return expect(txGraphService.queryGraph(id('a'))).rejects.toMatchObject({status:503});
+ });
+ it('resolves actual parent values when prevout is missing or contradictory',async()=>{
+  for(const prevout of [undefined,{...B.vin[0].prevout,value:1}]){
+   txGraphService.index={...fixtureIndex,transaction:async txid=>txid===B.txid?{...B,vin:[{...B.vin[0],prevout}]} as any:fixtureIndex.transaction(txid)};
+   const result=await txGraphService.queryGraph(B.txid,1,'upstream',1000);expect(result.edges[0].value_sats).toBe(5000);
+  }
+ });
+ it('honors direction for address edges and treats address totals/status as unknown',async()=>{
+  const addr='tb1qaddrbfixture0000000000';const up=await txGraphService.queryGraph(addr,1,'upstream');const down=await txGraphService.queryGraph(addr,1,'downstream');
+  expect(up.edges.every(e=>e.target_id===addr)).toBe(true);expect(down.edges.every(e=>e.source_id===addr)).toBe(true);
+  expect(up.nodes.find(n=>n.id===addr)).toMatchObject({value_sats:null,status:'unknown'});
+ });
+ it('marks a full address page as a completeness bound, not an exhaustive history',async()=>{
+  txGraphService.index={...fixtureIndex,addressTransactions:async()=>Array.from({length:25},()=>B)};
+  const result=await txGraphService.queryGraph('tb1qaddrbfixture0000000000',1,'upstream');expect(result).toMatchObject({truncated:true,truncation_reason:'address_page'});
+ });
+ it('rejects malformed address documents and absent output values',async()=>{
+  txGraphService.index={...fixtureIndex,addressTransactions:async()=>[{...B,vout:[{...B.vout[0],value:undefined}]}] as any};
+  await expect(txGraphService.queryGraph('tb1qaddrbfixture0000000000')).rejects.toMatchObject({status:503});
+ });
 });

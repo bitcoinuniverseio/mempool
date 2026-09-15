@@ -1,3 +1,4 @@
+import config from '../../../config';
 import { createHash } from 'crypto';
 import { OffchainPackageVerifier } from './package-verifier';
 import * as fs from 'fs';
@@ -32,6 +33,10 @@ import {
  * against the operator key. Package checks remain checks on the supplied
  * data through an explicit signed-transaction profile and owned header checkpoint.
  */
+
+export class OffchainRegistryError extends Error {
+  constructor(public readonly code: string, message: string, public readonly status = 503) { super(message); }
+}
 
 export const REGISTRY_ENV = 'UNIVERSE_OFFCHAIN_REGISTRY_JSON';
 
@@ -68,7 +73,7 @@ export function verifyManifestSignature(manifest: Partial<StatechainPublicManife
 }
 
 export class OffchainService {
-  private registryCache: { at: number; registry: OffchainRegistry } | null = null;
+  private registryCache: { at: number; path: string; network: string; registry: OffchainRegistry } | null = null;
   public registryPath: () => string | undefined = () => process.env[REGISTRY_ENV];
   public currentHeight: () => number = () => blocks.getCurrentBlockHeight();
   public recommendedFeeRate: () => number | null = () => { try { return feeApi.getRecommendedFee().halfHourFee; } catch { return null; } };
@@ -79,25 +84,40 @@ export class OffchainService {
   }
 
   private registry(now = Date.now()): OffchainRegistry {
-    if (this.registryCache && now - this.registryCache.at < 60_000) { return this.registryCache.registry; }
-    const path = this.registryPath();
-    let registry: OffchainRegistry = { source: path ?? null, operators: [], offers: [], history: {}, error: null };
-    if (path) {
-      try {
-        const parsed = JSON.parse(fs.readFileSync(path, 'utf8'));
-        registry = {
-          source: path,
-          operators: Array.isArray(parsed.operators) ? parsed.operators : [],
-          offers: Array.isArray(parsed.offers) ? parsed.offers : [],
-          history: parsed.history && typeof parsed.history === 'object' ? parsed.history : {},
-          error: null,
-        };
-      } catch (error) {
-        registry = { source: path, operators: [], offers: [], history: {}, error: error instanceof Error ? error.message : String(error) };
+    const path = this.registryPath(), network = config.MEMPOOL.NETWORK;
+    if (!path) throw new OffchainRegistryError('unavailable-registry', 'No offchain registry is configured.');
+    if (this.registryCache && this.registryCache.path === path && this.registryCache.network === network && now >= this.registryCache.at && now - this.registryCache.at < 60000) return this.registryCache.registry;
+    let descriptor: number | undefined;
+    try {
+      descriptor = fs.openSync(path, 'r');
+      const stat = fs.fstatSync(descriptor);
+      if (!stat.isFile() || stat.size > 1024 * 1024) throw Error('bounds');
+      const buffer = Buffer.alloc(1024 * 1024 + 1); let read = 0;
+      while (read < buffer.length) { const n = fs.readSync(descriptor, buffer, read, buffer.length-read, null); if (!n) break; read += n; }
+      if (read > 1024 * 1024) throw Error('bounds');
+      const bytes = buffer.subarray(0,read), parsed = JSON.parse(bytes.toString('utf8'));
+      const object = (v:any) => v && typeof v === 'object' && !Array.isArray(v);
+      const text = (v:any,n=256) => typeof v === 'string' && v.length > 0 && v.length <= n;
+      const array = (v:any) => Array.isArray(v) && v.length <= 64 && v.every((x:any)=>text(x));
+      const amount = (v:any) => Number.isSafeInteger(v) && v >= 0 && v <= 2100000000000000;
+      if (!object(parsed) || !Array.isArray(parsed.operators) || parsed.operators.length > 1000 || !Array.isArray(parsed.offers) || parsed.offers.length > 2000 || !object(parsed.history)) throw Error('schema');
+      const ids = new Set<string>();
+      for (const operator of parsed.operators) {
+        if (!object(operator) || !text(operator.operator_id) || ids.has(operator.operator_id) || !['mercury_statechain','teleport_coinswap'].includes(operator.protocol) || !text(operator.display_name) || typeof operator.operator_public_key !== 'string' || !/^(02|03)[a-f0-9]{64}$/i.test(operator.operator_public_key) || !array(operator.networks) || !array(operator.supported_versions) || !array(operator.transfer_capabilities) || !array(operator.recovery_capabilities) || !object(operator.endpoints) || !text(operator.endpoints.clearnet,2048)) throw Error('operator schema');
+        ids.add(operator.operator_id);
       }
-    }
-    this.registryCache = { at: now, registry };
-    return registry;
+      const offers = new Set<string>();
+      for (const offer of parsed.offers) {
+        if (!object(offer) || !text(offer.offer_id) || offers.has(offer.offer_id) || !ids.has(offer.maker_id) || !text(offer.network) || !text(offer.endpoint,2048) || !amount(offer.min_amount_sats) || !amount(offer.max_amount_sats) || offer.max_amount_sats < offer.min_amount_sats || !amount(offer.base_fee_sats) || !Number.isFinite(offer.fee_rate_bps) || offer.fee_rate_bps < 0 || offer.fee_rate_bps > 10000 || !Array.isArray(offer.supported_timelock_deltas) || offer.supported_timelock_deltas.length > 64 || !offer.supported_timelock_deltas.every((x:any)=>Number.isInteger(x)&&x>=0&&x<=0xffffffff)) throw Error('offer schema');
+        offers.add(offer.offer_id);
+      }
+      if (Object.entries(parsed.history).some(([id,events])=>!ids.has(id)||!Array.isArray(events)||events.length>1000)) throw Error('history schema');
+      const operators = parsed.operators.filter((operator:any)=>operator.networks.includes(network)).map((operator:any)=>({...operator,health:'unknown',provenance:{registered_in_knowledge_registry:null,verified_signature:null},operator_authenticated:null,evidence_scope:'Operator-configured reference entry; endpoint health, signatures and identity authority are not observed.'}));
+      const selected = new Set(operators.map((operator:any)=>operator.operator_id));
+      const registry: OffchainRegistry = { source:'sha256:'+createHash('sha256').update(bytes).digest('hex'), operators, offers:parsed.offers.filter((offer:any)=>offer.network===network&&selected.has(offer.maker_id)),history:Object.fromEntries(Object.entries(parsed.history).filter(([id])=>selected.has(id))) as Record<string, unknown[]>,error:null };
+      this.registryCache = {at:now,path,network,registry}; return registry;
+    } catch { throw new OffchainRegistryError('invalid-registry-source','The configured offchain registry is unreadable, malformed or exceeds its bounds.'); }
+    finally { if (descriptor !== undefined) fs.closeSync(descriptor); }
   }
 
   public getOverview(): OffchainOverviewResponse {
@@ -106,10 +126,11 @@ export class OffchainService {
       total_operators: registry.operators.length,
       // Statechain counts live with the operators; no operator on this deployment reports them.
       active_statechains_count: null,
-      active_coinswap_makers: registry.offers.length,
+      active_coinswap_makers: null,
+      configured_coinswap_makers: new Set(registry.offers.map(offer => offer.maker_id)).size,
       operators: registry.operators,
       public_offers: registry.offers,
-      registry: { configured: registry.source !== null, source: registry.source, error: registry.error },
+      registry: { configured: true, source: registry.source, error: registry.error, observed_at: new Date(this.registryCache!.at).toISOString(), scope: 'Configured reference catalog only; operator availability and offer acceptance are not observed.' },
     };
   }
 
@@ -138,7 +159,8 @@ export class OffchainService {
     return this.registry().offers;
   }
 
-  public verifyManifest(manifest: Partial<StatechainPublicManifest>): { verified: boolean; operator_id: string; scheme: 'schnorr' | 'ecdsa' | null; errors: string[] } {
+  public verifyManifest(manifest: Partial<StatechainPublicManifest>) {
+    if (!manifest || typeof manifest !== 'object' || Array.isArray(manifest) || Buffer.byteLength(JSON.stringify(manifest)) > 65536) throw new OffchainRegistryError('invalid-input', 'A bounded manifest object is required.', 400);
     const errors: string[] = [];
     if (!manifest.protocol) { errors.push('Protocol identifier is required'); }
     if (!manifest.signature) { errors.push('Cryptographic signature is required'); }
@@ -151,6 +173,9 @@ export class OffchainService {
     if (!signature.valid && signature.reason) { errors.push(signature.reason); }
     return {
       verified: errors.length === 0 && signature.valid,
+      signature_valid: signature.valid,
+      operator_authenticated: null,
+      verification_scope: 'Signature over the supplied canonical manifest and declared validity interval only. The supplied signing key is not authenticated as an operator identity or domain.',
       operator_id: `op-${createHash('sha256').update(manifest.operator_public_key || '').digest('hex').substring(0, 12)}`,
       scheme: signature.scheme,
       errors,

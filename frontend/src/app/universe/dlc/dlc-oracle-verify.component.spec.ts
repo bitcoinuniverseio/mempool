@@ -3,7 +3,7 @@ import { of,Subject } from 'rxjs';
 import { DlcOracleVerifyComponent } from './dlc-oracle-verify.component';
 function page(response:any=of({verified:true,errors:[]})){
  const api={verifyAnnouncement$:vi.fn(()=>response),verifyAttestation$:vi.fn(()=>response)};
- return {page:new DlcOracleVerifyComponent(api as any,{markForCheck:vi.fn()} as any),api};
+ const network={network:'signet',networkChanged$:new Subject<string>()};const component=new DlcOracleVerifyComponent(api as any,{markForCheck:vi.fn()} as any,network as any);component.ngOnInit();return {page:component,api,network};
 }
 describe('oracle verifier user actions',()=>{
  it('submits exact announcement and binds attestation to the separate signed announcement',()=>{
@@ -11,10 +11,16 @@ describe('oracle verifier user actions',()=>{
   p.page.verify('attestation');expect(p.api.verifyAttestation$.mock.calls[0][0].announcement).toEqual(JSON.parse(p.page.announcementInput));
  });
  it('clears prior success on edits and malformed JSON',()=>{
-  const p=page();p.page.loadSample();p.page.verify('announcement');p.page.edited();expect(p.page.result).toBeNull();p.page.announcementInput='{';p.page.verify('announcement');expect(p.page.result.verified).toBe(false);
+  const p=page();p.page.loadSample();p.page.verify('announcement');p.page.edited();expect(p.page.result).toBeNull();p.page.announcementInput='{';p.page.verify('announcement');expect(p.page.result).toBeNull();expect(p.page.error).toBeTruthy();
  });
  it.each(['edit','sample','destroy'])('discards stale verification on %s',action=>{
   const pending=new Subject();const p=page(pending);p.page.loadSample();p.page.verify('announcement');if(action==='edit')p.page.edited();else if(action==='sample')p.page.loadSample();else p.page.ngOnDestroy();pending.next({verified:true});expect(p.page.result).toBeNull();
  });
- it('rejects ambiguous nested announcement input',()=>{const p=page();p.page.loadSample();p.page.attestationInput='{"announcement":{}}';p.page.verify('attestation');expect(p.api.verifyAttestation$).not.toHaveBeenCalled();expect(p.page.result.verified).toBe(false);});
+ it('rejects ambiguous nested announcement input',()=>{const p=page();p.page.loadSample();p.page.attestationInput='{"announcement":{}}';p.page.verify('attestation');expect(p.api.verifyAttestation$).not.toHaveBeenCalled();expect(p.page.result).toBeNull();expect(p.page.error).toBeTruthy();});
+});
+
+describe('oracle verification source boundaries',()=>{
+ it.each(['true',1,null])('does not accept truthy or absent verification boolean %j',verified=>{const p=page(of({verified,errors:[]}));p.page.loadSample();p.page.verify('announcement');expect(p.page.result).toBeNull();expect(p.page.error).toContain('incomplete');p.page.ngOnDestroy();});
+ it('keeps a real unavailable error separate from cryptographic invalidity',()=>{const pending=new Subject(),p=page(pending);p.page.loadSample();p.page.verify('announcement');pending.error({status:503,error:{error:'Oracle verifier unavailable'}});expect(p.page.result).toBeNull();expect(p.page.error).toBe('Oracle verifier unavailable');p.page.ngOnDestroy();});
+ it('clears success and cancels pending checks on network changes',()=>{const pending=new Subject(),p=page(pending);p.page.loadSample();p.page.verify('announcement');pending.next({verified:true,errors:[]});expect(p.page.result.verified).toBe(true);p.network.networkChanged$.next('regtest');expect(p.page.result).toBeNull();expect(pending.observed).toBe(false);p.page.ngOnDestroy();expect(p.network.networkChanged$.observed).toBe(false);});
 });

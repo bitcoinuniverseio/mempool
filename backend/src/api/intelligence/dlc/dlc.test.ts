@@ -93,7 +93,9 @@ describe('DlcService', () => {
         remote_payout_sats: 99000,
       },
     });
-    expect(validPkg.valid).toBe(true);
+    expect(validPkg.valid).toBeNull();
+    expect(validPkg.structural_checks_passed).toBe(true);
+    expect(validPkg.cryptographic_verification).toBe('not-established');
     expect(validPkg.total_collateral_sats).toBe(200000);
 
     const invalidPkg = dlcService.verifyContractPackage({
@@ -147,5 +149,26 @@ describe('DLC HTTP responses', () => {
     await posts.get('/api/v1/intelligence/dlc/simulations')!({ body: { scenario: 'settlement', contract_id: 'c', oracle_ids: [] } } as Request, res as unknown as Response);
     expect(res.status).toHaveBeenCalledWith(503);
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ stage: 'unavailable-dlc-simulator' }));
+  });
+});
+
+describe('DLC contract arithmetic is not cryptographic validity',()=>{
+  const fixture=():any=>({parties:[{collateral_sats:1000},{collateral_sats:1000}],cets:[{local_payout_sats:1900,remote_payout_sats:0,fee_sats:100,adaptor_signature:'invented'}],refund:{local_payout_sats:900,remote_payout_sats:900}});
+  it.each([NaN,Infinity,-1,0.5,'1000',Number.MAX_SAFE_INTEGER])('rejects invalid collateral %p without coercion',value=>{
+    const p=fixture();p.parties[0].collateral_sats=value;
+    const r=dlcService.verifyContractPackage(p);expect(r.valid).toBe(false);expect(r.total_collateral_sats).toBeNull();
+  });
+  it('does not accept negative payout offsets or noninteger refund',()=>{
+    const p=fixture();p.cets[0].remote_payout_sats=-1;p.cets[0].local_payout_sats=1901;
+    expect(dlcService.verifyContractPackage(p).valid).toBe(false);
+    p.cets[0].remote_payout_sats=0;p.cets[0].local_payout_sats=1900;p.refund.local_payout_sats=0.5;
+    expect(dlcService.verifyContractPackage(p).valid).toBe(false);
+  });
+  it('never upgrades arbitrary or absent adaptor bytes to a valid DLC',()=>{
+    const p=fixture();for(const sig of ['invented','00'.repeat(162),undefined]){p.cets[0].adaptor_signature=sig;expect(dlcService.verifyContractPackage(p)).toMatchObject({valid:null,structural_checks_passed:true,cryptographic_verification:'not-established'});}
+  });
+  it('bounds the package and rejects null cleanly',()=>{
+    expect(()=>dlcService.verifyContractPackage(null as any)).toThrow(expect.objectContaining({status:400}));
+    const p=fixture();p.cets=Array(4097).fill(p.cets[0]);expect(()=>dlcService.verifyContractPackage(p)).toThrow(expect.objectContaining({status:400}));
   });
 });

@@ -1,7 +1,9 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subscription } from 'rxjs';
+import { Subscription, distinctUntilChanged, startWith } from 'rxjs';
+import { StateService } from '@app/services/state.service';
+import { checkedGraph, checkedPath, normalizedEntity } from './graph-evidence';
 import { IntelligenceApiService } from './intelligence-api.service';
 
 @Component({
@@ -20,6 +22,22 @@ import { IntelligenceApiService } from './intelligence-api.service';
         </p>
       </header>
 
+      <section class="card p-3 mb-4">
+        <h2 class="h5">Find a transaction path</h2>
+        <p>Search downstream through at most four hops. A missing path in a bounded search does not prove there is no connection.</p>
+        <label for="graph-path-from">From transaction ID</label><input id="graph-path-from" class="form-control font-monospace mb-2" [(ngModel)]="pathFrom" (ngModelChange)="pathEdited()" maxlength="64" />
+        <label for="graph-path-to">To transaction ID</label><input id="graph-path-to" class="form-control font-monospace mb-2" [(ngModel)]="pathTo" (ngModelChange)="pathEdited()" maxlength="64" />
+        <button class="btn btn-primary" (click)="findPath()" [disabled]="pathLoading">Find path</button>
+        <p *ngIf="pathError" class="alert alert-warning mt-2" role="alert">{{ pathError }}</p>
+        <div *ngIf="pathResult" class="mt-3" role="status">
+          <h3 class="h6">{{ pathResult.path_found ? 'Observed transaction path' : 'No path found in this search' }}</h3>
+          <p *ngIf="pathResult.search_exhausted">Search budget reached; the reachable set was not exhausted.</p>
+          <ol *ngIf="pathResult.path_found"><li *ngFor="let id of pathResult.node_sequence"><code>{{ id }}</code></li></ol>
+          <p>Exact funds transferred: Unknown.</p>
+          <p>Path value upper bound: {{ pathResult.value_upper_bound_sats === null ? 'Unknown' : (pathResult.value_upper_bound_sats | number) + ' sats' }}.</p>
+          <p>{{ pathResult.transfer_scope }}</p>
+        </div>
+      </section>
       <!-- Query Controls -->
       <section class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -33,13 +51,13 @@ import { IntelligenceApiService } from './intelligence-api.service';
                 id="rootEntity"
                 type="text"
                 class="form-control font-monospace text-break"
-                [(ngModel)]="rootEntity"
+                [(ngModel)]="rootEntity" (ngModelChange)="edited()" maxlength="120"
                 placeholder="txid or address"
               />
             </div>
             <div class="col-md-2">
               <label class="form-label small text-muted" for="hopsSelect">Hops</label>
-              <select id="hopsSelect" class="form-control" [(ngModel)]="hops">
+              <select id="hopsSelect" class="form-control" [(ngModel)]="hops" (ngModelChange)="edited()">
                 <option [ngValue]="1">1</option>
                 <option [ngValue]="2">2</option>
                 <option [ngValue]="3">3</option>
@@ -47,7 +65,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
             </div>
             <div class="col-md-2">
               <label class="form-label small text-muted" for="directionSelect">Direction</label>
-              <select id="directionSelect" class="form-control" [(ngModel)]="direction">
+              <select id="directionSelect" class="form-control" [(ngModel)]="direction" (ngModelChange)="edited()">
                 <option value="both">Both</option>
                 <option value="upstream">Inputs</option>
                 <option value="downstream">Spends</option>
@@ -85,11 +103,13 @@ import { IntelligenceApiService } from './intelligence-api.service';
               <h5 class="mt-1 mb-0 font-monospace text-break">{{ activeResult.root_entity }}</h5>
             </div>
             <div class="metrics d-flex gap-3">
-              <div><span class="text-muted small">Nodes:</span> <strong>{{ activeResult.nodes?.length || 0 }}</strong></div>
-              <div><span class="text-muted small">Edges:</span> <strong>{{ activeResult.edges?.length || 0 }}</strong></div>
+              <div><span class="text-muted small">Nodes:</span> <strong>{{ activeResult.nodes.length }}</strong></div>
+              <div><span class="text-muted small">Edges:</span> <strong>{{ activeResult.edges.length }}</strong></div>
             </div>
           </div>
           <div class="card-body">
+            <p>Selected-index observations only. These connections do not identify owners or trace exact funds through mixed transaction inputs.</p>
+            <p *ngIf="activeResult.truncated" class="alert alert-warning" role="status">Bounded result: {{ activeResult.truncation_reason }}. Completeness is not established.</p>
             <!-- Nodes Table -->
             <h5 class="mb-3">Discovered Graph Nodes</h5>
             <div class="table-responsive mb-4" tabindex="0">
@@ -99,7 +119,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
                     <th>Entity Identifier</th>
                     <th>Type</th>
                     <th>Depth</th>
-                    <th>Value Transferred</th>
+                    <th>Transaction output total</th>
                     <th>Confirmation</th>
                   </tr>
                 </thead>
@@ -108,15 +128,15 @@ import { IntelligenceApiService } from './intelligence-api.service';
                     <td class="font-monospace text-break">{{ node.id }}</td>
                     <td><span class="badge badge-secondary">{{ node.type }}</span></td>
                     <td>Hop {{ node.depth }}</td>
-                    <td>{{ node.value_sats | number }} sats</td>
-                    <td><span class="badge badge-success">{{ node.status }}</span></td>
+                    <td>{{ node.value_sats === null ? 'Unknown' : (node.value_sats | number) + ' sats' }}</td>
+                    <td><span class="badge badge-secondary">{{ node.status }}</span></td>
                   </tr>
                 </tbody>
               </table>
             </div>
 
             <!-- Value Edges Table -->
-            <h5 class="mb-3">Value Transfer Edges</h5>
+            <h5 class="mb-3">Observed Output Connections</h5>
             <div class="table-responsive" tabindex="0">
               <table class="table table-sm table-hover mb-0">
                 <thead>
@@ -165,26 +185,39 @@ export class TransactionGraphComponent implements OnInit, OnDestroy {
   activeResult: any = null;
 
   private sub?: Subscription;
+  private networkSubscription?: Subscription;
+  private pathSubscription?: Subscription;
+  pathFrom = '';
+  pathTo = '';
+  pathLoading = false;
+  pathError: string | null = null;
+  pathResult: any = null;
 
   constructor(
     private api: IntelligenceApiService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private network: StateService
   ) {}
 
   ngOnInit(): void {
-    // Zero auto-execution on load
+    this.networkSubscription = this.network.networkChanged$.pipe(startWith(this.network.network), distinctUntilChanged()).subscribe(() => {this.edited();this.pathEdited();});
   }
 
   runQuery(): void {
+    this.edited();
     if (!this.rootEntity.trim()) return;
+    const root = normalizedEntity(this.rootEntity);
+    const hops = this.hops, direction = this.direction, network = this.network.network || 'mainnet';
+    if (!root || !Number.isInteger(hops) || hops < 1 || hops > 3 || !['upstream','downstream','both'].includes(direction)) {this.queryError = 'Enter a bounded transaction ID or address and supported query options.';return;}
     this.loading = true;
     this.queryError = null;
     this.cdr.markForCheck();
 
     this.sub?.unsubscribe();
-    this.sub = this.api.queryGraph$(this.rootEntity.trim(), this.hops, this.direction).subscribe({
+    this.sub = this.api.queryGraph$(root, hops, direction).subscribe({
       next: (res) => {
-        this.activeResult = res;
+        try {this.activeResult = checkedGraph(res, root, network, hops, direction);}
+        catch {this.queryError = 'The index returned incomplete or mismatched graph evidence.';}
         this.loading = false;
         this.cdr.markForCheck();
       },
@@ -196,7 +229,26 @@ export class TransactionGraphComponent implements OnInit, OnDestroy {
     });
   }
 
-  ngOnDestroy(): void {
-    this.sub?.unsubscribe();
+  edited(): void {
+    this.sub?.unsubscribe();this.sub = undefined;this.loading = false;this.queryError = null;this.activeResult = null;this.cdr.markForCheck();
   }
+  pathEdited(): void {
+    this.pathSubscription?.unsubscribe();this.pathSubscription = undefined;this.pathLoading = false;this.pathError = null;this.pathResult = null;this.cdr.markForCheck();
+  }
+  findPath(): void {
+    this.pathEdited();
+    const from = this.pathFrom.trim().toLowerCase(), to = this.pathTo.trim().toLowerCase(), network = this.network.network || 'mainnet';
+    if (!/^[0-9a-f]{64}$/.test(from) || !/^[0-9a-f]{64}$/.test(to)) {this.pathError = 'Enter two complete 32-byte transaction IDs.';return;}
+    this.pathLoading = true;
+    this.pathSubscription = this.api.findShortestPath$(from, to).subscribe({
+      next: result => {
+        this.pathLoading = false;
+        try {this.pathResult = checkedPath(result, from, to, network);}
+        catch {this.pathError = 'The index returned incomplete or mismatched path evidence.';}
+        this.cdr.markForCheck();
+      },
+      error: error => {this.pathLoading = false;this.pathError = error?.error?.error || 'The selected index could not complete the path search.';this.cdr.markForCheck();},
+    });
+  }
+  ngOnDestroy(): void {this.edited();this.pathEdited();this.networkSubscription?.unsubscribe();}
 }

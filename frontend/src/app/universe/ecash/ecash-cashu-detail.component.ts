@@ -21,8 +21,8 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
         </div>
         <div class="title-row d-flex flex-wrap align-items-center justify-content-between gap-2">
           <h1 class="m-0">Cashu Mint Telemetry</h1>
-          <span class="badge bg-success" *ngIf="mint">
-            {{ mint.active_keysets_count }} Active Keysets
+          <span class="badge bg-secondary" *ngIf="mint">
+            {{ mint.active_keysets_count ?? 'Unknown' }} Active Keysets
           </span>
         </div>
       </header>
@@ -53,7 +53,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
 
         <!-- Keysets Table -->
         <div class="card p-4 bg-body-tertiary border mb-4">
-          <h2 class="h5 mb-3">Cryptographic Keysets</h2>
+          <h2 class="h5 mb-3">Reported Keysets</h2><p *ngIf="mint.keysets === null" class="text-muted">Keyset observation unavailable</p>
           <div class="table-responsive" tabindex="0" role="region" aria-label="Cryptographic Keysets, scroll horizontally" i18n-aria-label>
             <table class="table table-hover align-middle mb-0">
               <thead>
@@ -69,7 +69,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                   <td>{{ k.unit }}</td>
                   <td>
                     <span class="badge" [ngClass]="k.active ? 'bg-success' : 'bg-secondary'">
-                      {{ k.active ? 'Active (Issuing & Redeeming)' : 'Retired (Redeem Only)' }}
+                      {{ k.active ? 'Reported active' : 'Reported inactive' }}
                     </span>
                   </td>
                 </tr>
@@ -80,7 +80,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
 
         <!-- Supported NUTs -->
         <div class="card p-4 bg-body-tertiary border">
-          <h2 class="h5 mb-3">Supported Notation of Unit (NUT) Specifications</h2>
+          <h2 class="h5 mb-3">Reported NUT Specifications</h2><p *ngIf="mint.nuts_supported === null" class="text-muted">Supported NUTs unknown</p>
           <div class="d-flex flex-wrap gap-2">
             <span *ngFor="let n of mint.nuts_supported" class="badge bg-secondary p-2">
               NUT-{{ n < 10 ? '0' + n : n }}

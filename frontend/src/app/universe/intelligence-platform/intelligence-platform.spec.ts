@@ -227,7 +227,7 @@ describe('Unified Intelligence Platform Frontend Services', () => {
     });
 
     it('TransactionGraphComponent: does not expand graph on ngOnInit', () => {
-      const cmp = new TransactionGraphComponent(service, mockCdr);
+      const cmp = new TransactionGraphComponent(service, mockCdr, {network:'signet',networkChanged$:new Subject<string>()} as any);
       cmp.ngOnInit();
       expect(cmp.activeResult).toBeNull();
       expect(cmp.loading).toBe(false);
