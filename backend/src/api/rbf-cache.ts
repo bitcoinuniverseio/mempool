@@ -62,6 +62,8 @@ interface CacheEvent {
 
 class RbfCache {
   private replacedBy: Map<string, string> = new Map();
+  // Told about every replacement the cache records; used by the watchlist matcher.
+  private replacementListeners: ((replacedTxid: string, replacementTxid: string) => void)[] = [];
   private replaces: Map<string, string[]> = new Map();
   private rbfTrees: Map<string, RbfTree> = new Map(); // sequences of consecutive replacements
   private dirtyTrees: Set<string> = new Set();
@@ -149,6 +151,9 @@ class RbfCache {
         continue;
       }
       this.replacedBy.set(replacedTx.txid, newTx.txid);
+      for (const listener of this.replacementListeners) {
+        try { listener(replacedTx.txid, newTx.txid); } catch (e) { logger.debug('rbf replacement listener failed: ' + (e instanceof Error ? e.message : e)); }
+      }
       if (this.treeMap.has(replacedTx.txid)) {
         const treeId = this.treeMap.get(replacedTx.txid);
         if (treeId) {
@@ -231,6 +236,10 @@ class RbfCache {
       }
     }
     return false;
+  }
+
+  public onReplacement(listener: (replacedTxid: string, replacementTxid: string) => void): void {
+    this.replacementListeners.push(listener);
   }
 
   public getReplacedBy(txId: string): string | undefined {

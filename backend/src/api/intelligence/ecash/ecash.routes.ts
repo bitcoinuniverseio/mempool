@@ -1,6 +1,15 @@
 import { Application, Request, Response } from 'express';
-import { ecashService } from './ecash.service';
+import { ecashService, EcashUnavailableError } from './ecash.service';
 import { handleError } from '../../../utils/api';
+
+/** An unconfigured mint list or a missing client is a 503 that names it, never an invented provider. */
+function fail(req: Request, res: Response, e: unknown, fallback: string): void {
+  if (e instanceof EcashUnavailableError) {
+    res.status(e.status).json({ stage: e.code, error: e.message });
+    return;
+  }
+  handleError(req, res, 500, e instanceof Error ? e.message : fallback);
+}
 
 class EcashRoutes {
   public initRoutes(app: Application): void {
@@ -17,33 +26,33 @@ class EcashRoutes {
 
   private async $getOverview(req: Request, res: Response): Promise<void> {
     try {
-      const overview = ecashService.getOverview();
+      const overview = await ecashService.getOverview();
       res.json(overview);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch ecash overview');
+      fail(req, res, e, 'Failed to fetch ecash overview');
     }
   }
 
   private async $getCashuMints(req: Request, res: Response): Promise<void> {
     try {
-      const mints = ecashService.getMints();
+      const mints = await ecashService.getMints();
       res.json(mints);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch Cashu mints');
+      fail(req, res, e, 'Failed to fetch Cashu mints');
     }
   }
 
   private async $getCashuMintById(req: Request, res: Response): Promise<void> {
     try {
       const mintId = req.params.mintId;
-      const mint = ecashService.getMintById(mintId);
+      const mint = await ecashService.getMintById(mintId);
       if (!mint) {
         res.status(404).json({ error: 'Cashu mint not found' });
         return;
       }
       res.json(mint);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch Cashu mint');
+      fail(req, res, e, 'Failed to fetch Cashu mint');
     }
   }
 
@@ -52,7 +61,7 @@ class EcashRoutes {
       const federations = ecashService.getFederations();
       res.json(federations);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch Fedimint federations');
+      fail(req, res, e, 'Failed to fetch Fedimint federations');
     }
   }
 
@@ -66,13 +75,13 @@ class EcashRoutes {
       }
       res.json(federation);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch Fedimint federation');
+      fail(req, res, e, 'Failed to fetch Fedimint federation');
     }
   }
 
   private async $postRegisterClaim(req: Request, res: Response): Promise<void> {
     try {
-      const claim = ecashService.registerClaim(req.body);
+      const claim = ecashService.verifyClaim(req.body ?? {});
       res.json(claim);
     } catch (e) {
       res.status(400).json({ error: e instanceof Error ? e.message : 'Failed to register provider claim' });

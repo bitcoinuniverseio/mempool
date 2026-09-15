@@ -12,6 +12,7 @@
   </header>
 
   <p class="error" role="alert" *ngIf="error">{{ error }}</p>
+  <p class="text-muted small" *ngIf="!hasOwnerKey" i18n="node.rpc.needs-key">Running a method needs an owner key with the node:rpc scope. Create one in the Developer Platform; the catalog below is public.</p>
   <p class="loading" role="status" *ngIf="loading" i18n="node.rpc.loading">Fetching the list…</p>
 
   <p class="note" *ngIf="note">{{ note }}</p>

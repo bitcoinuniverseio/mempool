@@ -1,6 +1,7 @@
 import { Application, Request, Response } from 'express';
 import { QueryStudioEvidenceError, queryStudioService, usageMetricsUnavailable } from './query-studio.service';
-import { DeveloperIdentityManager } from '../identity/developer-identity';
+import { developerIdentity, IdentityError } from '../identity/developer-identity';
+import { ownerOf, requireOwner, sendIdentityError } from '../identity/owner-auth';
 import { handleError } from '../../../utils/api';
 
 /** An absent source is a 503 that names the source, never a 500 and never an invented row. */
@@ -9,57 +10,78 @@ function fail(req: Request, res: Response, e: unknown, status: number, fallback:
     res.status(e.status).json({ stage: e.code, error: e.message });
     return;
   }
+  if (e instanceof IdentityError) {
+    sendIdentityError(res, e, fallback);
+    return;
+  }
   handleError(req, res, status, e instanceof Error ? e.message : fallback);
 }
 
+/**
+ * Developer platform and Query Studio.
+ *
+ * Identity: POST developer/owners creates a new owner and returns its first
+ * key once; every other developer, webhook, saved-query route requires that
+ * key. There is no user_id anywhere; the owner is who holds the key.
+ */
 class QueryStudioRoutes {
   public initRoutes(app: Application): void {
     const prefix = '/api/v1/intelligence/';
 
     app
-      .post(prefix + 'developer/keys', this.$postKey)
-      .get(prefix + 'developer/keys', this.$getKeys)
-      .delete(prefix + 'developer/keys/:id', this.$deleteKey)
-      .get(prefix + 'developer/usage', this.$getUsage)
-      .post(prefix + 'developer/webhooks', this.$postWebhook)
-      .get(prefix + 'developer/webhooks', this.$getWebhooks)
+      .post(prefix + 'developer/owners', this.$postOwner)
+      .post(prefix + 'developer/keys', requireOwner('keys:manage'), this.$postKey)
+      .get(prefix + 'developer/keys', requireOwner(), this.$getKeys)
+      .delete(prefix + 'developer/keys/:id', requireOwner('keys:manage'), this.$deleteKey)
+      .get(prefix + 'developer/usage', requireOwner(), this.$getUsage)
+      .post(prefix + 'developer/webhooks', requireOwner('webhooks'), this.$postWebhook)
+      .get(prefix + 'developer/webhooks', requireOwner('webhooks'), this.$getWebhooks)
+      .get(prefix + 'developer/webhooks/:id/attempts', requireOwner('webhooks'), this.$getWebhookAttempts)
       .post(prefix + 'query/execute', this.$postExecute)
       .get(prefix + 'query/schema', this.$getSchema)
       .get(prefix + 'query/history', this.$getHistory)
-      .post(prefix + 'query/saved', this.$postSaveQuery)
-      .get(prefix + 'query/saved', this.$getSavedQueries);
+      .post(prefix + 'query/saved', requireOwner('queries'), this.$postSaveQuery)
+      .get(prefix + 'query/saved', requireOwner('queries'), this.$getSavedQueries);
+  }
+
+  private async $postOwner(req: Request, res: Response): Promise<void> {
+    try {
+      const key = await developerIdentity.bootstrapOwner(req.body?.name ?? req.body?.label, req.ip || req.socket.remoteAddress || 'unknown');
+      res.status(201).json({ ...key, storage: 'durable' });
+    } catch (e) {
+      fail(req, res, e, 500, 'Owner creation failed');
+    }
   }
 
   private async $postKey(req: Request, res: Response): Promise<void> {
     try {
-      const { user_id, label, scopes } = req.body;
-      const keyData = DeveloperIdentityManager.generateApiKey(
-        user_id || 'dev-default',
-        label || 'Default Key',
-        scopes || ['read']
-      );
-      res.json(keyData);
+      const { label, name, scopes, rate_limit, expires_in_days } = req.body ?? {};
+      const key = await developerIdentity.generateApiKey(ownerOf(res), name ?? label, scopes, rate_limit !== undefined ? Number(rate_limit) : undefined, expires_in_days !== undefined ? Number(expires_in_days) : undefined);
+      res.status(201).json(key);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'API key generation failed');
+      fail(req, res, e, 500, 'API key generation failed');
     }
   }
 
   private async $getKeys(req: Request, res: Response): Promise<void> {
     try {
-      const userId = String(req.query.user_id || 'dev-default');
-      const keys = DeveloperIdentityManager.getUserKeys(userId);
+      const keys = await developerIdentity.listKeys(ownerOf(res));
       res.json({ keys, count: keys.length });
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch keys');
+      fail(req, res, e, 500, 'Failed to fetch keys');
     }
   }
 
   private async $deleteKey(req: Request, res: Response): Promise<void> {
     try {
-      const revoked = DeveloperIdentityManager.revokeApiKey(req.params.id);
-      res.json({ revoked });
+      const revoked = await developerIdentity.revokeApiKey(ownerOf(res), req.params.id);
+      if (!revoked) {
+        res.status(404).json({ error: 'Key not found.' });
+        return;
+      }
+      res.json({ revoked: true });
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to revoke key');
+      fail(req, res, e, 500, 'Failed to revoke key');
     }
   }
 
@@ -73,32 +95,40 @@ class QueryStudioRoutes {
 
   private async $postWebhook(req: Request, res: Response): Promise<void> {
     try {
-      const { user_id, target_url, events } = req.body;
-      const webhook = DeveloperIdentityManager.registerWebhook(
-        user_id || 'dev-default',
-        target_url,
-        events || ['mempool.evaluated']
-      );
-      res.json(webhook);
+      const { target_url, events } = req.body ?? {};
+      const webhook = await developerIdentity.registerWebhook(ownerOf(res), target_url, events ?? ['watchlist.notification']);
+      res.status(201).json(webhook);
     } catch (e) {
-      handleError(req, res, 400, e instanceof Error ? e.message : 'Failed to register webhook');
+      fail(req, res, e, 400, 'Failed to register webhook');
     }
   }
 
   private async $getWebhooks(req: Request, res: Response): Promise<void> {
     try {
-      const userId = String(req.query.user_id || 'dev-default');
-      const hooks = DeveloperIdentityManager.getUserWebhooks(userId);
-      res.json({ webhooks: hooks, count: hooks.length });
+      const webhooks = await developerIdentity.listWebhooks(ownerOf(res));
+      res.json({ webhooks, count: webhooks.length });
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch webhooks');
+      fail(req, res, e, 500, 'Failed to fetch webhooks');
+    }
+  }
+
+  private async $getWebhookAttempts(req: Request, res: Response): Promise<void> {
+    try {
+      const attempts = await developerIdentity.listAttempts(ownerOf(res), req.params.id);
+      if (attempts === null) {
+        res.status(404).json({ error: 'Webhook not found.' });
+        return;
+      }
+      res.json({ attempts, count: attempts.length });
+    } catch (e) {
+      fail(req, res, e, 500, 'Failed to fetch delivery attempts');
     }
   }
 
   private async $postExecute(req: Request, res: Response): Promise<void> {
     try {
-      const sql = String(req.body.sql || '');
-      const maxRows = req.body.max_rows !== undefined ? parseInt(req.body.max_rows, 10) : 100;
+      const sql = String(req.body?.sql || '');
+      const maxRows = req.body?.max_rows !== undefined ? parseInt(req.body.max_rows, 10) : 100;
       if (!sql) {
         res.status(400).json({ error: 'sql parameter required.' });
         return;
@@ -130,25 +160,20 @@ class QueryStudioRoutes {
 
   private async $postSaveQuery(req: Request, res: Response): Promise<void> {
     try {
-      const { user_id, title, sql } = req.body;
-      if (!sql || !title) {
-        res.status(400).json({ error: 'title and sql required.' });
-        return;
-      }
-      const saved = queryStudioService.saveQuery(user_id || 'dev-default', title, sql);
-      res.json(saved);
+      const { title, sql } = req.body ?? {};
+      const saved = await queryStudioService.saveQuery(ownerOf(res), title, sql);
+      res.status(201).json(saved);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to save query');
+      fail(req, res, e, 500, 'Failed to save query');
     }
   }
 
   private async $getSavedQueries(req: Request, res: Response): Promise<void> {
     try {
-      const userId = String(req.query.user_id || 'dev-default');
-      const queries = queryStudioService.getSavedQueries(userId);
+      const queries = await queryStudioService.getSavedQueries(ownerOf(res));
       res.json({ saved_queries: queries, count: queries.length });
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch saved queries');
+      fail(req, res, e, 500, 'Failed to fetch saved queries');
     }
   }
 }

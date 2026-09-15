@@ -7,7 +7,7 @@ import cpfpRepository from '../repositories/CpfpRepository';
 import { RowDataPacket } from 'mysql2';
 
 class DatabaseMigration {
-  private static currentVersion = 108;
+  private static currentVersion = 109;
   private queryTimeout = 3600_000;
   private statisticsAddedIndexed = false;
   private uniqueLogs: string[] = [];
@@ -1265,6 +1265,207 @@ class DatabaseMigration {
         INDEX universe_timestamp_records_anchor (anchor_block_height)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`);
       await this.updateToSchemaVersion(108);
+    }
+    if (databaseSchemaVersion < 109) {
+      // Owner-scoped intelligence state: developer API keys and webhooks,
+      // watchlists with their entities and rules, saved queries, matcher
+      // notifications with their delivery outbox, and the matcher checkpoint.
+      // Every tenant row carries owner_id and network; the network is the
+      // backend's own, never chosen by the caller. Secrets are never stored in
+      // clear: keys as a peppered hash, webhook signing secrets encrypted.
+      await this.$executeQuery(`CREATE TABLE IF NOT EXISTS intelligence_settings (
+        name VARCHAR(64) NOT NULL,
+        value TEXT NOT NULL,
+        created_at DATETIME(3) NOT NULL,
+        PRIMARY KEY (name)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
+      await this.$executeQuery(`CREATE TABLE IF NOT EXISTS intelligence_api_keys (
+        key_id CHAR(36) NOT NULL,
+        owner_id CHAR(36) NOT NULL,
+        network VARCHAR(16) NOT NULL,
+        key_prefix VARCHAR(16) NOT NULL,
+        key_hash CHAR(64) NOT NULL,
+        hash_version TINYINT UNSIGNED NOT NULL DEFAULT 1,
+        name VARCHAR(128) NOT NULL,
+        scopes_json JSON NOT NULL,
+        rate_limit INT UNSIGNED NOT NULL,
+        expires_at DATETIME(3) NULL,
+        created_at DATETIME(3) NOT NULL,
+        last_used_at DATETIME(3) NULL,
+        revoked_at DATETIME(3) NULL,
+        PRIMARY KEY (key_id),
+        UNIQUE INDEX intelligence_api_keys_hash (key_hash),
+        INDEX intelligence_api_keys_owner (owner_id, network, created_at)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
+      await this.$executeQuery(`CREATE TABLE IF NOT EXISTS intelligence_webhooks (
+        webhook_id CHAR(36) NOT NULL,
+        owner_id CHAR(36) NOT NULL,
+        network VARCHAR(16) NOT NULL,
+        url VARCHAR(2048) NOT NULL,
+        secret_ciphertext VARCHAR(512) NOT NULL,
+        key_version TINYINT UNSIGNED NOT NULL DEFAULT 1,
+        event_filters_json JSON NOT NULL,
+        active TINYINT(1) NOT NULL DEFAULT 1,
+        created_at DATETIME(3) NOT NULL,
+        updated_at DATETIME(3) NOT NULL,
+        PRIMARY KEY (webhook_id),
+        INDEX intelligence_webhooks_owner (owner_id, network, created_at)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
+      await this.$executeQuery(`CREATE TABLE IF NOT EXISTS intelligence_watchlists (
+        watchlist_id CHAR(36) NOT NULL,
+        owner_id CHAR(36) NOT NULL,
+        network VARCHAR(16) NOT NULL,
+        name VARCHAR(128) NOT NULL,
+        privacy_mode VARCHAR(16) NOT NULL,
+        created_at DATETIME(3) NOT NULL,
+        updated_at DATETIME(3) NOT NULL,
+        version INT UNSIGNED NOT NULL DEFAULT 1,
+        PRIMARY KEY (watchlist_id),
+        INDEX intelligence_watchlists_owner (owner_id, network, updated_at)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
+      await this.$executeQuery(`CREATE TABLE IF NOT EXISTS intelligence_watchlist_entities (
+        entity_id CHAR(36) NOT NULL,
+        watchlist_id CHAR(36) NOT NULL,
+        owner_id CHAR(36) NOT NULL,
+        network VARCHAR(16) NOT NULL,
+        entity_type VARCHAR(24) NOT NULL,
+        blinded_hash CHAR(64) NOT NULL,
+        label VARCHAR(128) NOT NULL,
+        created_at DATETIME(3) NOT NULL,
+        PRIMARY KEY (entity_id),
+        UNIQUE INDEX intelligence_watchlist_entities_identity (watchlist_id, entity_type, blinded_hash),
+        INDEX intelligence_watchlist_entities_hash (network, entity_type, blinded_hash),
+        CONSTRAINT intelligence_watchlist_entities_watchlist FOREIGN KEY (watchlist_id) REFERENCES intelligence_watchlists (watchlist_id) ON DELETE CASCADE
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
+      await this.$executeQuery(`CREATE TABLE IF NOT EXISTS intelligence_watchlist_rules (
+        rule_id CHAR(36) NOT NULL,
+        watchlist_id CHAR(36) NOT NULL,
+        owner_id CHAR(36) NOT NULL,
+        network VARCHAR(16) NOT NULL,
+        condition_type VARCHAR(24) NOT NULL,
+        threshold_value DOUBLE NULL,
+        delivery_channel VARCHAR(16) NOT NULL,
+        webhook_id CHAR(36) NULL,
+        enabled TINYINT(1) NOT NULL DEFAULT 1,
+        rate_limit_per_hour INT UNSIGNED NOT NULL DEFAULT 20,
+        created_at DATETIME(3) NOT NULL,
+        version INT UNSIGNED NOT NULL DEFAULT 1,
+        PRIMARY KEY (rule_id),
+        INDEX intelligence_watchlist_rules_watchlist (watchlist_id),
+        INDEX intelligence_watchlist_rules_active (network, enabled, condition_type),
+        CONSTRAINT intelligence_watchlist_rules_watchlist FOREIGN KEY (watchlist_id) REFERENCES intelligence_watchlists (watchlist_id) ON DELETE CASCADE
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
+      await this.$executeQuery(`CREATE TABLE IF NOT EXISTS intelligence_saved_queries (
+        query_id CHAR(36) NOT NULL,
+        owner_id CHAR(36) NOT NULL,
+        network VARCHAR(16) NOT NULL,
+        title VARCHAR(128) NOT NULL,
+        sql_text TEXT NOT NULL,
+        created_at DATETIME(3) NOT NULL,
+        updated_at DATETIME(3) NOT NULL,
+        PRIMARY KEY (query_id),
+        INDEX intelligence_saved_queries_owner (owner_id, network, updated_at)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
+      await this.$executeQuery(`CREATE TABLE IF NOT EXISTS intelligence_graph_cases (
+        case_id CHAR(36) NOT NULL,
+        owner_id CHAR(36) NOT NULL,
+        network VARCHAR(16) NOT NULL,
+        document JSON NOT NULL,
+        created_at DATETIME(3) NOT NULL,
+        updated_at DATETIME(3) NOT NULL,
+        PRIMARY KEY (case_id),
+        INDEX intelligence_graph_cases_owner (owner_id, network, updated_at)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
+      await this.$executeQuery(`CREATE TABLE IF NOT EXISTS intelligence_matcher_checkpoints (
+        consumer_id VARCHAR(64) NOT NULL,
+        network VARCHAR(16) NOT NULL,
+        block_height INT UNSIGNED NOT NULL,
+        block_hash CHAR(64) NOT NULL,
+        updated_at DATETIME(3) NOT NULL,
+        PRIMARY KEY (consumer_id, network)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
+      await this.$executeQuery(`CREATE TABLE IF NOT EXISTS intelligence_notifications (
+        notification_id CHAR(36) NOT NULL,
+        owner_id CHAR(36) NOT NULL,
+        network VARCHAR(16) NOT NULL,
+        watchlist_id CHAR(36) NOT NULL,
+        rule_id CHAR(36) NOT NULL,
+        event_id VARCHAR(160) NOT NULL,
+        title VARCHAR(160) NOT NULL,
+        message VARCHAR(1024) NOT NULL,
+        severity VARCHAR(16) NOT NULL,
+        entity_type VARCHAR(24) NOT NULL,
+        blinded_hash CHAR(64) NOT NULL,
+        block_height INT UNSIGNED NULL,
+        block_hash CHAR(64) NULL,
+        state VARCHAR(16) NOT NULL,
+        created_at DATETIME(3) NOT NULL,
+        acknowledged_at DATETIME(3) NULL,
+        PRIMARY KEY (notification_id),
+        UNIQUE INDEX intelligence_notifications_event (rule_id, event_id),
+        INDEX intelligence_notifications_owner (owner_id, network, watchlist_id, created_at),
+        INDEX intelligence_notifications_block (network, block_height)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
+      await this.$executeQuery(`CREATE TABLE IF NOT EXISTS intelligence_delivery_outbox (
+        outbox_id CHAR(36) NOT NULL,
+        notification_id CHAR(36) NOT NULL,
+        webhook_id CHAR(36) NOT NULL,
+        network VARCHAR(16) NOT NULL,
+        state VARCHAR(16) NOT NULL,
+        attempt_count INT UNSIGNED NOT NULL DEFAULT 0,
+        next_attempt_at DATETIME(3) NOT NULL,
+        lease_until DATETIME(3) NULL,
+        lease_token CHAR(36) NULL,
+        last_error VARCHAR(512) NULL,
+        created_at DATETIME(3) NOT NULL,
+        updated_at DATETIME(3) NOT NULL,
+        PRIMARY KEY (outbox_id),
+        UNIQUE INDEX intelligence_delivery_outbox_target (notification_id, webhook_id),
+        INDEX intelligence_delivery_outbox_due (network, state, next_attempt_at)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
+      await this.$executeQuery(`CREATE TABLE IF NOT EXISTS intelligence_webhook_attempts (
+        attempt_id CHAR(36) NOT NULL,
+        outbox_id CHAR(36) NOT NULL,
+        webhook_id CHAR(36) NOT NULL,
+        event_id VARCHAR(160) NOT NULL,
+        attempt_number INT UNSIGNED NOT NULL,
+        started_at DATETIME(3) NOT NULL,
+        finished_at DATETIME(3) NOT NULL,
+        status_code INT UNSIGNED NULL,
+        success TINYINT(1) NOT NULL,
+        response_digest CHAR(64) NULL,
+        error_code VARCHAR(64) NULL,
+        PRIMARY KEY (attempt_id),
+        UNIQUE INDEX intelligence_webhook_attempts_number (outbox_id, attempt_number),
+        INDEX intelligence_webhook_attempts_webhook (webhook_id, started_at)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
+      await this.$executeQuery(`CREATE TABLE IF NOT EXISTS intelligence_knowledge_labels (
+        label_id CHAR(36) NOT NULL,
+        owner_id CHAR(36) NOT NULL,
+        network VARCHAR(16) NOT NULL,
+        entity_type VARCHAR(16) NOT NULL,
+        entity_id VARCHAR(160) NOT NULL,
+        status VARCHAR(16) NOT NULL,
+        document JSON NOT NULL,
+        created_at DATETIME(3) NOT NULL,
+        updated_at DATETIME(3) NOT NULL,
+        PRIMARY KEY (label_id),
+        INDEX intelligence_knowledge_labels_entity (network, entity_type, entity_id),
+        INDEX intelligence_knowledge_labels_owner (owner_id, network, updated_at)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
+      await this.$executeQuery(`CREATE TABLE IF NOT EXISTS intelligence_knowledge_audit (
+        audit_id CHAR(36) NOT NULL,
+        label_id CHAR(36) NOT NULL,
+        network VARCHAR(16) NOT NULL,
+        action VARCHAR(16) NOT NULL,
+        actor_owner_id CHAR(36) NOT NULL,
+        summary VARCHAR(1024) NOT NULL,
+        created_at DATETIME(3) NOT NULL,
+        PRIMARY KEY (audit_id),
+        INDEX intelligence_knowledge_audit_network (network, created_at),
+        INDEX intelligence_knowledge_audit_label (label_id, created_at)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
+      await this.updateToSchemaVersion(109);
     }
 
     if (databaseSchemaVersion < 106 && config.MEMPOOL.NETWORK === 'liquid') {

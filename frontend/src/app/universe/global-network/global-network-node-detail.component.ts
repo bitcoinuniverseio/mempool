@@ -92,7 +92,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                 </li>
                 <li class="list-group-item bg-transparent d-flex justify-content-between px-0">
                   <span class="text-muted">Probe Handshake Latency</span>
-                  <span class="fw-semibold">{{ node.latency_ms }} ms</span>
+                  <span class="fw-semibold">{{ node.latency_ms >= 0 ? node.latency_ms + ' ms' : 'n/a' }}</span>
                 </li>
                 <li class="list-group-item bg-transparent d-flex justify-content-between px-0">
                   <span class="text-muted">Autonomous System (ASN)</span>

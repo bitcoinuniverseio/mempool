@@ -1,6 +1,7 @@
-import crypto from 'crypto';
-import logger from '../../../logger';
-import { IntelligenceEventBus } from '../events/intelligence-event-bus';
+import bitcoinApi from '../../bitcoin/bitcoin-api-factory';
+import config from '../../../config';
+import { BlockExtended, TransactionExtended } from '../../../mempool.interfaces';
+import { classifyTransaction } from '../protocols/protocol-activity';
 import {
   BlockspaceSemanticClass,
   BlockspaceCompositionPoint,
@@ -9,17 +10,98 @@ import {
   BlockspaceOverview,
 } from './blockspace.models';
 
+/**
+ * Blockspace composition measured from the blocks this backend processes.
+ *
+ * The revision this replaces answered every read with constants: a taxonomy
+ * with invented shares, a time series of invented blocks, two invented fee
+ * regimes and, for any txid whatsoever, "Simple Monetary Payment, 564 WU".
+ * Every number here now comes from a transaction the main loop handed over,
+ * classified by what its inputs, outputs and witnesses contain, and the
+ * window each figure covers is reported with it.
+ */
+
+export class BlockspaceUnavailableError extends Error {
+  constructor(public readonly code: string, message: string) { super(message); }
+}
+
+export interface ClassDefinition {
+  class_id: string;
+  name: string;
+  category: BlockspaceSemanticClass['category'];
+  description: string;
+}
+
+/** Classes in priority order: a transaction is counted under the first that matches. */
+export const CLASSES: ClassDefinition[] = [
+  { class_id: 'class-coinbase', name: 'Coinbase', category: 'infrastructure', description: 'The block reward transaction.' },
+  { class_id: 'class-inscription', name: 'Inscriptions', category: 'arbitrary_data', description: 'Transactions revealing an ordinals inscription envelope in a taproot witness.' },
+  { class_id: 'class-runes', name: 'Runes', category: 'arbitrary_data', description: 'Transactions carrying a valid runestone in an OP_RETURN output.' },
+  { class_id: 'class-op-return', name: 'Data Carriers', category: 'arbitrary_data', description: 'Transactions with an OP_RETURN output that is not a runestone.' },
+  { class_id: 'class-coinjoin-like', name: 'Equal-Output Batches', category: 'monetary', description: 'Five or more inputs and five or more outputs of the same value, the shape of a coinjoin.' },
+  { class_id: 'class-batched-payout', name: 'Batched Payouts', category: 'monetary', description: 'Ten or more outputs from few inputs, the shape of an exchange or pool payout.' },
+  { class_id: 'class-consolidation', name: 'Consolidations', category: 'infrastructure', description: 'Five or more inputs into one or two outputs.' },
+  { class_id: 'class-simple-payment', name: 'Simple Payments', category: 'monetary', description: 'At most two inputs and two outputs, no data.' },
+  { class_id: 'class-other-monetary', name: 'Other Payments', category: 'monetary', description: 'Everything else that moves value without carrying data.' },
+];
+
+const REGIMES: { type: BlockspaceRegimeEvent['regime_type']; floor: number; driver: string }[] = [
+  { type: 'extreme_congestion', floor: 100, driver: 'Median fee rate at or above 100 sat/vB' },
+  { type: 'data_minting_spike', floor: 30, driver: 'Median fee rate between 30 and 100 sat/vB' },
+  { type: 'monetary_standard', floor: 5, driver: 'Median fee rate between 5 and 30 sat/vB' },
+  { type: 'consolidation_friendly', floor: 0, driver: 'Median fee rate below 5 sat/vB' },
+];
+
+export interface TxClassification {
+  class_id: string;
+  tags: string[];
+}
+
+export function classifyBlockspace(tx: TransactionExtended): TxClassification {
+  const tags: string[] = [];
+  const inputs = tx.vin?.length ?? 0;
+  const outputs = tx.vout?.length ?? 0;
+  if (tx.vin?.some(vin => vin.is_coinbase)) { return { class_id: 'class-coinbase', tags: ['coinbase'] }; }
+  const protocols = classifyTransaction(tx);
+  if (tx.vin?.some(vin => vin.sequence !== undefined && vin.sequence < 0xfffffffe)) { tags.push('rbf_signaling'); }
+  if (tx.vin?.some(vin => (vin.witness?.length ?? 0) > 0)) { tags.push('segwit'); }
+  if (protocols.ordinals) { tags.push(`inscriptions:${protocols.ordinals}`); }
+  if (protocols.brc20) { tags.push(`brc20:${protocols.brc20}`); }
+  if (protocols.runes) { tags.push(`runes_operations:${protocols.runes}`); }
+  if (protocols.op_return) { tags.push(`op_return_outputs:${protocols.op_return}`); }
+  tags.push(`inputs:${inputs}`, `outputs:${outputs}`);
+  if (protocols.ordinals) { return { class_id: 'class-inscription', tags }; }
+  if (protocols.runes) { return { class_id: 'class-runes', tags }; }
+  if (protocols.op_return) { return { class_id: 'class-op-return', tags }; }
+  const values = new Map<number, number>();
+  for (const vout of tx.vout ?? []) { values.set(vout.value, (values.get(vout.value) ?? 0) + 1); }
+  const largestEqualGroup = Math.max(0, ...values.values());
+  if (inputs >= 5 && outputs >= 5 && largestEqualGroup >= 5) { tags.push(`equal_outputs:${largestEqualGroup}`); return { class_id: 'class-coinjoin-like', tags }; }
+  if (outputs >= 10 && inputs <= 3) { return { class_id: 'class-batched-payout', tags }; }
+  if (inputs >= 5 && outputs <= 2) { return { class_id: 'class-consolidation', tags }; }
+  if (inputs <= 2 && outputs <= 2) { return { class_id: 'class-simple-payment', tags }; }
+  return { class_id: 'class-other-monetary', tags };
+}
+
+interface BlockTally {
+  height: number;
+  hash: string;
+  timestamp: number;
+  weight: number;
+  fees: number;
+  medianFee: number | null;
+  perClass: Record<string, { transactions: number; weight: number; fees: number }>;
+}
+
+const DAY_SECONDS = 86_400;
+
 export class BlockspaceService {
   private static instance: BlockspaceService;
-  private eventBus = IntelligenceEventBus.getInstance();
-
-  private taxonomyClasses: BlockspaceSemanticClass[] = [];
-  private timeseries: BlockspaceCompositionPoint[] = [];
+  private tallies: BlockTally[] = [];
   private regimes: BlockspaceRegimeEvent[] = [];
+  private maxBlocks = 288;
 
-  private constructor() {
-    this.seedInitialData();
-  }
+  private constructor() {}
 
   public static getInstance(): BlockspaceService {
     if (!BlockspaceService.instance) {
@@ -28,133 +110,123 @@ export class BlockspaceService {
     return BlockspaceService.instance;
   }
 
-  private seedInitialData(): void {
-    this.taxonomyClasses = [
-      {
-        class_id: 'class-simple-p2p',
-        name: 'Simple Monetary Payments',
-        category: 'monetary',
-        description: 'Standard 1-in-2-out or 2-in-2-out payments between individual wallets.',
-        weight_share_percentage: 32.5,
-        fee_share_percentage: 30.2,
-        tx_count_24h: 185000,
-      },
-      {
-        class_id: 'class-batched-payout',
-        name: 'Batched Multi-Output Payments',
-        category: 'monetary',
-        description: 'Exchange and pool withdrawal transactions with 10+ payment destinations.',
-        weight_share_percentage: 18.2,
-        fee_share_percentage: 22.4,
-        tx_count_24h: 12400,
-      },
-      {
-        class_id: 'class-consolidation',
-        name: 'UTXO Consolidations',
-        category: 'infrastructure',
-        description: 'Multi-input single-output transactions consolidating dust and wallet balances.',
-        weight_share_percentage: 14.8,
-        fee_share_percentage: 8.5,
-        tx_count_24h: 8200,
-      },
-      {
-        class_id: 'class-lightning-channel',
-        name: 'Lightning Channel Operations',
-        category: 'layer2',
-        description: 'Channel openings, cooperative closures, and commitment sweep transactions.',
-        weight_share_percentage: 9.6,
-        fee_share_percentage: 12.1,
-        tx_count_24h: 6800,
-      },
-      {
-        class_id: 'class-inscriptions',
-        name: 'Inscriptions & Taproot Envelopes',
-        category: 'arbitrary_data',
-        description: 'Taproot script-path witness envelopes containing images, text, or audio data.',
-        weight_share_percentage: 19.4,
-        fee_share_percentage: 21.8,
-        tx_count_24h: 94000,
-      },
-      {
-        class_id: 'class-runes-alkanes',
-        name: 'Runes, Alkanes & Token Protocols',
-        category: 'arbitrary_data',
-        description: 'OP_RETURN protocol messages, runestones, and token issuance/transfer markers.',
-        weight_share_percentage: 5.5,
-        fee_share_percentage: 5.0,
-        tx_count_24h: 24000,
-      },
-    ];
+  /** Test seam. */
+  public reset(): void {
+    this.tallies = [];
+    this.regimes = [];
+  }
 
-    const baseHeight = 860400;
-    for (let i = 0; i < 6; i++) {
-      const h = baseHeight - i;
-      this.timeseries.push({
-        block_height: h,
-        timestamp_utc: new Date(Date.now() - (i * 600000)).toISOString(),
-        total_weight: 3992000,
-        total_fee_sats: 18500000,
-        monetary_weight: 1950000,
-        layer2_weight: 380000,
-        arbitrary_data_weight: 980000,
-        consolidation_weight: 682000,
-      });
+  public observeBlock(block: BlockExtended, transactions: TransactionExtended[]): void {
+    const tally: BlockTally = {
+      height: block.height, hash: block.id, timestamp: block.timestamp, weight: block.weight,
+      fees: block.extras?.totalFees ?? transactions.reduce((sum, tx) => sum + (tx.fee ?? 0), 0),
+      medianFee: typeof block.extras?.medianFee === 'number' ? block.extras.medianFee : null,
+      perClass: {},
+    };
+    for (const definition of CLASSES) { tally.perClass[definition.class_id] = { transactions: 0, weight: 0, fees: 0 }; }
+    for (const tx of transactions) {
+      const { class_id } = classifyBlockspace(tx);
+      const entry = tally.perClass[class_id];
+      entry.transactions += 1;
+      entry.weight += tx.weight ?? 0;
+      entry.fees += tx.fee ?? 0;
     }
+    this.tallies = this.tallies.filter(existing => existing.height < block.height);
+    this.tallies.push(tally);
+    if (this.tallies.length > this.maxBlocks) { this.tallies = this.tallies.slice(-this.maxBlocks); }
+    this.updateRegimes(tally);
+  }
 
-    this.regimes = [
-      {
-        regime_id: 'regime-current',
-        network: 'bitcoin',
-        start_height: 860380,
-        regime_type: 'monetary_standard',
-        median_feerate: 14.5,
-        primary_demand_driver: 'Balanced monetary relay with baseline ordinals minting',
-        detected_at: new Date().toISOString(),
-      },
-      {
-        regime_id: 'regime-prev-1',
-        network: 'bitcoin',
-        start_height: 860200,
-        end_height: 860379,
-        regime_type: 'data_minting_spike',
-        median_feerate: 42.0,
-        primary_demand_driver: 'High-volume protocol minting wave',
-        detected_at: new Date(Date.now() - 86400000).toISOString(),
-      },
-    ];
+  private regimeFor(medianFee: number): { type: BlockspaceRegimeEvent['regime_type']; driver: string } {
+    return REGIMES.find(regime => medianFee >= regime.floor) ?? REGIMES[REGIMES.length - 1];
+  }
+
+  /** A regime is a run of consecutive observed blocks whose median fee rate falls in one band. */
+  private updateRegimes(tally: BlockTally): void {
+    if (tally.medianFee === null) { return; }
+    const regime = this.regimeFor(tally.medianFee);
+    const current = this.regimes[0];
+    if (current && current.end_height === undefined && current.regime_type === regime.type) {
+      current.median_feerate = Math.round(((current.median_feerate + tally.medianFee) / 2) * 100) / 100;
+      return;
+    }
+    if (current && current.end_height === undefined) { current.end_height = tally.height - 1; }
+    this.regimes.unshift({
+      regime_id: `regime-${config.MEMPOOL.NETWORK}-${tally.height}`, network: config.MEMPOOL.NETWORK, start_height: tally.height,
+      regime_type: regime.type, median_feerate: tally.medianFee, primary_demand_driver: regime.driver, detected_at: new Date().toISOString(),
+    });
+    if (this.regimes.length > 50) { this.regimes = this.regimes.slice(0, 50); }
+  }
+
+  private window(): BlockTally[] {
+    if (this.tallies.length === 0) { throw new BlockspaceUnavailableError('no-observed-blocks', 'No block has been observed by this backend yet; blockspace composition is measured from processed blocks.'); }
+    const tip = this.tallies[this.tallies.length - 1];
+    return this.tallies.filter(tally => tally.timestamp >= tip.timestamp - DAY_SECONDS);
+  }
+
+  public getTaxonomy(): BlockspaceSemanticClass[] {
+    const window = this.window();
+    const totalWeight = window.reduce((sum, tally) => sum + tally.weight, 0);
+    const totalFees = window.reduce((sum, tally) => sum + tally.fees, 0);
+    const share = (part: number, whole: number): number => whole > 0 ? Math.round((part / whole) * 10000) / 100 : 0;
+    return CLASSES.map(definition => {
+      const totals = window.reduce((sum, tally) => {
+        const entry = tally.perClass[definition.class_id];
+        return { transactions: sum.transactions + entry.transactions, weight: sum.weight + entry.weight, fees: sum.fees + entry.fees };
+      }, { transactions: 0, weight: 0, fees: 0 });
+      return {
+        class_id: definition.class_id, name: definition.name, category: definition.category, description: definition.description,
+        weight_share_percentage: share(totals.weight, totalWeight), fee_share_percentage: share(totals.fees, totalFees), tx_count_24h: totals.transactions,
+      };
+    });
+  }
+
+  public getComposition(limit = 24): BlockspaceCompositionPoint[] {
+    const window = this.window();
+    const sum = (tally: BlockTally, category: BlockspaceSemanticClass['category']): number =>
+      CLASSES.filter(definition => definition.category === category).reduce((total, definition) => total + tally.perClass[definition.class_id].weight, 0);
+    return window.slice(-Math.max(1, Math.min(288, limit))).reverse().map(tally => ({
+      block_height: tally.height, timestamp_utc: new Date(tally.timestamp * 1000).toISOString(), total_weight: tally.weight, total_fee_sats: tally.fees,
+      monetary_weight: sum(tally, 'monetary'), layer2_weight: sum(tally, 'layer2'), arbitrary_data_weight: sum(tally, 'arbitrary_data'),
+      consolidation_weight: tally.perClass['class-consolidation'].weight,
+    }));
+  }
+
+  public getRegimes(): BlockspaceRegimeEvent[] {
+    this.window();
+    return this.regimes;
   }
 
   public getOverview(): BlockspaceOverview {
+    const window = this.window();
+    const medians = window.map(tally => tally.medianFee).filter((value): value is number => value !== null).sort((a, b) => a - b);
+    const median = medians.length ? medians[Math.floor(medians.length / 2)] : 0;
+    const tip = window[window.length - 1];
     return {
-      current_regime: this.regimes[0],
-      median_feerate_24h: 14.5,
-      taxonomy_classes: this.taxonomyClasses,
-      composition_timeseries: this.timeseries,
+      network: config.MEMPOOL.NETWORK,
+      current_regime: this.regimes[0] ?? null,
+      median_feerate_24h: median,
+      taxonomy_classes: this.getTaxonomy(),
+      composition_timeseries: this.getComposition(24),
+      window: { blocks: window.length, from_height: window[0].height, to_height: tip.height, covers_24h: this.tallies[0].timestamp <= tip.timestamp - DAY_SECONDS },
+      checkpoint: { height: tip.height, hash: tip.hash },
       last_updated: new Date().toISOString(),
     };
   }
 
-  public getTaxonomy(): BlockspaceSemanticClass[] {
-    return this.taxonomyClasses;
-  }
-
-  public getComposition(limit = 24): BlockspaceCompositionPoint[] {
-    return this.timeseries.slice(0, limit);
-  }
-
-  public getRegimes(): BlockspaceRegimeEvent[] {
-    return this.regimes;
-  }
-
-  public getTxSemantics(txid: string): BlockspaceTxEvidence {
+  /** Classifies one transaction fetched from the owned index; null when the index does not have it. */
+  public async getTxSemantics(txid: string): Promise<BlockspaceTxEvidence | null> {
+    if (!/^[0-9a-fA-F]{64}$/.test(txid)) { return null; }
+    let tx: TransactionExtended;
+    try { tx = await bitcoinApi.$getRawTransaction(txid) as TransactionExtended; } catch { return null; }
+    const { class_id, tags } = classifyBlockspace(tx);
+    const definition = CLASSES.find(entry => entry.class_id === class_id) as ClassDefinition;
+    const vsize = Math.ceil((tx.weight ?? 0) / 4);
     return {
-      txid,
-      primary_class: 'Simple Monetary Payments',
-      secondary_tags: ['SegWit v0', 'RBF Signaling', 'Single Change Output'],
-      weight: 564,
-      fee_sats: 1420,
-      feerate_sats_vb: 10.1,
-      evidence_summary: 'Standard 1-in-2-out transaction sending monetary balance with one change outpoint.',
+      txid, primary_class: definition.name, class_id, secondary_tags: tags, weight: tx.weight ?? 0, fee_sats: tx.fee ?? 0,
+      feerate_sats_vb: vsize > 0 ? Math.round(((tx.fee ?? 0) / vsize) * 100) / 100 : 0,
+      evidence_summary: `${definition.description} Observed ${tx.vin?.length ?? 0} input(s) and ${tx.vout?.length ?? 0} output(s).`,
+      confirmed: Boolean(tx.status?.confirmed), block_height: tx.status?.confirmed ? (tx.status.block_height ?? null) : null,
     };
   }
 }

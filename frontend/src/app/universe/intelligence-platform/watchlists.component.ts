@@ -1,126 +1,148 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { IntelligenceApiService } from './intelligence-api.service';
+import { OwnerKeyService } from './owner-key.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
+export const ENTITY_TYPES = ['address', 'txid', 'outpoint', 'descriptor'] as const;
+export const CONDITION_TYPES = ['confirmation', 'value_transfer', 'rbf_replacement', 'feerate_cross', 'reorg_displaced'] as const;
+
+/**
+ * Watchlists for the owner whose key this browser holds. Everything shown
+ * comes from the backend: the earlier revision offered a "sample watchlist"
+ * that existed only in this component's state.
+ */
 @Component({
   selector: 'app-watchlists',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule, RelativeUrlPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
       <header class="page-header">
         <div class="title-row">
           <h1>Privacy-First Watchlists, Rules, and Alerts</h1>
-          <span class="badge badge-success">Blinded Hashing Enabled</span>
+          <span class="badge badge-success">Blinded Hashing</span>
         </div>
         <p class="subtitle">
-          Monitor addresses, transactions, and outpoints with zero plain-text IP logging or server-side address leakage using blinded entity matching.
+          Watch addresses and transactions by their SHA-256 hash. The matcher compares hashes against confirmed blocks and mempool replacements and never stores the raw identifier.
         </p>
       </header>
 
-      <div *ngIf="loadError" class="alert alert-danger mb-4">
-        {{ loadError }}
+      <div *ngIf="loadError" class="alert alert-danger mb-4">{{ loadError }}</div>
+
+      <div *ngIf="!hasKey" class="alert alert-warning mb-4">
+        Watchlists belong to an owner key. Create or paste one in the
+        <a [routerLink]="'/intelligence/developer' | relativeUrl">Developer Platform</a> first.
       </div>
 
-      <!-- Empty State -->
-      <div *ngIf="!loading && watchlists.length === 0 && !loadError" class="card mb-4 text-center p-4 bg-dark-subtle">
-        <div class="card-body">
-          <h5>No Active Watchlists</h5>
-          <p class="text-muted small mb-3">
-            You have not configured any privacy-preserving watchlists yet. Create a local watchlist to monitor transaction lifecycle events.
-          </p>
-          <button type="button" class="btn btn-primary" (click)="createSampleWatchlist()">
-            Create Sample Watchlist
-          </button>
-        </div>
-      </div>
+      <ng-container *ngIf="hasKey">
+        <!-- Create -->
+        <section class="card mb-4">
+          <div class="card-body">
+            <div class="row g-2 align-items-end">
+              <div class="col-md-6">
+                <label class="form-label small text-muted" for="newWatchlistName">New watchlist</label>
+                <input id="newWatchlistName" type="text" class="form-control" [(ngModel)]="newName" placeholder="e.g. Cold storage" />
+              </div>
+              <div class="col-md-3">
+                <button type="button" class="btn btn-primary w-100" [disabled]="!newName.trim() || busy" (click)="create()">Create</button>
+              </div>
+            </div>
+          </div>
+        </section>
 
-      <!-- Active Watchlists -->
-      <section class="card mb-4" *ngIf="watchlists.length > 0">
-        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-          <h4 class="mb-0">Your Monitored Watchlists</h4>
-          <span class="badge badge-primary">{{ watchlists[0].privacy_mode | uppercase }} PRIVACY</span>
+        <div *ngIf="!loading && watchlists.length === 0 && !loadError" class="card mb-4 text-center p-4 bg-dark-subtle">
+          <div class="card-body"><h5>No watchlists</h5><p class="text-muted small mb-0">Create one above, then add entities and rules.</p></div>
         </div>
-        <div class="card-body">
-          <h5 class="mb-3">{{ watchlists[0].name }}</h5>
 
-          <!-- Watched Entities -->
-          <h6 class="text-uppercase small text-muted mb-2">Blinded Monitored Entities</h6>
-          <div class="table-responsive mb-4" tabindex="0" role="region" aria-label="Blinded Monitored Entities, scroll horizontally" i18n-aria-label>
-            <table class="table table-sm table-hover mb-0">
-              <thead>
-                <tr>
-                  <th>Label</th>
-                  <th>Type</th>
-                  <th>Blinded SHA-256 Hash</th>
-                  <th>Added</th>
-                </tr>
-              </thead>
+        <section class="card mb-4" *ngFor="let wl of watchlists">
+          <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h4 class="mb-0">{{ wl.name }} <span class="badge badge-primary ms-2">{{ wl.privacy_mode | uppercase }}</span><span class="badge badge-secondary ms-1">{{ wl.storage }}</span></h4>
+            <button type="button" class="btn btn-sm btn-outline-danger" [disabled]="busy" (click)="remove(wl.watchlist_id)">Delete</button>
+          </div>
+          <div class="card-body">
+            <h6 class="text-uppercase small text-muted mb-2">Watched entities</h6>
+            <div class="row g-2 align-items-end mb-2">
+              <div class="col-md-2">
+                <select class="form-select form-select-sm" [(ngModel)]="entityType[wl.watchlist_id]">
+                  <option *ngFor="let t of entityTypes" [value]="t">{{ t }}</option>
+                </select>
+              </div>
+              <div class="col-md-5"><input type="text" class="form-control form-control-sm font-monospace" [(ngModel)]="entityRaw[wl.watchlist_id]" placeholder="address or txid (hashed before it is stored)" /></div>
+              <div class="col-md-3"><input type="text" class="form-control form-control-sm" [(ngModel)]="entityLabel[wl.watchlist_id]" placeholder="label" /></div>
+              <div class="col-md-2"><button type="button" class="btn btn-sm btn-outline-primary w-100" [disabled]="!entityRaw[wl.watchlist_id] || busy" (click)="addEntity(wl.watchlist_id)">Add</button></div>
+            </div>
+            <div class="table-responsive mb-4" *ngIf="wl.entities.length" tabindex="0" role="region" aria-label="Watched entities, scroll horizontally" i18n-aria-label>
+              <table class="table table-sm table-hover mb-0">
+                <thead><tr><th>Label</th><th>Type</th><th>Blinded SHA-256</th><th>Added</th></tr></thead>
+                <tbody>
+                  <tr *ngFor="let ent of wl.entities">
+                    <td class="fw-bold">{{ ent.label }}</td>
+                    <td><span class="badge badge-secondary">{{ ent.entity_type }}</span></td>
+                    <td class="font-monospace small text-break">{{ ent.blinded_hash }}</td>
+                    <td class="small text-muted">{{ ent.added_at_utc | date:'short' }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h6 class="text-uppercase small text-muted mb-2">Rules</h6>
+            <div class="row g-2 align-items-end mb-2">
+              <div class="col-md-3">
+                <select class="form-select form-select-sm" [(ngModel)]="ruleCondition[wl.watchlist_id]">
+                  <option *ngFor="let c of conditionTypes" [value]="c">{{ c }}</option>
+                </select>
+              </div>
+              <div class="col-md-3"><input type="number" class="form-control form-control-sm" [(ngModel)]="ruleThreshold[wl.watchlist_id]" placeholder="threshold (sats, or sat/vB for feerate_cross)" /></div>
+              <div class="col-md-2">
+                <select class="form-select form-select-sm" [(ngModel)]="ruleChannel[wl.watchlist_id]"><option value="in_app">in_app</option><option value="webhook">webhook</option></select>
+              </div>
+              <div class="col-md-2"><input type="text" class="form-control form-control-sm font-monospace" [(ngModel)]="ruleWebhook[wl.watchlist_id]" placeholder="webhook id" [disabled]="ruleChannel[wl.watchlist_id] !== 'webhook'" /></div>
+              <div class="col-md-2"><button type="button" class="btn btn-sm btn-outline-primary w-100" [disabled]="busy" (click)="addRule(wl.watchlist_id)">Add rule</button></div>
+            </div>
+            <div class="row g-2">
+              <div *ngFor="let r of wl.rules" class="col-md-6">
+                <div class="p-3 rounded bg-dark-subtle border h-100">
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <strong>{{ r.condition_type }}</strong>
+                    <span class="badge" [ngClass]="r.enabled ? 'badge-success' : 'badge-secondary'">{{ r.enabled ? 'Active' : 'Disabled' }}</span>
+                  </div>
+                  <div class="small text-muted" *ngIf="r.threshold_value !== undefined && r.threshold_value !== null">Threshold: {{ r.threshold_value | number }}</div>
+                  <div class="small text-muted">Delivery: {{ r.delivery_channel }}<span *ngIf="r.webhook_id"> ({{ r.webhook_id }})</span>, at most {{ r.rate_limit_per_hour }} per hour</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card mb-4">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">Notifications</h4>
+            <button type="button" class="btn btn-sm btn-outline-secondary" (click)="loadNotifications()">Refresh</button>
+          </div>
+          <div *ngIf="notifications.length === 0" class="p-4 text-center text-muted">No notification has been produced for this owner yet.</div>
+          <div class="table-responsive" *ngIf="notifications.length > 0" tabindex="0" role="region" aria-label="Notifications, scroll horizontally" i18n-aria-label>
+            <table class="table table-hover mb-0">
+              <thead><tr><th>Severity</th><th>Title</th><th>Message</th><th>Block</th><th>State</th><th>Time</th><th></th></tr></thead>
               <tbody>
-                <tr *ngFor="let ent of watchlists[0].entities">
-                  <td class="fw-bold">{{ ent.label }}</td>
-                  <td><span class="badge badge-secondary">{{ ent.entity_type }}</span></td>
-                  <td class="font-monospace small text-break">{{ ent.blinded_hash }}</td>
-                  <td class="small text-muted">{{ ent.added_at_utc | date:'short' }}</td>
+                <tr *ngFor="let n of notifications">
+                  <td><span class="badge" [ngClass]="n.severity === 'critical' ? 'badge-danger' : (n.severity === 'warning' ? 'badge-warning' : 'badge-primary')">{{ n.severity | uppercase }}</span></td>
+                  <td class="fw-bold">{{ n.title }}</td>
+                  <td>{{ n.message }}</td>
+                  <td class="font-monospace small">{{ n.block_height ?? 'mempool' }}</td>
+                  <td><span class="badge badge-secondary">{{ n.state }}</span></td>
+                  <td class="small text-muted">{{ n.created_at_utc | date:'short' }}</td>
+                  <td><button *ngIf="n.state === 'open'" type="button" class="btn btn-sm btn-outline-secondary" [disabled]="busy" (click)="acknowledge(n.notification_id)">Acknowledge</button></td>
                 </tr>
               </tbody>
             </table>
           </div>
-
-          <!-- Rules -->
-          <h6 class="text-uppercase small text-muted mb-2">Notification Rules</h6>
-          <div class="row g-2 mb-4">
-            <div *ngFor="let r of watchlists[0].rules" class="col-md-6">
-              <div class="p-3 rounded bg-dark-subtle border h-100">
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                  <strong>Condition: {{ r.condition_type }}</strong>
-                  <span class="badge badge-success">Active</span>
-                </div>
-                <div class="small text-muted" *ngIf="r.threshold_value">
-                  Threshold: {{ r.threshold_value | number }} satoshis
-                </div>
-                <div class="small text-muted">Delivery Channel: {{ r.delivery_channel | uppercase }}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Notifications Feed -->
-      <section class="card mb-4" *ngIf="notifications.length > 0">
-        <div class="card-header">
-          <h4 class="mb-0">Recent In-App Alert Notifications</h4>
-        </div>
-        <div class="table-responsive" tabindex="0" role="region" aria-label="Recent In-App Alert Notifications, scroll horizontally" i18n-aria-label>
-          <table class="table table-hover mb-0">
-            <thead>
-              <tr>
-                <th>Severity</th>
-                <th>Alert Title</th>
-                <th>Message</th>
-                <th>Blinded Hash</th>
-                <th>Time</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let n of notifications">
-                <td>
-                  <span class="badge" [ngClass]="n.severity === 'critical' ? 'badge-danger' : 'badge-primary'">
-                    {{ n.severity | uppercase }}
-                  </span>
-                </td>
-                <td class="fw-bold">{{ n.title }}</td>
-                <td>{{ n.message }}</td>
-                <td class="font-monospace small text-muted text-break">{{ n.blinded_hash | slice:0:16 }}...</td>
-                <td class="small text-muted">{{ n.created_at_utc | date:'short' }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
+        </section>
+      </ng-container>
     </div>
   `,
   styles: [`
@@ -135,6 +157,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
     .badge-primary { background-color: var(--primary, #0d6efd); color: #fff; }
     .badge-secondary { background-color: var(--secondary, #6c757d); color: #fff; }
     .badge-success { background-color: var(--success, #198754); color: #fff; }
+    .badge-warning { background-color: var(--warning, #ffc107); color: #212529; }
     .badge-danger { background-color: var(--danger, #dc3545); color: #fff; }
   `],
 })
@@ -142,62 +165,103 @@ export class WatchlistsComponent implements OnInit, OnDestroy {
   watchlists: any[] = [];
   notifications: any[] = [];
   loading = false;
+  busy = false;
   loadError: string | null = null;
+  newName = '';
+  readonly entityTypes = ENTITY_TYPES;
+  readonly conditionTypes = CONDITION_TYPES;
+  entityType: Record<string, string> = {};
+  entityRaw: Record<string, string> = {};
+  entityLabel: Record<string, string> = {};
+  ruleCondition: Record<string, string> = {};
+  ruleThreshold: Record<string, number | null> = {};
+  ruleChannel: Record<string, string> = {};
+  ruleWebhook: Record<string, string> = {};
 
   private subs: Subscription[] = [];
 
   constructor(
     private api: IntelligenceApiService,
+    private ownerKey: OwnerKeyService,
     private cdr: ChangeDetectorRef
   ) {}
 
-  ngOnInit(): void {
-    this.loading = true;
-    this.subs.push(
-      this.api.getWatchlists$().subscribe({
-        next: (res) => {
-          this.watchlists = res?.watchlists || [];
-          this.loading = false;
-          this.cdr.markForCheck();
-        },
-        error: (err) => {
-          this.loadError = err?.message || 'Failed to fetch watchlists';
-          this.loading = false;
-          this.cdr.markForCheck();
-        },
-      })
-    );
+  get hasKey(): boolean {
+    return this.ownerKey.key !== null;
   }
 
-  createSampleWatchlist(): void {
-    this.watchlists = [
-      {
-        id: 'wl-sample-01',
-        name: 'Cold Storage Vault Monitoring',
-        privacy_mode: 'blinded',
-        entities: [
-          {
-            label: 'Multisig Vault Output',
-            entity_type: 'outpoint',
-            blinded_hash: '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08',
-            added_at_utc: new Date().toISOString(),
-          },
-        ],
-        rules: [
-          {
-            condition_type: 'spend_attempt',
-            threshold_value: null,
-            delivery_channel: 'in_app',
-          },
-        ],
+  ngOnInit(): void {
+    if (this.hasKey) { this.load(); this.loadNotifications(); }
+  }
+
+  private failure(err: any, fallback: string): string {
+    if (err?.status === 401) { return 'The stored owner key was not accepted; create or paste a valid key in the Developer Platform.'; }
+    return err?.error?.error || err?.message || fallback;
+  }
+
+  load(): void {
+    this.loading = true;
+    this.subs.push(this.api.getWatchlists$().subscribe({
+      next: (res) => {
+        this.watchlists = res?.watchlists || [];
+        for (const wl of this.watchlists) {
+          this.entityType[wl.watchlist_id] ??= 'address';
+          this.ruleCondition[wl.watchlist_id] ??= 'confirmation';
+          this.ruleChannel[wl.watchlist_id] ??= 'in_app';
+        }
+        this.loading = false;
+        this.loadError = null;
+        this.cdr.markForCheck();
       },
-    ];
-    this.cdr.markForCheck();
+      error: (err) => { this.loadError = this.failure(err, 'Failed to fetch watchlists'); this.loading = false; this.cdr.markForCheck(); },
+    }));
+  }
+
+  loadNotifications(): void {
+    this.subs.push(this.api.getWatchlistNotifications$().subscribe({
+      next: (res) => { this.notifications = res?.notifications || []; this.cdr.markForCheck(); },
+      error: (err) => { this.loadError = this.failure(err, 'Failed to fetch notifications'); this.cdr.markForCheck(); },
+    }));
+  }
+
+  private run(observable: { subscribe: Function }, after: () => void): void {
+    this.busy = true;
+    this.subs.push(observable.subscribe({
+      next: () => { this.busy = false; this.loadError = null; after(); },
+      error: (err: any) => { this.busy = false; this.loadError = this.failure(err, 'The request failed'); this.cdr.markForCheck(); },
+    }));
+  }
+
+  create(): void {
+    if (!this.newName.trim()) { return; }
+    this.run(this.api.createWatchlist$(this.newName.trim()), () => { this.newName = ''; this.load(); });
+  }
+
+  remove(watchlistId: string): void {
+    this.run(this.api.deleteWatchlist$(watchlistId), () => this.load());
+  }
+
+  addEntity(watchlistId: string): void {
+    const raw = (this.entityRaw[watchlistId] || '').trim();
+    if (!raw) { return; }
+    this.run(this.api.addWatchlistEntity$(watchlistId, this.entityType[watchlistId] || 'address', raw, (this.entityLabel[watchlistId] || '').trim() || 'Monitored Item'), () => {
+      this.entityRaw[watchlistId] = '';
+      this.entityLabel[watchlistId] = '';
+      this.load();
+    });
+  }
+
+  addRule(watchlistId: string): void {
+    const threshold = this.ruleThreshold[watchlistId];
+    const channel = this.ruleChannel[watchlistId] || 'in_app';
+    this.run(this.api.addWatchlistRule$(watchlistId, this.ruleCondition[watchlistId] || 'confirmation', channel, threshold === null || threshold === undefined ? undefined : Number(threshold), channel === 'webhook' ? (this.ruleWebhook[watchlistId] || '').trim() : undefined), () => this.load());
+  }
+
+  acknowledge(notificationId: string): void {
+    this.run(this.api.acknowledgeNotification$(notificationId), () => this.loadNotifications());
   }
 
   ngOnDestroy(): void {
-    for (const sub of this.subs) {
-      sub.unsubscribe();
-    }
+    for (const sub of this.subs) { sub.unsubscribe(); }
   }
 }

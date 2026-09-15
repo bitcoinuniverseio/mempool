@@ -3,6 +3,7 @@ import config from '../../config';
 import { handleError } from '../../utils/api';
 import bitcoinClient from '../bitcoin/bitcoin-client';
 import { $nodeOverview } from './node-console';
+import { requireOwner } from '../intelligence/identity/owner-auth';
 import {
   ALLOWED_METHODS,
   methodNamed,
@@ -23,6 +24,11 @@ import {
  * The trimming happens here too, before the answer is serialized, so a
  * change that forgot it would show up as a redaction test failure rather
  * than as an address on a public page.
+ *
+ * The overview and the catalog are public. Executing a method is not: it
+ * spends the node's RPC budget, so the route requires an owner key holding
+ * the node:rpc scope before the allowlist is even consulted. The per-method
+ * budget below then applies on top of that identity.
  */
 
 /** Calls a minute, per method, before the route starts refusing. */
@@ -78,7 +84,7 @@ class NodeConsoleRoutes {
     app
       .get(prefix + 'node/overview', this.$getOverview)
       .get(prefix + 'node/rpc/catalog', this.getCatalog)
-      .post(prefix + 'node/rpc', this.$callMethod);
+      .post(prefix + 'node/rpc', requireOwner('node:rpc'), this.$callMethod);
   }
 
   /**
