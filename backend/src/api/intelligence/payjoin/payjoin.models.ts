@@ -17,6 +17,8 @@ export interface PayjoinProposalAnalysisRequest {
   disable_output_substitution?: boolean;
   additional_fee_output_index?: number;
   max_additional_fee_contribution?: number;
+  final_signed_psbt?: string;
+  min_feerate?: number;
 }
 
 export interface PayjoinProposalAnalysisResult {
@@ -38,6 +40,21 @@ export interface PayjoinProposalAnalysisResult {
   psbt_envelope_checks_passed: boolean;
   signatures_verified: boolean | null;
   chain_verified: boolean | null;
+  final_signatures_verified?: boolean | null;
+  node_policy_accepted?: boolean | null;
+  final_vsize?: number;
+  final_feerate_sats_vb?: number;
+  utxo_evidence?: {
+    network: string;
+    tip: string;
+    observed_at: string;
+    outputs: Array<{
+      outpoint: string;
+      matches: boolean;
+      confirmations: number | null;
+      reason: string | null;
+    }>;
+  };
   verification_scope: string;
   validation_messages: string[];
   original: { inputs: number; outputs: number };

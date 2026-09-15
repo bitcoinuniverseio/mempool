@@ -21,7 +21,10 @@ class PayjoinRoutes {
       .get(prefix + 'compatibility', this.$getCompatibility)
       .post(prefix + 'analyze', this.$postAnalyzeProposal)
       .post(prefix + 'playground/sessions', this.$postCreatePlaygroundSession)
-      .post(prefix + 'playground/sessions/:id/advance', this.$postAdvancePlaygroundSession);
+      .post(
+        prefix + 'playground/sessions/:id/advance',
+        this.$postAdvancePlaygroundSession
+      );
   }
 
   private async $getOverview(req: Request, res: Response): Promise<void> {
@@ -47,36 +50,75 @@ class PayjoinRoutes {
       const compat = payjoinService.getCompatibility();
       res.json(compat);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch compatibility matrix');
+      handleError(
+        req,
+        res,
+        500,
+        e instanceof Error ? e.message : 'Failed to fetch compatibility matrix'
+      );
     }
   }
 
-  private async $postAnalyzeProposal(req: Request, res: Response): Promise<void> {
+  private async $postAnalyzeProposal(
+    req: Request,
+    res: Response
+  ): Promise<void> {
     try {
-      const result = await payjoinService.analyzeProposalWithSignatures(req.body);
+      const result = await payjoinService.analyzeProposalWithOwnedEvidence(
+        req.body
+      );
       res.json(result);
     } catch (e) {
-      res.status(400).json({ error: e instanceof Error ? e.message : 'Failed to analyze payjoin proposal' });
+      res
+        .status(400)
+        .json({
+          error:
+            e instanceof Error
+              ? e.message
+              : 'Failed to analyze payjoin proposal',
+        });
     }
   }
 
-  private async $postCreatePlaygroundSession(req: Request, res: Response): Promise<void> {
+  private async $postCreatePlaygroundSession(
+    req: Request,
+    res: Response
+  ): Promise<void> {
     try {
       const { amount_sats } = req.body;
-      const session = payjoinService.createPlaygroundSession(amount_sats ? Number(amount_sats) : undefined);
+      const session = payjoinService.createPlaygroundSession(
+        amount_sats ? Number(amount_sats) : undefined
+      );
       res.json(session);
     } catch (e) {
-      res.status(400).json({ error: e instanceof Error ? e.message : 'Failed to create playground session' });
+      res
+        .status(400)
+        .json({
+          error:
+            e instanceof Error
+              ? e.message
+              : 'Failed to create playground session',
+        });
     }
   }
 
-  private async $postAdvancePlaygroundSession(req: Request, res: Response): Promise<void> {
+  private async $postAdvancePlaygroundSession(
+    req: Request,
+    res: Response
+  ): Promise<void> {
     try {
       const sessionId = req.params.id;
       const session = payjoinService.advancePlaygroundSession(sessionId);
       res.json(session);
     } catch (e) {
-      res.status(400).json({ error: e instanceof Error ? e.message : 'Failed to advance playground session' });
+      res
+        .status(400)
+        .json({
+          error:
+            e instanceof Error
+              ? e.message
+              : 'Failed to advance playground session',
+        });
     }
   }
 }
