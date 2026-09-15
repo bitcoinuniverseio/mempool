@@ -115,6 +115,9 @@ jobs:
       - name: The release gates fail on the faults they exist for
         run: node --test scripts/universe/release-gates.test.mjs
 
+      - name: Workflow inputs remain data and builds preserve the runner host
+        run: node --test scripts/universe/workflow-safety.test.mjs scripts/universe/backend-startup-check.test.mjs
+
       - name: The production synthetic check parses
         run: node --check scripts/universe/synthetic-check.mjs
 
@@ -154,52 +157,17 @@ jobs:
       # subsecond check; a broken one repairs itself instead of failing every
       # job routed to it. Same guard as
       # bitcoinuniverseio/index-zcash-metaprotocols.
-      - name: Repair a half-installed Rust toolchain before using it
+      - name: Verify the provisioned Rust toolchain
         shell: bash
         run: |
-          CARGO_BIN="${CARGO_HOME:-$HOME/.cargo}/bin"
-          export PATH="$CARGO_BIN:$PATH"
-
-          if command -v rustup >/dev/null 2>&1; then
-            if rustup run stable rustc --version >/dev/null 2>&1 \
-               && cargo metadata --format-version 1 \
-                  --manifest-path rust/gbt/Cargo.toml >/dev/null 2>&1; then
-              echo "toolchain is usable"
-            else
-              echo "toolchain cannot read the manifest; reinstalling"
-              rustup toolchain uninstall stable || true
-              rustup toolchain install stable --profile minimal
-              rustup default stable
-            fi
-          else
-            # Some runners in the fleet have never had Rust provisioned. The
-            # backend build compiles rust-gbt, so an absent toolchain is not a
-            # condition to report and step past: install it here, in the step
-            # whose name says the toolchain is being made usable.
-            echo "no rustup on this runner; installing the pinned toolchain"
-            curl --proto "=https" --tlsv1.2 -sSf https://sh.rustup.rs -o /tmp/rustup-init.sh
-            sh /tmp/rustup-init.sh -y --profile minimal --default-toolchain stable --no-modify-path
-            export PATH="$CARGO_BIN:$PATH"
+          # Runner provisioning owns the toolchain. A job must not uninstall
+          # or replace Rust while another runner on this host is compiling.
+          export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
+          if ! cargo metadata --format-version 1 --manifest-path rust/gbt/Cargo.toml >/dev/null; then
+            echo '::error::The provisioned Rust toolchain cannot read rust/gbt/Cargo.toml; repair runner provisioning before retrying.'
+            exit 1
           fi
-
-          # Put the repaired toolchain ahead of anything else for the steps
-          # that follow. A step's `export PATH` dies with the step, so without
-          # this the repair above fixes a cargo that `npm ci` never calls: the
-          # first attempt reinstalled cleanly, reported cargo 1.98.0, and the
-          # next step still failed on `cargo metadata` because it was reaching
-          # a different one.
-          if [ -x "$CARGO_BIN/cargo" ]; then
-            echo "$CARGO_BIN" >> "$GITHUB_PATH"
-          fi
-
-          echo "cargo in use: $(command -v cargo || echo none)"
-          cargo --version || true
-          # Prove it can read the manifest the build depends on, here, where
-          # the failure is legible, rather than inside a napi build script that
-          # reports it as "Could not parse the Cargo.toml".
-          cargo metadata --format-version 1 \
-            --manifest-path rust/gbt/Cargo.toml >/dev/null
-          echo "cargo can read rust/gbt/Cargo.toml"
+          echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> "$GITHUB_PATH"
 
       - name: Install (builds rust-gbt)
         working-directory: backend
