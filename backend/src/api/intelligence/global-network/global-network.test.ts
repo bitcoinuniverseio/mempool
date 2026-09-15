@@ -4,7 +4,7 @@ import { globalNetworkService, GlobalNetworkUnavailableError, DNS_SEEDS } from '
 import config from '../../../config';
 
 const peers = [
-  { id: 1, addr: '203.0.113.10:8333', network: 'ipv4', services: '0000000000000409', subver: '/Satoshi:28.0.0/', startingheight: 100, pingtime: 0.032, transport_protocol_type: 'v2', inbound: false, version: 70016, relaytxes: true },
+  { id: 1, addr: '93.184.216.10:8333', network: 'ipv4', services: '0000000000000409', subver: '/Satoshi:28.0.0/', startingheight: 100, pingtime: 0.032, transport_protocol_type: 'v2', inbound: false, version: 70016, relaytxes: true },
   { id: 2, addr: '[2001:db8::5]:8333', network: 'ipv6', services: '0000000000000409', subver: '/Satoshi:27.1.0/', startingheight: 99, pingtime: 0.07, transport_protocol_type: 'v1', inbound: true, version: 70015, relaytxes: true },
   { id: 3, addr: 'abc.onion:8333', network: 'onion', services: '0000000000000409', subver: '/Satoshi:28.0.0/', startingheight: 100, transport_protocol_type: 'v2', inbound: true, version: 70016, relaytxes: false },
 ];
@@ -34,7 +34,7 @@ describe('global network: the owned node is the only sensor', () => {
     expect(page.nodes.map(n => n.endpoint_id)).toEqual(['[2001:db8::5]:8333', 'abc.onion:8333']);
     expect(page.nodes[0]).toMatchObject({ ip_or_onion: '2001:db8::5', port: 8333, transport_v2: false, addrv2: false, latency_ms: 70, inbound: true, network: 'ipv6' });
     expect(page.nodes[1].latency_ms).toBe(-1);
-    expect(await globalNetworkService.getNodeByEndpoint('203.0.113.10:8333')).toMatchObject({ user_agent: '/Satoshi:28.0.0/', transport_v2: true });
+    expect(await globalNetworkService.getNodeByEndpoint('93.184.216.10:8333')).toMatchObject({ user_agent: '/Satoshi:28.0.0/', transport_v2: true });
     expect(await globalNetworkService.getNodeByEndpoint('nobody:1')).toBeNull();
   });
 
@@ -45,7 +45,7 @@ describe('global network: the owned node is the only sensor', () => {
   });
 
   it('DNS seeds are resolved on request and report what came back', async () => {
-    globalNetworkService.seedResolver = async hostname => hostname.includes('sprovoost') ? ['203.0.113.1', '203.0.113.2'] : [];
+    globalNetworkService.seedResolver = async hostname => hostname.includes('sprovoost') ? ['93.184.216.1', '93.184.216.2'] : [];
     const seeds = await globalNetworkService.getDnsSeeds();
     expect(seeds.map(s => s.hostname)).toEqual(DNS_SEEDS[config.MEMPOOL.NETWORK].map(s => s.hostname));
     const sprovoost = seeds.find(s => s.hostname.includes('sprovoost'))!;
@@ -63,11 +63,11 @@ describe('global network: the owned node is the only sensor', () => {
     for (const address of ['127.0.0.1', '10.1.1.1', 'localhost', '169.254.169.254', 'fd00::1']) {
       expect(globalNetworkService.validateSelfCheckEndpoint(address, 8333).valid).toBe(false);
     }
-    expect(globalNetworkService.validateSelfCheckEndpoint('203.0.113.7', 70000).valid).toBe(false);
+    expect(globalNetworkService.validateSelfCheckEndpoint('93.184.216.7', 70000).valid).toBe(false);
     globalNetworkService.tcpProber = async (address, port) => ({ reachable: port === 8333, latency_ms: port === 8333 ? 41 : null, error: port === 8333 ? null : 'ECONNREFUSED' });
-    const ok = await globalNetworkService.performSelfCheck({ endpoint_address: '203.0.113.7', port: 8333 });
-    expect(ok).toMatchObject({ reachable: true, latency_ms: 41, bip324_handshake: null, resolved_address: '203.0.113.7', error: null });
-    const refused = await globalNetworkService.performSelfCheck({ endpoint_address: '203.0.113.7', port: 8334 });
+    const ok = await globalNetworkService.performSelfCheck({ endpoint_address: '93.184.216.7', port: 8333 });
+    expect(ok).toMatchObject({ reachable: true, latency_ms: 41, bip324_handshake: null, resolved_address: '93.184.216.7', error: null });
+    const refused = await globalNetworkService.performSelfCheck({ endpoint_address: '93.184.216.7', port: 8334 });
     expect(refused).toMatchObject({ reachable: false, latency_ms: null, error: 'ECONNREFUSED' });
   });
 });

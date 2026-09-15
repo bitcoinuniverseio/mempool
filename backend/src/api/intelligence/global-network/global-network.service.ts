@@ -35,7 +35,7 @@ export class GlobalNetworkUnavailableError extends Error {
   constructor(public readonly code: string, message: string, public readonly status = 503) { super(message); }
 }
 
-interface PeerInfo {
+export interface PeerInfo {
   id: number;
   addr: string;
   network?: string;
@@ -51,8 +51,10 @@ interface PeerInfo {
   conntime?: number;
 }
 
-interface NetworkInfo {
+export interface NetworkInfo {
   version: number;
+  protocolversion?: number;
+  relayfee?: number;
   subversion: string;
   localservices: string;
   localservicesnames?: string[];
@@ -62,7 +64,7 @@ interface NetworkInfo {
   networks: { name: string; reachable: boolean }[];
 }
 
-export type NodeReader = () => Promise<{ peers: PeerInfo[]; info: NetworkInfo }>;
+export type NodeReader = () => Promise<{ peers: PeerInfo[]; info: NetworkInfo; genesisHash?: string }>;
 export type SeedResolver = (hostname: string) => Promise<string[]>;
 export type TcpProber = (address: string, port: number, timeoutMs: number) => Promise<{ reachable: boolean; latency_ms: number | null; error: string | null }>;
 
@@ -90,8 +92,8 @@ const SELF_CHECK_TIMEOUT_MS = 5_000;
 
 /** @asyncUnsafe The service turns a rejection into an unavailable state. */
 const defaultNodeReader: NodeReader = async () => {
-  const [peers, info] = await Promise.all([bitcoinClient.getPeerInfo() as Promise<PeerInfo[]>, bitcoinClient.getNetworkInfo() as Promise<NetworkInfo>]);
-  return { peers, info };
+  const [peers, info, genesisHash] = await Promise.all([bitcoinClient.getPeerInfo() as Promise<PeerInfo[]>, bitcoinClient.getNetworkInfo() as Promise<NetworkInfo>, bitcoinClient.getBlockHash(0) as Promise<string>]);
+  return { peers, info, genesisHash };
 };
 
 /** @asyncUnsafe The service records a rejection on the seed entry. */
@@ -118,7 +120,9 @@ function splitAddress(addr: string): { host: string; port: number } {
 
 export class GlobalNetworkService {
   private static instance: GlobalNetworkService;
-  private cache: { at: number; peers: PeerInfo[]; info: NetworkInfo } | null = null;
+  private cache: { at: number; peers: PeerInfo[]; info: NetworkInfo; genesisHash?: string } | null = null;
+  private nodeFlight: Promise<{ peers: PeerInfo[]; info: NetworkInfo; genesisHash?: string }> | null = null;
+  private nodeGeneration = 0;
   private seedCache = new Map<string, { at: number; addresses: string[]; error: string | null }>();
   private snapshots: GlobalNetworkSnapshot[] = [];
   private snapshotTimer: NodeJS.Timeout | null = null;
@@ -139,20 +143,51 @@ export class GlobalNetworkService {
   /** Test seam. */
   public resetForTests(): void {
     this.cache = null;
+    this.nodeFlight = null; this.nodeGeneration++;
     this.seedCache.clear();
     this.snapshots = [];
   }
 
   /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */
-  private async node(now = Date.now()): Promise<{ peers: PeerInfo[]; info: NetworkInfo }> {
-    if (this.cache && now - this.cache.at < NODE_CACHE_MS) { return this.cache; }
-    try {
-      const fresh = await this.nodeReader();
-      this.cache = { at: now, peers: fresh.peers, info: fresh.info };
-      return this.cache;
-    } catch (error) {
-      throw new GlobalNetworkUnavailableError('node-unreachable', `The owned node did not answer getpeerinfo/getnetworkinfo: ${error instanceof Error ? error.message : String(error)}`);
-    }
+  private async node(now = Date.now()): Promise<{ peers: PeerInfo[]; info: NetworkInfo; genesisHash?: string }> {
+    if (this.cache && now >= this.cache.at && now - this.cache.at < NODE_CACHE_MS) return this.cache;
+    if (this.nodeFlight) return this.waitNode(this.nodeFlight);
+    const generation = this.nodeGeneration;
+    const pending = (async () => {
+      try {
+        const fresh = await this.nodeReader();
+        if (!Array.isArray(fresh.peers) || fresh.peers.length > 10000 || !fresh.info || !Array.isArray(fresh.info.networks)) throw new Error('Invalid owned node snapshot.');
+        if (generation === this.nodeGeneration) this.cache = { at: now, ...fresh };
+        return fresh;
+      } catch (error) {
+        throw new GlobalNetworkUnavailableError('node-unreachable', 'The owned node did not answer getpeerinfo/getnetworkinfo: ' + (error instanceof Error ? error.message : String(error)));
+      }
+    })();
+    this.nodeFlight = pending;
+    const settled = () => { if (this.nodeFlight === pending) this.nodeFlight = null; };
+    void pending.then(settled, settled);
+    return this.waitNode(pending);
+  }
+
+  private async waitNode<T>(pending: Promise<T>): Promise<T> {
+    let timer: NodeJS.Timeout | undefined;
+    try { return await Promise.race([pending, new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new GlobalNetworkUnavailableError('node-timeout', 'Owned Core observation exceeded 10 seconds.')), 10000); })]); }
+    finally { if (timer) clearTimeout(timer); }
+  }
+
+  /** Shared owned Core observation; never relabel a different chain as this network. */
+  public async getOwnedNodeSnapshot(now = Date.now()) {
+    const snapshot = await this.node(now);
+    const genesis: Record<string,string> = {
+      mainnet: '000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f',
+      signet: '00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6',
+      testnet: '000000000933ea01ad0ee984209779baaec3ced90fa3f408719526f8d77f4943',
+      testnet4: '00000000da84f2bafbbc53dee25a72ae507ff4914b867c565be350b0da8bf043',
+      regtest: '0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206',
+    };
+    if (!snapshot.genesisHash || snapshot.genesisHash !== genesis[config.MEMPOOL.NETWORK]) throw new GlobalNetworkUnavailableError('node-network-mismatch', 'The owned Core genesis does not match the configured network.');
+    const observed = this.cache?.at ?? now;
+    return { ...snapshot, network: config.MEMPOOL.NETWORK, observed_at_utc: new Date(observed).toISOString(), age_ms: Math.max(0, now-observed), freshness_limit_ms: NODE_CACHE_MS };
   }
 
   private observation(peer: PeerInfo, epochId: string, at: number): GlobalNetworkObservation {

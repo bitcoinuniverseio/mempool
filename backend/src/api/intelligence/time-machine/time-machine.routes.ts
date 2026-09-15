@@ -36,8 +36,8 @@ class TimeMachineRoutes {
 
   private async $postReplay(req: Request, res: Response): Promise<void> {
     try {
-      const timestamp = req.body.timestamp_utc;
-      const height = req.body.block_height !== undefined ? parseInt(req.body.block_height, 10) : undefined;
+      const timestamp = req.body?.timestamp_utc;
+      const height = req.body?.block_height;
       const state = timeMachineService.replayToTimestampOrHeight(timestamp, height);
       res.json(state);
     } catch (e) {

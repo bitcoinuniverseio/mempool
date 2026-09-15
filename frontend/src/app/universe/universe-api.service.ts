@@ -734,6 +734,10 @@ export class UniverseApiService {
     );
   }
 
+  getLiquidNode$(network: string): Observable<import('./liquid-observatory/liquid-node-view').LiquidNodeView> {
+    return this.httpClient.get<import('./liquid-observatory/liquid-node-view').LiquidNodeView>(this.apiBaseUrl + '/api/v1/liquid/observatory/node?network=' + encodeURIComponent(network));
+  }
+
   getLiquidObservatorySummary$(): Observable<LiquidObservatorySummary> {
     return this.httpClient.get<LiquidObservatorySummary>(
       this.apiBaseUrl + '/api/v1/liquid/observatory/summary'
