@@ -9,6 +9,7 @@ import { SwapsApiService } from './swaps.service';
 import { SwapsProvidersComponent } from './swaps-providers.component';
 import { SwapsProviderDetailComponent } from './swaps-provider-detail.component';
 import { SwapsInspectComponent } from './swaps-inspect.component';
+import { SwapsOverviewComponent } from './swaps-overview.component';
 
 // Handler tests use the real components; shared visual dependencies require a browser.
 vi.mock('@app/shared/shared.module', () => ({ SharedModule: class {} }));
@@ -28,8 +29,8 @@ const prev = new Transaction(); prev.addInput(Buffer.alloc(32, 8), 0); prev.addO
 const psbt = new Psbt({ network: networks.testnet }); psbt.setVersion(2).setLocktime(200);
 psbt.addInput({ hash: prev.getId(), index: 0, sequence: 0xfffffffd, nonWitnessUtxo: prev.toBuffer(), witnessUtxo: prev.outs[0], tapInternalKey: pub, tapMerkleRoot: payment.hash, tapLeafScript: [{ script: leaf, controlBlock: payment.witness[1], leafVersion: 0xc0 }] });
 psbt.addOutput({ address: destination, value: 99000 });
-const pkg = { chain: 'bitcoin', network: 'signet', protocol_id: 'boltz_submarine_v2', swap_type: 'submarine', lockup_transaction: prev.getId(), lockup_vout: 0, lockup_address: payment.address, internal_key: pub.toString('hex'), refund_public_key: pub.toString('hex'), expected_amount_sats: 100000, timeout_height: 200, destination_address: destination, fee_sats: 1000 };
-const plan: any = { stage: 'unsigned-plan-ready', unsigned_recovery_psbt: psbt.toBase64(), notes: [], source_context: { chain: 'bitcoin', network: 'signet', source_id: 'controlled-unit-authority', block_height: 200, block_hash: '11'.repeat(32), observed_at: '2026-09-05T00:00:00.000Z' } };
+const pkg = { chain: 'bitcoin', network: 'signet', protocol_id: 'boltz_submarine_v2', swap_type: 'submarine', lockup_transaction: prev.getId(), lockup_vout: 0, lockup_address: payment.address, internal_key: pub.toString('hex'), refund_public_key: pub.toString('hex'), claim_public_key: pub.toString('hex'), preimage_hash: Buffer.alloc(32, 4).toString('hex'), expected_amount_sats: 100000, timeout_height: 200, destination_address: destination, fee_sats: 1000 };
+const plan: any = { stage: 'unsigned-plan-ready', recoverable_value_sats: 99000, estimated_miner_fee_sats: 1000, unsigned_recovery_psbt: psbt.toBase64(), notes: [], source_context: { chain: 'bitcoin', network: 'signet', source_id: 'controlled-unit-authority', block_height: 200, block_hash: '11'.repeat(32), observed_at: '2026-09-05T00:00:00.000Z' } };
 
 describe('Public swap recovery package boundary', () => {
   it('rejects malformed, private, oversized and network-mismatched packages before HTTP', () => {
@@ -40,6 +41,12 @@ describe('Public swap recovery package boundary', () => {
     expect(() => publicSwapPackage(JSON.stringify(pkg), 'mainnet')).toThrow(/chain\/network/);
   });
   it('independently decodes a complete bitcoinjs PSBT with scure', () => expect(() => checkRecoveryArtifact(plan, pkg, 'signet')).not.toThrow());
+  it.each([{recoverable_value_sats:99001},{estimated_miner_fee_sats:999},{recoverable_value_sats:undefined}])('rejects misleading displayed recovery amounts %j', changes => {
+    expect(() => checkRecoveryArtifact({...plan,...changes},pkg,'signet')).toThrow(/Displayed/);
+  });
+  it.each([{claim_public_key:Buffer.from(ecc.xOnlyPointFromScalar(Buffer.alloc(32,2))).toString('hex')},{preimage_hash:'aa'.repeat(32)},{swap_type:'reverse'}])('binds the independently checked claim sibling %j', changes => {
+    expect(() => checkRecoveryArtifact(plan,{...pkg,...changes},'signet')).toThrow(/contract/);
+  });
   it('rejects a refund key or lockup script that differs from the intended contract', () => {
     expect(() => checkRecoveryArtifact(plan, { ...pkg, refund_public_key: Buffer.from(ecc.xOnlyPointFromScalar(Buffer.alloc(32, 2))).toString('hex') }, 'signet')).toThrow();
     expect(() => checkRecoveryArtifact(plan, { ...pkg, lockup_address: payments.p2tr({ internalPubkey: pub, network: networks.testnet }).address }, 'signet')).toThrow();
@@ -107,6 +114,15 @@ describe('Recovery form actual handlers', () => {
 });
 
 describe('Swaps consumer network and error boundary', () => {
+  it('clears old overview observations, recovers after an error and cancels obsolete requests', () => {
+    const network$=new BehaviorSubject('signet'), requests:Subject<any>[]=[];
+    const api:any={network$,getOverview$:vi.fn(()=>{const request=new Subject();requests.push(request);return request;})};
+    const page=new SwapsOverviewComponent(api,{markForCheck:vi.fn()} as any);page.ngOnInit();requests[0].next({recent_observations:[{txid:'old'}]});expect(page.overview).toBeTruthy();
+    network$.next('testnet');expect(page.overview).toBeNull();expect(page.loading).toBe(true);expect(requests[0].observed).toBe(false);
+    requests[1].error({error:{error:'source unavailable'}});expect(page.error).toBe('source unavailable');expect(page.overview).toBeNull();
+    network$.next('regtest');expect(page.error).toBe('');requests[2].next({recent_observations:[]});expect(page.overview?.recent_observations).toEqual([]);
+    page.ngOnDestroy();expect(requests[2].observed).toBe(false);
+  });
   it('forwards selected network and propagates errors instead of returning seeded state', () => {
     const pending = new Subject<any>(), changes = new Subject<string>();
     const http: any = { get: vi.fn(() => pending) }; const state: any = { network: 'signet', networkChanged$: changes, isBrowser: true };
