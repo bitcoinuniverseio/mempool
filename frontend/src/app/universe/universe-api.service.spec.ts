@@ -4,6 +4,9 @@ import { HttpClient } from '@angular/common/http';
 import { StateService } from '@app/services/state.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 
+// Owner-scoped calls read a bearer header from this; the specs here make none.
+const ownerKeyStub = { headers: () => ({}), key: null };
+
 interface Recorder {
   service: UniverseApiService;
   urls: string[];
@@ -33,7 +36,7 @@ function build(
       NGINX_PORT: '443',
     },
   } as unknown as StateService;
-  return { service: new UniverseApiService(httpClient, stateService), urls };
+  return { service: new UniverseApiService(httpClient, stateService, ownerKeyStub as never), urls };
 }
 
 describe('UniverseApiService addressing', () => {
@@ -46,7 +49,7 @@ describe('UniverseApiService addressing', () => {
       pending.set(url, response);
       return response;
     });
-    const service = new UniverseApiService({ get } as unknown as HttpClient, state);
+    const service = new UniverseApiService({ get } as unknown as HttpClient, state, ownerKeyStub as never);
     const received: unknown[] = [];
     const subscription = service.getChains$().subscribe(value => received.push(value));
     state.network = 'signet'; changed.next('signet');
@@ -61,7 +64,7 @@ describe('UniverseApiService addressing', () => {
 
   it('rejects a capability row from another network', () => {
     const state = { isBrowser: true, env: {}, network: 'signet' } as unknown as StateService;
-    const service = new UniverseApiService({ get: () => of([{ chain: 'bitcoin', network: 'mainnet' }]) } as unknown as HttpClient, state);
+    const service = new UniverseApiService({ get: () => of([{ chain: 'bitcoin', network: 'mainnet' }]) } as unknown as HttpClient, state, ownerKeyStub as never);
     let failure: Error | undefined;
     service.getChains$().subscribe({ error: error => failure = error });
     expect(failure?.message).toBe('authority-network-mismatch');
@@ -70,7 +73,7 @@ describe('UniverseApiService addressing', () => {
   it('requests selected Bitcoin health and mainnet Dogecoin health separately', () => {
     const urls: string[] = [];
     const state = { isBrowser: true, env: {}, network: 'testnet4' } as unknown as StateService;
-    const service = new UniverseApiService({ get: (url: string) => { urls.push(url); return of({}); } } as unknown as HttpClient, state);
+    const service = new UniverseApiService({ get: (url: string) => { urls.push(url); return of({}); } } as unknown as HttpClient, state, ownerKeyStub as never);
     service.getChainStatus$('bitcoin').subscribe();
     service.getChainStatus$('dogecoin').subscribe();
     expect(urls).toEqual(['/api/v1/bitcoin/status?network=testnet4', '/api/v1/dogecoin/status?network=mainnet']);
@@ -122,7 +125,7 @@ describe('UniverseApiService addressing', () => {
     const service = new UniverseApiService({ get: (url: string) => {
       urls.push(url);
       return of({ activeChain: url.includes('chain=bitcoin') ? 'bitcoin' : 'dogecoin', groups: [] });
-    } } as unknown as HttpClient, state);
+    } } as unknown as HttpClient, state, ownerKeyStub as never);
     service.search$('abc', 'bitcoin', false).subscribe();
     service.search$('abc', 'dogecoin', true).subscribe();
     expect(urls).toEqual([
@@ -136,7 +139,7 @@ describe('UniverseApiService addressing', () => {
     const service = new UniverseApiService({ get: () => of({
       activeChain: 'bitcoin',
       groups: [{ chain: 'bitcoin', network: 'mainnet', results: [] }],
-    }) } as unknown as HttpClient, state);
+    }) } as unknown as HttpClient, state, ownerKeyStub as never);
     let failure: Error | undefined;
     service.search$('abc', 'bitcoin', false).subscribe({ error: error => failure = error });
     expect(failure?.message).toBe('authority-network-mismatch');
@@ -150,7 +153,7 @@ describe('UniverseApiService addressing', () => {
       const response = new Subject<unknown>();
       pending.set(url, response);
       return response;
-    } } as unknown as HttpClient, state);
+    } } as unknown as HttpClient, state, ownerKeyStub as never);
     const received: unknown[] = [];
     const subscription = service.search$('abc', 'bitcoin', false).subscribe(value => received.push(value));
     state.network = 'testnet4'; changed.next('testnet4');
@@ -207,7 +210,7 @@ describe('UniverseApiService protocol registry cache', () => {
     const get = vi.fn(() => of({ registryVersion: '1.0.0' }));
     const httpClient = { get } as unknown as HttpClient;
     const stateService = { isBrowser: true, env: {} } as unknown as StateService;
-    const service = new UniverseApiService(httpClient, stateService);
+    const service = new UniverseApiService(httpClient, stateService, ownerKeyStub as never);
     service.getProtocols$().subscribe();
     service.getProtocols$().subscribe();
     service.getProtocols$().subscribe();
@@ -224,7 +227,7 @@ describe('UniverseApiService protocol registry cache', () => {
     });
     const httpClient = { get } as unknown as HttpClient;
     const stateService = { isBrowser: true, env: {} } as unknown as StateService;
-    const service = new UniverseApiService(httpClient, stateService);
+    const service = new UniverseApiService(httpClient, stateService, ownerKeyStub as never);
 
     let failed = false;
     service.getProtocols$().subscribe({ error: () => (failed = true) });
@@ -242,7 +245,7 @@ describe('UniverseApiService protocol registry cache', () => {
     const get = vi.fn(() => of({}));
     const httpClient = { get } as unknown as HttpClient;
     const stateService = { isBrowser: true, env: {} } as unknown as StateService;
-    const service = new UniverseApiService(httpClient, stateService);
+    const service = new UniverseApiService(httpClient, stateService, ownerKeyStub as never);
     const txid = 'b'.repeat(64);
     service.getTransactionFlow$(txid).subscribe();
     service.getTransactionFlow$(txid).subscribe();
@@ -255,7 +258,7 @@ describe('UniverseApiService backend route network prefix', () => {
     const urls: string[] = [];
     const httpClient = { get: (url: string) => { urls.push(url); return of({ assets: [], groups: [], offers: [], quotes: [], total: 0 }); }, post: (url: string) => { urls.push(url); return of({}); } } as unknown as HttpClient;
     const stateService = { isBrowser: true, network, env: { ROOT_NETWORK: 'mainnet' } } as unknown as StateService;
-    return { service: new UniverseApiService(httpClient, stateService), urls };
+    return { service: new UniverseApiService(httpClient, stateService, ownerKeyStub as never), urls };
   }
 
   it('sends backend-owned routes to the selected network backend, as the gateway expects', () => {

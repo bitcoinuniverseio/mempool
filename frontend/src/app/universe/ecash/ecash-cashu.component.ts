@@ -113,7 +113,7 @@ export class EcashCashuComponent implements OnInit, OnDestroy {
           this.cd.markForCheck();
         },
         error: err => {
-          this.error = err?.message || 'Failed to load Cashu mints';
+          this.error = err?.error?.error || err?.message || 'Failed to load Cashu mints';
           this.loading = false;
           this.cd.markForCheck();
         },

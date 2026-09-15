@@ -23,7 +23,7 @@ sensitive can fit through it.
 | --- | --- |
 | `GET /api/v1/node/overview` | The overview, section by section. |
 | `GET /api/v1/node/rpc/catalog` | The only methods this route will call. |
-| `POST /api/v1/node/rpc` | Call one catalogued method with checked arguments. |
+| `POST /api/v1/node/rpc` | Call one catalogued method with checked arguments. Needs an owner key with the `node:rpc` scope (see [OWNER-IDENTITY](../api/OWNER-IDENTITY.md)); the catalog and overview stay public. |
 
 ## Why an allowlist, and never a denylist
 

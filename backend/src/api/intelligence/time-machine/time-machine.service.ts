@@ -1,8 +1,19 @@
 import * as crypto from 'crypto';
-import { EventEnvelopeValidator } from '../events/event-envelope';
-import { StorageCheckpointManifest, intelligenceStorage } from '../storage/intelligence-storage';
 import config from '../../../config';
 import mempool from '../../mempool';
+import { BlockExtended, MempoolTransactionExtended, TransactionExtended } from '../../../mempool.interfaces';
+
+/**
+ * Mempool time machine over what this backend has actually observed.
+ *
+ * The revision this replaces seeded five checkpoints with invented block
+ * hashes, added 120,000 to the event count, invented a coverage gap, and
+ * answered a lifecycle for any txid with two events nobody observed. Now a
+ * checkpoint is a snapshot of the real mempool taken when a block arrived,
+ * a lifecycle event is one the mempool loop reported, coverage is exactly
+ * the observed window, and a request outside it is answered with the
+ * unavailable state rather than a guess.
+ */
 
 export interface HistoricalMempoolEvent {
   event_id: string;
@@ -16,11 +27,32 @@ export interface HistoricalMempoolEvent {
   replaced_by_txid?: string;
 }
 
+export interface MempoolCheckpoint {
+  checkpoint_id: string;
+  network: string;
+  block_height: number;
+  block_hash: string;
+  timestamp_utc: string;
+  /** The mempool as it stood when this block was processed. */
+  mempool_tx_count: number;
+  mempool_vsize: number;
+  mempool_weight: number;
+  mempool_fees_sats: number;
+  median_feerate_sats_vb: number;
+  fee_distribution: Array<{ feerate_bucket: string; count: number; total_vsize: number }>;
+  /** The block itself. */
+  block_tx_count: number;
+  block_weight: number;
+  block_fees_sats: number;
+  state_hash: string;
+}
+
 export interface ReplayStateSummary {
   state_hash: string;
   target_timestamp_utc: string;
   target_block_height: number;
   nearest_checkpoint_id: string;
+  checkpoint_block_hash: string;
   applied_events_count: number;
   total_transactions: number;
   total_vsize: number;
@@ -46,15 +78,26 @@ export interface ReplayComparisonReport {
   };
 }
 
+export class TimeMachineUnavailableError extends Error {
+  constructor(public readonly code: string, message: string, public readonly status = 503) { super(message); }
+}
+
+const BUCKETS: { label: string; min: number; max: number }[] = [
+  { label: '1-5 sat/vB', min: 0, max: 5 }, { label: '6-10 sat/vB', min: 5, max: 10 }, { label: '11-20 sat/vB', min: 10, max: 20 },
+  { label: '21-50 sat/vB', min: 20, max: 50 }, { label: '50+ sat/vB', min: 50, max: Infinity },
+];
+
+export const TIME_MACHINE_LIMITS = { checkpoints: 288, events: 50_000, eventsPerTx: 64 } as const;
+
 export class TimeMachineService {
   private static instance: TimeMachineService;
   private eventLog: HistoricalMempoolEvent[] = [];
-  private checkpoints: StorageCheckpointManifest[] = [];
-  private stateCache: Map<string, ReplayStateSummary> = new Map();
+  private checkpoints: MempoolCheckpoint[] = [];
+  private stateCache: Map<string, { summary: ReplayStateSummary; txids: Set<string> }> = new Map();
+  private startedAt = new Date().toISOString();
+  private lifecycleFeed: () => { [txid: string]: MempoolTransactionExtended } = () => mempool.getMempool();
 
-  private constructor() {
-    this.seedHistoricalCheckpoints();
-  }
+  private constructor() {}
 
   public static getInstance(): TimeMachineService {
     if (!TimeMachineService.instance) {
@@ -63,182 +106,167 @@ export class TimeMachineService {
     return TimeMachineService.instance;
   }
 
-  private seedHistoricalCheckpoints(): void {
-    const baseHeight = 860000;
-    const baseTime = 1724000000000;
-
-    for (let i = 0; i < 5; i++) {
-      const height = baseHeight + i * 10;
-      const ts = new Date(baseTime + i * 6000000).toISOString();
-      const stateHash = crypto.createHash('sha256').update(`state-${height}-${ts}`).digest('hex');
-
-      const manifest: StorageCheckpointManifest = {
-        checkpoint_id: `chk-${height}`,
-        network: config.MEMPOOL.NETWORK,
-        block_height: height,
-        block_hash: `0000000000000000000${height}abcdef0123456789`,
-        timestamp_utc: ts,
-        tx_count: 15400 + i * 350,
-        total_weight: 42000000 + i * 800000,
-        total_fee_sats: 350000000 + i * 5000000,
-        state_hash: stateHash,
-        manifest_checksum: crypto.createHash('sha256').update(stateHash).digest('hex'),
-      };
-      this.checkpoints.push(manifest);
-    }
+  /** Test seam: an alternative mempool reader and a clean slate. */
+  public resetForTests(feed?: () => { [txid: string]: MempoolTransactionExtended }): void {
+    this.eventLog = [];
+    this.checkpoints = [];
+    this.stateCache.clear();
+    this.startedAt = new Date().toISOString();
+    if (feed) { this.lifecycleFeed = feed; }
   }
 
   public recordLifecycleEvent(event: HistoricalMempoolEvent): void {
     this.eventLog.push(event);
-    if (this.eventLog.length > 50000) {
+    if (this.eventLog.length > TIME_MACHINE_LIMITS.events) {
       this.eventLog.shift();
     }
   }
 
-  public getCoverage(): {
-    earliest_recorded_event_utc: string;
-    latest_recorded_event_utc: string;
-    total_events: number;
-    total_checkpoints: number;
-    coverage_gaps: Array<{ start_utc: string; end_utc: string; reason: string }>;
-  } {
-    const now = new Date().toISOString();
+  private static eventFor(tx: MempoolTransactionExtended | TransactionExtended, type: HistoricalMempoolEvent['event_type'], at: number, blockHeight?: number, replacedBy?: string): HistoricalMempoolEvent {
+    const vsize = tx.vsize ?? Math.ceil((tx.weight ?? 0) / 4);
     return {
-      earliest_recorded_event_utc: this.checkpoints[0]?.timestamp_utc || now,
-      latest_recorded_event_utc: now,
-      total_events: this.eventLog.length + 120000,
-      total_checkpoints: this.checkpoints.length,
-      coverage_gaps: [
-        {
-          start_utc: '2026-08-15T04:12:00Z',
-          end_utc: '2026-08-15T04:18:00Z',
-          reason: 'Scheduled database compaction and index checkpointing',
-        },
-      ],
+      event_id: crypto.createHash('sha256').update(`${tx.txid}:${type}:${blockHeight ?? ''}:${replacedBy ?? ''}`).digest('hex').slice(0, 32),
+      txid: tx.txid, timestamp_utc: new Date(at).toISOString(), event_type: type, vsize, fee_sats: tx.fee ?? 0,
+      fee_rate: vsize > 0 ? Math.round(((tx.fee ?? 0) / vsize) * 100) / 100 : 0, block_height: blockHeight, replaced_by_txid: replacedBy,
     };
   }
 
-  public replayToTimestampOrHeight(
-    targetTimestampUtc?: string,
-    targetBlockHeight?: number
-  ): ReplayStateSummary {
-    let nearestCheckpoint: StorageCheckpointManifest = this.checkpoints[0];
+  /** Called from the mempool change callback with what entered and left. */
+  public observeMempoolChange(added: MempoolTransactionExtended[], removed: MempoolTransactionExtended[], now = Date.now()): void {
+    for (const tx of added) { this.recordLifecycleEvent(TimeMachineService.eventFor(tx, 'accepted', now)); }
+    for (const tx of removed) { this.recordLifecycleEvent(TimeMachineService.eventFor(tx, 'removed', now)); }
+  }
 
-    if (targetBlockHeight !== undefined) {
-      for (const chk of this.checkpoints) {
-        if (chk.block_height <= targetBlockHeight) {
-          nearestCheckpoint = chk;
-        }
-      }
-    } else if (targetTimestampUtc) {
-      const targetMs = Date.parse(targetTimestampUtc);
-      for (const chk of this.checkpoints) {
-        if (Date.parse(chk.timestamp_utc) <= targetMs) {
-          nearestCheckpoint = chk;
-        }
-      }
+  public observeReplacement(replaced: MempoolTransactionExtended, replacementTxid: string, now = Date.now()): void {
+    this.recordLifecycleEvent(TimeMachineService.eventFor(replaced, 'replaced', now, undefined, replacementTxid));
+  }
+
+  /** Called from the block hub: records confirmations and snapshots the mempool. */
+  public observeBlock(block: BlockExtended, transactions: TransactionExtended[], now = Date.now()): MempoolCheckpoint {
+    for (const tx of transactions) { this.recordLifecycleEvent(TimeMachineService.eventFor(tx, 'confirmed', now, block.height)); }
+    const snapshot = Object.values(this.lifecycleFeed());
+    const rates = snapshot.map(tx => tx.vsize > 0 ? tx.fee / tx.vsize : 0).sort((a, b) => a - b);
+    const distribution = BUCKETS.map(bucket => ({ feerate_bucket: bucket.label, count: 0, total_vsize: 0 }));
+    let vsize = 0;
+    let weight = 0;
+    let fees = 0;
+    for (const tx of snapshot) {
+      const rate = tx.vsize > 0 ? tx.fee / tx.vsize : 0;
+      const bucket = distribution[BUCKETS.findIndex(entry => rate >= entry.min && rate < entry.max || (entry.max === Infinity && rate >= entry.min))] ?? distribution[0];
+      bucket.count += 1;
+      bucket.total_vsize += tx.vsize;
+      vsize += tx.vsize;
+      weight += tx.weight;
+      fees += tx.fee;
     }
-
-    const appliedEvents = this.eventLog.filter((e) => {
-      if (targetTimestampUtc && Date.parse(e.timestamp_utc) > Date.parse(targetTimestampUtc)) {
-        return false;
-      }
-      return true;
-    });
-
-    const statePayload = `${nearestCheckpoint.checkpoint_id}:${appliedEvents.map((e) => e.event_id).join(',')}`;
-    const stateHash = crypto.createHash('sha256').update(statePayload).digest('hex');
-
-    const summary: ReplayStateSummary = {
-      state_hash: stateHash,
-      target_timestamp_utc: targetTimestampUtc || nearestCheckpoint.timestamp_utc,
-      target_block_height: targetBlockHeight || nearestCheckpoint.block_height,
-      nearest_checkpoint_id: nearestCheckpoint.checkpoint_id,
-      applied_events_count: appliedEvents.length,
-      total_transactions: nearestCheckpoint.tx_count,
-      total_vsize: Math.round(nearestCheckpoint.total_weight / 4),
-      total_weight: nearestCheckpoint.total_weight,
-      total_fees_sats: nearestCheckpoint.total_fee_sats,
-      median_feerate_sats_vb: 12.5,
-      fee_distribution: [
-        { feerate_bucket: '1-5 sat/vB', count: 4200, total_vsize: 1200000 },
-        { feerate_bucket: '6-10 sat/vB', count: 5800, total_vsize: 1650000 },
-        { feerate_bucket: '11-20 sat/vB', count: 3900, total_vsize: 1100000 },
-        { feerate_bucket: '21-50 sat/vB', count: 1200, total_vsize: 340000 },
-        { feerate_bucket: '50+ sat/vB', count: 300, total_vsize: 85000 },
-      ],
-      projected_blocks_count: Math.ceil(nearestCheckpoint.total_weight / 4000000),
-      coverage_status: 'complete',
-      gap_intervals: [],
+    const checkpoint: MempoolCheckpoint = {
+      checkpoint_id: `chk-${config.MEMPOOL.NETWORK}-${block.height}-${block.id.slice(0, 12)}`, network: config.MEMPOOL.NETWORK,
+      block_height: block.height, block_hash: block.id, timestamp_utc: new Date(block.timestamp * 1000).toISOString(),
+      mempool_tx_count: snapshot.length, mempool_vsize: vsize, mempool_weight: weight, mempool_fees_sats: fees,
+      median_feerate_sats_vb: rates.length ? Math.round(rates[Math.floor(rates.length / 2)] * 100) / 100 : 0, fee_distribution: distribution,
+      block_tx_count: transactions.length, block_weight: block.weight, block_fees_sats: block.extras?.totalFees ?? 0,
+      state_hash: crypto.createHash('sha256').update(`${block.id}:${snapshot.map(tx => tx.txid).sort().join(',')}`).digest('hex'),
     };
+    this.checkpoints = this.checkpoints.filter(existing => existing.block_height < block.height);
+    this.checkpoints.push(checkpoint);
+    if (this.checkpoints.length > TIME_MACHINE_LIMITS.checkpoints) { this.checkpoints.shift(); }
+    this.stateCache.set(checkpoint.state_hash, { summary: this.summarize(checkpoint, checkpoint.timestamp_utc, checkpoint.block_height, 0), txids: new Set(snapshot.map(tx => tx.txid)) });
+    return checkpoint;
+  }
 
-    this.stateCache.set(stateHash, summary);
-    return summary;
+  public getCoverage(): {
+    network: string;
+    observing_since_utc: string;
+    earliest_recorded_event_utc: string | null;
+    latest_recorded_event_utc: string | null;
+    total_events: number;
+    total_checkpoints: number;
+    earliest_checkpoint_height: number | null;
+    latest_checkpoint_height: number | null;
+    coverage_gaps: Array<{ start_utc: string; end_utc: string; reason: string }>;
+  } {
+    return {
+      network: config.MEMPOOL.NETWORK,
+      observing_since_utc: this.startedAt,
+      earliest_recorded_event_utc: this.eventLog[0]?.timestamp_utc ?? null,
+      latest_recorded_event_utc: this.eventLog[this.eventLog.length - 1]?.timestamp_utc ?? null,
+      total_events: this.eventLog.length,
+      total_checkpoints: this.checkpoints.length,
+      earliest_checkpoint_height: this.checkpoints[0]?.block_height ?? null,
+      latest_checkpoint_height: this.checkpoints[this.checkpoints.length - 1]?.block_height ?? null,
+      // History before this process started is not held anywhere; that is the one gap, and it is stated.
+      coverage_gaps: [{ start_utc: '1970-01-01T00:00:00.000Z', end_utc: this.startedAt, reason: 'No history is retained before this backend started observing.' }],
+    };
+  }
+
+  private summarize(checkpoint: MempoolCheckpoint, targetTimestamp: string, targetHeight: number, appliedEvents: number): ReplayStateSummary {
+    return {
+      state_hash: checkpoint.state_hash, target_timestamp_utc: targetTimestamp, target_block_height: targetHeight,
+      nearest_checkpoint_id: checkpoint.checkpoint_id, checkpoint_block_hash: checkpoint.block_hash, applied_events_count: appliedEvents,
+      total_transactions: checkpoint.mempool_tx_count, total_vsize: checkpoint.mempool_vsize, total_weight: checkpoint.mempool_weight,
+      total_fees_sats: checkpoint.mempool_fees_sats, median_feerate_sats_vb: checkpoint.median_feerate_sats_vb, fee_distribution: checkpoint.fee_distribution,
+      projected_blocks_count: Math.ceil(checkpoint.mempool_weight / 4_000_000), coverage_status: appliedEvents === 0 ? 'complete' : 'partial', gap_intervals: [],
+    };
+  }
+
+  /**
+   * The state at the nearest checkpoint at or before the target. Events
+   * observed between that checkpoint and the target are counted, not
+   * applied: the snapshot is exact at the checkpoint and the count tells
+   * the reader how far the target is from it.
+   */
+  public replayToTimestampOrHeight(targetTimestampUtc?: string, targetBlockHeight?: number): ReplayStateSummary {
+    if (this.checkpoints.length === 0) {
+      throw new TimeMachineUnavailableError('no-observed-checkpoints', 'No mempool checkpoint has been observed by this backend yet.');
+    }
+    let nearest: MempoolCheckpoint | null = null;
+    if (targetBlockHeight !== undefined && Number.isFinite(targetBlockHeight)) {
+      for (const checkpoint of this.checkpoints) { if (checkpoint.block_height <= targetBlockHeight) { nearest = checkpoint; } }
+    } else if (targetTimestampUtc) {
+      const target = Date.parse(targetTimestampUtc);
+      if (!Number.isFinite(target)) { throw new TimeMachineUnavailableError('invalid-target', 'timestamp_utc must be an ISO-8601 date.', 400); }
+      for (const checkpoint of this.checkpoints) { if (Date.parse(checkpoint.timestamp_utc) <= target) { nearest = checkpoint; } }
+    } else {
+      nearest = this.checkpoints[this.checkpoints.length - 1];
+    }
+    if (!nearest) {
+      throw new TimeMachineUnavailableError('target-before-coverage', `The target is before the earliest observed checkpoint (height ${this.checkpoints[0].block_height}).`, 404);
+    }
+    const targetTime = targetTimestampUtc && !targetBlockHeight ? Date.parse(targetTimestampUtc) : Date.parse(nearest.timestamp_utc);
+    const applied = this.eventLog.filter(event => { const at = Date.parse(event.timestamp_utc); return at > Date.parse(nearest!.timestamp_utc) && at <= targetTime; }).length;
+    return this.summarize(nearest, new Date(targetTime).toISOString(), targetBlockHeight ?? nearest.block_height, applied);
   }
 
   public getStateByHash(stateHash: string): ReplayStateSummary | null {
-    return this.stateCache.get(stateHash) || null;
+    return this.stateCache.get(stateHash)?.summary ?? null;
   }
 
+  /** Events this backend observed for the txid; empty when it saw none. */
   public getTransactionLifecycle(txid: string): HistoricalMempoolEvent[] {
-    const events = this.eventLog.filter((e) => e.txid === txid);
-    if (events.length > 0) {
-      return events;
-    }
-
-    // Default historical lifecycle representation for verified txid
-    const now = Date.now();
-    return [
-      {
-        event_id: EventEnvelopeValidator.generateUuidV7(),
-        txid,
-        timestamp_utc: new Date(now - 1800000).toISOString(),
-        event_type: 'observed',
-        vsize: 142,
-        fee_sats: 1775,
-        fee_rate: 12.5,
-      },
-      {
-        event_id: EventEnvelopeValidator.generateUuidV7(),
-        txid,
-        timestamp_utc: new Date(now - 1799000).toISOString(),
-        event_type: 'accepted',
-        vsize: 142,
-        fee_sats: 1775,
-        fee_rate: 12.5,
-      },
-    ];
+    return this.eventLog.filter(event => event.txid === txid).slice(-TIME_MACHINE_LIMITS.eventsPerTx);
   }
 
-  public compareStates(stateHashA: string, stateHashB: string): ReplayComparisonReport {
-    const stateA = this.getStateByHash(stateHashA) || this.replayToTimestampOrHeight(undefined, 860010);
-    const stateB = this.getStateByHash(stateHashB) || this.replayToTimestampOrHeight(undefined, 860020);
-
+  public compareStates(stateHashA: string, stateHashB: string): ReplayComparisonReport | null {
+    const a = this.stateCache.get(stateHashA);
+    const b = this.stateCache.get(stateHashB);
+    if (!a || !b) { return null; }
     return {
-      state_a: stateA,
-      state_b: stateB,
+      state_a: a.summary, state_b: b.summary,
       delta: {
-        tx_count_delta: stateB.total_transactions - stateA.total_transactions,
-        weight_delta: stateB.total_weight - stateA.total_weight,
-        fees_delta_sats: stateB.total_fees_sats - stateA.total_fees_sats,
-        median_feerate_delta: Number((stateB.median_feerate_sats_vb - stateA.median_feerate_sats_vb).toFixed(2)),
-        added_txids: [],
-        removed_txids: [],
+        tx_count_delta: b.summary.total_transactions - a.summary.total_transactions,
+        weight_delta: b.summary.total_weight - a.summary.total_weight,
+        fees_delta_sats: b.summary.total_fees_sats - a.summary.total_fees_sats,
+        median_feerate_delta: Number((b.summary.median_feerate_sats_vb - a.summary.median_feerate_sats_vb).toFixed(2)),
+        added_txids: [...b.txids].filter(txid => !a.txids.has(txid)).slice(0, 1000),
+        removed_txids: [...a.txids].filter(txid => !b.txids.has(txid)).slice(0, 1000),
       },
     };
   }
 
-  public startExportJob(
-    stateHash: string,
-    format: 'json' | 'ndjson' | 'csv' | 'parquet'
-  ): { job_id: string; status: string; estimated_seconds: number; download_url: string } {
-    const jobId = EventEnvelopeValidator.generateUuidV7();
-    return {
-      job_id: jobId,
-      status: 'completed',
-      estimated_seconds: 0,
-      download_url: `/api/v1/intelligence/history/states/${stateHash}?format=${format}`,
-    };
+  /** The state and its transaction set, produced now. There is no export queue. */
+  public exportState(stateHash: string): { state: ReplayStateSummary; txids: string[] } | null {
+    const entry = this.stateCache.get(stateHash);
+    return entry ? { state: entry.summary, txids: [...entry.txids].sort() } : null;
   }
 }
 

@@ -125,16 +125,19 @@ export interface OffchainRecoveryPlan {
   current_stage: string;
   earliest_broadcast_height: number;
   requires_fee_bump: boolean;
-  suggested_fee_rate_sats_vb: number;
+  suggested_fee_rate_sats_vb: number | null;
   recovery_state: OffchainRecoveryState;
-  unsigned_psbt_hex: string;
+  /** Null: a recovery PSBT is built from the backup transaction, not from an entity id. */
+  unsigned_psbt_hex: string | null;
   action_guidance: string;
 }
 
 export interface OffchainOverviewResponse {
   total_operators: number;
-  active_statechains_count: number;
+  /** Null: no operator on this deployment reports its statechain count. */
+  active_statechains_count: number | null;
   active_coinswap_makers: number;
   operators: OffchainOperator[];
   public_offers: CoinswapPublicOffer[];
+  registry: { configured: boolean; source: string | null; error: string | null };
 }

@@ -722,3 +722,27 @@ exchange while the established tunnel keeps serving. A new connection needs
 fork, exec, PAM and password file reads, all uncached IO, and proportional IO
 weight cannot beat a saturated queue. An established session does none of that
 per byte.
+
+## Independent overlay gateway updates
+
+The gateway reads the root-owned `overlay-route.json` in the Explorer state
+folder for each new HTTP request and WebSocket upgrade. Atomic replacement
+moves new traffic between the live and passive overlay slots. Requests and
+sockets already assigned to the prior slot keep that upstream. Portfolio v2
+remains enabled by default, preserving existing installations. Unprefixed
+`/v2/universe` paths return 404 instead of the application shell.
+
+A gateway-only update may use a versioned component directory under
+`/opt/universe-explorer/gateway-components/<source-sha>` and a service override
+pointing to its `gateway.mjs`. Keep the existing working directory, environment,
+and socket unit. Verify the candidate on a spare loopback port before changing
+the service. Require the socket unit to be active during the restart, and check
+continuous HTTP responses and the route-control document afterward. Roll back
+by restoring the prior override and restarting with the same socket still held.
+
+The override is maintained deployment configuration. A later complete Explorer
+release must either update that component pointer or remove the override after
+proving its bundled gateway supports `universe-overlay-route-v1`. Do not leave
+an older component pinned accidentally. The overlay release tool serializes
+cutovers with `/run/lock/universe-explorer-deploy.lock` and preserves the current
+Portfolio v2 exposure when called with `--defer-gateway`.

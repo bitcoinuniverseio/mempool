@@ -77,6 +77,27 @@ Core needs `txindex=1` and `server=1`. `SECOND_CORE_RPC` is used only when
 `MEMPOOL.USE_SECOND_NODE_FOR_MINFEE` is on, to read a minimum relay fee from a
 second node.
 
+With `COOKIE: true` the client re-reads `COOKIE_PATH` after any `401`, so the
+file at that path must follow the node: Core rewrites its cookie on every
+restart. When the node runs on another host, keep the copy current with
+`scripts/universe/rpc-cookie-sync.mjs` (see
+[SIGNET-VALIDATION-RUNTIME.md](SIGNET-VALIDATION-RUNTIME.md)); a one-time copy
+answers `401` from the next node restart on.
+
+### Intelligence surfaces (environment)
+
+| Variable | Purpose |
+| --- | --- |
+| `UNIVERSE_INTELLIGENCE_KEY_PEPPER` | Pepper for API key hashes (32+ chars). Unset: generated once and stored in `intelligence_settings` |
+| `UNIVERSE_INTELLIGENCE_SECRET_KEY` | 32 bytes hex for webhook secret encryption. Unset: derived from the pepper |
+| `UNIVERSE_INTELLIGENCE_LEGACY_MASTER_KEY` | Optional operator key with every scope. Nothing is seeded without it |
+| `UNIVERSE_INTELLIGENCE_WEBHOOK_CA` | Optional extra PEM CA trusted for webhook receivers |
+| `UNIVERSE_ECASH_MINTS` | Comma separated https URLs of Cashu mints to observe; unset: the ecash directory is unavailable |
+| `UNIVERSE_PAYJOIN_DIRECTORIES` | Comma separated https URLs of payjoin directories to probe; unset: unavailable |
+| `UNIVERSE_OFFCHAIN_REGISTRY_JSON` | Path to the statechain and coinswap operator registry file; unset: empty registry |
+
+See [../api/OWNER-IDENTITY.md](../api/OWNER-IDENTITY.md) for the owner contract.
+
 `DEBUG_LOG_PATH` points at Core's `debug.log` and is read for block template
 auditing. Leave it empty when auditing is off.
 

@@ -91,6 +91,7 @@ import {
   RpcCatalog,
   RpcResult,
 } from '@app/universe/node-console/node-console.types';
+import { OwnerKeyService } from '@app/universe/intelligence-platform/owner-key.service';
 
 /** Server-side batch ceilings. Callers must not exceed them. */
 export const UNIVERSE_OUTPOINT_BATCH_LIMIT = 50;
@@ -122,6 +123,7 @@ export class UniverseApiService {
   constructor(
     private httpClient: HttpClient,
     private stateService: StateService,
+    private ownerKey: OwnerKeyService,
   ) {
     this.apiBaseUrl = ''; // use relative (same-origin) URL by default
     if (!stateService.isBrowser) { // except when inside AU SSR process
@@ -595,9 +597,12 @@ export class UniverseApiService {
    * its allowlist before anything else happens.
    */
   callNodeRpc$(method: string, args: unknown[]): Observable<RpcResult> {
+    // Executing a method spends the node's RPC budget, so the route needs an
+    // owner key with the node:rpc scope; the catalog and overview stay public.
     return this.httpClient.post<RpcResult>(
       this.backendBase + '/api/v1/node/rpc',
       { method, args },
+      { headers: this.ownerKey.headers() },
     );
   }
 

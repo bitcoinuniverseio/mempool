@@ -125,7 +125,7 @@ export class GlobalNetworkSnapshotsComponent implements OnInit, OnDestroy {
           this.cd.markForCheck();
         },
         error: err => {
-          this.error = err?.message || 'Failed to load snapshots';
+          this.error = err?.error?.error || err?.message || 'Failed to load snapshots';
           this.loading = false;
           this.cd.markForCheck();
         },

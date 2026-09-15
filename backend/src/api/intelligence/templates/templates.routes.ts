@@ -3,6 +3,8 @@ import { templateCollectorService } from './template-collector.service';
 import { handleError } from '../../../utils/api';
 import { eventBus } from '../events/intelligence-event-bus';
 
+const OVERVIEW_TEMPLATES = 24;
+
 class TemplatesRoutes {
   public initRoutes(app: Application): void {
     const prefix = '/api/v1/intelligence/templates/';
@@ -21,11 +23,12 @@ class TemplatesRoutes {
     try {
       const sources = templateCollectorService.getSources();
       const templates = templateCollectorService.getTemplatesForHeight();
+      // The overview shows the newest collections; the full list is paged through the stream and per-height routes.
       res.json({
         sources_count: sources.length,
         candidate_templates_count: templates.length,
         sources,
-        latest_templates: templates,
+        latest_templates: templates.slice(-OVERVIEW_TEMPLATES).reverse(),
       });
     } catch (e) {
       handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch templates overview');
@@ -56,10 +59,11 @@ class TemplatesRoutes {
 
   private async $getDiff(req: Request, res: Response): Promise<void> {
     try {
-      const diff = templateCollectorService.computeTemplateDiff(
-        req.params.templateId,
-        req.params.otherTemplateId
-      );
+      const diff = templateCollectorService.computeTemplateDiff(req.params.templateId, req.params.otherTemplateId);
+      if (!diff) {
+        res.status(404).json({ error: 'Both templates must be ones this backend collected.' });
+        return;
+      }
       res.json(diff);
     } catch (e) {
       handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to diff templates');
@@ -69,6 +73,10 @@ class TemplatesRoutes {
   private async $getBlockComparison(req: Request, res: Response): Promise<void> {
     try {
       const comparison = templateCollectorService.compareMinedBlock(req.params.blockHash);
+      if (!comparison) {
+        res.status(404).json({ error: 'No template was collected for this block before it was mined, or the block was not observed by this backend.', code: 'no-comparison' });
+        return;
+      }
       res.json(comparison);
     } catch (e) {
       handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to compare block with template');

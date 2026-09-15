@@ -91,7 +91,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
       <div *ngIf="result" class="card p-4 bg-body-tertiary border">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 border-bottom pb-2">
           <h2 class="h5 m-0 text-success">&check; Valid {{ result.protocol_version }} Proposal Verified</h2>
-          <span class="badge bg-success">+{{ result.privacy_score_gain }}% Privacy Rating</span>
+          <span class="badge" [ngClass]="result.is_valid ? 'bg-success' : 'bg-warning text-dark'">{{ result.heuristics_broken.length }} heuristic(s) broken</span>
         </div>
 
         <div class="row g-3 mb-4">
@@ -105,21 +105,21 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           <div class="col-12 col-sm-6 col-md-3">
             <div class="p-3 border rounded bg-body">
               <div class="text-muted small">Receiver Contribution</div>
-              <div class="h4 my-1 text-success">{{ result.receiver_contributed_sats | number }} sats</div>
+              <div class="h4 my-1 text-success">{{ result.receiver_contributed_sats !== null ? (result.receiver_contributed_sats | number) + ' sats' : 'unknown (no UTXO data)' }}</div>
               <div class="small text-muted">Injected receiver liquidity</div>
             </div>
           </div>
           <div class="col-12 col-sm-6 col-md-3">
             <div class="p-3 border rounded bg-body">
               <div class="text-muted small">Fee Adjustment</div>
-              <div class="h4 my-1 text-warning">+{{ result.fee_delta_sats }} sats</div>
+              <div class="h4 my-1 text-warning">{{ result.fee_delta_sats !== null ? (result.fee_delta_sats >= 0 ? '+' : '') + result.fee_delta_sats + ' sats' : 'unknown (no UTXO data)' }}</div>
               <div class="small text-muted">BIP78 fee coverage compliant</div>
             </div>
           </div>
           <div class="col-12 col-sm-6 col-md-3">
             <div class="p-3 border rounded bg-body">
               <div class="text-muted small">Effective Feerate</div>
-              <div class="h4 my-1 text-info">{{ result.effective_feerate_sats_vb }} sat/vB</div>
+              <div class="h4 my-1 text-info">{{ result.effective_feerate_sats_vb !== null ? result.effective_feerate_sats_vb + ' sat/vB' : 'unknown' }}</div>
               <div class="small text-muted">Calculated package rate</div>
             </div>
           </div>

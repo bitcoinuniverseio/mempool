@@ -1,7 +1,8 @@
 import { Application, Request, Response } from 'express';
 import queryStudioRoutes from './query-studio.routes';
 import { QueryStudioEvidenceError, queryStudioService } from './query-studio.service';
-import { DeveloperIdentityManager } from '../identity/developer-identity';
+import { developerIdentity, AuthenticatedOwner } from '../identity/developer-identity';
+import { MemoryOwnerStore, useOwnerStore } from '../identity/owner-store';
 
 /**
  * These assertions replace a suite that asserted the constants the service used
@@ -56,42 +57,37 @@ describe('Product 9: Developer Data Platform and Query Studio', () => {
     }
   });
 
-  it('keeps saved queries the caller submitted and nothing seeded', () => {
-    expect(queryStudioService.getSavedQueries('dev-default')).toEqual([]);
+  it('keeps saved queries per authenticated owner, durably and bounded', async () => {
+    useOwnerStore(new MemoryOwnerStore());
+    developerIdentity.resetForTests();
+    const a = await developerIdentity.bootstrapOwner('analyst', '203.0.113.1');
+    const b = await developerIdentity.bootstrapOwner('other', '203.0.113.2');
+    const analyst: AuthenticatedOwner = (await developerIdentity.authenticateKey(a.secret_key))!;
+    const other: AuthenticatedOwner = (await developerIdentity.authenticateKey(b.secret_key))!;
+    expect(await queryStudioService.getSavedQueries(analyst)).toEqual([]);
 
     const title = 'High Priority Mempool Packages';
     const sql = 'SELECT txid, feerate FROM mempool_transactions ORDER BY feerate DESC LIMIT 50';
-    const saved = queryStudioService.saveQuery('dev-analyst-01', title, sql);
-    expect(saved.query_id).toBeDefined();
-
-    const queries = queryStudioService.getSavedQueries('dev-analyst-01');
-    expect(queries.map((q) => q.query_id)).toEqual([saved.query_id]);
+    const saved = await queryStudioService.saveQuery(analyst, title, sql);
+    expect(saved.owner_id).toBe(analyst.owner_id);
+    expect((await queryStudioService.getSavedQueries(analyst)).map((q) => q.query_id)).toEqual([saved.query_id]);
+    expect(await queryStudioService.getSavedQueries(other)).toEqual([]);
+    await expect(queryStudioService.saveQuery(analyst, '', sql)).rejects.toMatchObject({ code: 'invalid_title' });
+    await expect(queryStudioService.saveQuery(analyst, 'x', 's'.repeat(20000))).rejects.toMatchObject({ code: 'invalid_sql' });
   });
 
-  it('blocks SSRF attempts in developer webhook registration', () => {
-    expect(() => {
-      DeveloperIdentityManager.registerWebhook(
-        'dev-user-01',
-        'http://169.254.169.254/latest/meta-data/',
-        ['mempool.evaluated']
-      );
-    }).toThrow(/SSRF Protection/);
-
-    expect(() => {
-      DeveloperIdentityManager.registerWebhook(
-        'dev-user-01',
-        'http://localhost:8080/callback',
-        ['mempool.evaluated']
-      );
-    }).toThrow(/SSRF Protection/);
-
-    const validHook = DeveloperIdentityManager.registerWebhook(
-      'dev-user-01',
-      'https://api.externalpartner.org/webhooks/mempool',
-      ['mempool.evaluated']
-    );
+  it('blocks SSRF attempts in developer webhook registration', async () => {
+    useOwnerStore(new MemoryOwnerStore());
+    developerIdentity.resetForTests();
+    developerIdentity.resolver = async () => [{ address: '203.0.113.9', family: 4 }];
+    const key = await developerIdentity.bootstrapOwner('dev', '203.0.113.3');
+    const owner = (await developerIdentity.authenticateKey(key.secret_key))!;
+    await expect(developerIdentity.registerWebhook(owner, 'http://169.254.169.254/latest/meta-data/', ['mempool.evaluated'])).rejects.toMatchObject({ code: 'invalid_url' });
+    await expect(developerIdentity.registerWebhook(owner, 'https://localhost:8080/callback', ['mempool.evaluated'])).rejects.toMatchObject({ code: 'invalid_url' });
+    const validHook = await developerIdentity.registerWebhook(owner, 'https://api.externalpartner.org/webhooks/mempool', ['mempool.evaluated']);
     expect(validHook.webhook_id).toBeDefined();
-    expect(validHook.secret).toBeDefined();
+    expect(validHook.signing_secret).toHaveLength(64);
+    expect(JSON.stringify(await developerIdentity.listWebhooks(owner))).not.toMatch(/secret/);
   });
 });
 
@@ -102,8 +98,8 @@ describe('Query Studio HTTP responses', () => {
     const gets = new Map<string, Handler>();
     const posts = new Map<string, Handler>();
     const app = {
-      get: jest.fn((path: string, callback: Handler) => { gets.set(path, callback); return app; }),
-      post: jest.fn((path: string, callback: Handler) => { posts.set(path, callback); return app; }),
+      get: jest.fn((path: string, ...fns: Handler[]) => { gets.set(path, fns[fns.length - 1]); return app; }),
+      post: jest.fn((path: string, ...fns: Handler[]) => { posts.set(path, fns[fns.length - 1]); return app; }),
       delete: jest.fn(() => app),
     };
     queryStudioRoutes.initRoutes(app as unknown as Application);
