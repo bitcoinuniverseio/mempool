@@ -1041,7 +1041,7 @@ export interface TaprootAssetItem {
   readonly anchorTxid: string;
   readonly anchorOutpoint: string;
   readonly scriptKey: string;
-  readonly hasProofFile: boolean;
+  readonly hasProofFile: boolean | null;
   readonly mintTime: number;
 }
 

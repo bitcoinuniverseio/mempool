@@ -806,6 +806,10 @@ export class UniverseApiService {
     );
   }
 
+  verifyTaprootProof$(assetId: string, proofData: string): Observable<any> {
+    return this.httpClient.post(this.backendBase + '/api/v1/taproot-assets/proof/verify', { assetId, proofData });
+  }
+
   getTaprootAsset$(assetId: string): Observable<TaprootAssetItem> {
     return this.httpClient.get<TaprootAssetItem>(
       this.backendBase + '/api/v1/taproot-assets/assets/' + encodeURIComponent(assetId)

@@ -14,7 +14,8 @@ export interface TaprootAssetItem {
   readonly anchorTxid: string;
   readonly anchorOutpoint: string;
   readonly scriptKey: string;
-  readonly hasProofFile: boolean;
+  /** Null until proof-file availability has actually been read; listing alone is insufficient. */
+  readonly hasProofFile: boolean | null;
   readonly mintTime: number;
 }
 
