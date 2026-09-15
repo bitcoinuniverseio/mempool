@@ -88,28 +88,39 @@ async function runVerification(network: string, http: TapdProofSource, core: Wor
       const info = await request('GET', '/v1/taproot-assets/getinfo');
       const selected = info?.network === 'testnet3' ? 'testnet' : info?.network;
       if (selected !== network || info?.sync_to_chain !== true || !uint(info?.block_height) || !hash(info?.block_hash) ||
-          typeof info?.version !== 'string' || !info.version || info.version.length > 256 || info.block_height > before.block_height ||
+          typeof info?.version !== 'string' || !info.version || info.version.length > 256 || info.block_height !== before.block_height || info.block_hash !== before.block_hash ||
           await core.call('getblockhash', [info.block_height]) !== info.block_hash) unknown('tapd network or synced chain checkpoint is inconsistent with owned Bitcoin.');
       return { version: info.version as string, height: info.block_height as number, hash: info.block_hash as string };
     };
     const tapd = await daemon();
+    const assertStable = async () => {
+      if (JSON.stringify(tapd) !== JSON.stringify(await daemon()) || JSON.stringify(before) !== JSON.stringify(await checkpoint())) {
+        unknown('Proof sources changed checkpoint during verification; retry.');
+      }
+    };
     // tapd v0.6.0 RESTJsonUnmarshalOpts explicitly uses UseHexForBytes (not protobuf base64).
     const bytes = Buffer.from(proof, 'base64');
     const raw = bytes.toString('hex');
     const decoded = claim(await request('POST', '/v1/taproot-assets/proofs/decode', { raw_proof: raw, proof_at_depth: 0 }));
-    if (decoded.id !== assetId.toLowerCase()) return { valid: false, stage: 'asset-mismatch', error: 'The decoded proof belongs to a different asset.' };
+    if (decoded.id !== assetId.toLowerCase()) {
+      await assertStable();
+      return { valid: false, stage: 'asset-mismatch', error: 'The decoded proof belongs to a different asset.' };
+    }
     const response = await request('POST', '/v1/taproot-assets/proofs/verify', { raw_proof_file: raw, genesis_point: decoded.genesis });
     if (response?.valid === false) {
-      if (JSON.stringify(tapd) !== JSON.stringify(await daemon()) || JSON.stringify(before) !== JSON.stringify(await checkpoint())) unknown('Proof sources changed while returning a rejection.');
+      await assertStable();
       return { valid: false, stage: 'invalid-proof', error: 'The owned tapd verifier rejected this proof file.' };
     }
     if (response?.valid !== true) unknown('tapd returned no boolean proof verdict.');
     const verified = claim(response);
     if (verified.id !== decoded.id || verified.genesis !== decoded.genesis || verified.count !== decoded.count) unknown('tapd decode and verification disagree about the same proof file identity.');
     if (JSON.stringify(verified) !== JSON.stringify(decoded)) unknown('tapd decode and verification disagree about the same proof file anchor.');
-    if (verified.height > before.block_height || await core.call('getblockhash', [verified.height]) !== verified.hash) return { valid: false, stage: 'anchor-mismatch', error: 'The verified proof anchor is not on the owned active chain at its stated height.' };
+    if (verified.height > before.block_height || await core.call('getblockhash', [verified.height]) !== verified.hash) {
+      await assertStable();
+      return { valid: false, stage: 'anchor-mismatch', error: 'The verified proof anchor is not on the owned active chain at its stated height.' };
+    }
     const header = await core.call('getblockheader', [verified.hash, true]);
-    if (header?.hash !== verified.hash || header?.height !== verified.height || !Number.isSafeInteger(header?.confirmations) || header.confirmations < 1) unknown('Owned Bitcoin anchor header is inconsistent.');
+    if (header?.hash !== verified.hash || header?.height !== verified.height || !Number.isSafeInteger(header?.confirmations) || header.confirmations !== before.block_height - verified.height + 1) unknown('Owned Bitcoin anchor header is inconsistent.');
     const ownedRaw = await core.call('getrawtransaction', [verified.txid, false, verified.hash]);
     if (ownedRaw !== verified.raw) unknown('Owned Bitcoin anchor transaction bytes differ from the verified proof.');
     const afterTapd = await daemon();

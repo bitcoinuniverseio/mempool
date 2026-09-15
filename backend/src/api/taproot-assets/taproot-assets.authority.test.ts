@@ -157,3 +157,37 @@ describe('proof resource bounds', () => {
     } finally { finish({ status: 503, body: {} }); jest.useRealTimers(); }
   });
 });
+
+describe('exact proof checkpoints and early-negative stability', () => {
+  it.each([0, 2, 999, 1.5])('rejects inconsistent anchor confirmation count %s', async confirmations => {
+    const s = setup(undefined, (method, result) => method === 'getblockheader' ? { ...result, confirmations } : result);
+    expect(await s.authority.verifyProof(id, encoded)).toMatchObject({ valid: false, stage: 'unavailable-verifier' });
+  });
+  it('requires the native daemon checkpoint to equal the selected Bitcoin tip', async () => {
+    const s = setup((path, body) => path.endsWith('getinfo') ? { ...body, block_height: 99 } : body);
+    expect(await s.authority.verifyProof(id, encoded)).toMatchObject({ valid: false, stage: 'unavailable-verifier' });
+    expect(s.calls.some(call => call.path.endsWith('/decode') || call.path.endsWith('/verify'))).toBe(false);
+  });
+  it('retains successful verification at aligned source checkpoints', async () => {
+    expect(await setup().authority.verifyProof(id, encoded)).toMatchObject({ valid: true, stage: 'verified' });
+  });
+  it('withholds asset mismatch if the daemon changes before publishing it', async () => {
+    let infos = 0;
+    const s = setup((path, body) => path.endsWith('getinfo') && ++infos > 1 ? { ...body, network: 'mainnet' } : body);
+    expect(await s.authority.verifyProof('66'.repeat(32), encoded)).toMatchObject({ valid: false, stage: 'unavailable-verifier' });
+    expect(s.calls.some(call => call.path.endsWith('/verify'))).toBe(false);
+  });
+  it('withholds asset mismatch if Bitcoin changes before publishing it', async () => {
+    let checkpoints = 0;
+    const s = setup(undefined, (method, result) => method === 'getblockchaininfo' && ++checkpoints > 1 ? { ...result, bestblockhash: '77'.repeat(32) } : result);
+    expect(await s.authority.verifyProof('66'.repeat(32), encoded)).toMatchObject({ valid: false, stage: 'unavailable-verifier' });
+  });
+  it.each([false, true])('reports anchor mismatch only at stable sources; changed=%s', async changed => {
+    let checkpoints = 0;
+    const s = setup((path, body) => {
+      if (path.endsWith('/decode') || path.endsWith('/verify')) body.decoded_proof.asset.chain_anchor.block_height = 101;
+      return body;
+    }, (method, result) => method === 'getblockchaininfo' && ++checkpoints > 1 && changed ? { ...result, bestblockhash: '77'.repeat(32) } : result);
+    expect(await s.authority.verifyProof(id, encoded)).toMatchObject({ valid: false, stage: changed ? 'unavailable-verifier' : 'anchor-mismatch' });
+  });
+});

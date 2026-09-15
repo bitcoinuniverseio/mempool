@@ -17,11 +17,11 @@ export class HttpCacheInterceptor implements HttpInterceptor {
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     if (this.isBrowser && request.method === 'GET') {
 
-      const { response, headers } = this.transferState.get<any>(makeStateKey(request.url), null) || {};
+      const { response, headers } = this.transferState.get<any>(makeStateKey(request.urlWithParams), null) || {};
       if (response) {
-        const httpHeaders = new HttpHeaders();
+        let httpHeaders = new HttpHeaders();
         for (const [k,v] of Object.entries(headers)) {
-          httpHeaders.set(k,v as string[]);
+          httpHeaders = httpHeaders.set(k,v as string[]);
         }
         const modifiedResponse = new HttpResponse<any>({
           headers: httpHeaders,
@@ -30,7 +30,7 @@ export class HttpCacheInterceptor implements HttpInterceptor {
           statusText: response.statusText,
           url: response.url
         });
-        this.transferState.remove(makeStateKey(request.url));
+        this.transferState.remove(makeStateKey(request.urlWithParams));
         return of(modifiedResponse);
       }
     }
@@ -38,8 +38,8 @@ export class HttpCacheInterceptor implements HttpInterceptor {
     return next.handle(request)
       .pipe(
         tap((event: HttpEvent<any>) => {
-          if (!this.isBrowser && event instanceof HttpResponse) {
-            const keyId = request.url.split('/').slice(3).join('/');
+          if (!this.isBrowser && request.method === 'GET' && event instanceof HttpResponse) {
+            const keyId = request.urlWithParams.split('/').slice(3).join('/');
             const headers = {};
             for (const k of event.headers.keys()) {
               headers[k] = event.headers.getAll(k);

@@ -16,6 +16,10 @@ export function publicSwapPackage(raw: string, network: string): Record<string, 
   try { pkg = JSON.parse(raw); } catch { throw new Error('The package is not valid JSON.'); }
   if (!pkg || typeof pkg !== 'object' || Array.isArray(pkg)) throw new Error('The package must be a JSON object.');
   if (Object.keys(pkg).some(key => !allowed.has(key))) throw new Error('This form accepts public contract fields only. Remove private backup fields, invoices, preimages, keys used for spending and caller height.');
+  const numbers = new Set(['timeout_height','expected_amount_sats','lockup_vout','fee_sats']);
+  if (Object.entries(pkg).some(([key,value]) => numbers.has(key) ? !Number.isSafeInteger(value) || Number(value)<0 : typeof value!=='string')) {
+    throw new Error('Public contract fields must contain their documented scalar strings or integer amounts. Nested objects and arrays are not accepted.');
+  }
   if (pkg.chain !== 'bitcoin' || pkg.network !== network) throw new Error('Package chain/network must match the selected page.');
   return pkg;
 }
@@ -27,6 +31,7 @@ export function checkRecoveryArtifact(plan: SwapRecoveryPlan, pkg: Record<string
       source.chain !== 'bitcoin' || source.network !== network || !source.source_id ||
       !/^[0-9a-f]{64}$/.test(source.block_hash) || !Number.isSafeInteger(source.block_height) ||
       source.block_height < pkg.timeout_height || !Number.isFinite(Date.parse(source.observed_at))) throw new Error('Recovery artifact is missing its verified mature source context.');
+  if (plan.current_block_height !== source.block_height || plan.blocks_until_refund !== 0 || plan.timeout_height !== pkg.timeout_height) throw new Error('Displayed recovery maturity disagrees with the checked source context.');
   const tx = Transaction.fromPSBT(decodePsbtInput(plan.unsigned_recovery_psbt), { allowUnknownInputs: true, allowUnknownOutputs: true });
   const net = network === 'mainnet' ? NETWORK : network === 'regtest' ? { ...TEST_NETWORK, bech32: 'bcrt' } : TEST_NETWORK;
   if (tx.inputsLength !== 1 || tx.outputsLength !== 1 || tx.version !== 2 || tx.lockTime !== pkg.timeout_height) throw new Error('PSBT transaction structure does not match the requested refund.');
