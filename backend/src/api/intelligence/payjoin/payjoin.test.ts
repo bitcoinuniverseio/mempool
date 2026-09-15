@@ -21,8 +21,8 @@ describe('payjoin proposal analysis reads the transactions', () => {
     const original = psbt([{ txid: A, vout: 0, value: 100_000 }], [{ seed: 'pay', value: 60_000 }, { seed: 'change', value: 39_000 }]);
     const proposal = psbt([{ txid: A, vout: 0, value: 100_000 }, { txid: B, vout: 1, value: 25_000 }], [{ seed: 'pay', value: 85_000 }, { seed: 'change', value: 38_800 }]);
     const result = payjoinService.analyzeProposal({ original_psbt: original, proposal_psbt: proposal });
-    expect(result).toMatchObject({ inputs_added_by_receiver: 1, receiver_contributed_sats: 25_000, original_fee_sats: 1000, proposal_fee_sats: 1200, fee_delta_sats: 200, is_valid: true, privacy_score_gain: 2 });
-    expect(result.heuristics_broken).toEqual(['Common-Input-Ownership Heuristic (CIOH)', 'Payment-Amount Heuristic']);
+    expect(result).toMatchObject({ inputs_added_by_receiver: 1, receiver_contributed_sats: 25_000, original_fee_sats: 1000, proposal_fee_sats: 1200, fee_delta_sats: 200, is_valid: false, privacy_score_gain: 0 });
+    expect(result.validation_messages.join(' ')).toMatch(/decreased without fee authorization/);
     expect(result.original).toEqual({ inputs: 1, outputs: 2 });
     expect(result.proposal).toEqual({ inputs: 2, outputs: 2 });
   });
@@ -32,7 +32,7 @@ describe('payjoin proposal analysis reads the transactions', () => {
     const dropped = psbt([{ txid: B, vout: 0, value: 100_000 }], [{ seed: 'pay', value: 60_000 }]);
     const result = payjoinService.analyzeProposal({ original_psbt: original, proposal_psbt: dropped });
     expect(result.is_valid).toBe(false);
-    expect(result.validation_messages.join(' ')).toMatch(/dropped 1 of the sender's original inputs/);
+    expect(result.validation_messages.join(' ')).toMatch(/dropped or reordered the sender's original inputs/);
     const same = payjoinService.analyzeProposal({ original_psbt: original, proposal_psbt: original });
     expect(same).toMatchObject({ inputs_added_by_receiver: 0, is_valid: false, heuristics_broken: [] });
   });
@@ -58,7 +58,7 @@ describe('payjoin directories and overview', () => {
       : { ok: false, status: null, body: null, latency_ms: null, error: 'ECONNREFUSED' };
     // Resolution is pinned to a public address for the test.
     const identity = await import('../identity/developer-identity');
-    jest.spyOn(identity, 'resolvePublicAddress').mockResolvedValue({ address: '203.0.113.5', family: 4 });
+    jest.spyOn(identity, 'resolvePublicAddress').mockResolvedValue({ address: '93.184.216.5', family: 4 });
     const directories = await payjoinService.getDirectories();
     expect(directories).toHaveLength(3);
     expect(directories[0]).toMatchObject({ bip77_supported: true, latency_ms: 42, error: null, ohttp_key_hash: crypto.createHash('sha256').update('keys').digest('hex') });

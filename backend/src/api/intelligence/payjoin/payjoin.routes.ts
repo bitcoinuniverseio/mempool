@@ -53,8 +53,7 @@ class PayjoinRoutes {
 
   private async $postAnalyzeProposal(req: Request, res: Response): Promise<void> {
     try {
-      const { original_psbt, proposal_psbt } = req.body;
-      const result = payjoinService.analyzeProposal({ original_psbt, proposal_psbt });
+      const result = await payjoinService.analyzeProposalWithSignatures(req.body);
       res.json(result);
     } catch (e) {
       res.status(400).json({ error: e instanceof Error ? e.message : 'Failed to analyze payjoin proposal' });
