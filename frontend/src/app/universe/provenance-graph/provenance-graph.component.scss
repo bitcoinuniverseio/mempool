@@ -168,10 +168,10 @@
 .facts {
   display: grid;
   gap: var(--u-space-4);
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
 
   @media (min-width: 980px) {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 }
 
@@ -179,6 +179,7 @@
   border-collapse: collapse;
   font-size: var(--u-text-sm);
   width: 100%;
+  table-layout: fixed;
 
   th,
   td {
@@ -186,6 +187,7 @@
     padding: var(--u-space-2);
     text-align: left;
     vertical-align: top;
+    overflow-wrap: anywhere;
   }
 
   th {
@@ -202,6 +204,7 @@
     font-family: var(--u-font-data);
     font-size: var(--u-text-xs);
     overflow-wrap: anywhere;
+    white-space: normal;
   }
 }
 

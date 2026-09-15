@@ -39,6 +39,7 @@ describe('actual Esplora provenance decoding', () => {
     expect(readGraphPackage({ ...pack, freshness: { withinBudget: false } }, id)).toBeNull();
   });
   it('bounds replacement history and refuses unrelated or malformed IDs', () => {
+    expect(readGraphReplacements({ replacements: null, replaces: null }, id)).toEqual({ rbf: null, replaces: [], available: true });
     const tree: any = { tx: { txid: id }, replaces: [{ tx: { txid: parent }, replaces: [] }] };
     expect(readGraphReplacements({ replacements: tree, replaces: [] }, id).available).toBe(true);
     expect(readGraphReplacements({ replacements: tree, replaces: [] }, spender).available).toBe(false);

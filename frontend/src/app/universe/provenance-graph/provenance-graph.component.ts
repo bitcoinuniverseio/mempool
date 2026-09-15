@@ -93,10 +93,9 @@ export class ProvenanceGraphComponent {
         packageTxids: packageIds ?? [], packageAvailable: packageIds !== null,
       };
       const graph = buildProvenanceGraph(transaction, readGraphOutspends(outspends, transaction.outputs.length), {
-        rbfHistory: extras.rbf, replaces: extras.replaces, packageTxids: extras.packageTxids,
+        rbfHistory: extras.rbf, rbfAvailable: extras.rbfAvailable, replaces: extras.replaces, packageTxids: extras.packageTxids,
       });
       const unavailable: string[] = [];
-      if (!extras.rbfAvailable) { unavailable.push('Replacement history was unavailable or invalid.'); }
       if (!extras.packageAvailable && transaction.confirmed === false) {
         unavailable.push('Current package and cluster data was unavailable.');
       }

@@ -166,6 +166,9 @@ import { IntelligenceApiService } from './intelligence-api.service';
     .intelligence-page { padding-top: 2rem; padding-bottom: 4rem; }
     .page-header { margin-bottom: 2rem; }
     .title-row { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+    .metrics { column-gap: 1rem; }
+    .table { table-layout: fixed; width: 100%; }
+    .table th, .table td, code { overflow-wrap: anywhere; white-space: normal; }
     .badge {
       display: inline-block; padding: 0.35em 0.65em; font-size: 0.75em;
       font-weight: 700; line-height: 1; text-align: center; white-space: nowrap;
