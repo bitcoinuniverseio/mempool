@@ -1,56 +1,24 @@
-import lightningResilienceService from './lightning-resilience.service';
-
-describe('LightningResilienceService', () => {
-  it('should return overview with healthy and congested channels', () => {
-    const overview = lightningResilienceService.getOverview();
-    expect(overview.total_channels_monitored).toBeGreaterThan(0);
-    expect(overview.healthy_channels_count).toBeGreaterThan(0);
-    expect(overview.onion_queue).toBeDefined();
-    expect(overview.recent_incidents.length).toBeGreaterThan(0);
-  });
-
-  it('should list and retrieve channels by short_channel_id', () => {
-    const channels = lightningResilienceService.listChannels();
-    expect(channels.length).toBeGreaterThanOrEqual(2);
-
-    const first = channels[0];
-    const retrieved = lightningResilienceService.getChannel(first.short_channel_id);
-    expect(retrieved).toBeDefined();
-    expect(retrieved?.capacity_sats).toBe(first.capacity_sats);
-  });
-
-  it('should retrieve node resilience profile and capabilities', () => {
-    const profile = lightningResilienceService.getNodeResilience('0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798');
-    expect(profile).toBeDefined();
-    expect(profile.resilience_status).toBe('healthy');
-    expect(profile.supported_mitigations.length).toBeGreaterThan(0);
-  });
-
-  it('should report incident alerts without peer accusation', () => {
-    const incidents = lightningResilienceService.listIncidents();
-    expect(incidents.length).toBeGreaterThanOrEqual(2);
-    for (const inc of incidents) {
-      expect(inc.operator_recommendation).toBeDefined();
-      expect(inc.description).not.toContain('attacker');
-    }
-  });
-
-  it('should simulate channel jamming and calculate attacker cost vs honest failure', () => {
-    const simResult = lightningResilienceService.runSimulator({
-      channel_capacity_sats: 10000000,
-      htlc_slot_count: 483,
-      pending_value_limit_sats: 5000000,
-      attacker_htlc_count: 200,
-      attacker_hold_seconds: 7200,
-      honest_traffic_rate_per_min: 15,
-      routing_base_fee_msat: 1000,
-      routing_fee_proportional_millionths: 50,
-      hold_time_fee_per_second_msat: 2,
-      circuit_breaker_enabled: true,
-    });
-    expect(simResult.locked_liquidity_sats).toBeGreaterThan(0);
-    expect(simResult.cost_to_attacker_sats).toBeGreaterThan(0);
-    expect(simResult.mitigation_effectiveness_pct).toBeGreaterThan(50);
-    expect(simResult.observations.length).toBeGreaterThan(0);
-  });
+import express from 'express';
+import { AddressInfo } from 'net';
+import { LightningResilienceService } from './lightning-resilience.service';
+import { LightningResilienceRoutes } from './lightning-resilience.routes';
+import { LightningEvidenceError } from './lightning-evidence';
+import { simulateHtlcs } from './lightning-simulation';
+const key='0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798';
+const other='03'+key.slice(2);
+const now=Date.parse('2026-09-15T12:00:00Z');
+const sample=()=>({network:'signet',observed_at_utc:new Date(now).toISOString(),identity_pubkey:key,channels:[{chan_id:String((100n<<40n)|(2n<<16n)|1n),channel_point:'ab'.repeat(32)+':1',remote_pubkey:other,capacity:'100000',local_balance:'40000',remote_balance:'50000',local_constraints:{max_accepted_htlcs:10,max_pending_amt_msat:'10000000'},remote_constraints:{max_accepted_htlcs:20,max_pending_amt_msat:'20000000'},pending_htlcs:[{incoming:true,amount:'1000',hash_lock:'must-not-be-returned'},{incoming:false,amount:'2000'}]}]});
+const params=()=>({channel_capacity_sats:100000,htlc_slot_count:10,pending_value_limit_sats:10000,attacker_htlc_count:20,attacker_hold_seconds:3600,honest_traffic_rate_per_min:15,routing_base_fee_msat:1000,routing_fee_proportional_millionths:50,circuit_breaker_enabled:false,attacker_htlc_value_sats:2000});
+describe('owned Lightning resilience evidence',()=>{
+ it('reports unknown rather than healthy when unavailable and never fabricates incidents',async()=>{const s=new LightningResilienceService({reader:async()=>{throw new LightningEvidenceError('lightning-disabled','Disabled');}});const o=await s.getOverview();expect(o.total_channels_monitored).toBeNull();expect(o.healthy_channels_count).toBeNull();expect(o.active_incidents_count).toBeNull();expect(o.onion_queue.status).toBe('unknown');expect(o.source.error).toBe('lightning-disabled');expect(s.listIncidents()).toEqual([]);expect(s.listMitigations().every(c=>c.status==='unknown'&&c.lnd_supported===null)).toBe(true);});
+ it('derives directional occupancy from actual snapshot without payment hashes or health inference',async()=>{const s=new LightningResilienceService({network:'signet',now:()=>now,reader:async()=>sample()});const c=await s.getChannel('100x2x1');expect(c.incoming.slot_utilization_pct).toBe(10);expect(c.outgoing.slot_utilization_pct).toBe(5);expect(c.pending_htlc_value_sats).toBe(3000);expect(c.htlc_slot_capacity).toBe(30);expect(c.resilience_band).toBe('unknown');expect(c.held_duration_p95_seconds).toBeNull();expect(JSON.stringify(c)).not.toContain('must-not-be-returned');expect((await s.getNodeResilience(other)).resilience_status).toBe('unknown');c.incoming.slots_in_use=999;expect((await s.getChannel('100x2x1')).incoming.slots_in_use).toBe(1);});
+ it('validates every record and rejects wrong network, old source and duplicate channels',async()=>{for(const mutate of [(x:any)=>x.network='mainnet',(x:any)=>x.observed_at_utc=new Date(now-30001).toISOString(),(x:any)=>x.channels.push({...x.channels[0]}),(x:any)=>x.channels[0].pending_htlcs[1].amount='NaN',(x:any)=>x.channels[0].local_balance='100001']){const x=sample();mutate(x);const s=new LightningResilienceService({network:'signet',now:()=>now,reader:async()=>x});await expect(s.listChannels()).rejects.toThrow();}});
+ it('coalesces reads, refreshes stale evidence and has no stale healthy fallback',async()=>{let time=now;let fail=false;const reader=jest.fn(async()=>{if(fail)throw Error('secret transport details');return sample();});const s=new LightningResilienceService({network:'signet',now:()=>time,reader});await Promise.all([s.listChannels(),s.getOverview(),s.listChannels()]);expect(reader).toHaveBeenCalledTimes(1);time+=30001;fail=true;expect((await s.getOverview()).source.status).toBe('unavailable');expect(reader).toHaveBeenCalledTimes(2);});
+ it('returns real HTTP evidence and typed invalid, unknown and unavailable errors',async()=>{const s=new LightningResilienceService({network:'signet',now:()=>now,reader:async()=>sample()});const app=express();app.use(express.json());new LightningResilienceRoutes(s).initRoutes(app);const server=await new Promise<ReturnType<typeof app.listen>>(resolve=>{const server=app.listen(0,'127.0.0.1',()=>resolve(server));});const base=`http://127.0.0.1:${(server.address() as AddressInfo).port}/api/v1/intelligence/lightning/resilience/`;try{const c=await fetch(base+'channels/100x2x1');expect(c.status).toBe(200);expect((await c.json()).pending_htlc_value_sats).toBe(3000);expect((await fetch(base+'channels/bad')).status).toBe(400);expect((await fetch(base+'channels/100x2x2')).status).toBe(404);expect((await fetch(base+'simulate',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({...params(),attacker_htlc_count:-1})})).status).toBe(400);}finally{server.closeAllConnections();await new Promise<void>(resolve=>server.close(()=>resolve()));}});
+});
+describe('bounded deterministic HTLC model',()=>{
+ it('limits accepted offers by explicit value and negotiated slots',()=>{const r=simulateHtlcs(params());expect(r.accepted_htlc_count).toBe(5);expect(r.locked_liquidity_sats).toBe(10000);expect(r.remaining_slots).toBe(5);expect(r.slot_exhaustion_seconds).toBeNull();expect(r.honest_failure_probability_pct).toBeNull();expect(r.cost_to_attacker_sats).toBeNull();expect(r.routing_revenue_sats).toBeNull();expect(r.calibrated).toBe(false);});
+ it('preserves zeros, no hold and missing per-HTLC value without implicit defaults',()=>{expect(simulateHtlcs({...params(),attacker_htlc_count:0}).locked_liquidity_sats).toBe(0);expect(simulateHtlcs({...params(),attacker_hold_seconds:0}).accepted_htlc_count).toBe(0);expect(simulateHtlcs({...params(),attacker_htlc_value_sats:undefined}).locked_liquidity_sats).toBeNull();expect(simulateHtlcs({...params(),htlc_slot_count:0}).accepted_htlc_count).toBe(0);});
+ it('calculates explicit immediate quotas and hypothetical unconditional fees exactly',()=>{const r=simulateHtlcs({...params(),circuit_breaker_enabled:true,circuit_breaker_slot_quota:2,upfront_fee_msat:100,hold_time_fee_per_second_msat:1});expect(r.accepted_htlc_count).toBe(2);expect(r.hypothetical_unconditional_fee_sats).toBe(7.4);expect(r.mitigation_effectiveness_pct).toBeNull();expect(simulateHtlcs({...params(),circuit_breaker_enabled:true}).accepted_htlc_count).toBe(5);});
+ it('rejects coercion, nonfinite, fractional, negative, excessive and inconsistent inputs',()=>{for(const patch of [{htlc_slot_count:484},{attacker_htlc_count:-1},{attacker_hold_seconds:NaN},{attacker_hold_seconds:'3600'},{attacker_htlc_count:1.5},{pending_value_limit_sats:100001},{circuit_breaker_slot_quota:2},{attacker_htlc_value_sats:0}])expect(()=>simulateHtlcs({...params(),...patch} as any)).toThrow();});
 });

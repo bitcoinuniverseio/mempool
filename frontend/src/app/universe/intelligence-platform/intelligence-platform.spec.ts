@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { of, throwError } from 'rxjs';
+import { of, throwError, Subject } from 'rxjs';
 import { IntelligenceApiService } from './intelligence-api.service';
 import { PolicyLabComponent } from './policy-lab.component';
 import { ScriptWorkbenchComponent } from './script-workbench.component';
@@ -8,6 +8,7 @@ import { RelayObservatoryComponent } from './relay-observatory.component';
 import { TimeMachineComponent } from './time-machine.component';
 import { MiningTemplatesComponent } from './mining-templates.component';
 import { UtxoIntelligenceComponent } from './utxo-intelligence.component';
+import { UtxoEvidenceService } from '../utxo-set/utxo-evidence.service';
 import { TransactionGraphComponent } from './transaction-graph.component';
 import { IncidentCenterComponent } from './incident-center.component';
 import { KnowledgeRegistryComponent } from './knowledge-registry.component';
@@ -24,7 +25,7 @@ describe('Unified Intelligence Platform Frontend Services', () => {
     get: (url: string) => {
       recordedCalls.push({ method: 'GET', url });
       if (url.includes('/relay/overview')) {
-        return of({ fleet_size: 4, online_sensor_regions_count: 4 });
+        return of({ fleet_size: 1, online_sensor_regions_count: null, latency_percentiles: null, recent_propagation_sample: [] });
       }
       if (url.includes('/history/coverage')) {
         return of({ total_checkpoints: 5 });
@@ -119,7 +120,7 @@ describe('Unified Intelligence Platform Frontend Services', () => {
 
   it('fetches relay overview via GET /api/v1/intelligence/relay/overview', () => {
     service.getRelayOverview$().subscribe((res) => {
-      expect(res.fleet_size).toBe(4);
+      expect(res.fleet_size).toBe(1);
     });
 
     const call = recordedCalls[recordedCalls.length - 1];
@@ -200,11 +201,12 @@ describe('Unified Intelligence Platform Frontend Services', () => {
     });
 
     it('ScriptWorkbenchComponent: does not analyze script on ngOnInit', () => {
-      const cmp = new ScriptWorkbenchComponent(service, mockCdr);
+      const cmp = new ScriptWorkbenchComponent(service, mockCdr, { ...mockStateService, networkChanged$: new Subject<string>() }, mockHttp);
       cmp.ngOnInit();
       expect(cmp.scriptResult).toBeNull();
       expect(cmp.loading).toBe(false);
       expect(cmp.scriptInput).toBe('');
+      cmp.ngOnDestroy();
     });
 
     it('VerifyProofComponent: does not generate SPV proof on ngOnInit', () => {
@@ -249,10 +251,17 @@ describe('Unified Intelligence Platform Frontend Services', () => {
     });
 
     it('RelayObservatoryComponent: populates overview without hardcoded sensor counts', () => {
-      const cmp = new RelayObservatoryComponent(service, mockCdr);
+      const start = recordedCalls.length;
+      const state: any = { ...mockStateService, isBrowser: false, network: 'signet', networkChanged$: new Subject<string>() };
+      const cmp = new RelayObservatoryComponent(mockHttp, state, mockCdr);
       cmp.ngOnInit();
       expect(cmp.overview).toBeDefined();
-      expect(cmp.overview.online_sensor_regions_count).toBe(4);
+      expect(cmp.overview.fleet_size).toBe(1);
+      expect(cmp.overview.online_sensor_regions_count).toBeNull();
+      expect(cmp.overview.latency_percentiles).toBeNull();
+      expect(recordedCalls.slice(start).every(call => call.url.includes('/signet/api/v1/intelligence/relay/'))).toBe(true);
+      expect(recordedCalls.slice(start).some(call => call.url.includes('/transactions/'))).toBe(false);
+      cmp.ngOnDestroy();
       expect(cmp.activeLifecycle).toBeNull();
     });
 
@@ -264,10 +273,11 @@ describe('Unified Intelligence Platform Frontend Services', () => {
     });
 
     it('UtxoIntelligenceComponent: binds block height from overview', () => {
-      const cmp = new UtxoIntelligenceComponent(service, mockCdr);
+      const cmp = new UtxoIntelligenceComponent(new UtxoEvidenceService(mockHttp, { ...mockStateService, isBrowser:false, networkChanged$:new Subject<string>() }), mockCdr);
       cmp.ngOnInit();
       expect(cmp.overview).toBeDefined();
       expect(cmp.overview.block_height).toBe(887412);
+      cmp.ngOnDestroy();
     });
 
     it('IncidentCenterComponent: tracks active divergences dynamically', () => {

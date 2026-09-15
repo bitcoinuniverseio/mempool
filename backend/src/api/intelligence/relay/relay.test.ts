@@ -1,111 +1,28 @@
-import { relayCollectorService } from './relay-collector.service';
-
-describe('Product 2: Distributed Relay and Policy Observatory', () => {
-  it('retrieves global sensor fleet with deployment regions and clock uncertainties', () => {
-    const sensors = relayCollectorService.getSensors();
-    expect(sensors.length).toBeGreaterThanOrEqual(4);
-
-    for (const sensor of sensors) {
-      expect(sensor.id).toBeDefined();
-      expect(sensor.region).toBeDefined();
-      expect(sensor.clock_uncertainty_ms).toBeGreaterThanOrEqual(0);
-      expect(typeof sensor.clock_offset_ms).toBe('number');
-      expect(sensor.status).toBe('online');
-    }
-  });
-
-  it('correlates transaction propagation across multiple staging sensors with percentiles', () => {
-    const txid = '3b8908fef9b8098c772274b7c1265882e70c8cf865d1d6cb58a74e54e44f479d';
-    const baseTime = Date.now() - 10000;
-
-    // Sensor 1: US-East (first seen, 0ms delta)
-    relayCollectorService.recordSensorObservation(
-      txid,
-      'sensor-us-east-01',
-      new Date(baseTime).toISOString(),
-      true,
-      'bip324'
-    );
-
-    // Sensor 2: EU-Central (80ms delta)
-    relayCollectorService.recordSensorObservation(
-      txid,
-      'sensor-eu-central-01',
-      new Date(baseTime + 80).toISOString(),
-      true,
-      'bip324'
-    );
-
-    // Sensor 3: SA-East (150ms delta)
-    relayCollectorService.recordSensorObservation(
-      txid,
-      'sensor-sa-east-01',
-      new Date(baseTime + 150).toISOString(),
-      true,
-      'bip324'
-    );
-
-    // Sensor 4: AP-Southeast (220ms delta)
-    const lifecycle = relayCollectorService.recordSensorObservation(
-      txid,
-      'sensor-ap-se-01',
-      new Date(baseTime + 220).toISOString(),
-      true,
-      'legacy'
-    );
-
-    expect(lifecycle.observations.length).toBe(4);
-    expect(lifecycle.latency_percentiles.p50_ms).toBeGreaterThan(0);
-    expect(lifecycle.latency_percentiles.p100_ms).toBe(220);
-    expect(lifecycle.spread_delta_ms).toBe(220);
-    expect(lifecycle.bip324_ratio).toBe(0.75); // 3 of 4 sensors were BIP324
-  });
-
-  it('deduplicates redelivered observations from the same sensor', () => {
-    const txid = '3b8908fef9b8098c772274b7c1265882e70c8cf865d1d6cb58a74e54e44f479d';
-    const initialCount = relayCollectorService.getPropagationForTx(txid).observations.length;
-
-    // Re-record for sensor-us-east-01
-    relayCollectorService.recordSensorObservation(
-      txid,
-      'sensor-us-east-01',
-      new Date().toISOString(),
-      true,
-      'bip324'
-    );
-
-    const afterCount = relayCollectorService.getPropagationForTx(txid).observations.length;
-    expect(afterCount).toBe(initialCount);
-  });
-
-  it('strictly preserves peer privacy: zero peer IP addresses or peer identifiers exposed', () => {
-    const overview = relayCollectorService.getOverview();
-    const serialized = JSON.stringify(overview);
-
-    // Check for IP regexes
-    const ipv4Regex = /\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/;
-    expect(ipv4Regex.test(serialized)).toBe(false);
-
-    expect(serialized).not.toContain('peer_ip');
-    expect(serialized).not.toContain('remote_addr');
-    expect(serialized).not.toContain('peer_id');
-  });
-
-  it('measures BIP324 transport adoption and states Erlay capability accurately', () => {
-    const metrics = relayCollectorService.getTransportMetrics();
-    expect(metrics.total_peers).toBeGreaterThan(0);
-    expect(metrics.bip324_peers).toBeGreaterThan(0);
-    expect(metrics.bip324_percent).toBeGreaterThan(0);
-    expect(metrics.bip324_percent).toBeLessThanOrEqual(100);
-    expect(metrics.erlay_status).toBe('unsupported'); // Erlay unsupported in Core 27
-  });
-
-  it('exposes active policy differences across sensor nodes', () => {
-    const diffs = relayCollectorService.getPolicyDifferences();
-    expect(diffs.length).toBeGreaterThanOrEqual(1);
-    const fullRbfDiff = diffs.find((d) => d.policy === 'mempoolfullrbf');
-    expect(fullRbfDiff).toBeDefined();
-    expect(fullRbfDiff?.nodes_aligned.length).toBeGreaterThan(0);
-    expect(fullRbfDiff?.nodes_divergent).toContain('sensor-ap-se-01');
-  });
+import { EventEmitter } from 'events';
+import express from 'express';
+import { AddressInfo } from 'net';
+import config from '../../../config';
+import { RelayCollectorService,RELAY_LIMITS } from './relay-collector.service';
+import { RelayRoutes } from './relay.routes';
+import { streamRelay } from './relay-stream';
+const TX='ab'.repeat(32);
+function setup(){let now=100000;const reader=jest.fn(async()=>({network:config.MEMPOOL.NETWORK,observed_at_utc:new Date(now).toISOString(),age_ms:0,freshness_limit_ms:30000,peers:[{addr:'192.0.2.1:8333',id:4,transport_protocol_type:'v2'},{addr:'192.0.2.2:8333',id:5,transport_protocol_type:'v1'},{addr:'192.0.2.3:8333',id:6}],info:{subversion:'/Satoshi:30.0.0/',protocolversion:70016,relayfee:0.00001,networks:[]}} as any));const policy=jest.fn(async()=>({fullrbf:true}));const service=new RelayCollectorService({now:()=>now,snapshotReader:reader,policyReader:policy,maxTransactions:2});return{service,reader,policy,setNow:(value:number)=>now=value};}
+describe('relay owned observations',()=>{
+ it('reports one owned sensor and exact transport counts without invented clock, region or fleet metrics',async()=>{const {service}=setup();const overview=await service.getOverview();expect(overview).toMatchObject({fleet_size:1,median_network_latency_ms:null,active_policy_divergences_count:null,recent_propagation_sample:[]});expect(overview.sensors[0]).toMatchObject({region:null,clock_offset_ms:null,clock_uncertainty_ms:null,full_rbf:true,min_relay_feerate:1});expect(overview.transport).toMatchObject({bip324_peers:1,legacy_peers:1,unknown_transport_peers:1,bip324_percent:50,erlay_status:'not_observed'});expect(JSON.stringify(overview)).not.toMatch(/192\.0\.2|"addr"|"peer_id"/);expect((await service.getPolicyDifferences()).comparison_available).toBe(false);});
+ it('records only actual deltas and preserves uncertainty across failures',()=>{const {service,setNow}=setup();expect(()=>service.getPropagationForTx(TX)).toThrow(/no retained/);service.observeMempoolPoll([],[],true,100000);service.observeMempoolPoll([{txid:TX}],[],true,101000);setNow(101000);const lifecycle=service.getPropagationForTx(TX);expect(lifecycle.events[0].payload.previous_complete_poll_utc).toBe(new Date(100000).toISOString());expect(lifecycle).toMatchObject({sensor_count:1,latency_percentiles:null,bip324_ratio:null});service.markPollFailure();service.observeMempoolPoll([],[{txid:TX}],true,105000);expect(service.getPropagationForTx(TX).events[1].payload).toMatchObject({presence:'left_mempool',previous_complete_poll_utc:null});service.observeMempoolPoll([],[{txid:TX}],true,106000);expect(service.getPropagationForTx(TX).events).toHaveLength(2);});
+ it('bounds retained transactions/events and expires old observations',()=>{const {service,setNow}=setup();for(let i=0;i<20;i++)service.observeMempoolPoll(i%2?[{txid:TX}]:[],i%2?[]:[{txid:TX}],true,100000+i);expect(service.getPropagationForTx(TX).events).toHaveLength(16);expect(service.getPropagationForTx(TX).retention.events_pruned).toBe(4);service.observeMempoolPoll([{txid:'bc'.repeat(32)},{txid:'cd'.repeat(32)}],[],true,100100);expect(()=>service.getPropagationForTx(TX)).toThrow(/no retained/);setNow(100101+RELAY_LIMITS.retentionMs);expect(()=>service.getPropagationForTx('bc'.repeat(32))).toThrow(/no retained/);});
+ it('refuses stale/wrong-network/failed sources and reports stale polls independently',async()=>{const {service,reader,setNow}=setup();service.observeMempoolPoll([],[],true,100000);setNow(140000);expect((await service.getOverview()).collection.status).toBe('stale');reader.mockResolvedValueOnce({network:config.MEMPOOL.NETWORK,age_ms:30001} as any);await expect(service.getOverview()).rejects.toMatchObject({status:503});reader.mockResolvedValueOnce({network:'another',age_ms:0} as any);await expect(service.getOverview()).rejects.toMatchObject({status:503});reader.mockRejectedValueOnce(new Error('node unavailable'));await expect(service.getOverview()).rejects.toMatchObject({status:503});});
+ it('reports dropped oversized poll deltas and clock regression',async()=>{const {service}=setup();service.observeMempoolPoll(Array(RELAY_LIMITS.eventsPerPoll+3).fill({txid:TX}),[],true,100000);expect((await service.getOverview()).collection).toMatchObject({dropped_events:3,status:'interrupted'});service.observeMempoolPoll([],[{txid:TX}],true,99999);expect((await service.getOverview()).collection.clock_regressions).toBe(1);expect(service.getPropagationForTx(TX).events[1].payload.previous_complete_poll_utc).toBeNull();});
+ it('isolates subscriber mutation from retained evidence',()=>{const {service}=setup();const unsubscribe=service.subscribe(event=>{event.payload.txid='corrupted';});service.observeMempoolPoll([{txid:TX}],[],true);expect(service.getPropagationForTx(TX).events[0].payload.txid).toBe(TX);unsubscribe();});
+});
+describe('relay stream ownership',()=>{
+ function connection(){const req=new EventEmitter() as any;const res=new EventEmitter() as any;Object.assign(res,{writableLength:0,setHeader:jest.fn(),flushHeaders:jest.fn(),write:jest.fn(()=>true),destroy:jest.fn(()=>res.emit('close'))});return{req,res};}
+ it('filters networks and releases subscribers immediately on backpressure',()=>{const {service}=setup();const {req,res}=connection();streamRelay(req,res,service,'different-network');service.observeMempoolPoll([{txid:TX}],[],true);expect(res.write).toHaveBeenCalledTimes(1);req.emit('close');const second=connection();streamRelay(second.req,second.res,service,config.MEMPOOL.NETWORK);second.res.write.mockReturnValue(false);service.observeMempoolPoll([],[{txid:TX}],true);expect(second.res.destroy).toHaveBeenCalledTimes(1);const writes=second.res.write.mock.calls.length;service.observeMempoolPoll([{txid:TX}],[],true);expect(second.res.write).toHaveBeenCalledTimes(writes);});
+ it('enforces stream capacity and releases closed connections',()=>{const {service}=setup();const unsubscribers=Array.from({length:RELAY_LIMITS.subscribers},()=>service.subscribe(()=>undefined));expect(()=>service.subscribe(()=>undefined)).toThrow(/capacity/);unsubscribers.forEach(fn=>fn());expect(()=>service.subscribe(()=>undefined)()).not.toThrow();});
+});
+describe('relay actual HTTP',()=>{
+ it('returns observed data, 404 unknown, 400 malformed and 503 failed source',async()=>{const {service,reader}=setup();const app=express();new RelayRoutes(service).initRoutes(app);const server=app.listen(0,'127.0.0.1');await new Promise<void>(resolve=>server.once('listening',resolve));const base=`http://127.0.0.1:${(server.address() as AddressInfo).port}/api/v1/intelligence/relay`;
+ try{expect((await fetch(base+'/transactions/'+TX)).status).toBe(404);expect((await fetch(base+'/transactions/not-a-txid')).status).toBe(400);service.observeMempoolPoll([{txid:TX}],[],true);expect(await(await fetch(base+'/transactions/'+TX)).json()).toMatchObject({txid:TX,sensor_count:1,latency_percentiles:null});expect(await(await fetch(base+'/sensors')).json()).toMatchObject({total:1});reader.mockRejectedValueOnce(new Error('offline'));expect((await fetch(base+'/overview')).status).toBe(503);
+ const controller=new AbortController();const response=await fetch(base+'/stream',{signal:controller.signal});const stream=response.body!.getReader();const first=await stream.read();expect(Buffer.from(first.value!).toString()).toContain('relay.connected');service.observeMempoolPoll([],[{txid:TX}],true);const next=await stream.read();expect(Buffer.from(next.value!).toString()).toContain('left_mempool');controller.abort();await stream.cancel().catch(()=>undefined);
+ }finally{server.closeAllConnections();await new Promise<void>(resolve=>server.close(()=>resolve()));}},10000);
 });

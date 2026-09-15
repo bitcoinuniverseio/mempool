@@ -1,326 +1,38 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, Inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { Subscription } from 'rxjs';
-import { IntelligenceApiService } from './intelligence-api.service';
-
-@Component({
-  selector: 'app-relay-observatory',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <div class="intelligence-page container-xl">
-      <header class="page-header">
-        <div class="title-row">
-          <h1>Distributed Relay and Policy Observatory</h1>
-          <span class="badge badge-success" *ngIf="overview">
-            {{ overview.online_sensor_regions_count || 0 }} Sensor Regions Online
-          </span>
-          <span class="badge badge-secondary" *ngIf="!overview && loadingOverview">
-            Querying Sensor Fleet...
-          </span>
-        </div>
-        <p class="subtitle">
-          Real-time measurement of transaction propagation latencies and policy divergences across Universe-operated Bitcoin nodes with peer privacy preservation.
-        </p>
-      </header>
-
-      <div *ngIf="overviewError" class="alert alert-danger mb-4">
-        {{ overviewError }}
-      </div>
-
-      <!-- Fleet Overview Cards -->
-      <section *ngIf="overview" class="row g-3 mb-4">
-        <div class="col-md-3 col-6">
-          <div class="card p-3 bg-dark-subtle h-100">
-            <div class="text-muted small">Median Network Latency</div>
-            <div class="h3 my-1 text-primary">{{ overview.median_network_latency_ms }} ms</div>
-            <div class="small text-muted">Trans-continental spread</div>
-          </div>
-        </div>
-        <div class="col-md-3 col-6">
-          <div class="card p-3 bg-dark-subtle h-100">
-            <div class="text-muted small">BIP324 v2 Transport</div>
-            <div class="h3 my-1 text-success">{{ overview.bip324_adoption_percent }}%</div>
-            <div class="small text-muted">Encrypted P2P adoption</div>
-          </div>
-        </div>
-        <div class="col-md-3 col-6">
-          <div class="card p-3 bg-dark-subtle h-100">
-            <div class="text-muted small">Erlay Reconciliation</div>
-            <div class="h3 my-1 text-secondary">{{ overview.erlay_reconciliation_status || 'Unsupported' }}</div>
-            <div class="small text-muted">{{ overview.erlay_reconciliation_detail || 'Protocol capability unadvertised' }}</div>
-          </div>
-        </div>
-        <div class="col-md-3 col-6">
-          <div class="card p-3 bg-dark-subtle h-100">
-            <div class="text-muted small">Active Policy Divergences</div>
-            <div class="h3 my-1 text-warning">{{ overview.active_policy_divergences_count }}</div>
-            <div class="small text-muted">Full-RBF vs legacy</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Propagation Inspection -->
-      <section class="card mb-4">
-        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-          <h4 class="mb-0">Transaction Propagation Lifecycle</h4>
-          <div class="d-flex gap-2 flex-wrap align-items-center">
-            <input
-              type="text"
-              class="form-control form-control-sm font-monospace"
-              style="min-width: 200px; max-width: 320px;"
-              [(ngModel)]="searchTxid"
-              placeholder="Search txid propagation..."
-              aria-label="Search txid propagation"
-            />
-            <button
-              type="button"
-              class="btn btn-sm btn-primary"
-              [disabled]="loadingSearch || !searchTxid.trim()"
-              (click)="searchTx()"
-            >
-              {{ loadingSearch ? 'Searching...' : 'Inspect' }}
-            </button>
-            <button
-              type="button"
-              class="btn btn-sm btn-outline-secondary"
-              (click)="loadSampleTx()"
-            >
-              Load Sample
-            </button>
-          </div>
-        </div>
-        <div class="card-body">
-          <div *ngIf="searchError" class="alert alert-danger mb-3">
-            {{ searchError }}
-          </div>
-
-          <div *ngIf="!activeLifecycle && !loadingSearch && !searchError" class="p-3 rounded bg-dark-subtle text-muted small">
-            Enter a transaction ID or load a sample to inspect propagation timings across worldwide sensor regions.
-          </div>
-
-          <div *ngIf="activeLifecycle">
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3 pb-3 border-bottom">
-              <div>
-                <div class="small text-muted">First observed by Universe sensors:</div>
-                <div class="font-monospace text-break">
-                  {{ activeLifecycle.first_observed_utc | date:'medium' }}
-                  <span class="text-muted">(±{{ activeLifecycle.first_observed_uncertainty_ms }}ms clock uncertainty)</span>
-                </div>
-              </div>
-              <div class="d-flex gap-3 flex-wrap">
-                <div>
-                  <span class="text-muted small">Spread Delta:</span>
-                  <strong> {{ activeLifecycle.spread_delta_ms }} ms</strong>
-                </div>
-                <div>
-                  <span class="text-muted small">BIP324 Transport:</span>
-                  <strong> {{ (activeLifecycle.bip324_ratio * 100).toFixed(0) }}%</strong>
-                </div>
-              </div>
-            </div>
-
-            <!-- Latency Percentiles Bar -->
-            <h6 class="text-uppercase small text-muted mb-2">Fleet Propagation Percentiles</h6>
-            <div class="row text-center g-2 mb-4" *ngIf="activeLifecycle.latency_percentiles">
-              <div class="col">
-                <div class="p-2 rounded bg-dark-subtle">
-                  <div class="small text-muted">p25</div>
-                  <div class="fw-bold">{{ activeLifecycle.latency_percentiles.p25_ms }} ms</div>
-                </div>
-              </div>
-              <div class="col">
-                <div class="p-2 rounded bg-dark-subtle">
-                  <div class="small text-muted">p50 (Median)</div>
-                  <div class="fw-bold text-primary">{{ activeLifecycle.latency_percentiles.p50_ms }} ms</div>
-                </div>
-              </div>
-              <div class="col">
-                <div class="p-2 rounded bg-dark-subtle">
-                  <div class="small text-muted">p75</div>
-                  <div class="fw-bold">{{ activeLifecycle.latency_percentiles.p75_ms }} ms</div>
-                </div>
-              </div>
-              <div class="col">
-                <div class="p-2 rounded bg-dark-subtle">
-                  <div class="small text-muted">p90</div>
-                  <div class="fw-bold text-warning">{{ activeLifecycle.latency_percentiles.p90_ms }} ms</div>
-                </div>
-              </div>
-              <div class="col">
-                <div class="p-2 rounded bg-dark-subtle">
-                  <div class="small text-muted">p100 (Max)</div>
-                  <div class="fw-bold text-danger">{{ activeLifecycle.latency_percentiles.p100_ms }} ms</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Sensor Observations Timeline -->
-            <div class="table-responsive" tabindex="0">
-              <table class="table table-hover mb-0">
-                <thead>
-                  <tr>
-                    <th>Sensor Deployment Region</th>
-                    <th>Observed Timestamp</th>
-                    <th>Relative Delta</th>
-                    <th>Transport</th>
-                    <th>Policy Verdict</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let obs of activeLifecycle.observations">
-                    <td>
-                      <strong>{{ obs.node_name }}</strong>
-                      <div class="small text-muted">{{ obs.region }}</div>
-                    </td>
-                    <td class="font-monospace small">{{ obs.arrived_at_utc | date:'mediumTime' }}</td>
-                    <td>
-                      <span class="badge" [ngClass]="obs.delta_from_first_ms === 0 ? 'badge-success' : 'badge-secondary'">
-                        +{{ obs.delta_from_first_ms }} ms
-                      </span>
-                    </td>
-                    <td>
-                      <span class="badge" [ngClass]="obs.transport_type === 'bip324' ? 'badge-primary' : 'badge-light'">
-                        {{ obs.transport_type | uppercase }}
-                      </span>
-                    </td>
-                    <td>
-                      <span class="badge badge-success">Accepted</span>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Policy Differences Matrix -->
-      <section class="card mb-4" *ngIf="policyDifferences.length > 0">
-        <div class="card-header">
-          <h4 class="mb-0">Sensor Fleet Policy Differences</h4>
-        </div>
-        <div class="card-body">
-          <div *ngFor="let diff of policyDifferences" class="mb-3">
-            <h5>{{ diff.policy }}</h5>
-            <p class="text-muted small">{{ diff.description }}</p>
-            <div class="d-flex gap-4 flex-wrap">
-              <div>
-                <span class="badge badge-success mb-1">Aligned Nodes</span>
-                <ul class="list-unstyled small mb-0 font-monospace">
-                  <li *ngFor="let n of diff.nodes_aligned">{{ n }}</li>
-                </ul>
-              </div>
-              <div *ngIf="diff.nodes_divergent?.length > 0">
-                <span class="badge badge-warning mb-1">Divergent Nodes</span>
-                <ul class="list-unstyled small mb-0 font-monospace">
-                  <li *ngFor="let n of diff.nodes_divergent">{{ n }}</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-    </div>
-  `,
-  styles: [`
-    .intelligence-page { padding-top: 2rem; padding-bottom: 4rem; }
-    .page-header { margin-bottom: 2rem; }
-    .title-row { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
-    .badge {
-      display: inline-block; padding: 0.35em 0.65em; font-size: 0.75em;
-      font-weight: 700; line-height: 1; text-align: center; white-space: nowrap;
-      vertical-align: baseline; border-radius: 0.25rem;
-    }
-    .badge-primary { background-color: var(--primary, #0d6efd); color: #fff; }
-    .badge-success { background-color: var(--success, #198754); color: #fff; }
-    .badge-warning { background-color: var(--warning, #ffc107); color: #000; }
-    .badge-danger { background-color: var(--danger, #dc3545); color: #fff; }
-    .badge-secondary { background-color: var(--secondary, #6c757d); color: #fff; }
-    .badge-light { background-color: #f8f9fa; color: #000; }
-  `],
-})
-export class RelayObservatoryComponent implements OnInit, OnDestroy {
-  overview: any = null;
-  loadingOverview = false;
-  overviewError: string | null = null;
-
-  activeLifecycle: any = null;
-  loadingSearch = false;
-  searchError: string | null = null;
-  searchTxid = '';
-
-  policyDifferences: any[] = [];
-
-  private subs: Subscription[] = [];
-
-  constructor(
-    private api: IntelligenceApiService,
-    private cdr: ChangeDetectorRef
-  ) {}
-
-  ngOnInit(): void {
-    this.loadingOverview = true;
-    this.subs.push(
-      this.api.getRelayOverview$().subscribe({
-        next: (res) => {
-          this.overview = res;
-          this.loadingOverview = false;
-          this.cdr.markForCheck();
-        },
-        error: (err) => {
-          this.overviewError = err?.message || 'Failed to fetch relay overview';
-          this.loadingOverview = false;
-          this.cdr.markForCheck();
-        },
-      })
-    );
-
-    this.subs.push(
-      this.api.getRelayPolicyDifferences$().subscribe({
-        next: (res) => {
-          this.policyDifferences = res?.differences || [];
-          this.cdr.markForCheck();
-        },
-        error: () => {
-          this.cdr.markForCheck();
-        },
-      })
-    );
-  }
-
-  loadSampleTx(): void {
-    this.searchTxid = 'e5765796c3d9efeb8152579df6461a6b18973b404d0938f36c535492d5272a0f';
-    this.searchTx();
-  }
-
-  searchTx(): void {
-    if (!this.searchTxid.trim()) return;
-    this.loadingSearch = true;
-    this.searchError = null;
-    this.cdr.markForCheck();
-
-    this.subs.push(
-      this.api.getRelayTransaction$(this.searchTxid.trim()).subscribe({
-        next: (res) => {
-          this.activeLifecycle = res;
-          this.loadingSearch = false;
-          this.cdr.markForCheck();
-        },
-        error: (err) => {
-          this.searchError = err?.error?.error || err?.message || 'Transaction not observed by sensor fleet';
-          this.loadingSearch = false;
-          this.cdr.markForCheck();
-        },
-      })
-    );
-  }
-
-  ngOnDestroy(): void {
-    for (const sub of this.subs) {
-      sub.unsubscribe();
-    }
-  }
+import { StateService } from '@app/services/state.service';
+@Component({selector:'app-relay-observatory',standalone:true,imports:[CommonModule,FormsModule],changeDetection:ChangeDetectionStrategy.OnPush,
+ template:`<section class="container-xl py-4"><h1>Relay and policy observatory</h1><p>Owned node peer metadata and local mempool detections. Multi-sensor propagation, calibrated clocks and transaction transport attribution require additional observations.</p>
+ <button class="btn btn-outline-secondary mb-3" (click)="refreshAll()">Refresh observations</button>
+ <p *ngIf="overviewError" role="alert" class="text-danger">{{ overviewError }}</p>
+ <section *ngIf="overview" class="card p-3 mb-4"><h2 class="h5">{{ overview.online_sensors }} owned sensor · {{ overview.network }}</h2><p>{{ overview.scope }}</p>
+ <dl><dt>Core observation</dt><dd>{{ overview.source.observed_at_utc | date:'medium' }} · {{ overview.source.age_ms }} ms old</dd><dt>Poll collection</dt><dd>{{ overview.collection.status }} · {{ overview.collection.retained_transactions }} retained transactions · {{ overview.collection.dropped_events }} dropped events</dd><dt>Connected peers using BIP324</dt><dd>{{ overview.transport.bip324_peers }} of {{ overview.transport.known_transport_peers }} with known transport; {{ overview.transport.unknown_transport_peers }} unknown</dd><dt>Propagation latency</dt><dd>Not measured</dd><dt>Erlay capability</dt><dd>Not observed</dd><dt>Clock calibration</dt><dd>Unknown · {{ overview.collection.clock_regressions }} local clock regressions detected</dd></dl>
+ <p *ngFor="let sensor of overview.sensors">{{ sensor.client_version }} · minimum relay fee {{ sensor.min_relay_feerate == null ? 'Unknown' : sensor.min_relay_feerate + ' sat/vB' }} · full RBF {{ sensor.full_rbf == null ? 'Unknown' : sensor.full_rbf ? 'Enabled' : 'Disabled' }}</p>
+ </section>
+ <section class="card p-3 mb-4"><h2 class="h5">Transaction detection history</h2><label for="relay-txid">Transaction ID</label><input id="relay-txid" class="form-control font-monospace mb-2" [ngModel]="searchTxid" (ngModelChange)="editTxid($event)"><div><button class="btn btn-primary me-2" [disabled]="loadingSearch || !searchTxid.trim()" (click)="searchTx()">Inspect</button><button class="btn btn-outline-secondary" [disabled]="!overview?.recent_propagation_sample?.length" (click)="loadSampleTx()">Use recent observed transaction</button></div>
+ <p *ngIf="searchError" role="alert" class="text-danger mt-2">{{ searchError }}</p>
+ <article *ngIf="activeLifecycle" class="mt-3"><p>{{ activeLifecycle.scope }}</p><p>First local detection: {{ activeLifecycle.first_observed_utc | date:'medium' }}. {{ activeLifecycle.retention.events_pruned }} older lifecycle events pruned.</p><p>Arrival time, propagation spread, policy rejection cause and per-transaction transport: not measured.</p><div class="table-responsive"><table class="table"><thead><tr><th>Sequence</th><th>Detected locally</th><th>Observation</th><th>Previous complete poll</th><th>Poll complete</th></tr></thead><tbody><tr *ngFor="let event of activeLifecycle.events"><td>{{ event.source_sequence }}</td><td>{{ event.observed_at_utc | date:'medium' }}</td><td>{{ event.payload.presence === 'present' ? 'Present in local mempool' : 'Left local mempool; cause unknown' }}</td><td>{{ event.payload.previous_complete_poll_utc ? (event.payload.previous_complete_poll_utc | date:'medium') : 'Unknown / observation gap' }}</td><td>{{ event.payload.complete_poll ? 'Yes' : 'No' }}</td></tr></tbody></table></div></article></section>
+ <section class="card p-3 mb-4"><h2 class="h5">Policy comparison</h2><p *ngIf="policyError" class="text-danger">{{ policyError }}</p><p *ngIf="policy">{{ policy.scope }}</p><p>Multiple independently observed sensors and policy probes are required for a divergence verdict.</p></section>
+ <section class="card p-3"><h2 class="h5">Live local detections</h2><p>{{ streamStatus }}</p><p>Live events only. Disconnections do not replay missing observations.</p><ul><li *ngFor="let event of liveEvents"><button class="btn btn-link font-monospace text-break" (click)="inspectEvent(event.payload.txid)">{{ event.payload.txid }}</button> {{ event.payload.presence }} · {{ event.observed_at_utc | date:'mediumTime' }}</li></ul></section></section>`})
+export class RelayObservatoryComponent implements OnInit,OnDestroy{
+ overview:any=null;overviewError:string|null=null;loadingOverview=false;activeLifecycle:any=null;loadingSearch=false;searchError:string|null=null;searchTxid='';policy:any=null;policyError:string|null=null;liveEvents:any[]=[];streamStatus='Not connected';
+ private revision=0;private searchRevision=0;private requests:Subscription[]=[];private searchRequest?:Subscription;private network?:Subscription;private stream:EventSource|null=null;
+ constructor(@Inject(HttpClient)private http:HttpClient,@Inject(StateService)private state:StateService,@Inject(ChangeDetectorRef)private cdr:ChangeDetectorRef){}
+ ngOnInit():void{let emitted=false;this.network=this.state.networkChanged$.subscribe(()=>{emitted=true;this.refreshAll();});if(!emitted)this.refreshAll();}
+ private url(path:string):string{const origin=this.state.isBrowser?'':this.state.env.NGINX_PROTOCOL+'://'+this.state.env.NGINX_HOSTNAME+':'+this.state.env.NGINX_PORT;const network=this.state.network;return origin+(network&&network!==this.state.env.ROOT_NETWORK?'/'+network:'')+'/api/v1/intelligence/relay/'+path;}
+ private clearSearch():void{this.searchRevision++;this.searchRequest?.unsubscribe();this.activeLifecycle=null;this.searchError=null;this.loadingSearch=false;}
+ refreshAll():void{this.revision++;const revision=this.revision;this.requests.forEach(s=>s.unsubscribe());this.requests=[];this.stream?.close();this.stream=null;this.clearSearch();this.overview=null;this.overviewError=null;this.policy=null;this.policyError=null;this.liveEvents=[];this.loadingOverview=true;
+ this.requests.push(this.http.get<any>(this.url('overview')).subscribe({next:value=>{if(revision!==this.revision)return;this.overview=value;this.loadingOverview=false;this.cdr.markForCheck();},error:error=>{if(revision!==this.revision)return;this.overviewError=error?.error?.error||'Owned relay source unavailable.';this.loadingOverview=false;this.cdr.markForCheck();}}));
+ this.requests.push(this.http.get<any>(this.url('policy-differences')).subscribe({next:value=>{if(revision!==this.revision)return;this.policy=value;this.cdr.markForCheck();},error:error=>{if(revision!==this.revision)return;this.policyError=error?.error?.error||'Policy observation unavailable.';this.cdr.markForCheck();}}));
+ this.streamStatus='Live stream unavailable in this rendering context.';
+ if(this.state.isBrowser&&typeof EventSource!=='undefined'){const network=this.state.network||this.state.env.ROOT_NETWORK||'mainnet';this.stream=new EventSource(this.url('stream'));this.streamStatus='Connecting';this.stream.onopen=()=>{if(revision===this.revision){this.streamStatus='Connected';this.cdr.markForCheck();}};this.stream.onerror=()=>{if(revision===this.revision){this.streamStatus='Disconnected; reconnecting. Events during the gap are not replayed.';this.cdr.markForCheck();}};this.stream.addEventListener('intelligence.relay.transaction',(message:MessageEvent)=>{if(revision!==this.revision)return;try{const event=JSON.parse(message.data);if(event.network!==network||!event.payload||!/^[0-9a-f]{64}$/.test(event.payload.txid))return;this.liveEvents=[event,...this.liveEvents].slice(0,20);this.cdr.markForCheck();}catch{/* Ignore malformed stream frames. */}});}
+ this.cdr.markForCheck();}
+ editTxid(value:string):void{this.clearSearch();this.searchTxid=value;this.cdr.markForCheck();}
+ loadSampleTx():void{const txid=this.overview?.recent_propagation_sample?.[0]?.txid;if(txid)this.inspectEvent(txid);}
+ inspectEvent(txid:string):void{this.editTxid(txid);this.searchTx();}
+ searchTx():void{this.clearSearch();const txid=this.searchTxid.trim();if(!/^[0-9a-fA-F]{64}$/.test(txid)){this.searchError='Enter a 64-character hexadecimal transaction ID.';this.cdr.markForCheck();return;}const revision=this.searchRevision;this.loadingSearch=true;this.searchRequest=this.http.get<any>(this.url('transactions/'+txid)).subscribe({next:value=>{if(revision!==this.searchRevision)return;this.activeLifecycle=value;this.loadingSearch=false;this.cdr.markForCheck();},error:error=>{if(revision!==this.searchRevision)return;this.searchError=error?.error?.error||'Transaction not retained by this observer.';this.loadingSearch=false;this.cdr.markForCheck();}});}
+ ngOnDestroy():void{this.revision++;this.clearSearch();this.requests.forEach(s=>s.unsubscribe());this.network?.unsubscribe();this.stream?.close();}
 }

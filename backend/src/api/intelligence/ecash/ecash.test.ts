@@ -14,7 +14,7 @@ describe('ecash providers: configured mints and signed claims', () => {
   it('reads each configured mint through its own NUT-06 and NUT-02 endpoints', async () => {
     ecashService.configuredMints = () => ['https://mint.example.org', 'https://down.example.org'];
     const identity = await import('../identity/developer-identity');
-    jest.spyOn(identity, 'resolvePublicAddress').mockResolvedValue({ address: '203.0.113.5', family: 4 });
+    jest.spyOn(identity, 'resolvePublicAddress').mockResolvedValue({ address: '93.184.216.5', family: 4 });
     ecashService.fetcher = async (url, _address, path) => {
       if (!url.hostname.startsWith('mint')) { return { status: null, json: null, error: 'ETIMEDOUT' }; }
       if (path === '/v1/info') { return { status: 200, json: { name: 'Example Mint', nuts: { '4': {}, '5': {}, '7': {} } }, error: null }; }

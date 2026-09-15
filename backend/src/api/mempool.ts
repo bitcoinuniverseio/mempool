@@ -16,6 +16,11 @@ import blocks from './blocks';
 
 class Mempool {
   private inSync: boolean = false;
+  private observedPollCallback?: (added: MempoolTransactionExtended[], removed: MempoolTransactionExtended[], complete: boolean) => void;
+
+  public setObservedPollCallback(callback: (added: MempoolTransactionExtended[], removed: MempoolTransactionExtended[], complete: boolean) => void): void {
+    this.observedPollCallback = callback;
+  }
   private mempoolCacheDelta: number = -1;
   private mempoolCache: { [txId: string]: MempoolTransactionExtended } = {};
   private mempoolCandidates: { [txid: string ]: boolean } = {};
@@ -436,6 +441,7 @@ class Mempool {
       await rbfCache.updateCache();
     }
 
+    this.observedPollCallback?.(newTransactions, deletedTransactions, this.mempoolProtection !== 1 && transactions.length === newMempoolSize);
     this.lastMempoolUpdateAt = Date.now();
 
     const end = new Date().getTime();
