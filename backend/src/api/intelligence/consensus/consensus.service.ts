@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { checkBareCtv } from './ctv';
 import logger from '../../../logger';
 import { IntelligenceEventBus } from '../events/intelligence-event-bus';
 import {
@@ -34,15 +35,17 @@ export class ConsensusService {
       title: 'CHECKTEMPLATEVERIFY (CTV)',
       author: 'Jeremy Rubin',
       proposal_type: 'covenant',
-      status: 'active_discussion',
+      status: 'draft',
       covenant_type: 'non_recursive',
-      activation_mechanism: 'Speedy Trial / BIP9 Soft Fork',
-      spec_url: 'https://github.com/bitcoin/bips/blob/master/bip-0119.mediawiki',
-      summary: 'Deterministic commitment to spending transaction outputs, enabling simple non-recursive covenants, congestion-control trees, and payment pools.',
+      activation_mechanism: 'Not specified by this BIP',
+      spec_url:
+        'https://github.com/bitcoin/bips/blob/master/bip-0119.mediawiki',
+      summary:
+        'Deterministic commitment to spending transaction outputs, enabling simple non-recursive covenants, congestion-control trees, and payment pools.',
       opcodes: ['OP_CHECKTEMPLATEVERIFY', 'OP_NOP4'],
-      expressiveness_score: 72,
-      security_surface_rating: 'minimal',
-      created_at: '2020-01-20T00:00:00Z',
+      expressiveness_score: null,
+      security_surface_rating: null,
+      created_at: '2020-01-06T00:00:00Z',
     };
 
     const p2: ConsensusProposal = {
@@ -51,32 +54,36 @@ export class ConsensusService {
       title: 'OP_CAT in Tapscript',
       author: 'Ethan Heilman, Armin Sabouri',
       proposal_type: 'covenant',
-      status: 'active_discussion',
+      status: 'complete',
       covenant_type: 'recursive',
-      activation_mechanism: 'BIP9 Soft Fork',
-      spec_url: 'https://github.com/bitcoin/bips/blob/master/bip-0347.mediawiki',
-      summary: 'Restores OP_CAT opcode in Tapscript allowing string concatenation, which in combination with Schnorr signatures enables covenants, Merkle trees, and recursive vaults.',
+      activation_mechanism: 'Not specified by this BIP',
+      spec_url:
+        'https://github.com/bitcoin/bips/blob/master/bip-0347.mediawiki',
+      summary:
+        'Restores OP_CAT opcode in Tapscript allowing string concatenation, which in combination with Schnorr signatures enables covenants, Merkle trees, and recursive vaults.',
       opcodes: ['OP_CAT', 'OP_SUCCESS126'],
-      expressiveness_score: 95,
-      security_surface_rating: 'moderate',
-      created_at: '2023-10-21T00:00:00Z',
+      expressiveness_score: null,
+      security_surface_rating: null,
+      created_at: '2023-12-11T00:00:00Z',
     };
 
     const p3: ConsensusProposal = {
       proposal_id: 'bip-443',
       bip_number: 443,
-      title: 'OP_TXHASH and OP_CHECKTXHASHVERIFY',
-      author: 'Brandon Black',
+      title: 'OP_CHECKCONTRACTVERIFY',
+      author: 'Salvatore Ingala',
       proposal_type: 'introspection',
-      status: 'proposed',
+      status: 'draft',
       covenant_type: 'general',
-      activation_mechanism: 'BIP8 / BIP9 Soft Fork',
-      spec_url: 'https://github.com/bitcoin/bips/blob/master/bip-0443.mediawiki',
-      summary: 'Generalized transaction introspection allowing scripts to hash specific selectable fields of the spending transaction.',
-      opcodes: ['OP_TXHASH', 'OP_CHECKTXHASHVERIFY'],
-      expressiveness_score: 88,
-      security_surface_rating: 'moderate',
-      created_at: '2024-02-14T00:00:00Z',
+      activation_mechanism: 'Not specified by this BIP',
+      spec_url:
+        'https://github.com/bitcoin/bips/blob/master/bip-0443.mediawiki',
+      summary:
+        'Proposed tapscript checks bind carried data, Taproot program commitments and aggregate input/output amount constraints.',
+      opcodes: ['OP_CHECKCONTRACTVERIFY', 'OP_SUCCESS187'],
+      expressiveness_score: null,
+      security_surface_rating: null,
+      created_at: '2025-05-08T00:00:00Z',
     };
 
     this.proposals.set(p1.proposal_id, p1);
@@ -87,7 +94,8 @@ export class ConsensusService {
       {
         template_id: 'vault-simple-ctv',
         name: 'Simple CTV Time-Delayed Vault',
-        description: 'Standard 2-stage vault using OP_CHECKTEMPLATEVERIFY with unvaulting trigger and cold recovery key.',
+        description:
+          'Standard 2-stage vault using OP_CHECKTEMPLATEVERIFY with unvaulting trigger and cold recovery key.',
         proposal_target: 'bip-119',
         hot_key_threshold: 1,
         recovery_delay_blocks: 144,
@@ -96,7 +104,8 @@ export class ConsensusService {
       {
         template_id: 'vault-cat-recursive',
         name: 'OP_CAT Introspecting Recursive Vault',
-        description: 'General recursive vault that preserves custody rules on partial withdrawals without pre-computing all spending trees.',
+        description:
+          'General recursive vault that preserves custody rules on partial withdrawals without pre-computing all spending trees.',
         proposal_target: 'bip-347',
         hot_key_threshold: 2,
         recovery_delay_blocks: 288,
@@ -114,7 +123,10 @@ export class ConsensusService {
 
     return {
       proposals_count: props.length,
-      covenant_types: Object.entries(typesCount).map(([type, count]) => ({ type, count })),
+      covenant_types: Object.entries(typesCount).map(([type, count]) => ({
+        type,
+        count,
+      })),
       featured_proposals: props,
       vault_templates: this.vaultTemplates,
       last_updated: new Date().toISOString(),
@@ -133,45 +145,42 @@ export class ConsensusService {
     return this.vaultTemplates;
   }
 
-  public simulateCovenant(req: CovenantSimulationRequest): CovenantSimulationResult {
+  public simulateCovenant(
+    req: CovenantSimulationRequest
+  ): CovenantSimulationResult {
     if (!req.proposal_id) {
       throw new Error('proposal_id is required for covenant simulation.');
     }
 
     const proposal = this.proposals.get(req.proposal_id);
     if (!proposal) {
-      throw new Error(`Proposal ${req.proposal_id} not registered in Consensus Lab.`);
+      throw new Error(
+        `Proposal ${req.proposal_id} not registered in Consensus Lab.`
+      );
     }
 
+    if (req.proposal_id !== 'bip-119')
+      throw new Error(
+        'This endpoint currently checks bare BIP119 commitments. Complete hypothetical OP_CAT and OP_CHECKCONTRACTVERIFY interpreters are not yet connected.'
+      );
+    const evidence = checkBareCtv(
+      req.transaction_hex!,
+      req.input_index!,
+      req.covenant_script
+    );
     return {
-      simulation_id: 'cov-sim-' + crypto.randomBytes(4).toString('hex'),
+      simulation_id: 'cov-sim-' + crypto.randomBytes(8).toString('hex'),
       proposal_id: req.proposal_id,
-      valid: true,
-      state_transitions: [
-        {
-          from_state: 'Vaulted (Cold Balance)',
-          to_state: 'Unvaulting (Pending Challenge Window)',
-          trigger: 'Hot Key Authorization Signature',
-          delay_blocks: 0,
-        },
-        {
-          from_state: 'Unvaulting (Pending Challenge Window)',
-          to_state: 'Settled (Destination Address)',
-          trigger: 'Timelock Expiration (CSV)',
-          delay_blocks: req.timelock_blocks || 144,
-        },
-        {
-          from_state: 'Unvaulting (Pending Challenge Window)',
-          to_state: 'Recovered (Emergency Cold Key)',
-          trigger: 'Emergency Clawback Cold Key Signature',
-          delay_blocks: 0,
-        },
-      ],
-      witness_weight_estimate: 280,
+      valid: evidence.template_matches ? null : false,
+      ...evidence,
+      scope:
+        'BIP119 bare-script template equality under hypothetical activation. Full script execution, key authorization, timelock maturity, chain activation and vault state transitions are not established.',
+      state_transitions: [],
+      witness_weight_estimate: null,
       covenant_restrictions_summary: [
-        `Destination address locked to ${proposal.covenant_type} template commitment.`,
-        `Emergency cancellation active for ${req.timelock_blocks || 144} blocks (~24h).`,
-        `Spending transaction must match exact hash commitment parameters.`,
+        'The hash binds version, locktime, scriptSigs when present, input count and sequences, output count and bytes, and the executing input index.',
+        'It does not bind input outpoints or witness signatures. Template equality alone is not a safe vault or a valid spend.',
+        'Deposit, recovery key and hot-key fields do not constitute executable transaction evidence.',
       ],
     };
   }
