@@ -235,7 +235,7 @@ const SECURITY_HEADERS = {
  */
 const CONTENT_SECURITY_POLICY_PARTS = [
   "default-src 'self'",
-  "script-src 'self'",
+  "script-src 'self' 'wasm-unsafe-eval'",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
@@ -519,13 +519,13 @@ function proxy(request, response, route) {
   response.on('close', abandon);
   request.on('aborted', abandon);
 
-  const failClosed = () => {
+  const failClosed = (reason = 'upstream-unavailable') => {
     if (clientGone || response.headersSent || response.writableEnded) return;
     try {
       // A dead upstream is reported as a gateway failure, never as an empty
       // success: a caller must be able to tell the two apart.
       response.writeHead(502, { 'content-type': 'application/json; charset=utf-8' });
-      response.end(JSON.stringify({ error: 'upstream-unavailable' }));
+      response.end(JSON.stringify({ error: reason }));
     } catch {
       // The client went away between the check and the write.
       response.destroy();
@@ -548,6 +548,14 @@ function proxy(request, response, route) {
     const proxied = transport.request(options, (upstreamResponse) => {
       if (clientGone) {
         upstreamResponse.destroy();
+        return;
+      }
+      // API upstreams are configured authorities, not redirect discovery
+      // services. Forwarding Location could send the browser (and submitted
+      // data on 307/308) to an unowned source outside this gateway.
+      if ([301, 302, 303, 307, 308].includes(upstreamResponse.statusCode)) {
+        upstreamResponse.destroy();
+        failClosed('upstream-redirect-refused');
         return;
       }
       try {
