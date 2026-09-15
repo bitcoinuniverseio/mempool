@@ -22,6 +22,8 @@ export interface PreflightInput {
   readonly addressBackend: 'none' | 'electrum' | 'esplora';
   /** An Esplora endpoint is named in configuration. */
   readonly esploraEndpointConfigured: boolean;
+  /** Primary endpoint, supplied by the running configuration. */
+  readonly esploraEndpoint?: string;
   /** Extra Esplora hosts this deployment would fall back to. */
   readonly esploraFallbacks: readonly string[];
 }
@@ -75,6 +77,11 @@ export function preflightFailures(input: PreflightInput): PreflightFailure[] {
       reason: 'MEMPOOL.BACKEND is esplora but no ESPLORA endpoint is configured, so nothing would answer the address family.',
     });
   }
+  if (input.addressBackend === 'esplora' && input.esploraEndpoint !== undefined &&
+      !isFirstPartyEndpoint(input.esploraEndpoint)) {
+    failures.push({ feature: 'addressLookup',
+      reason: 'The primary ESPLORA endpoint must be an operated loopback HTTP(S) endpoint or absolute Unix socket path.' });
+  }
   // Data sovereignty: every address answer has to come from infrastructure we
   // run. A fallback is a source too, and a fallback is exactly where a public
   // API gets in unnoticed, because it only answers when something is already
@@ -83,7 +90,7 @@ export function preflightFailures(input: PreflightInput): PreflightFailure[] {
     if (!isFirstPartyEndpoint(fallback)) {
       failures.push({
         feature: 'addressLookup',
-        reason: `ESPLORA.FALLBACK names ${fallback}, which is not a loopback or Unix socket endpoint this deployment operates.`,
+        reason: 'ESPLORA.FALLBACK contains an endpoint that is not an operated loopback HTTP(S) endpoint or absolute Unix socket path.',
       });
     }
   }
@@ -98,13 +105,15 @@ export function preflightFailures(input: PreflightInput): PreflightFailure[] {
  * nothing here can prove that, and a rule that cannot prove its answer is not
  * a rule worth having in a release gate.
  */
-function isFirstPartyEndpoint(endpoint: string): boolean {
-  if (endpoint.startsWith('/')) {
+export function isFirstPartyEndpoint(endpoint: string): boolean {
+  if (endpoint.startsWith('/') && !endpoint.startsWith('//')) {
     return true;
   }
   let host: string;
   try {
-    host = new URL(endpoint.includes('://') ? endpoint : `http://${endpoint}`).hostname;
+    const url = new URL(endpoint);
+    if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) return false;
+    host = url.hostname;
   } catch {
     return false;
   }

@@ -121,7 +121,7 @@ describe('address lookup preflight', () => {
     ]) {
       const failures = preflightFailures({ ...coherentWithData, esploraFallbacks: [fallback] });
       expect(
-        failures.some((failure) => failure.feature === 'addressLookup' && failure.reason.includes(fallback)),
+        failures.some((failure) => failure.feature === 'addressLookup' && failure.reason.includes('ESPLORA.FALLBACK')),
       ).toBe(true);
     }
   });
@@ -132,5 +132,16 @@ describe('address lookup preflight', () => {
       esploraFallbacks: ['http://127.0.0.1:3002', '/var/run/universe-explorer/electrs.sock', 'http://localhost:3003'],
     });
     expect(failures.map((failure) => failure.feature)).not.toContain('addressLookup');
+  });
+
+  it.each(['//remote.example/index', 'ftp://127.0.0.1/index', 'http://user:private@localhost:3022',
+    'https://localhost.remote.example', 'https://remote.example'])('rejects ambiguous or unowned primary and fallback endpoints: %s', endpoint => {
+    expect(preflightFailures({ ...coherentWithData, esploraEndpoint: endpoint })).not.toEqual([]);
+    expect(preflightFailures({ ...coherentWithData, esploraFallbacks: [endpoint] })).not.toEqual([]);
+  });
+
+  it('never echoes credentials from a rejected endpoint into startup diagnostics', () => {
+    const failures = preflightFailures({ ...coherentWithData, esploraFallbacks: ['https://user:private@remote.example'] });
+    expect(JSON.stringify(failures)).not.toContain('private');
   });
 });

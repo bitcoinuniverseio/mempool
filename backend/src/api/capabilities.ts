@@ -152,6 +152,7 @@ class Capabilities {
       indexingBlocksAmount: config.MEMPOOL.INDEXING_BLOCKS_AMOUNT,
       addressBackend: addressBackendKind(),
       esploraEndpointConfigured: !!(config.ESPLORA.UNIX_SOCKET_PATH || config.ESPLORA.REST_API_URL),
+      esploraEndpoint: config.ESPLORA.UNIX_SOCKET_PATH || config.ESPLORA.REST_API_URL,
       esploraFallbacks: config.ESPLORA.FALLBACK || [],
     });
   }
