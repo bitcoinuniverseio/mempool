@@ -35,8 +35,8 @@ export class SwapsApiService {
   path(path: string): string { return (this.state.network ? '/' + this.state.network : '') + path; }
   get network$(): Observable<string> { return this.state.networkChanged$.pipe(startWith(this.state.network), map(n => n || 'mainnet'), distinctUntilChanged()); }
   private params(network: string) { return { chain: 'bitcoin', network }; }
-  public getOverview$(): Observable<SwapsOverview> {
-    return this.network$.pipe(switchMap(network => this.http.get<SwapsOverview>(`${this.baseUrl}/overview`, { params: this.params(network) })));
+  public getOverview$(network = this.network): Observable<SwapsOverview> {
+    return this.http.get<SwapsOverview>(`${this.baseUrl}/overview`, { params: this.params(network) });
   }
   public getProviders$(network = this.network): Observable<SwapProvider[]> {
     return this.http.get<SwapProvider[]>(`${this.baseUrl}/providers`, { params: this.params(network) });

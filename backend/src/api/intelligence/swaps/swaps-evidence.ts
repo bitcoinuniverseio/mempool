@@ -2,6 +2,7 @@ import { Transaction } from 'bitcoinjs-lib';
 import bitcoinClient from '../../bitcoin/bitcoin-client';
 import config from '../../../config';
 import { SwapContext, SwapSourceContext } from './swaps.models';
+import { GENESIS } from '../utxo/utxo-evidence';
 
 export class SwapEvidenceError extends Error {
   constructor(public readonly code: string, message: string) { super(message); }
@@ -38,9 +39,12 @@ export class BitcoinSwapAuthority implements SwapAuthority {
     }
     const info = await this.rpc<any>('getBlockchainInfo');
     const expected = context.network === 'mainnet' ? 'main' : context.network === 'testnet' ? 'test' : context.network;
-    if (info.chain !== expected) throw new SwapEvidenceError('wrong-network', 'Bitcoin Core reported a different chain than the requested network.');
-    if (info.initialblockdownload || !Number.isSafeInteger(info.blocks) || !/^[0-9a-f]{64}$/.test(info.bestblockhash)) {
+    if (info?.chain !== expected) throw new SwapEvidenceError('wrong-network', 'Bitcoin Core reported a different chain than the requested network.');
+    if (info.initialblockdownload !== false || !Number.isSafeInteger(info.blocks) || info.blocks < 0 || !/^[0-9a-f]{64}$/.test(info.bestblockhash)) {
       throw new SwapEvidenceError('unavailable-source', 'Bitcoin Core is syncing or returned an invalid checkpoint.');
+    }
+    if (!GENESIS[context.network] || await this.rpc<string>('getBlockHash', 0) !== GENESIS[context.network]) {
+      throw new SwapEvidenceError('wrong-network', 'Bitcoin Core genesis does not match the selected network.');
     }
     return { ...context, source_id: 'configured-bitcoin-core', block_height: info.blocks, block_hash: info.bestblockhash, observed_at: new Date().toISOString() };
   }
@@ -55,9 +59,11 @@ export class BitcoinSwapAuthority implements SwapAuthority {
       if (transaction.getId() !== txid) throw new Error();
     } catch { throw new SwapEvidenceError('invalid', 'Node transaction serialization or transaction identity is invalid.'); }
     let confirmations = 0;
-    if (raw.blockhash) {
+    if (raw.blockhash !== undefined) {
+      if (typeof raw.blockhash !== 'string' || !/^[0-9a-f]{64}$/.test(raw.blockhash)) throw new SwapEvidenceError('invalid', 'Node returned an invalid transaction block identity.');
       const header = await this.rpc<any>('getBlockHeader', raw.blockhash, true);
-      if (header.confirmations < 1 || !Number.isSafeInteger(header.height) || header.height > context.block_height ||
+      if (!header || header.hash !== raw.blockhash || !Number.isSafeInteger(header.confirmations) || header.confirmations < 1 || !Number.isSafeInteger(header.height) || header.height < 0 || header.height > context.block_height ||
+          header.confirmations !== context.block_height - header.height + 1 ||
           await this.rpc<string>('getBlockHash', header.height) !== raw.blockhash) {
         throw new SwapEvidenceError('reorged', 'Transaction is not in the selected active chain checkpoint.');
       }
@@ -81,7 +87,8 @@ export class BitcoinSwapAuthority implements SwapAuthority {
       if (utxo && (utxo.bestblock !== checkpoint.block_hash || utxo.scriptPubKey?.hex !== output.script.toString('hex'))) {
         throw new SwapEvidenceError('source-changed', 'Outpoint and node checkpoint disagree. Retry against the current chain.');
       }
-      if ((await this.checkpoint(context)).block_hash !== checkpoint.block_hash) {
+      const final = await this.checkpoint(context);
+      if (final.block_hash !== checkpoint.block_hash || final.block_height !== checkpoint.block_height) {
         throw new SwapEvidenceError('source-changed', 'Chain tip changed during verification. Retry against the current chain.');
       }
       return { ...result, context: checkpoint, unspent: utxo !== null };
@@ -93,7 +100,8 @@ export class BitcoinSwapAuthority implements SwapAuthority {
     this.busy = true;
     try {
       const result = await this.readTransaction(context, txid);
-      if ((await this.checkpoint(context)).block_hash !== context.block_hash) throw new SwapEvidenceError('source-changed', 'Chain tip changed during verification. Retry.');
+      const final = await this.checkpoint(context);
+      if (final.block_hash !== context.block_hash || final.block_height !== context.block_height) throw new SwapEvidenceError('source-changed', 'Chain tip changed during verification. Retry.');
       return result;
     } finally { this.busy = false; }
   }
