@@ -1,50 +1,18 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { SeoService } from '@app/services/seo.service';
+import { StateService } from '@app/services/state.service';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
-
-/**
- * The outcome of one validation attempt.
- *
- * There is only an unavailable outcome here, because there is no validation
- * engine on this deployment. The revision this replaces waited 450 ms and then
- * emitted a valid result for any input at all, with an invented schema id,
- * contract id, genesis txid, transition count and seal count, and the sentence
- * "All single-use seals and transition DAG hashes match Bitcoin commitments."
- * Nothing read the consignment. A reader could not tell that from a real
- * validation, and on a validator that is the whole of what it offers.
- */
-interface RgbValidationOutcome {
-  readonly available: false;
-  readonly reason: string;
-}
-
-@Component({
-  selector: 'app-rgb-studio',
-  templateUrl: './rgb-studio.component.html',
-  styleUrls: ['../product-page.scss'],
-  standalone: true,
-  imports: [RelativeUrlPipe, CommonModule, FormsModule, RouterModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-})
-export class RgbStudioComponent {
-  consignmentHex = '';
-
-  private readonly resultSubject = new BehaviorSubject<RgbValidationOutcome | null>(null);
-  readonly result$: Observable<RgbValidationOutcome | null> = this.resultSubject.asObservable();
-
-  constructor(private seo: SeoService) {
-    this.seo.setTitle('RGB Client-Side Validation Studio');
-  }
-
-  validate(): void {
-    if (!this.consignmentHex.trim()) return;
-    this.resultSubject.next({
-      available: false,
-      reason: $localize`:@@rgb.validator.unavailable:This deployment carries no RGB validation engine, so this consignment has not been checked. Nothing was uploaded.`,
-    });
-  }
+import { RgbResult, RgbValidationService } from './rgb-validation.service';
+@Component({selector:'app-rgb-studio',templateUrl:'./rgb-studio.component.html',styleUrls:['../product-page.scss'],standalone:true,imports:[RelativeUrlPipe,CommonModule,FormsModule,RouterModule],changeDetection:ChangeDetectionStrategy.OnPush})
+export class RgbStudioComponent implements OnDestroy {
+ consignmentHex=''; result:RgbResult|null=null; loading=false; private attempt=0;private request?:Subscription;private networkSub:Subscription;
+ constructor(private seo:SeoService,private validator:RgbValidationService,private state:StateService,private cdr:ChangeDetectorRef){seo.setTitle('RGB Client-Side Validation Studio');this.networkSub=state.networkChanged$.subscribe(()=>this.invalidate());}
+ invalidate():void{this.attempt++;this.request?.unsubscribe();this.result=null;this.loading=false;this.cdr.markForCheck();}
+ async importFile(event:Event):Promise<void>{this.invalidate();this.consignmentHex='';const file=(event.target as HTMLInputElement).files?.[0];if(!file)return;const attempt=this.attempt;if(file.size>2_000_000){this.result={status:'malformed',reason:'Consignment exceeds the 2 MB import limit.'};this.cdr.markForCheck();return;}try{const bytes=new Uint8Array(await file.arrayBuffer());if(attempt!==this.attempt)return;const text=new TextDecoder().decode(bytes);this.consignmentHex=text.startsWith('-----BEGIN RGB CONSIGNMENT-----')?text:Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');this.cdr.markForCheck();}catch{if(attempt===this.attempt){this.result={status:'malformed',reason:'The local file could not be read.'};this.cdr.markForCheck();}}}
+ validate():void{this.invalidate();const input=this.consignmentHex.trim();if(!input)return;if(input.length>4_000_000){this.result={status:'malformed',reason:'Consignment exceeds the 2 MB import limit.'};return;}const attempt=this.attempt,network=this.state.network;this.loading=true;this.request=this.validator.validate(input).subscribe({next:result=>{if(attempt!==this.attempt||input!==this.consignmentHex.trim()||network!==this.state.network)return;this.result=result;this.loading=false;this.cdr.markForCheck();},error:()=>{if(attempt===this.attempt){this.result={status:'unresolved',reason:'Local validation could not complete.'};this.loading=false;this.cdr.markForCheck();}}});}
+ ngOnDestroy():void{this.invalidate();this.networkSub.unsubscribe();}
 }

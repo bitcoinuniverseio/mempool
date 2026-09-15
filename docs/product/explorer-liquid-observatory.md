@@ -1,0 +1,7 @@
+# Liquid checkpoint and local output verification
+
+The observatory reads `/api/v1/liquid/observatory/node?network=liquidv1` (also liquidtestnet or elementsregtest). Configure only the owned backend runtime with `UNIVERSE_ELEMENTS_RPC_ORIGIN` and `UNIVERSE_ELEMENTS_RPC_COOKIE_FILE`, or RPC USER/PASSWORD variables. Browser input selects an allowlisted network only; it cannot select a source URL, credentials or RPC method. Four read-only calls bind node-reported height, tip hash and signing policy across a stable checkpoint. Two concurrent reads maximum; each RPC has a three-second timeout, redirects disabled and a 100 KB response limit. The policy is not an online signer count. Sync state is reported explicitly.
+
+Peg reserve/history requires the Bitcoin peg reader and reconciliation. Asset metadata requires an owned registry mirror. These original reads remain unavailable until their sources exist; the checkpoint panel does not turn them into empty lists or zero values.
+
+The unblinding workspace verifies actual secp256k1-zkp range and surjection proofs locally, recovers the exact asset and amount, and clears the key input. Output bytes, witness proofs and ordered generators remain caller-supplied; no automatic transaction history, signature/amount balance or spendability claim is made. The maintained regtest fixture was actually issued, transferred and mined on isolated Elements23.3.4, then independently extracted with elements-rust and tested through the browser WASM. User blinding keys are never sent to the checkpoint endpoint.

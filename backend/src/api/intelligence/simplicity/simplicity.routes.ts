@@ -1,9 +1,10 @@
+import { FormalCheckerError } from './formal-checker';
 import { Application, Request, Response } from 'express';
 import simplicityService, { SimplicityEvidenceError } from './simplicity.service';
 
 /** An absent source is a 503 that names the source, never a 500 and never an empty list. */
 function fail(res: Response, err: unknown, status = 500): Response {
-  if (err instanceof SimplicityEvidenceError) return res.status(err.status).json({ stage: err.code, error: err.message });
+  if (err instanceof SimplicityEvidenceError || err instanceof FormalCheckerError) return res.status(err.status).json({ stage: err.code, error: err.message });
   return res.status(status).json({ error: err instanceof Error && err.message ? err.message : 'Internal error' });
 }
 
@@ -85,9 +86,9 @@ class SimplicityRoutes {
       }
     });
 
-    app.post('/api/v1/intelligence/simplicity/formal-artifacts/verify', (req: Request, res: Response) => {
+    app.post('/api/v1/intelligence/simplicity/formal-artifacts/verify', async (req: Request, res: Response) => {
       try {
-        const result = simplicityService.verifyFormalArtifact(req.body);
+        const result = await simplicityService.verifyFormalArtifact(req.body);
         res.json(result);
       } catch (err: any) {
         fail(res, err, 400);

@@ -2,6 +2,7 @@ import { Application, Request, Response } from 'express';
 import config from '../../config';
 import { handleError } from '../../utils/api';
 import { LiquidObservatoryEvidenceError, liquidObservatoryService } from './liquid-observatory.service';
+import { elementsNodeSource } from './elements-node-source';
 
 /** An absent source is a 503 that names the source, never a 500 and never an empty list. */
 function fail(req: Request, res: Response, e: unknown): void {
@@ -17,11 +18,19 @@ class LiquidObservatoryRoutes {
     const prefix = config.MEMPOOL.API_URL_PREFIX + 'liquid/observatory/';
 
     app
+      .get(prefix + 'node', this.$getNode)
       .get(prefix + 'summary', this.$getSummary)
       .get(prefix + 'assets', this.$getAssets)
       .get(prefix + 'assets/:assetId', this.$getAsset)
       .get(prefix + 'pegs', this.$getPegs)
       .get(prefix + 'federation', this.$getFederation);
+  }
+
+  private async $getNode(req: Request, res: Response): Promise<void> {
+    try {
+      if (Object.keys(req.query || {}).some(key => key !== 'network')) throw new LiquidObservatoryEvidenceError('invalid-query', 'Only the public network selector is accepted.', 400);
+      res.json(await elementsNodeSource.snapshot(typeof req.query?.network === 'string' ? req.query.network : 'liquidv1'));
+    } catch (e) { fail(req, res, e); }
   }
 
   private async $getSummary(req: Request, res: Response): Promise<void> {
