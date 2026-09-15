@@ -25,7 +25,12 @@ export interface PayjoinProposalAnalysisResult {
   effective_feerate_sats_vb: number | null;
   heuristics_broken: string[];
   privacy_score_gain: number;
-  is_valid: boolean;
+  is_valid: boolean | null;
+  structural_checks_passed: boolean;
+  psbt_envelope_checks_passed: boolean;
+  signatures_verified: boolean | null;
+  chain_verified: boolean | null;
+  verification_scope: string;
   validation_messages: string[];
 }
 
@@ -75,6 +80,10 @@ export class PayjoinApiService {
         ':' +
         this.stateService.env.NGINX_PORT;
     }
+    const origin = this.apiBaseUrl;
+    const update = (network: string) => { this.apiBaseUrl = origin + (network && network !== 'mainnet' && network !== this.stateService.env.ROOT_NETWORK ? '/' + network : ''); };
+    update(this.stateService.network);
+    this.stateService.networkChanged$.subscribe(update);
   }
 
   getOverview$(): Observable<PayjoinOverview> {
@@ -95,10 +104,10 @@ export class PayjoinApiService {
     );
   }
 
-  analyzeProposal$(originalPsbt: string, proposalPsbt: string): Observable<PayjoinProposalAnalysisResult> {
+  analyzeProposal$(originalPsbt: string, proposalPsbt: string, policy: { payment_output_index?: number; disable_output_substitution?: boolean; additional_fee_output_index?: number; max_additional_fee_contribution?: number } = {}): Observable<PayjoinProposalAnalysisResult> {
     return this.httpClient.post<PayjoinProposalAnalysisResult>(
       `${this.apiBaseUrl}/api/v1/intelligence/payments/payjoin/analyze`,
-      { original_psbt: originalPsbt, proposal_psbt: proposalPsbt }
+      { original_psbt: originalPsbt, proposal_psbt: proposalPsbt, ...policy }
     );
   }
 

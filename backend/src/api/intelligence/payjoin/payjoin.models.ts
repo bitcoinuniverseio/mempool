@@ -13,6 +13,10 @@ export interface PayjoinDirectory {
 export interface PayjoinProposalAnalysisRequest {
   original_psbt: string;
   proposal_psbt: string;
+  payment_output_index?: number;
+  disable_output_substitution?: boolean;
+  additional_fee_output_index?: number;
+  max_additional_fee_contribution?: number;
 }
 
 export interface PayjoinProposalAnalysisResult {
@@ -28,7 +32,13 @@ export interface PayjoinProposalAnalysisResult {
   heuristics_broken: string[];
   /** The number of heuristics broken; no scoring model is applied. */
   privacy_score_gain: number;
-  is_valid: boolean;
+  /** False on a detected violation; null when full signing/chain acceptance is unestablished. */
+  is_valid: boolean | null;
+  structural_checks_passed: boolean;
+  psbt_envelope_checks_passed: boolean;
+  signatures_verified: boolean | null;
+  chain_verified: boolean | null;
+  verification_scope: string;
   validation_messages: string[];
   original: { inputs: number; outputs: number };
   proposal: { inputs: number; outputs: number };

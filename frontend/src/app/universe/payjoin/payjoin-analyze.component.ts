@@ -1,4 +1,7 @@
-import { Component, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectionStrategy, ChangeDetectorRef, OnDestroy, Inject } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { StateService } from '@app/services/state.service';
+import { PAYJOIN_SAMPLE } from './payjoin-sample';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -15,7 +18,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
       <header class="page-header mb-4">
         <div class="title-row d-flex flex-wrap align-items-center justify-content-between gap-2">
           <h1 class="m-0">Payjoin Proposal Differential Analyzer</h1>
-          <span class="badge bg-primary">BIP78 & BIP77 Diff Engine</span>
+          <span class="badge bg-primary">BIP78 Transaction Comparison</span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
           Perform side-by-side inspection between a sender's original PSBT and the receiver's returned Payjoin proposal PSBT.
@@ -44,6 +47,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                 rows="4"
                 placeholder="Paste original sender PSBT..."
                 [(ngModel)]="originalPsbt"
+                (ngModelChange)="edited()"
                 name="originalPsbt"
                 required
               ></textarea>
@@ -56,19 +60,28 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                 rows="4"
                 placeholder="Paste receiver Payjoin proposal PSBT..."
                 [(ngModel)]="proposalPsbt"
+                (ngModelChange)="edited()"
                 name="proposalPsbt"
                 required
               ></textarea>
             </div>
           </div>
 
+          <p class="small mt-3">All original outputs are protected by default. Enter the original payment output index only if you know which output belongs to the receiver. Indexes start at zero.</p>
+          <label for="payjoin-payment-index">Payment output index (optional)</label>
+          <input id="payjoin-payment-index" name="paymentIndex" type="number" min="0" step="1" [(ngModel)]="paymentIndex" (ngModelChange)="edited()" class="form-control" />
+          <label><input name="disableSubstitution" type="checkbox" [(ngModel)]="disableSubstitution" (ngModelChange)="edited()" /> Protect the payment script and amount</label>
+          <div class="row mt-2">
+            <div class="col-sm-6"><label for="payjoin-fee-index">Authorized fee output index (optional)</label><input id="payjoin-fee-index" name="feeIndex" type="number" min="0" step="1" [(ngModel)]="feeIndex" (ngModelChange)="edited()" class="form-control" /></div>
+            <div class="col-sm-6"><label for="payjoin-fee-limit">Maximum extra sender fee (sats)</label><input id="payjoin-fee-limit" name="feeLimit" type="number" min="0" step="1" [(ngModel)]="feeLimit" (ngModelChange)="edited()" class="form-control" /></div>
+          </div>
           <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-4">
             <button
               type="button"
               class="btn btn-outline-secondary"
               (click)="loadDemoPsbts()"
             >
-              Load Sample Payjoin Diff
+              Load Synthetic Signed Sample
             </button>
             <button
               type="submit"
@@ -90,8 +103,8 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
       <!-- Results -->
       <div *ngIf="result" class="card p-4 bg-body-tertiary border">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 border-bottom pb-2">
-          <h2 class="h5 m-0 text-success">&check; Valid {{ result.protocol_version }} Proposal Verified</h2>
-          <span class="badge" [ngClass]="result.is_valid ? 'bg-success' : 'bg-warning text-dark'">{{ result.heuristics_broken.length }} heuristic(s) broken</span>
+          <h2 class="h5 m-0" [class.text-danger]="result.is_valid === false">{{ result.is_valid === false ? 'Proposal checks failed' : 'Comparison passed; signing acceptance unestablished' }}</h2>
+          <span class="badge bg-secondary">{{ result.verification_scope }}</span>
         </div>
 
         <div class="row g-3 mb-4">
@@ -113,7 +126,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
             <div class="p-3 border rounded bg-body">
               <div class="text-muted small">Fee Adjustment</div>
               <div class="h4 my-1 text-warning">{{ result.fee_delta_sats !== null ? (result.fee_delta_sats >= 0 ? '+' : '') + result.fee_delta_sats + ' sats' : 'unknown (no UTXO data)' }}</div>
-              <div class="small text-muted">BIP78 fee coverage compliant</div>
+              <div class="small text-muted">Difference from supplied UTXO amounts</div>
             </div>
           </div>
           <div class="col-12 col-sm-6 col-md-3">
@@ -126,7 +139,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
         </div>
 
         <!-- Broken Heuristics List -->
-        <h3 class="h6 mb-2">Broken Surveillance Heuristics</h3>
+        <h3 class="h6 mb-2">Observed Transaction Structure</h3>
         <ul class="list-group mb-3">
           <li *ngFor="let h of result.heuristics_broken" class="list-group-item bg-transparent d-flex align-items-center gap-2">
             <span class="text-success">&check;</span>
@@ -156,37 +169,54 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
     }
   `],
 })
-export class PayjoinAnalyzeComponent {
+export class PayjoinAnalyzeComponent implements OnDestroy {
   originalPsbt = '';
   proposalPsbt = '';
+  paymentIndex: number | null = null;
+  disableSubstitution = true;
+  feeIndex: number | null = null;
+  feeLimit: number | null = null;
   analyzing = false;
   errorMessage: string | null = null;
   result: PayjoinProposalAnalysisResult | null = null;
+  private pending?: Subscription;
+  private generation = 0;
+  private networkSubscription: Subscription;
+
+  edited(): void { this.generation++; this.pending?.unsubscribe(); this.pending = undefined; this.result = null; this.errorMessage = null; this.analyzing = false; }
+  ngOnDestroy(): void { this.edited(); this.networkSubscription.unsubscribe(); }
 
   constructor(
-    private api: PayjoinApiService,
-    private cd: ChangeDetectorRef
-  ) {}
+    @Inject(PayjoinApiService) private api: PayjoinApiService,
+    @Inject(ChangeDetectorRef) private cd: ChangeDetectorRef,
+    @Inject(StateService) state: StateService
+  ) { this.networkSubscription = state.networkChanged$.subscribe(() => { this.edited(); this.cd.markForCheck(); }); }
 
   loadDemoPsbts(): void {
-    this.originalPsbt = 'cHNidP8BAFICAAAAAQAAAAAAAAAAAAAAAQAAAAAAAAAAAA==';
-    this.proposalPsbt = 'cHNidP8BAFICAAAAAgAAAAAAAAAAAAAAAgAAAAAAAAAAAA==';
+    this.originalPsbt = PAYJOIN_SAMPLE.original_psbt;
+    this.proposalPsbt = PAYJOIN_SAMPLE.proposal_psbt;
+    this.paymentIndex = 0; this.disableSubstitution = true; this.feeIndex = null; this.feeLimit = null;
     this.analyze();
   }
 
   analyze(): void {
+    this.edited();
     if (!this.originalPsbt || !this.proposalPsbt) return;
+    const generation = this.generation;
     this.analyzing = true;
     this.errorMessage = null;
     this.result = null;
 
-    this.api.analyzeProposal$(this.originalPsbt.trim(), this.proposalPsbt.trim()).subscribe({
+    const policy = { ...(this.paymentIndex !== null ? { payment_output_index: this.paymentIndex, disable_output_substitution: this.disableSubstitution } : {}), ...(this.feeIndex !== null ? { additional_fee_output_index: this.feeIndex } : {}), ...(this.feeLimit !== null ? { max_additional_fee_contribution: this.feeLimit } : {}) };
+    this.pending = this.api.analyzeProposal$(this.originalPsbt.trim(), this.proposalPsbt.trim(), policy).subscribe({
       next: res => {
+        if (generation !== this.generation) return;
         this.result = res;
         this.analyzing = false;
         this.cd.markForCheck();
       },
       error: err => {
+        if (generation !== this.generation) return;
         this.errorMessage = err?.error?.error || err?.message || 'Failed to analyze proposal';
         this.analyzing = false;
         this.cd.markForCheck();

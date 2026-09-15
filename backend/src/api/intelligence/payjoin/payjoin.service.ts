@@ -1,6 +1,8 @@
 import * as crypto from 'crypto';
 import * as https from 'https';
 import { Psbt } from 'bitcoinjs-lib';
+import { compareProposal } from './proposal-analysis';
+import { verifyProposalSignatures } from './proposal-signatures';
 import { EventEnvelopeValidator } from '../events/event-envelope';
 import { IdentityError, resolvePublicAddress, validateWebhookUrl } from '../identity/developer-identity';
 import {
@@ -44,35 +46,6 @@ const defaultProber: DirectoryProber = (url, address) => new Promise(resolve => 
   request.on('error', error => resolve({ ok: false, status: null, body: null, latency_ms: null, error: (error as NodeJS.ErrnoException).code ?? error.message }));
   request.end();
 });
-
-interface PsbtView {
-  inputs: { outpoint: string; value: number | null }[];
-  outputs: { script: string; value: number }[];
-  fee: number | null;
-  vsize: number | null;
-}
-
-function view(psbt: Psbt): PsbtView {
-  const inputs = psbt.txInputs.map((input, index) => {
-    const data = psbt.data.inputs[index];
-    let value: number | null = null;
-    if (data.witnessUtxo) { value = Number(data.witnessUtxo.value); }
-    else if (data.nonWitnessUtxo) {
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const { Transaction } = require('bitcoinjs-lib');
-        value = Number(Transaction.fromBuffer(data.nonWitnessUtxo).outs[input.index].value);
-      } catch { value = null; }
-    }
-    return { outpoint: `${Buffer.from(input.hash).reverse().toString('hex')}:${input.index}`, value };
-  });
-  const outputs = psbt.txOutputs.map(output => ({ script: Buffer.from(output.script).toString('hex'), value: Number(output.value) }));
-  const inputTotal = inputs.every(input => input.value !== null) ? inputs.reduce((sum, input) => sum + (input.value as number), 0) : null;
-  const fee = inputTotal === null ? null : inputTotal - outputs.reduce((sum, output) => sum + output.value, 0);
-  let vsize: number | null = null;
-  try { vsize = psbt.extractTransaction(true).virtualSize(); } catch { vsize = null; }
-  return { inputs, outputs, fee, vsize };
-}
 
 export class PayjoinService {
   private static instance: PayjoinService;
@@ -153,37 +126,19 @@ export class PayjoinService {
     return this.compatibilityCatalog;
   }
 
-  private static parse(encoded: string, label: string): Psbt {
-    const trimmed = String(encoded ?? '').trim();
-    if (!trimmed) { throw new Error(`${label} is required`); }
-    try { return /^[0-9a-fA-F]+$/.test(trimmed) ? Psbt.fromHex(trimmed) : Psbt.fromBase64(trimmed); }
-    catch { throw new Error(`${label} is not a valid PSBT (base64 or hex)`); }
-  }
-
   /** Compares the original and the proposal transaction by their inputs and outputs. */
   public analyzeProposal(req: PayjoinProposalAnalysisRequest): PayjoinProposalAnalysisResult {
     if (!req.original_psbt || !req.proposal_psbt) {
       throw new Error('Both original_psbt and proposal_psbt are required for comparison.');
     }
-    const original = view(PayjoinService.parse(req.original_psbt, 'original_psbt'));
-    const proposal = view(PayjoinService.parse(req.proposal_psbt, 'proposal_psbt'));
-    const messages: string[] = [];
-    const originalOutpoints = new Set(original.inputs.map(input => input.outpoint));
-    const addedInputs = proposal.inputs.filter(input => !originalOutpoints.has(input.outpoint));
-    const missingInputs = original.inputs.filter(input => !proposal.inputs.some(candidate => candidate.outpoint === input.outpoint));
-    if (missingInputs.length) { messages.push(`Proposal dropped ${missingInputs.length} of the sender's original inputs; BIP78 requires them all to stay.`); }
-    const receiverSats = addedInputs.every(input => input.value !== null) ? addedInputs.reduce((sum, input) => sum + (input.value as number), 0) : null;
-    if (addedInputs.length && receiverSats === null) { messages.push('Receiver inputs carry no UTXO data, so the contributed amount cannot be computed.'); }
-    const removedOutputs = original.outputs.filter(output => !proposal.outputs.some(candidate => candidate.script === output.script));
-    if (removedOutputs.length) { messages.push(`Proposal removed ${removedOutputs.length} original output(s).`); }
-    const changedOutputs = original.outputs.filter(output => { const match = proposal.outputs.find(candidate => candidate.script === output.script); return match && match.value !== output.value; });
-    const feeDelta = original.fee !== null && proposal.fee !== null ? proposal.fee - original.fee : null;
-    if (feeDelta !== null && feeDelta < 0) { messages.push('Proposal pays less fee than the original.'); }
+    const comparison = compareProposal(req);
+    const { original, proposal, addedInputs, feeDelta, messages, envelopeIssues } = comparison;
+    const receiverSats = addedInputs.every(input => input.value !== null) ? addedInputs.reduce((sum, input) => sum + input.value!, 0) : null;
+    const structuralPassed = messages.length === 0;
     const heuristics: string[] = [];
-    if (addedInputs.length > 0) { heuristics.push('Common-Input-Ownership Heuristic (CIOH)'); }
-    if (changedOutputs.length > 0) { heuristics.push('Payment-Amount Heuristic'); }
-    const valid = missingInputs.length === 0 && removedOutputs.length === 0 && (feeDelta === null || feeDelta >= 0);
-    if (addedInputs.length === 0) { messages.push('Proposal adds no receiver input; it is not a payjoin.'); }
+    if (addedInputs.length) heuristics.push('Multiple input outpoints; independent ownership is not verified');
+    messages.push(...envelopeIssues);
+    messages.push('Transaction comparison does not establish signatures, input ownership, current UTXO availability or final signed transaction feerate.');
     return {
       analysis_id: EventEnvelopeValidator.generateUuidV7(), protocol_version: 'BIP78',
       inputs_added_by_receiver: addedInputs.length, receiver_contributed_sats: receiverSats,
@@ -191,11 +146,30 @@ export class PayjoinService {
       effective_feerate_sats_vb: proposal.fee !== null && proposal.vsize ? Math.round((proposal.fee / proposal.vsize) * 100) / 100 : null,
       heuristics_broken: heuristics,
       // A count of broken heuristics, not a score; no model is applied.
-      privacy_score_gain: heuristics.length,
-      is_valid: valid && addedInputs.length > 0,
+      privacy_score_gain: 0,
+      is_valid: structuralPassed && envelopeIssues.length === 0 ? null : false,
+      structural_checks_passed: structuralPassed, psbt_envelope_checks_passed: envelopeIssues.length === 0,
+      signatures_verified: null, chain_verified: null, verification_scope: 'PSBT differential and declared sender policy; not signing authorization',
       validation_messages: messages,
       original: { inputs: original.inputs.length, outputs: original.outputs.length }, proposal: { inputs: proposal.inputs.length, outputs: proposal.outputs.length },
     };
+  }
+
+  public async analyzeProposalWithSignatures(req: PayjoinProposalAnalysisRequest): Promise<PayjoinProposalAnalysisResult> {
+    const result = this.analyzeProposal(req);
+    if (!result.structural_checks_passed || !result.psbt_envelope_checks_passed) return result;
+    try {
+      const signatures = await verifyProposalSignatures(req);
+      result.signatures_verified = signatures.verified;
+      result.validation_messages = result.validation_messages.filter(message => !message.startsWith('Transaction comparison does not establish'));
+      result.validation_messages.push(...signatures.errors);
+      result.validation_messages.push('Original and receiver proposal scripts checked with ' + signatures.engine + '. Current UTXO availability, final sender signatures and final transaction feerate remain unestablished.');
+      result.verification_scope = 'BIP78 sender comparison and transaction-context script verification against supplied previous outputs';
+      if (!signatures.verified) result.is_valid = false;
+    } catch {
+      result.validation_messages.push('Transaction script verification could not complete. No signature acceptance is established.');
+    }
+    return result;
   }
 
   /** A narrated walkthrough. It builds no transaction and is labelled as a simulation. */
