@@ -46,6 +46,15 @@ describe('OffchainService', () => {
     const schnorr = Buffer.from(secp256k1.signSchnorr(manifestDigest(manifest), privateKey)).toString('hex');
     expect(verifyManifestSignature({ ...manifest, signature: schnorr })).toEqual({ valid: true, scheme: 'schnorr', reason: null });
     expect(offchainService.verifyManifest({ ...manifest, signature: schnorr })).toMatchObject({verified:true,signature_valid:true,operator_authenticated:null});
+    const bound = offchainService.verifyManifest({...manifest,signature:schnorr});
+    const altered = offchainService.verifyManifest({...manifest,signature:'ab'.repeat(64)});
+    expect(bound.declared_scheme).toBe('schnorr');
+    expect(bound.manifest_digest).toBe(manifestDigest(manifest).toString('hex'));
+    expect(altered.manifest_digest).toBe(bound.manifest_digest);
+    expect(altered.input_digest).not.toBe(bound.input_digest);
+    expect(altered).toMatchObject({scheme:null,declared_scheme:'schnorr',signature_valid:false,verified:false});
+    const sorted = Object.fromEntries(Object.entries({...manifest,signature:schnorr}).sort(([a],[b])=>a<b?-1:a>b?1:0));
+    expect(bound.input_digest).toBe(crypto.createHash('sha256').update(JSON.stringify(sorted)).digest('hex'));
     const ecdsaManifest = { ...manifest, signature_scheme: 'ecdsa' as const };
     const ecdsa = Buffer.from(secp256k1.sign(manifestDigest(ecdsaManifest), privateKey)).toString('hex');
     expect(verifyManifestSignature({ ...ecdsaManifest, signature: ecdsa }).scheme).toBe('ecdsa');

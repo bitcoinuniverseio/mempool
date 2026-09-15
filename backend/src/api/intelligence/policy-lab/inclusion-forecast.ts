@@ -1,182 +1,52 @@
 import mempool from '../../mempool';
-
+import config from '../../../config';
+export class PolicyEvidenceError extends Error {
+  constructor(public readonly code: string, message: string, public readonly status = 503) { super(message); }
+}
 export interface InclusionForecastProbabilities {
-  next_block: number;
-  two_blocks: number;
-  three_blocks: number;
-  six_blocks: number;
-  twelve_blocks: number;
-  twenty_four_blocks: number;
-  confidence_interval: [number, number];
-  is_fallback: boolean;
-  model_version: string;
-  calculated_at: string;
+  next_block: null; two_blocks: null; three_blocks: null; six_blocks: null; twelve_blocks: null; twenty_four_blocks: null;
+  confidence_interval: null; is_fallback: false; model_version: string; calculated_at: string;
+  scope: string; network: string; observed_transactions: number | null; observed_vsize_ahead: number | null;
+  queue_capacity_blocks: number | null; unavailable_reason: string | null;
 }
-
 export interface ForecastModelCard {
-  version: string;
-  name: string;
-  description: string;
-  algorithm: string;
-  features: string[];
-  training_coverage: string;
-  evaluation_metrics: {
-    brier_score: number;
-    calibration_error: number;
-    sample_size: number;
-    validation_status: 'calibrated' | 'monitoring' | 'fallback_active';
-  };
-  limitations: string[];
-  last_calibrated_at: string;
+  version: string; name: string; description: string; algorithm: string; features: string[]; training_coverage: null;
+  evaluation_metrics: { brier_score: null; calibration_error: null; sample_size: null; validation_status: 'not-calibrated' };
+  limitations: string[]; last_calibrated_at: null;
 }
-
 export class InclusionForecaster {
-  private static activeModelVersion = 'v1.4-hazard-survival';
-
-  public static getModelCard(): ForecastModelCard {
-    return {
-      version: this.activeModelVersion,
-      name: 'Discrete-Time Hazard Survival Forecaster',
-      description: 'Parametric survival analysis estimating conditional confirmation probabilities across future block intervals using real mempool depth and feerate histograms.',
-      algorithm: 'Weibull-Cox Hazard Survival Estimator with isotonic regression calibration',
-      features: [
-        'effective_feerate_sats_vb',
-        'package_feerate_sats_vb',
-        'mempool_vsize_ahead',
-        'projected_block_index',
-        'recent_block_median_feerate',
-        'time_in_mempool_minutes',
-        'rbf_signaling',
-      ],
-      training_coverage: 'Last 10,000 blocks observed by Universe nodes',
-      evaluation_metrics: {
-        brier_score: 0.038,
-        calibration_error: 0.024,
-        sample_size: 145000,
-        validation_status: 'calibrated',
-      },
-      limitations: [
-        'Forecast assumes Poisson block arrival process with mean 10 minutes.',
-        'Sudden network hashrate drops or burst tx floods can temporarily widen variance.',
-        'Transactions with non-standard ancestor chains may lag expected block position.',
-      ],
-      last_calibrated_at: new Date(Date.now() - 3600000).toISOString(),
-    };
+  public static readonly activeModelVersion = 'observed-feerate-queue-v1';
+  public static getModelCard(version = this.activeModelVersion): ForecastModelCard {
+    if (version !== this.activeModelVersion) throw new PolicyEvidenceError('unknown-model-version', 'This forecast model version is not available.', 404);
+    return { version, name: 'Observed feerate queue calculation', description: 'A bounded calculation over the synchronized local mempool snapshot. No trained or calibrated probability model is available.',
+      algorithm: 'Sum virtual sizes with strictly higher individual feerate, then divide by 1,000,000 vB nominal block capacity.',
+      features: ['effective_feerate_sats_vb', 'observed_vsize_ahead', 'candidate_vsize'], training_coverage: null,
+      evaluation_metrics: {brier_score:null,calibration_error:null,sample_size:null,validation_status:'not-calibrated'}, last_calibrated_at:null,
+      limitations:['Queue position is a heuristic, not confirmation probability or a time guarantee.','Ignores miner selection, package dependencies, ties, new arrivals, reserved capacity and transaction validity.','Snapshot source is the configured local mempool; no independent chain or completeness proof is established by this calculation.'] };
   }
-
-  public static calculateForecast(
-    effectiveFeerate: number,
-    packageFeerate?: number,
-    vsize = 140
-  ): InclusionForecastProbabilities {
-    const rate = Math.max(0.1, packageFeerate !== undefined && packageFeerate > effectiveFeerate ? packageFeerate : effectiveFeerate);
-    const now = new Date().toISOString();
-
-    // Query mempool state to derive position
-    let mempoolTotalWeight = 0;
-    let fasterWeight = 0;
+  public static unavailable(reason: string): InclusionForecastProbabilities {
+    return { next_block:null,two_blocks:null,three_blocks:null,six_blocks:null,twelve_blocks:null,twenty_four_blocks:null,confidence_interval:null,is_fallback:false,
+      model_version:this.activeModelVersion,calculated_at:new Date().toISOString(),network:config.MEMPOOL.NETWORK,
+      scope:'Observed feerate queue heuristic only; calibrated probabilities and confidence intervals are unavailable.',observed_transactions:null,observed_vsize_ahead:null,queue_capacity_blocks:null,unavailable_reason:reason };
+  }
+  public static snapshot(): Record<string, any> {
     try {
-      const allTxs = mempool.getMempool();
-      const txValues = Object.values(allTxs);
-      if (txValues.length > 0) {
-        for (const tx of txValues) {
-          mempoolTotalWeight += tx.vsize * 4;
-          if (tx.feePerVsize > rate) {
-            fasterWeight += tx.vsize * 4;
-          }
-        }
-      } else {
-        // Statistical fallback based on historical fee depth: higher rate -> fewer blocks ahead
-        fasterWeight = rate >= 20 ? 800000 : rate >= 10 ? 3000000 : rate >= 5 ? 8000000 : 25000000;
-      }
-    } catch {
-      fasterWeight = rate >= 20 ? 800000 : rate >= 10 ? 3000000 : rate >= 5 ? 8000000 : 25000000;
-    }
-
-    // Capacity of 1 block is ~4,000,000 weight units (~1,000,000 vB)
-    const blockCapacityWeight = 4000000;
-    const blocksAhead = fasterWeight / blockCapacityWeight;
-
-    let p1 = 0;
-    let p2 = 0;
-    let p3 = 0;
-    let p6 = 0;
-    let p12 = 0;
-    let p24 = 0;
-
-    if (blocksAhead < 0.8) {
-      // Top of mempool, high next block probability
-      p1 = Math.min(0.95, 0.90 + (0.8 - blocksAhead) * 0.1);
-      p2 = 0.98;
-      p3 = 0.99;
-      p6 = 0.999;
-      p12 = 1.0;
-      p24 = 1.0;
-    } else if (blocksAhead < 1.8) {
-      p1 = Math.max(0.40, 0.80 - (blocksAhead - 0.8) * 0.4);
-      p2 = 0.88;
-      p3 = 0.95;
-      p6 = 0.99;
-      p12 = 0.999;
-      p24 = 1.0;
-    } else if (blocksAhead < 3.5) {
-      p1 = Math.max(0.08, 0.35 - (blocksAhead - 1.8) * 0.15);
-      p2 = 0.45;
-      p3 = 0.72;
-      p6 = 0.92;
-      p12 = 0.98;
-      p24 = 0.999;
-    } else if (blocksAhead < 7.0) {
-      p1 = 0.02;
-      p2 = 0.12;
-      p3 = 0.28;
-      p6 = 0.70;
-      p12 = 0.91;
-      p24 = 0.98;
-    } else {
-      p1 = 0.01;
-      p2 = 0.03;
-      p3 = 0.08;
-      p6 = 0.25;
-      p12 = 0.65;
-      p24 = 0.88;
-    }
-
-    const confidenceLow = Math.max(0, p1 - 0.04);
-    const confidenceHigh = Math.min(1.0, p1 + 0.04);
-
-    return {
-      next_block: Number(p1.toFixed(3)),
-      two_blocks: Number(p2.toFixed(3)),
-      three_blocks: Number(p3.toFixed(3)),
-      six_blocks: Number(p6.toFixed(3)),
-      twelve_blocks: Number(p12.toFixed(3)),
-      twenty_four_blocks: Number(p24.toFixed(3)),
-      confidence_interval: [Number(confidenceLow.toFixed(3)), Number(confidenceHigh.toFixed(3))],
-      is_fallback: false,
-      model_version: this.activeModelVersion,
-      calculated_at: now,
-    };
+      if (!mempool.isInSync()) throw new Error();
+      const snapshot = mempool.getMempool();
+      if (!snapshot || typeof snapshot !== 'object' || Array.isArray(snapshot) || Object.keys(snapshot).length > 200000) throw new Error();
+      return snapshot;
+    } catch { throw new PolicyEvidenceError('unavailable-mempool-source', 'A bounded synchronized mempool snapshot is unavailable.'); }
   }
-
-  public static empiricalFallback(effectiveFeerate: number): InclusionForecastProbabilities {
-    const rate = Math.max(0.1, effectiveFeerate);
-    const p1 = rate > 20 ? 0.90 : rate > 10 ? 0.60 : rate > 5 ? 0.30 : 0.05;
-    const p2 = Math.min(0.98, p1 * 1.3);
-    const p3 = Math.min(0.99, p2 * 1.2);
-    const p6 = Math.min(0.999, p3 * 1.1);
-
-    return {
-      next_block: Number(p1.toFixed(3)),
-      two_blocks: Number(p2.toFixed(3)),
-      three_blocks: Number(p3.toFixed(3)),
-      six_blocks: Number(p6.toFixed(3)),
-      twelve_blocks: 0.98,
-      twenty_four_blocks: 0.99,
-      confidence_interval: [Math.max(0, p1 - 0.08), Math.min(1.0, p1 + 0.08)],
-      is_fallback: true,
-      model_version: 'deterministic-empirical-fallback',
-      calculated_at: new Date().toISOString(),
-    };
+  public static calculateForecast(effectiveFeerate: number, packageFeerate?: number, vsize = 140, snapshot = this.snapshot()): InclusionForecastProbabilities {
+    if (!Number.isFinite(effectiveFeerate) || effectiveFeerate < 0 || packageFeerate !== undefined && (!Number.isFinite(packageFeerate) || packageFeerate < 0) || !Number.isSafeInteger(vsize) || vsize <= 0) throw new PolicyEvidenceError('invalid-forecast-input', 'Finite nonnegative feerates and positive integer virtual size are required.',400);
+    const rate=Math.max(effectiveFeerate,packageFeerate??effectiveFeerate);let ahead=0;
+    const rows=Object.values(snapshot);
+    for(const row of rows) {
+      if (!row || !Number.isFinite(row.feePerVsize) || row.feePerVsize<0 || !Number.isSafeInteger(row.vsize) || row.vsize<=0) throw new PolicyEvidenceError('unavailable-mempool-source','The mempool snapshot contains incomplete fee or size evidence.');
+      if(row.feePerVsize>rate) ahead+=row.vsize;
+      if(!Number.isSafeInteger(ahead+vsize)) throw new PolicyEvidenceError('unavailable-mempool-source','The observed queue exceeds the bounded size range.');
+    }
+    return {...this.unavailable(''),unavailable_reason:null,observed_transactions:rows.length,observed_vsize_ahead:ahead,queue_capacity_blocks:(ahead+vsize)/1000000};
   }
+  public static empiricalFallback(_effectiveFeerate: number): InclusionForecastProbabilities { return this.unavailable('No calibrated empirical fallback is available.'); }
 }

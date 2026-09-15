@@ -1,7 +1,8 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, Optional } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { Subscription, combineLatest, of, startWith } from 'rxjs';
+import { StateService } from '@app/services/state.service';
 import { EcashApiService, FedimintFederation } from './ecash.service';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
@@ -21,7 +22,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
         </div>
         <div class="title-row d-flex flex-wrap align-items-center justify-content-between gap-2">
           <h1 class="m-0">Fedimint Federation Telemetry</h1>
-          <span class="badge bg-success" *ngIf="federation">
+          <span class="badge bg-secondary" *ngIf="federation">
             Epoch {{ federation.current_epoch | number }}
           </span>
         </div>
@@ -45,7 +46,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
               <div class="h4 text-primary">{{ federation.name }}</div>
             </div>
             <div class="col-12 col-md-6">
-              <div class="text-muted small">Consensus Quorum</div>
+              <div class="text-muted small">Reported Guardian Quorum</div>
               <div class="h4">{{ federation.threshold }} of {{ federation.guardians_count }} Guardians Required</div>
             </div>
           </div>
@@ -59,7 +60,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
               <ul class="list-group list-group-flush bg-transparent">
                 <li *ngFor="let mod of federation.modules" class="list-group-item bg-transparent d-flex justify-content-between px-0">
                   <span class="fw-semibold">{{ mod | uppercase }}</span>
-                  <span class="badge bg-success">Active Consensus Module</span>
+                  <span class="badge bg-secondary">Reported module</span>
                 </li>
               </ul>
             </div>
@@ -70,7 +71,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
               <h2 class="h5 mb-3">Epoch State</h2>
               <ul class="list-group list-group-flush bg-transparent">
                 <li class="list-group-item bg-transparent d-flex justify-content-between px-0">
-                  <span class="text-muted">Current Federation Epoch</span>
+                  <span class="text-muted">Reported Federation Epoch</span>
                   <span class="fw-semibold">{{ federation.current_epoch | number }}</span>
                 </li>
                 <li class="list-group-item bg-transparent d-flex justify-content-between px-0">
@@ -107,44 +108,28 @@ export class EcashFedimintDetailComponent implements OnInit, OnDestroy {
   federation: FedimintFederation | null = null;
   loading = true;
   error: string | null = null;
-  private sub = new Subscription();
+  private sub?: Subscription;private request?:Subscription;
 
   constructor(
     private route: ActivatedRoute,
     private api: EcashApiService,
-    private cd: ChangeDetectorRef
+    private cd: ChangeDetectorRef,
+    @Optional() private state: StateService = null
   ) {}
 
   ngOnInit(): void {
-    this.sub.add(
-      this.route.paramMap.subscribe(params => {
-        const fedId = params.get('federationId');
-        if (fedId) {
-          this.fetchFederation(fedId);
-        }
-      })
-    );
+    this.sub=combineLatest([this.route.paramMap,(this.state ? this.state.networkChanged$.pipe(startWith(null)) : of(null))]).subscribe(([params])=>{
+      this.request?.unsubscribe();this.federation=null;this.error=null;this.loading=false;
+      const id=params.get('federationId');
+      if(!id){this.error='Missing requested identifier.';this.cd.markForCheck();return;}
+      this.loading=true;this.cd.markForCheck();
+      this.request=this.api.getFedimintFederationById$(id).subscribe({next:data=>{
+        this.loading=false;
+        if(!data||data.federation_id!==id){this.error='Response does not match the requested identifier.';}
+        else this.federation=data;
+        this.cd.markForCheck();
+      },error:err=>{this.loading=false;this.error=err?.error?.error||'Source unavailable; no observation established.';this.cd.markForCheck();}});
+    });
   }
-
-  private fetchFederation(fedId: string): void {
-    this.loading = true;
-    this.sub.add(
-      this.api.getFedimintFederationById$(fedId).subscribe({
-        next: data => {
-          this.federation = data;
-          this.loading = false;
-          this.cd.markForCheck();
-        },
-        error: err => {
-          this.error = err?.error?.error || err?.message || 'Failed to load federation details';
-          this.loading = false;
-          this.cd.markForCheck();
-        },
-      })
-    );
-  }
-
-  ngOnDestroy(): void {
-    this.sub.unsubscribe();
-  }
+  ngOnDestroy(): void {this.sub?.unsubscribe();this.request?.unsubscribe();this.federation=null;this.loading=false;}
 }

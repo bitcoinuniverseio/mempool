@@ -48,7 +48,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
             <div class="card p-3 h-100 bg-body-tertiary border">
               <div class="text-muted small">Tracked Reserve Balance</div>
               <div class="h4 my-1 text-primary">{{ overview.total_tracked_reserve_sats == null ? 'Unknown' : (overview.total_tracked_reserve_sats / 100000000).toFixed(2) + ' BTC' }}</div>
-              <div class="small text-muted">Onchain verified assets</div>
+              <div class="small text-muted">Onchain reserve evidence required</div>
             </div>
           </div>
           <div class="col-12 col-sm-6 col-lg-3">
@@ -67,9 +67,9 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           </div>
           <div class="col-12 col-sm-6 col-lg-3">
             <div class="card p-3 h-100 bg-body-tertiary border">
-              <div class="text-muted small">Active Attestors</div>
+              <div class="text-muted small">Configured Provider Identities</div>
               <div class="h4 my-1 text-info">{{ overview.active_providers_count }} Entities</div>
-              <div class="small text-muted">Regular proof publishers</div>
+              <div class="small text-muted">Key configuration is separate from attestation evidence</div>
             </div>
           </div>
         </section>

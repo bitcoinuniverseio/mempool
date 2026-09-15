@@ -21,7 +21,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           </span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
-          Catalog of observed on-chain Simplicity smart contracts on Liquid, commitment roots, and static resource bounds.
+          Program observations require the owned Liquid program index. Compiler output alone is not an on-chain observation; an unavailable index is shown as an error.
         </p>
 
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
@@ -50,7 +50,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                 <th>CMR (Commitment Root)</th>
                 <th>Type</th>
                 <th>Static Weight</th>
-                <th>Memory Bound</th>
+                <th>Memory Cell Bound</th>
                 <th>Formal Proof</th>
                 <th>Action</th>
               </tr>
@@ -58,18 +58,18 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
             <tbody>
               <tr *ngFor="let p of programs">
                 <td>
-                  <div class="fw-bold">{{ p.source_name || p.program_id }}</div>
+                  <div class="fw-bold">{{ p.program_name || p.program_id }}</div>
                   <div class="small text-muted font-monospace">{{ p.program_id }}</div>
                 </td>
                 <td class="font-monospace small text-truncate" style="max-width: 200px;">
                   {{ p.cmr }}
                 </td>
                 <td><span class="badge bg-secondary">{{ p.program_type }}</span></td>
-                <td class="font-monospace small">{{ p.static_cost_weight }} WU</td>
-                <td class="font-monospace small">{{ p.memory_bound_bytes }} B</td>
+                <td class="font-monospace small">{{ p.resource_bounds.max_cost_weight }} WU</td>
+                <td class="font-monospace small">{{ p.resource_bounds.max_memory_cells }} cells</td>
                 <td>
-                  <span class="badge" [ngClass]="p.is_formally_verified ? 'bg-success' : 'bg-secondary'">
-                    {{ p.is_formally_verified ? 'VERIFIED' : 'UNPROVEN' }}
+                  <span class="badge" [ngClass]="(p.formal_verification_state === 'proof_checked') ? 'bg-success' : 'bg-secondary'">
+                    {{ (p.formal_verification_state === 'proof_checked') ? 'VERIFIED' : 'UNPROVEN' }}
                   </span>
                 </td>
                 <td>

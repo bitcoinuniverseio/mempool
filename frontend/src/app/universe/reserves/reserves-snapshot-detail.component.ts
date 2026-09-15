@@ -1,7 +1,8 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { Subscription, combineLatest, forkJoin, of, catchError, map, startWith, switchMap } from 'rxjs';
+import { StateService } from '@app/services/state.service';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { ReservesApiService, ReserveSnapshot } from './reserves.service';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
@@ -72,7 +73,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
               <div class="fw-bold">{{ snapshot.utxo_count ?? 'Unknown' }} UTXOs / {{ snapshot.signature_count }} Signatures</div>
             </div>
             <div class="col-12">
-              <div class="text-muted small">Merkle Sum Tree Root</div>
+              <div class="text-muted small">Committed Liability Root</div>
               <div class="font-monospace small text-break p-2 bg-dark rounded border">
                 {{ snapshot.merkle_root }}
               </div>
@@ -108,32 +109,21 @@ export class ReservesSnapshotDetailComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private reservesApi: ReservesApiService,
     private cd: ChangeDetectorRef,
+    private state: StateService,
   ) {}
 
   public ngOnInit(): void {
-    this.sub = this.route.paramMap.subscribe(params => {
-      const snapshotId = params.get('snapshotId') || '';
-      if (!snapshotId) {
-        this.error = 'No snapshot ID specified';
-        this.loading = false;
-        this.cd.markForCheck();
-        return;
-      }
-
-      this.loading = true;
-      this.reservesApi.getSnapshotById(snapshotId).subscribe({
-        next: (snap) => {
-          this.snapshot = snap;
-          this.loading = false;
-          this.cd.markForCheck();
-        },
-        error: (err) => {
-          this.error = loadFailureMessage(classifyLoadFailure(err));
-          this.loading = false;
-          this.cd.markForCheck();
-        }
-      });
-    });
+    this.sub = combineLatest([this.route.paramMap, this.state.networkChanged$.pipe(startWith(this.state.network))]).pipe(
+      switchMap(([params]) => {
+        this.snapshot = null; this.error = ''; this.loading = true; this.cd.markForCheck();
+        const id = params.get('snapshotId');
+        if (!id || id.length > 256) { this.error = 'A valid snapshot identity is required.'; return of(null); }
+        return this.reservesApi.getSnapshotById(id).pipe(
+          map(value => { if (value?.snapshot_id !== id) throw new Error('Mismatched snapshot'); return value; }),
+          catchError(() => { this.error = 'Snapshot evidence is unavailable or does not match the requested identity.'; return of(null); }),
+        );
+      }),
+    ).subscribe(value => { this.snapshot = value; this.loading = false; this.cd.markForCheck(); });
   }
 
   public ngOnDestroy(): void {

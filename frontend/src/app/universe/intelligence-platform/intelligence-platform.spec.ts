@@ -102,7 +102,7 @@ describe('Unified Intelligence Platform Frontend Services', () => {
   };
 
   // A held key makes owner-scoped calls possible; the stub never touches localStorage.
-  const ownerKey = { key: 'uip_live_' + 'a'.repeat(48), headers: () => ({}), set: () => undefined, clear: () => undefined } as unknown as OwnerKeyService;
+  const ownerKey = { key$:of('uip_live_' + 'a'.repeat(48)), key: 'uip_live_' + 'a'.repeat(48), headers: () => ({}), set: () => undefined, clear: () => undefined } as unknown as OwnerKeyService;
   const service = new IntelligenceApiService(mockHttp, mockStateService, ownerKey);
   const mockCdr: any = { markForCheck: () => {} };
 
@@ -193,7 +193,7 @@ describe('Unified Intelligence Platform Frontend Services', () => {
   // Component rendering and lifecycle assertions
   describe('Component Lifecycle and State Verification', () => {
     it('PolicyLabComponent: does not evaluate transactions on ngOnInit', () => {
-      const cmp = new PolicyLabComponent(service, mockCdr);
+      const cmp = new PolicyLabComponent(service, mockCdr, mockStateService);
       cmp.ngOnInit();
       expect(cmp.evaluationResult).toBeNull();
       expect(cmp.loading).toBe(false);
