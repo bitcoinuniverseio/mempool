@@ -288,7 +288,7 @@
   border-radius: var(--u-radius-sm, 3px);
   font-weight: 500;
   cursor: pointer;
-  &:hover { background: var(--u-brand-strong); }
+  &:hover, &:focus-visible { background: var(--u-brand-hover); color: var(--u-brand-contrast); }
   &:disabled { opacity: 0.6; cursor: not-allowed; }
 }
 

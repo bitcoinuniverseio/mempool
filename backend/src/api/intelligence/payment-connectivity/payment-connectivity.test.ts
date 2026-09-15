@@ -59,35 +59,50 @@ describe('PaymentConnectivityService', () => {
 
   it('should inspect and mask NWC URI without exposing secret in return value', () => {
     const rawSecret = '112233445566778899aabbccddeeff00112233445566778899aabbccddeeff00';
-    const uri = `nostr+walletconnect://0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798?relay=wss%3A%2F%2Frelay.damus.io&secret=${rawSecret}`;
+    const uri = `nostr+walletconnect://79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798?relay=wss%3A%2F%2Frelay.damus.io&secret=${rawSecret}`;
 
     const inspected = paymentConnectivityService.inspectNwcUri(uri);
     expect(inspected.valid).toBe(true);
     expect(inspected.wallet_service_pubkey).toBe(
-      '0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798'
+      '79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798'
     );
-    expect(inspected.relays).toContain('wss://relay.damus.io');
+    expect(inspected.relays).toContain('wss://relay.damus.io/');
     expect(inspected.masked_uri).not.toContain(rawSecret);
-    expect(inspected.masked_uri).toContain('1122...ff00');
+    expect(inspected.masked_uri).toContain('secret=[redacted]');
+    expect(inspected.encryption_supported).toEqual([]);
+    expect(inspected.masked_uri).not.toContain(rawSecret.slice(0, 4));
   });
 
-  it('should reject non-HTTPS and SSRF target URLs for LNURL endpoints', () => {
-    const valid = paymentConnectivityService.verifyPublicEndpoint('https://service.example.com/.well-known/lnurlp/alice');
-    expect(valid.valid).toBe(true);
-    expect(valid.is_https).toBe(true);
-    expect(valid.ssrf_safe).toBe(true);
+  it('validates every required key, singleton and relay without leaking supplied secrets', () => {
+    const key = '79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798';
+    const secret = '11'.repeat(32);
+    const uri = (query: string, pub = key) => 'nostr+walletconnect://' + pub + '?' + query;
+    const base = 'relay=wss%3A%2F%2Frelay.example.com&secret=';
+    for (const input of [uri(base + 'z'.repeat(64)), uri(base + '0'.repeat(64)), uri(base + 'f'.repeat(64)), uri(base + secret, '0'.repeat(64)), uri(base + secret, '02' + key), uri(base + secret + '&secret=' + secret), uri('secret=' + secret), uri(base + secret + '&relay=%GG'), uri('relay=https://relay.example.com&secret=' + secret)]) {
+      const result = paymentConnectivityService.inspectNwcUri(input);
+      expect(result.valid).toBe(false);
+      expect(JSON.stringify(result)).not.toContain(secret);
+    }
+    const reflected = paymentConnectivityService.inspectNwcUri(uri('relay=' + encodeURIComponent('wss://' + secret + '.example.com/path?secret=' + secret) + '&secret=' + secret));
+    expect(JSON.stringify(reflected)).not.toContain(secret);
+    expect(reflected.encryption_supported).toEqual([]);
+  });
 
-    const httpBlocked = paymentConnectivityService.verifyPublicEndpoint('http://insecure.example.com/lnurl');
-    expect(httpBlocked.valid).toBe(false);
-    expect(httpBlocked.errors).toContain('LNURL endpoints must use HTTPS');
-
-    const ssrfLoopback = paymentConnectivityService.verifyPublicEndpoint('https://127.0.0.1/admin');
-    expect(ssrfLoopback.valid).toBe(false);
-    expect(ssrfLoopback.ssrf_safe).toBe(false);
-
-    const ssrfMetadata = paymentConnectivityService.verifyPublicEndpoint('https://169.254.169.254/latest/meta-data');
-    expect(ssrfMetadata.valid).toBe(false);
-    expect(ssrfMetadata.ssrf_safe).toBe(false);
+  it('checks all DNS answers without claiming transport or LNURL capability validation', async () => {
+    paymentConnectivityService.resolver = async () => [{ address: '8.8.8.8', family: 4 }];
+    try {
+      const valid = await paymentConnectivityService.verifyPublicEndpoint('https://service.example.com/.well-known/lnurlp/alice');
+      expect(valid).toMatchObject({ valid: true, is_https: true, ssrf_safe: null, resolved_address: '8.8.8.8', verification_scope: 'dns-address-inspection' });
+      for (const url of ['http://insecure.example.com', 'https://localhost', 'https://localhost.', 'https://127.1', 'https://2130706433', 'https://[::ffff:7f00:1]', 'https://[febf::1]', 'https://172.31.255.255', 'https://169.254.169.254', 'https://user:secret@example.com/']) {
+        expect(await paymentConnectivityService.verifyPublicEndpoint(url)).toMatchObject({ valid: false, ssrf_safe: false });
+      }
+      paymentConnectivityService.resolver = async () => [{ address: '8.8.8.8', family: 4 }, { address: '10.0.0.1', family: 4 }];
+      expect(await paymentConnectivityService.verifyPublicEndpoint('https://mixed.example.com/')).toMatchObject({ valid: false, ssrf_safe: false });
+      paymentConnectivityService.resolver = async () => { throw new Error('Do not echo resolver details'); };
+      const unresolved = await paymentConnectivityService.verifyPublicEndpoint('https://unresolved.example.com/');
+      expect(unresolved.valid).toBe(false);
+      expect(JSON.stringify(unresolved)).not.toContain('Do not echo');
+    } finally { paymentConnectivityService.resolver = undefined; }
   });
 });
 

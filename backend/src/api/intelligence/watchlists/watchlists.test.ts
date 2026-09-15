@@ -91,7 +91,8 @@ describe('watchlists: ownership, validation and durability', () => {
     await expect(watchlistsService.addRule(alice, wl.watchlist_id, 'feerate_cross', 'in_app')).rejects.toMatchObject({ code: 'invalid_threshold_value' });
     await expect(watchlistsService.addRule(alice, wl.watchlist_id, 'value_transfer', 'in_app', 'NaN')).rejects.toMatchObject({ code: 'invalid_threshold_value' });
     await expect(watchlistsService.addRule(alice, wl.watchlist_id, 'confirmation', 'webhook')).rejects.toMatchObject({ code: 'invalid_webhook_id' });
-    developerIdentity.resolver = async () => [{ address: '203.0.113.9', family: 4 }];
+    // Resolver seam only; no outbound request. Documentation networks are blocked.
+    developerIdentity.resolver = async () => [{ address: '8.8.8.8', family: 4 }];
     const bobHook = await developerIdentity.registerWebhook(bob, 'https://hooks.example.org/b', ['watchlist.notification']);
     await expect(watchlistsService.addRule(alice, wl.watchlist_id, 'confirmation', 'webhook', undefined, bobHook.webhook_id)).rejects.toMatchObject({ code: 'invalid_webhook_id', status: 404 });
     const aliceHook = await developerIdentity.registerWebhook(alice, 'https://hooks.example.org/a', ['watchlist.notification']);
@@ -192,7 +193,8 @@ describe('watchlist matcher: findings come from observed blocks and replacements
   });
 
   it('a webhook rule queues a delivery for exactly the owner webhook', async () => {
-    developerIdentity.resolver = async () => [{ address: '203.0.113.9', family: 4 }];
+    // Resolver seam only; no outbound request. Documentation networks are blocked.
+    developerIdentity.resolver = async () => [{ address: '8.8.8.8', family: 4 }];
     const hook = await developerIdentity.registerWebhook(alice, 'https://hooks.example.org/a', ['watchlist.notification']);
     const wl = await watchlistsService.createWatchlist(alice, 'hooked');
     await watchlistsService.addEntity(alice, wl.watchlist_id, 'txid', watchedTxid, 'the tx');
