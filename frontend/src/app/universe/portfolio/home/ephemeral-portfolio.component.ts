@@ -4,9 +4,10 @@
  * Nothing about the visit is stored: no vault record, no history entry.
  */
 
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, DestroyRef, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
+import { catchError, distinctUntilChanged, forkJoin, map, of, switchMap } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PortfolioV2ApiService } from '../data/portfolio-v2-api.service';
 import { PortfolioSessionService } from '../stores/session.service';
 import { PortfolioDataStateComponent } from '../shared/data-state.component';
@@ -135,31 +136,33 @@ export class EphemeralPortfolioComponent implements OnInit {
   readonly activity = this.activitySignal.asReadonly();
   readonly failure = this.failureSignal.asReadonly();
 
-  private readonly chain = computed(() => this.route.snapshot.paramMap.get('chain') ?? '');
-  private readonly network = computed(() => this.route.snapshot.paramMap.get('network') ?? '');
-  private readonly address = computed(() => this.route.snapshot.paramMap.get('address') ?? '');
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly address = signal('');
 
   ngOnInit(): void {
-    void this.load();
-  }
-
-  private async load(): Promise<void> {
-    try {
-      const [summary, holdings, activity] = await Promise.all([
-        firstValueFrom(this.api.getSummary$(this.chain(), this.network(), this.address())),
-        firstValueFrom(this.api.getHoldings$(this.chain(), this.network(), this.address(), undefined, 100)),
-        firstValueFrom(this.api.getActivity$(this.chain(), this.network(), this.address())),
-      ]);
-      this.summarySignal.set(summary);
-      this.holdingsSignal.set(holdings);
-      this.activitySignal.set(activity);
-    } catch (error) {
-      this.failureSignal.set(
-        error instanceof Error
-          ? error.message
-          : $localize`:@@universe.portfolio.ephemeral.failed:The address evidence could not be read.`,
-      );
-    }
+    this.route.paramMap.pipe(
+      map(params => ({ chain: params.get('chain') ?? '', network: params.get('network') ?? '', address: params.get('address') ?? '' })),
+      distinctUntilChanged((a, b) => a.chain === b.chain && a.network === b.network && a.address === b.address),
+      switchMap(({ chain, network, address }) => {
+        this.address.set(address);
+        this.summarySignal.set(null);
+        this.holdingsSignal.set(null);
+        this.activitySignal.set(null);
+        this.failureSignal.set('');
+        if (!chain || !network || !address) return of({ error: 'A chain, network and address are required.' });
+        return forkJoin({
+          summary: this.api.getSummary$(chain, network, address),
+          holdings: this.api.getHoldings$(chain, network, address, undefined, 100),
+          activity: this.api.getActivity$(chain, network, address),
+        }).pipe(catchError(() => of({ error: 'The address evidence could not be read.' })));
+      }),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(result => {
+      if ('error' in result) { this.failureSignal.set(result.error); return; }
+      this.summarySignal.set(result.summary);
+      this.holdingsSignal.set(result.holdings);
+      this.activitySignal.set(result.activity);
+    });
   }
 
   protected truncated(): string {

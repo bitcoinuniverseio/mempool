@@ -1,9 +1,11 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, defer, of } from 'rxjs';
-import { distinctUntilChanged, map, startWith, switchMap } from 'rxjs/operators';
+import { catchError, distinctUntilChanged, map, startWith, switchMap, take } from 'rxjs/operators';
 import { StateService } from '@app/services/state.service';
 
+export interface TimestampCoverage { record_limit: number; records_examined: number; complete: boolean; }
+export interface TimestampAnchorPage { anchors: TimestampAnchor[]; coverage: TimestampCoverage; verified_records: number; }
 export interface TimestampAnchor {
   batch_id: string;
   calendar_id: string;
@@ -23,13 +25,18 @@ export interface TimestampCalendar {
   health_detail: string;
   /** Stamps made here that this calendar promised and has not yet anchored. */
   pending_attestations_count: number;
+  counts_scope: string;
+  anchored_coverage: TimestampCoverage;
+  pending_coverage: TimestampCoverage;
   anchored_proofs_count: number;
   last_anchor_block_height: number | null;
 }
 
 export interface TimestampsOverview {
   total_proofs_tracked: number;
-  bitcoin_confirmed_proofs: number;
+  bitcoin_confirmed_proofs: number | null;
+  stored_anchored_proofs: number;
+  active_chain_coverage: TimestampCoverage;
   pending_calendar_attestations: number;
   failed_submissions: number;
   active_calendar_servers: number;
@@ -139,6 +146,18 @@ export class OpenTimestampsApiService {
   /** Bitcoin blocks that anchored proofs stamped through this deployment. */
   public getBatches$(): Observable<TimestampAnchor[]> {
     return this.scoped(base => this.http.get<{ anchors: TimestampAnchor[] }>(`${base}/anchors`).pipe(map(res => res?.anchors ?? [])));
+  }
+
+  public getAnchorPage$(): Observable<TimestampAnchorPage> {
+    return this.scoped(base => this.http.get<TimestampAnchorPage>(base + '/anchors'));
+  }
+
+  public watch<T>(request: () => Observable<T>): Observable<{loading: boolean; value: T | null; error: unknown}> {
+    return defer(() => (this.stateService.networkChanged$ ?? of(this.stateService.network)).pipe(
+      startWith(this.stateService.network), map(() => this.network), distinctUntilChanged(),
+      switchMap(() => request().pipe(take(1), map(value => ({ loading: false, value, error: null as unknown })),
+        catchError(error => of({ loading: false, value: null, error })), startWith({ loading: true, value: null, error: null }))),
+    ));
   }
 
   public stampDigest$(digest: string): Observable<TimestampStampResult> {

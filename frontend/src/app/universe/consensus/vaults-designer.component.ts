@@ -1,10 +1,11 @@
+import {Subscription} from 'rxjs';
 import {
-  Component,
+  Component, Optional, Inject, OnDestroy,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 import { compileVaultScripts } from './vault-script-template';
@@ -52,7 +53,7 @@ import { compileVaultScripts } from './vault-script-template';
           >
           <a
             class="nav-link"
-            [routerLink]="'/labs/vaults/simulate' | relativeUrl"
+            [routerLink]="'/labs/vaults/simulate' | relativeUrl" [queryParams]="{proposal:targetBip,ctv:templateHash}"
             >Covenant Simulator</a
           >
         </nav>
@@ -219,7 +220,7 @@ import { compileVaultScripts } from './vault-script-template';
 
         <div class="d-flex justify-content-end">
           <a
-            [routerLink]="'/labs/vaults/simulate' | relativeUrl"
+            [routerLink]="'/labs/vaults/simulate' | relativeUrl" [queryParams]="{proposal:targetBip,ctv:templateHash}"
             class="btn btn-primary"
           >
             Test in Covenant Simulator &rarr;
@@ -242,7 +243,9 @@ import { compileVaultScripts } from './vault-script-template';
     `,
   ],
 })
-export class VaultsDesignerComponent {
+export class VaultsDesignerComponent implements OnDestroy {
+  private context?:Subscription;
+  ngOnDestroy():void {this.context?.unsubscribe();this.edited();}
   hotKey = '';
   coldKey = '';
   delayBlocks = 144;
@@ -257,7 +260,7 @@ export class VaultsDesignerComponent {
     this.error = null;
   }
 
-  constructor(private cd: ChangeDetectorRef) {}
+  constructor(private cd: ChangeDetectorRef,@Optional() @Inject(ActivatedRoute) route?:ActivatedRoute) {this.context=route?.queryParamMap.subscribe(params=>{this.edited();this.targetBip='bip-119';this.delayBlocks=144;this.templateHash='';const proposal=params.get('proposal'),delay=params.get('delay');if(proposal){if(!['bip-119','bip-347','bip-443'].includes(proposal)){this.error='Unsupported proposal context.';return;}this.targetBip=proposal;}if(delay!==null){const value=Number(delay);if(!/^\d+$/.test(delay)||!Number.isSafeInteger(value)||value<1||value>65535){this.error='Invalid template delay context.';return;}this.delayBlocks=value;}this.cd.markForCheck();});}
 
   loadDemoKeys(): void {
     this.hotKey =

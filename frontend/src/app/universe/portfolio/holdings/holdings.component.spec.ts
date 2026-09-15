@@ -1,0 +1,12 @@
+// @vitest-environment jsdom
+import 'zone.js';
+import {afterEach,beforeAll,expect,it,vi} from 'vitest';
+import {signal,Component} from '@angular/core';import {TestBed} from '@angular/core/testing';import {BrowserDynamicTestingModule,platformBrowserDynamicTesting} from '@angular/platform-browser-dynamic/testing';
+import {HoldingsComponent} from './holdings.component';import {PortfolioDataService} from '../data/portfolio-data.service';import {PortfolioSessionService} from '../stores/session.service';
+import {PortfolioDataStateComponent} from '../shared/data-state.component';
+@Component({selector:'app-portfolio-data-state',standalone:true,inputs:['state'],template:''}) class StateFixture {state:string='';}
+beforeAll(()=>TestBed.initTestEnvironment(BrowserDynamicTestingModule,platformBrowserDynamicTesting()));afterEach(()=>TestBed.resetTestingModule());
+function fixture(value='25',total='100') {const hidden=signal(false);const data=signal({loading:false,aggregation:{pricedTotal:total,holdings:[{assetKey:'bitcoin:btc',displayName:'Coin',protocol:'base',chain:'bitcoin',accountIds:['one'],quantityAtomic:'717171',decimals:0,pricedValue:value,state:'proven',locations:[{kind:'outpoint',reference:'tx:0',quantityAtomic:'828282'}]}]}});TestBed.configureTestingModule({providers:[{provide:PortfolioDataService,useValue:{state:data}},{provide:PortfolioSessionService,useValue:{valuesHidden:hidden}}]});TestBed.overrideComponent(HoldingsComponent,{remove:{imports:[PortfolioDataStateComponent]},add:{imports:[StateFixture]}});const view=TestBed.createComponent(HoldingsComponent);view.detectChanges();return {view,hidden,component:view.componentInstance};}
+it.each([['25','100','25%'],['0.25','1','25%'],['1','4.000','25%'],['0','0.0','-'],['1','bad','-']])('exact shares %s/%s', (value,total,expected)=>{expect(fixture(value,total).component.rows()[0].share).toBe(expected);});
+it('privacy hides desktop, mobile and expanded quantities',()=>{const {view,hidden,component}=fixture();component.expanded.set('bitcoin:btc');hidden.set(true);view.detectChanges();expect(view.nativeElement.textContent).not.toContain('717');expect(view.nativeElement.textContent).not.toContain('828');});
+it('the control describes filters instead of claiming grouping',()=>{const {view}=fixture();expect(view.nativeElement.querySelector('.group').textContent).toContain('Filter');expect(view.nativeElement.querySelector('.group').textContent).toContain('Priced only');});

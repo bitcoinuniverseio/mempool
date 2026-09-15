@@ -23,10 +23,10 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           class="title-row d-flex flex-wrap align-items-center justify-content-between gap-2"
         >
           <h1 class="m-0">Covenant Proposal Comparison Matrix</h1>
-          <span class="badge bg-primary">Comparative Technical Audit</span>
+          <span class="badge bg-primary">Proposal reference comparison</span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
-          Side-by-side evaluation of Bitcoin covenant proposals across
+          Reference descriptions of Bitcoin covenant proposals across
           expressiveness, computational weight, and consensus risk.
         </p>
 

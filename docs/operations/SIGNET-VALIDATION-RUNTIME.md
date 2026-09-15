@@ -114,12 +114,14 @@ The app is then at `http://127.0.0.1:8099/signet`.
 ## Proving the served state before testing
 
 ```bash
-node scripts/universe/acceptance-preflight.mjs --origin http://127.0.0.1:8099 --network signet audits/preflight-signet.json
+node scripts/universe/acceptance-preflight.mjs --origin http://127.0.0.1:8099 --network signet --out audits/preflight-signet.json
 curl -s http://127.0.0.1:8099/signet/api/v1/backend-info      # gitCommit, chainSync
 curl -s http://127.0.0.1:8099/signet/api/blocks/tip/height     # must equal the Esplora tip
 curl -s http://127.0.0.1:3022/blocks/tip/height
 curl -s http://127.0.0.1:8099/signet/api/v1/fees/recommended   # 200 once the mempool is in sync
 ```
+
+Preflight requires an explicit literal loopback HTTP origin and network. The output file must be new; existing evidence is never overwritten. It checks API genesis, block identity and a stable tip, and retains the eleven historical transport probes without interpreting their HTTP responses as operation passes. It does not evaluate prior prerequisite claims or establish full GO. Source hashes identify the local tooling, not the process serving the URL.
 
 `backend-info.gitCommit` is the served revision, `chainSync` is the node the
 backend reads, and the database namespace is `DATABASE.DATABASE` in the

@@ -99,9 +99,9 @@ describe('PaymentConnectivityService', () => {
       paymentConnectivityService.resolver = async () => [{ address: '8.8.8.8', family: 4 }, { address: '10.0.0.1', family: 4 }];
       expect(await paymentConnectivityService.verifyPublicEndpoint('https://mixed.example.com/')).toMatchObject({ valid: false, ssrf_safe: false });
       paymentConnectivityService.resolver = async () => { throw new Error('Do not echo resolver details'); };
-      const unresolved = await paymentConnectivityService.verifyPublicEndpoint('https://unresolved.example.com/');
-      expect(unresolved.valid).toBe(false);
-      expect(JSON.stringify(unresolved)).not.toContain('Do not echo');
+      await expect(paymentConnectivityService.verifyPublicEndpoint('https://unresolved.example.com/')).rejects.toMatchObject({status:503,code:'unavailable-dns-source'});
+      paymentConnectivityService.resolver = async () => [{address:'not-an-IP',family:4}];
+      await expect(paymentConnectivityService.verifyPublicEndpoint('https://malformed.example.com/')).rejects.toMatchObject({status:503,code:'unavailable-dns-source'});
     } finally { paymentConnectivityService.resolver = undefined; }
   });
 });
@@ -134,6 +134,15 @@ describe('Payment connectivity HTTP responses', () => {
       expect(body).not.toHaveProperty('products');
       expect(body).not.toHaveProperty('relays');
     }
+  });
+
+  it('returns a typed unavailable response for DNS failure without a negative or secret-bearing verdict', async () => {
+    const {posts}=mount(); const res={status:jest.fn().mockReturnThis(),json:jest.fn()};
+    paymentConnectivityService.resolver=async()=>{throw new Error('private-path-and-credentials');};
+    try { await posts.get('/api/v1/intelligence/payment-connectivity/public-endpoints/verify')!({body:{endpoint_url:'https://example.com'}} as Request,res as unknown as Response);
+      expect(res.status).toHaveBeenCalledWith(503);expect(res.json).toHaveBeenCalledWith({stage:'unavailable-dns-source',error:expect.any(String)});
+      expect(JSON.stringify(res.json.mock.calls)).not.toContain('private-path');expect(res.json.mock.calls[0][0]).not.toHaveProperty('valid');
+    } finally {paymentConnectivityService.resolver=undefined;}
   });
 
   it.each([

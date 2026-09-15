@@ -29,6 +29,9 @@ export interface TimestampCalendar {
   health_detail: string;
   /** Stamps made here that this calendar promised and has not yet anchored. */
   pending_attestations_count: number;
+  counts_scope: string;
+  anchored_coverage: TimestampCoverage;
+  pending_coverage: TimestampCoverage;
   anchored_proofs_count: number;
   average_anchor_lag_blocks: number | null;
   last_anchor_block_height: number | null;
@@ -40,7 +43,10 @@ export interface TimestampCalendar {
 export interface TimestampBatch {
   batch_id: string;
   calendar_id: string;
-  merkle_root: string;
+  merkle_root: null;
+  commitment_hex: string;
+  anchor_status: 'pending' | 'active-chain' | 'reorged' | 'invalid' | 'unknown';
+  anchor_verified_at: string | null;
   leaf_count: number;
   created_at_utc: string;
   anchor_block_height?: number;
@@ -106,6 +112,7 @@ export interface TimestampVerificationResult {
   network: string;
   attestation_type?: 'bitcoin';
   bitcoin_block_hash?: string;
+  bitcoin_merkle_root?: string;
   earliest_proven_block_height?: number;
   earliest_proven_time_utc?: string;
   bitcoin_txid?: string;
@@ -121,14 +128,16 @@ export interface TimestampVerificationResult {
 
 export interface TimestampOverview {
   total_active_calendars: number;
-  total_verified_anchors_count: number;
+  total_verified_anchors_count: number | null;
   total_digests_stamped_24h: number;
-  latest_bitcoin_anchor_height: number;
+  latest_bitcoin_anchor_height: number | null;
   active_calendars: TimestampCalendar[];
   recent_batches: TimestampBatch[];
   recent_anchors: TimestampAnchorTransaction[];
   total_proofs_tracked: number;
-  bitcoin_confirmed_proofs: number;
+  stored_anchored_proofs: number;
+  active_chain_coverage: TimestampCoverage;
+  bitcoin_confirmed_proofs: number | null;
   pending_calendar_attestations: number;
   failed_submissions: number;
   active_calendar_servers: number;
@@ -140,3 +149,5 @@ export interface TimestampOverview {
   storage: 'mysql' | 'memory';
   generated_at: string;
 }
+
+export interface TimestampCoverage { record_limit: number; records_examined: number; complete: boolean; }

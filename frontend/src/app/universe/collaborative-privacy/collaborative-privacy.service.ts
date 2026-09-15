@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map, startWith, distinctUntilChanged } from 'rxjs';
+import { StateService } from '@app/services/state.service';
 
 export interface CollaborativeOverview {
   total_collaborative_txs_24h: number;
@@ -24,32 +25,34 @@ export interface CollaborativeOverview {
   providedIn: 'root',
 })
 export class CollaborativePrivacyApiService {
-  private readonly baseUrl = '/api/v1/intelligence/collaborative';
-
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private state: StateService) {}
+  get network(): string { return this.state.network || this.state.env?.ROOT_NETWORK || 'mainnet'; }
+  get networkChanged$() { return this.state.networkChanged$.pipe(startWith(this.network),map(() => this.network),distinctUntilChanged()); }
+  private get baseUrl(): string { const root=this.state.env?.ROOT_NETWORK || 'mainnet'; return (this.network===root?'':'/'+this.network)+'/api/v1/intelligence/collaborative'; }
+  private rows(kind: string): Observable<any[]> { const network=this.network; return this.http.get<any>(`${this.baseUrl}/${kind}`).pipe(map(res=>{ const key=kind==='fidelity-bonds'?'fidelity_bonds':kind; if(!Array.isArray(res?.[key]) || res[key].length>10000) throw new Error('Malformed source response'); if(kind!=='protocols' && res.network!==network) throw new Error('Source network is not bound'); return res[key]; })); }
 
   public getOverview$(): Observable<CollaborativeOverview> {
     return this.http.get<CollaborativeOverview>(`${this.baseUrl}/overview`);
   }
 
   public getProtocols$(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/protocols`);
+    return this.rows('protocols');
   }
 
   public getCoordinators$(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/coordinators`);
+    return this.rows('coordinators');
   }
 
   public getRounds$(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/rounds`);
+    return this.rows('rounds');
   }
 
   public getRound$(roundId: string): Observable<any> {
-    return this.http.get<any>(`${this.baseUrl}/rounds/${roundId}`);
+    return this.http.get<any>(`${this.baseUrl}/rounds/${encodeURIComponent(roundId)}`);
   }
 
   public getFidelityBonds$(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/fidelity-bonds`);
+    return this.rows('fidelity-bonds');
   }
 
   public verifyPublicPackage$(payload: any): Observable<any> {

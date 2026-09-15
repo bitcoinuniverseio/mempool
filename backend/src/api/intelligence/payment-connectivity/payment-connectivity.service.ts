@@ -6,7 +6,9 @@ import {
   PaymentConnectivityOverviewResponse,
 } from './payment-connectivity.models';
 import * as ecc from 'tiny-secp256k1';
-import { Resolver, resolvePublicAddress, validateWebhookUrl } from '../identity/developer-identity';
+import { promises as dns } from 'dns';
+import { isIP } from 'net';
+import { IdentityError, Resolver, resolvePublicAddress, validateWebhookUrl } from '../identity/developer-identity';
 
 /**
  * Raised when a read has no source behind it. The routes map the code to a
@@ -177,7 +179,12 @@ export class PaymentConnectivityService {
     try {
       const parsed = validateWebhookUrl(endpointUrl);
       isHttps = parsed.protocol === 'https:';
-      const pinned = await resolvePublicAddress(parsed, this.resolver);
+      const source: Resolver = this.resolver ?? (async hostname => await dns.lookup(hostname, { all: true, verbatim: true }) as { address: string; family: 4 | 6 }[]);
+      const pinned = await resolvePublicAddress(parsed, async hostname => {
+        const answers = await source(hostname);
+        if (!Array.isArray(answers) || answers.length === 0 || answers.length > 512 || answers.some(answer => !answer || typeof answer.address !== 'string' || isIP(answer.address) === 0 || isIP(answer.address) !== answer.family)) { throw new Error('malformed resolution evidence'); }
+        return answers;
+      });
       return {
         valid: true, is_https: true, ssrf_safe: null,
         resolved_address: pinned.address, address_family: pinned.family,
@@ -185,7 +192,10 @@ export class PaymentConnectivityService {
         details: 'All resolved addresses passed the public-address policy at inspection time. No HTTP request or LNURL capability check was performed. A subsequent request must validate again and pin its connection; redirects require independent validation.',
         errors: [],
       };
-    } catch {
+    } catch (error) {
+      if (!(error instanceof IdentityError) || !['invalid_url', 'blocked_destination'].includes(error.code)) {
+        throw new PaymentConnectivityEvidenceError('unavailable-dns-source', 'Current DNS address evidence is unavailable. No endpoint policy or capability verdict was established.');
+      }
       // Never echo untrusted URLs, resolver exceptions or URL credentials.
       return { valid: false, is_https: isHttps, ssrf_safe: false, verification_scope: 'dns-address-inspection',
         details: 'Endpoint inspection failed.', errors: ['Expected a credential-free HTTPS URL resolving only to public addresses.'] };

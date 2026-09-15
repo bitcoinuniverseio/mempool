@@ -200,4 +200,18 @@ describe('portfolio report sharing controls', () => {
     expect(component.shareLink()).toBe('');
     expect(shares.list).toHaveBeenCalledWith('owner-two');
   });
+  it('encodes source-derived formula cells as literal text too', () => {
+    const { view, component, data } = fixture();
+    component.addressMode.set('included');
+    data.update(state => ({ ...state, aggregation: { ...state.aggregation!, holdings: [{ ...state.aggregation!.holdings[0], displayName: '=1+1', locations: [{ address: '@SUM(1)' }] }] } as any }));
+    let csv = '';
+    vi.stubGlobal('Blob', class { constructor(parts: string[]) { csv = parts.join(''); } });
+    vi.stubGlobal('URL', { createObjectURL: vi.fn(() => 'blob:test'), revokeObjectURL: vi.fn() });
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    (component as any).downloadCsv();
+    expect(csv).toContain("\"'=1+1\",\"'@SUM(1)\"");
+    expect(component.reportRows()[0].asset).toBe('=1+1');
+    expect(csv).toContain('"10%"');
+  });
+
 });

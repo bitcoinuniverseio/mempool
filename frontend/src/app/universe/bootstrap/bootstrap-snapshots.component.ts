@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { Subscription, combineLatest } from 'rxjs';
 import { BootstrapApiService, AssumeUtxoSnapshot } from './bootstrap.service';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
@@ -20,7 +20,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           </span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
-          Verified serialized UTXO set snapshots, SHA-256 integrity checksums, and Base UTXO hash commitments.
+          Source-reported serialized UTXO set snapshots, SHA-256 integrity checksums, and Base UTXO hash commitments.
         </p>
 
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
@@ -50,7 +50,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                 <th>Block Hash</th>
                 <th>Coins Count</th>
                 <th>Size</th>
-                <th>UTXO Hash (MuHash)</th>
+                <th>Serialized UTXO Hash</th>
                 <th>Core Version</th>
                 <th>Action</th>
               </tr>
@@ -85,6 +85,7 @@ export class BootstrapSnapshotsComponent implements OnInit, OnDestroy {
   error: string | null = null;
   snapshots: AssumeUtxoSnapshot[] = [];
   private sub?: Subscription;
+  private request?: Subscription;
 
   constructor(
     private bootstrapApi: BootstrapApiService,
@@ -92,21 +93,18 @@ export class BootstrapSnapshotsComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.sub = this.bootstrapApi.getSnapshots$().subscribe({
-      next: (data) => {
-        this.snapshots = data;
-        this.loading = false;
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        this.error = err.message || 'Failed to load snapshots';
-        this.loading = false;
-        this.cdr.markForCheck();
-      },
+    this.sub = this.bootstrapApi.networkChanged$.subscribe(() => {
+      this.request?.unsubscribe();this.snapshots=[];this.error=null;this.loading=true;this.cdr.markForCheck();
+
+      this.request = this.bootstrapApi.getSnapshots$().subscribe({
+        next: data => {if (!(Array.isArray(data) && data.every(s => (s as any).network === this.bootstrapApi.network))) {this.error='Snapshot catalogue response is not bound to this network and reference.';} else {this.snapshots=data;}this.loading=false;this.cdr.markForCheck();},
+        error: err => {this.error=err?.error?.error || err?.message || 'Snapshot source unavailable';this.loading=false;this.cdr.markForCheck();}
+      });
     });
   }
 
   ngOnDestroy(): void {
     this.sub?.unsubscribe();
+    this.request?.unsubscribe();
   }
 }
