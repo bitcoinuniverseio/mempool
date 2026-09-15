@@ -69,15 +69,21 @@ interface Captured {
   headers: Record<string, string>;
 }
 
+// Guards registered in front of a handler are kept apart from the handler,
+// so a test can exercise either on its own.
+const guards = new Map<string, ((req: any, res: any, next: () => void) => unknown)[]>();
+
 function handlers(): Map<string, (req: any, res: any) => unknown> {
   const found = new Map<string, (req: any, res: any) => unknown>();
   const app: any = {
-    get(path: string, handler: (req: any, res: any) => unknown) {
-      found.set(path, handler);
+    get(path: string, ...fns: ((req: any, res: any) => unknown)[]) {
+      found.set(path, fns[fns.length - 1]);
+      guards.set(path, fns.slice(0, -1) as any);
       return app;
     },
-    post(path: string, handler: (req: any, res: any) => unknown) {
-      found.set('POST ' + path, handler);
+    post(path: string, ...fns: ((req: any, res: any) => unknown)[]) {
+      found.set('POST ' + path, fns[fns.length - 1]);
+      guards.set('POST ' + path, fns.slice(0, -1) as any);
       return app;
     },
   };
@@ -308,5 +314,30 @@ describe('route registration', () => {
     const found = handlers();
     expect(found.has(`${PREFIX}node/overview`)).toBe(true);
     expect(found.has(`${PREFIX}node/rpc/catalog`)).toBe(true);
+  });
+});
+
+describe('executing a method needs an owner key', () => {
+  it('registers an owner guard in front of the rpc route and none in front of the public reads', async () => {
+    handlers();
+    expect(guards.get(RPC)).toHaveLength(1);
+    expect(guards.get(PREFIX + 'node/overview')).toHaveLength(0);
+    expect(guards.get(PREFIX + 'node/rpc/catalog')).toHaveLength(0);
+  });
+
+  it('refuses an unauthenticated call with 401 before the allowlist is consulted', async () => {
+    handlers();
+    const guard = guards.get(RPC)![0];
+    const captured: Captured = { status: 200, body: undefined, headers: {} };
+    const res: any = {
+      json(body: unknown) { captured.body = body; return res; },
+      status(code: number) { captured.status = code; return res; },
+      locals: {},
+    };
+    const next = jest.fn();
+    await guard({ headers: {}, body: { method: 'getblockchaininfo' } }, res, next);
+    expect(captured.status).toBe(401);
+    expect(next).not.toHaveBeenCalled();
+    expect(calls).toEqual([]);
   });
 });

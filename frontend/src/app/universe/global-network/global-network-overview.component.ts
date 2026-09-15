@@ -116,6 +116,9 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                     </tr>
                   </thead>
                   <tbody>
+                    <tr *ngIf="!overview.geographic_distribution?.length">
+                      <td colspan="2" class="text-muted small">No geolocation source is configured; countries are not guessed.</td>
+                    </tr>
                     <tr *ngFor="let g of overview.geographic_distribution">
                       <td><span class="badge bg-secondary me-1">{{ g.country }}</span></td>
                       <td class="text-end fw-semibold">{{ g.count | number }}</td>

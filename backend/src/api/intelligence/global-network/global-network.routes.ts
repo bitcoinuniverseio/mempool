@@ -1,10 +1,19 @@
 import { Application, Request, Response } from 'express';
-import { globalNetworkService } from './global-network.service';
+import { globalNetworkService, GlobalNetworkUnavailableError } from './global-network.service';
 import { handleError } from '../../../utils/api';
+
+/** An unreachable node is a 503 that says so, never an invented network. */
+function fail(req: Request, res: Response, e: unknown, fallback: string): void {
+  if (e instanceof GlobalNetworkUnavailableError) {
+    res.status(e.status).json({ stage: e.code, error: e.message });
+    return;
+  }
+  handleError(req, res, 500, e instanceof Error ? e.message : fallback);
+}
 
 class GlobalNetworkRoutes {
   public initRoutes(app: Application): void {
-    const prefix = '/api/v1/intelligence/network/global/';
+    const prefix = '/api/v1/intelligence/network/';
 
     app
       .get(prefix + 'overview', this.$getOverview)
@@ -18,71 +27,67 @@ class GlobalNetworkRoutes {
 
   private async $getOverview(req: Request, res: Response): Promise<void> {
     try {
-      const overview = globalNetworkService.getOverview();
-      res.json(overview);
+      res.json(await globalNetworkService.getOverview());
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch global network overview');
+      fail(req, res, e, 'Failed to fetch network overview');
     }
   }
 
   private async $getNodes(req: Request, res: Response): Promise<void> {
     try {
-      const limit = Math.min(100, parseInt(req.query.limit as string) || 50);
-      const offset = parseInt(req.query.offset as string) || 0;
-      const result = globalNetworkService.getNodes(limit, offset);
-      res.json(result);
+      const limit = parseInt(String(req.query.limit)) || 50;
+      const offset = parseInt(String(req.query.offset)) || 0;
+      res.json(await globalNetworkService.getNodes(limit, offset));
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch global network nodes');
+      fail(req, res, e, 'Failed to fetch nodes');
     }
   }
 
   private async $getNodeByEndpoint(req: Request, res: Response): Promise<void> {
     try {
-      const endpointId = req.params.endpointId;
-      const node = globalNetworkService.getNodeByEndpoint(endpointId);
+      const node = await globalNetworkService.getNodeByEndpoint(req.params.endpointId);
       if (!node) {
-        res.status(404).json({ error: 'Node endpoint not found' });
+        res.status(404).json({ error: 'Node endpoint not found among the current peers' });
         return;
       }
       res.json(node);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch node detail');
+      fail(req, res, e, 'Failed to fetch node');
     }
   }
 
   private async $getDnsSeeds(req: Request, res: Response): Promise<void> {
     try {
-      const seeds = globalNetworkService.getDnsSeeds();
-      res.json(seeds);
+      const seeds = await globalNetworkService.getDnsSeeds();
+      res.json({ seeds, total: seeds.length });
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch DNS seeds');
+      fail(req, res, e, 'Failed to fetch DNS seeds');
     }
   }
 
   private async $getSnapshots(req: Request, res: Response): Promise<void> {
     try {
       const snapshots = globalNetworkService.getSnapshots();
-      res.json(snapshots);
+      res.json({ snapshots, total: snapshots.length });
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch network snapshots');
+      fail(req, res, e, 'Failed to fetch snapshots');
     }
   }
 
   private async $getSensors(req: Request, res: Response): Promise<void> {
     try {
-      const sensors = globalNetworkService.getSensors();
-      res.json(sensors);
+      const sensors = await globalNetworkService.getSensors();
+      res.json({ sensors, total: sensors.length });
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch network sensors');
+      fail(req, res, e, 'Failed to fetch sensors');
     }
   }
 
   private async $postSelfCheck(req: Request, res: Response): Promise<void> {
     try {
-      const { endpoint_address, port } = req.body;
-      const result = globalNetworkService.performSelfCheck({
-        endpoint_address,
-        port: Number(port),
+      const result = await globalNetworkService.performSelfCheck({
+        endpoint_address: String(req.body?.endpoint_address ?? ''),
+        port: parseInt(String(req.body?.port)) || 8333,
       });
       res.json(result);
     } catch (e) {

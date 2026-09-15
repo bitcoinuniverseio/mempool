@@ -55,14 +55,14 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           <div class="col-12 col-sm-6 col-lg-4">
             <div class="card p-3 h-100 bg-body-tertiary border">
               <div class="text-muted small">Detected Payjoins (24h)</div>
-              <div class="h4 my-1 text-success">{{ overview.total_payjoins_detected_24h }}</div>
+              <div class="h4 my-1 text-success">{{ overview.total_payjoins_detected_24h ?? 'n/a' }}</div>
               <div class="small text-muted">Multi-party input structures</div>
             </div>
           </div>
           <div class="col-12 col-sm-6 col-lg-4">
             <div class="card p-3 h-100 bg-body-tertiary border">
               <div class="text-muted small">Heuristic Inversions (24h)</div>
-              <div class="h4 my-1 text-info">{{ overview.common_input_heuristic_breaks_24h }}</div>
+              <div class="h4 my-1 text-info">{{ overview.common_input_heuristic_breaks_24h ?? 'n/a' }}</div>
               <div class="small text-muted">Common-input assumptions broken</div>
             </div>
           </div>

@@ -111,15 +111,15 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           <div class="col-12 col-sm-6 col-md-3">
             <div class="p-3 border rounded bg-body">
               <div class="text-muted small">BIP324 v2 Handshake</div>
-              <div class="fw-bold" [ngClass]="result.bip324_handshake ? 'text-success' : 'text-warning'">
-                {{ result.bip324_handshake ? 'Passed (Encrypted)' : 'Not Advertised (v1 Only)' }}
+              <div class="fw-bold" [ngClass]="result.bip324_handshake ? 'text-success' : 'text-muted'">
+                {{ result.bip324_handshake === null ? 'Not attempted (TCP connect only)' : (result.bip324_handshake ? 'Passed (Encrypted)' : 'Not Advertised (v1 Only)') }}
               </div>
             </div>
           </div>
           <div class="col-12 col-sm-6 col-md-3">
             <div class="p-3 border rounded bg-body">
-              <div class="text-muted small">Handshake Latency</div>
-              <div class="fw-bold text-primary">{{ result.latency_ms }} ms</div>
+              <div class="text-muted small">TCP Connect Latency</div>
+              <div class="fw-bold text-primary">{{ result.latency_ms !== null ? result.latency_ms + ' ms' : (result.error || 'unreachable') }}</div>
             </div>
           </div>
         </div>

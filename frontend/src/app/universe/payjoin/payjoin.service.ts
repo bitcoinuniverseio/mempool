@@ -6,22 +6,23 @@ import { StateService } from '@app/services/state.service';
 export interface PayjoinDirectory {
   directory_id: string;
   url: string;
-  ohttp_key_hash: string;
+  ohttp_key_hash: string | null;
   bip77_supported: boolean;
   bip78_supported: boolean;
-  latency_ms: number;
+  latency_ms: number | null;
   last_tested_at: string;
+  error: string | null;
 }
 
 export interface PayjoinProposalAnalysisResult {
   analysis_id: string;
   protocol_version: 'BIP78' | 'BIP77';
   inputs_added_by_receiver: number;
-  receiver_contributed_sats: number;
-  original_fee_sats: number;
-  proposal_fee_sats: number;
-  fee_delta_sats: number;
-  effective_feerate_sats_vb: number;
+  receiver_contributed_sats: number | null;
+  original_fee_sats: number | null;
+  proposal_fee_sats: number | null;
+  fee_delta_sats: number | null;
+  effective_feerate_sats_vb: number | null;
   heuristics_broken: string[];
   privacy_score_gain: number;
   is_valid: boolean;
@@ -50,8 +51,8 @@ export interface PayjoinPlaygroundSession {
 
 export interface PayjoinOverview {
   active_directories_count: number;
-  total_payjoins_detected_24h: number;
-  common_input_heuristic_breaks_24h: number;
+  total_payjoins_detected_24h: number | null;
+  common_input_heuristic_breaks_24h: number | null;
   compatibility_catalog: PayjoinCompatibilityEntry[];
   last_updated: string;
 }
