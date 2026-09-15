@@ -2,6 +2,7 @@ import { Application, NextFunction, Request, Response } from 'express';
 import logger from '../../logger';
 import bitcoinClient from './bitcoin-client';
 import config from '../../config';
+import { readUnsignedInteger } from './route-input';
 
 const BLOCKHASH_REGEX = /^[a-f0-9]{64}$/i;
 const TXID_REGEX = /^[a-f0-9]{64}$/i;
@@ -78,7 +79,7 @@ class BitcoinBackendRoutes {
   }
 
   private async $decodeRawTransaction(req: Request, res: Response): Promise<void> {
-    const rawTx = req.body.rawTx;
+    const rawTx = req.body?.rawTx;
     try {
       if (typeof(rawTx) !== 'string' || !RAW_TX_REGEX.test(rawTx)) {
         res.status(400).send(`invalid param rawTx. must be a string of hexadecimal characters`);
@@ -107,8 +108,8 @@ class BitcoinBackendRoutes {
         res.status(400).send(`invalid param verbose. must be a string representing an integer`);
         return;
       }
-      const verboseNumber = parseInt(verbose, 10);
-      if (typeof(verboseNumber) !== 'number') {
+      const verboseNumber = readUnsignedInteger(verbose, 2);
+      if (verboseNumber === null) {
         res.status(400).send(`invalid param verbose. must be a valid integer`);
         return;
       }
@@ -125,7 +126,7 @@ class BitcoinBackendRoutes {
   }
 
   private async $sendRawTransaction(req: Request, res: Response): Promise<void> {
-    const rawTx = req.body.rawTx;
+    const rawTx = req.body?.rawTx;
     try {
       if (typeof(rawTx) !== 'string' || !RAW_TX_REGEX.test(rawTx)) {
         res.status(400).send(`invalid param rawTx. must be a string of hexadecimal characters`);
@@ -143,7 +144,7 @@ class BitcoinBackendRoutes {
   }
 
   private async $testMempoolAccept(req: Request, res: Response): Promise<void> {
-    const rawTxs = req.body.rawTxs;
+    const rawTxs = req.body?.rawTxs;
     try {
       if (typeof(rawTxs) !== 'object' || !Array.isArray(rawTxs) || rawTxs.some((tx) => typeof(tx) !== 'string' || !RAW_TX_REGEX.test(tx))) {
         res.status(400).send(`invalid param rawTxs. must be an array of strings of hexadecimal characters`);
@@ -196,8 +197,8 @@ class BitcoinBackendRoutes {
         res.status(400).send(`invalid param verbosity. must be a string representing an integer`);
         return;
       }
-      const verbosityNumber = parseInt(verbosity, 10);
-      if (typeof(verbosityNumber) !== 'number') {
+      const verbosityNumber = readUnsignedInteger(verbosity, 3);
+      if (verbosityNumber === null) {
         res.status(400).send(`invalid param verbosity. must be a valid integer`);
         return;
       }
@@ -220,8 +221,8 @@ class BitcoinBackendRoutes {
         res.status(400).send(`invalid param blockHeight, must be a string representing an integer`);
         return;
       }
-      const blockHeightNumber = parseInt(blockHeight, 10);
-      if (typeof(blockHeightNumber) !== 'number') {
+      const blockHeightNumber = readUnsignedInteger(blockHeight);
+      if (blockHeightNumber === null) {
         res.status(400).send(`invalid param blockHeight. must be a valid integer`);
         return;
       }
@@ -240,7 +241,7 @@ class BitcoinBackendRoutes {
   private async $getBlockCount(req: Request, res: Response): Promise<void> {
     try {
       const count = await bitcoinClient.getBlockCount();
-      if (!count) {
+      if (!Number.isSafeInteger(count) || count < 0) {
         res.status(400).send(`unable to get block count`);
         return;
       }
