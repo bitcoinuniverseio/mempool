@@ -85,7 +85,7 @@ function txNode(txid: string, confirmed: boolean | null): GraphNode {
   return {
     id: `tx:${txid}`,
     kind: 'transaction',
-    label: txid.length > 16 ? `${txid.slice(0, 12)}...` : txid,
+    label: txid.length > 16 ? `${txid.slice(0, 10)}…` : txid,
     path: `/tx/${txid}`,
     valueSat: null,
     state: confirmed === null ? 'unknown' : confirmed ? 'confirmed' : 'pending',
@@ -127,6 +127,7 @@ export function buildProvenanceGraph(
   outspends: readonly GraphOutspend[],
   extras: {
     readonly rbfHistory: RbfTree | null;
+    readonly rbfAvailable?: boolean;
     readonly replaces: readonly string[];
     readonly packageTxids: readonly string[];
   } = { rbfHistory: null, replaces: [], packageTxids: [] },
@@ -235,7 +236,7 @@ export function buildProvenanceGraph(
     }
   }
 
-  if (extras.rbfHistory === null && extras.replaces.length === 0) {
+  if (extras.rbfAvailable !== true && extras.rbfHistory === null && extras.replaces.length === 0) {
     notes.push('No replacement history was available. The graph shows the observed transaction connections only.');
   }
   if (notes.length === 0 && nodes.length >= MAX_NODES) {

@@ -46,8 +46,8 @@ export function readGraphOutspends(value: unknown, outputs: number): readonly Gr
 /** Reject malformed, unrelated or unbounded replacement trees before traversal. */
 export function readGraphReplacements(value: unknown, requested: string): { rbf: RbfTree | null; replaces: string[]; available: boolean } {
   const unavailable = { rbf: null, replaces: [], available: false };
-  if (!object(value) || !Array.isArray(value.replaces) || value.replaces.length > MAX_NODES * 4
-    || !value.replaces.every(txid)) { return unavailable; }
+  if (!object(value) || (value.replaces != null && (!Array.isArray(value.replaces)
+    || value.replaces.length > MAX_NODES * 4 || !value.replaces.every(txid)))) { return unavailable; }
   const tree = value.replacements;
   if (tree != null) {
     const queue = [tree], seen = new Set<object>(), ids = new Set<string>();
@@ -59,7 +59,7 @@ export function readGraphReplacements(value: unknown, requested: string): { rbf:
     }
     if (!ids.has(requested.toLowerCase())) { return unavailable; }
   }
-  return { rbf: tree ?? null, replaces: value.replaces.map(id => id.toLowerCase()), available: true };
+  return { rbf: tree ?? null, replaces: (value.replaces ?? []).map(id => id.toLowerCase()), available: true };
 }
 
 export function readGraphPackage(value: unknown, requested: string): string[] | null {
