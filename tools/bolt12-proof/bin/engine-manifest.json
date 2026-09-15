@@ -1,0 +1,7 @@
+{
+  "engine": "lightning-0.2.6",
+  "binary": "universe-bolt12-proof.exe",
+  "binary_sha256": "86c4890c0ae71722c558f275819207620638dad06de44682f5cd268c7468b051",
+  "lock_sha256": "789f7d82450553e309201ebc0d01f7b682bd39f9b9af5a40cae35da83ae2d6cf",
+  "source_sha256": "7e02d4def3c41d8908900bcef60a845e4179c7db72f4b903e357c8d6cb248183"
+}

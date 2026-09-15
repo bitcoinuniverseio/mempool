@@ -78,7 +78,7 @@ describe('Taproot Assets HTTP responses', () => {
     let post!: Handler;
     const app = {
       get: jest.fn((path: string, callback: Handler) => { gets.set(path, callback); return app; }),
-      post: jest.fn((_path: string, callback: Handler) => { post = callback; return app; }),
+      post: jest.fn((path: string, callback: Handler) => { if (path.endsWith('/taproot-assets/proof/verify')) post = callback; return app; }),
     };
     taprootAssetsRoutes.initRoutes(app as unknown as Application);
     return { gets, post };

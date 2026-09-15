@@ -1,0 +1,14 @@
+[package]
+name = "universe-bolt12-proof"
+version = "0.1.0"
+edition = "2021"
+publish = false
+[dependencies]
+lightning = { version = "=0.2.6", default-features = false }
+bitcoin = { version = "=0.32.8", default-features = false }
+serde_json = "=1.0.149"
+[profile.release]
+opt-level = "s"
+lto = false
+panic = "abort"
+strip = true

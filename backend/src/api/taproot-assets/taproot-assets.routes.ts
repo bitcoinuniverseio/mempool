@@ -2,6 +2,7 @@ import { Application, Request, Response } from 'express';
 import config from '../../config';
 import { handleError } from '../../utils/api';
 import { TaprootAssetsEvidenceError, taprootAssetsService } from './taproot-assets.service';
+import { decodeBolt12Offer } from './bolt12-decoder';
 
 /** An absent source is a 503 that names the source, never a 500 and never an empty list. */
 function fail(req: Request, res: Response, e: unknown): void {
@@ -22,6 +23,7 @@ class TaprootAssetsRoutes {
       .get(prefix + 'taproot-assets/groups', this.$getGroups)
       .post(prefix + 'taproot-assets/proof/verify', this.$verifyProof)
       .get(prefix + 'lightning/offers', this.$getOffers)
+      .post(prefix + 'lightning/offers/decode', this.$decodeOffer)
       .get(prefix + 'lightning/rfq', this.$getRfq);
   }
 
@@ -74,6 +76,11 @@ class TaprootAssetsRoutes {
     } catch (e) {
       fail(req, res, e);
     }
+  }
+
+  private async $decodeOffer(req: Request, res: Response): Promise<void> {
+    try { res.json(await decodeBolt12Offer(req.body)); }
+    catch (error) { fail(req, res, error); }
   }
 
   private async $getRfq(req: Request, res: Response): Promise<void> {
