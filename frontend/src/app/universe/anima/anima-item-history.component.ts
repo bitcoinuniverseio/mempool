@@ -1,8 +1,9 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
-import { Observable, catchError, map, of } from 'rxjs';
+import { Observable, catchError, combineLatest, distinctUntilChanged, map, of, startWith } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
+import { StateService } from '@app/services/state.service';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { AnimaOrganismHistoryDocument } from '@app/universe/universe.types';
@@ -34,9 +35,10 @@ export class AnimaItemHistoryComponent implements OnInit {
     private route: ActivatedRoute,
     private api: UniverseApiService,
     private seo: SeoService,
+    private network: StateService,
   ) {
-    this.vm$ = this.route.paramMap.pipe(
-      map((params) => params.get('itemId') ?? ''),
+    this.vm$ = combineLatest([this.route.paramMap, this.network.networkChanged$.pipe(startWith(this.network.network), distinctUntilChanged())]).pipe(
+      map(([params]) => params.get('itemId') ?? ''),
       switchMap((itemId) => {
         if (!itemId) {
           return of({ state: 'missing' as const });
@@ -46,9 +48,11 @@ export class AnimaItemHistoryComponent implements OnInit {
           catchError((error) =>
             of({ state: error?.status === 404 ? ('missing' as const) : ('error' as const) }),
           ),
+          startWith({ state: 'loading' as const }),
         );
       }),
       map((result): AnimaHistoryViewModel => {
+        if (result.state === 'loading') {return { kind: 'loading' };}
         if (result.state === 'error') {return { kind: 'error' };}
         if (result.state === 'missing' || !('doc' in result)) {
           return { kind: 'missing' };
