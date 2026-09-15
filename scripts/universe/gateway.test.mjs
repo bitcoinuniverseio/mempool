@@ -20,6 +20,13 @@ function port(route) {
   return route === null ? null : route.upstream.port;
 }
 
+test('unprefixed Portfolio API paths are absent rather than serving the application shell', () => {
+  for (const path of ['/v2/universe', '/v2/universe/portfolio/networks']) {
+    assert.deepEqual(routeFor(path, path), { upstream: null, status: 404 });
+    assert.deepEqual(routeFor(path, path, true), { upstream: null, status: 404 });
+  }
+});
+
 test('HTML documentation aliases reach the frontend while API consumers retain dispatch', () => {
   for (const path of ['/api', '/api/faq', '/api/api/rest', '/api/api/websocket']) {
     assert.equal(routeFor(path, path, true), null, path);

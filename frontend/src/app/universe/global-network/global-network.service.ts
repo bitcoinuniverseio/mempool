@@ -51,7 +51,9 @@ export interface GlobalNetworkDnsSeed {
   active: boolean;
   last_query_at: string;
   discovered_addrs_count: number;
-  reachable_ratio: number;
+  /** Null: discovered addresses are not probed by this deployment. */
+  reachable_ratio: number | null;
+  error: string | null;
 }
 
 export interface GlobalNetworkSnapshot {
@@ -75,7 +77,10 @@ export interface GlobalNetworkOverview {
   addrv2_adoption_percentage: number;
   top_user_agents: { agent: string; count: number; percentage: number }[];
   geographic_distribution: { country: string; count: number }[];
+  /** Null: no geolocation source is configured. */
+  geo_source: string | null;
   transport_breakdown: { transport: string; count: number }[];
+  node: { version: number; subversion: string; connections: number; connections_in: number | null; connections_out: number | null; reachable_networks: string[] };
   last_updated: string;
 }
 
@@ -83,12 +88,15 @@ export interface GlobalNetworkSelfCheckResult {
   check_id: string;
   endpoint_address: string;
   port: number;
+  resolved_address: string;
   probed_from_region: string;
   reachable: boolean;
-  bip324_handshake: boolean;
-  latency_ms: number;
+  /** Null: only a TCP connection is attempted, not the Bitcoin handshake. */
+  bip324_handshake: boolean | null;
+  latency_ms: number | null;
   user_agent?: string;
   services?: number;
+  error: string | null;
   probed_at: string;
 }
 

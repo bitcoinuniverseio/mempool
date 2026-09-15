@@ -46,10 +46,14 @@ export interface BlockspaceTxEvidence {
 }
 
 export interface BlockspaceOverview {
-  current_regime: BlockspaceRegimeEvent;
+  network: string;
+  /** Null until a block with a median fee rate was observed. */
+  current_regime: BlockspaceRegimeEvent | null;
   median_feerate_24h: number;
   taxonomy_classes: BlockspaceSemanticClass[];
   composition_timeseries: BlockspaceCompositionPoint[];
+  window: { blocks: number; from_height: number; to_height: number; covers_24h: boolean };
+  checkpoint: { height: number; hash: string };
   last_updated: string;
 }
 

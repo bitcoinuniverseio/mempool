@@ -69,7 +69,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                   </span>
                 </td>
                 <td><code class="small text-muted">{{ dir.ohttp_key_hash.slice(0, 16) }}...</code></td>
-                <td>{{ dir.latency_ms }} ms</td>
+                <td>{{ dir.latency_ms !== null ? dir.latency_ms + ' ms' : (dir.error || 'unreachable') }}</td>
                 <td class="text-end text-muted small">{{ dir.last_tested_at }}</td>
               </tr>
             </tbody>
@@ -110,7 +110,7 @@ export class PayjoinDirectoryComponent implements OnInit, OnDestroy {
           this.cd.markForCheck();
         },
         error: err => {
-          this.error = err?.message || 'Failed to load directories';
+          this.error = err?.error?.error || err?.message || 'Failed to load directories';
           this.loading = false;
           this.cd.markForCheck();
         },

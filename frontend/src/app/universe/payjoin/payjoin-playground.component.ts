@@ -96,7 +96,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
         </div>
 
         <div *ngIf="session.step === 'signed_and_broadcast'" class="alert alert-success mt-2 mb-0">
-          <strong>Payjoin Complete!</strong> Collaborative transaction broadcast successfully with txid: <code>{{ session.payjoin_txid }}</code>
+          <strong>Walkthrough complete.</strong> This playground narrates the protocol; nothing was signed or broadcast and there is no transaction id.
         </div>
       </div>
 

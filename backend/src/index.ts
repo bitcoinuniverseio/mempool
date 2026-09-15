@@ -81,6 +81,16 @@ import queryStudioRoutes from './api/intelligence/query-studio/query-studio.rout
 import watchlistsRoutes from './api/intelligence/watchlists/watchlists.routes';
 import knowledgeRoutes from './api/intelligence/knowledge/knowledge.routes';
 import protocolsRoutes from './api/intelligence/protocols/protocols.routes';
+import { protocolRegistryService } from './api/intelligence/protocols/protocol-registry.service';
+import { ProtocolActivityObserver } from './api/intelligence/protocols/protocol-activity';
+import { blockObservationHub } from './api/intelligence/observation/block-observation-hub';
+import { watchlistMatcher } from './api/intelligence/watchlists/watchlist-matcher';
+import { blockspaceService } from './api/intelligence/blockspace/blockspace.service';
+import { timeMachineService } from './api/intelligence/time-machine/time-machine.service';
+import { templateCollectorService } from './api/intelligence/templates/template-collector.service';
+import { globalNetworkService } from './api/intelligence/global-network/global-network.service';
+import { developerIdentity } from './api/intelligence/identity/developer-identity';
+import rbfCache from './api/rbf-cache';
 import globalNetworkRoutes from './api/intelligence/global-network/global-network.routes';
 import lightningReliabilityRoutes from './api/intelligence/lightning/lightning-reliability.routes';
 import silentPaymentsRoutes from './api/intelligence/silent-payments/silent-payments.routes';
@@ -430,6 +440,34 @@ class Server {
           logger.warn('Elements parsing error: ' + (e instanceof Error ? e.message : e));
         }
       });
+    }
+    // Every block the main loop processes is handed once to the intelligence
+    // observers through one hub: protocol activity metrics and the watchlist
+    // matcher read the same copy. Replacements reach the matcher from the
+    // RBF cache, and webhook deliveries drain from their durable outbox.
+    const protocolActivity = new ProtocolActivityObserver(config.MEMPOOL.NETWORK);
+    protocolRegistryService.attachObserver(protocolActivity);
+    blockObservationHub.subscribe('protocol-activity', (block, transactions) => { protocolActivity.observeBlock(block, transactions); });
+    blockObservationHub.subscribe('blockspace', (block, transactions) => { blockspaceService.observeBlock(block, transactions); });
+    blockObservationHub.subscribe('time-machine', (block, transactions) => { timeMachineService.observeBlock(block, transactions); });
+    blockObservationHub.subscribe('templates', (block, transactions) => { templateCollectorService.observeBlock(block, transactions); });
+    // The hub contains each observer's failure; the matcher's own rejection is reported there.
+    blockObservationHub.subscribe('watchlist-matcher', (block, transactions) => watchlistMatcher.observeBlock(block, transactions).then(() => undefined));
+    blocks.setNewAsyncBlockCallback((block, _txIds, transactions) => blockObservationHub.dispatch(block, transactions).then(() => undefined));
+    rbfCache.onReplacement((replaced, replacement) => {
+      watchlistMatcher.observeReplacement(replaced, replacement).catch(e => logger.warn('watchlist replacement match failed: ' + (e instanceof Error ? e.message : e)));
+      const replacedTx = memPool.getMempool()[replaced];
+      if (replacedTx) { timeMachineService.observeReplacement(replacedTx, replacement); }
+    });
+    // The sync mempool callback was unused; the time machine records what entered and left.
+    memPool.setMempoolChangedCallback((_newMempool, newTransactions, deletedTransactions) => {
+      timeMachineService.observeMempoolChange(newTransactions, deletedTransactions.flat());
+    });
+    if (config.MEMPOOL.ENABLED) {
+      developerIdentity.startOutboxWorker();
+      // Cold schedule: one getblocktemplate every two minutes plus one after each block.
+      templateCollectorService.startPolling();
+      globalNetworkService.startSnapshots(10 * 60_000, () => blocks.getCurrentBlockHeight());
     }
     websocketHandler.setupConnectionHandling();
     if (config.MEMPOOL.ENABLED) {

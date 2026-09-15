@@ -14,13 +14,10 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
     <div class="intelligence-page container-xl">
       <header class="page-header mb-4">
         <div class="title-row d-flex flex-wrap align-items-center justify-content-between gap-2">
-          <h1 class="m-0">Blockspace Demand and Transaction Semantics Terminal</h1>
-          <span class="badge bg-primary" *ngIf="overview">
-            Median Feerate: {{ overview.median_feerate_24h }} sat/vB
-          </span>
+          <h1 class="m-0">Blockspace Semantics</h1>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
-          Deep structural analysis of Bitcoin blockspace composition, demand regimes, script taxonomy, and transaction intent classification.
+          Composition, demand regimes and transaction classes, from observed blocks.
         </p>
 
         <!-- Navigation Tabs -->
@@ -48,22 +45,22 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           <div class="col-12 col-sm-6 col-lg-3">
             <div class="card p-3 h-100 bg-body-tertiary border">
               <div class="text-muted small">Current Regime</div>
-              <div class="h5 my-1 text-primary text-uppercase">{{ overview.current_regime.regime_type.replace('_', ' ') }}</div>
-              <div class="small text-muted">Height {{ overview.current_regime.start_height }} to present</div>
+              <div class="h5 my-1 text-primary text-uppercase">{{ overview.current_regime ? overview.current_regime.regime_type.replace('_', ' ') : 'not yet observed' }}</div>
+              <div class="small text-muted">{{ overview.current_regime ? 'Height ' + overview.current_regime.start_height + ' to present' : 'Needs a block with a median fee rate' }}</div>
             </div>
           </div>
           <div class="col-12 col-sm-6 col-lg-3">
             <div class="card p-3 h-100 bg-body-tertiary border">
               <div class="text-muted small">Median Feerate (24h)</div>
               <div class="h4 my-1 text-success">{{ overview.median_feerate_24h }} sat/vB</div>
-              <div class="small text-muted">Rolling 24-hour window</div>
+              <div class="small text-muted">{{ overview.window?.covers_24h ? 'Rolling 24-hour window' : 'Observed blocks ' + overview.window?.from_height + ' to ' + overview.window?.to_height + ' (window still filling)' }}</div>
             </div>
           </div>
           <div class="col-12 col-sm-6 col-lg-3">
             <div class="card p-3 h-100 bg-body-tertiary border">
               <div class="text-muted small">Primary Demand Driver</div>
-              <div class="h6 my-1 text-info text-truncate" [title]="overview.current_regime.primary_demand_driver">
-                {{ overview.current_regime.primary_demand_driver }}
+              <div class="h6 my-1 text-info">
+                {{ overview.current_regime?.primary_demand_driver || 'not yet observed' }}
               </div>
               <div class="small text-muted">Identified from block evidence</div>
             </div>
@@ -175,7 +172,7 @@ export class BlockspaceOverviewComponent implements OnInit, OnDestroy {
         this.cd.markForCheck();
       },
       error: (err) => {
-        this.error = err?.message || 'Failed to load blockspace overview';
+        this.error = err?.error?.error || err?.message || 'Failed to load blockspace overview';
         this.loading = false;
         this.cd.markForCheck();
       },

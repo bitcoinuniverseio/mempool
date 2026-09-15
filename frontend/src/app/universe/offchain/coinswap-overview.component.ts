@@ -109,7 +109,7 @@ export class CoinswapOverviewComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
       },
       error: (err) => {
-        this.error = err.message || 'Failed to load CoinSwap makers';
+        this.error = err?.error?.error || err?.message || 'Failed to load CoinSwap makers';
         this.loading = false;
         this.cdr.markForCheck();
       },

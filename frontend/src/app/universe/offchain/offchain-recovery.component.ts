@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { OffchainApiService } from './offchain.service';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
@@ -38,23 +39,23 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
 
             <div class="mb-3">
               <label class="form-label small text-muted" for="offchain-recovery-protocol">Protocol Type</label>
-              <select class="form-select" id="offchain-recovery-protocol" [(ngModel)]="protocolType">
+              <select class="form-control" id="offchain-recovery-protocol" [(ngModel)]="protocolType">
                 <option value="statechain">Mercury Statechain (Unilateral Exit)</option>
                 <option value="coinswap">Teleport CoinSwap (Timeout Refund)</option>
               </select>
             </div>
 
             <div class="mb-3">
-              <label class="form-label small text-muted" for="offchain-recovery-txid">Deposit / Funding TxID</label>
-              <input type="text" class="form-control font-monospace small" id="offchain-recovery-txid" [(ngModel)]="txid" />
+              <label class="form-label small text-muted" for="offchain-recovery-txid">Funding txid</label>
+              <input type="text" class="form-control font-monospace small" id="offchain-recovery-txid" [(ngModel)]="txid" placeholder="64 hex characters" />
             </div>
 
             <div class="mb-3">
-              <label class="form-label small text-muted" for="offchain-recovery-locktime">Locktime Height</label>
-              <input type="number" class="form-control" id="offchain-recovery-locktime" [(ngModel)]="locktimeHeight" />
+              <label class="form-label small text-muted" for="offchain-recovery-locktime">Locktime height</label>
+              <input type="number" class="form-control" id="offchain-recovery-locktime" [(ngModel)]="locktimeHeight" min="1" placeholder="block height" />
             </div>
 
-            <button class="btn btn-primary w-100" (click)="generatePlan()" [disabled]="planning">
+            <button class="btn btn-primary w-100" (click)="generatePlan()" [disabled]="planning || !canPlan">
               <span *ngIf="planning" class="spinner-border spinner-border-sm me-1"></span>
               Compute Recovery Plan
             </button>
@@ -65,8 +66,10 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           <div class="card p-4 bg-body-tertiary border h-100">
             <h2 class="h5 mb-3">Actionable Recovery Steps</h2>
 
-            <div *ngIf="!plan && !planning" class="text-center py-5 text-muted">
-              Specify the deposit context to compute recovery schedule and PSBT parameters.
+            <div *ngIf="loadError" class="alert alert-warning">{{ loadError }}</div>
+
+            <div *ngIf="!plan && !planning && !loadError" class="text-center py-5 text-muted">
+              Specify the deposit context to compute the recovery schedule.
             </div>
 
             <div *ngIf="planning" class="text-center py-5 text-muted">
@@ -75,22 +78,22 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
             </div>
 
             <div *ngIf="plan">
-              <div class="alert" [ngClass]="plan.recoverable_now ? 'alert-success' : 'alert-warning'">
-                <div class="fw-bold">{{ plan.recoverable_now ? 'Recoverable Immediately' : 'Awaiting Locktime Expiration' }}</div>
-                <div class="small mt-1">Status: {{ plan.recovery_status }}</div>
+              <div class="alert" [ngClass]="plan.recovery_state === 'recoverable_now' ? 'alert-success' : (plan.recovery_state === 'recoverable_after_height' ? 'alert-warning' : 'alert-secondary')">
+                <div class="fw-bold">{{ plan.recovery_state === 'recoverable_now' ? 'Recoverable Immediately' : (plan.recovery_state === 'recoverable_after_height' ? 'Awaiting Locktime Expiration' : 'Timing Unknown') }}</div>
+                <div class="small mt-1">Status: {{ plan.recovery_state }}</div>
               </div>
 
               <div class="row g-2 mb-3">
                 <div class="col-6">
                   <div class="p-2 border rounded bg-body">
                     <div class="text-muted small">Earliest Valid Height</div>
-                    <div class="fw-bold font-monospace">Block #{{ plan.earliest_valid_height }}</div>
+                    <div class="fw-bold font-monospace">{{ plan.earliest_broadcast_height ? 'Block #' + plan.earliest_broadcast_height : 'not provided' }}</div>
                   </div>
                 </div>
                 <div class="col-6">
                   <div class="p-2 border rounded bg-body">
-                    <div class="text-muted small">Estimated Blocks Left</div>
-                    <div class="fw-bold font-monospace">{{ plan.blocks_remaining }} blocks</div>
+                    <div class="text-muted small">Suggested Fee Rate</div>
+                    <div class="fw-bold font-monospace">{{ plan.suggested_fee_rate_sats_vb !== null ? plan.suggested_fee_rate_sats_vb + ' sat/vB' : 'mempool not synced' }}</div>
                   </div>
                 </div>
               </div>
@@ -98,14 +101,14 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
               <div class="mb-3">
                 <div class="text-muted small mb-1">Recovery Policy Recommendation</div>
                 <div class="p-3 border rounded bg-body small">
-                  {{ plan.policy_guidance }}
+                  {{ plan.action_guidance }}
                 </div>
               </div>
 
               <div class="mb-3">
-                <div class="text-muted small mb-1">Unsigned PSBT Recovery Template</div>
-                <div class="font-monospace small p-2 border rounded bg-body text-break" style="max-height: 90px; overflow-y: auto;">
-                  {{ plan.psbt_template }}
+                <div class="text-muted small mb-1">Recovery PSBT</div>
+                <div class="small p-2 border rounded bg-body text-break">
+                  {{ plan.unsigned_psbt_hex || 'Built from the latest backup transaction in the PSBT Workbench; this planner does not construct one from an identifier.' }}
                 </div>
               </div>
 
@@ -127,10 +130,15 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
 })
 export class OffchainRecoveryComponent {
   protocolType = 'statechain';
-  txid = 'd9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0';
-  locktimeHeight = 860000;
+  txid = '';
+  locktimeHeight: number | null = null;
+
+  get canPlan(): boolean {
+    return /^[0-9a-f]{64}$/i.test(this.txid.trim()) && Number.isInteger(this.locktimeHeight) && (this.locktimeHeight as number) > 0;
+  }
   planning = false;
   plan: any = null;
+  loadError: string | null = null;
 
   constructor(
     private offchainApi: OffchainApiService,
@@ -140,12 +148,14 @@ export class OffchainRecoveryComponent {
   generatePlan(): void {
     this.planning = true;
     this.plan = null;
+    this.loadError = null;
 
     this.offchainApi
       .getRecoveryPlan$({
         protocol: this.protocolType,
-        deposit_txid: this.txid,
-        locktime: this.locktimeHeight,
+        entity_id: this.txid.trim().toLowerCase(),
+        current_stage: 'latest_backup_ready',
+        target_locktime: this.locktimeHeight,
       })
       .subscribe({
         next: (res) => {
@@ -153,16 +163,12 @@ export class OffchainRecoveryComponent {
           this.planning = false;
           this.cdr.markForCheck();
         },
+        // A request that failed has no plan; the earlier revision answered it
+        // with an invented schedule and a constant PSBT.
         error: (err) => {
           this.planning = false;
-          this.plan = {
-            recovery_status: 'recoverable_after_height',
-            earliest_valid_height: this.locktimeHeight,
-            blocks_remaining: 120,
-            recoverable_now: false,
-            policy_guidance: 'Wait until locktime block height is reached before broadcasting exit transaction.',
-            psbt_template: 'cHNidP8BAFICAAAAASz15N3E06Ww+am80d7i86W1xtfo+aC7wtPE1eT1pr7ZAAAAAAD/////AcCeBQAAAAAAFgAU1122334455667788990011223344556677889900AAAA',
-          };
+          this.plan = null;
+          this.loadError = err?.error?.error || loadFailureMessage(classifyLoadFailure(err));
           this.cdr.markForCheck();
         },
       });

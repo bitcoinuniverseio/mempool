@@ -1,126 +1,145 @@
 import { Application, Request, Response } from 'express';
-import { txGraphService } from './tx-graph.service';
+import { GraphInputError, txGraphService } from './tx-graph.service';
+import { ownerOf, requireOwner, sendIdentityError } from '../identity/owner-auth';
 import { handleError } from '../../../utils/api';
 
+/**
+ * Graph queries and paths are public reads over the owned index. Saved
+ * cases belong to an owner and need a key with the cases scope.
+ */
 class GraphRoutes {
   public initRoutes(app: Application): void {
     const prefix = '/api/v1/intelligence/graph/';
+    const guard = requireOwner('cases');
 
     app
       .post(prefix + 'queries', this.$postQuery)
       .get(prefix + 'queries/:id', this.$getQuery)
       .post(prefix + 'paths', this.$postPaths)
       .post(prefix + 'exports', this.$postExports)
-      .get(prefix + 'cases', this.$getCases)
-      .post(prefix + 'cases', this.$postCase)
-      .patch(prefix + 'cases/:id', this.$patchCase)
-      .delete(prefix + 'cases/:id', this.$deleteCase);
+      .get(prefix + 'cases', guard, this.$getCases)
+      .post(prefix + 'cases', guard, this.$postCase)
+      .get(prefix + 'cases/:id', guard, this.$getCase)
+      .patch(prefix + 'cases/:id', guard, this.$patchCase)
+      .delete(prefix + 'cases/:id', guard, this.$deleteCase);
+  }
+
+  private static fail(req: Request, res: Response, e: unknown, fallback: string): void {
+    if (e instanceof GraphInputError) {
+      res.status(400).json({ error: e.message, code: 'invalid_input' });
+      return;
+    }
+    handleError(req, res, 500, e instanceof Error ? e.message : fallback);
   }
 
   private async $postQuery(req: Request, res: Response): Promise<void> {
     try {
-      const root = String(req.body.root_entity || '');
-      const hops = req.body.hops !== undefined ? parseInt(req.body.hops, 10) : 2;
-      const direction = req.body.direction || 'both';
-      const minValue = req.body.min_value_sats !== undefined ? parseInt(req.body.min_value_sats, 10) : 0;
-
+      const root = String(req.body?.root_entity || '');
+      const hops = req.body?.hops !== undefined ? parseInt(req.body.hops, 10) : 2;
+      const direction = req.body?.direction || 'both';
+      const minValue = req.body?.min_value_sats !== undefined ? parseInt(req.body.min_value_sats, 10) : 0;
       if (!root) {
         res.status(400).json({ error: 'root_entity parameter required.' });
         return;
       }
-
-      const result = txGraphService.queryGraph(root, hops, direction, minValue);
-      res.json(result);
+      res.json(await txGraphService.queryGraph(root, hops, direction, minValue));
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Graph query failed');
+      GraphRoutes.fail(req, res, e, 'Graph query failed');
     }
   }
 
   private async $getQuery(req: Request, res: Response): Promise<void> {
     try {
-      const result = txGraphService.queryGraph(req.params.id, 2);
-      res.json(result);
+      res.json(await txGraphService.queryGraph(req.params.id, 2));
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Graph query lookup failed');
+      GraphRoutes.fail(req, res, e, 'Graph query lookup failed');
     }
   }
 
   private async $postPaths(req: Request, res: Response): Promise<void> {
     try {
-      const from = String(req.body.from_entity || '');
-      const to = String(req.body.to_entity || '');
+      const from = String(req.body?.from_entity || '');
+      const to = String(req.body?.to_entity || '');
       if (!from || !to) {
         res.status(400).json({ error: 'from_entity and to_entity parameters required.' });
         return;
       }
-      const pathResult = txGraphService.findShortestPath(from, to);
-      res.json(pathResult);
+      res.json(await txGraphService.findShortestPath(from, to));
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Path search failed');
+      GraphRoutes.fail(req, res, e, 'Path search failed');
     }
   }
 
+  /**
+   * An export is the query result itself, produced now. There is no export
+   * queue, so nothing is reported as ready before it exists.
+   */
   private async $postExports(req: Request, res: Response): Promise<void> {
     try {
-      const format = req.body.format || 'json';
-      res.json({
-        export_id: 'exp-' + Date.now(),
-        status: 'ready',
-        format,
-        download_url: `/api/v1/intelligence/graph/queries/${req.body.query_id || 'root'}?format=${format}`,
-      });
+      const format = String(req.body?.format || 'json');
+      if (format !== 'json') {
+        res.status(400).json({ error: 'Only json export is available.', code: 'unsupported_format' });
+        return;
+      }
+      const root = String(req.body?.root_entity || req.body?.query_id || '');
+      if (!root) {
+        res.status(400).json({ error: 'root_entity parameter required.' });
+        return;
+      }
+      const result = await txGraphService.queryGraph(root, req.body?.hops !== undefined ? parseInt(req.body.hops, 10) : 2, req.body?.direction || 'both', 0);
+      res.setHeader('content-disposition', `attachment; filename="graph-${root.slice(0, 16)}.json"`);
+      res.json({ format, exported_at: new Date().toISOString(), graph: result });
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Export failed');
+      GraphRoutes.fail(req, res, e, 'Export failed');
     }
   }
 
   private async $getCases(req: Request, res: Response): Promise<void> {
     try {
-      const userId = String(req.query.user_id || 'user-default');
-      const cases = txGraphService.getCases(userId);
+      const cases = await txGraphService.getCases(ownerOf(res));
       res.json({ cases, count: cases.length });
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch graph cases');
+      sendIdentityError(res, e, 'Failed to fetch graph cases');
+    }
+  }
+
+  private async $getCase(req: Request, res: Response): Promise<void> {
+    try {
+      const found = await txGraphService.getCaseById(ownerOf(res), req.params.id);
+      if (!found) { res.status(404).json({ error: `Case '${req.params.id}' not found.` }); return; }
+      res.json(found);
+    } catch (e) {
+      sendIdentityError(res, e, 'Failed to fetch graph case');
     }
   }
 
   private async $postCase(req: Request, res: Response): Promise<void> {
     try {
-      const { user_id, title, root_entity, hops, filters, layout, notes } = req.body;
-      const saved = txGraphService.saveCase(
-        user_id || 'user-default',
-        title || 'Untitled Case',
-        root_entity || 'unknown',
-        hops || 2,
-        filters || {},
-        layout || {},
-        notes || ''
-      );
-      res.json(saved);
+      const { title, root_entity, hops, filters, layout, notes, nodes_count } = req.body ?? {};
+      res.status(201).json(await txGraphService.saveCase(ownerOf(res), title, root_entity, hops, filters, layout, notes, nodes_count));
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to save graph case');
+      if (e instanceof GraphInputError) { res.status(400).json({ error: e.message, code: 'invalid_input' }); return; }
+      sendIdentityError(res, e, 'Failed to save graph case');
     }
   }
 
   private async $patchCase(req: Request, res: Response): Promise<void> {
     try {
-      const updated = txGraphService.updateCase(req.params.id, req.body);
-      if (!updated) {
-        res.status(404).json({ error: `Case '${req.params.id}' not found.` });
-        return;
-      }
+      const updated = await txGraphService.updateCase(ownerOf(res), req.params.id, req.body ?? {});
+      if (!updated) { res.status(404).json({ error: `Case '${req.params.id}' not found.` }); return; }
       res.json(updated);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to update graph case');
+      sendIdentityError(res, e, 'Failed to update graph case');
     }
   }
 
   private async $deleteCase(req: Request, res: Response): Promise<void> {
     try {
-      const deleted = txGraphService.deleteCase(req.params.id);
-      res.json({ deleted });
+      const deleted = await txGraphService.deleteCase(ownerOf(res), req.params.id);
+      if (!deleted) { res.status(404).json({ error: `Case '${req.params.id}' not found.` }); return; }
+      res.json({ deleted: true });
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to delete graph case');
+      sendIdentityError(res, e, 'Failed to delete graph case');
     }
   }
 }
