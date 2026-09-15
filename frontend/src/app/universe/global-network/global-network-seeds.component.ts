@@ -60,10 +60,10 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                 <td><code class="fw-bold">{{ s.hostname }}</code></td>
                 <td>{{ s.maintainer }}</td>
                 <td>
-                  <span class="badge bg-success" *ngIf="s.active">Active</span>
-                  <span class="badge bg-warning" *ngIf="!s.active">Inactive</span>
+                  <span class="badge bg-success" *ngIf="s.active === true">Active</span><span *ngIf="s.active === null" class="badge bg-secondary">Unknown</span>
+                  <span class="badge bg-warning" *ngIf="s.active === false">Inactive</span>
                 </td>
-                <td class="fw-semibold">{{ s.discovered_addrs_count | number }}</td>
+                <td class="fw-semibold">{{ s.discovered_addrs_count === null ? 'Unknown' : (s.discovered_addrs_count | number) }}</td>
                 <td>
                   <div class="d-flex align-items-center gap-2" *ngIf="s.reachable_ratio !== null">
                     <div class="progress flex-grow-1" style="height: 6px; min-width: 60px;">

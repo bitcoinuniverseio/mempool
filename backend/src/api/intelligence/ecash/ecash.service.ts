@@ -25,19 +25,18 @@ export class EcashUnavailableError extends Error {
 
 export type MintFetcher = (url: URL, address: string, path: string) => Promise<{ status: number | null; json: unknown; error: string | null }>;
 
-const defaultFetcher: MintFetcher = (url, address, path) => new Promise(resolve => {
-  const request = https.request({ host: address, servername: url.hostname, port: url.port ? Number(url.port) : 443, path: `${url.pathname.replace(/\/$/, '')}${path}`, method: 'GET', headers: { host: url.host, accept: 'application/json' }, timeout: 5000 }, response => {
-    const chunks: Buffer[] = [];
-    let size = 0;
-    response.on('data', (chunk: Buffer) => { size += chunk.length; if (size <= 256 * 1024) { chunks.push(chunk); } });
-    response.on('end', () => {
-      try { resolve({ status: response.statusCode ?? null, json: JSON.parse(Buffer.concat(chunks).toString('utf8')), error: null }); }
-      catch { resolve({ status: response.statusCode ?? null, json: null, error: 'invalid json' }); }
-    });
+export const defaultFetcher: MintFetcher = (url, address, path) => new Promise(resolve => {
+  let settled = false;
+  const finish = (result: Awaited<ReturnType<MintFetcher>>) => { if (!settled) { settled = true; clearTimeout(deadline); resolve(result); } };
+  const deadline = setTimeout(() => { finish({ status: null, json: null, error: 'deadline-exceeded' }); request.destroy(); }, 5000);
+  const request = https.request({ host: address, servername: url.hostname, port: url.port ? Number(url.port) : 443, path: `${url.pathname.replace(/\/$/, '')}${path}`, method: 'GET', headers: { host: url.host, accept: 'application/json' } }, response => {
+    const chunks: Buffer[] = []; let size = 0;
+    response.on('data', (chunk: Buffer) => { size += chunk.length; if (size > 256 * 1024) { finish({ status: response.statusCode ?? null, json: null, error: 'response-too-large' }); response.destroy(); request.destroy(); } else chunks.push(chunk); });
+    response.on('error', () => finish({ status: null, json: null, error: 'response-failed' }));
+    response.on('aborted', () => finish({ status: null, json: null, error: 'response-aborted' }));
+    response.on('end', () => { try { finish({ status: response.statusCode ?? null, json: JSON.parse(Buffer.concat(chunks).toString('utf8')), error: null }); } catch { finish({ status: response.statusCode ?? null, json: null, error: 'invalid-json' }); } });
   });
-  request.on('timeout', () => { request.destroy(new Error('timeout')); });
-  request.on('error', error => resolve({ status: null, json: null, error: (error as NodeJS.ErrnoException).code ?? error.message }));
-  request.end();
+  request.on('error', () => finish({ status: null, json: null, error: 'request-failed' })); request.end();
 });
 
 /** The bytes an operator signs for a claim: type, identifier and domain, joined and hashed. */
@@ -58,7 +57,7 @@ export function verifyClaimSignature(claim: { provider_type: string; identifier:
 
 export class EcashService {
   private static instance: EcashService;
-  private mintCache: { at: number; mints: CashuMint[] } | null = null;
+  private mintCache: { at: number; configuration: string; mints: CashuMint[] } | null = null;
   public fetcher: MintFetcher = defaultFetcher;
   public configuredMints: () => string[] = () => (process.env[MINTS_ENV] ?? '').split(',').map(value => value.trim()).filter(Boolean);
 
@@ -82,8 +81,10 @@ export class EcashService {
 
   /** @asyncUnsafe Reads each configured mint's info (NUT-06) and keysets (NUT-02) with a short cache. */
   public async getMints(now = Date.now()): Promise<CashuMint[]> {
-    if (this.mintCache && now - this.mintCache.at < 5 * 60_000) { return this.mintCache.mints; }
     const configured = this.configuredMints();
+    const configuration = JSON.stringify(configured);
+    if (this.mintCache && this.mintCache.configuration === configuration && now >= this.mintCache.at && now - this.mintCache.at < 5 * 60_000) return this.mintCache.mints;
+    if (configured.length > 32) throw new EcashUnavailableError('invalid-mint-configuration', 'At most 32 mint observations may be configured.');
     if (configured.length === 0) {
       throw new EcashUnavailableError('unavailable-ecash-registry', `No Cashu mint is configured on this deployment (${MINTS_ENV}); mint identities, keysets and reachability cannot be reported.`);
     }
@@ -91,7 +92,7 @@ export class EcashService {
     for (const raw of configured) {
       let url: URL;
       try { url = validateWebhookUrl(raw); } catch (error) {
-        mints.push({ mint_id: `mint-${crypto.createHash('sha256').update(raw).digest('hex').slice(0, 12)}`, mint_url: raw, name: null, nuts_supported: [], active_keysets_count: 0, keysets: [], last_heartbeat: null, reachable: false, error: error instanceof IdentityError ? error.message : 'invalid url' });
+        mints.push({ mint_id: `mint-${crypto.createHash('sha256').update(raw).digest('hex').slice(0, 12)}`, mint_url: raw, name: null, nuts_supported: null, active_keysets_count: null, keysets: null, info_status: 'unavailable', keysets_status: 'unavailable', last_heartbeat: null, reachable: false, error: error instanceof IdentityError ? error.message : 'invalid url' });
         continue;
       }
       let info: Awaited<ReturnType<MintFetcher>>;
@@ -104,18 +105,21 @@ export class EcashService {
         info = { status: null, json: null, error: message };
         keysets = { status: null, json: null, error: message };
       }
-      const infoBody = (info.json ?? {}) as { name?: unknown; nuts?: Record<string, unknown> };
-      const keysetBody = (keysets.json ?? {}) as { keysets?: { id?: unknown; unit?: unknown; active?: unknown }[] };
-      const list = Array.isArray(keysetBody.keysets) ? keysetBody.keysets.filter(entry => typeof entry?.id === 'string').map(entry => ({ id: String(entry.id), unit: String(entry.unit ?? ''), active: entry.active === true })) : [];
-      const reachable = info.status === 200 && info.error === null;
+      const object = (v: any) => v && typeof v === 'object' && !Array.isArray(v);
+      const infoBody: any = info.json, keysetBody: any = keysets.json;
+      const infoOk = info.status === 200 && info.error === null && object(infoBody) && object(infoBody.nuts) && Object.keys(infoBody.nuts).every(k => /^(0|[1-9][0-9]{0,5})$/.test(k));
+      const keysetsOk = keysets.status === 200 && keysets.error === null && object(keysetBody) && Array.isArray(keysetBody.keysets) && keysetBody.keysets.length <= 4096 && keysetBody.keysets.every((entry: any) => object(entry) && typeof entry.id === 'string' && /^[0-9a-fA-F]{2,128}$/.test(entry.id) && entry.id.length % 2 === 0 && typeof entry.unit === 'string' && entry.unit.length > 0 && entry.unit.length <= 32 && typeof entry.active === 'boolean') && new Set(keysetBody.keysets.map((entry: any) => entry.id)).size === keysetBody.keysets.length;
+      const list = keysetsOk ? keysetBody.keysets.map((entry: any) => ({ id: entry.id, unit: entry.unit, active: entry.active })) : null;
       mints.push({
-        mint_id: EcashService.mintId(url), mint_url: url.toString(), name: reachable && typeof infoBody.name === 'string' ? infoBody.name : null,
-        nuts_supported: reachable && infoBody.nuts && typeof infoBody.nuts === 'object' ? Object.keys(infoBody.nuts).map(Number).filter(Number.isFinite).sort((a, b) => a - b) : [],
-        active_keysets_count: list.filter(entry => entry.active).length, keysets: list, last_heartbeat: reachable ? new Date(now).toISOString() : null,
-        reachable, error: info.error ?? (reachable ? null : `http ${info.status}`),
+        mint_id: EcashService.mintId(url), mint_url: url.toString(), name: infoOk && typeof infoBody.name === 'string' ? infoBody.name : null,
+        nuts_supported: infoOk ? Object.keys(infoBody.nuts).map(Number).sort((a,b)=>a-b) : null,
+        active_keysets_count: list === null ? null : list.filter((entry: any) => entry.active).length, keysets: list,
+        info_status: infoOk ? 'observed' : 'unavailable', keysets_status: keysetsOk ? 'observed' : 'unavailable',
+        last_heartbeat: infoOk && keysetsOk ? new Date(now).toISOString() : null,
+        reachable: infoOk && keysetsOk, error: !infoOk ? 'Mint info observation unavailable or malformed.' : !keysetsOk ? 'Mint keyset observation unavailable or malformed.' : null,
       });
     }
-    this.mintCache = { at: now, mints };
+    this.mintCache = { at: now, configuration, mints };
     return mints;
   }
 
@@ -138,7 +142,7 @@ export class EcashService {
     return {
       total_cashu_mints: mints.length, reachable_cashu_mints: mints.filter(mint => mint.reachable).length,
       total_fedimint_federations: null, total_verified_guardians: null, active_claims_count: null,
-      mints, federations: [], federations_note: 'Fedimint federations need the owned Fedimint client; none is connected.', last_updated: new Date().toISOString(),
+      mints, federations: [], federations_note: 'Fedimint federations need the owned Fedimint client; none is connected.', last_updated: new Date(this.mintCache!.at).toISOString(),
     };
   }
 

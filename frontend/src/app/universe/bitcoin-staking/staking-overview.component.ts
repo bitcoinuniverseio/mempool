@@ -1,3 +1,4 @@
+import { observeStaking, slashingLabel, reconciliationLabel } from './staking-view';
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -21,7 +22,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           </span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
-          Verifies Babylon-style Bitcoin staking delegations across 18 lifecycle states, finality provider telemetry, Extractable One-Time Signature (EOTS) slashing proofs, and cross-chain PoS reconciliation.
+          Displays source-reported Babylon-style Bitcoin staking delegations across 18 lifecycle states, finality provider telemetry, Extractable One-Time Signature (EOTS) slashing proofs, and cross-chain PoS reconciliation.
         </p>
 
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
@@ -47,7 +48,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
         <div class="col-12 col-md-3">
           <div class="card p-3 bg-body-tertiary border h-100">
             <div class="text-muted small">Active Staked Bitcoin</div>
-            <div class="fs-4 fw-bold mt-1 text-success">{{ (overview.total_staked_sat / 100000000).toFixed(4) }} BTC</div>
+            <div class="fs-4 fw-bold mt-1 text-success">{{ overview.total_staked_sat ?? 'Unknown' }} sats</div>
             <div class="small text-muted mt-1">{{ overview.total_active_delegations }} active delegations</div>
           </div>
         </div>
@@ -64,7 +65,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
             <div class="fs-4 fw-bold mt-1" [ngClass]="overview.slashed_providers_count > 0 ? 'text-danger' : 'text-success'">
               {{ overview.slashed_providers_count }}
             </div>
-            <div class="small text-muted mt-1">EOTS equivocation proven</div>
+            <div class="small text-muted mt-1">Provider-reported slashing count</div>
           </div>
         </div>
         <div class="col-12 col-md-3">
@@ -85,7 +86,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
               <div *ngFor="let state of delegationStates" class="col-6 col-md-4">
                 <div class="p-2 border rounded bg-body">
                   <div class="text-muted small font-monospace">{{ state }}</div>
-                  <div class="fs-5 fw-bold font-monospace">{{ overview.delegation_states_summary[state] || 0 }}</div>
+                  <div class="fs-5 fw-bold font-monospace">{{ overview.delegation_states_summary[state] ?? 'Unknown' }}</div>
                 </div>
               </div>
             </div>
@@ -147,19 +148,12 @@ export class StakingOverviewComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef
   ) {}
 
+  readonly slashingLabel = slashingLabel;
+  readonly reconciliationLabel = reconciliationLabel;
   ngOnInit(): void {
-    this.sub = this.stakingApi.getOverview$().subscribe({
-      next: (data) => {
-        this.overview = data;
-        this.loading = false;
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        this.error = loadFailureMessage(classifyLoadFailure(err));
-        this.loading = false;
-        this.cdr.markForCheck();
-      },
-    });
+    this.sub = observeStaking(this.stakingApi.networkChanges$, () => {this.overview = null;this.loading=true;this.error=null;this.cdr.markForCheck();},
+      () => this.stakingApi.getOverview$(), data => {this.overview=data;this.loading=false;this.cdr.markForCheck();},
+      err => {this.overview=null;this.error=err?.error?.error || err?.message || loadFailureMessage(classifyLoadFailure(err));this.loading=false;this.cdr.markForCheck();});
   }
 
   ngOnDestroy(): void {

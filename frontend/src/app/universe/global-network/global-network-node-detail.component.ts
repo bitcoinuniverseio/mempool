@@ -24,7 +24,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           <span class="badge bg-success" *ngIf="node && node.transport_v2">
             BIP324 v2 Encrypted Active
           </span>
-          <span class="badge bg-secondary" *ngIf="node && !node.transport_v2">
+          <span class="badge bg-secondary" *ngIf="node && node.transport_v2 === false">
             v1 Standard Transport
           </span>
         </div>
@@ -61,22 +61,22 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
               <h2 class="h5 mb-3">Protocol Capabilities</h2>
               <ul class="list-group list-group-flush bg-transparent">
                 <li class="list-group-item bg-transparent d-flex justify-content-between px-0">
-                  <span class="text-muted">BIP324 v2 Encrypted Transport</span>
+                  <span *ngIf="node.transport_v2 === null" class="text-muted">Transport unknown</span><span class="text-muted">BIP324 v2 Encrypted Transport</span>
                   <span class="badge bg-success" *ngIf="node.transport_v2">Supported</span>
-                  <span class="badge bg-secondary" *ngIf="!node.transport_v2">Not Advertised</span>
+                  <span class="badge bg-secondary" *ngIf="node.transport_v2 === false">Not Advertised</span>
                 </li>
                 <li class="list-group-item bg-transparent d-flex justify-content-between px-0">
                   <span class="text-muted">BIP155 addrv2 Extended Gossip</span>
                   <span class="badge bg-info" *ngIf="node.addrv2">Enabled</span>
-                  <span class="badge bg-secondary" *ngIf="!node.addrv2">Disabled</span>
+                  <span class="badge bg-secondary" *ngIf="node.addrv2 !== true">Unknown</span>
                 </li>
                 <li class="list-group-item bg-transparent d-flex justify-content-between px-0">
                   <span class="text-muted">Transaction Relay Flag</span>
-                  <span class="fw-semibold">{{ node.relay ? 'True' : 'False' }}</span>
+                  <span class="fw-semibold">{{ node.relay === null ? 'Unknown' : node.relay ? 'True' : 'False' }}</span>
                 </li>
                 <li class="list-group-item bg-transparent d-flex justify-content-between px-0">
                   <span class="text-muted">Advertised Services Bitmask</span>
-                  <code class="fw-semibold">0x{{ node.services.toString(16) }}</code>
+                  <code class="fw-semibold">{{ node.services_hex === null ? 'Unknown' : '0x' + node.services_hex }}</code>
                 </li>
               </ul>
             </div>
@@ -92,7 +92,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                 </li>
                 <li class="list-group-item bg-transparent d-flex justify-content-between px-0">
                   <span class="text-muted">Probe Handshake Latency</span>
-                  <span class="fw-semibold">{{ node.latency_ms >= 0 ? node.latency_ms + ' ms' : 'n/a' }}</span>
+                  <span class="fw-semibold">{{ node.latency_ms !== null && node.latency_ms >= 0 ? node.latency_ms + ' ms' : 'n/a' }}</span>
                 </li>
                 <li class="list-group-item bg-transparent d-flex justify-content-between px-0">
                   <span class="text-muted">Autonomous System (ASN)</span>

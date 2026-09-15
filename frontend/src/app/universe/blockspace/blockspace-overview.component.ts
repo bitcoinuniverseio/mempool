@@ -41,6 +41,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
       </div>
 
       <div *ngIf="!loading && overview" class="content-body">
+        <p *ngIf="overview.window?.transactions_complete !== true" class="alert alert-warning" role="status">Transaction coverage is {{ overview.window?.transactions_complete === false ? 'incomplete' : 'unknown' }}. Class counts describe only observed transactions; full class shares are unknown.</p>
         <!-- Metric Cards -->
         <section class="row g-3 mb-4">
           <div class="col-12 col-sm-6 col-lg-3">

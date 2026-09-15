@@ -1,3 +1,5 @@
+import { createHash } from 'crypto';
+import config from '../../../config';
 import { verifyAnnouncement, verifyAttestation } from './oracle-verification';
 import {
   DlcOracle,
@@ -80,59 +82,39 @@ export class DlcService {
 
   public verifyAttestation(data: unknown) { return verifyAttestation(data); }
 
-  public verifyContractPackage(pkg: Partial<DlcContractPackage>): {
-    valid: boolean;
-    total_collateral_sats: number;
-    cet_count: number;
-    errors: string[];
-    warnings: string[];
-  } {
+  public verifyContractPackage(pkg: Partial<DlcContractPackage>) {
+    if (!pkg || typeof pkg !== 'object' || Array.isArray(pkg)) throw new DlcEvidenceError('invalid-input', 'A contract package object is required.', 400);
     const errors: string[] = [];
-    const warnings: string[] = [];
-
-    if (!pkg.parties || pkg.parties.length !== 2) {
-      errors.push('DLC contract package requires exactly two parties');
+    const money = (n: unknown): n is number => typeof n === 'number' && Number.isSafeInteger(n) && n >= 0 && n <= 2100000000000000;
+    const parties = Array.isArray(pkg.parties) ? pkg.parties : [];
+    const cets = Array.isArray(pkg.cets) ? pkg.cets : [];
+    if (parties.length > 2 || cets.length > 4096) throw new DlcEvidenceError('invalid-input', 'At most two parties and 4096 CETs are accepted.', 400);
+    if (parties.length !== 2) errors.push('DLC contract package requires exactly two parties');
+    let total: number | null = 0;
+    for (const party of parties) {
+      if (!party || !money(party.collateral_sats) || party.collateral_sats === 0) { errors.push('Party collateral must be positive bounded integer satoshis'); total = null; }
+      else if (total !== null) total += party.collateral_sats;
     }
-
-    let totalCollateral = 0;
-    for (const p of pkg.parties || []) {
-      if (p.collateral_sats <= 0) {
-        errors.push(`Party ${p.role} collateral must be positive`);
-      }
-      totalCollateral += p.collateral_sats;
+    if (total !== null && !money(total)) { total = null; errors.push('Total collateral exceeds Bitcoin monetary bounds'); }
+    if (!cets.length) errors.push('Contract package must contain at least one CET');
+    for (const cet of cets) {
+      if (!cet || !money(cet.local_payout_sats) || !money(cet.remote_payout_sats) || !money(cet.fee_sats)) { errors.push('CET payouts and fees must be bounded nonnegative integer satoshis'); continue; }
+      const sum = cet.local_payout_sats + cet.remote_payout_sats + cet.fee_sats;
+      if (!Number.isSafeInteger(sum) || total === null || sum !== total) errors.push('CET payouts and fees do not conserve collateral');
     }
-
-    if (!pkg.cets || pkg.cets.length === 0) {
-      errors.push('Contract package must contain at least one CET');
-    }
-
-    for (const cet of pkg.cets || []) {
-      const payoutSum = cet.local_payout_sats + cet.remote_payout_sats + cet.fee_sats;
-      if (payoutSum !== totalCollateral) {
-        errors.push(
-          `CET outcome '${cet.outcome}' total payout (${payoutSum} sats) does not conserve collateral (${totalCollateral} sats)`
-        );
-      }
-      if (!cet.adaptor_signature) {
-        errors.push(`CET outcome '${cet.outcome}' is missing adaptor signature`);
-      }
-    }
-
-    if (!pkg.refund) {
-      errors.push('Contract package is missing refund transaction specifications');
-    } else {
-      const refundSum = pkg.refund.local_payout_sats + pkg.refund.remote_payout_sats;
-      if (refundSum > totalCollateral) {
-        errors.push('Refund payout exceeds total collateral');
-      }
-    }
-
+    if (!pkg.refund) errors.push('Contract package is missing refund transaction specifications');
+    else if (!money(pkg.refund.local_payout_sats) || !money(pkg.refund.remote_payout_sats)) errors.push('Refund payouts must be bounded nonnegative integer satoshis');
+    else if (total === null || pkg.refund.local_payout_sats + pkg.refund.remote_payout_sats > total) errors.push('Refund payout exceeds total collateral');
     return {
-      valid: errors.length === 0,
-      total_collateral_sats: totalCollateral,
-      cet_count: (pkg.cets || []).length,
-      errors,
-      warnings,
+      valid: errors.length ? false : null,
+      structural_checks_passed: errors.length === 0,
+      cryptographic_verification: 'not-established' as const,
+      input_sha256: createHash('sha256').update(JSON.stringify(pkg)).digest('hex'),
+      configured_network: config.MEMPOOL.NETWORK,
+      network_scope: 'Configured request context only; no owned chain observation was performed.',
+      scope: 'Caller-supplied collateral and payout arithmetic only. Adaptor signatures, oracle bindings, CET/refund transaction scripts, funding UTXOs, fees and timelock maturity are not verified.',
+      total_collateral_sats: total, cet_count: cets.length, errors,
+      warnings: ['A structurally consistent package is not a verified DLC. Raw authenticated transaction and adaptor-signature evidence is required by the unconnected contract verifier.'],
     };
   }
 

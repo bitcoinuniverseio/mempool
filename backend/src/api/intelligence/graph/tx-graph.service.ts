@@ -21,8 +21,8 @@ export interface GraphNode {
   id: string;
   type: 'transaction' | 'outpoint' | 'address';
   label: string;
-  value_sats: number;
-  status: 'confirmed' | 'mempool' | 'replaced' | 'conflicted';
+  value_sats: number | null;
+  status: 'confirmed' | 'mempool' | 'replaced' | 'conflicted' | 'unknown';
   block_height?: number;
   depth: number;
   evidence_tags?: string[];
@@ -48,18 +48,21 @@ export interface GraphQueryResult {
   edges: GraphEdge[];
   truncated: boolean;
   /** Why the walk stopped early, when it did. */
-  truncation_reason: 'node_limit' | 'fetch_budget' | null;
+  truncation_reason: 'node_limit' | 'fetch_budget' | 'address_page' | null;
   total_nodes_count: number;
   fetches: number;
   generated_at: string;
 }
 
 export interface ShortestPathResult {
+  network: string;
   from_entity: string;
   to_entity: string;
   path_found: boolean;
   total_hops: number;
-  total_value_transferred_sats: number;
+  total_value_transferred_sats: null;
+  value_upper_bound_sats: number | null;
+  transfer_scope: string;
   node_sequence: string[];
   edge_sequence: GraphEdge[];
   /** True when the search hit its budget before exhausting the reachable set. */
@@ -94,12 +97,17 @@ export class GraphIndexError extends Error {
 async function readIndex<T>(read: () => Promise<T>): Promise<T> {
   try { return await read(); }
   catch (error) {
-    const failure = error as { response?: { status?: number }; code?: number };
-    if (failure?.response?.status === 404 || failure?.code === -5) {
+    const failure = error as { response?: { status?: number; data?: unknown }; code?: number };
+    if (failure?.response?.status === 404 && failure.response.data === 'Transaction not found') {
       throw new GraphIndexError(404, 'The requested record is not in the selected index.');
     }
     throw new GraphIndexError(503, 'The selected transaction index could not complete the graph read.');
   }
+}
+
+function checkedTransaction(tx: IEsploraApi.Transaction, expected?: string): IEsploraApi.Transaction {
+  if (!tx || typeof tx.txid !== 'string' || !TXID.test(tx.txid) || expected !== undefined && tx.txid !== expected || !Array.isArray(tx.vin) || !Array.isArray(tx.vout) || tx.vout.some(output => !output || !Number.isSafeInteger(output.value) || output.value < 0 || output.value > 2100000000000000) || !Number.isSafeInteger(tx.vout.reduce((sum, output) => sum + output.value, 0))) throw new GraphIndexError(503, 'The index returned incomplete or invalid transaction evidence.');
+  return tx;
 }
 
 function checkedOutspends(tx: IEsploraApi.Transaction, outspends: IEsploraApi.Outspend[]): IEsploraApi.Outspend[] {
@@ -157,7 +165,7 @@ export class TxGraphService {
     return {
       id: tx.txid, type: 'transaction', label: tx.txid.slice(0, 10),
       value_sats: tx.vout.reduce((sum, vout) => sum + (vout.value ?? 0), 0),
-      status: tx.status?.confirmed ? 'confirmed' : 'mempool',
+      status: tx.status?.confirmed === true ? 'confirmed' : tx.status?.confirmed === false ? 'mempool' : 'unknown',
       block_height: tx.status?.confirmed ? tx.status.block_height : undefined,
       depth, evidence_tags: [],
     };
@@ -190,9 +198,7 @@ export class TxGraphService {
       if (cached) { return cached; }
       if (!budget.take()) { truncation = truncation ?? 'fetch_budget'; return null; }
       const tx = await readIndex(() => this.index.transaction(txid));
-      if (tx?.txid !== txid || !Array.isArray(tx.vin) || !Array.isArray(tx.vout)) {
-        throw new GraphIndexError(503, 'The index returned an invalid transaction document.');
-      }
+      checkedTransaction(tx, txid);
       cache.set(txid, tx);
       return tx;
     };
@@ -207,14 +213,24 @@ export class TxGraphService {
       if (!budget.take()) { throw new GraphInputError('fetch budget exhausted'); }
       let txs: IEsploraApi.Transaction[];
       txs = await readIndex(() => this.index.addressTransactions(root));
-      nodes.set(root, { id: root, type: 'address', label: root.slice(0, 10), value_sats: 0, status: 'confirmed', depth: 0, evidence_tags: [] });
+      if (!Array.isArray(txs) || txs.length > 10000) throw new GraphIndexError(503, 'Invalid address transaction page.');
+      if (txs.length >= GRAPH_LIMITS.addressPageSize) truncation = 'address_page';
+      nodes.set(root, { id: root, type: 'address', label: root.slice(0, 10), value_sats: null, status: 'unknown', depth: 0, evidence_tags: [] });
       for (const tx of txs.slice(0, GRAPH_LIMITS.addressPageSize)) {
-        if (!room()) { break; }
-        cache.set(tx.txid, tx);
-        nodes.set(tx.txid, TxGraphService.txNode(tx, 1));
-        tx.vout.forEach((vout, index) => { if (vout.scriptpubkey_address === root && vout.value >= minValue) { addEdge({ source_id: tx.txid, target_id: root, value_sats: vout.value, vout: index, edge_type: 'output' }); } });
-        tx.vin.forEach(vin => { if (vin.prevout?.scriptpubkey_address === root && (vin.prevout.value ?? 0) >= minValue) { addEdge({ source_id: root, target_id: tx.txid, value_sats: vin.prevout.value ?? 0, vout: vin.vout, spending_txid: tx.txid, edge_type: 'input' }); } });
-        frontier.push({ txid: tx.txid, depth: 1 });
+        checkedTransaction(tx);
+        if (!room()) break;
+        const links: GraphEdge[] = [];
+        if (direction !== 'downstream') tx.vout.forEach((vout, index) => { if (vout.scriptpubkey_address === root && vout.value >= minValue) links.push({ source_id: tx.txid, target_id: root, value_sats: vout.value, vout: index, edge_type: 'output' }); });
+        if (direction !== 'upstream') for (const vin of tx.vin) {
+          if (vin.is_coinbase || !vin.txid) continue;
+          const parent = await fetchTx(vin.txid); if (!parent) break;
+          const output = parent.vout[vin.vout];
+          if (!Number.isInteger(vin.vout) || vin.vout < 0 || !output) throw new GraphIndexError(503, 'Input refers to an absent parent output.');
+          if (output.scriptpubkey_address === root && output.value >= minValue) links.push({ source_id: root, target_id: tx.txid, value_sats: output.value, vout: vin.vout, spending_txid: tx.txid, edge_type: 'input' });
+        }
+        if (!links.length) continue;
+        cache.set(tx.txid, tx); nodes.set(tx.txid, TxGraphService.txNode(tx, 1));
+        links.forEach(addEdge); frontier.push({ txid: tx.txid, depth: 1 });
       }
     }
 
@@ -228,12 +244,14 @@ export class TxGraphService {
       if (direction !== 'downstream') {
         for (const vin of tx.vin) {
           if (vin.is_coinbase || !vin.txid) { continue; }
-          const value = vin.prevout?.value ?? 0;
+          const parent = await fetchTx(vin.txid);
+          if (!parent) break;
+          const output = parent.vout[vin.vout];
+          if (!Number.isInteger(vin.vout) || vin.vout < 0 || !output) throw new GraphIndexError(503, 'Input refers to an absent parent output.');
+          const value = output.value;
           if (value < minValue) { continue; }
           if (!nodes.has(vin.txid)) {
             if (!room()) { break; }
-            const parent = await fetchTx(vin.txid);
-            if (!parent) { break; }
             nodes.set(parent.txid, TxGraphService.txNode(parent, current.depth + 1));
             frontier.push({ txid: parent.txid, depth: current.depth + 1 });
           }
@@ -282,7 +300,7 @@ export class TxGraphService {
     if (from === to) {
       budget.take();
       const tx = await readIndex(() => this.index.transaction(from));
-      if (tx?.txid !== from) throw new GraphIndexError(503, 'The index returned a different transaction.');
+      checkedTransaction(tx, from);
       found = true;
     }
     while (queue.length > 0 && !found) {
@@ -291,7 +309,7 @@ export class TxGraphService {
       if (!budget.take()) { break; }
       let tx: IEsploraApi.Transaction;
       tx = await readIndex(() => this.index.transaction(current.txid));
-      if (tx?.txid !== current.txid || !Array.isArray(tx.vout)) throw new GraphIndexError(503, 'The index returned an invalid transaction document.');
+      checkedTransaction(tx, current.txid);
       if (!budget.take()) { break; }
       let outspends: IEsploraApi.Outspend[] = [];
       outspends = checkedOutspends(tx, await readIndex(() => this.index.outspends(current.txid)));
@@ -318,9 +336,11 @@ export class TxGraphService {
       }
     }
     return {
-      from_entity: from, to_entity: to, path_found: found, total_hops: found ? edgeSequence.length : 0,
+      network: config.MEMPOOL.NETWORK, from_entity: from, to_entity: to, path_found: found, total_hops: found ? edgeSequence.length : 0,
       // The value that can traverse the whole path is bounded by its thinnest edge.
-      total_value_transferred_sats: found && edgeSequence.length ? Math.min(...edgeSequence.map(edge => edge.value_sats)) : 0,
+      total_value_transferred_sats: null,
+      value_upper_bound_sats: found && edgeSequence.length ? Math.min(...edgeSequence.map(edge => edge.value_sats)) : null,
+      transfer_scope: 'Observed transaction connectivity only. Path bottleneck upper bound only, not a traced or achievable transfer amount; fungible mixed inputs do not establish exact funds transferred.',
       node_sequence: nodeSequence, edge_sequence: edgeSequence, search_exhausted: !found && (depthLimited || budget.exhausted() || queue.length > 0), fetches: budget.used,
     };
   }

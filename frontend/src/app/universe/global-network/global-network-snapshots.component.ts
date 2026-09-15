@@ -50,7 +50,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
               <div class="small text-muted">Captured at Block Height {{ s.block_height | number }} &bull; {{ s.timestamp_utc }}</div>
             </div>
             <div class="d-flex gap-2">
-              <span class="badge bg-success">{{ s.v2_percentage }}% BIP324 v2</span>
+              <span class="badge bg-success">{{ s.v2_percentage === null ? 'Unknown' : s.v2_percentage + '%' }} BIP324 v2</span>
               <span class="badge bg-info">{{ s.total_nodes | number }} Reachable Nodes</span>
             </div>
           </div>

@@ -59,8 +59,8 @@ describe('blockspace reads come from observed blocks', () => {
   });
 
   it('shares are exact fractions of the observed window and regimes follow median fee bands', () => {
-    blockspaceService.observeBlock(block(10, 1_000_000, 4, 4000, 1000), [tx({ vin: [{ is_coinbase: true }], weight: 1000, fee: 0 } as never), tx({ weight: 3000, fee: 1000 })]);
-    blockspaceService.observeBlock(block(11, 1_000_600, 40, 4000, 2000), [tx({ txid: 'b'.repeat(64), weight: 4000, fee: 2000, vout: [{ value: 0, scriptpubkey: EDICT, scriptpubkey_type: 'op_return' }] } as never)]);
+    blockspaceService.observeBlock({ ...block(10, 1_000_000, 4, 4000, 1000), tx_count: 2 }, [tx({ vin: [{ is_coinbase: true }], weight: 1000, fee: 0 } as never), tx({ weight: 3000, fee: 1000 })]);
+    blockspaceService.observeBlock({ ...block(11, 1_000_600, 40, 4000, 2000), tx_count: 1 }, [tx({ txid: 'b'.repeat(64), weight: 4000, fee: 2000, vout: [{ value: 0, scriptpubkey: EDICT, scriptpubkey_type: 'op_return' }] } as never)]);
     const taxonomy = blockspaceService.getTaxonomy();
     const find = (id: string) => taxonomy.find(c => c.class_id === id)!;
     expect(find('class-simple-payment')).toMatchObject({ tx_count_24h: 1, weight_share_percentage: 37.5, fee_share_percentage: 33.33 });
@@ -131,4 +131,11 @@ describe('blockspace unknown evidence and coverage boundaries', () => {
     blockspaceService.observeBlock(first, [tx({})]); blockspaceService.observeBlock(second, [tx({})]);
     expect(blockspaceService.getOverview().window).toMatchObject({ covers_24h: true, contiguous: true, transactions_complete: true, time_basis: 'block_timestamp_relative_to_observed_tip' });
   });
+});
+
+it.each([undefined,2])('does not infer exact class shares from unknown/incomplete transaction coverage %p',tx_count=>{
+ blockspaceService.reset();blockspaceService.observeBlock({...block(5,1000,2),tx_count} as unknown as BlockExtended,[tx({})]);
+ expect(blockspaceService.getTaxonomy().every(c=>c.weight_share_percentage===null&&c.fee_share_percentage===null)).toBe(true);
+ expect(blockspaceService.getComposition()[0]).toMatchObject({monetary_weight:null,arbitrary_data_weight:null,consolidation_weight:null});
+ expect(blockspaceService.getTaxonomy().find(c=>c.class_id==='class-simple-payment')?.tx_count_24h).toBe(1);
 });

@@ -191,7 +191,8 @@ export class BlockspaceService {
     const window = this.window();
     const totalWeight = sumKnown(window.map(tally => tally.weight));
     const totalFees = sumKnown(window.map(tally => tally.fees));
-    const share = (part: number | null, whole: number | null): number | null => part === null || whole === null ? null : whole > 0 ? Math.round((part / whole) * 10000) / 100 : 0;
+    const complete = window.every(tally => tally.transactionsComplete === true);
+    const share = (part: number | null, whole: number | null): number | null => !complete || part === null || whole === null ? null : whole > 0 ? Math.round((part / whole) * 10000) / 100 : 0;
     return CLASSES.map(definition => {
       const totals = window.reduce((sum, tally) => {
         const entry = tally.perClass[definition.class_id];
@@ -208,12 +209,12 @@ export class BlockspaceService {
     const window = this.window();
     const sum = (tally: BlockTally, category: BlockspaceSemanticClass['category']): number | null => {
       const classes = CLASSES.filter(definition => definition.category === category);
-      return classes.length ? sumKnown(classes.map(definition => tally.perClass[definition.class_id].weight)) : null;
+      return tally.transactionsComplete === true && classes.length ? sumKnown(classes.map(definition => tally.perClass[definition.class_id].weight)) : null;
     };
     return window.slice(-Math.max(1, Math.min(288, limit))).reverse().map(tally => ({
       block_height: tally.height, timestamp_utc: new Date(tally.timestamp * 1000).toISOString(), total_weight: tally.weight, total_fee_sats: tally.fees,
       monetary_weight: sum(tally, 'monetary'), layer2_weight: sum(tally, 'layer2'), arbitrary_data_weight: sum(tally, 'arbitrary_data'),
-      consolidation_weight: tally.perClass['class-consolidation'].weight,
+      consolidation_weight: tally.transactionsComplete === true ? tally.perClass['class-consolidation'].weight : null,
     }));
   }
 
