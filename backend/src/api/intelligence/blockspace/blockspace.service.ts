@@ -90,6 +90,7 @@ interface BlockTally {
   weight: number;
   fees: number;
   medianFee: number | null;
+  observedAt: string;
   perClass: Record<string, { transactions: number; weight: number; fees: number }>;
 }
 
@@ -121,6 +122,7 @@ export class BlockspaceService {
       height: block.height, hash: block.id, timestamp: block.timestamp, weight: block.weight,
       fees: block.extras?.totalFees ?? transactions.reduce((sum, tx) => sum + (tx.fee ?? 0), 0),
       medianFee: typeof block.extras?.medianFee === 'number' ? block.extras.medianFee : null,
+      observedAt: new Date().toISOString(),
       perClass: {},
     };
     for (const definition of CLASSES) { tally.perClass[definition.class_id] = { transactions: 0, weight: 0, fees: 0 }; }
@@ -134,7 +136,10 @@ export class BlockspaceService {
     this.tallies = this.tallies.filter(existing => existing.height < block.height);
     this.tallies.push(tally);
     if (this.tallies.length > this.maxBlocks) { this.tallies = this.tallies.slice(-this.maxBlocks); }
-    this.updateRegimes(tally);
+    // Derive regimes from the same retained branch as composition. Replacement
+    // blocks must remove the fee regimes caused by the orphaned tallies too.
+    this.regimes = [];
+    for (const retained of this.tallies) this.updateRegimes(retained);
   }
 
   private regimeFor(medianFee: number): { type: BlockspaceRegimeEvent['regime_type']; driver: string } {
@@ -147,13 +152,16 @@ export class BlockspaceService {
     const regime = this.regimeFor(tally.medianFee);
     const current = this.regimes[0];
     if (current && current.end_height === undefined && current.regime_type === regime.type) {
-      current.median_feerate = Math.round(((current.median_feerate + tally.medianFee) / 2) * 100) / 100;
+      const fees = this.tallies.filter(item => item.height >= current.start_height && item.height <= tally.height)
+        .map(item => item.medianFee).filter((fee): fee is number => fee !== null).sort((a, b) => a - b);
+      const middle = Math.floor(fees.length / 2);
+      current.median_feerate = fees.length % 2 ? fees[middle] : (fees[middle - 1] + fees[middle]) / 2;
       return;
     }
     if (current && current.end_height === undefined) { current.end_height = tally.height - 1; }
     this.regimes.unshift({
       regime_id: `regime-${config.MEMPOOL.NETWORK}-${tally.height}`, network: config.MEMPOOL.NETWORK, start_height: tally.height,
-      regime_type: regime.type, median_feerate: tally.medianFee, primary_demand_driver: regime.driver, detected_at: new Date().toISOString(),
+      regime_type: regime.type, median_feerate: tally.medianFee, primary_demand_driver: regime.driver, detected_at: tally.observedAt,
     });
     if (this.regimes.length > 50) { this.regimes = this.regimes.slice(0, 50); }
   }
