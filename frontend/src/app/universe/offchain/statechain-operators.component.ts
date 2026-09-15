@@ -109,7 +109,7 @@ export class StatechainOperatorsComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
       },
       error: (err) => {
-        this.error = err.message || 'Failed to load statechain operators';
+        this.error = err?.error?.error || err?.message || 'Failed to load statechain operators';
         this.loading = false;
         this.cdr.markForCheck();
       },

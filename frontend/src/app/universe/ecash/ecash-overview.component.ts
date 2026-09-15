@@ -180,7 +180,7 @@ export class EcashOverviewComponent implements OnInit, OnDestroy {
           this.cd.markForCheck();
         },
         error: err => {
-          this.error = err?.message || 'Failed to load ecash overview';
+          this.error = err?.error?.error || err?.message || 'Failed to load ecash overview';
           this.loading = false;
           this.cd.markForCheck();
         },

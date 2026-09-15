@@ -207,12 +207,14 @@ export interface OwnerStore {
   insertEntity(row: WatchlistEntityRow): Promise<'inserted' | 'duplicate'>;
   listEntities(watchlistId: string): Promise<WatchlistEntityRow[]>;
   countEntities(watchlistId: string): Promise<number>;
+  deleteEntity(ownerId: string, network: string, watchlistId: string, entityId: string): Promise<boolean>;
   /** Entities across every enabled watchlist of the network, for the matcher. */
   listEntitiesByType(network: string, entityType: string): Promise<WatchlistEntityRow[]>;
 
   insertRule(row: WatchlistRuleRow): Promise<void>;
   listRules(watchlistId: string): Promise<WatchlistRuleRow[]>;
   countRules(watchlistId: string): Promise<number>;
+  deleteRule(ownerId: string, network: string, watchlistId: string, ruleId: string): Promise<boolean>;
   listEnabledRules(network: string): Promise<WatchlistRuleRow[]>;
 
   insertSavedQuery(row: SavedQueryRow): Promise<void>;
@@ -441,6 +443,12 @@ export class MysqlOwnerStore implements OwnerStore {
   }
 
   /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */
+  public async deleteEntity(ownerId: string, network: string, watchlistId: string, entityId: string): Promise<boolean> {
+    const [result]: any[] = await DB.query('DELETE FROM intelligence_watchlist_entities WHERE entity_id = ? AND watchlist_id = ? AND owner_id = ? AND network = ?', [entityId, watchlistId, ownerId, network]);
+    return Number(result?.affectedRows ?? 0) > 0;
+  }
+
+  /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */
   public async listEntitiesByType(network: string, entityType: string): Promise<WatchlistEntityRow[]> {
     const [rows]: any[] = await DB.query('SELECT * FROM intelligence_watchlist_entities WHERE network = ? AND entity_type = ? LIMIT 100000', [network, entityType]);
     return (rows ?? []).map((row: any) => this.entity(row));
@@ -474,6 +482,12 @@ export class MysqlOwnerStore implements OwnerStore {
   public async countRules(watchlistId: string): Promise<number> {
     const [rows]: any[] = await DB.query('SELECT COUNT(*) AS n FROM intelligence_watchlist_rules WHERE watchlist_id = ?', [watchlistId]);
     return Number(rows?.[0]?.n ?? 0);
+  }
+
+  /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */
+  public async deleteRule(ownerId: string, network: string, watchlistId: string, ruleId: string): Promise<boolean> {
+    const [result]: any[] = await DB.query('DELETE FROM intelligence_watchlist_rules WHERE rule_id = ? AND watchlist_id = ? AND owner_id = ? AND network = ?', [ruleId, watchlistId, ownerId, network]);
+    return Number(result?.affectedRows ?? 0) > 0;
   }
 
   /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */
@@ -823,6 +837,13 @@ export class MemoryOwnerStore implements OwnerStore {
   /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */
   public async countEntities(watchlistId: string): Promise<number> { return (await this.listEntities(watchlistId)).length; }
   /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */
+  public async deleteEntity(ownerId: string, network: string, watchlistId: string, entityId: string): Promise<boolean> {
+    const e = this.entities.get(entityId);
+    if (!e || e.watchlist_id !== watchlistId || e.owner_id !== ownerId || e.network !== network) { return false; }
+    this.entities.delete(entityId);
+    return true;
+  }
+  /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */
   public async listEntitiesByType(network: string, entityType: string): Promise<WatchlistEntityRow[]> { return [...this.entities.values()].filter(e => e.network === network && e.entity_type === entityType).map(e => this.clone(e)); }
 
   /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */
@@ -831,6 +852,13 @@ export class MemoryOwnerStore implements OwnerStore {
   public async listRules(watchlistId: string): Promise<WatchlistRuleRow[]> { return [...this.rules.values()].filter(r => r.watchlist_id === watchlistId).map(r => this.clone(r)); }
   /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */
   public async countRules(watchlistId: string): Promise<number> { return (await this.listRules(watchlistId)).length; }
+  /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */
+  public async deleteRule(ownerId: string, network: string, watchlistId: string, ruleId: string): Promise<boolean> {
+    const r = this.rules.get(ruleId);
+    if (!r || r.watchlist_id !== watchlistId || r.owner_id !== ownerId || r.network !== network) { return false; }
+    this.rules.delete(ruleId);
+    return true;
+  }
   /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */
   public async listEnabledRules(network: string): Promise<WatchlistRuleRow[]> { return [...this.rules.values()].filter(r => r.network === network && r.enabled).map(r => this.clone(r)); }
 

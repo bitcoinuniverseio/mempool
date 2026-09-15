@@ -222,6 +222,14 @@ export class IntelligenceApiService {
     return this.httpClient.post<any>(`${this.apiBaseUrl}/api/v1/intelligence/watchlists/${encodeURIComponent(watchlistId)}/rules`, { condition_type: conditionType, delivery_channel: deliveryChannel, threshold_value: thresholdValue, webhook_id: webhookId }, this.ownerHeaders);
   }
 
+  deleteWatchlistEntity$(watchlistId: string, entityId: string): Observable<any> {
+    return this.httpClient.delete<any>(`${this.apiBaseUrl}/api/v1/intelligence/watchlists/${encodeURIComponent(watchlistId)}/entities/${encodeURIComponent(entityId)}`, this.ownerHeaders);
+  }
+
+  deleteWatchlistRule$(watchlistId: string, ruleId: string): Observable<any> {
+    return this.httpClient.delete<any>(`${this.apiBaseUrl}/api/v1/intelligence/watchlists/${encodeURIComponent(watchlistId)}/rules/${encodeURIComponent(ruleId)}`, this.ownerHeaders);
+  }
+
   getWatchlistNotifications$(): Observable<any> {
     return this.httpClient.get<any>(`${this.apiBaseUrl}/api/v1/intelligence/watchlists/notifications`, this.ownerHeaders);
   }

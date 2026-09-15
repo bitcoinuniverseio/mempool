@@ -48,7 +48,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           </div>
           <div class="col-6 col-md-3">
             <select
-              class="form-select"
+              class="form-control"
               [(ngModel)]="transportFilter"
               (ngModelChange)="applyFilter()"
               aria-label="Filter by transport"
@@ -161,7 +161,7 @@ export class GlobalNetworkNodesComponent implements OnInit, OnDestroy {
           this.cd.markForCheck();
         },
         error: err => {
-          this.error = err?.message || 'Failed to load reachable nodes';
+          this.error = err?.error?.error || err?.message || 'Failed to load reachable nodes';
           this.loading = false;
           this.cd.markForCheck();
         },

@@ -133,7 +133,7 @@ export class PayjoinOverviewComponent implements OnInit, OnDestroy {
           this.cd.markForCheck();
         },
         error: err => {
-          this.error = err?.message || 'Failed to load payjoin overview';
+          this.error = err?.error?.error || err?.message || 'Failed to load payjoin overview';
           this.loading = false;
           this.cd.markForCheck();
         },

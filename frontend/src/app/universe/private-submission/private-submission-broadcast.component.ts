@@ -59,7 +59,7 @@ export function statusPresentation(status: PrivateBroadcastStatus): { heading: s
       <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
           <h1 class="h2 mb-1">Private Broadcast</h1>
-          <p class="text-muted mb-0">Relay a raw transaction through the relay paths this deployment reports as available.</p>
+          <p class="text-muted mb-0">Relay a raw transaction over Tor, I2P or public P2P.</p>
         </div>
         <a [routerLink]="'/mempool/submission' | relativeUrl" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
       </div>
@@ -72,7 +72,7 @@ export function statusPresentation(status: PrivateBroadcastStatus): { heading: s
         {{ loadError }}
       </div>
 
-      <div class="row g-4">
+      <div class="row g-4" *ngIf="!capabilityError">
         <div class="col-lg-6">
           <div class="card bg-dark border-secondary p-3">
             <h5 class="card-title mb-3">Submit Raw Transaction</h5>

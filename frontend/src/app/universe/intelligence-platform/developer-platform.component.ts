@@ -78,7 +78,7 @@ export const KEY_SCOPES = ['read', 'watchlists', 'webhooks', 'queries', 'cases',
             Requests this month: {{ usage.monthly_requests | number }}.
           </ng-container>
           <ng-template #noUsage>
-            <strong>Usage metrics unavailable.</strong> {{ usageError || 'The API gateway metrics store is not connected on this deployment.' }}
+            <strong>Usage metrics unavailable.</strong> The API gateway metrics store is not connected on this deployment.
           </ng-template>
         </section>
 
@@ -118,9 +118,9 @@ export const KEY_SCOPES = ['read', 'watchlists', 'webhooks', 'queries', 'cases',
               <tbody>
                 <tr *ngFor="let key of keys">
                   <td>{{ key.name }}<div class="font-monospace small text-muted text-break">{{ key.key_id }}</div></td>
-                  <td><span *ngFor="let s of key.scopes" class="badge badge-secondary me-1">{{ s }}</span></td>
-                  <td class="small text-muted">{{ key.created_at | date:'short' }}</td>
-                  <td class="small text-muted">{{ key.last_used_at ? (key.last_used_at | date:'short') : 'never' }}</td>
+                  <td class="scopes"><span *ngFor="let s of key.scopes" class="badge badge-secondary me-1 mb-1">{{ s }}</span></td>
+                  <td class="small text-muted text-nowrap">{{ key.created_at | date:'short' }}</td>
+                  <td class="small text-muted text-nowrap">{{ key.last_used_at ? (key.last_used_at | date:'short') : 'never' }}</td>
                   <td><span class="badge" [ngClass]="key.revoked ? 'badge-secondary' : 'badge-success'">{{ key.revoked ? 'REVOKED' : 'ACTIVE' }}</span></td>
                   <td><button *ngIf="!key.revoked" type="button" class="btn btn-sm btn-outline-danger" [disabled]="busy" (click)="revokeKey(key.key_id)">Revoke</button></td>
                 </tr>
@@ -186,6 +186,7 @@ export const KEY_SCOPES = ['read', 'watchlists', 'webhooks', 'queries', 'cases',
   `,
   styles: [`
     .intelligence-page { padding-top: 2rem; padding-bottom: 4rem; }
+    td.scopes { max-width: 26rem; white-space: normal; }
     .page-header { margin-bottom: 2rem; }
     .title-row { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
     .badge {
@@ -203,7 +204,6 @@ export class DeveloperPlatformComponent implements OnInit, OnDestroy {
   webhooks: any[] = [];
   attempts: Record<string, any[]> = {};
   usage: any = null;
-  usageError: string | null = null;
   loading = false;
   busy = false;
   loadError: string | null = null;
@@ -259,7 +259,7 @@ export class DeveloperPlatformComponent implements OnInit, OnDestroy {
     // Usage is shown only when the backend measures it; a 503 says it does not.
     this.subs.push(this.api.getDeveloperUsage$().subscribe({
       next: (res) => { this.usage = res && typeof res.monthly_requests === 'number' ? res : null; this.cdr.markForCheck(); },
-      error: (err) => { this.usage = null; this.usageError = err?.error?.error || null; this.cdr.markForCheck(); },
+      error: () => { this.usage = null; this.cdr.markForCheck(); },
     }));
   }
 

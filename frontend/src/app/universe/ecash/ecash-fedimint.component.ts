@@ -110,7 +110,7 @@ export class EcashFedimintComponent implements OnInit, OnDestroy {
           this.cd.markForCheck();
         },
         error: err => {
-          this.error = err?.message || 'Failed to load Fedimint federations';
+          this.error = err?.error?.error || err?.message || 'Failed to load Fedimint federations';
           this.loading = false;
           this.cd.markForCheck();
         },

@@ -24,19 +24,19 @@ export const CONDITION_TYPES = ['confirmation', 'value_transfer', 'rbf_replaceme
     <div class="intelligence-page container-xl">
       <header class="page-header">
         <div class="title-row">
-          <h1>Privacy-First Watchlists, Rules, and Alerts</h1>
-          <span class="badge badge-success">Blinded Hashing</span>
+          <h1>Watchlists</h1>
+          <span class="badge badge-success">Blinded</span>
         </div>
         <p class="subtitle">
-          Watch addresses and transactions by their SHA-256 hash. The matcher compares hashes against confirmed blocks and mempool replacements and never stores the raw identifier.
+          Addresses and transactions are stored as SHA-256 hashes and matched against confirmed blocks and mempool replacements.
         </p>
       </header>
 
       <div *ngIf="loadError" class="alert alert-danger mb-4">{{ loadError }}</div>
 
       <div *ngIf="!hasKey" class="alert alert-warning mb-4">
-        Watchlists belong to an owner key. Create or paste one in the
-        <a class="text-decoration-underline" [routerLink]="'/intelligence/developer' | relativeUrl">Developer Platform</a> first.
+        Watchlists need an owner key. Create or paste one in the
+        <a class="text-decoration-underline" [routerLink]="'/developers' | relativeUrl">Developer Platform</a> first.
       </div>
 
       <ng-container *ngIf="hasKey">
@@ -68,23 +68,24 @@ export const CONDITION_TYPES = ['confirmation', 'value_transfer', 'rbf_replaceme
             <h6 class="text-uppercase small text-muted mb-2">Watched entities</h6>
             <div class="row g-2 align-items-end mb-2">
               <div class="col-md-2">
-                <select class="form-select form-select-sm" [(ngModel)]="entityType[wl.watchlist_id]">
+                <select class="form-control form-control-sm" [(ngModel)]="entityType[wl.watchlist_id]">
                   <option *ngFor="let t of entityTypes" [value]="t">{{ t }}</option>
                 </select>
               </div>
-              <div class="col-md-5"><input type="text" class="form-control form-control-sm font-monospace" [(ngModel)]="entityRaw[wl.watchlist_id]" placeholder="address or txid (hashed before it is stored)" /></div>
-              <div class="col-md-3"><input type="text" class="form-control form-control-sm" [(ngModel)]="entityLabel[wl.watchlist_id]" placeholder="label" /></div>
+              <div class="col-md-5"><input type="text" class="form-control form-control-sm font-monospace" [(ngModel)]="entityRaw[wl.watchlist_id]" placeholder="address or txid" aria-label="Address or txid, hashed before it is stored" /></div>
+              <div class="col-md-3"><input type="text" class="form-control form-control-sm" [(ngModel)]="entityLabel[wl.watchlist_id]" placeholder="label" aria-label="Label" /></div>
               <div class="col-md-2"><button type="button" class="btn btn-sm btn-outline-primary w-100" [disabled]="!entityRaw[wl.watchlist_id] || busy" (click)="addEntity(wl.watchlist_id)">Add</button></div>
             </div>
             <div class="table-responsive mb-4" *ngIf="wl.entities.length" tabindex="0" role="region" aria-label="Watched entities, scroll horizontally" i18n-aria-label>
               <table class="table table-sm table-hover mb-0">
-                <thead><tr><th>Label</th><th>Type</th><th>Blinded SHA-256</th><th>Added</th></tr></thead>
+                <thead><tr><th>Label</th><th>Type</th><th>SHA-256</th><th>Added</th><th></th></tr></thead>
                 <tbody>
                   <tr *ngFor="let ent of wl.entities">
-                    <td class="fw-bold">{{ ent.label }}</td>
+                    <td class="fw-bold text-nowrap">{{ ent.label }}</td>
                     <td><span class="badge badge-secondary">{{ ent.entity_type }}</span></td>
-                    <td class="font-monospace small text-break">{{ ent.blinded_hash }}</td>
-                    <td class="small text-muted">{{ ent.added_at_utc | date:'short' }}</td>
+                    <td class="font-monospace small text-nowrap">{{ ent.blinded_hash }}</td>
+                    <td class="small text-muted text-nowrap">{{ ent.added_at_utc | date:'short' }}</td>
+                    <td class="text-end"><button type="button" class="btn btn-sm btn-outline-danger" [disabled]="busy" (click)="removeEntity(wl.watchlist_id, ent.entity_id)" aria-label="Remove entity">Remove</button></td>
                   </tr>
                 </tbody>
               </table>
@@ -93,26 +94,33 @@ export const CONDITION_TYPES = ['confirmation', 'value_transfer', 'rbf_replaceme
             <h6 class="text-uppercase small text-muted mb-2">Rules</h6>
             <div class="row g-2 align-items-end mb-2">
               <div class="col-md-3">
-                <select class="form-select form-select-sm" [(ngModel)]="ruleCondition[wl.watchlist_id]">
+                <select class="form-control form-control-sm" [(ngModel)]="ruleCondition[wl.watchlist_id]">
                   <option *ngFor="let c of conditionTypes" [value]="c">{{ c }}</option>
                 </select>
               </div>
-              <div class="col-md-3"><input type="number" class="form-control form-control-sm" [(ngModel)]="ruleThreshold[wl.watchlist_id]" placeholder="threshold (sats, or sat/vB for feerate_cross)" /></div>
+              <div class="col-md-3"><input type="number" class="form-control form-control-sm" [(ngModel)]="ruleThreshold[wl.watchlist_id]" [placeholder]="thresholdHint(ruleCondition[wl.watchlist_id])" aria-label="Threshold" /></div>
               <div class="col-md-2">
-                <select class="form-select form-select-sm" [(ngModel)]="ruleChannel[wl.watchlist_id]"><option value="in_app">in_app</option><option value="webhook">webhook</option></select>
+                <select class="form-control form-control-sm" [(ngModel)]="ruleChannel[wl.watchlist_id]" aria-label="Delivery"><option value="in_app">In app</option><option value="webhook" [disabled]="webhooks.length === 0">Webhook</option></select>
               </div>
-              <div class="col-md-2"><input type="text" class="form-control form-control-sm font-monospace" [(ngModel)]="ruleWebhook[wl.watchlist_id]" placeholder="webhook id" [disabled]="ruleChannel[wl.watchlist_id] !== 'webhook'" /></div>
-              <div class="col-md-2"><button type="button" class="btn btn-sm btn-outline-primary w-100" [disabled]="busy" (click)="addRule(wl.watchlist_id)">Add rule</button></div>
+              <div class="col-md-2">
+                <select class="form-control form-control-sm" [(ngModel)]="ruleWebhook[wl.watchlist_id]" [disabled]="ruleChannel[wl.watchlist_id] !== 'webhook'" aria-label="Webhook">
+                  <option *ngFor="let w of webhooks" [value]="w.webhook_id">{{ w.url }}</option>
+                </select>
+              </div>
+              <div class="col-md-2"><button type="button" class="btn btn-sm btn-outline-primary w-100" [disabled]="busy || (ruleChannel[wl.watchlist_id] === 'webhook' && !ruleWebhook[wl.watchlist_id])" (click)="addRule(wl.watchlist_id)">Add rule</button></div>
             </div>
             <div class="row g-2">
               <div *ngFor="let r of wl.rules" class="col-md-6">
                 <div class="p-3 rounded bg-dark-subtle border h-100">
-                  <div class="d-flex justify-content-between align-items-center mb-1">
+                  <div class="d-flex justify-content-between align-items-center mb-1 gap-2">
                     <strong>{{ r.condition_type }}</strong>
-                    <span class="badge" [ngClass]="r.enabled ? 'badge-success' : 'badge-secondary'">{{ r.enabled ? 'Active' : 'Disabled' }}</span>
+                    <span class="d-flex align-items-center gap-2">
+                      <span class="badge" [ngClass]="r.enabled ? 'badge-success' : 'badge-secondary'">{{ r.enabled ? 'Active' : 'Disabled' }}</span>
+                      <button type="button" class="btn btn-sm btn-outline-danger" [disabled]="busy" (click)="removeRule(wl.watchlist_id, r.rule_id)" aria-label="Remove rule">Remove</button>
+                    </span>
                   </div>
-                  <div class="small text-muted" *ngIf="r.threshold_value !== undefined && r.threshold_value !== null">Threshold: {{ r.threshold_value | number }}</div>
-                  <div class="small text-muted">Delivery: {{ r.delivery_channel }}<span *ngIf="r.webhook_id"> ({{ r.webhook_id }})</span>, at most {{ r.rate_limit_per_hour }} per hour</div>
+                  <div class="small text-muted" *ngIf="r.threshold_value !== undefined && r.threshold_value !== null">Threshold {{ r.threshold_value | number }} {{ r.condition_type === 'feerate_cross' ? 'sat/vB' : 'sats' }}</div>
+                  <div class="small text-muted">{{ r.delivery_channel === 'webhook' ? 'Webhook ' + webhookLabel(r.webhook_id) : 'In app' }}, max {{ r.rate_limit_per_hour }}/h</div>
                 </div>
               </div>
             </div>
@@ -124,7 +132,7 @@ export const CONDITION_TYPES = ['confirmation', 'value_transfer', 'rbf_replaceme
             <h4 class="mb-0">Notifications</h4>
             <button type="button" class="btn btn-sm btn-outline-secondary" (click)="loadNotifications()">Refresh</button>
           </div>
-          <div *ngIf="notifications.length === 0" class="p-4 text-center text-muted">No notification has been produced for this owner yet.</div>
+          <div *ngIf="notifications.length === 0" class="p-4 text-center text-muted">No notifications yet.</div>
           <div class="table-responsive" *ngIf="notifications.length > 0" tabindex="0" role="region" aria-label="Notifications, scroll horizontally" i18n-aria-label>
             <table class="table table-hover mb-0">
               <thead><tr><th>Severity</th><th>Title</th><th>Message</th><th>Block</th><th>State</th><th>Time</th><th></th></tr></thead>
@@ -135,7 +143,7 @@ export const CONDITION_TYPES = ['confirmation', 'value_transfer', 'rbf_replaceme
                   <td>{{ n.message }}</td>
                   <td class="font-monospace small">{{ n.block_height ?? 'mempool' }}</td>
                   <td><span class="badge badge-secondary">{{ n.state }}</span></td>
-                  <td class="small text-muted">{{ n.created_at_utc | date:'short' }}</td>
+                  <td class="small text-muted text-nowrap">{{ n.created_at_utc | date:'short' }}</td>
                   <td><button *ngIf="n.state === 'open'" type="button" class="btn btn-sm btn-outline-secondary" [disabled]="busy" (click)="acknowledge(n.notification_id)">Acknowledge</button></td>
                 </tr>
               </tbody>
@@ -163,6 +171,7 @@ export const CONDITION_TYPES = ['confirmation', 'value_transfer', 'rbf_replaceme
 })
 export class WatchlistsComponent implements OnInit, OnDestroy {
   watchlists: any[] = [];
+  webhooks: any[] = [];
   notifications: any[] = [];
   loading = false;
   busy = false;
@@ -191,7 +200,37 @@ export class WatchlistsComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    if (this.hasKey) { this.load(); this.loadNotifications(); }
+    if (this.hasKey) { this.load(); this.loadWebhooks(); this.loadNotifications(); }
+  }
+
+  thresholdHint(condition: string): string {
+    if (condition === 'feerate_cross') { return 'sat/vB'; }
+    if (condition === 'value_transfer') { return 'min sats (optional)'; }
+    return 'no threshold';
+  }
+
+  webhookLabel(webhookId: string | null): string {
+    const hook = this.webhooks.find(w => w.webhook_id === webhookId);
+    return hook ? hook.url : (webhookId || '');
+  }
+
+  loadWebhooks(): void {
+    this.subs.push(this.api.getWebhooks$().subscribe({
+      next: (res) => {
+        this.webhooks = (res?.webhooks || []).filter((w: any) => w.active);
+        for (const wl of this.watchlists) { this.ruleWebhook[wl.watchlist_id] ||= this.webhooks[0]?.webhook_id || ''; }
+        this.cdr.markForCheck();
+      },
+      error: () => { this.webhooks = []; this.cdr.markForCheck(); },
+    }));
+  }
+
+  removeEntity(watchlistId: string, entityId: string): void {
+    this.run(this.api.deleteWatchlistEntity$(watchlistId, entityId), () => this.load());
+  }
+
+  removeRule(watchlistId: string, ruleId: string): void {
+    this.run(this.api.deleteWatchlistRule$(watchlistId, ruleId), () => this.load());
   }
 
   private failure(err: any, fallback: string): string {
@@ -208,6 +247,7 @@ export class WatchlistsComponent implements OnInit, OnDestroy {
           this.entityType[wl.watchlist_id] ??= 'address';
           this.ruleCondition[wl.watchlist_id] ??= 'confirmation';
           this.ruleChannel[wl.watchlist_id] ??= 'in_app';
+          this.ruleWebhook[wl.watchlist_id] ||= this.webhooks[0]?.webhook_id || '';
         }
         this.loading = false;
         this.loadError = null;

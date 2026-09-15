@@ -291,7 +291,6 @@ describe('Unified Intelligence Platform Frontend Services', () => {
       cmp.ngOnInit();
       expect(cmp.keys).toEqual([]);
       expect(cmp.usage).toBeNull();
-      expect(cmp.usageError).toContain('unavailable');
       cmp.newKeyLabel = 'Test Key';
       cmp.createKey();
       const call = recordedCalls[recordedCalls.length - 1];

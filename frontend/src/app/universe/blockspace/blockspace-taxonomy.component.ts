@@ -94,7 +94,7 @@ export class BlockspaceTaxonomyComponent implements OnInit, OnDestroy {
         this.cd.markForCheck();
       },
       error: (err) => {
-        this.error = err?.message || 'Failed to load taxonomy';
+        this.error = err?.error?.error || err?.message || 'Failed to load taxonomy';
         this.loading = false;
         this.cd.markForCheck();
       },

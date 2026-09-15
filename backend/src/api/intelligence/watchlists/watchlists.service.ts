@@ -262,6 +262,20 @@ export class WatchlistsService {
   public async deleteWatchlist(owner: AuthenticatedOwner, watchlistId: string): Promise<boolean> {
     return ownerStore().deleteWatchlist(owner.owner_id, this.network, watchlistId);
   }
+
+  /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */
+  public async deleteEntity(owner: AuthenticatedOwner, watchlistId: string, entityId: string): Promise<boolean> {
+    const deleted = await ownerStore().deleteEntity(owner.owner_id, this.network, watchlistId, entityId);
+    if (deleted) { await ownerStore().touchWatchlist(watchlistId, new Date().toISOString()); }
+    return deleted;
+  }
+
+  /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */
+  public async deleteRule(owner: AuthenticatedOwner, watchlistId: string, ruleId: string): Promise<boolean> {
+    const deleted = await ownerStore().deleteRule(owner.owner_id, this.network, watchlistId, ruleId);
+    if (deleted) { await ownerStore().touchWatchlist(watchlistId, new Date().toISOString()); }
+    return deleted;
+  }
 }
 
 export const watchlistsService = WatchlistsService.getInstance();

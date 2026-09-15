@@ -187,7 +187,7 @@ export class GlobalNetworkOverviewComponent implements OnInit, OnDestroy {
           this.cd.markForCheck();
         },
         error: err => {
-          this.error = err?.message || 'Failed to load network overview';
+          this.error = err?.error?.error || err?.message || 'Failed to load network overview';
           this.loading = false;
           this.cd.markForCheck();
         },

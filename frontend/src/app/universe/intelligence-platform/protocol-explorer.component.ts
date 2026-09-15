@@ -13,11 +13,10 @@ import { IntelligenceApiService } from './intelligence-api.service';
     <div class="intelligence-page container-xl">
       <header class="page-header">
         <div class="title-row">
-          <h1>Universal Protocol Intelligence Registry & Adapters</h1>
-          <span class="badge badge-primary">Standardized Adapters</span>
+          <h1>Protocols</h1>
         </div>
         <p class="subtitle">
-          Catalog of Bitcoin overlays, metaprotocols, token standards, Layer-2 networks, and cryptographic privacy primitives with live payload decoding.
+          Decode a script or witness payload and browse the registered protocol adapters.
         </p>
       </header>
 
@@ -28,9 +27,9 @@ import { IntelligenceApiService } from './intelligence-api.service';
       <!-- Protocol Decoder -->
       <section class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-          <h4 class="mb-0">Live Protocol Payload Decoder</h4>
+          <h4 class="mb-0">Decoder</h4>
           <button type="button" class="btn btn-sm btn-outline-secondary" (click)="loadSamplePayload()">
-            Load Sample Payload (Runes)
+            Sample runestone
           </button>
         </div>
         <div class="card-body">
@@ -51,7 +50,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
               [disabled]="decoding || !decodeInput.trim()"
               (click)="decodePayload()"
             >
-              {{ decoding ? 'Decoding...' : 'Decode Protocol Payload' }}
+              {{ decoding ? 'Decoding...' : 'Decode' }}
             </button>
             <button
               *ngIf="decodeInput"
@@ -68,7 +67,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
           </div>
 
           <div *ngIf="!decoded && !decodedResults.length && !decoding && !decodeError" class="mt-3 p-3 rounded bg-dark-subtle text-muted small">
-            Enter a raw script or witness hex payload, or click "Load Sample Payload" to test protocol interpretation.
+            Paste a script or witness hex, or load the sample.
           </div>
 
           <div *ngIf="decoded && !decodedResults.length && !decoding && !decodeError" class="mt-3 p-3 rounded bg-dark-subtle small">
@@ -98,7 +97,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
       <!-- Protocol Adapters Catalog -->
       <section class="card mb-4" *ngIf="protocols.length > 0">
         <div class="card-header">
-          <h4 class="mb-0">Registered Protocol Adapters</h4>
+          <h4 class="mb-0">Adapters</h4>
         </div>
         <div class="table-responsive" tabindex="0" role="region" aria-label="Registered Protocol Adapters, scroll horizontally" i18n-aria-label>
           <table class="table table-hover mb-0">
@@ -177,7 +176,7 @@ export class ProtocolExplorerComponent implements OnInit, OnDestroy {
           this.cdr.markForCheck();
         },
         error: (err) => {
-          this.loadError = err?.message || 'Failed to fetch protocol adapters';
+          this.loadError = err?.error?.error || err?.message || 'Failed to fetch protocol adapters';
           this.loading = false;
           this.cdr.markForCheck();
         },
