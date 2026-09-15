@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { BehaviorSubject, Observable, catchError, combineLatest, map, of } from 'rxjs';
+import { BehaviorSubject, Observable, Subscription, catchError, combineLatest, distinctUntilChanged, map, of, startWith, switchMap, tap } from 'rxjs';
+import { StateService } from '@app/services/state.service';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
@@ -29,13 +30,15 @@ interface StratumViewModel {
   imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class StratumV2Component implements OnInit {
+export class StratumV2Component implements OnInit, OnDestroy {
+  private subscription?: Subscription;
   private readonly state = new BehaviorSubject<StratumViewModel>({ kind: 'loading' });
   readonly vm$: Observable<StratumViewModel> = this.state.asObservable();
 
   constructor(
     private api: UniverseApiService,
     private seo: SeoService,
+    private network: StateService,
   ) {
     this.seo.setTitle('Stratum V2 Job-Declaration Observatory');
   }
@@ -43,18 +46,25 @@ export class StratumV2Component implements OnInit {
   ngOnInit(): void {
     // No per-read fallback: a role or template table the source could not
     // answer is an error with its reason, not an empty table.
-    combineLatest([
+    this.subscription = this.network.networkChanged$.pipe(
+      startWith(this.network.network), distinctUntilChanged(),
+      tap(() => this.state.next({ kind: 'loading' })),
+      switchMap(() => combineLatest([
       this.api.getStratumV2Network$(),
       this.api.getStratumV2Templates$(),
       this.api.getStratumV2Declarations$(),
     ]).pipe(
-      map(([networkData, tmplData, declData]): StratumViewModel => ({
-        kind: 'ready',
-        roles: networkData.roles,
-        templates: tmplData.templates,
-        declarations: declData.declarations,
-      })),
+      map(([networkData, tmplData, declData]): StratumViewModel => {
+        if (!Array.isArray(networkData?.roles) || !Array.isArray(tmplData?.templates) || !Array.isArray(declData?.declarations)
+          || declData.declarations.some(job => !job || !Array.isArray(job.minerDeclaredTxids) || !Array.isArray(job.poolModifiedTxids))) {
+          return { kind: 'error', message: 'The source returned incomplete Stratum V2 telemetry.' };
+        }
+        return { kind: 'ready', roles: networkData.roles, templates: tmplData.templates, declarations: declData.declarations };
+      }),
       catchError((error) => of<StratumViewModel>({ kind: 'error', message: loadFailureMessage(classifyLoadFailure(error)) })),
+    )),
     ).subscribe((vm) => this.state.next(vm));
   }
+
+  ngOnDestroy(): void { this.subscription?.unsubscribe(); }
 }

@@ -29,7 +29,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           <a class="nav-link" [routerLink]="'/intelligence/quantum' | relativeUrl">Overview</a>
           <a class="nav-link active" [routerLink]="'/intelligence/quantum/exposure' | relativeUrl">Script Cohorts</a>
           <a class="nav-link" [routerLink]="'/intelligence/quantum/history' | relativeUrl">Reveal Timeline</a>
-          <a class="nav-link" [routerLink]="'/intelligence/quantum/audit' | relativeUrl">Local Public Audit</a>
+          <a class="nav-link" [routerLink]="'/intelligence/quantum/audit' | relativeUrl">Public Audit</a>
           <a class="nav-link" [routerLink]="'/intelligence/quantum/migration' | relativeUrl">Migration Planner</a>
         </nav>
       </header>
