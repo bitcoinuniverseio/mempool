@@ -1,3 +1,4 @@
+import { blockspaceValue, blockspaceShare, blockspaceBtc } from './blockspace-format';
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -48,8 +49,8 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                 <tr>
                   <th>Regime Type</th>
                   <th>Height Range</th>
-                  <th class="text-end">Median Feerate</th>
-                  <th>Primary Demand Driver</th>
+                  <th class="text-end">Median of Block Medians</th>
+                  <th>Observed Fee Band</th>
                   <th>Detection Time</th>
                 </tr>
               </thead>
@@ -68,7 +69,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                   <td>
                     <span class="fw-semibold">{{ r.start_height }}</span>
                     <span class="text-muted"> to </span>
-                    <span class="fw-semibold">{{ r.end_height ? r.end_height : 'Present' }}</span>
+                    <span class="fw-semibold">{{ r.end_height !== undefined ? r.end_height : 'Present' }}</span>
                   </td>
                   <td class="text-end fw-bold">{{ r.median_feerate }} sat/vB</td>
                   <td>{{ r.primary_demand_driver }}</td>
@@ -99,18 +100,17 @@ export class BlockspaceRegimesComponent implements OnInit, OnDestroy {
     private cd: ChangeDetectorRef,
   ) {}
 
+  readonly value = blockspaceValue;
+  readonly share = blockspaceShare;
+  readonly btc = blockspaceBtc;
+
   public ngOnInit(): void {
-    this.sub = this.blockspaceApi.getRegimes().subscribe({
-      next: (data) => {
-        this.regimes = data;
-        this.loading = false;
-        this.cd.markForCheck();
-      },
-      error: (err) => {
-        this.error = err?.error?.error || err?.message || 'Failed to load regimes';
-        this.loading = false;
-        this.cd.markForCheck();
-      },
+    this.sub?.unsubscribe();
+    this.sub = this.blockspaceApi.watch(() => this.blockspaceApi.getRegimes()).subscribe(state => {
+      this.regimes = state.kind === 'ready' ? state.data : [];
+      this.loading = state.kind === 'loading';
+      this.error = state.kind === 'error' ? state.error : '';
+      this.cd.markForCheck();
     });
   }
 

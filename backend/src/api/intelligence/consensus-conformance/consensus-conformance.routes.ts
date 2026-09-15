@@ -9,7 +9,7 @@ export class ConsensusConformanceRoutes {
         const overview = this.service.getOverview();
         res.json(overview);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        res.status(err instanceof ConformanceEvidenceError ? err.status : 500).json({ stage: err instanceof ConformanceEvidenceError ? err.code : 'internal-error', error: err instanceof ConformanceEvidenceError ? err.message : 'Internal error' });
       }
     });
 
@@ -18,7 +18,7 @@ export class ConsensusConformanceRoutes {
         const impls = this.service.listImplementations();
         res.json(impls);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        res.status(err instanceof ConformanceEvidenceError ? err.status : 500).json({ stage: err instanceof ConformanceEvidenceError ? err.code : 'internal-error', error: err instanceof ConformanceEvidenceError ? err.message : 'Internal error' });
       }
     });
 
@@ -27,7 +27,7 @@ export class ConsensusConformanceRoutes {
         const targets = this.service.listTargets();
         res.json(targets);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        res.status(err instanceof ConformanceEvidenceError ? err.status : 500).json({ stage: err instanceof ConformanceEvidenceError ? err.code : 'internal-error', error: err instanceof ConformanceEvidenceError ? err.message : 'Internal error' });
       }
     });
 
@@ -36,7 +36,7 @@ export class ConsensusConformanceRoutes {
         const campaigns = this.service.listCampaigns();
         res.json(campaigns);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        res.status(err instanceof ConformanceEvidenceError ? err.status : 500).json({ stage: err instanceof ConformanceEvidenceError ? err.code : 'internal-error', error: err instanceof ConformanceEvidenceError ? err.message : 'Internal error' });
       }
     });
 
@@ -45,7 +45,7 @@ export class ConsensusConformanceRoutes {
         const cases = this.service.listCases();
         res.json(cases);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        res.status(err instanceof ConformanceEvidenceError ? err.status : 500).json({ stage: err instanceof ConformanceEvidenceError ? err.code : 'internal-error', error: err instanceof ConformanceEvidenceError ? err.message : 'Internal error' });
       }
     });
 
@@ -57,7 +57,7 @@ export class ConsensusConformanceRoutes {
         }
         res.json(caseRecord);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        res.status(err instanceof ConformanceEvidenceError ? err.status : 500).json({ stage: err instanceof ConformanceEvidenceError ? err.code : 'internal-error', error: err instanceof ConformanceEvidenceError ? err.message : 'Internal error' });
       }
     });
 
@@ -94,7 +94,7 @@ export class ConsensusConformanceRoutes {
         const artifacts = this.service.listFormalArtifacts();
         res.json(artifacts);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        res.status(err instanceof ConformanceEvidenceError ? err.status : 500).json({ stage: err instanceof ConformanceEvidenceError ? err.code : 'internal-error', error: err instanceof ConformanceEvidenceError ? err.message : 'Internal error' });
       }
     });
   }

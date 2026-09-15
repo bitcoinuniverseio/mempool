@@ -47,6 +47,7 @@ export interface VaultDesignTemplate {
   hot_key_threshold: number;
   recovery_delay_blocks: number;
   auto_cancel_available: boolean;
+  execution_scope: string;
 }
 
 export interface ConsensusLabOverview {
@@ -54,7 +55,8 @@ export interface ConsensusLabOverview {
   covenant_types: { type: string; count: number }[];
   featured_proposals: ConsensusProposal[];
   vault_templates: VaultDesignTemplate[];
-  last_updated: string;
+  last_updated: string | null;
+  source_basis: string;
 }
 
 @Injectable({

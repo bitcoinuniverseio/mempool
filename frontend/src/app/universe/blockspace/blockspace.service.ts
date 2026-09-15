@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, defer, of, map, startWith, distinctUntilChanged, switchMap, catchError } from 'rxjs';
 import { StateService } from '@app/services/state.service';
 
 export interface BlockspaceSemanticClass {
@@ -8,20 +8,20 @@ export interface BlockspaceSemanticClass {
   name: string;
   category: 'monetary' | 'infrastructure' | 'arbitrary_data' | 'layer2';
   description: string;
-  weight_share_percentage: number;
-  fee_share_percentage: number;
+  weight_share_percentage: number | null;
+  fee_share_percentage: number | null;
   tx_count_24h: number;
 }
 
 export interface BlockspaceCompositionPoint {
   block_height: number;
   timestamp_utc: string;
-  total_weight: number;
-  total_fee_sats: number;
-  monetary_weight: number;
-  layer2_weight: number;
-  arbitrary_data_weight: number;
-  consolidation_weight: number;
+  total_weight: number | null;
+  total_fee_sats: number | null;
+  monetary_weight: number | null;
+  layer2_weight: number | null;
+  arbitrary_data_weight: number | null;
+  consolidation_weight: number | null;
 }
 
 export interface BlockspaceRegimeEvent {
@@ -38,21 +38,24 @@ export interface BlockspaceRegimeEvent {
 export interface BlockspaceTxEvidence {
   txid: string;
   primary_class: string;
+  class_id: string;
+  confirmed: boolean | null;
+  block_height: number | null;
   secondary_tags: string[];
-  weight: number;
-  fee_sats: number;
-  feerate_sats_vb: number;
+  weight: number | null;
+  fee_sats: number | null;
+  feerate_sats_vb: number | null;
   evidence_summary: string;
 }
 
 export interface BlockspaceOverview {
   network: string;
-  /** Null until a block with a median fee rate was observed. */
   current_regime: BlockspaceRegimeEvent | null;
-  median_feerate_24h: number;
+  median_feerate_24h: number | null;
+  fee_metric: string;
   taxonomy_classes: BlockspaceSemanticClass[];
   composition_timeseries: BlockspaceCompositionPoint[];
-  window: { blocks: number; from_height: number; to_height: number; covers_24h: boolean };
+  window: { blocks: number; from_height: number; to_height: number; covers_24h: boolean | null; contiguous: boolean | null; transactions_complete: boolean | null; median_fee_observations: number; time_basis: string };
   checkpoint: { height: number; hash: string };
   last_updated: string;
 }
@@ -61,17 +64,37 @@ export interface BlockspaceOverview {
   providedIn: 'root',
 })
 export class BlockspaceApiService {
-  private apiBaseUrl = '';
+  private get apiBaseUrl(): string {
+    const network = this.stateService.network || 'mainnet';
+    if (!['mainnet', 'testnet', 'testnet4', 'signet', 'regtest'].includes(network)) throw new Error('Unsupported blockspace network.');
+    const base = this.stateService.isBrowser ? '' : this.stateService.env.NGINX_PROTOCOL + '://' + this.stateService.env.NGINX_HOSTNAME + ':' + this.stateService.env.NGINX_PORT;
+    const prefix = network !== 'mainnet' && network !== this.stateService.env.ROOT_NETWORK ? '/' + network : '';
+    return base + prefix + '/api/v1/intelligence/blockspace';
+  }
+
+  watch<T>(load: () => Observable<T>): Observable<{ kind: 'loading' } | { kind: 'ready'; data: T } | { kind: 'error'; error: string }> {
+    return defer(() => (this.stateService.networkChanged$ ?? of(this.stateService.network)).pipe(
+      startWith(this.stateService.network), map(() => this.stateService.network || 'mainnet'), distinctUntilChanged(),
+      switchMap(() => defer(load).pipe(
+        map(data => ({ kind: 'ready' as const, data })),
+        catchError(() => of({ kind: 'error' as const, error: 'Blockspace observations are unavailable for the selected network.' })),
+        startWith({ kind: 'loading' as const }),
+      )),
+    ));
+  }
 
   constructor(
     private http: HttpClient,
     private stateService: StateService,
   ) {
-    this.apiBaseUrl = (this.stateService.env.GIT_COMMIT_HASH ? '' : 'http://127.0.0.1:8999') + '/api/v1/intelligence/blockspace';
+
   }
 
   public getOverview(): Observable<BlockspaceOverview> {
-    return this.http.get<BlockspaceOverview>(`${this.apiBaseUrl}/overview`);
+    return this.http.get<BlockspaceOverview>(`${this.apiBaseUrl}/overview`).pipe(map(value => {
+      if (!value || value.network !== (this.stateService.network || 'mainnet') || !Array.isArray(value.taxonomy_classes) || !Array.isArray(value.composition_timeseries)) throw new Error('Mismatched blockspace evidence.');
+      return value;
+    }));
   }
 
   public getTaxonomy(): Observable<BlockspaceSemanticClass[]> {

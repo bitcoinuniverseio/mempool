@@ -54,3 +54,32 @@ describe('ConsensusService', () => {
     expect(result.witness_weight_estimate).toBeNull();
   });
 });
+
+import consensusRoutes from './consensus.routes';
+describe('Consensus catalog authority and operation errors', () => {
+  it('does not invent catalog freshness or executable cancellation', () => {
+    const first = consensusService.getOverview();
+    expect(first.last_updated).toBeNull();
+    expect(first.source_basis).toMatch(/Static reference/);
+    expect(first.vault_templates.every(t => t.auto_cancel_available === false && /unavailable/.test(t.execution_scope))).toBe(true);
+    expect(consensusService.getOverview().last_updated).toBeNull();
+  });
+  it.each([['bip-347'], ['bip-443']])('reports unsupported %s as503', async proposal_id => {
+    const handlers: Record<string, Function> = {};
+    const app: any = { get: () => app, post: (url: string, fn: Function) => { handlers[url] = fn; return app; } };
+    consensusRoutes.initRoutes(app);
+    const res: any = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+    await handlers['/api/v1/intelligence/consensus/simulations']({ body: { proposal_id } }, res);
+    expect(res.status).toHaveBeenCalledWith(503);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ stage: 'unavailable-covenant-engine' }));
+  });
+  it.each([null, {}, {proposal_id:'unknown'}, {proposal_id:'bip-119'}])('reports malformed experiment %p as400', async body => {
+    const handlers: Record<string, Function> = {};
+    const app: any = { get: () => app, post: (url: string, fn: Function) => { handlers[url] = fn; return app; } };
+    consensusRoutes.initRoutes(app);
+    const res: any = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+    await handlers['/api/v1/intelligence/consensus/simulations']({ body }, res);
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ stage: 'invalid-input' }));
+  });
+});

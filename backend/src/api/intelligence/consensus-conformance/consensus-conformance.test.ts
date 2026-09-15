@@ -171,7 +171,9 @@ describe('restart and authenticated report validation', () => {
     writeFileSync(f.path, gzipSync(JSON.stringify(outer)));
     const s = new ConsensusConformanceService(f.manifest);
     await expect(s.startCampaign('compact_size', 0)).rejects.toMatchObject({ code: 'campaign-state-unavailable' });
-    expect(s.listCases().cases).toEqual([]);
+    expect(() => s.listCases()).toThrow(/failed validation/);
+    expect(() => s.listCampaigns()).toThrow(/failed validation/);
+    expect(() => s.getCase('missing')).toThrow(/failed validation/);
     s.close();
   });
   it('rejects authenticated records whose case input digest is inconsistent', async () => {
@@ -187,5 +189,47 @@ describe('restart and authenticated report validation', () => {
     const s = new ConsensusConformanceService(f.manifest);
     await expect(s.startCampaign('compact_size', 0)).rejects.toMatchObject({ code: 'campaign-state-unavailable' });
     s.close();
+  });
+});
+
+import * as engineManifest from './conformance-manifest';
+import * as pins from './conformance-pins';
+import { IsolatedCore } from './conformance-runner';
+import { digest } from './conformance-evidence';
+import { ConsensusConformanceRoutes } from './consensus-conformance.routes';
+describe('conformance failure recovery', () => {
+  afterEach(() => jest.restoreAllMocks());
+  it('maps corrupt campaign and case reads to503, including missing case lookup', async () => {
+    const s:any=new ConsensusConformanceService('');s.loadError=true;
+    const handlers:Record<string,Function>={};const app:any={get:(u:string,h:Function)=>{handlers[u]=h;return app;},post:()=>app};
+    new ConsensusConformanceRoutes(s).initRoutes(app);
+    for(const path of ['campaigns','cases','cases/:caseId']) {
+      const res:any={status:jest.fn().mockReturnThis(),json:jest.fn()};
+      await handlers['/api/v1/intelligence/consensus-conformance/'+path]({params:{caseId:'absent'}},res);
+      expect(res.status).toHaveBeenCalledWith(503);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({stage:'campaign-state-unavailable'}));
+    }
+  });
+  it('preserves valid empty local state',()=>{
+    const s=new ConsensusConformanceService('');
+    expect(s.listCases().cases).toEqual([]);expect(s.listCampaigns().campaigns).toEqual([]);expect(s.getCase('absent')).toBeUndefined();
+  });
+  it.each(['campaign','replay'])('releases the busy slot if %s Core cleanup rejects',async operation=>{
+    const s:any=new ConsensusConformanceService('');
+    s.manifest={artifact_directory:tmpdir()};s.store={write:async()=>{}};
+    jest.spyOn(engineManifest,'verifyEnginePins').mockReturnValue([]);
+    jest.spyOn(pins,'harnessDigest').mockReturnValue('test-harness');
+    jest.spyOn(IsolatedCore.prototype,'start').mockRejectedValue(new Error('test start failed'));
+    jest.spyOn(IsolatedCore.prototype,'close').mockRejectedValue(new Error('test cleanup failed'));
+    if(operation==='replay') {
+      const input={hex:'00'};
+      s.state.campaigns=[{campaign_id:'test-campaign',harness_sha256:'test-harness',engine_pins:[]}];
+      s.state.cases=[{case_id:'test-case',campaign_id:'test-campaign',target:'transaction_parse',input,input_sha256:digest(JSON.stringify(input))}];
+    }
+    await expect(operation==='campaign'?s.startCampaign('transaction_parse',0):s.replayCase('test-case')).rejects.toThrow('cleanup failed');
+    expect(s.busy).toBe(false);
+    // A subsequent call reaches engine execution again, rather than the busy guard.
+    await expect(operation==='campaign'?s.startCampaign('transaction_parse',1):s.replayCase('test-case')).rejects.toThrow('cleanup failed');
+    expect(s.busy).toBe(false);
   });
 });

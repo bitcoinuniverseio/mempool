@@ -169,13 +169,19 @@ export class ConsensusConformanceService {
     }
     return { implementations, availability };
   }
+  private readable() {
+    if (this.loadError) throw new ConformanceEvidenceError('campaign-state-unavailable', 'Operator campaign storage or manifest failed validation.');
+  }
   listCampaigns() {
+    this.readable();
     return { campaigns: structuredClone(this.state.campaigns) };
   }
   listCases() {
+    this.readable();
     return { cases: structuredClone(this.state.cases) };
   }
   getCase(id: string) {
+    this.readable();
     return structuredClone(this.state.cases.find((c) => c.case_id === id));
   }
   listFormalArtifacts() {
@@ -314,8 +320,7 @@ export class ConsensusConformanceService {
         ? e
         : new ConformanceEvidenceError('runner-failed', 'Campaign failed; successful completion is not claimed.');
     } finally {
-      await core?.close();
-      this.busy = false;
+      try { await core?.close(); } finally { this.busy = false; }
     }
   }
   async replayCase(id: string) {
@@ -362,8 +367,7 @@ export class ConsensusConformanceService {
       await this.persist();
       return structuredClone(replay);
     } finally {
-      await core?.close();
-      this.busy = false;
+      try { await core?.close(); } finally { this.busy = false; }
     }
   }
   close() {
