@@ -12,12 +12,12 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
   imports: [RelativeUrlPipe, CommonModule, RouterModule],
   template: `
   <div class="container-xl py-4"><h1 class="h2 mb-3">Block Fork-Race Observatory</h1><nav class="nav nav-pills flex-wrap gap-2 mb-4">
-<a [routerLink]="'/network/blocks' | relativeUrl">Overview</a>
-<a [routerLink]="'/network/blocks/live' | relativeUrl">Live Propagation</a>
-<a [routerLink]="'/network/compact-blocks' | relativeUrl">Compact Blocks</a>
-<a [routerLink]="'/network/fork-races' | relativeUrl">Fork Races</a>
-<a [routerLink]="'/network/stale-tips' | relativeUrl">Stale Tips</a>
-<a [routerLink]="'/network/fibre' | relativeUrl">FIBRE</a></nav>
+<a class="nav-link" [routerLink]="'/network/blocks' | relativeUrl">Overview</a>
+<a class="nav-link" [routerLink]="'/network/blocks/live' | relativeUrl">Live Propagation</a>
+<a class="nav-link" [routerLink]="'/network/compact-blocks' | relativeUrl">Compact Blocks</a>
+<a class="nav-link" [routerLink]="'/network/fork-races' | relativeUrl">Fork Races</a>
+<a class="nav-link" [routerLink]="'/network/stale-tips' | relativeUrl">Stale Tips</a>
+<a class="nav-link" [routerLink]="'/network/fibre' | relativeUrl">FIBRE</a></nav>
   <p class="text-muted">Observations reported by the configured source; this page does not independently validate sensor coverage or chain consensus.</p>
   <div *ngIf="loading" role="status" aria-busy="true">Loading propagation evidence...</div>
   <div *ngIf="loadError" class="alert alert-warning" role="alert">{{ loadError }}</div>

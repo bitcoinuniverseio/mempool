@@ -164,4 +164,8 @@ describe('Real route handlers', () => {
   });
   it.each([{ current_height: 9999999 }, { privateKey: 'sensitive' }])('rejects unsafe request fields %j', /** @asyncUnsafe Jest owns rejected test promises. */ async extra => { const res: any = { setHeader: jest.fn(), status: jest.fn(), json: jest.fn() }; res.status.mockReturnValue(res); res.json.mockReturnValue(res); await handlers.get('POST /api/v1/intelligence/swaps/chain-context')({ method: 'POST', path: '/chain-context', query: ctx, body: { ...pkg, ...extra } }, res); expect(res.status).toHaveBeenCalledWith(400); expect(res.json.mock.calls[0][0].stage).toBe('invalid'); });
   it('rejects partial network context', () => expect(() => swapContext(undefined, 'signet')).toThrow());
+  it.each([{swap_id:{privateKey:'test-only-marker'}},{provider_id:['test-only-marker']},{expected_amount_sats:'100000'}])('rejects nested or mistyped public package fields %j', async changes=>{
+    const res=response();await handlers.get('POST /api/v1/intelligence/swaps/chain-context')({method:'POST',path:'/chain-context',query:ctx,body:{...pkg,...changes}},res);
+    expect(res.status).toHaveBeenCalledWith(400);expect(res.json.mock.calls[0][0].error).toContain('scalar');
+  });
 });

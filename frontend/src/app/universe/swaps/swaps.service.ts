@@ -21,6 +21,7 @@ export interface SwapsOverview {
 export interface SwapRecoveryPlan {
   stage: string; recommended_action: string; notes: string[]; unsigned_recovery_psbt?: string;
   current_block_height: number | null; blocks_until_refund: number | null; recoverable_value_sats: number;
+  timeout_height: number;
   estimated_miner_fee_sats: number; source_context?: { chain: string; network: string; source_id: string; block_hash: string; block_height: number; observed_at: string };
   decoded?: { txid: string; vout: number; destination: string; output_value_sats: number; fee_sats: number; locktime: number; sequence: number; input_count: number; output_count: number };
 }

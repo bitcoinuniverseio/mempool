@@ -30,7 +30,7 @@ const psbt = new Psbt({ network: networks.testnet }); psbt.setVersion(2).setLock
 psbt.addInput({ hash: prev.getId(), index: 0, sequence: 0xfffffffd, nonWitnessUtxo: prev.toBuffer(), witnessUtxo: prev.outs[0], tapInternalKey: pub, tapMerkleRoot: payment.hash, tapLeafScript: [{ script: leaf, controlBlock: payment.witness[1], leafVersion: 0xc0 }] });
 psbt.addOutput({ address: destination, value: 99000 });
 const pkg = { chain: 'bitcoin', network: 'signet', protocol_id: 'boltz_submarine_v2', swap_type: 'submarine', lockup_transaction: prev.getId(), lockup_vout: 0, lockup_address: payment.address, internal_key: pub.toString('hex'), refund_public_key: pub.toString('hex'), claim_public_key: pub.toString('hex'), preimage_hash: Buffer.alloc(32, 4).toString('hex'), expected_amount_sats: 100000, timeout_height: 200, destination_address: destination, fee_sats: 1000 };
-const plan: any = { stage: 'unsigned-plan-ready', recoverable_value_sats: 99000, estimated_miner_fee_sats: 1000, unsigned_recovery_psbt: psbt.toBase64(), notes: [], source_context: { chain: 'bitcoin', network: 'signet', source_id: 'controlled-unit-authority', block_height: 200, block_hash: '11'.repeat(32), observed_at: '2026-09-05T00:00:00.000Z' } };
+const plan: any = { stage: 'unsigned-plan-ready', timeout_height: 200, current_block_height: 200, blocks_until_refund: 0, recoverable_value_sats: 99000, estimated_miner_fee_sats: 1000, unsigned_recovery_psbt: psbt.toBase64(), notes: [], source_context: { chain: 'bitcoin', network: 'signet', source_id: 'controlled-unit-authority', block_height: 200, block_hash: '11'.repeat(32), observed_at: '2026-09-05T00:00:00.000Z' } };
 
 describe('Public swap recovery package boundary', () => {
   it('rejects malformed, private, oversized and network-mismatched packages before HTTP', () => {
@@ -41,6 +41,12 @@ describe('Public swap recovery package boundary', () => {
     expect(() => publicSwapPackage(JSON.stringify(pkg), 'mainnet')).toThrow(/chain\/network/);
   });
   it('independently decodes a complete bitcoinjs PSBT with scure', () => expect(() => checkRecoveryArtifact(plan, pkg, 'signet')).not.toThrow());
+  it.each([{swap_id:{privateKey:'test-only-marker'}},{provider_id:['test-only-marker']},{expected_amount_sats:'100000'}])('rejects nested or malformed public fields before transport %j', changes=>{
+    expect(()=>publicSwapPackage(JSON.stringify({...pkg,...changes}),'signet')).toThrow(/scalar/);
+  });
+  it.each([{current_block_height:999999},{blocks_until_refund:999},{current_block_height:undefined},{timeout_height:123}])('binds displayed maturity to the source checkpoint %j', changes=>{
+    expect(()=>checkRecoveryArtifact({...plan,...changes},pkg,'signet')).toThrow(/maturity/);
+  });
   it.each([{recoverable_value_sats:99001},{estimated_miner_fee_sats:999},{recoverable_value_sats:undefined}])('rejects misleading displayed recovery amounts %j', changes => {
     expect(() => checkRecoveryArtifact({...plan,...changes},pkg,'signet')).toThrow(/Displayed/);
   });

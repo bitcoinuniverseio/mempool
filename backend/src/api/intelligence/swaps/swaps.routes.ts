@@ -21,6 +21,10 @@ class SwapsRoutes {
           if (!req.path.endsWith('/manifests/verify') && Object.keys(req.body).some(key => !publicFields.has(key))) {
             return res.status(400).json({ error: 'Only the documented public package fields are accepted. Remove private backup data and caller-controlled height.', stage: 'invalid' });
           }
+          const numbers = new Set(['timeout_height','expected_amount_sats','lockup_vout','fee_sats']);
+          if (!req.path.endsWith('/manifests/verify') && Object.entries(req.body).some(([key,value]) => numbers.has(key) ? !Number.isSafeInteger(value) || Number(value)<0 : typeof value!=='string')) {
+            return res.status(400).json({error:'Public package fields must contain documented scalar strings or nonnegative integers; nested objects and arrays are not accepted.',stage:'invalid'});
+          }
         }
         return await fn(req, res);
       } catch (err) {
