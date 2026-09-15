@@ -49,33 +49,15 @@ describe('DlcService', () => {
     }
   });
 
-  it('still checks the structure of a caller-supplied announcement and rejects duplicate nonces', () => {
-    const valid = dlcService.verifyAnnouncement({
-      oracle_public_key: '0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798',
-      event_id: 'test-event-01',
-      event_descriptor: { type: 'enumerated', outcomes: ['win', 'loss'] },
-      event_maturity_epoch: 1788500000,
-      nonces: ['02e07174624d775191c0e0b3f5115291d92a4a350a4179373f1d3a5a7849e7b235'],
-      announcement_signature: '72a6b22b10298a0c5c4f24fef7d8b584a7e937d5718a209b0b4a7be6c7a918e9324bc6885dfb2e59fa257f8cf28e5784931a7c36e4f3a743b174780614cf12c5',
-    });
-    expect(valid.verified).toBe(true);
-    expect(valid.errors.length).toBe(0);
-
-    const invalid = dlcService.verifyAnnouncement({
-      oracle_public_key: '0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798',
-      event_id: 'test-event-02',
-      event_descriptor: { type: 'enumerated', outcomes: ['win', 'loss'] },
-      event_maturity_epoch: 1788500000,
-      nonces: [
-        '02e07174624d775191c0e0b3f5115291d92a4a350a4179373f1d3a5a7849e7b235',
-        '02e07174624d775191c0e0b3f5115291d92a4a350a4179373f1d3a5a7849e7b235',
-      ],
-      announcement_signature: 'sig',
-    });
-    expect(invalid.verified).toBe(false);
-    expect(invalid.errors).toContain('Duplicate nonce points detected in announcement');
+  it('rejects fabricated signatures and duplicate nonce announcements', () => {
+    const point = '79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798';
+    const announcement = { protocol_revision: 'dlcspecs-tagged-v0', oracle_public_key: point,
+      event_id: 'test-event', event_descriptor: { type: 'enumerated', outcomes: ['win', 'loss'] },
+      event_maturity_epoch: 1788500000, nonces: [point], announcement_signature: '00'.repeat(64) };
+    expect(dlcService.verifyAnnouncement(announcement).verified).toBe(false);
+    expect(dlcService.verifyAnnouncement({ ...announcement, nonces: [point, point] }).errors)
+      .toContain('Duplicate nonce points detected in announcement');
   });
-
   it('still checks a caller-supplied contract package for collateral conservation', () => {
     const validPkg = dlcService.verifyContractPackage({
       parties: [

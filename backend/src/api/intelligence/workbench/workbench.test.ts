@@ -121,14 +121,15 @@ describe('Workbench HTTP responses', () => {
 
   it('distinguishes malformed PSBT input from unavailable engines', async () => {
     const posts = mount();
-    expect(posts.size).toBe(6);
+    expect(posts.size).toBe(7);
+    expect(posts.has('/api/v1/intelligence/workbench/transaction/verify')).toBe(true);
     const body = { script_hex: '0014' + 'ab'.repeat(20), witness: [], policy: 'pk(A)', descriptor: 'wpkh(A)', psbt: '70736274ff' };
     for (const [route, handler] of posts.entries()) {
       const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
       await handler({ body } as Request, res as unknown as Response);
-      expect(res.status).toHaveBeenCalledWith(route.endsWith('psbt/analyze') || route.endsWith('miniscript/compile') || route.endsWith('script/simulate') ? 400 : 503);
+      expect(res.status).toHaveBeenCalledWith(route.endsWith('psbt/analyze') || route.endsWith('miniscript/compile') || route.endsWith('script/simulate') || route.endsWith('transaction/verify') ? 400 : 503);
       const answer = res.json.mock.calls[0][0];
-      expect(answer.stage).toMatch(route.endsWith('psbt/analyze') ? /^invalid-psbt$/ : route.endsWith('miniscript/compile') ? /^invalid-policy$/ : route.endsWith('script/simulate') ? /^transaction-context-required$/ : /^unavailable-/);
+      expect(answer.stage).toMatch(route.endsWith('psbt/analyze') ? /^invalid-psbt$/ : route.endsWith('miniscript/compile') ? /^invalid-policy$/ : route.endsWith('script/simulate') ? /^transaction-context-required$/ : route.endsWith('transaction/verify') ? /^invalid-transaction-context$/ : /^unavailable-/);
       expect(typeof answer.error).toBe('string');
       expect(answer).not.toHaveProperty('steps');
       expect(answer).not.toHaveProperty('derived');

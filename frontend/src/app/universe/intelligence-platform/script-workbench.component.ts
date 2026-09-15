@@ -225,6 +225,16 @@ import { IntelligenceApiService } from './intelligence-api.service';
           </div>
         </section>
       </div>
+      <section *ngIf="activeTab === 'transaction'" class="card p-4 mb-4">
+        <h2 class="h5">Verify a transaction input against owned previous outputs</h2>
+        <label for="transaction-context-hex">Signed transaction hexadecimal</label>
+        <textarea id="transaction-context-hex" class="form-control font-monospace" rows="5" [(ngModel)]="transactionInput" (ngModelChange)="invalidateResults()"></textarea>
+        <label for="transaction-context-index" class="mt-3">Input index (zero-based)</label>
+        <input id="transaction-context-index" type="number" min="0" max="31" class="form-control" [(ngModel)]="transactionIndex" (ngModelChange)="invalidateResults()">
+        <button class="btn btn-primary mt-3" [disabled]="loading || !transactionInput.trim()" (click)="verifyTransaction()">Verify input script</button>
+        <p class="mt-3">The owned Bitcoin source supplies every previous output. This executes the selected input, including its signature and script context. It does not sign, broadcast, or establish present spendability.</p>
+        <div *ngIf="transactionResult"><h3 class="h6">{{transactionResult.results[0].script_valid ? 'Selected input script passed' : 'Selected input script failed'}}</h3><p>{{transactionResult.scope}}</p><p *ngIf="transactionResult.results[0].error" role="alert">{{transactionResult.results[0].error}}</p><pre>{{transactionResult | json}}</pre></div>
+      </section>
       <section *ngIf="activeTab === 'simulate'" class="card p-4 mb-4">
         <h2 class="h5">Script execution and stack trace</h2>
         <label for="execution-script">Script hex</label>
@@ -298,12 +308,15 @@ import { IntelligenceApiService } from './intelligence-api.service';
 })
 export class ScriptWorkbenchComponent implements OnInit, OnDestroy {
   activeTab = 'script';
-  readonly extraTabs = [{ id: 'simulate', label: 'Stack execution' }, { id: 'miniscript', label: 'Miniscript' }, { id: 'taproot', label: 'Taproot tree' }];
+  readonly extraTabs = [{ id: 'transaction', label: 'Transaction input' }, { id: 'simulate', label: 'Stack execution' }, { id: 'miniscript', label: 'Miniscript' }, { id: 'taproot', label: 'Taproot tree' }];
   scriptInput = '';
   descriptorInput = '';
   psbtInput = '';
   witnessInput = '';
   policyInput = '';
+  transactionInput = '';
+  transactionIndex = 0;
+  transactionResult: any = null;
   loading = false;
   loadError: string | null = null;
   scriptResult: any = null;
@@ -332,7 +345,7 @@ export class ScriptWorkbenchComponent implements OnInit, OnDestroy {
     this.revision++;
     this.pending?.unsubscribe();
     this.pending = undefined;
-    this.scriptResult = this.descriptorResult = this.psbtResult = this.simulationResult = this.compileResult = null;
+    this.scriptResult = this.descriptorResult = this.psbtResult = this.simulationResult = this.compileResult = this.transactionResult = null;
     this.loading = false;
     this.loadError = null;
     this.cdr.markForCheck();
@@ -387,6 +400,15 @@ export class ScriptWorkbenchComponent implements OnInit, OnDestroy {
   inspectPsbt(): void {
     if (!this.psbtInput.trim()) { this.invalidateResults(); return; }
     this.request(this.api.analyzePsbt$(this.psbtInput.trim()), result => this.psbtResult = result);
+  }
+  verifyTransaction(): void {
+    this.invalidateResults();
+    const network=this.state.network || this.state.env.ROOT_NETWORK;
+    const prefix=network===this.state.env.ROOT_NETWORK?'':'/'+network;
+    this.request(this.http.post(prefix+'/api/v1/intelligence/workbench/transaction/verify',{transaction_hex:this.transactionInput.trim(),input_index:this.transactionIndex}),result=>{
+      if(result?.source?.network!==network || !Array.isArray(result.results) || result.results.length!==1 || typeof result.results[0]?.script_valid!=='boolean' || result.whole_transaction_valid!==null || result.spendable_now!==null){this.loadError='Transaction verifier returned invalid or mis-scoped evidence.';return;}
+      this.transactionResult=result;
+    });
   }
   simulate(): void {
     if (!this.scriptInput.trim()) { this.invalidateResults(); return; }

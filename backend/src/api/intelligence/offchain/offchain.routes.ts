@@ -1,8 +1,18 @@
 import { Application, Request, Response } from 'express';
 import offchainService from './offchain.service';
+import { OffchainVerificationError } from './package-verifier';
 
 class OffchainRoutes {
   public initRoutes(app: Application): void {
+    for (const kind of ['statechain', 'coinswap'] as const) {
+      app.post(`/api/v1/intelligence/offchain/${kind}/verify`, async (req: Request, res: Response) => {
+        try { res.json(await (kind === 'statechain' ? offchainService.verifyTransferPackage(req.body) : offchainService.verifyCoinswapPackage(req.body))); }
+        catch (error) {
+          const known = error instanceof OffchainVerificationError;
+          res.status(known ? error.status : (error as any).status || 503).json({ is_valid: false, code: known ? error.code : 'verification-unavailable', error: known ? error.message : 'The independent transaction verifier is unavailable.' });
+        }
+      });
+    }
     app.get('/api/v1/intelligence/offchain/overview', (req: Request, res: Response) => {
       try {
         const overview = offchainService.getOverview();

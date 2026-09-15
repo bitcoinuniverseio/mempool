@@ -1,0 +1,12 @@
+import { Transaction, payments, script } from 'bitcoinjs-lib';
+import * as secp from 'tiny-secp256k1';
+import { createHash } from 'crypto';
+import { verifyBip127 } from './bip127-proof';
+const secret=Buffer.alloc(32,1), key=Buffer.from(secp.pointFromScalar(secret,true)!);
+const genesis='00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6';
+function fixture(){const message='test provider 2026';const tx=new Transaction();tx.addInput(Buffer.from(createHash('sha256').update('Proof-of-Reserves: '+message).digest()).reverse(),0);tx.addInput(Buffer.alloc(32,2),0);tx.addOutput(Buffer.from([0x6a]),1000);const sig=secp.sign(tx.hashForWitnessV0(1,payments.p2pkh({pubkey:key}).output!,1000,Transaction.SIGHASH_ALL),secret);tx.setWitness(1,[script.signature.encode(Buffer.from(sig),Transaction.SIGHASH_ALL),key]);const reader={getBlockHash:jest.fn(async()=>genesis),getBestBlockHash:jest.fn(async()=>'aa'.repeat(32)),getTxOut:jest.fn(async()=>({bestblock:'aa'.repeat(32),confirmations:6,coinbase:false,value:0.00001,scriptPubKey:{hex:payments.p2wpkh({pubkey:key}).output!.toString('hex')}}))};return{tx,message,reader};}
+describe('BIP127 current owned UTXO proof',()=>{
+ it('checks actual signatures and derives reserve amounts from owned outputs',async()=>{const {tx,message,reader}=fixture();expect(await verifyBip127({transaction_hex:tx.toHex(),expected_message:message},reader,'signet')).toMatchObject({verified:true,total_verified_sats:1000,verified_items_count:1,solvency_verified:false});});
+ it.each(['message','signature','amount','spent','network','tip'])('rejects tampered %s',async kind=>{const f=fixture();if(kind==='message')f.message+='tampered';if(kind==='signature')f.tx.ins[1].witness[0][5]^=1;if(kind==='amount')f.tx.outs[0].value++;if(kind==='spent')f.reader.getTxOut.mockResolvedValue(null as any);if(kind==='network')f.reader.getBlockHash.mockResolvedValue('ff'.repeat(32));if(kind==='tip')f.reader.getBestBlockHash.mockResolvedValueOnce('aa'.repeat(32)).mockResolvedValueOnce('bb'.repeat(32));await expect(verifyBip127({transaction_hex:f.tx.toHex(),expected_message:f.message},f.reader,'signet')).rejects.toThrow();});
+ it('rejects ad-hoc signature items before any node access',async()=>{const f=fixture();await expect(verifyBip127({expected_message:f.message,items:[{}]},f.reader,'signet')).rejects.toThrow(/ad-hoc/);expect(f.reader.getTxOut).not.toHaveBeenCalled();});
+});

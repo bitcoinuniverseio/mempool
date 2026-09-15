@@ -38,6 +38,7 @@ export interface OffchainOperator {
 }
 
 export interface StatechainPublicManifest {
+  signature_scheme?: 'schnorr' | 'ecdsa';
   schema_version: string;
   protocol: string;
   operator_public_key: string;

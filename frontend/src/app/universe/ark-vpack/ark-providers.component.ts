@@ -35,21 +35,22 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
         <div>Loading ASP observatory...</div>
       </div>
 
+      <p *ngIf="!loading && !loadError && !providers.length" class="alert alert-info">No independently registered provider observations are available.</p>
       <div *ngIf="!loading && providers" class="row g-4">
         <div class="col-12 col-md-6" *ngFor="let p of providers">
           <div class="card p-3 bg-body-tertiary border h-100">
             <div class="d-flex justify-content-between align-items-center mb-2">
               <h5 class="m-0">{{ p.name }}</h5>
-              <span class="badge bg-success">{{ p.health_status | uppercase }}</span>
+              <span class="badge" [class.bg-success]="p.health_status === 'online' && p.observed_at" [class.bg-secondary]="p.health_status !== 'online' || !p.observed_at">{{ (p.observed_at ? p.health_status : 'unobserved') | uppercase }}</span>
             </div>
             <p class="small text-muted font-monospace mb-2">{{ p.provider_id }}</p>
             <div class="row g-2 small mb-3">
-              <div class="col-6"><strong>Exit Delay:</strong> {{ p.exit_delay_blocks }} blocks</div>
+              <div class="col-6"><strong>Exit Delay:</strong> {{ p.exit_delay_blocks ?? 'Unknown' }} blocks</div>
               <div class="col-6"><strong>Network:</strong> {{ p.network }}</div>
               <div class="col-12"><strong>V-PACK Version:</strong> {{ p.vpack_version }}</div>
             </div>
             <div class="mt-auto">
-              <span class="badge bg-dark">Manifest PGP Verified</span>
+              <span class="badge bg-dark">{{ p.signature_verified === true && p.signer_trusted === true ? 'Authenticated provider statement' : 'Manifest not authenticated' }}</span>
             </div>
           </div>
         </div>
@@ -61,15 +62,29 @@ export class ArkProvidersComponent implements OnInit, OnDestroy {
   public providers: any[] = [];
   public loading = true;
   private sub?: Subscription;
+  private requestSub?: Subscription;
 
   public loadError: string | null = null;
 
   constructor(private api: ArkVpackApiService, private cdr: ChangeDetectorRef) {}
 
   public ngOnInit(): void {
-    this.sub = this.api.getProviders$().subscribe({
+    this.sub = this.api.networkChanges$.subscribe(() => {
+      this.requestSub?.unsubscribe();
+      this.providers = [];
+      this.loading = true;
+      this.loadError = null;
+      this.cdr.markForCheck();
+      this.load();
+    });
+  }
+
+  private load(): void {
+    this.requestSub = this.api.getProviders$().subscribe({
       next: (data) => {
-        this.providers = data;
+        const valid = Array.isArray(data) && data.every(p => p && typeof p.provider_id === 'string' && typeof p.name === 'string' && typeof p.network === 'string');
+        this.providers = valid ? data : [];
+        if (!valid) { this.loading = false; this.loadError = 'The provider registry returned invalid evidence.'; this.cdr.markForCheck(); return; }
         this.loading = false;
         this.loadError = null;
         this.cdr.markForCheck();
@@ -85,5 +100,6 @@ export class ArkProvidersComponent implements OnInit, OnDestroy {
 
   public ngOnDestroy(): void {
     this.sub?.unsubscribe();
+    this.requestSub?.unsubscribe();
   }
 }
