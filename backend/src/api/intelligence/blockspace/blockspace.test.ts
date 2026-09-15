@@ -32,6 +32,26 @@ describe('blockspace classification reads the transaction', () => {
 describe('blockspace reads come from observed blocks', () => {
   beforeEach(() => blockspaceService.reset());
 
+  it('removes orphan regimes and computes the median of retained fee samples', () => {
+    blockspaceService.observeBlock(block(10, 1000, 5), [tx({})]);
+    const detectedAt = blockspaceService.getRegimes()[0].detected_at;
+    blockspaceService.observeBlock(block(11, 1600, 6), [tx({})]);
+    blockspaceService.observeBlock(block(12, 2200, 28), [tx({})]);
+    expect(blockspaceService.getRegimes()[0].median_feerate).toBe(6);
+    blockspaceService.observeBlock(block(13, 2800, 120), [tx({})]);
+    expect(blockspaceService.getRegimes()[0].regime_type).toBe('extreme_congestion');
+    blockspaceService.observeBlock({ ...block(12, 2300, 7), id: 'f'.repeat(64) }, [tx({})]);
+    expect(blockspaceService.getRegimes()).toHaveLength(1);
+    expect(blockspaceService.getRegimes()[0]).toMatchObject({ start_height: 10, median_feerate: 6, detected_at: detectedAt });
+    expect(blockspaceService.getOverview().checkpoint).toEqual({ height: 12, hash: 'f'.repeat(64) });
+  });
+
+  it('drops regimes outside the retained block window', () => {
+    for (let height = 1; height <= 300; height++) blockspaceService.observeBlock(block(height, height * 600, height === 1 ? 120 : 2), [tx({})]);
+    expect(blockspaceService.getRegimes()).toHaveLength(1);
+    expect(blockspaceService.getRegimes()[0].start_height).toBe(13);
+  });
+
   it('is unavailable until a block was observed', () => {
     for (const read of [() => blockspaceService.getOverview(), () => blockspaceService.getTaxonomy(), () => blockspaceService.getComposition(), () => blockspaceService.getRegimes()]) {
       expect(read).toThrow(BlockspaceUnavailableError);

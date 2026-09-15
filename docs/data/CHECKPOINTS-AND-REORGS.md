@@ -1,5 +1,22 @@
 # Checkpoints and reorg handling
 
+## Backend template and blockspace observations
+
+Mined-block template comparisons require the same height **and parent hash**,
+with template observation no later than block receipt. The comparison uses the
+highest-fee eligible collected template and reports age from observer timestamps,
+not miner-controlled block timestamps. An in-flight Core template targeting an
+old parent cannot replace the tracked tip after a block callback. Next-block
+projections carry the current observed parent rather than a previous template's
+parent. Selection differences do not establish why a miner chose a transaction.
+
+When a block at an already-observed or lower height replaces the branch,
+blockspace regimes are recomputed from retained canonical tallies. Orphaned and
+evicted tallies no longer contribute fees, regimes or checkpoints. Regime fee
+statistics use the actual median of retained samples, and observation times
+remain the original times. This is bounded retained history, not a claim that
+the process holds every historical block.
+
 ## Checkpoints
 
 Every protocol authority exposes its indexing checkpoint (height + block hash).

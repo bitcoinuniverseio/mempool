@@ -103,6 +103,8 @@ export class TemplateCollectorService {
   private templates: CandidateTemplate[] = [];
   private comparisons = new Map<string, MinedBlockTemplateComparison>();
   private currentHeight: number | null = null;
+  private currentParentHash: string | null = null;
+  private tipRevision = 0;
   private pollTimer: NodeJS.Timeout | null = null;
   private polling = false;
 
@@ -133,6 +135,8 @@ export class TemplateCollectorService {
     this.templates = [];
     this.comparisons.clear();
     this.currentHeight = null;
+    this.currentParentHash = null;
+    this.tipRevision = 0;
     for (const source of this.sources.values()) { source.status = 'not_collected'; source.last_template_at = null; source.last_error = null; }
   }
 
@@ -142,24 +146,33 @@ export class TemplateCollectorService {
   }
 
   /** One getblocktemplate call; the outcome is recorded on the source either way. */
-  public async collectCoreTemplate(now = Date.now()): Promise<CandidateTemplate | null> {
+  public async collectCoreTemplate(now?: number): Promise<CandidateTemplate | null> {
     const source = this.sources.get('src-core-gbt') as TemplateSource;
+    const requestedTipRevision = this.tipRevision;
     try {
       const result = await this.fetchCoreTemplate();
+      const observedAt = now ?? Date.now();
+      if (requestedTipRevision !== this.tipRevision &&
+        (result.height !== this.currentHeight || result.previousblockhash !== this.currentParentHash)) {
+        source.status = 'degraded';
+        source.last_error = 'Template response crossed a tip change and targets the previous parent.';
+        return null;
+      }
       const txids = result.transactions.map(tx => tx.txid);
       const template: CandidateTemplate = {
-        template_id: `tmpl-core-${result.height}-${now}`, source_id: source.source_id, source_name: source.name, source_type: 'core_gbt',
+        template_id: `tmpl-core-${result.height}-${observedAt}`, source_id: source.source_id, source_name: source.name, source_type: 'core_gbt',
         height: result.height, prev_block_hash: result.previousblockhash, tx_count: txids.length,
         total_weight: result.transactions.reduce((sum, tx) => sum + (tx.weight ?? 0), 0),
         total_fees_sats: result.transactions.reduce((sum, tx) => sum + (tx.fee ?? 0), 0),
         sigops_count: result.transactions.every(tx => typeof tx.sigops === 'number') ? result.transactions.reduce((sum, tx) => sum + (tx.sigops ?? 0), 0) : null,
-        coinbase_value_sats: result.coinbasevalue ?? null, fingerprint_hash: fingerprint(txids), observed_at_utc: new Date(now).toISOString(), txids,
+        coinbase_value_sats: result.coinbasevalue ?? null, fingerprint_hash: fingerprint(txids), observed_at_utc: new Date(observedAt).toISOString(), txids,
       };
       this.remember(template);
       source.status = 'active';
       source.last_template_at = template.observed_at_utc;
       source.last_error = null;
       this.currentHeight = result.height;
+      this.currentParentHash = result.previousblockhash;
       return template;
     } catch (error) {
       source.status = 'offline';
@@ -173,7 +186,7 @@ export class TemplateCollectorService {
   public collectProjection(now = Date.now()): CandidateTemplate | null {
     const source = this.sources.get('src-mempool-projection') as TemplateSource;
     const projection = this.readProjection();
-    if (!projection || this.currentHeight === null) {
+    if (!projection || this.currentHeight === null || this.currentParentHash === null) {
       source.status = 'not_collected';
       source.last_error = projection ? 'height unknown until Core answered getblocktemplate' : 'no projection available yet';
       return null;
@@ -181,7 +194,7 @@ export class TemplateCollectorService {
     const txids = projection.transactionIds;
     const template: CandidateTemplate = {
       template_id: `tmpl-projection-${this.currentHeight}-${now}`, source_id: source.source_id, source_name: source.name, source_type: 'mempool_projection',
-      height: this.currentHeight, prev_block_hash: this.templates.filter(t => t.source_type === 'core_gbt').pop()?.prev_block_hash ?? '', tx_count: projection.nTx,
+      height: this.currentHeight, prev_block_hash: this.currentParentHash, tx_count: projection.nTx,
       total_weight: projection.blockVSize * 4, total_fees_sats: Math.round(projection.totalFees), sigops_count: null, coinbase_value_sats: null,
       fingerprint_hash: fingerprint(txids), observed_at_utc: new Date(now).toISOString(), txids,
     };
@@ -192,7 +205,7 @@ export class TemplateCollectorService {
     return template;
   }
 
-  public async collect(now = Date.now()): Promise<void> {
+  public async collect(now?: number): Promise<void> {
     if (this.polling) { return; }
     this.polling = true;
     try {
@@ -217,7 +230,11 @@ export class TemplateCollectorService {
 
   /** Called from the block hub: compares the mined block with the latest template for its height. */
   public observeBlock(block: BlockExtended, transactions: TransactionExtended[], now = Date.now()): MinedBlockTemplateComparison | null {
-    const candidates = this.templates.filter(template => template.height === block.height);
+    this.tipRevision++;
+    this.currentHeight = block.height + 1;
+    this.currentParentHash = block.id;
+    const candidates = this.templates.filter(template => template.height === block.height &&
+      template.prev_block_hash === block.previousblockhash && Date.parse(template.observed_at_utc) <= now);
     const best = candidates.length ? candidates.reduce((a, b) => (b.total_fees_sats > a.total_fees_sats ? b : a)) : null;
     const minedTxids = transactions.filter(tx => !tx.vin?.some(vin => vin.is_coinbase)).map(tx => tx.txid);
     const minedFees = block.extras?.totalFees ?? transactions.reduce((sum, tx) => sum + (tx.fee ?? 0), 0);
@@ -233,8 +250,8 @@ export class TemplateCollectorService {
       fee_differential_sats: minedFees - best.total_fees_sats,
       omitted_txids: best.txids.filter(txid => !minedSet.has(txid)).slice(0, TEMPLATE_LIMITS.txidsInResponse),
       unexpected_txids: minedTxids.filter(txid => !templateSet.has(txid)).slice(0, TEMPLATE_LIMITS.txidsInResponse),
-      template_age_seconds: Math.max(0, Math.round((block.timestamp * 1000 - Date.parse(best.observed_at_utc)) / 1000)),
-      observed_difference_reason: 'Set difference between the mined block and the latest template this backend collected for the height; no cause is inferred.',
+      template_age_seconds: Math.max(0, Math.round((now - Date.parse(best.observed_at_utc)) / 1000)),
+      observed_difference_reason: 'Set difference against the highest-fee observed template for the identical height and parent before block receipt; no cause is inferred.',
     };
     this.comparisons.set(block.id, comparison);
     if (this.comparisons.size > TEMPLATE_LIMITS.comparisons) {
@@ -280,7 +297,9 @@ export class TemplateCollectorService {
       added_to_b: b.txids.filter(txid => !setA.has(txid)).slice(0, TEMPLATE_LIMITS.txidsInResponse),
       removed_from_b: a.txids.filter(txid => !setB.has(txid)).slice(0, TEMPLATE_LIMITS.txidsInResponse),
       reordered_count: reordered, fee_delta_sats: b.total_fees_sats - a.total_fees_sats, weight_delta: b.total_weight - a.total_weight,
-      explanation: a.height === b.height ? 'Both templates target the same height; differences are selection and ordering differences between the two sources at their observation times.' : 'The templates target different heights and are not directly comparable.',
+      explanation: a.height === b.height && a.prev_block_hash === b.prev_block_hash
+        ? 'Both templates extend the same parent; differences are selection and ordering differences between the two sources at their observation times.'
+        : 'The templates target different heights or parent blocks and are not directly comparable.',
     };
   }
 
