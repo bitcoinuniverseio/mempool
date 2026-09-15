@@ -111,6 +111,7 @@ export class AddressComponent implements OnInit, OnDestroy {
   isLoadingAddress = true;
   transactions: Transaction[];
   utxos: Utxo[];
+  utxoSourceState: 'idle' | 'loading' | 'complete' | 'limit' | 'unavailable' = 'idle';
   isLoadingTransactions = true;
   retryLoadMore = false;
   error: any;
@@ -240,6 +241,7 @@ export class AddressComponent implements OnInit, OnDestroy {
           this.isLoadingTransactions = true;
           this.transactions = null;
           this.utxos = null;
+          this.utxoSourceState = 'idle';
           this.addressInfo = null;
           this.exampleChannel = null;
           this.tapTreeIncomplete = false;
@@ -297,14 +299,19 @@ export class AddressComponent implements OnInit, OnDestroy {
           this.isLoadingAddress = false;
           this.isLoadingTransactions = true;
           const utxoCount = this.chainStats.utxos + this.mempoolStats.utxos;
+          this.utxoSourceState = utxoCount > 500 ? 'limit' : utxoCount > 0 ? 'loading' : 'complete';
           return forkJoin([
             address.is_pubkey
               ? this.electrsApiService.getScriptHashTransactions$((address.address.length === 66 ? '21' : '41') + address.address + 'ac')
               : this.electrsApiService.getAddressTransactions$(address.address),
-            (utxoCount > 2 && utxoCount <= 500 ? (address.is_pubkey
+            (utxoCount > 0 && utxoCount <= 500 ? (address.is_pubkey
               ? this.electrsApiService.getScriptHashUtxos$((address.address.length === 66 ? '21' : '41') + address.address + 'ac')
-              : this.electrsApiService.getAddressUtxos$(address.address)) : of(null)).pipe(
-                catchError(() => {
+              : this.electrsApiService.getAddressUtxos$(address.address)) : of(utxoCount === 0 ? [] : null)).pipe(
+                catchError((error) => {
+                  const body = error?.error;
+                  this.utxoSourceState = body?.code === 'address-history-too-large' ||
+                    typeof body === 'string' && /^Too many unspent transaction outputs \(>\d+\)\./.test(body)
+                    ? 'limit' : 'unavailable';
                   return of(null);
                 })
               )
@@ -312,6 +319,7 @@ export class AddressComponent implements OnInit, OnDestroy {
         }),
         switchMap(([transactions, utxos]) => {
           this.utxos = utxos;
+          if (Array.isArray(utxos)) this.utxoSourceState = 'complete';
 
           this.tempTransactions = transactions;
           if (transactions.length) {

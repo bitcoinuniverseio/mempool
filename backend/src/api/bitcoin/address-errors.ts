@@ -60,7 +60,7 @@ const STATUS: Readonly<Record<AddressErrorCode, number>> = {
 const MESSAGE: Readonly<Record<AddressErrorCode, string>> = {
   'address-backend-unavailable': 'This deployment has no Bitcoin address index, so address history cannot be served.',
   'address-backend-syncing': 'The Bitcoin address index is still catching up to the chain.',
-  'address-history-too-large': 'This address has more history than the configured lookup limit can serve.',
+  'address-history-too-large': 'This address has more history or unspent outputs than the configured lookup limit can serve.',
   'address-query-timeout': 'The Bitcoin address index did not answer in time.',
   'invalid-address': 'That is not a valid address on this network.',
   'address-source-disagreement': 'Two address sources disagreed about this address.',
@@ -86,6 +86,10 @@ export function addressErrorMessage(code: AddressErrorCode): string {
 export function classifyAddressError(e: unknown): AddressErrorCode {
   const message = e instanceof Error ? e.message : typeof e === 'string' ? e : '';
   const code = (e as { code?: string } | null)?.code;
+  const response = (e as { response?: { status?: number; data?: unknown } } | null)?.response;
+  if (response?.status === 400 && typeof response.data === 'string' && /^Too many unspent transaction outputs \(>\d+\)\./.test(response.data)) {
+    return 'address-history-too-large';
+  }
 
   if (message === 'Invalid Bitcoin address') {
     return 'invalid-address';
