@@ -11,6 +11,9 @@ application itself at `/docs/api/rest`, generated from
 Authentication and side effects depend on the handler. Public explorer reads,
 local inspectors, portfolio persistence, sharing, and privileged admin adapters
 have different contracts. This reference does not grant mutation or admin access.
+Owner-scoped intelligence routes (watchlists, developer keys and webhooks,
+saved queries, graph cases, knowledge submissions, node RPC execution) take a
+bearer API key; the contract is in [OWNER-IDENTITY.md](OWNER-IDENTITY.md).
 `POST /api/v1/tx/push` is always mounted, and `POST /api/v1/tx` is mounted when
 the backend serves the transaction family itself. Both hand raw bytes to
 Bitcoin Core and store nothing.

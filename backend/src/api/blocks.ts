@@ -974,6 +974,19 @@ class Blocks {
 
     diskCache.lock();
 
+    // The stall timer and the disk cache lock belong to this run only. A
+    // rejected RPC call used to skip the cleanup below, leaving one more
+    // repeating interval and one more lock behind on every failed run.
+    try {
+      return await this.$runUpdateBlocks(timer);
+    } finally {
+      diskCache.unlock();
+      this.clearTimer(timer);
+    }
+  }
+
+  /** @asyncUnsafe */
+  private async $runUpdateBlocks(timer): Promise<number> {
     let fastForwarded = false;
     let handledBlocks = 0;
     const lastBlockHeight = this.currentBlockHeight;
@@ -1177,10 +1190,6 @@ class Blocks {
 
       handledBlocks++;
     }
-
-    diskCache.unlock();
-
-    this.clearTimer(timer);
 
     return handledBlocks;
   }

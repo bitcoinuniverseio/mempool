@@ -2,7 +2,8 @@ import {
   EventEnvelopeValidator,
 } from './event-envelope';
 import { IntelligenceEventBus } from './intelligence-event-bus';
-import { developerIdentity } from '../identity/developer-identity';
+import { developerIdentity, IdentityError, validateWebhookUrl } from '../identity/developer-identity';
+import { MemoryOwnerStore, useOwnerStore } from '../identity/owner-store';
 
 describe('Phase 1 Foundation: Event Envelope & Event Bus', () => {
   it('generates valid UUIDv7 identifiers', () => {
@@ -106,28 +107,33 @@ describe('Phase 1 Foundation: Event Envelope & Event Bus', () => {
     expect(deadLetters[deadLetters.length - 1].reason).toMatch(/Integer constraint violation/);
   });
 
-  it('authenticates developer API keys and enforces scope validation', () => {
-    const key = developerIdentity.generateApiKey('user-123', 'Test Key', ['read:mempool', 'read:relay']);
+  it('authenticates developer API keys and enforces scope validation', async () => {
+    useOwnerStore(new MemoryOwnerStore());
+    developerIdentity.resetForTests();
+    const first = await developerIdentity.bootstrapOwner('Test Owner', '203.0.113.50');
+    const owner = (await developerIdentity.authenticateKey(first.secret_key))!;
+    const key = await developerIdentity.generateApiKey(owner, 'Test Key', ['read', 'queries']);
     expect(key.secret_key.startsWith('uip_live_')).toBe(true);
 
-    const authValid = developerIdentity.authenticateKey(key.secret_key, 'read:mempool');
+    const authValid = await developerIdentity.authenticateKey(key.secret_key, 'read');
     expect(authValid).not.toBeNull();
-    expect(authValid?.owner_id).toBe('user-123');
+    expect(authValid?.owner_id).toBe(first.owner_id);
 
-    const authForbiddenScope = developerIdentity.authenticateKey(key.secret_key, 'admin:ops');
+    const authForbiddenScope = await developerIdentity.authenticateKey(key.secret_key, 'node:rpc');
     expect(authForbiddenScope).toBeNull();
 
-    developerIdentity.revokeKey(key.key_id);
-    const authRevoked = developerIdentity.authenticateKey(key.secret_key);
+    await developerIdentity.revokeApiKey(owner, key.key_id);
+    const authRevoked = await developerIdentity.authenticateKey(key.secret_key);
     expect(authRevoked).toBeNull();
   });
 
   it('enforces SSRF protection blocking private, loopback, and metadata URLs', () => {
-    expect(developerIdentity.isBlockedUrl('http://127.0.0.1:8080/hook')).toBe(true);
-    expect(developerIdentity.isBlockedUrl('http://localhost:3000/webhook')).toBe(true);
-    expect(developerIdentity.isBlockedUrl('http://169.254.169.254/latest/meta-data/')).toBe(true);
-    expect(developerIdentity.isBlockedUrl('http://10.0.0.5/api')).toBe(true);
-    expect(developerIdentity.isBlockedUrl('http://192.168.1.100/hook')).toBe(true);
-    expect(developerIdentity.isBlockedUrl('https://api.external-auditor.org/webhook')).toBe(false);
+    expect(() => validateWebhookUrl('https://127.0.0.1:8080/hook')).toThrow(IdentityError);
+    expect(() => validateWebhookUrl('https://localhost:3000/webhook')).toThrow(IdentityError);
+    expect(() => validateWebhookUrl('https://169.254.169.254/latest/meta-data/')).toThrow(IdentityError);
+    expect(() => validateWebhookUrl('https://10.0.0.5/api')).toThrow(IdentityError);
+    expect(() => validateWebhookUrl('https://192.168.1.100/hook')).toThrow(IdentityError);
+    expect(() => validateWebhookUrl('http://api.external-auditor.org/webhook')).toThrow(IdentityError);
+    expect(validateWebhookUrl('https://api.external-auditor.org/webhook').hostname).toBe('api.external-auditor.org');
   });
 });

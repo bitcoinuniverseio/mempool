@@ -48,7 +48,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           </div>
           <div class="col-6 col-md-3">
             <select
-              class="form-select"
+              class="form-control"
               [(ngModel)]="transportFilter"
               (ngModelChange)="applyFilter()"
               aria-label="Filter by transport"
@@ -105,7 +105,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                 </td>
                 <td><code>{{ node.user_agent }}</code></td>
                 <td>{{ node.start_height | number }}</td>
-                <td>{{ node.latency_ms }} ms</td>
+                <td>{{ node.latency_ms >= 0 ? node.latency_ms + ' ms' : 'n/a' }}</td>
                 <td>
                   <span class="badge bg-secondary me-1" *ngIf="node.country_code">{{ node.country_code }}</span>
                   <span class="text-muted small" *ngIf="node.asn">AS{{ node.asn }}</span>
@@ -161,7 +161,7 @@ export class GlobalNetworkNodesComponent implements OnInit, OnDestroy {
           this.cd.markForCheck();
         },
         error: err => {
-          this.error = err?.message || 'Failed to load reachable nodes';
+          this.error = err?.error?.error || err?.message || 'Failed to load reachable nodes';
           this.loading = false;
           this.cd.markForCheck();
         },

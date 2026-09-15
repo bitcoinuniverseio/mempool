@@ -1,6 +1,15 @@
 import { Application, Request, Response } from 'express';
-import { payjoinService } from './payjoin.service';
+import { payjoinService, PayjoinUnavailableError } from './payjoin.service';
 import { handleError } from '../../../utils/api';
+
+/** An unconfigured directory list is a 503 that names the setting, never an invented directory. */
+function fail(req: Request, res: Response, e: unknown, fallback: string): void {
+  if (e instanceof PayjoinUnavailableError) {
+    res.status(e.status).json({ stage: e.code, error: e.message });
+    return;
+  }
+  handleError(req, res, 500, e instanceof Error ? e.message : fallback);
+}
 
 class PayjoinRoutes {
   public initRoutes(app: Application): void {
@@ -17,19 +26,19 @@ class PayjoinRoutes {
 
   private async $getOverview(req: Request, res: Response): Promise<void> {
     try {
-      const overview = payjoinService.getOverview();
+      const overview = await payjoinService.getOverview();
       res.json(overview);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch payjoin overview');
+      fail(req, res, e, 'Failed to fetch payjoin overview');
     }
   }
 
   private async $getDirectories(req: Request, res: Response): Promise<void> {
     try {
-      const dirs = payjoinService.getDirectories();
+      const dirs = await payjoinService.getDirectories();
       res.json(dirs);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch payjoin directories');
+      fail(req, res, e, 'Failed to fetch payjoin directories');
     }
   }
 

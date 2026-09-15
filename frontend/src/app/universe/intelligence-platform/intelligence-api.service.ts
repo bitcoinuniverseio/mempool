@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { StateService } from '@app/services/state.service';
+import { OwnerKeyService } from './owner-key.service';
 
 @Injectable({
   providedIn: 'root',
@@ -12,7 +13,8 @@ export class IntelligenceApiService {
 
   constructor(
     private httpClient: HttpClient,
-    private stateService: StateService
+    private stateService: StateService,
+    private ownerKey: OwnerKeyService,
   ) {
     if (!this.stateService.isBrowser && this.stateService.env) {
       this.apiBaseUrl =
@@ -148,16 +150,44 @@ export class IntelligenceApiService {
   }
 
   // Product 9: Developer Platform & Query Studio
-  getDeveloperKeys$(userId = 'dev-default'): Observable<any> {
-    return this.httpClient.get<any>(`${this.apiBaseUrl}/api/v1/intelligence/developer/keys?user_id=${encodeURIComponent(userId)}`);
+  //
+  // Owner-scoped calls carry the owner key as a bearer token. There is no
+  // user_id: the backend derives the owner from the key.
+  private get ownerHeaders() {
+    return { headers: this.ownerKey.headers() };
   }
 
-  generateDeveloperKey$(label: string, scopes: string[], userId = 'dev-default'): Observable<any> {
-    return this.httpClient.post<any>(`${this.apiBaseUrl}/api/v1/intelligence/developer/keys`, {
-      user_id: userId,
-      label,
-      scopes,
-    });
+  /** Creates a new owner and returns its first key, shown once. */
+  createOwner$(name: string): Observable<any> {
+    return this.httpClient.post<any>(`${this.apiBaseUrl}/api/v1/intelligence/developer/owners`, { name });
+  }
+
+  getDeveloperKeys$(): Observable<any> {
+    return this.httpClient.get<any>(`${this.apiBaseUrl}/api/v1/intelligence/developer/keys`, this.ownerHeaders);
+  }
+
+  generateDeveloperKey$(name: string, scopes: string[]): Observable<any> {
+    return this.httpClient.post<any>(`${this.apiBaseUrl}/api/v1/intelligence/developer/keys`, { name, scopes }, this.ownerHeaders);
+  }
+
+  revokeDeveloperKey$(keyId: string): Observable<any> {
+    return this.httpClient.delete<any>(`${this.apiBaseUrl}/api/v1/intelligence/developer/keys/${encodeURIComponent(keyId)}`, this.ownerHeaders);
+  }
+
+  getDeveloperUsage$(): Observable<any> {
+    return this.httpClient.get<any>(`${this.apiBaseUrl}/api/v1/intelligence/developer/usage`, this.ownerHeaders);
+  }
+
+  getWebhooks$(): Observable<any> {
+    return this.httpClient.get<any>(`${this.apiBaseUrl}/api/v1/intelligence/developer/webhooks`, this.ownerHeaders);
+  }
+
+  registerWebhook$(targetUrl: string, events: string[]): Observable<any> {
+    return this.httpClient.post<any>(`${this.apiBaseUrl}/api/v1/intelligence/developer/webhooks`, { target_url: targetUrl, events }, this.ownerHeaders);
+  }
+
+  getWebhookAttempts$(webhookId: string): Observable<any> {
+    return this.httpClient.get<any>(`${this.apiBaseUrl}/api/v1/intelligence/developer/webhooks/${encodeURIComponent(webhookId)}/attempts`, this.ownerHeaders);
   }
 
   executeDevQuery$(sql: string, maxRows = 100): Observable<any> {
@@ -171,17 +201,41 @@ export class IntelligenceApiService {
     return this.httpClient.get<any>(`${this.apiBaseUrl}/api/v1/intelligence/query/schema`);
   }
 
-  // Product 10: Watchlists
-  getWatchlists$(userId = 'user-default'): Observable<any> {
-    return this.httpClient.get<any>(`${this.apiBaseUrl}/api/v1/intelligence/watchlists?user_id=${encodeURIComponent(userId)}`);
+  // Product 10: Watchlists (owner-scoped)
+  getWatchlists$(): Observable<any> {
+    return this.httpClient.get<any>(`${this.apiBaseUrl}/api/v1/intelligence/watchlists`, this.ownerHeaders);
   }
 
-  createWatchlist$(name: string, privacyMode = 'blinded', userId = 'user-default'): Observable<any> {
-    return this.httpClient.post<any>(`${this.apiBaseUrl}/api/v1/intelligence/watchlists`, {
-      user_id: userId,
-      name,
-      privacy_mode: privacyMode,
-    });
+  createWatchlist$(name: string, privacyMode = 'blinded'): Observable<any> {
+    return this.httpClient.post<any>(`${this.apiBaseUrl}/api/v1/intelligence/watchlists`, { name, privacy_mode: privacyMode }, this.ownerHeaders);
+  }
+
+  deleteWatchlist$(watchlistId: string): Observable<any> {
+    return this.httpClient.delete<any>(`${this.apiBaseUrl}/api/v1/intelligence/watchlists/${encodeURIComponent(watchlistId)}`, this.ownerHeaders);
+  }
+
+  addWatchlistEntity$(watchlistId: string, entityType: string, raw: string, label: string): Observable<any> {
+    return this.httpClient.post<any>(`${this.apiBaseUrl}/api/v1/intelligence/watchlists/${encodeURIComponent(watchlistId)}/entities`, { entity_type: entityType, entity_raw_or_blinded: raw, label }, this.ownerHeaders);
+  }
+
+  addWatchlistRule$(watchlistId: string, conditionType: string, deliveryChannel: string, thresholdValue?: number, webhookId?: string): Observable<any> {
+    return this.httpClient.post<any>(`${this.apiBaseUrl}/api/v1/intelligence/watchlists/${encodeURIComponent(watchlistId)}/rules`, { condition_type: conditionType, delivery_channel: deliveryChannel, threshold_value: thresholdValue, webhook_id: webhookId }, this.ownerHeaders);
+  }
+
+  deleteWatchlistEntity$(watchlistId: string, entityId: string): Observable<any> {
+    return this.httpClient.delete<any>(`${this.apiBaseUrl}/api/v1/intelligence/watchlists/${encodeURIComponent(watchlistId)}/entities/${encodeURIComponent(entityId)}`, this.ownerHeaders);
+  }
+
+  deleteWatchlistRule$(watchlistId: string, ruleId: string): Observable<any> {
+    return this.httpClient.delete<any>(`${this.apiBaseUrl}/api/v1/intelligence/watchlists/${encodeURIComponent(watchlistId)}/rules/${encodeURIComponent(ruleId)}`, this.ownerHeaders);
+  }
+
+  getWatchlistNotifications$(): Observable<any> {
+    return this.httpClient.get<any>(`${this.apiBaseUrl}/api/v1/intelligence/watchlists/notifications`, this.ownerHeaders);
+  }
+
+  acknowledgeNotification$(notificationId: string): Observable<any> {
+    return this.httpClient.post<any>(`${this.apiBaseUrl}/api/v1/intelligence/watchlists/notifications/${encodeURIComponent(notificationId)}/ack`, {}, this.ownerHeaders);
   }
 
   // Product 11: Knowledge Registry

@@ -8,6 +8,7 @@ export interface GlobalNetworkSensor {
   v2_bip324_supported: boolean;
   addrv2_bip155_supported: boolean;
   last_probe_utc: string;
+  reachable_networks: string[];
 }
 
 export interface GlobalNetworkCrawlEpoch {
@@ -19,6 +20,8 @@ export interface GlobalNetworkCrawlEpoch {
   reachable_nodes: number;
   v2_nodes: number;
   status: 'running' | 'completed' | 'failed';
+  /** What the epoch actually covers. */
+  scope: string;
 }
 
 export interface GlobalNetworkObservation {
@@ -37,6 +40,8 @@ export interface GlobalNetworkObservation {
   country_code?: string;
   asn?: number;
   observed_at: string;
+  inbound: boolean;
+  network: string;
 }
 
 export interface GlobalNetworkDnsSeed {
@@ -46,7 +51,9 @@ export interface GlobalNetworkDnsSeed {
   active: boolean;
   last_query_at: string;
   discovered_addrs_count: number;
-  reachable_ratio: number;
+  /** Null: discovered addresses are not probed by this deployment. */
+  reachable_ratio: number | null;
+  error: string | null;
 }
 
 export interface GlobalNetworkSelfCheckRequest {
@@ -58,12 +65,15 @@ export interface GlobalNetworkSelfCheckResult {
   check_id: string;
   endpoint_address: string;
   port: number;
+  resolved_address: string;
   probed_from_region: string;
   reachable: boolean;
-  bip324_handshake: boolean;
-  latency_ms: number;
+  /** Null: only a TCP connection is attempted, not the Bitcoin handshake. */
+  bip324_handshake: boolean | null;
+  latency_ms: number | null;
   user_agent?: string;
   services?: number;
+  error: string | null;
   probed_at: string;
 }
 
@@ -77,7 +87,7 @@ export interface GlobalNetworkSnapshot {
   top_asns: { asn: number; org: string; count: number }[];
   top_clients: { client: string; count: number }[];
   geo_distribution: { country: string; count: number }[];
-  s3_path?: string;
+  scope: string;
 }
 
 export interface GlobalNetworkOverview {
@@ -88,6 +98,9 @@ export interface GlobalNetworkOverview {
   addrv2_adoption_percentage: number;
   top_user_agents: { agent: string; count: number; percentage: number }[];
   geographic_distribution: { country: string; count: number }[];
+  /** Null: no geolocation source is configured, so no country is claimed. */
+  geo_source: string | null;
   transport_breakdown: { transport: string; count: number }[];
+  node: { version: number; subversion: string; connections: number; connections_in: number | null; connections_out: number | null; reachable_networks: string[] };
   last_updated: string;
 }
