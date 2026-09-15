@@ -88,6 +88,7 @@ async function render(tab: string, result: any): Promise<string> {
     if (tab === 'script') component.scriptResult = result;
     if (tab === 'descriptor' || tab === 'taproot') component.descriptorResult = result;
     if (tab === 'simulate') component.simulationResult = result;
+    if (tab === 'transaction') component.transactionResult = result;
     if (tab === 'psbt') component.psbtResult = result;
     app.components[0].changeDetectorRef.detectChanges();
     return app;
@@ -95,6 +96,10 @@ async function render(tab: string, result: any): Promise<string> {
 }
 
 describe('Workbench rendered contract labels', () => {
+  it('renders selected-input failure without whole-transaction claims', async () => {
+    const html = await render('transaction', { results: [{ script_valid: false, error: 'signature failed' }], scope: 'Owned historical output context only', whole_transaction_valid: null, spendable_now: null });
+    expect(html).toContain('Selected input script failed'); expect(html).toContain('signature failed'); expect(html).toContain('Owned historical output context only'); expect(html).toContain('does not sign, broadcast, or establish present spendability');
+  });
   it('renders a failed native trace and its execution scope', async () => {
     const html = await render('simulate', { completed: true, script_succeeded: false, error: 'OP_VERIFY failed', scope: 'Standalone execution only', steps: [] });
     expect(html).toContain('Standalone script failed'); expect(html).toContain('OP_VERIFY failed'); expect(html).toContain('Standalone execution only');

@@ -1,4 +1,5 @@
-import { Component, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectionStrategy, ChangeDetectorRef, OnDestroy } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -16,10 +17,10 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
       <header class="page-header mb-4">
         <div class="title-row d-flex flex-wrap align-items-center justify-content-between gap-2">
           <h1 class="m-0">Off-Chain Recovery Planner</h1>
-          <span class="badge bg-warning text-dark">PSBT Integration</span>
+          <span class="badge bg-warning text-dark">Public Recovery Context</span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
-          Diagnose interrupted or abandoned statechains and CoinSwaps. Determine earliest unilateral exit heights, fee bump requirements, and generate recovery PSBT templates.
+          Review the public recovery context and required artifacts. Signed transactions and an owned-node verification are needed to establish spendability.
         </p>
 
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
@@ -39,7 +40,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
 
             <div class="mb-3">
               <label class="form-label small text-muted" for="offchain-recovery-protocol">Protocol Type</label>
-              <select class="form-control" id="offchain-recovery-protocol" [(ngModel)]="protocolType">
+              <select class="form-control" id="offchain-recovery-protocol" [(ngModel)]="protocolType" (ngModelChange)="clear()">
                 <option value="statechain">Mercury Statechain (Unilateral Exit)</option>
                 <option value="coinswap">Teleport CoinSwap (Timeout Refund)</option>
               </select>
@@ -47,12 +48,12 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
 
             <div class="mb-3">
               <label class="form-label small text-muted" for="offchain-recovery-txid">Funding txid</label>
-              <input type="text" class="form-control font-monospace small" id="offchain-recovery-txid" [(ngModel)]="txid" placeholder="64 hex characters" />
+              <input type="text" class="form-control font-monospace small" id="offchain-recovery-txid" [(ngModel)]="txid" (ngModelChange)="clear()" placeholder="64 hex characters" />
             </div>
 
             <div class="mb-3">
               <label class="form-label small text-muted" for="offchain-recovery-locktime">Locktime height</label>
-              <input type="number" class="form-control" id="offchain-recovery-locktime" [(ngModel)]="locktimeHeight" min="1" placeholder="block height" />
+              <input type="number" class="form-control" id="offchain-recovery-locktime" [(ngModel)]="locktimeHeight" (ngModelChange)="clear()" min="1" placeholder="block height" />
             </div>
 
             <button class="btn btn-primary w-100" (click)="generatePlan()" [disabled]="planning || !canPlan">
@@ -74,7 +75,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
 
             <div *ngIf="planning" class="text-center py-5 text-muted">
               <div class="spinner-border text-primary mb-2"></div>
-              <div>Analyzing current blockchain tip and locktime status...</div>
+              <div>Checking required recovery artifacts...</div>
             </div>
 
             <div *ngIf="plan">
@@ -114,7 +115,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
 
               <div class="d-flex gap-2">
                 <a [routerLink]="'/tools/workbench' | relativeUrl" class="btn btn-outline-primary btn-sm">
-                  Send to PSBT Workbench &rarr;
+                  Open PSBT Workbench &rarr;
                 </a>
               </div>
             </div>
@@ -128,7 +129,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
     .nav-link.active { background-color: var(--bs-primary); color: #fff; }
   `],
 })
-export class OffchainRecoveryComponent {
+export class OffchainRecoveryComponent implements OnDestroy {
   protocolType = 'statechain';
   txid = '';
   locktimeHeight: number | null = null;
@@ -145,12 +146,19 @@ export class OffchainRecoveryComponent {
     private cdr: ChangeDetectorRef
   ) {}
 
+  private request?: Subscription;
+  private generation = 0;
+  clear(): void { this.generation++; this.request?.unsubscribe(); this.plan = null; this.loadError = null; this.planning = false; this.cdr.markForCheck(); }
+  ngOnDestroy(): void { this.clear(); }
   generatePlan(): void {
+    this.clear();
+    if (!this.canPlan) return;
+    const generation = this.generation;
     this.planning = true;
     this.plan = null;
     this.loadError = null;
 
-    this.offchainApi
+    this.request = this.offchainApi
       .getRecoveryPlan$({
         protocol: this.protocolType,
         entity_id: this.txid.trim().toLowerCase(),
@@ -159,6 +167,7 @@ export class OffchainRecoveryComponent {
       })
       .subscribe({
         next: (res) => {
+          if (generation !== this.generation) return;
           this.plan = res;
           this.planning = false;
           this.cdr.markForCheck();
@@ -166,6 +175,7 @@ export class OffchainRecoveryComponent {
         // A request that failed has no plan; the earlier revision answered it
         // with an invented schedule and a constant PSBT.
         error: (err) => {
+          if (generation !== this.generation) return;
           this.planning = false;
           this.plan = null;
           this.loadError = err?.error?.error || loadFailureMessage(classifyLoadFailure(err));

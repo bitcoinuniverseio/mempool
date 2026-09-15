@@ -89,9 +89,13 @@ export class OffchainApiService {
 
   verifyStatechainTransfer$(pkg: any): Observable<any> {
     return this.httpClient.post<any>(
-      `${this.apiBaseUrl}/api/v1/intelligence/offchain/manifests/verify`,
+      `${this.apiBaseUrl}/api/v1/intelligence/offchain/statechain/verify`,
       pkg
     );
+  }
+
+  verifyCoinswapPackage$(pkg: any): Observable<any> {
+    return this.httpClient.post<any>(`${this.apiBaseUrl}/api/v1/intelligence/offchain/coinswap/verify`, pkg);
   }
 
   getRecoveryPlan$(context: any): Observable<any> {

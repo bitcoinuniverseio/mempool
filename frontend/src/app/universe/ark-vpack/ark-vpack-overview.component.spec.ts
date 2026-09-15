@@ -23,6 +23,7 @@ describe('Ark V-PACK implementation response contract', () => {
 
   function render(supported_implementations: unknown) {
     TestBed.configureTestingModule({ providers: [provideRouter([]), { provide: ArkVpackApiService, useValue: {
+      networkChanges$: of('signet'),
       getOverview$: () => of({ total_vpack_versions: 1, active_providers_count: 0, recent_verified_anchors: 0,
         supported_implementations, providers: [], active_versions: ['v0.1.0-mvv'] }),
     } }] });

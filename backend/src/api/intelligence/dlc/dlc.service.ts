@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+import { verifyAnnouncement, verifyAttestation } from './oracle-verification';
 import {
   DlcOracle,
   DlcOracleAnnouncement,
@@ -76,79 +76,9 @@ export class DlcService {
     throw new DlcEvidenceError('unavailable-oracle-registry', oracleRegistryUnavailable);
   }
 
-  public verifyAnnouncement(data: {
-    oracle_public_key: string;
-    event_id: string;
-    event_descriptor: any;
-    event_maturity_epoch: number;
-    nonces: string[];
-    announcement_signature: string;
-  }): {
-    verified: boolean;
-    announcement_id: string;
-    payload_hash: string;
-    errors: string[];
-  } {
-    const errors: string[] = [];
+  public verifyAnnouncement(data: unknown) { return verifyAnnouncement(data); }
 
-    if (!data.oracle_public_key || data.oracle_public_key.length < 64) {
-      errors.push('Invalid oracle public key length');
-    }
-    if (!data.event_id || data.event_id.trim().length === 0) {
-      errors.push('Event ID is required');
-    }
-    if (!data.nonces || data.nonces.length === 0) {
-      errors.push('At least one nonce point is required');
-    }
-
-    // Check for duplicate nonces
-    const nonceSet = new Set(data.nonces);
-    if (nonceSet.size !== (data.nonces ? data.nonces.length : 0)) {
-      errors.push('Duplicate nonce points detected in announcement');
-    }
-
-    const payloadString = `${data.oracle_public_key}:${data.event_id}:${data.event_maturity_epoch}:${(data.nonces || []).join(',')}`;
-    const payload_hash = crypto.createHash('sha256').update(payloadString).digest('hex');
-    const announcement_id = `ann-${payload_hash.substring(0, 16)}`;
-
-    const verified = errors.length === 0 && Boolean(data.announcement_signature);
-
-    return {
-      verified,
-      announcement_id,
-      payload_hash,
-      errors,
-    };
-  }
-
-  public verifyAttestation(data: {
-    announcement_id: string;
-    oracle_public_key: string;
-    event_id: string;
-    outcomes: string[];
-    signatures: string[];
-  }): {
-    verified: boolean;
-    attestation_id: string;
-    has_conflict: boolean;
-    errors: string[];
-  } {
-    const errors: string[] = [];
-
-    if (data.outcomes.length !== data.signatures.length) {
-      errors.push('Outcome count must match signature count exactly');
-    }
-
-    const attestation_id = `att-${crypto.randomBytes(8).toString('hex')}`;
-    const verified = errors.length === 0 && (data.signatures || []).length > 0;
-
-    return {
-      verified,
-      attestation_id,
-      has_conflict: false,
-      errors,
-    };
-  }
+  public verifyAttestation(data: unknown) { return verifyAttestation(data); }
 
   public verifyContractPackage(pkg: Partial<DlcContractPackage>): {
     valid: boolean;

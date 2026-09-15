@@ -54,16 +54,16 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
               <div class="mt-auto">
                 <div class="d-flex justify-content-between py-1 border-bottom">
                   <span class="text-muted small">Reserve:</span>
-                  <span class="fw-semibold">{{ (p.total_reserve_sats / 100000000).toFixed(2) | number }} BTC</span>
+                  <span class="fw-semibold">{{ p.total_reserve_sats == null ? 'Unknown' : (p.total_reserve_sats / 100000000).toFixed(2) + ' BTC' }}</span>
                 </div>
                 <div class="d-flex justify-content-between py-1 border-bottom">
                   <span class="text-muted small">Liability:</span>
-                  <span class="fw-semibold">{{ (p.total_liability_sats / 100000000).toFixed(2) | number }} BTC</span>
+                  <span class="fw-semibold">{{ p.total_liability_sats == null ? 'Unknown' : (p.total_liability_sats / 100000000).toFixed(2) + ' BTC' }}</span>
                 </div>
                 <div class="d-flex justify-content-between py-1 border-bottom">
                   <span class="text-muted small">Solvency:</span>
-                  <span class="fw-bold" [ngClass]="p.solvency_ratio_percentage >= 100 ? 'text-success' : 'text-danger'">
-                    {{ p.solvency_ratio_percentage }}%
+                  <span class="fw-bold" [ngClass]="p.solvency_ratio_percentage == null ? 'bg-secondary' : p.solvency_ratio_percentage >= 100 ? 'text-success' : 'text-danger'">
+                    {{ p.solvency_ratio_percentage == null ? 'Not established' : p.solvency_ratio_percentage + '%' }}
                   </span>
                 </div>
                 <div class="d-flex justify-content-between py-1 mb-3">

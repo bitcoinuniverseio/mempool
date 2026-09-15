@@ -16,12 +16,12 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
       <header class="page-header mb-4">
         <div class="title-row d-flex flex-wrap align-items-center justify-content-between gap-2">
           <h1 class="m-0">{{ provider ? provider.name : 'Provider Detail' }}</h1>
-          <span class="badge" *ngIf="provider" [ngClass]="provider.solvency_ratio_percentage >= 100 ? 'bg-success' : 'bg-danger'">
-            {{ provider.solvency_ratio_percentage }}% Solvency
+          <span class="badge" *ngIf="provider" [ngClass]="provider.solvency_ratio_percentage == null ? 'bg-secondary' : provider.solvency_ratio_percentage >= 100 ? 'bg-success' : 'bg-danger'">
+            {{ provider.solvency_ratio_percentage == null ? 'Not established' : provider.solvency_ratio_percentage + '%' }} Solvency
           </span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
-          Detailed cryptographic proof record and historical solvency snapshots for {{ provider?.name || 'this provider' }}.
+          Configured provider identity and available signed root evidence for {{ provider?.name || 'this provider' }}.
         </p>
 
         <!-- Navigation Tabs -->
@@ -47,14 +47,14 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           <div class="col-12 col-md-4">
             <div class="card p-3 bg-body-tertiary border h-100">
               <div class="text-muted small">Total Reserves</div>
-              <div class="h4 my-1 text-primary">{{ (provider.total_reserve_sats / 100000000).toFixed(2) | number }} BTC</div>
-              <div class="small text-muted">Verified UTXOs</div>
+              <div class="h4 my-1 text-primary">{{ provider.total_reserve_sats == null ? 'Unknown' : (provider.total_reserve_sats / 100000000).toFixed(2) + ' BTC' }}</div>
+              <div class="small text-muted">Verified UTXO evidence required</div>
             </div>
           </div>
           <div class="col-12 col-md-4">
             <div class="card p-3 bg-body-tertiary border h-100">
               <div class="text-muted small">Total Liabilities</div>
-              <div class="h4 my-1 text-secondary">{{ (provider.total_liability_sats / 100000000).toFixed(2) | number }} BTC</div>
+              <div class="h4 my-1 text-secondary">{{ provider.total_liability_sats == null ? 'Unknown' : (provider.total_liability_sats / 100000000).toFixed(2) + ' BTC' }}</div>
               <div class="small text-muted">Attested liabilities</div>
             </div>
           </div>
@@ -86,11 +86,11 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
               <tbody>
                 <tr *ngFor="let s of snapshots">
                   <td class="font-monospace fw-semibold">{{ s.snapshot_id }}</td>
-                  <td>{{ s.block_height }}</td>
+                  <td>{{ s.block_height ?? 'Unknown' }}</td>
                   <td class="text-muted small">{{ s.timestamp_utc | date:'medium' }}</td>
-                  <td class="text-end">{{ (s.total_reserve_sats / 100000000).toFixed(2) | number }} BTC</td>
-                  <td class="text-end">{{ (s.total_liability_sats / 100000000).toFixed(2) | number }} BTC</td>
-                  <td class="text-end fw-bold text-success">{{ (s.solvency_ratio * 100).toFixed(2) }}%</td>
+                  <td class="text-end">{{ s.total_reserve_sats == null ? 'Unknown' : (s.total_reserve_sats / 100000000).toFixed(2) + ' BTC' }}</td>
+                  <td class="text-end">{{ s.total_liability_sats == null ? 'Unknown' : (s.total_liability_sats / 100000000).toFixed(2) + ' BTC' }}</td>
+                  <td class="text-end fw-bold text-success">{{ s.solvency_ratio == null ? 'Not established' : (s.solvency_ratio * 100).toFixed(2) + '%' }}</td>
                   <td class="text-end">
                     <a class="btn btn-sm btn-outline-primary" [routerLink]="['/intelligence/reserves/snapshot' | relativeUrl, s.snapshot_id]">
                       Inspect Proof

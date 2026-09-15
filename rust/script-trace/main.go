@@ -37,4 +37,3 @@ func trace(input Input) (Result,error) {
  r.Error="trace step limit reached";return r,nil
 }
 func main(){if len(os.Args)>1&&os.Args[1]=="--transactions"{transactionMain();return};var input Input;if err:=json.NewDecoder(io.LimitReader(os.Stdin,65537)).Decode(&input);err!=nil{fmt.Println(`{"error":"invalid request"}`);os.Exit(2)};result,err:=trace(input);if err!=nil {json.NewEncoder(os.Stdout).Encode(map[string]string{"error":err.Error()});os.Exit(2)};json.NewEncoder(os.Stdout).Encode(result)}
-

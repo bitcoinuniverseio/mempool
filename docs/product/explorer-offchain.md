@@ -36,3 +36,11 @@ The Statechain, CoinSwap, and Off-Chain UTXO Recovery Center provides an observa
 - `GET /api/v1/intelligence/offchain/offers`: Public CoinSwap maker offers and liquidity parameters.
 - `POST /api/v1/intelligence/offchain/manifests/verify`: Cryptographic verification of signed operator manifests.
 - `POST /api/v1/intelligence/offchain/recovery/context`: Calculation of broadcast readiness and fee requirements.
+
+## Forensic BE038 / UI-F12 correction
+
+Statechain and CoinSwap inspector results now come from real signed transaction execution and an owned Bitcoin Core header/UTXO checkpoint. The supported public profiles, exact protocol limits, isolated-node reproduction and test evidence are documented in [offchain proof tooling](../../tools/offchain-proof/README.md).
+
+The statechain page verifies fully signed Taproot Bitcoin backup sequences. Mercury transfer ownership, key rotation and operator counts remain unverified. The CoinSwap page verifies actual Teleport P2WSH contract and timeout-refund signatures, hash commitments and relative CSV delays. Full route recovery safety remains open because it also depends on per-contract confirmation ages and protocol state. Neither page nor the identifier-only recovery planner authorizes a broadcast. Caller heights can never create a recoverable verdict.
+
+Public packages are transmitted to this explorer backend; wallet secrets are not inputs. Unknown fields are rejected before transmission. The signed sample is synthetic regtest and requires its matching isolated owned node. Missing or wrong-network sources show errors; numeric-only legacy samples are not marked valid.
