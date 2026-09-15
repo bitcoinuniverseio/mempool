@@ -10,6 +10,10 @@ import {
   ConsensusLabOverview,
 } from './consensus.models';
 
+export class ConsensusEvidenceError extends Error {
+  constructor(public readonly code: string, message: string, public readonly status = 503) { super(message); }
+}
+
 export class ConsensusService {
   private static instance: ConsensusService;
   private eventBus = IntelligenceEventBus.getInstance();
@@ -99,7 +103,8 @@ export class ConsensusService {
         proposal_target: 'bip-119',
         hot_key_threshold: 1,
         recovery_delay_blocks: 144,
-        auto_cancel_available: true,
+        auto_cancel_available: false,
+        execution_scope: 'Static hypothetical design only; vault signing, cancellation and recovery execution are unavailable.',
       },
       {
         template_id: 'vault-cat-recursive',
@@ -109,7 +114,8 @@ export class ConsensusService {
         proposal_target: 'bip-347',
         hot_key_threshold: 2,
         recovery_delay_blocks: 288,
-        auto_cancel_available: true,
+        auto_cancel_available: false,
+        execution_scope: 'Static hypothetical design only; vault signing, cancellation and recovery execution are unavailable.',
       },
     ];
   }
@@ -129,7 +135,8 @@ export class ConsensusService {
       })),
       featured_proposals: props,
       vault_templates: this.vaultTemplates,
-      last_updated: new Date().toISOString(),
+      last_updated: null,
+      source_basis: 'Static reference catalog; source observation time and deployed vault capabilities are not established.',
     };
   }
 
@@ -148,7 +155,7 @@ export class ConsensusService {
   public simulateCovenant(
     req: CovenantSimulationRequest
   ): CovenantSimulationResult {
-    if (!req.proposal_id) {
+    if (!req || typeof req !== 'object' || typeof req.proposal_id !== 'string' || !req.proposal_id) {
       throw new Error('proposal_id is required for covenant simulation.');
     }
 
@@ -160,7 +167,7 @@ export class ConsensusService {
     }
 
     if (req.proposal_id !== 'bip-119')
-      throw new Error(
+      throw new ConsensusEvidenceError('unavailable-covenant-engine',
         'This endpoint currently checks bare BIP119 commitments. Complete hypothetical OP_CAT and OP_CHECKCONTRACTVERIFY interpreters are not yet connected.'
       );
     const evidence = checkBareCtv(

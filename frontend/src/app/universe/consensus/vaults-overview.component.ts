@@ -69,7 +69,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
             </div>
 
             <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
-              <span class="small text-success" *ngIf="t.auto_cancel_available">&check; Emergency Clawback Active</span>
+              <span class="small text-muted">{{ t.execution_scope }}</span>
               <a [routerLink]="'/labs/vaults/designer' | relativeUrl" class="btn btn-sm btn-outline-primary">
                 Open in Designer
               </a>

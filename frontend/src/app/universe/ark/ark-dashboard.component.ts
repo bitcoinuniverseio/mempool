@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { BehaviorSubject, Observable, catchError, combineLatest, map, of } from 'rxjs';
+import { Observable, Subject, catchError, forkJoin, map, of, startWith, switchMap, distinctUntilChanged, takeUntil } from 'rxjs';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
+import { StateService } from '@app/services/state.service';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
@@ -29,34 +30,31 @@ interface ArkViewModel {
   imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ArkDashboardComponent implements OnInit {
+export class ArkDashboardComponent implements OnInit, OnDestroy {
   // Templates format raw strings through the Number global; AOT needs it bound.
   protected readonly Number = Number;
-  private readonly state = new BehaviorSubject<ArkViewModel>({ kind: 'loading' });
-  readonly vm$: Observable<ArkViewModel> = this.state.asObservable();
+  private readonly destroyed = new Subject<void>();
+  vm$: Observable<ArkViewModel>;
 
   constructor(
     private api: UniverseApiService,
     private seo: SeoService,
+    private networkState: StateService,
   ) {
     this.seo.setTitle('Arkade / Ark VTXO & Exit Explorer');
   }
 
   ngOnInit(): void {
-    // No per-read fallback: an operator or batch table the source could not
-    // answer is an error with its reason, not an empty table. The revision
-    // this replaces also inspected a VTXO by a fixed invented ID and labelled
-    // its exit proof verified; nothing here names a VTXO the source did not.
-    combineLatest([
-      this.api.getArkOperators$(),
-      this.api.getArkBatches$(),
+    this.vm$ = this.networkState.networkChanged$.pipe(startWith(this.networkState.network), distinctUntilChanged(), switchMap(() => forkJoin([
+      this.api.getArkOperators$(), this.api.getArkBatches$(),
     ]).pipe(
-      map(([opsData, batchesData]): ArkViewModel => ({
-        kind: 'ready',
-        operators: opsData.operators,
-        batches: batchesData.batches,
-      })),
-      catchError((error) => of<ArkViewModel>({ kind: 'error', message: loadFailureMessage(classifyLoadFailure(error)) })),
-    ).subscribe((vm) => this.state.next(vm));
+      map(([opsData, batchesData]): ArkViewModel => {
+        if (!Array.isArray(opsData?.operators) || !Array.isArray(batchesData?.batches)) throw Error('Malformed Ark operator or batch response.');
+        return {kind: 'ready', operators: opsData.operators, batches: batchesData.batches};
+      }),
+      catchError(error => of<ArkViewModel>({kind: 'error', message: error?.error?.error || loadFailureMessage(classifyLoadFailure(error))})),
+      startWith<ArkViewModel>({kind:'loading'}),
+    )), takeUntil(this.destroyed));
   }
+  ngOnDestroy(): void {this.destroyed.next();this.destroyed.complete();}
 }

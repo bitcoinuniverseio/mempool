@@ -1,3 +1,4 @@
+import { blockspaceValue, blockspaceShare, blockspaceBtc } from './blockspace-format';
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -51,14 +52,14 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           </div>
           <div class="col-12 col-sm-6 col-lg-3">
             <div class="card p-3 h-100 bg-body-tertiary border">
-              <div class="text-muted small">Median Feerate (24h)</div>
-              <div class="h4 my-1 text-success">{{ overview.median_feerate_24h }} sat/vB</div>
-              <div class="small text-muted">{{ overview.window?.covers_24h ? 'Rolling 24-hour window' : 'Observed blocks ' + overview.window?.from_height + ' to ' + overview.window?.to_height + ' (window still filling)' }}</div>
+              <div class="text-muted small">Median of Observed Block Medians</div>
+              <div class="h4 my-1 text-success">{{ value(overview.median_feerate_24h, 'sat/vB') }}</div>
+              <div class="small text-muted">{{ overview.window?.covers_24h === true ? 'Linked observed blocks span 24 hours relative to the observed tip timestamp' : overview.window?.covers_24h === null ? 'Full window coverage is unknown' : 'Partial observed window' }}. Blocks {{ overview.window?.from_height }}–{{ overview.window?.to_height }}. Observed {{ overview.last_updated | date:'medium' }}.</div>
             </div>
           </div>
           <div class="col-12 col-sm-6 col-lg-3">
             <div class="card p-3 h-100 bg-body-tertiary border">
-              <div class="text-muted small">Primary Demand Driver</div>
+              <div class="text-muted small">Observed Fee Band</div>
               <div class="h6 my-1 text-info">
                 {{ overview.current_regime?.primary_demand_driver || 'not yet observed' }}
               </div>
@@ -76,8 +77,8 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
 
         <!-- Semantic Classes Breakdown -->
         <section class="card p-4 bg-body-tertiary border mb-4">
-          <h2 class="h5 mb-3">Semantic Blockspace Consumption (24h)</h2>
-          <div class="table-responsive" tabindex="0" role="region" aria-label="Semantic Blockspace Consumption (24h), scroll horizontally" i18n-aria-label>
+          <h2 class="h5 mb-3">Observed Blockspace Consumption</h2>
+          <div class="table-responsive" tabindex="0" role="region" aria-label="Observed Blockspace Consumption, scroll horizontally" i18n-aria-label>
             <table class="table table-hover align-middle mb-0">
               <thead>
                 <tr>
@@ -85,7 +86,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                   <th>Category</th>
                   <th class="text-end">Weight Share</th>
                   <th class="text-end">Fee Share</th>
-                  <th class="text-end">24h Tx Count</th>
+                  <th class="text-end">Observed Tx Count</th>
                 </tr>
               </thead>
               <tbody>
@@ -104,8 +105,8 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                       {{ c.category }}
                     </span>
                   </td>
-                  <td class="text-end fw-semibold">{{ c.weight_share_percentage }}%</td>
-                  <td class="text-end fw-semibold">{{ c.fee_share_percentage }}%</td>
+                  <td class="text-end fw-semibold">{{ value(c.weight_share_percentage, '%') }}</td>
+                  <td class="text-end fw-semibold">{{ value(c.fee_share_percentage, '%') }}</td>
                   <td class="text-end text-muted">{{ c.tx_count_24h | number }}</td>
                 </tr>
               </tbody>
@@ -133,11 +134,11 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                 <tr *ngFor="let p of overview.composition_timeseries">
                   <td class="fw-bold">{{ p.block_height }}</td>
                   <td class="text-muted small">{{ p.timestamp_utc | date:'short' }}</td>
-                  <td class="text-end">{{ p.total_weight | number }} WU</td>
-                  <td class="text-end">{{ (p.total_fee_sats / 100000000).toFixed(4) }} BTC</td>
-                  <td class="text-end">{{ ((p.monetary_weight / p.total_weight) * 100).toFixed(1) }}%</td>
-                  <td class="text-end">{{ ((p.arbitrary_data_weight / p.total_weight) * 100).toFixed(1) }}%</td>
-                  <td class="text-end">{{ ((p.layer2_weight / p.total_weight) * 100).toFixed(1) }}%</td>
+                  <td class="text-end">{{ value(p.total_weight, 'WU') }}</td>
+                  <td class="text-end">{{ btc(p.total_fee_sats) }}</td>
+                  <td class="text-end">{{ share(p.monetary_weight, p.total_weight) }}</td>
+                  <td class="text-end">{{ share(p.arbitrary_data_weight, p.total_weight) }}</td>
+                  <td class="text-end">{{ share(p.layer2_weight, p.total_weight) }}</td>
                 </tr>
               </tbody>
             </table>
@@ -164,18 +165,17 @@ export class BlockspaceOverviewComponent implements OnInit, OnDestroy {
     private cd: ChangeDetectorRef,
   ) {}
 
+  readonly value = blockspaceValue;
+  readonly share = blockspaceShare;
+  readonly btc = blockspaceBtc;
+
   public ngOnInit(): void {
-    this.sub = this.blockspaceApi.getOverview().subscribe({
-      next: (data) => {
-        this.overview = data;
-        this.loading = false;
-        this.cd.markForCheck();
-      },
-      error: (err) => {
-        this.error = err?.error?.error || err?.message || 'Failed to load blockspace overview';
-        this.loading = false;
-        this.cd.markForCheck();
-      },
+    this.sub?.unsubscribe();
+    this.sub = this.blockspaceApi.watch(() => this.blockspaceApi.getOverview()).subscribe(state => {
+      this.overview = state.kind === 'ready' ? state.data : null;
+      this.loading = state.kind === 'loading';
+      this.error = state.kind === 'error' ? state.error : '';
+      this.cd.markForCheck();
     });
   }
 
