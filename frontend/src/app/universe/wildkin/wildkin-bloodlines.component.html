@@ -9,7 +9,7 @@
     </nav>
     <h1>Wildkin Bloodlines & Braid Ceremonies</h1>
     <p class="summary">
-      Dual-parent inscription provenance, inheritance commitments, and lifetime reproduction limits enforced on-chain.
+      Dual-parent inscription provenance, inheritance commitments, and source-reported reproduction limits.
     </p>
   </header>
 
@@ -31,7 +31,7 @@
 
     <ng-container *ngIf="vm.kind === 'ready'">
       <section class="panel">
-        <h2>Settled Braid Ceremonies</h2>
+        <h2>Reported Braid Ceremonies</h2>
         <p>
           A transaction is a valid braid when it spends the binding UTXO of both named parents, commits the inheritance manifest hash, and inscribes exactly one heir creature as a child of both parents.
         </p>
@@ -56,7 +56,7 @@
               <td class="mono"><a [routerLink]="['/wildkin/creature' | relativeUrl, b.parentBId]">{{ b.parentBId }}</a></td>
               <td class="mono">{{ b.inheritanceManifestHash.slice(0, 14) }}...</td>
               <td>{{ b.blockHeight }}</td>
-              <td><span class="badge badge-success">Valid Braid</span></td>
+              <td><span class="badge" [class.badge-success]="b.valid === true" [class.badge-danger]="b.valid === false">{{ braidVerdict(b.valid) }}</span></td>
             </tr>
           </tbody>
         </table>
