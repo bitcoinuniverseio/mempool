@@ -121,7 +121,7 @@ export class BlockspaceCompareComponent implements OnInit, OnDestroy {
         this.cd.markForCheck();
       },
       error: (err) => {
-        this.error = err?.message || 'Failed to load regimes for comparison';
+        this.error = err?.error?.error || err?.message || 'Failed to load regimes for comparison';
         this.loading = false;
         this.cd.markForCheck();
       },

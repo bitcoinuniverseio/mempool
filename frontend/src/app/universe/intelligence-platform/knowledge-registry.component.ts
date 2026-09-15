@@ -13,16 +13,16 @@ import { IntelligenceApiService } from './intelligence-api.service';
     <div class="intelligence-page container-xl">
       <header class="page-header">
         <div class="title-row">
-          <h1>Evidence-Backed Labels & Public Knowledge Registry</h1>
+          <h1>Knowledge Registry</h1>
           <span class="badge badge-success" *ngIf="labels.length > 0">
-            {{ verifiedCount }} Verified Attributions
+            {{ verifiedCount }} verified
           </span>
           <span class="badge badge-secondary" *ngIf="loading">
-            Loading Knowledge Registry...
+            Loading...
           </span>
         </div>
         <p class="subtitle">
-          Transparent public label registry where every entity attribution is backed by immutable cryptographic proof, on-chain signatures, or verifiable disclosures.
+          Entity labels with the evidence behind each one.
         </p>
       </header>
 
@@ -33,12 +33,12 @@ import { IntelligenceApiService } from './intelligence-api.service';
       <!-- Labels Grid -->
       <section class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-          <h4 class="mb-0">Entity Labels</h4>
+          <h4 class="mb-0">Labels <span class="text-muted small fw-normal" *ngIf="labels.length">{{ filteredLabels.length | number }} of {{ labels.length | number }}</span></h4>
           <div class="d-flex gap-2 align-items-center">
             <input
               type="text"
               class="form-control form-control-sm"
-              placeholder="Filter labels or addresses..."
+              placeholder="Filter"
               [(ngModel)]="searchFilter"
               aria-label="Filter labels"
             />
@@ -46,7 +46,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
         </div>
 
         <div *ngIf="!loading && filteredLabels.length === 0 && !loadError" class="p-4 text-center text-muted">
-          No entity labels match the selected criteria.
+          No label matches.
         </div>
 
         <div class="table-responsive" *ngIf="filteredLabels.length > 0" tabindex="0" role="region" aria-label="Entity Labels, scroll horizontally" i18n-aria-label>
@@ -63,7 +63,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let label of filteredLabels">
+              <tr *ngFor="let label of filteredLabels | slice:0:visibleCount">
                 <td class="fw-bold">{{ label.name }}</td>
                 <td class="font-monospace small text-break">{{ label.entity_id }}</td>
                 <td><span class="badge badge-secondary text-uppercase">{{ label.category }}</span></td>
@@ -98,6 +98,9 @@ import { IntelligenceApiService } from './intelligence-api.service';
               </tr>
             </tbody>
           </table>
+        </div>
+        <div class="p-2 text-center" *ngIf="filteredLabels.length > visibleCount">
+          <button type="button" class="btn btn-sm btn-outline-secondary" (click)="showMore()">Show more ({{ filteredLabels.length - visibleCount | number }} left)</button>
         </div>
       </section>
 
@@ -176,6 +179,10 @@ export class KnowledgeRegistryComponent implements OnInit, OnDestroy {
 
   private subs: Subscription[] = [];
 
+  visibleCount = 50;
+
+  showMore(): void { this.visibleCount += 100; }
+
   get verifiedCount(): number {
     return this.labels.filter((l) => l.status === 'verified').length;
   }
@@ -206,7 +213,7 @@ export class KnowledgeRegistryComponent implements OnInit, OnDestroy {
           this.cdr.markForCheck();
         },
         error: (err) => {
-          this.loadError = err?.message || 'Failed to fetch knowledge labels';
+          this.loadError = err?.error?.error || err?.message || 'Failed to fetch knowledge labels';
           this.loading = false;
           this.cdr.markForCheck();
         },

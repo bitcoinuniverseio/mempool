@@ -33,6 +33,9 @@ export interface BlockspaceRegimeEvent {
 export interface BlockspaceTxEvidence {
   txid: string;
   primary_class: string;
+  class_id: string;
+  confirmed: boolean;
+  block_height: number | null;
   secondary_tags: string[];
   weight: number;
   fee_sats: number;
@@ -41,9 +44,12 @@ export interface BlockspaceTxEvidence {
 }
 
 export interface BlockspaceOverview {
-  current_regime: BlockspaceRegimeEvent;
+  network: string;
+  current_regime: BlockspaceRegimeEvent | null;
   median_feerate_24h: number;
   taxonomy_classes: BlockspaceSemanticClass[];
   composition_timeseries: BlockspaceCompositionPoint[];
+  window: { blocks: number; from_height: number; to_height: number; covers_24h: boolean };
+  checkpoint: { height: number; hash: string };
   last_updated: string;
 }

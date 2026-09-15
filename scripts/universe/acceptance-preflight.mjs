@@ -4,10 +4,21 @@ import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 
 const root = resolve(import.meta.dirname, '../..');
-const origin = 'http://localhost:4310';
+// --origin and --network point the probes at the gateway under test; the
+// network becomes the route prefix the gateway expects (/signet/api/...).
+// Without them the historic local candidate defaults apply.
+const args = process.argv.slice(2);
+const option = (name, fallback) => {
+  const index = args.indexOf(name);
+  return index === -1 ? fallback : args[index + 1];
+};
+const positional = args.filter((value, index) => !value.startsWith('--') && (index === 0 || !args[index - 1].startsWith('--')));
+const origin = option('--origin', 'http://localhost:4310').replace(/\/$/, '');
+const network = option('--network', '');
+const prefix = network && network !== 'mainnet' ? `/${network}` : '';
 const probes = [];
 // Invalid detail IDs exercise transport only. They are never authority fixtures.
-for (const path of [
+for (const bare of [
   '/__gateway/health', '/api/v1/__acceptance', '/api/v1/backend-info',
   '/api/v1/capabilities', '/api/v1/universe/status',
   '/api/v1/anima/status', '/api/v1/anima/events?from=0&limit=1',
@@ -16,6 +27,7 @@ for (const path of [
   '/api/v1/anima/organisms/invalid-acceptance-identity',
   '/api/v1/anima/organisms/invalid-acceptance-identity/history?limit=1',
 ]) {
+  const path = bare.startsWith('/__gateway') ? bare : prefix + bare;
   try {
     const response = await fetch(origin + path, { signal: AbortSignal.timeout(12000), headers: { accept: 'application/json' } });
     const body = await response.text();
@@ -32,7 +44,7 @@ for (const path of [
 }
 const sourcePaths = ['scripts/universe/gateway.mjs', 'scripts/universe/acceptance-server.cjs'];
 const report = {
-  checkedAt: new Date().toISOString(), origin,
+  checkedAt: new Date().toISOString(), origin, network: network || 'mainnet',
   revision: execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim(),
   scope: 'Actual candidate gateway with isolated compiled parser/swap handlers; no indexer, chain authority or database configured.',
   source: sourcePaths.map(path => ({ path, sha256: createHash('sha256').update(readFileSync(resolve(root, path))).digest('hex') })),
@@ -46,5 +58,5 @@ const report = {
     'PRE-06': 'Universe CI triggers self-hosted jobs on develop/main push and pull requests. No push, PR, workflow or deployment invoked.',
   },
 };
-writeFileSync(resolve(root, process.argv[2] || 'docs/acceptance/preflight-2026-09-06.json'), JSON.stringify(report, null, 2) + '\n');
+writeFileSync(resolve(root, positional[0] || 'docs/acceptance/preflight-2026-09-06.json'), JSON.stringify(report, null, 2) + '\n');
 console.log(JSON.stringify({ origin, probes: probes.map(({path,status,contract}) => ({path,status,contract})), realNetworkE2ePasses: 0 }));

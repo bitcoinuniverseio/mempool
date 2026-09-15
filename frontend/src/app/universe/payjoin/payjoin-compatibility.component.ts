@@ -110,7 +110,7 @@ export class PayjoinCompatibilityComponent implements OnInit, OnDestroy {
           this.cd.markForCheck();
         },
         error: err => {
-          this.error = err?.message || 'Failed to load compatibility';
+          this.error = err?.error?.error || err?.message || 'Failed to load compatibility';
           this.loading = false;
           this.cd.markForCheck();
         },

@@ -14,6 +14,7 @@ import { KnowledgeRegistryComponent } from './knowledge-registry.component';
 import { DeveloperPlatformComponent } from './developer-platform.component';
 import { QueryStudioComponent } from './query-studio.component';
 import { WatchlistsComponent } from './watchlists.component';
+import { OwnerKeyService } from './owner-key.service';
 import { ProtocolExplorerComponent } from './protocol-explorer.component';
 
 describe('Unified Intelligence Platform Frontend Services', () => {
@@ -47,7 +48,16 @@ describe('Unified Intelligence Platform Frontend Services', () => {
         return of({ labels: [{ name: 'Exchange A', status: 'verified', confidence_level: 3 }] });
       }
       if (url.includes('/developer/keys')) {
-        return of({ keys: [], usage: { monthly_requests: 100 } });
+        return of({ keys: [] });
+      }
+      if (url.includes('/developer/webhooks')) {
+        return of({ webhooks: [] });
+      }
+      if (url.includes('/developer/usage')) {
+        return throwError(() => ({ status: 503, error: { error: 'usage metrics unavailable' } }));
+      }
+      if (url.includes('/watchlists/notifications')) {
+        return of({ notifications: [] });
       }
       if (url.includes('/query/schema')) {
         return of({ tables: [{ table_name: 'mempool_transactions' }] });
@@ -90,7 +100,9 @@ describe('Unified Intelligence Platform Frontend Services', () => {
     },
   };
 
-  const service = new IntelligenceApiService(mockHttp, mockStateService);
+  // A held key makes owner-scoped calls possible; the stub never touches localStorage.
+  const ownerKey = { key: 'uip_live_' + 'a'.repeat(48), headers: () => ({}), set: () => undefined, clear: () => undefined } as unknown as OwnerKeyService;
+  const service = new IntelligenceApiService(mockHttp, mockStateService, ownerKey);
   const mockCdr: any = { markForCheck: () => {} };
 
   it('evaluates transaction packages via POST /api/v1/intelligence/policy/evaluations', () => {
@@ -158,7 +170,7 @@ describe('Unified Intelligence Platform Frontend Services', () => {
   });
 
   it('manages privacy-first watchlists via /api/v1/intelligence/watchlists', () => {
-    service.getWatchlists$('user-1').subscribe((res) => {
+    service.getWatchlists$().subscribe((res) => {
       expect(res.watchlists.length).toBe(1);
     });
 
@@ -274,21 +286,30 @@ describe('Unified Intelligence Platform Frontend Services', () => {
       expect(cmp.filteredLabels.length).toBe(0);
     });
 
-    it('DeveloperPlatformComponent: handles empty keys and provisions new keys', () => {
-      const cmp = new DeveloperPlatformComponent(service, mockCdr);
+    it('DeveloperPlatformComponent: lists owner keys, reports unavailable usage, shows a minted key once', () => {
+      const cmp = new DeveloperPlatformComponent(service, ownerKey, mockCdr);
       cmp.ngOnInit();
       expect(cmp.keys).toEqual([]);
+      expect(cmp.usage).toBeNull();
       cmp.newKeyLabel = 'Test Key';
       cmp.createKey();
-      expect(cmp.generatedKeySecret).toBeDefined();
+      const call = recordedCalls[recordedCalls.length - 1];
+      expect(call.body).toEqual({ name: 'Test Key', scopes: ['read'] });
+      // The mock answered { ok: true } without a secret_key, so nothing is shown as a key.
+      expect(cmp.generatedKeySecret).toBeNull();
+      expect(cmp.loadError).toContain('did not return a key');
     });
 
-    it('WatchlistsComponent: supports local sample watchlist creation', () => {
-      const cmp = new WatchlistsComponent(service, mockCdr);
+    it('WatchlistsComponent: renders the owner watchlists from the backend and never a local sample', () => {
+      const cmp = new WatchlistsComponent(service, ownerKey, mockCdr);
       cmp.ngOnInit();
       expect(cmp.watchlists.length).toBe(1);
-      cmp.createSampleWatchlist();
-      expect(cmp.watchlists[0].name).toBe('Cold Storage Vault Monitoring');
+      expect(cmp.watchlists[0].name).toBe('Vault');
+      expect((cmp as any).createSampleWatchlist).toBeUndefined();
+      const noKey = new WatchlistsComponent(service, { key: null } as unknown as OwnerKeyService, mockCdr);
+      noKey.ngOnInit();
+      expect(noKey.hasKey).toBe(false);
+      expect(noKey.watchlists).toEqual([]);
     });
   });
 });

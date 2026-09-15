@@ -12,6 +12,7 @@
   </header>
 
   <p class="error" role="alert" *ngIf="error">{{ error }}</p>
+  <p class="text-muted small" *ngIf="!hasOwnerKey">Running a method needs an owner key with the <code>node:rpc</code> scope from the <a class="text-decoration-underline" [routerLink]="'/developers' | relativeUrl">Developer Platform</a>. The catalog is public.</p>
   <p class="loading" role="status" *ngIf="loading" i18n="node.rpc.loading">Fetching the list…</p>
 
   <p class="note" *ngIf="note">{{ note }}</p>

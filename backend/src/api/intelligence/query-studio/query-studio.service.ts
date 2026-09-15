@@ -1,4 +1,7 @@
 import { EventEnvelopeValidator } from '../events/event-envelope';
+import config from '../../../config';
+import { AuthenticatedOwner, IdentityError } from '../identity/developer-identity';
+import { ownerStore } from '../identity/owner-store';
 
 /**
  * Raised when a read has no source behind it. The routes map the code to a
@@ -43,12 +46,14 @@ export interface TableSchemaInfo {
 
 export interface SavedQueryRecord {
   query_id: string;
-  user_id: string;
+  owner_id: string;
   title: string;
   sql: string;
   created_at: string;
   updated_at: string;
 }
+
+const SAVED_QUERY_LIMITS = { perOwner: 200, titleLength: 128, sqlLength: 16_384 } as const;
 
 /**
  * Query Studio.
@@ -61,7 +66,6 @@ export interface SavedQueryRecord {
  */
 export class QueryStudioService {
   private static instance: QueryStudioService;
-  private savedQueries: Map<string, SavedQueryRecord> = new Map();
   private queryHistory: Array<{ query_id: string; sql: string; executed_at: string; duration_ms: number }> = [];
 
   private constructor() {}
@@ -112,22 +116,28 @@ export class QueryStudioService {
     return this.queryHistory;
   }
 
-  public saveQuery(userId: string, title: string, sql: string): SavedQueryRecord {
-    const id = EventEnvelopeValidator.generateUuidV7();
-    const saved: SavedQueryRecord = {
-      query_id: id,
-      user_id: userId,
-      title,
-      sql,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-    this.savedQueries.set(id, saved);
-    return saved;
+  /** @asyncUnsafe Saved queries are the owner's data: durable, owner and network scoped, bounded. */
+  public async saveQuery(owner: AuthenticatedOwner, title: unknown, sql: unknown): Promise<SavedQueryRecord> {
+    if (typeof title !== 'string' || title.trim().length === 0 || title.length > SAVED_QUERY_LIMITS.titleLength) {
+      throw new IdentityError('invalid_title', `title must be 1 to ${SAVED_QUERY_LIMITS.titleLength} characters`, 400);
+    }
+    if (typeof sql !== 'string' || sql.trim().length === 0 || sql.length > SAVED_QUERY_LIMITS.sqlLength) {
+      throw new IdentityError('invalid_sql', `sql must be 1 to ${SAVED_QUERY_LIMITS.sqlLength} characters`, 400);
+    }
+    const store = ownerStore();
+    if ((await store.countSavedQueries(owner.owner_id, config.MEMPOOL.NETWORK)) >= SAVED_QUERY_LIMITS.perOwner) {
+      throw new IdentityError('quota', `an owner may keep at most ${SAVED_QUERY_LIMITS.perOwner} saved queries`, 409);
+    }
+    const now = new Date().toISOString();
+    const row = { query_id: EventEnvelopeValidator.generateUuidV7(), owner_id: owner.owner_id, network: config.MEMPOOL.NETWORK, title: title.trim(), sql_text: sql, created_at: now, updated_at: now };
+    await store.insertSavedQuery(row);
+    return { query_id: row.query_id, owner_id: row.owner_id, title: row.title, sql: row.sql_text, created_at: row.created_at, updated_at: row.updated_at };
   }
 
-  public getSavedQueries(userId: string): SavedQueryRecord[] {
-    return Array.from(this.savedQueries.values()).filter((q) => q.user_id === userId);
+  /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */
+  public async getSavedQueries(owner: AuthenticatedOwner, limit = 100): Promise<SavedQueryRecord[]> {
+    const rows = await ownerStore().listSavedQueries(owner.owner_id, config.MEMPOOL.NETWORK, Math.max(1, Math.min(200, limit)));
+    return rows.map(row => ({ query_id: row.query_id, owner_id: row.owner_id, title: row.title, sql: row.sql_text, created_at: row.created_at, updated_at: row.updated_at }));
   }
 }
 
