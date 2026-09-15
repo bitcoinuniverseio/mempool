@@ -13,48 +13,44 @@ import { IntelligenceApiService } from './intelligence-api.service';
     <div class="intelligence-page container-xl">
       <header class="page-header">
         <div class="title-row">
-          <h1>Multi-Hop Transaction Graph Workspace</h1>
-          <span class="badge badge-secondary">Anti-Heuristic Investigation</span>
+          <h1>Transaction Graph</h1>
         </div>
         <p class="subtitle">
-          Interactive provenance and payment flow graph exploration with bounded multi-hop expansion, shortest value paths, and verifiable evidence tags.
+          Expand a transaction or address up to three hops through this node's chain data.
         </p>
       </header>
 
       <!-- Query Controls -->
       <section class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-          <h4 class="mb-0">Graph Query Parameters</h4>
-          <button type="button" class="btn btn-sm btn-outline-secondary" (click)="loadSampleTxid()">
-            Load Sample Txid
-          </button>
+          <h4 class="mb-0">Query</h4>
         </div>
         <div class="card-body">
           <div class="row g-3">
             <div class="col-md-6">
-              <label class="form-label small text-muted" for="rootEntity">Root Entity (Txid or Address)</label>
+              <label class="form-label small text-muted" for="rootEntity">Txid or address</label>
               <input
                 id="rootEntity"
                 type="text"
                 class="form-control font-monospace text-break"
                 [(ngModel)]="rootEntity"
-                placeholder="Enter root txid or address..."
+                placeholder="txid or address"
               />
             </div>
             <div class="col-md-2">
-              <label class="form-label small text-muted" for="hopsSelect">Max Hops</label>
-              <select id="hopsSelect" class="form-select" [(ngModel)]="hops">
-                <option [ngValue]="1">1 Hop</option>
-                <option [ngValue]="2">2 Hops</option>
-                <option [ngValue]="3">3 Hops</option>
+              <label class="form-label small text-muted" for="hopsSelect">Hops</label>
+              <select id="hopsSelect" class="form-control" [(ngModel)]="hops">
+                <option [ngValue]="1">1</option>
+                <option [ngValue]="2">2</option>
+                <option [ngValue]="3">3</option>
               </select>
             </div>
             <div class="col-md-2">
               <label class="form-label small text-muted" for="directionSelect">Direction</label>
-              <select id="directionSelect" class="form-select" [(ngModel)]="direction">
+              <select id="directionSelect" class="form-control" [(ngModel)]="direction">
                 <option value="both">Both</option>
-                <option value="upstream">Upstream (Inputs)</option>
-                <option value="downstream">Downstream (Spends)</option>
+                <option value="upstream">Inputs</option>
+                <option value="downstream">Spends</option>
               </select>
             </div>
             <div class="col-md-2 d-flex align-items-end">
@@ -64,7 +60,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
                 [disabled]="loading || !rootEntity.trim()"
                 (click)="runQuery()"
               >
-                {{ loading ? 'Expanding...' : 'Expand Graph' }}
+                {{ loading ? 'Expanding...' : 'Expand' }}
               </button>
             </div>
           </div>
@@ -77,7 +73,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
 
       <!-- Initial Prompt -->
       <div *ngIf="!activeResult && !loading && !queryError" class="p-4 rounded bg-dark-subtle text-muted text-center mb-4">
-        Enter a transaction ID or address above, or click "Load Sample Txid" to explore multi-hop payment relationships.
+        Enter a transaction ID or address to expand its graph.
       </div>
 
       <!-- Graph View -->
@@ -177,11 +173,6 @@ export class TransactionGraphComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     // Zero auto-execution on load
-  }
-
-  loadSampleTxid(): void {
-    this.rootEntity = 'e5765796c3d9efeb8152579df6461a6b18973b404d0938f36c535492d5272a0f';
-    this.runQuery();
   }
 
   runQuery(): void {

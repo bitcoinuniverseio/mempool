@@ -20,6 +20,8 @@ class WatchlistsRoutes {
       .delete(prefix + '/:id', guard, this.$deleteWatchlist)
       .post(prefix + '/:id/entities', guard, this.$postEntity)
       .post(prefix + '/:id/rules', guard, this.$postRule)
+      .delete(prefix + '/:id/entities/:entityId', guard, this.$deleteEntity)
+      .delete(prefix + '/:id/rules/:ruleId', guard, this.$deleteRule)
       .get(prefix + '/:id/notifications', guard, this.$getNotifications);
   }
 
@@ -62,6 +64,26 @@ class WatchlistsRoutes {
       res.json({ deleted: true });
     } catch (e) {
       sendIdentityError(res, e, 'Failed to delete watchlist');
+    }
+  }
+
+  private async $deleteEntity(req: Request, res: Response): Promise<void> {
+    try {
+      const deleted = await watchlistsService.deleteEntity(ownerOf(res), req.params.id, req.params.entityId);
+      if (!deleted) { res.status(404).json({ error: `Entity '${req.params.entityId}' not found in watchlist '${req.params.id}'.` }); return; }
+      res.json({ deleted: true });
+    } catch (e) {
+      sendIdentityError(res, e, 'Failed to delete entity');
+    }
+  }
+
+  private async $deleteRule(req: Request, res: Response): Promise<void> {
+    try {
+      const deleted = await watchlistsService.deleteRule(ownerOf(res), req.params.id, req.params.ruleId);
+      if (!deleted) { res.status(404).json({ error: `Rule '${req.params.ruleId}' not found in watchlist '${req.params.id}'.` }); return; }
+      res.json({ deleted: true });
+    } catch (e) {
+      sendIdentityError(res, e, 'Failed to delete rule');
     }
   }
 

@@ -65,6 +65,20 @@ describe('watchlists: ownership, validation and durability', () => {
     expect(await watchlistsService.getWatchlists(alice)).toEqual([]);
   });
 
+  it('entities and rules are removed by their owner only', async () => {
+    const wl = await watchlistsService.createWatchlist(alice, 'mine');
+    const entity = (await watchlistsService.addEntity(alice, wl.watchlist_id, 'txid', 'b'.repeat(64), 'tx'))!;
+    const rule = (await watchlistsService.addRule(alice, wl.watchlist_id, 'confirmation', 'in_app'))!;
+    expect(await watchlistsService.deleteEntity(bob, wl.watchlist_id, entity.entity_id)).toBe(false);
+    expect(await watchlistsService.deleteRule(bob, wl.watchlist_id, rule.rule_id)).toBe(false);
+    expect(await watchlistsService.deleteEntity(alice, wl.watchlist_id, entity.entity_id)).toBe(true);
+    expect(await watchlistsService.deleteRule(alice, wl.watchlist_id, rule.rule_id)).toBe(true);
+    expect(await watchlistsService.deleteEntity(alice, wl.watchlist_id, entity.entity_id)).toBe(false);
+    const after = (await watchlistsService.getWatchlistById(alice, wl.watchlist_id))!;
+    expect(after.entities).toEqual([]);
+    expect(after.rules).toEqual([]);
+  });
+
   it('validates enums, lengths, thresholds, webhook ownership and duplicates', async () => {
     const wl = await watchlistsService.createWatchlist(alice, 'rules');
     await expect(watchlistsService.createWatchlist(alice, '')).rejects.toMatchObject({ code: 'invalid_name', status: 400 });

@@ -39,23 +39,23 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
 
             <div class="mb-3">
               <label class="form-label small text-muted" for="offchain-recovery-protocol">Protocol Type</label>
-              <select class="form-select" id="offchain-recovery-protocol" [(ngModel)]="protocolType">
+              <select class="form-control" id="offchain-recovery-protocol" [(ngModel)]="protocolType">
                 <option value="statechain">Mercury Statechain (Unilateral Exit)</option>
                 <option value="coinswap">Teleport CoinSwap (Timeout Refund)</option>
               </select>
             </div>
 
             <div class="mb-3">
-              <label class="form-label small text-muted" for="offchain-recovery-txid">Deposit / Funding TxID</label>
-              <input type="text" class="form-control font-monospace small" id="offchain-recovery-txid" [(ngModel)]="txid" />
+              <label class="form-label small text-muted" for="offchain-recovery-txid">Funding txid</label>
+              <input type="text" class="form-control font-monospace small" id="offchain-recovery-txid" [(ngModel)]="txid" placeholder="64 hex characters" />
             </div>
 
             <div class="mb-3">
-              <label class="form-label small text-muted" for="offchain-recovery-locktime">Locktime Height</label>
-              <input type="number" class="form-control" id="offchain-recovery-locktime" [(ngModel)]="locktimeHeight" />
+              <label class="form-label small text-muted" for="offchain-recovery-locktime">Locktime height</label>
+              <input type="number" class="form-control" id="offchain-recovery-locktime" [(ngModel)]="locktimeHeight" min="1" placeholder="block height" />
             </div>
 
-            <button class="btn btn-primary w-100" (click)="generatePlan()" [disabled]="planning">
+            <button class="btn btn-primary w-100" (click)="generatePlan()" [disabled]="planning || !canPlan">
               <span *ngIf="planning" class="spinner-border spinner-border-sm me-1"></span>
               Compute Recovery Plan
             </button>
@@ -130,8 +130,12 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
 })
 export class OffchainRecoveryComponent {
   protocolType = 'statechain';
-  txid = 'd9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0';
-  locktimeHeight = 860000;
+  txid = '';
+  locktimeHeight: number | null = null;
+
+  get canPlan(): boolean {
+    return /^[0-9a-f]{64}$/i.test(this.txid.trim()) && Number.isInteger(this.locktimeHeight) && (this.locktimeHeight as number) > 0;
+  }
   planning = false;
   plan: any = null;
   loadError: string | null = null;
@@ -149,7 +153,7 @@ export class OffchainRecoveryComponent {
     this.offchainApi
       .getRecoveryPlan$({
         protocol: this.protocolType,
-        entity_id: this.txid,
+        entity_id: this.txid.trim().toLowerCase(),
         current_stage: 'latest_backup_ready',
         target_locktime: this.locktimeHeight,
       })

@@ -181,7 +181,7 @@ export class StatechainVerifyComponent {
         this.verifying = false;
         this.report = {
           valid: false,
-          errors: [err.message || 'Verification service error'],
+          errors: [err?.error?.error || err?.message || 'Verification service error'],
         };
         this.cdr.markForCheck();
       },

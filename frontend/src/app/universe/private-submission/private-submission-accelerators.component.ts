@@ -11,18 +11,18 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
   imports: [RelativeUrlPipe, CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4">
-      <div class="alert alert-warning" role="alert" *ngIf="loadError">
-        {{ loadError }}
-      </div>
       <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
-          <h1 class="h2 mb-1">Transaction Accelerator Providers Directory</h1>
-          <p class="text-muted mb-0">Providers from the signed provider directory, with the pools they claim and the fees they publish.</p>
+          <h1 class="h2 mb-1">Accelerator Providers</h1>
+          <p class="text-muted mb-0">Signed provider directory: claimed pools and published fees.</p>
         </div>
         <a [routerLink]="'/mempool/submission' | relativeUrl" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
       </div>
+      <div class="alert alert-warning" role="alert" *ngIf="loadError">
+        {{ loadError }}
+      </div>
 
-      <div class="card bg-dark border-secondary mb-4">
+      <div class="card bg-dark border-secondary mb-4" *ngIf="!loadError">
         <div class="card-header border-secondary">
           <h5 class="card-title mb-0">Available Acceleration Services</h5>
         </div>

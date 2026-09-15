@@ -13,7 +13,7 @@ function fail(req: Request, res: Response, e: unknown, fallback: string): void {
 
 class GlobalNetworkRoutes {
   public initRoutes(app: Application): void {
-    const prefix = '/api/v1/intelligence/network/';
+    const prefix = '/api/v1/intelligence/network/global/';
 
     app
       .get(prefix + 'overview', this.$getOverview)

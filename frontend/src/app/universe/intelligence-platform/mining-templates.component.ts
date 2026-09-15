@@ -13,7 +13,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
     <div class="intelligence-page container-xl">
       <header class="page-header">
         <div class="title-row">
-          <h1>Mining Template and Inclusion Observatory</h1>
+          <h1>Mining Templates</h1>
           <span class="badge badge-success" *ngIf="overview">
             {{ overview.sources?.length || 0 }} Template Sources Active
           </span>
@@ -22,7 +22,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
           </span>
         </div>
         <p class="subtitle">
-          Real-time candidate block templates captured across Bitcoin Core GBT, Stratum V2, and DATUM endpoints with objective divergence analytics.
+          Block templates collected from this node, compared with what was mined.
         </p>
       </header>
 
@@ -48,7 +48,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
       <!-- Candidate Templates -->
       <section class="card mb-4" *ngIf="overview && overview.latest_templates">
         <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-          <h4 class="mb-0">Candidate Block Templates at Tip</h4>
+          <h4 class="mb-0">Latest templates</h4>
           <button
             type="button"
             class="btn btn-sm btn-primary"
@@ -160,7 +160,7 @@ export class MiningTemplatesComponent implements OnInit, OnDestroy {
           this.cdr.markForCheck();
         },
         error: (err) => {
-          this.overviewError = err?.message || 'Failed to fetch mining template overview';
+          this.overviewError = err?.error?.error || err?.message || 'Failed to fetch mining template overview';
           this.loadingOverview = false;
           this.cdr.markForCheck();
         },

@@ -114,7 +114,7 @@ export class GlobalNetworkSeedsComponent implements OnInit, OnDestroy {
           this.cd.markForCheck();
         },
         error: err => {
-          this.error = err?.message || 'Failed to load DNS seeds';
+          this.error = err?.error?.error || err?.message || 'Failed to load DNS seeds';
           this.loading = false;
           this.cd.markForCheck();
         },
