@@ -209,13 +209,13 @@ describe('Unified Intelligence Platform Frontend Services', () => {
       cmp.ngOnDestroy();
     });
 
-    it('VerifyProofComponent: does not generate SPV proof on ngOnInit', () => {
-      const cmp = new VerifyProofComponent(service, mockCdr);
-      cmp.ngOnInit();
+    it('VerifyProofComponent: does not generate SPV proof on construction', () => {
+      const cmp = new VerifyProofComponent(mockHttp, { ...mockStateService, networkChanged$: new Subject<string>() }, mockCdr);
       expect(cmp.spvResult).toBeNull();
       expect(cmp.loadingSpv).toBe(false);
       expect(cmp.spvTxid).toBe('');
       expect(cmp.spvBlockHash).toBe('');
+      cmp.ngOnDestroy();
     });
 
     it('TimeMachineComponent: does not trigger replay on ngOnInit', () => {

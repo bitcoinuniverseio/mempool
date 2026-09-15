@@ -27,12 +27,12 @@ class VerificationRoutes {
 
   private async $postSpvProof(req: Request, res: Response): Promise<void> {
     try {
-      const { txid, block_hash, block_height } = req.body;
+      const { txid, block_hash, block_height, network } = req.body || {};
       if (!txid || !block_hash) {
         res.status(400).json({ error: 'txid and block_hash parameters required.' });
         return;
       }
-      const proof = verificationService.generateSpvProof(txid, block_hash, block_height);
+      const proof = await verificationService.generateSpvProof(txid, block_hash, block_height, network);
       res.json(proof);
     } catch (e) {
       fail(req, res, e, 'SPV proof generation failed');
@@ -41,9 +41,9 @@ class VerificationRoutes {
 
   private async $postVerifySpv(req: Request, res: Response): Promise<void> {
     try {
-      const proof = req.body.proof || req.body;
-      const valid = verificationService.verifySpvProof(proof);
-      res.json({ is_valid: valid, verified_at_utc: new Date().toISOString() });
+      const proof = req.body?.proof || req.body;
+      const result = await verificationService.verifySpvProof(proof);
+      res.json(result);
     } catch (e) {
       fail(req, res, e, 'SPV verification failed');
     }
@@ -66,8 +66,8 @@ class VerificationRoutes {
   private async $postVerifySignature(req: Request, res: Response): Promise<void> {
     try {
       const { address, message, signature, format } = req.body;
-      if (!address || !message || !signature) {
-        res.status(400).json({ error: 'address, message, and signature required.' });
+      if (typeof address !== 'string' || !address || address.length > 200 || typeof message !== 'string' || Buffer.byteLength(message, 'utf8') > 65536 || typeof signature !== 'string' || !signature || signature.length > 100000) {
+        res.status(400).json({ error: 'Supply an address, a message (empty is allowed, at most 65536 UTF-8 bytes), and a bounded signature.' });
         return;
       }
       const result = verificationService.verifySignature(address, message, signature, format);
