@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
@@ -46,6 +47,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           No calendar is configured for {{ overview.network }} on this deployment. Stamping is unavailable until the operator names one; verification still works.
         </div>
 
+        <p class="small" *ngIf="overview.active_chain_coverage as coverage">Owned-chain readback: {{ coverage.records_examined }} stored records examined (limit {{ coverage.record_limit }}). {{ coverage.complete ? 'Complete stored anchor window.' : 'Partial coverage; full current count is unknown.' }} Historical stored anchors: {{ overview.stored_anchored_proofs }}.</p>
         <div class="row g-3 mb-4">
           <div class="col-6 col-md-3">
             <div class="card p-3 h-100">
@@ -55,8 +57,8 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           </div>
           <div class="col-6 col-md-3">
             <div class="card p-3 h-100">
-              <div class="text-muted small text-uppercase">Anchored in Bitcoin</div>
-              <div class="display-6 fw-bold my-1 metric-proven">{{ overview.bitcoin_confirmed_proofs | number }}</div>
+              <div class="text-muted small text-uppercase">Current chain verified</div>
+              <div class="display-6 fw-bold my-1">{{ overview.bitcoin_confirmed_proofs === null ? 'Unknown' : (overview.bitcoin_confirmed_proofs | number) }}</div>
             </div>
           </div>
           <div class="col-6 col-md-3">
@@ -68,7 +70,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           <div class="col-6 col-md-3">
             <div class="card p-3 h-100">
               <div class="text-muted small text-uppercase">Latest anchor block</div>
-              <div class="display-6 fw-bold my-1">{{ overview.latest_anchored_block_height ?? 'none yet' }}</div>
+              <div class="display-6 fw-bold my-1">{{ overview.latest_anchored_block_height ?? 'not established' }}</div>
               <div class="small text-muted">{{ overview.active_calendar_servers }} calendar{{ overview.active_calendar_servers === 1 ? '' : 's' }} online</div>
             </div>
           </div>
@@ -79,7 +81,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
             <h2 class="h5 mb-0">Recent anchors</h2>
             <a [routerLink]="'/intelligence/timestamps/batches' | relativeUrl" class="small">All anchors</a>
           </div>
-          <p class="text-muted p-3 mb-0" *ngIf="!overview.recent_anchors?.length">No proof stamped here has been anchored yet.</p>
+          <p class="text-muted p-3 mb-0" *ngIf="!overview.recent_anchors?.length">No current anchor was verified in the observed record window.</p>
           <div class="table-responsive" tabindex="0" role="region" aria-label="Recent anchors, scroll horizontally" i18n-aria-label *ngIf="overview.recent_anchors?.length">
             <table class="table table-hover mb-0">
               <thead>
@@ -87,7 +89,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                   <th>Calendar</th>
                   <th>Block</th>
                   <th>Proofs</th>
-                  <th>Commitment</th>
+                  <th>Bitcoin header Merkle root</th>
                   <th>Anchored</th>
                 </tr>
               </thead>
@@ -110,7 +112,9 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
     .metric-proven { color: var(--u-state-proven); }
   `],
 })
-export class OpenTimestampsOverviewComponent implements OnInit {
+export class OpenTimestampsOverviewComponent implements OnInit, OnDestroy {
+  private subscription?: Subscription;
+  public ngOnDestroy(): void { this.subscription?.unsubscribe(); }
   public overview: TimestampsOverview | null = null;
   public loadError: string | null = null;
   public loading = true;
@@ -118,17 +122,11 @@ export class OpenTimestampsOverviewComponent implements OnInit {
   constructor(private api: OpenTimestampsApiService) {}
 
   public ngOnInit(): void {
-    this.api.getOverview$().subscribe({
-      next: res => {
-        this.overview = res;
-        this.loadError = null;
-        this.loading = false;
-      },
-      error: err => {
-        this.overview = null;
-        this.loadError = loadFailureMessage(classifyLoadFailure(err));
-        this.loading = false;
-      },
+    this.subscription = this.api.watch(() => this.api.getOverview$()).subscribe(state => {
+      this.loading = state.loading;
+      this.loadError = state.error ? loadFailureMessage(classifyLoadFailure(state.error)) : null;
+      this.overview = state.value;
+
     });
   }
 }

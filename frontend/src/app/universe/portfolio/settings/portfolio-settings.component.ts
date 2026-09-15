@@ -4,7 +4,7 @@
  * complete local deletion.
  */
 
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, effect, inject, signal } from '@angular/core';
 import { PortfoliosStore } from '../stores/portfolios.store';
 import { PortfolioVaultService } from '../stores/vault.service';
 
@@ -88,6 +88,21 @@ export class PortfolioSettingsComponent {
   readonly message = this.messageSignal.asReadonly();
   readonly downloadUrl = this.downloadUrlSignal.asReadonly();
 
+  private readonly destroyRef = inject(DestroyRef);
+  private exportVersion = 0;
+
+  constructor() {
+    effect(() => { if (this.store.vaultKind() !== 'unlocked') this.clearDownload(); });
+    this.destroyRef.onDestroy(() => { this.clearDownload(); this.importFileVersion++; this.pendingImport = null; });
+  }
+
+  private clearDownload(): void {
+    this.exportVersion++;
+    const previous = this.downloadUrlSignal();
+    if (previous) URL.revokeObjectURL(previous);
+    this.downloadUrlSignal.set('');
+  }
+
   protected downloadName(): string {
     return this.downloadNameValue;
   }
@@ -106,7 +121,10 @@ export class PortfolioSettingsComponent {
   }
 
   protected async exportBackup(): Promise<void> {
+    this.clearDownload();
+    const version = this.exportVersion;
     const backup = await this.vault.exportEncrypted();
+    if (version !== this.exportVersion || this.destroyRef.destroyed || this.store.vaultKind() !== 'unlocked') return;
     const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
     this.downloadUrlSignal.set(URL.createObjectURL(blob));
     this.downloadNameValue = `universe-portfolio-${new Date().toISOString().slice(0, 10)}.universe-portfolio`;

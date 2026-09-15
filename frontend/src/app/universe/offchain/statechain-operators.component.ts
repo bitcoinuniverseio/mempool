@@ -1,3 +1,4 @@
+import { PublicManifestComponent } from './public-manifest.component';
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -8,7 +9,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
 @Component({
   selector: 'app-statechain-operators',
   standalone: true,
-  imports: [RelativeUrlPipe, CommonModule, RouterModule],
+  imports: [PublicManifestComponent, RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -20,7 +21,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           </span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
-          Signed operator manifests, endpoint telemetry, supported protocol revisions, and signature counters for blinded statechains.
+          Configured reference entries only. Operator identity, current availability and advertised terms are not authenticated by this catalogue.
         </p>
 
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
@@ -33,6 +34,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
         </nav>
       </header>
 
+      <app-public-manifest></app-public-manifest>
       <div *ngIf="loading" class="text-center py-5 text-muted">
         <div class="spinner-border text-primary mb-2" role="status"></div>
         <div>Loading statechain operators...</div>
@@ -61,14 +63,14 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
               <div class="col-6">
                 <div class="p-2 border rounded bg-body">
                   <div class="text-muted small">Fee Rate</div>
-                  <div class="fw-bold">{{ op.published_terms.fee_rate_basis_points / 100 }}%</div>
+                  <div class="fw-bold">{{ op.published_terms.fee_rate_basis_points ?? 'Unknown' }}</div>
                 </div>
               </div>
               <div class="col-6">
                 <div class="p-2 border rounded bg-body">
                   <div class="text-muted small">Amount Limits</div>
                   <div class="fw-bold font-monospace small">
-                    {{ op.published_terms.min_amount_sat | number }} &ndash; {{ op.published_terms.max_amount_sat | number }} sat
+                    {{ op.published_terms.min_amount_sat ?? 'Unknown' }} &ndash; {{ op.published_terms.max_amount_sat ?? 'Unknown' }} sat
                   </div>
                 </div>
               </div>

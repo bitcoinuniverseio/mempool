@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, startWith, map, distinctUntilChanged } from 'rxjs';
 import { StateService } from '@app/services/state.service';
 
 export interface AssumeUtxoSnapshot {
@@ -60,8 +60,9 @@ export class BootstrapApiService {
     }
   }
 
+  get network(): string {return this.stateService.network || this.stateService.env?.ROOT_NETWORK || 'mainnet';}
   get networkChanged$() {
-    return this.stateService.networkChanged$;
+    return this.stateService.networkChanged$.pipe(startWith(this.network),map(() => this.network),distinctUntilChanged());
   }
   private get networkPrefix() {
     const network =

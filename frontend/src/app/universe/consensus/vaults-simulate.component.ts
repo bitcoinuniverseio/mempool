@@ -3,12 +3,12 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   OnDestroy,
-  Inject,
+  Inject, Optional,
 } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { StateService } from '@app/services/state.service';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import {
   ConsensusApiService,
@@ -236,6 +236,7 @@ export class VaultsSimulateComponent implements OnDestroy {
   private request?: Subscription;
   private network: Subscription;
   private revision = 0;
+  private context?:Subscription;
   edited(): void {
     this.revision++;
     this.request?.unsubscribe();
@@ -245,14 +246,16 @@ export class VaultsSimulateComponent implements OnDestroy {
   }
   ngOnDestroy(): void {
     this.edited();
-    this.network.unsubscribe();
+    this.network.unsubscribe();this.context?.unsubscribe();
   }
 
   constructor(
     @Inject(ConsensusApiService) private api: ConsensusApiService,
     @Inject(ChangeDetectorRef) private cd: ChangeDetectorRef,
-    @Inject(StateService) state: StateService
+    @Inject(StateService) state: StateService,
+    @Optional() @Inject(ActivatedRoute) route?:ActivatedRoute
   ) {
+    this.context=route?.queryParamMap.subscribe(params=>{this.edited();this.proposalId='bip-119';this.covenantScript='';this.transactionHex='';const proposal=params.get('proposal'),ctv=params.get('ctv');if(proposal){if(!['bip-119','bip-347','bip-443'].includes(proposal)){this.errorMessage='Unsupported proposal context.';return;}this.proposalId=proposal;}if(ctv!==null){if(!/^[0-9a-fA-F]{64}$/.test(ctv)){this.errorMessage='Invalid CTV commitment context.';return;}this.covenantScript='20'+ctv.toLowerCase()+'b3';}this.cd.markForCheck();});
     this.network = state.networkChanged$.subscribe(() => {
       this.edited();
       this.cd.markForCheck();

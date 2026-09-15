@@ -38,7 +38,7 @@
         type="button"
         class="tool"
         (click)="saveCurrent()"
-        [disabled]="!value().trim()"
+        [disabled]="!value().trim() || secretLike()"
         i18n="universe.command.save">Save</button>
       <button
         type="button"

@@ -4,7 +4,7 @@ import paymentConnectivityService, { PaymentConnectivityEvidenceError } from './
 /** An absent source is a 503 that names the source, never a 500 and never an empty list. */
 function fail(res: Response, err: unknown, status = 500): Response {
   if (err instanceof PaymentConnectivityEvidenceError) return res.status(err.status).json({ stage: err.code, error: err.message });
-  return res.status(status).json({ error: err instanceof Error && err.message ? err.message : 'Internal error' });
+  return res.status(status).json({ error: 'Internal error' });
 }
 
 class PaymentConnectivityRoutes {

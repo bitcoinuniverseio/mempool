@@ -1,6 +1,6 @@
 /**
  * Holdings: one product supporting table mode, compact cards on mobile,
- * grouping, expansion with per-location breakdowns, search, and filters.
+ * expansion with per-location breakdowns, search, and filters.
  * Hiding and pinning are presentation-only and never touch evidence.
  */
 
@@ -9,6 +9,7 @@ import { PortfolioDataService } from '../data/portfolio-data.service';
 import { PortfolioSessionService } from '../stores/session.service';
 import { PortfolioDataStateComponent } from '../shared/data-state.component';
 import { atomicToDisplay, formatExact, maskedValue } from '../shared/exact';
+import { exactPercentage } from '../shared/percentage';
 import type { AggregatedHolding } from '../shared/aggregation';
 
 type GroupMode = 'asset' | 'account' | 'chain' | 'protocol' | 'priced';
@@ -33,13 +34,13 @@ type GroupMode = 'asset' | 'account' | 'chain' | 'protocol' | 'priced';
           />
         </label>
         <label class="group">
-          <span i18n="@@universe.portfolio.holdings.group">Group</span>
+          <span i18n="@@universe.portfolio.holdings.filter">Filter</span>
           <select #groupSelect (change)="group.set($any(groupSelect.value))">
-            <option value="asset" i18n="@@universe.portfolio.holdings.group-asset">Asset</option>
-            <option value="account" i18n="@@universe.portfolio.holdings.group-account">Account</option>
-            <option value="chain" i18n="@@universe.portfolio.holdings.group-chain">Chain</option>
-            <option value="protocol" i18n="@@universe.portfolio.holdings.group-protocol">Protocol</option>
-            <option value="priced" i18n="@@universe.portfolio.holdings.group-priced">Priced / unpriced</option>
+            <option value="asset" i18n="@@universe.portfolio.holdings.filter-asset">All holdings</option>
+            <option value="account" i18n="@@universe.portfolio.holdings.filter-account">Linked to an account</option>
+            <option value="chain" i18n="@@universe.portfolio.holdings.filter-chain">Identified chain</option>
+            <option value="protocol" i18n="@@universe.portfolio.holdings.filter-protocol">Protocol assets (excluding base)</option>
+            <option value="priced" i18n="@@universe.portfolio.holdings.filter-priced">Priced only</option>
           </select>
         </label>
       </header>
@@ -96,7 +97,7 @@ type GroupMode = 'asset' | 'account' | 'chain' | 'protocol' | 'priced';
                             <li class="mono">
                               <span>{{ location.kind === 'outpoint' ? 'Output' : location.kind === 'protocol-ledger' ? 'Protocol ledger' : 'Manual' }}</span>
                               <span>{{ location.reference }}</span>
-                              <span>{{ location.quantityAtomic === null ? '-' : quantityText(location.quantityAtomic, row.holding.decimals) }}</span>
+                              <span>{{ session.valuesHidden() ? masked() : (location.quantityAtomic === null ? '-' : quantityText(location.quantityAtomic, row.holding.decimals)) }}</span>
                             </li>
                           }
                         </ul>
@@ -121,7 +122,7 @@ type GroupMode = 'asset' | 'account' | 'chain' | 'protocol' | 'priced';
                 <span class="num">{{ session.valuesHidden() ? masked() : (row.holding.pricedValue === null ? '-' : formatExact(row.holding.pricedValue, 'en')) }}</span>
               </div>
               <div class="card-sub">
-                <span>{{ quantity(row.holding) }}</span>
+                <span>{{ session.valuesHidden() ? masked() : quantity(row.holding) }}</span>
                 <app-portfolio-data-state [state]="row.holding.state" />
               </div>
             </li>
@@ -209,8 +210,8 @@ export class HoldingsComponent {
   }
 
   private shareOf(holding: AggregatedHolding, total: string | null): string {
-    if (holding.pricedValue === null || total === null || total === '0') return '-';
-    const share = percent(holding.pricedValue, total);
+    const share = exactPercentage(holding.pricedValue, total);
+    if (share === null) return '-';
     return `${formatExact(share, 'en', { maximumFractionDigits: 2 })}%`;
   }
 
@@ -235,14 +236,4 @@ export class HoldingsComponent {
   protected masked(): string {
     return maskedValue();
   }
-}
-
-function percent(part: string, total: string): string {
-  const scale = (value: string): bigint => BigInt(value.replace('.', ''));
-  const partScale = part.split('.')[1]?.length ?? 0;
-  const totalScale = total.split('.')[1]?.length ?? 0;
-  const scaled = (scale(part) * 10n ** BigInt(Math.max(0, totalScale - partScale) + 8)) / scale(total);
-  const whole = scaled / 100_000_000n;
-  const fraction = (scaled % 100_000_000n).toString().padStart(8, '0').replace(/0+$/, '');
-  return fraction.length === 0 ? `${whole}` : `${whole}.${fraction}`;
 }

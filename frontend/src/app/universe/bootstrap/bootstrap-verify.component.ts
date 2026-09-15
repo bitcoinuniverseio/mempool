@@ -1,4 +1,5 @@
-import { Component, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -16,10 +17,10 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
       <header class="page-header mb-4">
         <div class="title-row d-flex flex-wrap align-items-center justify-content-between gap-2">
           <h1 class="m-0">AssumeUTXO Snapshot Verifier</h1>
-          <span class="badge bg-success">MuHash Commitment Check</span>
+          <span class="badge bg-success">Commitment comparison</span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
-          Verifies local snapshot file SHA-256 and Base UTXO set hash (MuHash) against hardcoded Bitcoin Core consensus parameters.
+          Compares supplied commitment metadata. This page does not read a snapshot file or establish that it is safe to load.
         </p>
 
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
@@ -38,17 +39,17 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
 
             <div class="mb-3">
               <label class="form-label small text-muted" for="bootstrap-verify-height">Snapshot Height</label>
-              <input type="number" class="form-control" id="bootstrap-verify-height" [(ngModel)]="snapshotHeight" />
+              <input type="number" class="form-control" id="bootstrap-verify-height" [(ngModel)]="snapshotHeight" (ngModelChange)="clear()" />
             </div>
 
             <div class="mb-3">
               <label class="form-label small text-muted" for="bootstrap-verify-checksum">Calculated File SHA-256 Checksum</label>
-              <input type="text" class="form-control font-monospace small" id="bootstrap-verify-checksum" [(ngModel)]="computedSha256" />
+              <input type="text" class="form-control font-monospace small" id="bootstrap-verify-checksum" [(ngModel)]="computedSha256" (ngModelChange)="clear()" />
             </div>
 
             <div class="mb-3">
-              <label class="form-label small text-muted" for="bootstrap-verify-utxo-hash">Base UTXO Set Hash (MuHash)</label>
-              <input type="text" class="form-control font-monospace small" id="bootstrap-verify-utxo-hash" [(ngModel)]="computedUtxoHash" />
+              <label class="form-label small text-muted" for="bootstrap-verify-utxo-hash">Serialized UTXO Set Hash (hash_serialized_3)</label>
+              <input type="text" class="form-control font-monospace small" id="bootstrap-verify-utxo-hash" [(ngModel)]="computedUtxoHash" (ngModelChange)="clear()" />
             </div>
 
             <button class="btn btn-primary w-100" (click)="verifyChecksum()" [disabled]="verifying">
@@ -77,9 +78,9 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
 
             <div *ngIf="report">
               <div class="alert" [ngClass]="report.valid ? 'alert-success' : 'alert-danger'">
-                <div class="fw-bold">{{ report.valid ? 'Snapshot Commitments Verified Authentic' : 'Integrity Mismatch' }}</div>
+                <div class="fw-bold">{{ report.valid ? 'Commitment comparison reported' : 'Integrity Mismatch' }}</div>
                 <div class="small mt-1" *ngIf="report.valid">
-                  Both file SHA-256 and UTXO MuHash match the official Bitcoin Core pinned parameters. Safe to load.
+                  Commitment metadata alone does not establish file authenticity or Core snapshot acceptance.
                 </div>
                 <div class="small mt-1" *ngIf="!report.valid">
                   Snapshot commitments do not match pinned values. Do not load into a node.
@@ -97,7 +98,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
               </div>
 
               <div class="alert alert-info py-2 px-3 small m-0">
-                Notice: Loading an unverified snapshot into Bitcoin Core could cause state divergence. Always verify MuHash before loadtxoutset.
+                Core independently checks its pinned serialized UTXO commitment during snapshot loading. No node operation is performed here.
               </div>
             </div>
           </div>
@@ -110,7 +111,9 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
     .nav-link.active { background-color: var(--bs-primary); color: #fff; }
   `],
 })
-export class BootstrapVerifyComponent {
+export class BootstrapVerifyComponent implements OnInit, OnDestroy {
+  private networkSub?: Subscription;
+  private request?: Subscription;
   snapshotHeight = 840000;
   computedSha256 = '4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b';
   computedUtxoHash = 'a602b92131713d288d7fc4ee6fcf237000e4fe51a37c0303886f44485590994a';
@@ -123,12 +126,17 @@ export class BootstrapVerifyComponent {
     private cdr: ChangeDetectorRef
   ) {}
 
+  ngOnInit(): void {this.networkSub=this.bootstrapApi.networkChanged$.subscribe(() => this.clear());}
+  clear(): void {this.request?.unsubscribe();this.report=null;this.verifying=false;this.failure=null;this.cdr.markForCheck();}
+  ngOnDestroy(): void {this.clear();this.networkSub?.unsubscribe();}
+
   verifyChecksum(): void {
+    this.clear();
     this.verifying = true;
     this.failure = null;
     this.report = null;
 
-    this.bootstrapApi
+    this.request = this.bootstrapApi
       .verifySnapshotChecksum$({
         height: this.snapshotHeight,
         sha256: this.computedSha256,
@@ -136,7 +144,7 @@ export class BootstrapVerifyComponent {
       })
       .subscribe({
         next: (res) => {
-          this.report = res;
+          if (res?.valid !== false || typeof res.status !== 'string') {this.report=null;this.failure='No supported independently verified snapshot receipt was returned. Supplied hashes alone do not verify a file.';} else {this.report=res;}
           this.verifying = false;
           this.cdr.markForCheck();
         },
@@ -147,7 +155,7 @@ export class BootstrapVerifyComponent {
         error: (err) => {
           this.verifying = false;
           this.report = null;
-          this.failure = loadFailureMessage(classifyLoadFailure(err));
+          this.failure = err?.error?.error || loadFailureMessage(classifyLoadFailure(err));
           this.cdr.markForCheck();
         },
       });

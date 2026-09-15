@@ -4,9 +4,11 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ElectrsApiService } from '@app/services/electrs-api.service';
 import { ApiService } from '@app/services/api.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
+import { StateService } from '@app/services/state.service';
+import { readGraphTransaction, readGraphOutspends, readGraphReplacements, readGraphPackage } from './provenance-sources';
 import { RbfTree } from '@interfaces/node-api.interface';
-import { Observable, forkJoin, of } from 'rxjs';
-import { catchError, map, share, switchMap } from 'rxjs/operators';
+import { Observable, combineLatest, forkJoin, of } from 'rxjs';
+import { catchError, distinctUntilChanged, map, shareReplay, startWith, switchMap, take } from 'rxjs/operators';
 import {
   GraphEdge,
   ProvenanceGraph,
@@ -19,7 +21,7 @@ import {
 /**
  * The provenance of one transaction, drawn and stated.
  *
- * The drawing answers "where did this value come from and where did it go".
+ * The drawing shows observed transaction input and output connections; it does not infer ownership.
  * The table beside it carries the identical facts for anyone who reads
  * tables, and the exports carry them as data. Every node links to the object
  * it stands for, so the graph is a set of doors rather than a picture.
@@ -47,6 +49,8 @@ interface SourceState {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProvenanceGraphComponent {
+  private readonly network = inject(StateService);
+  private selectedNetwork = this.network.network;
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly electrsApi = inject(ElectrsApiService);
@@ -54,10 +58,16 @@ export class ProvenanceGraphComponent {
   private readonly universeApi = inject(UniverseApiService);
 
   /** The whole picture, or the reason there is none. */
-  readonly result$ = this.route.paramMap.pipe(
-    map((params) => params.get('txid') ?? ''),
-    switchMap((txid) => this.load(txid)),
-    share(),
+  readonly result$ = combineLatest([
+    this.route.paramMap.pipe(map(params => (params.get('txid') ?? '').toLowerCase())),
+    this.network.networkChanged$.pipe(startWith(this.network.network), distinctUntilChanged()),
+  ]).pipe(
+    distinctUntilChanged(([oldId, oldNetwork], [id, network]) => oldId === id && oldNetwork === network),
+    switchMap(([txid, network]) => {
+      this.selectedNetwork = network;
+      return this.load(txid).pipe(startWith({ state: 'loading', txid, graph: null, extras: null } as LoadResult));
+    }),
+    shareReplay({ bufferSize: 1, refCount: true }),
   );
 
   readonly layout$ = this.result$.pipe(map((result) => result.graph ? layoutGraph(result.graph) : null));
@@ -67,57 +77,28 @@ export class ProvenanceGraphComponent {
       return of({ state: 'invalid', txid, graph: null, extras: null } as LoadResult);
     }
     return forkJoin({
-      tx: this.electrsApi.getTransaction$(txid).pipe(catchError(() => of(null))),
-      outspends: this.electrsApi.getOutspends$(txid).pipe(catchError(() => of([]))),
-      rbf: this.apiService.getRbfHistory$(txid).pipe(catchError(() => of(null))),
-      pack: this.universeApi.getMempoolPackage$(txid).pipe(catchError(() => of(null))),
+      tx: this.electrsApi.getTransaction$(txid).pipe(take(1), catchError(() => of(null))),
+      outspends: this.electrsApi.getOutspends$(txid).pipe(take(1), catchError(() => of(null))),
+      rbf: this.apiService.getRbfHistory$(txid).pipe(take(1), catchError(() => of(null))),
+      pack: this.universeApi.getMempoolPackage$(txid).pipe(take(1), catchError(() => of(null))),
     }).pipe(map(({ tx, outspends, rbf, pack }) => {
-      if (!tx) {
+      const transaction = readGraphTransaction(tx, txid);
+      if (!transaction) {
         return { state: 'unavailable', txid, graph: null, extras: null } as LoadResult;
       }
-      const anyTx = tx as any;
+      const history = readGraphReplacements(rbf, txid);
+      const packageIds = readGraphPackage(pack, txid);
       const extras: SourceState = {
-        rbf: (rbf as any)?.replacements ?? null,
-        replaces: (rbf as any)?.replaces ?? [],
-        rbfAvailable: rbf !== null,
-        packageTxids: this.packageTxids(pack),
-        packageAvailable: pack !== null,
+        rbf: history.rbf, replaces: history.replaces, rbfAvailable: history.available,
+        packageTxids: packageIds ?? [], packageAvailable: packageIds !== null,
       };
-      const graph = buildProvenanceGraph(
-        {
-          txid: anyTx.txid,
-          confirmed: anyTx.status?.confirmed === true,
-          feeSat: typeof anyTx.fee === 'number' ? anyTx.fee : null,
-          inputs: (anyTx.vin ?? [])
-            .filter((vin: any) => vin?.prevout?.txid && typeof vin.prevout.vout === 'number')
-            .map((vin: any) => ({
-              txid: vin.prevout.txid,
-              vout: vin.prevout.vout,
-              valueSat: typeof vin.prevout.value === 'number' ? vin.prevout.value : 0,
-            })),
-          outputs: (anyTx.vout ?? [])
-            .filter((vout: any) => vout && typeof vout.value === 'number')
-            .map((vout: any, index: number) => ({
-              vout: typeof vout.vout === 'number' ? vout.vout : index,
-              valueSat: vout.value,
-            })),
-        },
-        (outspends as any[] ?? []).map((outspend) => ({
-          spent: outspend?.spent === true,
-          txid: outspend?.txid ?? null,
-        })),
-        {
-          rbfHistory: extras.rbf,
-          replaces: extras.replaces,
-          packageTxids: extras.packageTxids,
-        },
-      );
+      const graph = buildProvenanceGraph(transaction, readGraphOutspends(outspends, transaction.outputs.length), {
+        rbfHistory: extras.rbf, replaces: extras.replaces, packageTxids: extras.packageTxids,
+      });
       const unavailable: string[] = [];
-      if (!extras.rbfAvailable) {
-        unavailable.push('Replacement history did not answer.');
-      }
-      if (!extras.packageAvailable && !anyTx.status?.confirmed) {
-        unavailable.push('Package and cluster data did not answer.');
+      if (!extras.rbfAvailable) { unavailable.push('Replacement history was unavailable or invalid.'); }
+      if (!extras.packageAvailable && transaction.confirmed === false) {
+        unavailable.push('Current package and cluster data was unavailable.');
       }
       const stated: ProvenanceGraph = {
         ...graph,
@@ -127,21 +108,18 @@ export class ProvenanceGraphComponent {
     }));
   }
 
-  private packageTxids(pack: any): string[] {
-    const txids = pack?.cluster?.transactions ?? pack?.cluster?.txids ?? [];
-    return Array.isArray(txids)
-      ? txids.map((entry: any) => typeof entry === 'string' ? entry : entry?.txid).filter(Boolean)
-      : [];
-  }
-
   nodeLabel(state: string, label: string, valueSat: number | null): string {
     const value = valueSat !== null ? `, ${valueSat} sats` : '';
     return `${state} ${label}${value}`;
   }
 
+  networkPath(path: string | null): string | null {
+    return path ? `${this.selectedNetwork ? '/' + this.selectedNetwork : ''}${path}` : null;
+  }
+
   open(path: string | null): void {
     if (path) {
-      this.router.navigateByUrl(path);
+      this.router.navigateByUrl(this.networkPath(path));
     }
   }
 
@@ -173,7 +151,7 @@ export class ProvenanceGraphComponent {
 }
 
 interface LoadResult {
-  readonly state: 'ready' | 'unavailable' | 'invalid';
+  readonly state: 'loading' | 'ready' | 'unavailable' | 'invalid';
   readonly txid: string;
   readonly graph: ProvenanceGraph | null;
   readonly extras: SourceState | null;

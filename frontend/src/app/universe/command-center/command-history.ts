@@ -1,3 +1,6 @@
+import { looksSecretLike } from './command-candidates';
+import { parseCommandQuery } from './command-query';
+const unsafeQuery=(value:string)=>looksSecretLike(value)||looksSecretLike(parseCommandQuery(value).text);
 /**
  * What the command center remembers, on this device only.
  *
@@ -26,7 +29,7 @@ function read(storage: Storage | null, key: string): StoredQuery[] {
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) { return []; }
     return parsed
-      .filter((entry) => entry && typeof entry.query === 'string' && typeof entry.at === 'number')
+      .filter((entry) => entry && typeof entry.query === 'string' && typeof entry.at === 'number' && !unsafeQuery(entry.query))
       .map((entry) => ({ query: entry.query, at: entry.at }));
   } catch {
     // A value this explorer cannot validate is a value it ignores.
@@ -50,7 +53,7 @@ export function loadRecent(storage: Storage | null): StoredQuery[] {
 /** Records a query, newest first, collapsing repeats of the same query. */
 export function pushRecent(storage: Storage | null, query: string, at: number = Date.now()): StoredQuery[] {
   const trimmed = (query ?? '').trim();
-  if (!trimmed) { return loadRecent(storage); }
+  if (!trimmed || unsafeQuery(trimmed)) { return loadRecent(storage); }
   const rest = read(storage, RECENT_KEY).filter((entry) => entry.query !== trimmed);
   const next = [{ query: trimmed, at }, ...rest].slice(0, MAXIMUM_RECENT);
   write(storage, RECENT_KEY, next);
@@ -64,7 +67,7 @@ export function loadSaved(storage: Storage | null): StoredQuery[] {
 /** True when the query was not already saved. */
 export function saveQuery(storage: Storage | null, query: string, at: number = Date.now()): boolean {
   const trimmed = (query ?? '').trim();
-  if (!trimmed) { return false; }
+  if (!trimmed || unsafeQuery(trimmed)) { return false; }
   const existing = read(storage, SAVED_KEY);
   if (existing.some((entry) => entry.query === trimmed)) { return false; }
   write(storage, SAVED_KEY, [{ query: trimmed, at }, ...existing].slice(0, MAXIMUM_SAVED));

@@ -3,8 +3,9 @@
  * this portfolio, with serving mode, checkpoint, and release identity.
  */
 
-import { ChangeDetectionStrategy, Component, OnInit, inject, input, signal } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
+import { ChangeDetectionStrategy, Component, effect, inject, input, signal } from '@angular/core';
+import { catchError, concatMap, from, map, of, timeout } from 'rxjs';
+import { accountReadScope, matchesAccount } from '../data/account-read-scope';
 import { PortfolioV2ApiService } from '../data/portfolio-v2-api.service';
 import { PortfoliosStore } from '../stores/portfolios.store';
 import { PortfolioDataStateComponent } from '../shared/data-state.component';
@@ -18,9 +19,14 @@ import type { PortfolioV2CoverageEntry } from '@app/shared/universe-portfolio-v2
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="sources">
+      @if (loading()) { <p role="status">Reading source coverage…</p> }
+      @for (warning of warnings(); track $index) { <p role="note">{{ warning }}</p> }
+      @for (read of reads(); track read.key) {
+        <p>{{ read.accounts.join(', ') }} · {{ read.chain }}/{{ read.network }} · {{ read.address }}: {{ read.status }}</p>
+      }
       @if (entries().length === 0) {
         <p class="soft" i18n="@@universe.portfolio.sources.empty">
-          Open a portfolio to see what every source answered for its accounts.
+          No source roster is available in the current read. See account coverage above.
         </p>
       } @else {
         <table>
@@ -37,22 +43,22 @@ import type { PortfolioV2CoverageEntry } from '@app/shared/universe-portfolio-v2
             </tr>
           </thead>
           <tbody>
-            @for (entry of entries(); track entry.protocol) {
+            @for (entry of entries(); track $index) {
               <tr>
-                <td>{{ entry.protocol }}</td>
+                <td>{{ entry.scope }} · {{ entry.protocol }}</td>
                 <td class="mono">{{ entry.authorityId ?? '-' }}</td>
                 <td>{{ entry.servingMode }}</td>
                 <td><app-portfolio-data-state [state]="entry.state" /></td>
                 <td class="mono">
                   {{ entry.checkpoint === null ? '-' : height(entry.checkpoint.heightAtomic) }}
+                  <br />{{ entry.releaseSha ?? 'Release unknown' }}
                 </td>
               </tr>
             }
           </tbody>
         </table>
         <p class="soft" i18n="@@universe.portfolio.sources.note">
-          Every answer names its source release and chain checkpoint, so a number can always
-          be traced to the authority and block it came from.
+          Available release and checkpoint identities are shown. Missing identities remain unknown; this table does not prove source completeness.
         </p>
       }
     </div>
@@ -69,34 +75,40 @@ import type { PortfolioV2CoverageEntry } from '@app/shared/universe-portfolio-v2
     `,
   ],
 })
-export class SourcesComponent implements OnInit {
+export class SourcesComponent {
   readonly store = inject(PortfoliosStore);
   private readonly api = inject(PortfolioV2ApiService);
   readonly portfolioId = input<string>('');
 
-  private readonly entriesSignal = signal<readonly PortfolioV2CoverageEntry[]>([]);
+  private readonly entriesSignal = signal<readonly (PortfolioV2CoverageEntry & { scope: string })[]>([]);
   readonly entries = this.entriesSignal.asReadonly();
-  private loaded = false;
+  readonly loading = signal(false);
+  readonly warnings = signal<readonly string[]>([]);
+  readonly reads = signal<readonly { key: string; accounts: readonly string[]; chain: string; network: string; address: string; status: string }[]>([]);
 
-  ngOnInit(): void {
-    if (this.loaded) return;
-    this.loaded = true;
-    void this.load();
-  }
-
-  private async load(): Promise<void> {
-    const portfolio = this.store.activePortfolio();
-    if (portfolio === null) return;
-    const account = portfolio.accounts.find((candidate) => (candidate.addresses?.length ?? 0) > 0);
-    if (account === undefined || account.addresses![0] === undefined) return;
-    try {
-      const coverage = await firstValueFrom(
-        this.api.getCoverage$(account.chain, account.network, account.addresses![0]),
-      );
-      this.entriesSignal.set(coverage.roster);
-    } catch {
+  constructor() {
+    effect((cleanup) => {
+      const scope = accountReadScope(this.store.activePortfolio());
       this.entriesSignal.set([]);
-    }
+      this.warnings.set(scope.warnings);
+      this.reads.set(scope.targets.map(target => ({ ...target, status: 'Pending' })));
+      this.loading.set(scope.targets.length > 0);
+      const sub = from(scope.targets).pipe(concatMap(target => this.api.getCoverage$(target.chain, target.network, target.address).pipe(
+        timeout(15000),
+        map(coverage => {
+          if (!matchesAccount(coverage.account, target) || !Array.isArray(coverage.roster)) throw new Error('Invalid source identity');
+          return { target, coverage };
+        }),
+        catchError(() => of({ target, coverage: null })),
+      ))).subscribe({
+        next: ({ target, coverage }) => {
+          this.reads.update(rows => rows.map(row => row.key === target.key ? { ...row, status: coverage ? 'Answered; see each source state' : 'Unavailable; coverage unknown' } : row));
+          if (coverage) this.entriesSignal.update(rows => [...rows, ...coverage.roster.map(entry => ({ ...entry, scope: `${target.accounts.join(', ')} · ${target.chain}/${target.network} · ${target.address}` }))]);
+        },
+        complete: () => this.loading.set(false),
+      });
+      cleanup(() => sub.unsubscribe());
+    });
   }
 
   protected height(value: string): string {

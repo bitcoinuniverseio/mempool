@@ -5,8 +5,9 @@
  * falls back to current holdings.
  */
 
-import { ChangeDetectionStrategy, Component, OnInit, inject, input, signal } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
+import { ChangeDetectionStrategy, Component, effect, untracked, inject, input, signal } from '@angular/core';
+import { catchError, concatMap, from, map, of, Subscription, timeout } from 'rxjs';
+import { accountReadScope, matchesAccount } from '../data/account-read-scope';
 import { PortfolioV2ApiService } from '../data/portfolio-v2-api.service';
 import { PortfoliosStore } from '../stores/portfolios.store';
 import { PortfolioSessionService } from '../stores/session.service';
@@ -24,11 +25,11 @@ import type { PortfolioDelta } from '@app/shared/universe-portfolio-v2.types';
       <form class="controls" (submit)="compare($event)">
         <label>
           <span i18n="@@universe.portfolio.timemachine.from">From</span>
-          <input #fromInput type="date" required />
+          <input #fromInput type="date" required [value]="fromDate()" (input)="editDate('from', fromInput.value)" />
         </label>
         <label>
           <span i18n="@@universe.portfolio.timemachine.to">To</span>
-          <input #toInput type="date" required />
+          <input #toInput type="date" required [value]="toDate()" (input)="editDate('to', toInput.value)" />
         </label>
         <button type="submit" class="primary" [disabled]="loading()" i18n="@@universe.portfolio.timemachine.compare">Compare</button>
       </form>
@@ -41,19 +42,25 @@ import type { PortfolioDelta } from '@app/shared/universe-portfolio-v2.types';
         <p class="error" role="alert">{{ message }}</p>
       }
 
-      @if (delta(); as delta) {
+      <p class="soft">Comparisons are per public address at 00:00 UTC on each selected date. They are not summed into portfolio performance.</p>
+      @for (warning of warnings(); track $index) { <p class="warning">{{ warning }}</p> }
+      @for (result of results(); track result.key) {
+        <h2>{{ result.scope }}</h2>
+        @if (result.error) { <p role="note">{{ result.error }}</p> }
+        @if (result.delta; as delta) {
         <section class="result">
           <header class="endpoints">
             <div>
               <p class="label" i18n="@@universe.portfolio.timemachine.starting">Starting priced value</p>
-              <p class="value">{{ show(delta.from.valuation.pricedValue) }}</p>
+              <p class="value">{{ show(delta.from.valuation.pricedValue, delta.from.valuation.quoteCurrency) }}</p>
             </div>
             <div>
               <p class="label" i18n="@@universe.portfolio.timemachine.ending">Ending priced value</p>
-              <p class="value">{{ show(delta.to.valuation.pricedValue) }}</p>
+              <p class="value">{{ show(delta.to.valuation.pricedValue, delta.to.valuation.quoteCurrency) }}</p>
             </div>
           </header>
 
+          <p>Effects in {{ delta.from.valuation.quoteCurrency }}; no cross-address netting.</p>
           <dl class="effects">
             <div>
               <dt i18n="@@universe.portfolio.timemachine.flows">External flow effect</dt>
@@ -98,6 +105,7 @@ import type { PortfolioDelta } from '@app/shared/universe-portfolio-v2.types';
             <p class="warning" role="note">{{ warning }}</p>
           }
         </section>
+        }
       }
     </div>
   `,
@@ -125,80 +133,70 @@ import type { PortfolioDelta } from '@app/shared/universe-portfolio-v2.types';
     `,
   ],
 })
-export class TimeMachineComponent implements OnInit {
+export class TimeMachineComponent {
   readonly store = inject(PortfoliosStore);
   readonly session = inject(PortfolioSessionService);
   private readonly api = inject(PortfolioV2ApiService);
   readonly portfolioId = input<string>('');
 
-  private readonly deltaSignal = signal<PortfolioDelta | null>(null);
-  private readonly loadingSignal = signal(false);
-  private readonly errorSignal = signal('');
+  readonly fromDate = signal(new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10));
+  readonly toDate = signal(new Date().toISOString().slice(0, 10));
+  readonly loading = signal(false);
+  readonly error = signal('');
+  readonly warnings = signal<readonly string[]>([]);
+  readonly results = signal<readonly { key: string; scope: string; delta: PortfolioDelta | null; error: string }[]>([]);
+  private request?: Subscription;
 
-  readonly delta = this.deltaSignal.asReadonly();
-  readonly loading = this.loadingSignal.asReadonly();
-  readonly error = this.errorSignal.asReadonly();
-  private loaded = false;
-
-  ngOnInit(): void {
-    if (this.loaded) return;
-    this.loaded = true;
-    void this.loadDefault();
+  constructor() {
+    effect(cleanup => {
+      this.store.activePortfolio();
+      untracked(() => this.run(this.fromDate(), this.toDate()));
+      cleanup(() => this.request?.unsubscribe());
+    });
   }
 
-  private async loadDefault(): Promise<void> {
-    // Default comparison: 30 days ago to now.
-    const to = new Date();
-    const from = new Date(to.getTime() - 30 * 86_400_000);
-    await this.run(from.toISOString().slice(0, 10), to.toISOString().slice(0, 10));
+  editDate(which: 'from' | 'to', value: string): void {
+    this.request?.unsubscribe();
+    this.results.set([]); this.loading.set(false); this.error.set(''); this.warnings.set([]);
+    (which === 'from' ? this.fromDate : this.toDate).set(value);
   }
 
   protected compare(event: Event): void {
     event.preventDefault();
-    const inputs = (event.target as HTMLFormElement).querySelectorAll('input');
-    const from = (inputs[0] as HTMLInputElement).value;
-    const to = (inputs[1] as HTMLInputElement).value;
-    if (from.length === 0 || to.length === 0) return;
-    void this.run(from, to);
+    this.run(this.fromDate(), this.toDate());
   }
 
-  private async run(from: string, to: string): Promise<void> {
-    const portfolio = this.store.activePortfolio();
-    if (portfolio === null) return;
-    this.loadingSignal.set(true);
-    this.errorSignal.set('');
-    let lastError = '';
-    for (const account of portfolio.accounts) {
-      for (const address of account.addresses ?? []) {
-        try {
-          const delta = await firstValueFrom(
-            this.api.getDelta$(
-              account.chain,
-              account.network,
-              address,
-              { timestamp: `${from}T00:00:00Z` },
-              { timestamp: `${to}T00:00:00Z` },
-            ),
-          );
-          this.deltaSignal.set(delta);
-          this.loadingSignal.set(false);
-          return;
-        } catch (error) {
-          lastError = error instanceof Error ? error.message : '';
-        }
-      }
+  private run(fromDate: string, toDate: string): void {
+    this.request?.unsubscribe();
+    this.results.set([]); this.loading.set(false); this.error.set('');
+    const scope = accountReadScope(this.store.activePortfolio());
+    this.warnings.set(scope.warnings);
+    const valid = (date: string) => /^\d{4}-\d{2}-\d{2}$/.test(date) && Number.isFinite(Date.parse(date + 'T00:00:00Z')) && new Date(date + 'T00:00:00Z').toISOString().slice(0, 10) === date;
+    if (!valid(fromDate) || !valid(toDate) || fromDate > toDate || toDate > new Date().toISOString().slice(0, 10)) {
+      this.error.set('Choose valid dates in order, no later than today (UTC).'); return;
     }
-    this.loadingSignal.set(false);
-    this.errorSignal.set(
-      lastError.length > 0
-        ? lastError
-        : $localize`:@@universe.portfolio.timemachine.no-history:No account on this portfolio supports historical reconstruction yet. Bitcoin mainnet addresses do.`,
-    );
+    if (!scope.targets.length) { this.error.set('No public addresses are available for historical reconstruction.'); return; }
+    this.results.set(scope.targets.map(target => ({ key: target.key, scope: `${target.accounts.join(', ')} · ${target.chain}/${target.network} · ${target.address}`, delta: null, error: 'Pending' })));
+    this.loading.set(true);
+    this.request = from(scope.targets).pipe(concatMap(target => this.api.getDelta$(target.chain, target.network, target.address,
+      { timestamp: `${fromDate}T00:00:00Z` }, { timestamp: `${toDate}T00:00:00Z` }).pipe(
+      timeout(15000),
+      map(delta => {
+        if (!matchesAccount(delta, target) || !matchesAccount(delta.from, target) || !matchesAccount(delta.to, target)
+          || delta.from.requestedPoint?.timestamp !== `${fromDate}T00:00:00Z` || delta.to.requestedPoint?.timestamp !== `${toDate}T00:00:00Z`
+          || typeof delta.from.valuation?.quoteCurrency !== 'string' || delta.from.valuation.quoteCurrency !== delta.to.valuation?.quoteCurrency) throw Error('Mismatched comparison');
+        return { target, delta, error: '' };
+      }),
+      catchError(() => of({ target, delta: null, error: 'Historical comparison unavailable or invalid for this address; coverage is incomplete.' })),
+    ))).subscribe({
+      next: result => this.results.update(rows => rows.map(row => row.key === result.target.key ? { ...row, delta: result.delta, error: result.error } : row)),
+      complete: () => this.loading.set(false),
+    });
   }
 
-  protected show(value: string): string {
+  protected show(value: string, currency: string): string {
     if (this.session.valuesHidden()) return maskedValue();
-    return `${formatExact(value, 'en', { maximumFractionDigits: 2 })} ${this.store.activePortfolio()?.quoteCurrency ?? 'USD'}`;
+    return `${formatExact(value, 'en', { maximumFractionDigits: 2 })} ${currency}`;
   }
 
   protected effect(value: string | null): string {

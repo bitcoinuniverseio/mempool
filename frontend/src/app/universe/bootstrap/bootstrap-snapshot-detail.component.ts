@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { Subscription, combineLatest } from 'rxjs';
 import { BootstrapApiService, AssumeUtxoSnapshot } from './bootstrap.service';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
@@ -43,7 +43,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           <div class="card p-4 bg-body-tertiary border mb-4">
             <h2 class="h5 mb-3">Snapshot Commitments & Cryptographic Hashes</h2>
             <div class="p-3 border rounded bg-body mb-3">
-              <div class="text-muted small">UTXO Set Hash (MuHash)</div>
+              <div class="text-muted small">Serialized UTXO Hash (hash_serialized_3)</div>
               <div class="font-monospace small text-break mt-1">{{ snapshot.base_utxo_hash }}</div>
             </div>
 
@@ -74,10 +74,10 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
               To bootstrap a Bitcoin Core node using this snapshot, run via bitcoin-cli:
             </p>
             <div class="p-3 bg-body border rounded font-monospace small text-break user-select-all mb-3">
-              bitcoin-cli loadtxoutset &quot;/path/to/utxo-{{ snapshot.height }}.dat&quot;
+              bitcoin-cli -chain={{ bootstrapNetwork }} loadtxoutset &quot;/path/to/utxo-{{ snapshot.height }}.dat&quot;
             </div>
             <p class="small text-muted mb-0">
-              The node will verify the MuHash against its internal binary parameter, activate the snapshot chainstate immediately, and validate background blocks.
+              Core checks its pinned serialized UTXO commitment before activating a supported snapshot. This page has not tested loading this file.
             </p>
           </div>
         </div>
@@ -98,7 +98,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                   Hardcoded in Bitcoin Core source
                 </span>
                 <span class="text-muted small" *ngIf="snapshot.status !== 'pinned_core'">
-                  Community attested
+                  No independent attestation established
                 </span>
               </dd>
             </dl>
@@ -118,10 +118,12 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
   `,
 })
 export class BootstrapSnapshotDetailComponent implements OnInit, OnDestroy {
+  get bootstrapNetwork(): string {const n=this.bootstrapApi.network;return n==='mainnet'?'main':n==='testnet'?'test':n==='testnet4'?'testnet4':n;}
   loading = true;
   error: string | null = null;
   snapshot: AssumeUtxoSnapshot | null = null;
   private sub?: Subscription;
+  private request?: Subscription;
 
   constructor(
     private route: ActivatedRoute,
@@ -130,22 +132,18 @@ export class BootstrapSnapshotDetailComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    const heightOrHash = this.route.snapshot.paramMap.get('heightOrHash') || '840000';
-    this.sub = this.bootstrapApi.getSnapshotByHeightOrHash$(heightOrHash).subscribe({
-      next: (data) => {
-        this.snapshot = data;
-        this.loading = false;
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        this.error = err.message || 'Failed to load snapshot details';
-        this.loading = false;
-        this.cdr.markForCheck();
-      },
+    this.sub = combineLatest([this.bootstrapApi.networkChanged$,this.route.paramMap]).subscribe(() => {
+      this.request?.unsubscribe();this.snapshot=null;this.error=null;this.loading=true;this.cdr.markForCheck();
+      const reference = this.route.snapshot.paramMap.get('heightOrHash') || '';
+      this.request = this.bootstrapApi.getSnapshotByHeightOrHash$(reference).subscribe({
+        next: data => {if (!(data && (data as any).network === this.bootstrapApi.network && (String(data.height) === reference || data.block_hash === reference))) {this.error='Snapshot catalogue response is not bound to this network and reference.';} else {this.snapshot=data;}this.loading=false;this.cdr.markForCheck();},
+        error: err => {this.error=err?.error?.error || err?.message || 'Snapshot source unavailable';this.loading=false;this.cdr.markForCheck();}
+      });
     });
   }
 
   ngOnDestroy(): void {
     this.sub?.unsubscribe();
+    this.request?.unsubscribe();
   }
 }

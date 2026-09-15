@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Subscription, combineLatest } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
@@ -14,7 +15,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
       <div class="alert alert-warning" role="alert" *ngIf="loadError">
         {{ loadError }}
       </div>
-      <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+      <ng-container *ngIf="round"><div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
           <h1 class="h2 mb-1">Round Audit: <span class="text-info font-monospace">{{ round.round_id }}</span></h1>
           <p class="text-muted mb-0">{{ round.protocol }} coordinated by {{ round.coordinator }}</p>
@@ -73,10 +74,13 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           </dl>
         </div>
       </div>
+      </ng-container>
     </div>
   `
 })
-export class CollaborativePrivacyRoundDetailComponent implements OnInit {
+export class CollaborativePrivacyRoundDetailComponent implements OnInit, OnDestroy {
+  loading=false; private context?:Subscription; private request?:Subscription;
+  ngOnDestroy():void {this.context?.unsubscribe();this.request?.unsubscribe();this.round=null;}
   public round: any = null;
 
   public loadError: string | null = null;
@@ -87,24 +91,16 @@ export class CollaborativePrivacyRoundDetailComponent implements OnInit {
   ) {}
 
   public ngOnInit(): void {
-    this.route.paramMap.subscribe(params => {
-      const roundId = params.get('roundId');
-      if (!roundId) {
-        // An earlier revision substituted a fixed id here, so the page
-        // reported on that round whatever address opened it.
-        this.loadError = $localize`:@@privacy.round.missing:This address does not name a round.`;
-        return;
-      }
-      this.api.getRound$(roundId).subscribe({
-        next: res => {
-          this.round = res;
-          this.loadError = null;
-        },
-        error: err => {
-          this.round = null;
-          this.loadError = loadFailureMessage(classifyLoadFailure(err));
-        },
-      });
+    this.context=combineLatest([this.route.paramMap,this.api.networkChanged$]).subscribe(([params])=>{
+      this.request?.unsubscribe();this.round=null;this.loadError=null;this.loading=false;
+      const roundId=params.get('roundId');
+      if(!roundId){this.loadError='This address does not name a round.';return;}
+      const network=this.api.network;this.loading=true;
+      this.request=this.api.getRound$(roundId).subscribe({next:res=>{
+        this.loading=false;
+        if(!res || res.round_id!==roundId || res.network!==network){this.loadError='Round identity or network is not bound to this request.';return;}
+        this.round=res;
+      },error:err=>{this.loading=false;this.round=null;this.loadError=loadFailureMessage(classifyLoadFailure(err));}});
     });
   }
 }

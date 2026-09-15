@@ -64,12 +64,12 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           </div>
 
           <div class="card p-4 bg-body-tertiary border">
-            <h2 class="h5 mb-3">Trust Model & Verifiable Guarantees</h2>
+            <h2 class="h5 mb-3">Protocol trust assumptions</h2>
             <div class="alert alert-info py-2 px-3 small mb-2">
               Blinded Statechain Security Notice:
             </div>
             <p class="small text-muted mb-0">
-              The operator cannot spend UTXOs unilaterally because each statechain deposit uses a 2-of-2 multisig or MuSig2 key shared with the current owner. However, receiving clients must verify the decrementing timelock sequence across every prior backup transaction to protect against operator counterparty collusion.
+              This configured reference does not authenticate an operator or establish custody, signing policy or deposit security. Independently check actual protocol artifacts and complete backup transaction history before relying on a transfer.
             </p>
           </div>
         </div>

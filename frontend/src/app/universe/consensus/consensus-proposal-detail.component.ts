@@ -86,7 +86,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
             <div class="fw-semibold">Simulate this Proposal in a Vault</div>
             <div class="small text-muted">Test custody state transitions and emergency clawback mechanics.</div>
           </div>
-          <a [routerLink]="'/labs/vaults/simulate' | relativeUrl" class="btn btn-primary">
+          <a [routerLink]="'/labs/vaults/simulate' | relativeUrl" [queryParams]="{proposal: proposal.proposal_id}" class="btn btn-primary">
             Launch Covenant Simulator
           </a>
         </div>
@@ -99,6 +99,7 @@ export class ConsensusProposalDetailComponent implements OnInit, OnDestroy {
   loading = true;
   error: string | null = null;
   private sub = new Subscription();
+  private request?:Subscription;
 
   constructor(
     private route: ActivatedRoute,
@@ -110,18 +111,17 @@ export class ConsensusProposalDetailComponent implements OnInit, OnDestroy {
     this.sub.add(
       this.route.paramMap.subscribe(params => {
         const id = params.get('proposalId');
-        if (id) {
-          this.fetchProposal(id);
-        }
+        this.request?.unsubscribe();this.proposal=null;this.error=null;this.loading=false;
+        if (id) this.fetchProposal(id); else this.error='This address does not name a proposal.';this.cd.markForCheck();
       })
     );
   }
 
   private fetchProposal(id: string): void {
     this.loading = true;
-    this.sub.add(
-      this.api.getProposalById$(id).subscribe({
+    this.request=this.api.getProposalById$(id).subscribe({
         next: data => {
+          if(data?.proposal_id!==id){this.error='Proposal identity does not match this address.';this.loading=false;this.cd.markForCheck();return;}
           this.proposal = data;
           this.loading = false;
           this.cd.markForCheck();
@@ -131,11 +131,10 @@ export class ConsensusProposalDetailComponent implements OnInit, OnDestroy {
           this.loading = false;
           this.cd.markForCheck();
         },
-      })
-    );
+      });
   }
 
   ngOnDestroy(): void {
-    this.sub.unsubscribe();
+    this.request?.unsubscribe();this.sub.unsubscribe();
   }
 }
