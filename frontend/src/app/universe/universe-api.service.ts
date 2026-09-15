@@ -822,6 +822,10 @@ export class UniverseApiService {
     );
   }
 
+  decodeBolt12Offer$(offer: string): Observable<import('./taproot-assets/bolt12-decoded-offer').Bolt12DecodedOffer> {
+    return this.httpClient.post<import('./taproot-assets/bolt12-decoded-offer').Bolt12DecodedOffer>(this.backendBase + '/api/v1/lightning/offers/decode', {offer, network:this.network || 'mainnet'});
+  }
+
   getBolt12Offers$(): Observable<{ offers: Bolt12Offer[]; total: number }> {
     return this.httpClient.get<{ offers: Bolt12Offer[]; total: number }>(
       this.backendBase + '/api/v1/lightning/offers'
