@@ -20,18 +20,22 @@ export interface NodeChainstateObservation {
   node_id: string;
   client_version: string;
   dual_chainstate_active: boolean;
-  background_ibd_height: number;
-  snapshot_chainstate_height: number;
+  background_ibd_height: number | null;
+  snapshot_chainstate_height: number | null;
   tip_height: number;
   sync_percent: number;
-  estimated_time_to_validation_completion_sec: number;
+  estimated_time_to_validation_completion_sec: number | null;
+  current_phase: string;
+  observed_at: string;
 }
 
 export interface BootstrapOverview {
-  total_snapshots: number;
+  total_snapshots: number | null;
   configured_nodes_count: number;
   dual_chainstate_nodes_count: number;
-  recommended_snapshot_height: number;
+  recommended_snapshot_height: number | null;
+  snapshot_catalogue_status: string;
+  snapshot_catalogue_reason: string;
   featured_snapshots: AssumeUtxoSnapshot[];
   observed_nodes: NodeChainstateObservation[];
 }
@@ -56,21 +60,32 @@ export class BootstrapApiService {
     }
   }
 
+  get networkChanged$() {
+    return this.stateService.networkChanged$;
+  }
+  private get networkPrefix() {
+    const network =
+      this.stateService.network || this.stateService.env.ROOT_NETWORK;
+    return network === this.stateService.env.ROOT_NETWORK ? '' : '/' + network;
+  }
+
   getOverview$(): Observable<BootstrapOverview> {
     return this.httpClient.get<BootstrapOverview>(
-      `${this.apiBaseUrl}/api/v1/intelligence/bootstrap/overview`
+      `${this.apiBaseUrl}${this.networkPrefix}/api/v1/intelligence/bootstrap/overview`
     );
   }
 
   getSnapshots$(): Observable<AssumeUtxoSnapshot[]> {
     return this.httpClient.get<AssumeUtxoSnapshot[]>(
-      `${this.apiBaseUrl}/api/v1/intelligence/bootstrap/snapshots`
+      `${this.apiBaseUrl}${this.networkPrefix}/api/v1/intelligence/bootstrap/snapshots`
     );
   }
 
-  getSnapshotByHeightOrHash$(heightOrHash: string): Observable<AssumeUtxoSnapshot> {
+  getSnapshotByHeightOrHash$(
+    heightOrHash: string
+  ): Observable<AssumeUtxoSnapshot> {
     return this.httpClient.get<AssumeUtxoSnapshot>(
-      `${this.apiBaseUrl}/api/v1/intelligence/bootstrap/snapshots/${encodeURIComponent(heightOrHash)}`
+      `${this.apiBaseUrl}${this.networkPrefix}/api/v1/intelligence/bootstrap/snapshots/${encodeURIComponent(heightOrHash)}`
     );
   }
 
@@ -79,21 +94,21 @@ export class BootstrapApiService {
   // rendered its error branch, which used to report the snapshot as valid.
   verifySnapshotChecksum$(req: any): Observable<any> {
     return this.httpClient.post<any>(
-      `${this.apiBaseUrl}/api/v1/intelligence/bootstrap/verifications`,
+      `${this.apiBaseUrl}${this.networkPrefix}/api/v1/intelligence/bootstrap/verifications`,
       req
     );
   }
 
   generateBootstrapPlan$(req: any): Observable<any> {
     return this.httpClient.post<any>(
-      `${this.apiBaseUrl}/api/v1/intelligence/bootstrap/plans`,
+      `${this.apiBaseUrl}${this.networkPrefix}/api/v1/intelligence/bootstrap/plans`,
       req
     );
   }
 
   getNodeChainstates$(): Observable<NodeChainstateObservation[]> {
     return this.httpClient.get<NodeChainstateObservation[]>(
-      `${this.apiBaseUrl}/api/v1/intelligence/bootstrap/chainstates`
+      `${this.apiBaseUrl}${this.networkPrefix}/api/v1/intelligence/bootstrap/chainstates`
     );
   }
 }
