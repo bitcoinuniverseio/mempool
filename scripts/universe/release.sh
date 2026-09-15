@@ -420,7 +420,14 @@ PY
 # left. A service that has to be reachable from another host is added to
 # PUBLIC_LISTENERS deliberately, with a reason, rather than discovered in
 # production.
-PUBLIC_LISTENERS="22 8333 50001"
+# 22 ssh; 8333 mainnet p2p; 50001 electrum; 38333 signet p2p for the
+# stampdex-signet node, which needs inbound peers like 8333 does; 38385 the
+# stampdex mempool-adapter-signet container, which runs with host networking
+# and binds every interface, and is dropped off-loopback by the iptables rule
+# "! -i lo -p tcp --dport 38385 -j DROP"; 8099 the socat forward on the wt0
+# NetBird address that carries production ingress from the single web gateway
+# peer (range-restricted), the path DEPLOYMENT.md describes.
+PUBLIC_LISTENERS="22 8333 50001 38333 38385 8099"
 
 gate_private_listeners() {
   command -v ss >/dev/null 2>&1 || fail "ss is not available, so the listener gate cannot run"
