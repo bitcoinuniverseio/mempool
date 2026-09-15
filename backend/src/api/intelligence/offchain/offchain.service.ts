@@ -178,6 +178,9 @@ export class OffchainService {
       verification_scope: 'Signature over the supplied canonical manifest and declared validity interval only. The supplied signing key is not authenticated as an operator identity or domain.',
       operator_id: `op-${createHash('sha256').update(manifest.operator_public_key || '').digest('hex').substring(0, 12)}`,
       scheme: signature.scheme,
+      declared_scheme: manifest.signature_scheme ?? null,
+      manifest_digest: manifestDigest(manifest).toString('hex'),
+      input_digest: createHash('sha256').update(JSON.stringify(Object.fromEntries(Object.keys(manifest).sort().map(key => [key, (manifest as any)[key]])))).digest('hex'),
       errors,
     };
   }

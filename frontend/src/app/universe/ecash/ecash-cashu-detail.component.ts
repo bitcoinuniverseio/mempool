@@ -1,7 +1,8 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, Optional } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { Subscription, combineLatest, of, startWith } from 'rxjs';
+import { StateService } from '@app/services/state.service';
 import { EcashApiService, CashuMint } from './ecash.service';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
@@ -95,44 +96,28 @@ export class EcashCashuDetailComponent implements OnInit, OnDestroy {
   mint: CashuMint | null = null;
   loading = true;
   error: string | null = null;
-  private sub = new Subscription();
+  private sub?: Subscription;private request?:Subscription;
 
   constructor(
     private route: ActivatedRoute,
     private api: EcashApiService,
-    private cd: ChangeDetectorRef
+    private cd: ChangeDetectorRef,
+    @Optional() private state: StateService = null
   ) {}
 
   ngOnInit(): void {
-    this.sub.add(
-      this.route.paramMap.subscribe(params => {
-        const mintId = params.get('mintId');
-        if (mintId) {
-          this.fetchMint(mintId);
-        }
-      })
-    );
+    this.sub=combineLatest([this.route.paramMap,(this.state ? this.state.networkChanged$.pipe(startWith(null)) : of(null))]).subscribe(([params])=>{
+      this.request?.unsubscribe();this.mint=null;this.error=null;this.loading=false;
+      const id=params.get('mintId');
+      if(!id){this.error='Missing requested identifier.';this.cd.markForCheck();return;}
+      this.loading=true;this.cd.markForCheck();
+      this.request=this.api.getCashuMintById$(id).subscribe({next:data=>{
+        this.loading=false;
+        if(!data||data.mint_id!==id){this.error='Response does not match the requested identifier.';}
+        else this.mint=data;
+        this.cd.markForCheck();
+      },error:err=>{this.loading=false;this.error=err?.error?.error||'Source unavailable; no observation established.';this.cd.markForCheck();}});
+    });
   }
-
-  private fetchMint(mintId: string): void {
-    this.loading = true;
-    this.sub.add(
-      this.api.getCashuMintById$(mintId).subscribe({
-        next: data => {
-          this.mint = data;
-          this.loading = false;
-          this.cd.markForCheck();
-        },
-        error: err => {
-          this.error = err?.error?.error || err?.message || 'Failed to load mint details';
-          this.loading = false;
-          this.cd.markForCheck();
-        },
-      })
-    );
-  }
-
-  ngOnDestroy(): void {
-    this.sub.unsubscribe();
-  }
+  ngOnDestroy(): void {this.sub?.unsubscribe();this.request?.unsubscribe();this.mint=null;this.loading=false;}
 }

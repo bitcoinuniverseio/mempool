@@ -1,7 +1,8 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { Subscription, combineLatest, forkJoin, of, catchError, map, startWith, switchMap } from 'rxjs';
+import { StateService } from '@app/services/state.service';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { ReservesApiService, ReserveProvider, ReserveSnapshot } from './reserves.service';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
@@ -122,41 +123,26 @@ export class ReservesProviderDetailComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private reservesApi: ReservesApiService,
     private cd: ChangeDetectorRef,
+    private state: StateService,
   ) {}
 
   public ngOnInit(): void {
-    this.sub = this.route.paramMap.subscribe(params => {
-      const providerId = params.get('providerId') || '';
-      if (!providerId) {
-        this.error = 'No provider ID specified';
-        this.loading = false;
-        this.cd.markForCheck();
-        return;
-      }
-
-      this.loading = true;
-      this.reservesApi.getProviderById(providerId).subscribe({
-        next: (prov) => {
-          this.provider = prov;
-          this.reservesApi.getSnapshots(providerId).subscribe({
-            next: (snaps) => {
-              this.snapshots = snaps;
-              this.loading = false;
-              this.cd.markForCheck();
-            },
-            error: (err) => {
-              this.error = loadFailureMessage(classifyLoadFailure(err));
-              this.loading = false;
-              this.cd.markForCheck();
-            }
-          });
-        },
-        error: (err) => {
-          this.error = loadFailureMessage(classifyLoadFailure(err));
-          this.loading = false;
-          this.cd.markForCheck();
-        }
-      });
+    this.sub = combineLatest([this.route.paramMap, this.state.networkChanged$.pipe(startWith(this.state.network))]).pipe(
+      switchMap(([params]) => {
+        this.provider = null; this.snapshots = []; this.error = ''; this.loading = true; this.cd.markForCheck();
+        const id = params.get('providerId');
+        if (!id || id.length > 256) { this.error = 'A valid provider identity is required.'; return of(null); }
+        return forkJoin({ provider: this.reservesApi.getProviderById(id), snapshots: this.reservesApi.getSnapshots(id) }).pipe(
+          map(value => {
+            if (value.provider?.provider_id !== id || !Array.isArray(value.snapshots) || value.snapshots.some(snapshot => snapshot.provider_id !== id)) throw new Error('Mismatched provider evidence');
+            return value;
+          }),
+          catchError(() => { this.error = 'Provider evidence is unavailable or does not match the requested identity.'; return of(null); }),
+        );
+      }),
+    ).subscribe(value => {
+      this.provider = value?.provider ?? null; this.snapshots = value?.snapshots ?? [];
+      this.loading = false; this.cd.markForCheck();
     });
   }
 

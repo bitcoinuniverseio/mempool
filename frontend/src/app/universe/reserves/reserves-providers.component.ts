@@ -18,7 +18,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           <h1 class="m-0">Reserve Providers Directory</h1>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
-          Participating exchanges, custody networks, and federated bridges publishing verified cryptographic proof of reserves.
+          Operator-configured provider identities and available signed-root evidence. A configured key does not establish published reserves, complete liabilities or solvency.
         </p>
 
         <!-- Navigation Tabs -->
