@@ -6,7 +6,7 @@ const id = 'a'.repeat(64), parent = 'b'.repeat(64), spender = 'c'.repeat(64);
 const source = () => ({ txid: id, vin: [{ txid: parent, vout: 3, prevout: { value: 1000 } }], vout: [{ value: 700 }, { value: 200 }], fee: 100, status: { confirmed: true } });
 
 describe('actual Esplora provenance decoding', () => {
-  it('uses vin identity and preserves canonical output positions', () => {
+  it('uses vin identity and preserves declared output positions', () => {
     const tx = readGraphTransaction(source(), id)!;
     expect(tx.inputs).toEqual([{ txid: parent, vout: 3, valueSat: 1000 }]);
     expect(tx.outputs).toEqual([{ vout: 0, valueSat: 700 }, { vout: 1, valueSat: 200 }]);

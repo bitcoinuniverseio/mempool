@@ -7,6 +7,7 @@ import {
   map,
   merge,
   of,
+  scan,
   shareReplay,
   switchMap,
   timer,
@@ -23,11 +24,14 @@ import {
 export interface ChainDashboardState {
   readonly view: ChainDashboardView | null;
   readonly error: string | null;
+  /** True when the view is the retained last-good one after a failed refresh. */
+  readonly stale?: boolean;
 }
 
 export interface ChainPendingState {
   readonly payload: ChainExplorerPayload | null;
   readonly error: string | null;
+  readonly stale?: boolean;
 }
 
 /** How often the page re-reads when no live event arrives first. */
@@ -58,14 +62,22 @@ export class ChainDashboardService {
     if (!stream) {
       stream = this.refreshing$(chain, () =>
         this.api.getChainDashboard$(chain).pipe(
-          map((view): ChainDashboardState => ({ view, error: null })),
+          map((view): ChainDashboardState => ({ view, error: null, stale: false })),
           catchError(() =>
             of<ChainDashboardState>({
               view: null,
               error: 'dashboard-unavailable',
+              stale: true,
             })
           )
         )
+      ).pipe(
+        // Keep the last good view through a failed poll, marked stale, so
+        // the page keeps its evidence and its observation time instead of
+        // going blank.
+        scan((previous: ChainDashboardState, next: ChainDashboardState): ChainDashboardState =>
+          next.error && previous.view ? { ...next, view: previous.view } : next,
+        { view: null, error: null }),
       );
       this.dashboards.set(chain, stream);
     }
@@ -85,14 +97,19 @@ export class ChainDashboardService {
     if (!stream) {
       stream = this.refreshing$(chain, () =>
         this.api.getChainMempool$(chain, 400).pipe(
-          map((payload): ChainPendingState => ({ payload, error: null })),
+          map((payload): ChainPendingState => ({ payload, error: null, stale: false })),
           catchError(() =>
             of<ChainPendingState>({
               payload: null,
               error: 'mempool-unavailable',
+              stale: true,
             })
           )
         )
+      ).pipe(
+        scan((previous: ChainPendingState, next: ChainPendingState): ChainPendingState =>
+          next.error && previous.payload ? { ...next, payload: previous.payload } : next,
+        { payload: null, error: null }),
       );
       this.pending.set(chain, stream);
     }

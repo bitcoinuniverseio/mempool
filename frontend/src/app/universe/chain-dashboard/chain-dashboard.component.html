@@ -79,6 +79,18 @@
     current.
   </p>
 
+  <!-- A failed refresh keeps the last document and says so; the reading is
+       last known, never current. -->
+  <p
+    class="notice failure"
+    role="status"
+    *ngIf="vm.viewStale && vm.timeline"
+    i18n="universe.dash.view-stale"
+  >
+    The latest dashboard refresh failed. What is shown is the last successful
+    reading, produced {{ vm.viewObserved | date: 'medium' }}.
+  </p>
+
   <div class="dash-grid">
     <!-- Transaction fees -->
     <section class="panel" aria-labelledby="dash-fees-heading">
@@ -455,6 +467,12 @@
           <span class="universe-chip" [ngClass]="'state-' + protocol.tone">{{
             protocol.stateLabel
           }}</span>
+          <details class="reasons" *ngIf="protocol.reasons.length">
+            <summary i18n="universe.dash.protocol-reasons">Why</summary>
+            <ul>
+              <li *ngFor="let reason of protocol.reasons; trackBy: trackByCode">{{ reason.text }}</li>
+            </ul>
+          </details>
         </li>
       </ul>
       <ng-template #protocolsUnavailable>
@@ -482,18 +500,23 @@
     <h2 id="dash-subsystems-heading" i18n="universe.dash.subsystems-title">
       Subsystem health
     </h2>
+    <p class="subsystem-observed" *ngIf="vm.viewObserved">
+      <ng-container i18n="universe.dash.subsystems-observed">Observed</ng-container>
+      {{ vm.viewObserved | date: 'mediumTime' }}<ng-container *ngIf="vm.viewStale" i18n="universe.dash.subsystems-stale"> (last known; the latest refresh failed)</ng-container>
+    </p>
     <ul class="subsystem-list">
       <li *ngFor="let subsystem of vm.subsystems; trackBy: trackById">
-        <span class="subsystem-label">{{ subsystemLabel(subsystem.id) }}</span>
-        <span
-          class="universe-chip"
-          [ngClass]="{
-            'state-proven': subsystem.state === 'ready',
-            'state-partial': subsystem.state === 'degraded',
-            'state-unavailable': subsystem.state === 'unavailable',
-          }"
-          >{{ subsystem.state }}</span
-        >
+        <div class="subsystem-row">
+          <span class="subsystem-label">{{ subsystem.label }}</span>
+          <span class="universe-chip" [ngClass]="'state-' + subsystem.tone">{{ subsystem.stateLabel }}</span>
+          <span class="subsystem-age" *ngIf="subsystem.observed">{{ subsystem.observed }}</span>
+        </div>
+        <details class="reasons" *ngIf="subsystem.reasons.length">
+          <summary i18n="universe.dash.subsystem-reasons">Why</summary>
+          <ul>
+            <li *ngFor="let reason of subsystem.reasons; trackBy: trackByCode">{{ reason.text }}</li>
+          </ul>
+        </details>
       </li>
     </ul>
   </section>

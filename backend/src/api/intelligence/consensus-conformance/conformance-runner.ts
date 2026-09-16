@@ -10,6 +10,7 @@ import { CampaignInput, parserCorpus } from './conformance-corpus';
 import { CAMPAIGN_LIMITS, ConformanceEvidenceError } from './conformance-evidence';
 import { NODE_ENGINE_CODE } from './conformance-node-code';
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+/** @asyncUnsafe rejections propagate to the caller, which handles them. */
 export async function childJson(path: string, args: string[], input: unknown) {
   const started = performance.now();
   const data: any = await new Promise((resolve, reject) => {
@@ -46,6 +47,7 @@ export class IsolatedCore {
     private readonly manifest: ConformanceManifest,
     readonly directory: string
   ) {}
+  /** @asyncUnsafe rejections propagate to the caller, which handles them. */
   async start() {
     this.port = await new Promise<number>((resolve, reject) => {
       const server = createServer();
@@ -142,6 +144,7 @@ export class IsolatedCore {
       req.end(body);
     });
   }
+  /** @asyncUnsafe rejections propagate to the caller, which handles them. */
   async close() {
     if (this.stopped || !this.child) return;
     this.stopped = true;
@@ -155,6 +158,7 @@ export class IsolatedCore {
       await Promise.race([new Promise((resolve) => this.child.once('exit', resolve)), sleep(2000)]);
     }
   }
+  /** @asyncUnsafe rejections propagate to the caller, which handles them. */
   async scriptCorpus(): Promise<CampaignInput[]> {
     await this.rpc('createwallet', ['conformance']);
     const address = await this.rpc('getnewaddress', [], 'conformance');
@@ -196,6 +200,7 @@ export class IsolatedCore {
     ];
   }
 }
+/** @asyncUnsafe rejections propagate to the caller, which handles them. */
 export async function runCorpus(m: ConformanceManifest, target: string, inputs: CampaignInput[], core?: IsolatedCore) {
   if (
     inputs.length === 0 ||

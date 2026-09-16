@@ -43,8 +43,10 @@ import {
   ReadCapability,
   SourceDetail,
   StatusReading,
+  availabilityLabel,
   chainProfile,
   formatAtomicAmount,
+  formatElapsed,
   formatExactInteger,
   readCapabilities,
   readHistoryCoverage,
@@ -53,7 +55,7 @@ import {
   readSourceDetails,
   readStatusRail,
 } from '@app/universe/multichain-explorer/multichain-view';
-import { ChainReasonReading } from '@app/universe/multichain-explorer/chain-reasons';
+import { ChainReasonReading, describeChainReasons } from '@app/universe/multichain-explorer/chain-reasons';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 import {
@@ -110,7 +112,28 @@ interface DashboardViewModel {
   readonly recent: readonly LensItem[];
   readonly pendingPayload: Record<string, unknown> | null;
   readonly pendingError: string | null;
-  readonly subsystems: readonly ChainSubsystemHealth[];
+  readonly subsystems: readonly SubsystemReading[];
+  /** True when the dashboard shown is the retained last-good one. */
+  readonly viewStale: boolean;
+  /** When the dashboard document was produced by the overlay. */
+  readonly viewObserved: string | null;
+}
+
+/**
+ * One subsystem row, read. The chip keeps the overlay's word for the state
+ * with unknown evidence shown as Not stated rather than borrowed as an
+ * outage, and the reasons behind anything short of ready are listed beside
+ * it, each attributed to the protocol it belongs to where the row is an
+ * aggregate.
+ */
+export interface SubsystemReading {
+  readonly id: string;
+  readonly label: string;
+  readonly state: string;
+  readonly stateLabel: string;
+  readonly tone: 'proven' | 'partial' | 'unavailable' | 'neutral';
+  readonly observed: string | null;
+  readonly reasons: readonly ChainReasonReading[];
 }
 
 /** Bitcoin's four-level fee vocabulary, reused so the panels read alike. */
@@ -173,7 +196,7 @@ export class ChainDashboardComponent implements OnInit {
       this.data.capability$(this.chain),
     ]).pipe(
       map(([dashboard, pending, capability]) =>
-        this.viewModel(capability, dashboard.view, dashboard.error, pending.payload, pending.error)
+        this.viewModel(capability, dashboard.view, dashboard.error, pending.payload, pending.error, dashboard.stale === true)
       )
     );
   }
@@ -183,7 +206,8 @@ export class ChainDashboardComponent implements OnInit {
     view: ChainDashboardView | null,
     viewError: string | null,
     pendingPayload: Record<string, unknown> | null,
-    pendingError: string | null
+    pendingError: string | null,
+    viewStale = false
   ): DashboardViewModel {
     const now = Date.now();
     const buckets = view?.buckets
@@ -277,7 +301,29 @@ export class ChainDashboardComponent implements OnInit {
       recent,
       pendingPayload,
       pendingError,
-      subsystems: view?.subsystems ?? [],
+      subsystems: (view?.subsystems ?? []).map((row) => this.subsystemReading(row, now)),
+      viewStale,
+      viewObserved: view?.observedAt ?? null,
+    };
+  }
+
+  private subsystemReading(row: ChainSubsystemHealth, now: number): SubsystemReading {
+    const state = row.availability ?? row.state;
+    const tone =
+      state === 'ready' ? 'proven' : state === 'degraded' ? 'partial' : state === 'unavailable' ? 'unavailable' : 'neutral';
+    const reasons = [
+      ...row.reasonIds,
+      ...(row.lastFailureKind && !row.reasonIds.some((id) => id.endsWith(row.lastFailureKind as string)) ? ['latest-refresh-failed:' + row.lastFailureKind] : []),
+      ...(row.stale === true && state === 'ready' ? ['authority-observation-stale'] : []),
+    ];
+    return {
+      id: row.id,
+      label: this.subsystemLabel(row.id),
+      state,
+      stateLabel: availabilityLabel(state),
+      tone,
+      observed: formatElapsed(row.observedAt ?? null, now),
+      reasons: describeChainReasons([...new Set(reasons)]),
     };
   }
 
@@ -312,6 +358,10 @@ export class ChainDashboardComponent implements OnInit {
 
   trackById(_index: number, item: { id: string }): string {
     return item.id;
+  }
+
+  trackByCode(_index: number, item: { code: string }): string {
+    return item.code;
   }
 
   trackByProtocol(_index: number, item: { protocolId: string }): string {

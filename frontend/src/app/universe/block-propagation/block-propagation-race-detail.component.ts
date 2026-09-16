@@ -21,9 +21,9 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
   <p class="text-muted">Observations reported by the configured source; this page does not independently validate sensor coverage or chain consensus.</p>
   <div *ngIf="loading" role="status" aria-busy="true">Loading propagation evidence...</div>
   <div *ngIf="loadError" class="alert alert-warning" role="alert">{{ loadError }}</div>
-  <section *ngIf="race"><h2 class="h5">{{ race.race_id }} — Divergence Height {{ race.divergence_height }}</h2>
+  <section *ngIf="race"><h2 class="h5">{{ race.race_id }}: divergence height {{ race.divergence_height }}</h2>
 <p>Observed {{ race.discovered_at_utc | date:'medium' }}. Source resolution: <strong>{{ race.resolution_status }}</strong></p>
-<div class="card p-3 mb-3" *ngFor="let b of race.branches"><h3 class="h6">{{ b.branch_id }} — {{ verdict(race, b) }}</h3><code class="text-break">{{ b.tip_block_hash }}</code>
+<div class="card p-3 mb-3" *ngFor="let b of race.branches"><h3 class="h6">{{ b.branch_id }}: {{ verdict(race, b) }}</h3><code class="text-break">{{ b.tip_block_hash }}</code>
 <p>Height {{ b.tip_height }}; accumulated work {{ b.accumulated_work }}</p><p>First observed by {{ b.first_observed_sensor_id }} at {{ b.first_observed_utc | date:'medium' }}</p><p>Source-attributed pool: {{ b.mined_by_pool || 'Not reported' }}</p></div>
 <p>Arrival percentages, geographic split and miner economic losses are not supplied by this source contract.</p><ul><li *ngFor="let note of race.notes">{{ note }}</li></ul></section></div>
   `

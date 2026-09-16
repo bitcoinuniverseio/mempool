@@ -9,6 +9,7 @@ export class AnchorReadError extends Error {
 export class AnchorReader {
   constructor(private core: WorkbenchCoreReader = ownedWorkbenchCore) {}
 
+  /** @asyncUnsafe rejections propagate to the caller, which handles them. */
   async verify(outpoint: string, descriptor?: string) {
     const match = typeof outpoint === 'string' && /^([0-9a-f]{64}):(0|[1-9][0-9]{0,9})$/i.exec(outpoint);
     if (!match || Number(match[2]) > 0xffffffff) throw new AnchorReadError('invalid-outpoint', 'Use a 64-character transaction ID and an unsigned output index separated by a colon.', 400);

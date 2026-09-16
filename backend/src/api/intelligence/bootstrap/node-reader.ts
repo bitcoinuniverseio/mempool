@@ -42,6 +42,7 @@ export class BootstrapNodeReader {
       if (timer) clearTimeout(timer);
     }
   }
+  /** @asyncUnsafe rejections propagate to the caller, which handles them. */
   private async observe() {
     const core = this.core,
       network = core.network;

@@ -4,6 +4,7 @@ export class RgbEvidenceError extends Error { constructor(public status: number,
 /** Public transaction resolver only: private RGB consignments never reach this API. */
 export class RgbAnchorReader {
   constructor(private core: WorkbenchCoreReader = ownedWorkbenchCore) {}
+  /** @asyncUnsafe rejections propagate to the caller, which handles them. */
   async read(txids: unknown) {
     if (!Array.isArray(txids) || txids.length < 1 || txids.length > 16 || txids.some(id => typeof id !== 'string' || !/^[0-9a-f]{64}$/.test(id)) || new Set(txids).size !== txids.length) throw new RgbEvidenceError(400, 'Supply one to sixteen distinct lowercase public transaction IDs.');
     const expected = { mainnet: 'main', testnet: 'test', testnet4: 'testnet4', signet: 'signet', regtest: 'regtest' }[this.core.network];

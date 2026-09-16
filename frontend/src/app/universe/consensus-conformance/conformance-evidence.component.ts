@@ -42,7 +42,7 @@ import { ConsensusConformanceApiService } from './consensus-conformance.service'
         <p *ngIf="!value.implementations?.length">No verified engine configuration is available.</p>
         <ul>
           <li *ngFor="let engine of value.implementations">
-            {{ engine.name }} {{ engine.version }} — {{ engine.health_status
+            {{ engine.name }} {{ engine.version }}: {{ engine.health_status
             }}<small class="d-block text-break">Executable or source digest: {{ engine.build_hash }}</small>
           </li>
         </ul>
@@ -106,7 +106,7 @@ import { ConsensusConformanceApiService } from './consensus-conformance.service'
         ><p *ngIf="!value.cases?.length">No authenticated measured cases are available.</p>
         <ul>
           <li *ngFor="let c of value.cases">
-            <a [routerLink]="['/labs/consensus/case' | relativeUrl, c.case_id]">{{ c.title }}</a> —
+            <a [routerLink]="['/labs/consensus/case' | relativeUrl, c.case_id]">{{ c.title }}</a>:
             {{ c.has_difference ? 'Observed difference' : 'No difference in measured outputs' }}; {{ c.target }}
           </li>
         </ul></ng-container
@@ -135,7 +135,7 @@ import { ConsensusConformanceApiService } from './consensus-conformance.service'
         </div>
         <h3 class="h5">Independent vector expectations</h3>
         <p *ngFor="let e of value.expectations">
-          {{ e.implementation_id }} expected {{ e.expected }}, observed {{ e.actual }} —
+          {{ e.implementation_id }} expected {{ e.expected }}, observed {{ e.actual }}:
           {{ e.passed ? 'matched' : 'FAILED' }}
         </p>
         <label for="conformance-token">Operator execution token</label
@@ -165,7 +165,7 @@ import { ConsensusConformanceApiService } from './consensus-conformance.service'
         ><p>BIP references are specifications, not evidence that this runner formally proved them.</p>
         <ul>
           <li *ngFor="let bip of [141, 340, 341, 342]">
-            <a [href]="'https://github.com/bitcoin/bips/blob/master/bip-' + bip + '.mediawiki'">BIP {{ bip }}</a> — no
+            <a [href]="'https://github.com/bitcoin/bips/blob/master/bip-' + bip + '.mediawiki'">BIP {{ bip }}</a>: no
             machine-proof claim from this runner.
           </li>
         </ul></ng-container

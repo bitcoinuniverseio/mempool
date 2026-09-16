@@ -70,6 +70,7 @@ export class ArkVpackService {
     return this.providers.find((p) => p.provider_id === providerId);
   }
 
+  /** @asyncUnsafe rejections propagate to the caller, which handles them. */
   public async verifyPublicAnchor(anchorOutpoint: string, expectedDescriptor?: string) {
     const result = await new AnchorReader().verify(anchorOutpoint, expectedDescriptor);
     if (result.outpoint_verified) {

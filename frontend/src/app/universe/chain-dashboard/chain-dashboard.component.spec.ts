@@ -27,3 +27,14 @@ describe('chain dashboard template', () => {
     );
   });
 });
+
+describe('chain dashboard subsystem readings', () => {
+  it('renders subsystem chips from the evaluated verdict with their reasons and a stale notice', () => {
+    const subsystem = template.slice(template.indexOf('class="panel subsystems"'));
+    expect(subsystem).toContain('subsystem.stateLabel');
+    expect(subsystem).toContain('subsystem.reasons');
+    expect(subsystem).toContain('<details class="reasons"');
+    expect(template).toContain('vm.viewStale');
+  });
+
+});
