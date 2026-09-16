@@ -1,6 +1,6 @@
 import * as crypto from 'crypto';
 import { Application, Request, Response } from 'express';
-import watchlistsRoutes from './watchlists.routes';
+import watchlistsRoutes, { notificationLimit } from './watchlists.routes';
 import { blind, watchlistsService } from './watchlists.service';
 import { WatchlistMatcher } from './watchlist-matcher';
 import { developerIdentity, AuthenticatedOwner } from '../identity/developer-identity';
@@ -50,6 +50,37 @@ describe('watchlists: ownership, validation and durability', () => {
     // A txid is 64 hex characters and is still hashed unless the caller says it is already blinded.
     expect(blind('c'.repeat(64))).toBe(sha256('c'.repeat(64)));
     expect(() => blind('not-a-hash', true)).toThrow();
+  });
+
+  it('does not claim encryption and preserves historical records without relabeling stored bytes', async () => {
+    await expect(watchlistsService.createWatchlist(alice, 'encrypted', 'encrypted')).rejects.toMatchObject({ code: 'invalid_privacy_mode', status: 400 });
+    const wl = await watchlistsService.createWatchlist(alice, 'historical');
+    const store = ownerStore();
+    const row = (await store.getWatchlist(alice.owner_id, config.MEMPOOL.NETWORK, wl.watchlist_id))!;
+    await store.insertWatchlist({ ...row, privacy_mode: 'encrypted' });
+    const read = (await watchlistsService.getWatchlistById(alice, wl.watchlist_id))!;
+    expect(read.privacy_mode).toBe('legacy-unverified');
+    expect(read.requested_privacy_mode).toBe('encrypted');
+    expect(read.encryption_verified).toBe(false);
+    expect(read.privacy_scope).toContain('not encryption');
+    expect((await store.getWatchlist(alice.owner_id, config.MEMPOOL.NETWORK, wl.watchlist_id))?.privacy_mode).toBe('encrypted');
+  });
+
+  it('enforces service quotas under simultaneous creates and rejects coerced thresholds and limits', async () => {
+    const outcomes = await Promise.allSettled(Array.from({ length: 65 }, (_, i) => watchlistsService.createWatchlist(alice, `List ${i}`)));
+    expect(outcomes.filter(result => result.status === 'fulfilled')).toHaveLength(50);
+    expect(await ownerStore().countWatchlists(alice.owner_id, config.MEMPOOL.NETWORK)).toBe(50);
+    const wl = (await watchlistsService.getWatchlists(alice))[0];
+    const rules = await Promise.allSettled(Array.from({ length: 60 }, () => watchlistsService.addRule(alice, wl.watchlist_id, 'confirmation', 'in_app')));
+    expect(rules.filter(result => result.status === 'fulfilled')).toHaveLength(50);
+    for (const invalid of [true, [], {}, ' ', '0x10', '1e2']) {
+      await expect(watchlistsService.addRule(alice, wl.watchlist_id, 'value_transfer', 'in_app', invalid)).rejects.toMatchObject({ code: 'invalid_threshold_value', status: 400 });
+    }
+    for (const invalid of [NaN, Infinity, 0, -1, 1.5, 501]) {
+      await expect(watchlistsService.getNotifications(alice, null, invalid)).rejects.toMatchObject({ code: 'invalid_limit', status: 400 });
+    }
+    for (const invalid of ['1.5', '1junk', '-1', '0', '501', ['1'], {}]) { expect(() => notificationLimit(invalid)).toThrow(); }
+    expect(notificationLimit(undefined)).toBe(100); expect(notificationLimit('500')).toBe(500);
   });
 
   it('a foreign watchlist is not found, not readable, not writable, not deletable', async () => {

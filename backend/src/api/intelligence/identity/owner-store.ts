@@ -1,4 +1,4 @@
-import { randomUUID } from 'crypto';
+import { createHash, randomUUID } from 'crypto';
 import config from '../../../config';
 import DB from '../../../database';
 import logger from '../../../logger';
@@ -198,6 +198,7 @@ export interface OwnerStore {
   countWebhooks(ownerId: string, network: string): Promise<number>;
 
   insertWatchlist(row: WatchlistRow): Promise<void>;
+  insertWatchlistWithinQuota(row: WatchlistRow, limit: number): Promise<boolean>;
   listWatchlists(ownerId: string, network: string): Promise<WatchlistRow[]>;
   getWatchlist(ownerId: string, network: string, watchlistId: string): Promise<WatchlistRow | null>;
   countWatchlists(ownerId: string, network: string): Promise<number>;
@@ -205,6 +206,7 @@ export interface OwnerStore {
   touchWatchlist(watchlistId: string, at: string): Promise<void>;
 
   insertEntity(row: WatchlistEntityRow): Promise<'inserted' | 'duplicate'>;
+  insertEntityWithinQuota(row: WatchlistEntityRow, limit: number): Promise<'inserted' | 'duplicate' | 'quota'>;
   listEntities(watchlistId: string): Promise<WatchlistEntityRow[]>;
   countEntities(watchlistId: string): Promise<number>;
   deleteEntity(ownerId: string, network: string, watchlistId: string, entityId: string): Promise<boolean>;
@@ -212,13 +214,15 @@ export interface OwnerStore {
   listEntitiesByType(network: string, entityType: string): Promise<WatchlistEntityRow[]>;
 
   insertRule(row: WatchlistRuleRow): Promise<void>;
+  insertRuleWithinQuota(row: WatchlistRuleRow, limit: number): Promise<boolean>;
   listRules(watchlistId: string): Promise<WatchlistRuleRow[]>;
   countRules(watchlistId: string): Promise<number>;
   deleteRule(ownerId: string, network: string, watchlistId: string, ruleId: string): Promise<boolean>;
   listEnabledRules(network: string): Promise<WatchlistRuleRow[]>;
 
   insertSavedQuery(row: SavedQueryRow): Promise<void>;
-  listSavedQueries(ownerId: string, network: string, limit: number): Promise<SavedQueryRow[]>;
+  insertSavedQueryWithinQuota(row: SavedQueryRow, limit: number): Promise<boolean>;
+  listSavedQueries(ownerId: string, network: string, limit: number, before?: string): Promise<SavedQueryRow[]>;
   countSavedQueries(ownerId: string, network: string): Promise<number>;
 
   insertGraphCase(row: GraphCaseRow): Promise<void>;
@@ -370,6 +374,34 @@ export class MysqlOwnerStore implements OwnerStore {
     return Number(rows?.[0]?.n ?? 0);
   }
 
+  /** Cross-process quota serialization uses one existing settings row per owner/network. */
+  private async quotaInsert(row: {owner_id:string;network:string}, table: string, columns: string[], values: unknown[], scope: string, scopeValues: unknown[], limit: number, duplicate?: {where:string;values:unknown[]}): Promise<'inserted'|'duplicate'|'quota'> {
+    if(!Number.isSafeInteger(limit)||limit<1||limit>100000)throw new Error('Invalid store quota');
+    const lock=createHash('sha256').update('owner-quota:'+JSON.stringify([row.owner_id,row.network])).digest('hex');
+    const queries:any[]=[
+      {query:'INSERT INTO intelligence_settings (name, value, created_at) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE name = name',params:[lock,'quota-lock',new Date()]},
+      {query:'SELECT value FROM intelligence_settings WHERE name = ? FOR UPDATE',params:[lock]},
+    ];
+    if(duplicate)queries.push({query:'SELECT 1 AS found FROM '+table+' WHERE '+duplicate.where+' LIMIT 1',params:duplicate.values});
+    queries.push({query:'INSERT INTO '+table+' ('+columns.join(', ')+') SELECT '+values.map(()=>'?').join(', ')+' WHERE (SELECT COUNT(*) FROM '+table+' WHERE '+scope+') < ?'+(duplicate?' AND NOT EXISTS (SELECT 1 FROM '+table+' WHERE '+duplicate.where+')':''),params:[...values,...scopeValues,limit,...(duplicate?.values??[])]});
+    const results:any[]=await DB.$atomicQuery(queries);
+    if(Number(results[results.length-1]?.[0]?.affectedRows)===1)return 'inserted';
+    if(duplicate&&results[2]?.[0]?.length)return 'duplicate';
+    return 'quota';
+  }
+  public async insertWatchlistWithinQuota(row: WatchlistRow, limit: number): Promise<boolean> {
+    return await this.quotaInsert(row,'intelligence_watchlists',['watchlist_id','owner_id','network','name','privacy_mode','created_at','updated_at','version'],[row.watchlist_id,row.owner_id,row.network,row.name,row.privacy_mode,toDate(row.created_at),toDate(row.updated_at),row.version],'owner_id = ? AND network = ?',[row.owner_id,row.network],limit)==='inserted';
+  }
+  public async insertEntityWithinQuota(row: WatchlistEntityRow, limit: number): Promise<'inserted'|'duplicate'|'quota'> {
+    return this.quotaInsert(row,'intelligence_watchlist_entities',['entity_id','watchlist_id','owner_id','network','entity_type','blinded_hash','label','created_at'],[row.entity_id,row.watchlist_id,row.owner_id,row.network,row.entity_type,row.blinded_hash,row.label,toDate(row.created_at)],'watchlist_id = ? AND owner_id = ? AND network = ?',[row.watchlist_id,row.owner_id,row.network],limit,{where:'watchlist_id = ? AND entity_type = ? AND blinded_hash = ?',values:[row.watchlist_id,row.entity_type,row.blinded_hash]});
+  }
+  public async insertRuleWithinQuota(row: WatchlistRuleRow, limit: number): Promise<boolean> {
+    return await this.quotaInsert(row,'intelligence_watchlist_rules',['rule_id','watchlist_id','owner_id','network','condition_type','threshold_value','delivery_channel','webhook_id','enabled','rate_limit_per_hour','created_at','version'],[row.rule_id,row.watchlist_id,row.owner_id,row.network,row.condition_type,row.threshold_value,row.delivery_channel,row.webhook_id,row.enabled?1:0,row.rate_limit_per_hour,toDate(row.created_at),row.version],'watchlist_id = ? AND owner_id = ? AND network = ?',[row.watchlist_id,row.owner_id,row.network],limit)==='inserted';
+  }
+  public async insertSavedQueryWithinQuota(row: SavedQueryRow, limit: number): Promise<boolean> {
+    return await this.quotaInsert(row,'intelligence_saved_queries',['query_id','owner_id','network','title','sql_text','created_at','updated_at'],[row.query_id,row.owner_id,row.network,row.title,row.sql_text,toDate(row.created_at),toDate(row.updated_at)],'owner_id = ? AND network = ?',[row.owner_id,row.network],limit)==='inserted';
+  }
+
   private watchlist(row: any): WatchlistRow {
     return {
       watchlist_id: row.watchlist_id, owner_id: row.owner_id, network: row.network, name: row.name, privacy_mode: row.privacy_mode,
@@ -509,8 +541,8 @@ export class MysqlOwnerStore implements OwnerStore {
   }
 
   /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */
-  public async listSavedQueries(ownerId: string, network: string, limit: number): Promise<SavedQueryRow[]> {
-    const [rows]: any[] = await DB.query('SELECT * FROM intelligence_saved_queries WHERE owner_id = ? AND network = ? ORDER BY updated_at DESC LIMIT ?', [ownerId, network, limit]);
+  public async listSavedQueries(ownerId: string, network: string, limit: number, before?: string): Promise<SavedQueryRow[]> {
+    const [rows]: any[] = await DB.query('SELECT * FROM intelligence_saved_queries WHERE owner_id = ? AND network = ?' + (before ? ' AND query_id < ?' : '') + ' ORDER BY query_id DESC LIMIT ?', before ? [ownerId, network, before, limit] : [ownerId, network, limit]);
     return (rows ?? []).map((row: any) => this.savedQuery(row));
   }
 
@@ -807,6 +839,24 @@ export class MemoryOwnerStore implements OwnerStore {
 
   /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */
   public async insertWatchlist(row: WatchlistRow): Promise<void> { this.watchlists.set(row.watchlist_id, this.clone(row)); }
+  public async insertWatchlistWithinQuota(row: WatchlistRow, limit: number): Promise<boolean> {
+    if([...this.watchlists.values()].filter(value=>value.owner_id===row.owner_id&&value.network===row.network).length>=limit)return false;
+    if(this.watchlists.has(row.watchlist_id))throw new Error('Duplicate watchlist ID');this.watchlists.set(row.watchlist_id,this.clone(row));return true;
+  }
+  public async insertEntityWithinQuota(row: WatchlistEntityRow, limit: number): Promise<'inserted'|'duplicate'|'quota'> {
+    const rows=[...this.entities.values()].filter(value=>value.watchlist_id===row.watchlist_id&&value.owner_id===row.owner_id&&value.network===row.network);
+    if(rows.some(value=>value.entity_type===row.entity_type&&value.blinded_hash===row.blinded_hash))return 'duplicate';
+    if(rows.length>=limit)return 'quota';if(this.entities.has(row.entity_id))throw new Error('Duplicate entity ID');this.entities.set(row.entity_id,this.clone(row));return 'inserted';
+  }
+  public async insertRuleWithinQuota(row: WatchlistRuleRow, limit: number): Promise<boolean> {
+    if([...this.rules.values()].filter(value=>value.watchlist_id===row.watchlist_id&&value.owner_id===row.owner_id&&value.network===row.network).length>=limit)return false;
+    if(this.rules.has(row.rule_id))throw new Error('Duplicate rule ID');this.rules.set(row.rule_id,this.clone(row));return true;
+  }
+  public async insertSavedQueryWithinQuota(row: SavedQueryRow, limit: number): Promise<boolean> {
+    if([...this.queries.values()].filter(value=>value.owner_id===row.owner_id&&value.network===row.network).length>=limit)return false;
+    if(this.queries.has(row.query_id))throw new Error('Duplicate saved-query ID');this.queries.set(row.query_id,this.clone(row));return true;
+  }
+
   /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */
   public async listWatchlists(ownerId: string, network: string): Promise<WatchlistRow[]> { return [...this.watchlists.values()].filter(w => w.owner_id === ownerId && w.network === network).map(w => this.clone(w)); }
   /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */
@@ -865,7 +915,7 @@ export class MemoryOwnerStore implements OwnerStore {
   /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */
   public async insertSavedQuery(row: SavedQueryRow): Promise<void> { this.queries.set(row.query_id, this.clone(row)); }
   /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */
-  public async listSavedQueries(ownerId: string, network: string, limit: number): Promise<SavedQueryRow[]> { return [...this.queries.values()].filter(q => q.owner_id === ownerId && q.network === network).slice(0, limit).map(q => this.clone(q)); }
+  public async listSavedQueries(ownerId: string, network: string, limit: number, before?: string): Promise<SavedQueryRow[]> { return [...this.queries.values()].filter(q => q.owner_id === ownerId && q.network === network && (!before || q.query_id < before)).sort((a,b)=>b.query_id.localeCompare(a.query_id)).slice(0, limit).map(q => this.clone(q)); }
   /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */
   public async countSavedQueries(ownerId: string, network: string): Promise<number> { return (await this.listSavedQueries(ownerId, network, 100000)).length; }
 

@@ -70,7 +70,7 @@ import { execSync } from 'child_process';
       });
     } else {
       try {
-        const pool = await this.getPool();
+        const pool = connection ?? await this.getPool();
         return pool.query(query, params);
       } catch (e) {
         if (errorLogLevel !== 'silent') {
