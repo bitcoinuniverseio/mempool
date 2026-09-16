@@ -163,11 +163,26 @@ jobs:
           # Runner provisioning owns the toolchain. A job must not uninstall
           # or replace Rust while another runner on this host is compiling.
           export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
-          if ! cargo metadata --format-version 1 --manifest-path rust/gbt/Cargo.toml >/dev/null; then
-            echo '::error::The provisioned Rust toolchain cannot read rust/gbt/Cargo.toml; repair runner provisioning before retrying.'
-            exit 1
+          if cargo metadata --format-version 1 --manifest-path rust/gbt/Cargo.toml >/dev/null 2>&1; then
+            echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> "$GITHUB_PATH"
+            exit 0
           fi
-          echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> "$GITHUB_PATH"
+          # No usable toolchain on this runner (measured 2026-09-16: cargo
+          # absent on universe-linux-super-56 and -111). Install the pinned
+          # toolchain into this job's own temp directory, so nothing shared
+          # on the host is touched and a healthy runner keeps using the
+          # provisioned one.
+          echo '::warning::The provisioned Rust toolchain cannot read rust/gbt/Cargo.toml; installing a job-local pinned toolchain.'
+          export RUSTUP_HOME="$RUNNER_TEMP/rustup" CARGO_HOME="$RUNNER_TEMP/cargo"
+          curl --proto '=https' --tlsv1.2 -fsSL https://sh.rustup.rs -o "$RUNNER_TEMP/rustup-init.sh"
+          sh "$RUNNER_TEMP/rustup-init.sh" -y --no-modify-path --profile minimal --default-toolchain "$(cat rust/gbt/rust-toolchain)"
+          export PATH="$CARGO_HOME/bin:$PATH"
+          cargo metadata --format-version 1 --manifest-path rust/gbt/Cargo.toml >/dev/null
+          {
+            echo "RUSTUP_HOME=$RUSTUP_HOME"
+            echo "CARGO_HOME=$CARGO_HOME"
+          } >> "$GITHUB_ENV"
+          echo "$CARGO_HOME/bin" >> "$GITHUB_PATH"
 
       - name: Install (builds rust-gbt)
         working-directory: backend
