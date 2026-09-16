@@ -227,7 +227,7 @@ test('other ports on the declared NetBird address remain exposed', () => {
   ]), ['5353', '8996']);
 });
 
-function runListenerGate(lines) {
+function runListenerGate(lines, adapterFirewall = false) {
   const gate = script.match(/^gate_private_listeners\(\) \{$[\s\S]*?^\}$/m)?.[0];
   const allowed = script.match(/^PUBLIC_LISTENERS=.*$/m)?.[0];
   const netbirdIngress = script.match(/^NETBIRD_GATEWAY_INGRESS=.*$/m)?.[0];
@@ -236,11 +236,12 @@ function runListenerGate(lines) {
 ${allowed}
 ${netbirdIngress}
 ss() { printf '%s\\n' "$SS_OUTPUT"; }
+iptables() { [ "$ADAPTER_FIREWALL" = true ]; }
 log() { printf '%s\\n' "$*"; }
 fail() { printf '%s\\n' "$*" >&2; exit 1; }
 ${gate}
 gate_private_listeners
-`, { SS_OUTPUT: [SS_HEADER, ...lines].join('\n') });
+`, { SS_OUTPUT: [SS_HEADER, ...lines].join('\n'), ADAPTER_FIREWALL: String(adapterFirewall) });
 }
 
 test('release address probe uses the configured network and requires real alternate-network history', () => {
@@ -275,6 +276,12 @@ test('Signet P2P and the exact NetBird ingress binding are permitted without wil
       assert.match(result.stderr, new RegExp(String(port)));
     }
   }
+});
+
+test('the adapter listener requires its IPv4 firewall drop rule', () => {
+  const listener = ['LISTEN 0 4096 0.0.0.0:38385 0.0.0.0:*'];
+  assert.notEqual(runListenerGate(listener).status, 0);
+  assert.equal(runListenerGate(listener, true).status, 0);
 });
 
 // ------------------------------------------------------------ wait_for ----
