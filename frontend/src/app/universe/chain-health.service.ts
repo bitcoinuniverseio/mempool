@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, Subject, catchError, defer, distinctUntilChanged, map, merge, of, shareReplay, startWith, switchMap, take, timer } from 'rxjs';
+import { Observable, Subject, catchError, defer, distinctUntilChanged, map, merge, of, scan, shareReplay, startWith, switchMap, take, timer } from 'rxjs';
 import { StateService } from '@app/services/state.service';
 import { UniverseApiService } from './universe-api.service';
 import { ChainCapabilityEnvelope, ExplorerChain } from './universe.types';
@@ -8,6 +8,10 @@ export interface ChainHealthState {
   capabilities: ChainCapabilityEnvelope[];
   loading: boolean;
   error: string | null;
+  /** When the capabilities shown were last fetched successfully; null before the first success. */
+  observedAt?: string | null;
+  /** True when a refresh failed and the capabilities shown are the retained last-good ones. */
+  stale?: boolean;
 }
 
 /** A single health poll shared by the picker, dashboards, details and sync notice. */
@@ -26,9 +30,18 @@ export class ChainHealthService {
       switchMap(() => merge(timer(0, 15_000), this.refresh$).pipe(
         switchMap(() => this.api.getChains$().pipe(
           take(1),
-          map(capabilities => ({ capabilities, loading: false, error: null } as ChainHealthState)),
-          catchError(() => of<ChainHealthState>({ capabilities: [], loading: false, error: 'Status refresh failed. Current health is unknown.' })),
+          map(capabilities => ({ capabilities, loading: false, error: null, observedAt: new Date().toISOString(), stale: false } as ChainHealthState)),
+          catchError(() => of<ChainHealthState>({ capabilities: [], loading: false, error: 'Status refresh failed. Current health is unknown.', stale: true })),
         )),
+        // A failed refresh keeps the last successful document and marks it
+        // stale, so the page does not turn every reading into "not stated"
+        // because one poll failed. The stamped observation age still ages
+        // the evidence honestly. switchMap above already discards a slower
+        // older request when a newer one starts, so no older answer can
+        // replace a newer one.
+        scan((previous: ChainHealthState, next: ChainHealthState): ChainHealthState => next.error && previous.capabilities.length
+          ? { ...next, capabilities: previous.capabilities, observedAt: previous.observedAt ?? null }
+          : next, loading),
         startWith(loading),
       )),
     )).pipe(shareReplay({ bufferSize: 1, refCount: true }));

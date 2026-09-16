@@ -669,6 +669,28 @@ export interface ChainSubsystemHealth {
   id: ChainSubsystemId;
   state: 'ready' | 'degraded' | 'unavailable';
   reasonIds: string[];
+  /** Additive from the overlay: the four-state verdict; unknown means no evidence. */
+  availability?: 'ready' | 'degraded' | 'unavailable' | 'unknown';
+  observedAt?: string | null;
+  lastFailureKind?: string | null;
+  stale?: boolean | null;
+  authorityId?: string | null;
+  protocols?: {
+    protocolId: string;
+    availability: 'ready' | 'degraded' | 'unavailable' | 'unknown';
+    qualification: 'qualified' | 'unqualified' | 'unknown';
+    coverage: 'complete' | 'partial' | 'unavailable' | 'unknown';
+  }[];
+}
+
+/** The dashboard's own account of its bucket read, beside the collector's health. */
+export interface ChainPendingViewStatus {
+  state: 'fresh' | 'retained' | 'unavailable';
+  observedAt: string | null;
+  lastSuccessAt: string | null;
+  lastFailureKind: string | null;
+  correlationId: string | null;
+  consecutiveFailuresAtomic: string;
 }
 
 export interface ChainDashboardView {
@@ -682,6 +704,7 @@ export interface ChainDashboardView {
   mempool: ChainMempoolSummary | null;
   mining: MiningSummaryView | null;
   subsystems: ChainSubsystemHealth[];
+  pendingView?: ChainPendingViewStatus;
   observedAt: string;
 }
 
