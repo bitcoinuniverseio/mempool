@@ -131,6 +131,7 @@ export class QueryStudioService {
     return { query_id: row.query_id, owner_id: row.owner_id, title: row.title, sql: row.sql_text, created_at: row.created_at, updated_at: row.updated_at };
   }
 
+  /** @asyncUnsafe rejections propagate to the caller, which handles them. */
   public async getSavedQueryPage(owner: AuthenticatedOwner, limit = 200, before?: string): Promise<{saved_queries: SavedQueryRecord[]; count:number; next_cursor:string|null; complete:boolean}> {
     if(!Number.isSafeInteger(limit)||limit<1||limit>200||before!==undefined&&!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(before))throw new IdentityError('invalid_page','Use an integer limit from1 to200 and a valid saved-query cursor.',400);
     const rows=await ownerStore().listSavedQueries(owner.owner_id,config.MEMPOOL.NETWORK,limit+1,before);

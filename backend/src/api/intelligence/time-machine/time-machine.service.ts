@@ -161,7 +161,7 @@ export class TimeMachineService {
     if (!this.store || this.loadFailed) return;
     this.dirty = true;
     if (this.timer || this.writing) return;
-    this.timer = setTimeout(() => { this.timer = undefined; void this.flushHistory().catch(() => undefined); }, 250);
+    this.timer = setTimeout(() => { this.timer = undefined; this.flushHistory().catch(() => undefined); }, 250);
     this.timer.unref();
   }
 

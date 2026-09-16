@@ -73,6 +73,7 @@ export class WorkbenchService {
 
   public constructor(private readonly core: WorkbenchCoreReader = ownedWorkbenchCore) {}
 
+  /** @asyncUnsafe rejections propagate to the caller, which handles them. */
   private async source(): Promise<{ network: string; chain: string; block_hash: string }> {
     const expected = { mainnet: 'main', testnet: 'test', testnet4: 'testnet4', signet: 'signet', regtest: 'regtest' }[this.core.network];
     if (!expected) throw new WorkbenchEvidenceError('unsupported-network', 'No Bitcoin source is configured for this network.');
@@ -97,6 +98,7 @@ export class WorkbenchService {
     return WorkbenchService.instance;
   }
 
+  /** @asyncUnsafe rejections propagate to the caller, which handles them. */
   public async analyzeScript(scriptHex: string): Promise<ScriptAnalysisResult> {
     if (typeof scriptHex !== 'string' || scriptHex.length > 20000 || !/^(?:[0-9a-f]{2})*$/i.test(scriptHex)) throw new WorkbenchEvidenceError('invalid-script', 'Script must be even-length hexadecimal of at most 10000 bytes.', 400);
     const chunks = script.decompile(Buffer.from(scriptHex, 'hex'));
@@ -127,6 +129,7 @@ export class WorkbenchService {
     }
   }
 
+  /** @asyncUnsafe rejections propagate to the caller, which handles them. */
   public async parseDescriptor(descriptorStr: string, range: [number, number] = [0, 4], requireAddresses = false): Promise<DescriptorParseResult> {
     if (typeof descriptorStr !== 'string' || !descriptorStr.trim() || descriptorStr.length > 16384) throw new WorkbenchEvidenceError('invalid-descriptor', 'A public descriptor of at most 16384 characters is required.', 400);
     // Never forward extended private keys or WIF keys to the node.

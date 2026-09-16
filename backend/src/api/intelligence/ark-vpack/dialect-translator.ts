@@ -14,6 +14,7 @@ function minimal(evidence: any, network: string) {
     user_pubkey: evidence.user_pubkey, expires_at_height: evidence.expiry };
 }
 
+/** @asyncUnsafe rejections propagate to the caller, which handles them. */
 export async function translateVpackDialect(request: any) {
   const { source_dialect: source, target_dialect: target, package: pkg, network } = request || {};
   if (!['arkade', 'bark', 'mvv'].includes(source) || !['arkade', 'bark', 'mvv'].includes(target) || source === target) throw new AnchorReadError('invalid-dialects', 'Select two different supported dialect names.', 400);

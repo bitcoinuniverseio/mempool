@@ -389,15 +389,18 @@ export class MysqlOwnerStore implements OwnerStore {
     if(duplicate&&results[2]?.[0]?.length)return 'duplicate';
     return 'quota';
   }
+  /** @asyncUnsafe rejections propagate to the caller, which handles them. */
   public async insertWatchlistWithinQuota(row: WatchlistRow, limit: number): Promise<boolean> {
     return await this.quotaInsert(row,'intelligence_watchlists',['watchlist_id','owner_id','network','name','privacy_mode','created_at','updated_at','version'],[row.watchlist_id,row.owner_id,row.network,row.name,row.privacy_mode,toDate(row.created_at),toDate(row.updated_at),row.version],'owner_id = ? AND network = ?',[row.owner_id,row.network],limit)==='inserted';
   }
   public async insertEntityWithinQuota(row: WatchlistEntityRow, limit: number): Promise<'inserted'|'duplicate'|'quota'> {
     return this.quotaInsert(row,'intelligence_watchlist_entities',['entity_id','watchlist_id','owner_id','network','entity_type','blinded_hash','label','created_at'],[row.entity_id,row.watchlist_id,row.owner_id,row.network,row.entity_type,row.blinded_hash,row.label,toDate(row.created_at)],'watchlist_id = ? AND owner_id = ? AND network = ?',[row.watchlist_id,row.owner_id,row.network],limit,{where:'watchlist_id = ? AND entity_type = ? AND blinded_hash = ?',values:[row.watchlist_id,row.entity_type,row.blinded_hash]});
   }
+  /** @asyncUnsafe rejections propagate to the caller, which handles them. */
   public async insertRuleWithinQuota(row: WatchlistRuleRow, limit: number): Promise<boolean> {
     return await this.quotaInsert(row,'intelligence_watchlist_rules',['rule_id','watchlist_id','owner_id','network','condition_type','threshold_value','delivery_channel','webhook_id','enabled','rate_limit_per_hour','created_at','version'],[row.rule_id,row.watchlist_id,row.owner_id,row.network,row.condition_type,row.threshold_value,row.delivery_channel,row.webhook_id,row.enabled?1:0,row.rate_limit_per_hour,toDate(row.created_at),row.version],'watchlist_id = ? AND owner_id = ? AND network = ?',[row.watchlist_id,row.owner_id,row.network],limit)==='inserted';
   }
+  /** @asyncUnsafe rejections propagate to the caller, which handles them. */
   public async insertSavedQueryWithinQuota(row: SavedQueryRow, limit: number): Promise<boolean> {
     return await this.quotaInsert(row,'intelligence_saved_queries',['query_id','owner_id','network','title','sql_text','created_at','updated_at'],[row.query_id,row.owner_id,row.network,row.title,row.sql_text,toDate(row.created_at),toDate(row.updated_at)],'owner_id = ? AND network = ?',[row.owner_id,row.network],limit)==='inserted';
   }

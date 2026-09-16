@@ -54,6 +54,7 @@ export class OwnedDataSource implements DataSource {
     private client: any = bitcoinClient,
     public network = config.MEMPOOL.NETWORK
   ) {}
+  /** @asyncUnsafe rejections propagate to the caller, which handles them. */
   async read(): Promise<DataSnapshot> {
     const deadline = Date.now() + LIMITS.sourceTimeoutMs;
     const genesis = await this.client.getBlockHash(0);

@@ -217,7 +217,7 @@ export class DataStudioService {
           if (!this.sourceWork) {
             const work = this.source.read();
             this.sourceWork = work;
-            void work
+            work
               .finally(() => {
                 if (this.sourceWork === work) this.sourceWork = null;
               })
@@ -281,7 +281,7 @@ export class DataStudioService {
         }
       };
       this.flight = run();
-      void this.flight
+      this.flight
         .finally(() => {
           this.flight = null;
         })
@@ -305,6 +305,7 @@ export class DataStudioService {
     }
     return this.refresh();
   }
+  /** @asyncUnsafe rejections propagate to the caller, which handles them. */
   async $getCatalog() {
     const s = await this.refresh();
     const datasets: DatasetManifest[] = Object.entries(s.datasets).map(([id, rows]) => {
@@ -446,6 +447,7 @@ export class DataStudioService {
           bad('Filter value does not match field type.');
     }
   }
+  /** @asyncUnsafe rejections propagate to the caller, which handles them. */
   async $executeQuery(query: QueryRequest): Promise<QueryResult> {
     this.validateQuery(query);
     const start = performance.now(),
@@ -499,6 +501,7 @@ export class DataStudioService {
       source: { tipHash: s.tipHash, tipHeight: s.tipHeight, scope: s.scope },
     };
   }
+  /** @asyncUnsafe rejections propagate to the caller, which handles them. */
   async export(id: string, dataset: string, format: string) {
     const s = await this.snapshot(id);
     if (!Object.prototype.hasOwnProperty.call(FIELDS, dataset) || !s.datasets[dataset])

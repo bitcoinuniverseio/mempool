@@ -4,7 +4,7 @@ The inspector parses Cashu A (V3 JSON), Cashu B (V4 definite-length CBOR), and F
 
 Cashu checks required fields, positive bounded amounts, encoded keyset IDs and valid secp256k1 points. V4 integer quantities and sums use BigInt decimal strings. It does not verify mint signatures, DLEQ, witnesses, resolve short keyset IDs, or establish unspent status. Amounts are declared quantities, not spendable balances. Secrets are excluded from returned summaries; URL credentials/query/fragments are removed. Multiple V3 mint groups are preserved.
 
-Fedimint checks checksums where present, canonical BigSize lengths, exact end-of-input, required federation ID/API endpoint, unique peer IDs, bounded UTF8 URL fields, and optional API-secret omission from output. Included peer count is not total guardian count. Unknown bounded extension fields are counted and skipped. Configuration authentication and federation state require separate authoritative evidence.
+Fedimint checks checksums where present, minimal BigSize lengths, exact end-of-input, required federation ID/API endpoint, unique peer IDs, bounded UTF8 URL fields, and optional API-secret omission from output. Included peer count is not total guardian count. Unknown bounded extension fields are counted and skipped. Configuration authentication and federation state require separate authoritative evidence.
 
 ## Pinned primary references and fixtures
 

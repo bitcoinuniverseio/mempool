@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { DataStudioService } from './data-studio.service';
+/** @asyncUnsafe rejections propagate to the caller, which handles them. */
 export async function streamData(req: Request, res: Response, service: DataStudioService) {
   await service.refresh();
   const cursor = req.get('Last-Event-ID') ?? (typeof req.query.cursor === 'string' ? req.query.cursor : undefined);
@@ -46,7 +47,7 @@ export async function streamData(req: Request, res: Response, service: DataStudi
   res.flushHeaders();
   for (const event of backlog) write(`id: ${event.id}\nevent: data.snapshot\ndata: ${JSON.stringify(event)}\n\n`);
   poll = setInterval(() => {
-    void service.refresh().catch(() => {
+    service.refresh().catch(() => {
       write(
         'event: data.source-unavailable\ndata: {"scope":"Owned source refresh failed; no new snapshot claimed."}\n\n'
       );

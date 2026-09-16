@@ -139,7 +139,34 @@ const REASON_COPY: Record<string, ReasonCopy> = {
     text: $localize`:@@universe.reason.confirmed-history-unconfigured:Historical indexer for confirmed transactions is not configured for this chain.`,
     kind: 'fault',
   },
+  'confirmed-reads-unverified': { text: 'Block and transaction reads have not yet been independently verified against the index.', kind: 'fault' },
+  'address-reads-unverified': { text: 'Address and UTXO reads have not yet been independently verified against the index.', kind: 'fault' },
+  'confirmed-reads-stale': { text: 'The last verified block and transaction read is too old to establish current availability.', kind: 'fault' },
+  'address-reads-stale': { text: 'The last verified address read is too old to establish current availability.', kind: 'fault' },
+  'confirmed-read-failed': { text: 'The most recent block or transaction read from the index did not return a usable document.', kind: 'fault' },
+  'address-read-failed': { text: 'The most recent address or UTXO read from the index did not return a usable document.', kind: 'fault' },
+  'address-history-authority-unavailable': { text: 'The source of address history did not answer.', kind: 'fault' },
+  'address-history-checkpoint-unknown': { text: 'The address-history index has not reported a checkpoint.', kind: 'fault' },
+  'address-history-unconfigured': { text: 'The address-history index is not configured for this chain.', kind: 'fault' },
+  'mempool-collector-unconfigured': { text: 'No pending-transaction collector is configured for this chain.', kind: 'fault' },
+  'bucket-service-unconfigured': { text: 'No pending bucket service is configured for this chain.', kind: 'fault' },
+  'pending-set-retained': { text: 'The pending set shown is the last successful read; the latest refresh failed.', kind: 'fault' },
+  'protocol-roster-empty': { text: 'No protocol is registered for this chain.', kind: 'fault' },
+  'protocol-authority-unconfigured': { text: 'No indexer is configured for this protocol.', kind: 'fault' },
+  'health-contract-invalid': { text: 'The health document did not pass validation, so its readings are not used. The status route needs attention.', kind: 'fault' },
+  'health-contract-absent': { text: 'No independent health document was reported; the legacy flag is not used as evidence.', kind: 'fault' },
+  'evidence-absent': { text: 'No evidence has been reported for this reading.', kind: 'fault' },
+  'status-unavailable': { text: 'The chain status could not be read.', kind: 'fault' },
 };
+
+/**
+ * Codes that carry a variable part after a fixed prefix. The prefix names the
+ * event, the suffix is the sanitized failure class the overlay recorded.
+ */
+const PREFIXED_COPY: readonly { prefix: string; text: (detail: string) => string; kind: Exclude<ChainReasonKind, 'unstated'> }[] = [
+  { prefix: 'latest-refresh-failed:', text: detail => `The latest refresh failed: ${readableCode(detail).toLowerCase()}.`, kind: 'fault' },
+  { prefix: 'bucket-view-', text: detail => `The pending buckets could not be read: ${readableCode(detail).toLowerCase()}.`, kind: 'fault' },
+];
 
 /**
  * A code with no sentence here, made readable without being interpreted. The
@@ -159,6 +186,18 @@ export function describeChainReason(code: string): ChainReasonReading {
   const copy = REASON_COPY[code];
   if (copy) {
     return { code, text: copy.text, kind: copy.kind };
+  }
+  const prefixed = PREFIXED_COPY.find(entry => code.startsWith(entry.prefix) && code.length > entry.prefix.length);
+  if (prefixed) {
+    return { code, text: prefixed.text(code.slice(prefixed.prefix.length)), kind: prefixed.kind };
+  }
+  // An aggregate row attributes each reason to the protocol it belongs to
+  // as `<protocolId>:<code>`; the sentence is the code's, named for the
+  // protocol, so the aggregate never hides which member is at fault.
+  const separator = code.indexOf(':');
+  if (separator > 0 && /^[a-z0-9_]+$/.test(code.slice(0, separator))) {
+    const inner = describeChainReason(code.slice(separator + 1));
+    return { code, text: `${readableCode(code.slice(0, separator))}: ${inner.text}`, kind: inner.kind };
   }
   return { code, text: readableCode(code), kind: 'unstated' };
 }

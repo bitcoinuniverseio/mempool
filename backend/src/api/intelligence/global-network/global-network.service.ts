@@ -166,7 +166,7 @@ export class GlobalNetworkService {
     })();
     this.nodeFlight = pending;
     const settled = () => { if (this.nodeFlight === pending) this.nodeFlight = null; };
-    void pending.then(settled, settled);
+    pending.then(settled, settled);
     return this.waitNode(pending);
   }
 
@@ -176,7 +176,7 @@ export class GlobalNetworkService {
     finally { if (timer) clearTimeout(timer); }
   }
 
-  /** Shared owned Core observation; never relabel a different chain as this network. */
+  /** Shared owned Core observation; never relabel a different chain as this network.  @asyncUnsafe rejections propagate to the caller, which handles them. */
   public async getOwnedNodeSnapshot(now = Date.now()) {
     const snapshot = await this.node(now);
     const genesis: Record<string,string> = {
