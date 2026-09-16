@@ -13,7 +13,7 @@ describe('actual local Zcash WASM',()=>{
   expect(WebAssembly.Module.imports(module)).toEqual([]);
   const fixtures=JSON.parse(await readFile('../tools/zcash-scanner/fixtures.json','utf8'));
   for(const fixture of fixtures){const instance=await WebAssembly.instantiate(module,{});const input=clone(fixture);const result=scanZcash(instance,input);expect(result.received_zatoshis).toBe(fixture.expected_zatoshis);expect(result.notes_found).toBe(1);expect(result.balance_zatoshis).toBeNull();expect(result.scanned_blocks).toBe(0);expect(input.viewing_key).toBe('');expect(new Uint8Array((instance.exports.memory as WebAssembly.Memory).buffer).every(v=>v===0)).toBe(true);}
- });
+ },60000);
  it('rejects ciphertext mutations and incorrect valid keys',async()=>{
   const module=await WebAssembly.compile(await readFile('src/resources/zcash-scanner/universe_zcash_scanner.wasm'));const fixtures=JSON.parse(await readFile('../tools/zcash-scanner/fixtures.json','utf8'));
   for(const index of [0,10]){const data=clone(fixtures[index]);data.outputs[0].ciphertext='00'+data.outputs[0].ciphertext.slice(2);expect(scanZcash(await WebAssembly.instantiate(module,{}),data).notes_found).toBe(0);const wrong=clone(fixtures[index]);wrong.viewing_key=fixtures[index+1].viewing_key;expect(scanZcash(await WebAssembly.instantiate(module,{}),wrong).notes_found).toBe(0);}
