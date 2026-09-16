@@ -18,6 +18,7 @@ import {
   TimelineFutureSlot,
 } from '@app/universe/chain-dashboard/chain-timeline';
 import { ExplorerChain } from '@app/universe/universe.types';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 /**
  * The horizontal block strip: upcoming target slots on one side of the
@@ -29,7 +30,7 @@ import { ExplorerChain } from '@app/universe/universe.types';
 @Component({
   selector: 'app-chain-timeline',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   templateUrl: './chain-timeline.component.html',
   styleUrls: ['./chain-timeline.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

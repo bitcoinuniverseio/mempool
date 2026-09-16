@@ -23,6 +23,7 @@ import { fileURLToPath } from 'node:url';
 import playwright from 'playwright';
 
 import { auditAddressPage, auditMalformedAddressPage } from './address-page-audit.mjs';
+import { navigateTolerantly } from './runner-network.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const args = Object.fromEntries(
@@ -89,10 +90,15 @@ async function openAddress(context, address) {
   page.on('pageerror', (error) => consoleErrors.push(error.message));
 
   try {
-    await page.goto(`${ORIGIN}/address/${address}`, {
-      waitUntil: 'networkidle',
+    // The load event, not network idle: the app polls its authorities and
+    // holds a WebSocket for the life of the page, so on a slow origin the
+    // network never goes quiet, the navigation timed out, and a page that
+    // had rendered every transaction was reported as naming nothing. The
+    // waits below hold the page to its content instead.
+    notes.push(...(await navigateTolerantly(page, `${ORIGIN}/address/${address}`, {
+      waitUntil: 'load',
       timeout: REQUEST_TIMEOUT_MS,
-    });
+    }, consoleErrors)).notes);
     // The address panel resolves asynchronously. Wait for either the data or
     // the error state rather than for a fixed time, so a slow index is not
     // reported as an empty page.

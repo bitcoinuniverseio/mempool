@@ -4,13 +4,16 @@
  * Nothing about the visit is stored: no vault record, no history entry.
  */
 
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, DestroyRef, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
+import { catchError, distinctUntilChanged, forkJoin, map, of, switchMap } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PortfolioV2ApiService } from '../data/portfolio-v2-api.service';
 import { PortfolioSessionService } from '../stores/session.service';
 import { PortfolioDataStateComponent } from '../shared/data-state.component';
 import { atomicToDisplay, formatExact, maskedValue, truncateIdentifier } from '../shared/exact';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
+
 import type {
   PortfolioSemanticActivityPage,
   PortfolioV2HoldingsPage,
@@ -20,13 +23,13 @@ import type {
 @Component({
   selector: 'app-ephemeral-portfolio',
   standalone: true,
-  imports: [RouterLink, PortfolioDataStateComponent],
+  imports: [RelativeUrlPipe, RouterLink, PortfolioDataStateComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="wrap">
       <header class="head">
         <p class="crumb">
-          <a routerLink="/portfolio" i18n="@@universe.portfolio.ephemeral.back">Portfolio Intelligence</a>
+          <a [routerLink]="'/portfolio' | relativeUrl" i18n="@@universe.portfolio.ephemeral.back">Portfolio Intelligence</a>
           <span> · </span>
           <span i18n="@@universe.portfolio.ephemeral.mode">Ephemeral view - nothing is saved</span>
         </p>
@@ -36,7 +39,7 @@ import type {
 
       @if (failure(); as failure) {
         <p class="error" role="alert">{{ failure }}</p>
-        <a routerLink="/portfolio" i18n="@@universe.portfolio.ephemeral.back-home">Back to Portfolio Intelligence</a>
+        <a [routerLink]="'/portfolio' | relativeUrl" i18n="@@universe.portfolio.ephemeral.back-home">Back to Portfolio Intelligence</a>
       } @else if (summary(); as summary) {
         <section class="hero">
           <div>
@@ -90,7 +93,7 @@ import type {
             </ul>
           }
           <p class="soft" i18n="@@universe.portfolio.ephemeral.save-hint">
-            Want this address tracked with labels, history, and a vault? <a routerLink="/portfolio/new">Create a portfolio</a>.
+            Want this address tracked with labels, history, and a vault? <a [routerLink]="'/portfolio/new' | relativeUrl">Create a portfolio</a>.
           </p>
         </section>
       } @else {
@@ -133,31 +136,33 @@ export class EphemeralPortfolioComponent implements OnInit {
   readonly activity = this.activitySignal.asReadonly();
   readonly failure = this.failureSignal.asReadonly();
 
-  private readonly chain = computed(() => this.route.snapshot.paramMap.get('chain') ?? '');
-  private readonly network = computed(() => this.route.snapshot.paramMap.get('network') ?? '');
-  private readonly address = computed(() => this.route.snapshot.paramMap.get('address') ?? '');
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly address = signal('');
 
   ngOnInit(): void {
-    void this.load();
-  }
-
-  private async load(): Promise<void> {
-    try {
-      const [summary, holdings, activity] = await Promise.all([
-        firstValueFrom(this.api.getSummary$(this.chain(), this.network(), this.address())),
-        firstValueFrom(this.api.getHoldings$(this.chain(), this.network(), this.address(), undefined, 100)),
-        firstValueFrom(this.api.getActivity$(this.chain(), this.network(), this.address())),
-      ]);
-      this.summarySignal.set(summary);
-      this.holdingsSignal.set(holdings);
-      this.activitySignal.set(activity);
-    } catch (error) {
-      this.failureSignal.set(
-        error instanceof Error
-          ? error.message
-          : $localize`:@@universe.portfolio.ephemeral.failed:The address evidence could not be read.`,
-      );
-    }
+    this.route.paramMap.pipe(
+      map(params => ({ chain: params.get('chain') ?? '', network: params.get('network') ?? '', address: params.get('address') ?? '' })),
+      distinctUntilChanged((a, b) => a.chain === b.chain && a.network === b.network && a.address === b.address),
+      switchMap(({ chain, network, address }) => {
+        this.address.set(address);
+        this.summarySignal.set(null);
+        this.holdingsSignal.set(null);
+        this.activitySignal.set(null);
+        this.failureSignal.set('');
+        if (!chain || !network || !address) return of({ error: 'A chain, network and address are required.' });
+        return forkJoin({
+          summary: this.api.getSummary$(chain, network, address),
+          holdings: this.api.getHoldings$(chain, network, address, undefined, 100),
+          activity: this.api.getActivity$(chain, network, address),
+        }).pipe(catchError(() => of({ error: 'The address evidence could not be read.' })));
+      }),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(result => {
+      if ('error' in result) { this.failureSignal.set(result.error); return; }
+      this.summarySignal.set(result.summary);
+      this.holdingsSignal.set(result.holdings);
+      this.activitySignal.set(result.activity);
+    });
   }
 
   protected truncated(): string {

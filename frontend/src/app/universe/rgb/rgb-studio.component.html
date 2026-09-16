@@ -1,36 +1,8 @@
 <div class="container-xl product-page">
-  <header class="page-head">
-    <nav class="crumbs">
-      <a [routerLink]="['/']">Home</a>
-      <span class="divider">/</span>
-      <span>Client-Side Validation</span>
-    </nav>
-    <h1>RGB Client-Side Validation & Consignment Studio</h1>
-    <p class="summary">
-      Browser-isolated client-side validation engine for RGB consignments, single-use seals, transition DAGs, and Bitcoin transaction anchors.
-    </p>
-  </header>
-
-  <section class="panel">
-    <h2>Client-Side Consignment Validator</h2>
-    <p>
-      Load or paste an RGB consignment. Nothing is uploaded to any server. This deployment does not yet carry a validation engine, and the result below says so rather than reporting a check that did not run.
-    </p>
-
-    <div class="form-group">
-      <label for="consignmentInput">RGB Consignment Data (Hex / Armored)</label>
-      <textarea id="consignmentInput" [(ngModel)]="consignmentHex" rows="4" placeholder="rgb:consignment:... or hex data"></textarea>
-    </div>
-
-    <button type="button" class="btn-primary" (click)="validate()" [disabled]="!consignmentHex.trim()">
-      Validate Consignment
-    </button>
-  </section>
-
-  <ng-container *ngIf="result$ | async as res">
-    <section class="panel">
-      <h2>Validation Evidence</h2>
-      <p role="alert">{{ res.reason }}</p>
-    </section>
-  </ng-container>
+ <header class="page-head"><nav class="crumbs"><a [routerLink]="['/' | relativeUrl]">Home</a><span class="divider">/</span><span>Client-Side Validation</span></nav><h1>RGB Client-Side Validation & Consignment Studio</h1><p class="summary">Validate schema rules, contract history and single-use seal commitments with the pinned RGB 0.11.1 engine.</p></header>
+ <section class="panel"><h2>Client-Side Consignment Validator</h2><p>Your consignment stays in a local browser worker. Only public anchor transaction IDs are sent to the owned Bitcoin source. Five pinned official schemas are supported; other schemas remain unresolved.</p>
+ <div class="form-group"><label for="consignmentFile">Import binary or armored consignment (maximum 2 MB)</label><input id="consignmentFile" type="file" (change)="importFile($event)"></div>
+ <div class="form-group"><label for="consignmentInput">RGB Consignment Data (Hex / Armored)</label><textarea id="consignmentInput" [(ngModel)]="consignmentHex" (ngModelChange)="invalidate()" rows="6" placeholder="Strict-encoded hexadecimal or RGB CONSIGNMENT armor"></textarea></div>
+ <button type="button" class="btn-primary" (click)="validate()" [disabled]="loading || !consignmentHex.trim()">{{ loading ? 'Validating locally...' : 'Validate Consignment' }}</button></section>
+ <section class="panel" *ngIf="result as res"><h2>Validation Evidence: {{res.status}}</h2><p *ngIf="res.reason" role="alert">{{res.reason}}</p><p *ngIf="res.contract_id">Contract: <code>{{res.contract_id}}</code></p><p *ngIf="res.schema_id">Schema: <code>{{res.schema_id}}</code></p><p *ngIf="res.engine">Engine: {{res.engine}}</p><p>Validation concerns the supplied history and observed anchors. Issuer identity, ownership of terminal seals, current spendability and wallet recovery are separate checks.</p><pre>{{res | json}}</pre></section>
 </div>

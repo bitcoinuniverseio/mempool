@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { GlobalNetworkApiService, GlobalNetworkDnsSeed } from './global-network.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-global-network-seeds',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -24,11 +25,11 @@ import { GlobalNetworkApiService, GlobalNetworkDnsSeed } from './global-network.
 
         <!-- Sub-navigation tabs -->
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/network/global">Overview</a>
-          <a class="nav-link" routerLink="/network/global/nodes">Reachable Nodes</a>
-          <a class="nav-link" routerLink="/network/global/snapshots">Snapshots Archive</a>
-          <a class="nav-link active" routerLink="/network/global/seeds">DNS Seeds</a>
-          <a class="nav-link" routerLink="/network/global/self-check">Node Self-Check</a>
+          <a class="nav-link" [routerLink]="'/network/global' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/network/global/nodes' | relativeUrl">Reachable Nodes</a>
+          <a class="nav-link" [routerLink]="'/network/global/snapshots' | relativeUrl">Snapshots Archive</a>
+          <a class="nav-link active" [routerLink]="'/network/global/seeds' | relativeUrl">DNS Seeds</a>
+          <a class="nav-link" [routerLink]="'/network/global/self-check' | relativeUrl">Node Self-Check</a>
         </nav>
       </header>
 
@@ -59,17 +60,19 @@ import { GlobalNetworkApiService, GlobalNetworkDnsSeed } from './global-network.
                 <td><code class="fw-bold">{{ s.hostname }}</code></td>
                 <td>{{ s.maintainer }}</td>
                 <td>
-                  <span class="badge bg-success" *ngIf="s.active">Active</span>
-                  <span class="badge bg-warning" *ngIf="!s.active">Inactive</span>
+                  <span class="badge bg-success" *ngIf="s.active === true">Active</span><span *ngIf="s.active === null" class="badge bg-secondary">Unknown</span>
+                  <span class="badge bg-warning" *ngIf="s.active === false">Inactive</span>
                 </td>
-                <td class="fw-semibold">{{ s.discovered_addrs_count | number }}</td>
+                <td class="fw-semibold">{{ s.discovered_addrs_count === null ? 'Unknown' : (s.discovered_addrs_count | number) }}</td>
                 <td>
-                  <div class="d-flex align-items-center gap-2">
+                  <div class="d-flex align-items-center gap-2" *ngIf="s.reachable_ratio !== null">
                     <div class="progress flex-grow-1" style="height: 6px; min-width: 60px;">
                       <div class="progress-bar bg-success" [style.width.%]="s.reachable_ratio * 100"></div>
                     </div>
                     <span class="small">{{ (s.reachable_ratio * 100).toFixed(1) }}%</span>
                   </div>
+                  <span class="small text-muted" *ngIf="s.reachable_ratio === null">not probed</span>
+                  <span class="small text-danger d-block" *ngIf="s.error">{{ s.error }}</span>
                 </td>
                 <td class="text-end text-muted small">{{ s.last_query_at }}</td>
               </tr>
@@ -111,7 +114,7 @@ export class GlobalNetworkSeedsComponent implements OnInit, OnDestroy {
           this.cd.markForCheck();
         },
         error: err => {
-          this.error = err?.message || 'Failed to load DNS seeds';
+          this.error = err?.error?.error || err?.message || 'Failed to load DNS seeds';
           this.loading = false;
           this.cd.markForCheck();
         },

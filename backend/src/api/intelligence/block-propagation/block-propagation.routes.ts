@@ -1,5 +1,13 @@
 import { Application, Request, Response } from 'express';
-import blockPropagationService from './block-propagation.service';
+import blockPropagationService, { BlockPropagationEvidenceError } from './block-propagation.service';
+
+/** An absent source is a 503 that names the source, never a 500 and never an empty list. */
+function fail(res: Response, err: unknown): Response {
+  if (err instanceof BlockPropagationEvidenceError) {
+    return res.status(err.status).json({ stage: err.code, error: err.message });
+  }
+  return res.status(500).json({ error: err instanceof Error && err.message ? err.message : 'Internal error' });
+}
 
 class BlockPropagationRoutes {
   public initRoutes(app: Application): void {
@@ -8,7 +16,7 @@ class BlockPropagationRoutes {
         const overview = blockPropagationService.getOverview();
         res.json(overview);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -17,7 +25,7 @@ class BlockPropagationRoutes {
         const live = blockPropagationService.getLive();
         res.json(live);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -29,7 +37,7 @@ class BlockPropagationRoutes {
         }
         res.json(block);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -38,7 +46,7 @@ class BlockPropagationRoutes {
         const compactBlocks = blockPropagationService.listCompactBlocks();
         res.json(compactBlocks);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -47,7 +55,7 @@ class BlockPropagationRoutes {
         const forkRaces = blockPropagationService.listForkRaces();
         res.json(forkRaces);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -59,7 +67,7 @@ class BlockPropagationRoutes {
         }
         res.json(race);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -68,7 +76,7 @@ class BlockPropagationRoutes {
         const staleTips = blockPropagationService.listStaleTips();
         res.json(staleTips);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -77,7 +85,7 @@ class BlockPropagationRoutes {
         const sensors = blockPropagationService.listSensors();
         res.json(sensors);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -86,7 +94,7 @@ class BlockPropagationRoutes {
         const fibre = blockPropagationService.listFibre();
         res.json(fibre);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 

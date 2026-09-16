@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 /**
  * Git commit and tag attestations.
@@ -14,7 +15,7 @@ import { RouterModule } from '@angular/router';
 @Component({
   selector: 'app-opentimestamps-git',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4">
       <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
@@ -22,7 +23,7 @@ import { RouterModule } from '@angular/router';
           <h1 class="h2 mb-1">Git Commit and Tag Proof of Publication</h1>
           <p class="text-muted mb-0">Verify Git commit hashes and releases anchored into the Bitcoin blockchain through ots-git.</p>
         </div>
-        <a routerLink="/tools/timestamp" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
+        <a [routerLink]="'/tools/timestamp' | relativeUrl" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
       </div>
 
       <div class="alert alert-warning" role="alert">

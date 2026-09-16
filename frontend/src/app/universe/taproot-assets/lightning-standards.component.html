@@ -1,9 +1,9 @@
 <div class="container-xl product-page">
   <header class="page-head">
     <nav class="crumbs">
-      <a [routerLink]="['/']">Home</a>
+      <a [routerLink]="['/' | relativeUrl]">Home</a>
       <span class="divider">/</span>
-      <a [routerLink]="['/taproot-assets']">Taproot Assets</a>
+      <a [routerLink]="['/taproot-assets' | relativeUrl]">Taproot Assets</a>
       <span class="divider">/</span>
       <span>Lightning Standards</span>
     </nav>
@@ -14,8 +14,8 @@
   </header>
 
   <nav class="nav-tabs">
-    <a [routerLink]="['/taproot-assets']">Assets & Groups</a>
-    <a [routerLink]="['/lightning/offers']" class="active">Lightning BOLT12 & RFQ</a>
+    <a [routerLink]="['/taproot-assets' | relativeUrl]">Assets & Groups</a>
+    <a [routerLink]="['/lightning/offers' | relativeUrl]" class="active">Lightning BOLT12 & RFQ</a>
   </nav>
 
   <!-- Decoder Section -->
@@ -23,25 +23,34 @@
     <h2>BOLT12 Offer Decoder</h2>
     <div class="form-group">
       <label for="offerInput">BOLT12 Offer String (lno1...)</label>
-      <input id="offerInput" type="text" [(ngModel)]="offerInput" placeholder="lno1pg257enxv4ezqcneype82um50ynhxgrwdajx283q890cdse444n894v69n0q2sxve80q" />
+      <input id="offerInput" type="text" [(ngModel)]="offerInput" (ngModelChange)="clearDecode()" maxlength="16384" placeholder="lno1..." />
     </div>
-    <button type="button" class="btn-primary" (click)="decode()" [disabled]="!offerInput.trim()">
+    <p>The offer is sent to the owned backend's pinned Lightning parser. Offers are unsigned; decoding does not authenticate an issuer, verify an invoice or prove payment.</p>
+    <button type="button" class="btn btn-primary" (click)="decode()" [disabled]="!offerInput.trim() || decoding">
       Decode Offer
     </button>
   </section>
+  <p *ngIf="decoding" role="status">Decoding offer...</p>
 
   <section class="panel" *ngIf="decodeError">
-    <h2>Decoded Offer Summary</h2>
+    <h2>{{ decodeUnavailable ? 'Offer decoding unavailable' : 'Offer not decoded' }}</h2>
     <p role="alert">{{ decodeError }}</p>
   </section>
 
   <ng-container *ngIf="decodedOffer">
     <section class="panel">
       <h2>Decoded Offer Summary</h2>
-      <p><strong>Offer ID:</strong> <span class="mono">{{ decodedOffer.offerId }}</span></p>
-      <p><strong>Description:</strong> {{ decodedOffer.description }}</p>
-      <p><strong>Blinded Routes:</strong> {{ decodedOffer.blindRoutesCount }} hops</p>
-      <p><span class="badge badge-success">Valid BOLT12 Syntax</span></p>
+      <p><strong>Offer ID:</strong> <span class="mono text-break">{{ decodedOffer.offer_id }}</span></p>
+      <p><strong>Description:</strong> {{ decodedOffer.description ?? 'Not specified' }}</p>
+      <p><strong>Issuer:</strong> {{ decodedOffer.issuer ?? 'Not specified' }}</p>
+      <p><strong>Amount:</strong> {{ amountLabel(decodedOffer) }}</p>
+      <p><strong>Quantity:</strong> {{ quantityLabel(decodedOffer) }}</p>
+      <p><strong>Blinded paths:</strong> {{ decodedOffer.blinded_path_count }}</p>
+      <p><strong>Absolute expiry (Unix seconds):</strong> {{ decodedOffer.absolute_expiry ?? 'Not specified' }}</p>
+      <p>At decode time: {{ decodedOffer.expired ? 'Expired' : 'Not expired' }}. Selected network: {{ decodedOffer.network_compatible ? 'Included' : 'Not included' }}. Unknown required features: {{ decodedOffer.unknown_required_features ? 'Present' : 'None reported' }}.</p>
+      <p>Native invoice-request eligibility at decode time: {{ decodedOffer.usable_for_invoice_request ? 'Eligible' : 'Not eligible' }}.</p>
+      <p><strong>Unsigned offer parsed by {{ decodedOffer.engine }}.</strong> Payment is not verified.</p>
+      <p>{{ decodedOffer.scope }}</p>
     </section>
   </ng-container>
 
@@ -90,9 +99,9 @@
           <tbody>
             <tr *ngFor="let q of vm.quotes">
               <td><strong>{{ q.baseAsset }} / {{ q.quoteAsset }}</strong></td>
-              <td class="mono">{{ q.askRate }}</td>
-              <td class="mono">{{ q.bidRate }}</td>
-              <td><span class="badge badge-info">{{ q.spreadBps }} bps</span></td>
+              <td class="mono">{{ q.askRate ?? 'not quoted' }}</td>
+              <td class="mono">{{ q.bidRate ?? 'not quoted' }}</td>
+              <td><span class="badge badge-info">{{ q.spreadBps === null ? 'one-sided' : q.spreadBps + ' bps' }}</span></td>
               <td>{{ quoteExpiry(q.validUntil) }}</td>
             </tr>
           </tbody>

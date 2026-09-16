@@ -27,17 +27,20 @@ export interface OffchainOperator {
   signature_count_endpoint?: string;
   transfer_capabilities: string[];
   recovery_capabilities: string[];
-  health: 'healthy' | 'degraded' | 'unreachable';
+  health: 'healthy' | 'degraded' | 'unreachable' | 'unknown';
+  operator_authenticated?: null;
+  evidence_scope?: string;
   effective_from: string;
   expires_at: string;
   provenance: {
-    registered_in_knowledge_registry: boolean;
+    registered_in_knowledge_registry: boolean | null;
     identity_ref?: string;
-    verified_signature: boolean;
+    verified_signature: boolean | null;
   };
 }
 
 export interface StatechainPublicManifest {
+  signature_scheme?: 'schnorr' | 'ecdsa';
   schema_version: string;
   protocol: string;
   operator_public_key: string;
@@ -125,16 +128,20 @@ export interface OffchainRecoveryPlan {
   current_stage: string;
   earliest_broadcast_height: number;
   requires_fee_bump: boolean;
-  suggested_fee_rate_sats_vb: number;
+  suggested_fee_rate_sats_vb: number | null;
   recovery_state: OffchainRecoveryState;
-  unsigned_psbt_hex: string;
+  /** Null: a recovery PSBT is built from the backup transaction, not from an entity id. */
+  unsigned_psbt_hex: string | null;
   action_guidance: string;
 }
 
 export interface OffchainOverviewResponse {
   total_operators: number;
-  active_statechains_count: number;
-  active_coinswap_makers: number;
+  /** Null: no operator on this deployment reports its statechain count. */
+  active_statechains_count: number | null;
+  active_coinswap_makers: number | null;
+  configured_coinswap_makers: number;
   operators: OffchainOperator[];
   public_offers: CoinswapPublicOffer[];
+  registry: { configured: boolean; source: string | null; error: string | null; observed_at: string; scope: string };
 }

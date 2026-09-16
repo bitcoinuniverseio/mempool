@@ -75,7 +75,7 @@
       <tbody>
         <tr *ngFor="let cluster of data.clusters; trackBy: trackById">
           <th scope="row">
-            <a [routerLink]="['/mempool/clusters', cluster.id]">
+            <a [routerLink]="['/mempool/clusters' | relativeUrl, cluster.id]">
               <code>{{ cluster.id.slice(0, 8) }}…{{ cluster.id.slice(-8) }}</code>
             </a>
           </th>
@@ -115,7 +115,7 @@
       a block no miner could build.
     </p>
     <p>
-      <a routerLink="/mempool/feerate-diagram" i18n="mempool.clusters.diagram-link">
+      <a [routerLink]="'/mempool/feerate-diagram' | relativeUrl" i18n="mempool.clusters.diagram-link">
         See the fee rate diagram for this mempool
       </a>
     </p>

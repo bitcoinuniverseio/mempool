@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { OffchainApiService, OffchainOperator } from './offchain.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-coinswap-overview',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -23,12 +24,12 @@ import { OffchainApiService, OffchainOperator } from './offchain.service';
         </p>
 
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/offchain/utxo">Overview</a>
-          <a class="nav-link" routerLink="/offchain/statechains/operators">Statechains</a>
-          <a class="nav-link" routerLink="/offchain/statechains/verify">Transfer Verifier</a>
-          <a class="nav-link active" routerLink="/offchain/coinswap">CoinSwap</a>
-          <a class="nav-link" routerLink="/offchain/coinswap/inspect">CoinSwap Inspector</a>
-          <a class="nav-link" routerLink="/offchain/recovery">Recovery Planner</a>
+          <a class="nav-link" [routerLink]="'/offchain/utxo' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/offchain/statechains/operators' | relativeUrl">Statechains</a>
+          <a class="nav-link" [routerLink]="'/offchain/statechains/verify' | relativeUrl">Transfer Verifier</a>
+          <a class="nav-link active" [routerLink]="'/offchain/coinswap' | relativeUrl">CoinSwap</a>
+          <a class="nav-link" [routerLink]="'/offchain/coinswap/inspect' | relativeUrl">CoinSwap Inspector</a>
+          <a class="nav-link" [routerLink]="'/offchain/recovery' | relativeUrl">Recovery Planner</a>
         </nav>
       </header>
 
@@ -60,14 +61,14 @@ import { OffchainApiService, OffchainOperator } from './offchain.service';
               <div class="col-6">
                 <div class="p-2 border rounded bg-body">
                   <div class="text-muted small">Fee Rate</div>
-                  <div class="fw-bold">{{ m.published_terms.fee_rate_basis_points / 100 }}%</div>
+                  <div class="fw-bold">{{ m.published_terms.fee_rate_basis_points ?? 'Unknown' }}</div>
                 </div>
               </div>
               <div class="col-6">
                 <div class="p-2 border rounded bg-body">
                   <div class="text-muted small">Swap Limits</div>
                   <div class="fw-bold font-monospace small">
-                    {{ m.published_terms.min_amount_sat | number }} &ndash; {{ m.published_terms.max_amount_sat | number }} sat
+                    {{ m.published_terms.min_amount_sat ?? 'Unknown' }} &ndash; {{ m.published_terms.max_amount_sat ?? 'Unknown' }} sat
                   </div>
                 </div>
               </div>
@@ -75,7 +76,7 @@ import { OffchainApiService, OffchainOperator } from './offchain.service';
 
             <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
               <span class="small text-muted font-monospace text-break">{{ m.tor_endpoint || m.endpoint }}</span>
-              <a routerLink="/offchain/coinswap/inspect" class="btn btn-sm btn-outline-primary">
+              <a [routerLink]="'/offchain/coinswap/inspect' | relativeUrl" class="btn btn-sm btn-outline-primary">
                 Inspect Swap Package
               </a>
             </div>
@@ -108,7 +109,7 @@ export class CoinswapOverviewComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
       },
       error: (err) => {
-        this.error = err.message || 'Failed to load CoinSwap makers';
+        this.error = err?.error?.error || err?.message || 'Failed to load CoinSwap makers';
         this.loading = false;
         this.cdr.markForCheck();
       },

@@ -8,11 +8,12 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { PortfoliosStore } from '../stores/portfolios.store';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-portfolio-home',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RelativeUrlPipe, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="home">
@@ -24,8 +25,8 @@ import { PortfoliosStore } from '../stores/portfolios.store';
               Track Bitcoin assets and UTXOs with exact values, kept private in this browser.
             </p>
             <div class="actions">
-              <a class="primary" routerLink="/portfolio/new" i18n="@@universe.portfolio.home.get-started">Get started</a>
-              <a routerLink="/portfolio/new" [queryParams]="{ mode: 'ephemeral' }" i18n="@@universe.portfolio.home.lookup">Look up one address</a>
+              <a class="primary" [routerLink]="'/portfolio/new' | relativeUrl" i18n="@@universe.portfolio.home.get-started">Get started</a>
+              <a [routerLink]="'/portfolio/new' | relativeUrl" [queryParams]="{ mode: 'ephemeral' }" i18n="@@universe.portfolio.home.lookup">Look up one address</a>
             </div>
           </section>
         }

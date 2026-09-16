@@ -56,7 +56,7 @@ export class ElectrsApiService {
   }
 
   listBlocks$(height?: number): Observable<BlockExtended[]> {
-    return this.httpClient.get<BlockExtended[]>(this.apiBaseUrl + this.apiBasePath + '/api/blocks/' + (height || ''));
+    return this.httpClient.get<BlockExtended[]>(this.apiBaseUrl + this.apiBasePath + '/api/blocks/' + (height ?? ''));
   }
 
   getTransaction$(txId: string): Observable<Transaction> {
@@ -115,8 +115,9 @@ export class ElectrsApiService {
   }
 
   getScriptHash$(script: string): Observable<ScriptHash> {
+    const requestBase = this.apiBaseUrl + this.apiBasePath;
     return from(calcScriptHash$(script)).pipe(
-      switchMap(scriptHash => this.httpClient.get<ScriptHash>(this.apiBaseUrl + this.apiBasePath + '/api/scripthash/' + scriptHash))
+      switchMap(scriptHash => this.httpClient.get<ScriptHash>(requestBase + '/api/scripthash/' + scriptHash))
     );
   }
 
@@ -157,32 +158,35 @@ export class ElectrsApiService {
   }
 
   getScriptHashTransactions$(script: string,  txid?: string): Observable<Transaction[]> {
+    const requestBase = this.apiBaseUrl + this.apiBasePath;
     let params = new HttpParams();
     if (txid) {
       params = params.append('after_txid', txid);
     }
     return from(calcScriptHash$(script)).pipe(
-      switchMap(scriptHash => this.httpClient.get<Transaction[]>(this.apiBaseUrl + this.apiBasePath + '/api/scripthash/' + scriptHash + '/txs', { params })),
+      switchMap(scriptHash => this.httpClient.get<Transaction[]>(requestBase + '/api/scripthash/' + scriptHash + '/txs', { params })),
     );
   }
 
   getScriptHashesTransactions$(scripts: string[],  txid?: string): Observable<Transaction[]> {
+    const requestBase = this.apiBaseUrl + this.apiBasePath;
     let params = new HttpParams();
     if (txid) {
       params = params.append('after_txid', txid);
     }
     return from(Promise.all(scripts.map(script => calcScriptHash$(script)))).pipe(
-      switchMap(scriptHashes => this.httpClient.post<Transaction[]>(this.apiBaseUrl + this.apiBasePath + '/api/scripthashes/txs', scriptHashes, { params })),
+      switchMap(scriptHashes => this.httpClient.post<Transaction[]>(requestBase + '/api/scripthashes/txs', scriptHashes, { params })),
     );
   }
 
   getScriptHashSummary$(script: string,  txid?: string): Observable<AddressTxSummary[]> {
+    const requestBase = this.apiBaseUrl + this.apiBasePath;
     let params = new HttpParams();
     if (txid) {
       params = params.append('after_txid', txid);
     }
     return from(calcScriptHash$(script)).pipe(
-      switchMap(scriptHash => this.httpClient.get<AddressTxSummary[]>(this.apiBaseUrl + this.apiBasePath + '/api/scripthash/' + scriptHash + '/txs/summary', { params })),
+      switchMap(scriptHash => this.httpClient.get<AddressTxSummary[]>(requestBase + '/api/scripthash/' + scriptHash + '/txs/summary', { params })),
     );
   }
 
@@ -191,18 +195,20 @@ export class ElectrsApiService {
   }
 
   getScriptHashUtxos$(script: string): Observable<Utxo[]> {
+    const requestBase = this.apiBaseUrl + this.apiBasePath;
     return from(calcScriptHash$(script)).pipe(
-      switchMap(scriptHash => this.httpClient.get<Utxo[]>(this.apiBaseUrl + this.apiBasePath + '/api/scripthash/' + scriptHash + '/utxo')),
+      switchMap(scriptHash => this.httpClient.get<Utxo[]>(requestBase + '/api/scripthash/' + scriptHash + '/utxo')),
     );
   }
 
   getScriptHashesSummary$(scripts: string[],  txid?: string): Observable<AddressTxSummary[]> {
+    const requestBase = this.apiBaseUrl + this.apiBasePath;
     let params = new HttpParams();
     if (txid) {
       params = params.append('after_txid', txid);
     }
     return from(Promise.all(scripts.map(script => calcScriptHash$(script)))).pipe(
-      switchMap(scriptHashes => this.httpClient.post<AddressTxSummary[]>(this.apiBaseUrl + this.apiBasePath + '/api/scripthashes/txs/summary', scriptHashes, { params })),
+      switchMap(scriptHashes => this.httpClient.post<AddressTxSummary[]>(requestBase + '/api/scripthashes/txs/summary', scriptHashes, { params })),
     );
   }
 

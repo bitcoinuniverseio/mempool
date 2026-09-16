@@ -1,6 +1,24 @@
-import * as crypto from 'crypto';
 import { EventEnvelopeValidator } from '../events/event-envelope';
-import { DeveloperIdentityManager, DeveloperApiKeyRecord } from '../identity/developer-identity';
+import config from '../../../config';
+import { AuthenticatedOwner, IdentityError } from '../identity/developer-identity';
+import { ownerStore } from '../identity/owner-store';
+
+/**
+ * Raised when a read has no source behind it. The routes map the code to a
+ * 503, so an absent integration is reported as an absent integration rather
+ * than as an answer.
+ */
+export class QueryStudioEvidenceError extends Error {
+  constructor(public readonly code: string, message: string, public readonly status = 503) {
+    super(message);
+  }
+}
+
+const queryEngineUnavailable =
+  'Query Studio results are unavailable. Query execution and the sandbox schema require the owned read-only analytics replica (UNIVERSE_QUERY_ENGINE_DSN) fed by the owned mempool and relay sensor tables, which is not connected on this deployment.';
+
+export const usageMetricsUnavailable =
+  'Developer usage metrics are unavailable. Request counts, quota and latency require the owned API gateway metrics store (UNIVERSE_API_GATEWAY_METRICS_ORIGIN), which is not connected on this deployment.';
 
 export interface QueryExecutionResult {
   query_id: string;
@@ -28,21 +46,29 @@ export interface TableSchemaInfo {
 
 export interface SavedQueryRecord {
   query_id: string;
-  user_id: string;
+  owner_id: string;
   title: string;
   sql: string;
   created_at: string;
   updated_at: string;
 }
 
+const SAVED_QUERY_LIMITS = { perOwner: 200, titleLength: 128, sqlLength: 16_384 } as const;
+
+/**
+ * Query Studio.
+ *
+ * Execution used to answer every SELECT with the same two invented rows, and
+ * the schema described a sandbox that was never connected. Both now report
+ * the analytics replica they would need. The SQL policy check stays because
+ * it is a check on the caller's input, and saved queries and history stay
+ * because they hold what callers submitted, minus the seeded example.
+ */
 export class QueryStudioService {
   private static instance: QueryStudioService;
-  private savedQueries: Map<string, SavedQueryRecord> = new Map();
   private queryHistory: Array<{ query_id: string; sql: string; executed_at: string; duration_ms: number }> = [];
 
-  private constructor() {
-    this.seedDefaultSavedQueries();
-  }
+  private constructor() {}
 
   public static getInstance(): QueryStudioService {
     if (!QueryStudioService.instance) {
@@ -51,62 +77,12 @@ export class QueryStudioService {
     return QueryStudioService.instance;
   }
 
-  private seedDefaultSavedQueries(): void {
-    const q1Id = 'query-top-feerates';
-    this.savedQueries.set(q1Id, {
-      query_id: q1Id,
-      user_id: 'dev-admin',
-      title: 'Top Mempool Fee Rates',
-      sql: 'SELECT txid, fee_sats, vsize, feerate FROM mempool_transactions ORDER BY feerate DESC LIMIT 20',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    });
-  }
-
   public getSchema(): TableSchemaInfo[] {
-    return [
-      {
-        table_name: 'mempool_transactions',
-        description: 'Current real-time unconfirmed transactions in the Universe node mempool',
-        columns: [
-          { name: 'txid', type: 'VARCHAR(64)', nullable: false, is_primary_key: true },
-          { name: 'fee_sats', type: 'BIGINT UNSIGNED', nullable: false, is_primary_key: false },
-          { name: 'vsize', type: 'INT UNSIGNED', nullable: false, is_primary_key: false },
-          { name: 'weight', type: 'INT UNSIGNED', nullable: false, is_primary_key: false },
-          { name: 'feerate', type: 'DECIMAL(10,2)', nullable: false, is_primary_key: false },
-          { name: 'first_seen_utc', type: 'DATETIME', nullable: false, is_primary_key: false },
-        ],
-        indexes: ['PRIMARY (txid)', 'idx_feerate (feerate DESC)'],
-      },
-      {
-        table_name: 'mempool_checkpoints',
-        description: 'Verified historical mempool state snapshots and checkpoints',
-        columns: [
-          { name: 'checkpoint_id', type: 'VARCHAR(64)', nullable: false, is_primary_key: true },
-          { name: 'block_height', type: 'INT UNSIGNED', nullable: false, is_primary_key: false },
-          { name: 'tx_count', type: 'INT UNSIGNED', nullable: false, is_primary_key: false },
-          { name: 'total_weight', type: 'BIGINT UNSIGNED', nullable: false, is_primary_key: false },
-          { name: 'total_fees_sats', type: 'BIGINT UNSIGNED', nullable: false, is_primary_key: false },
-          { name: 'state_hash', type: 'CHAR(64)', nullable: false, is_primary_key: false },
-        ],
-        indexes: ['PRIMARY (checkpoint_id)', 'idx_height (block_height)'],
-      },
-      {
-        table_name: 'relay_sensor_observations',
-        description: 'Observed propagation delays across geographically distributed Universe nodes',
-        columns: [
-          { name: 'id', type: 'BIGINT UNSIGNED', nullable: false, is_primary_key: true },
-          { name: 'txid', type: 'VARCHAR(64)', nullable: false, is_primary_key: false },
-          { name: 'sensor_id', type: 'VARCHAR(64)', nullable: false, is_primary_key: false },
-          { name: 'delta_from_first_ms', type: 'INT UNSIGNED', nullable: false, is_primary_key: false },
-          { name: 'transport_type', type: 'VARCHAR(16)', nullable: false, is_primary_key: false },
-        ],
-        indexes: ['PRIMARY (id)', 'idx_txid (txid)'],
-      },
-    ];
+    throw new QueryStudioEvidenceError('unavailable-query-engine', queryEngineUnavailable);
   }
 
   public executeQuery(sql: string, maxRows = 100): QueryExecutionResult {
+    void maxRows;
     const trimmed = sql.trim();
 
     // Strict validation: Only SELECT permitted
@@ -131,69 +107,41 @@ export class QueryStudioService {
       }
     }
 
-    const queryId = EventEnvelopeValidator.generateUuidV7();
-    const startTime = Date.now();
-
-    // Deterministic safe execution mock with realistic records
-    const dummyRows: Array<Record<string, unknown>> = [
-      {
-        txid: '3b8908fef9b8098c772274b7c1265882e70c8cf865d1d6cb58a74e54e44f479d',
-        fee_sats: 1540,
-        vsize: 140,
-        feerate: 11.0,
-        first_seen_utc: new Date(Date.now() - 30000).toISOString(),
-      },
-      {
-        txid: 'e5765796c3d9efeb8152579df6461a6b18973b404d0938f36c535492d5272a0f',
-        fee_sats: 2890,
-        vsize: 210,
-        feerate: 13.76,
-        first_seen_utc: new Date(Date.now() - 45000).toISOString(),
-      },
-    ];
-
-    const duration = Date.now() - startTime + 2;
-    this.queryHistory.unshift({
-      query_id: queryId,
-      sql: trimmed,
-      executed_at: new Date().toISOString(),
-      duration_ms: duration,
-    });
-    if (this.queryHistory.length > 50) this.queryHistory.pop();
-
-    return {
-      query_id: queryId,
-      sql: trimmed,
-      columns: ['txid', 'fee_sats', 'vsize', 'feerate', 'first_seen_utc'],
-      rows: dummyRows.slice(0, maxRows),
-      row_count: Math.min(dummyRows.length, maxRows),
-      execution_time_ms: duration,
-      truncated: false,
-    };
+    // The policy above is a check on the caller's SQL; the rows would come from
+    // the analytics replica, and no replica is connected.
+    throw new QueryStudioEvidenceError('unavailable-query-engine', queryEngineUnavailable);
   }
 
   public getHistory(): Array<{ query_id: string; sql: string; executed_at: string; duration_ms: number }> {
     return this.queryHistory;
   }
 
-  public saveQuery(userId: string, title: string, sql: string): SavedQueryRecord {
-    const id = EventEnvelopeValidator.generateUuidV7();
-    const saved: SavedQueryRecord = {
-      query_id: id,
-      user_id: userId,
-      title,
-      sql,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-    this.savedQueries.set(id, saved);
-    return saved;
+  /** @asyncUnsafe Saved queries are the owner's data: durable, owner and network scoped, bounded. */
+  public async saveQuery(owner: AuthenticatedOwner, title: unknown, sql: unknown): Promise<SavedQueryRecord> {
+    if (typeof title !== 'string' || title.trim().length === 0 || title.length > SAVED_QUERY_LIMITS.titleLength) {
+      throw new IdentityError('invalid_title', `title must be 1 to ${SAVED_QUERY_LIMITS.titleLength} characters`, 400);
+    }
+    if (typeof sql !== 'string' || sql.trim().length === 0 || sql.length > SAVED_QUERY_LIMITS.sqlLength) {
+      throw new IdentityError('invalid_sql', `sql must be 1 to ${SAVED_QUERY_LIMITS.sqlLength} characters`, 400);
+    }
+    const store = ownerStore();
+    const now = new Date().toISOString();
+    const row = { query_id: EventEnvelopeValidator.generateUuidV7(), owner_id: owner.owner_id, network: config.MEMPOOL.NETWORK, title: title.trim(), sql_text: sql, created_at: now, updated_at: now };
+    if (!await store.insertSavedQueryWithinQuota(row, SAVED_QUERY_LIMITS.perOwner)) throw new IdentityError('quota', 'Saved-query quota reached.', 409);
+    return { query_id: row.query_id, owner_id: row.owner_id, title: row.title, sql: row.sql_text, created_at: row.created_at, updated_at: row.updated_at };
   }
 
-  public getSavedQueries(userId: string): SavedQueryRecord[] {
-    return Array.from(this.savedQueries.values()).filter(
-      (q) => q.user_id === userId || q.user_id === 'dev-admin'
-    );
+  public async getSavedQueryPage(owner: AuthenticatedOwner, limit = 200, before?: string): Promise<{saved_queries: SavedQueryRecord[]; count:number; next_cursor:string|null; complete:boolean}> {
+    if(!Number.isSafeInteger(limit)||limit<1||limit>200||before!==undefined&&!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(before))throw new IdentityError('invalid_page','Use an integer limit from1 to200 and a valid saved-query cursor.',400);
+    const rows=await ownerStore().listSavedQueries(owner.owner_id,config.MEMPOOL.NETWORK,limit+1,before);
+    const selected=rows.slice(0,limit),more=rows.length>limit;
+    return {saved_queries:selected.map(row=>({query_id:row.query_id,owner_id:row.owner_id,title:row.title,sql:row.sql_text,created_at:row.created_at,updated_at:row.updated_at})),count:selected.length,next_cursor:more?selected[selected.length-1].query_id:null,complete:!more};
+  }
+
+  /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */
+  public async getSavedQueries(owner: AuthenticatedOwner, limit = 200): Promise<SavedQueryRecord[]> {
+    const rows = await ownerStore().listSavedQueries(owner.owner_id, config.MEMPOOL.NETWORK, Math.max(1, Math.min(200, limit)));
+    return rows.map(row => ({ query_id: row.query_id, owner_id: row.owner_id, title: row.title, sql: row.sql_text, created_at: row.created_at, updated_at: row.updated_at }));
   }
 }
 

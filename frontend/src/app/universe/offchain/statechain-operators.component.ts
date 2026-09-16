@@ -1,13 +1,15 @@
+import { PublicManifestComponent } from './public-manifest.component';
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { OffchainApiService, OffchainOperator } from './offchain.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-statechain-operators',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [PublicManifestComponent, RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -19,19 +21,20 @@ import { OffchainApiService, OffchainOperator } from './offchain.service';
           </span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
-          Signed operator manifests, endpoint telemetry, supported protocol revisions, and signature counters for blinded statechains.
+          Configured reference entries only. Operator identity, current availability and advertised terms are not authenticated by this catalogue.
         </p>
 
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/offchain/utxo">Overview</a>
-          <a class="nav-link active" routerLink="/offchain/statechains/operators">Statechains</a>
-          <a class="nav-link" routerLink="/offchain/statechains/verify">Transfer Verifier</a>
-          <a class="nav-link" routerLink="/offchain/coinswap">CoinSwap</a>
-          <a class="nav-link" routerLink="/offchain/coinswap/inspect">CoinSwap Inspector</a>
-          <a class="nav-link" routerLink="/offchain/recovery">Recovery Planner</a>
+          <a class="nav-link" [routerLink]="'/offchain/utxo' | relativeUrl">Overview</a>
+          <a class="nav-link active" [routerLink]="'/offchain/statechains/operators' | relativeUrl">Statechains</a>
+          <a class="nav-link" [routerLink]="'/offchain/statechains/verify' | relativeUrl">Transfer Verifier</a>
+          <a class="nav-link" [routerLink]="'/offchain/coinswap' | relativeUrl">CoinSwap</a>
+          <a class="nav-link" [routerLink]="'/offchain/coinswap/inspect' | relativeUrl">CoinSwap Inspector</a>
+          <a class="nav-link" [routerLink]="'/offchain/recovery' | relativeUrl">Recovery Planner</a>
         </nav>
       </header>
 
+      <app-public-manifest></app-public-manifest>
       <div *ngIf="loading" class="text-center py-5 text-muted">
         <div class="spinner-border text-primary mb-2" role="status"></div>
         <div>Loading statechain operators...</div>
@@ -60,14 +63,14 @@ import { OffchainApiService, OffchainOperator } from './offchain.service';
               <div class="col-6">
                 <div class="p-2 border rounded bg-body">
                   <div class="text-muted small">Fee Rate</div>
-                  <div class="fw-bold">{{ op.published_terms.fee_rate_basis_points / 100 }}%</div>
+                  <div class="fw-bold">{{ op.published_terms.fee_rate_basis_points ?? 'Unknown' }}</div>
                 </div>
               </div>
               <div class="col-6">
                 <div class="p-2 border rounded bg-body">
                   <div class="text-muted small">Amount Limits</div>
                   <div class="fw-bold font-monospace small">
-                    {{ op.published_terms.min_amount_sat | number }} &ndash; {{ op.published_terms.max_amount_sat | number }} sat
+                    {{ op.published_terms.min_amount_sat ?? 'Unknown' }} &ndash; {{ op.published_terms.max_amount_sat ?? 'Unknown' }} sat
                   </div>
                 </div>
               </div>
@@ -75,7 +78,7 @@ import { OffchainApiService, OffchainOperator } from './offchain.service';
 
             <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
               <span class="small text-muted font-monospace text-break">{{ op.endpoint }}</span>
-              <a [routerLink]="['/offchain/statechains/operator', op.operator_id]" class="btn btn-sm btn-outline-primary">
+              <a [routerLink]="['/offchain/statechains/operator' | relativeUrl, op.operator_id]" class="btn btn-sm btn-outline-primary">
                 Operator Details
               </a>
             </div>
@@ -108,7 +111,7 @@ export class StatechainOperatorsComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
       },
       error: (err) => {
-        this.error = err.message || 'Failed to load statechain operators';
+        this.error = err?.error?.error || err?.message || 'Failed to load statechain operators';
         this.loading = false;
         this.cdr.markForCheck();
       },

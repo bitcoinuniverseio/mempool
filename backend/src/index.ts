@@ -76,15 +76,29 @@ import templatesRoutes from './api/intelligence/templates/templates.routes';
 import utxoRoutes from './api/intelligence/utxo/utxo.routes';
 import graphRoutes from './api/intelligence/graph/graph.routes';
 import workbenchRoutes from './api/intelligence/workbench/workbench.routes';
+import { registerBip353Routes } from './api/payment-discovery/bip353.routes';
 import verificationRoutes from './api/intelligence/verification/verification.routes';
 import queryStudioRoutes from './api/intelligence/query-studio/query-studio.routes';
 import watchlistsRoutes from './api/intelligence/watchlists/watchlists.routes';
 import knowledgeRoutes from './api/intelligence/knowledge/knowledge.routes';
 import protocolsRoutes from './api/intelligence/protocols/protocols.routes';
+import { protocolRegistryService } from './api/intelligence/protocols/protocol-registry.service';
+import { ProtocolActivityObserver } from './api/intelligence/protocols/protocol-activity';
+import { blockObservationHub } from './api/intelligence/observation/block-observation-hub';
+import { watchlistMatcher } from './api/intelligence/watchlists/watchlist-matcher';
+import { blockspaceService } from './api/intelligence/blockspace/blockspace.service';
+import { timeMachineService } from './api/intelligence/time-machine/time-machine.service';
+import { relayCollectorService } from './api/intelligence/relay/relay-collector.service';
+import { boundedHistoryFlush } from './api/intelligence/time-machine/history-shutdown';
+import { templateCollectorService } from './api/intelligence/templates/template-collector.service';
+import { globalNetworkService } from './api/intelligence/global-network/global-network.service';
+import { developerIdentity } from './api/intelligence/identity/developer-identity';
+import rbfCache from './api/rbf-cache';
 import globalNetworkRoutes from './api/intelligence/global-network/global-network.routes';
 import lightningReliabilityRoutes from './api/intelligence/lightning/lightning-reliability.routes';
 import silentPaymentsRoutes from './api/intelligence/silent-payments/silent-payments.routes';
 import payjoinRoutes from './api/intelligence/payjoin/payjoin.routes';
+import rgbRoutes from './api/intelligence/rgb/rgb.routes';
 import ecashRoutes from './api/intelligence/ecash/ecash.routes';
 import consensusRoutes from './api/intelligence/consensus/consensus.routes';
 import quantumRoutes from './api/intelligence/quantum/quantum.routes';
@@ -338,6 +352,7 @@ class Server {
 
   /** @asyncSafe */
   async runMainUpdateLoop(): Promise<void> {
+    if (this.shuttingDown) return;
     const start = Date.now();
     this.mainLoopWatchdog.begin();
     try {
@@ -376,6 +391,8 @@ class Server {
       this.backendRetryCount = 0;
     } catch (e: any) {
       this.backendRetryCount++;
+      timeMachineService.markObservationFailure();
+      relayCollectorService.markPollFailure();
       let loggerMsg = `Exception in runMainUpdateLoop() (count: ${this.backendRetryCount}). Retrying in ${this.currentBackendRetryInterval} sec.`;
       loggerMsg += ` Reason: ${(e instanceof Error ? e.message : e)}.`;
       if (e?.stack) {
@@ -431,6 +448,39 @@ class Server {
         }
       });
     }
+    // Every block the main loop processes is handed once to the intelligence
+    // observers through one hub: protocol activity metrics and the watchlist
+    // matcher read the same copy. Replacements reach the matcher from the
+    // RBF cache, and webhook deliveries drain from their durable outbox.
+    const protocolActivity = new ProtocolActivityObserver(config.MEMPOOL.NETWORK);
+    protocolRegistryService.attachObserver(protocolActivity);
+    blockObservationHub.subscribe('protocol-activity', (block, transactions) => { protocolActivity.observeBlock(block, transactions); });
+    blockObservationHub.subscribe('blockspace', (block, transactions) => { blockspaceService.observeBlock(block, transactions); });
+    blockObservationHub.subscribe('time-machine', (block, transactions) => {
+      if (memPool.isInSync()) timeMachineService.observeBlock(block, transactions);
+      else timeMachineService.markObservationFailure();
+    });
+    blockObservationHub.subscribe('templates', (block, transactions) => { templateCollectorService.observeBlock(block, transactions); });
+    // The hub contains each observer's failure; the matcher's own rejection is reported there.
+    blockObservationHub.subscribe('watchlist-matcher', (block, transactions) => watchlistMatcher.observeBlock(block, transactions).then(() => undefined));
+    blocks.setNewAsyncBlockCallback((block, _txIds, transactions) => blockObservationHub.dispatch(block, transactions).then(() => undefined));
+    rbfCache.onReplacement((replaced, replacement) => {
+      watchlistMatcher.observeReplacement(replaced, replacement).catch(e => logger.warn('watchlist replacement match failed: ' + (e instanceof Error ? e.message : e)));
+      const replacedTx = memPool.getMempool()[replaced];
+      if (replacedTx) { timeMachineService.observeReplacement(replacedTx, replacement); }
+    });
+    // Record the current poll delta exactly once, including unchanged complete
+    // polls. Recently-deleted history belongs to other consumers, not replay.
+    memPool.setObservedPollCallback((newTransactions, deletedTransactions, complete) => {
+      timeMachineService.observePoll(newTransactions, deletedTransactions, complete);
+      relayCollectorService.observeMempoolPoll(newTransactions, deletedTransactions, complete);
+    });
+    if (config.MEMPOOL.ENABLED) {
+      developerIdentity.startOutboxWorker();
+      // Cold schedule: one getblocktemplate every two minutes plus one after each block.
+      templateCollectorService.startPolling();
+      globalNetworkService.startSnapshots(10 * 60_000, () => blocks.getCurrentBlockHeight());
+    }
     websocketHandler.setupConnectionHandling();
     if (config.MEMPOOL.ENABLED) {
       statistics.setNewStatisticsEntryCallback(websocketHandler.handleNewStatistic.bind(websocketHandler));
@@ -451,6 +501,7 @@ class Server {
   setUpHttpApiRoutes(): void {
     bitcoinRoutes.initRoutes(this.app);
     capabilitiesRoutes.initRoutes(this.app);
+    registerBip353Routes(this.app);
     // Who owns the address family depends on the backend, and the capability
     // report has to say so rather than assume it. With `esplora` this process
     // deliberately does not mount those routes: the Esplora index serves them
@@ -551,6 +602,7 @@ class Server {
     lightningReliabilityRoutes.initRoutes(this.app);
     silentPaymentsRoutes.initRoutes(this.app);
     payjoinRoutes.initRoutes(this.app);
+    rgbRoutes.initRoutes(this.app);
     ecashRoutes.initRoutes(this.app);
     consensusRoutes.initRoutes(this.app);
     quantumRoutes.initRoutes(this.app);
@@ -596,15 +648,24 @@ class Server {
     }
   }
 
-  forceExit(exitEvent, code?: number): void {
-    logger.debug(`triggering exit for signal: ${exitEvent}`);
-    if (code != null) {
-      // override the default exit code
-      process.exitCode = code;
-    }
-    process.exit();
-  }
+  private shuttingDown = false;
 
+  forceExit(exitEvent, code?: number): void {
+    if (this.shuttingDown) return;
+    this.shuttingDown = true;
+    logger.debug(`triggering exit for signal: ${exitEvent}`);
+    // An uncaught failure leaves application state uncertain: never serialize
+    // fresh state from that process. The last atomic snapshot remains valid.
+    if (exitEvent === 'uncaughtException' || exitEvent === 'unhandledRejection') {
+      process.exit(code ?? 1);
+    }
+    this.server?.close();
+    this.serverUnixSocket?.close();
+    void boundedHistoryFlush(() => timeMachineService.closeHistory()).then(flushed => {
+      if (!flushed) logger.warn('Time Machine shutdown flush failed or exceeded 5 seconds; the next start will expose a history gap.');
+      process.exit(code ?? (flushed ? 0 : 1));
+    });
+  }
   exitCleanup(): void {
     if (config.DATABASE.ENABLED) {
       DB.releasePidLock();

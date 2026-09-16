@@ -1,124 +1,30 @@
-import { Component } from '@angular/core';
+import { Component, Inject, OnDestroy, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import { LightningResilienceApiService } from './lightning-resilience.service';
-
-@Component({
-  selector: 'app-lightning-resilience-simulate',
-  standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
-  template: `
-    <div class="container-xl py-4">
-      <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
-        <div>
-          <h1 class="h2 mb-1">Lightning Jamming Attack & Mitigation Simulator</h1>
-          <p class="text-muted mb-0">Evaluate channel survival rates against slow-hold attacks, slot-exhaustion, and onion storms.</p>
-        </div>
-        <a routerLink="/lightning/resilience" class="btn btn-outline-secondary btn-sm">Back to Resilience Center</a>
-      </div>
-
-      <div class="row g-4">
-        <div class="col-lg-5">
-          <div class="card bg-dark border-secondary p-3">
-            <h5 class="card-title mb-3">Simulation Parameters</h5>
-
-            <div class="mb-3">
-              <label class="form-label text-muted small text-uppercase" for="lightning-resilience-scenario">Attack Vector Scenario</label>
-              <select class="form-select bg-black text-light border-secondary" id="lightning-resilience-scenario" [(ngModel)]="scenario">
-                <option value="slot_exhaustion_dos">Slot Exhaustion (483 unendorsed dust HTLCs)</option>
-                <option value="slow_hold_liquidity_pinning">Slow Hold Liquidity Pinning (Prolonged P95 Latency)</option>
-                <option value="onion_message_storm">Onion Messaging Queue Flood (CPU / Memory DoS)</option>
-                <option value="sybil_circuit_breaker_probe">Sybil Circuit Breaker Trip Probe</option>
-              </select>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label text-muted small text-uppercase" for="lightning-resilience-slots">Attacker Capital / Slots</label>
-              <input type="number" class="form-control bg-black text-light border-secondary" id="lightning-resilience-slots" [(ngModel)]="attackerSlots" min="10" max="483">
-            </div>
-
-            <div class="mb-3">
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="reputationCheck" [(ngModel)]="enableReputation">
-                <label class="form-check-label" for="reputationCheck">
-                  Enable Upstream Endorsement & Reputation Tracking
-                </label>
-              </div>
-              <div class="form-check mt-2">
-                <input class="form-check-input" type="checkbox" id="fastLaneCheck" [(ngModel)]="enableFastLane">
-                <label class="form-check-label" for="fastLaneCheck">
-                  Reserve 20% Fast-Lane Slots for High-Reputation Routes
-                </label>
-              </div>
-            </div>
-
-            <button class="btn btn-primary w-100" (click)="runSimulation()" [disabled]="simulating">
-              {{ simulating ? 'Simulating Dynamic Network...' : 'Run Resilience Simulation' }}
-            </button>
-          </div>
-        </div>
-
-        <div class="col-lg-7">
-          <div class="card bg-dark border-secondary p-4 h-100" *ngIf="simulationResult">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-              <h5 class="card-title mb-0">Simulation Results</h5>
-              <span class="badge bg-success">COMPLETED</span>
-            </div>
-
-            <div class="row g-3 mb-4">
-              <div class="col-md-6">
-                <div class="p-3 bg-black rounded border border-secondary">
-                  <div class="text-muted small text-uppercase">Baseline Route Survival</div>
-                  <div class="display-6 fw-bold text-danger my-1">{{ simulationResult.baseline_survival_rate_pct }}%</div>
-                  <div class="small text-muted">Survival under unmitigated attack</div>
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div class="p-3 bg-black rounded border border-secondary">
-                  <div class="text-muted small text-uppercase">Mitigated Route Survival</div>
-                  <div class="display-6 fw-bold text-success my-1">{{ simulationResult.protected_survival_rate_pct }}%</div>
-                  <div class="small text-muted">Survival with defensive policies enabled</div>
-                </div>
-              </div>
-            </div>
-
-            <h6 class="text-info mb-2">Automated Policy Recommendations:</h6>
-            <ul class="list-group list-group-flush bg-transparent">
-              <li *ngFor="let rec of simulationResult.recommended_actions" class="list-group-item bg-transparent text-light border-secondary px-0">
-                <i class="bi bi-shield-check text-success me-2">✓</i> {{ rec }}
-              </li>
-            </ul>
-          </div>
-
-          <div class="card bg-dark border-secondary p-5 text-center h-100 d-flex justify-content-center" *ngIf="!simulationResult">
-            <p class="text-muted mb-0">Select attack parameters and click "Run Resilience Simulation" to observe outcome.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  `
-})
-export class LightningResilienceSimulateComponent {
-  public scenario = 'slot_exhaustion_dos';
-  public attackerSlots = 350;
-  public enableReputation = true;
-  public enableFastLane = true;
-  public simulating = false;
-  public simulationResult: any = null;
-
-  constructor(private api: LightningResilienceApiService) {}
-
-  public runSimulation(): void {
-    this.simulating = true;
-    this.api.simulate$({
-      scenario: this.scenario,
-      attacker_slots: this.attackerSlots,
-      enable_reputation: this.enableReputation,
-      enable_fast_lane: this.enableFastLane,
-    }).subscribe(res => {
-      this.simulationResult = res;
-      this.simulating = false;
-    });
-  }
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
+@Component({selector:'app-lightning-resilience-simulate',standalone:true,imports:[CommonModule,RouterModule,FormsModule,RelativeUrlPipe],template:`
+<div class="container-xl py-4"><h1 class="h2">Lightning HTLC Constraint Simulator</h1><a [routerLink]="'/lightning/resilience' | relativeUrl">Back to Resilience Center</a>
+<p class="mt-3">A deterministic model of simultaneous offers in one channel direction. Supply explicit values; no payment is sent and no observed attack is inferred.</p>
+<p class="alert alert-info">Onion storms, reputation and fast-lane policies remain pending: these need separate calibrated models. An immediate slot quota below is a stated counterfactual.</p>
+<div class="row g-4"><section class="col-lg-5"><form (ngSubmit)="runSimulation()">
+<div class="mb-3" *ngFor="let field of fields"><label class="form-label" [for]="field.key">{{ field.label }}</label><input class="form-control" type="number" [id]="field.key" [name]="field.key" [ngModel]="params[field.key]" (ngModelChange)="edit(field.key,$event)" min="0" [max]="field.max" step="1" required></div>
+<div class="form-check mb-3"><input id="quota-enabled" name="quota-enabled" type="checkbox" class="form-check-input" [ngModel]="params.circuit_breaker_enabled" (ngModelChange)="edit('circuit_breaker_enabled',$event)"><label for="quota-enabled" class="form-check-label">Apply immediate slot quota</label></div>
+<div class="mb-3" *ngIf="params.circuit_breaker_enabled"><label for="slot-quota">Explicit accepted-slot quota</label><input id="slot-quota" name="slot-quota" class="form-control" type="number" [ngModel]="quota" (ngModelChange)="editQuota($event)" min="0" max="483" required></div>
+<button class="btn btn-primary" type="submit" [disabled]="simulating">{{ simulating ? 'Calculating…' : 'Calculate constraints' }}</button></form></section>
+<section class="col-lg-7"><p *ngIf="error" class="alert alert-warning" role="alert">{{ error }}</p><div *ngIf="simulationResult as r" aria-live="polite"><h2 class="h4">Counterfactual result</h2><p>{{ r.scope }}</p><dl>
+<dt>Accepted simultaneous HTLCs</dt><dd>{{ r.accepted_htlc_count ?? 'Unknown' }}</dd><dt>Remaining slots</dt><dd>{{ r.remaining_slots ?? 'Unknown' }}</dd><dt>Locked liquidity</dt><dd>{{ r.locked_liquidity_sats === null ? 'Unknown' : (r.locked_liquidity_sats | number) + ' sats' }}</dd><dt>Liquidity time product</dt><dd>{{ r.liquidity_time_product_sat_hours === null ? 'Unknown' : (r.liquidity_time_product_sat_hours | number:'1.0-3') + ' sat-hours' }}</dd><dt>Hypothetical unconditional fees</dt><dd>{{ r.hypothetical_unconditional_fee_sats === null ? 'Unknown' : (r.hypothetical_unconditional_fee_sats | number:'1.0-3') + ' sats' }}</dd><dt>Full slot exhaustion</dt><dd>{{ r.slot_exhaustion_seconds === 0 ? 'Immediate under simultaneous-offer assumptions' : 'Not established' }}</dd><dt>Honest payment failure / realized cost / routing revenue</dt><dd>Unknown; no calibrated settlement or traffic model</dd><dt>Mitigation effectiveness</dt><dd>Not evaluated</dd></dl><h3 class="h5">Assumptions and limits</h3><ul><li *ngFor="let observation of r.observations">{{ observation }}</li></ul></div><p *ngIf="!simulationResult && !simulating">Enter the directional channel constraints to calculate a result.</p></section></div></div>`})
+export class LightningResilienceSimulateComponent implements OnInit,OnDestroy {
+ params:any={channel_capacity_sats:100000,htlc_slot_count:10,pending_value_limit_sats:10000,attacker_htlc_count:20,attacker_hold_seconds:3600,attacker_htlc_value_sats:2000,honest_traffic_rate_per_min:0,routing_base_fee_msat:0,routing_fee_proportional_millionths:0,upfront_fee_msat:0,hold_time_fee_per_second_msat:0,circuit_breaker_enabled:false};
+ fields=[{key:'channel_capacity_sats',label:'Channel capacity (sats)',max:2100000000000000},{key:'htlc_slot_count',label:'Negotiated directional slot capacity',max:483},{key:'pending_value_limit_sats',label:'Directional pending value limit (sats)',max:2100000000000000},{key:'attacker_htlc_count',label:'Offered HTLC count',max:1000000},{key:'attacker_htlc_value_sats',label:'Value per offered HTLC (sats)',max:2100000000000000},{key:'attacker_hold_seconds',label:'Hold duration (seconds)',max:31536000},{key:'upfront_fee_msat',label:'Hypothetical unconditional upfront fee per HTLC (msat)',max:1000000000},{key:'hold_time_fee_per_second_msat',label:'Hypothetical fee per HTLC per second (msat)',max:1000000000}];
+ quota=2;simulating=false;simulationResult:any=null;error:string|null=null;private request?:Subscription;private network?:Subscription;private revision=0;
+ constructor(@Inject(LightningResilienceApiService) private api:LightningResilienceApiService,@Inject(ChangeDetectorRef) private cdr:ChangeDetectorRef){}
+ ngOnInit(){this.network=this.api.networkChanged$.subscribe(()=>this.invalidate());}
+ invalidate(){this.revision++;this.request?.unsubscribe();this.simulating=false;this.simulationResult=null;this.error=null;this.cdr.markForCheck();}
+ edit(key:string,value:any){this.params[key]=value;this.invalidate();}
+ editQuota(value:number){this.quota=value;this.invalidate();}
+ runSimulation(){this.invalidate();const revision=this.revision;this.simulating=true;const body={...this.params,...(this.params.circuit_breaker_enabled?{circuit_breaker_slot_quota:this.quota}:{})};this.request=this.api.simulate$(body).subscribe({next:r=>{if(revision!==this.revision)return;this.simulationResult=r;this.simulating=false;this.cdr.markForCheck();},error:()=>{if(revision!==this.revision)return;this.simulationResult=null;this.simulating=false;this.error='Simulation failed. Check integer bounds, positive per-HTLC value, and pending value no greater than capacity.';this.cdr.markForCheck();}});}
+ ngOnDestroy(){this.invalidate();this.network?.unsubscribe();}
 }

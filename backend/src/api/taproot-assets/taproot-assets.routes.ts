@@ -1,7 +1,17 @@
 import { Application, Request, Response } from 'express';
 import config from '../../config';
 import { handleError } from '../../utils/api';
-import { taprootAssetsService } from './taproot-assets.service';
+import { TaprootAssetsEvidenceError, taprootAssetsService } from './taproot-assets.service';
+import { decodeBolt12Offer } from './bolt12-decoder';
+
+/** An absent source is a 503 that names the source, never a 500 and never an empty list. */
+function fail(req: Request, res: Response, e: unknown): void {
+  if (e instanceof TaprootAssetsEvidenceError) {
+    res.status(e.status).json({ stage: e.code, error: e.message });
+    return;
+  }
+  handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+}
 
 class TaprootAssetsRoutes {
   public initRoutes(app: Application): void {
@@ -13,6 +23,7 @@ class TaprootAssetsRoutes {
       .get(prefix + 'taproot-assets/groups', this.$getGroups)
       .post(prefix + 'taproot-assets/proof/verify', this.$verifyProof)
       .get(prefix + 'lightning/offers', this.$getOffers)
+      .post(prefix + 'lightning/offers/decode', this.$decodeOffer)
       .get(prefix + 'lightning/rfq', this.$getRfq);
   }
 
@@ -21,7 +32,7 @@ class TaprootAssetsRoutes {
       const assets = await taprootAssetsService.$getAssets();
       res.json({ assets, total: assets.length });
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -34,7 +45,7 @@ class TaprootAssetsRoutes {
       }
       res.json(asset);
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -43,7 +54,7 @@ class TaprootAssetsRoutes {
       const groups = await taprootAssetsService.$getGroups();
       res.json({ groups, total: groups.length });
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -51,9 +62,10 @@ class TaprootAssetsRoutes {
     try {
       const { assetId, proofData } = req.body || {};
       const result = await taprootAssetsService.$verifyProof(assetId, proofData);
-      res.status(result.stage === 'invalid-input' ? 400 : 503).json(result);
+      // A completed verdict, valid or not, is a 200; only bad input and an absent verifier are not answers.
+      res.status(result.stage === 'invalid-input' ? 400 : result.stage === 'unavailable-verifier' ? 503 : 200).json(result);
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -62,8 +74,13 @@ class TaprootAssetsRoutes {
       const offers = await taprootAssetsService.$getOffers();
       res.json({ offers, total: offers.length });
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
+  }
+
+  private async $decodeOffer(req: Request, res: Response): Promise<void> {
+    try { res.json(await decodeBolt12Offer(req.body)); }
+    catch (error) { fail(req, res, error); }
   }
 
   private async $getRfq(req: Request, res: Response): Promise<void> {
@@ -71,7 +88,7 @@ class TaprootAssetsRoutes {
       const quotes = await taprootAssetsService.$getRfqQuotes();
       res.json({ quotes, total: quotes.length });
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 }

@@ -1,66 +1,135 @@
-import { Component, OnInit } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { validProvider } from './submission-validation';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
-import { PrivateSubmissionApiService } from './private-submission.service';
+import {
+  classifyLoadFailure,
+  loadFailureMessage,
+} from '@app/shared/load-state';
+import {
+  AcceleratorProvider,
+  PrivateSubmissionApiService,
+} from './private-submission.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-private-submission-accelerators',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4">
+      <div
+        class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom"
+      >
+        <div>
+          <h1 class="h2 mb-1">Accelerator Providers</h1>
+          <p class="text-muted mb-0">
+            Signed provider directory: claimed pools and published fees.
+          </p>
+        </div>
+        <a
+          [routerLink]="'/mempool/submission' | relativeUrl"
+          class="btn btn-outline-secondary btn-sm"
+          >Back to Overview</a
+        >
+      </div>
       <div class="alert alert-warning" role="alert" *ngIf="loadError">
         {{ loadError }}
       </div>
-      <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
-        <div>
-          <h1 class="h2 mb-1">Transaction Accelerator Providers Directory</h1>
-          <p class="text-muted mb-0">Verified miner acceleration gateways, supported hashrate coverage, and pricing models.</p>
-        </div>
-        <a routerLink="/mempool/submission" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
-      </div>
 
-      <div class="card bg-dark border-secondary mb-4">
+      <div class="card bg-dark border-secondary mb-4" *ngIf="!loadError">
         <div class="card-header border-secondary">
           <h5 class="card-title mb-0">Available Acceleration Services</h5>
         </div>
-        <div class="table-responsive" tabindex="0" role="region" aria-label="Available Acceleration Services, scroll horizontally" i18n-aria-label>
+        <div
+          class="table-responsive"
+          tabindex="0"
+          role="region"
+          aria-label="Available Acceleration Services, scroll horizontally"
+          i18n-aria-label
+        >
           <table class="table table-dark table-hover mb-0">
             <thead>
               <tr>
-                <th>Provider Name</th>
-                <th>Hashrate Reach</th>
-                <th>Supported Pools</th>
-                <th>Base Fee</th>
-                <th>Success Rate</th>
-                <th>Status</th>
+                <th>Provider</th>
+                <th>Networks</th>
+                <th>Claimed partner pools</th>
+                <th>Minimum fee</th>
+                <th>Max vsize</th>
+                <th>Health</th>
                 <th>Action</th>
               </tr>
             </thead>
             <tbody>
+              <tr *ngIf="loaded && providers.length === 0">
+                <td colspan="7" class="text-muted">
+                  The provider directory is empty.
+                </td>
+              </tr>
               <tr *ngFor="let p of providers">
                 <td>
-                  <a [routerLink]="['/mempool/accelerator', p.provider_id]" class="fw-bold text-info">
+                  <a
+                    [routerLink]="[
+                      '/mempool/accelerator' | relativeUrl,
+                      p.provider_id,
+                    ]"
+                    class="fw-bold text-info"
+                  >
                     {{ p.name }}
                   </a>
-                </td>
-                <td>
-                  <div class="d-flex align-items-center">
-                    <span class="me-2 fw-semibold">{{ p.hashrate_coverage_pct }}%</span>
-                    <div class="progress flex-grow-1" style="height: 6px;">
-                      <div class="progress-bar bg-info" [style.width.%]="p.hashrate_coverage_pct"></div>
-                    </div>
+                  <div class="small text-muted" *ngIf="isExpired(p)">
+                    directory entry expired {{ p.expires_at }}
                   </div>
                 </td>
                 <td>
-                  <span *ngFor="let pool of p.supported_pools" class="badge bg-secondary me-1">{{ pool }}</span>
+                  <span
+                    *ngFor="let network of p.supported_networks"
+                    class="badge bg-secondary me-1"
+                    >{{ network }}</span
+                  >
                 </td>
-                <td class="text-warning font-monospace">\${{ p.minimum_fee_usd | number:'1.2-2' }}</td>
-                <td class="text-success fw-bold">{{ p.success_rate_pct }}%</td>
-                <td><span class="badge bg-success">{{ p.status | uppercase }}</span></td>
                 <td>
-                  <a [routerLink]="['/mempool/accelerator', p.provider_id]" class="btn btn-sm btn-outline-primary">View Details</a>
+                  <span
+                    *ngFor="let pool of p.partner_mining_claims"
+                    class="badge bg-secondary me-1"
+                    title="claimed by the provider, not verified here"
+                    >{{ pool }}</span
+                  >
+                  <span
+                    *ngIf="!p.partner_mining_claims?.length"
+                    class="text-muted small"
+                    >none claimed</span
+                  >
+                </td>
+                <td class="text-warning font-monospace">
+                  {{ p.minimum_fee_sats | number }} sats
+                </td>
+                <td class="font-monospace">
+                  {{ p.maximum_tx_vsize | number }} vB
+                </td>
+                <td>
+                  <span
+                    class="badge"
+                    [ngClass]="
+                      healthClass(isExpired(p) ? null : p.health_status)
+                    "
+                    >{{
+                      isExpired(p)
+                        ? 'EXPIRED / HEALTH UNKNOWN'
+                        : 'Reported: ' + p.health_status
+                    }}</span
+                  >
+                </td>
+                <td>
+                  <a
+                    [routerLink]="[
+                      '/mempool/accelerator' | relativeUrl,
+                      p.provider_id,
+                    ]"
+                    class="btn btn-sm btn-outline-primary"
+                    >View Details</a
+                  >
                 </td>
               </tr>
             </tbody>
@@ -68,24 +137,73 @@ import { PrivateSubmissionApiService } from './private-submission.service';
         </div>
       </div>
     </div>
-  `
+  `,
 })
-export class PrivateSubmissionAcceleratorsComponent implements OnInit {
-  public providers: any[] = [];
+export class PrivateSubmissionAcceleratorsComponent
+  implements OnInit, OnDestroy
+{
+  private request?: Subscription;
+  private networkSub?: Subscription;
+  ngOnDestroy(): void {
+    this.request?.unsubscribe();
+    this.networkSub?.unsubscribe();
+  }
+  public providers: AcceleratorProvider[] = [];
+  public loaded = false;
   public loadError: string | null = null;
 
   constructor(private api: PrivateSubmissionApiService) {}
 
   public ngOnInit(): void {
-    this.api.listAccelerators$().subscribe({
-      next: res => {
-        this.providers = res ?? [];
-        this.loadError = null;
-      },
-      error: err => {
-        this.providers = [];
-        this.loadError = loadFailureMessage(classifyLoadFailure(err));
-      },
+    this.networkSub = this.api.network$.subscribe(() => {
+      this.request?.unsubscribe();
+      this.providers = [];
+      this.loaded = false;
+      this.loadError = null;
+      this.request = this.api.listAccelerators$().subscribe({
+        // The contract is an envelope; a bare array or anything else is malformed.
+        next: (res) => {
+          if (
+            !res ||
+            !Array.isArray(res.providers) ||
+            !res.providers.every(validProvider)
+          ) {
+            this.providers = [];
+            this.loaded = false;
+            this.loadError = loadFailureMessage('malformed');
+            return;
+          }
+          this.providers = res.providers;
+          this.loaded = true;
+          this.loadError = null;
+        },
+        error: (err) => {
+          this.providers = [];
+          this.loaded = false;
+          this.loadError =
+            err?.error?.error || loadFailureMessage(classifyLoadFailure(err));
+        },
+      });
     });
+  }
+
+  public isExpired(provider: AcceleratorProvider): boolean {
+    const expires = Date.parse(provider.expires_at);
+    return !Number.isFinite(expires) || expires <= Date.now();
+  }
+
+  public healthClass(
+    health: AcceleratorProvider['health_status'] | null
+  ): string {
+    if (health === null) {
+      return 'bg-secondary';
+    }
+    if (health === 'online') {
+      return 'bg-secondary';
+    }
+    if (health === 'degraded') {
+      return 'bg-warning text-dark';
+    }
+    return 'bg-danger';
   }
 }

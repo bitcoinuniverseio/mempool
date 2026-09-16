@@ -1,9 +1,12 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { BehaviorSubject, Observable, catchError, combineLatest, of } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, combineLatest, map, of } from 'rxjs';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
+
 import {
   BlockTemplateComparison,
   ObserverNode,
@@ -15,6 +18,7 @@ interface NetworkViewModel {
   readonly nodes?: ObserverNode[];
   readonly propagation?: PropagationObservation;
   readonly templates?: BlockTemplateComparison;
+  readonly message?: string;
 }
 
 @Component({
@@ -22,7 +26,7 @@ interface NetworkViewModel {
   templateUrl: './network-observatory.component.html',
   styleUrls: ['../product-page.scss', './network-observatory.component.scss'],
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NetworkObservatoryComponent implements OnInit {
@@ -37,21 +41,20 @@ export class NetworkObservatoryComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // No per-read fallback: a fleet table the source could not answer is an
+    // error with its reason, not an empty table under a live-looking timeline.
     combineLatest([
-      this.api.getObserverNodes$().pipe(catchError(() => of({ nodes: [] }))),
-      this.api.getPropagationObservation$().pipe(catchError(() => of(null))),
-      this.api.getBlockTemplateComparison$().pipe(catchError(() => of(null))),
-    ]).subscribe(([nodesData, propagation, templates]) => {
-      if (!propagation || !templates) {
-        this.state.next({ kind: 'error' });
-        return;
-      }
-      this.state.next({
+      this.api.getObserverNodes$(),
+      this.api.getPropagationObservation$(),
+      this.api.getBlockTemplateComparison$(),
+    ]).pipe(
+      map(([nodesData, propagation, templates]): NetworkViewModel => ({
         kind: 'ready',
         nodes: nodesData.nodes,
         propagation,
         templates,
-      });
-    });
+      })),
+      catchError((error) => of<NetworkViewModel>({ kind: 'error', message: loadFailureMessage(classifyLoadFailure(error)) })),
+    ).subscribe((vm) => this.state.next(vm));
   }
 }

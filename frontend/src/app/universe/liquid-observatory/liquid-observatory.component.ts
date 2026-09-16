@@ -1,9 +1,14 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, OnDestroy } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { BehaviorSubject, Observable, catchError, combineLatest, of } from 'rxjs';
+import { BehaviorSubject, Observable, Subscription, catchError, combineLatest, map, of, startWith, switchMap } from 'rxjs';
+import { LiquidNodeView } from './liquid-node-view';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
+
 import {
   LiquidAssetRecord,
   LiquidFederationEpoch,
@@ -17,6 +22,7 @@ interface LiquidViewModel {
   readonly assets?: LiquidAssetRecord[];
   readonly pegs?: LiquidPegRecord[];
   readonly federation?: LiquidFederationEpoch;
+  readonly message?: string;
 }
 
 @Component({
@@ -24,10 +30,20 @@ interface LiquidViewModel {
   templateUrl: './liquid-observatory.component.html',
   styleUrls: ['../product-page.scss'],
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LiquidObservatoryComponent implements OnInit {
+export class LiquidObservatoryComponent implements OnInit, OnDestroy {
+  network = 'liquidv1';
+  private readonly nodeNetwork = new BehaviorSubject('liquidv1');
+  readonly node$ = this.nodeNetwork.pipe(switchMap(network => this.api.getLiquidNode$(network).pipe(
+    map(node => ({node, error: null as string | null, loading: false})),
+    catchError(error => of({node: null as LiquidNodeView | null, error: error?.error?.error || 'Owned Elements checkpoint unavailable.', loading: false})),
+    startWith({node: null as LiquidNodeView | null, error: null as string | null, loading: true}),
+  )));
+  private reads?: Subscription;
+  refreshNode(): void { this.nodeNetwork.next(this.network); }
+  ngOnDestroy(): void { this.reads?.unsubscribe(); this.nodeNetwork.complete(); this.state.complete(); }
   // Templates format raw strings through the Number global; AOT needs it bound.
   protected readonly Number = Number;
   private readonly state = new BehaviorSubject<LiquidViewModel>({ kind: 'loading' });
@@ -41,23 +57,22 @@ export class LiquidObservatoryComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    combineLatest([
-      this.api.getLiquidObservatorySummary$().pipe(catchError(() => of(null))),
-      this.api.getLiquidAssets$().pipe(catchError(() => of({ assets: [] }))),
-      this.api.getLiquidPegs$().pipe(catchError(() => of({ pegs: [] }))),
-      this.api.getLiquidFederation$().pipe(catchError(() => of(null))),
-    ]).subscribe(([summary, assetsData, pegsData, federation]) => {
-      if (!summary || !federation) {
-        this.state.next({ kind: 'error' });
-        return;
-      }
-      this.state.next({
+    // No per-read fallback: an asset or peg table the source could not answer
+    // is an error with its reason, not an empty table.
+    this.reads = combineLatest([
+      this.api.getLiquidObservatorySummary$(),
+      this.api.getLiquidAssets$(),
+      this.api.getLiquidPegs$(),
+      this.api.getLiquidFederation$(),
+    ]).pipe(
+      map(([summary, assetsData, pegsData, federation]): LiquidViewModel => ({
         kind: 'ready',
         summary,
         assets: assetsData.assets,
         pegs: pegsData.pegs,
         federation,
-      });
-    });
+      })),
+      catchError((error) => of<LiquidViewModel>({ kind: 'error', message: loadFailureMessage(classifyLoadFailure(error)) })),
+    ).subscribe((vm) => this.state.next(vm));
   }
 }

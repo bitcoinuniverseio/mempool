@@ -196,7 +196,7 @@ export async function verifyDetachedProof(request: TimestampProofRequest, reader
     // bitcoinjs stores merkleRoot in header byte order, matching OTS message bytes.
     if (attestation.message.length !== 32 || !block.merkleRoot?.equals(attestation.message)) {result.errors.push(`The proof commitment does not match the Bitcoin Merkle root at height ${attestation.height}.`);}
   }
-  if (result.errors.length) {return { ...result, status: 'bitcoin_attestation_invalid' };}
+  if (result.errors.length) {return { ...result, status: 'bitcoin_attestation_invalid', bitcoin_block_hash: headers.get(Math.min(...headers.keys()))!.hash };}
   // A previous branch can be orphaned while a later branch is being read.
   // Recheck every accepted anchor before returning the complete proof verdict.
   for (const [anchorHeight, anchor] of headers) {
@@ -209,6 +209,6 @@ export async function verifyDetachedProof(request: TimestampProofRequest, reader
   return {
     ...result, status: 'bitcoin_attestation_verified', verified: true, attestation_type: 'bitcoin',
     earliest_proven_block_height: height, earliest_proven_time_utc: new Date(earliest.block.timestamp * 1000).toISOString(),
-    bitcoin_block_hash: earliest.hash,
+    bitcoin_block_hash: earliest.hash, bitcoin_merkle_root: Buffer.from(earliest.block.merkleRoot!).reverse().toString('hex'),
   };
 }

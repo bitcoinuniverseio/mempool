@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { PayjoinApiService, PayjoinOverview } from './payjoin.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-payjoin-overview',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -24,11 +25,11 @@ import { PayjoinApiService, PayjoinOverview } from './payjoin.service';
 
         <!-- Navigation Tabs -->
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link active" routerLink="/payments/payjoin">Overview</a>
-          <a class="nav-link" routerLink="/payments/payjoin/analyze">Proposal Analyzer</a>
-          <a class="nav-link" routerLink="/payments/payjoin/directory">Directory Observatory</a>
-          <a class="nav-link" routerLink="/payments/payjoin/compatibility">Compatibility Matrix</a>
-          <a class="nav-link" routerLink="/payments/payjoin/playground">Interactive Playground</a>
+          <a class="nav-link active" [routerLink]="'/payments/payjoin' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/payments/payjoin/analyze' | relativeUrl">Proposal Analyzer</a>
+          <a class="nav-link" [routerLink]="'/payments/payjoin/directory' | relativeUrl">Directory Observatory</a>
+          <a class="nav-link" [routerLink]="'/payments/payjoin/compatibility' | relativeUrl">Compatibility Matrix</a>
+          <a class="nav-link" [routerLink]="'/payments/payjoin/playground' | relativeUrl">Interactive Playground</a>
         </nav>
       </header>
 
@@ -54,14 +55,14 @@ import { PayjoinApiService, PayjoinOverview } from './payjoin.service';
           <div class="col-12 col-sm-6 col-lg-4">
             <div class="card p-3 h-100 bg-body-tertiary border">
               <div class="text-muted small">Detected Payjoins (24h)</div>
-              <div class="h4 my-1 text-success">{{ overview.total_payjoins_detected_24h }}</div>
+              <div class="h4 my-1 text-success">{{ overview.total_payjoins_detected_24h ?? 'n/a' }}</div>
               <div class="small text-muted">Multi-party input structures</div>
             </div>
           </div>
           <div class="col-12 col-sm-6 col-lg-4">
             <div class="card p-3 h-100 bg-body-tertiary border">
               <div class="text-muted small">Heuristic Inversions (24h)</div>
-              <div class="h4 my-1 text-info">{{ overview.common_input_heuristic_breaks_24h }}</div>
+              <div class="h4 my-1 text-info">{{ overview.common_input_heuristic_breaks_24h ?? 'n/a' }}</div>
               <div class="small text-muted">Common-input assumptions broken</div>
             </div>
           </div>
@@ -132,7 +133,7 @@ export class PayjoinOverviewComponent implements OnInit, OnDestroy {
           this.cd.markForCheck();
         },
         error: err => {
-          this.error = err?.message || 'Failed to load payjoin overview';
+          this.error = err?.error?.error || err?.message || 'Failed to load payjoin overview';
           this.loading = false;
           this.cd.markForCheck();
         },

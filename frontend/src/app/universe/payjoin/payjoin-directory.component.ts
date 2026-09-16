@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { PayjoinApiService, PayjoinDirectory } from './payjoin.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-payjoin-directory',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -24,11 +25,11 @@ import { PayjoinApiService, PayjoinDirectory } from './payjoin.service';
 
         <!-- Navigation Tabs -->
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/payments/payjoin">Overview</a>
-          <a class="nav-link" routerLink="/payments/payjoin/analyze">Proposal Analyzer</a>
-          <a class="nav-link active" routerLink="/payments/payjoin/directory">Directory Observatory</a>
-          <a class="nav-link" routerLink="/payments/payjoin/compatibility">Compatibility Matrix</a>
-          <a class="nav-link" routerLink="/payments/payjoin/playground">Interactive Playground</a>
+          <a class="nav-link" [routerLink]="'/payments/payjoin' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/payments/payjoin/analyze' | relativeUrl">Proposal Analyzer</a>
+          <a class="nav-link active" [routerLink]="'/payments/payjoin/directory' | relativeUrl">Directory Observatory</a>
+          <a class="nav-link" [routerLink]="'/payments/payjoin/compatibility' | relativeUrl">Compatibility Matrix</a>
+          <a class="nav-link" [routerLink]="'/payments/payjoin/playground' | relativeUrl">Interactive Playground</a>
         </nav>
       </header>
 
@@ -68,7 +69,7 @@ import { PayjoinApiService, PayjoinDirectory } from './payjoin.service';
                   </span>
                 </td>
                 <td><code class="small text-muted">{{ dir.ohttp_key_hash.slice(0, 16) }}...</code></td>
-                <td>{{ dir.latency_ms }} ms</td>
+                <td>{{ dir.latency_ms !== null ? dir.latency_ms + ' ms' : (dir.error || 'unreachable') }}</td>
                 <td class="text-end text-muted small">{{ dir.last_tested_at }}</td>
               </tr>
             </tbody>
@@ -109,7 +110,7 @@ export class PayjoinDirectoryComponent implements OnInit, OnDestroy {
           this.cd.markForCheck();
         },
         error: err => {
-          this.error = err?.message || 'Failed to load directories';
+          this.error = err?.error?.error || err?.message || 'Failed to load directories';
           this.loading = false;
           this.cd.markForCheck();
         },

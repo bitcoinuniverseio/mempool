@@ -3,6 +3,7 @@ import { AsyncPipe, CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Observable, combineLatest, map } from 'rxjs';
 import { PwaService } from './pwa.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 /**
  * What the interface says about this browser's own state.
@@ -34,7 +35,7 @@ export function bannerState(
 @Component({
   selector: 'app-universe-connectivity-banner',
   standalone: true,
-  imports: [CommonModule, RouterLink, AsyncPipe, DatePipe],
+  imports: [RelativeUrlPipe, CommonModule, RouterLink, AsyncPipe, DatePipe],
   templateUrl: './connectivity-banner.component.html',
   styleUrls: ['./connectivity-banner.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

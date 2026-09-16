@@ -1,12 +1,14 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
-import { Observable, catchError, map, of } from 'rxjs';
+import { Observable, catchError, combineLatest, distinctUntilChanged, map, of, startWith } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
+import { StateService } from '@app/services/state.service';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { AnimaEventDocument } from '@app/universe/universe.types';
 import { shortenIdentifier } from '@app/universe/universe-evidence';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 interface AnimaTransitionViewModel {
   readonly kind: 'loading' | 'error' | 'missing' | 'ready';
@@ -25,7 +27,7 @@ const EVENT_ID_PATTERN = /^a\d+:\d+$/;
   templateUrl: './anima-transition.component.html',
   styleUrls: ['./anima-page.scss'],
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AnimaTransitionComponent implements OnInit {
@@ -36,9 +38,10 @@ export class AnimaTransitionComponent implements OnInit {
     private route: ActivatedRoute,
     private api: UniverseApiService,
     private seo: SeoService,
+    private network: StateService,
   ) {
-    const document$ = this.route.paramMap.pipe(
-      map((params) => params.get('eventId') ?? ''),
+    const document$ = combineLatest([this.route.paramMap, this.network.networkChanged$.pipe(startWith(this.network.network), distinctUntilChanged())]).pipe(
+      map(([params]) => params.get('eventId') ?? ''),
       switchMap((eventId) => {
         if (!EVENT_ID_PATTERN.test(eventId)) {
           return of({ state: 'missing' as const, eventId });
@@ -51,12 +54,14 @@ export class AnimaTransitionComponent implements OnInit {
               eventId,
             }),
           ),
+          startWith({ state: 'loading' as const }),
         );
       }),
     );
 
     this.vm$ = document$.pipe(
       map((result): AnimaTransitionViewModel => {
+        if (result.state === 'loading') {return { kind: 'loading' };}
         if (result.state === 'error') {return { kind: 'error' };}
         if (result.state === 'missing' || !('doc' in result)) {
           return { kind: 'missing' };

@@ -6,11 +6,12 @@ import { publicSwapPackage } from './swaps-package';
 import { CommonModule } from '@angular/common';
 import { SharedModule } from '@app/shared/shared.module';
 import { RouterModule } from '@angular/router';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-swaps-inspect',
   standalone: true,
-  imports: [CommonModule, RouterModule, SharedModule, FormsModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule, SharedModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: ['.text-muted { color: var(--u-text-muted) !important; }'],
   template: `

@@ -2,12 +2,14 @@ import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRe
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { SimplicityApiService, SimplicityProgram } from './simplicity.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-simplicity-contracts',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -19,14 +21,14 @@ import { SimplicityApiService, SimplicityProgram } from './simplicity.service';
           </span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
-          Catalog of observed on-chain Simplicity smart contracts on Liquid, commitment roots, and static resource bounds.
+          Program observations require the owned Liquid program index. Compiler output alone is not an on-chain observation; an unavailable index is shown as an error.
         </p>
 
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/liquid/simplicity">Overview</a>
-          <a class="nav-link active" routerLink="/liquid/simplicity/contracts">Contract Programs</a>
-          <a class="nav-link" routerLink="/tools/simplicity">Compiler Workbench</a>
-          <a class="nav-link" routerLink="/tools/simplicity/verify">Formal Proof Verifier</a>
+          <a class="nav-link" [routerLink]="'/liquid/simplicity' | relativeUrl">Overview</a>
+          <a class="nav-link active" [routerLink]="'/liquid/simplicity/contracts' | relativeUrl">Contract Programs</a>
+          <a class="nav-link" [routerLink]="'/tools/simplicity' | relativeUrl">Compiler Workbench</a>
+          <a class="nav-link" [routerLink]="'/tools/simplicity/verify' | relativeUrl">Formal Proof Verifier</a>
         </nav>
       </header>
 
@@ -48,7 +50,7 @@ import { SimplicityApiService, SimplicityProgram } from './simplicity.service';
                 <th>CMR (Commitment Root)</th>
                 <th>Type</th>
                 <th>Static Weight</th>
-                <th>Memory Bound</th>
+                <th>Memory Cell Bound</th>
                 <th>Formal Proof</th>
                 <th>Action</th>
               </tr>
@@ -56,22 +58,22 @@ import { SimplicityApiService, SimplicityProgram } from './simplicity.service';
             <tbody>
               <tr *ngFor="let p of programs">
                 <td>
-                  <div class="fw-bold">{{ p.source_name || p.program_id }}</div>
+                  <div class="fw-bold">{{ p.program_name || p.program_id }}</div>
                   <div class="small text-muted font-monospace">{{ p.program_id }}</div>
                 </td>
                 <td class="font-monospace small text-truncate" style="max-width: 200px;">
                   {{ p.cmr }}
                 </td>
                 <td><span class="badge bg-secondary">{{ p.program_type }}</span></td>
-                <td class="font-monospace small">{{ p.static_cost_weight }} WU</td>
-                <td class="font-monospace small">{{ p.memory_bound_bytes }} B</td>
+                <td class="font-monospace small">{{ p.resource_bounds.max_cost_weight }} WU</td>
+                <td class="font-monospace small">{{ p.resource_bounds.max_memory_cells }} cells</td>
                 <td>
-                  <span class="badge" [ngClass]="p.is_formally_verified ? 'bg-success' : 'bg-secondary'">
-                    {{ p.is_formally_verified ? 'VERIFIED' : 'UNPROVEN' }}
+                  <span class="badge" [ngClass]="(p.formal_verification_state === 'proof_checked') ? 'bg-success' : 'bg-secondary'">
+                    {{ (p.formal_verification_state === 'proof_checked') ? 'VERIFIED' : 'UNPROVEN' }}
                   </span>
                 </td>
                 <td>
-                  <a [routerLink]="['/liquid/simplicity/program', p.program_id]" class="btn btn-sm btn-outline-primary">
+                  <a [routerLink]="['/liquid/simplicity/program' | relativeUrl, p.program_id]" class="btn btn-sm btn-outline-primary">
                     Inspect
                   </a>
                 </td>
@@ -106,7 +108,7 @@ export class SimplicityContractsComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
       },
       error: (err) => {
-        this.error = err.message || 'Failed to load Simplicity programs';
+        this.error = loadFailureMessage(classifyLoadFailure(err));
         this.loading = false;
         this.cdr.markForCheck();
       },

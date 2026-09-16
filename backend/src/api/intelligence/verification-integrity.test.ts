@@ -7,6 +7,9 @@ import fs from 'fs';
 import path from 'path';
 import bootstrapRoutes from './bootstrap/bootstrap.routes';
 import timestampRoutes from './opentimestamps/opentimestamps.routes';
+
+// No calendar is reachable from an isolated test: the allowlist names a closed loopback port.
+process.env.UNIVERSE_OPENTIMESTAMPS_CALENDARS = 'http://127.0.0.1:9';
 import multipartyRoutes from './multiparty/multiparty.routes';
 
 // Public BIP340 test vector 0; no wallet or user key material is involved.
@@ -30,14 +33,16 @@ describe('verification evidence integrity', () => {
       .toThrow(/unavailable/i);
   });
 
-  it('does not manufacture calendar receipts, proof upgrades or Bitcoin attestations', () => {
-    expect(() => timestampsService.stampDigest('ab'.repeat(32))).toThrow(/unavailable/i);
-    expect(() => timestampsService.upgradeProof({ ots_proof: 'pending-proof-data' })).toThrow(/unavailable/i);
+  it('does not manufacture calendar receipts, proof upgrades or Bitcoin attestations', /** @asyncUnsafe Jest awaits this test and reports its rejection. */ async () => {
+    // The allowlist points at a closed loopback port, so no calendar answers:
+    // no proof may be created and nothing may be reported as upgraded.
+    await expect(timestampsService.stampDigest('ab'.repeat(32))).rejects.toMatchObject({ code: 'calendar-unreachable', status: 503 });
+    await expect(timestampsService.upgradeProof({ ots_proof: 'pending-proof-data' })).rejects.toMatchObject({ code: 'invalid-proof', status: 400 });
   });
 
   it('rejects malformed successful proof inputs instead of verifying an empty object', /** @asyncUnsafe Jest awaits this test and reports its rejection. */ async () => {
     await expect(timestampsService.verifyProof({})).rejects.toThrow(/proof/i);
-    expect(() => timestampsService.stampDigest('z'.repeat(64))).toThrow(/digest/i);
+    await expect(timestampsService.stampDigest('z'.repeat(64))).rejects.toThrow(/digest/i);
   });
 
   it('does not certify a final signature by its length and computes the participant aggregate independently', () => {
@@ -82,7 +87,9 @@ describe('verification HTTP contracts', () => {
 
   it.each([
     ['/bootstrap/overview', 'unavailable-node-source'],
-    ['/timestamps/overview', 'unavailable-calendar-source'],
+    // The test configuration enables the database without providing one, so
+    // the record store is unavailable and the overview says exactly that.
+    ['/timestamps/overview', 'unavailable-record-store'],
     ['/multiparty/overview', 'unavailable-signing-source'],
   ])('keeps %s offered and returns source unavailability rather than invented records', /** @asyncUnsafe Jest awaits this test and reports its rejection. */ async (route, stage) => {
     const response = await fetch(origin + '/api/v1/intelligence' + route);

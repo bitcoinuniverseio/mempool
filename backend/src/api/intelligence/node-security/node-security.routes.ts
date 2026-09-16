@@ -1,5 +1,13 @@
 import { Application, Request, Response } from 'express';
-import nodeSecurityService from './node-security.service';
+import nodeSecurityService, { NodeSecurityEvidenceError } from './node-security.service';
+
+/** An absent source is a 503 that names the source, never a 500 and never an empty list. */
+function fail(res: Response, err: unknown): Response {
+  if (err instanceof NodeSecurityEvidenceError) {
+    return res.status(err.status).json({ stage: err.code, error: err.message });
+  }
+  return res.status(500).json({ error: err instanceof Error && err.message ? err.message : 'Internal error' });
+}
 
 class NodeSecurityRoutes {
   public initRoutes(app: Application): void {
@@ -8,7 +16,7 @@ class NodeSecurityRoutes {
         const overview = nodeSecurityService.getOverview();
         res.json(overview);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -17,7 +25,7 @@ class NodeSecurityRoutes {
         const releases = nodeSecurityService.listReleases();
         res.json(releases);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -26,7 +34,7 @@ class NodeSecurityRoutes {
         const advisories = nodeSecurityService.listAdvisories();
         res.json(advisories);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -38,7 +46,7 @@ class NodeSecurityRoutes {
         }
         res.json(advisory);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -47,7 +55,7 @@ class NodeSecurityRoutes {
         const fleet = nodeSecurityService.listFleet();
         res.json(fleet);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -59,19 +67,16 @@ class NodeSecurityRoutes {
         }
         res.json(node);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
     app.get('/api/v1/intelligence/node-security/nodes/:nodeId/exposures', (req: Request, res: Response) => {
       try {
         const exposures = nodeSecurityService.getNodeExposures(req.params.nodeId);
-        if (!exposures) {
-          return res.status(404).json({ error: 'Node not found' });
-        }
         res.json(exposures);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -80,7 +85,7 @@ class NodeSecurityRoutes {
         const artifacts = nodeSecurityService.listArtifacts();
         res.json(artifacts);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -89,7 +94,7 @@ class NodeSecurityRoutes {
         const result = nodeSecurityService.verifyArtifact(req.body);
         res.status(result.stage === 'invalid-input' ? 400 : 503).json(result);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
 
@@ -98,7 +103,7 @@ class NodeSecurityRoutes {
         const plan = nodeSecurityService.createUpgradePlan(req.body);
         res.json(plan);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        fail(res, err);
       }
     });
   }

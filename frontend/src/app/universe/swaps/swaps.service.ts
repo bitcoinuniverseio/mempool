@@ -21,6 +21,7 @@ export interface SwapsOverview {
 export interface SwapRecoveryPlan {
   stage: string; recommended_action: string; notes: string[]; unsigned_recovery_psbt?: string;
   current_block_height: number | null; blocks_until_refund: number | null; recoverable_value_sats: number;
+  timeout_height: number;
   estimated_miner_fee_sats: number; source_context?: { chain: string; network: string; source_id: string; block_hash: string; block_height: number; observed_at: string };
   decoded?: { txid: string; vout: number; destination: string; output_value_sats: number; fee_sats: number; locktime: number; sequence: number; input_count: number; output_count: number };
 }
@@ -35,8 +36,8 @@ export class SwapsApiService {
   path(path: string): string { return (this.state.network ? '/' + this.state.network : '') + path; }
   get network$(): Observable<string> { return this.state.networkChanged$.pipe(startWith(this.state.network), map(n => n || 'mainnet'), distinctUntilChanged()); }
   private params(network: string) { return { chain: 'bitcoin', network }; }
-  public getOverview$(): Observable<SwapsOverview> {
-    return this.network$.pipe(switchMap(network => this.http.get<SwapsOverview>(`${this.baseUrl}/overview`, { params: this.params(network) })));
+  public getOverview$(network = this.network): Observable<SwapsOverview> {
+    return this.http.get<SwapsOverview>(`${this.baseUrl}/overview`, { params: this.params(network) });
   }
   public getProviders$(network = this.network): Observable<SwapProvider[]> {
     return this.http.get<SwapProvider[]>(`${this.baseUrl}/providers`, { params: this.params(network) });

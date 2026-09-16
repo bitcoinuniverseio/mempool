@@ -16,6 +16,11 @@ import blocks from './blocks';
 
 class Mempool {
   private inSync: boolean = false;
+  private observedPollCallback?: (added: MempoolTransactionExtended[], removed: MempoolTransactionExtended[], complete: boolean) => void;
+
+  public setObservedPollCallback(callback: (added: MempoolTransactionExtended[], removed: MempoolTransactionExtended[], complete: boolean) => void): void {
+    this.observedPollCallback = callback;
+  }
   private mempoolCacheDelta: number = -1;
   private mempoolCache: { [txId: string]: MempoolTransactionExtended } = {};
   private mempoolCandidates: { [txid: string ]: boolean } = {};
@@ -251,6 +256,16 @@ class Mempool {
     // warn if this run stalls the main loop for more than 2 minutes
     const timer = this.startTimer();
 
+    // The stall timer belongs to this run only; clear it on every exit path.
+    try {
+      await this.$runUpdateMempool(timer, transactions, accelerations, minFeeMempool, minFeeTip, pollRate);
+    } finally {
+      this.clearTimer(timer);
+    }
+  }
+
+  /** @asyncUnsafe */
+  private async $runUpdateMempool(timer, transactions: string[], accelerations: Record<string, Acceleration> | null, minFeeMempool: string[], minFeeTip: number, pollRate: number): Promise<void> {
     const start = new Date().getTime();
     let hasChange: boolean = false;
     const currentMempoolSize = Object.keys(this.mempoolCache).length;
@@ -426,13 +441,12 @@ class Mempool {
       await rbfCache.updateCache();
     }
 
+    this.observedPollCallback?.(newTransactions, deletedTransactions, this.mempoolProtection !== 1 && transactions.length === newMempoolSize);
     this.lastMempoolUpdateAt = Date.now();
 
     const end = new Date().getTime();
     const time = end - start;
     logger.debug(`Mempool updated in ${time / 1000} seconds. New size: ${Object.keys(this.mempoolCache).length} (${diff > 0 ? '+' + diff : diff})`);
-
-    this.clearTimer(timer);
   }
 
   public getAccelerations(): { [txid: string]: Acceleration } {

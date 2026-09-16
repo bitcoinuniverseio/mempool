@@ -1,72 +1,25 @@
 <div class="container-xl product-page">
-  <header class="page-head">
-    <nav class="crumbs">
-      <a [routerLink]="['/']">Home</a>
-      <span class="divider">/</span>
-      <a [routerLink]="['/zcash']">Zcash</a>
-      <span class="divider">/</span>
-      <a [routerLink]="['/zcash/privacy']">Privacy Observatory</a>
-      <span class="divider">/</span>
-      <span>Workspace</span>
-    </nav>
-    <h1>Client-Only Viewing-Key Workspace</h1>
-    <p class="summary">
-      Inspect Unified Full Viewing Keys (UFVK), Sapling viewing keys, and decode note commitments strictly inside your browser. Key material never leaves your local memory.
-    </p>
-  </header>
-
-  <nav class="nav-tabs">
-    <a [routerLink]="['/zcash/privacy']">Pools & Upgrades</a>
-    <a [routerLink]="['/zcash/privacy/workspace']" class="active">Viewing-Key Workspace</a>
-  </nav>
-
-  <section class="panel">
-    <h2>Client-Side Note Scanner</h2>
-    <p>
-      Enter your Unified Full Viewing Key or Sapling Incoming Viewing Key to derive receivers and scan compact block ranges.
-    </p>
-
-    <div class="form-group">
-      <label for="viewingKeyInput">Viewing Key or Unified Address</label>
-      <input id="viewingKeyInput" type="text" [(ngModel)]="viewingKey" placeholder="uview1... or zxviews1..." />
-    </div>
-
-    <div class="form-group">
-      <label for="startHeightInput">Scan Start Height</label>
-      <input id="startHeightInput" type="number" [(ngModel)]="startHeight" />
-    </div>
-
-    <button type="button" class="btn-primary" (click)="scan()" [disabled]="scanning || !viewingKey.trim()">
-      {{ scanning ? 'Scanning Compact Blocks...' : 'Scan Locally' }}
-    </button>
-  </section>
-
-  <ng-container *ngIf="result$ | async as res">
-    <section class="panel">
-      <h2>Scan Results</h2>
-      <div class="metrics-grid">
-        <div class="metric-card">
-          <span class="metric-label">Key Family</span>
-          <span class="metric-value">{{ res.addressType | uppercase }}</span>
-        </div>
-        <div class="metric-card">
-          <span class="metric-label">Scanned Blocks</span>
-          <span class="metric-value">{{ res.scannedBlocks }}</span>
-        </div>
-        <div class="metric-card">
-          <span class="metric-label">Notes Decrypted</span>
-          <span class="metric-value">{{ res.notesFound }}</span>
-        </div>
-        <div class="metric-card">
-          <span class="metric-label">Balance</span>
-          <span class="metric-value">{{ res.totalZatoshis }} zat</span>
-        </div>
-      </div>
-
-      <div style="margin-top: 1rem;">
-        <p><strong>Decoded Receiver Components:</strong> {{ res.receivers.join(', ') }}</p>
-        <p><span class="badge badge-success">Zero-Leakage Verified</span> Note decryption executed in isolated browser context.</p>
-      </div>
-    </section>
-  </ng-container>
+ <header class="page-head"><h1>Client-Only Viewing-Key Workspace</h1><p class="summary">Parse supported viewing keys and decrypt Sapling and Orchard notes in a local WASM worker. Keys remain in browser memory until cleared or the page closes.</p></header>
+ <nav class="nav-tabs"><a [routerLink]="['/zcash/privacy' | relativeUrl]">Pools &amp; Upgrades</a><a class="active">Viewing-Key Workspace</a></nav>
+ <section class="panel">
+  <h2>Local Note Scanner</h2>
+  <p>Public block requests contain only the network, height interval and prior block hash. No viewing key is uploaded or saved. This scanner reports received notes; it does not determine an unspent balance.</p>
+  <div class="form-group"><label for="zcash-key-type">Key Format</label><select id="zcash-key-type" [(ngModel)]="keyType" (ngModelChange)="clear()"><option value="unified-full">Unified Full Viewing Key (UFVK)</option><option value="unified-incoming">Unified Incoming Viewing Key (UIVK)</option><option value="sapling-extended-full">Sapling Extended Full Viewing Key</option><option value="sapling-incoming-hex">Sapling Incoming Key — 32-byte hex</option><option value="orchard-incoming-hex">Orchard Incoming Key — 64-byte hex</option></select></div>
+  <div class="form-group"><label for="viewingKeyInput">Viewing Key</label><input id="viewingKeyInput" type="password" autocomplete="off" spellcheck="false" [(ngModel)]="viewingKey" (ngModelChange)="clear()" placeholder="Supported viewing key; addresses cannot decrypt notes" /></div>
+  <div class="form-group"><label for="zcash-scan-network">Zcash Network</label><select id="zcash-scan-network" [(ngModel)]="network" (ngModelChange)="clear()"><option value="mainnet">Mainnet</option><option value="testnet">Testnet</option></select></div>
+  <div class="form-group"><label for="zcash-scan-mode">Public Data</label><select id="zcash-scan-mode" [(ngModel)]="mode" (ngModelChange)="clear()"><option value="owned-blocks">Owned Node Block Interval</option><option value="compact-artifact">Offline Compact Artifact</option></select></div>
+  <ng-container *ngIf="mode === 'owned-blocks'"><div class="form-group"><label for="startHeightInput">Scan Start Height</label><input id="startHeightInput" type="number" min="1" [(ngModel)]="startHeight" (ngModelChange)="clear()" /></div><div class="form-group"><label for="zcash-block-count">Block Count (1–10)</label><input id="zcash-block-count" type="number" min="1" max="10" [(ngModel)]="blockCount" (ngModelChange)="clear()" /></div></ng-container>
+  <div class="form-group" *ngIf="mode === 'compact-artifact'"><label for="zcash-compact-artifact">Public Compact Outputs JSON</label><textarea id="zcash-compact-artifact" class="form-control font-monospace" rows="10" [(ngModel)]="artifactInput" (ngModelChange)="clear()"></textarea><p>Offline artifacts establish note decryption only. They do not establish chain inclusion, complete history or a live balance.</p></div>
+  <div class="d-flex flex-wrap gap-2"><button class="btn-primary" (click)="scan()" [disabled]="scanning || !viewingKey.trim()">{{ scanning ? 'Scanning Locally…' : 'Scan Locally' }}</button><button class="btn btn-outline-secondary" (click)="scan(true)" *ngIf="resume" [disabled]="scanning">Scan Next Interval</button><button class="btn btn-outline-secondary" (click)="clearKey()">Clear Key &amp; Results</button><button class="btn btn-outline-secondary" (click)="loadSample('sapling')">Load Public Sapling Test Vector</button><button class="btn btn-outline-secondary" (click)="loadSample('orchard')">Load Public Orchard Test Vector</button></div>
+  <div *ngIf="error" role="alert" class="alert alert-danger mt-3">{{ error }}</div>
+ </section>
+ <section class="panel" *ngIf="result$ | async as res">
+  <h2>Interval Scan Results</h2>
+  <p class="alert alert-warning">History incomplete. Spent notes are not tracked. Unspent balance is unknown.</p>
+  <p *ngIf="res.mode === 'compact-artifact'">Offline artifact result — no chain blocks scanned.</p>
+  <div class="metrics-grid"><div class="metric-card"><span class="metric-label">Key Family</span><span class="metric-value">{{ res.key_family }}</span></div><div class="metric-card"><span class="metric-label">Blocks Scanned</span><span class="metric-value">{{ res.scanned_blocks }}</span></div><div class="metric-card"><span class="metric-label">Notes Decrypted</span><span class="metric-value">{{ res.notes_found }}</span></div><div class="metric-card"><span class="metric-label">Received in This Interval</span><span class="metric-value">{{ res.received_zatoshis }} zat</span></div></div>
+  <p>Supported pools: {{ res.sapling_supported ? 'Sapling ' : '' }}{{ res.orchard_supported ? 'Orchard' : '' }}. Transparent and Sprout scanning are unsupported.</p>
+  <p *ngIf="res.last_hash" class="text-break">Last verified block: {{ res.last_hash }}. Next interval starts at {{ res.next_height }}.</p>
+  <pre style="white-space: pre-wrap; overflow-wrap: anywhere">{{ res.notes | json }}</pre>
+ </section>
 </div>

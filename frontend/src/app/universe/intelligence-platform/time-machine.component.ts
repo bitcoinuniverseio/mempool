@@ -17,50 +17,48 @@ import { IntelligenceApiService } from './intelligence-api.service';
           <span class="badge badge-primary">Event-Sourced Replay</span>
         </div>
         <p class="subtitle">
-          Reconstruct exact historical mempool state at any past block height or timestamp with deterministic state hashes and explicit gap accounting.
+          Replay the mempool as this node observed it at a past block height or time.
         </p>
       </header>
 
       <!-- Coverage Indicator -->
       <div *ngIf="coverage" class="alert alert-info d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
-        <div>
-          <strong>Archival Coverage:</strong>
-          <span> From {{ coverage.earliest_recorded_event_utc | date:'mediumDate' }} to {{ coverage.latest_recorded_event_utc | date:'mediumDate' }}</span>
-          <span class="badge badge-secondary ms-2">{{ coverage.total_checkpoints }} verified checkpoints</span>
+        <div *ngIf="coverage.total_checkpoints > 0; else noCoverage">
+          <strong>Coverage</strong>
+          <span> heights {{ coverage.earliest_checkpoint_height | number }} to {{ coverage.latest_checkpoint_height | number }}, since {{ coverage.observing_since_utc | date:'short' }}</span>
+          <span class="badge badge-secondary ms-2">{{ coverage.total_checkpoints }} checkpoints</span>
         </div>
-        <div *ngIf="coverage.coverage_gaps?.length > 0" class="small text-warning">
-          ⚠ {{ coverage.coverage_gaps.length }} documented maintenance intervals
-        </div>
+        <ng-template #noCoverage><span>No checkpoint recorded yet; the first one arrives with the next block.</span></ng-template>
       </div>
 
       <!-- Scrub Controls -->
       <section class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
           <h4 class="mb-0">Replay Target</h4>
-          <button type="button" class="btn btn-sm btn-outline-secondary" (click)="loadSampleTarget()">
-            Load Sample Target (860,020)
+          <button type="button" class="btn btn-sm btn-outline-secondary" *ngIf="coverage?.latest_checkpoint_height" (click)="loadLatestCheckpoint()">
+            Latest checkpoint ({{ coverage.latest_checkpoint_height | number }})
           </button>
         </div>
         <div class="card-body">
           <div class="row g-3 align-items-end">
             <div class="col-md-5">
-              <label class="form-label small text-muted" for="targetHeight">Target Block Height</label>
+              <label class="form-label small text-muted" for="targetHeight">Block height</label>
               <input
                 id="targetHeight"
                 type="number"
                 class="form-control font-monospace"
                 [(ngModel)]="targetHeight"
-                placeholder="e.g. 860020"
+                [placeholder]="coverage?.latest_checkpoint_height ? 'e.g. ' + coverage.latest_checkpoint_height : 'height'"
               />
             </div>
             <div class="col-md-4">
-              <label class="form-label small text-muted" for="targetTimestamp">Or Target ISO Timestamp</label>
+              <label class="form-label small text-muted" for="targetTimestamp">Or time (ISO 8601, UTC)</label>
               <input
                 id="targetTimestamp"
                 type="text"
                 class="form-control font-monospace"
                 [(ngModel)]="targetTimestamp"
-                placeholder="2026-08-20T12:00:00Z"
+                [placeholder]="coverage?.latest_recorded_event_utc || 'YYYY-MM-DDTHH:MM:SSZ'"
               />
             </div>
             <div class="col-md-3">
@@ -83,7 +81,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
 
       <!-- Initial Prompt -->
       <div *ngIf="!currentState && !loading && !replayError" class="p-4 rounded bg-dark-subtle text-muted text-center mb-4">
-        Specify a historical block height or timestamp above to reconstruct exact unconfirmed transaction state.
+        Pick a block height or time to replay.
       </div>
 
       <!-- Reconstructed State View -->
@@ -200,8 +198,9 @@ export class TimeMachineComponent implements OnInit, OnDestroy {
     );
   }
 
-  loadSampleTarget(): void {
-    this.targetHeight = 860020;
+  loadLatestCheckpoint(): void {
+    if (!this.coverage?.latest_checkpoint_height) { return; }
+    this.targetHeight = this.coverage.latest_checkpoint_height;
     this.targetTimestamp = '';
     this.runReplay();
   }

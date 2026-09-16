@@ -1,26 +1,33 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
-import { BehaviorSubject, Observable, catchError, of, switchMap } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, of, switchMap, startWith, Subscription } from 'rxjs';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { WildkinCreature } from '@app/universe/universe.types';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 interface CreaturesViewModel {
   readonly kind: 'loading' | 'ready' | 'detail' | 'error';
   readonly creatures?: WildkinCreature[];
   readonly selected?: WildkinCreature;
+  readonly message?: string;
 }
+
+const failed = (error: unknown): Observable<CreaturesViewModel> =>
+  of({ kind: 'error', message: loadFailureMessage(classifyLoadFailure(error)) });
 
 @Component({
   selector: 'app-wildkin-creatures',
   templateUrl: './wildkin-creatures.component.html',
   styleUrls: ['../product-page.scss'],
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class WildkinCreaturesComponent implements OnInit {
+export class WildkinCreaturesComponent implements OnInit, OnDestroy {
+  private request?: Subscription;
   private readonly state = new BehaviorSubject<CreaturesViewModel>({ kind: 'loading' });
   readonly vm$: Observable<CreaturesViewModel> = this.state.asObservable();
 
@@ -33,20 +40,23 @@ export class WildkinCreaturesComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.route.paramMap.pipe(
+    this.request = this.route.paramMap.pipe(
       switchMap((params) => {
         const id = params.get('id');
         if (id) {
           return this.api.getWildkinCreature$(id).pipe(
             switchMap((creature) => of<CreaturesViewModel>({ kind: 'detail', selected: creature })),
-            catchError(() => of<CreaturesViewModel>({ kind: 'error' }))
+            catchError(failed),
+            startWith<CreaturesViewModel>({ kind: 'loading' })
           );
         }
         return this.api.getWildkinCreatures$().pipe(
           switchMap((data) => of<CreaturesViewModel>({ kind: 'ready', creatures: data.creatures })),
-          catchError(() => of<CreaturesViewModel>({ kind: 'error' }))
+          catchError(failed),
+            startWith<CreaturesViewModel>({ kind: 'loading' })
         );
       })
     ).subscribe((vm) => this.state.next(vm));
   }
+  ngOnDestroy(): void { this.request?.unsubscribe(); this.state.complete(); }
 }

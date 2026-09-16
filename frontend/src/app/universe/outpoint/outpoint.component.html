@@ -32,7 +32,7 @@
       <p i18n="universe.outpoint.error-body">
         The request was rejected. Check the output reference, then try again.
       </p>
-      <a class="action" [routerLink]="['/tx', vm.txid]" *ngIf="vm.txid" i18n="universe.outpoint.open-tx">
+      <a class="action" [routerLink]="['/tx' | relativeUrl, vm.txid]" *ngIf="vm.txid" i18n="universe.outpoint.open-tx">
         Open the transaction instead
       </a>
     </div>
@@ -51,12 +51,12 @@
           <dd class="identifier">{{ vm.result.outpoint }}</dd>
 
           <dt i18n="universe.outpoint.field-transaction">Transaction</dt>
-          <dd><a class="identifier" [routerLink]="['/tx', vm.txid]">{{ vm.txid }}</a></dd>
+          <dd><a class="identifier" [routerLink]="['/tx' | relativeUrl, vm.txid]">{{ vm.txid }}</a></dd>
 
           <ng-container *ngIf="vm.result.checkpoint as checkpoint">
             <dt i18n="universe.outpoint.field-asof">Proven as of</dt>
             <dd>
-              <a [routerLink]="['/block', checkpoint.blockHash]">
+              <a [routerLink]="['/block' | relativeUrl, checkpoint.blockHash]">
                 <ng-container i18n="universe.outpoint.block-height">Block {{ checkpoint.heightAtomic }}</ng-container>
               </a>
             </dd>
@@ -78,7 +78,7 @@
 
         <div class="protocol-group" *ngFor="let group of vm.groups; trackBy: trackByGroup">
           <h3 class="protocol-name">
-            <a [routerLink]="['/protocols', group.protocolId]">{{ group.protocolId }}</a>
+            <a [routerLink]="['/protocols' | relativeUrl, group.protocolId]">{{ group.protocolId }}</a>
           </h3>
 
           <ul class="position-list">
@@ -122,7 +122,7 @@
         <h2 i18n="universe.outpoint.value-title">Bitcoin value</h2>
         <p class="sats">{{ satsLabel(vm.result.positions[0].valueSatsAtomic) }} <span i18n="universe.outpoint.sats-unit">sats</span></p>
         <p class="owner identifier" *ngIf="vm.result.positions[0].ownerAddress as owner">
-          <a [routerLink]="['/address', owner]">{{ owner }}</a>
+          <a [routerLink]="['/address' | relativeUrl, owner]">{{ owner }}</a>
         </p>
       </section>
 

@@ -73,7 +73,7 @@
 
           <ng-container *ngIf="state.result.value.blockAtomic as block">
             <dt i18n="universe.sat.field-block">Mined in block</dt>
-            <dd><a [routerLink]="['/block', block]">{{ block }}</a></dd>
+            <dd><a [routerLink]="['/block' | relativeUrl, block]">{{ block }}</a></dd>
           </ng-container>
 
           <ng-container *ngIf="state.result.value.timestampAtomic as timestamp">
@@ -108,7 +108,7 @@
 
           <ng-container *ngIf="state.result.value.address as address">
             <dt i18n="universe.sat.field-address">Address</dt>
-            <dd><a class="identifier" [routerLink]="['/address', address]">{{ address }}</a></dd>
+            <dd><a class="identifier" [routerLink]="['/address' | relativeUrl, address]">{{ address }}</a></dd>
           </ng-container>
         </dl>
         <p class="empty" *ngIf="!state.result.value.satpoint" i18n="universe.sat.no-location">
@@ -120,7 +120,7 @@
         <h2 i18n="universe.sat.inscriptions-title">Inscriptions on this satoshi</h2>
         <ul>
           <li *ngFor="let inscription of state.result.value.inscriptions">
-            <a class="identifier" [routerLink]="['/inscription', inscription]">{{ shorten(inscription, 12) }}</a>
+            <a class="identifier" [routerLink]="['/inscription' | relativeUrl, inscription]">{{ shorten(inscription, 12) }}</a>
           </li>
         </ul>
       </section>

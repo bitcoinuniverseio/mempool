@@ -8,27 +8,27 @@ function fail(res: Response, err: unknown): Response {
 
 class OpenTimestampsRoutes {
   public initRoutes(app: Application): void {
-    app.get('/api/v1/intelligence/timestamps/overview', (_req: Request, res: Response) => {
+    app.get('/api/v1/intelligence/timestamps/overview', async (_req: Request, res: Response) => {
       try {
-        const overview = openTimestampsService.getOverview();
+        const overview = await openTimestampsService.getOverview();
         res.json(overview);
       } catch (err: any) {
         fail(res, err);
       }
     });
 
-    app.get('/api/v1/intelligence/timestamps/calendars', (_req: Request, res: Response) => {
+    app.get('/api/v1/intelligence/timestamps/calendars', async (_req: Request, res: Response) => {
       try {
-        const calendars = openTimestampsService.listCalendars();
+        const calendars = await openTimestampsService.listCalendars();
         res.json(calendars);
       } catch (err: any) {
         fail(res, err);
       }
     });
 
-    app.get('/api/v1/intelligence/timestamps/calendars/:calendarId', (req: Request, res: Response) => {
+    app.get('/api/v1/intelligence/timestamps/calendars/:calendarId', async (req: Request, res: Response) => {
       try {
-        const calendar = openTimestampsService.getCalendar(req.params.calendarId);
+        const calendar = await openTimestampsService.getCalendar(req.params.calendarId);
         if (!calendar) {
           return res.status(404).json({ error: 'Calendar not found' });
         }
@@ -38,18 +38,18 @@ class OpenTimestampsRoutes {
       }
     });
 
-    app.get('/api/v1/intelligence/timestamps/anchors', (_req: Request, res: Response) => {
+    app.get('/api/v1/intelligence/timestamps/anchors', async (_req: Request, res: Response) => {
       try {
-        const anchors = openTimestampsService.listAnchors();
+        const anchors = await openTimestampsService.listAnchors();
         res.json(anchors);
       } catch (err: any) {
         fail(res, err);
       }
     });
 
-    app.get('/api/v1/intelligence/timestamps/batches/:batchId', (req: Request, res: Response) => {
+    app.get('/api/v1/intelligence/timestamps/batches/:batchId', async (req: Request, res: Response) => {
       try {
-        const batch = openTimestampsService.getBatch(req.params.batchId);
+        const batch = await openTimestampsService.getBatch(req.params.batchId);
         if (!batch) {
           return res.status(404).json({ error: 'Batch not found' });
         }
@@ -59,10 +59,10 @@ class OpenTimestampsRoutes {
       }
     });
 
-    app.post('/api/v1/intelligence/timestamps/digests/stamp', (req: Request, res: Response) => {
+    app.post('/api/v1/intelligence/timestamps/digests/stamp', async (req: Request, res: Response) => {
       try {
         const digest = req.body?.digest ?? req.body?.hash;
-        const result = openTimestampsService.stampDigest(digest);
+        const result = await openTimestampsService.stampDigest(digest);
         res.json(result);
       } catch (err: any) {
         fail(res, err);
@@ -78,9 +78,9 @@ class OpenTimestampsRoutes {
       }
     });
 
-    app.post('/api/v1/intelligence/timestamps/proofs/upgrade', (req: Request, res: Response) => {
+    app.post('/api/v1/intelligence/timestamps/proofs/upgrade', async (req: Request, res: Response) => {
       try {
-        const result = openTimestampsService.upgradeProof(req.body);
+        const result = await openTimestampsService.upgradeProof(req.body ?? {});
         res.json(result);
       } catch (err: any) {
         fail(res, err);

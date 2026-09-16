@@ -2,9 +2,9 @@
   <header class="page-head">
     <div class="title-block">
       <nav class="crumbs">
-        <a [routerLink]="['/protocols']" i18n="anima.crumb">Protocols</a>
+        <a [routerLink]="['/protocols' | relativeUrl]" i18n="anima.crumb">Protocols</a>
         <span class="divider">/</span>
-        <a [routerLink]="['/protocols', 'anima']">ANIMA</a>
+        <a [routerLink]="['/protocols' | relativeUrl, 'anima']">ANIMA</a>
       </nav>
       <h1 i18n="anima.transitions-title">ANIMA transitions</h1>
       <p class="summary" i18n="anima.transitions-summary">
@@ -53,7 +53,7 @@
             <dt i18n="anima.field-live">Live supply</dt>
             <dd>{{ status.status.supply.live }}</dd>
             <dt>
-              <a class="browse-link" [routerLink]="['/anima', 'items']" i18n="anima.open-items">Browse organisms</a>
+              <a class="browse-link" [routerLink]="['/anima' | relativeUrl, 'items']" i18n="anima.open-items">Browse organisms</a>
             </dt>
             <dd></dd>
           </dl>
@@ -66,9 +66,9 @@
           </p>
           <ul class="event-list" *ngIf="events.events.length > 0">
             <li *ngFor="let event of events.events">
-              <a class="identifier" [routerLink]="['/anima', 'event', event.eventId]">{{ event.eventId }}</a>
+              <a class="identifier" [routerLink]="['/anima' | relativeUrl, 'event', event.eventId]">{{ event.eventId }}</a>
               <span class="kind">{{ event.kind }}</span>
-              <a class="identifier" [routerLink]="['/tx', event.txid]">{{ shorten(event.txid, 10) }}</a>
+              <a class="identifier" [routerLink]="['/tx' | relativeUrl, event.txid]">{{ shorten(event.txid, 10) }}</a>
               <span class="height">block {{ event.height }}</span>
             </li>
           </ul>

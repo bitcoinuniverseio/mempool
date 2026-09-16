@@ -687,7 +687,7 @@ export interface ChainDashboardView {
 
 export interface UniverseSearchResult {
   chain: ExplorerChain;
-  network: 'mainnet';
+  network: ExplorerNetwork;
   kind: string;
   reference: string;
   label: string;
@@ -703,7 +703,7 @@ export interface UniverseSearchResponse {
   scope: 'active' | 'all';
   groups: Array<{
     chain: ExplorerChain;
-    network: 'mainnet';
+    network: ExplorerNetwork;
     results: UniverseSearchResult[];
   }>;
   failures: Array<{
@@ -1035,12 +1035,13 @@ export interface TaprootAssetItem {
   readonly name: string;
   readonly groupKey?: string;
   readonly genesisPoint: string;
-  readonly genesisHeight: number;
+  /** The genesis block height when this proof is the genesis output, null when the anchor is a later transfer. */
+  readonly genesisHeight: number | null;
   readonly totalAmountAtomic: string;
   readonly anchorTxid: string;
   readonly anchorOutpoint: string;
   readonly scriptKey: string;
-  readonly hasProofFile: boolean;
+  readonly hasProofFile: boolean | null;
   readonly mintTime: number;
 }
 
@@ -1067,9 +1068,10 @@ export interface LightningRfqQuote {
   readonly quoteId: string;
   readonly baseAsset: string;
   readonly quoteAsset: string;
-  readonly askRate: string;
-  readonly bidRate: string;
-  readonly spreadBps: number;
+  /** A quote is one-sided: a buy quote carries an ask rate, a sell quote a bid rate. */
+  readonly askRate: string | null;
+  readonly bidRate: string | null;
+  readonly spreadBps: number | null;
   readonly validUntil: number;
 }
 

@@ -37,7 +37,7 @@
 
     <ul class="share-list" *ngIf="vm.shares.length">
       <li *ngFor="let share of vm.shares; trackBy: trackByShare">
-        <a class="share-name" [routerLink]="['/protocols', share.protocolId]">{{ share.displayName }}</a>
+        <a class="share-name" [routerLink]="['/protocols' | relativeUrl, share.protocolId]">{{ share.displayName }}</a>
         <div class="share-bar" role="img"
              [attr.aria-label]="share.displayName + ': ' + share.count + ' of ' + vm.pulse.checked">
           <span class="fill" [style.width.%]="share.percent"></span>
@@ -58,11 +58,11 @@
 
     <ul class="event-list" *ngIf="vm.pulse.recent.length">
       <li *ngFor="let event of vm.pulse.recent; trackBy: trackByEvent" class="event">
-        <a class="event-txid identifier" [routerLink]="['/tx', event.txid]">{{ shorten(event.txid, 10) }}</a>
+        <a class="event-txid identifier" [routerLink]="['/tx' | relativeUrl, event.txid]">{{ shorten(event.txid, 10) }}</a>
         <span class="event-protocols">
           <a *ngFor="let protocolId of event.protocolIds"
              class="protocol-tag"
-             [routerLink]="['/protocols', protocolId]">{{ vm.names.get(protocolId) || protocolId }}</a>
+             [routerLink]="['/protocols' | relativeUrl, protocolId]">{{ vm.names.get(protocolId) || protocolId }}</a>
         </span>
         <span class="event-action">{{ actionSummary(event) }}</span>
         <span class="universe-chip" [ngClass]="'state-' + statusTone(event)">{{ statusLabel(event) }}</span>
@@ -76,7 +76,7 @@
       {{ readySourceCount(sources) }} of {{ sources.length }} configured authorities are answering.
       Which protocols each one covers is on the protocols page.
     </p>
-    <a [routerLink]="['/protocols']" i18n="universe.pulse.see-protocols">See every protocol and its authority</a>
+    <a [routerLink]="['/protocols' | relativeUrl]" i18n="universe.pulse.see-protocols">See every protocol and its authority</a>
   </section>
 
 </div>

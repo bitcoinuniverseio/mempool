@@ -73,10 +73,14 @@ export class CompactFiltersApiService {
     );
   }
 
-  getBlockFilter$(blockHash: string): Observable<any> {
+  getBlockFilter$(blockHash: string, network = 'main'): Observable<any> {
     return this.httpClient.get<any>(
-      `${this.apiBaseUrl}/api/v1/intelligence/compact-filters/blocks/${encodeURIComponent(blockHash)}`
+      `${this.apiBaseUrl}/api/v1/intelligence/compact-filters/blocks/${encodeURIComponent(blockHash)}?network=${encodeURIComponent(network)}`
     );
+  }
+
+  getRanges$(start: number, end: number, network: string): Observable<any> {
+    return this.httpClient.get(`${this.apiBaseUrl}/api/v1/intelligence/compact-filters/ranges?start=${start}&end=${end}&network=${encodeURIComponent(network)}`);
   }
 
   executeVerification$(req: any): Observable<any> {

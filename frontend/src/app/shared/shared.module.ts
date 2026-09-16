@@ -151,7 +151,6 @@ import { GithubLogin } from '@components/github-login.component/github-login.com
     AmountSelectorComponent,
     TimezoneSelectorComponent,
     ScriptpubkeyTypePipe,
-    RelativeUrlPipe,
     ImageFallbackDirective,
     TooltipReachableDirective,
     NoSanitizePipe,
@@ -264,6 +263,7 @@ import { GithubLogin } from '@components/github-login.component/github-login.com
     BitcoinInvoiceComponent,
   ],
   imports: [
+    RelativeUrlPipe,
     CommonModule,
     RouterModule,
     ReactiveFormsModule,

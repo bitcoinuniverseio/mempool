@@ -144,7 +144,7 @@
       </h2>
     </div>
 
-    <app-universe-address-assets [utxos]="utxos"></app-universe-address-assets>
+    <app-universe-address-assets [utxos]="utxos" [sourceState]="utxoSourceState"></app-universe-address-assets>
 
     <p class="universe-portfolio-link" *ngIf="network === ''">
       <a [routerLink]="['/portfolio', 'bitcoin', 'mainnet', addressString]" i18n="address.open-portfolio">

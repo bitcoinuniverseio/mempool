@@ -1,17 +1,18 @@
 import { Component, OnInit, ChangeDetectionStrategy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-multiparty-session',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
       <header class="page-header mb-4">
         <div class="mb-2">
-          <a routerLink="/tools/multiparty/musig2" class="btn btn-sm btn-outline-secondary">
+          <a [routerLink]="'/tools/multiparty/musig2' | relativeUrl" class="btn btn-sm btn-outline-secondary">
             &larr; Back to MuSig2 Coordinator
           </a>
         </div>

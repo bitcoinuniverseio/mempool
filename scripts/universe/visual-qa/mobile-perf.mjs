@@ -89,7 +89,12 @@ const BUDGETS = {
   // far enough above that ordinary drift does not trip it and a real regression
   // does, and when it needs raising, raise it deliberately and say what bought
   // the bytes.
-  eagerBytesGzipped: 480_000,
+  //
+  // Raised to 490kB on 2026-09-10: develop after the network-relative link sweep
+  // (#116) and the network prefix interceptor (#117) measures 469kB compressed,
+  // 1678kB raw, which is the 480kB ceiling to the byte. The bytes bought every
+  // Universe link and every backend request staying on the selected network.
+  eagerBytesGzipped: 490_000,
   cls: 0.1,
 };
 

@@ -1,3 +1,6 @@
+import { StateService } from '@app/services/state.service';
+import { OwnerKeyService } from './owner-key.service';
+import { SavedQueryPanelComponent } from './saved-query-panel.component';
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -7,23 +10,24 @@ import { IntelligenceApiService } from './intelligence-api.service';
 @Component({
   selector: 'app-query-studio',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SavedQueryPanelComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
       <header class="page-header">
         <div class="title-row">
-          <h1>Mempool Query Studio</h1>
-          <span class="badge badge-success">Sandboxed Read-Only SQL</span>
+          <h1>Query Studio</h1>
+          <span class="badge badge-secondary">Read-only SQL</span>
         </div>
         <p class="subtitle">
-          Execute analytical SQL queries over real-time and historical mempool tables, inspect schema definitions, and export query results.
+          Run analytical queries when an analytics source is connected.
         </p>
       </header>
 
+      <app-saved-query-panel [sql]="sqlQuery" (load)="useSaved($event)" />
       <div class="row g-4 mb-4">
         <!-- Schema Sidebar -->
-        <div class="col-md-4">
+        <div class="col-md-4 order-2 order-md-1">
           <div class="card h-100">
             <div class="card-header">
               <h5 class="mb-0">Table Schema Explorer</h5>
@@ -44,24 +48,24 @@ import { IntelligenceApiService } from './intelligence-api.service';
         </div>
 
         <!-- SQL Editor and Execution -->
-        <div class="col-md-8">
+        <div class="col-md-8 order-1 order-md-2">
           <div class="card mb-4">
             <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-              <h5 class="mb-0">SQL Query Editor</h5>
+              <h5 class="mb-0">Query</h5>
               <div class="d-flex gap-2 align-items-center">
                 <button type="button" class="btn btn-sm btn-outline-secondary" (click)="loadSampleQuery()">
-                  Load Sample Query
+                  Example
                 </button>
-                <span class="small text-muted">SELECT only • 5000ms limit</span>
+                <span class="small text-muted">SELECT only</span>
               </div>
             </div>
             <div class="card-body">
-              <label class="form-label small text-muted" for="sqlQueryInput">Analytical SQL Query</label>
+              <label class="form-label small text-muted" for="sqlQueryInput">SQL query</label>
               <textarea
                 id="sqlQueryInput"
                 class="form-control font-monospace mb-3"
                 rows="5"
-                [(ngModel)]="sqlQuery"
+                [(ngModel)]="sqlQuery" (ngModelChange)="invalidate()"
                 placeholder="SELECT txid, fee_sats, feerate FROM mempool_transactions LIMIT 20"
               ></textarea>
               <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -83,13 +87,13 @@ import { IntelligenceApiService } from './intelligence-api.service';
 
           <!-- Empty Initial State -->
           <div *ngIf="!queryResult && !loading && !queryError" class="p-4 rounded bg-dark-subtle text-muted text-center">
-            Write an analytical SELECT query or click "Load Sample Query" above to inspect execution results.
+            Run a SELECT query to see results.
           </div>
 
           <!-- Query Results -->
           <div *ngIf="queryResult" class="card">
             <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-              <h5 class="mb-0">Execution Results</h5>
+              <h5 class="mb-0">Results</h5>
               <span class="badge badge-secondary">{{ queryResult.rows?.length || 0 }} rows</span>
             </div>
             <div class="table-responsive" tabindex="0">
@@ -99,13 +103,14 @@ import { IntelligenceApiService } from './intelligence-api.service';
                     <th *ngFor="let col of queryResult.columns">{{ col }}</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody *ngIf="queryResult.rows?.length; else emptyRows">
                   <tr *ngFor="let row of queryResult.rows">
                     <td *ngFor="let col of queryResult.columns" class="font-monospace small text-break">
                       {{ row[col] }}
                     </td>
                   </tr>
                 </tbody>
+                <ng-template #emptyRows><tbody><tr><td [attr.colspan]="queryResult.columns?.length || 1" class="text-center text-muted py-4">No rows returned.</td></tr></tbody></ng-template>
               </table>
             </div>
           </div>
@@ -125,6 +130,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
     .badge-primary { background-color: var(--primary, #0d6efd); color: #fff; }
     .badge-secondary { background-color: var(--secondary, #6c757d); color: #fff; }
     .badge-success { background-color: var(--success, #198754); color: #fff; }
+    .badge-secondary { background-color: var(--secondary, #6c757d); color: #fff; }
   `],
 })
 export class QueryStudioComponent implements OnInit, OnDestroy {
@@ -135,26 +141,39 @@ export class QueryStudioComponent implements OnInit, OnDestroy {
   queryResult: any = null;
 
   private sub?: Subscription;
+  private schemaSub?: Subscription;
+  private context = new Subscription();
+  private generation=0;
+  private destroyed=false;
 
   constructor(
     private api: IntelligenceApiService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private state: StateService,
+    private owner: OwnerKeyService
   ) {}
 
   ngOnInit(): void {
-    this.api.getQuerySchema$().subscribe((res) => {
-      this.schema = res?.tables || [];
-      this.cdr.markForCheck();
-    });
+    this.loadSchema();this.context.add(this.state.networkChanged$?.subscribe(()=>this.reset()));this.context.add(this.owner.key$.subscribe(()=>this.reset()));
   }
+  invalidate(): void {this.generation++;this.sub?.unsubscribe();this.queryResult=null;this.queryError=null;this.loading=false;this.cdr.markForCheck();}
+  private reset(): void {this.invalidate();this.loadSchema();}
+  private loadSchema(): void {
+    this.schemaSub?.unsubscribe();this.schema=[];const generation=this.generation;
+    this.schemaSub=this.api.getQuerySchema$().subscribe({next:res=>{if(this.destroyed||generation!==this.generation)return;this.schema=Array.isArray(res?.tables)?res.tables:[];this.cdr.markForCheck();},error:()=>{if(this.destroyed||generation!==this.generation)return;this.schema=[];this.queryError='Analytics source unavailable.';this.cdr.markForCheck();}});
+  }
+
+  useSaved(sql: string): void { this.invalidate(); this.sqlQuery=sql; this.cdr.markForCheck(); }
 
   loadSampleQuery(): void {
     this.sqlQuery = 'SELECT txid, fee_sats, feerate FROM mempool_transactions LIMIT 10';
-    this.executeQuery();
+    this.sub?.unsubscribe(); this.queryResult=null; this.queryError=null; this.loading=false; this.cdr.markForCheck();
   }
 
   executeQuery(): void {
+    this.invalidate();
     if (!this.sqlQuery.trim()) return;
+    const query=this.sqlQuery.trim(),generation=this.generation;
     this.loading = true;
     this.queryError = null;
     this.cdr.markForCheck();
@@ -162,11 +181,14 @@ export class QueryStudioComponent implements OnInit, OnDestroy {
     this.sub?.unsubscribe();
     this.sub = this.api.executeDevQuery$(this.sqlQuery.trim()).subscribe({
       next: (res) => {
+        if(this.destroyed||generation!==this.generation||query!==this.sqlQuery.trim())return;
         this.queryResult = res;
         this.loading = false;
         this.cdr.markForCheck();
       },
       error: (err) => {
+        if(this.destroyed||generation!==this.generation)return;
+        this.queryResult=null;
         this.queryError = err?.error?.error || err?.message || 'Query execution failed';
         this.loading = false;
         this.cdr.markForCheck();
@@ -175,6 +197,7 @@ export class QueryStudioComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.destroyed=true;this.generation++;this.schemaSub?.unsubscribe();this.context.unsubscribe();
     this.sub?.unsubscribe();
   }
 }

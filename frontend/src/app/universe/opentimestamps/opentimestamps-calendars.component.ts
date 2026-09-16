@@ -1,74 +1,89 @@
-import { Component, OnInit } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
-import { OpenTimestampsApiService } from './opentimestamps.service';
+import { OpenTimestampsApiService, TimestampCalendar } from './opentimestamps.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
+/**
+ * The allowlisted calendars, as this deployment last observed them. A
+ * calendar's own queue is not visible through its protocol, so the page shows
+ * what was observed: reachability, and the proofs stamped here it anchored.
+ */
 @Component({
   selector: 'app-opentimestamps-calendars',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4">
-      <div class="alert alert-warning" role="alert" *ngIf="loadError">
-        {{ loadError }}
-      </div>
-      <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+      <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
-          <h1 class="h2 mb-1">OpenTimestamps Calendar Servers</h1>
-          <p class="text-muted mb-0">Decentralized calendar aggregation network uptime, pending commitments, and synchronization status.</p>
+          <h1 class="h2 mb-1">Calendars</h1>
+          <p class="text-muted mb-0">The calendar servers this deployment submits digests to.</p>
         </div>
-        <a routerLink="/tools/timestamp" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
+        <a [routerLink]="'/tools/timestamp' | relativeUrl" class="btn btn-outline-secondary btn-sm">Overview</a>
       </div>
 
-      <div class="card bg-dark border-secondary mb-4">
-        <div class="card-header border-secondary">
-          <h5 class="card-title mb-0">Active Public Calendar Servers</h5>
-        </div>
-        <div class="table-responsive" tabindex="0" role="region" aria-label="Active Public Calendar Servers, scroll horizontally" i18n-aria-label>
-          <table class="table table-dark table-hover mb-0">
+      <div class="alert alert-warning" role="alert" *ngIf="loadError">{{ loadError }}</div>
+      <p class="text-muted" *ngIf="loading" role="status">Loading</p>
+
+      <div class="card" *ngIf="!loading && !loadError">
+        <p class="small p-3">Counts cover bounded local record windows, not calendar-wide activity. Current anchors are checked against the owned chain at read time.</p>
+        <p class="text-muted p-3 mb-0" *ngIf="!calendars.length">No calendar is configured.</p>
+        <div class="table-responsive" tabindex="0" role="region" aria-label="Calendar servers, scroll horizontally" i18n-aria-label *ngIf="calendars.length">
+          <table class="table table-hover mb-0">
             <thead>
               <tr>
-                <th>Calendar ID</th>
-                <th>Endpoint URL</th>
-                <th>Pending Commitments</th>
-                <th>Latest Anchored Block</th>
-                <th>Uptime</th>
+                <th>Calendar</th>
                 <th>Status</th>
+                <th>Promised, not anchored</th>
+                <th>Current chain verified</th>
+                <th>Latest block</th>
+                <th>Last observed</th>
               </tr>
             </thead>
             <tbody>
               <tr *ngFor="let c of calendars">
-                <td class="fw-bold text-info">{{ c.calendar_id }}</td>
-                <td class="font-monospace text-muted">{{ c.url }}</td>
-                <td>{{ c.pending_commitments }} hashes</td>
-                <td class="fw-bold">{{ c.last_btc_block_anchored }}</td>
-                <td class="text-success">{{ c.uptime_pct }}%</td>
-                <td><span class="badge bg-success">{{ c.status | uppercase }}</span></td>
+                <td>
+                  <div class="fw-bold">{{ c.name }}</div>
+                  <div class="small text-muted font-monospace text-break">{{ c.url }}</div>
+                </td>
+                <td>
+                  <span class="badge" [class.badge-success]="c.health_status === 'online'" [class.badge-warning]="c.health_status === 'degraded'" [class.badge-offline]="c.health_status === 'offline'" [title]="c.health_detail">
+                    {{ c.health_status | uppercase }}
+                  </span>
+                </td>
+                <td>{{ c.pending_coverage?.complete === false ? 'At least ' : '' }}{{ c.pending_attestations_count | number }}</td>
+                <td>{{ c.anchored_coverage?.complete === false ? 'At least ' : '' }}{{ c.anchored_proofs_count | number }}</td>
+                <td class="fw-bold">{{ c.last_anchor_block_height ?? 'none yet' }}</td>
+                <td class="small text-muted">{{ c.health_observed_at ? (c.health_observed_at | date:'short') : 'not yet' }}</td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
     </div>
-  `
+  `,
+  styles: [`
+    .badge-offline { color: #fff; background: var(--u-state-unavailable, #c0392b); }
+  `],
 })
-export class OpenTimestampsCalendarsComponent implements OnInit {
-  public calendars: any[] = [];
+export class OpenTimestampsCalendarsComponent implements OnInit, OnDestroy {
+  private subscription?: Subscription;
+  public ngOnDestroy(): void { this.subscription?.unsubscribe(); }
+  public calendars: TimestampCalendar[] = [];
   public loadError: string | null = null;
+  public loading = true;
 
   constructor(private api: OpenTimestampsApiService) {}
 
   public ngOnInit(): void {
-    this.api.getCalendars$().subscribe({
-      next: res => {
-        this.calendars = res ?? [];
-        this.loadError = null;
-      },
-      error: err => {
-        this.calendars = [];
-        this.loadError = loadFailureMessage(classifyLoadFailure(err));
-      },
+    this.subscription = this.api.watch(() => this.api.getCalendars$()).subscribe(state => {
+      this.loading = state.loading;
+      this.loadError = state.error ? loadFailureMessage(classifyLoadFailure(state.error)) : null;
+      this.calendars = state.value ?? [];
+
     });
   }
 }

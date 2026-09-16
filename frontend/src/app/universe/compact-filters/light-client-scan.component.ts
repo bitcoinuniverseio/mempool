@@ -1,12 +1,17 @@
+import { OnDestroy } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { CompactFiltersApiService } from './compact-filters.service';
+import { scanScript, scanFilterRange } from './local-filter-scan';
 import { Component, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-light-client-scan',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -20,12 +25,12 @@ import { FormsModule } from '@angular/forms';
         </p>
 
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/network/light-client">Overview</a>
-          <a class="nav-link" routerLink="/network/light-client/providers">Providers</a>
-          <a class="nav-link" routerLink="/network/light-client/filters">Filter Explorer</a>
-          <a class="nav-link" routerLink="/network/light-client/verify">Header Verifier</a>
-          <a class="nav-link active" routerLink="/network/light-client/scan">Local Scanner</a>
-          <a class="nav-link" routerLink="/network/light-client/privacy">Privacy Controls</a>
+          <a class="nav-link" [routerLink]="'/network/light-client' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/network/light-client/providers' | relativeUrl">Providers</a>
+          <a class="nav-link" [routerLink]="'/network/light-client/filters' | relativeUrl">Filter Explorer</a>
+          <a class="nav-link" [routerLink]="'/network/light-client/verify' | relativeUrl">Header Verifier</a>
+          <a class="nav-link active" [routerLink]="'/network/light-client/scan' | relativeUrl">Local Scanner</a>
+          <a class="nav-link" [routerLink]="'/network/light-client/privacy' | relativeUrl">Privacy Controls</a>
         </nav>
       </header>
 
@@ -33,6 +38,9 @@ import { FormsModule } from '@angular/forms';
         <div class="col-12 col-lg-5">
           <div class="card p-4 bg-body-tertiary border h-100">
             <h2 class="h5 mb-3">Scan Configuration</h2>
+<label for="filter-scan-network">Bitcoin network</label><select id="filter-scan-network" [(ngModel)]="network" (ngModelChange)="edited()"><option value="main">Mainnet</option><option value="test">Testnet</option><option value="testnet4">Testnet4</option><option value="signet">Signet</option><option value="regtest">Regtest</option></select>
+<p class="small">Addresses, addr(address), raw(scriptHex); at most32 blocks. Other descriptors remain unsupported. Only public network and height selectors leave this browser.</p>
+<label for="filter-offline">Optional offline public filter interval JSON</label><textarea id="filter-offline" [(ngModel)]="offlineRange" (ngModelChange)="edited()" rows="3" class="form-control"></textarea><p>Leave blank to read the owned node. Offline bytes have no established chain provenance or peer agreement.</p><p *ngIf="error" role="alert" class="alert alert-warning">{{ error }}</p>
 
             <div class="mb-3">
               <label class="form-label small text-muted" for="light-client-scan-descriptor">Public Descriptor or Address</label>
@@ -40,7 +48,7 @@ import { FormsModule } from '@angular/forms';
                 id="light-client-scan-descriptor"
                 class="form-control font-monospace small"
                 rows="4"
-                [(ngModel)]="descriptor"
+                [(ngModel)]="descriptor" (ngModelChange)="edited()"
                 placeholder="wpkh([fingerprint/84'/0'/0']xpub.../0/*)"
               ></textarea>
             </div>
@@ -48,11 +56,11 @@ import { FormsModule } from '@angular/forms';
             <div class="row g-2 mb-3">
               <div class="col-6">
                 <label class="form-label small text-muted" for="light-client-scan-start">Start Height</label>
-                <input type="number" class="form-control" id="light-client-scan-start" [(ngModel)]="startHeight" />
+                <input type="number" class="form-control" id="light-client-scan-start" [(ngModel)]="startHeight" (ngModelChange)="edited()" />
               </div>
               <div class="col-6">
                 <label class="form-label small text-muted" for="light-client-scan-end">End Height</label>
-                <input type="number" class="form-control" id="light-client-scan-end" [(ngModel)]="endHeight" />
+                <input type="number" class="form-control" id="light-client-scan-end" [(ngModel)]="endHeight" (ngModelChange)="edited()" />
               </div>
             </div>
 
@@ -78,7 +86,7 @@ import { FormsModule } from '@angular/forms';
 
             <div *ngIf="scanning" class="py-4">
               <div class="d-flex justify-content-between small text-muted mb-1">
-                <span>Checking filters in Web Worker...</span>
+                <span>Fetching public filters and checking them locally...</span>
                 <span>{{ progressPercent }}%</span>
               </div>
               <div class="progress mb-3" style="height: 10px;">
@@ -133,7 +141,7 @@ import { FormsModule } from '@angular/forms';
               </div>
 
               <div class="alert alert-info py-2 px-3 small m-0 mt-3">
-                Matching blocks are fetched through configured Tor/decoy paths to confirm transactions without leaking address links.
+                Matches are candidates, not confirmed transactions. Full-block confirmation, Tor routing and decoy requests are not implemented.
               </div>
             </div>
           </div>
@@ -146,46 +154,18 @@ import { FormsModule } from '@angular/forms';
     .nav-link.active { background-color: var(--bs-primary); color: #fff; }
   `],
 })
-export class LightClientScanComponent {
-  descriptor = 'wpkh([73c5da0a/84/0/0]xpub6BosfCnifzGh.../0/*)';
-  startHeight = 855000;
-  endHeight = 856000;
-  scanning = false;
-  progressPercent = 0;
-  currentHeight = 855000;
-  scanResults: any = null;
-  private intervalId: any;
-
-  constructor(private cdr: ChangeDetectorRef) {}
-
-  startScan(): void {
-    this.scanning = true;
-    this.scanResults = null;
-    this.progressPercent = 0;
-    this.currentHeight = this.startHeight;
-
-    this.intervalId = setInterval(() => {
-      this.progressPercent += 20;
-      this.currentHeight += 200;
-      if (this.progressPercent >= 100) {
-        clearInterval(this.intervalId);
-        this.scanning = false;
-        this.scanResults = {
-          total_scanned: 1000,
-          false_positives: 0,
-          matches: [
-            { height: 855320, hash: '00000000000000000001ab9823c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2' },
-            { height: 855890, hash: '00000000000000000003cb9823c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c4' },
-          ],
-        };
-      }
-      this.cdr.markForCheck();
-    }, 200);
-  }
-
-  cancelScan(): void {
-    if (this.intervalId) clearInterval(this.intervalId);
-    this.scanning = false;
-    this.cdr.markForCheck();
-  }
+export class LightClientScanComponent implements OnDestroy {
+ offlineRange='';descriptor='';startHeight=0;endHeight=15;network='main';scanning=false;progressPercent=0;currentHeight=0;scanResults:any=null;error:string|null=null;
+ private request?:Subscription;
+ constructor(private cdr:ChangeDetectorRef,private api:CompactFiltersApiService){}
+ edited():void{this.request?.unsubscribe();this.scanning=false;this.scanResults=null;this.error=null;this.progressPercent=0;}
+ startScan():void{
+  this.edited();let script:Uint8Array;
+  try{if(!Number.isSafeInteger(this.startHeight)||!Number.isSafeInteger(this.endHeight)||this.startHeight<0||this.endHeight<this.startHeight||this.endHeight-this.startHeight>=32)throw Error('Choose1–32 consecutive nonnegative block heights.');script=scanScript(this.descriptor,this.network);}catch(error){this.error=error instanceof Error?error.message:'Invalid scan input';return;}
+  this.scanning=true;this.currentHeight=this.startHeight;
+  if(this.offlineRange.trim()){try{if(this.offlineRange.length>4100000)throw Error('Offline interval exceeds4MB.');this.scanResults=scanFilterRange(JSON.parse(this.offlineRange),script,this.startHeight,this.endHeight,this.network);this.currentHeight=this.endHeight;this.progressPercent=100;}catch(error){this.error=error instanceof Error?error.message:'Invalid offline interval';}finally{script.fill(0);this.scanning=false;this.cdr.markForCheck();}return;}
+  this.request=this.api.getRanges$(this.startHeight,this.endHeight,this.network).subscribe({next:ranges=>{try{this.scanResults=scanFilterRange(ranges,script,this.startHeight,this.endHeight,this.network);this.currentHeight=this.endHeight;this.progressPercent=100;}catch(error){this.error=error instanceof Error?error.message:'Local filter verification failed';}finally{script.fill(0);this.scanning=false;this.cdr.markForCheck();}},error:error=>{script.fill(0);this.scanning=false;this.error=error?.error?.error||'Owned filters are unavailable.';this.cdr.markForCheck();}});
+ }
+ cancelScan():void{this.edited();this.cdr.markForCheck();}
+ ngOnDestroy():void{this.edited();this.descriptor='';this.offlineRange='';}
 }

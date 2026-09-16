@@ -1,13 +1,15 @@
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { MultipartyApiService } from './multiparty.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-multiparty-compatibility',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -17,16 +19,16 @@ import { MultipartyApiService } from './multiparty.service';
           <span class="badge bg-primary">Standards Compliance</span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
-          Cross-hardware compatibility verification matrix for MuSig2, BSMS, Wallet Policies, Miniscript, and Labels.
+          Source-backed cross-hardware compatibility matrix for MuSig2, BSMS, Wallet Policies, Miniscript, and Labels.
         </p>
 
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/tools/multiparty">Overview</a>
-          <a class="nav-link" routerLink="/tools/multiparty/musig2">MuSig2 Coordinator</a>
-          <a class="nav-link" routerLink="/tools/multiparty/bsms">BSMS Setup (BIP129)</a>
-          <a class="nav-link" routerLink="/tools/multiparty/policies">Wallet Policies (BIP388)</a>
-          <a class="nav-link" routerLink="/tools/multiparty/labels">Labels (BIP329)</a>
-          <a class="nav-link active" routerLink="/tools/multiparty/compatibility">Hardware Matrix</a>
+          <a class="nav-link" [routerLink]="'/tools/multiparty' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/tools/multiparty/musig2' | relativeUrl">MuSig2 Coordinator</a>
+          <a class="nav-link" [routerLink]="'/tools/multiparty/bsms' | relativeUrl">BSMS Setup (BIP129)</a>
+          <a class="nav-link" [routerLink]="'/tools/multiparty/policies' | relativeUrl">Wallet Policies (BIP388)</a>
+          <a class="nav-link" [routerLink]="'/tools/multiparty/labels' | relativeUrl">Labels (BIP329)</a>
+          <a class="nav-link active" [routerLink]="'/tools/multiparty/compatibility' | relativeUrl">Hardware Matrix</a>
         </nav>
       </header>
 
@@ -52,47 +54,7 @@ import { MultipartyApiService } from './multiparty.service';
                 <th>Air-Gapped QR</th>
               </tr>
             </thead>
-            <tbody>
-              <tr>
-                <td class="fw-bold">Coldcard Mk4 / Q</td>
-                <td><span class="badge bg-success">Supported</span></td>
-                <td><span class="badge bg-success">Supported</span></td>
-                <td><span class="badge bg-success">Supported</span></td>
-                <td><span class="badge bg-success">Supported</span></td>
-                <td><span class="badge bg-success">BBQR / MicroSD</span></td>
-              </tr>
-              <tr>
-                <td class="fw-bold">BitBox02</td>
-                <td><span class="badge bg-warning text-dark">Beta</span></td>
-                <td><span class="badge bg-success">Supported</span></td>
-                <td><span class="badge bg-success">Supported</span></td>
-                <td><span class="badge bg-success">Supported</span></td>
-                <td><span class="badge bg-secondary">USB / MicroSD</span></td>
-              </tr>
-              <tr>
-                <td class="fw-bold">Ledger Nano S+ / X / Stax</td>
-                <td><span class="badge bg-secondary">Planned</span></td>
-                <td><span class="badge bg-success">Supported</span></td>
-                <td><span class="badge bg-success">Supported</span></td>
-                <td><span class="badge bg-success">Supported</span></td>
-                <td><span class="badge bg-secondary">USB / BLE</span></td>
-              </tr>
-              <tr>
-                <td class="fw-bold">Blockstream Jade</td>
-                <td><span class="badge bg-success">Supported</span></td>
-                <td><span class="badge bg-success">Supported</span></td>
-                <td><span class="badge bg-warning text-dark">Beta</span></td>
-                <td><span class="badge bg-success">Supported</span></td>
-                <td><span class="badge bg-success">Animated QR</span></td>
-              </tr>
-              <tr>
-                <td class="fw-bold">Krux DIY Signer</td>
-                <td><span class="badge bg-success">Supported</span></td>
-                <td><span class="badge bg-success">Supported</span></td>
-                <td><span class="badge bg-success">Supported</span></td>
-                <td><span class="badge bg-success">Supported</span></td>
-                <td><span class="badge bg-success">UR / BBQR</span></td>
-              </tr>
+            <tbody><tr><td colspan="6">No source-backed hardware compatibility records are available.</td></tr>
             </tbody>
           </table>
         </div>
@@ -107,7 +69,7 @@ import { MultipartyApiService } from './multiparty.service';
 export class MultipartyCompatibilityComponent implements OnInit, OnDestroy {
   loading = false;
   error: string | null = null;
-  matrix: any = null;
+
   private sub?: Subscription;
 
   constructor(
@@ -116,13 +78,16 @@ export class MultipartyCompatibilityComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    this.loading = true;
+    this.error = null;
     this.sub = this.multipartyApi.getCompatibility$().subscribe({
-      next: (data) => {
-        this.matrix = data;
+      next: () => {
+        this.error = 'The compatibility source response has no supported verification contract. Hardware support is unverified.';
         this.loading = false;
         this.cdr.markForCheck();
       },
-      error: () => {
+      error: (error) => {
+        this.error = loadFailureMessage(classifyLoadFailure(error));
         this.loading = false;
         this.cdr.markForCheck();
       },

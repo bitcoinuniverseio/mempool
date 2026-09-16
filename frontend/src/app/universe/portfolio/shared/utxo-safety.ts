@@ -22,13 +22,17 @@ export type UtxoSafetyClass =
   | 'spent'
   | 'reorged';
 
-/** Per-1000-vbyte input weight by script type, in virtual bytes. */
+/** Conservative single-key input estimates (vB), not measured signed transaction sizes.
+ * P2WPKH: 41 base bytes + 109 witness bytes / 4, rounded up.
+ * Nested P2WPKH adds 23 base bytes. Taproot assumes key path, no annex,
+ * and a 65-byte signature; script-path spending is not estimated.
+ * Serialization/weight: https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki
+ */
 export const INPUT_VBYTES: Readonly<Record<string, number>> = {
-  p2wpkh: 57.25,
-  'p2sh-p2wpkh': 90.75,
-  p2pkh: 147.5,
-  p2tr: 57.25,
-  unknown: 147.5,
+  p2wpkh: 69,
+  'p2sh-p2wpkh': 92,
+  p2pkh: 149,
+  p2tr: 58,
 };
 
 export interface EffectiveValueResult {
@@ -49,10 +53,11 @@ export function effectiveValue(
   scriptType: string,
   feeRateSatPerVb: string,
 ): EffectiveValueResult | null {
-  if (!/^\d+(\.\d+)?$/.test(valueAtomic) || !/^\d+(\.\d+)?$/.test(feeRateSatPerVb)) {
+  if (!/^\d{1,16}$/.test(valueAtomic) || !/^\d{1,7}(\.\d{1,3})?$/.test(feeRateSatPerVb)) {
     return null;
   }
-  const vbytes = INPUT_VBYTES[scriptType] ?? INPUT_VBYTES['unknown'];
+  const vbytes = INPUT_VBYTES[scriptType];
+  if (vbytes === undefined) return null;
   const rate = Number(feeRateSatPerVb);
   if (!Number.isFinite(rate) || rate < 0) return null;
   // The input cost is the input's fee weight times the rate - independent
@@ -93,17 +98,20 @@ export function classifyUtxo(
   options: { readonly dustThresholdAtomic?: string } = {},
 ): UtxoClassification {
   const classes = new Set<UtxoSafetyClass>();
+  if (!/^\d{1,16}$/.test(utxo.valueAtomic)) classes.add('unknown-asset-state');
   if (utxo.pending) classes.add('pending');
   if (utxo.spent) classes.add('spent');
-  if (utxo.coinbase && utxo.maturityHeightAtomic !== null && !utxo.pending) {
-    classes.add('immature-coinbase');
+  // For Bitcoin, confirmations at the observed tip determine eligibility for
+  // the next block: Core COINBASE_MATURITY is 100. A future maturity height
+  // alone does not mean an already mature output is still immature.
+  if (utxo.coinbase) {
+    if (utxo.chain !== 'bitcoin' || !/^\d{1,16}$/.test(utxo.confirmationsAtomic)) classes.add('unknown-asset-state');
+    else if (BigInt(utxo.confirmationsAtomic) < 100n || utxo.pending) classes.add('immature-coinbase');
   }
   if (utxo.assets.length > 0) {
     classes.add('asset-bearing');
   }
-  if (utxo.assetState === 'partial' || utxo.assetState === 'unavailable' || utxo.assetState === 'unsupported') {
-    classes.add('unknown-asset-state');
-  } else if (utxo.assetState === 'stale') {
+  if (utxo.assetState !== 'proven') {
     classes.add('unknown-asset-state');
   }
   for (const warning of utxo.warnings) {
@@ -112,7 +120,7 @@ export function classifyUtxo(
     }
   }
   const dust = options.dustThresholdAtomic;
-  if (dust !== undefined && /^\d+$/.test(dust) && BigInt(utxo.valueAtomic) <= BigInt(dust)) {
+  if (dust !== undefined && /^\d{1,16}$/.test(dust) && /^\d{1,16}$/.test(utxo.valueAtomic) && BigInt(utxo.valueAtomic) <= BigInt(dust)) {
     classes.add('economic-dust');
   }
   if (classes.size === 0) {
@@ -146,6 +154,8 @@ export function classifyUtxo(
  * Estimates only; nothing here builds or signs anything.
  */
 export interface ConsolidationAnalysis {
+  readonly estimateOnly: true;
+  readonly assumptions: readonly string[];
   readonly candidateCount: number;
   readonly totalValueAtomic: string;
   readonly currentFeeAtomic: string;
@@ -160,45 +170,47 @@ export function analyzeConsolidation(
   currentRateSatVb: string,
   alternativeRatesSatVb: readonly string[],
 ): ConsolidationAnalysis {
-  const candidates = utxos.filter((utxo) => {
-    const classification = classifyUtxo(utxo);
-    return classification.primary === 'plain-proven';
-  });
-  const excluded = utxos
-    .filter((utxo) => !candidates.includes(utxo))
-    .map((utxo) => {
-      const classification = classifyUtxo(utxo);
-      return {
-        outpoint: `${utxo.txid}:${utxo.vout}`,
-        reason:
-          classification.primary === 'asset-bearing'
-            ? 'Asset-bearing outputs are never candidates.'
-            : classification.primary === 'unknown-asset-state'
-              ? 'The asset state is not proven.'
-              : classification.primary === 'economic-dust'
-                ? 'The output is below the dust threshold.'
-                : 'The output is pending, spent, or otherwise not spendable now.',
-      };
-    });
+  const validRate = (rate: string) => /^\d{1,7}(\.\d{1,3})?$/.test(rate);
+  if (utxos.length > 10000 || alternativeRatesSatVb.length > 20 || !validRate(currentRateSatVb) || !alternativeRatesSatVb.every(validRate)) {
+    throw new Error('Invalid or oversized consolidation estimate input');
+  }
+  const candidates: PortfolioUtxo[] = [];
+  const excluded: { outpoint: string; reason: string }[] = [];
+  const seen = new Set<string>();
+  let network: string | undefined;
+  for (const utxo of utxos) {
+    const outpoint = `${utxo.chain}:${utxo.network}:${utxo.txid}:${utxo.vout}`;
+    let reason = '';
+    if (seen.has(outpoint)) reason = 'Duplicate outpoint is not counted twice.';
+    else if (utxo.chain !== 'bitcoin' || (network !== undefined && network !== utxo.network)) reason = 'A consolidation estimate requires one Bitcoin network.';
+    else if (!/^\d{1,16}$/.test(utxo.valueAtomic) || INPUT_VBYTES[utxo.scriptType] === undefined) reason = 'Value or script input size cannot be estimated.';
+    else if (classifyUtxo(utxo).primary !== 'plain-proven') reason = 'Asset coverage, maturity or lifecycle does not support a plain-output estimate.';
+    seen.add(outpoint);
+    if (reason) excluded.push({ outpoint, reason });
+    else { network = utxo.network; candidates.push(utxo); }
+  }
   const total = candidates.reduce((sum, utxo) => sum + BigInt(utxo.valueAtomic), 0n);
-  const feeAt = (rate: string): string => {
-    const vbytes = candidates.reduce((sum, utxo) => sum + (INPUT_VBYTES[utxo.scriptType] ?? INPUT_VBYTES['unknown']), 0);
-    const outputVbytes = 31;
-    const txVbytes = vbytes + outputVbytes;
-    return exactMultiplyRoundUp(txVbytes.toFixed(0), rate);
-  };
-  const currentFee = BigInt(feeAt(currentRateSatVb));
-  const futureSavings = candidates.reduce((savings, utxo) => {
-    const perInput = Number(INPUT_VBYTES[utxo.scriptType] ?? INPUT_VBYTES['unknown']) * Number(currentRateSatVb);
-    return savings + BigInt(Math.ceil(perInput));
-  }, 0n);
+  const inputVbytes = candidates.reduce((sum, utxo) => sum + INPUT_VBYTES[utxo.scriptType], 0);
+  // One P2WPKH output (31 bytes), version/locktime, CompactSize counts,
+  // and conservative rounded marker/flag overhead for witness transactions.
+  const countBytes = candidates.length < 253 ? 1 : 3;
+  const hasWitness = candidates.some(utxo => utxo.scriptType !== 'p2pkh');
+  const overhead = 8 + countBytes + 1 + (hasWitness ? 1 + Math.ceil(candidates.filter(utxo => utxo.scriptType === 'p2pkh').length / 4) : 0);
+  const txVbytes = inputVbytes + overhead + 31;
+  const feeAt = (rate: string) => candidates.length ? exactMultiplyRoundUp(String(txVbytes), rate) : '0';
+  const currentFee = feeAt(currentRateSatVb);
+  // Savings is the difference between future spending of all original
+  // inputs and spending the one new P2WPKH input, at the supplied rate.
+  const futureSavings = candidates.length ? exactMultiplyRoundUp(String(Math.max(0, inputVbytes - INPUT_VBYTES.p2wpkh)), currentRateSatVb) : '0';
   return {
+    estimateOnly: true,
+    assumptions: ['Single P2WPKH resulting output; conservative single-key input sizes.', 'Taproot key-path only, no annex; no script-path estimate.', 'No native transaction acceptance, dust or spend authorization is established.'],
     candidateCount: candidates.length,
     totalValueAtomic: total.toString(),
-    currentFeeAtomic: currentFee.toString(),
-    alternativeFees: alternativeRatesSatVb.map((rate) => ({ rateSatVb: rate, feeAtomic: feeAt(rate) })),
-    futureInputSavingsAtomic: futureSavings.toString(),
-    resultingUtxoCount: candidates.length === 0 ? 0 : 1,
+    currentFeeAtomic: currentFee,
+    alternativeFees: alternativeRatesSatVb.map(rate => ({ rateSatVb: rate, feeAtomic: feeAt(rate) })),
+    futureInputSavingsAtomic: futureSavings,
+    resultingUtxoCount: candidates.length === 0 || total <= BigInt(currentFee) ? 0 : 1,
     excluded,
   };
 }

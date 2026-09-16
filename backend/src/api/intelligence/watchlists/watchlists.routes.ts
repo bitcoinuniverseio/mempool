@@ -1,134 +1,150 @@
 import { Application, Request, Response } from 'express';
+import { IdentityError } from '../identity/developer-identity';
 import { watchlistsService } from './watchlists.service';
-import { handleError } from '../../../utils/api';
+import { ownerOf, requireOwner, sendIdentityError } from '../identity/owner-auth';
 
+/**
+ * Every watchlist route needs an owner key with the watchlists scope. The
+ * owner comes from the key; the routes never read a user_id.
+ */
+export function notificationLimit(value: unknown): number {
+  if (value === undefined) return 100;
+  if (typeof value !== 'string' || !/^[1-9][0-9]{0,2}$/.test(value) || Number(value) > 500) {
+    throw new IdentityError('invalid_limit', 'limit must be an integer from 1 to 500', 400);
+  }
+  return Number(value);
+}
 class WatchlistsRoutes {
   public initRoutes(app: Application): void {
     const prefix = '/api/v1/intelligence/watchlists';
+    const guard = requireOwner('watchlists');
 
     app
-      .post(prefix, this.$postWatchlist)
-      .get(prefix, this.$getWatchlists)
-      .get(prefix + '/:id', this.$getWatchlist)
-      .delete(prefix + '/:id', this.$deleteWatchlist)
-      .post(prefix + '/:id/entities', this.$postEntity)
-      .post(prefix + '/:id/rules', this.$postRule)
-      .get(prefix + '/:id/notifications', this.$getNotifications)
-      .post(prefix + '/notifications/:notifId/ack', this.$postAckNotification);
+      .post(prefix, guard, this.$postWatchlist)
+      .get(prefix, guard, this.$getWatchlists)
+      .get(prefix + '/notifications', guard, this.$getAllNotifications)
+      .post(prefix + '/notifications/:notifId/ack', guard, this.$postAckNotification)
+      .get(prefix + '/:id', guard, this.$getWatchlist)
+      .delete(prefix + '/:id', guard, this.$deleteWatchlist)
+      .post(prefix + '/:id/entities', guard, this.$postEntity)
+      .post(prefix + '/:id/rules', guard, this.$postRule)
+      .delete(prefix + '/:id/entities/:entityId', guard, this.$deleteEntity)
+      .delete(prefix + '/:id/rules/:ruleId', guard, this.$deleteRule)
+      .get(prefix + '/:id/notifications', guard, this.$getNotifications);
+  }
+
+  private notFound(res: Response, id: string): void {
+    res.status(404).json({ error: `Watchlist '${id}' not found.` });
   }
 
   private async $postWatchlist(req: Request, res: Response): Promise<void> {
     try {
-      const { user_id, name, privacy_mode } = req.body;
-      if (!name) {
-        res.status(400).json({ error: 'name parameter required.' });
-        return;
-      }
-      const wl = watchlistsService.createWatchlist(
-        user_id || 'user-default',
-        name,
-        privacy_mode || 'blinded'
-      );
-      res.json(wl);
+      const { name, privacy_mode } = req.body ?? {};
+      res.status(201).json(await watchlistsService.createWatchlist(ownerOf(res), name, privacy_mode ?? 'blinded'));
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to create watchlist');
+      sendIdentityError(res, e, 'Failed to create watchlist');
     }
   }
 
   private async $getWatchlists(req: Request, res: Response): Promise<void> {
     try {
-      const userId = String(req.query.user_id || 'user-default');
-      const list = watchlistsService.getWatchlists(userId);
+      const list = await watchlistsService.getWatchlists(ownerOf(res));
       res.json({ watchlists: list, count: list.length });
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch watchlists');
+      sendIdentityError(res, e, 'Failed to fetch watchlists');
     }
   }
 
   private async $getWatchlist(req: Request, res: Response): Promise<void> {
     try {
-      const wl = watchlistsService.getWatchlistById(req.params.id);
-      if (!wl) {
-        res.status(404).json({ error: `Watchlist '${req.params.id}' not found.` });
-        return;
-      }
+      const wl = await watchlistsService.getWatchlistById(ownerOf(res), req.params.id);
+      if (!wl) { res.status(404).json({ error: `Watchlist '${req.params.id}' not found.` }); return; }
       res.json(wl);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch watchlist');
+      sendIdentityError(res, e, 'Failed to fetch watchlist');
     }
   }
 
   private async $deleteWatchlist(req: Request, res: Response): Promise<void> {
     try {
-      const deleted = watchlistsService.deleteWatchlist(req.params.id);
-      res.json({ deleted });
+      const deleted = await watchlistsService.deleteWatchlist(ownerOf(res), req.params.id);
+      if (!deleted) { res.status(404).json({ error: `Watchlist '${req.params.id}' not found.` }); return; }
+      res.json({ deleted: true });
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to delete watchlist');
+      sendIdentityError(res, e, 'Failed to delete watchlist');
+    }
+  }
+
+  private async $deleteEntity(req: Request, res: Response): Promise<void> {
+    try {
+      const deleted = await watchlistsService.deleteEntity(ownerOf(res), req.params.id, req.params.entityId);
+      if (!deleted) { res.status(404).json({ error: `Entity '${req.params.entityId}' not found in watchlist '${req.params.id}'.` }); return; }
+      res.json({ deleted: true });
+    } catch (e) {
+      sendIdentityError(res, e, 'Failed to delete entity');
+    }
+  }
+
+  private async $deleteRule(req: Request, res: Response): Promise<void> {
+    try {
+      const deleted = await watchlistsService.deleteRule(ownerOf(res), req.params.id, req.params.ruleId);
+      if (!deleted) { res.status(404).json({ error: `Rule '${req.params.ruleId}' not found in watchlist '${req.params.id}'.` }); return; }
+      res.json({ deleted: true });
+    } catch (e) {
+      sendIdentityError(res, e, 'Failed to delete rule');
     }
   }
 
   private async $postEntity(req: Request, res: Response): Promise<void> {
     try {
-      const { entity_type, entity_raw_or_blinded, label } = req.body;
-      if (!entity_type || !entity_raw_or_blinded) {
-        res.status(400).json({ error: 'entity_type and entity_raw_or_blinded required.' });
-        return;
-      }
-      const entity = watchlistsService.addEntity(
-        req.params.id,
-        entity_type,
-        entity_raw_or_blinded,
-        label || 'Monitored Item'
-      );
-      if (!entity) {
-        res.status(404).json({ error: `Watchlist '${req.params.id}' not found.` });
-        return;
-      }
-      res.json(entity);
+      const { entity_type, entity_raw_or_blinded, label, blinded } = req.body ?? {};
+      const entity = await watchlistsService.addEntity(ownerOf(res), req.params.id, entity_type, entity_raw_or_blinded, label, blinded === true);
+      if (!entity) { res.status(404).json({ error: `Watchlist '${req.params.id}' not found.` }); return; }
+      res.status(201).json(entity);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to add entity');
+      sendIdentityError(res, e, 'Failed to add entity');
     }
   }
 
   private async $postRule(req: Request, res: Response): Promise<void> {
     try {
-      const { condition_type, delivery_channel, threshold_value, webhook_url } = req.body;
-      if (!condition_type || !delivery_channel) {
-        res.status(400).json({ error: 'condition_type and delivery_channel required.' });
-        return;
-      }
-      const rule = watchlistsService.addRule(
-        req.params.id,
-        condition_type,
-        delivery_channel,
-        threshold_value,
-        webhook_url
-      );
-      if (!rule) {
-        res.status(404).json({ error: `Watchlist '${req.params.id}' not found.` });
-        return;
-      }
-      res.json(rule);
+      const { condition_type, delivery_channel, threshold_value, webhook_id } = req.body ?? {};
+      const rule = await watchlistsService.addRule(ownerOf(res), req.params.id, condition_type, delivery_channel, threshold_value, webhook_id);
+      if (!rule) { res.status(404).json({ error: `Watchlist '${req.params.id}' not found.` }); return; }
+      res.status(201).json(rule);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to add rule');
+      sendIdentityError(res, e, 'Failed to add rule');
     }
   }
 
   private async $getNotifications(req: Request, res: Response): Promise<void> {
     try {
-      const notifs = watchlistsService.getNotifications(req.params.id);
-      res.json({ notifications: notifs, count: notifs.length });
+      const limit = notificationLimit(req.query.limit);
+      const notifications = await watchlistsService.getNotifications(ownerOf(res), req.params.id, limit);
+      if (!notifications) { res.status(404).json({ error: `Watchlist '${req.params.id}' not found.` }); return; }
+      res.json({ notifications, count: notifications.length });
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch notifications');
+      sendIdentityError(res, e, 'Failed to fetch notifications');
+    }
+  }
+
+  private async $getAllNotifications(req: Request, res: Response): Promise<void> {
+    try {
+      const limit = notificationLimit(req.query.limit);
+      const notifications = await watchlistsService.getNotifications(ownerOf(res), null, limit);
+      res.json({ notifications: notifications ?? [], count: notifications?.length ?? 0 });
+    } catch (e) {
+      sendIdentityError(res, e, 'Failed to fetch notifications');
     }
   }
 
   private async $postAckNotification(req: Request, res: Response): Promise<void> {
     try {
-      const acked = watchlistsService.acknowledgeNotification(req.params.notifId);
-      res.json({ acknowledged: acked });
+      const acked = await watchlistsService.acknowledgeNotification(ownerOf(res), req.params.notifId);
+      if (!acked) { res.status(404).json({ error: 'Notification not found or already acknowledged.' }); return; }
+      res.json({ acknowledged: true });
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to ack notification');
+      sendIdentityError(res, e, 'Failed to ack notification');
     }
   }
 }

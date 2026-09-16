@@ -1,13 +1,15 @@
+import { blockspaceValue, blockspaceShare, blockspaceBtc } from './blockspace-format';
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { BlockspaceApiService, BlockspaceRegimeEvent } from './blockspace.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-blockspace-regimes',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -21,11 +23,11 @@ import { BlockspaceApiService, BlockspaceRegimeEvent } from './blockspace.servic
 
         <!-- Navigation Tabs -->
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/intelligence/blockspace">Overview</a>
-          <a class="nav-link" routerLink="/intelligence/blockspace/composition">Composition</a>
-          <a class="nav-link active" routerLink="/intelligence/blockspace/regimes">Fee Regimes</a>
-          <a class="nav-link" routerLink="/intelligence/blockspace/compare">Regime Compare</a>
-          <a class="nav-link" routerLink="/intelligence/blockspace/taxonomy">Taxonomy Catalog</a>
+          <a class="nav-link" [routerLink]="'/intelligence/blockspace' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/intelligence/blockspace/composition' | relativeUrl">Composition</a>
+          <a class="nav-link active" [routerLink]="'/intelligence/blockspace/regimes' | relativeUrl">Fee Regimes</a>
+          <a class="nav-link" [routerLink]="'/intelligence/blockspace/compare' | relativeUrl">Regime Compare</a>
+          <a class="nav-link" [routerLink]="'/intelligence/blockspace/taxonomy' | relativeUrl">Taxonomy Catalog</a>
         </nav>
       </header>
 
@@ -47,8 +49,8 @@ import { BlockspaceApiService, BlockspaceRegimeEvent } from './blockspace.servic
                 <tr>
                   <th>Regime Type</th>
                   <th>Height Range</th>
-                  <th class="text-end">Median Feerate</th>
-                  <th>Primary Demand Driver</th>
+                  <th class="text-end">Median of Block Medians</th>
+                  <th>Observed Fee Band</th>
                   <th>Detection Time</th>
                 </tr>
               </thead>
@@ -67,7 +69,7 @@ import { BlockspaceApiService, BlockspaceRegimeEvent } from './blockspace.servic
                   <td>
                     <span class="fw-semibold">{{ r.start_height }}</span>
                     <span class="text-muted"> to </span>
-                    <span class="fw-semibold">{{ r.end_height ? r.end_height : 'Present' }}</span>
+                    <span class="fw-semibold">{{ r.end_height !== undefined ? r.end_height : 'Present' }}</span>
                   </td>
                   <td class="text-end fw-bold">{{ r.median_feerate }} sat/vB</td>
                   <td>{{ r.primary_demand_driver }}</td>
@@ -98,18 +100,17 @@ export class BlockspaceRegimesComponent implements OnInit, OnDestroy {
     private cd: ChangeDetectorRef,
   ) {}
 
+  readonly value = blockspaceValue;
+  readonly share = blockspaceShare;
+  readonly btc = blockspaceBtc;
+
   public ngOnInit(): void {
-    this.sub = this.blockspaceApi.getRegimes().subscribe({
-      next: (data) => {
-        this.regimes = data;
-        this.loading = false;
-        this.cd.markForCheck();
-      },
-      error: (err) => {
-        this.error = err?.message || 'Failed to load regimes';
-        this.loading = false;
-        this.cd.markForCheck();
-      },
+    this.sub?.unsubscribe();
+    this.sub = this.blockspaceApi.watch(() => this.blockspaceApi.getRegimes()).subscribe(state => {
+      this.regimes = state.kind === 'ready' ? state.data : [];
+      this.loading = state.kind === 'loading';
+      this.error = state.kind === 'error' ? state.error : '';
+      this.cd.markForCheck();
     });
   }
 

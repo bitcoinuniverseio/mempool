@@ -6,25 +6,35 @@ import { StateService } from '@app/services/state.service';
 export interface PayjoinDirectory {
   directory_id: string;
   url: string;
-  ohttp_key_hash: string;
+  ohttp_key_hash: string | null;
   bip77_supported: boolean;
   bip78_supported: boolean;
-  latency_ms: number;
+  latency_ms: number | null;
   last_tested_at: string;
+  error: string | null;
 }
 
 export interface PayjoinProposalAnalysisResult {
   analysis_id: string;
   protocol_version: 'BIP78' | 'BIP77';
   inputs_added_by_receiver: number;
-  receiver_contributed_sats: number;
-  original_fee_sats: number;
-  proposal_fee_sats: number;
-  fee_delta_sats: number;
-  effective_feerate_sats_vb: number;
+  receiver_contributed_sats: number | null;
+  original_fee_sats: number | null;
+  proposal_fee_sats: number | null;
+  fee_delta_sats: number | null;
+  effective_feerate_sats_vb: number | null;
   heuristics_broken: string[];
   privacy_score_gain: number;
-  is_valid: boolean;
+  is_valid: boolean | null;
+  structural_checks_passed: boolean;
+  psbt_envelope_checks_passed: boolean;
+  signatures_verified: boolean | null;
+  chain_verified: boolean | null;
+  final_signatures_verified?: boolean | null;
+  node_policy_accepted?: boolean | null;
+  final_vsize?: number;
+  final_feerate_sats_vb?: number;
+  verification_scope: string;
   validation_messages: string[];
 }
 
@@ -50,8 +60,8 @@ export interface PayjoinPlaygroundSession {
 
 export interface PayjoinOverview {
   active_directories_count: number;
-  total_payjoins_detected_24h: number;
-  common_input_heuristic_breaks_24h: number;
+  total_payjoins_detected_24h: number | null;
+  common_input_heuristic_breaks_24h: number | null;
   compatibility_catalog: PayjoinCompatibilityEntry[];
   last_updated: string;
 }
@@ -74,6 +84,18 @@ export class PayjoinApiService {
         ':' +
         this.stateService.env.NGINX_PORT;
     }
+    const origin = this.apiBaseUrl;
+    const update = (network: string) => {
+      this.apiBaseUrl =
+        origin +
+        (network &&
+        network !== 'mainnet' &&
+        network !== this.stateService.env.ROOT_NETWORK
+          ? '/' + network
+          : '');
+    };
+    update(this.stateService.network);
+    this.stateService.networkChanged$.subscribe(update);
   }
 
   getOverview$(): Observable<PayjoinOverview> {
@@ -94,21 +116,36 @@ export class PayjoinApiService {
     );
   }
 
-  analyzeProposal$(originalPsbt: string, proposalPsbt: string): Observable<PayjoinProposalAnalysisResult> {
+  analyzeProposal$(
+    originalPsbt: string,
+    proposalPsbt: string,
+    policy: {
+      payment_output_index?: number;
+      disable_output_substitution?: boolean;
+      additional_fee_output_index?: number;
+      max_additional_fee_contribution?: number;
+      final_signed_psbt?: string;
+      min_feerate?: number;
+    } = {}
+  ): Observable<PayjoinProposalAnalysisResult> {
     return this.httpClient.post<PayjoinProposalAnalysisResult>(
       `${this.apiBaseUrl}/api/v1/intelligence/payments/payjoin/analyze`,
-      { original_psbt: originalPsbt, proposal_psbt: proposalPsbt }
+      { original_psbt: originalPsbt, proposal_psbt: proposalPsbt, ...policy }
     );
   }
 
-  createPlaygroundSession$(amountSats: number): Observable<PayjoinPlaygroundSession> {
+  createPlaygroundSession$(
+    amountSats: number
+  ): Observable<PayjoinPlaygroundSession> {
     return this.httpClient.post<PayjoinPlaygroundSession>(
       `${this.apiBaseUrl}/api/v1/intelligence/payments/payjoin/playground/sessions`,
       { amount_sats: amountSats }
     );
   }
 
-  advancePlaygroundSession$(sessionId: string): Observable<PayjoinPlaygroundSession> {
+  advancePlaygroundSession$(
+    sessionId: string
+  ): Observable<PayjoinPlaygroundSession> {
     return this.httpClient.post<PayjoinPlaygroundSession>(
       `${this.apiBaseUrl}/api/v1/intelligence/payments/payjoin/playground/sessions/${sessionId}/advance`,
       {}

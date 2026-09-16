@@ -1,79 +1,9 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
-import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
-import { ConsensusConformanceApiService } from './consensus-conformance.service';
-
+import { Component } from '@angular/core';
+import { ConformanceEvidenceComponent } from './conformance-evidence.component';
 @Component({
   selector: 'app-consensus-conformance-cases',
   standalone: true,
-  imports: [CommonModule, RouterModule],
-  template: `
-    <div class="container-xl py-4">
-      <div class="alert alert-warning" role="alert" *ngIf="loadError">
-        {{ loadError }}
-      </div>
-      <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
-        <div>
-          <h1 class="h2 mb-1">Consensus Discrepancy Cases</h1>
-          <p class="text-muted mb-0">Catalog of transactions and blocks that produce diverging outcomes across different node implementations.</p>
-        </div>
-        <a routerLink="/labs/consensus/conformance" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
-      </div>
-
-      <div class="card bg-dark border-secondary mb-4">
-        <div class="card-header border-secondary">
-          <h5 class="card-title mb-0">Catalog of Identified Divergences</h5>
-        </div>
-        <div class="table-responsive" tabindex="0" role="region" aria-label="Catalog of Identified Divergences, scroll horizontally" i18n-aria-label>
-          <table class="table table-dark table-hover mb-0">
-            <thead>
-              <tr>
-                <th>Case Identifier</th>
-                <th>Title</th>
-                <th>BIP Reference</th>
-                <th>Affected Clients</th>
-                <th>Severity</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let c of cases">
-                <td class="font-monospace text-info">{{ c.case_id }}</td>
-                <td class="fw-semibold">{{ c.title }}</td>
-                <td><span class="badge bg-secondary">{{ c.bip_reference }}</span></td>
-                <td>
-                  <span *ngFor="let a of c.affected_implementations" class="badge bg-danger me-1">{{ a }}</span>
-                </td>
-                <td><span class="badge bg-danger">{{ c.severity | uppercase }}</span></td>
-                <td>
-                  <a [routerLink]="['/labs/consensus/case', c.case_id]" class="btn btn-sm btn-outline-info">Replay Case</a>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  `
+  imports: [ConformanceEvidenceComponent],
+  template: '<app-conformance-evidence mode="cases" />',
 })
-export class ConsensusConformanceCasesComponent implements OnInit {
-  public cases: any[] = [];
-
-  public loadError: string | null = null;
-
-  constructor(private api: ConsensusConformanceApiService) {}
-
-  public ngOnInit(): void {
-    this.api.getCases$().subscribe({
-      next: res => {
-        this.cases = res;
-        this.loadError = null;
-      },
-      error: err => {
-        this.cases = [];
-        this.loadError = loadFailureMessage(classifyLoadFailure(err));
-      },
-    });
-  }
-}
+export class ConsensusConformanceCasesComponent {}

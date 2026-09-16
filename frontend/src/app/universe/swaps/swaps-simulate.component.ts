@@ -4,11 +4,12 @@ import { SharedModule } from '@app/shared/shared.module';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { simulateSwapRollback, SwapSimulationInput } from './swaps-simulation';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-swaps-simulate',
   standalone: true,
-  imports: [CommonModule, RouterModule, SharedModule, FormsModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule, SharedModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: ['.text-muted { color: var(--u-text-muted) !important; }'],
   template: `

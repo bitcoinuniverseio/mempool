@@ -8,6 +8,7 @@ import { UniverseApiService } from '@app/universe/universe-api.service';
 import { SeoService } from '@app/services/seo.service';
 import { AnimaOrganism, AnimaOrganismsDocument, AnimaStatusDocument, AnimaEventsDocument, AnimaLoggedEvent } from '@app/universe/universe.types';
 
+const network = () => ({network: '', networkChanged$: new Subject<string>()} as any);
 const seo = { setTitle: () => undefined } as unknown as SeoService;
 const destroyRef = { onDestroy: () => () => undefined } as unknown as DestroyRef;
 
@@ -54,7 +55,7 @@ function items(
 ) {
   const getAnimaOrganisms$ = vi.fn((offset: number) => pages.shift() ?? throwError(() => new Error(`no page for ${offset}`)));
   const api = { getAnimaStatus$: () => status$, getAnimaOrganisms$ } as unknown as UniverseApiService;
-  const subject = new AnimaItemsComponent(api, seo, destroyRef);
+  const subject = new AnimaItemsComponent(api, seo, destroyRef, network());
   return { subject, getAnimaOrganisms$ };
 }
 
@@ -166,7 +167,7 @@ describe('ANIMA transitions page', () => {
   function transitions(status$: Observable<AnimaStatusDocument>, pages: Array<Observable<AnimaEventsDocument>>) {
     const getAnimaEvents$ = vi.fn((from: number) => pages.shift() ?? throwError(() => new Error(`no page for ${from}`)));
     const api = { getAnimaStatus$: () => status$, getAnimaEvents$ } as unknown as UniverseApiService;
-    return { subject: new AnimaTransitionsComponent(api, seo, destroyRef), getAnimaEvents$ };
+    return { subject: new AnimaTransitionsComponent(api, seo, destroyRef, network()), getAnimaEvents$ };
   }
 
   it('preserves the typed unconfigured document', async () => {

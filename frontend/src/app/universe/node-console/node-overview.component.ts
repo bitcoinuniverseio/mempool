@@ -6,6 +6,8 @@ import { switchMap } from 'rxjs/operators';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { NodeOverview } from './node-console.types';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
+
 import {
   bytes,
   chainHealth,
@@ -38,7 +40,7 @@ const REFRESH_MS = 15_000;
 @Component({
   selector: 'app-node-overview',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   templateUrl: './node-overview.component.html',
   styleUrls: ['./node-console.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

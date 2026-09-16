@@ -91,6 +91,7 @@ import {
   RpcCatalog,
   RpcResult,
 } from '@app/universe/node-console/node-console.types';
+import { OwnerKeyService } from '@app/universe/intelligence-platform/owner-key.service';
 
 /** Server-side batch ceilings. Callers must not exceed them. */
 export const UNIVERSE_OUTPOINT_BATCH_LIMIT = 50;
@@ -122,6 +123,7 @@ export class UniverseApiService {
   constructor(
     private httpClient: HttpClient,
     private stateService: StateService,
+    private ownerKey: OwnerKeyService,
   ) {
     this.apiBaseUrl = ''; // use relative (same-origin) URL by default
     if (!stateService.isBrowser) { // except when inside AU SSR process
@@ -137,6 +139,16 @@ export class UniverseApiService {
     return network as ExplorerNetwork;
   }
 
+  /**
+   * Backend-owned routes follow the selected network the way the gateway does:
+   * /signet/api/v1/... reaches the Signet backend, /api/v1/... the root one. Overlay
+   * routes carry chain and network as query fields instead and do not use this.
+   */
+  private get backendBase(): string {
+    const network = this.stateService.network;
+    const prefix = network && network !== 'mainnet' && network !== this.stateService.env?.ROOT_NETWORK ? '/' + network : '';
+    return this.apiBaseUrl + prefix;
+  }
   private selectedNetwork$(): Observable<ExplorerNetwork> {
     return defer(() => (this.stateService.networkChanged$ ?? of(this.stateService.network)).pipe(
       startWith(this.stateService.network),
@@ -237,7 +249,7 @@ export class UniverseApiService {
    * the overlay calls rather than a bare relative path.
    */
   getBackendInfo$(): Observable<BackendInfo> {
-    return this.httpClient.get<BackendInfo>(this.apiBaseUrl + '/api/v1/backend-info');
+    return this.httpClient.get<BackendInfo>(this.backendBase + '/api/v1/backend-info');
   }
 
   /** Protocol asset flow for one transaction. Never cached: state changes as the transaction confirms. */
@@ -342,10 +354,27 @@ export class UniverseApiService {
     );
   }
 
+  /**
+   * A search carries the selected network, and a network switch cancels the
+   * request in flight. Without the network the overlay answered every search
+   * from mainnet, so a Signet reader was sent to mainnet pages; without the
+   * switch a late mainnet answer could land on a page that had moved on.
+   */
   search$(query: string, activeChain: ExplorerChain, allChains = false): Observable<UniverseSearchResponse> {
-    return this.httpClient.get<UniverseSearchResponse>(
-      this.apiBaseUrl + '/api/v1/universe/search?q=' + encodeURIComponent(query)
-        + '&chain=' + activeChain + '&all=' + allChains
+    return this.selectedNetwork$().pipe(
+      map(network => activeChain === 'bitcoin' ? network : 'mainnet' as ExplorerNetwork),
+      distinctUntilChanged(),
+      switchMap(network => this.httpClient.get<UniverseSearchResponse>(
+        this.apiBaseUrl + '/api/v1/universe/search?q=' + encodeURIComponent(query)
+          + '&chain=' + activeChain + '&all=' + allChains + '&network=' + network,
+      ).pipe(map(response => {
+        const active = (response.groups ?? []).find(group => group.chain === activeChain);
+        if ((response.activeChain !== undefined && response.activeChain !== activeChain)
+          || (active && active.network !== network)) {
+          throw new Error('authority-network-mismatch');
+        }
+        return response;
+      }))),
     );
   }
 
@@ -497,7 +526,7 @@ export class UniverseApiService {
    */
   getMempoolClusters$(offset = 0, limit = 50, minTxCount = 1): Observable<ClusterListResponse> {
     return this.httpClient.get<ClusterListResponse>(
-      this.apiBaseUrl + '/api/v1/mempool/clusters?offset=' + offset + '&limit=' + limit
+      this.backendBase + '/api/v1/mempool/clusters?offset=' + offset + '&limit=' + limit
         + '&minTxCount=' + minTxCount
     );
   }
@@ -505,21 +534,21 @@ export class UniverseApiService {
   /** One cluster in full, addressed by its id or by any member txid. */
   getMempoolCluster$(reference: string): Observable<ClusterResponse> {
     return this.httpClient.get<ClusterResponse>(
-      this.apiBaseUrl + '/api/v1/mempool/clusters/' + encodeURIComponent(reference)
+      this.backendBase + '/api/v1/mempool/clusters/' + encodeURIComponent(reference)
     );
   }
 
   /** The mempool wide fee rate diagram, with the naive curve beside it. */
   getMempoolFeerateDiagram$(): Observable<DiagramResponse> {
     return this.httpClient.get<DiagramResponse>(
-      this.apiBaseUrl + '/api/v1/mempool/feerate-diagram'
+      this.backendBase + '/api/v1/mempool/feerate-diagram'
     );
   }
 
   /** The package around one unconfirmed transaction. */
   getMempoolPackage$(txid: string): Observable<ClusterResponse> {
     return this.httpClient.get<ClusterResponse>(
-      this.apiBaseUrl + '/api/v1/mempool/packages/' + encodeURIComponent(txid)
+      this.backendBase + '/api/v1/mempool/packages/' + encodeURIComponent(txid)
     );
   }
 
@@ -532,7 +561,7 @@ export class UniverseApiService {
    */
   simulatePackage$(rawTxs: string[]): Observable<PackageSimulation> {
     return this.httpClient.post<PackageSimulation>(
-      this.apiBaseUrl + '/api/v1/mempool/simulate',
+      this.backendBase + '/api/v1/mempool/simulate',
       { rawTxs },
     );
   }
@@ -545,19 +574,19 @@ export class UniverseApiService {
    */
   getBumpPlan$(txid: string, targetFeerate: number): Observable<BumpPlan> {
     return this.httpClient.get<BumpPlan>(
-      this.apiBaseUrl + '/api/v1/mempool/bump/' + encodeURIComponent(txid)
+      this.backendBase + '/api/v1/mempool/bump/' + encodeURIComponent(txid)
         + '?targetFeerate=' + encodeURIComponent(String(targetFeerate)),
     );
   }
 
   /** What this node is, section by section, each with its own state. */
   getNodeOverview$(): Observable<NodeOverview> {
-    return this.httpClient.get<NodeOverview>(this.apiBaseUrl + '/api/v1/node/overview');
+    return this.httpClient.get<NodeOverview>(this.backendBase + '/api/v1/node/overview');
   }
 
   /** The only node methods the console will call. */
   getRpcCatalog$(): Observable<RpcCatalog> {
-    return this.httpClient.get<RpcCatalog>(this.apiBaseUrl + '/api/v1/node/rpc/catalog');
+    return this.httpClient.get<RpcCatalog>(this.backendBase + '/api/v1/node/rpc/catalog');
   }
 
   /**
@@ -568,9 +597,12 @@ export class UniverseApiService {
    * its allowlist before anything else happens.
    */
   callNodeRpc$(method: string, args: unknown[]): Observable<RpcResult> {
+    // Executing a method spends the node's RPC budget, so the route needs an
+    // owner key with the node:rpc scope; the catalog and overview stay public.
     return this.httpClient.post<RpcResult>(
-      this.apiBaseUrl + '/api/v1/node/rpc',
+      this.backendBase + '/api/v1/node/rpc',
       { method, args },
+      { headers: this.ownerKey.headers() },
     );
   }
 
@@ -702,6 +734,10 @@ export class UniverseApiService {
     );
   }
 
+  getLiquidNode$(network: string): Observable<import('./liquid-observatory/liquid-node-view').LiquidNodeView> {
+    return this.httpClient.get<import('./liquid-observatory/liquid-node-view').LiquidNodeView>(this.apiBaseUrl + '/api/v1/liquid/observatory/node?network=' + encodeURIComponent(network));
+  }
+
   getLiquidObservatorySummary$(): Observable<LiquidObservatorySummary> {
     return this.httpClient.get<LiquidObservatorySummary>(
       this.apiBaseUrl + '/api/v1/liquid/observatory/summary'
@@ -734,20 +770,20 @@ export class UniverseApiService {
 
   getDataCatalog$(): Observable<{ datasets: DatasetManifest[]; streams: StreamManifest[]; mcpTools: McpToolDeclaration[] }> {
     return this.httpClient.get<{ datasets: DatasetManifest[]; streams: StreamManifest[]; mcpTools: McpToolDeclaration[] }>(
-      this.apiBaseUrl + '/api/v1/data/catalog'
+      this.backendBase + '/api/v1/data/catalog'
     );
   }
 
   executeDataQuery$(query: any): Observable<QueryResult> {
     return this.httpClient.post<QueryResult>(
-      this.apiBaseUrl + '/api/v1/data/query',
+      this.backendBase + '/api/v1/data/query',
       query
     );
   }
 
   getObserverNodes$(): Observable<{ nodes: ObserverNode[]; total: number }> {
     return this.httpClient.get<{ nodes: ObserverNode[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/network/nodes'
+      this.backendBase + '/api/v1/network/nodes'
     );
   }
 
@@ -760,152 +796,160 @@ export class UniverseApiService {
 
   getBlockTemplateComparison$(): Observable<BlockTemplateComparison> {
     return this.httpClient.get<BlockTemplateComparison>(
-      this.apiBaseUrl + '/api/v1/network/templates'
+      this.backendBase + '/api/v1/network/templates'
     );
   }
 
   getTaprootAssets$(): Observable<{ assets: TaprootAssetItem[]; total: number }> {
     return this.httpClient.get<{ assets: TaprootAssetItem[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/taproot-assets/assets'
+      this.backendBase + '/api/v1/taproot-assets/assets'
     );
+  }
+
+  verifyTaprootProof$(assetId: string, proofData: string): Observable<any> {
+    return this.httpClient.post(this.backendBase + '/api/v1/taproot-assets/proof/verify', { assetId, proofData });
   }
 
   getTaprootAsset$(assetId: string): Observable<TaprootAssetItem> {
     return this.httpClient.get<TaprootAssetItem>(
-      this.apiBaseUrl + '/api/v1/taproot-assets/assets/' + encodeURIComponent(assetId)
+      this.backendBase + '/api/v1/taproot-assets/assets/' + encodeURIComponent(assetId)
     );
   }
 
   getTaprootAssetGroups$(): Observable<{ groups: TaprootAssetGroup[]; total: number }> {
     return this.httpClient.get<{ groups: TaprootAssetGroup[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/taproot-assets/groups'
+      this.backendBase + '/api/v1/taproot-assets/groups'
     );
+  }
+
+  decodeBolt12Offer$(offer: string): Observable<import('./taproot-assets/bolt12-decoded-offer').Bolt12DecodedOffer> {
+    return this.httpClient.post<import('./taproot-assets/bolt12-decoded-offer').Bolt12DecodedOffer>(this.backendBase + '/api/v1/lightning/offers/decode', {offer, network:this.network || 'mainnet'});
   }
 
   getBolt12Offers$(): Observable<{ offers: Bolt12Offer[]; total: number }> {
     return this.httpClient.get<{ offers: Bolt12Offer[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/lightning/offers'
+      this.backendBase + '/api/v1/lightning/offers'
     );
   }
 
   getLightningRfq$(): Observable<{ quotes: LightningRfqQuote[]; total: number }> {
     return this.httpClient.get<{ quotes: LightningRfqQuote[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/lightning/rfq'
+      this.backendBase + '/api/v1/lightning/rfq'
     );
   }
 
   getArkOperators$(): Observable<{ operators: ArkOperator[]; total: number }> {
     return this.httpClient.get<{ operators: ArkOperator[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/ark/operators'
+      this.backendBase + '/api/v1/ark/operators'
     );
   }
 
   getArkBatches$(): Observable<{ batches: ArkBatch[]; total: number }> {
     return this.httpClient.get<{ batches: ArkBatch[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/ark/batches'
+      this.backendBase + '/api/v1/ark/batches'
     );
   }
 
   getArkBatch$(batchId: string): Observable<ArkBatch> {
     return this.httpClient.get<ArkBatch>(
-      this.apiBaseUrl + '/api/v1/ark/batches/' + encodeURIComponent(batchId)
+      this.backendBase + '/api/v1/ark/batches/' + encodeURIComponent(batchId)
     );
   }
 
   getArkVtxo$(vtxoId: string): Observable<ArkVtxo> {
     return this.httpClient.get<ArkVtxo>(
-      this.apiBaseUrl + '/api/v1/ark/vtxos/' + encodeURIComponent(vtxoId)
+      this.backendBase + '/api/v1/ark/vtxos/' + encodeURIComponent(vtxoId)
     );
   }
 
   getStratumV2Network$(): Observable<{ roles: StratumV2RoleStatus[]; total: number }> {
     return this.httpClient.get<{ roles: StratumV2RoleStatus[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/stratum-v2/network'
+      this.backendBase + '/api/v1/stratum-v2/network'
     );
   }
 
   getStratumV2Templates$(): Observable<{ templates: StratumV2Template[]; total: number }> {
     return this.httpClient.get<{ templates: StratumV2Template[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/stratum-v2/templates'
+      this.backendBase + '/api/v1/stratum-v2/templates'
     );
   }
 
   getStratumV2Declarations$(): Observable<{ declarations: StratumV2JobDeclaration[]; total: number }> {
     return this.httpClient.get<{ declarations: StratumV2JobDeclaration[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/stratum-v2/declarations'
+      this.backendBase + '/api/v1/stratum-v2/declarations'
     );
   }
 
   getL2Systems$(): Observable<{ systems: L2BridgeSystem[]; total: number }> {
     return this.httpClient.get<{ systems: L2BridgeSystem[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/l2/systems'
+      this.backendBase + '/api/v1/l2/systems'
     );
   }
 
   getL2System$(systemId: string): Observable<L2BridgeSystem> {
     return this.httpClient.get<L2BridgeSystem>(
-      this.apiBaseUrl + '/api/v1/l2/systems/' + encodeURIComponent(systemId)
+      this.backendBase + '/api/v1/l2/systems/' + encodeURIComponent(systemId)
     );
   }
 
   getL2Challenges$(systemId?: string): Observable<{ challenges: L2Challenge[]; total: number }> {
     const query = systemId ? '?systemId=' + encodeURIComponent(systemId) : '';
     return this.httpClient.get<{ challenges: L2Challenge[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/l2/challenges' + query
+      this.backendBase + '/api/v1/l2/challenges' + query
     );
   }
 
   getL2ReserveAudit$(systemId: string): Observable<L2ReserveAudit> {
     return this.httpClient.get<L2ReserveAudit>(
-      this.apiBaseUrl + '/api/v1/l2/reserves/' + encodeURIComponent(systemId)
+      this.backendBase + '/api/v1/l2/reserves/' + encodeURIComponent(systemId)
     );
   }
 
   getUtxoCheckpoints$(): Observable<{ checkpoints: UtxoCheckpoint[]; total: number }> {
     return this.httpClient.get<{ checkpoints: UtxoCheckpoint[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/utxo-set/checkpoints'
+      this.backendBase + '/api/v1/utxo-set/checkpoints'
     );
   }
 
   getUtxoDistribution$(): Observable<{ valueCohorts: SupplyCohort[]; scriptTypes: ScriptTypeDistribution[] }> {
     return this.httpClient.get<{ valueCohorts: SupplyCohort[]; scriptTypes: ScriptTypeDistribution[] }>(
-      this.apiBaseUrl + '/api/v1/utxo-set/distribution'
+      this.backendBase + '/api/v1/utxo-set/distribution'
     );
   }
 
   getProtocolBearingUtxos$(): Observable<ProtocolBearingUtxos> {
     return this.httpClient.get<ProtocolBearingUtxos>(
-      this.apiBaseUrl + '/api/v1/utxo-set/protocols'
+      this.backendBase + '/api/v1/utxo-set/protocols'
     );
   }
 
   getUtreexoRoots$(): Observable<UtreexoRootsView> {
     return this.httpClient.get<UtreexoRootsView>(
-      this.apiBaseUrl + '/api/v1/utreexo/roots'
+      this.backendBase + '/api/v1/utreexo/roots'
     );
   }
 
   getWildkinStatus$(): Observable<WildkinStatusSummary> {
     return this.httpClient.get<WildkinStatusSummary>(
-      this.apiBaseUrl + '/api/v1/wildkin/status'
+      this.backendBase + '/api/v1/wildkin/status'
     );
   }
 
   getWildkinCreatures$(): Observable<{ creatures: WildkinCreature[]; total: number }> {
     return this.httpClient.get<{ creatures: WildkinCreature[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/wildkin/creatures'
+      this.backendBase + '/api/v1/wildkin/creatures'
     );
   }
 
   getWildkinCreature$(id: string): Observable<WildkinCreature> {
     return this.httpClient.get<WildkinCreature>(
-      this.apiBaseUrl + '/api/v1/wildkin/creatures/' + encodeURIComponent(id)
+      this.backendBase + '/api/v1/wildkin/creatures/' + encodeURIComponent(id)
     );
   }
 
   getWildkinBraids$(): Observable<{ braids: WildkinBraidCeremony[]; total: number }> {
     return this.httpClient.get<{ braids: WildkinBraidCeremony[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/wildkin/braids'
+      this.backendBase + '/api/v1/wildkin/braids'
     );
   }
 }

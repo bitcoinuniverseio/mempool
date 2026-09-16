@@ -20,6 +20,7 @@ import { ZoneService } from '@app/services/zone-shim.service';
 import { SharedModule } from '@app/shared/shared.module';
 import { StorageService } from '@app/services/storage.service';
 import { HttpCacheInterceptor } from '@app/services/http-cache.interceptor';
+import { NetworkPrefixInterceptor } from '@app/services/network-prefix.interceptor';
 import { LanguageService } from '@app/services/language.service';
 import { ThemeService } from '@app/services/theme.service';
 import { TimeService } from '@app/services/time.service';
@@ -53,6 +54,7 @@ const providers = [
   AppPreloadingStrategy,
   ServicesApiServices,
   PreloadService,
+  { provide: HTTP_INTERCEPTORS, useClass: NetworkPrefixInterceptor, multi: true },
   { provide: HTTP_INTERCEPTORS, useClass: HttpCacheInterceptor, multi: true },
   { provide: ZONE_SERVICE, useClass: ZoneService },
 ];

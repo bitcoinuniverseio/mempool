@@ -1,54 +1,50 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
+export const LOCAL_RPC_EXAMPLE =
+  '# Bitcoin Core 29 local RPC example only\n# Keep existing network/datadir selection explicit.\nserver=1\n# No rpcpassword or rpcauth: use default generated cookie credentials.\n# RPC defaults to loopback; review existing config/command-line overrides.\nrest=0';
 @Component({
   selector: 'app-node-security-configuration',
   standalone: true,
-  imports: [CommonModule, RouterModule],
-  template: `
-    <div class="container-xl py-4">
-      <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
-        <div>
-          <h1 class="h2 mb-1">Hardened bitcoin.conf Configuration Generator</h1>
-          <p class="text-muted mb-0">Best-practice security configurations protecting against RPC exposure, peer fingerprinting, and memory exhaustion.</p>
-        </div>
-        <a routerLink="/node/security" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
-      </div>
-
-      <div class="card bg-dark border-secondary mb-4">
-        <div class="card-header border-secondary d-flex justify-content-between align-items-center">
-          <h5 class="card-title mb-0">Recommended Production Configuration</h5>
-          <span class="badge bg-success">HARDENED</span>
-        </div>
-        <div class="card-body">
-          <pre class="bg-black text-light p-3 rounded font-monospace small mb-0" tabindex="0" role="region" aria-label="Recommended Production Configuration, scroll horizontally" i18n-aria-label><code># Bitcoin Core Hardened Production Configuration
-# Network & Bindings
-server=1
-daemon=1
-listen=1
-maxconnections=64
-listenonion=1
-
-# Memory & Resource Limits
-dbcache=4096
-maxmempool=300
-mempoolexpiry=72
-
-# Security & RPC Isolation
-rpcallowip=127.0.0.1
-rpcbind=127.0.0.1:8332
-rpcpassword=use_cookie_auth_instead
-# Disable unauthenticated REST endpoints if not required
-rest=0
-
-# P2P Hardening
-blocksonly=0
-peerbloomfilters=0
-v2transport=1</code></pre>
-        </div>
-      </div>
-    </div>
-  `
+  imports: [RouterModule, RelativeUrlPipe],
+  template: ` <div class="container-xl py-4">
+    <h1>Bitcoin Core Local RPC Configuration Example</h1>
+    <a [routerLink]="'/node/security' | relativeUrl">Back to node security</a>
+    <p>
+      This example describes Bitcoin Core 29 defaults. It is not an audit of
+      your installed version, network, operating system, effective configuration
+      or resource limits.
+    </p>
+    <h2>Local cookie authentication</h2>
+    <pre class="card p-3" style="white-space:pre-wrap" tabindex="0">{{
+      example
+    }}</pre>
+    <p>
+      With no configured RPC password, Core generates a fresh cookie credential
+      at startup. Local clients need access to the correct network/datadir
+      cookie under the node's operating-system account. Existing
+      password/authentication overrides must be reviewed before using cookie
+      authentication.
+    </p>
+    <p>
+      RPC defaults to loopback. Review all configuration includes, command-line
+      overrides and container port mappings before enabling it. This page has
+      not inspected the effective listener or file permissions. It does not
+      generate credentials or change your node.
+    </p>
+    <p>
+      Choose memory budgets, peer settings and service startup options from the
+      installed version's help and the actual host requirements. No production
+      hardening verdict is established here.
+    </p>
+    <a
+      href="https://github.com/bitcoin/bitcoin/blob/v29.0/doc/JSON-RPC-interface.md#security"
+      target="_blank"
+      rel="noopener noreferrer"
+      >Bitcoin Core 29 RPC authentication and security documentation</a
+    >
+  </div>`,
 })
-export class NodeSecurityConfigurationComponent {}
+export class NodeSecurityConfigurationComponent {
+  example = LOCAL_RPC_EXAMPLE;
+}

@@ -1,73 +1,117 @@
-import { Component, OnInit } from '@angular/core';
+import {
+  Component,
+  Inject,
+  ChangeDetectorRef,
+  OnInit,
+  OnDestroy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
-import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
+import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import { NodeSecurityApiService } from './node-security.service';
-
+import {
+  NodeSecurityEvidenceComponent,
+  securityError,
+} from './node-security-evidence.component';
 @Component({
   selector: 'app-node-security-artifacts',
   standalone: true,
-  imports: [CommonModule, RouterModule],
-  template: `
-    <div class="container-xl py-4">
-      <div class="alert alert-warning" role="alert" *ngIf="loadError">
-        {{ loadError }}
-      </div>
-      <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
-        <div>
-          <h1 class="h2 mb-1">Guix Reproducible Builds & Artifact Attestations</h1>
-          <p class="text-muted mb-0">Multi-party cryptographic attestations guaranteeing binary releases are built bit-for-bit identically from source.</p>
-        </div>
-        <a routerLink="/node/security" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
-      </div>
-
-      <div class="card bg-dark border-secondary mb-4">
-        <div class="card-header border-secondary">
-          <h5 class="card-title mb-0">Verified Release Binaries</h5>
-        </div>
-        <div class="table-responsive" tabindex="0" role="region" aria-label="Verified Release Binaries, scroll horizontally" i18n-aria-label>
-          <table class="table table-dark table-hover mb-0">
-            <thead>
-              <tr>
-                <th>Release</th>
-                <th>Artifact Filename</th>
-                <th>SHA256 Checksum</th>
-                <th>Guix Signers</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let art of artifacts">
-                <td class="fw-bold">{{ art.release }}</td>
-                <td class="font-monospace text-info">{{ art.filename }}</td>
-                <td class="font-monospace text-muted small">{{ art.sha256 | slice:0:24 }}...</td>
-                <td><span class="badge bg-primary">{{ art.guix_attestations_count }} Signatures</span></td>
-                <td><span class="badge bg-success">{{ art.reproducibility_status }}</span></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  `
+  imports: [CommonModule, FormsModule, NodeSecurityEvidenceComponent],
+  template: ` <app-node-security-evidence
+      view="artifacts"
+      title="Release Artifacts and Attestations"
+    ></app-node-security-evidence>
+    <div class="container-xl pb-4">
+      <h2>Request artifact verification</h2>
+      <p>
+        A checksum identifies bytes. Release signature, source binding and
+        reproducible-build evidence are separate checks.
+      </p>
+      <form (ngSubmit)="verify()">
+        <label for="artifact-sha">SHA256 checksum</label
+        ><input
+          id="artifact-sha"
+          class="form-control mb-3"
+          name="sha"
+          [(ngModel)]="sha256"
+          (ngModelChange)="reset()"
+          maxlength="64"
+          required
+        /><label for="artifact-version">Release version (optional)</label
+        ><input
+          id="artifact-version"
+          class="form-control mb-3"
+          name="version"
+          [(ngModel)]="version"
+          (ngModelChange)="reset()"
+          maxlength="128"
+        /><button class="btn btn-primary" [disabled]="loading">
+          {{ loading ? 'Checking source…' : 'Request verification' }}
+        </button>
+      </form>
+      <p *ngIf="error" class="alert alert-warning mt-3" role="alert">
+        {{ error }}
+      </p>
+      <p *ngIf="result" role="status">
+        State: {{ result.state }} · {{ result.stage }}. {{ result.error }} No
+        reproducible-build verdict is established by this response.
+      </p>
+    </div>`,
 })
-export class NodeSecurityArtifactsComponent implements OnInit {
-  public artifacts: any[] = [];
-
-  public loadError: string | null = null;
-
-  constructor(private api: NodeSecurityApiService) {}
-
-  public ngOnInit(): void {
-    this.api.getArtifacts$().subscribe({
-      next: res => {
-        this.artifacts = res;
-        this.loadError = null;
-      },
-      error: err => {
-        this.artifacts = [];
-        this.loadError = loadFailureMessage(classifyLoadFailure(err));
-      },
-    });
+export class NodeSecurityArtifactsComponent implements OnInit, OnDestroy {
+  sha256 = '';
+  version = '';
+  loading = false;
+  error = '';
+  result: any = null;
+  private request?: Subscription;
+  private network?: Subscription;
+  constructor(
+    @Inject(NodeSecurityApiService) private api: NodeSecurityApiService,
+    @Inject(ChangeDetectorRef) private cdr: ChangeDetectorRef
+  ) {}
+  ngOnInit(): void {
+    this.network = this.api.network$.subscribe(() => this.reset());
+  }
+  reset(): void {
+    this.request?.unsubscribe();
+    this.result = null;
+    this.error = '';
+    this.loading = false;
+    this.cdr.markForCheck();
+  }
+  verify(): void {
+    this.reset();
+    if (!/^[0-9a-f]{64}$/i.test(this.sha256)) {
+      this.error = 'Enter a 32-byte hexadecimal checksum.';
+      return;
+    }
+    this.loading = true;
+    this.request = this.api
+      .verifyArtifact$({
+        sha256: this.sha256,
+        ...(this.version.trim() ? { version: this.version.trim() } : {}),
+      })
+      .subscribe({
+        next: (r) => {
+          this.loading = false;
+          this.cdr.markForCheck();
+          if (r?.verified !== false || r?.state !== 'unverified') {
+            this.error =
+              'Unsupported artifact verification response. No verification is established.';
+            return;
+          }
+          this.result = r;
+        },
+        error: (e) => {
+          this.loading = false;
+          this.cdr.markForCheck();
+          this.error = securityError(e);
+        },
+      });
+  }
+  ngOnDestroy(): void {
+    this.reset();
+    this.network?.unsubscribe();
   }
 }

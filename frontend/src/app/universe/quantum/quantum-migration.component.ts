@@ -1,13 +1,17 @@
-import { Component, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { publicIdentifier, publicOutpoint, validExposure, validPlan } from './quantum-validation';
+import { Component, ChangeDetectionStrategy, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { QuantumApiService, QuantumMigrationPlanResult } from './quantum.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-quantum-migration',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -17,16 +21,16 @@ import { QuantumApiService, QuantumMigrationPlanResult } from './quantum.service
           <span class="badge bg-primary">Hash-Protected Target Standard</span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
-          Plan migration of exposed UTXOs to hash-protected SegWit outputs and quantum-resistant script architectures without third-party custodians.
+          Request a source-reported plan for P2WPKH outputs. Public outpoints are sent to the configured server. A plan does not execute a migration or establish quantum resistance.
         </p>
 
         <!-- Navigation Tabs -->
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/intelligence/quantum">Overview</a>
-          <a class="nav-link" routerLink="/intelligence/quantum/exposure">Script Cohorts</a>
-          <a class="nav-link" routerLink="/intelligence/quantum/history">Reveal Timeline</a>
-          <a class="nav-link" routerLink="/intelligence/quantum/audit">Local Public Audit</a>
-          <a class="nav-link active" routerLink="/intelligence/quantum/migration">Migration Planner</a>
+          <a class="nav-link" [routerLink]="'/intelligence/quantum' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/intelligence/quantum/exposure' | relativeUrl">Script Cohorts</a>
+          <a class="nav-link" [routerLink]="'/intelligence/quantum/history' | relativeUrl">Reveal Timeline</a>
+          <a class="nav-link" [routerLink]="'/intelligence/quantum/audit' | relativeUrl">Public Audit</a>
+          <a class="nav-link active" [routerLink]="'/intelligence/quantum/migration' | relativeUrl">Migration Planner</a>
         </nav>
       </header>
 
@@ -42,6 +46,7 @@ import { QuantumApiService, QuantumMigrationPlanResult } from './quantum.service
               rows="3"
               placeholder="e.g. 4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b:0"
               [(ngModel)]="rawOutpoints"
+              (ngModelChange)="clear()"
               name="rawOutpoints"
               required
               [disabled]="planning"
@@ -68,11 +73,15 @@ import { QuantumApiService, QuantumMigrationPlanResult } from './quantum.service
         </form>
       </div>
 
+      <div *ngIf="errorMessage" class="alert alert-danger mb-4" role="alert">
+        {{ errorMessage }}
+      </div>
+
       <!-- Result View -->
       <div *ngIf="result" class="card p-4 bg-body-tertiary border">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 border-bottom pb-2">
-          <h2 class="h5 m-0 text-success">&check; Migration Strategy Ready</h2>
-          <span class="badge bg-success">0.0% Post-Migration Exposure</span>
+          <h2 class="h5 m-0 text-success">Source-Reported Migration Plan</h2>
+          <span class="badge bg-success">{{ result.post_migration_exposure_percentage }}% Projected Exposure (Source Estimate)</span>
         </div>
 
         <div class="row g-3 mb-4">
@@ -121,35 +130,52 @@ import { QuantumApiService, QuantumMigrationPlanResult } from './quantum.service
     }
   `],
 })
-export class QuantumMigrationComponent {
+export class QuantumMigrationComponent implements OnDestroy {
+  private request?: Subscription;
+  private networkSubscription?: Subscription;
   rawOutpoints = '';
   planning = false;
+  errorMessage: string | null = null;
   result: QuantumMigrationPlanResult | null = null;
 
   constructor(
     private api: QuantumApiService,
     private cd: ChangeDetectorRef
-  ) {}
+  ) {
+    this.networkSubscription = this.api.networkChanged$?.subscribe(() => { this.clear(); this.cd.markForCheck(); });
+  }
+
+  clear(): void {
+    this.request?.unsubscribe();
+    this.planning = false;
+    this.result = null;
+    this.errorMessage = null;
+  }
+
+  ngOnDestroy(): void { this.networkSubscription?.unsubscribe(); this.clear(); }
 
   loadDemoOutpoints(): void {
+    this.clear();
     this.rawOutpoints = '4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b:0';
-    this.generatePlan();
   }
 
   generatePlan(): void {
-    if (!this.rawOutpoints) return;
+    this.clear();
+    const input = this.rawOutpoints.trim();
+    const outpoints = input.split('\n').map(value => value.trim()).filter(Boolean);
+    if (!outpoints.length || outpoints.length > 100 || !outpoints.every(publicOutpoint) || new Set(outpoints.map(value => value.toLowerCase())).size !== outpoints.length) {
+      this.errorMessage = 'Enter 1–100 unique public txid:vout outpoints. Nothing was sent.'; return;
+    }
     this.planning = true;
-    this.result = null;
-
-    const outpoints = this.rawOutpoints.split('\n').map(s => s.trim()).filter(Boolean);
-
-    this.api.generateMigrationPlan$(outpoints).subscribe({
+    this.request = this.api.generateMigrationPlan$(outpoints).subscribe({
       next: res => {
-        this.result = res;
+        if (validPlan(res)) this.result = res;
+        else this.errorMessage = 'The source returned malformed or inconsistent evidence.';
         this.planning = false;
         this.cd.markForCheck();
       },
-      error: () => {
+      error: err => {
+        this.errorMessage = loadFailureMessage(classifyLoadFailure(err));
         this.planning = false;
         this.cd.markForCheck();
       },

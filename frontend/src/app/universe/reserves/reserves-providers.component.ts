@@ -2,12 +2,14 @@ import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRe
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { ReservesApiService, ReserveProvider } from './reserves.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-reserves-providers',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -16,14 +18,14 @@ import { ReservesApiService, ReserveProvider } from './reserves.service';
           <h1 class="m-0">Reserve Providers Directory</h1>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
-          Participating exchanges, custody networks, and federated bridges publishing verified cryptographic proof of reserves.
+          Operator-configured provider identities and available signed-root evidence. A configured key does not establish published reserves, complete liabilities or solvency.
         </p>
 
         <!-- Navigation Tabs -->
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/intelligence/reserves">Overview</a>
-          <a class="nav-link active" routerLink="/intelligence/reserves/providers">Providers Directory</a>
-          <a class="nav-link" routerLink="/intelligence/reserves/verify">Verify Proof</a>
+          <a class="nav-link" [routerLink]="'/intelligence/reserves' | relativeUrl">Overview</a>
+          <a class="nav-link active" [routerLink]="'/intelligence/reserves/providers' | relativeUrl">Providers Directory</a>
+          <a class="nav-link" [routerLink]="'/intelligence/reserves/verify' | relativeUrl">Verify Proof</a>
         </nav>
       </header>
 
@@ -52,16 +54,16 @@ import { ReservesApiService, ReserveProvider } from './reserves.service';
               <div class="mt-auto">
                 <div class="d-flex justify-content-between py-1 border-bottom">
                   <span class="text-muted small">Reserve:</span>
-                  <span class="fw-semibold">{{ (p.total_reserve_sats / 100000000).toFixed(2) | number }} BTC</span>
+                  <span class="fw-semibold">{{ p.total_reserve_sats == null ? 'Unknown' : (p.total_reserve_sats / 100000000).toFixed(2) + ' BTC' }}</span>
                 </div>
                 <div class="d-flex justify-content-between py-1 border-bottom">
                   <span class="text-muted small">Liability:</span>
-                  <span class="fw-semibold">{{ (p.total_liability_sats / 100000000).toFixed(2) | number }} BTC</span>
+                  <span class="fw-semibold">{{ p.total_liability_sats == null ? 'Unknown' : (p.total_liability_sats / 100000000).toFixed(2) + ' BTC' }}</span>
                 </div>
                 <div class="d-flex justify-content-between py-1 border-bottom">
                   <span class="text-muted small">Solvency:</span>
-                  <span class="fw-bold" [ngClass]="p.solvency_ratio_percentage >= 100 ? 'text-success' : 'text-danger'">
-                    {{ p.solvency_ratio_percentage }}%
+                  <span class="fw-bold" [ngClass]="p.solvency_ratio_percentage == null ? 'bg-secondary' : p.solvency_ratio_percentage >= 100 ? 'text-success' : 'text-danger'">
+                    {{ p.solvency_ratio_percentage == null ? 'Not established' : p.solvency_ratio_percentage + '%' }}
                   </span>
                 </div>
                 <div class="d-flex justify-content-between py-1 mb-3">
@@ -69,7 +71,7 @@ import { ReservesApiService, ReserveProvider } from './reserves.service';
                   <span class="text-capitalize">{{ p.attestation_frequency }}</span>
                 </div>
 
-                <a class="btn btn-primary w-100" [routerLink]="['/intelligence/reserves/provider', p.provider_id]">
+                <a class="btn btn-primary w-100" [routerLink]="['/intelligence/reserves/provider' | relativeUrl, p.provider_id]">
                   View Attestation History
                 </a>
               </div>
@@ -105,7 +107,7 @@ export class ReservesProvidersComponent implements OnInit, OnDestroy {
         this.cd.markForCheck();
       },
       error: (err) => {
-        this.error = err?.message || 'Failed to load reserve providers';
+        this.error = loadFailureMessage(classifyLoadFailure(err));
         this.loading = false;
         this.cd.markForCheck();
       },

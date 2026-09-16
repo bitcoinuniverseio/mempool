@@ -92,6 +92,7 @@ function startGateway({ gatewayPort, upstreamPort, esploraPort }) {
       UNIVERSE_GATEWAY_ROOT: ROOT,
     },
     stdio: 'ignore',
+    windowsHide: true,
   });
 }
 
@@ -106,6 +107,34 @@ function ask(gatewayPort, path = '/api/v1/backend-info') {
       .on('error', (error) => resolve({ status: 0, error: error.code, ms: Date.now() - started }));
   });
 }
+
+test('API redirects cannot send a client or request body to another authority', async (t) => {
+  const ports = await reservePorts();
+  let redirectedRequests = 0;
+  const redirectTarget = http.createServer((_request, response) => { redirectedRequests++; response.end('unowned answer'); });
+  await new Promise(resolve => redirectTarget.listen(0, '127.0.0.1', resolve));
+  t.after(() => new Promise(resolve => redirectTarget.close(resolve)));
+  const upstream = http.createServer((request, response) => {
+    const code = Number(new URL(request.url, 'http://local').searchParams.get('status'));
+    request.resume();
+    response.writeHead(code, { Location: `http://127.0.0.1:${redirectTarget.address().port}/substitute` });
+    response.end();
+  });
+  await new Promise(resolve => upstream.listen(ports.upstreamPort, '127.0.0.1', resolve));
+  t.after(() => new Promise(resolve => upstream.close(resolve)));
+  const gateway = startGateway(ports);
+  t.after(() => new Promise(resolve => { if (gateway.exitCode !== null) return resolve(); gateway.once('exit', resolve); gateway.kill(); }));
+  await sleep(1000);
+  for (const status of [301,302,303,307,308]) {
+    const response = await fetch(`http://127.0.0.1:${ports.gatewayPort}/api/v1/test?status=${status}`, {
+      method: 'POST', body: 'public-test-payload', redirect: 'follow', signal: AbortSignal.timeout(5000),
+    });
+    assert.equal(response.status, 502);
+    assert.equal(response.headers.get('location'), null);
+    assert.deepEqual(await response.json(), { error: 'upstream-redirect-refused' });
+  }
+  assert.equal(redirectedRequests, 0);
+});
 
 test('a request waits for an upstream that is restarting, rather than failing', async (t) => {
   const ports = await reservePorts();

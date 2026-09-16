@@ -60,12 +60,12 @@
 
           <ng-container *ngIf="state.result.value.blockAtomic as block">
             <dt i18n="universe.rune.field-etched">Etched in block</dt>
-            <dd><a [routerLink]="['/block', block]">{{ block }}</a></dd>
+            <dd><a [routerLink]="['/block' | relativeUrl, block]">{{ block }}</a></dd>
           </ng-container>
 
           <ng-container *ngIf="state.result.value.etchingTxid as txid">
             <dt i18n="universe.rune.field-etching">Etching transaction</dt>
-            <dd><a class="identifier" [routerLink]="['/tx', txid]">{{ txid }}</a></dd>
+            <dd><a class="identifier" [routerLink]="['/tx' | relativeUrl, txid]">{{ txid }}</a></dd>
           </ng-container>
 
           <ng-container *ngIf="state.result.value.timestampAtomic as timestamp">
@@ -136,7 +136,7 @@
 
       <section class="panel parent" *ngIf="state.result.value.parentInscriptionId as parent">
         <h2 i18n="universe.rune.parent-title">Parent inscription</h2>
-        <a class="identifier" [routerLink]="['/inscription', parent]">{{ parent }}</a>
+        <a class="identifier" [routerLink]="['/inscription' | relativeUrl, parent]">{{ parent }}</a>
       </section>
 
       <p class="asof" *ngIf="state.result.checkpoint as checkpoint">

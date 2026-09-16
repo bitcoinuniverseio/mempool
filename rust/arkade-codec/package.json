@@ -1,0 +1,7 @@
+{
+  "name": "universe-arkade-codec",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "dependencies": { "@arkade-os/sdk": "0.4.72" }
+}

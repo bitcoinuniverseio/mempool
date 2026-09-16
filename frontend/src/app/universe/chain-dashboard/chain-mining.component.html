@@ -164,7 +164,7 @@
           <tbody>
             <tr *ngFor="let block of vm.recentBlocks; trackBy: trackByHash">
               <td>
-                <a class="identifier" [routerLink]="['/', chain, 'block', block.hash]"
+                <a class="identifier" [routerLink]="['/' | relativeUrl, chain, 'block', block.hash]"
                    *ngIf="heightFormatted(block) as height" [attr.title]="block.hash">{{ height.display }}</a>
               </td>
               <td>{{ blockTime(block) }}</td>
@@ -216,7 +216,7 @@
         </p>
       </ng-container>
       <p class="panel-link">
-        <a [routerLink]="['/', chain, 'docs']" i18n="universe.mining.docs-link">Read the {{ profile.name }} explorer docs</a>
+        <a [routerLink]="['/' | relativeUrl, chain, 'docs']" i18n="universe.mining.docs-link">Read the {{ profile.name }} explorer docs</a>
       </p>
     </section>
 

@@ -2,31 +2,33 @@ import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRe
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { ReservesApiService, ReservesOverview } from './reserves.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-reserves-overview',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
       <header class="page-header mb-4">
         <div class="title-row d-flex flex-wrap align-items-center justify-content-between gap-2">
-          <h1 class="m-0">Reserves and Solvency Verification Center</h1>
-          <span class="badge bg-success" *ngIf="overview">
-            {{ overview.overall_solvency_percentage }}% Tracked Solvency
+          <h1 class="m-0">Reserves and Solvency Verification Center</h1><p *ngIf="overview?.attestation_source_status === 'unconfigured'">Provider keys are configured; no attestation snapshot source is configured.</p>
+          <span class="badge bg-secondary" *ngIf="overview">
+            {{ overview.overall_solvency_percentage == null ? 'Not established' : overview.overall_solvency_percentage + '%' }} Tracked Solvency
           </span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
-          Cryptographic proof-of-reserves verification, BIP127 signature validation, Merkle sum tree liability audits, and noncustodial customer inclusion checks.
+          Current-tip BIP127 signature checks, committed liability inclusion and operator-pinned provider roots. Complete liabilities and solvency are not established.
         </p>
 
         <!-- Navigation Tabs -->
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link active" routerLink="/intelligence/reserves">Overview</a>
-          <a class="nav-link" routerLink="/intelligence/reserves/providers">Providers Directory</a>
-          <a class="nav-link" routerLink="/intelligence/reserves/verify">Verify Proof</a>
+          <a class="nav-link active" [routerLink]="'/intelligence/reserves' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/intelligence/reserves/providers' | relativeUrl">Providers Directory</a>
+          <a class="nav-link" [routerLink]="'/intelligence/reserves/verify' | relativeUrl">Verify Proof</a>
         </nav>
       </header>
 
@@ -45,29 +47,29 @@ import { ReservesApiService, ReservesOverview } from './reserves.service';
           <div class="col-12 col-sm-6 col-lg-3">
             <div class="card p-3 h-100 bg-body-tertiary border">
               <div class="text-muted small">Tracked Reserve Balance</div>
-              <div class="h4 my-1 text-primary">{{ (overview.total_tracked_reserve_sats / 100000000).toFixed(2) | number }} BTC</div>
-              <div class="small text-muted">Onchain verified assets</div>
+              <div class="h4 my-1 text-primary">{{ overview.total_tracked_reserve_sats == null ? 'Unknown' : (overview.total_tracked_reserve_sats / 100000000).toFixed(2) + ' BTC' }}</div>
+              <div class="small text-muted">Onchain reserve evidence required</div>
             </div>
           </div>
           <div class="col-12 col-sm-6 col-lg-3">
             <div class="card p-3 h-100 bg-body-tertiary border">
               <div class="text-muted small">Tracked Liabilities</div>
-              <div class="h4 my-1 text-secondary">{{ (overview.total_tracked_liability_sats / 100000000).toFixed(2) | number }} BTC</div>
+              <div class="h4 my-1 text-secondary">{{ overview.total_tracked_liability_sats == null ? 'Unknown' : (overview.total_tracked_liability_sats / 100000000).toFixed(2) + ' BTC' }}</div>
               <div class="small text-muted">Attested customer claims</div>
             </div>
           </div>
           <div class="col-12 col-sm-6 col-lg-3">
             <div class="card p-3 h-100 bg-body-tertiary border">
               <div class="text-muted small">Solvency Ratio</div>
-              <div class="h4 my-1 text-success">{{ overview.overall_solvency_percentage }}%</div>
+              <div class="h4 my-1 text-success">{{ overview.overall_solvency_percentage == null ? 'Not established' : overview.overall_solvency_percentage + '%' }}</div>
               <div class="small text-muted">Reserves / Liabilities</div>
             </div>
           </div>
           <div class="col-12 col-sm-6 col-lg-3">
             <div class="card p-3 h-100 bg-body-tertiary border">
-              <div class="text-muted small">Active Attestors</div>
+              <div class="text-muted small">Configured Provider Identities</div>
               <div class="h4 my-1 text-info">{{ overview.active_providers_count }} Entities</div>
-              <div class="small text-muted">Regular proof publishers</div>
+              <div class="small text-muted">Key configuration is separate from attestation evidence</div>
             </div>
           </div>
         </section>
@@ -76,7 +78,7 @@ import { ReservesApiService, ReservesOverview } from './reserves.service';
         <section class="card p-4 bg-body-tertiary border mb-4">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h2 class="h5 m-0">Custodial and Exchange Attestations</h2>
-            <a class="btn btn-sm btn-outline-primary" routerLink="/intelligence/reserves/providers">View All Providers</a>
+            <a class="btn btn-sm btn-outline-primary" [routerLink]="'/intelligence/reserves/providers' | relativeUrl">View All Providers</a>
           </div>
           <div class="table-responsive" tabindex="0" role="region" aria-label="Custodial and Exchange Attestations, scroll horizontally" i18n-aria-label>
             <table class="table table-hover align-middle mb-0">
@@ -95,7 +97,7 @@ import { ReservesApiService, ReservesOverview } from './reserves.service';
                 <tr *ngFor="let p of overview.providers">
                   <td>
                     <div class="fw-bold">{{ p.name }}</div>
-                    <div class="small text-muted">Last at height {{ p.last_attestation_height }}</div>
+                    <div class="small text-muted">Last at height {{ p.last_attestation_height ?? 'Unknown' }}</div>
                   </td>
                   <td>
                     <span class="badge bg-secondary text-capitalize">{{ p.category.replace('_', ' ') }}</span>
@@ -103,15 +105,15 @@ import { ReservesApiService, ReservesOverview } from './reserves.service';
                   <td>
                     <span class="badge bg-info text-uppercase">{{ p.proof_standard }}</span>
                   </td>
-                  <td class="text-end fw-semibold">{{ (p.total_reserve_sats / 100000000).toFixed(2) | number }} BTC</td>
-                  <td class="text-end text-muted">{{ (p.total_liability_sats / 100000000).toFixed(2) | number }} BTC</td>
+                  <td class="text-end fw-semibold">{{ p.total_reserve_sats == null ? 'Unknown' : (p.total_reserve_sats / 100000000).toFixed(2) + ' BTC' }}</td>
+                  <td class="text-end text-muted">{{ p.total_liability_sats == null ? 'Unknown' : (p.total_liability_sats / 100000000).toFixed(2) + ' BTC' }}</td>
                   <td class="text-end">
-                    <span class="badge" [ngClass]="p.solvency_ratio_percentage >= 100 ? 'bg-success' : 'bg-danger'">
-                      {{ p.solvency_ratio_percentage }}%
+                    <span class="badge" [ngClass]="p.solvency_ratio_percentage == null ? 'bg-secondary' : p.solvency_ratio_percentage >= 100 ? 'bg-success' : 'bg-danger'">
+                      {{ p.solvency_ratio_percentage == null ? 'Not established' : p.solvency_ratio_percentage + '%' }}
                     </span>
                   </td>
                   <td class="text-end">
-                    <a class="btn btn-sm btn-primary" [routerLink]="['/intelligence/reserves/provider', p.provider_id]">
+                    <a class="btn btn-sm btn-primary" [routerLink]="['/intelligence/reserves/provider' | relativeUrl, p.provider_id]">
                       Inspect
                     </a>
                   </td>
@@ -139,12 +141,12 @@ import { ReservesApiService, ReservesOverview } from './reserves.service';
               <tbody>
                 <tr *ngFor="let s of overview.recent_snapshots">
                   <td class="fw-bold font-monospace">{{ s.snapshot_id }}</td>
-                  <td>{{ s.block_height }}</td>
-                  <td>{{ s.utxo_count | number }}</td>
+                  <td>{{ s.block_height ?? 'Unknown' }}</td>
+                  <td>{{ s.utxo_count ?? 'Unknown' }}</td>
                   <td>{{ s.signature_count | number }}</td>
-                  <td class="text-end fw-semibold">{{ (s.total_reserve_sats / 100000000).toFixed(2) | number }} BTC</td>
+                  <td class="text-end fw-semibold">{{ s.total_reserve_sats == null ? 'Unknown' : (s.total_reserve_sats / 100000000).toFixed(2) + ' BTC' }}</td>
                   <td class="text-end">
-                    <a class="btn btn-sm btn-outline-secondary" [routerLink]="['/intelligence/reserves/snapshot', s.snapshot_id]">
+                    <a class="btn btn-sm btn-outline-secondary" [routerLink]="['/intelligence/reserves/snapshot' | relativeUrl, s.snapshot_id]">
                       Details
                     </a>
                   </td>
@@ -182,7 +184,7 @@ export class ReservesOverviewComponent implements OnInit, OnDestroy {
         this.cd.markForCheck();
       },
       error: (err) => {
-        this.error = err?.message || 'Failed to load reserves overview';
+        this.error = loadFailureMessage(classifyLoadFailure(err));
         this.loading = false;
         this.cd.markForCheck();
       },

@@ -1,77 +1,40 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
-import { BlockPropagationApiService } from './block-propagation.service';
+import { Subscription, of } from 'rxjs';
+import { BlockPropagationApiService, branchVerdict } from './block-propagation.service';
+import { BlockPropagationOverview, BlockPropagationObservation, CompactBlockDetail, ForkRaceRecord, FibreObservation } from './block-propagation.models';
+import { watchPropagation } from './propagation-load';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
-  selector: 'app-block-propagation-stale-tips',
-  standalone: true,
-  imports: [CommonModule, RouterModule],
+  selector: 'app-block-propagation-stale-tips', standalone: true,
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   template: `
-    <div class="container-xl py-4">
-      <div class="alert alert-warning" role="alert" *ngIf="loadError">
-        {{ loadError }}
-      </div>
-      <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
-        <div>
-          <h1 class="h2 mb-1">Stale Tips & 1-Block Reorganizations</h1>
-          <p class="text-muted mb-0">Historical log of discarded blocks, miner economic losses, and chain divergence duration.</p>
-        </div>
-        <a routerLink="/network/blocks" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
-      </div>
-
-      <div class="card bg-dark border-secondary mb-4">
-        <div class="card-header border-secondary">
-          <h5 class="card-title mb-0">Stale Tip History</h5>
-        </div>
-        <div class="table-responsive" tabindex="0" role="region" aria-label="Stale Tip History, scroll horizontally" i18n-aria-label>
-          <table class="table table-dark table-hover mb-0">
-            <thead>
-              <tr>
-                <th>Height</th>
-                <th>Date</th>
-                <th>Miner</th>
-                <th>Stale Hash</th>
-                <th>Surviving Hash</th>
-                <th>Lost Rewards</th>
-                <th>Reorg Depth</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let s of staleTips">
-                <td class="fw-bold">{{ s.height }}</td>
-                <td>{{ s.date }}</td>
-                <td><span class="badge bg-secondary">{{ s.miner }}</span></td>
-                <td class="font-monospace text-danger">{{ s.stale_hash | slice:0:16 }}...</td>
-                <td class="font-monospace text-success">{{ s.winning_hash | slice:0:16 }}...</td>
-                <td class="text-warning">{{ ((s.lost_subsidy_sats + s.lost_fees_sats) / 100000000) | number:'1.4-4' }} BTC</td>
-                <td><span class="badge bg-warning text-dark">{{ s.reorg_depth }} Block</span></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+  <div class="container-xl py-4"><h1 class="h2 mb-3">Stale Tips & Reorganizations</h1><nav class="nav nav-pills flex-wrap gap-2 mb-4">
+<a class="nav-link" [routerLink]="'/network/blocks' | relativeUrl">Overview</a>
+<a class="nav-link" [routerLink]="'/network/blocks/live' | relativeUrl">Live Propagation</a>
+<a class="nav-link" [routerLink]="'/network/compact-blocks' | relativeUrl">Compact Blocks</a>
+<a class="nav-link" [routerLink]="'/network/fork-races' | relativeUrl">Fork Races</a>
+<a class="nav-link" [routerLink]="'/network/stale-tips' | relativeUrl">Stale Tips</a>
+<a class="nav-link" [routerLink]="'/network/fibre' | relativeUrl">FIBRE</a></nav>
+  <p class="text-muted">Observations reported by the configured source; this page does not independently validate sensor coverage or chain consensus.</p>
+  <div *ngIf="loading" role="status" aria-busy="true">Loading propagation evidence...</div>
+  <div *ngIf="loadError" class="alert alert-warning" role="alert">{{ loadError }}</div>
+  <p>Stale-tip history requires the owned propagation sensor fleet. No successful history contract is connected.</p><p>Stale and surviving hashes, miner attribution, lost subsidy/fees and reorganization depth remain unavailable.</p></div>
   `
 })
-export class BlockPropagationStaleTipsComponent implements OnInit {
-  public staleTips: any[] = [];
-
-  public loadError: string | null = null;
-
+export class BlockPropagationStaleTipsComponent implements OnInit, OnDestroy {
+  staleTips: never | null = null;
+  loading = false;
+  loadError: string | null = null;
+  readonly verdict = branchVerdict;
+  private request?: Subscription;
   constructor(private api: BlockPropagationApiService) {}
-
-  public ngOnInit(): void {
-    this.api.getStaleTips$().subscribe({
-      next: res => {
-        this.staleTips = res;
-        this.loadError = null;
-      },
-      error: err => {
-        this.staleTips = [];
-        this.loadError = loadFailureMessage(classifyLoadFailure(err));
-      },
+  ngOnInit(): void {
+    this.request = watchPropagation(this.api.networkChanged$ ?? of(''), () => this.api.getStaleTips$(), state => {
+      this.staleTips = state.value; this.loading = state.loading; this.loadError = state.error;
     });
   }
+  ngOnDestroy(): void { this.request?.unsubscribe(); }
 }

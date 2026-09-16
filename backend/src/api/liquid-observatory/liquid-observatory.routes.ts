@@ -1,13 +1,24 @@
 import { Application, Request, Response } from 'express';
 import config from '../../config';
 import { handleError } from '../../utils/api';
-import { liquidObservatoryService } from './liquid-observatory.service';
+import { LiquidObservatoryEvidenceError, liquidObservatoryService } from './liquid-observatory.service';
+import { elementsNodeSource } from './elements-node-source';
+
+/** An absent source is a 503 that names the source, never a 500 and never an empty list. */
+function fail(req: Request, res: Response, e: unknown): void {
+  if (e instanceof LiquidObservatoryEvidenceError) {
+    res.status(e.status).json({ stage: e.code, error: e.message });
+    return;
+  }
+  handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+}
 
 class LiquidObservatoryRoutes {
   public initRoutes(app: Application): void {
     const prefix = config.MEMPOOL.API_URL_PREFIX + 'liquid/observatory/';
 
     app
+      .get(prefix + 'node', this.$getNode)
       .get(prefix + 'summary', this.$getSummary)
       .get(prefix + 'assets', this.$getAssets)
       .get(prefix + 'assets/:assetId', this.$getAsset)
@@ -15,12 +26,19 @@ class LiquidObservatoryRoutes {
       .get(prefix + 'federation', this.$getFederation);
   }
 
+  private async $getNode(req: Request, res: Response): Promise<void> {
+    try {
+      if (Object.keys(req.query || {}).some(key => key !== 'network')) throw new LiquidObservatoryEvidenceError('invalid-query', 'Only the public network selector is accepted.', 400);
+      res.json(await elementsNodeSource.snapshot(typeof req.query?.network === 'string' ? req.query.network : 'liquidv1'));
+    } catch (e) { fail(req, res, e); }
+  }
+
   private async $getSummary(req: Request, res: Response): Promise<void> {
     try {
       const summary = await liquidObservatoryService.$getSummary();
       res.json(summary);
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -29,7 +47,7 @@ class LiquidObservatoryRoutes {
       const assets = await liquidObservatoryService.$getAssets();
       res.json({ assets, total: assets.length });
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -42,7 +60,7 @@ class LiquidObservatoryRoutes {
       }
       res.json(asset);
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -51,7 +69,7 @@ class LiquidObservatoryRoutes {
       const pegs = await liquidObservatoryService.$getPegs();
       res.json({ pegs, total: pegs.length });
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -60,7 +78,7 @@ class LiquidObservatoryRoutes {
       const federation = await liquidObservatoryService.$getFederation();
       res.json(federation);
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 }

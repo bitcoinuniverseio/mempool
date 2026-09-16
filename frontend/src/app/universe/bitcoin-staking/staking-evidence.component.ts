@@ -1,14 +1,17 @@
+import { observeStaking } from './staking-view';
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { BitcoinStakingApiService, EotsSlashingEvidence } from './bitcoin-staking.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-staking-evidence',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -16,22 +19,26 @@ import { BitcoinStakingApiService, EotsSlashingEvidence } from './bitcoin-stakin
         <div class="title-row d-flex flex-wrap align-items-center justify-content-between gap-2">
           <h1 class="m-0">EOTS Equivocation & Slashing Evidence</h1>
           <span class="badge bg-danger" *ngIf="evidenceList.length > 0">
-            {{ evidenceList.length }} Proven Equivocations
+            {{ evidenceList.length }} Reported Evidence Records
           </span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
-          Extractable One-Time Signature (EOTS) dual-signature evidence verification. Proves finality provider equivocation and derives the secret scalar hash.
+          Extractable One-Time Signature (EOTS) dual-signature evidence verification. Verification requires a supported cryptographic verifier; source records alone do not prove equivocation.
         </p>
 
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/protocols/bitcoin-staking">Overview</a>
-          <a class="nav-link" routerLink="/protocols/bitcoin-staking/delegations">Delegations</a>
-          <a class="nav-link" routerLink="/protocols/bitcoin-staking/finality-providers">Finality Providers</a>
-          <a class="nav-link" routerLink="/protocols/bitcoin-staking/parameters">Parameters</a>
-          <a class="nav-link active" routerLink="/protocols/bitcoin-staking/evidence">Slashing Evidence</a>
-          <a class="nav-link" routerLink="/protocols/bitcoin-staking/reconciliation">PoS Reconciliation</a>
+          <a class="nav-link" [routerLink]="'/protocols/bitcoin-staking' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/protocols/bitcoin-staking/delegations' | relativeUrl">Delegations</a>
+          <a class="nav-link" [routerLink]="'/protocols/bitcoin-staking/finality-providers' | relativeUrl">Finality Providers</a>
+          <a class="nav-link" [routerLink]="'/protocols/bitcoin-staking/parameters' | relativeUrl">Parameters</a>
+          <a class="nav-link active" [routerLink]="'/protocols/bitcoin-staking/evidence' | relativeUrl">Slashing Evidence</a>
+          <a class="nav-link" [routerLink]="'/protocols/bitcoin-staking/reconciliation' | relativeUrl">PoS Reconciliation</a>
         </nav>
       </header>
+
+      <div *ngIf="error" class="alert alert-warning" role="alert">
+        {{ error }}
+      </div>
 
       <div class="row g-4">
         <div class="col-12 col-lg-6">
@@ -43,30 +50,30 @@ import { BitcoinStakingApiService, EotsSlashingEvidence } from './bitcoin-stakin
 
             <div class="mb-2">
               <label class="form-label small text-muted" for="staking-evidence-public-key">EOTS Public Key</label>
-              <input type="text" class="form-control font-monospace small" id="staking-evidence-public-key" [(ngModel)]="eotsPk" />
+              <input type="text" class="form-control font-monospace small" id="staking-evidence-public-key" [(ngModel)]="eotsPk" (ngModelChange)="clearReport()" maxlength="4096" />
             </div>
 
             <div class="mb-2">
               <label class="form-label small text-muted" for="staking-evidence-nonce">Committed Nonce Point (R)</label>
-              <input type="text" class="form-control font-monospace small" id="staking-evidence-nonce" [(ngModel)]="noncePoint" />
+              <input type="text" class="form-control font-monospace small" id="staking-evidence-nonce" [(ngModel)]="noncePoint" (ngModelChange)="clearReport()" maxlength="4096" />
             </div>
 
             <div class="row g-2 mb-2">
               <div class="col-6">
                 <label class="form-label small text-muted" for="staking-evidence-message-a">Signed Message A</label>
-                <input type="text" class="form-control font-monospace small" id="staking-evidence-message-a" [(ngModel)]="msgA" />
+                <input type="text" class="form-control font-monospace small" id="staking-evidence-message-a" [(ngModel)]="msgA" (ngModelChange)="clearReport()" maxlength="4096" />
               </div>
               <div class="col-6">
                 <label class="form-label small text-muted" for="staking-evidence-message-b">Signed Message B</label>
-                <input type="text" class="form-control font-monospace small" id="staking-evidence-message-b" [(ngModel)]="msgB" />
+                <input type="text" class="form-control font-monospace small" id="staking-evidence-message-b" [(ngModel)]="msgB" (ngModelChange)="clearReport()" maxlength="4096" />
               </div>
             </div>
 
             <div class="mb-3">
               <label class="form-label small text-muted" for="staking-evidence-signature-a" i18n>Signature A</label>
-              <input type="text" class="form-control font-monospace small mb-1" id="staking-evidence-signature-a" [(ngModel)]="sigA" placeholder="Sig A" />
+              <input type="text" class="form-control font-monospace small mb-1" id="staking-evidence-signature-a" [(ngModel)]="sigA" (ngModelChange)="clearReport()" maxlength="4096" placeholder="Sig A" />
               <label class="form-label small text-muted" for="staking-evidence-signature-b" i18n>Signature B</label>
-              <input type="text" class="form-control font-monospace small" id="staking-evidence-signature-b" [(ngModel)]="sigB" placeholder="Sig B" />
+              <input type="text" class="form-control font-monospace small" id="staking-evidence-signature-b" [(ngModel)]="sigB" (ngModelChange)="clearReport()" maxlength="4096" placeholder="Sig B" />
             </div>
 
             <div class="d-flex gap-2">
@@ -95,8 +102,8 @@ import { BitcoinStakingApiService, EotsSlashingEvidence } from './bitcoin-stakin
             </div>
 
             <div *ngIf="report">
-              <div class="alert" [ngClass]="report.verified ? 'alert-danger' : 'alert-warning'">
-                <div class="fw-bold">{{ report.verified ? 'EQUIVOCATION CRYPTOGRAPHICALLY PROVEN' : 'INVALID EVIDENCE' }}</div>
+              <div class="alert" [ngClass]="'alert-warning'">
+                <div class="fw-bold">{{ report.status === 'insufficient_evidence' ? 'INSUFFICIENT EVIDENCE' : 'INVALID EVIDENCE' }}</div>
                 <div class="small mt-1">{{ report.reason }}</div>
               </div>
 
@@ -114,7 +121,7 @@ import { BitcoinStakingApiService, EotsSlashingEvidence } from './bitcoin-stakin
               </div>
 
               <div class="alert alert-info py-2 px-3 small m-0">
-                With this proof, any network observer can broadcast a valid Babylon slashing transaction burning the finality provider's locked stake.
+                No slashing transaction or authorization is established by this assessment.
               </div>
             </div>
           </div>
@@ -129,6 +136,7 @@ import { BitcoinStakingApiService, EotsSlashingEvidence } from './bitcoin-stakin
 })
 export class StakingEvidenceComponent implements OnInit, OnDestroy {
   evidenceList: EotsSlashingEvidence[] = [];
+  error: string | null = null;
   eotsPk = '02e4d94d3b64c679b3ee38734fe0d15e9858df34ab941b38f15d2a937964177d61';
   noncePoint = '028888888888888888888888888888888888888888888888888888888888888888';
   msgA = 'vote_block_alpha_height_858102';
@@ -138,6 +146,7 @@ export class StakingEvidenceComponent implements OnInit, OnDestroy {
   verifying = false;
   report: any = null;
   private sub?: Subscription;
+  private verifySub?: Subscription;
 
   constructor(
     private stakingApi: BitcoinStakingApiService,
@@ -145,16 +154,16 @@ export class StakingEvidenceComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.sub = this.stakingApi.getEvidence$().subscribe({
-      next: (data) => {
-        this.evidenceList = data;
-        this.cdr.markForCheck();
-      },
-      error: () => {},
-    });
+    this.sub = observeStaking(this.stakingApi.networkChanges$, () => {this.clearReport();this.evidenceList=[];this.error=null;},
+      () => this.stakingApi.getEvidence$(), data => {this.evidenceList=data;this.cdr.markForCheck();},
+      err => {this.error=err?.error?.error || loadFailureMessage(classifyLoadFailure(err));this.cdr.markForCheck();});
   }
+  clearReport(): void {this.verifySub?.unsubscribe();this.verifying=false;this.report=null;this.error=null;this.cdr.markForCheck();}
 
   loadSample(): void {
+    this.clearReport();
+    this.sigA = '';
+    this.sigB = '';
     this.eotsPk = '02e4d94d3b64c679b3ee38734fe0d15e9858df34ab941b38f15d2a937964177d61';
     this.noncePoint = '028888888888888888888888888888888888888888888888888888888888888888';
     this.msgA = 'vote_block_alpha_height_858102';
@@ -163,10 +172,11 @@ export class StakingEvidenceComponent implements OnInit, OnDestroy {
   }
 
   verifyEvidence(): void {
+    this.clearReport();
     this.verifying = true;
     this.report = null;
 
-    this.stakingApi
+    this.verifySub = this.stakingApi
       .verifyEvidence$({
         eots_pk: this.eotsPk,
         nonce_point: this.noncePoint,
@@ -177,17 +187,17 @@ export class StakingEvidenceComponent implements OnInit, OnDestroy {
       })
       .subscribe({
         next: (res) => {
-          this.report = res;
+          if (res?.verified !== false || !['invalid_evidence','insufficient_evidence'].includes(res.status) || typeof res.reason !== 'string') {
+            this.error = 'The response does not contain a supported cryptographic verification receipt. No equivocation proof was established.';
+            this.report = null;
+          } else {this.report = res;}
           this.verifying = false;
           this.cdr.markForCheck();
         },
         error: (err) => {
           this.verifying = false;
-          this.report = {
-            verified: false,
-            status: 'invalid_evidence',
-            reason: err.message || 'Evidence verification error',
-          };
+          this.report = null;
+          this.error = err?.error?.error || loadFailureMessage(classifyLoadFailure(err));
           this.cdr.markForCheck();
         },
       });
@@ -195,5 +205,7 @@ export class StakingEvidenceComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.sub?.unsubscribe();
+    this.verifySub?.unsubscribe();
+    this.report = null;
   }
 }

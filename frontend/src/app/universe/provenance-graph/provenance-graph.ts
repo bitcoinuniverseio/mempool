@@ -23,14 +23,15 @@ export type GraphEdgeKind = 'input' | 'output' | 'spend' | 'replacement' | 'pack
 
 export interface GraphTx {
   readonly txid: string;
-  readonly confirmed: boolean;
+  readonly confirmed: boolean | null;
   readonly feeSat: number | null;
-  readonly inputs: ReadonlyArray<{ readonly txid: string; readonly vout: number; readonly valueSat: number }>;
+  readonly inputs: ReadonlyArray<{ readonly txid: string; readonly vout: number; readonly valueSat: number | null }>;
   readonly outputs: ReadonlyArray<{ readonly vout: number; readonly valueSat: number }>;
 }
 
 export interface GraphOutspend {
-  readonly spent: boolean;
+  readonly spent: boolean | null;
+  readonly confirmed?: boolean | null;
   readonly txid: string | null;
 }
 
@@ -69,25 +70,25 @@ function inputNode(input: GraphTx['inputs'][number]): GraphNode {
   };
 }
 
-function outputNode(txid: string, vout: number, valueSat: number, spent: boolean, spender: string | null): GraphNode {
+function outputNode(txid: string, vout: number, valueSat: number, spent: boolean | null, spender: string | null): GraphNode {
   return {
     id: `out:${txid}:${vout}`,
     kind: 'output',
     label: `output ${vout}`,
     path: `/outpoint/${txid}/${vout}`,
     valueSat,
-    state: spent ? 'spent' : 'unspent',
+    state: spent === null ? 'unknown' : spent ? 'spent' : 'unspent',
   };
 }
 
-function txNode(txid: string, confirmed: boolean): GraphNode {
+function txNode(txid: string, confirmed: boolean | null): GraphNode {
   return {
     id: `tx:${txid}`,
     kind: 'transaction',
-    label: txid.length > 16 ? `${txid.slice(0, 12)}...` : txid,
+    label: txid.length > 16 ? `${txid.slice(0, 10)}…` : txid,
     path: `/tx/${txid}`,
     valueSat: null,
-    state: confirmed ? 'confirmed' : 'pending',
+    state: confirmed === null ? 'unknown' : confirmed ? 'confirmed' : 'pending',
   };
 }
 
@@ -95,16 +96,20 @@ function txNode(txid: string, confirmed: boolean): GraphNode {
 export function replacementPairs(tree: RbfTree | null | undefined): Array<{ readonly replaced: string; readonly replacement: string }> {
   const pairs: Array<{ readonly replaced: string; readonly replacement: string }> = [];
   if (!tree) { return pairs; }
-  const walk = (node: RbfTree): void => {
-    const replacementId = node.tx?.txid;
-    for (const child of node.replaces ?? []) {
-      if (child.tx?.txid && replacementId) {
-        pairs.push({ replaced: child.tx.txid, replacement: replacementId });
+  const queue = [tree];
+  const visited = new Set<RbfTree>();
+  while (queue.length && visited.size < MAX_NODES * 4) {
+    const node = queue.shift();
+    if (!node || visited.has(node)) { continue; }
+    visited.add(node);
+    for (const child of (Array.isArray(node.replaces) ? node.replaces : []).slice(0, MAX_NODES * 4)) {
+      if (pairs.length >= MAX_NODES * 4) { return pairs; }
+      if (child?.tx?.txid && node.tx?.txid) {
+        pairs.push({ replaced: child.tx.txid, replacement: node.tx.txid });
       }
-      walk(child);
+      if (child && !visited.has(child)) { queue.push(child); }
     }
-  };
-  walk(tree);
+  }
   return pairs;
 }
 
@@ -114,7 +119,7 @@ export function replacementPairs(tree: RbfTree | null | undefined): Array<{ read
  * The center transaction, the prevouts it spends, the outputs it creates and
  * what spent them, plus the replacement and package edges the node
  * reported. Every extra set is optional: a graph without replacement or
- * package data is still the true graph of the value flow, and the note says
+ * package data is still the true graph of the observed transaction connections, and the note says
  * what could not be read.
  */
 export function buildProvenanceGraph(
@@ -122,6 +127,7 @@ export function buildProvenanceGraph(
   outspends: readonly GraphOutspend[],
   extras: {
     readonly rbfHistory: RbfTree | null;
+    readonly rbfAvailable?: boolean;
     readonly replaces: readonly string[];
     readonly packageTxids: readonly string[];
   } = { rbfHistory: null, replaces: [], packageTxids: [] },
@@ -142,11 +148,13 @@ export function buildProvenanceGraph(
   const center = txNode(tx.txid, tx.confirmed);
   add(center);
 
+  let drawnInputs = 0;
   for (const input of tx.inputs) {
     if (!add(inputNode(input))) {
-      notes.push(`Prevouts past the first ${MAX_NODES - nodes.length} are not drawn. The full list is on the transaction page.`);
+      notes.push(`The remaining ${tx.inputs.length - drawnInputs} prevouts are not drawn. The full list is on the transaction page.`);
       break;
     }
+    drawnInputs++;
     edges.push({
       from: `in:${input.txid}:${input.vout}`,
       to: center.id,
@@ -156,8 +164,15 @@ export function buildProvenanceGraph(
   }
 
   let truncatedOutputs = false;
+  let truncatedSpenders = 0;
+  if (tx.outputs.some((_, index) => outspends[index]?.spent == null)) {
+    notes.push("Spend status is unknown for outputs without a valid source response.");
+  }
+  if (tx.inputs.some(input => input.valueSat === null)) {
+    notes.push("Some previous output amounts are unavailable; their values remain unknown.");
+  }
   tx.outputs.forEach((output, index) => {
-    const outspend = outspends[index] ?? { spent: false, txid: null };
+    const outspend = outspends[index] ?? { spent: null, txid: null };
     if (!add(outputNode(tx.txid, output.vout, output.valueSat, outspend.spent, outspend.txid))) {
       truncatedOutputs = true;
       return;
@@ -169,8 +184,8 @@ export function buildProvenanceGraph(
       valueSat: output.valueSat,
     });
     if (outspend.spent && outspend.txid) {
-      const spender = txNode(outspend.txid, false);
-      add(spender);
+      const spender = { ...txNode(outspend.txid, outspend.confirmed ?? null), kind: 'spender' as const };
+      if (!add(spender)) { truncatedSpenders++; return; }
       edges.push({
         from: `out:${tx.txid}:${output.vout}`,
         to: spender.id,
@@ -179,6 +194,7 @@ export function buildProvenanceGraph(
       });
     }
   });
+  if (truncatedSpenders) { notes.push(`${truncatedSpenders} spenders are not drawn because the node limit was reached.`); }
   if (truncatedOutputs) {
     notes.push(`Outputs past node ${MAX_NODES} are not drawn. The full list is on the transaction page.`);
   }
@@ -188,8 +204,8 @@ export function buildProvenanceGraph(
   // same lineage. Each pair is one edge.
   for (const pair of replacementPairs(extras.rbfHistory)) {
     if (pair.replaced === tx.txid || pair.replacement === tx.txid) {
-      const replacedNode = txNode(pair.replaced, true);
-      const replacementNode = txNode(pair.replacement, tx.confirmed);
+      const replacedNode = { ...txNode(pair.replaced, null), state: 'replaced' };
+      const replacementNode = txNode(pair.replacement, pair.replacement === tx.txid ? tx.confirmed : null);
       if (add(replacedNode) && add(replacementNode)) {
         edges.push({
           from: replacedNode.id,
@@ -202,7 +218,7 @@ export function buildProvenanceGraph(
   }
   for (const txid of extras.replaces) {
     if (!txid || txid === tx.txid) { continue; }
-    const older = txNode(txid, true);
+    const older = { ...txNode(txid, null), state: 'replaced' };
     if (add(older)) {
       edges.push({ from: older.id, to: center.id, kind: 'replacement', valueSat: null });
     }
@@ -210,7 +226,7 @@ export function buildProvenanceGraph(
 
   // The package or cluster the node reports, when the transaction is still
   // unconfirmed. Confirmed transactions have no package.
-  if (!tx.confirmed) {
+  if (tx.confirmed === false) {
     for (const txid of extras.packageTxids) {
       if (!txid || txid === tx.txid) { continue; }
       const relative = txNode(txid, false);
@@ -220,8 +236,8 @@ export function buildProvenanceGraph(
     }
   }
 
-  if (extras.rbfHistory === null && extras.replaces.length === 0) {
-    notes.push('No replacement history was available. The graph shows the value flow only.');
+  if (extras.rbfAvailable !== true && extras.rbfHistory === null && extras.replaces.length === 0) {
+    notes.push('No replacement history was available. The graph shows the observed transaction connections only.');
   }
   if (notes.length === 0 && nodes.length >= MAX_NODES) {
     notes.push(`The graph is bounded at ${MAX_NODES} nodes.`);
@@ -239,7 +255,7 @@ const CSV_COLUMNS = ['from', 'to', 'kind', 'value_sat'] as const;
 
 function csvField(value: unknown): string {
   const text = String(value ?? '');
-  return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+  return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 }
 
 /** The edge list as CSV: the same facts the drawing shows, as data. */
@@ -335,7 +351,7 @@ export function layoutGraph(graph: ProvenanceGraph): GraphLayout {
     })
     .filter((edge): edge is LayoutEdge => edge !== null);
 
-  const width = PADDING * 2 + 3 * COLUMN_WIDTH;
-  const height = PADDING * 2 + Math.max(0, maxRows - 1) * ROW_HEIGHT;
+  const width = PADDING * 2 + 3 * COLUMN_WIDTH + NODE_WIDTH;
+  const height = PADDING * 2 + Math.max(0, maxRows - 1) * ROW_HEIGHT + NODE_HEIGHT;
   return { nodes, edges, width, height };
 }

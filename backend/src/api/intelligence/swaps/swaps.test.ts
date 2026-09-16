@@ -7,6 +7,7 @@ import { SwapObservationStore } from './swaps-observations';
 import bitcoinClient from '../../bitcoin/bitcoin-client';
 import config from '../../../config';
 import routes from './swaps.routes';
+import { GENESIS } from '../utxo/utxo-evidence';
 
 jest.mock('../../bitcoin/bitcoin-client', () => ({ __esModule: true, default: { getBlockchainInfo: jest.fn(), getRawTransaction: jest.fn(), getTxOut: jest.fn(), getBlockHeader: jest.fn(), getBlockHash: jest.fn() } }));
 initEccLib(ecc);
@@ -95,12 +96,31 @@ describe('Swap evidence and unsigned recovery with controlled unit authority', (
 
 describe('Configured first-party node authority', () => {
   const rpc = bitcoinClient as any;
-  beforeEach(() => { jest.clearAllMocks(); config.MEMPOOL.NETWORK = 'signet'; rpc.getBlockchainInfo.mockResolvedValue({ chain: 'signet', blocks: 200, bestblockhash: checkpoint.block_hash, initialblockdownload: false }); rpc.getRawTransaction.mockResolvedValue({ hex: lockup.toHex(), blockhash: '22'.repeat(32) }); rpc.getBlockHeader.mockResolvedValue({ height: 198, confirmations: 3 }); rpc.getBlockHash.mockResolvedValue('22'.repeat(32)); rpc.getTxOut.mockResolvedValue({ bestblock: checkpoint.block_hash, scriptPubKey: { hex: payment.output!.toString('hex') } }); });
+  beforeEach(() => { jest.clearAllMocks(); config.MEMPOOL.NETWORK = 'signet'; rpc.getBlockchainInfo.mockResolvedValue({ chain: 'signet', blocks: 200, bestblockhash: checkpoint.block_hash, initialblockdownload: false }); rpc.getRawTransaction.mockResolvedValue({ hex: lockup.toHex(), blockhash: '22'.repeat(32) }); rpc.getBlockHeader.mockResolvedValue({ hash: '22'.repeat(32), height: 198, confirmations: 3 }); rpc.getBlockHash.mockImplementation(async (height: number) => height === 0 ? GENESIS.signet : '22'.repeat(32)); rpc.getTxOut.mockResolvedValue({ bestblock: checkpoint.block_hash, scriptPubKey: { hex: payment.output!.toString('hex') } }); });
   it('checks active block and UTXO using the shared configured RPC', /** @asyncUnsafe Jest owns rejected test promises. */ async () => { const found = await new BitcoinSwapAuthority().lockup(ctx, lockup.getId(), 1); expect(found.confirmations).toBe(3); expect(found.unspent).toBe(true); expect(rpc.getTxOut).toHaveBeenCalledWith(lockup.getId(), 1, true); });
   it('rejects network mismatch before RPC', /** @asyncUnsafe Jest owns rejected test promises. */ async () => { await expect(new BitcoinSwapAuthority().lockup({ ...ctx, network: 'mainnet' }, lockup.getId(), 1)).rejects.toMatchObject({ code: 'wrong-network' }); expect(rpc.getBlockchainInfo).not.toHaveBeenCalled(); });
   it('checks actual node-reported network', /** @asyncUnsafe Jest owns rejected test promises. */ async () => { rpc.getBlockchainInfo.mockResolvedValue({ chain: 'main' }); await expect(new BitcoinSwapAuthority().lockup(ctx, lockup.getId(), 1)).rejects.toMatchObject({ code: 'wrong-network' }); });
   it('rejects displaced transactions', /** @asyncUnsafe Jest owns rejected test promises. */ async () => { rpc.getBlockHeader.mockResolvedValue({ height: 198, confirmations: -1 }); await expect(new BitcoinSwapAuthority().lockup(ctx, lockup.getId(), 1)).rejects.toMatchObject({ code: 'reorged' }); });
   it('rejects an absent UTXO RPC result instead of treating it as unspent', /** @asyncUnsafe Jest owns rejected test promises. */ async () => { rpc.getTxOut.mockResolvedValue(undefined); await expect(new BitcoinSwapAuthority().lockup(ctx, lockup.getId(), 1)).rejects.toMatchObject({ code: 'invalid' }); });
+  it.each([undefined, null, 0, 'false', true])('rejects malformed or syncing IBD state %j', async initialblockdownload => {
+    rpc.getBlockchainInfo.mockResolvedValue({chain:'signet',blocks:200,bestblockhash:checkpoint.block_hash,initialblockdownload});
+    await expect(new BitcoinSwapAuthority().lockup(ctx,lockup.getId(),1)).rejects.toMatchObject({code:'unavailable-source'});
+    expect(rpc.getRawTransaction).not.toHaveBeenCalled();
+  });
+  it('rejects negative checkpoint height and mismatched genesis', async () => {
+    rpc.getBlockchainInfo.mockResolvedValueOnce({chain:'signet',blocks:-1,bestblockhash:checkpoint.block_hash,initialblockdownload:false});
+    await expect(new BitcoinSwapAuthority().lockup(ctx,lockup.getId(),1)).rejects.toMatchObject({code:'unavailable-source'});
+    rpc.getBlockHash.mockResolvedValue(GENESIS.regtest);
+    await expect(new BitcoinSwapAuthority().lockup(ctx,lockup.getId(),1)).rejects.toMatchObject({code:'wrong-network'});
+  });
+  it.each([{confirmations:undefined},{confirmations:NaN},{confirmations:2},{height:-1},{hash:'33'.repeat(32)}])('rejects unbound or malformed block evidence %j', async changes => {
+    rpc.getBlockHeader.mockResolvedValue({hash:'22'.repeat(32),height:198,confirmations:3,...changes});
+    await expect(new BitcoinSwapAuthority().lockup(ctx,lockup.getId(),1)).rejects.toMatchObject({code:'reorged'});
+  });
+  it('rejects a changed checkpoint height even when its hash is repeated', async () => {
+    rpc.getBlockchainInfo.mockResolvedValueOnce({chain:'signet',blocks:200,bestblockhash:checkpoint.block_hash,initialblockdownload:false}).mockResolvedValueOnce({chain:'signet',blocks:201,bestblockhash:checkpoint.block_hash,initialblockdownload:false});
+    await expect(new BitcoinSwapAuthority().lockup(ctx,lockup.getId(),1)).rejects.toMatchObject({code:'source-changed'});
+  });
   it('bounds concurrent reads', /** @asyncUnsafe Jest owns rejected test promises. */ async () => { const node = new BitcoinSwapAuthority(), first = node.lockup(ctx, lockup.getId(), 1); await expect(node.lockup(ctx, lockup.getId(), 1)).rejects.toMatchObject({ code: 'source-busy' }); await first; });
 });
 
@@ -144,4 +164,8 @@ describe('Real route handlers', () => {
   });
   it.each([{ current_height: 9999999 }, { privateKey: 'sensitive' }])('rejects unsafe request fields %j', /** @asyncUnsafe Jest owns rejected test promises. */ async extra => { const res: any = { setHeader: jest.fn(), status: jest.fn(), json: jest.fn() }; res.status.mockReturnValue(res); res.json.mockReturnValue(res); await handlers.get('POST /api/v1/intelligence/swaps/chain-context')({ method: 'POST', path: '/chain-context', query: ctx, body: { ...pkg, ...extra } }, res); expect(res.status).toHaveBeenCalledWith(400); expect(res.json.mock.calls[0][0].stage).toBe('invalid'); });
   it('rejects partial network context', () => expect(() => swapContext(undefined, 'signet')).toThrow());
+  it.each([{swap_id:{privateKey:'test-only-marker'}},{provider_id:['test-only-marker']},{expected_amount_sats:'100000'}])('rejects nested or mistyped public package fields %j', async changes=>{
+    const res=response();await handlers.get('POST /api/v1/intelligence/swaps/chain-context')({method:'POST',path:'/chain-context',query:ctx,body:{...pkg,...changes}},res);
+    expect(res.status).toHaveBeenCalledWith(400);expect(res.json.mock.calls[0][0].error).toContain('scalar');
+  });
 });

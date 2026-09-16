@@ -1,7 +1,16 @@
 import { Application, Request, Response } from 'express';
 import config from '../../config';
 import { handleError } from '../../utils/api';
-import { l2ObservatoryService } from './l2-observatory.service';
+import { L2ObservatoryEvidenceError, l2ObservatoryService } from './l2-observatory.service';
+
+/** An absent source is a 503 that names the source, never a 500 and never an empty list. */
+function fail(req: Request, res: Response, e: unknown): void {
+  if (e instanceof L2ObservatoryEvidenceError) {
+    res.status(e.status).json({ stage: e.code, error: e.message });
+    return;
+  }
+  handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+}
 
 class L2ObservatoryRoutes {
   public initRoutes(app: Application): void {
@@ -19,7 +28,7 @@ class L2ObservatoryRoutes {
       const systems = await l2ObservatoryService.$getSystems();
       res.json({ systems, total: systems.length });
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -32,7 +41,7 @@ class L2ObservatoryRoutes {
       }
       res.json(system);
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -42,7 +51,7 @@ class L2ObservatoryRoutes {
       const challenges = await l2ObservatoryService.$getChallenges(systemId);
       res.json({ challenges, total: challenges.length });
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -55,7 +64,7 @@ class L2ObservatoryRoutes {
       }
       res.json(audit);
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 }

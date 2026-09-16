@@ -1,13 +1,14 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { Subscription, combineLatest } from 'rxjs';
 import { BootstrapApiService, AssumeUtxoSnapshot } from './bootstrap.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-bootstrap-snapshots',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -19,15 +20,15 @@ import { BootstrapApiService, AssumeUtxoSnapshot } from './bootstrap.service';
           </span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
-          Verified serialized UTXO set snapshots, SHA-256 integrity checksums, and Base UTXO hash commitments.
+          Source-reported serialized UTXO set snapshots, SHA-256 integrity checksums, and Base UTXO hash commitments.
         </p>
 
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/node/bootstrap">Overview</a>
-          <a class="nav-link active" routerLink="/node/bootstrap/snapshots">Snapshots</a>
-          <a class="nav-link" routerLink="/node/bootstrap/verify">Integrity Verifier</a>
-          <a class="nav-link" routerLink="/node/bootstrap/planner">Bootstrap Planner</a>
-          <a class="nav-link" routerLink="/node/bootstrap/chainstates">Dual Chainstates</a>
+          <a class="nav-link" [routerLink]="'/node/bootstrap' | relativeUrl">Overview</a>
+          <a class="nav-link active" [routerLink]="'/node/bootstrap/snapshots' | relativeUrl">Snapshots</a>
+          <a class="nav-link" [routerLink]="'/node/bootstrap/verify' | relativeUrl">Integrity Verifier</a>
+          <a class="nav-link" [routerLink]="'/node/bootstrap/planner' | relativeUrl">Bootstrap Planner</a>
+          <a class="nav-link" [routerLink]="'/node/bootstrap/chainstates' | relativeUrl">Dual Chainstates</a>
         </nav>
       </header>
 
@@ -49,7 +50,7 @@ import { BootstrapApiService, AssumeUtxoSnapshot } from './bootstrap.service';
                 <th>Block Hash</th>
                 <th>Coins Count</th>
                 <th>Size</th>
-                <th>UTXO Hash (MuHash)</th>
+                <th>Serialized UTXO Hash</th>
                 <th>Core Version</th>
                 <th>Action</th>
               </tr>
@@ -63,7 +64,7 @@ import { BootstrapApiService, AssumeUtxoSnapshot } from './bootstrap.service';
                 <td class="font-monospace small text-truncate" style="max-width: 180px;">{{ s.base_utxo_hash }}</td>
                 <td><span class="badge bg-secondary font-monospace">{{ s.release_version }}</span></td>
                 <td>
-                  <a [routerLink]="['/node/bootstrap/snapshot', s.height]" class="btn btn-sm btn-outline-primary">
+                  <a [routerLink]="['/node/bootstrap/snapshot' | relativeUrl, s.height]" class="btn btn-sm btn-outline-primary">
                     Details
                   </a>
                 </td>
@@ -84,6 +85,7 @@ export class BootstrapSnapshotsComponent implements OnInit, OnDestroy {
   error: string | null = null;
   snapshots: AssumeUtxoSnapshot[] = [];
   private sub?: Subscription;
+  private request?: Subscription;
 
   constructor(
     private bootstrapApi: BootstrapApiService,
@@ -91,21 +93,18 @@ export class BootstrapSnapshotsComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.sub = this.bootstrapApi.getSnapshots$().subscribe({
-      next: (data) => {
-        this.snapshots = data;
-        this.loading = false;
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        this.error = err.message || 'Failed to load snapshots';
-        this.loading = false;
-        this.cdr.markForCheck();
-      },
+    this.sub = this.bootstrapApi.networkChanged$.subscribe(() => {
+      this.request?.unsubscribe();this.snapshots=[];this.error=null;this.loading=true;this.cdr.markForCheck();
+
+      this.request = this.bootstrapApi.getSnapshots$().subscribe({
+        next: data => {if (!(Array.isArray(data) && data.every(s => (s as any).network === this.bootstrapApi.network))) {this.error='Snapshot catalogue response is not bound to this network and reference.';} else {this.snapshots=data;}this.loading=false;this.cdr.markForCheck();},
+        error: err => {this.error=err?.error?.error || err?.message || 'Snapshot source unavailable';this.loading=false;this.cdr.markForCheck();}
+      });
     });
   }
 
   ngOnDestroy(): void {
     this.sub?.unsubscribe();
+    this.request?.unsubscribe();
   }
 }

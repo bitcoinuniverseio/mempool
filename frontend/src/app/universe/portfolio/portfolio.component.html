@@ -406,7 +406,7 @@
                         <span *ngIf="event.confirmation === 'confirmed'" i18n="universe.portfolio.activity-confirmed">Block {{ event.blockHeightAtomic }}</span>
                         <span class="state-chip tone-warn" *ngIf="event.confirmation === 'mempool-candidate'" i18n="universe.portfolio.activity-pending">Pending</span>
                       </td>
-                      <td><a [routerLink]="['/tx', event.txid]" class="identifier">{{ shorten(event.txid, 8) }}</a></td>
+                      <td><a [routerLink]="['/tx' | relativeUrl, event.txid]" class="identifier">{{ shorten(event.txid, 8) }}</a></td>
                     </tr>
                   </tbody>
                 </table>
@@ -488,7 +488,7 @@
                           <span class="muted" i18n="universe.portfolio.point-unpriced">no price for this day</span>
                         </ng-template>
                       </td>
-                      <td><a [routerLink]="['/tx', point.txid]" class="identifier">{{ shorten(point.txid, 8) }}</a></td>
+                      <td><a [routerLink]="['/tx' | relativeUrl, point.txid]" class="identifier">{{ shorten(point.txid, 8) }}</a></td>
                     </tr>
                   </tbody>
                 </table>

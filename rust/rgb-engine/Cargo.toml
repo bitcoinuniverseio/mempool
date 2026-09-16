@@ -1,0 +1,26 @@
+[package]
+name = "universe-rgb-engine"
+version = "0.1.0"
+edition = "2021"
+[lib]
+crate-type = ["cdylib", "rlib"]
+[dependencies]
+rgb-ops = { git = "https://github.com/rgb-protocol/rgb-ops", rev = "650370c6603d9d7f2810b91489f41444acfc867f", features = ["serde"] }
+rgb-consensus = { git = "https://github.com/rgb-protocol/rgb-consensus", rev = "6d77b2ffc4e1a5db0e6a190c5010aadd1586ddb4", features = ["serde"] }
+rgb-schemas = { git = "https://github.com/rgb-protocol/rgb-schemas", rev = "c5e43e987d18a2398d5f5f6c78629480fd792abd" }
+rgb-strict-encoding = "=1.0.2"
+amplify = "=4.8.1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+hex = "0.4"
+wasm-bindgen = "=0.2.114"
+[patch.crates-io]
+rgb-ops = { git = "https://github.com/rgb-protocol/rgb-ops", rev = "650370c6603d9d7f2810b91489f41444acfc867f" }
+rgb-consensus = { git = "https://github.com/rgb-protocol/rgb-consensus", rev = "6d77b2ffc4e1a5db0e6a190c5010aadd1586ddb4" }
+rgb-schemas = { git = "https://github.com/rgb-protocol/rgb-schemas", rev = "c5e43e987d18a2398d5f5f6c78629480fd792abd" }
+rgb-aluvm = { git = "https://github.com/rgb-protocol/rgb-aluvm", rev = "ea0705ac83dc7394ff64367916fd9c3391c70332" }
+rgb-strict-types = { git = "https://github.com/rgb-protocol/rgb-strict-types", rev = "8dfd9210f7c9d454409ac44f93cd72b7cd8c0a10" }
+rgb-strict-encoding = { path = "vendor/rgb-strict-encoding/rust" }
+rgb-ascii-armor = { git = "https://github.com/rgb-protocol/rgb-ascii-armor", rev = "6cd400ec3cdbb5c17252e0f2d71c7ab50de57733" }
+rgb-invoicing = { git = "https://github.com/rgb-protocol/rgb-ops", rev = "650370c6603d9d7f2810b91489f41444acfc867f" }
+rgb-strict-encoding-derive = { path = "vendor/rgb-strict-encoding/rust/derive" }

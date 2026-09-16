@@ -1,11 +1,12 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-multiparty-policies',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -19,12 +20,12 @@ import { RouterModule } from '@angular/router';
         </p>
 
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/tools/multiparty">Overview</a>
-          <a class="nav-link" routerLink="/tools/multiparty/musig2">MuSig2 Coordinator</a>
-          <a class="nav-link" routerLink="/tools/multiparty/bsms">BSMS Setup (BIP129)</a>
-          <a class="nav-link active" routerLink="/tools/multiparty/policies">Wallet Policies (BIP388)</a>
-          <a class="nav-link" routerLink="/tools/multiparty/labels">Labels (BIP329)</a>
-          <a class="nav-link" routerLink="/tools/multiparty/compatibility">Hardware Matrix</a>
+          <a class="nav-link" [routerLink]="'/tools/multiparty' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/tools/multiparty/musig2' | relativeUrl">MuSig2 Coordinator</a>
+          <a class="nav-link" [routerLink]="'/tools/multiparty/bsms' | relativeUrl">BSMS Setup (BIP129)</a>
+          <a class="nav-link active" [routerLink]="'/tools/multiparty/policies' | relativeUrl">Wallet Policies (BIP388)</a>
+          <a class="nav-link" [routerLink]="'/tools/multiparty/labels' | relativeUrl">Labels (BIP329)</a>
+          <a class="nav-link" [routerLink]="'/tools/multiparty/compatibility' | relativeUrl">Hardware Matrix</a>
         </nav>
       </header>
 

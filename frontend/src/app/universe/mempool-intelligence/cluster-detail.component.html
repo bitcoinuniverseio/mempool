@@ -1,9 +1,9 @@
 <div class="container-xl cluster-detail">
   <nav class="crumbs" aria-label="Breadcrumb" i18n-aria-label="mempool.cluster.crumbs-label">
-    <a routerLink="/mempool/clusters" i18n="mempool.cluster.back">All clusters</a>
+    <a [routerLink]="'/mempool/clusters' | relativeUrl" i18n="mempool.cluster.back">All clusters</a>
     <ng-container *ngIf="fromTransaction">
       <span aria-hidden="true">/</span>
-      <a [routerLink]="['/tx', reference]" i18n="mempool.cluster.back-tx">This transaction</a>
+      <a [routerLink]="['/tx' | relativeUrl, reference]" i18n="mempool.cluster.back-tx">This transaction</a>
     </ng-container>
   </nav>
 
@@ -15,7 +15,7 @@
     <h1 i18n="mempool.cluster.missing-heading">This cluster is not in the mempool</h1>
     <p>{{ error }}</p>
     <p>
-      <a [routerLink]="['/tx', reference]" i18n="mempool.cluster.try-tx">
+      <a [routerLink]="['/tx' | relativeUrl, reference]" i18n="mempool.cluster.try-tx">
         Look the transaction up instead
       </a>
     </p>
@@ -124,7 +124,7 @@
           <tbody>
             <tr *ngFor="let tx of group.transactions; trackBy: trackByTxid">
               <th scope="row">
-                <a [routerLink]="['/tx', tx.txid]" [attr.aria-label]="nodeLabel(tx)">
+                <a [routerLink]="['/tx' | relativeUrl, tx.txid]" [attr.aria-label]="nodeLabel(tx)">
                   <code>{{ short(tx.txid) }}</code>
                 </a>
               </th>

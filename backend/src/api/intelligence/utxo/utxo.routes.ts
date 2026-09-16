@@ -1,74 +1,14 @@
-import { Application, Request, Response } from 'express';
-import { utxoIntelligenceService } from './utxo-intelligence.service';
-import { handleError } from '../../../utils/api';
-
-class UtxoRoutes {
-  public initRoutes(app: Application): void {
-    const prefix = '/api/v1/intelligence/utxo/';
-
-    app
-      .get(prefix + 'overview', this.$getOverview)
-      .get(prefix + 'cohorts', this.$getCohorts)
-      .get(prefix + 'history', this.$getHistory)
-      .get(prefix + 'economic-thresholds', this.$getThresholds)
-      .get(prefix + 'spend-transitions', this.$getTransitions)
-      .get(prefix + 'reconciliation', this.$getReconciliation);
-  }
-
-  private async $getOverview(req: Request, res: Response): Promise<void> {
-    try {
-      const overview = utxoIntelligenceService.getOverview();
-      res.json(overview);
-    } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch UTXO overview');
-    }
-  }
-
-  private async $getCohorts(req: Request, res: Response): Promise<void> {
-    try {
-      const cohorts = utxoIntelligenceService.getCohorts();
-      res.json(cohorts);
-    } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch UTXO cohorts');
-    }
-  }
-
-  private async $getHistory(req: Request, res: Response): Promise<void> {
-    try {
-      const transitions = utxoIntelligenceService.getSpendTransitions(30);
-      res.json({ history: transitions, count: transitions.length });
-    } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch UTXO history');
-    }
-  }
-
-  private async $getThresholds(req: Request, res: Response): Promise<void> {
-    try {
-      const thresholds = utxoIntelligenceService.getEconomicThresholds();
-      res.json({ thresholds, count: thresholds.length });
-    } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch economic thresholds');
-    }
-  }
-
-  private async $getTransitions(req: Request, res: Response): Promise<void> {
-    try {
-      const limit = req.query.limit ? parseInt(String(req.query.limit), 10) : 10;
-      const transitions = utxoIntelligenceService.getSpendTransitions(limit);
-      res.json({ transitions, count: transitions.length });
-    } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch spend transitions');
-    }
-  }
-
-  private async $getReconciliation(req: Request, res: Response): Promise<void> {
-    try {
-      const report = utxoIntelligenceService.getReconciliation();
-      res.json(report);
-    } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch reconciliation report');
-    }
-  }
+import { Application,Request,Response } from 'express';
+import { UtxoIntelligenceService,utxoIntelligenceService } from './utxo-intelligence.service';
+import { UtxoEvidenceError } from './utxo-evidence';
+export class UtxoRoutes {
+ constructor(private readonly service:UtxoIntelligenceService=utxoIntelligenceService){}
+ initRoutes(app:Application):void{const prefix='/api/v1/intelligence/utxo/';
+ const route=(fn:(req:Request)=>unknown)=>(req:Request,res:Response)=>{Promise.resolve().then(()=>fn(req)).then(data=>res.json(data)).catch(e=>res.status(e instanceof UtxoEvidenceError?e.status:503).json({stage:e instanceof UtxoEvidenceError?e.code:'utxo-source-unavailable',error:e instanceof UtxoEvidenceError?e.message:'Owned UTXO evidence is unavailable.'}));};
+ app.get(prefix+'overview',route(()=>this.service.getOverview()));app.get(prefix+'cohorts',route(()=>this.service.getCohorts()));
+ app.get(prefix+'history',route(async()=>{const history=await this.service.getSpendTransitions(30);return {history,count:history.length};}));
+ app.get(prefix+'economic-thresholds',route(async()=>{const thresholds=await this.service.getEconomicThresholds();return {thresholds,count:thresholds.length};}));
+ app.get(prefix+'spend-transitions',route(async req=>{const raw=req.query.limit;if(raw!==undefined&&(typeof raw!=='string'||!/^([1-9][0-9]{0,2})$/.test(raw)||Number(raw)>288))throw new UtxoEvidenceError('invalid-utxo-limit','Transition limit must be an integer from1 to288.',400);const transitions=await this.service.getSpendTransitions(raw===undefined?10:Number(raw));return {transitions,count:transitions.length};}));
+ app.get(prefix+'reconciliation',route(()=>this.service.getReconciliation()));}
 }
-
 export default new UtxoRoutes();

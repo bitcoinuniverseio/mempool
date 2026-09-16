@@ -1,86 +1,21 @@
-import { Application, Request, Response } from 'express';
-import { relayCollectorService } from './relay-collector.service';
-import { handleError } from '../../../utils/api';
-import { eventBus } from '../events/intelligence-event-bus';
-
-class RelayRoutes {
-  public initRoutes(app: Application): void {
-    const prefix = '/api/v1/intelligence/relay/';
-
-    app
-      .get(prefix + 'overview', this.$getOverview)
-      .get(prefix + 'transactions/:txid', this.$getTransactionRelay)
-      .get(prefix + 'sensors', this.$getSensors)
-      .get(prefix + 'policy-differences', this.$getPolicyDifferences)
-      .get(prefix + 'transports', this.$getTransports)
-      .get(prefix + 'stream', this.$getRelayStream);
-  }
-
-  private async $getOverview(req: Request, res: Response): Promise<void> {
-    try {
-      const overview = relayCollectorService.getOverview();
-      res.json(overview);
-    } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch relay overview');
-    }
-  }
-
-  private async $getTransactionRelay(req: Request, res: Response): Promise<void> {
-    try {
-      const txid = req.params.txid;
-      const relay = relayCollectorService.getPropagationForTx(txid);
-      res.json(relay);
-    } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch transaction relay');
-    }
-  }
-
-  private async $getSensors(req: Request, res: Response): Promise<void> {
-    try {
-      const sensors = relayCollectorService.getSensors();
-      res.json({ sensors, total: sensors.length });
-    } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch sensors');
-    }
-  }
-
-  private async $getPolicyDifferences(req: Request, res: Response): Promise<void> {
-    try {
-      const diffs = relayCollectorService.getPolicyDifferences();
-      res.json({ differences: diffs, total: diffs.length });
-    } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch policy differences');
-    }
-  }
-
-  private async $getTransports(req: Request, res: Response): Promise<void> {
-    try {
-      const metrics = relayCollectorService.getTransportMetrics();
-      res.json(metrics);
-    } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch transport metrics');
-    }
-  }
-
-  private async $getRelayStream(req: Request, res: Response): Promise<void> {
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-    res.flushHeaders();
-
-    const unsubscribe = eventBus.subscribe('btc.*.relay.*', (envelope) => {
-      res.write(`event: intelligence.relay.transaction\ndata: ${JSON.stringify(envelope)}\n\n`);
-    });
-
-    const keepAliveTimer = setInterval(() => {
-      res.write(': keepalive\n\n');
-    }, 15000);
-
-    req.on('close', () => {
-      clearInterval(keepAliveTimer);
-      unsubscribe();
-    });
+import { Application,Request,Response } from 'express';
+import { RelayCollectorService,RelayEvidenceError,relayCollectorService } from './relay-collector.service';
+import { streamRelay } from './relay-stream';
+export class RelayRoutes {
+  constructor(private readonly collector:RelayCollectorService=relayCollectorService){}
+  public initRoutes(app:Application):void{
+    const prefix='/api/v1/intelligence/relay/';
+    const route=(fn:(req:Request,res:Response)=>Promise<unknown>|unknown)=>(req:Request,res:Response)=>{Promise.resolve().then(()=>fn(req,res)).catch(error=>{
+      if(res.headersSent){res.destroy();return;}
+      if(error instanceof RelayEvidenceError)res.status(error.status).json({stage:error.code,error:error.message});
+      else res.status(503).json({stage:'relay-source-unavailable',error:'Relay evidence source is unavailable.'});
+    });};
+    app.get(prefix+'overview',route(async(_req,res)=>res.json(await this.collector.getOverview())))
+      .get(prefix+'transactions/:txid',route((req,res)=>res.json(this.collector.getPropagationForTx(req.params.txid))))
+      .get(prefix+'sensors',route(async(_req,res)=>{const sensors=await this.collector.getSensors();res.json({sensors,total:sensors.length});}))
+      .get(prefix+'policy-differences',route(async(_req,res)=>res.json(await this.collector.getPolicyDifferences())))
+      .get(prefix+'transports',route(async(_req,res)=>res.json(await this.collector.getTransportMetrics())))
+      .get(prefix+'stream',route((req,res)=>streamRelay(req,res,this.collector)));
   }
 }
-
 export default new RelayRoutes();

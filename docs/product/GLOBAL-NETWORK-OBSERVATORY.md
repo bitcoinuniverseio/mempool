@@ -25,3 +25,19 @@ The Global Bitcoin Network Observatory provides real-time and historical visibil
 - `/network/global/snapshots`: Historical network snapshot archive and diff engine.
 - `/network/global/seeds`: Real-time health and response time of network DNS seeds.
 - `/network/global/self-check`: Noncustodial inbound node reachability test suite.
+
+## Owned-source implementation status
+
+The current implementation uses the owned Core peer set; it does not implement
+a global crawler or independent BIP324/BIP155 handshake engine. DNS seeds are
+resolved on request and cached. The self-check performs a real, bounded TCP
+connection to a public pinned address and leaves BIP324 handshake evidence null.
+No geography/ASN source is connected. These limits supersede the broader target
+capabilities listed above; the remaining crawler, handshake, archive and owner
+claim capabilities still need separate acceptance.
+
+Relay consumers share a 30-second Core snapshot and single in-flight RPC read.
+The shared relay accessor verifies genesis/network and exposes source timestamp
+and age. Callers have a ten-second wait bound; failures do not relabel stale data
+as fresh. See [Relay observatory](RELAY-OBSERVATORY.md) for actual local collection,
+stream bounds, provenance and remaining distributed-sensor requirements.

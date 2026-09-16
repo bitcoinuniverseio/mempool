@@ -7,6 +7,8 @@ import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { DiagramResponse } from './mempool-intelligence.types';
 import { CurvePoint, DiagramLayout, layoutDiagram, toPath } from './cluster-layout';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
+
 import {
   describeFreshness,
   FreshnessView,
@@ -33,7 +35,7 @@ const TABLE_ROWS = 40;
 @Component({
   selector: 'app-feerate-diagram',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   templateUrl: './feerate-diagram.component.html',
   styleUrls: ['./feerate-diagram.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

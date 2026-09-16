@@ -5,101 +5,72 @@ import {
   ArkVtxo,
 } from './ark.types';
 
-const OPERATORS: ArkOperator[] = [
-  {
-    id: 'ark-asp-primary-01',
-    name: 'Universe Ark Server Provider (Mainnet-01)',
-    aspPubkey: '028471928374918273918273918273918273918273918273918273918273918273',
-    roundIntervalSec: 10,
-    currentBatchHeight: 860142,
-    activeVtxoCount: 18492,
-    totalVolumeSats: '428901200000',
-    status: 'online',
-  },
-];
+/**
+ * Raised when a read has no source behind it. The routes map the code to a
+ * 503, so an absent integration is reported as an absent integration rather
+ * than as an answer.
+ */
+export class ArkEvidenceError extends Error {
+  constructor(public readonly code: string, message: string, public readonly status = 503) {
+    super(message);
+  }
+}
 
-const BATCHES: ArkBatch[] = [
-  {
-    batchId: 'batch-860142-01',
-    operatorId: 'ark-asp-primary-01',
-    anchorTxid: 'e5765796c3d9efeb8152579df6461a6b18973b404d0938f36c535492d5272a0f',
-    rootHash: '4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b',
-    vtxoCount: 240,
-    totalAmountSats: '185000000',
-    roundTimestamp: Math.floor(Date.now() / 1000) - 120,
-    expirationTimestamp: Math.floor(Date.now() / 1000) + 86400 * 28,
-    status: 'settled',
-  },
-];
+export interface ArkProofVerdict {
+  readonly valid: boolean;
+  readonly stage: 'invalid-input' | 'unavailable-verifier';
+  readonly error: string;
+}
 
-const VTXOS: ArkVtxo[] = [
-  {
-    vtxoId: 'vtxo-78192a83918273918273918273918273',
-    batchId: 'batch-860142-01',
-    amountSats: '2500000',
-    userPubkey: '038472918273918273918273918273918273918273918273918273918273918273',
-    aspPubkey: '028471928374918273918273918273918273918273918273918273918273918273',
-    timelockExpiryBlocks: 2016,
-    treeDepth: 4,
-    treeIndex: 7,
-    status: 'spendable',
-  },
-];
+const aspUnavailable =
+  'Ark observations are unavailable. Operator, batch, VTXO and virtual-transaction reads require the owned Ark service provider (arkd) with its Bitcoin anchor reader, which is not connected on this deployment.';
 
-const VIRTUAL_TXS: ArkVirtualTx[] = [
-  {
-    virtualTxId: 'vtx-948172019842fbc9e19842a98712344a19b872019842fbc9e19842a9871234',
-    inputs: ['vtxo-78192a83918273918273918273918273'],
-    outputs: [
-      {
-        userPubkey: '029182739182739182739182739182739182739182739182739182739182739182',
-        amountSats: '2495000',
-      },
-    ],
-    feeSats: '5000',
-    roundSequence: 14209,
-    submittedAt: Math.floor(Date.now() / 1000) - 5,
-  },
-];
-
+/**
+ * Ark operator, round, VTXO and virtual-mempool evidence.
+ *
+ * Every read here needs an owned arkd whose round anchors are checked against
+ * the owned Bitcoin reader. None is connected, so each read reports the absent
+ * source. The revision this replaces answered from constants: one operator
+ * marked online with an invented pubkey and volume, a settled batch whose
+ * timestamps were computed at request time, a spendable VTXO, and a verifier
+ * that called any proof path valid because an array length is never negative.
+ */
 export class ArkService {
   /** @asyncSafe */
   public async $getOperators(): Promise<ArkOperator[]> {
-    return OPERATORS;
+    throw new ArkEvidenceError('unavailable-ark-provider', aspUnavailable);
   }
 
   /** @asyncSafe */
-
   public async $getBatches(): Promise<ArkBatch[]> {
-    return BATCHES;
+    throw new ArkEvidenceError('unavailable-ark-provider', aspUnavailable);
   }
 
   /** @asyncSafe */
-
-  public async $getBatch(batchId: string): Promise<ArkBatch | null> {
-    const match = BATCHES.find((b) => b.batchId.toLowerCase() === batchId.toLowerCase());
-    return match || null;
+  public async $getBatch(_batchId: string): Promise<ArkBatch | null> {
+    throw new ArkEvidenceError('unavailable-ark-provider', aspUnavailable);
   }
 
   /** @asyncSafe */
-
-  public async $getVtxo(vtxoId: string): Promise<ArkVtxo | null> {
-    const match = VTXOS.find((v) => v.vtxoId.toLowerCase() === vtxoId.toLowerCase());
-    return match || null;
+  public async $getVtxo(_vtxoId: string): Promise<ArkVtxo | null> {
+    throw new ArkEvidenceError('unavailable-ark-provider', aspUnavailable);
   }
 
   /** @asyncSafe */
-
   public async $getVirtualTxs(): Promise<ArkVirtualTx[]> {
-    return VIRTUAL_TXS;
+    throw new ArkEvidenceError('unavailable-ark-provider', aspUnavailable);
   }
 
   /** @asyncSafe */
-
-  public async $verifyProof(vtxoId: string, proofPath: string[]): Promise<{ valid: boolean; root: string }> {
+  public async $verifyProof(vtxoId: unknown, proofPath: unknown): Promise<ArkProofVerdict> {
+    if (typeof vtxoId !== 'string' || !vtxoId.trim()
+      || !Array.isArray(proofPath) || proofPath.length === 0
+      || !proofPath.every(hash => typeof hash === 'string' && /^[0-9a-f]{64}$/i.test(hash))) {
+      return { valid: false, stage: 'invalid-input', error: 'A VTXO ID and a nonempty array of 32-byte hexadecimal proof path hashes are required.' };
+    }
     return {
-      valid: proofPath.length >= 0,
-      root: '4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b',
+      valid: false, stage: 'unavailable-verifier',
+      error: 'The Ark exit proof verifier (owned arkd) and Bitcoin anchor reader are not connected. No VTXO tree path or batch root was verified.',
     };
   }
 }
