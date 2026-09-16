@@ -22,7 +22,7 @@ export const securityError = (e: any): string =>
   imports: [CommonModule, RouterModule, RelativeUrlPipe],
   templateUrl: './node-security-evidence.component.html',
   styles: [
-    'nav { display:flex; flex-wrap:wrap; gap:1rem; margin:1rem 0; } pre { white-space:pre-wrap; overflow-wrap:anywhere; } td,dd { overflow-wrap:anywhere; }',
+    'nav { display:flex; flex-wrap:wrap; gap:1rem; margin:1rem 0; } nav a { display:inline-flex; align-items:center; min-height:44px; min-width:44px; padding:0 0.5rem; } pre { white-space:pre-wrap; overflow-wrap:anywhere; } td,dd { overflow-wrap:anywhere; }',
   ],
 })
 export class NodeSecurityEvidenceComponent implements OnInit, OnDestroy {
