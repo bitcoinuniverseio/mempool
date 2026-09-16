@@ -471,7 +471,7 @@ gate_private_listeners() {
     port=${endpoint##*:}
     if printf '%s\n' "$allowed" | grep -qx "$port"; then continue; fi
     if [ "$endpoint" = "$NETBIRD_GATEWAY_INGRESS" ]; then continue; fi
-    if [ "$endpoint" = "0.0.0.0:38385" \
+    if [ "$endpoint" = "0.0.0.0:38385" ] \
       && iptables -C INPUT ! -i lo -p tcp --dport 38385 -j DROP >/dev/null 2>&1; then continue; fi
     unexpected="$unexpected $endpoint"
   done
