@@ -1,13 +1,16 @@
+import { observeStaking, slashingLabel, reconciliationLabel } from './staking-view';
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { BitcoinStakingApiService, FinalityProvider } from './bitcoin-staking.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-staking-finality-providers',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -23,12 +26,12 @@ import { BitcoinStakingApiService, FinalityProvider } from './bitcoin-staking.se
         </p>
 
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/protocols/bitcoin-staking">Overview</a>
-          <a class="nav-link" routerLink="/protocols/bitcoin-staking/delegations">Delegations</a>
-          <a class="nav-link active" routerLink="/protocols/bitcoin-staking/finality-providers">Finality Providers</a>
-          <a class="nav-link" routerLink="/protocols/bitcoin-staking/parameters">Parameters</a>
-          <a class="nav-link" routerLink="/protocols/bitcoin-staking/evidence">Slashing Evidence</a>
-          <a class="nav-link" routerLink="/protocols/bitcoin-staking/reconciliation">PoS Reconciliation</a>
+          <a class="nav-link" [routerLink]="'/protocols/bitcoin-staking' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/protocols/bitcoin-staking/delegations' | relativeUrl">Delegations</a>
+          <a class="nav-link active" [routerLink]="'/protocols/bitcoin-staking/finality-providers' | relativeUrl">Finality Providers</a>
+          <a class="nav-link" [routerLink]="'/protocols/bitcoin-staking/parameters' | relativeUrl">Parameters</a>
+          <a class="nav-link" [routerLink]="'/protocols/bitcoin-staking/evidence' | relativeUrl">Slashing Evidence</a>
+          <a class="nav-link" [routerLink]="'/protocols/bitcoin-staking/reconciliation' | relativeUrl">PoS Reconciliation</a>
         </nav>
       </header>
 
@@ -49,8 +52,8 @@ import { BitcoinStakingApiService, FinalityProvider } from './bitcoin-staking.se
                 <h2 class="h5 mt-1 mb-1">{{ p.moniker }}</h2>
                 <div class="small font-monospace text-muted text-break">{{ p.btc_pk }}</div>
               </div>
-              <span class="badge" [ngClass]="p.is_slashed ? 'bg-danger' : 'bg-success'">
-                {{ p.is_slashed ? 'SLASHED' : 'ACTIVE' }}
+              <span class="badge" [ngClass]="p.is_slashed === true ? 'bg-danger' : 'bg-secondary'">
+                {{ slashingLabel(p.is_slashed) }}
               </span>
             </div>
 
@@ -58,7 +61,7 @@ import { BitcoinStakingApiService, FinalityProvider } from './bitcoin-staking.se
               <div class="col-4">
                 <div class="p-2 border rounded bg-body">
                   <div class="text-muted small">Active TVL</div>
-                  <div class="fw-bold font-monospace">{{ (p.active_tvl_sat / 100000000).toFixed(2) }} BTC</div>
+                  <div class="fw-bold font-monospace">{{ p.active_tvl_sat ?? 'Unknown' }} sats</div>
                 </div>
               </div>
               <div class="col-4">
@@ -77,7 +80,7 @@ import { BitcoinStakingApiService, FinalityProvider } from './bitcoin-staking.se
 
             <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
               <span class="small text-muted">{{ p.delegations_count }} delegations</span>
-              <a [routerLink]="['/protocols/bitcoin-staking/finality-provider', p.provider_id]" class="btn btn-sm btn-outline-primary">
+              <a [routerLink]="['/protocols/bitcoin-staking/finality-provider' | relativeUrl, p.provider_id]" class="btn btn-sm btn-outline-primary">
                 Provider Details
               </a>
             </div>
@@ -102,19 +105,12 @@ export class StakingFinalityProvidersComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef
   ) {}
 
+  readonly slashingLabel = slashingLabel;
+  readonly reconciliationLabel = reconciliationLabel;
   ngOnInit(): void {
-    this.sub = this.stakingApi.getFinalityProviders$().subscribe({
-      next: (data) => {
-        this.providers = data;
-        this.loading = false;
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        this.error = err.message || 'Failed to load finality providers';
-        this.loading = false;
-        this.cdr.markForCheck();
-      },
-    });
+    this.sub = observeStaking(this.stakingApi.networkChanges$, () => {this.providers = [];this.loading=true;this.error=null;this.cdr.markForCheck();},
+      () => this.stakingApi.getFinalityProviders$(), data => {this.providers=data;this.loading=false;this.cdr.markForCheck();},
+      err => {this.providers=[];this.error=err?.error?.error || err?.message || loadFailureMessage(classifyLoadFailure(err));this.loading=false;this.cdr.markForCheck();});
   }
 
   ngOnDestroy(): void {

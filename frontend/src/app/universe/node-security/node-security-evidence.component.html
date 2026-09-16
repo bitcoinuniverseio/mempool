@@ -1,0 +1,191 @@
+<div class="container-xl py-4">
+  <h1>{{ title }}</h1>
+  <nav aria-label="Node security">
+    <a
+      *ngFor="let link of links"
+      [routerLink]="
+        '/node/security' + (link[0] ? '/' + link[0] : '') | relativeUrl
+      "
+      >{{ link[1] }}</a
+    >
+  </nav>
+  <p>
+    Owned source observations are scoped to the selected network. A version,
+    signature or configuration declaration alone does not establish
+    vulnerability mitigation or reproducible builds.
+  </p>
+  <p *ngIf="vm.loading" role="status">Loading selected-network evidence…</p>
+  <p *ngIf="vm.error" role="alert" class="alert alert-warning">
+    {{ vm.error }}
+  </p>
+  <ng-container *ngIf="vm.data as data">
+    <section *ngIf="view === 'overview'">
+      <h2>Observed inventory summary</h2>
+      <dl>
+        <dt>Monitored nodes</dt>
+        <dd>{{ data.total_fleet_nodes_monitored }}</dd>
+        <dt>Reported healthy nodes</dt>
+        <dd>{{ data.healthy_nodes_count }}</dd>
+        <dt>Exposed advisories</dt>
+        <dd>{{ data.exposed_advisories_count }}</dd>
+        <dt>End-of-life nodes</dt>
+        <dd>{{ data.eol_nodes_count }}</dd>
+      </dl>
+      <h3>Active advisories</h3>
+      <p *ngFor="let a of data.active_advisories">
+        <a
+          [routerLink]="[
+            '/node/security/advisory' | relativeUrl,
+            a.advisory_id,
+          ]"
+          >{{ a.title }}</a
+        >
+        · {{ a.severity }} · {{ a.attack_preconditions }}
+      </p>
+      <h3>Fleet observations</h3>
+      <p *ngFor="let n of data.fleet_summary">
+        <a [routerLink]="['/node/security/node' | relativeUrl, n.node_id]">{{
+          n.node_id
+        }}</a>
+        · {{ n.software }} {{ n.version }} · {{ display(n.exposure_status) }} ·
+        {{ n.last_verified_utc }}
+      </p>
+      <h3>Latest reported software releases</h3>
+      <p *ngFor="let r of data.latest_software_releases">
+        {{ r.project }} {{ r.version }} · {{ r.eol_status }} · release
+        signature:
+        {{
+          r.signature_verified === true
+            ? "Verified"
+            : r.signature_verified === false
+              ? "Not verified"
+              : "Unknown"
+        }}. Reproducibility: not established by this record.
+      </p>
+    </section>
+    <div class="table-responsive" *ngIf="view === 'fleet'">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Node</th>
+            <th>Software</th>
+            <th>Network</th>
+            <th>Exposure state</th>
+            <th>RPC boundary</th>
+            <th>Last verified</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let n of data">
+            <td>
+              <a
+                [routerLink]="['/node/security/node' | relativeUrl, n.node_id]"
+                >{{ n.node_id }}</a
+              >
+            </td>
+            <td>{{ n.software }} {{ n.version }}</td>
+            <td>{{ n.network }}</td>
+            <td>{{ display(n.exposure_status) }}</td>
+            <td>{{ display(n.rpc_exposure_boundary) }}</td>
+            <td>{{ display(n.last_verified_utc) }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <p *ngIf="data.length === 0">The source returned no fleet records.</p>
+    </div>
+    <div class="table-responsive" *ngIf="view === 'advisories'">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Advisory</th>
+            <th>Project</th>
+            <th>Severity</th>
+            <th>Affected versions</th>
+            <th>Fixed versions</th>
+            <th>Signature</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let a of data">
+            <td>
+              <a
+                [routerLink]="[
+                  '/node/security/advisory' | relativeUrl,
+                  a.advisory_id,
+                ]"
+                >{{ a.title }}</a
+              >
+            </td>
+            <td>{{ a.project }}</td>
+            <td>{{ display(a.severity) }}</td>
+            <td>{{ display(a.affected_versions) }}</td>
+            <td>{{ display(a.fixed_versions) }}</td>
+            <td>{{ display(a.signature_status) }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <p *ngIf="data.length === 0">The source returned no advisory records.</p>
+    </div>
+    <section *ngIf="view === 'releases'">
+      <h2>Release observations</h2>
+      <article *ngFor="let r of data" class="card p-3 mb-3">
+        <h3>{{ r.project }} {{ r.version }}</h3>
+        <p>
+          Released {{ r.release_date_utc }} · lifecycle:
+          {{ display(r.eol_status) }}
+        </p>
+        <p>
+          Release signature:
+          {{
+            r.signature_verified === true
+              ? "Verified"
+              : r.signature_verified === false
+                ? "Not verified"
+                : "Unknown"
+          }}
+        </p>
+        <p>Reproducible build: not established by this release record.</p>
+        <p class="text-break">
+          Official tarball SHA256: {{ display(r.official_tarball_sha256) }}
+        </p>
+        <a [href]="r.release_notes_url" rel="noopener noreferrer"
+          >Release notes</a
+        >
+      </article>
+      <p *ngIf="data.length === 0">The source returned no release records.</p>
+    </section>
+    <section *ngIf="view === 'node' || view === 'advisory'">
+      <h2>Source record</h2>
+      <dl *ngFor="let field of data | keyvalue">
+        <dt>{{ field.key }}</dt>
+        <dd>
+          <pre>{{ display(field.value) }}</pre>
+        </dd>
+      </dl>
+      <p *ngIf="view === 'node'">
+        Specific CVE exposure requires the advisory preconditions, configuration
+        and build evidence. A node record alone does not establish
+        exploitability.
+      </p>
+    </section>
+    <section *ngIf="view === 'artifacts'">
+      <h2>Uninterpreted source response</h2>
+      <p>
+        No artifact-list verification schema is defined by this backend. No
+        attestation or reproducibility verdict is inferred.
+      </p>
+      <pre>{{ data | json }}</pre>
+    </section>
+  </ng-container>
+  <section *ngIf="view === 'node' && exposures">
+    <h2>Per-node exposure evidence</h2>
+    <p *ngIf="exposures.error" role="alert">{{ exposures.error }}</p>
+    <ng-container *ngIf="exposures.data"
+      ><p>
+        Uninterpreted exposure response; this backend has no implemented success
+        schema.
+      </p>
+      <pre>{{ exposures.data | json }}</pre>
+    </ng-container>
+  </section>
+</div>

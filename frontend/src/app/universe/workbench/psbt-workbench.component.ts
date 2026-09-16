@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -50,7 +50,9 @@ const MAX_FILE_BYTES = 4 * 1024 * 1024;
   styleUrls: ['./psbt-workbench.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PsbtWorkbenchComponent implements OnInit {
+export class PsbtWorkbenchComponent implements OnInit, OnDestroy {
+  private revision = 0;
+  private destroyed = false;
   input = '';
   comparison = '';
   compareMode = false;
@@ -86,6 +88,8 @@ export class PsbtWorkbenchComponent implements OnInit {
    * than the keystroke that made it.
    */
   inspect(): void {
+    if (this.destroyed) return;
+    ++this.revision;
     this.reset();
     const secret = looksLikeSecret(this.input);
     if (secret) {
@@ -141,10 +145,22 @@ export class PsbtWorkbenchComponent implements OnInit {
   }
 
   clear(): void {
+    ++this.revision;
     this.input = '';
     this.comparison = '';
     this.fileName = null;
     this.reset();
+  }
+
+  inputChanged(): void {
+    ++this.revision;
+    this.fileName = null;
+    this.reset();
+  }
+
+  ngOnDestroy(): void {
+    this.destroyed = true;
+    this.clear();
   }
 
   /**
@@ -182,6 +198,8 @@ export class PsbtWorkbenchComponent implements OnInit {
   }
 
   private readFile(file: File): void {
+    if (this.destroyed) return;
+    const revision = ++this.revision;
     this.reset();
     this.fileName = file.name;
     if (file.size > MAX_FILE_BYTES) {
@@ -189,6 +207,7 @@ export class PsbtWorkbenchComponent implements OnInit {
       return;
     }
     file.arrayBuffer().then((buffer) => {
+      if (this.destroyed || revision !== this.revision) return;
       const bytes = new Uint8Array(buffer);
       const isBinary = bytes.length >= 5
         && bytes[0] === 0x70 && bytes[1] === 0x73 && bytes[2] === 0x62
@@ -203,6 +222,7 @@ export class PsbtWorkbenchComponent implements OnInit {
       this.inspect();
       this.cd.markForCheck();
     }).catch(() => {
+      if (this.destroyed || revision !== this.revision) return;
       this.error = $localize`:@@workbench.psbt.file-unreadable:That file could not be read.`;
       this.cd.markForCheck();
     });
@@ -284,7 +304,7 @@ export class PsbtWorkbenchComponent implements OnInit {
   shortValue(hex: string, keep = 32): string {
     if (!hex) { return $localize`:@@workbench.psbt.empty-value:empty`; }
     if (hex.length <= keep * 2) { return hex; }
-    return `${hex.slice(0, keep)}…${hex.slice(-keep)}`;
+    return `${hex.slice(0, keep)}â€¦${hex.slice(-keep)}`;
   }
 
   byteLength(hex: string): number {

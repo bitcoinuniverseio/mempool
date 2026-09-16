@@ -19,7 +19,7 @@
          aria-label="Documentation sections" i18n-aria-label="universe.docs.nav-label">
       <ul>
         <li *ngFor="let section of sections; trackBy: trackById">
-          <a [routerLink]="['/', chain, 'docs', section.id]"
+          <a [routerLink]="['/' | relativeUrl, chain, 'docs', section.id]"
              [class.active]="state.active === section.id"
              (click)="closeNav()">{{ section.title }}</a>
         </li>

@@ -4,11 +4,12 @@ import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { GlobalNetworkApiService, GlobalNetworkObservation } from './global-network.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-global-network-nodes',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -25,11 +26,11 @@ import { GlobalNetworkApiService, GlobalNetworkObservation } from './global-netw
 
         <!-- Sub-navigation tabs -->
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/network/global">Overview</a>
-          <a class="nav-link active" routerLink="/network/global/nodes">Reachable Nodes</a>
-          <a class="nav-link" routerLink="/network/global/snapshots">Snapshots Archive</a>
-          <a class="nav-link" routerLink="/network/global/seeds">DNS Seeds</a>
-          <a class="nav-link" routerLink="/network/global/self-check">Node Self-Check</a>
+          <a class="nav-link" [routerLink]="'/network/global' | relativeUrl">Overview</a>
+          <a class="nav-link active" [routerLink]="'/network/global/nodes' | relativeUrl">Reachable Nodes</a>
+          <a class="nav-link" [routerLink]="'/network/global/snapshots' | relativeUrl">Snapshots Archive</a>
+          <a class="nav-link" [routerLink]="'/network/global/seeds' | relativeUrl">DNS Seeds</a>
+          <a class="nav-link" [routerLink]="'/network/global/self-check' | relativeUrl">Node Self-Check</a>
         </nav>
       </header>
 
@@ -47,7 +48,7 @@ import { GlobalNetworkApiService, GlobalNetworkObservation } from './global-netw
           </div>
           <div class="col-6 col-md-3">
             <select
-              class="form-select"
+              class="form-control"
               [(ngModel)]="transportFilter"
               (ngModelChange)="applyFilter()"
               aria-label="Filter by transport"
@@ -93,24 +94,24 @@ import { GlobalNetworkApiService, GlobalNetworkObservation } from './global-netw
             <tbody>
               <tr *ngFor="let node of filteredNodes">
                 <td>
-                  <a [routerLink]="['/network/global/node', node.endpoint_id]" class="fw-semibold text-decoration-none">
+                  <a [routerLink]="['/network/global/node' | relativeUrl, node.endpoint_id]" class="fw-semibold text-decoration-none">
                     {{ node.endpoint_id }}
                   </a>
                 </td>
                 <td>
                   <span class="badge bg-success" *ngIf="node.transport_v2">BIP324 v2</span>
-                  <span class="badge bg-secondary" *ngIf="!node.transport_v2">v1 Standard</span>
-                  <span class="badge bg-info ms-1" *ngIf="node.addrv2">addrv2</span>
+                  <span class="badge bg-secondary" *ngIf="node.transport_v2 === false">v1 Standard</span>
+                  <span class="badge bg-info ms-1" *ngIf="node.addrv2 === true">addrv2</span><span class="text-muted" *ngIf="node.transport_v2 === null">Transport unknown</span>
                 </td>
                 <td><code>{{ node.user_agent }}</code></td>
                 <td>{{ node.start_height | number }}</td>
-                <td>{{ node.latency_ms }} ms</td>
+                <td>{{ node.latency_ms !== null && node.latency_ms >= 0 ? node.latency_ms + ' ms' : 'n/a' }}</td>
                 <td>
                   <span class="badge bg-secondary me-1" *ngIf="node.country_code">{{ node.country_code }}</span>
                   <span class="text-muted small" *ngIf="node.asn">AS{{ node.asn }}</span>
                 </td>
                 <td class="text-end">
-                  <a [routerLink]="['/network/global/node', node.endpoint_id]" class="btn btn-sm btn-outline-primary">
+                  <a [routerLink]="['/network/global/node' | relativeUrl, node.endpoint_id]" class="btn btn-sm btn-outline-primary">
                     Inspect
                   </a>
                 </td>
@@ -160,7 +161,7 @@ export class GlobalNetworkNodesComponent implements OnInit, OnDestroy {
           this.cd.markForCheck();
         },
         error: err => {
-          this.error = err?.message || 'Failed to load reachable nodes';
+          this.error = err?.error?.error || err?.message || 'Failed to load reachable nodes';
           this.loading = false;
           this.cd.markForCheck();
         },
@@ -172,7 +173,7 @@ export class GlobalNetworkNodesComponent implements OnInit, OnDestroy {
     const q = this.searchQuery.toLowerCase().trim();
     this.filteredNodes = this.nodes.filter(node => {
       if (this.transportFilter === 'v2' && !node.transport_v2) return false;
-      if (this.transportFilter === 'v1' && node.transport_v2) return false;
+      if (this.transportFilter === 'v1' && node.transport_v2 !== false) return false;
       if (!q) return true;
       return (
         node.endpoint_id.toLowerCase().includes(q) ||

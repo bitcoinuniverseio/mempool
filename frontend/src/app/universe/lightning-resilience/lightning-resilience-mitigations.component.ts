@@ -1,97 +1,14 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
-import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
+import { RouterModule, ActivatedRoute } from '@angular/router';
+import { Subscription, of } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 import { LightningResilienceApiService } from './lightning-resilience.service';
-
-@Component({
-  selector: 'app-lightning-resilience-mitigations',
-  standalone: true,
-  imports: [CommonModule, RouterModule],
-  template: `
-    <div class="container-xl py-4">
-      <div class="alert alert-warning" role="alert" *ngIf="loadError">
-        {{ loadError }}
-      </div>
-      <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
-        <div>
-          <h1 class="h2 mb-1">Lightning Anti-Jamming & Defense Mitigations</h1>
-          <p class="text-muted mb-0">Standardized protocol defenses, fee policies, and reputation-based slot isolation specifications.</p>
-        </div>
-        <a routerLink="/lightning/resilience" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
-      </div>
-
-      <div class="card bg-dark border-secondary mb-4">
-        <div class="card-header border-secondary">
-          <h5 class="card-title mb-0">Active Defense Strategies</h5>
-        </div>
-        <div class="table-responsive" tabindex="0" role="region" aria-label="Active Defense Strategies, scroll horizontally" i18n-aria-label>
-          <table class="table table-dark table-hover mb-0">
-            <thead>
-              <tr>
-                <th>Mitigation ID</th>
-                <th>Strategy Name</th>
-                <th>Layer</th>
-                <th>Status</th>
-                <th>Impact Score</th>
-                <th>Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let m of mitigations">
-                <td class="font-monospace text-muted">{{ m.mitigation_id }}</td>
-                <td class="fw-bold text-info">{{ m.name }}</td>
-                <td><span class="badge bg-secondary">{{ m.layer }}</span></td>
-                <td><span class="badge bg-success">{{ m.status }}</span></td>
-                <td><span class="badge bg-primary">{{ m.impact_score }}</span></td>
-                <td class="small text-muted">{{ m.description }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="row g-4">
-        <div class="col-md-6">
-          <div class="card bg-dark border-secondary p-4 h-100">
-            <h5 class="card-title text-light">Unconditional Fast Lane & Endorsement</h5>
-            <p class="text-muted small">
-              Payments endorsed by upstream routing nodes with accumulated economic reputation are placed into a reserved 80% slot bucket.
-              Unendorsed or new peer payments compete exclusively within a capped 20% bucket, guaranteeing that jamming attempts cannot starve
-              legitimate network transactions.
-            </p>
-          </div>
-        </div>
-        <div class="col-md-6">
-          <div class="card bg-dark border-secondary p-4 h-100">
-            <h5 class="card-title text-light">Upfront & Resolution Fees</h5>
-            <p class="text-muted small">
-              Nodes assess micro-fees for routing attempts that linger in hold states without timely settlement.
-              By shifting the opportunity cost back to the upstream forwarder, holding liquidity hostage becomes economically prohibitive for attackers.
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  `
-})
-export class LightningResilienceMitigationsComponent implements OnInit {
-  public mitigations: any[] = [];
-
-  public loadError: string | null = null;
-
-  constructor(private api: LightningResilienceApiService) {}
-
-  public ngOnInit(): void {
-    this.api.getMitigations$().subscribe({
-      next: res => {
-        this.mitigations = res;
-        this.loadError = null;
-      },
-      error: err => {
-        this.mitigations = [];
-        this.loadError = loadFailureMessage(classifyLoadFailure(err));
-      },
-    });
-  }
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
+@Component({selector:'app-lightning-resilience-mitigations',standalone:true,imports:[CommonModule,RouterModule,RelativeUrlPipe],template:`<div class="container-xl py-4"><h1 class="h2">Lightning Mitigation References</h1><nav class="d-flex flex-wrap gap-3 mb-4" aria-label="Lightning resilience"><a [routerLink]="'/lightning/resilience' | relativeUrl">Overview</a><a [routerLink]="'/lightning/resilience/htlcs' | relativeUrl">HTLC slots</a><a [routerLink]="'/lightning/resilience/onion-messages' | relativeUrl">Onion queues</a><a [routerLink]="'/lightning/resilience/simulate' | relativeUrl">Simulator</a><a [routerLink]="'/lightning/resilience/mitigations' | relativeUrl">Mitigations</a></nav><p *ngIf="loading" role="status">Loading owned evidence…</p><p *ngIf="loadError" role="alert" class="alert alert-warning">{{ loadError }}</p><p>Reference concepts only. Deployment, implementation support, reputation policies and defensive effectiveness are not observed.</p><div class="table-responsive"><table class="table"><thead><tr><th>Capability</th><th>Category</th><th>Observed deployment</th><th>Reference</th></tr></thead><tbody><tr *ngFor="let m of mitigations"><td>{{ m.name }}</td><td>{{ m.category }}</td><td>{{ m.status }}</td><td><a [href]="m.specification_url" target="_blank" rel="noopener noreferrer">Specification / project</a></td></tr></tbody></table></div><p>Reputation and fast-lane guarantees remain unverified. The simulator can apply an explicit immediate slot quota as a counterfactual; it does not establish deployed protection.</p></div>`})
+export class LightningResilienceMitigationsComponent implements OnInit,OnDestroy {
+ mitigations:any=[];loadError:string|null=null;loading=false;private subscription?:Subscription;
+ constructor(@Inject(LightningResilienceApiService) private api:LightningResilienceApiService,@Inject(ChangeDetectorRef) private cdr:ChangeDetectorRef){}
+ ngOnInit(){this.subscription=this.api.watch$(()=>this.api.getMitigations$(),[]).subscribe(s=>{this.mitigations=s.value;this.loadError=s.error;this.loading=s.loading;this.cdr.markForCheck();});}
+ ngOnDestroy(){this.subscription?.unsubscribe();}
 }

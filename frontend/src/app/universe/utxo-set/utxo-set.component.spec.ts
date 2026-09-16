@@ -1,0 +1,13 @@
+import { Subject,of } from 'rxjs';
+import { describe,expect,it,vi } from 'vitest';
+import { SeoService } from '@app/services/seo.service';
+import { UtxoSetComponent } from './utxo-set.component';
+import { UtxoEvidenceService } from './utxo-evidence.service';
+import { UtxoIntelligenceComponent } from '../intelligence-platform/utxo-intelligence.component';
+const unavailable={kind:'unavailable',value:null,message:'Required owned source is unavailable.'};
+const seo={setTitle:vi.fn()} as unknown as SeoService;
+describe('UTXO evidence separation and freshness',()=>{
+ it('keeps an entirely absent source in error without invented tables',()=>{const api={watch$:()=>of(unavailable)} as unknown as UtxoEvidenceService;const view=new UtxoSetComponent(api,seo);view.ngOnInit();let observed:any;view.vm$.subscribe(value=>observed=value).unsubscribe();expect(observed.kind).toBe('error');expect(observed.message).toBeTruthy();expect(observed.checkpoints).toBeUndefined();expect(observed.scriptTypes).toBeUndefined();view.ngOnDestroy();});
+ it('retains real checkpoints when unrelated protocol and Utreexo sources are unavailable',()=>{const api={watch$:(path:string)=>of(path.endsWith('checkpoints')?{kind:'available',value:{checkpoints:[{blockHeight:102,muhashHex:'ab'.repeat(32)}]},message:null}:unavailable)} as unknown as UtxoEvidenceService;const view=new UtxoSetComponent(api,seo);view.ngOnInit();let observed:any;view.vm$.subscribe(value=>observed=value).unsubscribe();expect(observed.kind).toBe('ready');expect(observed.checkpoints[0].blockHeight).toBe(102);expect(observed.unavailable).toHaveLength(3);expect(observed.protocolUtxos).toBeUndefined();view.ngOnDestroy();});
+ it('selects network URLs and discards old requests and displays no false reconciled state',()=>{const network=new Subject<string>(),pending:Subject<any>[]=[];const state:any={isBrowser:false,network:'signet',env:{ROOT_NETWORK:'mainnet',NGINX_PROTOCOL:'http',NGINX_HOSTNAME:'localhost',NGINX_PORT:8999},networkChanged$:network};const http={get:vi.fn((_url:string)=>{const p=new Subject();pending.push(p);return p;})};const api=new UtxoEvidenceService(http as any,state);const cmp=new UtxoIntelligenceComponent(api,{markForCheck:vi.fn()} as any);cmp.ngOnInit();expect(http.get.mock.calls[0][0]).toContain('/signet/api/');pending[0].next({block_height:102,reconciled:false});expect(cmp.overview.reconciled).toBe(false);state.network='regtest';network.next('regtest');expect(cmp.overview).toBeNull();pending[0].next({block_height:999,reconciled:true});expect(cmp.overview).toBeNull();pending[5].error(Error('unavailable'));expect(cmp.overview).toBeNull();expect(cmp.loadError).toBeTruthy();cmp.ngOnDestroy();});
+});

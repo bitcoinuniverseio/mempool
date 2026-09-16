@@ -1,3 +1,4 @@
+import type { AnchorReader } from './anchor-reader';
 export type VtxoVerificationState =
   | 'package_valid'
   | 'anchor_verified'
@@ -85,17 +86,7 @@ export interface VpackProvider {
   last_successful_observation: string;
 }
 
-export interface VpackPublicAnchorVerification {
-  anchor_outpoint: string;
-  exists_onchain: boolean;
-  block_height?: number;
-  confirmations: number;
-  spend_status: 'unspent' | 'spent' | 'conflicting';
-  spend_txid?: string;
-  exit_delay_blocks: number;
-  verified: boolean;
-  errors: string[];
-}
+export type VpackPublicAnchorVerification = Awaited<ReturnType<AnchorReader['verify']>>;
 
 export interface VpackUnilateralExitPlan {
   vtxo_id: string;
@@ -117,6 +108,8 @@ export interface VpackUnilateralExitPlan {
 }
 
 export interface VpackOverview {
+  registry_status?: string;
+  observation_scope?: string;
   total_vpack_versions: number;
   active_providers_count: number;
   supported_implementations: VpackImplementationAdapter[];

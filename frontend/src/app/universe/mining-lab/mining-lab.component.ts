@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 /**
  * The mining and consensus lab's front door.
@@ -12,7 +13,7 @@ import { RouterLink } from '@angular/router';
 @Component({
   selector: 'app-universe-mining-lab',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [RelativeUrlPipe, CommonModule, RouterLink],
   template: `
     <div class="hub">
       <h1 class="title" i18n="universe.mining.hub-title">Mining and consensus lab</h1>
@@ -21,7 +22,7 @@ import { RouterLink } from '@angular/router';
         this deployment's own nodes and named with their sources.
       </p>
 
-      <a class="module" routerLink="/labs/mining/bitcoin">
+      <a class="module" [routerLink]="'/labs/mining/bitcoin' | relativeUrl">
         <h2 i18n="universe.mining.bitcoin-title">Bitcoin</h2>
         <p i18n="universe.mining.bitcoin-desc">
           Block intervals, empty blocks, pool shares, and fee share over the
@@ -29,7 +30,7 @@ import { RouterLink } from '@angular/router';
         </p>
       </a>
 
-      <a class="module" routerLink="/labs/mining/dogecoin">
+      <a class="module" [routerLink]="'/labs/mining/dogecoin' | relativeUrl">
         <h2 i18n="universe.mining.dogecoin-title">Dogecoin and AuxPoW</h2>
         <p i18n="universe.mining.dogecoin-desc">
           The merge mining proof, parsed from the raw block in your browser:
@@ -38,7 +39,7 @@ import { RouterLink } from '@angular/router';
         </p>
       </a>
 
-      <a class="module" routerLink="/labs/mining/reorgs">
+      <a class="module" [routerLink]="'/labs/mining/reorgs' | relativeUrl">
         <h2 i18n="universe.mining.reorgs-title">Reorgs</h2>
         <p i18n="universe.mining.reorgs-desc">
           Competing tips this node has seen: the stale block and the block

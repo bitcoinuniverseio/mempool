@@ -1,0 +1,5 @@
+import {describe,it,expect} from 'vitest';
+import {BehaviorSubject,Subject} from 'rxjs';
+import {convertToParamMap} from '@angular/router';
+import {CollaborativePrivacyRoundDetailComponent} from './collaborative-privacy-round-detail.component';
+it('keeps unavailable errors visible and owns round route/network requests',()=>{const route=new BehaviorSubject(convertToParamMap({roundId:'a'})),network=new BehaviorSubject('signet'),requests:Subject<any>[]=[];const c=new CollaborativePrivacyRoundDetailComponent({paramMap:route} as any,{network:'signet',networkChanged$:network,getRound$:()=>{const p=new Subject();requests.push(p);return p;}} as any);c.ngOnInit();requests[0].error({status:503});expect(c.loadError).toBeTruthy();expect(c.round).toBeNull();route.next(convertToParamMap({roundId:'b'}));requests[1].next({round_id:'wrong',network:'signet'});expect(c.round).toBeNull();route.next(convertToParamMap({roundId:'c'}));expect(requests[1].observed).toBe(false);requests[2].next({round_id:'c',network:'signet'});expect(c.round.round_id).toBe('c');network.next('regtest');expect(c.round).toBeNull();c.ngOnDestroy();expect(requests[3].observed).toBe(false);});

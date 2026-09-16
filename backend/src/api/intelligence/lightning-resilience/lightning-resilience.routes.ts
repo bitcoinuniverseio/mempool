@@ -1,83 +1,19 @@
 import { Application, Request, Response } from 'express';
-import lightningResilienceService from './lightning-resilience.service';
-
-class LightningResilienceRoutes {
-  public initRoutes(app: Application): void {
-    app.get('/api/v1/intelligence/lightning/resilience/overview', (_req: Request, res: Response) => {
-      try {
-        const overview = lightningResilienceService.getOverview();
-        res.json(overview);
-      } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
-      }
-    });
-
-    app.get('/api/v1/intelligence/lightning/resilience/channels', (_req: Request, res: Response) => {
-      try {
-        const channels = lightningResilienceService.listChannels();
-        res.json({ channels });
-      } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
-      }
-    });
-
-    app.get('/api/v1/intelligence/lightning/resilience/channels/:shortId', (req: Request, res: Response) => {
-      try {
-        const channel = lightningResilienceService.getChannel(req.params.shortId);
-        if (!channel) {
-          return res.status(404).json({ error: 'Channel not found' });
-        }
-        res.json(channel);
-      } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
-      }
-    });
-
-    app.get('/api/v1/intelligence/lightning/resilience/nodes/:publicKey', (req: Request, res: Response) => {
-      try {
-        const node = lightningResilienceService.getNodeResilience(req.params.publicKey);
-        res.json(node);
-      } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
-      }
-    });
-
-    app.get('/api/v1/intelligence/lightning/resilience/incidents', (_req: Request, res: Response) => {
-      try {
-        const incidents = lightningResilienceService.listIncidents();
-        res.json({ incidents });
-      } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
-      }
-    });
-
-    app.get('/api/v1/intelligence/lightning/resilience/mitigations', (_req: Request, res: Response) => {
-      try {
-        const mitigations = lightningResilienceService.listMitigations();
-        res.json({ mitigations });
-      } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
-      }
-    });
-
-    app.get('/api/v1/intelligence/lightning/resilience/capabilities', (_req: Request, res: Response) => {
-      try {
-        const caps = lightningResilienceService.getCapabilities();
-        res.json(caps);
-      } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
-      }
-    });
-
-    app.post('/api/v1/intelligence/lightning/resilience/simulate', (req: Request, res: Response) => {
-      try {
-        const result = lightningResilienceService.runSimulator(req.body);
-        res.json(result);
-      } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
-      }
-    });
-  }
+import defaultService, { LightningResilienceService } from './lightning-resilience.service';
+import { LightningEvidenceError } from './lightning-evidence';
+export class LightningResilienceRoutes {
+ constructor(private readonly service:LightningResilienceService=defaultService){}
+ public initRoutes(app:Application):void{
+  const prefix='/api/v1/intelligence/lightning/resilience/';
+  const route=(fn:(req:Request)=>unknown)=>(req:Request,res:Response)=>{Promise.resolve().then(()=>fn(req)).then(value=>res.json(value)).catch(e=>res.status(e instanceof LightningEvidenceError?e.status:503).json({stage:e instanceof LightningEvidenceError?e.code:'lightning-source-unavailable',error:e instanceof LightningEvidenceError?e.message:'Owned Lightning evidence is unavailable.'}));};
+  app.get(prefix+'overview',route(()=>this.service.getOverview()));
+  app.get(prefix+'channels',route(async()=>({channels:await this.service.listChannels()})));
+  app.get(prefix+'channels/:shortId',route(req=>this.service.getChannel(req.params.shortId)));
+  app.get(prefix+'nodes/:publicKey',route(req=>this.service.getNodeResilience(req.params.publicKey)));
+  app.get(prefix+'incidents',route(()=>({incidents:this.service.listIncidents(),status:'unknown',scope:'No incident detector or historical hold telemetry is configured.'})));
+  app.get(prefix+'mitigations',route(()=>({mitigations:this.service.listMitigations()})));
+  app.get(prefix+'capabilities',route(()=>this.service.getCapabilities()));
+  app.post(prefix+'simulate',route(req=>this.service.runSimulator(req.body)));
+ }
 }
-
 export default new LightningResilienceRoutes();

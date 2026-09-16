@@ -1,9 +1,9 @@
 <div class="container-xl product-page">
   <header class="page-head">
     <nav class="crumbs">
-      <a [routerLink]="['/']">Home</a>
+      <a [routerLink]="['/' | relativeUrl]">Home</a>
       <span class="divider">/</span>
-      <a [routerLink]="['/mining']">Mining</a>
+      <a [routerLink]="['/mining' | relativeUrl]">Mining</a>
       <span class="divider">/</span>
       <span>Stratum V2</span>
     </nav>
@@ -16,6 +16,11 @@
   <ng-container *ngIf="vm$ | async as vm">
     <div *ngIf="vm.kind === 'loading'" class="panel" aria-busy="true">
       <p>Reading Stratum V2 telemetry...</p>
+    </div>
+
+    <div *ngIf="vm.kind === 'error'" class="panel">
+      <h2>Stratum V2 Telemetry Unavailable</h2>
+      <p role="alert">{{ vm.message }}</p>
     </div>
 
     <ng-container *ngIf="vm.kind === 'ready'">
@@ -38,9 +43,9 @@
               <td><span class="badge badge-info">{{ r.role }}</span></td>
               <td><strong>{{ r.name }}</strong></td>
               <td class="mono">{{ r.endpoint }}</td>
-              <td><span class="badge badge-success">{{ r.noiseProtocolSecured ? 'Noise Secured' : 'Plaintext' }}</span></td>
+              <td><span class="badge" [class.badge-success]="r.noiseProtocolSecured === true" [class.badge-warning]="r.noiseProtocolSecured !== true">{{ r.noiseProtocolSecured === true ? 'Noise Secured' : r.noiseProtocolSecured === false ? 'Plaintext' : 'Unknown' }}</span></td>
               <td>{{ r.connectedDownstreams }} miners</td>
-              <td><span class="badge badge-success">{{ r.status }}</span></td>
+              <td><span class="badge" [class.badge-success]="r.status === 'active'" [class.badge-warning]="r.status !== 'active'">{{ r.status }}</span></td>
             </tr>
           </tbody>
         </table>
@@ -68,11 +73,23 @@
               <td class="mono">{{ t.coinbaseTxValueSats }}</td>
               <td>{{ t.declaredTxCount }}</td>
               <td>{{ t.poolSelectedTxCount }}</td>
-              <td>+{{ t.feeRateDeltaSatVb }}</td>
-              <td><span class="badge badge-success">{{ t.status }}</span></td>
+              <td>{{ t.feeRateDeltaSatVb > 0 ? '+' : '' }}{{ t.feeRateDeltaSatVb }}</td>
+              <td><span class="badge" [class.badge-success]="t.status === 'won'" [class.badge-info]="t.status === 'mining'">{{ t.status }}</span></td>
             </tr>
           </tbody>
         </table>
+      </section>
+      <section class="panel">
+        <h2>Pool Job Declarations</h2>
+        <p *ngIf="!vm.declarations?.length">The source returned no job declarations.</p>
+        <article *ngFor="let job of vm.declarations">
+          <h3 class="mono">{{ job.jobId }}</h3>
+          <p>Template: <span class="mono">{{ job.templateId }}</span> · Declarator: <span class="mono">{{ job.declaratorId }}</span></p>
+          <p><span class="badge" [class.badge-success]="job.acceptedByPool === true" [class.badge-warning]="job.acceptedByPool !== true">{{ job.acceptedByPool === true ? 'Accepted' : job.acceptedByPool === false ? 'Rejected' : 'Unknown' }}</span>
+            <span *ngIf="job.acceptedByPool === false"> Rejection code: {{ job.poolRejectionCode || 'Not reported' }}</span> · Latency: {{ job.latencyMs }} ms</p>
+          <details><summary>Miner declared transactions ({{ job.minerDeclaredTxids.length }})</summary><p class="mono" *ngFor="let txid of job.minerDeclaredTxids">{{ txid }}</p></details>
+          <details><summary>Pool modified transactions ({{ job.poolModifiedTxids.length }})</summary><p class="mono" *ngFor="let txid of job.poolModifiedTxids">{{ txid }}</p></details>
+        </article>
       </section>
     </ng-container>
   </ng-container>

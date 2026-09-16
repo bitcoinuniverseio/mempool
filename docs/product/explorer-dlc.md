@@ -41,3 +41,9 @@ The Discreet Log Contract (DLC) and Oracle Verification Center provides a compre
 - `POST /api/v1/intelligence/dlc/attestations/verify`: Verification of oracle attestation signatures and nonce alignment.
 - `POST /api/v1/intelligence/dlc/contracts/verify`: Mathematical verification of contract collateral conservation.
 - `POST /api/v1/intelligence/dlc/simulations`: Regtest simulation orchestration.
+
+## Oracle signature verification implementation
+
+Announcement and attestation checks now execute BIP340 verification through tiny-secp256k1. Requests explicitly declare either dlcspecs-tagged-v0 or rust-dlc-legacy-sha256 because spec-tagged and historical library profiles differ; the verifier never silently tries another scheme. Event descriptor serialization, NFC UTF8, every nonce, maturity and event ID are bound into the announcement. Attestations require the full verified announcement and exact key, event, allowed outcome and ordered nonce matching. Details, limits, independent vectors and source revisions are in `tools/dlc-verification/README.md`.
+
+The public signature verifier is available on the oracle directory and event-detail pages even while the registry is unavailable. It does not claim that a signed outcome is true. Cross-event conflict status remains unknown without separate evidence. Catalog/crawler observations, adaptor signatures, funding/CET/refund execution and simulation are still OPEN gates; oracle signature verification does not close them.

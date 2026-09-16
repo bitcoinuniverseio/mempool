@@ -1,6 +1,15 @@
 import { Application, Request, Response } from 'express';
-import { blockspaceService } from './blockspace.service';
+import { blockspaceService, BlockspaceUnavailableError } from './blockspace.service';
 import { handleError } from '../../../utils/api';
+
+/** No observed block yet is a 503 that says so, never an invented composition. */
+function fail(req: Request, res: Response, e: unknown, fallback: string): void {
+  if (e instanceof BlockspaceUnavailableError) {
+    res.status(e.status).json({ stage: e.code, error: e.message });
+    return;
+  }
+  handleError(req, res, 500, e instanceof Error ? e.message : fallback);
+}
 
 class BlockspaceRoutes {
   public initRoutes(app: Application): void {
@@ -19,7 +28,7 @@ class BlockspaceRoutes {
       const overview = blockspaceService.getOverview();
       res.json(overview);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch blockspace overview');
+      fail(req, res, e, 'Failed to fetch blockspace overview');
     }
   }
 
@@ -28,7 +37,7 @@ class BlockspaceRoutes {
       const tax = blockspaceService.getTaxonomy();
       res.json(tax);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch taxonomy');
+      fail(req, res, e, 'Failed to fetch taxonomy');
     }
   }
 
@@ -38,7 +47,7 @@ class BlockspaceRoutes {
       const comp = blockspaceService.getComposition(limit);
       res.json(comp);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch blockspace composition');
+      fail(req, res, e, 'Failed to fetch blockspace composition');
     }
   }
 
@@ -47,17 +56,20 @@ class BlockspaceRoutes {
       const regimes = blockspaceService.getRegimes();
       res.json(regimes);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch blockspace regimes');
+      fail(req, res, e, 'Failed to fetch blockspace regimes');
     }
   }
 
   private async $getTxSemantics(req: Request, res: Response): Promise<void> {
     try {
-      const txid = req.params.txid;
-      const evidence = blockspaceService.getTxSemantics(txid);
+      const evidence = await blockspaceService.getTxSemantics(req.params.txid);
+      if (!evidence) {
+        res.status(404).json({ error: 'Transaction ' + req.params.txid + ' is not in this index.' });
+        return;
+      }
       res.json(evidence);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch transaction semantics');
+      fail(req, res, e, 'Failed to fetch transaction semantics');
     }
   }
 }

@@ -114,42 +114,40 @@ async function explorerManifest(): Promise<AdminManifest> {
   };
 }
 
+function runResource(run: Awaited<ReturnType<typeof runStore.get>>): AdminResource {
+  return resource({
+    kind: 'run',
+    id: run.runId,
+    name: run.operationId,
+    state: run.state === 'SUCCEEDED' ? 'healthy'
+      : run.state === 'FAILED' || run.state === 'ROLLBACK_FAILED' ? 'unavailable'
+      : run.state === 'NEEDS_REVIEW' ? 'degraded' : 'syncing',
+    statusLabel: run.state,
+    summary: run.reason,
+    updatedAt: run.updatedAt,
+    attributes: { target: run.target, actor: run.actor, correlationId: run.correlationId },
+  });
+}
+
 /**
  * Every resource kind the Explorer can enumerate, built from live state.
  *
  * @asyncUnsafe Every caller is inside a route handler try/catch.
  */
 async function collect(kind: AdminResourceKind, query: string, limit: number): Promise<AdminResource[]> {
-  const needle = query.trim().toLowerCase();
+  const needle = query.trim().toLowerCase().slice(0, 200);
   const matches = (text: string): boolean => !needle || text.toLowerCase().includes(needle);
 
   if (kind === 'run') {
-    const runs = await runStore.list(limit);
+    const runs = await runStore.list(limit, needle);
     return runs
       .filter((run) => matches(`${run.runId} ${run.operationId} ${run.target}`))
-      .map((run) =>
-        resource({
-          kind: 'run',
-          id: run.runId,
-          name: run.operationId,
-          state:
-            run.state === 'SUCCEEDED'
-              ? 'healthy'
-              : run.state === 'FAILED' || run.state === 'ROLLBACK_FAILED'
-                ? 'unavailable'
-                : run.state === 'NEEDS_REVIEW'
-                  ? 'degraded'
-                  : 'syncing',
-          statusLabel: run.state,
-          summary: run.reason,
-          updatedAt: run.updatedAt,
-          attributes: { target: run.target, actor: run.actor, correlationId: run.correlationId },
-        }),
-      );
+      .map(runResource);
   }
 
   if (kind === 'release') {
     const release = explorerRelease();
+    if (!matches(`${release.backendSha} ${release.frontendSha} ${release.version} Explorer`)) return [];
     return [
       resource({
         kind: 'release',
@@ -253,7 +251,7 @@ class AdminAdapterRoutes {
         });
       } catch (e) {
         logger.err('[admin-adapter] resources failed: ' + (e instanceof Error ? e.message : e));
-        fail(response, 500, 'RESOURCES_FAILED', 'The adapter could not list those resources.');
+        fail(response, 503, 'RESOURCES_FAILED', 'The adapter could not list those resources.');
       }
     });
 
@@ -264,8 +262,12 @@ class AdminAdapterRoutes {
         return;
       }
       try {
-        const id = String(request.params.id).slice(0, 300);
-        const found = (await collect(kind as AdminResourceKind, '', 200)).find(
+        const id = String(request.params.id);
+        if (id.length > 300) {
+          fail(response, 400, 'INVALID_RESOURCE_ID', 'Resource id exceeds the limit.');
+          return;
+        }
+        const found = kind === 'run' ? runResource(await runStore.get(id)) : (await collect(kind as AdminResourceKind, '', 200)).find(
           (entry) => entry.id === id,
         );
         if (!found) {
@@ -274,8 +276,12 @@ class AdminAdapterRoutes {
         }
         response.json({ ...adminEnvelope(), resource: found });
       } catch (e) {
+        if (e instanceof AdminRunNotFound) {
+          fail(response, 404, 'NOT_FOUND', 'No such resource.');
+          return;
+        }
         logger.err('[admin-adapter] resource failed: ' + (e instanceof Error ? e.message : e));
-        fail(response, 500, 'RESOURCE_FAILED', 'The adapter could not read that resource.');
+        fail(response, 503, 'RESOURCE_FAILED', 'The adapter could not read that resource.');
       }
     });
 
@@ -298,7 +304,7 @@ class AdminAdapterRoutes {
         });
       } catch (e) {
         logger.err('[admin-adapter] search failed: ' + (e instanceof Error ? e.message : e));
-        fail(response, 500, 'SEARCH_FAILED', 'The adapter could not run that search.');
+        fail(response, 503, 'SEARCH_FAILED', 'The adapter could not run that search.');
       }
     });
 
@@ -505,46 +511,75 @@ class AdminAdapterRoutes {
         });
       } catch (e) {
         logger.err('[admin-adapter] audit failed: ' + (e instanceof Error ? e.message : e));
-        fail(response, 500, 'AUDIT_FAILED', 'The adapter could not read its audit records.');
+        fail(response, 503, 'AUDIT_FAILED', 'The adapter could not read its audit records.');
       }
     });
 
+    let activeStreams = 0;
     app.get(`${PREFIX}/events`, (request: Request, response: Response) => {
-      response.setHeader('Content-Type', 'text/event-stream');
-      response.setHeader('Connection', 'keep-alive');
-      response.flushHeaders?.();
+      if (activeStreams >= 32) {
+        fail(response, 503, 'STREAM_CAPACITY', 'Admin event stream capacity reached.');
+        return;
+      }
+      activeStreams++;
+      let closed = false;
+      let timer: ReturnType<typeof setInterval> | undefined;
+      const cleanup = (): void => {
+        if (closed) return;
+        closed = true;
+        activeStreams--;
+        if (timer !== undefined) clearInterval(timer);
+        request.removeListener('close', cleanup);
+        response.removeListener('close', cleanup);
+        response.removeListener('error', cleanup);
+      };
+      const stop = (): void => {
+        cleanup();
+        try { if (!response.destroyed && !response.writableEnded) response.end(); } catch { /* Socket already closed. */ }
+      };
+      request.on('close', cleanup);
+      response.on('close', cleanup);
+      response.on('error', cleanup);
+      try {
+        response.setHeader('Cache-Control', 'no-store');
+        response.setHeader('Content-Type', 'text/event-stream');
+        response.setHeader('Connection', 'keep-alive');
+        response.flushHeaders?.();
+      } catch { stop(); return; }
 
       const send = (event: Record<string, unknown>): void => {
-        response.write(`data: ${JSON.stringify(event)}\n\n`);
+        if (closed) return;
+        try {
+          if (response.destroyed || response.writableEnded || !response.write(`data: ${JSON.stringify(event)}\n\n`)) stop();
+        } catch { stop(); }
       };
 
       // One frame every ten seconds carrying the facts that change fastest.
       // A stream that says nothing is indistinguishable from a dead one, so
       // this always sends something, even when nothing changed.
-      const timer = setInterval(() => {
-        const sync = backendInfo.getBackendInfo().chainSync;
-        send({
-          id: randomUUID(),
-          at: adminTimestamp(),
-          application: 'explorer',
-          kind: 'explorer.tick',
-          severity: 'info',
-          message: `Explorer at height ${blocks.getCurrentBlockHeight()} with ${Object.keys(memPool.getMempool()).length} mempool transactions.`,
-          resourceKind: null,
-          resourceId: null,
-          correlationId: null,
-          data: {
-            blockHeight: blocks.getCurrentBlockHeight(),
-            mempoolTransactions: Object.keys(memPool.getMempool()).length,
-            nodeBlocks: sync?.blocks ?? null,
-            nodeHeaders: sync?.headers ?? null,
-          },
-        });
+      timer = setInterval(() => {
+        if (closed) return;
+        try {
+          const sync = backendInfo.getBackendInfo().chainSync;
+          send({
+            id: randomUUID(),
+            at: adminTimestamp(),
+            application: 'explorer',
+            kind: 'explorer.tick',
+            severity: 'info',
+            message: `Explorer at height ${blocks.getCurrentBlockHeight()} with ${Object.keys(memPool.getMempool()).length} mempool transactions.`,
+            resourceKind: null,
+            resourceId: null,
+            correlationId: null,
+            data: {
+              blockHeight: blocks.getCurrentBlockHeight(),
+              mempoolTransactions: Object.keys(memPool.getMempool()).length,
+              nodeBlocks: sync?.blocks ?? null,
+              nodeHeaders: sync?.headers ?? null,
+            },
+          });
+        } catch { stop(); }
       }, 10_000);
-
-      request.on('close', () => {
-        clearInterval(timer);
-      });
     });
 
     logger.info(

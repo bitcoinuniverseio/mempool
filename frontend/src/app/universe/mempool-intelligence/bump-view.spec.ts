@@ -54,6 +54,10 @@ describe('readTarget', () => {
     expect(readTarget(1.5)).toBe(1.5);
     expect(readTarget(' 12 ')).toBe(12);
   });
+  it('accepts exact three-place decimal input without binary floating point rejection', () => {
+    for (const value of ['1.001','1.009','99.999']) expect(readTarget(value)).toBe(Number(value));
+    expect(readTarget('0x10')).toBeNull();expect(readTarget('1e2')).toBeNull();
+  });
 
   it('refuses an empty box rather than picking a rate', () => {
     expect(readTarget('')).toBeNull();

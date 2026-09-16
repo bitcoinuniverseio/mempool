@@ -1,13 +1,16 @@
+import { observeStaking, slashingLabel, reconciliationLabel } from './staking-view';
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { BitcoinStakingApiService, StakingProtocolParameters } from './bitcoin-staking.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-staking-parameters',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -23,12 +26,12 @@ import { BitcoinStakingApiService, StakingProtocolParameters } from './bitcoin-s
         </p>
 
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/protocols/bitcoin-staking">Overview</a>
-          <a class="nav-link" routerLink="/protocols/bitcoin-staking/delegations">Delegations</a>
-          <a class="nav-link" routerLink="/protocols/bitcoin-staking/finality-providers">Finality Providers</a>
-          <a class="nav-link active" routerLink="/protocols/bitcoin-staking/parameters">Parameters</a>
-          <a class="nav-link" routerLink="/protocols/bitcoin-staking/evidence">Slashing Evidence</a>
-          <a class="nav-link" routerLink="/protocols/bitcoin-staking/reconciliation">PoS Reconciliation</a>
+          <a class="nav-link" [routerLink]="'/protocols/bitcoin-staking' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/protocols/bitcoin-staking/delegations' | relativeUrl">Delegations</a>
+          <a class="nav-link" [routerLink]="'/protocols/bitcoin-staking/finality-providers' | relativeUrl">Finality Providers</a>
+          <a class="nav-link active" [routerLink]="'/protocols/bitcoin-staking/parameters' | relativeUrl">Parameters</a>
+          <a class="nav-link" [routerLink]="'/protocols/bitcoin-staking/evidence' | relativeUrl">Slashing Evidence</a>
+          <a class="nav-link" [routerLink]="'/protocols/bitcoin-staking/reconciliation' | relativeUrl">PoS Reconciliation</a>
         </nav>
       </header>
 
@@ -62,7 +65,7 @@ import { BitcoinStakingApiService, StakingProtocolParameters } from './bitcoin-s
               <dd class="col-sm-6 font-monospace">{{ p.unbonding_time_blocks }} blocks</dd>
 
               <dt class="col-sm-6 text-muted">Min / Max Stake Satoshis</dt>
-              <dd class="col-sm-6 font-monospace">{{ (p.min_staking_amount_sat / 100000000).toFixed(4) }} &ndash; {{ (p.max_staking_amount_sat / 100000000).toFixed(2) }} BTC</dd>
+              <dd class="col-sm-6 font-monospace">{{ (p.min_staking_amount_sat / 100000000).toFixed(4) }} &ndash; {{ p.max_staking_amount_sat ?? 'Unknown' }} sats</dd>
 
               <dt class="col-sm-6 text-muted">Confirmation Depth</dt>
               <dd class="col-sm-6 font-monospace">{{ p.confirmation_depth }} blocks</dd>
@@ -72,7 +75,7 @@ import { BitcoinStakingApiService, StakingProtocolParameters } from './bitcoin-s
             </dl>
 
             <div class="mt-auto pt-3 border-top">
-              <div class="text-muted small mb-1">Slashing Burn Script (Provably Unspendable)</div>
+              <div class="text-muted small mb-1">Reported Slashing Script (spendability not verified)</div>
               <div class="font-monospace small p-2 border rounded bg-body text-break">
                 {{ p.slashing_burn_script }}
               </div>
@@ -98,19 +101,12 @@ export class StakingParametersComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef
   ) {}
 
+  readonly slashingLabel = slashingLabel;
+  readonly reconciliationLabel = reconciliationLabel;
   ngOnInit(): void {
-    this.sub = this.stakingApi.getParameters$().subscribe({
-      next: (data) => {
-        this.parameters = data;
-        this.loading = false;
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        this.error = err.message || 'Failed to load parameters';
-        this.loading = false;
-        this.cdr.markForCheck();
-      },
-    });
+    this.sub = observeStaking(this.stakingApi.networkChanges$, () => {this.parameters = [];this.loading=true;this.error=null;this.cdr.markForCheck();},
+      () => this.stakingApi.getParameters$(), data => {this.parameters=data;this.loading=false;this.cdr.markForCheck();},
+      err => {this.parameters=[];this.error=err?.error?.error || err?.message || loadFailureMessage(classifyLoadFailure(err));this.loading=false;this.cdr.markForCheck();});
   }
 
   ngOnDestroy(): void {

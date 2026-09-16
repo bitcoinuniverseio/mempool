@@ -6,6 +6,42 @@ import {
   JoinMarketFidelityBond,
 } from './collaborative-privacy.models';
 
+/**
+ * Raised when a read has no observation source behind it. The routes map the
+ * code to a 503, so an absent integration is reported as an absent
+ * integration rather than as an answer.
+ */
+export class CollaborativeEvidenceError extends Error {
+  constructor(public readonly code: string, message: string, public readonly status = 503) {
+    super(message);
+  }
+}
+
+const directoryUnavailable =
+  'Coordinator observations are unavailable. Coordinator identity, health, policy and signature reads require the authenticated owned coordinator directory, which is not connected on this deployment.';
+
+const roundsUnavailable =
+  'Round observations are unavailable. Round phases, counts, fees, anonymity sets and classifications require the owned round evidence source and the protocol credential verifier, which are not connected on this deployment.';
+
+const bondsUnavailable =
+  'Fidelity bond observations are unavailable. Bond UTXO, locktime, value and signature reads require the owned Bitcoin reader and the JoinMarket bond signature verifier, which are not connected on this deployment.';
+
+/**
+ * Collaborative transaction protocols, coordinators, rounds and bonds.
+ *
+ * The protocol catalogue is a static reference: protocol identifiers,
+ * coordination models and specification links are facts about the protocols,
+ * not observations, and stay answerable.
+ *
+ * Everything else the revision this replaces answered from constants: two
+ * coordinators reported online with abbreviated signatures nothing checked,
+ * two rounds classified protocol_proven with final txids nothing observed,
+ * a fidelity bond with signature_verified set to true and a 24 hour round
+ * count that was a literal. A reader could not tell those from evidence, and
+ * "online", "protocol_proven" and "signature_verified" are exactly the fields
+ * a reader trusts. Each observation read now names the integration it is
+ * waiting on, and the routes turn that into a 503.
+ */
 export class CollaborativePrivacyService {
   private protocols: CollaborativeProtocol[] = [
     {
@@ -37,106 +73,9 @@ export class CollaborativePrivacyService {
     },
   ];
 
-  private coordinators: CollaborativeCoordinator[] = [
-    {
-      coordinator_id: 'coord-zk-wasabi',
-      identity_key: '0289be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81799',
-      name: 'zkSNACKs WabiSabi Coordinator',
-      protocol: 'wabisabi',
-      protocol_revision: '2.0.4',
-      networks: ['bitcoin'],
-      endpoint_types: ['tor_v3', 'clearnet_tls'],
-      fee_policy_description: '0.3% coordinator fee on fresh mixed outputs; zero fee below 0.01 BTC',
-      min_input_count: 50,
-      max_input_count: 400,
-      health_status: 'online',
-      effective_from: '2026-01-01T00:00:00Z',
-      expires_at: '2027-01-01T00:00:00Z',
-      coordinator_signature: '30440220...',
-    },
-    {
-      coordinator_id: 'coord-joinmarket-yield',
-      identity_key: '0379be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798',
-      name: 'JoinMarket Pit Directory',
-      protocol: 'joinmarket',
-      protocol_revision: '0.9.9',
-      networks: ['bitcoin'],
-      endpoint_types: ['tor_v3'],
-      fee_policy_description: 'Makers set independent absolute and relative satoshi fee offers',
-      min_input_count: 3,
-      max_input_count: 12,
-      health_status: 'online',
-      effective_from: '2026-01-01T00:00:00Z',
-      expires_at: '2027-01-01T00:00:00Z',
-      coordinator_signature: '30450221...',
-    },
-  ];
-
-  private rounds: CollaborativeRound[] = [
-    {
-      round_id: 'rnd-ws-864205-01',
-      protocol: 'wabisabi',
-      coordinator_id: 'coord-zk-wasabi',
-      phase: 'ended',
-      input_count: 142,
-      output_count: 198,
-      registered_amount_sats: 452000000,
-      mining_fee_sats: 142000,
-      coordinator_fee_sats: 135600,
-      equal_output_groups_count: 8,
-      effective_anonymity_set_min: 42,
-      effective_anonymity_set_max: 85,
-      final_txid: '4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b',
-      classification: 'protocol_proven',
-      started_at_utc: '2026-09-04T15:30:00Z',
-      completed_at_utc: '2026-09-04T16:15:00Z',
-    },
-    {
-      round_id: 'rnd-jm-864210-02',
-      protocol: 'joinmarket',
-      coordinator_id: 'coord-joinmarket-yield',
-      phase: 'ended',
-      input_count: 7,
-      output_count: 7,
-      registered_amount_sats: 25000000,
-      mining_fee_sats: 4500,
-      coordinator_fee_sats: 0,
-      equal_output_groups_count: 1,
-      effective_anonymity_set_min: 5,
-      effective_anonymity_set_max: 6,
-      final_txid: '9b71d224bd62f3785d96d46ad3ea3d73319bfbc2770d3d5f7cc9a4744d91aafb',
-      classification: 'protocol_proven',
-      started_at_utc: '2026-09-04T17:00:00Z',
-      completed_at_utc: '2026-09-04T17:20:00Z',
-    },
-  ];
-
-  private fidelityBonds: JoinMarketFidelityBond[] = [
-    {
-      bond_utxo: '3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c:0',
-      maker_pubkey: '0250863ad64a87ae8a2fe83c1af1a8403cb53f53e486d8511dad8a04887e5b2352',
-      locktime_height: 910000,
-      current_height: 864210,
-      blocks_remaining: 45790,
-      locked_sats: 50000000,
-      calculated_bond_value_sats: 48200000,
-      is_active: true,
-      reused: false,
-      signature_verified: true,
-    },
-  ];
-
   public getOverview(): CollaborativePrivacyOverview {
-    return {
-      active_protocols_count: this.protocols.length,
-      active_coordinators_count: this.coordinators.length,
-      observed_rounds_24h: 48,
-      active_fidelity_bonds_count: this.fidelityBonds.length,
-      protocols: this.protocols,
-      coordinators: this.coordinators,
-      recent_rounds: this.rounds,
-      fidelity_bonds: this.fidelityBonds,
-    };
+    throw new CollaborativeEvidenceError('unavailable-observation-source',
+      'The collaborative privacy overview is unavailable. Coordinator, round and bond aggregates are derived from observations, and no owned coordinator directory, round evidence source or bond reader is connected on this deployment.');
   }
 
   public listProtocols(): { protocols: CollaborativeProtocol[] } {
@@ -144,23 +83,23 @@ export class CollaborativePrivacyService {
   }
 
   public listCoordinators(): { coordinators: CollaborativeCoordinator[] } {
-    return { coordinators: this.coordinators };
+    throw new CollaborativeEvidenceError('unavailable-directory', directoryUnavailable);
   }
 
-  public getCoordinator(coordinatorId: string): CollaborativeCoordinator | undefined {
-    return this.coordinators.find((c) => c.coordinator_id === coordinatorId);
+  public getCoordinator(_coordinatorId: string): CollaborativeCoordinator | undefined {
+    throw new CollaborativeEvidenceError('unavailable-directory', directoryUnavailable);
   }
 
   public listRounds(): { rounds: CollaborativeRound[] } {
-    return { rounds: this.rounds };
+    throw new CollaborativeEvidenceError('unavailable-round-source', roundsUnavailable);
   }
 
-  public getRound(roundId: string): CollaborativeRound | undefined {
-    return this.rounds.find((r) => r.round_id === roundId);
+  public getRound(_roundId: string): CollaborativeRound | undefined {
+    throw new CollaborativeEvidenceError('unavailable-round-source', roundsUnavailable);
   }
 
   public listFidelityBonds(): { fidelity_bonds: JoinMarketFidelityBond[] } {
-    return { fidelity_bonds: this.fidelityBonds };
+    throw new CollaborativeEvidenceError('unavailable-bond-source', bondsUnavailable);
   }
 
   public verifyPublicPackage(pkg: unknown): { verified: false; stage: 'invalid-input' | 'unavailable-verifier'; error: string } {

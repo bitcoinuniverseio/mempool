@@ -3,17 +3,18 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { ConsensusApiService, ConsensusProposal } from './consensus.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-consensus-proposal-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
       <header class="page-header mb-4">
         <div class="d-flex align-items-center gap-2 mb-2">
-          <a routerLink="/labs/consensus" class="btn btn-sm btn-outline-secondary">
+          <a [routerLink]="'/labs/consensus' | relativeUrl" class="btn btn-sm btn-outline-secondary">
             &larr; Back to Proposals
           </a>
           <span class="text-muted small">Consensus Upgrade Lab</span>
@@ -85,7 +86,7 @@ import { ConsensusApiService, ConsensusProposal } from './consensus.service';
             <div class="fw-semibold">Simulate this Proposal in a Vault</div>
             <div class="small text-muted">Test custody state transitions and emergency clawback mechanics.</div>
           </div>
-          <a routerLink="/labs/vaults/simulate" class="btn btn-primary">
+          <a [routerLink]="'/labs/vaults/simulate' | relativeUrl" [queryParams]="{proposal: proposal.proposal_id}" class="btn btn-primary">
             Launch Covenant Simulator
           </a>
         </div>
@@ -98,6 +99,7 @@ export class ConsensusProposalDetailComponent implements OnInit, OnDestroy {
   loading = true;
   error: string | null = null;
   private sub = new Subscription();
+  private request?:Subscription;
 
   constructor(
     private route: ActivatedRoute,
@@ -109,18 +111,17 @@ export class ConsensusProposalDetailComponent implements OnInit, OnDestroy {
     this.sub.add(
       this.route.paramMap.subscribe(params => {
         const id = params.get('proposalId');
-        if (id) {
-          this.fetchProposal(id);
-        }
+        this.request?.unsubscribe();this.proposal=null;this.error=null;this.loading=false;
+        if (id) this.fetchProposal(id); else this.error='This address does not name a proposal.';this.cd.markForCheck();
       })
     );
   }
 
   private fetchProposal(id: string): void {
     this.loading = true;
-    this.sub.add(
-      this.api.getProposalById$(id).subscribe({
+    this.request=this.api.getProposalById$(id).subscribe({
         next: data => {
+          if(data?.proposal_id!==id){this.error='Proposal identity does not match this address.';this.loading=false;this.cd.markForCheck();return;}
           this.proposal = data;
           this.loading = false;
           this.cd.markForCheck();
@@ -130,11 +131,10 @@ export class ConsensusProposalDetailComponent implements OnInit, OnDestroy {
           this.loading = false;
           this.cd.markForCheck();
         },
-      })
-    );
+      });
   }
 
   ngOnDestroy(): void {
-    this.sub.unsubscribe();
+    this.request?.unsubscribe();this.sub.unsubscribe();
   }
 }

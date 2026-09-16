@@ -1,32 +1,60 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { ConsensusApiService, ConsensusProposal } from './consensus.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-consensus-compare',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
       <header class="page-header mb-4">
-        <div class="title-row d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <div
+          class="title-row d-flex flex-wrap align-items-center justify-content-between gap-2"
+        >
           <h1 class="m-0">Covenant Proposal Comparison Matrix</h1>
-          <span class="badge bg-primary">Comparative Technical Audit</span>
+          <span class="badge bg-primary">Proposal reference comparison</span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
-          Side-by-side evaluation of Bitcoin covenant proposals across expressiveness, computational weight, and consensus risk.
+          Reference descriptions of Bitcoin covenant proposals across
+          expressiveness, computational weight, and consensus risk.
         </p>
 
         <!-- Navigation Tabs -->
-        <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/labs/consensus">Consensus Proposals</a>
-          <a class="nav-link active" routerLink="/labs/consensus/compare">Compare Matrix</a>
-          <a class="nav-link" routerLink="/labs/vaults">Vaults Overview</a>
-          <a class="nav-link" routerLink="/labs/vaults/designer">Vault Designer</a>
-          <a class="nav-link" routerLink="/labs/vaults/simulate">Covenant Simulator</a>
+        <nav
+          class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle"
+        >
+          <a class="nav-link" [routerLink]="'/labs/consensus' | relativeUrl"
+            >Consensus Proposals</a
+          >
+          <a
+            class="nav-link active"
+            [routerLink]="'/labs/consensus/compare' | relativeUrl"
+            >Compare Matrix</a
+          >
+          <a class="nav-link" [routerLink]="'/labs/vaults' | relativeUrl"
+            >Vaults Overview</a
+          >
+          <a
+            class="nav-link"
+            [routerLink]="'/labs/vaults/designer' | relativeUrl"
+            >Vault Designer</a
+          >
+          <a
+            class="nav-link"
+            [routerLink]="'/labs/vaults/simulate' | relativeUrl"
+            >Covenant Simulator</a
+          >
         </nav>
       </header>
 
@@ -39,8 +67,17 @@ import { ConsensusApiService, ConsensusProposal } from './consensus.service';
         {{ error }}
       </div>
 
-      <div *ngIf="!loading && proposals.length > 0" class="card bg-body-tertiary border">
-        <div class="table-responsive" tabindex="0" role="region" aria-label="Covenant Proposal Comparison Matrix, scroll horizontally" i18n-aria-label>
+      <div
+        *ngIf="!loading && proposals.length > 0"
+        class="card bg-body-tertiary border"
+      >
+        <div
+          class="table-responsive"
+          tabindex="0"
+          role="region"
+          aria-label="Covenant Proposal Comparison Matrix, scroll horizontally"
+          i18n-aria-label
+        >
           <table class="table table-hover align-middle mb-0">
             <thead>
               <tr>
@@ -57,32 +94,63 @@ import { ConsensusApiService, ConsensusProposal } from './consensus.service';
               <tr *ngFor="let p of proposals">
                 <td>
                   <div class="fw-bold">{{ p.title }}</div>
-                  <span class="badge bg-secondary" *ngIf="p.bip_number">BIP {{ p.bip_number }}</span>
+                  <span class="badge bg-secondary" *ngIf="p.bip_number"
+                    >BIP {{ p.bip_number }}</span
+                  >
                 </td>
-                <td><span class="badge bg-info">{{ p.covenant_type | titlecase }}</span></td>
+                <td>
+                  <span class="badge bg-info">{{
+                    p.covenant_type | titlecase
+                  }}</span>
+                </td>
                 <td>
                   <div class="d-flex align-items-center gap-2">
-                    <div class="progress flex-grow-1" style="height: 6px; min-width: 60px;">
-                      <div class="progress-bar bg-primary" [style.width.%]="p.expressiveness_score"></div>
+                    <div
+                      class="progress flex-grow-1"
+                      style="height: 6px; min-width: 60px;"
+                    >
+                      <div
+                        class="progress-bar bg-primary"
+                        [style.width.%]="p.expressiveness_score"
+                      ></div>
                     </div>
-                    <span class="small">{{ p.expressiveness_score }}/100</span>
+                    <span class="small">{{
+                      p.expressiveness_score === null
+                        ? 'Not measured'
+                        : p.expressiveness_score + '/100'
+                    }}</span>
                   </div>
                 </td>
                 <td>
-                  <span class="badge" [ngClass]="{
-                    'bg-success': p.security_surface_rating === 'minimal',
-                    'bg-warning': p.security_surface_rating === 'moderate',
-                    'bg-danger': p.security_surface_rating === 'complex'
-                  }">
-                    {{ p.security_surface_rating | titlecase }}
+                  <span
+                    class="badge"
+                    [ngClass]="{
+                      'bg-success': p.security_surface_rating === 'minimal',
+                      'bg-warning': p.security_surface_rating === 'moderate',
+                      'bg-danger': p.security_surface_rating === 'complex',
+                    }"
+                  >
+                    {{
+                      p.security_surface_rating
+                        ? (p.security_surface_rating | titlecase)
+                        : 'Not assessed'
+                    }}
                   </span>
                 </td>
                 <td>
-                  <code *ngFor="let op of p.opcodes" class="small me-1">{{ op }}</code>
+                  <code *ngFor="let op of p.opcodes" class="small me-1">{{
+                    op
+                  }}</code>
                 </td>
                 <td class="small text-muted">{{ p.activation_mechanism }}</td>
                 <td class="text-end">
-                  <a [routerLink]="['/labs/consensus', p.proposal_id]" class="btn btn-sm btn-outline-primary">
+                  <a
+                    [routerLink]="[
+                      '/labs/consensus' | relativeUrl,
+                      p.proposal_id,
+                    ]"
+                    class="btn btn-sm btn-outline-primary"
+                  >
                     Inspect
                   </a>
                 </td>
@@ -93,19 +161,25 @@ import { ConsensusApiService, ConsensusProposal } from './consensus.service';
       </div>
     </div>
   `,
-  styles: [`
-    .alert { overflow-wrap: anywhere; }
-    .text-muted { color: var(--u-text-muted) !important; }
-    .nav-link {
-      color: inherit;
-      padding: 0.4rem 0.8rem;
-      border-radius: 0.375rem;
-    }
-    .nav-link.active {
-      background-color: var(--bs-primary, #f7931a);
-      color: #fff;
-    }
-  `],
+  styles: [
+    `
+      .alert {
+        overflow-wrap: anywhere;
+      }
+      .text-muted {
+        color: var(--u-text-muted) !important;
+      }
+      .nav-link {
+        color: inherit;
+        padding: 0.4rem 0.8rem;
+        border-radius: 0.375rem;
+      }
+      .nav-link.active {
+        background-color: var(--bs-primary, #f7931a);
+        color: #fff;
+      }
+    `,
+  ],
 })
 export class ConsensusCompareComponent implements OnInit, OnDestroy {
   proposals: ConsensusProposal[] = [];
@@ -121,7 +195,7 @@ export class ConsensusCompareComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.sub.add(
       this.api.getProposals$().subscribe({
-        next: data => {
+        next: (data) => {
           this.proposals = data;
           this.loading = false;
           this.cd.markForCheck();

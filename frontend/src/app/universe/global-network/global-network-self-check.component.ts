@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { GlobalNetworkApiService, GlobalNetworkSelfCheckResult } from './global-network.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-global-network-self-check',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -17,16 +18,16 @@ import { GlobalNetworkApiService, GlobalNetworkSelfCheckResult } from './global-
           <span class="badge bg-primary">SSRF-Defended P2P Probe</span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
-          Validate your Bitcoin node's inbound reachability, latency, and BIP324 encrypted transport readiness from distributed sensors.
+          Check a public endpoint TCP connection from this server. Bitcoin handshake, BIP324 readiness and distributed reachability are not tested.
         </p>
 
         <!-- Sub-navigation tabs -->
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/network/global">Overview</a>
-          <a class="nav-link" routerLink="/network/global/nodes">Reachable Nodes</a>
-          <a class="nav-link" routerLink="/network/global/snapshots">Snapshots Archive</a>
-          <a class="nav-link" routerLink="/network/global/seeds">DNS Seeds</a>
-          <a class="nav-link active" routerLink="/network/global/self-check">Node Self-Check</a>
+          <a class="nav-link" [routerLink]="'/network/global' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/network/global/nodes' | relativeUrl">Reachable Nodes</a>
+          <a class="nav-link" [routerLink]="'/network/global/snapshots' | relativeUrl">Snapshots Archive</a>
+          <a class="nav-link" [routerLink]="'/network/global/seeds' | relativeUrl">DNS Seeds</a>
+          <a class="nav-link active" [routerLink]="'/network/global/self-check' | relativeUrl">Node Self-Check</a>
         </nav>
       </header>
 
@@ -110,15 +111,15 @@ import { GlobalNetworkApiService, GlobalNetworkSelfCheckResult } from './global-
           <div class="col-12 col-sm-6 col-md-3">
             <div class="p-3 border rounded bg-body">
               <div class="text-muted small">BIP324 v2 Handshake</div>
-              <div class="fw-bold" [ngClass]="result.bip324_handshake ? 'text-success' : 'text-warning'">
-                {{ result.bip324_handshake ? 'Passed (Encrypted)' : 'Not Advertised (v1 Only)' }}
+              <div class="fw-bold" [ngClass]="result.bip324_handshake ? 'text-success' : 'text-muted'">
+                {{ result.bip324_handshake === null ? 'Not attempted (TCP connect only)' : (result.bip324_handshake ? 'Passed (Encrypted)' : 'Not Advertised (v1 Only)') }}
               </div>
             </div>
           </div>
           <div class="col-12 col-sm-6 col-md-3">
             <div class="p-3 border rounded bg-body">
-              <div class="text-muted small">Handshake Latency</div>
-              <div class="fw-bold text-primary">{{ result.latency_ms }} ms</div>
+              <div class="text-muted small">TCP Connect Latency</div>
+              <div class="fw-bold text-primary">{{ result.latency_ms !== null ? result.latency_ms + ' ms' : (result.error || 'unreachable') }}</div>
             </div>
           </div>
         </div>

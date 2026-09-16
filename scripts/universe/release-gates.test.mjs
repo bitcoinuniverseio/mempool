@@ -227,6 +227,50 @@ test('other ports on the declared NetBird address remain exposed', () => {
   ]), ['5353', '8996']);
 });
 
+function runListenerGate(lines) {
+  const gate = script.match(/^gate_private_listeners\(\) \{$[\s\S]*?^\}$/m)?.[0];
+  const allowed = script.match(/^PUBLIC_LISTENERS=.*$/m)?.[0];
+  assert.ok(gate && allowed);
+  return bash(`
+${allowed}
+ss() { printf '%s\\n' "$SS_OUTPUT"; }
+log() { printf '%s\\n' "$*"; }
+fail() { printf '%s\\n' "$*" >&2; exit 1; }
+${gate}
+gate_private_listeners
+`, { SS_OUTPUT: [SS_HEADER, ...lines].join('\n') });
+}
+
+test('release address probe uses the configured network and requires real alternate-network history', () => {
+  const select = script.match(/^select_address_probe\(\) \{$[\s\S]*?^\}$/m)?.[0];
+  assert.ok(select);
+  const run = (network, probe = '') => bash(`fail() { printf '%s' "$*" >&2; exit 1; }\n${select}\nselect_address_probe "$PROBE_NETWORK"\nprintf '%s %s' "$GENESIS_HASH" "$ADDRESS_PROBE"`, {
+    PROBE_NETWORK: network, UNIVERSE_RELEASE_ADDRESS_PROBE: probe,
+  });
+  assert.match(run('mainnet').stdout, /^000000000019d668.* 1Q2TWHE3GMdB6BZKafqwxXtWAWgFt5Jvm3$/);
+  const expected = { signet: '00000008819873e9', testnet: '000000000933ea01', testnet4: '00000000da84f2ba', regtest: '0f9188f13cb7b2c7' };
+  for (const [network, prefix] of Object.entries(expected)) {
+    assert.notEqual(run(network).status, 0, 'empty history probe must fail');
+    const selected = run(network, 'operator-supplied-history-address');
+    assert.equal(selected.status, 0, selected.stderr);
+    assert.ok(selected.stdout.startsWith(prefix));
+    assert.ok(selected.stdout.endsWith(' operator-supplied-history-address'));
+  }
+  assert.notEqual(run('unknown', 'address').status, 0);
+});
+
+test('Signet P2P is permitted without permitting adapter or ingress ports', () => {
+  const peer = runListenerGate(['LISTEN 0 4096 0.0.0.0:38333 0.0.0.0:*']);
+  assert.equal(peer.status, 0, peer.stdout + peer.stderr);
+  for (const port of [38385, 8099]) {
+    for (const address of ['0.0.0.0', '[::]', '159.195.109.76', '100.124.130.242']) {
+      const result = runListenerGate([`LISTEN 0 4096 ${address}:${port} 0.0.0.0:*`]);
+      assert.notEqual(result.status, 0, `${address}:${port} passed without verified peer filtering`);
+      assert.match(result.stderr, new RegExp(String(port)));
+    }
+  }
+});
+
 // ------------------------------------------------------------ wait_for ----
 
 const waitForMatch = script.match(/^wait_for\(\) \{$[\s\S]*?^\}$/m);

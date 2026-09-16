@@ -1,14 +1,24 @@
 import { Application, Request, Response } from 'express';
-import offchainService from './offchain.service';
+import offchainService, { OffchainRegistryError } from './offchain.service';
+import { OffchainVerificationError } from './package-verifier';
 
 class OffchainRoutes {
   public initRoutes(app: Application): void {
+    for (const kind of ['statechain', 'coinswap'] as const) {
+      app.post(`/api/v1/intelligence/offchain/${kind}/verify`, async (req: Request, res: Response) => {
+        try { res.json(await (kind === 'statechain' ? offchainService.verifyTransferPackage(req.body) : offchainService.verifyCoinswapPackage(req.body))); }
+        catch (error) {
+          const known = error instanceof OffchainVerificationError;
+          res.status(known ? error.status : (error as any).status || 503).json({ is_valid: false, code: known ? error.code : 'verification-unavailable', error: known ? error.message : 'The independent transaction verifier is unavailable.' });
+        }
+      });
+    }
     app.get('/api/v1/intelligence/offchain/overview', (req: Request, res: Response) => {
       try {
         const overview = offchainService.getOverview();
         res.json(overview);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        res.status(err instanceof OffchainRegistryError ? err.status : 503).json({ stage: err instanceof OffchainRegistryError ? err.code : 'source-unavailable', error: err instanceof OffchainRegistryError ? err.message : 'Offchain evidence is unavailable.' });
       }
     });
 
@@ -17,7 +27,7 @@ class OffchainRoutes {
         const protocols = offchainService.listProtocols();
         res.json(protocols);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        res.status(err instanceof OffchainRegistryError ? err.status : 503).json({ stage: err instanceof OffchainRegistryError ? err.code : 'source-unavailable', error: err instanceof OffchainRegistryError ? err.message : 'Offchain evidence is unavailable.' });
       }
     });
 
@@ -26,7 +36,7 @@ class OffchainRoutes {
         const operators = offchainService.listOperators();
         res.json(operators);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        res.status(err instanceof OffchainRegistryError ? err.status : 503).json({ stage: err instanceof OffchainRegistryError ? err.code : 'source-unavailable', error: err instanceof OffchainRegistryError ? err.message : 'Offchain evidence is unavailable.' });
       }
     });
 
@@ -38,7 +48,7 @@ class OffchainRoutes {
         }
         res.json(operator);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        res.status(err instanceof OffchainRegistryError ? err.status : 503).json({ stage: err instanceof OffchainRegistryError ? err.code : 'source-unavailable', error: err instanceof OffchainRegistryError ? err.message : 'Offchain evidence is unavailable.' });
       }
     });
 
@@ -47,7 +57,7 @@ class OffchainRoutes {
         const history = offchainService.getOperatorHistory(req.params.operatorId);
         res.json(history);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        res.status(err instanceof OffchainRegistryError ? err.status : 503).json({ stage: err instanceof OffchainRegistryError ? err.code : 'source-unavailable', error: err instanceof OffchainRegistryError ? err.message : 'Offchain evidence is unavailable.' });
       }
     });
 
@@ -56,7 +66,7 @@ class OffchainRoutes {
         const offers = offchainService.listOffers();
         res.json(offers);
       } catch (err: any) {
-        res.status(500).json({ error: err.message || 'Internal error' });
+        res.status(err instanceof OffchainRegistryError ? err.status : 503).json({ stage: err instanceof OffchainRegistryError ? err.code : 'source-unavailable', error: err instanceof OffchainRegistryError ? err.message : 'Offchain evidence is unavailable.' });
       }
     });
 

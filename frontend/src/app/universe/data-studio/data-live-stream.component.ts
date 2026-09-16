@@ -1,44 +1,61 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, OnDestroy, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { BehaviorSubject, Observable, catchError, of } from 'rxjs';
+import { BehaviorSubject, Subscription } from 'rxjs';
 import { SeoService } from '@app/services/seo.service';
-import { UniverseApiService } from '@app/universe/universe-api.service';
-import { StreamManifest } from '@app/universe/universe.types';
-
-interface LiveStreamViewModel {
-  readonly kind: 'loading' | 'ready' | 'error';
-  readonly streams?: StreamManifest[];
-}
-
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
+import { DataStudioApiService } from './data-studio-api.service';
 @Component({
   selector: 'app-data-live-stream',
   templateUrl: './data-live-stream.component.html',
-  styleUrls: ['../product-page.scss'],
+  styleUrls: ['../product-page.scss', './data-studio.component.scss'],
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class DataLiveStreamComponent implements OnInit {
-  private readonly state = new BehaviorSubject<LiveStreamViewModel>({ kind: 'loading' });
-  readonly vm$: Observable<LiveStreamViewModel> = this.state.asObservable();
-
+export class DataLiveStreamComponent implements OnInit, OnDestroy {
+  private state = new BehaviorSubject<any>({ kind: 'loading', events: [], connection: 'disconnected' });
+  readonly vm$ = this.state.asObservable();
+  private read?: Subscription;
+  private stream?: Subscription;
   constructor(
-    private api: UniverseApiService,
-    private seo: SeoService,
+    @Inject(DataStudioApiService) private api: DataStudioApiService,
+    @Inject(SeoService) private seo: SeoService
   ) {
-    this.seo.setTitle('Universe Live Streams Inspector');
+    seo.setTitle('Owned Data Snapshot Stream Inspector');
   }
-
-  ngOnInit(): void {
-    this.api.getDataCatalog$()
-      .pipe(catchError(() => of(null)))
-      .subscribe((catalog) => {
-        if (!catalog) {
-          this.state.next({ kind: 'error' });
-          return;
-        }
-        this.state.next({ kind: 'ready', streams: catalog.streams });
-      });
+  ngOnInit() {
+    this.read = this.api.watchCatalog$().subscribe((catalog) => {
+      this.disconnect();
+      this.state.next({ ...catalog, events: [], connection: 'disconnected' });
+    });
+  }
+  connect() {
+    this.disconnect();
+    this.state.next({ ...this.state.value, connection: 'connecting', streamError: null });
+    this.stream = this.api.stream$().subscribe({
+      next: (row) => {
+        const current = this.state.value;
+        if (row.kind === 'event') {
+          const events = [...current.events.filter((e) => e.id !== row.event.id), row.event].slice(-20);
+          this.state.next({ ...current, events, connection: 'connected' });
+        } else this.state.next({ ...current, connection: row.kind, streamError: row.message ?? null });
+      },
+      error: (e) =>
+        this.state.next({
+          ...this.state.value,
+          connection: 'disconnected',
+          streamError: e.message ?? 'Owned event source unavailable.',
+        }),
+    });
+  }
+  disconnect() {
+    this.stream?.unsubscribe();
+    this.stream = undefined;
+    this.state.next({ ...this.state.value, connection: 'disconnected' });
+  }
+  ngOnDestroy() {
+    this.disconnect();
+    this.read?.unsubscribe();
   }
 }

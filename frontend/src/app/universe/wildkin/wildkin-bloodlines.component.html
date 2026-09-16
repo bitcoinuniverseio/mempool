@@ -1,22 +1,22 @@
 <div class="container-xl product-page">
   <header class="page-head">
     <nav class="crumbs">
-      <a [routerLink]="['/protocols']">Protocols</a>
+      <a [routerLink]="['/protocols' | relativeUrl]">Protocols</a>
       <span class="divider">/</span>
-      <a [routerLink]="['/wildkin']">Wildkin</a>
+      <a [routerLink]="['/wildkin' | relativeUrl]">Wildkin</a>
       <span class="divider">/</span>
       <span>Bloodlines</span>
     </nav>
     <h1>Wildkin Bloodlines & Braid Ceremonies</h1>
     <p class="summary">
-      Dual-parent inscription provenance, inheritance commitments, and lifetime reproduction limits enforced on-chain.
+      Dual-parent inscription provenance, inheritance commitments, and source-reported reproduction limits.
     </p>
   </header>
 
   <nav class="nav-tabs">
-    <a [routerLink]="['/wildkin']">Overview</a>
-    <a [routerLink]="['/wildkin/creatures']">Creatures</a>
-    <a [routerLink]="['/wildkin/bloodlines']" class="active">Bloodlines & Braids</a>
+    <a [routerLink]="['/wildkin' | relativeUrl]">Overview</a>
+    <a [routerLink]="['/wildkin/creatures' | relativeUrl]">Creatures</a>
+    <a [routerLink]="['/wildkin/bloodlines' | relativeUrl]" class="active">Bloodlines & Braids</a>
   </nav>
 
   <ng-container *ngIf="vm$ | async as vm">
@@ -24,9 +24,14 @@
       <p>Loading braid ceremony history...</p>
     </div>
 
+    <div *ngIf="vm.kind === 'error'" class="panel">
+      <h2>Braid History Unavailable</h2>
+      <p role="alert">{{ vm.message }}</p>
+    </div>
+
     <ng-container *ngIf="vm.kind === 'ready'">
       <section class="panel">
-        <h2>Settled Braid Ceremonies</h2>
+        <h2>Reported Braid Ceremonies</h2>
         <p>
           A transaction is a valid braid when it spends the binding UTXO of both named parents, commits the inheritance manifest hash, and inscribes exactly one heir creature as a child of both parents.
         </p>
@@ -45,13 +50,13 @@
           </thead>
           <tbody>
             <tr *ngFor="let b of vm.braids">
-              <td class="mono"><a [routerLink]="['/tx', b.braidTxid]">{{ b.braidTxid.slice(0, 16) }}...</a></td>
-              <td class="mono"><strong><a [routerLink]="['/wildkin/creature', b.heirCreatureId]">{{ b.heirCreatureId }}</a></strong></td>
-              <td class="mono"><a [routerLink]="['/wildkin/creature', b.parentAId]">{{ b.parentAId }}</a></td>
-              <td class="mono"><a [routerLink]="['/wildkin/creature', b.parentBId]">{{ b.parentBId }}</a></td>
+              <td class="mono"><a [routerLink]="['/tx' | relativeUrl, b.braidTxid]">{{ b.braidTxid.slice(0, 16) }}...</a></td>
+              <td class="mono"><strong><a [routerLink]="['/wildkin/creature' | relativeUrl, b.heirCreatureId]">{{ b.heirCreatureId }}</a></strong></td>
+              <td class="mono"><a [routerLink]="['/wildkin/creature' | relativeUrl, b.parentAId]">{{ b.parentAId }}</a></td>
+              <td class="mono"><a [routerLink]="['/wildkin/creature' | relativeUrl, b.parentBId]">{{ b.parentBId }}</a></td>
               <td class="mono">{{ b.inheritanceManifestHash.slice(0, 14) }}...</td>
               <td>{{ b.blockHeight }}</td>
-              <td><span class="badge badge-success">Valid Braid</span></td>
+              <td><span class="badge" [class.badge-success]="b.valid === true" [class.badge-danger]="b.valid === false">{{ braidVerdict(b.valid) }}</span></td>
             </tr>
           </tbody>
         </table>

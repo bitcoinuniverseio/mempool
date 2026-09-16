@@ -1,34 +1,33 @@
+import { blockspaceValue, blockspaceShare, blockspaceBtc } from './blockspace-format';
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { BlockspaceApiService, BlockspaceOverview } from './blockspace.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-blockspace-overview',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
       <header class="page-header mb-4">
         <div class="title-row d-flex flex-wrap align-items-center justify-content-between gap-2">
-          <h1 class="m-0">Blockspace Demand and Transaction Semantics Terminal</h1>
-          <span class="badge bg-primary" *ngIf="overview">
-            Median Feerate: {{ overview.median_feerate_24h }} sat/vB
-          </span>
+          <h1 class="m-0">Blockspace Semantics</h1>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
-          Deep structural analysis of Bitcoin blockspace composition, demand regimes, script taxonomy, and transaction intent classification.
+          Composition, demand regimes and transaction classes, from observed blocks.
         </p>
 
         <!-- Navigation Tabs -->
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link active" routerLink="/intelligence/blockspace">Overview</a>
-          <a class="nav-link" routerLink="/intelligence/blockspace/composition">Composition</a>
-          <a class="nav-link" routerLink="/intelligence/blockspace/regimes">Fee Regimes</a>
-          <a class="nav-link" routerLink="/intelligence/blockspace/compare">Regime Compare</a>
-          <a class="nav-link" routerLink="/intelligence/blockspace/taxonomy">Taxonomy Catalog</a>
+          <a class="nav-link active" [routerLink]="'/intelligence/blockspace' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/intelligence/blockspace/composition' | relativeUrl">Composition</a>
+          <a class="nav-link" [routerLink]="'/intelligence/blockspace/regimes' | relativeUrl">Fee Regimes</a>
+          <a class="nav-link" [routerLink]="'/intelligence/blockspace/compare' | relativeUrl">Regime Compare</a>
+          <a class="nav-link" [routerLink]="'/intelligence/blockspace/taxonomy' | relativeUrl">Taxonomy Catalog</a>
         </nav>
       </header>
 
@@ -42,27 +41,28 @@ import { BlockspaceApiService, BlockspaceOverview } from './blockspace.service';
       </div>
 
       <div *ngIf="!loading && overview" class="content-body">
+        <p *ngIf="overview.window?.transactions_complete !== true" class="alert alert-warning" role="status">Transaction coverage is {{ overview.window?.transactions_complete === false ? 'incomplete' : 'unknown' }}. Class counts describe only observed transactions; full class shares are unknown.</p>
         <!-- Metric Cards -->
         <section class="row g-3 mb-4">
           <div class="col-12 col-sm-6 col-lg-3">
             <div class="card p-3 h-100 bg-body-tertiary border">
               <div class="text-muted small">Current Regime</div>
-              <div class="h5 my-1 text-primary text-uppercase">{{ overview.current_regime.regime_type.replace('_', ' ') }}</div>
-              <div class="small text-muted">Height {{ overview.current_regime.start_height }} to present</div>
+              <div class="h5 my-1 text-primary text-uppercase">{{ overview.current_regime ? overview.current_regime.regime_type.replace('_', ' ') : 'not yet observed' }}</div>
+              <div class="small text-muted">{{ overview.current_regime ? 'Height ' + overview.current_regime.start_height + ' to present' : 'Needs a block with a median fee rate' }}</div>
             </div>
           </div>
           <div class="col-12 col-sm-6 col-lg-3">
             <div class="card p-3 h-100 bg-body-tertiary border">
-              <div class="text-muted small">Median Feerate (24h)</div>
-              <div class="h4 my-1 text-success">{{ overview.median_feerate_24h }} sat/vB</div>
-              <div class="small text-muted">Rolling 24-hour window</div>
+              <div class="text-muted small">Median of Observed Block Medians</div>
+              <div class="h4 my-1 text-success">{{ value(overview.median_feerate_24h, 'sat/vB') }}</div>
+              <div class="small text-muted">{{ overview.window?.covers_24h === true ? 'Linked observed blocks span 24 hours relative to the observed tip timestamp' : overview.window?.covers_24h === null ? 'Full window coverage is unknown' : 'Partial observed window' }}. Blocks {{ overview.window?.from_height }}–{{ overview.window?.to_height }}. Observed {{ overview.last_updated | date:'medium' }}.</div>
             </div>
           </div>
           <div class="col-12 col-sm-6 col-lg-3">
             <div class="card p-3 h-100 bg-body-tertiary border">
-              <div class="text-muted small">Primary Demand Driver</div>
-              <div class="h6 my-1 text-info text-truncate" [title]="overview.current_regime.primary_demand_driver">
-                {{ overview.current_regime.primary_demand_driver }}
+              <div class="text-muted small">Observed Fee Band</div>
+              <div class="h6 my-1 text-info">
+                {{ overview.current_regime?.primary_demand_driver || 'not yet observed' }}
               </div>
               <div class="small text-muted">Identified from block evidence</div>
             </div>
@@ -78,8 +78,8 @@ import { BlockspaceApiService, BlockspaceOverview } from './blockspace.service';
 
         <!-- Semantic Classes Breakdown -->
         <section class="card p-4 bg-body-tertiary border mb-4">
-          <h2 class="h5 mb-3">Semantic Blockspace Consumption (24h)</h2>
-          <div class="table-responsive" tabindex="0" role="region" aria-label="Semantic Blockspace Consumption (24h), scroll horizontally" i18n-aria-label>
+          <h2 class="h5 mb-3">Observed Blockspace Consumption</h2>
+          <div class="table-responsive" tabindex="0" role="region" aria-label="Observed Blockspace Consumption, scroll horizontally" i18n-aria-label>
             <table class="table table-hover align-middle mb-0">
               <thead>
                 <tr>
@@ -87,7 +87,7 @@ import { BlockspaceApiService, BlockspaceOverview } from './blockspace.service';
                   <th>Category</th>
                   <th class="text-end">Weight Share</th>
                   <th class="text-end">Fee Share</th>
-                  <th class="text-end">24h Tx Count</th>
+                  <th class="text-end">Observed Tx Count</th>
                 </tr>
               </thead>
               <tbody>
@@ -106,8 +106,8 @@ import { BlockspaceApiService, BlockspaceOverview } from './blockspace.service';
                       {{ c.category }}
                     </span>
                   </td>
-                  <td class="text-end fw-semibold">{{ c.weight_share_percentage }}%</td>
-                  <td class="text-end fw-semibold">{{ c.fee_share_percentage }}%</td>
+                  <td class="text-end fw-semibold">{{ value(c.weight_share_percentage, '%') }}</td>
+                  <td class="text-end fw-semibold">{{ value(c.fee_share_percentage, '%') }}</td>
                   <td class="text-end text-muted">{{ c.tx_count_24h | number }}</td>
                 </tr>
               </tbody>
@@ -135,11 +135,11 @@ import { BlockspaceApiService, BlockspaceOverview } from './blockspace.service';
                 <tr *ngFor="let p of overview.composition_timeseries">
                   <td class="fw-bold">{{ p.block_height }}</td>
                   <td class="text-muted small">{{ p.timestamp_utc | date:'short' }}</td>
-                  <td class="text-end">{{ p.total_weight | number }} WU</td>
-                  <td class="text-end">{{ (p.total_fee_sats / 100000000).toFixed(4) }} BTC</td>
-                  <td class="text-end">{{ ((p.monetary_weight / p.total_weight) * 100).toFixed(1) }}%</td>
-                  <td class="text-end">{{ ((p.arbitrary_data_weight / p.total_weight) * 100).toFixed(1) }}%</td>
-                  <td class="text-end">{{ ((p.layer2_weight / p.total_weight) * 100).toFixed(1) }}%</td>
+                  <td class="text-end">{{ value(p.total_weight, 'WU') }}</td>
+                  <td class="text-end">{{ btc(p.total_fee_sats) }}</td>
+                  <td class="text-end">{{ share(p.monetary_weight, p.total_weight) }}</td>
+                  <td class="text-end">{{ share(p.arbitrary_data_weight, p.total_weight) }}</td>
+                  <td class="text-end">{{ share(p.layer2_weight, p.total_weight) }}</td>
                 </tr>
               </tbody>
             </table>
@@ -166,18 +166,17 @@ export class BlockspaceOverviewComponent implements OnInit, OnDestroy {
     private cd: ChangeDetectorRef,
   ) {}
 
+  readonly value = blockspaceValue;
+  readonly share = blockspaceShare;
+  readonly btc = blockspaceBtc;
+
   public ngOnInit(): void {
-    this.sub = this.blockspaceApi.getOverview().subscribe({
-      next: (data) => {
-        this.overview = data;
-        this.loading = false;
-        this.cd.markForCheck();
-      },
-      error: (err) => {
-        this.error = err?.message || 'Failed to load blockspace overview';
-        this.loading = false;
-        this.cd.markForCheck();
-      },
+    this.sub?.unsubscribe();
+    this.sub = this.blockspaceApi.watch(() => this.blockspaceApi.getOverview()).subscribe(state => {
+      this.overview = state.kind === 'ready' ? state.data : null;
+      this.loading = state.kind === 'loading';
+      this.error = state.kind === 'error' ? state.error : '';
+      this.cd.markForCheck();
     });
   }
 

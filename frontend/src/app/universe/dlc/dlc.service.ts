@@ -123,6 +123,14 @@ export class DlcApiService {
     );
   }
 
+  verifyAnnouncement$(announcement: unknown): Observable<any> {
+    return this.httpClient.post<any>(`${this.apiBaseUrl}/api/v1/intelligence/dlc/announcements/verify`, announcement);
+  }
+
+  verifyAttestation$(attestation: unknown): Observable<any> {
+    return this.httpClient.post<any>(`${this.apiBaseUrl}/api/v1/intelligence/dlc/attestations/verify`, attestation);
+  }
+
   runSimulation$(sim: any): Observable<any> {
     return this.httpClient.post<any>(
       `${this.apiBaseUrl}/api/v1/intelligence/dlc/simulations`,

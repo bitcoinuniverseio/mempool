@@ -1,30 +1,34 @@
-import { Component, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { FORMAL_PROOF_SAMPLE } from './formal-proof-sample';
+import { LEAN_PROOF_SAMPLE } from './lean-proof-sample';
+import { Component, ChangeDetectionStrategy, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { SimplicityApiService } from './simplicity.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-simplicity-verify',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
       <header class="page-header mb-4">
         <div class="title-row d-flex flex-wrap align-items-center justify-content-between gap-2">
           <h1 class="m-0">Simplicity Formal Proof Verifier</h1>
-          <span class="badge bg-success">Coq / Lean Machine Check</span>
+          <span class="badge bg-success">Bounded Program &amp; Kernel Checks</span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
-          Cryptographically verify machine-checked formal proofs binding high-level mathematical specifications to exact Simplicity commitment roots.
+          Check a bound closed-program claim using independent compiler/C semantics, or a canonical u32 equality with the pinned Lean 4 kernel. General Lean, Coq, Isabelle and Dafny theorem scopes remain unsupported.
         </p>
 
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/liquid/simplicity">Overview</a>
-          <a class="nav-link" routerLink="/liquid/simplicity/contracts">Contract Programs</a>
-          <a class="nav-link" routerLink="/tools/simplicity">Compiler Workbench</a>
-          <a class="nav-link active" routerLink="/tools/simplicity/verify">Formal Proof Verifier</a>
+          <a class="nav-link" [routerLink]="'/liquid/simplicity' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/liquid/simplicity/contracts' | relativeUrl">Contract Programs</a>
+          <a class="nav-link" [routerLink]="'/tools/simplicity' | relativeUrl">Compiler Workbench</a>
+          <a class="nav-link active" [routerLink]="'/tools/simplicity/verify' | relativeUrl">Formal Proof Verifier</a>
         </nav>
       </header>
 
@@ -33,7 +37,7 @@ import { SimplicityApiService } from './simplicity.service';
           <div class="card p-4 bg-body-tertiary border h-100">
             <h2 class="h5 mb-3">Proof Package Manifest</h2>
             <p class="small text-muted mb-3">
-              Submit a formal proof manifest committing to the program CMR, theorem statement, and interactive theorem prover artifact.
+              Submit public source, encoded program and a bound certificate. This sends the package to the local backend checker; exclude secrets. Client verification commands are never executed.
             </p>
 
             <div class="mb-3">
@@ -42,7 +46,7 @@ import { SimplicityApiService } from './simplicity.service';
                 id="simplicity-verify-manifest"
                 class="form-control font-monospace small"
                 rows="14"
-                [(ngModel)]="manifestInput"
+                [(ngModel)]="manifestInput" (ngModelChange)="edited()"
               ></textarea>
             </div>
 
@@ -52,8 +56,9 @@ import { SimplicityApiService } from './simplicity.service';
                 Verify Formal Proof
               </button>
               <button class="btn btn-outline-secondary" (click)="loadSample()">
-                Load Sample Proof
+                Load Closed-Program Sample
               </button>
+              <button class="btn btn-outline-secondary" (click)="loadLeanSample()">Load Lean Kernel Sample</button>
             </div>
           </div>
         </div>
@@ -72,10 +77,10 @@ import { SimplicityApiService } from './simplicity.service';
             </div>
 
             <div *ngIf="result">
-              <div class="alert" [ngClass]="result.valid ? 'alert-success' : 'alert-danger'">
-                <div class="fw-bold">{{ result.valid ? 'Proof Machine-Checked Successfully' : 'Proof Verification Failed' }}</div>
-                <div class="small mt-1" *ngIf="result.valid">Status: {{ result.status }}</div>
-                <div class="small mt-1" *ngIf="!result.valid">{{ result.reason || 'Verification failure' }}</div>
+              <div class="alert" [ngClass]="result.verified ? 'alert-success' : 'alert-danger'">
+                <div class="fw-bold">{{ result.verified ? 'Exact Claim Checked' : 'Claim Not Verified' }}</div>
+                <div class="small mt-1" *ngIf="result.verified">Status: {{ result.proof_state }}</div>
+                <div class="small mt-1" *ngIf="!result.verified">{{ result.message || 'Verification failure' }}</div>
               </div>
 
               <div class="p-3 border rounded bg-body mb-3">
@@ -93,8 +98,9 @@ import { SimplicityApiService } from './simplicity.service';
                 <div class="badge bg-secondary">{{ result.proof_system }}</div>
               </div>
 
+              <div *ngIf="result.kernel_revision" class="p-3 border rounded mb-3"><div>Kernel: {{ result.kernel_revision }}</div><div class="text-muted small">Checked Lean artifact SHA256</div><div class="font-monospace small text-break">{{ result.kernel_artifact_hash }}</div></div>
               <div class="alert alert-info py-2 px-3 small m-0">
-                A contract is only displayed as formally verified when its proof dependencies match pinned revisions and the verification transcript is confirmed.
+                A checked result applies only to the exact statement and supported program profile shown. It does not prove authorization, asset safety, or an arbitrary theorem.
               </div>
             </div>
           </div>
@@ -107,64 +113,25 @@ import { SimplicityApiService } from './simplicity.service';
     .nav-link.active { background-color: var(--bs-primary); color: #fff; }
   `],
 })
-export class SimplicityVerifyComponent {
+export class SimplicityVerifyComponent implements OnDestroy {
   manifestInput = '';
   verifying = false;
   result: any = null;
-
-  constructor(
-    private simplicityApi: SimplicityApiService,
-    private cdr: ChangeDetectorRef
-  ) {
-    this.loadSample();
-  }
-
-  loadSample(): void {
-    this.manifestInput = JSON.stringify(
-      {
-        program_cmr: 'a1b2c3d4e5f67890123456789abcdef0123456789abcdef0123456789abcdef0',
-        proof_system: 'coq-8.18',
-        statement: 'Theorem vault_safety: forall w, eval(cmr, w) = true -> authorized(w).',
-        artifact_hash: '99887766554433221100aabbccddeeff99887766554433221100aabbccddeeff',
-        libsimplicity_revision: 'v0.2.0',
-      },
-      null,
-      2
-    );
-  }
-
+  private generation = 0;
+  private request: Subscription | null = null;
+  constructor(private simplicityApi: SimplicityApiService, private cdr: ChangeDetectorRef) { this.loadSample(); }
+  edited(): void { this.generation++; this.request?.unsubscribe(); this.request = null; this.verifying = false; this.result = null; }
+  loadSample(): void { this.edited(); this.manifestInput = JSON.stringify(FORMAL_PROOF_SAMPLE, null, 2); }
+  loadLeanSample(): void { this.edited(); this.manifestInput = JSON.stringify(LEAN_PROOF_SAMPLE, null, 2); }
   verifyProof(): void {
-    this.verifying = true;
-    this.result = null;
-    let pkg: any;
-    try {
-      pkg = JSON.parse(this.manifestInput);
-    } catch (e) {
-      this.verifying = false;
-      this.result = {
-        valid: false,
-        status: 'proof_failed',
-        reason: 'Malformed JSON manifest',
-      };
-      this.cdr.markForCheck();
-      return;
-    }
-
-    this.simplicityApi.verifyFormalProof$(pkg).subscribe({
-      next: (res) => {
-        this.result = res;
-        this.verifying = false;
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        this.verifying = false;
-        this.result = {
-          valid: false,
-          status: 'proof_failed',
-          reason: err.message || 'Verification service failure',
-        };
-        this.cdr.markForCheck();
-      },
+    this.edited(); const generation = this.generation; this.verifying = true;
+    let pkg: unknown;
+    try { if (this.manifestInput.length > 40000) throw new Error(); pkg = JSON.parse(this.manifestInput); }
+    catch { this.verifying = false; this.result = { verified: false, proof_state: 'proof_failed', message: 'Malformed or oversized JSON manifest' }; return; }
+    this.request = this.simplicityApi.verifyFormalProof$(pkg).subscribe({
+      next: (res) => { if (generation !== this.generation) return; this.result = res; this.verifying = false; this.cdr.markForCheck(); },
+      error: (err) => { if (generation !== this.generation) return; this.verifying = false; this.result = { verified: false, proof_state: err.error?.stage || 'proof_failed', message: err.error?.error || 'Verification service failure' }; this.cdr.markForCheck(); },
     });
   }
+  ngOnDestroy(): void { this.edited(); }
 }

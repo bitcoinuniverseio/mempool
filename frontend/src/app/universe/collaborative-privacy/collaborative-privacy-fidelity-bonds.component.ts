@@ -1,13 +1,15 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { CollaborativePrivacyApiService } from './collaborative-privacy.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-collaborative-privacy-fidelity-bonds',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   template: `
     <div class="container-xl py-4">
       <div class="alert alert-warning" role="alert" *ngIf="loadError">
@@ -16,16 +18,16 @@ import { CollaborativePrivacyApiService } from './collaborative-privacy.service'
       <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
           <h1 class="h2 mb-1">JoinMarket Fidelity Bonds Observatory</h1>
-          <p class="text-muted mb-0">Timelocked capital sacrifice proofs providing Sybil resistance in decentralized CoinJoin orderbooks.</p>
+          <p class="text-muted mb-0">Reported bond observations. UTXO, locktime and signature verification require connected evidence sources.</p>
         </div>
-        <a routerLink="/privacy/collaborative" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
+        <a [routerLink]="'/privacy/collaborative' | relativeUrl" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
       </div>
 
       <div class="card bg-dark border-secondary mb-4">
         <div class="card-header border-secondary">
-          <h5 class="card-title mb-0">Active Timelocked Fidelity Bonds</h5>
+          <h5 class="card-title mb-0">Reported Fidelity Bonds</h5>
         </div>
-        <div class="table-responsive" tabindex="0" role="region" aria-label="Active Timelocked Fidelity Bonds, scroll horizontally" i18n-aria-label>
+        <div class="table-responsive" tabindex="0" role="region" aria-label="Reported Fidelity Bonds, scroll horizontally" i18n-aria-label>
           <table class="table table-dark table-hover mb-0">
             <thead>
               <tr>
@@ -41,10 +43,10 @@ import { CollaborativePrivacyApiService } from './collaborative-privacy.service'
               <tr *ngFor="let b of bonds">
                 <td class="font-monospace text-info">{{ b.bond_id }}</td>
                 <td class="font-monospace text-muted">{{ b.maker_pubkey }}</td>
-                <td class="fw-bold text-success">{{ b.amount_btc | number:'1.2-2' }} BTC</td>
+                <td class="fw-bold text-success">{{ b.amount_btc ?? 'Unknown' }} BTC</td>
                 <td class="fw-semibold">{{ b.lock_expiry_block }}</td>
                 <td class="text-warning font-monospace">{{ b.fidelity_score | number }}</td>
-                <td><span class="badge bg-success">{{ b.status | uppercase }}</span></td>
+                <td><span class="badge bg-secondary">{{ b.status | uppercase }}</span></td>
               </tr>
             </tbody>
           </table>
@@ -53,15 +55,19 @@ import { CollaborativePrivacyApiService } from './collaborative-privacy.service'
     </div>
   `
 })
-export class CollaborativePrivacyFidelityBondsComponent implements OnInit {
+export class CollaborativePrivacyFidelityBondsComponent implements OnInit, OnDestroy {
+  private networkSub?: Subscription; private request?: Subscription;
+  ngOnDestroy(): void { this.networkSub?.unsubscribe(); this.request?.unsubscribe(); }
   public bonds: any[] = [];
 
   public loadError: string | null = null;
 
   constructor(private api: CollaborativePrivacyApiService) {}
 
-  public ngOnInit(): void {
-    this.api.getFidelityBonds$().subscribe({
+  public ngOnInit(): void { this.networkSub=this.api.networkChanged$.subscribe(()=>this.load()); }
+  private load(): void {
+    this.request?.unsubscribe(); this.bonds=[]; this.loadError=null;
+    this.request=this.api.getFidelityBonds$().subscribe({
       next: res => {
         this.bonds = res;
         this.loadError = null;

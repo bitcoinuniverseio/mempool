@@ -1,61 +1,97 @@
-import { timeMachineService } from './time-machine.service';
+import { timeMachineService, TimeMachineUnavailableError } from './time-machine.service';
+import { BlockExtended, MempoolTransactionExtended, TransactionExtended } from '../../../mempool.interfaces';
 
-describe('Product 3: Historical Mempool Time Machine', () => {
-  it('reports exact coverage boundaries and explicit gap intervals without silent interpolation', () => {
+/**
+ * The feed stands in for the live mempool: the service snapshots whatever
+ * it returns when a block arrives. Nothing is seeded; every number below is
+ * derived from these fixtures.
+ */
+const mem = (txid: string, fee: number, vsize: number): MempoolTransactionExtended => ({ txid, fee, vsize, weight: vsize * 4 } as unknown as MempoolTransactionExtended);
+const block = (height: number, timestamp: number): BlockExtended => ({ height, id: height.toString(16).padStart(64, '0'), timestamp, weight: 4000, extras: { totalFees: 500 } } as unknown as BlockExtended);
+const confirmed = (txid: string): TransactionExtended => ({ txid, fee: 100, vsize: 100, weight: 400 } as unknown as TransactionExtended);
+
+describe('time machine: observed history only', () => {
+  let pool: { [txid: string]: MempoolTransactionExtended };
+  beforeEach(() => { pool = {}; timeMachineService.resetForTests(() => pool); });
+
+  it('starts empty and says so instead of inventing checkpoints', () => {
     const coverage = timeMachineService.getCoverage();
-    expect(coverage.earliest_recorded_event_utc).toBeDefined();
-    expect(coverage.latest_recorded_event_utc).toBeDefined();
-    expect(coverage.total_checkpoints).toBeGreaterThan(0);
-    expect(coverage.coverage_gaps.length).toBeGreaterThan(0);
-    expect(coverage.coverage_gaps[0].reason).toBeDefined();
+    expect(coverage.total_events).toBe(0);
+    expect(coverage.total_checkpoints).toBe(0);
+    expect(coverage.earliest_checkpoint_height).toBeNull();
+    expect(coverage.coverage_gaps).toHaveLength(1);
+    expect(coverage.coverage_gaps[0].end_utc).toBe(coverage.observing_since_utc);
+    expect(() => timeMachineService.replayToTimestampOrHeight(undefined, 860020)).toThrow(TimeMachineUnavailableError);
+    expect(timeMachineService.getTransactionLifecycle('a'.repeat(64))).toEqual([]);
+    expect(timeMachineService.getStateByHash('x')).toBeNull();
+    expect(timeMachineService.compareStates('x', 'y')).toBeNull();
+    expect(timeMachineService.exportState('x')).toBeNull();
   });
 
-  it('reconstructs historical mempool state deterministically from block height', () => {
-    const state = timeMachineService.replayToTimestampOrHeight(undefined, 860020);
-    expect(state.state_hash).toBeDefined();
-    expect(state.target_block_height).toBe(860020);
-    expect(state.total_transactions).toBeGreaterThan(10000);
-    expect(state.total_weight).toBeGreaterThan(0);
-    expect(state.total_fees_sats).toBeGreaterThan(0);
-    expect(state.fee_distribution.length).toBeGreaterThanOrEqual(4);
-
-    const sameState = timeMachineService.replayToTimestampOrHeight(undefined, 860020);
-    expect(sameState.state_hash).toBe(state.state_hash);
+  it('a checkpoint is the real mempool at the block, with an exact fee distribution', () => {
+    pool = { a: mem('a', 100, 100), b: mem('b', 1200, 100), c: mem('c', 6000, 100) };
+    const checkpoint = timeMachineService.observeBlock(block(100, 1_000_000), [confirmed('z')], 1_000_000_000);
+    expect(checkpoint).toMatchObject({ block_height: 100, mempool_tx_count: 3, mempool_vsize: 300, mempool_weight: 1200, mempool_fees_sats: 7300, median_feerate_sats_vb: 12, block_tx_count: 1, block_fees_sats: 500 });
+    expect(checkpoint.fee_distribution.map(b => [b.feerate_bucket, b.count])).toEqual([['1-5 sat/vB', 1], ['6-10 sat/vB', 0], ['11-20 sat/vB', 1], ['21-50 sat/vB', 0], ['50+ sat/vB', 1]]);
+    const state = timeMachineService.getStateByHash(checkpoint.state_hash);
+    expect(state).toMatchObject({ total_transactions: 3, coverage_status: 'complete', applied_events_count: 0 });
+    expect(timeMachineService.getTransactionLifecycle('z')).toEqual([expect.objectContaining({ event_type: 'confirmed', block_height: 100 })]);
   });
 
-  it('retrieves cached historical states by stable state hash', () => {
-    const original = timeMachineService.replayToTimestampOrHeight(undefined, 860010);
-    const retrieved = timeMachineService.getStateByHash(original.state_hash);
-    expect(retrieved).not.toBeNull();
-    expect(retrieved?.state_hash).toBe(original.state_hash);
-    expect(retrieved?.total_transactions).toBe(original.total_transactions);
+  it('replays to the nearest observed checkpoint and refuses targets before coverage', () => {
+    pool = { a: mem('a', 100, 100) };
+    const first = timeMachineService.observeBlock(block(100, 1_000_000), [], 1_000_000_000);
+    pool = { a: mem('a', 100, 100), b: mem('b', 100, 100) };
+    timeMachineService.observeMempoolChange([mem('b', 100, 100)], [], 1_000_300_000);
+    const second = timeMachineService.observeBlock(block(101, 1_000_600), [], 1_000_600_000);
+    expect(timeMachineService.replayToTimestampOrHeight(undefined, 100).state_hash).toBe(first.state_hash);
+    expect(() => timeMachineService.replayToTimestampOrHeight(undefined, 100_000)).toThrow(/No retained checkpoint/);
+    const between = timeMachineService.replayToTimestampOrHeight(new Date(1_000_400_000).toISOString());
+    expect(between.state_hash).not.toBe(first.state_hash);
+    expect(between.total_transactions).toBe(2);
+    expect(between.total_fees_sats).toBe(200);
+    expect(between.applied_events_count).toBe(1);
+    expect(between.coverage_status).toBe('complete');
+    expect(() => timeMachineService.replayToTimestampOrHeight(undefined, 99)).toThrow(/before the earliest observed checkpoint/);
+    expect(() => timeMachineService.replayToTimestampOrHeight('not a date')).toThrow(/ISO-8601/);
   });
 
-  it('compares two historical states and derives deltas', () => {
-    const stateA = timeMachineService.replayToTimestampOrHeight(undefined, 860010);
-    const stateB = timeMachineService.replayToTimestampOrHeight(undefined, 860030);
-
-    const comparison = timeMachineService.compareStates(stateA.state_hash, stateB.state_hash);
-    expect(comparison.delta.tx_count_delta).toBeDefined();
-    expect(comparison.delta.weight_delta).toBeDefined();
-    expect(comparison.delta.fees_delta_sats).toBeDefined();
-    expect(comparison.state_a.state_hash).toBe(stateA.state_hash);
-    expect(comparison.state_b.state_hash).toBe(stateB.state_hash);
+  it('comparison lists the transactions that actually entered and left', () => {
+    pool = { a: mem('a', 100, 100), b: mem('b', 100, 100) };
+    const first = timeMachineService.observeBlock(block(100, 1_000_000), []);
+    pool = { b: mem('b', 100, 100), c: mem('c', 300, 100) };
+    const second = timeMachineService.observeBlock(block(101, 1_000_600), []);
+    const report = timeMachineService.compareStates(first.state_hash, second.state_hash)!;
+    expect(report.delta).toMatchObject({ tx_count_delta: 0, fees_delta_sats: 200, added_txids: ['c'], removed_txids: ['a'] });
+    expect(timeMachineService.exportState(second.state_hash)).toEqual({ state: report.state_b, txids: ['b', 'c'] });
   });
 
-  it('provides chronological transaction lifecycle playback', () => {
-    const txid = 'a1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d';
-    const lifecycle = timeMachineService.getTransactionLifecycle(txid);
-    expect(lifecycle.length).toBeGreaterThanOrEqual(2);
-    expect(lifecycle[0].event_type).toBe('observed');
-    expect(lifecycle[1].event_type).toBe('accepted');
-    expect(Date.parse(lifecycle[1].timestamp_utc)).toBeGreaterThanOrEqual(Date.parse(lifecycle[0].timestamp_utc));
+  it('lifecycle events are the ones the mempool loop reported, bounded', () => {
+    timeMachineService.observeMempoolChange([mem('t', 200, 100)], [], 1_000_000_000);
+    timeMachineService.observeReplacement(mem('t', 200, 100), 'r'.repeat(64), 1_000_001_000);
+    timeMachineService.observeMempoolChange([], [mem('t', 200, 100)], 1_000_002_000);
+    expect(timeMachineService.getTransactionLifecycle('t').map(e => e.event_type)).toEqual(['accepted', 'replaced', 'removed']);
+    expect(timeMachineService.getTransactionLifecycle('t')[1].replaced_by_txid).toBe('r'.repeat(64));
+    expect(timeMachineService.getCoverage().total_events).toBe(3);
   });
 
-  it('generates export jobs with stable identifiers and formats', () => {
-    const state = timeMachineService.replayToTimestampOrHeight(undefined, 860010);
-    const exportJob = timeMachineService.startExportJob(state.state_hash, 'parquet');
-    expect(exportJob.job_id).toBeDefined();
-    expect(exportJob.download_url).toContain('parquet');
+  it('applies same-millisecond events after the checkpoint and removes replacements', () => {
+    pool = { a: mem('a', 100, 100) };
+    timeMachineService.observeBlock(block(100, 1000), [], 1_000_000);
+    timeMachineService.observeMempoolChange([mem('b', 300, 100)], [], 1_000_000);
+    timeMachineService.observeReplacement(mem('a', 100, 100), 'b', 1_000_001);
+    const replay = timeMachineService.replayToTimestampOrHeight(new Date(1_000_002).toISOString());
+    expect(replay).toMatchObject({ total_transactions: 1, total_fees_sats: 300, total_weight: 400, applied_events_count: 2 });
+    expect(timeMachineService.exportState(replay.state_hash)?.txids).toEqual(['b']);
+  });
+
+  it('prunes cached snapshots on reorg and retention eviction', () => {
+    const first = timeMachineService.observeBlock(block(1, 1), [], 1000);
+    for (let height = 2; height <= 300; height++) timeMachineService.observeBlock(block(height, height), [], height * 1000);
+    expect(timeMachineService.getStateByHash(first.state_hash)).toBeNull();
+    const orphan = timeMachineService.replayToTimestampOrHeight(undefined, 300).state_hash;
+    timeMachineService.observeBlock({ ...block(299, 301), id: 'f'.repeat(64) }, [], 301000);
+    expect(timeMachineService.getStateByHash(orphan)).toBeNull();
+    expect(() => timeMachineService.replayToTimestampOrHeight(undefined, 300)).toThrow(/No retained checkpoint/);
   });
 });

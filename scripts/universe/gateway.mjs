@@ -12,6 +12,8 @@
  *   /api/v1/anima/*     ->  the protocol overlay
  *   /api/v1/*           ->  the explorer backend, including WebSocket upgrades
  *   /api/*              ->  the first-party Esplora index, with /api stripped
+ *   /<network>/api/*    ->  that network's own backend and index, or a
+ *                           structured error when none is configured
  *   everything else     ->  the built frontend, with SPA fallback
  *
  * It exists so the public origin has a single upstream to point at, and so the
@@ -24,8 +26,16 @@
  *   UNIVERSE_GATEWAY_PORT     default 8099
  *   UNIVERSE_GATEWAY_BACKEND  default http://127.0.0.1:8996
  *   UNIVERSE_GATEWAY_OVERLAY  default http://127.0.0.1:3400
+ *   UNIVERSE_GATEWAY_OVERLAY_ROUTE_FILE
+ *                                persistent atomic overlay handoff state
+ *   UNIVERSE_GATEWAY_PORTFOLIO_V2
+ *                                fallback, 1 enables, default 1
  *   UNIVERSE_GATEWAY_ESPLORA  unset; the local mempool/electrs Esplora API
  *   UNIVERSE_GATEWAY_ROOT     default ./frontend/dist/mempool/browser
+ *   UNIVERSE_GATEWAY_BACKEND_SIGNET, _TESTNET, _TESTNET4
+ *                             unset; the explorer backend for that network
+ *   UNIVERSE_GATEWAY_ESPLORA_SIGNET, _TESTNET, _TESTNET4
+ *                             unset; the Esplora index for that network
  */
 
 import http from 'node:http';
@@ -39,7 +49,75 @@ import { extname, join, normalize, resolve, sep } from 'node:path';
 const HOST = process.env.UNIVERSE_GATEWAY_HOST || '127.0.0.1';
 const PORT = Number(process.env.UNIVERSE_GATEWAY_PORT || 8099);
 const BACKEND = new URL(process.env.UNIVERSE_GATEWAY_BACKEND || 'http://127.0.0.1:8996');
-const OVERLAY = new URL(process.env.UNIVERSE_GATEWAY_OVERLAY || 'http://127.0.0.1:3400');
+const OVERLAY_FALLBACK = new URL(process.env.UNIVERSE_GATEWAY_OVERLAY || 'http://127.0.0.1:3400');
+const OVERLAY_ROUTE_FILE =
+  process.env.UNIVERSE_GATEWAY_OVERLAY_ROUTE_FILE ||
+  '/var/lib/universe-explorer/overlay-route.json';
+const OVERLAY_ROUTE_SCHEMA = 'universe-overlay-route-v1';
+const FULL_RELEASE_SHA = /^[0-9a-f]{40}$/;
+const OVERLAY_V2_DEFAULT = String(process.env.UNIVERSE_GATEWAY_PORTFOLIO_V2 ?? '1').trim() === '1';
+
+let lastOverlayRoute = {
+  upstream: OVERLAY_FALLBACK,
+  slot: 'environment',
+  releaseSha: null,
+  portfolioV2: OVERLAY_V2_DEFAULT,
+};
+
+function parsedOverlayRoute(text) {
+  const value = JSON.parse(text);
+  if (
+    value?.schemaVersion !== OVERLAY_ROUTE_SCHEMA ||
+    !['candidate', 'live'].includes(value.slot) ||
+    !FULL_RELEASE_SHA.test(value.releaseSha) ||
+    typeof value.portfolioV2 !== 'boolean'
+  ) {
+    throw new Error('overlay route state is invalid');
+  }
+  const upstream = new URL(value.origin);
+  if (
+    upstream.protocol !== 'http:' ||
+    upstream.hostname !== '127.0.0.1' ||
+    !upstream.port ||
+    upstream.pathname !== '/' ||
+    upstream.search ||
+    upstream.hash ||
+    upstream.username ||
+    upstream.password
+  ) {
+    throw new Error('overlay route origin must be a loopback HTTP origin');
+  }
+  return {
+    upstream,
+    slot: value.slot,
+    releaseSha: value.releaseSha,
+    portfolioV2: value.portfolioV2,
+  };
+}
+
+/**
+ * Resolve the overlay for this request.
+ *
+ * The release tool replaces the state file atomically. A malformed or
+ * temporarily unreadable file never redirects traffic somewhere new: the
+ * gateway retains the last fully validated route. Removing the file restores
+ * the configured live origin, which is also the safe state after a reboot.
+ */
+export function currentOverlayRoute() {
+  try {
+    lastOverlayRoute = parsedOverlayRoute(readFileSync(OVERLAY_ROUTE_FILE, 'utf8'));
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      lastOverlayRoute = {
+        upstream: OVERLAY_FALLBACK,
+        slot: 'environment',
+        releaseSha: null,
+        portfolioV2: OVERLAY_V2_DEFAULT,
+      };
+    }
+  }
+  return lastOverlayRoute;
+}
 /**
  * The first-party Esplora index, when this deployment runs one.
  *
@@ -54,7 +132,35 @@ const OVERLAY = new URL(process.env.UNIVERSE_GATEWAY_OVERLAY || 'http://127.0.0.
 const ESPLORA = process.env.UNIVERSE_GATEWAY_ESPLORA
   ? new URL(process.env.UNIVERSE_GATEWAY_ESPLORA)
   : null;
-for (const upstream of [BACKEND, OVERLAY, ESPLORA].filter(Boolean)) {
+/**
+ * The networks a path may name ahead of `/api/`, and their upstreams.
+ *
+ * The frontend addresses any network other than the root one by prefixing the
+ * path: `/signet/api/v1/fees/recommended`, `/testnet/api/tx/<txid>`. Each of
+ * those is a different chain, so each needs its own backend and, where one is
+ * run, its own index. The prefix is only ever stripped on the way to an
+ * upstream that was configured for exactly that network. It is never stripped
+ * and sent to the root backend, because that would answer a Signet question
+ * with mainnet data and nothing in the response would say so. And a prefix
+ * with no upstream is answered with a structured error rather than with the
+ * SPA document, because the caller is an API consumer, not a browser.
+ */
+const NETWORK_PREFIXES = ['signet', 'testnet4', 'testnet'];
+const NETWORK_UPSTREAMS = new Map(NETWORK_PREFIXES.map((network) => {
+  const key = network.toUpperCase();
+  const backend = process.env[`UNIVERSE_GATEWAY_BACKEND_${key}`];
+  const esplora = process.env[`UNIVERSE_GATEWAY_ESPLORA_${key}`];
+  return [network, {
+    backend: backend ? new URL(backend) : null,
+    esplora: esplora ? new URL(esplora) : null,
+  }];
+}));
+const NETWORK_API_PATH = new RegExp(`^/(${NETWORK_PREFIXES.join('|')})(/api(?:/|$)|/api$)`);
+
+for (const upstream of [
+  BACKEND, OVERLAY_FALLBACK, ESPLORA,
+  ...[...NETWORK_UPSTREAMS.values()].flatMap((entry) => [entry.backend, entry.esplora]),
+].filter(Boolean)) {
   if (!['http:', 'https:'].includes(upstream.protocol)) {
     throw new Error('Gateway authorities must use HTTP or HTTPS.');
   }
@@ -129,7 +235,7 @@ const SECURITY_HEADERS = {
  */
 const CONTENT_SECURITY_POLICY_PARTS = [
   "default-src 'self'",
-  "script-src 'self'",
+  "script-src 'self' 'wasm-unsafe-eval'",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
@@ -250,25 +356,49 @@ const OVERLAY_CHAIN_PREFIXES = [
  * existing.
  */
 export function routeFor(pathname, originalUrl, acceptsHtml = false) {
+  if (pathname === '/v2/universe' || pathname.startsWith('/v2/universe/')) {
+    return { upstream: null, status: 404 };
+  }
+  const network = NETWORK_API_PATH.exec(pathname);
+  if (network) {
+    const prefix = `/${network[1]}`;
+    return networkRouteFor(
+      network[1],
+      pathname.slice(prefix.length),
+      originalUrl.slice(prefix.length),
+      acceptsHtml,
+    );
+  }
   // These inherited documentation aliases share the API prefix. Browser
   // navigation must reach Angular; ordinary API consumers retain their route.
-  if (acceptsHtml && /^\/api(?:\/(?:faq|api(?:\/[^/]+)?))?\/?$/.test(pathname)) {
+  if (acceptsHtml && DOCUMENTATION_ALIAS.test(pathname)) {
     return null;
   }
   if (pathname === '/api/v1/universe' || pathname.startsWith('/api/v1/universe/')) {
-    return { upstream: OVERLAY, path: originalUrl };
+    return {
+      upstream: currentOverlayRoute().upstream,
+      path: originalUrl,
+      dynamicOverlay: true,
+    };
   }
   // Portfolio API v2 registers its own versioned prefix on the overlay, so
   // it is routed by that prefix rather than by the shared v1 family.
   if (pathname === '/api/v2/universe' || pathname.startsWith('/api/v2/universe/')) {
-    return { upstream: OVERLAY, path: originalUrl };
+    const overlay = currentOverlayRoute();
+    return overlay.portfolioV2
+      ? { upstream: overlay.upstream, path: originalUrl, dynamicOverlay: true }
+      : { upstream: null, status: 404 };
   }
   if (pathname === '/api/v1/zcash/privacy' || pathname.startsWith('/api/v1/zcash/privacy/')) {
     return { upstream: BACKEND, path: originalUrl };
   }
   for (const prefix of OVERLAY_CHAIN_PREFIXES) {
     if (pathname === prefix || pathname.startsWith(`${prefix}/`)) {
-      return { upstream: OVERLAY, path: originalUrl };
+      return {
+        upstream: currentOverlayRoute().upstream,
+        path: originalUrl,
+        dynamicOverlay: true,
+      };
     }
   }
   if (pathname === '/api/v1' || pathname.startsWith('/api/v1/')) {
@@ -292,8 +422,62 @@ export function routeFor(pathname, originalUrl, acceptsHtml = false) {
   return null;
 }
 
+const DOCUMENTATION_ALIAS = /^\/api(?:\/(?:faq|api(?:\/[^/]+)?))?\/?$/;
+
+/**
+ * Dispatch for a path under a network prefix, with the prefix already removed.
+ *
+ * The shape mirrors the root table: `/api/v1/` to that network's backend, the
+ * rest of `/api/` to that network's index where one is configured and to the
+ * backend's own prefix otherwise. There is no overlay entry: the overlay is
+ * addressed by query, `?chain=&network=`, never by path prefix.
+ */
+function networkRouteFor(network, pathname, originalUrl, acceptsHtml) {
+  if (acceptsHtml && DOCUMENTATION_ALIAS.test(pathname)) {
+    return null;
+  }
+  const upstreams = NETWORK_UPSTREAMS.get(network);
+  const refuse = (status, error) => ({ upstream: null, status, body: { error, network } });
+  if (!upstreams?.backend) {
+    return refuse(503, 'network-unconfigured');
+  }
+  if (pathname === '/api/v1' || pathname.startsWith('/api/v1/')) {
+    return { upstream: upstreams.backend, path: originalUrl };
+  }
+  if (upstreams.esplora && (pathname === '/api/internal' || pathname.startsWith('/api/internal/'))) {
+    return refuse(404, 'not-found');
+  }
+  if (pathname.startsWith('/api/')) {
+    return upstreams.esplora
+      ? { upstream: upstreams.esplora, path: `/${originalUrl.slice('/api/'.length)}` }
+      : { upstream: upstreams.backend, path: `/api/v1/${originalUrl.slice('/api/'.length)}` };
+  }
+  return { upstream: upstreams.backend, path: '/api/v1/' };
+}
+
+/**
+ * Which upstream a WebSocket upgrade reaches, and the path it should see.
+ *
+ * A network-prefixed socket, `/signet/api/v1/ws`, belongs to that network's
+ * backend with the prefix removed, exactly as its HTTP family does. With no
+ * backend configured for the network the upgrade is refused: the alternative,
+ * the root backend's socket, would stream mainnet blocks to a Signet page.
+ */
+export function websocketRouteFor(pathname, originalUrl = pathname) {
+  const network = NETWORK_API_PATH.exec(pathname);
+  if (network) {
+    const backend = NETWORK_UPSTREAMS.get(network[1])?.backend ?? null;
+    const prefix = `/${network[1]}`;
+    return backend ? { upstream: backend, path: originalUrl.slice(prefix.length) } : null;
+  }
+  return {
+    upstream: pathname === '/api/v1/universe/ws' ? currentOverlayRoute().upstream : BACKEND,
+    path: originalUrl,
+  };
+}
+
 export function websocketUpstreamFor(pathname) {
-  return pathname === '/api/v1/universe/ws' ? OVERLAY : BACKEND;
+  return websocketRouteFor(pathname)?.upstream ?? null;
 }
 
 /**
@@ -314,7 +498,6 @@ function upstreamIsRestarting(error) {
 }
 
 function proxy(request, response, route) {
-  const upstream = route.upstream;
   // Only a request with no body can be replayed. Everything this gateway
   // proxies that changes state carries one, so this never retries a write.
   const replayable = request.method === 'GET' || request.method === 'HEAD';
@@ -336,13 +519,13 @@ function proxy(request, response, route) {
   response.on('close', abandon);
   request.on('aborted', abandon);
 
-  const failClosed = () => {
+  const failClosed = (reason = 'upstream-unavailable') => {
     if (clientGone || response.headersSent || response.writableEnded) return;
     try {
       // A dead upstream is reported as a gateway failure, never as an empty
       // success: a caller must be able to tell the two apart.
       response.writeHead(502, { 'content-type': 'application/json; charset=utf-8' });
-      response.end(JSON.stringify({ error: 'upstream-unavailable' }));
+      response.end(JSON.stringify({ error: reason }));
     } catch {
       // The client went away between the check and the write.
       response.destroy();
@@ -351,6 +534,7 @@ function proxy(request, response, route) {
 
   const send = () => {
     if (clientGone) return;
+    const upstream = route.dynamicOverlay ? currentOverlayRoute().upstream : route.upstream;
     const options = {
       protocol: upstream.protocol,
       hostname: upstream.hostname,
@@ -364,6 +548,14 @@ function proxy(request, response, route) {
     const proxied = transport.request(options, (upstreamResponse) => {
       if (clientGone) {
         upstreamResponse.destroy();
+        return;
+      }
+      // API upstreams are configured authorities, not redirect discovery
+      // services. Forwarding Location could send the browser (and submitted
+      // data on 307/308) to an unowned source outside this gateway.
+      if ([301, 302, 303, 307, 308].includes(upstreamResponse.statusCode)) {
+        upstreamResponse.destroy();
+        failClosed('upstream-redirect-refused');
         return;
       }
       try {
@@ -476,6 +668,24 @@ const server = http.createServer((request, response) => {
     return;
   }
 
+  if (pathname === '/__gateway/overlay-route') {
+    const overlay = currentOverlayRoute();
+    response.writeHead(200, {
+      'content-type': 'application/json; charset=utf-8',
+      'cache-control': 'no-store',
+    });
+    response.end(
+      JSON.stringify({
+        schemaVersion: OVERLAY_ROUTE_SCHEMA,
+        dynamic: true,
+        slot: overlay.slot,
+        releaseSha: overlay.releaseSha,
+        portfolioV2: overlay.portfolioV2,
+      }),
+    );
+    return;
+  }
+
   const route = routeFor(pathname, request.url,
     request.method === 'GET' && (request.headers.accept || '').includes('text/html'));
   if (route) {
@@ -487,7 +697,7 @@ const server = http.createServer((request, response) => {
         'content-type': 'application/json; charset=utf-8',
         'cache-control': 'no-store',
       });
-      response.end(JSON.stringify({ error: 'not-found' }));
+      response.end(JSON.stringify(route.body || { error: 'not-found' }));
       return;
     }
     proxy(request, response, route);
@@ -546,9 +756,14 @@ server.on('upgrade', (request, socket, head) => {
     socket.destroy();
     return;
   }
-  const upstream = websocketUpstreamFor(pathname);
+  const route = websocketRouteFor(pathname, request.url || '/');
+  if (!route) {
+    socket.destroy();
+    return;
+  }
+  const upstream = route.upstream;
   const connected = () => {
-    const lines = [`${request.method} ${request.url} HTTP/1.1`];
+    const lines = [`${request.method} ${route.path} HTTP/1.1`];
     for (const [name, value] of Object.entries(request.headers)) {
       if (name.toLowerCase() === 'host') continue;
       for (const item of Array.isArray(value) ? value : [value]) {
@@ -620,12 +835,13 @@ export function inheritedListenerFd(env = process.env, pid = process.pid) {
 if (process.env.UNIVERSE_GATEWAY_NO_LISTEN !== '1') {
   const inherited = inheritedListenerFd();
   const announce = () => {
+    const overlay = currentOverlayRoute();
     process.stdout.write(
       `Universe Explorer gateway listening on ${
         inherited === null ? `${HOST}:${PORT}` : `the socket systemd passed on fd ${inherited}`
       }
 ` +
-      `  overlay  ${OVERLAY.origin}
+      `  overlay  ${overlay.upstream.origin}
 ` +
       `  backend  ${BACKEND.origin}
 ` +

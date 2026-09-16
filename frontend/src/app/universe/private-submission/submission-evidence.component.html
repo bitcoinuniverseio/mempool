@@ -1,0 +1,75 @@
+<div class="container-xl py-4">
+  <h1>{{ title }}</h1>
+  <nav aria-label="Submission tools">
+    <a *ngFor="let link of links" [routerLink]="link[0] | relativeUrl">{{
+      link[1]
+    }}</a>
+  </nav>
+  <p>
+    Selected-network owned source records. Missing public observations do not
+    prove private submission, provider payment, mining coverage or out-of-band
+    revenue.
+  </p>
+  <p *ngIf="vm.loading" role="status">Loading source evidence…</p>
+  <p *ngIf="vm.error" role="alert" class="alert alert-warning">
+    {{ vm.error }}
+  </p>
+  <section *ngIf="vm.data as data">
+    <h2>Reported source fields</h2>
+    <ng-container *ngIf="view !== 'ordering'"
+      ><dl *ngFor="let f of data | keyvalue">
+        <dt>{{ f.key }}</dt>
+        <dd>
+          <pre>{{ display(f.value) }}</pre>
+        </dd>
+      </dl></ng-container
+    ><ng-container *ngIf="view === 'ordering'"
+      ><article *ngFor="let row of data" class="card p-3 mb-3">
+        <a
+          [routerLink]="['/intelligence/ordering/tx' | relativeUrl, row.txid]"
+          >{{ row.txid }}</a
+        >
+        <p>
+          Evidence: {{ display(row.evidence_state) }} · Confidence:
+          {{ display(row.confidence_rating) }}
+        </p>
+        <p>
+          Observed block position: {{ display(row.block_position) }} · Fee:
+          {{ display(row.fee_sats_vb) }} sat/vB
+        </p>
+        <pre>{{ row | json }}</pre>
+      </article>
+      <p *ngIf="data.length === 0">
+        The source returned no findings.
+      </p></ng-container
+    >
+    <p *ngIf="view === 'provider'">
+      Provider declarations and timestamps are not independent payment, reach or
+      current health proof.
+    </p>
+  </section>
+  <section *ngIf="view === 'overview'">
+    <h2>Transaction diagnosis</h2>
+    <form (ngSubmit)="diagnose()">
+      <label for="submission-diagnosis">Transaction ID or raw hex</label
+      ><textarea
+        id="submission-diagnosis"
+        class="form-control"
+        name="raw"
+        [(ngModel)]="raw"
+        (ngModelChange)="clear()"
+        maxlength="8000000"
+      ></textarea
+      ><button class="btn btn-primary mt-2" [disabled]="diagnosing">
+        {{ diagnosing ? "Reading transaction evidence…" : "Request diagnosis" }}
+      </button>
+    </form>
+    <p *ngIf="diagnosisError" role="alert" class="alert alert-warning">
+      {{ diagnosisError }}
+    </p>
+    <dl *ngFor="let f of diagnosis | keyvalue">
+      <dt>{{ f.key }}</dt>
+      <dd>{{ display(f.value) }}</dd>
+    </dl>
+  </section>
+</div>

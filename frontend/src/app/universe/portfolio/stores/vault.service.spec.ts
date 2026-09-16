@@ -37,6 +37,20 @@ describe('vault worker failure recovery and KDF identity', () => {
   });
   afterEach(() => { service.ngOnDestroy(); vi.useRealTimers(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 
+  it('locks on hidden visibility only when configured and removes its listener on destroy', () => {
+    const lock = vi.spyOn(service, 'lock');
+    vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
+    service.configureAutoLock(15, false);
+    document.dispatchEvent(new Event('visibilitychange'));
+    expect(lock).not.toHaveBeenCalled();
+    service.configureAutoLock(15, true);
+    document.dispatchEvent(new Event('visibilitychange'));
+    expect(lock).toHaveBeenCalledOnce();
+    service.ngOnDestroy(); lock.mockClear();
+    document.dispatchEvent(new Event('visibilitychange'));
+    expect(lock).not.toHaveBeenCalled();
+  });
+
   it.each(['error', 'messageerror'])('rejects pending derivation on %s and starts a fresh worker for retry', async (event) => {
     const failed = expect(internals.runKdf(request)).rejects.toThrow('worker');
     const first = WorkerFixture.instances[0];

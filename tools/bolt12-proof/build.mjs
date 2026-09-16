@@ -1,0 +1,15 @@
+import { spawnSync } from 'node:child_process';
+import { mkdirSync, copyFileSync, readFileSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+const root = dirname(fileURLToPath(import.meta.url));
+const cargo = process.platform === 'win32' ? 'C:/rust/cargo/bin/cargo.exe' : 'cargo';
+const run = spawnSync(cargo, ['build', '--locked', '--release', '-j', '1'], { cwd: root, stdio: 'inherit', windowsHide: true });
+if (run.status !== 0) process.exit(run.status || 1);
+const name = 'universe-bolt12-proof' + (process.platform === 'win32' ? '.exe' : '');
+const binary = resolve(root, 'bin', name);
+mkdirSync(dirname(binary), { recursive: true });
+copyFileSync(resolve(process.env.CARGO_TARGET_DIR || resolve(root, 'target'), 'release', name), binary);
+const hash = path => createHash('sha256').update(readFileSync(path)).digest('hex');
+writeFileSync(resolve(root, 'bin/engine-manifest.json'), JSON.stringify({ engine: 'lightning-0.2.6', binary: name, binary_sha256: hash(binary), lock_sha256: hash(resolve(root, 'Cargo.lock')), source_sha256: hash(resolve(root, 'src/main.rs')) }, null, 2) + '\n');

@@ -1,13 +1,15 @@
+import { blockspaceValue, blockspaceShare, blockspaceBtc } from './blockspace-format';
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { BlockspaceApiService, BlockspaceSemanticClass } from './blockspace.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-blockspace-taxonomy',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -16,16 +18,16 @@ import { BlockspaceApiService, BlockspaceSemanticClass } from './blockspace.serv
           <h1 class="m-0">Transaction Semantics Taxonomy</h1>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
-          Authoritative taxonomy defining transaction classifications, witness patterns, and demand motives across the Bitcoin network.
+          Observed transaction-shape categories. Payment intent and full protocol validity are not established by these patterns.
         </p>
 
         <!-- Navigation Tabs -->
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/intelligence/blockspace">Overview</a>
-          <a class="nav-link" routerLink="/intelligence/blockspace/composition">Composition</a>
-          <a class="nav-link" routerLink="/intelligence/blockspace/regimes">Fee Regimes</a>
-          <a class="nav-link" routerLink="/intelligence/blockspace/compare">Regime Compare</a>
-          <a class="nav-link active" routerLink="/intelligence/blockspace/taxonomy">Taxonomy Catalog</a>
+          <a class="nav-link" [routerLink]="'/intelligence/blockspace' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/intelligence/blockspace/composition' | relativeUrl">Composition</a>
+          <a class="nav-link" [routerLink]="'/intelligence/blockspace/regimes' | relativeUrl">Fee Regimes</a>
+          <a class="nav-link" [routerLink]="'/intelligence/blockspace/compare' | relativeUrl">Regime Compare</a>
+          <a class="nav-link active" [routerLink]="'/intelligence/blockspace/taxonomy' | relativeUrl">Taxonomy Catalog</a>
         </nav>
       </header>
 
@@ -57,9 +59,9 @@ import { BlockspaceApiService, BlockspaceSemanticClass } from './blockspace.serv
               <p class="text-muted small mb-3">{{ item.description }}</p>
 
               <div class="mt-auto pt-3 border-top d-flex justify-content-between text-muted small">
-                <span>Weight Share: <strong class="text-body">{{ item.weight_share_percentage }}%</strong></span>
-                <span>Fee Share: <strong class="text-body">{{ item.fee_share_percentage }}%</strong></span>
-                <span>24h Count: <strong class="text-body">{{ item.tx_count_24h | number }}</strong></span>
+                <span>Weight Share: <strong class="text-body">{{ value(item.weight_share_percentage, '%') }}</strong></span>
+                <span>Fee Share: <strong class="text-body">{{ value(item.fee_share_percentage, '%') }}</strong></span>
+                <span>Observed Count: <strong class="text-body">{{ item.tx_count_24h | number }}</strong></span>
               </div>
             </div>
           </div>
@@ -85,18 +87,17 @@ export class BlockspaceTaxonomyComponent implements OnInit, OnDestroy {
     private cd: ChangeDetectorRef,
   ) {}
 
+  readonly value = blockspaceValue;
+  readonly share = blockspaceShare;
+  readonly btc = blockspaceBtc;
+
   public ngOnInit(): void {
-    this.sub = this.blockspaceApi.getTaxonomy().subscribe({
-      next: (data) => {
-        this.taxonomy = data;
-        this.loading = false;
-        this.cd.markForCheck();
-      },
-      error: (err) => {
-        this.error = err?.message || 'Failed to load taxonomy';
-        this.loading = false;
-        this.cd.markForCheck();
-      },
+    this.sub?.unsubscribe();
+    this.sub = this.blockspaceApi.watch(() => this.blockspaceApi.getTaxonomy()).subscribe(state => {
+      this.taxonomy = state.kind === 'ready' ? state.data : [];
+      this.loading = state.kind === 'loading';
+      this.error = state.kind === 'error' ? state.error : '';
+      this.cd.markForCheck();
     });
   }
 

@@ -1,0 +1,20 @@
+[package]
+name = "universe-simplicity-compiler"
+version = "0.1.0"
+edition = "2021"
+publish = false
+[lib]
+crate-type = ["cdylib", "rlib"]
+[dependencies]
+simplicityhl = { version = "=0.2.0", features = ["serde"] }
+serde_json = "1.0"
+base64 = "0.22"
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom = { version = "0.2", features = ["custom"] }
+[profile.release]
+opt-level = "s"
+lto = true
+panic = "abort"
+strip = true
+[dev-dependencies]
+simplicity-sys = { version = "=0.5.0", features = ["test-utils"] }

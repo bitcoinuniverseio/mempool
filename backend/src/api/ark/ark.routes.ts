@@ -1,7 +1,16 @@
 import { Application, Request, Response } from 'express';
 import config from '../../config';
 import { handleError } from '../../utils/api';
-import { arkService } from './ark.service';
+import { ArkEvidenceError, arkService } from './ark.service';
+
+/** An absent source is a 503 that names the source, never a 500 and never an empty list. */
+function fail(req: Request, res: Response, e: unknown): void {
+  if (e instanceof ArkEvidenceError) {
+    res.status(e.status).json({ stage: e.code, error: e.message });
+    return;
+  }
+  handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+}
 
 class ArkRoutes {
   public initRoutes(app: Application): void {
@@ -21,7 +30,7 @@ class ArkRoutes {
       const operators = await arkService.$getOperators();
       res.json({ operators, total: operators.length });
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -30,7 +39,7 @@ class ArkRoutes {
       const batches = await arkService.$getBatches();
       res.json({ batches, total: batches.length });
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -43,7 +52,7 @@ class ArkRoutes {
       }
       res.json(batch);
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -56,7 +65,7 @@ class ArkRoutes {
       }
       res.json(vtxo);
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
@@ -65,17 +74,18 @@ class ArkRoutes {
       const virtualTxs = await arkService.$getVirtualTxs();
       res.json({ virtualTxs, total: virtualTxs.length });
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 
   private async $verifyProof(req: Request, res: Response): Promise<void> {
     try {
       const { vtxoId, proofPath } = req.body || {};
-      const result = await arkService.$verifyProof(vtxoId || '', proofPath || []);
-      res.json(result);
+      const result = await arkService.$verifyProof(vtxoId, proofPath);
+      // Only bad input and an absent verifier are not answers.
+      res.status(result.stage === 'invalid-input' ? 400 : 503).json(result);
     } catch (e) {
-        handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');
+      fail(req, res, e);
     }
   }
 }

@@ -1,29 +1,32 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { Subscription, combineLatest, startWith, switchMap, map, catchError, of } from 'rxjs';
+import { StateService } from '@app/services/state.service';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { SimplicityApiService, SimplicityProgram } from './simplicity.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-simplicity-program-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
       <header class="page-header mb-4">
         <div class="mb-2">
-          <a routerLink="/liquid/simplicity/contracts" class="btn btn-sm btn-outline-secondary">
+          <a [routerLink]="'/liquid/simplicity/contracts' | relativeUrl" class="btn btn-sm btn-outline-secondary">
             &larr; Back to Programs
           </a>
         </div>
         <div class="title-row d-flex flex-wrap align-items-center justify-content-between gap-2" *ngIf="program">
           <div>
-            <h1 class="m-0">{{ program.source_name || program.program_id }}</h1>
+            <h1 class="m-0">{{ program.program_name || program.program_id }}</h1>
             <div class="text-muted small font-monospace mt-1">{{ program.program_id }}</div>
           </div>
-          <span class="badge" [ngClass]="program.is_formally_verified ? 'bg-success' : 'bg-secondary'">
-            {{ program.is_formally_verified ? 'FORMALLY VERIFIED' : 'UNVERIFIED' }}
+          <span class="badge" [ngClass]="(program.formal_verification_state === 'proof_checked') ? 'bg-success' : 'bg-secondary'">
+            {{ (program.formal_verification_state === 'proof_checked') ? 'FORMALLY VERIFIED' : 'UNVERIFIED' }}
           </span>
         </div>
       </header>
@@ -57,13 +60,13 @@ import { SimplicityApiService, SimplicityProgram } from './simplicity.service';
               <div class="col-6">
                 <div class="p-2 border rounded bg-body">
                   <div class="text-muted small">Static Weight</div>
-                  <div class="fw-bold">{{ program.static_cost_weight }} WU</div>
+                  <div class="fw-bold">{{ program.resource_bounds.max_cost_weight }} WU</div>
                 </div>
               </div>
               <div class="col-6">
                 <div class="p-2 border rounded bg-body">
-                  <div class="text-muted small">Memory Bound</div>
-                  <div class="fw-bold">{{ program.memory_bound_bytes }} Bytes</div>
+                  <div class="text-muted small">Memory Cell Bound</div>
+                  <div class="fw-bold">{{ program.resource_bounds.max_memory_cells }} cells</div>
                 </div>
               </div>
             </div>
@@ -75,7 +78,7 @@ import { SimplicityApiService, SimplicityProgram } from './simplicity.service';
               Optimized primitives accelerating Simplicity program evaluation without changing formal semantics:
             </p>
             <div class="d-flex flex-wrap gap-2">
-              <span *ngFor="let jet of program.jets_used" class="badge bg-body border text-body p-2 font-monospace">
+              <span *ngFor="let jet of program.jets" class="badge bg-body border text-body p-2 font-monospace">
                 {{ jet }}
               </span>
             </div>
@@ -97,20 +100,20 @@ import { SimplicityApiService, SimplicityProgram } from './simplicity.service';
 
               <dt class="col-sm-5 text-muted">Formal Proof</dt>
               <dd class="col-sm-7">
-                <span *ngIf="program.is_formally_verified" class="text-success small fw-bold">
-                  Checked with Coq / Lean
+                <span *ngIf="(program.formal_verification_state === 'proof_checked')" class="text-success small fw-bold">
+                  Checked profile: {{ program.provenance.proof_system || 'Not supplied' }}
                 </span>
-                <span *ngIf="!program.is_formally_verified" class="text-muted small">
+                <span *ngIf="!(program.formal_verification_state === 'proof_checked')" class="text-muted small">
                   No proof artifact registered
                 </span>
               </dd>
             </dl>
 
             <div class="mt-4 pt-3 border-top d-flex gap-2">
-              <a [routerLink]="['/tools/simplicity']" class="btn btn-sm btn-outline-primary">
+              <a [routerLink]="['/tools/simplicity' | relativeUrl]" class="btn btn-sm btn-outline-primary">
                 Open in Workbench
               </a>
-              <a [routerLink]="['/tools/simplicity/verify']" class="btn btn-sm btn-outline-secondary">
+              <a [routerLink]="['/tools/simplicity/verify' | relativeUrl]" class="btn btn-sm btn-outline-secondary">
                 Verify Proof Artifact
               </a>
             </div>
@@ -129,23 +132,20 @@ export class SimplicityProgramDetailComponent implements OnInit, OnDestroy {
   constructor(
     private route: ActivatedRoute,
     private simplicityApi: SimplicityApiService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private state: StateService
   ) {}
 
   ngOnInit(): void {
-    const programId = this.route.snapshot.paramMap.get('programId') || 'sim-multisig-v1';
-    this.sub = this.simplicityApi.getProgramById$(programId).subscribe({
-      next: (data) => {
-        this.program = data;
-        this.loading = false;
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        this.error = err.message || 'Failed to load program detail';
-        this.loading = false;
-        this.cdr.markForCheck();
-      },
-    });
+    this.sub = combineLatest([this.route.paramMap, this.state.networkChanged$.pipe(startWith(this.state.network))]).pipe(switchMap(([params]) => {
+      this.program = null; this.error = null; this.loading = true; this.cdr.markForCheck();
+      const id = params.get('programId');
+      if (!id || id.length > 256) { this.error = 'A program identity is required.'; return of(null); }
+      return this.simplicityApi.getProgramById$(id).pipe(map(value => {
+        if (value?.program_id !== id || !value.resource_bounds || !Array.isArray(value.jets)) throw Error('Mismatched program');
+        return value;
+      }), catchError(() => { this.error = 'Program index evidence is unavailable or does not match this identity.'; return of(null); }));
+    })).subscribe(value => { this.program = value; this.loading = false; this.cdr.markForCheck(); });
   }
 
   ngOnDestroy(): void {

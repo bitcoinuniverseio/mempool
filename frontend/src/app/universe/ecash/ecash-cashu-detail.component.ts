@@ -1,27 +1,29 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, Optional } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { Subscription, combineLatest, of, startWith } from 'rxjs';
+import { StateService } from '@app/services/state.service';
 import { EcashApiService, CashuMint } from './ecash.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-ecash-cashu-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
       <header class="page-header mb-4">
         <div class="d-flex align-items-center gap-2 mb-2">
-          <a routerLink="/ecash/cashu" class="btn btn-sm btn-outline-secondary">
+          <a [routerLink]="'/ecash/cashu' | relativeUrl" class="btn btn-sm btn-outline-secondary">
             &larr; Back to Cashu Mints
           </a>
           <span class="text-muted small">Cashu Observatory</span>
         </div>
         <div class="title-row d-flex flex-wrap align-items-center justify-content-between gap-2">
           <h1 class="m-0">Cashu Mint Telemetry</h1>
-          <span class="badge bg-success" *ngIf="mint">
-            {{ mint.active_keysets_count }} Active Keysets
+          <span class="badge bg-secondary" *ngIf="mint">
+            {{ mint.active_keysets_count ?? 'Unknown' }} Active Keysets
           </span>
         </div>
       </header>
@@ -52,7 +54,7 @@ import { EcashApiService, CashuMint } from './ecash.service';
 
         <!-- Keysets Table -->
         <div class="card p-4 bg-body-tertiary border mb-4">
-          <h2 class="h5 mb-3">Cryptographic Keysets</h2>
+          <h2 class="h5 mb-3">Reported Keysets</h2><p *ngIf="mint.keysets === null" class="text-muted">Keyset observation unavailable</p>
           <div class="table-responsive" tabindex="0" role="region" aria-label="Cryptographic Keysets, scroll horizontally" i18n-aria-label>
             <table class="table table-hover align-middle mb-0">
               <thead>
@@ -68,7 +70,7 @@ import { EcashApiService, CashuMint } from './ecash.service';
                   <td>{{ k.unit }}</td>
                   <td>
                     <span class="badge" [ngClass]="k.active ? 'bg-success' : 'bg-secondary'">
-                      {{ k.active ? 'Active (Issuing & Redeeming)' : 'Retired (Redeem Only)' }}
+                      {{ k.active ? 'Reported active' : 'Reported inactive' }}
                     </span>
                   </td>
                 </tr>
@@ -79,7 +81,7 @@ import { EcashApiService, CashuMint } from './ecash.service';
 
         <!-- Supported NUTs -->
         <div class="card p-4 bg-body-tertiary border">
-          <h2 class="h5 mb-3">Supported Notation of Unit (NUT) Specifications</h2>
+          <h2 class="h5 mb-3">Reported NUT Specifications</h2><p *ngIf="mint.nuts_supported === null" class="text-muted">Supported NUTs unknown</p>
           <div class="d-flex flex-wrap gap-2">
             <span *ngFor="let n of mint.nuts_supported" class="badge bg-secondary p-2">
               NUT-{{ n < 10 ? '0' + n : n }}
@@ -94,44 +96,28 @@ export class EcashCashuDetailComponent implements OnInit, OnDestroy {
   mint: CashuMint | null = null;
   loading = true;
   error: string | null = null;
-  private sub = new Subscription();
+  private sub?: Subscription;private request?:Subscription;
 
   constructor(
     private route: ActivatedRoute,
     private api: EcashApiService,
-    private cd: ChangeDetectorRef
+    private cd: ChangeDetectorRef,
+    @Optional() private state: StateService = null
   ) {}
 
   ngOnInit(): void {
-    this.sub.add(
-      this.route.paramMap.subscribe(params => {
-        const mintId = params.get('mintId');
-        if (mintId) {
-          this.fetchMint(mintId);
-        }
-      })
-    );
+    this.sub=combineLatest([this.route.paramMap,(this.state ? this.state.networkChanged$.pipe(startWith(null)) : of(null))]).subscribe(([params])=>{
+      this.request?.unsubscribe();this.mint=null;this.error=null;this.loading=false;
+      const id=params.get('mintId');
+      if(!id){this.error='Missing requested identifier.';this.cd.markForCheck();return;}
+      this.loading=true;this.cd.markForCheck();
+      this.request=this.api.getCashuMintById$(id).subscribe({next:data=>{
+        this.loading=false;
+        if(!data||data.mint_id!==id){this.error='Response does not match the requested identifier.';}
+        else this.mint=data;
+        this.cd.markForCheck();
+      },error:err=>{this.loading=false;this.error=err?.error?.error||'Source unavailable; no observation established.';this.cd.markForCheck();}});
+    });
   }
-
-  private fetchMint(mintId: string): void {
-    this.loading = true;
-    this.sub.add(
-      this.api.getCashuMintById$(mintId).subscribe({
-        next: data => {
-          this.mint = data;
-          this.loading = false;
-          this.cd.markForCheck();
-        },
-        error: err => {
-          this.error = err?.error?.error || err?.message || 'Failed to load mint details';
-          this.loading = false;
-          this.cd.markForCheck();
-        },
-      })
-    );
-  }
-
-  ngOnDestroy(): void {
-    this.sub.unsubscribe();
-  }
+  ngOnDestroy(): void {this.sub?.unsubscribe();this.request?.unsubscribe();this.mint=null;this.loading=false;}
 }

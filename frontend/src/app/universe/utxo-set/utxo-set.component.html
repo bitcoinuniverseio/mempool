@@ -1,7 +1,7 @@
 <div class="container-xl product-page">
   <header class="page-head">
     <nav class="crumbs">
-      <a [routerLink]="['/']">Home</a>
+      <a [routerLink]="['/' | relativeUrl]">Home</a>
       <span class="divider">/</span>
       <span>UTXO Intelligence</span>
     </nav>
@@ -16,7 +16,14 @@
       <p>Reading UTXO-set checkpoints and accumulator state...</p>
     </div>
 
+    <div *ngIf="vm.kind === 'error'" class="panel">
+      <h2>UTXO-Set Observatory Unavailable</h2>
+      <p role="alert">{{ vm.message }}</p>
+    </div>
+
     <ng-container *ngIf="vm.kind === 'ready'">
+      <p class="panel" *ngFor="let unavailable of vm.unavailable" role="status">{{ unavailable }}</p>
+      <p>Core MuHash checkpoints are node observations. They are not Utreexo roots or independent projection reconciliation.</p>
       <!-- Protocol Bearing Summary -->
       <div class="metrics-grid" *ngIf="vm.protocolUtxos">
         <div class="metric-card">
@@ -50,7 +57,7 @@
               <th>Block Height</th>
               <th>MuHash</th>
               <th>Total Outputs</th>
-              <th>Total Supply (BTC)</th>
+              <th>Value in UTXOs (BTC)</th>
               <th>Bogosize</th>
             </tr>
           </thead>
@@ -87,6 +94,7 @@
         </table>
       </section>
 
+      <section class="panel" *ngIf="vm.valueCohorts?.length"><h2>Value Cohorts</h2><table class="data-table"><thead><tr><th>Value band</th><th>Outputs</th><th>Satoshis</th></tr></thead><tbody><tr *ngFor="let c of vm.valueCohorts"><td>{{ c.label }}</td><td>{{ c.txOutCount | number }}</td><td>{{ c.totalAmountSats }}</td></tr></tbody></table></section>
       <!-- Utreexo Accumulator -->
       <section class="panel" *ngIf="vm.utreexo">
         <h2>Utreexo Accumulator State (Block #{{ vm.utreexo.blockHeight }})</h2>

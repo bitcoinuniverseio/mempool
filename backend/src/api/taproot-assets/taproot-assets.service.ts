@@ -1,127 +1,130 @@
+import { ownedWorkbenchCore } from '../intelligence/workbench/workbench-core';
+import { canonicalProof } from './taproot-proof';
+import config from '../../config';
 import {
   Bolt12Offer,
   LightningRfqQuote,
   TaprootAssetGroup,
   TaprootAssetItem,
 } from './taproot-assets.types';
+import { TapdAuthority, TapdError, TaprootProofVerdict, axiosTapdHttp, tapdConfigFromEnvironment } from './taproot-assets.authority';
 
-const ASSETS: TaprootAssetItem[] = [
-  {
-    assetId: '4a19b872019842fbc9e19842a98712344a19b872019842fbc9e19842a9871234',
-    assetType: 'normal',
-    name: 'Tether USD (Taproot)',
-    groupKey: '028471928374918273918273918273918273918273918273918273918273918273',
-    genesisPoint: 'e5765796c3d9efeb8152579df6461a6b18973b404d0938f36c535492d5272a0f:0',
-    genesisHeight: 840000,
-    totalAmountAtomic: '500000000000',
-    anchorTxid: 'e5765796c3d9efeb8152579df6461a6b18973b404d0938f36c535492d5272a0f',
-    anchorOutpoint: 'e5765796c3d9efeb8152579df6461a6b18973b404d0938f36c535492d5272a0f:0',
-    scriptKey: '023847192837491827391827391827391827391827391827391827391827391827',
-    hasProofFile: true,
-    mintTime: 1713571200,
-  },
-  {
-    assetId: '7f91827391827391827391827391827391827391827391827391827391827391',
-    assetType: 'collectible',
-    name: 'Taproot Glyph #001',
-    groupKey: '039182739182739182739182739182739182739182739182739182739182739182',
-    genesisPoint: 'b198374291847eabcf9817294817294817294817294817294817294817294817:1',
-    genesisHeight: 845200,
-    totalAmountAtomic: '1',
-    anchorTxid: 'b198374291847eabcf9817294817294817294817294817294817294817294817',
-    anchorOutpoint: 'b198374291847eabcf9817294817294817294817294817294817294817294817:1',
-    scriptKey: '038472918273918273918273918273918273918273918273918273918273918273',
-    hasProofFile: true,
-    mintTime: 1714200000,
-  },
-];
+/**
+ * Raised when a read has no source behind it. The routes map the code to a
+ * 503, so an absent integration is reported as an absent integration rather
+ * than as an answer.
+ */
+export class TaprootAssetsEvidenceError extends Error {
+  constructor(public readonly code: string, message: string, public readonly status = 503) {
+    super(message);
+  }
+}
 
-const GROUPS: TaprootAssetGroup[] = [
-  {
-    groupKey: '028471928374918273918273918273918273918273918273918273918273918273',
-    name: 'Tether Issuance Tranche A',
-    totalAssetsCount: 1,
-    totalCirculatingSupplyAtomic: '500000000000',
-  },
-  {
-    groupKey: '039182739182739182739182739182739182739182739182739182739182739182',
-    name: 'Taproot Glyphs Collection',
-    totalAssetsCount: 100,
-    totalCirculatingSupplyAtomic: '100',
-  },
-];
+const universeUnavailable =
+  'Taproot Assets observations are unavailable. Asset, group and proof reads require the owned asset Universe (tapd, UNIVERSE_TAPD_ORIGIN with its macaroon) and Bitcoin anchor reader, which are not connected on this deployment.';
 
-const OFFERS: Bolt12Offer[] = [
-  {
-    offerId: 'lno1pg257enxv4ezqcneype82um50ynhxgrwdajx283q890cdse444n894v69n0q2sxve80q',
-    offerString: 'lno1pg257enxv4ezqcneype82um50ynhxgrwdajx283q890cdse444n894v69n0q2sxve80q',
-    description: 'Universe Explorer Premium Feed Subscription (30 Days)',
-    issuer: 'Universe Foundation',
-    amountMsat: '25000000',
-    currency: 'msat',
-    blindRoutesCount: 3,
-    valid: true,
-  },
-];
+const offersUnavailable =
+  'BOLT12 offer observations are unavailable. Offer decoding and validity require the owned Lightning node offer source, which is not connected on this deployment.';
 
-const RFQ_QUOTES: LightningRfqQuote[] = [
-  {
-    quoteId: 'rfq-quote-849102',
-    baseAsset: 'BTC',
-    quoteAsset: 'USDt',
-    askRate: '64520.50',
-    bidRate: '64490.20',
-    spreadBps: 4.7,
-    validUntil: Math.floor(Date.now() / 1000) + 60,
-  },
-];
+const rfqUnavailable =
+  'Lightning RFQ observations are unavailable. Quotes require the owned tapd RFQ source (UNIVERSE_TAPD_ORIGIN with its macaroon), which is not connected on this deployment.';
 
+export interface TaprootAssetsServiceOptions {
+  /** The owned tapd, or null when the deployment configured none. */
+  authority?: TapdAuthority | null;
+}
+
+/**
+ * Taproot Assets, BOLT12 offers and Lightning RFQ evidence.
+ *
+ * Assets, groups, quotes and proof verdicts come from the owned tapd named by
+ * UNIVERSE_TAPD_ORIGIN, on the backend's own network, with every proof anchor
+ * checked against the owned Bitcoin reader. A deployment that names no tapd
+ * gets a 503 that says so: an empty directory and an absent directory are
+ * different answers, and this never turns the second into the first. BOLT12
+ * offers have no owned source yet and stay unavailable.
+ */
 export class TaprootAssetsService {
+  private authority: TapdAuthority | null | undefined;
+
+  constructor(private readonly options: TaprootAssetsServiceOptions = {}) {}
+
   /** @asyncSafe */
   public async $getAssets(): Promise<TaprootAssetItem[]> {
-    return ASSETS;
+    return this.read('unavailable-universe', universeUnavailable, authority => authority.listAssets());
   }
 
   /** @asyncSafe */
-
   public async $getAsset(assetId: string): Promise<TaprootAssetItem | null> {
-    const match = ASSETS.find(
-      (a) => a.assetId.toLowerCase() === assetId.toLowerCase() || a.name.toLowerCase() === assetId.toLowerCase()
-    );
-    return match || null;
+    if (typeof assetId !== 'string' || !/^[0-9a-f]{64}$/i.test(assetId)) {
+      throw new TaprootAssetsEvidenceError('invalid-input', 'A 32-byte hexadecimal asset ID is required.', 400);
+    }
+    return this.read('unavailable-universe', universeUnavailable, authority => authority.getAsset(assetId));
   }
 
   /** @asyncSafe */
-
   public async $getGroups(): Promise<TaprootAssetGroup[]> {
-    return GROUPS;
+    return this.read('unavailable-universe', universeUnavailable, authority => authority.listGroups());
   }
 
   /** @asyncSafe */
-
   public async $getOffers(): Promise<Bolt12Offer[]> {
-    return OFFERS;
+    throw new TaprootAssetsEvidenceError('unavailable-offer-source', offersUnavailable);
   }
 
   /** @asyncSafe */
-
   public async $getRfqQuotes(): Promise<LightningRfqQuote[]> {
-    return RFQ_QUOTES;
+    return this.read('unavailable-rfq-source', rfqUnavailable, authority => authority.getRfqQuotes());
   }
 
   /** @asyncSafe */
-
-  public async $verifyProof(assetId: string, proofData: string): Promise<{
-    valid: false; stage: 'invalid-input' | 'unavailable-verifier'; error: string;
-  }> {
+  public async $verifyProof(assetId: string, proofData: string): Promise<TaprootProofVerdict> {
     if (typeof assetId !== 'string' || !/^[0-9a-f]{64}$/i.test(assetId)
       || typeof proofData !== 'string' || !proofData.trim() || proofData.length > 1024 * 1024) {
       return { valid: false, stage: 'invalid-input', error: 'A 32-byte hexadecimal asset ID and a nonempty proof payload of at most 1 MiB are required.' };
     }
-    return {
-      valid: false, stage: 'unavailable-verifier',
-      error: 'The Taproot Assets proof verifier and owned Bitcoin anchor reader are not connected. No asset commitment or anchor was verified.',
-    };
+    const encoded = canonicalProof(proofData);
+    if (!encoded) {
+      return { valid: false, stage: 'invalid-input', error: 'The proof payload must be the base64 encoding of a Taproot Assets proof file.' };
+    }
+    try {
+      const authority = this.resolveAuthority();
+      if (!authority) {
+        return {
+          valid: false, stage: 'unavailable-verifier',
+          error: 'The Taproot Assets proof verifier (owned tapd) and Bitcoin anchor reader are not connected. No asset commitment or anchor was verified.',
+        };
+      }
+      return await authority.verifyProof(assetId, encoded);
+    } catch (error) {
+      if (error instanceof TapdError) {return { valid: false, stage: 'unavailable-verifier', error: error.message };}
+      return { valid: false, stage: 'unavailable-verifier', error: 'The owned Taproot Assets verifier configuration or source is unavailable.' };
+    }
+  }
+
+  /** @asyncSafe */
+  private async read<T>(code: string, absent: string, operation: (authority: TapdAuthority) => Promise<T>): Promise<T> {
+    try {
+      const authority = this.resolveAuthority();
+      if (!authority) {throw new TaprootAssetsEvidenceError(code, absent);}
+      return await operation(authority);
+    } catch (error) {
+      if (error instanceof TaprootAssetsEvidenceError) throw error;
+      if (error instanceof TapdError) {throw new TaprootAssetsEvidenceError(error.code, error.message);}
+      throw new TaprootAssetsEvidenceError(code, 'The owned Taproot Assets source configuration or read is unavailable.');
+    }
+  }
+
+  /** Built on first use so the environment is read once the process is configured. */
+  private resolveAuthority(): TapdAuthority | null {
+    if (this.authority !== undefined) {return this.authority;}
+    if (this.options.authority !== undefined) {
+      this.authority = this.options.authority;
+      return this.authority;
+    }
+    const tapd = tapdConfigFromEnvironment();
+    this.authority = tapd ? new TapdAuthority(config.MEMPOOL.NETWORK, axiosTapdHttp(tapd), ownedWorkbenchCore) : null;
+    return this.authority;
   }
 }
 

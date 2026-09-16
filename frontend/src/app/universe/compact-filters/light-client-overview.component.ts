@@ -2,12 +2,14 @@ import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRe
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { CompactFiltersApiService, CompactFilterOverview } from './compact-filters.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-light-client-overview',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -23,12 +25,12 @@ import { CompactFiltersApiService, CompactFilterOverview } from './compact-filte
         </p>
 
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link active" routerLink="/network/light-client">Overview</a>
-          <a class="nav-link" routerLink="/network/light-client/providers">Providers</a>
-          <a class="nav-link" routerLink="/network/light-client/filters">Filter Explorer</a>
-          <a class="nav-link" routerLink="/network/light-client/verify">Header Verifier</a>
-          <a class="nav-link" routerLink="/network/light-client/scan">Local Scanner</a>
-          <a class="nav-link" routerLink="/network/light-client/privacy">Privacy Controls</a>
+          <a class="nav-link active" [routerLink]="'/network/light-client' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/network/light-client/providers' | relativeUrl">Providers</a>
+          <a class="nav-link" [routerLink]="'/network/light-client/filters' | relativeUrl">Filter Explorer</a>
+          <a class="nav-link" [routerLink]="'/network/light-client/verify' | relativeUrl">Header Verifier</a>
+          <a class="nav-link" [routerLink]="'/network/light-client/scan' | relativeUrl">Local Scanner</a>
+          <a class="nav-link" [routerLink]="'/network/light-client/privacy' | relativeUrl">Privacy Controls</a>
         </nav>
       </header>
 
@@ -75,7 +77,7 @@ import { CompactFiltersApiService, CompactFilterOverview } from './compact-filte
           <div class="card p-4 bg-body-tertiary border h-100">
             <div class="d-flex justify-content-between align-items-center mb-3">
               <h2 class="h5 m-0">Observed Compact Filter Peers</h2>
-              <a routerLink="/network/light-client/providers" class="small text-decoration-none">View All &rarr;</a>
+              <a [routerLink]="'/network/light-client/providers' | relativeUrl" class="small text-decoration-none">View All &rarr;</a>
             </div>
             <div class="table-responsive" tabindex="0" role="region" aria-label="Observed Compact Filter Peers, scroll horizontally" i18n-aria-label>
               <table class="table table-sm table-hover align-middle">
@@ -91,7 +93,7 @@ import { CompactFiltersApiService, CompactFilterOverview } from './compact-filte
                 <tbody>
                   <tr *ngFor="let p of overview.recent_providers">
                     <td>
-                      <a [routerLink]="['/network/light-client/provider', p.provider_id]" class="font-monospace small text-decoration-none">
+                      <a [routerLink]="['/network/light-client/provider' | relativeUrl, p.provider_id]" class="font-monospace small text-decoration-none">
                         {{ p.address }}:{{ p.port }}
                       </a>
                     </td>
@@ -154,7 +156,7 @@ export class LightClientOverviewComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
       },
       error: (err) => {
-        this.error = err.message || 'Failed to load compact filter overview';
+        this.error = loadFailureMessage(classifyLoadFailure(err));
         this.loading = false;
         this.cdr.markForCheck();
       },

@@ -28,7 +28,9 @@ export class WalletComponent implements OnInit, OnDestroy {
   walletName: string;
   isLoadingWallet = true;
   isLoadingTransactions = true;
-  transactions: Transaction[];
+  // Starts empty: the websocket wallet stream can deliver a transaction
+  // before the HTTP snapshot resolves, and the live handler indexes into this.
+  transactions: Transaction[] = [];
   totalTransactionCount: number;
   retryLoadMore = false;
   wallet$: Observable<Record<string, WalletAddress>>;
@@ -38,6 +40,7 @@ export class WalletComponent implements OnInit, OnDestroy {
   error: any;
   walletSubscription: Subscription;
   transactionSubscription: Subscription;
+  networkSubscription: Subscription;
 
   collapseAddresses: boolean = true;
 
@@ -60,12 +63,16 @@ export class WalletComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
-    this.stateService.networkChanged$.subscribe((network) => this.network = network);
+    this.networkSubscription = this.stateService.networkChanged$.subscribe((network) => this.network = network);
     this.websocketService.want(['blocks']);
     this.wallet$ = this.route.paramMap.pipe(
       map((params: ParamMap) => params.get('wallet') as string),
       tap((walletName: string) => {
         this.walletName = walletName;
+        // A different wallet starts from a clean transaction list.
+        this.transactions = [];
+        this.fullyLoaded = false;
+        this.isLoadingTransactions = true;
         this.websocketService.startTrackingWallet(walletName);
         this.seoService.setTitle($localize`:@@wallet.component.browser-title:Wallet: ${walletName}:INTERPOLATION:`);
         this.seoService.setDescription($localize`:@@meta.description.bitcoin.wallet:See mempool transactions, confirmed transactions, balance, and more for ${this.stateService.network==='liquid'||this.stateService.network==='liquidtestnet'?'Liquid':'Bitcoin'}${seoDescriptionNetwork(this.stateService.network)} wallet ${walletName}:INTERPOLATION:.`);
@@ -235,13 +242,16 @@ export class WalletComponent implements OnInit, OnDestroy {
       if (!transactions) {
         return;
       }
-      this.transactions = transactions;
+      // Live transactions that arrived before this snapshot are kept, once each.
+      const known = new Set(transactions.map(tx => tx.txid));
+      const live = this.transactions.filter(tx => !known.has(tx.txid));
+      this.transactions = live.concat(transactions);
       this.isLoadingTransactions = false;
     });
   }
 
   loadMore(): void {
-    if (this.isLoadingTransactions || this.fullyLoaded) {
+    if (this.isLoadingTransactions || this.fullyLoaded || !this.transactions.length) {
       return;
     }
     this.isLoadingTransactions = true;
@@ -294,5 +304,6 @@ export class WalletComponent implements OnInit, OnDestroy {
     this.websocketService.stopTrackingWallet();
     this.walletSubscription.unsubscribe();
     this.transactionSubscription.unsubscribe();
+    this.networkSubscription?.unsubscribe();
   }
 }

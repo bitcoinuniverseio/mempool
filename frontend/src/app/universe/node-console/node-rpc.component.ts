@@ -5,8 +5,10 @@ import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
+import { OwnerKeyService } from '@app/universe/intelligence-platform/owner-key.service';
 import { RpcMethod, RpcResult } from './node-console.types';
 import { firstArgumentProblem, groupByCategory, searchMethods } from './node-view';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 /**
  * The read only method catalog, and a way to call one.
@@ -22,7 +24,7 @@ import { firstArgumentProblem, groupByCategory, searchMethods } from './node-vie
 @Component({
   selector: 'app-node-rpc',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, FormsModule, RouterModule],
   templateUrl: './node-rpc.component.html',
   styleUrls: ['./node-console.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -51,7 +53,12 @@ export class NodeRpcComponent implements OnInit, OnDestroy {
     private api: UniverseApiService,
     private seo: SeoService,
     private cd: ChangeDetectorRef,
+    private ownerKey: OwnerKeyService,
   ) {}
+
+  get hasOwnerKey(): boolean {
+    return this.ownerKey.key !== null;
+  }
 
   ngOnInit(): void {
     this.seo.setTitle($localize`:@@node.rpc.title:Ask this node`);
@@ -117,6 +124,13 @@ export class NodeRpcComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         this.running = false;
+        if (error?.status === 401 || error?.status === 403) {
+          this.error = error.status === 401
+            ? $localize`:@@node.rpc.unauthenticated:An owner key with the node:rpc scope is required to run a method.`
+            : $localize`:@@node.rpc.forbidden:This owner key lacks the node:rpc scope.`;
+          this.cd.markForCheck();
+          return;
+        }
         const message = error?.error?.error ?? error?.error;
         this.error = typeof message === 'string' && message.length < 600
           ? message

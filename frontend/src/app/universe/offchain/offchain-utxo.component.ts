@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { OffchainApiService, OffchainOverview } from './offchain.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-offchain-utxo',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -15,7 +16,7 @@ import { OffchainApiService, OffchainOverview } from './offchain.service';
         <div class="title-row d-flex flex-wrap align-items-center justify-content-between gap-2">
           <h1 class="m-0">Off-Chain UTXO Recovery & Verification Center</h1>
           <span class="badge bg-secondary" *ngIf="overview">
-            {{ overview.total_operators }} Active Entities
+            {{ overview.total_operators }} Configured Entities
           </span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
@@ -23,12 +24,12 @@ import { OffchainApiService, OffchainOverview } from './offchain.service';
         </p>
 
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link active" routerLink="/offchain/utxo">Overview</a>
-          <a class="nav-link" routerLink="/offchain/statechains/operators">Statechains</a>
-          <a class="nav-link" routerLink="/offchain/statechains/verify">Transfer Verifier</a>
-          <a class="nav-link" routerLink="/offchain/coinswap">CoinSwap</a>
-          <a class="nav-link" routerLink="/offchain/coinswap/inspect">CoinSwap Inspector</a>
-          <a class="nav-link" routerLink="/offchain/recovery">Recovery Planner</a>
+          <a class="nav-link active" [routerLink]="'/offchain/utxo' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/offchain/statechains/operators' | relativeUrl">Statechains</a>
+          <a class="nav-link" [routerLink]="'/offchain/statechains/verify' | relativeUrl">Transfer Verifier</a>
+          <a class="nav-link" [routerLink]="'/offchain/coinswap' | relativeUrl">CoinSwap</a>
+          <a class="nav-link" [routerLink]="'/offchain/coinswap/inspect' | relativeUrl">CoinSwap Inspector</a>
+          <a class="nav-link" [routerLink]="'/offchain/recovery' | relativeUrl">Recovery Planner</a>
         </nav>
       </header>
 
@@ -41,25 +42,26 @@ import { OffchainApiService, OffchainOverview } from './offchain.service';
         {{ error }}
       </div>
 
+      <p *ngIf="overview">{{ overview.registry?.scope }} Source identifier: {{ overview.registry?.source }}. Configured CoinSwap makers: {{ overview.configured_coinswap_makers ?? 'Unknown' }}. Active makers: Unknown.</p>
       <div *ngIf="!loading && overview" class="row g-4">
         <div class="col-12 col-md-4">
           <div class="card p-3 bg-body-tertiary border h-100">
             <div class="text-muted small">Registered Operators</div>
             <div class="fs-4 fw-bold mt-1">{{ overview.total_operators }}</div>
-            <div class="small text-success mt-1">{{ overview.active_operators }} operational</div>
+            <div class="small text-success mt-1">Operational status unknown</div>
           </div>
         </div>
         <div class="col-12 col-md-4">
           <div class="card p-3 bg-body-tertiary border h-100">
             <div class="text-muted small">Active Public Offers</div>
-            <div class="fs-4 fw-bold mt-1">{{ overview.active_offers_count }}</div>
+            <div class="fs-4 fw-bold mt-1">Unknown</div>
             <div class="small text-muted mt-1">Statechain deposits and maker offers</div>
           </div>
         </div>
         <div class="col-12 col-md-4">
           <div class="card p-3 bg-body-tertiary border h-100">
             <div class="text-muted small">Recovery Procedures</div>
-            <div class="fs-4 fw-bold mt-1">{{ overview.recent_recoveries_count }}</div>
+            <div class="fs-4 fw-bold mt-1">Unknown</div>
             <div class="small text-muted mt-1">Unilateral locktime exits analyzed</div>
           </div>
         </div>
@@ -67,10 +69,10 @@ import { OffchainApiService, OffchainOverview } from './offchain.service';
         <div class="col-12 col-lg-8">
           <div class="card p-4 bg-body-tertiary border h-100">
             <div class="d-flex justify-content-between align-items-center mb-3">
-              <h2 class="h5 m-0">Observed Protocol Operators</h2>
-              <a routerLink="/offchain/statechains/operators" class="small text-decoration-none">View All &rarr;</a>
+              <h2 class="h5 m-0">Configured Protocol Operators</h2>
+              <a [routerLink]="'/offchain/statechains/operators' | relativeUrl" class="small text-decoration-none">View All &rarr;</a>
             </div>
-            <div class="table-responsive" tabindex="0" role="region" aria-label="Observed Protocol Operators, scroll horizontally" i18n-aria-label>
+            <div class="table-responsive" tabindex="0" role="region" aria-label="Configured Protocol Operators, scroll horizontally" i18n-aria-label>
               <table class="table table-sm table-hover align-middle">
                 <thead>
                   <tr>
@@ -84,7 +86,7 @@ import { OffchainApiService, OffchainOverview } from './offchain.service';
                 <tbody>
                   <tr *ngFor="let op of overview.featured_operators">
                     <td>
-                      <a [routerLink]="['/offchain/statechains/operator', op.operator_id]" class="fw-bold text-decoration-none">
+                      <a [routerLink]="['/offchain/statechains/operator' | relativeUrl, op.operator_id]" class="fw-bold text-decoration-none">
                         {{ op.display_name }}
                       </a>
                     </td>
@@ -94,7 +96,7 @@ import { OffchainApiService, OffchainOverview } from './offchain.service';
                     <td class="font-monospace small text-truncate" style="max-width: 180px;">
                       {{ op.endpoint }}
                     </td>
-                    <td class="small">{{ op.published_terms.fee_rate_basis_points / 100 }}%</td>
+                    <td class="small">{{ op.published_terms.fee_rate_basis_points ?? 'Unknown' }}</td>
                     <td>
                       <span class="badge" [ngClass]="op.health === 'healthy' ? 'bg-success' : 'bg-warning text-dark'">
                         {{ op.health | uppercase }}
@@ -121,7 +123,7 @@ import { OffchainApiService, OffchainOverview } from './offchain.service';
                 &bull; Decrementing timelocks must be verified across every transfer hop.
               </li>
               <li class="list-group-item bg-transparent px-0 py-2">
-                &bull; Tor-only endpoints are routed without clearnet leakage.
+                &bull; Listing an onion address does not establish Tor routing or prevent clearnet leakage.
               </li>
             </ul>
           </div>
@@ -153,7 +155,7 @@ export class OffchainUtxoComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
       },
       error: (err) => {
-        this.error = err.message || 'Failed to load off-chain overview';
+        this.error = err?.error?.error || err?.message || 'Failed to load off-chain overview';
         this.loading = false;
         this.cdr.markForCheck();
       },

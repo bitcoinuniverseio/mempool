@@ -46,10 +46,9 @@ if (process.env.UNIVERSE_ACCEPTANCE_HANDLER_ONLY === '1') {
   app.use(express.static(build));
   app.get('*', (_req, res) => res.sendFile(path.join(build, 'index.html')));
 }
-app.use((error, _req, res, _next) => {
-  res.status(error.type === 'entity.too.large' ? 413 : 400).json({ code: 'INVALID_REQUEST', error: 'Invalid JSON request body.' });
-});
+app.use(require('./acceptance-error-handler.cjs'));
 const port = Number(process.env.UNIVERSE_ACCEPTANCE_PORT || 4310);
+if (!Number.isSafeInteger(port) || port < 1 || port > 65535) throw new Error('Invalid acceptance port');
 const server = app.listen(port, '127.0.0.1', () => console.log(`Local acceptance host listening on http://localhost:${port}`));
 process.on('SIGTERM', () => server.close(() => process.exit(0)));
 process.on('SIGINT', () => server.close(() => process.exit(0)));

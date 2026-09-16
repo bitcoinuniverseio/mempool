@@ -2,18 +2,20 @@ import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRe
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { DecentralizedMiningApiService, MiningShare } from './decentralized-mining.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-decentralized-mining-share-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
       <header class="page-header mb-4">
         <div class="mb-2">
-          <a routerLink="/mining/decentralized" class="btn btn-sm btn-outline-secondary">
+          <a [routerLink]="'/mining/decentralized' | relativeUrl" class="btn btn-sm btn-outline-secondary">
             &larr; Back to Decentralized Mining
           </a>
         </div>
@@ -112,7 +114,7 @@ export class DecentralizedMiningShareDetailComponent implements OnInit, OnDestro
         this.cdr.markForCheck();
       },
       error: (err) => {
-        this.error = err.message || 'Failed to load share details';
+        this.error = loadFailureMessage(classifyLoadFailure(err));
         this.loading = false;
         this.cdr.markForCheck();
       },

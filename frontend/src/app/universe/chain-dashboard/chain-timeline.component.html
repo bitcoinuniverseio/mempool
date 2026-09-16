@@ -54,9 +54,9 @@
            i18n-aria-label="universe.timeline.confirmed-label">
         <div class="timeline-cube candidate-cube confirmed-cube" role="listitem"
              *ngFor="let block of strip.confirmed; trackBy: trackByBlock">
-          <a class="cube-height" [routerLink]="['/', chain, 'block', block.hash]"
+          <a class="cube-height" [routerLink]="['/' | relativeUrl, chain, 'block', block.hash]"
              [attr.title]="block.height.exact">{{ block.height.display }}</a>
-          <a class="cube-block confirmed-block" [routerLink]="['/', chain, 'block', block.hash]"
+          <a class="cube-block confirmed-block" [routerLink]="['/' | relativeUrl, chain, 'block', block.hash]"
              [style.background]="confirmedBackground(block)"
              [attr.aria-label]="'Block ' + block.height.exact"></a>
           <div class="cube-readings">

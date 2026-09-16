@@ -1,19 +1,22 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, Optional } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { Subscription, combineLatest, of, startWith } from 'rxjs';
+import { StateService } from '@app/services/state.service';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { DlcApiService, DlcOracle } from './dlc.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-dlc-oracle-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
       <header class="page-header mb-4">
         <div class="mb-2">
-          <a routerLink="/contracts/dlc/oracles" class="btn btn-sm btn-outline-secondary">
+          <a [routerLink]="'/contracts/dlc/oracles' | relativeUrl" class="btn btn-sm btn-outline-secondary">
             &larr; Back to Oracles
           </a>
         </div>
@@ -22,8 +25,8 @@ import { DlcApiService, DlcOracle } from './dlc.service';
             <h1 class="m-0">{{ oracle.display_name }}</h1>
             <div class="text-muted small font-monospace mt-1 text-break">{{ oracle.oracle_public_key }}</div>
           </div>
-          <span class="badge" [ngClass]="oracle.health === 'healthy' ? 'bg-success' : 'bg-warning text-dark'">
-            {{ oracle.health | uppercase }}
+          <span class="badge bg-secondary">
+            Reported: {{ oracle.health | uppercase }}
           </span>
         </div>
       </header>
@@ -67,11 +70,11 @@ import { DlcApiService, DlcOracle } from './dlc.service';
 
           <div class="card p-4 bg-body-tertiary border">
             <h2 class="h5 mb-3">Verification & Equivocation Status</h2>
-            <div class="alert" [ngClass]="oracle.coverage.conflicts_detected === 0 ? 'alert-success' : 'alert-danger'">
-              <div class="fw-bold" *ngIf="oracle.coverage.conflicts_detected === 0">No Nonce Reuse or Equivocation Detected</div>
+            <div class="alert alert-secondary">
+              <div class="fw-bold" *ngIf="oracle.coverage.conflicts_detected === 0">No conflicts listed in this response</div>
               <div class="fw-bold" *ngIf="oracle.coverage.conflicts_detected > 0">Equivocation Conflict Recorded</div>
               <p class="small m-0 mt-1">
-                Every announcement and attestation signed by this oracle public key is evaluated for repeated nonces across divergent messages.
+                Registry counts do not establish complete coverage or independently verify nonce reuse. Use signed artifacts for bounded cryptographic verification.
               </p>
             </div>
           </div>
@@ -81,16 +84,16 @@ import { DlcApiService, DlcOracle } from './dlc.service';
           <div class="card p-4 bg-body-tertiary border h-100">
             <h2 class="h5 mb-3">Attestation Statistics</h2>
             <div class="p-3 border rounded bg-body mb-3">
-              <div class="text-muted small">Total Announcements</div>
+              <div class="text-muted small">Reported Announcements</div>
               <div class="fs-4 fw-bold">{{ oracle.coverage.total_announcements }}</div>
             </div>
             <div class="p-3 border rounded bg-body mb-3">
-              <div class="text-muted small">Total Attestations</div>
+              <div class="text-muted small">Reported Attestations</div>
               <div class="fs-4 fw-bold">{{ oracle.coverage.total_attestations }}</div>
             </div>
             <div class="p-3 border rounded bg-body">
               <div class="text-muted small">Observed Conflicts</div>
-              <div class="fs-4 fw-bold" [ngClass]="oracle.coverage.conflicts_detected > 0 ? 'text-danger' : 'text-success'">
+              <div class="fs-4 fw-bold" >
                 {{ oracle.coverage.conflicts_detected }}
               </div>
             </div>
@@ -104,31 +107,28 @@ export class DlcOracleDetailComponent implements OnInit, OnDestroy {
   loading = true;
   error: string | null = null;
   oracle: DlcOracle | null = null;
-  private sub?: Subscription;
+  private sub?: Subscription;private request?:Subscription;
 
   constructor(
     private route: ActivatedRoute,
     private dlcApi: DlcApiService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    @Optional() private state: StateService = null
   ) {}
 
   ngOnInit(): void {
-    const oracleId = this.route.snapshot.paramMap.get('oracleId') || 'oracle-kormir-rates';
-    this.sub = this.dlcApi.getOracleById$(oracleId).subscribe({
-      next: (data) => {
-        this.oracle = data;
-        this.loading = false;
+    this.sub=combineLatest([this.route.paramMap,(this.state ? this.state.networkChanged$.pipe(startWith(null)) : of(null))]).subscribe(([params])=>{
+      this.request?.unsubscribe();this.oracle=null;this.error=null;this.loading=false;
+      const id=params.get('oracleId');
+      if(!id){this.error='Missing requested identifier.';this.cdr.markForCheck();return;}
+      this.loading=true;this.cdr.markForCheck();
+      this.request=this.dlcApi.getOracleById$(id).subscribe({next:data=>{
+        this.loading=false;
+        if(!data||data.oracle_id!==id){this.error='Response does not match the requested identifier.';}
+        else this.oracle=data;
         this.cdr.markForCheck();
-      },
-      error: (err) => {
-        this.error = err.message || 'Failed to load oracle detail';
-        this.loading = false;
-        this.cdr.markForCheck();
-      },
+      },error:err=>{this.loading=false;this.error=err?.error?.error||'Source unavailable; no observation established.';this.cdr.markForCheck();}});
     });
   }
-
-  ngOnDestroy(): void {
-    this.sub?.unsubscribe();
-  }
+  ngOnDestroy(): void {this.sub?.unsubscribe();this.request?.unsubscribe();this.oracle=null;this.loading=false;}
 }

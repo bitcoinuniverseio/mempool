@@ -1,66 +1,21 @@
-import { utxoIntelligenceService } from './utxo-intelligence.service';
-
-describe('Product 5: UTXO Set and Supply Intelligence', () => {
-  it('guarantees exact integer satoshis across supply and overview metrics', () => {
-    const overview = utxoIntelligenceService.getOverview();
-    expect(Number.isInteger(overview.total_utxos)).toBe(true);
-    expect(Number.isInteger(overview.total_amount_sats)).toBe(true);
-    expect(Number.isInteger(overview.dormant_10yr_sats)).toBe(true);
-    expect(Number.isInteger(overview.uneconomical_at_10_sat_vb_sats)).toBe(true);
-    expect(overview.total_amount_sats).toBeGreaterThan(1900000000000000); // > 19M BTC in sats
-  });
-
-  it('provides script type, age, and value cohorts with exact integer satoshis', () => {
-    const cohorts = utxoIntelligenceService.getCohorts();
-    expect(cohorts.script_types.length).toBeGreaterThanOrEqual(6);
-    expect(cohorts.age_cohorts.length).toBeGreaterThanOrEqual(8);
-    expect(cohorts.value_cohorts.length).toBeGreaterThanOrEqual(6);
-
-    for (const script of cohorts.script_types) {
-      expect(Number.isInteger(script.utxo_count)).toBe(true);
-      expect(Number.isInteger(script.total_sats)).toBe(true);
-    }
-  });
-
-  it('calculates economic thresholds across feerate bands (1 to 100 sat/vB)', () => {
-    const thresholds = utxoIntelligenceService.getEconomicThresholds();
-    expect(thresholds.length).toBeGreaterThanOrEqual(5);
-
-    // Uneconomical outputs should monotonically increase with feerate
-    for (let i = 1; i < thresholds.length; i++) {
-      expect(thresholds[i].feerate_sats_vb).toBeGreaterThan(thresholds[i - 1].feerate_sats_vb);
-      expect(thresholds[i].uneconomical_utxo_count).toBeGreaterThan(thresholds[i - 1].uneconomical_utxo_count);
-      expect(thresholds[i].uneconomical_sats).toBeGreaterThan(thresholds[i - 1].uneconomical_sats);
-    }
-  });
-
-  it('provides spend transitions with coin days destroyed and net change', () => {
-    const transitions = utxoIntelligenceService.getSpendTransitions(5);
-    expect(transitions.length).toBe(5);
-    for (const t of transitions) {
-      expect(Number.isInteger(t.height)).toBe(true);
-      expect(Number.isInteger(t.created_count)).toBe(true);
-      expect(Number.isInteger(t.spent_count)).toBe(true);
-      expect(Number.isInteger(t.created_sats)).toBe(true);
-      expect(Number.isInteger(t.spent_sats)).toBe(true);
-      expect(t.coin_days_destroyed).toBeGreaterThan(0);
-    }
-  });
-
-  it('reconciles exactly against Bitcoin Core UTXO set summary', () => {
-    const rec = utxoIntelligenceService.getReconciliation();
-    expect(rec.reconciled).toBe(true);
-    expect(rec.hash_serialized_2).toHaveLength(64);
-    expect(rec.reorg_safe_checkpoint_height).toBe(rec.block_height - 6);
-  });
-
-  it('supports deterministic rollback during chain reorganizations', () => {
-    const initialOverview = utxoIntelligenceService.getOverview();
-    const rollbackSuccess = utxoIntelligenceService.rollbackToHeight(initialOverview.block_height - 2);
-    expect(rollbackSuccess).toBe(true);
-
-    const postRollbackOverview = utxoIntelligenceService.getOverview();
-    expect(postRollbackOverview.block_height).toBe(initialOverview.block_height - 2);
-    expect(postRollbackOverview.total_utxos).toBeLessThan(initialOverview.total_utxos);
-  });
+import { Block,Transaction } from 'bitcoinjs-lib';
+import { mkdtempSync,rmSync,appendFileSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
+import { UtxoMuHash } from './utxo-muhash';
+import { UtxoProjection } from './utxo-projection';
+import { GENESIS,btcToSats } from './utxo-evidence';
+import { UtxoIntelligenceService } from './utxo-intelligence.service';
+import { UtxoStatsCache } from './utxo-source';
+const script=Buffer.from('0014'+'11'.repeat(20),'hex');
+function coinbase(height:number,value=5000000000){const t=new Transaction();t.addInput(Buffer.alloc(32),0xffffffff,0xffffffff,Buffer.from([1,height]));t.addOutput(script,value);return t;}
+function block(previous:string,height:number,txs:Transaction[]){const b=new Block();b.version=1;b.prevHash=Buffer.from(previous,'hex').reverse();b.timestamp=1700000000+height*600;b.bits=0x207fffff;b.nonce=height;b.transactions=txs;b.merkleRoot=Block.calculateMerkleRoot(txs);return b;}
+function chain(){const first=block(GENESIS.regtest,1,[coinbase(1)]),spend=new Transaction();spend.addInput(Buffer.from(first.transactions![0].getId(),'hex').reverse(),0);spend.addOutput(Buffer.from('5120'+'22'.repeat(32),'hex'),4999999000);spend.addOutput(Buffer.from('6a01ff','hex'),0);const second=block(first.getId(),2,[coinbase(2),spend]);let blocks=[first,second];const reader={getBlockHash:async(h:number)=>h===0?GENESIS.regtest:blocks[h-1].getId(),getBlock:async(hash:string)=>blocks.find(b=>b.getId()===hash)!.toHex(),getBlockCount:async()=>blocks.length,getBlockHeader:async()=>({time:1700000000})};return {reader,first,second,set:(next:Block[])=>{blocks=next;}};}
+describe('UTXO exact projection and reconciliation',()=>{
+ it('matches the Bitcoin Core MuHash3072 independent published test vector',()=>{const m=new UtxoMuHash();m.insert(Buffer.alloc(32));m.insert(Buffer.concat([Buffer.from([1]),Buffer.alloc(31)]));m.remove(Buffer.concat([Buffer.from([2]),Buffer.alloc(31)]));expect(m.digest()).toBe('10d312b100cbd32ada024a6646e40d3482fcff103668d2625f10002a607d5863');});
+ it('converts decimal BTC without floating multiplication or fractional-satoshi rounding',()=>{expect(btcToSats(0.29)).toBe(29000000);expect(btcToSats(1e-8)).toBe(1);expect(btcToSats('20999999.99999999')).toBe(2099999999999999);expect(()=>btcToSats('0.000000001')).toThrow();expect(()=>btcToSats(NaN)).toThrow();});
+ it('projects actual outpoints and OP_RETURN exclusion, then reverses and reapplies a competing block',async()=>{const c=chain(),p=new UtxoProjection('regtest',c.reader);await p.sync();const original=p.getState();expect(original.total_utxos).toBe(2);expect(original.total_amount_sats).toBe(9999999000);expect(p.getTransitions(2)[0]).toMatchObject({created_count:2,spent_count:1,created_sats:9999999000,spent_sats:5000000000});c.set([c.first]);await p.sync();expect(p.getState().total_amount_sats).toBe(5000000000);expect(p.getState().block_hash).toBe(c.first.getId());const alternative=block(c.first.getId(),2,[coinbase(2,4900000000)]);c.set([c.first,alternative]);await p.sync();expect(p.getState().total_amount_sats).toBe(9900000000);expect(p.getState().muhash).not.toBe(original.muhash);expect(p.getTransitions(0)).toEqual([]);});
+ it('keeps state atomic when a block has missing inputs or wrong predecessor',async()=>{const c=chain(),p=new UtxoProjection('regtest',c.reader);c.set([c.first]);await p.sync();const before=p.getState();const tx=new Transaction();tx.addInput(Buffer.alloc(32,9),0);tx.addOutput(script,1);const invalid=block(c.first.getId(),2,[coinbase(2),tx]);expect(()=>p.applyBlock(invalid.toHex(),2,invalid.getId())).toThrow('previous output');expect(p.getState()).toEqual(before);});
+ it('persists all coins and undo, resumes after restart, detects corrupt and wrong-network state',async()=>{const directory=mkdtempSync(join(tmpdir(),'utxo-projection-'));const path=join(directory,'state.gz');const c=chain();try{const p=new UtxoProjection('regtest',c.reader,path);await p.sync();const before=p.getState();p.close();const resumed=new UtxoProjection('regtest',c.reader,path);await resumed.sync();expect(resumed.getState()).toEqual(before);c.set([c.first]);await resumed.sync();expect(resumed.getState().total_utxos).toBe(1);resumed.close();const wrong=new UtxoProjection('signet',c.reader,path);await expect(wrong.sync()).rejects.toThrow('Persisted UTXO');wrong.close();appendFileSync(path,'corruption');const broken=new UtxoProjection('regtest',c.reader,path);await expect(broken.sync()).rejects.toThrow('Persisted UTXO');broken.close();}finally{rmSync(directory,{recursive:true,force:true});}});
+ it('partitions every reconciled coin and refuses cohorts on commitment mismatch',async()=>{const c=chain(),p=new UtxoProjection('regtest',c.reader);await p.sync();let bad=false;const stats=new UtxoStatsCache({read:async()=>{const s=p.getState();return {...s,muhash:bad?'00'.repeat(32):s.muhash,bogo_size:'0',observed_at_utc:new Date().toISOString()};}});const service=new UtxoIntelligenceService(stats,p);expect((await service.getReconciliation()).reconciled).toBe(true);const cohorts=await service.getCohorts();for(const part of [cohorts.script_types,cohorts.age_cohorts,cohorts.value_cohorts] as Array<Array<{utxo_count:number;total_sats:number}>>){expect(part.reduce((s,g)=>s+g.utxo_count,0)).toBe(2);expect(part.reduce((s,g)=>s+g.total_sats,0)).toBe(9999999000);}bad=true;await expect(service.getCohorts()).rejects.toThrow('does not match');});
 });

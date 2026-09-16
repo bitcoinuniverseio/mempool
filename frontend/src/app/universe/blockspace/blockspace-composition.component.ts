@@ -1,13 +1,15 @@
+import { blockspaceValue, blockspaceShare, blockspaceBtc } from './blockspace-format';
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { BlockspaceApiService, BlockspaceCompositionPoint } from './blockspace.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-blockspace-composition',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -21,11 +23,11 @@ import { BlockspaceApiService, BlockspaceCompositionPoint } from './blockspace.s
 
         <!-- Navigation Tabs -->
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/intelligence/blockspace">Overview</a>
-          <a class="nav-link active" routerLink="/intelligence/blockspace/composition">Composition</a>
-          <a class="nav-link" routerLink="/intelligence/blockspace/regimes">Fee Regimes</a>
-          <a class="nav-link" routerLink="/intelligence/blockspace/compare">Regime Compare</a>
-          <a class="nav-link" routerLink="/intelligence/blockspace/taxonomy">Taxonomy Catalog</a>
+          <a class="nav-link" [routerLink]="'/intelligence/blockspace' | relativeUrl">Overview</a>
+          <a class="nav-link active" [routerLink]="'/intelligence/blockspace/composition' | relativeUrl">Composition</a>
+          <a class="nav-link" [routerLink]="'/intelligence/blockspace/regimes' | relativeUrl">Fee Regimes</a>
+          <a class="nav-link" [routerLink]="'/intelligence/blockspace/compare' | relativeUrl">Regime Compare</a>
+          <a class="nav-link" [routerLink]="'/intelligence/blockspace/taxonomy' | relativeUrl">Taxonomy Catalog</a>
         </nav>
       </header>
 
@@ -59,12 +61,12 @@ import { BlockspaceApiService, BlockspaceCompositionPoint } from './blockspace.s
                 <tr *ngFor="let point of composition">
                   <td class="fw-bold">{{ point.block_height }}</td>
                   <td class="text-muted small">{{ point.timestamp_utc | date:'medium' }}</td>
-                  <td class="text-end">{{ point.total_weight | number }} WU</td>
-                  <td class="text-end fw-semibold">{{ (point.total_fee_sats / 100000000).toFixed(4) }} BTC</td>
-                  <td class="text-end text-success">{{ ((point.monetary_weight / point.total_weight) * 100).toFixed(1) }}%</td>
-                  <td class="text-end text-warning">{{ ((point.arbitrary_data_weight / point.total_weight) * 100).toFixed(1) }}%</td>
-                  <td class="text-end text-secondary">{{ ((point.consolidation_weight / point.total_weight) * 100).toFixed(1) }}%</td>
-                  <td class="text-end text-info">{{ ((point.layer2_weight / point.total_weight) * 100).toFixed(1) }}%</td>
+                  <td class="text-end">{{ value(point.total_weight, 'WU') }}</td>
+                  <td class="text-end fw-semibold">{{ btc(point.total_fee_sats) }}</td>
+                  <td class="text-end text-success">{{ share(point.monetary_weight, point.total_weight) }}</td>
+                  <td class="text-end text-warning">{{ share(point.arbitrary_data_weight, point.total_weight) }}</td>
+                  <td class="text-end text-secondary">{{ share(point.consolidation_weight, point.total_weight) }}</td>
+                  <td class="text-end text-info">{{ share(point.layer2_weight, point.total_weight) }}</td>
                 </tr>
               </tbody>
             </table>
@@ -91,18 +93,17 @@ export class BlockspaceCompositionComponent implements OnInit, OnDestroy {
     private cd: ChangeDetectorRef,
   ) {}
 
+  readonly value = blockspaceValue;
+  readonly share = blockspaceShare;
+  readonly btc = blockspaceBtc;
+
   public ngOnInit(): void {
-    this.sub = this.blockspaceApi.getComposition(48).subscribe({
-      next: (data) => {
-        this.composition = data;
-        this.loading = false;
-        this.cd.markForCheck();
-      },
-      error: (err) => {
-        this.error = err?.message || 'Failed to load composition timeseries';
-        this.loading = false;
-        this.cd.markForCheck();
-      },
+    this.sub?.unsubscribe();
+    this.sub = this.blockspaceApi.watch(() => this.blockspaceApi.getComposition(48)).subscribe(state => {
+      this.composition = state.kind === 'ready' ? state.data : [];
+      this.loading = state.kind === 'loading';
+      this.error = state.kind === 'error' ? state.error : '';
+      this.cd.markForCheck();
     });
   }
 

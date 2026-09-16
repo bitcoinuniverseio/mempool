@@ -1,92 +1,153 @@
 <div class="container-xl product-page">
   <header class="page-head">
-    <nav class="crumbs">
-      <a [routerLink]="['/']">Home</a>
-      <span class="divider">/</span>
-      <span>Developer Platform</span>
-    </nav>
-    <h1>Universe Data Studio & Developer Platform</h1>
+    <h1>Universe Data Studio</h1>
     <p class="summary">
-      Constrained SQL query grammar, real-time SSE streams, Parquet/NDJSON exports, SDK snippets, and read-only Model Context Protocol (MCP) tool catalog.
+      Immutable owned-node snapshots, typed bounded queries, exact JSON/NDJSON/CSV exports, persisted snapshot events
+      and executable read-only MCP tools.
     </p>
   </header>
-
   <nav class="nav-tabs">
-    <a [routerLink]="['/data']" class="active">Datasets & Query Studio</a>
-    <a [routerLink]="['/data/live']">Live Streams</a>
+    <a [routerLink]="'/data' | relativeUrl" class="active">Datasets & Query Studio</a
+    ><a [routerLink]="'/data/live' | relativeUrl">Live Streams</a>
   </nav>
-
-  <ng-container *ngIf="vm$ | async as vm">
-    <div *ngIf="vm.kind === 'loading'" class="panel" aria-busy="true">
-      <p>Reading Data Studio catalog...</p>
-    </div>
-
-    <div *ngIf="vm.kind === 'error'" class="panel">
-      <h2>Data Service Offline</h2>
-      <p>Could not reach the Universe Data Studio catalog.</p>
-    </div>
-
-    <ng-container *ngIf="vm.kind === 'ready' && vm.datasets">
-      <!-- Catalog Selection -->
+  <ng-container *ngIf="vm$ | async as vm"
+    ><section class="panel" *ngIf="vm.kind === 'loading'">Reading owned snapshot…</section>
+    <section class="panel" role="alert" *ngIf="vm.kind === 'error'">{{ vm.message }}</section>
+    <ng-container *ngIf="vm.kind === 'ready'"
+      ><section class="panel">
+        <h2>Snapshot authority</h2>
+        <p>{{ vm.scope }}</p>
+        <p class="mono text-break">Snapshot: {{ vm.snapshotId }}</p>
+        <p>{{ vm.source.network }} · height {{ vm.source.tipHeight }} · observed {{ vm.source.observedAt }}</p>
+        <p *ngFor="let item of vm.unavailable | keyvalue">{{ item.key }} unavailable: {{ item.value }}</p>
+      </section>
       <section class="panel">
-        <h2>Dataset Query Workspace</h2>
-        <div style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
-          <div class="form-group" style="flex: 1; min-width: 240px; margin-bottom: 0;">
-            <label for="datasetSelect">Select Dataset</label>
-            <select id="datasetSelect" [ngModel]="selectedDatasetId" (ngModelChange)="onDatasetChange($event)">
-              <option *ngFor="let d of vm.datasets" [value]="d.id">{{ d.name }} ({{ d.category }})</option>
+        <h2>Dataset query workspace</h2>
+        <label for="datasetSelect">Dataset</label
+        ><select id="datasetSelect" [ngModel]="selectedDatasetId" (ngModelChange)="onDatasetChange($event)">
+          <option *ngFor="let d of vm.datasets" [value]="d.id">{{ d.name }} — {{ d.rowCount }} exact rows</option>
+        </select>
+        <p *ngIf="vm.selectedDataset">
+          {{ vm.selectedDataset.sizeBytes }} exact NDJSON bytes. Coverage: {{ vm.selectedDataset.coverage | json }}
+        </p>
+        <div class="query-controls">
+          <div>
+            <label for="queryLimitInput">Max rows</label
+            ><input
+              id="queryLimitInput"
+              type="number"
+              [(ngModel)]="queryLimit"
+              (ngModelChange)="invalidateQuery()"
+              min="1"
+              max="1000"
+            />
+          </div>
+          <div>
+            <label for="queryOffsetInput">Offset</label
+            ><input
+              id="queryOffsetInput"
+              type="number"
+              [(ngModel)]="queryOffset"
+              (ngModelChange)="invalidateQuery()"
+              min="0"
+              max="10000"
+            />
+          </div>
+          <div>
+            <label for="queryOrder">Order field</label
+            ><select id="queryOrder" [(ngModel)]="orderBy" (ngModelChange)="invalidateQuery()">
+              <option *ngFor="let f of vm.selectedDataset?.fields" [value]="f.name">{{ f.name }}</option>
             </select>
           </div>
-          <div class="form-group" style="width: 120px; margin-bottom: 0;">
-            <label for="queryLimitInput">Max Rows</label>
-            <input id="queryLimitInput" type="number" [(ngModel)]="queryLimit" min="1" max="100" />
+          <div>
+            <label for="queryDirection">Direction</label
+            ><select id="queryDirection" [(ngModel)]="orderDirection" (ngModelChange)="invalidateQuery()">
+              <option value="asc">Ascending</option>
+              <option value="desc">Descending</option>
+            </select>
           </div>
-          <button type="button" class="btn-primary" (click)="runQuery()" [disabled]="vm.executing">
-            {{ vm.executing ? 'Executing...' : 'Run Query' }}
-          </button>
         </div>
+        <label for="queryFields">Projection fields (comma separated; blank means all)</label
+        ><input id="queryFields" [(ngModel)]="selectedFields" (ngModelChange)="invalidateQuery()" />
+        <div class="query-controls">
+          <div>
+            <label for="queryFilterField">Filter field</label
+            ><select id="queryFilterField" [(ngModel)]="filterField" (ngModelChange)="invalidateQuery()">
+              <option *ngFor="let f of vm.selectedDataset?.fields" [value]="f.name">{{ f.name }} ({{ f.type }})</option>
+            </select>
+          </div>
+          <div>
+            <label for="queryFilterOperator">Comparison</label
+            ><select id="queryFilterOperator" [(ngModel)]="filterOperator" (ngModelChange)="invalidateQuery()">
+              <option *ngFor="let op of ['eq', 'neq', 'gt', 'gte', 'lt', 'lte']" [value]="op">{{ op }}</option>
+            </select>
+          </div>
+          <div>
+            <label for="queryFilterValue">Filter value (blank disables)</label
+            ><input id="queryFilterValue" [(ngModel)]="filterValue" (ngModelChange)="invalidateQuery()" />
+          </div>
+        </div>
+        <button
+          id="runDataQuery"
+          class="btn-primary"
+          (click)="runQuery()"
+          [disabled]="vm.executing || !vm.selectedDataset"
+        >
+          {{ vm.executing ? 'Executing…' : 'Run query' }}
+        </button>
       </section>
-
-      <!-- Results Table -->
-      <section class="panel" *ngIf="vm.queryResult">
-        <h2>Query Results ({{ vm.queryResult.rowCount }} rows in {{ vm.queryResult.executionTimeMs }} ms)</h2>
+      <section class="panel" *ngIf="vm.queryError" role="alert">
+        <h2>Query not answered</h2>
+        <p>{{ vm.queryError }}</p>
+      </section>
+      <section class="panel" id="dataQueryResults" *ngIf="vm.queryResult">
+        <h2>{{ vm.queryResult.rowCount }} returned rows of {{ vm.queryResult.totalAvailable }} filtered rows</h2>
+        <p>{{ vm.queryResult.executionTimeMs | number: '1.2-3' }} ms · {{ vm.queryResult.network }}</p>
+        <p class="mono text-break">Snapshot {{ vm.queryResult.snapshotId }}</p>
         <div class="query-results-scroll" tabindex="0" aria-label="Query result table">
-        <table class="data-table mcp-tools-table">
-          <thead>
-            <tr>
-              <th *ngFor="let col of vm.queryResult.columns">{{ col }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let row of vm.queryResult.rows">
-              <td *ngFor="let cell of row" class="mono">{{ cell }}</td>
-            </tr>
-          </tbody>
-        </table>
+          <table class="data-table mcp-tools-table">
+            <thead>
+              <tr>
+                <th *ngFor="let c of vm.queryResult.columns">{{ c }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of vm.queryResult.rows">
+                <td *ngFor="let cell of row" class="mono">{{ cell }}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
+        <button *ngIf="vm.queryResult.nextOffset !== null" (click)="nextPage()">Next page</button>
       </section>
-
-      <!-- MCP Tool Declarations -->
-      <section class="panel" *ngIf="vm.mcpTools?.length">
-        <h2>Model Context Protocol (MCP) Tools</h2>
-        <p>Read-only MCP server definitions allowing autonomous AI coding agents to query the Universe platform.</p>
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Tool Name</th>
-              <th>Description</th>
-              <th>Sample Request</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let t of vm.mcpTools">
-              <td class="mono" data-label="Tool name"><strong>{{ t.name }}</strong></td>
-              <td data-label="Description">{{ t.description }}</td>
-              <td class="mono" data-label="Sample request">{{ t.sampleCall }}</td>
-            </tr>
-          </tbody>
-        </table>
+      <section class="panel" *ngIf="vm.selectedDataset">
+        <h2>Download exact full snapshot dataset</h2>
+        <p>The download is the complete retained dataset, independent of the current query filter.</p>
+        <p *ngFor="let format of vm.selectedDataset.supportedFormats">
+          <a
+            [href]="api.exportUrl(vm.selectedDataset.snapshotId, vm.selectedDataset.id, format)"
+            [attr.data-format]="format"
+            >Download {{ format | uppercase }}</a
+          >
+          — {{ vm.selectedDataset.exports[format].bytes }} bytes
+          <span class="mono text-break">SHA256 {{ vm.selectedDataset.exports[format].sha256 }}</span>
+        </p>
       </section>
-    </ng-container>
-  </ng-container>
+      <section class="panel">
+        <h2>Executable read-only MCP tools</h2>
+        <p class="mono">{{ vm.mcpEndpoint }}</p>
+        <article *ngFor="let tool of vm.mcpTools">
+          <h3>{{ tool.name }}</h3>
+          <p>{{ tool.description }}</p>
+          <pre class="mono text-break">{{ tool.sampleCall }}</pre>
+        </article>
+      </section>
+      <section class="panel">
+        <h2>Remaining dataset and transport acceptance</h2>
+        <ul>
+          <li *ngFor="let item of vm.unsupportedAcceptance">{{ item }}</li>
+        </ul>
+      </section></ng-container
+    ></ng-container
+  >
 </div>

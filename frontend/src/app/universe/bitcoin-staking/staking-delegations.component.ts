@@ -1,13 +1,16 @@
+import { observeStaking, slashingLabel, reconciliationLabel } from './staking-view';
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { BitcoinStakingApiService, StakingDelegation } from './bitcoin-staking.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-staking-delegations',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -23,12 +26,12 @@ import { BitcoinStakingApiService, StakingDelegation } from './bitcoin-staking.s
         </p>
 
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/protocols/bitcoin-staking">Overview</a>
-          <a class="nav-link active" routerLink="/protocols/bitcoin-staking/delegations">Delegations</a>
-          <a class="nav-link" routerLink="/protocols/bitcoin-staking/finality-providers">Finality Providers</a>
-          <a class="nav-link" routerLink="/protocols/bitcoin-staking/parameters">Parameters</a>
-          <a class="nav-link" routerLink="/protocols/bitcoin-staking/evidence">Slashing Evidence</a>
-          <a class="nav-link" routerLink="/protocols/bitcoin-staking/reconciliation">PoS Reconciliation</a>
+          <a class="nav-link" [routerLink]="'/protocols/bitcoin-staking' | relativeUrl">Overview</a>
+          <a class="nav-link active" [routerLink]="'/protocols/bitcoin-staking/delegations' | relativeUrl">Delegations</a>
+          <a class="nav-link" [routerLink]="'/protocols/bitcoin-staking/finality-providers' | relativeUrl">Finality Providers</a>
+          <a class="nav-link" [routerLink]="'/protocols/bitcoin-staking/parameters' | relativeUrl">Parameters</a>
+          <a class="nav-link" [routerLink]="'/protocols/bitcoin-staking/evidence' | relativeUrl">Slashing Evidence</a>
+          <a class="nav-link" [routerLink]="'/protocols/bitcoin-staking/reconciliation' | relativeUrl">PoS Reconciliation</a>
         </nav>
       </header>
 
@@ -57,7 +60,7 @@ import { BitcoinStakingApiService, StakingDelegation } from './bitcoin-staking.s
             <tbody>
               <tr *ngFor="let d of delegations">
                 <td class="font-monospace fw-bold">{{ d.delegation_id }}</td>
-                <td class="font-monospace">{{ (d.staking_amount_sat / 100000000).toFixed(4) }} BTC</td>
+                <td class="font-monospace">{{ d.staking_amount_sat ?? 'Unknown' }} sats</td>
                 <td class="font-monospace small">{{ d.staking_timelock_blocks }} blocks</td>
                 <td>
                   <span class="badge" [ngClass]="d.covenant_signatures_count >= d.covenant_signatures_required ? 'bg-success' : 'bg-warning text-dark'">
@@ -70,7 +73,7 @@ import { BitcoinStakingApiService, StakingDelegation } from './bitcoin-staking.s
                   </span>
                 </td>
                 <td>
-                  <a [routerLink]="['/protocols/bitcoin-staking/delegation', d.delegation_id]" class="btn btn-sm btn-outline-primary">
+                  <a [routerLink]="['/protocols/bitcoin-staking/delegation' | relativeUrl, d.delegation_id]" class="btn btn-sm btn-outline-primary">
                     Inspect
                   </a>
                 </td>
@@ -97,19 +100,12 @@ export class StakingDelegationsComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef
   ) {}
 
+  readonly slashingLabel = slashingLabel;
+  readonly reconciliationLabel = reconciliationLabel;
   ngOnInit(): void {
-    this.sub = this.stakingApi.getDelegations$().subscribe({
-      next: (data) => {
-        this.delegations = data;
-        this.loading = false;
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        this.error = err.message || 'Failed to load delegations';
-        this.loading = false;
-        this.cdr.markForCheck();
-      },
-    });
+    this.sub = observeStaking(this.stakingApi.networkChanges$, () => {this.delegations = [];this.loading=true;this.error=null;this.cdr.markForCheck();},
+      () => this.stakingApi.getDelegations$(), data => {this.delegations=data;this.loading=false;this.cdr.markForCheck();},
+      err => {this.delegations=[];this.error=err?.error?.error || err?.message || loadFailureMessage(classifyLoadFailure(err));this.loading=false;this.cdr.markForCheck();});
   }
 
   getStateBadgeClass(state: string): string {

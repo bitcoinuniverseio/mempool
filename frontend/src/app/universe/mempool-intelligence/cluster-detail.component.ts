@@ -6,6 +6,8 @@ import { switchMap } from 'rxjs/operators';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { ChunkView, ClusterTxView, ClusterView } from './mempool-intelligence.types';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
+
 import {
   chunkRows,
   DEFAULT_LAYOUT,
@@ -34,7 +36,7 @@ import {
 @Component({
   selector: 'app-cluster-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   templateUrl: './cluster-detail.component.html',
   styleUrls: ['./cluster-detail.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

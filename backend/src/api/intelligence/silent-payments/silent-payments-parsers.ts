@@ -160,7 +160,8 @@ export function inspectPsbt(encoded: unknown) {
       };
       inputCount = count('04'); outputCount = count('05');
       if (global.has('03')) {size(global.get('03'), 4, 'fallback locktime');}
-      if (global.has('06') && (size(global.get('06'), 1, 'modifiable flags')[0] & 0xf8)) {throw new Error('Reserved transaction modifiable flags are set.');}
+      // BIP370 permits unknown modifiable flag bits; its official valid vectors include bit 3 and 0xff.
+      if (global.has('06')) {size(global.get('06'), 1, 'modifiable flags');}
     }
     if (inputCount + outputCount > bytes.length - reader.offset) {throw new Error('Truncated PSBT maps.');}
     const inputs = Array.from({ length: inputCount }, () => reader.map());

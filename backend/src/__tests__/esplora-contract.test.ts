@@ -146,6 +146,9 @@ const describeLive = liveIndex ? describe : describe.skip;
 
 describeLive('esplora address contract against a live index', () => {
   const base = (liveIndex || '').replace(/\/+$/, '');
+  // Choose addresses on the index's network; recorded unit fixtures stay mainnet.
+  const liveAddress = process.env.UNIVERSE_ESPLORA_CONTRACT_ADDRESS || ADDRESS;
+  const paginationAddress = process.env.UNIVERSE_ESPLORA_PAGINATION_ADDRESS || '1BitcoinEaterAddressDontSendf59kuE';
 
   async function get(path: string): Promise<unknown> {
     const response = await fetch(`${base}${path}`, { signal: AbortSignal.timeout(30_000) });
@@ -156,25 +159,27 @@ describeLive('esplora address contract against a live index', () => {
   }
 
   it('answers an address summary the way the fixtures say it does', async () => {
-    expect(addressSummaryProblems(await get(`/address/${ADDRESS}`), ADDRESS)).toEqual([]);
+    expect(addressSummaryProblems(await get(`/address/${liveAddress}`), liveAddress)).toEqual([]);
   }, 40_000);
 
   it('answers a bounded history page', async () => {
-    expect(addressHistoryProblems(await get(`/address/${ADDRESS}/txs`))).toEqual([]);
+    expect(addressHistoryProblems(await get(`/address/${liveAddress}/txs`))).toEqual([]);
   }, 40_000);
 
   it('answers a bounded UTXO list', async () => {
-    expect(utxoListProblems(await get(`/address/${ADDRESS}/utxo`))).toEqual([]);
+    expect(utxoListProblems(await get(`/address/${liveAddress}/utxo`))).toEqual([]);
   }, 40_000);
 
   it('pages an address with more history than one page holds', async () => {
     // The cursor is the contract. A provider that ignores it looks like a
     // working page and serves the same transactions forever.
-    const burn = '1BitcoinEaterAddressDontSendf59kuE';
+    const burn = paginationAddress;
     const first = (await get(`/address/${burn}/txs`)) as Array<{ txid: string }>;
     expect(addressHistoryProblems(first)).toEqual([]);
     expect(first.length).toBeGreaterThan(0);
     const second = (await get(`/address/${burn}/txs?after_txid=${first[first.length - 1].txid}`)) as Array<{ txid: string }>;
+    expect(addressHistoryProblems(second)).toEqual([]);
+    expect(second.length).toBeGreaterThan(0);
     const firstPage = new Set(first.map((transaction) => transaction.txid));
     expect(second.filter((transaction) => firstPage.has(transaction.txid))).toEqual([]);
   }, 60_000);

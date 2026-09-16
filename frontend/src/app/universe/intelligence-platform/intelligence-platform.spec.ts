@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { of, throwError } from 'rxjs';
+import { of, throwError, Subject } from 'rxjs';
 import { IntelligenceApiService } from './intelligence-api.service';
 import { PolicyLabComponent } from './policy-lab.component';
 import { ScriptWorkbenchComponent } from './script-workbench.component';
@@ -8,12 +8,14 @@ import { RelayObservatoryComponent } from './relay-observatory.component';
 import { TimeMachineComponent } from './time-machine.component';
 import { MiningTemplatesComponent } from './mining-templates.component';
 import { UtxoIntelligenceComponent } from './utxo-intelligence.component';
+import { UtxoEvidenceService } from '../utxo-set/utxo-evidence.service';
 import { TransactionGraphComponent } from './transaction-graph.component';
 import { IncidentCenterComponent } from './incident-center.component';
 import { KnowledgeRegistryComponent } from './knowledge-registry.component';
 import { DeveloperPlatformComponent } from './developer-platform.component';
 import { QueryStudioComponent } from './query-studio.component';
 import { WatchlistsComponent } from './watchlists.component';
+import { OwnerKeyService } from './owner-key.service';
 import { ProtocolExplorerComponent } from './protocol-explorer.component';
 
 describe('Unified Intelligence Platform Frontend Services', () => {
@@ -23,7 +25,7 @@ describe('Unified Intelligence Platform Frontend Services', () => {
     get: (url: string) => {
       recordedCalls.push({ method: 'GET', url });
       if (url.includes('/relay/overview')) {
-        return of({ fleet_size: 4, online_sensor_regions_count: 4 });
+        return of({ fleet_size: 1, online_sensor_regions_count: null, latency_percentiles: null, recent_propagation_sample: [] });
       }
       if (url.includes('/history/coverage')) {
         return of({ total_checkpoints: 5 });
@@ -47,7 +49,16 @@ describe('Unified Intelligence Platform Frontend Services', () => {
         return of({ labels: [{ name: 'Exchange A', status: 'verified', confidence_level: 3 }] });
       }
       if (url.includes('/developer/keys')) {
-        return of({ keys: [], usage: { monthly_requests: 100 } });
+        return of({ keys: [] });
+      }
+      if (url.includes('/developer/webhooks')) {
+        return of({ webhooks: [] });
+      }
+      if (url.includes('/developer/usage')) {
+        return throwError(() => ({ status: 503, error: { error: 'usage metrics unavailable' } }));
+      }
+      if (url.includes('/watchlists/notifications')) {
+        return of({ notifications: [] });
       }
       if (url.includes('/query/schema')) {
         return of({ tables: [{ table_name: 'mempool_transactions' }] });
@@ -90,7 +101,9 @@ describe('Unified Intelligence Platform Frontend Services', () => {
     },
   };
 
-  const service = new IntelligenceApiService(mockHttp, mockStateService);
+  // A held key makes owner-scoped calls possible; the stub never touches localStorage.
+  const ownerKey = { key$:of('uip_live_' + 'a'.repeat(48)), key: 'uip_live_' + 'a'.repeat(48), headers: () => ({}), set: () => undefined, clear: () => undefined } as unknown as OwnerKeyService;
+  const service = new IntelligenceApiService(mockHttp, mockStateService, ownerKey);
   const mockCdr: any = { markForCheck: () => {} };
 
   it('evaluates transaction packages via POST /api/v1/intelligence/policy/evaluations', () => {
@@ -107,7 +120,7 @@ describe('Unified Intelligence Platform Frontend Services', () => {
 
   it('fetches relay overview via GET /api/v1/intelligence/relay/overview', () => {
     service.getRelayOverview$().subscribe((res) => {
-      expect(res.fleet_size).toBe(4);
+      expect(res.fleet_size).toBe(1);
     });
 
     const call = recordedCalls[recordedCalls.length - 1];
@@ -158,7 +171,7 @@ describe('Unified Intelligence Platform Frontend Services', () => {
   });
 
   it('manages privacy-first watchlists via /api/v1/intelligence/watchlists', () => {
-    service.getWatchlists$('user-1').subscribe((res) => {
+    service.getWatchlists$().subscribe((res) => {
       expect(res.watchlists.length).toBe(1);
     });
 
@@ -180,7 +193,7 @@ describe('Unified Intelligence Platform Frontend Services', () => {
   // Component rendering and lifecycle assertions
   describe('Component Lifecycle and State Verification', () => {
     it('PolicyLabComponent: does not evaluate transactions on ngOnInit', () => {
-      const cmp = new PolicyLabComponent(service, mockCdr);
+      const cmp = new PolicyLabComponent(service, mockCdr, mockStateService);
       cmp.ngOnInit();
       expect(cmp.evaluationResult).toBeNull();
       expect(cmp.loading).toBe(false);
@@ -188,20 +201,21 @@ describe('Unified Intelligence Platform Frontend Services', () => {
     });
 
     it('ScriptWorkbenchComponent: does not analyze script on ngOnInit', () => {
-      const cmp = new ScriptWorkbenchComponent(service, mockCdr);
+      const cmp = new ScriptWorkbenchComponent(service, mockCdr, { ...mockStateService, networkChanged$: new Subject<string>() }, mockHttp);
       cmp.ngOnInit();
       expect(cmp.scriptResult).toBeNull();
       expect(cmp.loading).toBe(false);
       expect(cmp.scriptInput).toBe('');
+      cmp.ngOnDestroy();
     });
 
-    it('VerifyProofComponent: does not generate SPV proof on ngOnInit', () => {
-      const cmp = new VerifyProofComponent(service, mockCdr);
-      cmp.ngOnInit();
+    it('VerifyProofComponent: does not generate SPV proof on construction', () => {
+      const cmp = new VerifyProofComponent(mockHttp, { ...mockStateService, networkChanged$: new Subject<string>() }, mockCdr);
       expect(cmp.spvResult).toBeNull();
       expect(cmp.loadingSpv).toBe(false);
       expect(cmp.spvTxid).toBe('');
       expect(cmp.spvBlockHash).toBe('');
+      cmp.ngOnDestroy();
     });
 
     it('TimeMachineComponent: does not trigger replay on ngOnInit', () => {
@@ -213,7 +227,7 @@ describe('Unified Intelligence Platform Frontend Services', () => {
     });
 
     it('TransactionGraphComponent: does not expand graph on ngOnInit', () => {
-      const cmp = new TransactionGraphComponent(service, mockCdr);
+      const cmp = new TransactionGraphComponent(service, mockCdr, {network:'signet',networkChanged$:new Subject<string>()} as any);
       cmp.ngOnInit();
       expect(cmp.activeResult).toBeNull();
       expect(cmp.loading).toBe(false);
@@ -221,7 +235,7 @@ describe('Unified Intelligence Platform Frontend Services', () => {
     });
 
     it('QueryStudioComponent: does not execute query on ngOnInit', () => {
-      const cmp = new QueryStudioComponent(service, mockCdr);
+      const cmp = new QueryStudioComponent(service, mockCdr, mockStateService, ownerKey);
       cmp.ngOnInit();
       expect(cmp.queryResult).toBeNull();
       expect(cmp.loading).toBe(false);
@@ -237,10 +251,17 @@ describe('Unified Intelligence Platform Frontend Services', () => {
     });
 
     it('RelayObservatoryComponent: populates overview without hardcoded sensor counts', () => {
-      const cmp = new RelayObservatoryComponent(service, mockCdr);
+      const start = recordedCalls.length;
+      const state: any = { ...mockStateService, isBrowser: false, network: 'signet', networkChanged$: new Subject<string>() };
+      const cmp = new RelayObservatoryComponent(mockHttp, state, mockCdr);
       cmp.ngOnInit();
       expect(cmp.overview).toBeDefined();
-      expect(cmp.overview.online_sensor_regions_count).toBe(4);
+      expect(cmp.overview.fleet_size).toBe(1);
+      expect(cmp.overview.online_sensor_regions_count).toBeNull();
+      expect(cmp.overview.latency_percentiles).toBeNull();
+      expect(recordedCalls.slice(start).every(call => call.url.includes('/signet/api/v1/intelligence/relay/'))).toBe(true);
+      expect(recordedCalls.slice(start).some(call => call.url.includes('/transactions/'))).toBe(false);
+      cmp.ngOnDestroy();
       expect(cmp.activeLifecycle).toBeNull();
     });
 
@@ -252,10 +273,11 @@ describe('Unified Intelligence Platform Frontend Services', () => {
     });
 
     it('UtxoIntelligenceComponent: binds block height from overview', () => {
-      const cmp = new UtxoIntelligenceComponent(service, mockCdr);
+      const cmp = new UtxoIntelligenceComponent(new UtxoEvidenceService(mockHttp, { ...mockStateService, isBrowser:false, networkChanged$:new Subject<string>() }), mockCdr);
       cmp.ngOnInit();
       expect(cmp.overview).toBeDefined();
       expect(cmp.overview.block_height).toBe(887412);
+      cmp.ngOnDestroy();
     });
 
     it('IncidentCenterComponent: tracks active divergences dynamically', () => {
@@ -274,21 +296,30 @@ describe('Unified Intelligence Platform Frontend Services', () => {
       expect(cmp.filteredLabels.length).toBe(0);
     });
 
-    it('DeveloperPlatformComponent: handles empty keys and provisions new keys', () => {
-      const cmp = new DeveloperPlatformComponent(service, mockCdr);
+    it('DeveloperPlatformComponent: lists owner keys, reports unavailable usage, shows a minted key once', () => {
+      const cmp = new DeveloperPlatformComponent(service, ownerKey, mockCdr);
       cmp.ngOnInit();
       expect(cmp.keys).toEqual([]);
+      expect(cmp.usage).toBeNull();
       cmp.newKeyLabel = 'Test Key';
       cmp.createKey();
-      expect(cmp.generatedKeySecret).toBeDefined();
+      const call = recordedCalls[recordedCalls.length - 1];
+      expect(call.body).toEqual({ name: 'Test Key', scopes: ['read'] });
+      // The mock answered { ok: true } without a secret_key, so nothing is shown as a key.
+      expect(cmp.generatedKeySecret).toBeNull();
+      expect(cmp.loadError).toContain('did not return a key');
     });
 
-    it('WatchlistsComponent: supports local sample watchlist creation', () => {
-      const cmp = new WatchlistsComponent(service, mockCdr);
+    it('WatchlistsComponent: renders the owner watchlists from the backend and never a local sample', () => {
+      const cmp = new WatchlistsComponent(service, ownerKey, mockCdr);
       cmp.ngOnInit();
       expect(cmp.watchlists.length).toBe(1);
-      cmp.createSampleWatchlist();
-      expect(cmp.watchlists[0].name).toBe('Cold Storage Vault Monitoring');
+      expect(cmp.watchlists[0].name).toBe('Vault');
+      expect((cmp as any).createSampleWatchlist).toBeUndefined();
+      const noKey = new WatchlistsComponent(service, { key: null } as unknown as OwnerKeyService, mockCdr);
+      noKey.ngOnInit();
+      expect(noKey.hasKey).toBe(false);
+      expect(noKey.watchlists).toEqual([]);
     });
   });
 });

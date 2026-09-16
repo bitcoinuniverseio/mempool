@@ -1,73 +1,9 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
-import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
-import { ConsensusConformanceApiService } from './consensus-conformance.service';
-
+import { Component } from '@angular/core';
+import { ConformanceEvidenceComponent } from './conformance-evidence.component';
 @Component({
   selector: 'app-consensus-conformance-formal',
   standalone: true,
-  imports: [CommonModule, RouterModule],
-  template: `
-    <div class="container-xl py-4">
-      <div class="alert alert-warning" role="alert" *ngIf="loadError">
-        {{ loadError }}
-      </div>
-      <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
-        <div>
-          <h1 class="h2 mb-1">Formal Specification & Machine-Checked Proofs</h1>
-          <p class="text-muted mb-0">Mathematically proven consensus properties in Lean 4 and Coq/Rocq provers.</p>
-        </div>
-        <a routerLink="/labs/consensus/conformance" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
-      </div>
-
-      <div class="card bg-dark border-secondary mb-4">
-        <div class="card-header border-secondary">
-          <h5 class="card-title mb-0">Formally Verified Bitcoin Specifications</h5>
-        </div>
-        <div class="table-responsive" tabindex="0" role="region" aria-label="Formally Verified Bitcoin Specifications, scroll horizontally" i18n-aria-label>
-          <table class="table table-dark table-hover mb-0">
-            <thead>
-              <tr>
-                <th>Specification</th>
-                <th>Proof Assistant</th>
-                <th>Theorems Proven</th>
-                <th>Verified Invariant</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let s of artifacts">
-                <td class="fw-bold text-info">{{ s.name }}</td>
-                <td><span class="badge bg-secondary">{{ s.prover }}</span></td>
-                <td class="font-monospace text-success">{{ s.theorems_count }} proofs</td>
-                <td class="small text-muted">{{ s.mathematical_invariants }}</td>
-                <td><span class="badge bg-success">MACHINE CHECKED</span></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  `
+  imports: [ConformanceEvidenceComponent],
+  template: '<app-conformance-evidence mode="formal" />',
 })
-export class ConsensusConformanceFormalComponent implements OnInit {
-  public artifacts: any[] = [];
-
-  public loadError: string | null = null;
-
-  constructor(private api: ConsensusConformanceApiService) {}
-
-  public ngOnInit(): void {
-    this.api.getFormalArtifacts$().subscribe({
-      next: res => {
-        this.artifacts = res;
-        this.loadError = null;
-      },
-      error: err => {
-        this.artifacts = [];
-        this.loadError = loadFailureMessage(classifyLoadFailure(err));
-      },
-    });
-  }
-}
+export class ConsensusConformanceFormalComponent {}

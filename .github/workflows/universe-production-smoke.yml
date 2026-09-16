@@ -29,11 +29,17 @@ concurrency:
 jobs:
   smoke:
     name: Live origin answers with real content
-    runs-on: [self-hosted, linux, x64, universe-super]
+    # The PowerVPS pool. The Primcast pool's runners changed their own network
+    # interface mid-run on 9 September 2026 (Chromium: net::ERR_NETWORK_CHANGED)
+    # on super-20, super-23, super-46 and super-185 within one afternoon, and a
+    # browser step cannot tell that from an origin that stopped answering.
+    runs-on: [self-hosted, linux, x64, universe-linux-ultra]
     # Ten was for a job that only read the API. It now installs the browser
     # harness and loads two pages in a real browser, which is the only way to
     # see what the origin renders.
     timeout-minutes: 25
+    env:
+      SMOKE_ORIGIN: ${{ github.event.inputs.origin || 'https://explorer.bitcoinuniverse.io' }}
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -49,13 +55,13 @@ jobs:
       # added, dropped, renamed, re-authorised or moved between chains fails
       # here rather than being discovered by a reader of a stale table.
       - name: The served protocol roster matches the pinned one
-        run: node scripts/universe/protocol-contract.mjs --against "${{ github.event.inputs.origin || 'https://explorer.bitcoinuniverse.io' }}"
+        run: node scripts/universe/protocol-contract.mjs --against "$SMOKE_ORIGIN"
 
       - name: Source context and response deadlines reject incomplete observations
         run: node --test scripts/universe/synthetic-check.test.mjs scripts/universe/synthetic-context.test.mjs scripts/universe/synthetic-deadline.test.mjs
 
       - name: Every advertised feature has routes, data, and a matching release
-        run: node scripts/universe/synthetic-check.mjs "${{ github.event.inputs.origin || 'https://explorer.bitcoinuniverse.io' }}"
+        run: node scripts/universe/synthetic-check.mjs "$SMOKE_ORIGIN"
 
       # The step above reads the API. It cannot see what the origin renders, and
       # for as long as it could not, production served a chain dashboard whose
@@ -80,7 +86,7 @@ jobs:
       - name: The gate can still tell a bad page from a good one
         if: ${{ !cancelled() }}
         working-directory: scripts/universe/visual-qa
-        run: node --test chain-page-audit.test.mjs
+        run: node --test chain-page-audit.test.mjs runner-network.test.mjs
 
       - name: Install the locked Chromium engine
         if: ${{ !cancelled() }}
@@ -98,7 +104,7 @@ jobs:
         working-directory: scripts/universe/visual-qa
         run: >-
           node chain-page-smoke.mjs
-          --origin="${{ github.event.inputs.origin || 'https://explorer.bitcoinuniverse.io' }}"
+          --origin="$SMOKE_ORIGIN"
 
       # The address family, opened in a browser against the live origin. The
       # step above covers the chain pages and this covers the one page that
@@ -114,7 +120,7 @@ jobs:
         working-directory: scripts/universe/visual-qa
         run: >-
           node address-page-smoke.mjs
-          --origin="${{ github.event.inputs.origin || 'https://explorer.bitcoinuniverse.io' }}"
+          --origin="$SMOKE_ORIGIN"
 
       # On failure only, and never fatal. The Actions artifact quota is full,
       # an upload attempt fails the step, and a scheduled check that reports

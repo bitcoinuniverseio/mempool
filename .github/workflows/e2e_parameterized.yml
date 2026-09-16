@@ -3,11 +3,6 @@ name: 'Parameterized e2e tests'
 on:
   workflow_dispatch:
     inputs:
-      ref:
-        description: 'Branch name or Pull Request number (e.g., master or 6102)'
-        required: true
-        default: 'master'
-        type: string
       mempool_hostname:
         description: 'Mempool Hostname'
         required: true
@@ -19,25 +14,20 @@ on:
         default: 'liquid.network'
         type: string 
 
+permissions:
+  contents: read
+
+# Dispatch on the reviewed branch to test it. Arbitrary PR-head code must not
+# execute with another branch's cache scope or repository secrets.
 jobs:
   cache:
     name: "Cache assets for builds"
     runs-on: [self-hosted, linux, x64, universe-super]
     steps:
-      - name: Determine checkout ref
-        id: determine-ref
-        run: |
-          REF_INPUT="${{ github.event.inputs.ref }}"
-          if [[ "$REF_INPUT" =~ ^[0-9]+$ ]]; then
-            echo "ref=refs/pull/$REF_INPUT/head" >> $GITHUB_OUTPUT
-          else
-            echo "ref=$REF_INPUT" >> $GITHUB_OUTPUT
-          fi
-
       - name: Checkout
         uses: actions/checkout@v3
         with:
-          ref: ${{ steps.determine-ref.outputs.ref }}
+          persist-credentials: false
           path: assets
 
       - name: Setup Node
@@ -132,20 +122,10 @@ jobs:
 
     name: E2E tests for ${{ matrix.module }}
     steps:
-      - name: Determine checkout ref
-        id: determine-ref
-        run: |
-          REF_INPUT="${{ github.event.inputs.ref }}"
-          if [[ "$REF_INPUT" =~ ^[0-9]+$ ]]; then
-            echo "ref=refs/pull/$REF_INPUT/head" >> $GITHUB_OUTPUT
-          else
-            echo "ref=$REF_INPUT" >> $GITHUB_OUTPUT
-          fi
-
       - name: Checkout
         uses: actions/checkout@v3
         with:
-          ref: ${{ steps.determine-ref.outputs.ref }}
+          persist-credentials: false
           path: ${{ matrix.module }}
 
       - name: Setup node
@@ -207,7 +187,7 @@ jobs:
           browser: "chrome"
           ci-build-id: "${{ github.sha }}-${{ github.workflow }}-${{ github.event_name }}"
         env:
-          COMMIT_INFO_MESSAGE: ${{ github.event_name }} (${{ github.sha }}) - ref ${{ github.event.inputs.ref }} - ${{ github.event.inputs.mempool_hostname }} - ${{ github.event.inputs.liquid_hostname }}
+          COMMIT_INFO_MESSAGE: ${{ github.event_name }} (${{ github.sha }}) - ref ${{ github.ref_name }} - ${{ github.event.inputs.mempool_hostname }} - ${{ github.event.inputs.liquid_hostname }}
           MEMPOOL_HOSTNAME: ${{ github.event.inputs.mempool_hostname }}
           LIQUID_HOSTNAME: ${{ github.event.inputs.liquid_hostname }}
           MEMPOOL_CI_API_KEY: ${{ secrets.MEMPOOL_CI_API_KEY }}
@@ -235,7 +215,7 @@ jobs:
           browser: "chrome"
           ci-build-id: "${{ github.sha }}-${{ github.workflow }}-${{ github.event_name }}"
         env:
-          COMMIT_INFO_MESSAGE: ${{ github.event_name }} (${{ github.sha }}) - ref ${{ github.event.inputs.ref }} - ${{ github.event.inputs.mempool_hostname }} - ${{ github.event.inputs.liquid_hostname }}
+          COMMIT_INFO_MESSAGE: ${{ github.event_name }} (${{ github.sha }}) - ref ${{ github.ref_name }} - ${{ github.event.inputs.mempool_hostname }} - ${{ github.event.inputs.liquid_hostname }}
           MEMPOOL_HOSTNAME: ${{ github.event.inputs.mempool_hostname }}
           LIQUID_HOSTNAME: ${{ github.event.inputs.liquid_hostname }}
           MEMPOOL_CI_API_KEY: ${{ secrets.MEMPOOL_CI_API_KEY }}
@@ -262,7 +242,7 @@ jobs:
           browser: "chrome"
           ci-build-id: "${{ github.sha }}-${{ github.workflow }}-${{ github.event_name }}"
         env:
-          COMMIT_INFO_MESSAGE: ${{ github.event_name }} (${{ github.sha }}) - ref ${{ github.event.inputs.ref }} - ${{ github.event.inputs.mempool_hostname }} - ${{ github.event.inputs.liquid_hostname }}
+          COMMIT_INFO_MESSAGE: ${{ github.event_name }} (${{ github.sha }}) - ref ${{ github.ref_name }} - ${{ github.event.inputs.mempool_hostname }} - ${{ github.event.inputs.liquid_hostname }}
           MEMPOOL_HOSTNAME: ${{ github.event.inputs.mempool_hostname }}
           LIQUID_HOSTNAME: ${{ github.event.inputs.liquid_hostname }}
           MEMPOOL_CI_API_KEY: ${{ secrets.MEMPOOL_CI_API_KEY }}

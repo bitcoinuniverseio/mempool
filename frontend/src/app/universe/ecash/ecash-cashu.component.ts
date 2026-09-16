@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { EcashApiService, CashuMint } from './ecash.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-ecash-cashu',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -15,7 +16,7 @@ import { EcashApiService, CashuMint } from './ecash.service';
         <div class="title-row d-flex flex-wrap align-items-center justify-content-between gap-2">
           <h1 class="m-0">Cashu Mint Directory</h1>
           <span class="badge bg-secondary" *ngIf="mints.length > 0">
-            {{ mints.length }} Active Mints
+            {{ mints.length }} Configured Mints
           </span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
@@ -24,10 +25,10 @@ import { EcashApiService, CashuMint } from './ecash.service';
 
         <!-- Navigation Tabs -->
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/ecash">Overview</a>
-          <a class="nav-link active" routerLink="/ecash/cashu">Cashu Mints</a>
-          <a class="nav-link" routerLink="/ecash/fedimint">Fedimint Federations</a>
-          <a class="nav-link" routerLink="/ecash/inspect">Offline Token Inspector</a>
+          <a class="nav-link" [routerLink]="'/ecash' | relativeUrl">Overview</a>
+          <a class="nav-link active" [routerLink]="'/ecash/cashu' | relativeUrl">Cashu Mints</a>
+          <a class="nav-link" [routerLink]="'/ecash/fedimint' | relativeUrl">Fedimint Federations</a>
+          <a class="nav-link" [routerLink]="'/ecash/inspect' | relativeUrl">Offline Token Inspector</a>
         </nav>
       </header>
 
@@ -48,11 +49,11 @@ import { EcashApiService, CashuMint } from './ecash.service';
                 <h2 class="h5 m-0">{{ m.name }}</h2>
                 <code class="small text-muted text-break">{{ m.mint_url }}</code>
               </div>
-              <span class="badge bg-success">Online</span>
+              <span class="badge" [ngClass]="m.reachable ? 'bg-success' : 'bg-secondary'">{{ m.reachable ? 'Info and keysets observed' : 'Observation incomplete' }}</span>
             </div>
 
             <div class="mb-3">
-              <div class="text-muted small mb-1">Supported Notation of Unit (NUT) Specs</div>
+              <div class="text-muted small mb-1">Reported NUT Specs</div><div *ngIf="m.nuts_supported === null" class="text-muted">Supported NUTs unknown</div>
               <div class="d-flex flex-wrap gap-1">
                 <span *ngFor="let nut of m.nuts_supported" class="badge bg-secondary">
                   NUT-{{ nut < 10 ? '0' + nut : nut }}
@@ -61,7 +62,7 @@ import { EcashApiService, CashuMint } from './ecash.service';
             </div>
 
             <div class="mb-3">
-              <div class="text-muted small mb-1">Active Keysets</div>
+              <div class="text-muted small mb-1">Reported Keysets</div><div *ngIf="m.keysets === null" class="text-muted">Keysets unknown</div>
               <div class="d-flex flex-wrap gap-1">
                 <span *ngFor="let k of m.keysets" class="badge" [ngClass]="k.active ? 'bg-primary' : 'bg-body-secondary text-muted'">
                   {{ k.id }} ({{ k.unit }}) {{ k.active ? 'Active' : 'Retired' }}
@@ -71,7 +72,7 @@ import { EcashApiService, CashuMint } from './ecash.service';
 
             <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
               <span class="small text-muted">Heartbeat: {{ m.last_heartbeat | date:'short' }}</span>
-              <a [routerLink]="['/ecash/cashu', m.mint_id]" class="btn btn-sm btn-outline-primary">
+              <a [routerLink]="['/ecash/cashu' | relativeUrl, m.mint_id]" class="btn btn-sm btn-outline-primary">
                 Inspect Mint Keysets
               </a>
             </div>
@@ -112,7 +113,7 @@ export class EcashCashuComponent implements OnInit, OnDestroy {
           this.cd.markForCheck();
         },
         error: err => {
-          this.error = err?.message || 'Failed to load Cashu mints';
+          this.error = err?.error?.error || err?.message || 'Failed to load Cashu mints';
           this.loading = false;
           this.cd.markForCheck();
         },

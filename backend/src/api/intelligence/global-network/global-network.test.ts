@@ -1,65 +1,97 @@
-import { globalNetworkService } from './global-network.service';
+jest.mock('../../bitcoin/bitcoin-client', () => ({ __esModule: true, default: {} }));
 
-describe('GlobalNetworkService', () => {
-  it('should return overview with valid active epoch and adoption metrics', () => {
-    const overview = globalNetworkService.getOverview();
-    expect(overview).toBeDefined();
-    expect(overview.active_epoch).toBeDefined();
-    expect(overview.total_reachable_nodes).toBeGreaterThan(0);
-    expect(overview.bip324_v2_adoption_percentage).toBeGreaterThanOrEqual(0);
-    expect(overview.top_user_agents.length).toBeGreaterThan(0);
-    expect(overview.geographic_distribution.length).toBeGreaterThan(0);
+import { globalNetworkService, GlobalNetworkUnavailableError, DNS_SEEDS } from './global-network.service';
+import config from '../../../config';
+
+const peers = [
+  { id: 1, addr: '93.184.216.10:8333', network: 'ipv4', services: '0000000000000409', subver: '/Satoshi:28.0.0/', startingheight: 100, pingtime: 0.032, transport_protocol_type: 'v2', inbound: false, version: 70016, relaytxes: true },
+  { id: 2, addr: '[2001:db8::5]:8333', network: 'ipv6', services: '0000000000000409', subver: '/Satoshi:27.1.0/', startingheight: 99, pingtime: 0.07, transport_protocol_type: 'v1', inbound: true, version: 70015, relaytxes: true },
+  { id: 3, addr: 'abc.onion:8333', network: 'onion', services: '0000000000000409', subver: '/Satoshi:28.0.0/', startingheight: 100, transport_protocol_type: 'v2', inbound: true, version: 70016, relaytxes: false },
+];
+const info = { version: 280000, subversion: '/Satoshi:28.0.0/', localservices: '0409', connections: 3, connections_in: 2, connections_out: 1, networks: [{ name: 'ipv4', reachable: true }, { name: 'ipv6', reachable: true }, { name: 'onion', reachable: false }] };
+
+describe('global network: the owned node is the only sensor', () => {
+  beforeEach(() => {
+    config.MEMPOOL.NETWORK = 'mainnet';
+    globalNetworkService.resetForTests();
+    globalNetworkService.nodeReader = async () => ({ peers: peers as never, info, genesisHash: '000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f' });
   });
 
-  it('should return paginated nodes', () => {
-    const { nodes, total } = globalNetworkService.getNodes(2, 0);
-    expect(nodes.length).toBeLessThanOrEqual(2);
-    expect(total).toBeGreaterThan(0);
-    expect(nodes[0].endpoint_id).toBeDefined();
+  it('overview counts the real peers and claims no geography', async () => {
+    const overview = await globalNetworkService.getOverview();
+    expect(overview.total_reachable_nodes).toBe(3);
+    expect(overview.bip324_v2_adoption_percentage).toBe(66.67);
+    expect(overview.addrv2_adoption_percentage).toBeNull();
+    expect(overview.top_user_agents).toEqual([{ agent: '/Satoshi:28.0.0/', count: 2, percentage: 66.67 }, { agent: '/Satoshi:27.1.0/', count: 1, percentage: 33.33 }]);
+    expect(overview.geographic_distribution).toEqual([]);
+    expect(overview.geo_source).toBeNull();
+    expect(overview.active_epoch.scope).toMatch(/not a network crawl/);
+    expect(overview.node).toMatchObject({ version: 280000, connections: 3, reachable_networks: ['ipv4', 'ipv6'] });
   });
 
-  it('should fetch node detail by endpoint ID', () => {
-    const { nodes } = globalNetworkService.getNodes(1, 0);
-    const node = globalNetworkService.getNodeByEndpoint(nodes[0].endpoint_id);
-    expect(node).not.toBeNull();
-    expect(node?.endpoint_id).toBe(nodes[0].endpoint_id);
+  it('nodes are the peers, paginated, and lookups are by peer address', async () => {
+    const page = await globalNetworkService.getNodes(2, 1);
+    expect(page.total).toBe(3);
+    expect(page.nodes.map(n => n.endpoint_id)).toEqual(['[2001:db8::5]:8333', 'abc.onion:8333']);
+    expect(page.nodes[0]).toMatchObject({ ip_or_onion: '2001:db8::5', port: 8333, transport_v2: false, addrv2: null, latency_ms: 70, inbound: true, network: 'ipv6' });
+    expect(page.nodes[1].latency_ms).toBeNull();
+    expect(await globalNetworkService.getNodeByEndpoint('93.184.216.10:8333')).toMatchObject({ user_agent: '/Satoshi:28.0.0/', transport_v2: true });
+    expect(await globalNetworkService.getNodeByEndpoint('nobody:1')).toBeNull();
   });
 
-  it('should list DNS seeds with reachable metrics', () => {
-    const seeds = globalNetworkService.getDnsSeeds();
-    expect(seeds.length).toBeGreaterThan(0);
-    expect(seeds[0].hostname).toBeDefined();
-    expect(seeds[0].reachable_ratio).toBeGreaterThan(0);
+  it('an unreachable node is unavailable, not a sample network', async () => {
+    globalNetworkService.nodeReader = async () => { throw new Error('401 Unauthorized'); };
+    await expect(globalNetworkService.getOverview()).rejects.toThrow(GlobalNetworkUnavailableError);
+    await expect(globalNetworkService.getSensors()).rejects.toThrow(/complete network observation/);
   });
 
-  it('should block SSRF attacks on self-check endpoint', () => {
-    const ssrfTargets = [
-      '127.0.0.1',
-      'localhost',
-      '10.0.1.5',
-      '172.16.0.1',
-      '192.168.1.100',
-      '169.254.169.254',
-      'node.internal',
-    ];
+  it('DNS seeds are resolved on request and report what came back', async () => {
+    globalNetworkService.seedResolver = async hostname => hostname.includes('sprovoost') ? ['93.184.216.1', '93.184.216.2'] : [];
+    const seeds = await globalNetworkService.getDnsSeeds();
+    expect(seeds.map(s => s.hostname)).toEqual(DNS_SEEDS[config.MEMPOOL.NETWORK].map(s => s.hostname));
+    const sprovoost = seeds.find(s => s.hostname.includes('sprovoost'))!;
+    expect(sprovoost).toMatchObject({ active: true, discovered_addrs_count: 2, reachable_ratio: null, error: null });
+    expect(seeds.filter(s => !s.hostname.includes('sprovoost')).every(s => s.active === false && s.discovered_addrs_count === 0)).toBe(true);
+  });
 
-    for (const target of ssrfTargets) {
-      expect(() => {
-        globalNetworkService.performSelfCheck({
-          endpoint_address: target,
-          port: 8333,
-        });
-      }).toThrow(/prohibited|invalid/i);
+  it('a snapshot records the peer set at a height', async () => {
+    const snapshot = await globalNetworkService.takeSnapshot(500);
+    expect(snapshot).toMatchObject({ block_height: 500, total_nodes: 3, v2_percentage: 66.67, top_asns: [], geo_distribution: [] });
+    expect(globalNetworkService.getSnapshots()).toHaveLength(1);
+  });
+
+  it('self-check refuses private targets and reports the real TCP outcome', async () => {
+    for (const address of ['127.0.0.1', '10.1.1.1', 'localhost', '169.254.169.254', 'fd00::1']) {
+      expect(globalNetworkService.validateSelfCheckEndpoint(address, 8333).valid).toBe(false);
     }
+    expect(globalNetworkService.validateSelfCheckEndpoint('93.184.216.7', 70000).valid).toBe(false);
+    globalNetworkService.tcpProber = async (address, port) => ({ reachable: port === 8333, latency_ms: port === 8333 ? 41 : null, error: port === 8333 ? null : 'ECONNREFUSED' });
+    const ok = await globalNetworkService.performSelfCheck({ endpoint_address: '93.184.216.7', port: 8333 });
+    expect(ok).toMatchObject({ reachable: true, latency_ms: 41, bip324_handshake: null, resolved_address: '93.184.216.7', error: null });
+    const refused = await globalNetworkService.performSelfCheck({ endpoint_address: '93.184.216.7', port: 8334 });
+    expect(refused).toMatchObject({ reachable: false, latency_ms: null, error: 'ECONNREFUSED' });
   });
+});
 
-  it('should allow valid public endpoints on self-check', () => {
-    const result = globalNetworkService.performSelfCheck({
-      endpoint_address: '95.217.163.42',
-      port: 8333,
-    });
-    expect(result.check_id).toBeDefined();
-    expect(result.reachable).toBe(true);
-    expect(result.bip324_handshake).toBe(true);
-  });
+describe('global network evidence ownership',()=>{
+ const genesisHash='000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f';
+ beforeEach(()=>{config.MEMPOOL.NETWORK='mainnet';globalNetworkService.resetForTests();});
+ it.each(['getOverview','getNodes','getNodeByEndpoint','getSensors','takeSnapshot'])('binds %s to selected genesis',async method=>{
+  globalNetworkService.nodeReader=async()=>({peers:[],info,genesisHash:'ff'.repeat(32)});
+  await expect((globalNetworkService as any)[method](method==='takeSnapshot'?1:undefined)).rejects.toMatchObject({code:'node-network-mismatch',status:503});
+ });
+ it('does not infer negotiated features from protocol/software version or missing fields',async()=>{
+  globalNetworkService.nodeReader=async()=>({genesisHash,info,peers:[{...peers[0],transport_protocol_type:undefined,relaytxes:undefined,inbound:undefined,pingtime:undefined,services:'ffffffffffffffff'}]});
+  expect((await globalNetworkService.getNodes()).nodes[0]).toMatchObject({addrv2:null,transport_v2:null,relay:null,inbound:null,latency_ms:null,services:null,services_hex:'ffffffffffffffff'});
+  expect(await globalNetworkService.getOverview()).toMatchObject({addrv2_adoption_percentage:null,bip324_v2_adoption_percentage:null,transport_breakdown:[{transport:'unknown',count:1}]});
+  expect((await globalNetworkService.getSensors())[0]).toMatchObject({addrv2_bip155_supported:null,v1_supported:null,v2_bip324_supported:null});
+ });
+ it('keeps failed seed observations unknown and omits upstream errors',async()=>{
+  globalNetworkService.seedResolver=async()=>{throw new Error('private upstream diagnostic');};
+  const seeds=await globalNetworkService.getDnsSeeds();expect(seeds.length).toBeGreaterThan(0);for(const seed of seeds)expect(seed).toMatchObject({active:null,discovered_addrs_count:null,error:'DNS observation unavailable.'});
+ });
+ it('uses observation time for cached peer snapshot',async()=>{
+  globalNetworkService.nodeReader=async()=>({genesisHash,info,peers});await globalNetworkService.getOverview(100000);
+  expect((await globalNetworkService.takeSnapshot(500,100010)).timestamp_utc).toBe(new Date(100000).toISOString());
+ });
 });

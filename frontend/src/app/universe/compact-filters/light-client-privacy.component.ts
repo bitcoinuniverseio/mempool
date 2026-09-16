@@ -2,11 +2,12 @@ import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-light-client-privacy',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -20,22 +21,22 @@ import { FormsModule } from '@angular/forms';
         </p>
 
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/network/light-client">Overview</a>
-          <a class="nav-link" routerLink="/network/light-client/providers">Providers</a>
-          <a class="nav-link" routerLink="/network/light-client/filters">Filter Explorer</a>
-          <a class="nav-link" routerLink="/network/light-client/verify">Header Verifier</a>
-          <a class="nav-link" routerLink="/network/light-client/scan">Local Scanner</a>
-          <a class="nav-link active" routerLink="/network/light-client/privacy">Privacy Controls</a>
+          <a class="nav-link" [routerLink]="'/network/light-client' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/network/light-client/providers' | relativeUrl">Providers</a>
+          <a class="nav-link" [routerLink]="'/network/light-client/filters' | relativeUrl">Filter Explorer</a>
+          <a class="nav-link" [routerLink]="'/network/light-client/verify' | relativeUrl">Header Verifier</a>
+          <a class="nav-link" [routerLink]="'/network/light-client/scan' | relativeUrl">Local Scanner</a>
+          <a class="nav-link active" [routerLink]="'/network/light-client/privacy' | relativeUrl">Privacy Controls</a>
         </nav>
       </header>
 
       <div class="row g-4">
         <div class="col-12 col-lg-6">
           <div class="card p-4 bg-body-tertiary border h-100">
-            <h2 class="h5 mb-3">Privacy Guardrails</h2>
+            <h2 class="h5 mb-3">Privacy Guardrails</h2><p role="status">Tor, decoy block retrieval and split-peer routing are not connected. These controls cannot enable protection in this deployment.</p>
             <div class="mb-3">
               <label class="form-check form-switch mb-2 touch-check-label">
-                <input class="form-check-input" type="checkbox" id="torRoute" [(ngModel)]="torOnly" />
+                <input class="form-check-input" type="checkbox" disabled id="torRoute" [(ngModel)]="torOnly" />
                 <span class="form-check-label fw-bold">Route Block Queries over Tor / Onion</span>
               </label>
               <p class="small text-muted mb-3">
@@ -43,7 +44,7 @@ import { FormsModule } from '@angular/forms';
               </p>
 
               <label class="form-check form-switch mb-2 touch-check-label">
-                <input class="form-check-input" type="checkbox" id="decoyReqs" [(ngModel)]="decoyRequests" />
+                <input class="form-check-input" type="checkbox" disabled id="decoyReqs" [(ngModel)]="decoyRequests" />
                 <span class="form-check-label fw-bold">Inject Decoy Block Requests</span>
               </label>
               <p class="small text-muted mb-3">
@@ -51,7 +52,7 @@ import { FormsModule } from '@angular/forms';
               </p>
 
               <label class="form-check form-switch mb-2 touch-check-label">
-                <input class="form-check-input" type="checkbox" id="splitProviders" [(ngModel)]="splitPeers" />
+                <input class="form-check-input" type="checkbox" disabled id="splitProviders" [(ngModel)]="splitPeers" />
                 <span class="form-check-label fw-bold">Separate Filter Peer from Block Peer</span>
               </label>
               <p class="small text-muted mb-0">
@@ -82,7 +83,7 @@ import { FormsModule } from '@angular/forms';
                   <tr>
                     <td>Address Leakage</td>
                     <td class="text-danger">High (statistical intersection)</td>
-                    <td class="text-success">Zero (node never sees query)</td>
+                    <td class="text-success">Local script matching; public height requests remain observable</td>
                   </tr>
                   <tr>
                     <td>Bandwidth</td>
@@ -108,7 +109,7 @@ import { FormsModule } from '@angular/forms';
   `],
 })
 export class LightClientPrivacyComponent {
-  torOnly = true;
-  decoyRequests = true;
-  splitPeers = true;
+  torOnly = false;
+  decoyRequests = false;
+  splitPeers = false;
 }

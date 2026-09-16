@@ -354,3 +354,42 @@ describe('open one address without saving', () => {
     expect(navigate).toHaveBeenCalledWith(['/portfolio/p', 'local-test', 'overview']);
   });
 });
+
+describe('saved onboarding checksum and existing vault boundaries', () => {
+  function setup(kind: string) {
+    const store = { vaultKind: () => kind, initialize: vi.fn(async () => { kind = 'locked'; return kind; }),
+      unlock: vi.fn(async () => { kind = 'unlocked'; return true; }), createVault: vi.fn(), createPortfolio: vi.fn(), updatePortfolio: vi.fn() };
+    TestBed.configureTestingModule({ providers: [{ provide: PortfoliosStore, useValue: store }, { provide: Router, useValue: { navigate: vi.fn() } }] });
+    const view = TestBed.createComponent(OnboardingComponent); view.detectChanges();
+    const choose = (label: string): void => {
+      (Array.from(view.nativeElement.querySelectorAll('button')) as HTMLButtonElement[]).find(b => b.textContent?.includes(label))!.click(); view.detectChanges();
+    };
+    return { view, store, choose };
+  }
+  it.each(['Create from one address', 'Import an address list', 'Add a Bitcoin watch-only wallet'])('unlocks existing storage for %s without manual creation', async label => {
+    const { view, store, choose } = setup('locked'); choose(label);
+    expect(view.componentInstance.step()).toBe('unlock');
+    view.nativeElement.querySelector('input').value = 'disposable-test'; view.nativeElement.querySelector('button.primary').click();
+    await vi.waitFor(() => expect(view.componentInstance.step()).toBe('input'));
+    expect(store.createVault).not.toHaveBeenCalled(); expect(store.createPortfolio).not.toHaveBeenCalled();
+  });
+  it('probes direct saved entry before vault creation', async () => {
+    const { view, store, choose } = setup('absent'); choose('Create from one address');
+    await vi.waitFor(() => expect(view.componentInstance.step()).toBe('unlock'));
+    expect(store.initialize).toHaveBeenCalledOnce(); expect(store.createVault).not.toHaveBeenCalled();
+  });
+  it.each(['Create from one address', 'Import an address list'])('rejects invalid checksum at input and direct save for %s', async label => {
+    const { view, store, choose } = setup('unlocked'); choose(label);
+    const input = view.nativeElement.querySelector('textarea'); input.value = '1BoatSLRHtKNngkdXEeobR76b53LETtpyU'; input.dispatchEvent(new Event('input')); view.detectChanges();
+    expect(view.componentInstance.valid()).toBe(false);
+    await (view.componentInstance as unknown as { save(): Promise<void> }).save();
+    expect(store.createPortfolio).not.toHaveBeenCalled(); expect(store.updatePortfolio).not.toHaveBeenCalled();
+    input.value = '1BoatSLRHtKNngkdXEeobR76b53LETtpyT'; input.dispatchEvent(new Event('input')); view.detectChanges();
+    expect(view.componentInstance.valid()).toBe(true);
+  });
+  it('rejects imported metadata inconsistent with the actual address network', () => {
+    const { view, choose } = setup('unlocked'); choose('Import an address list');
+    const input = view.nativeElement.querySelector('textarea'); input.value = JSON.stringify([{ address: '1BoatSLRHtKNngkdXEeobR76b53LETtpyT', chain: 'dogecoin', network: 'mainnet' }]); input.dispatchEvent(new Event('input')); view.detectChanges();
+    expect(view.componentInstance.valid()).toBe(false);
+  });
+});

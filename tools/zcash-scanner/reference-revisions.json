@@ -1,0 +1,12 @@
+{
+  "zcash_primitives": "0.28.0",
+  "block_fixture": "zcash_primitives 0.28.0 src/block.rs BLOCK_MAINNET_415000",
+  "orchard_crate": "0.14.0",
+  "zcash_protocol": "0.9.0",
+  "sapling_crypto": "0.7.0",
+  "orchard": "zcash_test_vectors/orchard/note_encryption.py",
+  "sapling": "zcash_test_vectors/sapling/note_encryption.py",
+  "test_vectors_repository": "https://github.com/zcash/zcash-test-vectors",
+  "zcash_keys": "0.14.0",
+  "test_vectors_revision": "78321beacb0e0477e33cd002b56585a107c2708c"
+}

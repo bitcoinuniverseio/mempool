@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { GlobalNetworkApiService, GlobalNetworkOverview } from './global-network.service';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-global-network-overview',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -29,11 +30,11 @@ import { GlobalNetworkApiService, GlobalNetworkOverview } from './global-network
 
         <!-- Sub-navigation tabs -->
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link active" routerLink="/network/global">Overview</a>
-          <a class="nav-link" routerLink="/network/global/nodes">Reachable Nodes</a>
-          <a class="nav-link" routerLink="/network/global/snapshots">Snapshots Archive</a>
-          <a class="nav-link" routerLink="/network/global/seeds">DNS Seeds</a>
-          <a class="nav-link" routerLink="/network/global/self-check">Node Self-Check</a>
+          <a class="nav-link active" [routerLink]="'/network/global' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/network/global/nodes' | relativeUrl">Reachable Nodes</a>
+          <a class="nav-link" [routerLink]="'/network/global/snapshots' | relativeUrl">Snapshots Archive</a>
+          <a class="nav-link" [routerLink]="'/network/global/seeds' | relativeUrl">DNS Seeds</a>
+          <a class="nav-link" [routerLink]="'/network/global/self-check' | relativeUrl">Node Self-Check</a>
         </nav>
       </header>
 
@@ -59,14 +60,14 @@ import { GlobalNetworkApiService, GlobalNetworkOverview } from './global-network
           <div class="col-12 col-sm-6 col-lg-3">
             <div class="card p-3 h-100 bg-body-tertiary border">
               <div class="text-muted small">BIP324 v2 Encrypted Transport</div>
-              <div class="h4 my-1 text-success">{{ overview.bip324_v2_adoption_percentage }}%</div>
+              <div class="h4 my-1 text-success">{{ overview.bip324_v2_adoption_percentage === null ? 'Unknown' : overview.bip324_v2_adoption_percentage + '%' }}</div>
               <div class="small text-muted">{{ overview.active_epoch.v2_nodes | number }} verified v2 nodes</div>
             </div>
           </div>
           <div class="col-12 col-sm-6 col-lg-3">
             <div class="card p-3 h-100 bg-body-tertiary border">
               <div class="text-muted small">BIP155 addrv2 Adoption</div>
-              <div class="h4 my-1 text-info">{{ overview.addrv2_adoption_percentage }}%</div>
+              <div class="h4 my-1 text-info">{{ overview.addrv2_adoption_percentage === null ? 'Unknown' : overview.addrv2_adoption_percentage + '%' }}</div>
               <div class="small text-muted">Tor v3, I2P, CJDNS capable</div>
             </div>
           </div>
@@ -115,6 +116,9 @@ import { GlobalNetworkApiService, GlobalNetworkOverview } from './global-network
                     </tr>
                   </thead>
                   <tbody>
+                    <tr *ngIf="!overview.geographic_distribution?.length">
+                      <td colspan="2" class="text-muted small">No geolocation source is configured; countries are not guessed.</td>
+                    </tr>
                     <tr *ngFor="let g of overview.geographic_distribution">
                       <td><span class="badge bg-secondary me-1">{{ g.country }}</span></td>
                       <td class="text-end fw-semibold">{{ g.count | number }}</td>
@@ -183,7 +187,7 @@ export class GlobalNetworkOverviewComponent implements OnInit, OnDestroy {
           this.cd.markForCheck();
         },
         error: err => {
-          this.error = err?.message || 'Failed to load network overview';
+          this.error = err?.error?.error || err?.message || 'Failed to load network overview';
           this.loading = false;
           this.cd.markForCheck();
         },

@@ -1,13 +1,14 @@
-import { Component, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { PaymentConnectivityApiService } from './payment-connectivity.service';
+import { inspectNwcUri, NwcInspection } from './nwc-uri';
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
   selector: 'app-payment-nwc-inspect',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -21,13 +22,13 @@ import { PaymentConnectivityApiService } from './payment-connectivity.service';
         </p>
 
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link" routerLink="/payments">Overview</a>
-          <a class="nav-link" routerLink="/payments/nwc">NWC Directory</a>
-          <a class="nav-link active" routerLink="/payments/nwc/inspect">NWC URI Inspector</a>
-          <a class="nav-link" routerLink="/payments/nwc/compatibility">NWC Standards</a>
-          <a class="nav-link" routerLink="/payments/lnurl">LNURL Specifications</a>
-          <a class="nav-link" routerLink="/payments/lightning-address">Lightning Address</a>
-          <a class="nav-link" routerLink="/payments/zaps">NIP-57 Zaps</a>
+          <a class="nav-link" [routerLink]="'/payments' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/payments/nwc' | relativeUrl">NWC Directory</a>
+          <a class="nav-link active" [routerLink]="'/payments/nwc/inspect' | relativeUrl">NWC URI Inspector</a>
+          <a class="nav-link" [routerLink]="'/payments/nwc/compatibility' | relativeUrl">NWC Standards</a>
+          <a class="nav-link" [routerLink]="'/payments/lnurl' | relativeUrl">LNURL Specifications</a>
+          <a class="nav-link" [routerLink]="'/payments/lightning-address' | relativeUrl">Lightning Address</a>
+          <a class="nav-link" [routerLink]="'/payments/zaps' | relativeUrl">NIP-57 Zaps</a>
         </nav>
       </header>
 
@@ -37,11 +38,15 @@ import { PaymentConnectivityApiService } from './payment-connectivity.service';
             <h2 class="h5 mb-3">Connection URI Input</h2>
 
             <div class="mb-3">
-              <label class="form-label small text-muted">NWC Connection URI</label>
+              <label class="form-label small text-muted" for="nwc-uri-input">NWC Connection URI</label>
               <textarea
+                id="nwc-uri-input"
                 class="form-control font-monospace small"
                 rows="6"
                 [(ngModel)]="uriInput"
+                (ngModelChange)="clearResult()"
+                autocomplete="off"
+                spellcheck="false"
                 placeholder="nostr+walletconnect://<pubkey>?relay=wss%3A%2F%2F...&secret=..."
               ></textarea>
             </div>
@@ -75,6 +80,7 @@ import { PaymentConnectivityApiService } from './payment-connectivity.service';
               <div class="alert" [ngClass]="report.valid ? 'alert-success' : 'alert-danger'">
                 <div class="fw-bold">{{ report.valid ? 'Valid NWC Connection String' : 'Invalid Connection URI' }}</div>
               </div>
+              <p class="small text-muted">Encryption and wallet capabilities are unknown until a signed NIP-47 info event is observed. Inspection makes no network request.</p>
 
               <div class="p-3 border rounded bg-body mb-3">
                 <div class="text-muted small">Masked Safe URI (Secret Redacted)</div>
@@ -112,41 +118,36 @@ import { PaymentConnectivityApiService } from './payment-connectivity.service';
     .nav-link.active { background-color: var(--bs-primary); color: #fff; }
   `],
 })
-export class PaymentNwcInspectComponent {
+export class PaymentNwcInspectComponent implements OnDestroy {
   uriInput = '';
   inspecting = false;
-  report: any = null;
+  report: NwcInspection | null = null;
 
-  constructor(
-    private paymentApi: PaymentConnectivityApiService,
-    private cdr: ChangeDetectorRef
-  ) {
+  constructor() {
     this.loadSample();
   }
 
   loadSample(): void {
+    this.clearResult();
     this.uriInput =
-      'nostr+walletconnect://0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798?relay=wss%3A%2F%2Frelay.damus.io&secret=112233445566778899aabbccddeeff00112233445566778899aabbccddeeff00';
+      'nostr+walletconnect://79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798?relay=wss%3A%2F%2Frelay.example.invalid&secret=112233445566778899aabbccddeeff00112233445566778899aabbccddeeff00';
   }
 
   inspectUri(): void {
     this.inspecting = true;
     this.report = null;
 
-    this.paymentApi.inspectNwcUri$(this.uriInput).subscribe({
-      next: (res) => {
-        this.report = res;
-        this.inspecting = false;
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        this.inspecting = false;
-        this.report = {
-          valid: false,
-          errors: [err.message || 'Inspection error'],
-        };
-        this.cdr.markForCheck();
-      },
-    });
+    try { this.report = inspectNwcUri(this.uriInput); }
+    finally { this.uriInput = ''; this.inspecting = false; }
+  }
+
+  clearResult(): void {
+    this.report = null;
+    this.inspecting = false;
+  }
+
+  ngOnDestroy(): void {
+    this.uriInput = '';
+    this.clearResult();
   }
 }

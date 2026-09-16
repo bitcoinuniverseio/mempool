@@ -1,122 +1,14 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
-import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
+import { Subscription, of } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 import { LightningResilienceApiService } from './lightning-resilience.service';
-
-@Component({
-  selector: 'app-lightning-resilience-channel-detail',
-  standalone: true,
-  imports: [CommonModule, RouterModule],
-  template: `
-    <div class="container-xl py-4" *ngIf="loadError">
-      <div class="alert alert-warning" role="alert">{{ loadError }}</div>
-    </div>
-    <div class="container-xl py-4" *ngIf="channel">
-      <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
-        <div>
-          <h1 class="h2 mb-1">Channel Diagnostics: <span class="font-monospace text-info">{{ channel.short_channel_id }}</span></h1>
-          <p class="text-muted mb-0">Detailed slot reservation, hold latency distributions, and peer jamming evaluation.</p>
-        </div>
-        <a routerLink="/lightning/resilience" class="btn btn-outline-secondary btn-sm">Back to Resilience Center</a>
-      </div>
-
-      <div class="row g-3 mb-4">
-        <div class="col-md-4">
-          <div class="card bg-dark border-secondary p-3 h-100">
-            <div class="text-muted small text-uppercase">Capacity</div>
-            <div class="h3 fw-bold text-light my-1">{{ channel.capacity_sats | number }} sats</div>
-            <div class="small text-muted">Max HTLC Slots: {{ channel.htlc_slot_capacity }}</div>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="card bg-dark border-secondary p-3 h-100">
-            <div class="text-muted small text-uppercase">In-Flight HTLCs</div>
-            <div class="h3 fw-bold text-warning my-1">{{ channel.htlc_slots_in_use }} slots</div>
-            <div class="small text-danger">Utilization: {{ channel.htlc_slot_utilization_pct }}%</div>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="card bg-dark border-secondary p-3 h-100">
-            <div class="text-muted small text-uppercase">Held Duration Avg</div>
-            <div class="h3 fw-bold text-danger my-1">{{ channel.average_held_duration_seconds }}s</div>
-            <div class="small text-muted">Over 60s holds: {{ channel.held_htlcs_count_over_60s }}</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="card bg-dark border-secondary mb-4">
-        <div class="card-header border-secondary">
-          <h5 class="card-title mb-0">Channel Endpoints & Policy Protections</h5>
-        </div>
-        <div class="card-body">
-          <dl class="row mb-0">
-            <dt class="col-sm-3 text-muted">Node 1 Public Key</dt>
-            <dd class="col-sm-9 font-monospace">
-              <a [routerLink]="['/lightning/resilience/node', channel.node_1_pubkey]" class="text-info">{{ channel.node_1_pubkey }}</a>
-            </dd>
-
-            <dt class="col-sm-3 text-muted">Node 2 Public Key</dt>
-            <dd class="col-sm-9 font-monospace">
-              <a [routerLink]="['/lightning/resilience/node', channel.node_2_pubkey]" class="text-info">{{ channel.node_2_pubkey }}</a>
-            </dd>
-
-            <dt class="col-sm-3 text-muted">Resilience Band</dt>
-            <dd class="col-sm-9"><span class="badge bg-danger">{{ channel.resilience_band }}</span></dd>
-
-            <dt class="col-sm-3 text-muted">Reputation Rate Limiting</dt>
-            <dd class="col-sm-9">
-              <span class="badge" [ngClass]="channel.reputation_rate_limiting_active ? 'bg-success' : 'bg-secondary'">
-                {{ channel.reputation_rate_limiting_active ? 'ACTIVE' : 'INACTIVE' }}
-              </span>
-            </dd>
-
-            <dt class="col-sm-3 text-muted">Fast-Lane Priority Reserve</dt>
-            <dd class="col-sm-9">
-              <span class="badge" [ngClass]="channel.fast_lane_available ? 'bg-success' : 'bg-secondary'">
-                {{ channel.fast_lane_available ? 'ENABLED' : 'DISABLED' }}
-              </span>
-            </dd>
-
-            <dt class="col-sm-3 text-muted">Last Updated</dt>
-            <dd class="col-sm-9 font-monospace text-muted">{{ channel.updated_at }}</dd>
-          </dl>
-        </div>
-      </div>
-    </div>
-  `
-})
-export class LightningResilienceChannelDetailComponent implements OnInit {
-  public channel: any = null;
-
-  public loadError: string | null = null;
-
-  constructor(
-    private route: ActivatedRoute,
-    private api: LightningResilienceApiService
-  ) {}
-
-  public ngOnInit(): void {
-    this.route.paramMap.subscribe(params => {
-      const reference = params.get('shortId');
-      this.channel = null;
-      if (!reference) {
-        // An earlier revision substituted a fixed reference here, so the
-        // page reported on that channel whatever address opened it.
-        this.loadError = $localize`:@@lightning.channel.missing:This address does not name a channel.`;
-        return;
-      }
-      this.loadError = null;
-      this.api.getChannel$(reference).subscribe({
-        next: value => {
-          this.channel = value;
-          this.loadError = null;
-        },
-        error: err => {
-          this.channel = null;
-          this.loadError = loadFailureMessage(classifyLoadFailure(err));
-        },
-      });
-    });
-  }
+import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
+@Component({selector:'app-lightning-resilience-channel-detail',standalone:true,imports:[CommonModule,RouterModule,RelativeUrlPipe],template:`<div class="container-xl py-4"><h1 class="h2">Owned Channel Diagnostics</h1><nav class="d-flex flex-wrap gap-3 mb-4" aria-label="Lightning resilience"><a [routerLink]="'/lightning/resilience' | relativeUrl">Overview</a><a [routerLink]="'/lightning/resilience/htlcs' | relativeUrl">HTLC slots</a><a [routerLink]="'/lightning/resilience/onion-messages' | relativeUrl">Onion queues</a><a [routerLink]="'/lightning/resilience/simulate' | relativeUrl">Simulator</a><a [routerLink]="'/lightning/resilience/mitigations' | relativeUrl">Mitigations</a></nav><p *ngIf="loading" role="status">Loading owned evidence…</p><p *ngIf="loadError" role="alert" class="alert alert-warning">{{ loadError }}</p><section *ngIf="channel"><p>{{ channel.scope }}</p><p>Observed: {{ channel.observed_at_utc }}</p><dl><dt>Channel</dt><dd>{{ channel.short_channel_id }}</dd><dt>Capacity</dt><dd>{{ channel.capacity_sats | number }} sats</dd><dt>Pending aggregate value</dt><dd>{{ channel.pending_htlc_value_sats | number }} sats</dd><dt>Incoming slots</dt><dd>{{ channel.incoming.slots_in_use }} / {{ channel.incoming.slot_capacity ?? 'Unknown' }}</dd><dt>Outgoing slots</dt><dd>{{ channel.outgoing.slots_in_use }} / {{ channel.outgoing.slot_capacity ?? 'Unknown' }}</dd><dt>Hold duration and failure rate</dt><dd>Unknown</dd><dt>Reputation / fast-lane deployment</dt><dd>Unknown</dd></dl><p class="text-break">Local node: <a [routerLink]="['/lightning/resilience/node' | relativeUrl,channel.node1_pubkey]">{{ channel.node1_pubkey }}</a></p><p class="text-break">Remote node: <a [routerLink]="['/lightning/resilience/node' | relativeUrl,channel.node2_pubkey]">{{ channel.node2_pubkey }}</a></p></section></div>`})
+export class LightningResilienceChannelDetailComponent implements OnInit,OnDestroy {
+ channel:any=null;loadError:string|null=null;loading=false;private subscription?:Subscription;
+ constructor(@Inject(ActivatedRoute) private route:ActivatedRoute,@Inject(LightningResilienceApiService) private api:LightningResilienceApiService,@Inject(ChangeDetectorRef) private cdr:ChangeDetectorRef){}
+ ngOnInit(){this.subscription=this.route.paramMap.pipe(switchMap(params=>{const id=params.get('shortId');return id?this.api.watch$(()=>this.api.getChannel$(id),null):of({value:null,error:'This address does not name a channel.',loading:false});})).subscribe(s=>{this.channel=s.value;this.loadError=s.error;this.loading=s.loading;this.cdr.markForCheck();});}
+ ngOnDestroy(){this.subscription?.unsubscribe();}
 }

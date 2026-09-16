@@ -1,6 +1,15 @@
 import { Application, Request, Response } from 'express';
-import { verificationService } from './verification.service';
+import { VerificationEvidenceError, verificationService } from './verification.service';
 import { handleError } from '../../../utils/api';
+
+/** An absent source is a 503 that names the source, never a 500 and never an invented verdict. */
+function fail(req: Request, res: Response, e: unknown, fallback: string): void {
+  if (e instanceof VerificationEvidenceError) {
+    res.status(e.status).json({ stage: e.code, error: e.message });
+    return;
+  }
+  handleError(req, res, 500, fallback);
+}
 
 class VerificationRoutes {
   public initRoutes(app: Application): void {
@@ -18,53 +27,53 @@ class VerificationRoutes {
 
   private async $postSpvProof(req: Request, res: Response): Promise<void> {
     try {
-      const { txid, block_hash, block_height } = req.body;
+      const { txid, block_hash, block_height, network } = req.body || {};
       if (!txid || !block_hash) {
         res.status(400).json({ error: 'txid and block_hash parameters required.' });
         return;
       }
-      const proof = verificationService.generateSpvProof(txid, block_hash, block_height);
+      const proof = await verificationService.generateSpvProof(txid, block_hash, block_height, network);
       res.json(proof);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'SPV proof generation failed');
+      fail(req, res, e, 'SPV proof generation failed');
     }
   }
 
   private async $postVerifySpv(req: Request, res: Response): Promise<void> {
     try {
-      const proof = req.body.proof || req.body;
-      const valid = verificationService.verifySpvProof(proof);
-      res.json({ is_valid: valid, verified_at_utc: new Date().toISOString() });
+      const proof = req.body?.proof || req.body;
+      const result = await verificationService.verifySpvProof(proof);
+      res.json(result);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'SPV verification failed');
+      fail(req, res, e, 'SPV verification failed');
     }
   }
 
   private async $postCompactFilter(req: Request, res: Response): Promise<void> {
     try {
-      const { block_hash, scripts } = req.body;
+      const { block_hash, scripts, network } = req.body ?? {};
       if (!block_hash || !Array.isArray(scripts)) {
         res.status(400).json({ error: 'block_hash and array of scripts required.' });
         return;
       }
-      const filterResult = verificationService.queryCompactFilter(block_hash, scripts);
+      const filterResult = await verificationService.queryCompactFilter(block_hash, scripts, network);
       res.json(filterResult);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Compact filter query failed');
+      fail(req, res, e, 'Compact filter query failed');
     }
   }
 
   private async $postVerifySignature(req: Request, res: Response): Promise<void> {
     try {
-      const { address, message, signature, format } = req.body;
-      if (!address || !message || !signature) {
-        res.status(400).json({ error: 'address, message, and signature required.' });
+      const { address, message, signature, format, network } = req.body ?? {};
+      if (typeof address !== 'string' || !address || address.length > 200 || typeof message !== 'string' || Buffer.byteLength(message, 'utf8') > 65536 || typeof signature !== 'string' || !signature || signature.length > 100000) {
+        res.status(400).json({ error: 'Supply an address, a message (empty is allowed, at most 65536 UTF-8 bytes), and a bounded signature.' });
         return;
       }
-      const result = verificationService.verifySignature(address, message, signature, format);
+      const result = await verificationService.verifySignature(address, message, signature, format, network);
       res.json(result);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Signature verification failed');
+      fail(req, res, e, 'Signature verification failed');
     }
   }
 
@@ -73,7 +82,7 @@ class VerificationRoutes {
       const incidents = verificationService.getIncidents();
       res.json({ incidents, count: incidents.length });
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch incidents');
+      fail(req, res, e, 'Failed to fetch incidents');
     }
   }
 
@@ -86,7 +95,7 @@ class VerificationRoutes {
       }
       res.json(incident);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch incident');
+      fail(req, res, e, 'Failed to fetch incident');
     }
   }
 }

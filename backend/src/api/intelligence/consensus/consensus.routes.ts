@@ -1,5 +1,5 @@
 import { Application, Request, Response } from 'express';
-import { consensusService } from './consensus.service';
+import { consensusService, ConsensusEvidenceError } from './consensus.service';
 import { handleError } from '../../../utils/api';
 
 class ConsensusRoutes {
@@ -60,7 +60,8 @@ class ConsensusRoutes {
       const result = consensusService.simulateCovenant(req.body);
       res.json(result);
     } catch (e) {
-      res.status(400).json({ error: e instanceof Error ? e.message : 'Failed to simulate covenant' });
+      if (e instanceof ConsensusEvidenceError) { res.status(e.status).json({ stage: e.code, error: e.message }); return; }
+      res.status(400).json({ stage: 'invalid-input', error: e instanceof Error ? e.message : 'Failed to simulate covenant' });
     }
   }
 }

@@ -1,7 +1,7 @@
 <div class="container-xl product-page">
   <header class="page-head">
     <nav class="crumbs">
-      <a [routerLink]="['/']">Home</a>
+      <a [routerLink]="['/' | relativeUrl]">Home</a>
       <span class="divider">/</span>
       <span>Liquid Network</span>
     </nav>
@@ -12,9 +12,27 @@
   </header>
 
   <nav class="nav-tabs">
-    <a [routerLink]="['/liquid/observatory']" class="active">Observatory</a>
-    <a [routerLink]="['/liquid/unblind']">Unblinding Workspace</a>
+    <a [routerLink]="['/liquid/observatory' | relativeUrl]" class="active">Observatory</a>
+    <a [routerLink]="['/liquid/unblind' | relativeUrl]">Unblinding Workspace</a>
   </nav>
+
+  <section class="panel">
+    <h2>Owned Elements Checkpoint</h2>
+    <label for="elementsNetwork">Source network</label>
+    <select id="elementsNetwork" [(ngModel)]="network" (ngModelChange)="refreshNode()"><option value="liquidv1">Liquid mainnet</option><option value="liquidtestnet">Liquid testnet</option><option value="elementsregtest">Isolated Elements regtest</option></select>
+    <button type="button" (click)="refreshNode()">Refresh checkpoint</button>
+    <ng-container *ngIf="node$ | async as state">
+      <p *ngIf="state.loading" aria-busy="true">Reading the owned node checkpoint...</p>
+      <p *ngIf="state.error" role="alert">{{ state.error }}</p>
+      <ng-container *ngIf="state.node as node">
+        <p>Network: {{ node.network }} · Height: {{ node.blockHeight }} · Initial synchronization: {{ node.initialBlockDownload ? 'in progress' : 'complete' }}</p>
+        <p class="mono">{{ node.blockHash }}</p>
+        <p>Block signing policy: <span class="mono">{{ node.signblockScript }}</span></p>
+        <p>Peg program: <span class="mono">{{ node.fedpegProgram }}</span></p>
+        <p>These are node-reported checkpoint and policy bytes. Signer liveness, peg reserves and asset registry coverage remain unavailable.</p>
+      </ng-container>
+    </ng-container>
+  </section>
 
   <ng-container *ngIf="vm$ | async as vm">
     <div *ngIf="vm.kind === 'loading'" class="panel" aria-busy="true">
@@ -22,8 +40,9 @@
     </div>
 
     <div *ngIf="vm.kind === 'error'" class="panel">
-      <h2>Liquid Elements Node Offline</h2>
-      <p>Could not connect to Universe first-party Liquid node.</p>
+      <h2>Full Observatory Evidence Unavailable</h2>
+      <p>Complete peg, registry and federation observations are not available from the configured sources.</p>
+      <p role="alert">{{ vm.message }}</p>
     </div>
 
     <ng-container *ngIf="vm.kind === 'ready' && vm.summary && vm.federation">
@@ -93,7 +112,7 @@
             <tr *ngFor="let p of vm.pegs">
               <td><span class="badge" [ngClass]="p.type === 'peg-in' ? 'badge-success' : 'badge-warning'">{{ p.type | uppercase }}</span></td>
               <td><strong>{{ (Number(p.amountSats) / 1e8).toFixed(4) }}</strong></td>
-              <td class="mono"><a [routerLink]="['/tx', p.bitcoinTxid]">{{ p.bitcoinTxid.slice(0, 14) }}...</a></td>
+              <td class="mono"><a [routerLink]="['/tx' | relativeUrl, p.bitcoinTxid]">{{ p.bitcoinTxid.slice(0, 14) }}...</a></td>
               <td class="mono">{{ p.liquidTxid.slice(0, 14) }}...</td>
               <td>{{ p.confirmations }}</td>
               <td><span class="badge badge-success">{{ p.status }}</span></td>

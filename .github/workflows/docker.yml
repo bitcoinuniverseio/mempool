@@ -19,6 +19,8 @@ permissions:
 
 jobs:
   test-images:
+    env:
+      COMPOSE_PROJECT_NAME: mempool-images-${{ github.run_id }}-${{ github.run_attempt }}
     # Always run on tag pushes and all pull requests
     runs-on: [self-hosted, linux, x64, universe-super]
     timeout-minutes: 30
@@ -84,7 +86,7 @@ jobs:
 
       - name: Prepare docker-compose test file
         run: |
-          cat > /tmp/modify_compose.py << 'SCRIPT_END'
+          cat > "$RUNNER_TEMP/modify-compose-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT.py" << 'SCRIPT_END'
           import re
           import os
           import sys
@@ -100,8 +102,8 @@ jobs:
           content = content.replace('image: mempool/frontend:latest', f'image: test-frontend:{tag}')
           content = content.replace('image: mempool/backend:latest', f'image: test-backend:{tag}')
           
-          # Change web port mapping from 80:8080 to 8080:8080
-          content = content.replace('- 80:8080', '- 8080:8080')
+          # Let Docker reserve a loopback host port atomically for this job.
+          content = content.replace('- 80:8080', '- 127.0.0.1::8080')
           
           # Remove volumes from api service
           content = re.sub(r'    volumes:\n      - \.\/data:\/backend\/cache\n', '', content)
@@ -127,11 +129,12 @@ jobs:
           # Add tmpfs after stop_grace_period in db service (healthcheck already exists in base file)
           db_stop_grace = '    stop_grace_period: 1m'
           db_additions = '    stop_grace_period: 1m\n    tmpfs:\n      - /var/lib/mysql'
-          content = content.replace(db_stop_grace, db_additions, 1)
+          before_db, db_section = content.split('  db:\n', 1)
+          content = before_db + '  db:\n' + db_section.replace(db_stop_grace, db_additions, 1)
           
           # Add depends_on to web service after ports
-          web_ports = '    ports:\n      - 8080:8080'
-          web_with_depends = '    ports:\n      - 8080:8080\n    depends_on:\n      - api\n      - db'
+          web_ports = '    ports:\n      - 127.0.0.1::8080'
+          web_with_depends = '    ports:\n      - 127.0.0.1::8080\n    depends_on:\n      - api\n      - db'
           content = content.replace(web_ports, web_with_depends, 1)
           
           # Add depends_on to api service after command
@@ -145,7 +148,7 @@ jobs:
           
           print("Generated docker-compose.test.yml")
           SCRIPT_END
-          python3 /tmp/modify_compose.py
+          python3 "$RUNNER_TEMP/modify-compose-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT.py"
           cat docker-compose.test.yml
 
       - name: Start containers
@@ -241,34 +244,8 @@ jobs:
       image-digest-backend: ${{ matrix.service == 'backend' && steps.docker-build.outputs.digest || '' }}
       tag: ${{ matrix.service == 'frontend' && (steps.set-tag-push.outputs.tag || steps.set-tag-pr.outputs.tag) || '' }}
     steps:
-      - name: Replace the current swap file
-        shell: bash
-        run: |
-          sudo swapoff /mnt/swapfile || true
-          sudo rm -f /mnt/swapfile
-          sudo fallocate -l 16G /mnt/swapfile
-          sudo chmod 600 /mnt/swapfile
-          sudo mkswap /mnt/swapfile
-          sudo swapon /mnt/swapfile
-
-      - name: Show current memory and swap status
-        shell: bash
-        run: |
-          sudo free -h
-          echo
-          sudo swapon --show
-
-      - name: Mount a tmpfs over /var/lib/docker
-        shell: bash
-        run: |
-          if [ ! -d "/var/lib/docker" ]; then
-            echo "Directory '/var/lib/docker' not found"
-            exit 1
-          fi
-          sudo mount -t tmpfs -o size=12G tmpfs /var/lib/docker
-          sudo systemctl restart docker
-          sudo df -h | grep docker
-
+      # Shared runner capacity is provisioned outside jobs. Never replace host
+      # swap, hide Docker data, or restart the shared daemon during a build.
       # Only for tag pushes: use the Git tag as TAG
       - name: Set TAG from pushed tag
         if: github.event_name == 'push'

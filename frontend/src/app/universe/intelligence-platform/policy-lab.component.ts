@@ -1,4 +1,6 @@
-import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { StateService } from '@app/services/state.service';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IntelligenceApiService } from './intelligence-api.service';
@@ -13,10 +15,10 @@ import { IntelligenceApiService } from './intelligence-api.service';
       <header class="page-header">
         <div class="title-row">
           <h1>Transaction Package, Policy, and Inclusion Lab</h1>
-          <span class="badge badge-primary" *ngIf="nodeProfile">{{ nodeProfile.policy_name }}</span>
+          <span class="badge badge-primary" *ngIf="nodeProfile">{{ nodeProfile.subversion }}</span>
         </div>
         <p class="subtitle">
-          Evaluate transaction packages non-mutatively against relay policies, TRUC/v3 rules, and discrete-time inclusion forecasts.
+          Inspect exact transaction packages with the selected owned node. Calibrated inclusion forecasts and independent consensus certification are unavailable.
         </p>
       </header>
 
@@ -29,12 +31,12 @@ import { IntelligenceApiService } from './intelligence-api.service';
           <textarea
             class="form-control font-monospace"
             rows="5"
-            [(ngModel)]="rawTransactionsInput"
+            [(ngModel)]="rawTransactionsInput" (ngModelChange)="invalidate()"
             placeholder="Paste raw transaction hexes (one per line or comma separated)..."
             aria-label="Raw transaction hex inputs"
           ></textarea>
           <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3">
-            <span class="text-muted small">Evaluates against node consensus and mempool acceptance without broadcast.</span>
+            <span class="text-muted small">Raw transaction bytes are sent to this backend and its owned Bitcoin Core for a policy check. No broadcast.</span>
             <button class="btn btn-primary" [disabled]="loading || !rawTransactionsInput.trim()" (click)="evaluate()">
               {{ loading ? 'Evaluating...' : 'Run Policy & Inclusion Analysis' }}
             </button>
@@ -61,22 +63,22 @@ import { IntelligenceApiService } from './intelligence-api.service';
       <!-- Results Grid -->
       <div *ngIf="evaluationResult && !loading" class="results-grid">
         <!-- Summary Banner -->
-        <div class="card mb-4" [ngClass]="evaluationResult.package_report?.overall_allowed ? 'border-success' : 'border-warning'">
+        <div class="card mb-4" [ngClass]="evaluationResult.package_report?.overall_allowed === true ? 'border-success' : 'border-warning'">
           <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div>
-              <span class="badge" [ngClass]="evaluationResult.package_report?.overall_allowed ? 'badge-success' : 'badge-danger'">
-                {{ evaluationResult.package_report?.overall_allowed ? 'RELAY POLICY ACCEPTED' : 'RELAY POLICY REJECTED' }}
+              <span class="badge" [ngClass]="evaluationResult.package_report?.overall_allowed === true ? 'badge-success' : 'badge-danger'">
+                {{ evaluationResult.package_report?.overall_allowed === true ? 'CORE POLICY ACCEPTED AT READ TIME' : evaluationResult.package_report?.overall_allowed === false ? 'CORE POLICY REJECTED' : 'POLICY UNKNOWN' }}
               </span>
               <h4 class="mt-2 mb-0">Package {{ evaluationResult.package_report?.package_id }}</h4>
             </div>
             <div class="metrics-row d-flex flex-wrap gap-4">
               <div>
                 <div class="text-muted small">Package Feerate</div>
-                <div class="h5 mb-0 text-primary">{{ evaluationResult.package_report?.package_feerate_sats_vb }} sat/vB</div>
+                <div class="h5 mb-0 text-primary">{{ evaluationResult.package_report?.package_feerate_sats_vb ?? 'Unknown' }} sat/vB</div>
               </div>
               <div>
                 <div class="text-muted small">Total Fees</div>
-                <div class="h5 mb-0">{{ evaluationResult.package_report?.total_fees_sats | number }} sats</div>
+                <div class="h5 mb-0">{{ evaluationResult.package_report?.total_fees_sats === null ? 'Unknown' : (evaluationResult.package_report?.total_fees_sats | number) }} sats</div>
               </div>
               <div>
                 <div class="text-muted small">Virtual Size</div>
@@ -119,65 +121,17 @@ import { IntelligenceApiService } from './intelligence-api.service';
           </div>
         </div>
 
-        <!-- Inclusion Forecast Curves -->
-        <div *ngIf="evaluationResult.forecast" class="card mb-4">
-          <div class="card-header d-flex justify-content-between align-items-center">
-            <h4 class="h5 mb-0">Discrete-Time Inclusion Forecast</h4>
-            <span class="badge badge-secondary">{{ evaluationResult.forecast.model_version }}</span>
-          </div>
+        <div *ngIf="evaluationResult.forecast as forecast" class="card mb-4">
+          <div class="card-header"><h4 class="h5">Inclusion evidence</h4></div>
           <div class="card-body">
-            <p class="text-muted small mb-4">
-              Calibrated survival probability estimates for inclusion across upcoming block intervals based on live mempool depth and feerate histograms.
-            </p>
-            <div class="row text-center g-3">
-              <div class="col-md-2 col-4">
-                <div class="p-3 rounded bg-dark-subtle">
-                  <div class="small text-muted">Next Block</div>
-                  <div class="h4 my-1" [ngClass]="evaluationResult.forecast.next_block > 0.7 ? 'text-success' : 'text-warning'">
-                    {{ (evaluationResult.forecast.next_block * 100).toFixed(1) }}%
-                  </div>
-                  <div class="small text-muted font-monospace">[{{ (evaluationResult.forecast.confidence_interval?.[0] * 100).toFixed(0) }}-{{ (evaluationResult.forecast.confidence_interval?.[1] * 100).toFixed(0) }}%]</div>
-                </div>
-              </div>
-              <div class="col-md-2 col-4">
-                <div class="p-3 rounded bg-dark-subtle">
-                  <div class="small text-muted">2 Blocks</div>
-                  <div class="h4 my-1 text-info">{{ (evaluationResult.forecast.two_blocks * 100).toFixed(1) }}%</div>
-                  <div class="small text-muted">~20 min</div>
-                </div>
-              </div>
-              <div class="col-md-2 col-4">
-                <div class="p-3 rounded bg-dark-subtle">
-                  <div class="small text-muted">3 Blocks</div>
-                  <div class="h4 my-1 text-info">{{ (evaluationResult.forecast.three_blocks * 100).toFixed(1) }}%</div>
-                  <div class="small text-muted">~30 min</div>
-                </div>
-              </div>
-              <div class="col-md-2 col-4">
-                <div class="p-3 rounded bg-dark-subtle">
-                  <div class="small text-muted">6 Blocks</div>
-                  <div class="h4 my-1 text-primary">{{ (evaluationResult.forecast.six_blocks * 100).toFixed(1) }}%</div>
-                  <div class="small text-muted">~1 hour</div>
-                </div>
-              </div>
-              <div class="col-md-2 col-4">
-                <div class="p-3 rounded bg-dark-subtle">
-                  <div class="small text-muted">12 Blocks</div>
-                  <div class="h4 my-1 text-primary">{{ (evaluationResult.forecast.twelve_blocks * 100).toFixed(1) }}%</div>
-                  <div class="small text-muted">~2 hours</div>
-                </div>
-              </div>
-              <div class="col-md-2 col-4">
-                <div class="p-3 rounded bg-dark-subtle">
-                  <div class="small text-muted">24 Blocks</div>
-                  <div class="h4 my-1 text-success">{{ (evaluationResult.forecast.twenty_four_blocks * 100).toFixed(1) }}%</div>
-                  <div class="small text-muted">~4 hours</div>
-                </div>
-              </div>
-            </div>
+            <p>{{ forecast.scope }}</p><p *ngIf="forecast.unavailable_reason">{{ forecast.unavailable_reason }}</p>
+            <div class="row"><div class="col" *ngFor="let horizon of [1,2,3,6,12,24]"><strong>{{ horizon }} blocks</strong><p>Probability unknown</p></div></div>
+            <p>Confidence interval unknown. No trained or calibrated model is available.</p>
+            <p>Observed transactions: {{ forecast.observed_transactions ?? 'Unknown' }}; virtual bytes with a higher individual feerate: {{ forecast.observed_vsize_ahead ?? 'Unknown' }}.</p>
+            <p>Nominal queue capacity: {{ forecast.queue_capacity_blocks ?? 'Unknown' }} blocks of 1,000,000 vB. This is not a confirmation estimate; miner policy, dependencies and future arrivals can change ordering.</p>
           </div>
         </div>
-
+        <p class="small">{{ evaluationResult.package_report?.scope }}</p>
         <!-- Package Members Table -->
         <div class="card mb-4">
           <div class="card-header">
@@ -200,21 +154,21 @@ import { IntelligenceApiService } from './intelligence-api.service';
                 <tr *ngFor="let member of evaluationResult.package_report?.members">
                   <td class="font-monospace small">{{ member.txid | slice:0:16 }}...</td>
                   <td>
-                    <span class="badge" [ngClass]="member.allowed ? 'badge-success' : 'badge-danger'">
-                      {{ member.allowed ? 'Accepted' : 'Rejected' }}
+                    <span class="badge" [ngClass]="member.allowed === true ? 'badge-success' : 'badge-danger'">
+                      {{ member.allowed === true ? 'Accepted' : member.allowed === false ? 'Rejected' : 'Unknown' }}
                     </span>
                   </td>
                   <td>{{ member.vsize }} vB</td>
-                  <td>{{ member.fee_sats | number }} sats</td>
-                  <td>{{ member.effective_feerate }} sat/vB</td>
+                  <td>{{ member.fee_sats === null ? 'Unknown' : (member.fee_sats | number) }} sats</td>
+                  <td>{{ member.effective_feerate ?? 'Unknown' }} sat/vB</td>
                   <td>
-                    <span class="badge" [ngClass]="member.consensus_valid ? 'badge-success' : 'badge-danger'">
-                      {{ member.consensus_valid ? 'Valid' : 'Invalid' }}
+                    <span class="badge" [ngClass]="member.consensus_valid === true ? 'badge-success' : 'badge-secondary'">
+                      {{ member.consensus_valid === true ? 'Verified' : member.consensus_valid === false ? 'Invalid' : 'Not independently verified' }}
                     </span>
                   </td>
                   <td>
-                    <span class="badge" [ngClass]="member.relay_valid ? 'badge-success' : 'badge-danger'">
-                      {{ member.relay_valid ? 'Relay Safe' : 'Relay Disallowed' }}
+                    <span class="badge" [ngClass]="member.relay_valid === true ? 'badge-success' : 'badge-secondary'">
+                      {{ member.relay_valid === true ? 'Core allowed at read time' : member.relay_valid === false ? 'Core rejected' : 'Unknown' }}
                     </span>
                   </td>
                 </tr>
@@ -262,61 +216,38 @@ import { IntelligenceApiService } from './intelligence-api.service';
     .bg-dark-subtle { background-color: var(--bs-dark-bg-subtle, rgba(255,255,255,0.05)); }
   `],
 })
-export class PolicyLabComponent implements OnInit {
-  rawTransactionsInput = '';
-  loading = false;
-  errorMessage: string | null = null;
-  evaluationResult: any = null;
-  nodeProfile: any = null;
-
-  constructor(
-    private api: IntelligenceApiService,
-    private cdr: ChangeDetectorRef
-  ) {}
-
+export class PolicyLabComponent implements OnInit, OnDestroy {
+  rawTransactionsInput = ''; loading = false; errorMessage: string | null = null; evaluationResult: any = null; nodeProfile: any = null;
+  private attempt = 0; private destroyed = false; private request?: Subscription; private profileRequest?: Subscription; private networkRequest?: Subscription;
+  constructor(private api: IntelligenceApiService, private cdr: ChangeDetectorRef, private state: StateService) {}
+  private get network(): string { return this.state.network || 'mainnet'; }
   ngOnInit(): void {
-    // Only fetch non-mutative policy profiles, do NOT auto-submit transactions
-    this.api.getNodeProfiles$().subscribe({
-      next: (profile) => {
-        this.nodeProfile = profile;
-        this.cdr.markForCheck();
-      },
-      error: () => {
-        // Graceful fallback if profiles endpoint is unreachable
-        this.cdr.markForCheck();
-      },
-    });
+    this.loadProfile();
+    this.networkRequest = this.state.networkChanged$?.subscribe(() => { this.invalidate(); this.nodeProfile = null; this.loadProfile(); });
   }
-
-  loadSample(): void {
-    this.rawTransactionsInput =
-      '02000000010000000000000000000000000000000000000000000000000000000000000000ffffffff0100f2052a0100000043410496b538e853519c726a2c91e61ec11600ae1390813a627c66fb8be794bbe3e67020e17e572e632024f6655f4f4b822d159ced5da51657edffd7940761c7f536a5ac00000000';
-    this.cdr.markForCheck();
+  private loadProfile(): void {
+    this.profileRequest?.unsubscribe(); const network = this.network;
+    this.profileRequest = this.api.getNodeProfiles$().subscribe({next: value => { if (!this.destroyed && this.network === network) this.nodeProfile = value?.profiles?.find((profile: any) => profile.network === network) ?? null; this.cdr.markForCheck(); },error:()=>{this.nodeProfile=null;this.cdr.markForCheck();}});
   }
-
-  evaluate(): void {
-    const rawTxs = this.rawTransactionsInput
-      .split(/[\n,]+/)
-      .map((t) => t.trim())
-      .filter((t) => t.length > 0);
-
-    if (rawTxs.length === 0) return;
-
-    this.loading = true;
-    this.errorMessage = null;
-    this.cdr.markForCheck();
-
-    this.api.evaluatePackage$(rawTxs).subscribe({
-      next: (res) => {
-        this.evaluationResult = res;
-        this.loading = false;
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        this.errorMessage = err?.error?.error || err?.message || 'Policy evaluation request failed';
-        this.loading = false;
-        this.cdr.markForCheck();
-      },
-    });
+  invalidate(): void { this.attempt++; this.request?.unsubscribe(); this.evaluationResult=null;this.errorMessage=null;this.loading=false;this.cdr.markForCheck(); }
+  ngOnDestroy(): void { this.destroyed=true;this.attempt++;this.request?.unsubscribe();this.profileRequest?.unsubscribe();this.networkRequest?.unsubscribe(); }
+  loadSample(): void { this.invalidate(); this.rawTransactionsInput='020000000101010101010101010101010101010101010101010101010101010101010101010000000000ffffffff012823000000000000015100000000';this.cdr.markForCheck(); }
+  async evaluate(): Promise<void> {
+    this.invalidate(); const source=this.rawTransactionsInput,network=this.network,attempt=this.attempt;
+    const rawTxs=source.split(/[\n,]+/).map(value=>value.trim().toLowerCase()).filter(Boolean);
+    if(!rawTxs.length||rawTxs.length>25||rawTxs.some(raw=>raw.length%2!==0||!/^[0-9a-f]+$/.test(raw))||rawTxs.reduce((n,raw)=>n+raw.length,0)>8000000){this.errorMessage='Supply 1 to 25 raw transactions within 4 MB.';return;}
+    this.loading=true;this.cdr.markForCheck();
+    try {
+      const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(rawTxs.join(':')));
+      const expected=Array.from(new Uint8Array(digest)).map(byte=>byte.toString(16).padStart(2,'0')).join('');
+      if(this.destroyed||attempt!==this.attempt||source!==this.rawTransactionsInput||network!==this.network)return;
+      this.request=this.api.evaluatePackage$(rawTxs).subscribe({next:res=>{
+        if(this.destroyed||attempt!==this.attempt||source!==this.rawTransactionsInput||network!==this.network)return;
+        const report=res?.package_report;
+        if(!report||report.input_hash!==expected||report.network!==network||!Array.isArray(report.members)||report.members.length!==rawTxs.length){this.errorMessage='Policy response does not match the submitted bytes and network.';this.evaluationResult=null;}
+        else this.evaluationResult=res;
+        this.loading=false;this.cdr.markForCheck();
+      },error:err=>{if(this.destroyed||attempt!==this.attempt)return;this.evaluationResult=null;this.errorMessage=err?.error?.error||'Policy evidence unavailable';this.loading=false;this.cdr.markForCheck();}});
+    } catch { if(attempt===this.attempt){this.loading=false;this.errorMessage='Unable to bind this request to its transaction bytes.';this.cdr.markForCheck();} }
   }
 }

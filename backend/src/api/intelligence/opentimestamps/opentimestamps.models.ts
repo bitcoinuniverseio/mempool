@@ -13,38 +13,94 @@ export type TimestampProofStatus =
   | 'network_mismatch'
   | 'conflicting_attestations';
 
+/**
+ * A calendar on the allowlist, as this deployment has observed it. Health is
+ * what the last contact found; the anchor figures count proofs made here that
+ * the calendar anchored. A calendar's own queue depth and transactions are not
+ * visible through its protocol, so those fields are null rather than guessed.
+ */
 export interface TimestampCalendar {
   calendar_id: string;
   name: string;
   url: string;
   protocol_revision: string;
   health_status: 'online' | 'degraded' | 'offline';
+  health_observed_at: string | null;
+  health_detail: string;
+  /** Stamps made here that this calendar promised and has not yet anchored. */
   pending_attestations_count: number;
-  average_anchor_lag_blocks: number;
-  last_anchor_block_height: number;
-  last_anchor_txid: string;
+  counts_scope: string;
+  anchored_coverage: TimestampCoverage;
+  pending_coverage: TimestampCoverage;
+  anchored_proofs_count: number;
+  average_anchor_lag_blocks: number | null;
+  last_anchor_block_height: number | null;
+  last_anchor_txid: string | null;
   mirror_calendars: string[];
 }
 
+/** One stamp made here: a batch of one digest, keyed by its record id. */
 export interface TimestampBatch {
   batch_id: string;
   calendar_id: string;
-  merkle_root: string;
+  merkle_root: null;
+  commitment_hex: string;
+  anchor_status: 'pending' | 'active-chain' | 'reorged' | 'invalid' | 'unknown';
+  anchor_verified_at: string | null;
   leaf_count: number;
   created_at_utc: string;
   anchor_block_height?: number;
-  anchor_txid?: string;
-  status: 'pending' | 'anchored';
+  anchor_block_hash?: string;
+  status: 'pending' | 'anchored' | 'failed';
+  digest: string;
+  network: string;
+  last_error?: string;
 }
 
+/**
+ * A Bitcoin block that anchored proofs made here through one calendar. An
+ * OpenTimestamps proof commits to the block's Merkle root and never names the
+ * calendar's transaction, so there is no txid to report.
+ */
 export interface TimestampAnchorTransaction {
-  txid: string;
+  batch_id: string;
   block_hash: string;
   block_height: number;
   block_timestamp_utc: string;
-  op_return_payload_hex: string;
+  anchored_at: string;
   calendar_id: string;
   batch_count: number;
+  leaf_count: number;
+  merkle_root: string;
+}
+
+export interface TimestampStampResult {
+  record_id: string;
+  batch_id: string;
+  digest: string;
+  network: string;
+  commitment: string;
+  ots_proof_base64: string;
+  status: 'pending';
+  calendars_contacted: { calendar_id: string; url: string; status: 'pending' | 'unreachable'; error?: string }[];
+  timestamp: string;
+  notices: string[];
+}
+
+export interface TimestampUpgradeResult {
+  upgraded: boolean;
+  changed: boolean;
+  ots_proof_base64: string;
+  status: TimestampProofStatus;
+  verified: boolean;
+  verification: TimestampVerificationResult;
+  /**
+   * Per calendar: `pending` while it holds only a promise, `upgraded` when it
+   * returned a Bitcoin attestation that the owned reader has not verified,
+   * `verified` only after that attestation verified, `unreachable` otherwise.
+   */
+  calendars: { calendar_id?: string; calendar_url: string; status: 'pending' | 'upgraded' | 'verified' | 'unreachable'; detail: string }[];
+  notices: string[];
 }
 
 export interface TimestampVerificationResult {
@@ -56,6 +112,7 @@ export interface TimestampVerificationResult {
   network: string;
   attestation_type?: 'bitcoin';
   bitcoin_block_hash?: string;
+  bitcoin_merkle_root?: string;
   earliest_proven_block_height?: number;
   earliest_proven_time_utc?: string;
   bitcoin_txid?: string;
@@ -71,10 +128,26 @@ export interface TimestampVerificationResult {
 
 export interface TimestampOverview {
   total_active_calendars: number;
-  total_verified_anchors_count: number;
+  total_verified_anchors_count: number | null;
   total_digests_stamped_24h: number;
-  latest_bitcoin_anchor_height: number;
+  latest_bitcoin_anchor_height: number | null;
   active_calendars: TimestampCalendar[];
   recent_batches: TimestampBatch[];
   recent_anchors: TimestampAnchorTransaction[];
+  total_proofs_tracked: number;
+  stored_anchored_proofs: number;
+  active_chain_coverage: TimestampCoverage;
+  bitcoin_confirmed_proofs: number | null;
+  pending_calendar_attestations: number;
+  failed_submissions: number;
+  active_calendar_servers: number;
+  latest_anchored_block_height: number | null;
+  network: string;
+  /** False when the deployment named no calendar; stamping is unavailable then. */
+  calendars_configured: boolean;
+  /** Where the records live. Memory records do not survive a restart. */
+  storage: 'mysql' | 'memory';
+  generated_at: string;
 }
+
+export interface TimestampCoverage { record_limit: number; records_examined: number; complete: boolean; }

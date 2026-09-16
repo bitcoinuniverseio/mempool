@@ -608,13 +608,14 @@ on the same host is a different product and is not part of this stack.
 ## Private listeners
 
 `release.sh preflight` refuses a cutover if anything answers on a public
-interface that this deployment has not declared. Three ports are declared, in
+interface that this deployment has not declared. Four ports are declared, in
 `PUBLIC_LISTENERS` in `scripts/universe/release.sh`:
 
 | port | why it is public |
 | --- | --- |
 | 22 | SSH |
-| 8333 | Bitcoin Core peer to peer |
+| 8333 | Bitcoin Core mainnet peer to peer |
+| 38333 | Bitcoin Core Signet peer to peer |
 | 50001 | the peer restricted Fulcrum endpoint the other host reads |
 
 The listener gate also recognizes the host's NetBird DNS binding at
@@ -722,3 +723,76 @@ exchange while the established tunnel keeps serving. A new connection needs
 fork, exec, PAM and password file reads, all uncached IO, and proportional IO
 weight cannot beat a saturated queue. An established session does none of that
 per byte.
+
+## Independent overlay gateway updates
+
+The gateway reads the root-owned `overlay-route.json` in the Explorer state
+folder for each new HTTP request and WebSocket upgrade. Atomic replacement
+moves new traffic between the live and passive overlay slots. Requests and
+sockets already assigned to the prior slot keep that upstream. Portfolio v2
+remains enabled by default, preserving existing installations. Unprefixed
+`/v2/universe` paths return 404 instead of the application shell.
+
+A gateway-only update may use a versioned component directory under
+`/opt/universe-explorer/gateway-components/<source-sha>` and a service override
+pointing to its `gateway.mjs`. Keep the existing working directory, environment,
+and socket unit. Verify the candidate on a spare loopback port before changing
+the service. Require the socket unit to be active during the restart, and check
+continuous HTTP responses and the route-control document afterward. Roll back
+by restoring the prior override and restarting with the same socket still held.
+
+The override is maintained deployment configuration. A later complete Explorer
+release must either update that component pointer or remove the override after
+proving its bundled gateway supports `universe-overlay-route-v1`. Do not leave
+an older component pinned accidentally. The overlay release tool serializes
+cutovers with `/run/lock/universe-explorer-deploy.lock` and preserves the current
+Portfolio v2 exposure when called with `--defer-gateway`.
+## Time Machine observed history storage
+
+The history API retains actual backend observations. It does not reconstruct
+transactions unseen between polls, earlier archive history, or downtime. Check
+`GET /api/v1/intelligence/history/coverage` before relying on replay results:
+`observed_through_utc`, `coverage_gaps`, and `persistence.error` describe the
+available window. A timestamp after the last observation is partial. Replay
+across restart, failed-poll, or incomplete-poll gaps is refused until a later
+synchronized checkpoint can anchor the requested state.
+
+The default snapshot is `MEMPOOL.CACHE_DIR/time-machine-<network>.json.gz`.
+`UNIVERSE_TIME_MACHINE_HISTORY_PATH` overrides the base path. With
+`MEMPOOL.SPAWN_CLUSTER_PROCS`, each worker automatically appends
+`.worker-<workerId>` to either base path; the primary opens no store. The stable
+worker ID preserves that worker's history across replacement. Worker responses
+represent that worker's observed history; cached replay hashes are local to a
+worker and should use sticky routing when retrieved in a later request. This
+is not a shared archive or a cross-worker replay cache.
+
+Snapshots include a schema, network identity and checksum. Restoration validates
+every retained event and transaction and verifies checkpoint totals and hashes.
+Writes coalesce for 250 ms, serialize, and publish via atomic replacement. Bounds
+are 288 checkpoints, 50,000 lifecycle events, 1,024 gap intervals, 64 MiB serialized
+body and 128 MiB decoded envelope. Retained snapshots validate at most two million
+transaction entries. Reaching a storage bound or disk failure appears in
+`persistence.error`; it does not silently discard a corrupt file.
+
+An exclusive `<snapshot>.writer-lock` directory protects each writer's lifetime.
+Its uniquely named JSON owner record identifies host, PID and token. A competing
+writer fails closed. A restart reclaims a token only when the host matches and
+an OS PID check conclusively returns `ESRCH` (process gone); a live process,
+`EPERM`, unknown host or malformed owner record is never reclaimed automatically.
+The token-specific unlink prevents a stale contender from deleting a replacement
+writer's lock. For an invalid lock, inspect the owner and confirm no writer uses
+the path before operator removal. Preserve malformed snapshots for diagnosis
+and configure a fresh path if continued observation is required.
+
+Normal termination allows at most five seconds for pending history writes.
+Uncaught exceptions and unhandled rejections exit without serializing potentially
+inconsistent application state; the previous atomic snapshot remains available.
+A killed process can lose its latest coalescing window. Restart coverage reports
+the resulting observation gap. Back up the snapshot only after an orderly stop,
+or copy a published snapshot and validate it before use.
+
+## UTXO evidence sources and bounded projection
+
+UTXO checkpoints require a synced coinstatsindex on the already configured owned Core node. No full-set scan fallback is started by an HTTP read. For a complete small-chain projection, an operator can set UNIVERSE_UTXO_PROJECTION_PATH to a dedicated durable file. It reconstructs from genesis on demand, preserves exact outpoints and undo across restart, and reconciles independent MuHash/count/value at the same canonical block. Worker-specific writer isolation, capacity limits and rebuild requirements apply. This bounded implementation is not a mainnet-scale index.
+
+See [UTXO Intelligence operator details](../product/UTXO-INTELLIGENCE.md) before configuring it. Missing protocol indexes and Utreexo bridges remain independent unavailable evidence sources. No production settings were changed by the candidate audit.

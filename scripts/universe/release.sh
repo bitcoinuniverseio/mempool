@@ -22,8 +22,8 @@ RELEASES="$ROOT/releases"
 CURRENT="$ROOT/current"
 CONF=/etc/universe-explorer
 UNITS="universe-explorer-backend universe-explorer-overlay universe-explorer-gateway"
-GATEWAY=http://127.0.0.1:8099
-BACKEND=http://127.0.0.1:8996
+GATEWAY=${UNIVERSE_RELEASE_GATEWAY:-http://127.0.0.1:8099}
+BACKEND=${UNIVERSE_RELEASE_BACKEND:-http://127.0.0.1:8996}
 OVERLAY=http://127.0.0.1:3400
 
 # The address the gates ask about. It is the receiving output of the first
@@ -37,6 +37,26 @@ GENESIS_HASH=000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f
 
 log()  { printf '%s %s\n' "$(date -u +%H:%M:%SZ)" "$*"; }
 fail() { printf '%s FAILED: %s\n' "$(date -u +%H:%M:%SZ)" "$*" >&2; exit 1; }
+
+# A release probe checks history as well as readiness. Alternate networks need
+# an operator-supplied address with real indexed history; an empty deterministic
+# readiness address cannot satisfy this release contract.
+select_address_probe() {
+  local network=$1
+  case "$network" in
+    mainnet) GENESIS_HASH=000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f ;;
+    signet) GENESIS_HASH=00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6 ;;
+    testnet) GENESIS_HASH=000000000933ea01ad0ee984209779baaec3ced90fa3f408719526f8d77f4943 ;;
+    testnet4) GENESIS_HASH=00000000da84f2bafbbc53dee25a72ae507ff4914b867c565be350b0da8bf043 ;;
+    regtest) GENESIS_HASH=0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206 ;;
+    *) fail "unsupported release probe network: $network" ;;
+  esac
+  ADDRESS_PROBE=${UNIVERSE_RELEASE_ADDRESS_PROBE:-}
+  if [ "$network" = mainnet ]; then
+    ADDRESS_PROBE=${ADDRESS_PROBE:-1Q2TWHE3GMdB6BZKafqwxXtWAWgFt5Jvm3}
+  fi
+  [ -n "$ADDRESS_PROBE" ] || fail "set UNIVERSE_RELEASE_ADDRESS_PROBE to a $network address with indexed history"
+}
 
 release_dir() { printf '%s/mempool-%s' "$RELEASES" "$1"; }
 
@@ -245,6 +265,7 @@ NODE
 # says nothing about whether the thing behind it has an index, is on this
 # chain, has caught up, or can answer the three questions an address page asks.
 gate_address_backend() {
+  select_address_probe "$(conf_value MEMPOOL.NETWORK | tr -d '\"')"
   local backend; backend=$(conf_value MEMPOOL.BACKEND | tr -d '"')
 
   if [ "$backend" = none ]; then
@@ -264,10 +285,10 @@ PYGATE
 
   [ "$backend" = esplora ] || fail "MEMPOOL.BACKEND is $backend, which is not an address backend this deployment knows how to gate"
 
-  python3 - "$ADDRESS_PROBE" "$GENESIS_HASH" <<'PYGATE' || fail "the first-party address index is not ready to serve this release"
+  python3 - "$ADDRESS_PROBE" "$GENESIS_HASH" "$BACKEND" <<'PYGATE' || fail "the first-party address index is not ready to serve this release"
 import json, sys, urllib.request, urllib.error
 
-probe, genesis = sys.argv[1], sys.argv[2]
+probe, genesis, backend_origin = sys.argv[1], sys.argv[2], sys.argv[3]
 conf = json.load(open('/etc/universe-explorer/backend.json'))
 esplora = conf.get('ESPLORA') or {}
 base = esplora.get('REST_API_URL')
@@ -307,7 +328,7 @@ if indexed_genesis != genesis:
     sys.exit(1)
 
 try:
-    with urllib.request.urlopen('http://127.0.0.1:8996/api/v1/backend-info', timeout=20) as answer:
+    with urllib.request.urlopen(backend_origin + '/api/v1/backend-info', timeout=20) as answer:
         core_tip = json.loads(answer.read())['chainSync']['blocks']
 except Exception as error:
     print(f'could not read the Bitcoin Core height to compare against: {error}')
@@ -420,7 +441,10 @@ PY
 # left. A service that has to be reachable from another host is added to
 # PUBLIC_LISTENERS deliberately, with a reason, rather than discovered in
 # production.
-PUBLIC_LISTENERS="22 8333 50001"
+# Signet P2P is intentionally public, like mainnet P2P. The adapter on
+# 38385 and gateway ingress on 8099 are not globally public exceptions:
+# their binding and peer filtering must be proved before permitting them.
+PUBLIC_LISTENERS="22 8333 38333 50001"
 
 gate_private_listeners() {
   command -v ss >/dev/null 2>&1 || fail "ss is not available, so the listener gate cannot run"
@@ -581,6 +605,7 @@ PY
 # document cannot tell you: that the route in front of it works, and that the
 # process answering it is the one that is supposed to.
 gate_live_address() {
+  select_address_probe "$(conf_value MEMPOOL.NETWORK | tr -d '\"')"
   python3 - "$GATEWAY" "$BACKEND" "$ADDRESS_PROBE" <<'PYADDRESS' || return 1
 import json, sys, urllib.request, urllib.error
 
