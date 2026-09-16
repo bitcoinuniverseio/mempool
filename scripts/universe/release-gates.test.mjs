@@ -230,9 +230,11 @@ test('other ports on the declared NetBird address remain exposed', () => {
 function runListenerGate(lines) {
   const gate = script.match(/^gate_private_listeners\(\) \{$[\s\S]*?^\}$/m)?.[0];
   const allowed = script.match(/^PUBLIC_LISTENERS=.*$/m)?.[0];
-  assert.ok(gate && allowed);
+  const netbirdIngress = script.match(/^NETBIRD_GATEWAY_INGRESS=.*$/m)?.[0];
+  assert.ok(gate && allowed && netbirdIngress);
   return bash(`
 ${allowed}
+${netbirdIngress}
 ss() { printf '%s\\n' "$SS_OUTPUT"; }
 log() { printf '%s\\n' "$*"; }
 fail() { printf '%s\\n' "$*" >&2; exit 1; }
@@ -259,12 +261,16 @@ test('release address probe uses the configured network and requires real altern
   assert.notEqual(run('unknown', 'address').status, 0);
 });
 
-test('Signet P2P is permitted without permitting adapter or ingress ports', () => {
+test('Signet P2P and the exact NetBird ingress binding are permitted without wildcard ingress', () => {
   const peer = runListenerGate(['LISTEN 0 4096 0.0.0.0:38333 0.0.0.0:*']);
   assert.equal(peer.status, 0, peer.stdout + peer.stderr);
   for (const port of [38385, 8099]) {
     for (const address of ['0.0.0.0', '[::]', '159.195.109.76', '100.124.130.242']) {
       const result = runListenerGate([`LISTEN 0 4096 ${address}:${port} 0.0.0.0:*`]);
+      if (port === 8099 && address === '100.124.130.242') {
+        assert.equal(result.status, 0, result.stdout + result.stderr);
+        continue;
+      }
       assert.notEqual(result.status, 0, `${address}:${port} passed without verified peer filtering`);
       assert.match(result.stderr, new RegExp(String(port)));
     }
