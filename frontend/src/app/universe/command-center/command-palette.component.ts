@@ -7,7 +7,7 @@ import { StateService } from '@app/services/state.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { UniverseSearchResponse } from '@app/universe/universe.types';
 import { explorerChainFromUrl } from '@app/universe/universe-chain-routing';
-import { Subject, of } from 'rxjs';
+import { Subject, of, timer, merge } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, map, switchMap } from 'rxjs/operators';
 import {
   CommandCandidate,
@@ -96,6 +96,8 @@ export class CommandPaletteComponent {
 
   private readonly remoteCandidates = signal<readonly CommandCandidate[]>([]);
   private readonly queryText$ = new Subject<string>();
+  private revision=0; private destroyed=false;
+  private invalidate():void {this.revision++;this.remoteCandidates.set([]);this.remoteFailures.set([]);this.queryText$.next('');}
   private lastFocus: HTMLElement | null = null;
 
   /** The parsed view of the current input. Chips and text render from this. */
@@ -149,20 +151,16 @@ export class CommandPaletteComponent {
      * like key material never reaches this stream at all.
      */
     this.queryText$.pipe(
-      debounceTime(250),
-      distinctUntilChanged(),
-      switchMap((text) => {
-        const parsed = parseCommandQuery(text);
-        if (!parsed.text || looksSecretLike(parsed.text)) {
-          return of(null);
-        }
-        return this.universeApi.search$(parsed.text, this.activeChain, this.allChains()).pipe(
-          catchError(() => of(null)),
-        );
+      switchMap(text=>{
+        const parsed=parseCommandQuery(text), revision=this.revision;
+        if(!parsed.text || looksSecretLike(text) || looksSecretLike(parsed.text)) return of(null);
+        const chain=this.activeChain,all=this.allChains();
+        return timer(250).pipe(switchMap(()=>this.universeApi.search$(parsed.text,chain,all)),catchError(()=>of(null)),map(response=>revision===this.revision?response:null));
       }),
-      map((response) => this.absorbRemote(response)),
-      takeUntilDestroyed(this.destroyRef),
+      map(response=>this.absorbRemote(response)),takeUntilDestroyed(this.destroyRef),
     ).subscribe();
+    merge(this.router.events,this.stateService.networkChanged$).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(()=>{this.invalidate();if(this.open())this.queryText$.next(this.value());});
+    this.destroyRef.onDestroy(()=>{this.destroyed=true;this.invalidate();});
   }
 
   /** The active chain, from wherever in the explorer the palette was opened. */
@@ -192,6 +190,7 @@ export class CommandPaletteComponent {
 
   hide(): void {
     if (!this.open()) { return; }
+    this.invalidate();
     this.open.set(false);
     this.mode.set('results');
     this.selected.set(null);
@@ -231,6 +230,7 @@ export class CommandPaletteComponent {
   }
 
   onValueChange(text: string): void {
+    this.invalidate();
     this.value.set(text);
     this.selected.set(null);
     this.queryText$.next(text);
@@ -260,7 +260,7 @@ export class CommandPaletteComponent {
 
   saveCurrent(): void {
     const query = this.value().trim();
-    if (!query) { return; }
+    if (!query || looksSecretLike(query) || this.secretLike()) { return; }
     saveQuery(safeStorage(), query);
     this.saved.set(loadSaved(safeStorage()));
   }
@@ -271,6 +271,7 @@ export class CommandPaletteComponent {
   }
 
   toggleAllChains(): void {
+    this.invalidate();
     this.allChains.set(!this.allChains());
     if (this.value().trim()) {
       this.queryText$.next(this.value());
@@ -323,6 +324,7 @@ export class CommandPaletteComponent {
     const file = input.files?.[0];
     input.value = '';
     if (!file) { return; }
+    this.invalidate(); const revision=this.revision;
     if (!('BarcodeDetector' in window)) {
       this.qrMessage.set('This browser cannot read QR images.');
       return;
@@ -330,8 +332,8 @@ export class CommandPaletteComponent {
     try {
       const detector = new (window as any).BarcodeDetector({ formats: ['qr_code'] });
       const bitmap = await createImageBitmap(file);
-      const codes = await detector.detect(bitmap);
-      bitmap.close?.();
+      let codes:any;try {codes=await detector.detect(bitmap);}finally{bitmap.close?.();}
+      if(this.destroyed || revision!==this.revision) return;
       const value = codes?.[0]?.rawValue ?? null;
       if (value) {
         this.setMode('results');
@@ -341,13 +343,16 @@ export class CommandPaletteComponent {
         this.qrMessage.set('No QR code found in that image.');
       }
     } catch {
+      if(this.destroyed || revision!==this.revision) return;
       this.qrMessage.set('The image could not be read.');
     }
   }
 
   async pasteFromClipboard(): Promise<void> {
+    this.invalidate();const revision=this.revision;
     try {
       const text = await navigator.clipboard.readText();
+      if(this.destroyed || revision!==this.revision) return;
       if (text) {
         this.setMode('results');
         this.onValueChange(text.trim());
@@ -355,6 +360,7 @@ export class CommandPaletteComponent {
         this.qrMessage.set('The clipboard is empty.');
       }
     } catch {
+      if(this.destroyed || revision!==this.revision) return;
       this.qrMessage.set('The browser refused clipboard access. Paste into the field instead.');
     }
   }

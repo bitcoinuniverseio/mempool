@@ -9,28 +9,33 @@ export interface ConsensusProposal {
   title: string;
   author: string;
   proposal_type: 'covenant' | 'arithmetic' | 'introspection' | 'upgrade';
-  status: 'draft' | 'proposed' | 'active_discussion' | 'superseded';
+  status:
+    'draft' | 'proposed' | 'active_discussion' | 'superseded' | 'complete';
   covenant_type: 'recursive' | 'non_recursive' | 'general';
   activation_mechanism: string;
   spec_url: string;
   summary: string;
   opcodes: string[];
-  expressiveness_score: number;
-  security_surface_rating: 'minimal' | 'moderate' | 'complex';
+  expressiveness_score: number | null;
+  security_surface_rating: 'minimal' | 'moderate' | 'complex' | null;
   created_at: string;
 }
 
 export interface CovenantSimulationResult {
   simulation_id: string;
   proposal_id: string;
-  valid: boolean;
+  valid: boolean | null;
+  template_matches: boolean;
+  calculated_template_hash: string;
+  committed_template_hash: string;
+  scope: string;
   state_transitions: {
     from_state: string;
     to_state: string;
     trigger: string;
     delay_blocks?: number;
   }[];
-  witness_weight_estimate: number;
+  witness_weight_estimate: number | null;
   covenant_restrictions_summary: string[];
 }
 
@@ -42,6 +47,7 @@ export interface VaultDesignTemplate {
   hot_key_threshold: number;
   recovery_delay_blocks: number;
   auto_cancel_available: boolean;
+  execution_scope: string;
 }
 
 export interface ConsensusLabOverview {
@@ -49,7 +55,8 @@ export interface ConsensusLabOverview {
   covenant_types: { type: string; count: number }[];
   featured_proposals: ConsensusProposal[];
   vault_templates: VaultDesignTemplate[];
-  last_updated: string;
+  last_updated: string | null;
+  source_basis: string;
 }
 
 @Injectable({
@@ -70,6 +77,18 @@ export class ConsensusApiService {
         ':' +
         this.stateService.env.NGINX_PORT;
     }
+    const origin = this.apiBaseUrl;
+    const update = (network: string) => {
+      this.apiBaseUrl =
+        origin +
+        (network &&
+        network !== 'mainnet' &&
+        network !== this.stateService.env.ROOT_NETWORK
+          ? '/' + network
+          : '');
+    };
+    update(this.stateService.network);
+    this.stateService.networkChanged$.subscribe(update);
   }
 
   getOverview$(): Observable<ConsensusLabOverview> {
@@ -99,10 +118,12 @@ export class ConsensusApiService {
   simulateCovenant$(req: {
     proposal_id: string;
     covenant_script: string;
-    deposit_sats: number;
-    timelock_blocks: number;
-    recovery_pubkey: string;
-    unvault_pubkey: string;
+    deposit_sats?: number;
+    timelock_blocks?: number;
+    recovery_pubkey?: string;
+    unvault_pubkey?: string;
+    transaction_hex?: string;
+    input_index?: number;
   }): Observable<CovenantSimulationResult> {
     return this.httpClient.post<CovenantSimulationResult>(
       `${this.apiBaseUrl}/api/v1/intelligence/consensus/simulations`,

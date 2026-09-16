@@ -61,14 +61,14 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
               <div class="col-6">
                 <div class="p-2 border rounded bg-body">
                   <div class="text-muted small">Fee Rate</div>
-                  <div class="fw-bold">{{ m.published_terms.fee_rate_basis_points / 100 }}%</div>
+                  <div class="fw-bold">{{ m.published_terms.fee_rate_basis_points ?? 'Unknown' }}</div>
                 </div>
               </div>
               <div class="col-6">
                 <div class="p-2 border rounded bg-body">
                   <div class="text-muted small">Swap Limits</div>
                   <div class="fw-bold font-monospace small">
-                    {{ m.published_terms.min_amount_sat | number }} &ndash; {{ m.published_terms.max_amount_sat | number }} sat
+                    {{ m.published_terms.min_amount_sat ?? 'Unknown' }} &ndash; {{ m.published_terms.max_amount_sat ?? 'Unknown' }} sat
                   </div>
                 </div>
               </div>

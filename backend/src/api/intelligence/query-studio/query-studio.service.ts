@@ -125,17 +125,21 @@ export class QueryStudioService {
       throw new IdentityError('invalid_sql', `sql must be 1 to ${SAVED_QUERY_LIMITS.sqlLength} characters`, 400);
     }
     const store = ownerStore();
-    if ((await store.countSavedQueries(owner.owner_id, config.MEMPOOL.NETWORK)) >= SAVED_QUERY_LIMITS.perOwner) {
-      throw new IdentityError('quota', `an owner may keep at most ${SAVED_QUERY_LIMITS.perOwner} saved queries`, 409);
-    }
     const now = new Date().toISOString();
     const row = { query_id: EventEnvelopeValidator.generateUuidV7(), owner_id: owner.owner_id, network: config.MEMPOOL.NETWORK, title: title.trim(), sql_text: sql, created_at: now, updated_at: now };
-    await store.insertSavedQuery(row);
+    if (!await store.insertSavedQueryWithinQuota(row, SAVED_QUERY_LIMITS.perOwner)) throw new IdentityError('quota', 'Saved-query quota reached.', 409);
     return { query_id: row.query_id, owner_id: row.owner_id, title: row.title, sql: row.sql_text, created_at: row.created_at, updated_at: row.updated_at };
   }
 
+  public async getSavedQueryPage(owner: AuthenticatedOwner, limit = 200, before?: string): Promise<{saved_queries: SavedQueryRecord[]; count:number; next_cursor:string|null; complete:boolean}> {
+    if(!Number.isSafeInteger(limit)||limit<1||limit>200||before!==undefined&&!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(before))throw new IdentityError('invalid_page','Use an integer limit from1 to200 and a valid saved-query cursor.',400);
+    const rows=await ownerStore().listSavedQueries(owner.owner_id,config.MEMPOOL.NETWORK,limit+1,before);
+    const selected=rows.slice(0,limit),more=rows.length>limit;
+    return {saved_queries:selected.map(row=>({query_id:row.query_id,owner_id:row.owner_id,title:row.title,sql:row.sql_text,created_at:row.created_at,updated_at:row.updated_at})),count:selected.length,next_cursor:more?selected[selected.length-1].query_id:null,complete:!more};
+  }
+
   /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */
-  public async getSavedQueries(owner: AuthenticatedOwner, limit = 100): Promise<SavedQueryRecord[]> {
+  public async getSavedQueries(owner: AuthenticatedOwner, limit = 200): Promise<SavedQueryRecord[]> {
     const rows = await ownerStore().listSavedQueries(owner.owner_id, config.MEMPOOL.NETWORK, Math.max(1, Math.min(200, limit)));
     return rows.map(row => ({ query_id: row.query_id, owner_id: row.owner_id, title: row.title, sql: row.sql_text, created_at: row.created_at, updated_at: row.updated_at }));
   }

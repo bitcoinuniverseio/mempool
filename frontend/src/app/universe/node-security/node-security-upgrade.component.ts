@@ -1,89 +1,148 @@
-import { Component } from '@angular/core';
+import {
+  Component,
+  Inject,
+  ChangeDetectorRef,
+  OnInit,
+  OnDestroy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { FormsModule } from '@angular/forms';
-import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
-import { NodeSecurityApiService } from './node-security.service';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
-
+import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
+import {
+  NodeSecurityApiService,
+  UpgradeWavePlan,
+} from './node-security.service';
+import {
+  NodeSecurityEvidenceComponent,
+  securityError,
+} from './node-security-evidence.component';
 @Component({
   selector: 'app-node-security-upgrade',
   standalone: true,
-  imports: [RelativeUrlPipe, CommonModule, RouterModule, FormsModule],
-  template: `
-    <div class="container-xl py-4">
-      <div class="alert alert-warning" role="alert" *ngIf="loadError">
-        {{ loadError }}
-      </div>
-      <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
-        <div>
-          <h1 class="h2 mb-1">Fleet Upgrade Readiness Assessment</h1>
-          <p class="text-muted mb-0">Evaluate breaking configuration changes, database migrations, and safe rollout sequencing.</p>
-        </div>
-        <a [routerLink]="'/node/security' | relativeUrl" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
-      </div>
-
-      <div class="row g-4">
-        <div class="col-lg-5">
-          <div class="card bg-dark border-secondary p-3">
-            <h5 class="card-title mb-3">Generate Upgrade Plan</h5>
-            <div class="mb-3">
-              <label class="form-label text-muted small text-uppercase" for="node-security-upgrade-release">Target Release</label>
-              <select class="form-select bg-black text-light border-secondary" id="node-security-upgrade-release" [(ngModel)]="targetVersion">
-                <option value="v28.0">Bitcoin Core v28.0 (Latest Stable)</option>
-                <option value="v27.1">Bitcoin Core v27.1 (LTS Maintenance)</option>
-              </select>
-            </div>
-            <button class="btn btn-primary w-100" (click)="generatePlan()" [disabled]="generating">
-              {{ generating ? 'Analyzing Fleet Dependencies...' : 'Generate Safe Migration Plan' }}
-            </button>
-          </div>
-        </div>
-
-        <div class="col-lg-7">
-          <div class="card bg-dark border-secondary p-4 h-100" *ngIf="plan">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-              <h5 class="card-title text-success mb-0">Upgrade Plan: {{ plan.plan_id }}</h5>
-              <span class="badge bg-info">{{ plan.affected_nodes_count }} Nodes Affected</span>
-            </div>
-
-            <ol class="list-group list-group-numbered list-group-flush bg-transparent">
-              <li *ngFor="let step of plan.steps" class="list-group-item bg-transparent text-light border-secondary">
-                {{ step }}
-              </li>
-            </ol>
-          </div>
-
-          <div class="card bg-dark border-secondary p-5 text-center h-100 d-flex justify-content-center" *ngIf="!plan">
-            <p class="text-muted mb-0">Select target version and click "Generate Safe Migration Plan".</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  `
+  imports: [CommonModule, FormsModule, RouterModule, RelativeUrlPipe],
+  template: ` <div class="container-xl py-4">
+    <h1>Fleet Upgrade Readiness Assessment</h1>
+    <a [routerLink]="'/node/security' | relativeUrl">Node security overview</a>
+    <p>
+      A plan requires the owned fleet inventory, release compatibility and
+      configuration evidence. No upgrade is executed here.
+    </p>
+    <form (ngSubmit)="generatePlan()">
+      <label for="upgrade-from">Current version</label
+      ><input
+        id="upgrade-from"
+        class="form-control mb-3"
+        name="from"
+        maxlength="128"
+        [(ngModel)]="fromVersion"
+        (ngModelChange)="reset()"
+        required
+      />
+      <label for="upgrade-target">Target version</label
+      ><input
+        id="upgrade-target"
+        class="form-control mb-3"
+        name="target"
+        maxlength="128"
+        [(ngModel)]="targetVersion"
+        (ngModelChange)="reset()"
+        required
+      />
+      <button
+        class="btn btn-primary"
+        [disabled]="generating || !fromVersion.trim() || !targetVersion.trim()"
+      >
+        {{
+          generating ? 'Reading fleet evidence…' : 'Request upgrade assessment'
+        }}
+      </button>
+    </form>
+    <p *ngIf="loadError" role="alert" class="alert alert-warning mt-3">
+      {{ loadError }}
+    </p>
+    <section *ngIf="plan">
+      <h2>Upgrade plan {{ plan.plan_id }}</h2>
+      <p>
+        {{ plan.target_software }} · {{ plan.from_version }} to
+        {{ plan.target_version }} · {{ plan.nodes_count }} nodes
+      </p>
+      <h3>Required intermediate versions</h3>
+      <p>
+        {{ plan.intermediate_versions_required.join(', ') || 'None reported' }}
+      </p>
+      <h3>Configuration changes</h3>
+      <p *ngFor="let c of plan.configuration_changes_required">
+        {{ c.option }} · {{ c.action }} · {{ c.notes }}
+      </p>
+      <h3>Canary stages</h3>
+      <ol>
+        <li *ngFor="let s of plan.canary_stages">
+          Stage {{ s.stage_number }}: {{ s.node_ids.join(', ') }} · verify for
+          {{ s.verification_wait_minutes }} minutes
+        </li>
+      </ol>
+      <p>Rollback boundary: {{ plan.rollback_boundary }}</p>
+      <p>Estimated downtime: {{ plan.estimated_downtime_seconds }} seconds</p>
+      <p>This assessment is not an executed or verified fleet upgrade.</p>
+    </section>
+  </div>`,
 })
-export class NodeSecurityUpgradeComponent {
-  public targetVersion = 'v28.0';
-  public generating = false;
-  public plan: any = null;
-
-  public loadError: string | null = null;
-
-  constructor(private api: NodeSecurityApiService) {}
-
-  public generatePlan(): void {
+export class NodeSecurityUpgradeComponent implements OnInit, OnDestroy {
+  fromVersion = '';
+  targetVersion = '';
+  generating = false;
+  plan: UpgradeWavePlan | null = null;
+  loadError: string | null = null;
+  private request?: Subscription;
+  private network?: Subscription;
+  constructor(
+    @Inject(NodeSecurityApiService) private api: NodeSecurityApiService,
+    @Inject(ChangeDetectorRef) private cdr: ChangeDetectorRef
+  ) {}
+  ngOnInit(): void {
+    this.network = this.api.network$.subscribe(() => this.reset());
+  }
+  reset(): void {
+    this.request?.unsubscribe();
+    this.plan = null;
+    this.loadError = null;
+    this.generating = false;
+    this.cdr.markForCheck();
+  }
+  generatePlan(): void {
+    this.reset();
+    const from_version = this.fromVersion.trim(),
+      target_version = this.targetVersion.trim();
+    if (
+      !from_version ||
+      !target_version ||
+      from_version.length > 128 ||
+      target_version.length > 128
+    ) {
+      this.loadError =
+        'Enter both release versions, at most 128 characters each.';
+      return;
+    }
     this.generating = true;
-    this.api.createUpgradePlan$({ target_version: this.targetVersion }).subscribe({
-      next: res => {
-        this.plan = res;
-        this.generating = false;
-        this.loadError = null;
-      },
-      error: err => {
-        this.plan = null;
-        this.generating = false;
-        this.loadError = loadFailureMessage(classifyLoadFailure(err));
-      },
-    });
+    this.request = this.api
+      .createUpgradePlan$({ from_version, target_version })
+      .subscribe({
+        next: (p) => {
+          this.plan = p;
+          this.generating = false;
+          this.cdr.markForCheck();
+        },
+        error: (e) => {
+          this.loadError = securityError(e);
+          this.generating = false;
+          this.cdr.markForCheck();
+        },
+      });
+  }
+  ngOnDestroy(): void {
+    this.reset();
+    this.network?.unsubscribe();
   }
 }

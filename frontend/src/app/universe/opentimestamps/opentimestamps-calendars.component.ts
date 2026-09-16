@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
@@ -28,6 +29,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
       <p class="text-muted" *ngIf="loading" role="status">Loading</p>
 
       <div class="card" *ngIf="!loading && !loadError">
+        <p class="small p-3">Counts cover bounded local record windows, not calendar-wide activity. Current anchors are checked against the owned chain at read time.</p>
         <p class="text-muted p-3 mb-0" *ngIf="!calendars.length">No calendar is configured.</p>
         <div class="table-responsive" tabindex="0" role="region" aria-label="Calendar servers, scroll horizontally" i18n-aria-label *ngIf="calendars.length">
           <table class="table table-hover mb-0">
@@ -36,7 +38,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                 <th>Calendar</th>
                 <th>Status</th>
                 <th>Promised, not anchored</th>
-                <th>Anchored here</th>
+                <th>Current chain verified</th>
                 <th>Latest block</th>
                 <th>Last observed</th>
               </tr>
@@ -52,8 +54,8 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                     {{ c.health_status | uppercase }}
                   </span>
                 </td>
-                <td>{{ c.pending_attestations_count | number }}</td>
-                <td>{{ c.anchored_proofs_count | number }}</td>
+                <td>{{ c.pending_coverage?.complete === false ? 'At least ' : '' }}{{ c.pending_attestations_count | number }}</td>
+                <td>{{ c.anchored_coverage?.complete === false ? 'At least ' : '' }}{{ c.anchored_proofs_count | number }}</td>
                 <td class="fw-bold">{{ c.last_anchor_block_height ?? 'none yet' }}</td>
                 <td class="small text-muted">{{ c.health_observed_at ? (c.health_observed_at | date:'short') : 'not yet' }}</td>
               </tr>
@@ -67,7 +69,9 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
     .badge-offline { color: #fff; background: var(--u-state-unavailable, #c0392b); }
   `],
 })
-export class OpenTimestampsCalendarsComponent implements OnInit {
+export class OpenTimestampsCalendarsComponent implements OnInit, OnDestroy {
+  private subscription?: Subscription;
+  public ngOnDestroy(): void { this.subscription?.unsubscribe(); }
   public calendars: TimestampCalendar[] = [];
   public loadError: string | null = null;
   public loading = true;
@@ -75,17 +79,11 @@ export class OpenTimestampsCalendarsComponent implements OnInit {
   constructor(private api: OpenTimestampsApiService) {}
 
   public ngOnInit(): void {
-    this.api.getCalendars$().subscribe({
-      next: res => {
-        this.calendars = res ?? [];
-        this.loadError = null;
-        this.loading = false;
-      },
-      error: err => {
-        this.calendars = [];
-        this.loadError = loadFailureMessage(classifyLoadFailure(err));
-        this.loading = false;
-      },
+    this.subscription = this.api.watch(() => this.api.getCalendars$()).subscribe(state => {
+      this.loading = state.loading;
+      this.loadError = state.error ? loadFailureMessage(classifyLoadFailure(state.error)) : null;
+      this.calendars = state.value ?? [];
+
     });
   }
 }

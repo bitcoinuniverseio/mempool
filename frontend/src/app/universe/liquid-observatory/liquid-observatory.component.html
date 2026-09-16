@@ -16,14 +16,32 @@
     <a [routerLink]="['/liquid/unblind' | relativeUrl]">Unblinding Workspace</a>
   </nav>
 
+  <section class="panel">
+    <h2>Owned Elements Checkpoint</h2>
+    <label for="elementsNetwork">Source network</label>
+    <select id="elementsNetwork" [(ngModel)]="network" (ngModelChange)="refreshNode()"><option value="liquidv1">Liquid mainnet</option><option value="liquidtestnet">Liquid testnet</option><option value="elementsregtest">Isolated Elements regtest</option></select>
+    <button type="button" (click)="refreshNode()">Refresh checkpoint</button>
+    <ng-container *ngIf="node$ | async as state">
+      <p *ngIf="state.loading" aria-busy="true">Reading the owned node checkpoint...</p>
+      <p *ngIf="state.error" role="alert">{{ state.error }}</p>
+      <ng-container *ngIf="state.node as node">
+        <p>Network: {{ node.network }} · Height: {{ node.blockHeight }} · Initial synchronization: {{ node.initialBlockDownload ? 'in progress' : 'complete' }}</p>
+        <p class="mono">{{ node.blockHash }}</p>
+        <p>Block signing policy: <span class="mono">{{ node.signblockScript }}</span></p>
+        <p>Peg program: <span class="mono">{{ node.fedpegProgram }}</span></p>
+        <p>These are node-reported checkpoint and policy bytes. Signer liveness, peg reserves and asset registry coverage remain unavailable.</p>
+      </ng-container>
+    </ng-container>
+  </section>
+
   <ng-container *ngIf="vm$ | async as vm">
     <div *ngIf="vm.kind === 'loading'" class="panel" aria-busy="true">
       <p>Reading Liquid Elements node and federation state...</p>
     </div>
 
     <div *ngIf="vm.kind === 'error'" class="panel">
-      <h2>Liquid Elements Node Offline</h2>
-      <p>Could not connect to Universe first-party Liquid node.</p>
+      <h2>Full Observatory Evidence Unavailable</h2>
+      <p>Complete peg, registry and federation observations are not available from the configured sources.</p>
       <p role="alert">{{ vm.message }}</p>
     </div>
 

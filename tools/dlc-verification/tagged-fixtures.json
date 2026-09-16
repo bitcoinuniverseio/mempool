@@ -1,0 +1,106 @@
+[
+  {
+    "announcement": {
+      "protocol_revision": "dlcspecs-tagged-v0",
+      "oracle_public_key": "2bda68b3aa0239d382f185ca2d8c31ce604cc26220cef3eb65223f47a0088d87",
+      "event_id": "Synthetic NFC event",
+      "event_descriptor": {
+        "type": "enumerated",
+        "outcomes": [
+          "Å",
+          "sunny"
+        ]
+      },
+      "event_maturity_epoch": 1700000000,
+      "nonces": [
+        "30e8a4b5a96ae2d4b8a64c7764c317bb017da8ce398d6bcb2f6887d6f71d2584"
+      ],
+      "announcement_signature": "c0e039ff212dfa9bbe95cc1bd6d6da968ff4489e6f6859993278c7d85b454f0b041ea0bb39cb96e1699bc2206cb91a29ec3e69b022aad9e0ae65364682bfc82e"
+    },
+    "attestation": {
+      "announcement": {
+        "protocol_revision": "dlcspecs-tagged-v0",
+        "oracle_public_key": "2bda68b3aa0239d382f185ca2d8c31ce604cc26220cef3eb65223f47a0088d87",
+        "event_id": "Synthetic NFC event",
+        "event_descriptor": {
+          "type": "enumerated",
+          "outcomes": [
+            "Å",
+            "sunny"
+          ]
+        },
+        "event_maturity_epoch": 1700000000,
+        "nonces": [
+          "30e8a4b5a96ae2d4b8a64c7764c317bb017da8ce398d6bcb2f6887d6f71d2584"
+        ],
+        "announcement_signature": "c0e039ff212dfa9bbe95cc1bd6d6da968ff4489e6f6859993278c7d85b454f0b041ea0bb39cb96e1699bc2206cb91a29ec3e69b022aad9e0ae65364682bfc82e"
+      },
+      "oracle_public_key": "2bda68b3aa0239d382f185ca2d8c31ce604cc26220cef3eb65223f47a0088d87",
+      "event_id": "Synthetic NFC event",
+      "outcomes": [
+        "Å"
+      ],
+      "signatures": [
+        "30e8a4b5a96ae2d4b8a64c7764c317bb017da8ce398d6bcb2f6887d6f71d258427ed61f95187e19cc3d021cc1aa04644b7d96632f7406f60c8ea012e80e37f96"
+      ]
+    },
+    "event_hex": "fdd82249000130e8a4b5a96ae2d4b8a64c7764c317bb017da8ce398d6bcb2f6887d6f71d25846553f100fdd8060b000202c3850573756e6e791353796e746865746963204e4643206576656e74"
+  },
+  {
+    "announcement": {
+      "protocol_revision": "dlcspecs-tagged-v0",
+      "oracle_public_key": "2bda68b3aa0239d382f185ca2d8c31ce604cc26220cef3eb65223f47a0088d87",
+      "event_id": "Synthetic numeric event",
+      "event_descriptor": {
+        "type": "numeric",
+        "base": 16,
+        "is_signed": true,
+        "num_digits": 2,
+        "unit": "units",
+        "precision": -2
+      },
+      "event_maturity_epoch": 1700000000,
+      "nonces": [
+        "6b0a157300ca6c3a669c30fc923ebbde29ddb298ca410b1cffa58caa5ea92cf7",
+        "31f42fb03019a001d6ade2433c634a2781c5d618603f1dc9f6dba59ab6f7cdb2",
+        "8e58e4373d90ddbddd8e6def8cf8add9e6b165acd74fb011d5558224d8760252"
+      ],
+      "announcement_signature": "53015fcef601af5b0462058c0073f93edb5b42e6f26019e2f4025f1a2f38d27a34b5cf00ed354ad5476a40305ddb32fb6f9a33ebf1529040896c066badf8d8db"
+    },
+    "attestation": {
+      "announcement": {
+        "protocol_revision": "dlcspecs-tagged-v0",
+        "oracle_public_key": "2bda68b3aa0239d382f185ca2d8c31ce604cc26220cef3eb65223f47a0088d87",
+        "event_id": "Synthetic numeric event",
+        "event_descriptor": {
+          "type": "numeric",
+          "base": 16,
+          "is_signed": true,
+          "num_digits": 2,
+          "unit": "units",
+          "precision": -2
+        },
+        "event_maturity_epoch": 1700000000,
+        "nonces": [
+          "6b0a157300ca6c3a669c30fc923ebbde29ddb298ca410b1cffa58caa5ea92cf7",
+          "31f42fb03019a001d6ade2433c634a2781c5d618603f1dc9f6dba59ab6f7cdb2",
+          "8e58e4373d90ddbddd8e6def8cf8add9e6b165acd74fb011d5558224d8760252"
+        ],
+        "announcement_signature": "53015fcef601af5b0462058c0073f93edb5b42e6f26019e2f4025f1a2f38d27a34b5cf00ed354ad5476a40305ddb32fb6f9a33ebf1529040896c066badf8d8db"
+      },
+      "oracle_public_key": "2bda68b3aa0239d382f185ca2d8c31ce604cc26220cef3eb65223f47a0088d87",
+      "event_id": "Synthetic numeric event",
+      "outcomes": [
+        "-",
+        "10",
+        "15"
+      ],
+      "signatures": [
+        "6b0a157300ca6c3a669c30fc923ebbde29ddb298ca410b1cffa58caa5ea92cf71c47fa6ffabb9ba7177b9829746bd5037fa83bb016422c528e8255e5b4d4429f",
+        "31f42fb03019a001d6ade2433c634a2781c5d618603f1dc9f6dba59ab6f7cdb2b0d2b824931a36e2452b9707a3f8365f0bf09081523b1f80310f2d37386af70f",
+        "8e58e4373d90ddbddd8e6def8cf8add9e6b165acd74fb011d5558224d876025278ee73f0f8b6127ec4f58fa0243024909159ea4621d2f4e8c258a19d54512fcc"
+      ]
+    },
+    "event_hex": "fdd8229000036b0a157300ca6c3a669c30fc923ebbde29ddb298ca410b1cffa58caa5ea92cf731f42fb03019a001d6ade2433c634a2781c5d618603f1dc9f6dba59ab6f7cdb28e58e4373d90ddbddd8e6def8cf8add9e6b165acd74fb011d5558224d87602526553f100fdd80a0e100105756e697473fffffffe00021753796e746865746963206e756d65726963206576656e74"
+  }
+]

@@ -16,9 +16,10 @@
     <h2>BIP21 Multi-Protocol Payment URI Inspector</h2>
     <div class="form-group">
       <label for="bip21Input">BIP21 URI String</label>
-      <input id="bip21Input" type="text" [(ngModel)]="bip21Uri" />
+      <input id="bip21Input" type="text" [(ngModel)]="bip21Uri" (ngModelChange)="clearBip21()" />
     </div>
     <button type="button" class="btn-primary" (click)="parseBip21()">Parse URI</button>
+    <p *ngIf="bip21Error" class="alert alert-danger" role="alert">{{ bip21Error }}</p>
 
     <div *ngIf="parsedBip21$ | async as p" style="margin-top: 1rem;">
       <table class="data-table">
@@ -27,9 +28,9 @@
             <td><strong>On-Chain Address</strong></td>
             <td class="mono">{{ p.address }}</td>
           </tr>
-          <tr *ngIf="p.amountBtc">
+          <tr *ngIf="p.amountSats !== undefined">
             <td><strong>Amount (BTC)</strong></td>
-            <td>{{ p.amountBtc }} BTC ({{ (Number(p.amountBtc) * 1e8).toLocaleString() }} sats)</td>
+            <td>{{ p.amountBtc }} BTC ({{ p.amountSats }} sats)</td>
           </tr>
           <tr *ngIf="p.label">
             <td><strong>Label</strong></td>
@@ -57,14 +58,16 @@
     <h2>BIP353 DNSSEC Human-Readable Name Resolver</h2>
     <div class="form-group">
       <label for="bip353Input">BIP353 Name (user@domain)</label>
-      <input id="bip353Input" type="text" [(ngModel)]="bip353Name" />
+      <input id="bip353Input" type="text" [(ngModel)]="bip353Name" (ngModelChange)="clearBip353()" />
     </div>
-    <button type="button" class="btn-primary" (click)="resolveBip353()">Resolve DNSSEC Name</button>
+    <button type="button" class="btn-primary" (click)="resolveBip353()" [disabled]="resolving">{{ resolving ? 'Verifying DNSSEC proof…' : 'Resolve DNSSEC Name' }}</button>
+    <p *ngIf="bip353Error" class="alert alert-danger" role="alert">{{ bip353Error }}</p>
 
     <div *ngIf="bip353$ | async as b" style="margin-top: 1rem;">
-      <p><strong>Resolved Address:</strong> <span class="mono">{{ b.resolvedAddress }}</span></p>
-      <p><strong>DNS TXT Record:</strong> <span class="mono">{{ b.txtRecord }}</span></p>
-      <p><span class="badge badge-success">DNSSEC Validated</span> Cryptographic DNS root signatures verified.</p>
+      <p *ngIf="b.resolvedAddress"><strong>Resolved Address:</strong>&nbsp;<span class="mono text-break">{{ b.resolvedAddress }}</span></p>
+      <p><strong>Payment instructions:</strong> {{ b.paymentMethods.join(', ') }}</p>
+      <p><strong>DNS TXT Record:</strong>&nbsp;<span class="mono text-break">{{ b.txtRecord }}</span></p>
+      <p *ngIf="b.dnssecValid"><span class="badge badge-success">DNSSEC Validated</span> DNS signatures verified locally to the DNS root.</p>
     </div>
   </section>
 </div>

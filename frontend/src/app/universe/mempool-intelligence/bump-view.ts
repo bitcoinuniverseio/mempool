@@ -33,12 +33,13 @@ export const MAX_TARGET = 10_000;
  */
 export function readTarget(raw: string | number | null | undefined): number | null {
   if (raw === null || raw === undefined || raw === '') { return null; }
-  const value = typeof raw === 'number' ? raw : Number(String(raw).trim());
+  const decimal = String(raw).trim();
+  if (!/^[0-9]{1,6}(\.[0-9]{1,3})?$/.test(decimal)) { return null; }
+  const value = Number(decimal);
   if (!Number.isFinite(value)) { return null; }
   if (value < MIN_TARGET || value > MAX_TARGET) { return null; }
-  // Three decimals is the most a fee rate carries, and the server refuses
-  // more, so refusing it here too keeps the two agreeing.
-  if (Math.round(value * 1000) !== value * 1000) { return null; }
+  // Validate decimal precision lexically: 1.001 * 1000 is not exactly an
+  // integer in binary floating point even though the input has three places.
   return value;
 }
 

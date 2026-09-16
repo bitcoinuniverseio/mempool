@@ -5,6 +5,7 @@ import { handleError } from '../../utils/api';
 import intelligence from './mempool-intelligence';
 import { $simulate, validateRawTxs } from './package-service';
 import { $planBumpFor, readTargetFeerate, MAX_TARGET_FEERATE } from './bump-service';
+import { MempoolSourceUnavailable } from './source-unavailable';
 
 const TXID = /^[a-f0-9]{64}$/i;
 
@@ -160,11 +161,15 @@ class MempoolIntelligenceRoutes {
       res.header('Cache-control', 'no-store');
       res.json(simulation);
     } catch (e: any) {
+      if (e instanceof MempoolSourceUnavailable) {
+        handleError(req, res, 503, e.message);
+        return;
+      }
       // A transaction the node cannot decode is the caller's error, not this
       // service failing, and it is reported as the former with the node's own
       // words rather than as an opaque five hundred.
       const message = typeof e?.message === 'string' ? e.message : '';
-      if (/decode|deserial|malformed|hex/i.test(message)) {
+      if (e?.code === -22) {
         handleError(req, res, 400, `The node could not read one of these transactions: ${message}`);
         return;
       }
@@ -203,6 +208,10 @@ class MempoolIntelligenceRoutes {
       MempoolIntelligenceRoutes.setLiveCache(res);
       res.json(plan);
     } catch (e) {
+      if (e instanceof MempoolSourceUnavailable) {
+        handleError(req, res, 503, e.message);
+        return;
+      }
       handleError(req, res, 500, 'Failed to plan a bump for that transaction');
     }
   }

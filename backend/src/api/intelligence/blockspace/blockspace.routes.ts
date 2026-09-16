@@ -5,7 +5,7 @@ import { handleError } from '../../../utils/api';
 /** No observed block yet is a 503 that says so, never an invented composition. */
 function fail(req: Request, res: Response, e: unknown, fallback: string): void {
   if (e instanceof BlockspaceUnavailableError) {
-    res.status(503).json({ stage: e.code, error: e.message });
+    res.status(e.status).json({ stage: e.code, error: e.message });
     return;
   }
   handleError(req, res, 500, e instanceof Error ? e.message : fallback);
@@ -69,7 +69,7 @@ class BlockspaceRoutes {
       }
       res.json(evidence);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch transaction semantics');
+      fail(req, res, e, 'Failed to fetch transaction semantics');
     }
   }
 }

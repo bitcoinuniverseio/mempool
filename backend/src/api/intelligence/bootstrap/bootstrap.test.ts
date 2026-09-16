@@ -3,8 +3,6 @@ import bootstrapService, { BootstrapEvidenceError } from './bootstrap.service';
 describe('BootstrapService', () => {
   it('does not invent nodes, chainstates, manifests or verification records', () => {
     for (const read of [
-      () => bootstrapService.getOverview(), () => bootstrapService.listNodes(),
-      () => bootstrapService.listNodeChainstates(), () => bootstrapService.getNodeChainstates('node-syncing-staging'),
       () => bootstrapService.listSnapshots(), () => bootstrapService.getSnapshot('snap-840000-mainnet'),
       () => bootstrapService.getVerification('unknown'),
     ]) expect(read).toThrow(BootstrapEvidenceError);

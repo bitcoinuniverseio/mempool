@@ -53,12 +53,12 @@ describe('SimplicityService', () => {
     }
   });
 
-  it('still rejects malformed decode and formal-artifact inputs', () => {
+  it('still rejects malformed decode and formal-artifact inputs', async () => {
     const invalid = simplicityService.decodeProgram('01');
     expect(invalid.success).toBe(false);
     expect(invalid.errors).toContain('Simplicity program bytes too short or empty');
 
-    const artifact = simplicityService.verifyFormalArtifact({
+    const artifact = await simplicityService.verifyFormalArtifact({
       schema_version: '1.0.0',
       program_cmr: '9b3e18cf9410ea82b405f63901a88b5601235123992019485123491823019283',
       source_hash: 'hash',

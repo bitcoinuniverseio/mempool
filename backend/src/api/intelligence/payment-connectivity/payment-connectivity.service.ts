@@ -5,6 +5,10 @@ import {
   ZapPublicVerification,
   PaymentConnectivityOverviewResponse,
 } from './payment-connectivity.models';
+import * as ecc from 'tiny-secp256k1';
+import { promises as dns } from 'dns';
+import { isIP } from 'net';
+import { IdentityError, Resolver, resolvePublicAddress, validateWebhookUrl } from '../identity/developer-identity';
 
 /**
  * Raised when a read has no source behind it. The routes map the code to a
@@ -43,6 +47,7 @@ const vendorTrustUnavailable =
  * computations on caller-supplied input; those stay answerable.
  */
 export class PaymentConnectivityService {
+  public resolver?: Resolver;
   public getOverview(): PaymentConnectivityOverviewResponse {
     throw new PaymentConnectivityEvidenceError('unavailable-product-directory', productDirectoryUnavailable);
   }
@@ -95,137 +100,105 @@ export class PaymentConnectivityService {
     throw new PaymentConnectivityEvidenceError('unavailable-vendor-trust', vendorTrustUnavailable);
   }
 
+  /** NIP-47 URI inspection only; no relay connection, signing or wallet access. */
   public inspectNwcUri(uri: string): {
-    valid: boolean;
-    masked_uri: string;
-    wallet_service_pubkey: string;
-    relays: string[];
-    lud16?: string;
-    declared_budget?: string;
-    declared_expiry?: string;
-    encryption_supported: string[];
-    errors: string[];
-    warnings: string[];
+    valid: boolean; masked_uri: string; wallet_service_pubkey: string;
+    relays: string[]; lud16?: string; encryption_supported: string[];
+    errors: string[]; warnings: string[]; verification_scope: string;
   } {
-    const errors: string[] = [];
-    const warnings: string[] = [];
-
-    if (!uri || !uri.startsWith('nostr+walletconnect://')) {
-      errors.push('URI must start with nostr+walletconnect:// scheme');
-      return {
-        valid: false,
-        masked_uri: '',
-        wallet_service_pubkey: '',
-        relays: [],
-        encryption_supported: [],
-        errors,
-        warnings,
-      };
+    const result = {
+      valid: false, masked_uri: '', wallet_service_pubkey: '', relays: [] as string[],
+      encryption_supported: [] as string[], errors: [] as string[],
+      warnings: ['URI syntax and key validation only. Wallet authorization, relay reachability and encryption capabilities have not been observed.'],
+      verification_scope: 'local-uri-inspection',
+    };
+    if (typeof uri !== 'string' || uri.length > 8192 || /[\s\x00-\x1f\x7f]/.test(uri)) {
+      result.errors.push('Connection URI must be a bounded string without whitespace or control characters.');
+      return result;
     }
-
+    const match = /^nostr\+walletconnect:\/\/([0-9a-fA-F]{64})\?([^#]+)$/.exec(uri);
+    if (!match) {
+      result.errors.push('Expected nostr+walletconnect:// followed by a 32-byte x-only public key and query parameters.');
+      return result;
+    }
     try {
-      const match = uri.match(/^nostr\+walletconnect:\/\/([0-9a-fA-F]{64,66})\?(.*)$/);
-      if (!match) {
-        errors.push('Invalid NWC URI format: expected 64 or 66-character hex public key in host position');
-        return {
-          valid: false,
-          masked_uri: '',
-          wallet_service_pubkey: '',
-          relays: [],
-          encryption_supported: [],
-          errors,
-          warnings,
-        };
+      // URLSearchParams accepts malformed percent encodings; validate first.
+      for (const entry of match[2].split('&')) {
+        const separator = entry.indexOf('=');
+        if (separator < 1) throw new Error();
+        decodeURIComponent(entry.slice(0, separator).replace(/\+/g, ' '));
+        decodeURIComponent(entry.slice(separator + 1).replace(/\+/g, ' '));
       }
-
-      const pubkey = match[1].toLowerCase();
       const params = new URLSearchParams(match[2]);
+      const pubkey = match[1].toLowerCase();
+      const secrets = params.getAll('secret');
+      const secret = secrets[0];
+      if (!ecc.isXOnlyPoint(Buffer.from(pubkey, 'hex'))) result.errors.push('Wallet public key is not a secp256k1 x-only point.');
+      if (secrets.length !== 1 || !/^[0-9a-fA-F]{64}$/.test(secret || '') || !ecc.isPrivate(Buffer.from(secret, 'hex'))) {
+        result.errors.push('Exactly one client secret containing a valid 32-byte hex private scalar is required.');
+      }
+      for (const key of new Set(params.keys())) {
+        if (key !== 'relay' && params.getAll(key).length > 1) result.errors.push('Duplicate singleton query parameter.');
+      }
       const relays = params.getAll('relay');
-      const secret = params.get('secret');
-      const lud16 = params.get('lud16') || undefined;
-
-      if (!secret || secret.length !== 64) {
-        errors.push('Client secret must be 32-byte hex string');
+      if (!relays.length) result.errors.push('At least one relay URL is required.');
+      for (const relay of relays) {
+        try {
+          const parsed = new URL(relay);
+          if (!['ws:', 'wss:'].includes(parsed.protocol) || !parsed.hostname || parsed.username || parsed.password || parsed.hash) throw new Error();
+          // Relay paths and queries can carry credentials too. Inspection does
+          // not need to reproduce them, and must not echo a nested secret.
+          result.relays.push(parsed.protocol + '//' + parsed.host + (parsed.pathname !== '/' || parsed.search ? '/[path-and-query-redacted]' : '/'));
+        } catch { result.errors.push('Relay must be a valid ws/wss URL without user information or a fragment.'); }
       }
-
-      if (relays.length === 0) {
-        warnings.push('No relay parameters declared in connection URI');
-      }
-
-      const maskedSecret = secret ? secret.substring(0, 4) + '...' + secret.substring(60) : '';
-      const masked_uri = `nostr+walletconnect://${pubkey}?relay=${encodeURIComponent(relays[0] || '')}&secret=${maskedSecret}`;
-
-      return {
-        valid: errors.length === 0,
-        masked_uri,
-        wallet_service_pubkey: pubkey,
-        relays,
-        lud16,
-        encryption_supported: ['nip44_v2', 'nip04'],
-        errors,
-        warnings,
+      result.wallet_service_pubkey = pubkey;
+      result.masked_uri = 'nostr+walletconnect://' + pubkey + '?secret=[redacted]';
+      // A malicious URI can repeat its client secret in a public-looking field.
+      // Scrub every returned string, including public key and relay hostname.
+      const redact = (value: string): string => {
+        for (const item of secrets) if (item) value = value.replace(new RegExp(item.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), '[redacted]');
+        return value;
       };
-    } catch (err: any) {
-      errors.push(`URI parsing failure: ${err.message}`);
-      return {
-        valid: false,
-        masked_uri: '',
-        wallet_service_pubkey: '',
-        relays: [],
-        encryption_supported: [],
-        errors,
-        warnings,
-      };
+      result.wallet_service_pubkey = redact(result.wallet_service_pubkey);
+      result.masked_uri = redact(result.masked_uri);
+      result.relays = result.relays.map(redact);
+      result.valid = result.errors.length === 0;
+      return result;
+    } catch {
+      result.errors.push('Invalid connection URI encoding.');
+      return result;
     }
   }
 
-  public verifyPublicEndpoint(endpointUrl: string): {
-    valid: boolean;
-    is_https: boolean;
-    ssrf_safe: boolean;
-    details: string;
-    errors: string[];
-  } {
-    const errors: string[] = [];
-
+  public async verifyPublicEndpoint(endpointUrl: string): Promise<{
+    valid: boolean; is_https: boolean; ssrf_safe: boolean | null;
+    resolved_address?: string; address_family?: number; verification_scope: string;
+    details: string; errors: string[];
+  }> {
+    let isHttps = false;
     try {
-      const parsed = new URL(endpointUrl);
-      const hostname = parsed.hostname.toLowerCase();
-      const isHttps = parsed.protocol === 'https:';
-
-      if (!isHttps && hostname !== 'localhost' && !hostname.endsWith('.onion')) {
-        errors.push('LNURL endpoints must use HTTPS');
-      }
-
-      // Check SSRF blocked ranges
-      const isBlocked =
-        hostname === '127.0.0.1' ||
-        hostname.startsWith('10.') ||
-        hostname.startsWith('192.168.') ||
-        hostname.startsWith('172.16.') ||
-        hostname === '169.254.169.254' ||
-        hostname === 'metadata.google.internal';
-
-      if (isBlocked) {
-        errors.push('SSRF Violation: loopback, private RFC-1918, or cloud metadata IP detected');
-      }
-
+      const parsed = validateWebhookUrl(endpointUrl);
+      isHttps = parsed.protocol === 'https:';
+      const source: Resolver = this.resolver ?? (async hostname => await dns.lookup(hostname, { all: true, verbatim: true }) as { address: string; family: 4 | 6 }[]);
+      const pinned = await resolvePublicAddress(parsed, async hostname => {
+        const answers = await source(hostname);
+        if (!Array.isArray(answers) || answers.length === 0 || answers.length > 512 || answers.some(answer => !answer || typeof answer.address !== 'string' || isIP(answer.address) === 0 || isIP(answer.address) !== answer.family)) { throw new Error('malformed resolution evidence'); }
+        return answers;
+      });
       return {
-        valid: errors.length === 0,
-        is_https: isHttps,
-        ssrf_safe: !isBlocked,
-        details: errors.length === 0 ? 'Endpoint passed HTTPS and SSRF safety gates.' : 'Safety gates failed.',
-        errors,
+        valid: true, is_https: true, ssrf_safe: null,
+        resolved_address: pinned.address, address_family: pinned.family,
+        verification_scope: 'dns-address-inspection',
+        details: 'All resolved addresses passed the public-address policy at inspection time. No HTTP request or LNURL capability check was performed. A subsequent request must validate again and pin its connection; redirects require independent validation.',
+        errors: [],
       };
-    } catch (err: any) {
-      errors.push(`Invalid URL: ${err.message}`);
-      return {
-        valid: false,
-        is_https: false,
-        ssrf_safe: false,
-        details: 'URL parsing failed',
-        errors,
-      };
+    } catch (error) {
+      if (!(error instanceof IdentityError) || !['invalid_url', 'blocked_destination'].includes(error.code)) {
+        throw new PaymentConnectivityEvidenceError('unavailable-dns-source', 'Current DNS address evidence is unavailable. No endpoint policy or capability verdict was established.');
+      }
+      // Never echo untrusted URLs, resolver exceptions or URL credentials.
+      return { valid: false, is_https: isHttps, ssrf_safe: false, verification_scope: 'dns-address-inspection',
+        details: 'Endpoint inspection failed.', errors: ['Expected a credential-free HTTPS URL resolving only to public addresses.'] };
     }
   }
 

@@ -1,0 +1,11 @@
+[package]
+name = "universe-vpack-engine"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+vpack = { git = "https://github.com/jgmcalpine/libvpack-rs", rev = "e1f783a02489680b84121c71388a6a96122f5c63", default-features = false, features = ["std", "bitcoin", "adapter", "export-json"] }
+serde_json = "=1.0.145"
+hex = "=0.4.3"
+ark = { package = "ark-lib", version = "=0.7.1" }

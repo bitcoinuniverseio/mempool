@@ -1,7 +1,7 @@
 import { ChangeDetectorRef } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
-import { throwError } from 'rxjs';
+import { throwError, of, Subject } from 'rxjs';
 import { describe, expect, it, vi } from 'vitest';
 import { SimplicityOverviewComponent } from './simplicity-overview.component';
 import { SimplicityTxComponent } from './simplicity-tx.component';
@@ -24,10 +24,10 @@ describe('Simplicity pages when the program index is absent', () => {
 
   it('does not decide a transaction has no Simplicity when the index is absent', () => {
     const api = { getTransactionExecution$: unavailable } as unknown as SimplicityApiService;
-    const route = { snapshot: { paramMap: { get: () => 'ab'.repeat(32) } } } as unknown as ActivatedRoute;
-    const component = new SimplicityTxComponent(route, api, cdr);
+    const route = { paramMap: of({ get: () => 'ab'.repeat(32) }) } as unknown as ActivatedRoute;
+    const component = new SimplicityTxComponent(route, api, cdr, {network: 'liquid', networkChanged$: new Subject()} as any);
     component.ngOnInit();
-    expect(component.execution).toBeNull();
+    expect(component.transaction).toBeNull();
     expect(component.error).toContain('unavailable');
   });
 });

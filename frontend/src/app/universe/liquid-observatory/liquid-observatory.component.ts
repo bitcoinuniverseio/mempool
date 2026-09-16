@@ -1,7 +1,9 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, OnDestroy } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { BehaviorSubject, Observable, catchError, combineLatest, map, of } from 'rxjs';
+import { BehaviorSubject, Observable, Subscription, catchError, combineLatest, map, of, startWith, switchMap } from 'rxjs';
+import { LiquidNodeView } from './liquid-node-view';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
@@ -28,10 +30,20 @@ interface LiquidViewModel {
   templateUrl: './liquid-observatory.component.html',
   styleUrls: ['../product-page.scss'],
   standalone: true,
-  imports: [RelativeUrlPipe, CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LiquidObservatoryComponent implements OnInit {
+export class LiquidObservatoryComponent implements OnInit, OnDestroy {
+  network = 'liquidv1';
+  private readonly nodeNetwork = new BehaviorSubject('liquidv1');
+  readonly node$ = this.nodeNetwork.pipe(switchMap(network => this.api.getLiquidNode$(network).pipe(
+    map(node => ({node, error: null as string | null, loading: false})),
+    catchError(error => of({node: null as LiquidNodeView | null, error: error?.error?.error || 'Owned Elements checkpoint unavailable.', loading: false})),
+    startWith({node: null as LiquidNodeView | null, error: null as string | null, loading: true}),
+  )));
+  private reads?: Subscription;
+  refreshNode(): void { this.nodeNetwork.next(this.network); }
+  ngOnDestroy(): void { this.reads?.unsubscribe(); this.nodeNetwork.complete(); this.state.complete(); }
   // Templates format raw strings through the Number global; AOT needs it bound.
   protected readonly Number = Number;
   private readonly state = new BehaviorSubject<LiquidViewModel>({ kind: 'loading' });
@@ -47,7 +59,7 @@ export class LiquidObservatoryComponent implements OnInit {
   ngOnInit(): void {
     // No per-read fallback: an asset or peg table the source could not answer
     // is an error with its reason, not an empty table.
-    combineLatest([
+    this.reads = combineLatest([
       this.api.getLiquidObservatorySummary$(),
       this.api.getLiquidAssets$(),
       this.api.getLiquidPegs$(),

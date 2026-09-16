@@ -170,8 +170,9 @@ class QueryStudioRoutes {
 
   private async $getSavedQueries(req: Request, res: Response): Promise<void> {
     try {
-      const queries = await queryStudioService.getSavedQueries(ownerOf(res));
-      res.json({ saved_queries: queries, count: queries.length });
+      const rawLimit=req.query.limit, cursor=req.query.cursor;
+      if(rawLimit!==undefined&&(typeof rawLimit!=='string'||!/^[1-9][0-9]{0,2}$/.test(rawLimit))||cursor!==undefined&&typeof cursor!=='string')throw new IdentityError('invalid_page','Invalid saved-query pagination input.',400);
+      res.json(await queryStudioService.getSavedQueryPage(ownerOf(res),rawLimit===undefined?200:Number(rawLimit),cursor as string|undefined));
     } catch (e) {
       fail(req, res, e, 500, 'Failed to fetch saved queries');
     }

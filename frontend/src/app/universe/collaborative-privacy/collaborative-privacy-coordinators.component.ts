@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
@@ -17,16 +18,16 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
       <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
           <h1 class="h2 mb-1">CoinJoin Coordinator Registry</h1>
-          <p class="text-muted mb-0">Audited coordinator endpoints, fee policies, onion services, and blacklist/whitelisting policies.</p>
+          <p class="text-muted mb-0">Source-reported coordinator policies and endpoints. Listing does not establish an audit or current availability.</p>
         </div>
         <a [routerLink]="'/privacy/collaborative' | relativeUrl" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
       </div>
 
       <div class="card bg-dark border-secondary mb-4">
         <div class="card-header border-secondary">
-          <h5 class="card-title mb-0">Active Coordinators</h5>
+          <h5 class="card-title mb-0">Reported Coordinators</h5>
         </div>
-        <div class="table-responsive" tabindex="0" role="region" aria-label="Active Coordinators, scroll horizontally" i18n-aria-label>
+        <div class="table-responsive" tabindex="0" role="region" aria-label="Reported Coordinators, scroll horizontally" i18n-aria-label>
           <table class="table table-dark table-hover mb-0">
             <thead>
               <tr>
@@ -45,7 +46,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                 <td><span class="badge bg-secondary">{{ c.protocol }}</span></td>
                 <td class="text-warning">{{ c.fee_rate_pct }}%</td>
                 <td class="font-monospace text-muted small">{{ c.onion_endpoint }}</td>
-                <td><span class="badge bg-success">{{ c.status | uppercase }}</span></td>
+                <td><span class="badge bg-secondary">{{ c.status | uppercase }}</span></td>
               </tr>
             </tbody>
           </table>
@@ -54,15 +55,19 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
     </div>
   `
 })
-export class CollaborativePrivacyCoordinatorsComponent implements OnInit {
+export class CollaborativePrivacyCoordinatorsComponent implements OnInit, OnDestroy {
+  private networkSub?: Subscription; private request?: Subscription;
+  ngOnDestroy(): void { this.networkSub?.unsubscribe(); this.request?.unsubscribe(); }
   public coordinators: any[] = [];
 
   public loadError: string | null = null;
 
   constructor(private api: CollaborativePrivacyApiService) {}
 
-  public ngOnInit(): void {
-    this.api.getCoordinators$().subscribe({
+  public ngOnInit(): void { this.networkSub=this.api.networkChanged$.subscribe(()=>this.load()); }
+  private load(): void {
+    this.request?.unsubscribe(); this.coordinators=[]; this.loadError=null;
+    this.request=this.api.getCoordinators$().subscribe({
       next: res => {
         this.coordinators = res;
         this.loadError = null;

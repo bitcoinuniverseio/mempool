@@ -1,10 +1,26 @@
 // The service is exercised through an injected fixture index; the live factory must not open clients.
 jest.mock('../../bitcoin/bitcoin-api-factory', () => ({ __esModule: true, default: {}, bitcoinCoreApi: {} }));
 
-import { txGraphService, GraphIndex, GraphInputError, GRAPH_LIMITS } from './tx-graph.service';
+import { txGraphService, GraphIndex, GraphInputError, GraphIndexError, GRAPH_LIMITS } from './tx-graph.service';
 import { developerIdentity, AuthenticatedOwner } from '../identity/developer-identity';
 import { MemoryOwnerStore, useOwnerStore } from '../identity/owner-store';
 import { IEsploraApi } from '../../bitcoin/esplora-api.interface';
+import express from 'express';
+import graphRoutes from './graph.routes';
+
+it('rejects malformed numeric filters at the actual HTTP boundary', async () => {
+  const app = express(); app.use(express.json()); graphRoutes.initRoutes(app);
+  const server = app.listen(0, '127.0.0.1'); await new Promise<void>(resolve => server.once('listening', resolve));
+  try {
+    for (const body of [{hops:'1junk'}, {hops:1.5}, {hops:0}, {min_value_sats:'10garbage'}, {min_value_sats:-1}, {min_value_sats:Number.MAX_SAFE_INTEGER+1}]) {
+      const response = await fetch(`http://127.0.0.1:${(server.address() as {port:number}).port}/api/v1/intelligence/graph/queries`, {
+        method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({root_entity:'a'.repeat(64),...body}),
+      });
+      expect(response.status).toBe(400);
+      expect(await response.json()).toMatchObject({code:'invalid_input'});
+    }
+  } finally { await new Promise<void>(resolve => server.close(() => resolve())); }
+});
 
 /**
  * A small fixture chain stands in for the Esplora index:
@@ -38,7 +54,7 @@ const spends: Record<string, IEsploraApi.Outspend[]> = {
 
 let fetches: string[] = [];
 const fixtureIndex: GraphIndex = {
-  transaction: async txid => { fetches.push('tx:' + txid); const tx = txs.get(txid); if (!tx) { throw new Error('404'); } return tx; },
+  transaction: async txid => { fetches.push('tx:' + txid); const tx = txs.get(txid); if (!tx) { throw Object.assign(new Error('not found'), { response: { status: 404, data: 'Transaction not found' } }); } return tx; },
   outspends: async txid => { fetches.push('spends:' + txid); return spends[txid] ?? []; },
   addressTransactions: async address => { fetches.push('addr:' + address); const list = [...txs.values()].filter(tx => tx.vout.some(v => v.scriptpubkey_address === address) || tx.vin.some(v => v.prevout?.scriptpubkey_address === address)); if (!list.length) { throw new Error('404'); } return list; },
 };
@@ -82,10 +98,47 @@ describe('transaction graph over the index', () => {
     ]));
   });
 
-  it('an unknown transaction, a malformed entity or a bad direction are input errors', async () => {
-    await expect(txGraphService.queryGraph(id('9'), 1)).rejects.toThrow(GraphInputError);
+  it('distinguishes an unknown transaction from malformed input', async () => {
+    await expect(txGraphService.queryGraph(id('9'), 1)).rejects.toMatchObject({ status: 404 });
     await expect(txGraphService.queryGraph('not valid!', 1)).rejects.toThrow(GraphInputError);
     await expect(txGraphService.queryGraph(id('b'), 1, 'sideways' as never)).rejects.toThrow(GraphInputError);
+  });
+
+  it('requires index evidence even for an identical source and target', async () => {
+    await expect(txGraphService.findShortestPath(id('9'), id('9'))).rejects.toMatchObject({ status: 404 });
+    const result = await txGraphService.findShortestPath(id('a').toUpperCase(), id('a'));
+    expect(result).toMatchObject({ path_found: true, node_sequence: [id('a')], fetches: 1 });
+  });
+
+  it.each(['transaction', 'outspends', 'addressTransactions'] as const)('reports %s dependency outages without fabricating missing data', async operation => {
+    txGraphService.index = { ...fixtureIndex, [operation]: async () => { throw new Error('connection refused with private transport details'); } };
+    const root = operation === 'addressTransactions' ? 'tb1qaddrbfixture0000000000' : id('b');
+    await expect(txGraphService.queryGraph(root)).rejects.toMatchObject({ status: 503 });
+    if (operation !== 'addressTransactions') {
+      await expect(txGraphService.findShortestPath(id('a'), id('d'))).rejects.toThrow(GraphIndexError);
+    }
+  });
+
+  it('rejects a transaction returned under the wrong identity', async () => {
+    txGraphService.index = { ...fixtureIndex, transaction: async () => B };
+    await expect(txGraphService.queryGraph(id('a'))).rejects.toMatchObject({ status: 503 });
+    await expect(txGraphService.findShortestPath(id('a'), id('a'))).rejects.toMatchObject({ status: 503 });
+  });
+
+  it('does not interpret missing outspend rows as unspent outputs', async () => {
+    txGraphService.index = { ...fixtureIndex, outspends: async () => [] };
+    await expect(txGraphService.queryGraph(id('a'))).rejects.toMatchObject({ status: 503 });
+    await expect(txGraphService.findShortestPath(id('a'), id('d'))).rejects.toMatchObject({ status: 503 });
+  });
+
+  it('reports an incomplete search at the hop boundary', async () => {
+    const numericId = (n: number): string => n.toString(16).padStart(64, '0');
+    txGraphService.index = {
+      transaction: async txid => transaction(txid, [], [{ value: 10, address: 'out' }]),
+      outspends: async txid => [{ spent: true, txid: numericId(parseInt(txid, 16) + 1), vin: 0 }] as never,
+      addressTransactions: async () => [],
+    };
+    expect(await txGraphService.findShortestPath(numericId(1), numericId(8))).toMatchObject({ path_found: false, search_exhausted: true });
   });
 
   it('finds a real downstream path or reports that none exists', async () => {
@@ -93,7 +146,8 @@ describe('transaction graph over the index', () => {
     expect(found.path_found).toBe(true);
     expect(found.node_sequence).toEqual([id('a'), id('b'), id('c'), id('d')]);
     expect(found.total_hops).toBe(3);
-    expect(found.total_value_transferred_sats).toBe(2900);
+    expect(found.total_value_transferred_sats).toBeNull();
+    expect(found.value_upper_bound_sats).toBe(2900);
     const missing = await txGraphService.findShortestPath(id('d'), id('a'));
     expect(missing).toMatchObject({ path_found: false, total_hops: 0, node_sequence: [], edge_sequence: [] });
     expect(missing.search_exhausted).toBe(false);
@@ -152,4 +206,31 @@ describe('graph cases belong to their owner', () => {
     await expect(txGraphService.saveCase(alice, 'x', 'unknown!!', 2, {}, {}, '', 0)).rejects.toThrow(GraphInputError);
     await expect(txGraphService.saveCase(alice, 'x', id('b'), 2, {}, {}, 'n'.repeat(5000), 0)).rejects.toMatchObject({ code: 'invalid_notes' });
   });
+});
+
+describe('graph completeness and exact evidence',()=>{
+ beforeEach(()=>{txGraphService.index=fixtureIndex;});
+ it.each([{code:-5},{response:{status:404}},{response:{status:404,data:'upstream route missing'}}])('preserves ambiguous source error as503: %p',error=>{
+  txGraphService.index={...fixtureIndex,transaction:async()=>{throw error;}};
+  return expect(txGraphService.queryGraph(id('a'))).rejects.toMatchObject({status:503});
+ });
+ it('resolves actual parent values when prevout is missing or contradictory',async()=>{
+  for(const prevout of [undefined,{...B.vin[0].prevout,value:1}]){
+   txGraphService.index={...fixtureIndex,transaction:async txid=>txid===B.txid?{...B,vin:[{...B.vin[0],prevout}]} as any:fixtureIndex.transaction(txid)};
+   const result=await txGraphService.queryGraph(B.txid,1,'upstream',1000);expect(result.edges[0].value_sats).toBe(5000);
+  }
+ });
+ it('honors direction for address edges and treats address totals/status as unknown',async()=>{
+  const addr='tb1qaddrbfixture0000000000';const up=await txGraphService.queryGraph(addr,1,'upstream');const down=await txGraphService.queryGraph(addr,1,'downstream');
+  expect(up.edges.every(e=>e.target_id===addr)).toBe(true);expect(down.edges.every(e=>e.source_id===addr)).toBe(true);
+  expect(up.nodes.find(n=>n.id===addr)).toMatchObject({value_sats:null,status:'unknown'});
+ });
+ it('marks a full address page as a completeness bound, not an exhaustive history',async()=>{
+  txGraphService.index={...fixtureIndex,addressTransactions:async()=>Array.from({length:25},()=>B)};
+  const result=await txGraphService.queryGraph('tb1qaddrbfixture0000000000',1,'upstream');expect(result).toMatchObject({truncated:true,truncation_reason:'address_page'});
+ });
+ it('rejects malformed address documents and absent output values',async()=>{
+  txGraphService.index={...fixtureIndex,addressTransactions:async()=>[{...B,vout:[{...B.vout[0],value:undefined}]}] as any};
+  await expect(txGraphService.queryGraph('tb1qaddrbfixture0000000000')).rejects.toMatchObject({status:503});
+ });
 });

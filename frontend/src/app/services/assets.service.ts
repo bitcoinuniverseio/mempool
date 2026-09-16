@@ -10,7 +10,7 @@ import { AssetExtended } from '@interfaces/electrs.interface';
   providedIn: 'root'
 })
 export class AssetsService {
-  nativeAssetId = this.stateService.network === 'liquidtestnet' ? environment.nativeTestAssetId : environment.nativeAssetId;
+  get nativeAssetId(): string { return this.stateService.network === 'liquidtestnet' ? environment.nativeTestAssetId : environment.nativeAssetId; }
 
   getAssetsJson$: Observable<{ array: AssetExtended[]; objects: any}>;
   getAssetsMinimalJson$: Observable<any>;
@@ -27,23 +27,23 @@ export class AssetsService {
 
     this.getAssetsJson$ = this.stateService.networkChanged$
       .pipe(
-        switchMap(() => this.httpClient.get(`${apiBaseUrl}/resources/assets${this.stateService.network === 'liquidtestnet' ? '-testnet' : ''}.json`)),
-        map((rawAssets) => {
+        switchMap(network => this.httpClient.get(`${apiBaseUrl}/resources/assets${network === 'liquidtestnet' ? '-testnet' : ''}.json`).pipe(map(rawAssets => ({ network, rawAssets })))),
+        map(({ network, rawAssets }) => {
           const assets: AssetExtended[] = Object.values(rawAssets);
 
-          if (this.stateService.network === 'liquid') {
+          if (network === 'liquid') {
             // @ts-ignore
             assets.push({
               name: 'Liquid Bitcoin',
               ticker: 'LBTC',
-              asset_id: this.nativeAssetId,
+              asset_id: environment.nativeAssetId,
             });
-          } else if (this.stateService.network === 'liquidtestnet') {
+          } else if (network === 'liquidtestnet') {
             // @ts-ignore
             assets.push({
               name: 'Test Liquid Bitcoin',
               ticker: 'tLBTC',
-              asset_id: this.nativeAssetId,
+              asset_id: environment.nativeTestAssetId,
             });
           }
 

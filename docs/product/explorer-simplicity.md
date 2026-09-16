@@ -27,7 +27,7 @@ The Simplicity Contract Explorer and Formal Verification Workbench delivers a de
 - `/liquid/simplicity/tx/:txid`: Transaction execution trace view for Simplicity spends on Liquid.
 - `/liquid/simplicity/program/:programId`: Program detail including CMR, IMR, AMR, DAG nodes, and jets.
 - `/tools/simplicity`: Interactive browser workbench for SimplicityHL source editing, compilation, and analysis.
-- `/tools/simplicity/verify`: Formal proof artifact package verifier for Coq and Lean proof transcripts.
+- `/tools/simplicity/verify`: Exact-source closed-program checker and constrained Lean4 u32 equality kernel profile; general theorem transcripts remain unsupported.
 
 ## API Contracts
 - `GET /api/v1/intelligence/simplicity/overview`: Global statistics, active toolchain versions, and recent programs.
@@ -37,3 +37,17 @@ The Simplicity Contract Explorer and Formal Verification Workbench delivers a de
 - `GET /api/v1/intelligence/simplicity/toolchains`: Supported toolchain compilers, verifiers, and revisions.
 - `POST /api/v1/intelligence/simplicity/programs/decode`: Decoding of raw program bytes into Merkle roots and type signatures.
 - `POST /api/v1/intelligence/simplicity/formal-artifacts/verify`: Cryptographic verification of formal proof manifests and statements.
+
+## Compiler workbench implementation and limits
+
+`/tools/simplicity` uses the published SimplicityHL 0.2.0 compiler with rust-simplicity 0.5.0 in a local module worker. Its displayed source and template use that language version. Optional parameter and required declared-witness mappings are editable JSON using value/type entries. Syntax, type, unknown jets and missing witnesses produce actual compiler errors. Bytecode is re-decoded and its CMR compared before reporting success. Static cost is milliweight units; memory cells are bits, with an extra-frame count. Serialization does not establish successful execution, theorem validity or deployment eligibility.
+
+The worker has bounded input/output,128MiB WASM memory, a15-second deadline, and cancels on editing/template/navigation. Only static same-origin artifacts are fetched. Operator build/reproduction and independent C decoder/CMR/cost tests are documented in `tools/simplicity-compiler/README.md`. Other index, execution and formal-proof integrations remain separate gates.
+
+## Formal artifact checker: supported claim and remaining integrations
+
+The previous metadata-only success path is removed. Hashes, theorem text, dependencies, client verification commands and claimed transcripts never independently establish a proof. `verification_command` is retained as inert metadata and is never executed.
+
+The implemented `simplicity-closed-program-v1` checker binds public source, encoded program bytes, SHA256 hashes, exact CMR, pinned compiler/library revisions and a canonical claim certificate. It recompiles the source and independently checks the exact closed, witness-free, environment-free program through libsimplicity C. Only its fixed closed-program-success statement is supported. The frontend uses the backend's actual `verified` and `proof_state` contract, clears stale results, and distinguishes rejection from unavailable checker infrastructure.
+
+General Coq, Lean4, Isabelle and Dafny theorem verification remains an OPEN acceptance item. The additional Lean4 simplicity-u32-equality-v1 profile checks canonical closed u32 equality assertions with the pinned Lean4.24.0 kernel and independent C/compiler binding; other profiles remain unsupported. Local operator setup and limits are in `tools/simplicity-proof-checker/README.md`.

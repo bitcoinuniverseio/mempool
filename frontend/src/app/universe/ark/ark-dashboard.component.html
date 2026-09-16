@@ -42,13 +42,13 @@
         <div class="metric-card">
           <span class="metric-label">Settlement Batch</span>
           <span class="metric-value">#{{ vm.operators[0].currentBatchHeight }}</span>
-          <span class="metric-sub">On-chain anchored</span>
+          <span class="metric-sub">Provider-reported batch height</span>
         </div>
       </div>
 
       <!-- Batches Table -->
       <section class="panel" *ngIf="vm.batches?.length">
-        <h2>Settled Round Batches</h2>
+        <h2>Provider-reported Round Batches</h2>
         <table class="data-table">
           <thead>
             <tr>
@@ -67,7 +67,7 @@
               <td class="mono">{{ b.rootHash.slice(0, 16) }}...</td>
               <td>{{ b.vtxoCount }}</td>
               <td>{{ (Number(b.totalAmountSats) / 1e8).toFixed(4) }}</td>
-              <td><span class="badge badge-success">{{ b.status }}</span></td>
+              <td><span class="badge badge-secondary">{{ b.status }}</span></td>
             </tr>
           </tbody>
         </table>

@@ -83,7 +83,7 @@ class ReservesRoutes {
   private async $verifyProof(req: Request, res: Response): Promise<void> {
     try {
       const body = req.body;
-      const result = reservesService.verifyProof(body);
+      const result = await reservesService.verifyProof(body);
       res.json(result);
     } catch (e) {
       fail(req, res, e, 'Failed to verify proof');

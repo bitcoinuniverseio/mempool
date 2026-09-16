@@ -1,6 +1,7 @@
 import { Application, Request, Response } from 'express';
 import { policyLabService } from './policy-lab.service';
-import { handleError } from '../../../utils/api';
+import { PolicyEvidenceError } from './inclusion-forecast';
+function fail(res: Response, error: unknown): void { if (error instanceof PolicyEvidenceError) res.status(error.status).json({stage:error.code,error:error.message}); else res.status(500).json({error:'Policy operation failed'}); }
 
 class PolicyLabRoutes {
   public initRoutes(app: Application): void {
@@ -18,7 +19,7 @@ class PolicyLabRoutes {
 
   private async $postEvaluation(req: Request, res: Response): Promise<void> {
     try {
-      const rawTxs: string[] = req.body.transactions || (req.body.raw_hex ? [req.body.raw_hex] : []);
+      const rawTxs: string[] = req.body?.transactions || (req.body?.raw_hex ? [req.body.raw_hex] : []);
       if (!Array.isArray(rawTxs) || rawTxs.length === 0) {
         res.status(400).json({ error: 'Array of raw transaction hexes or raw_hex string required.' });
         return;
@@ -26,7 +27,7 @@ class PolicyLabRoutes {
       const evaluation = await policyLabService.evaluateTransactionOrPackage(rawTxs);
       res.json(evaluation);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Evaluation failed');
+      fail(res, e);
     }
   }
 
@@ -40,7 +41,7 @@ class PolicyLabRoutes {
       }
       res.json(evaluation);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Evaluation lookup failed');
+      fail(res, e);
     }
   }
 
@@ -49,13 +50,13 @@ class PolicyLabRoutes {
       const profiles = await policyLabService.getNodeProfiles();
       res.json({ profiles, total: profiles.length });
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch node profiles');
+      fail(res, e);
     }
   }
 
   private async $postPackageAnalyze(req: Request, res: Response): Promise<void> {
     try {
-      const rawTxs: string[] = req.body.transactions || (req.body.raw_hex ? [req.body.raw_hex] : []);
+      const rawTxs: string[] = req.body?.transactions || (req.body?.raw_hex ? [req.body.raw_hex] : []);
       if (!Array.isArray(rawTxs) || rawTxs.length === 0) {
         res.status(400).json({ error: 'Array of raw transactions required.' });
         return;
@@ -63,7 +64,7 @@ class PolicyLabRoutes {
       const result = await policyLabService.evaluateTransactionOrPackage(rawTxs);
       res.json(result.package_report);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Package analysis failed');
+      fail(res, e);
     }
   }
 
@@ -73,7 +74,7 @@ class PolicyLabRoutes {
       const forecast = policyLabService.getForecastForTxid(txid);
       res.json(forecast);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Forecast failed');
+      fail(res, e);
     }
   }
 
@@ -82,16 +83,16 @@ class PolicyLabRoutes {
       const card = policyLabService.getCurrentForecastModelCard();
       res.json(card);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to get current model');
+      fail(res, e);
     }
   }
 
   private async $getModelCard(req: Request, res: Response): Promise<void> {
     try {
-      const card = policyLabService.getCurrentForecastModelCard();
+      const card = policyLabService.getCurrentForecastModelCard(req.params.version);
       res.json(card);
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to get model card');
+      fail(res, e);
     }
   }
 }

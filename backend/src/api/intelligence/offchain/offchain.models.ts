@@ -27,17 +27,20 @@ export interface OffchainOperator {
   signature_count_endpoint?: string;
   transfer_capabilities: string[];
   recovery_capabilities: string[];
-  health: 'healthy' | 'degraded' | 'unreachable';
+  health: 'healthy' | 'degraded' | 'unreachable' | 'unknown';
+  operator_authenticated?: null;
+  evidence_scope?: string;
   effective_from: string;
   expires_at: string;
   provenance: {
-    registered_in_knowledge_registry: boolean;
+    registered_in_knowledge_registry: boolean | null;
     identity_ref?: string;
-    verified_signature: boolean;
+    verified_signature: boolean | null;
   };
 }
 
 export interface StatechainPublicManifest {
+  signature_scheme?: 'schnorr' | 'ecdsa';
   schema_version: string;
   protocol: string;
   operator_public_key: string;
@@ -136,8 +139,9 @@ export interface OffchainOverviewResponse {
   total_operators: number;
   /** Null: no operator on this deployment reports its statechain count. */
   active_statechains_count: number | null;
-  active_coinswap_makers: number;
+  active_coinswap_makers: number | null;
+  configured_coinswap_makers: number;
   operators: OffchainOperator[];
   public_offers: CoinswapPublicOffer[];
-  registry: { configured: boolean; source: string | null; error: string | null };
+  registry: { configured: boolean; source: string | null; error: string | null; observed_at: string; scope: string };
 }

@@ -18,7 +18,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           <span class="badge bg-primary">SSRF-Defended P2P Probe</span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
-          Validate your Bitcoin node's inbound reachability, latency, and BIP324 encrypted transport readiness from distributed sensors.
+          Check a public endpoint TCP connection from this server. Bitcoin handshake, BIP324 readiness and distributed reachability are not tested.
         </p>
 
         <!-- Sub-navigation tabs -->

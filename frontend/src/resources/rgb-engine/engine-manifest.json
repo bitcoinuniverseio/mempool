@@ -1,0 +1,10 @@
+{
+  "engine": "rgb-ops 0.11.1-rc.11",
+  "wasm_bindgen": "0.2.114",
+  "max_memory_bytes": 268435456,
+  "files": {
+    "rgb_engine.js": "9f1f1907fb8a7179a7b8e4f11bdbcc4875482e4ab5ccf738b82661605cbf083b",
+    "rgb_engine_bg.wasm": "d9ffdb3693a174b7195a6f96a79212eb59122958f02c41a95a811e64823becc2",
+    "rgb.worker.js": "83c2fd7fba720f2cf7439ccb3f67a60785f43c4a522a507b6c8088646aa7394b"
+  }
+}

@@ -96,9 +96,9 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                   <td class="fw-bold">{{ m.name }}</td>
                   <td><code>{{ m.mint_url }}</code></td>
                   <td>
-                    <span class="badge bg-secondary me-1">NUT-00..{{ m.nuts_supported[m.nuts_supported.length - 1] }}</span>
+                    <span *ngIf="m.nuts_supported === null">Unknown</span><span *ngFor="let nut of m.nuts_supported" class="badge bg-secondary me-1">NUT-{{ nut }}</span>
                   </td>
-                  <td>{{ m.active_keysets_count }} active</td>
+                  <td>{{ m.active_keysets_count ?? 'Unknown' }} active</td>
                   <td class="text-end">
                     <a [routerLink]="['/ecash/cashu' | relativeUrl, m.mint_id]" class="btn btn-sm btn-outline-primary">
                       Inspect

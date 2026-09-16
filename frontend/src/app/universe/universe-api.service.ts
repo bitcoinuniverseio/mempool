@@ -734,6 +734,10 @@ export class UniverseApiService {
     );
   }
 
+  getLiquidNode$(network: string): Observable<import('./liquid-observatory/liquid-node-view').LiquidNodeView> {
+    return this.httpClient.get<import('./liquid-observatory/liquid-node-view').LiquidNodeView>(this.apiBaseUrl + '/api/v1/liquid/observatory/node?network=' + encodeURIComponent(network));
+  }
+
   getLiquidObservatorySummary$(): Observable<LiquidObservatorySummary> {
     return this.httpClient.get<LiquidObservatorySummary>(
       this.apiBaseUrl + '/api/v1/liquid/observatory/summary'
@@ -802,6 +806,10 @@ export class UniverseApiService {
     );
   }
 
+  verifyTaprootProof$(assetId: string, proofData: string): Observable<any> {
+    return this.httpClient.post(this.backendBase + '/api/v1/taproot-assets/proof/verify', { assetId, proofData });
+  }
+
   getTaprootAsset$(assetId: string): Observable<TaprootAssetItem> {
     return this.httpClient.get<TaprootAssetItem>(
       this.backendBase + '/api/v1/taproot-assets/assets/' + encodeURIComponent(assetId)
@@ -812,6 +820,10 @@ export class UniverseApiService {
     return this.httpClient.get<{ groups: TaprootAssetGroup[]; total: number }>(
       this.backendBase + '/api/v1/taproot-assets/groups'
     );
+  }
+
+  decodeBolt12Offer$(offer: string): Observable<import('./taproot-assets/bolt12-decoded-offer').Bolt12DecodedOffer> {
+    return this.httpClient.post<import('./taproot-assets/bolt12-decoded-offer').Bolt12DecodedOffer>(this.backendBase + '/api/v1/lightning/offers/decode', {offer, network:this.network || 'mainnet'});
   }
 
   getBolt12Offers$(): Observable<{ offers: Bolt12Offer[]; total: number }> {

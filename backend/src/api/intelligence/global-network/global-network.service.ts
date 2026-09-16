@@ -35,7 +35,7 @@ export class GlobalNetworkUnavailableError extends Error {
   constructor(public readonly code: string, message: string, public readonly status = 503) { super(message); }
 }
 
-interface PeerInfo {
+export interface PeerInfo {
   id: number;
   addr: string;
   network?: string;
@@ -51,8 +51,10 @@ interface PeerInfo {
   conntime?: number;
 }
 
-interface NetworkInfo {
+export interface NetworkInfo {
   version: number;
+  protocolversion?: number;
+  relayfee?: number;
   subversion: string;
   localservices: string;
   localservicesnames?: string[];
@@ -62,7 +64,7 @@ interface NetworkInfo {
   networks: { name: string; reachable: boolean }[];
 }
 
-export type NodeReader = () => Promise<{ peers: PeerInfo[]; info: NetworkInfo }>;
+export type NodeReader = () => Promise<{ peers: PeerInfo[]; info: NetworkInfo; genesisHash?: string }>;
 export type SeedResolver = (hostname: string) => Promise<string[]>;
 export type TcpProber = (address: string, port: number, timeoutMs: number) => Promise<{ reachable: boolean; latency_ms: number | null; error: string | null }>;
 
@@ -90,14 +92,15 @@ const SELF_CHECK_TIMEOUT_MS = 5_000;
 
 /** @asyncUnsafe The service turns a rejection into an unavailable state. */
 const defaultNodeReader: NodeReader = async () => {
-  const [peers, info] = await Promise.all([bitcoinClient.getPeerInfo() as Promise<PeerInfo[]>, bitcoinClient.getNetworkInfo() as Promise<NetworkInfo>]);
-  return { peers, info };
+  const [peers, info, genesisHash] = await Promise.all([bitcoinClient.getPeerInfo() as Promise<PeerInfo[]>, bitcoinClient.getNetworkInfo() as Promise<NetworkInfo>, bitcoinClient.getBlockHash(0) as Promise<string>]);
+  return { peers, info, genesisHash };
 };
 
 /** @asyncUnsafe The service records a rejection on the seed entry. */
-const defaultSeedResolver: SeedResolver = async hostname => {
-  const [v4, v6] = await Promise.all([dns.promises.resolve4(hostname).catch(() => [] as string[]), dns.promises.resolve6(hostname).catch(() => [] as string[])]);
-  return [...v4, ...v6];
+export const defaultSeedResolver: SeedResolver = async hostname => {
+  const results = await Promise.allSettled([dns.promises.resolve4(hostname), dns.promises.resolve6(hostname)]);
+  if (results.some(result => result.status === 'rejected' && !['ENODATA','ENOTFOUND'].includes((result.reason as NodeJS.ErrnoException)?.code ?? ''))) throw new Error('DNS observation unavailable.');
+  return results.flatMap(result => result.status === 'fulfilled' ? result.value : []);
 };
 
 const defaultTcpProber: TcpProber = (address, port, timeoutMs) => new Promise(resolve => {
@@ -118,7 +121,9 @@ function splitAddress(addr: string): { host: string; port: number } {
 
 export class GlobalNetworkService {
   private static instance: GlobalNetworkService;
-  private cache: { at: number; peers: PeerInfo[]; info: NetworkInfo } | null = null;
+  private cache: { at: number; peers: PeerInfo[]; info: NetworkInfo; genesisHash?: string } | null = null;
+  private nodeFlight: Promise<{ peers: PeerInfo[]; info: NetworkInfo; genesisHash?: string }> | null = null;
+  private nodeGeneration = 0;
   private seedCache = new Map<string, { at: number; addresses: string[]; error: string | null }>();
   private snapshots: GlobalNetworkSnapshot[] = [];
   private snapshotTimer: NodeJS.Timeout | null = null;
@@ -139,30 +144,61 @@ export class GlobalNetworkService {
   /** Test seam. */
   public resetForTests(): void {
     this.cache = null;
+    this.nodeFlight = null; this.nodeGeneration++;
     this.seedCache.clear();
     this.snapshots = [];
   }
 
   /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */
-  private async node(now = Date.now()): Promise<{ peers: PeerInfo[]; info: NetworkInfo }> {
-    if (this.cache && now - this.cache.at < NODE_CACHE_MS) { return this.cache; }
-    try {
-      const fresh = await this.nodeReader();
-      this.cache = { at: now, peers: fresh.peers, info: fresh.info };
-      return this.cache;
-    } catch (error) {
-      throw new GlobalNetworkUnavailableError('node-unreachable', `The owned node did not answer getpeerinfo/getnetworkinfo: ${error instanceof Error ? error.message : String(error)}`);
-    }
+  private async node(now = Date.now()): Promise<{ peers: PeerInfo[]; info: NetworkInfo; genesisHash?: string }> {
+    if (this.cache && now >= this.cache.at && now - this.cache.at < NODE_CACHE_MS) return this.cache;
+    if (this.nodeFlight) return this.waitNode(this.nodeFlight);
+    const generation = this.nodeGeneration;
+    const pending = (async () => {
+      try {
+        const fresh = await this.nodeReader();
+        if (!Array.isArray(fresh.peers) || fresh.peers.length > 10000 || !fresh.info || !Array.isArray(fresh.info.networks)) throw new Error('Invalid owned node snapshot.');
+        if (generation === this.nodeGeneration) this.cache = { at: now, ...fresh };
+        return fresh;
+      } catch (error) {
+        throw new GlobalNetworkUnavailableError('node-unreachable', 'The owned node did not provide a complete network observation.');
+      }
+    })();
+    this.nodeFlight = pending;
+    const settled = () => { if (this.nodeFlight === pending) this.nodeFlight = null; };
+    void pending.then(settled, settled);
+    return this.waitNode(pending);
+  }
+
+  private async waitNode<T>(pending: Promise<T>): Promise<T> {
+    let timer: NodeJS.Timeout | undefined;
+    try { return await Promise.race([pending, new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new GlobalNetworkUnavailableError('node-timeout', 'Owned Core observation exceeded 10 seconds.')), 10000); })]); }
+    finally { if (timer) clearTimeout(timer); }
+  }
+
+  /** Shared owned Core observation; never relabel a different chain as this network. */
+  public async getOwnedNodeSnapshot(now = Date.now()) {
+    const snapshot = await this.node(now);
+    const genesis: Record<string,string> = {
+      mainnet: '000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f',
+      signet: '00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6',
+      testnet: '000000000933ea01ad0ee984209779baaec3ced90fa3f408719526f8d77f4943',
+      testnet4: '00000000da84f2bafbbc53dee25a72ae507ff4914b867c565be350b0da8bf043',
+      regtest: '0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206',
+    };
+    if (!snapshot.genesisHash || snapshot.genesisHash !== genesis[config.MEMPOOL.NETWORK]) throw new GlobalNetworkUnavailableError('node-network-mismatch', 'The owned Core genesis does not match the configured network.');
+    const observed = this.cache?.at ?? now;
+    return { ...snapshot, network: config.MEMPOOL.NETWORK, observed_at_utc: new Date(observed).toISOString(), age_ms: Math.max(0, now-observed), freshness_limit_ms: NODE_CACHE_MS };
   }
 
   private observation(peer: PeerInfo, epochId: string, at: number): GlobalNetworkObservation {
     const { host, port } = splitAddress(peer.addr);
     return {
       id: `peer-${peer.id}`, epoch_id: epochId, endpoint_id: peer.addr, ip_or_onion: host, port,
-      services: Number.parseInt(peer.services, 16) || 0, user_agent: peer.subver, start_height: peer.startingheight,
-      relay: peer.relaytxes ?? true, transport_v2: peer.transport_protocol_type === 'v2', addrv2: peer.version !== undefined ? peer.version >= 70016 : false,
-      latency_ms: peer.pingtime !== undefined ? Math.round(peer.pingtime * 1000) : -1, country_code: undefined, asn: undefined,
-      observed_at: new Date(at).toISOString(), inbound: peer.inbound ?? false, network: peer.network ?? 'unknown',
+      services: /^[0-9a-f]{1,16}$/i.test(peer.services) && Number.isSafeInteger(Number.parseInt(peer.services,16)) ? Number.parseInt(peer.services,16) : null, services_hex: /^[0-9a-f]{1,16}$/i.test(peer.services) ? peer.services.toLowerCase().padStart(16,'0') : null, user_agent: peer.subver, start_height: peer.startingheight,
+      relay: typeof peer.relaytxes === 'boolean' ? peer.relaytxes : null, transport_v2: peer.transport_protocol_type === 'v2' ? true : peer.transport_protocol_type === 'v1' ? false : null, addrv2: null,
+      latency_ms: typeof peer.pingtime === 'number' && Number.isFinite(peer.pingtime) && peer.pingtime >= 0 ? Math.round(peer.pingtime * 1000) : null, country_code: undefined, asn: undefined,
+      observed_at: new Date(at).toISOString(), inbound: typeof peer.inbound === 'boolean' ? peer.inbound : null, network: peer.network ?? 'unknown',
     };
   }
 
@@ -176,12 +212,12 @@ export class GlobalNetworkService {
 
   /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */
   public async getOverview(now = Date.now()): Promise<GlobalNetworkOverview> {
-    const { peers, info } = await this.node(now);
+    const { peers, info } = await this.getOwnedNodeSnapshot(now);
     const agents = new Map<string, number>();
     const transports = new Map<string, number>();
     for (const peer of peers) {
       agents.set(peer.subver, (agents.get(peer.subver) ?? 0) + 1);
-      const transport = peer.transport_protocol_type ?? 'v1';
+      const transport = peer.transport_protocol_type === 'v1' || peer.transport_protocol_type === 'v2' ? peer.transport_protocol_type : 'unknown';
       transports.set(transport, (transports.get(transport) ?? 0) + 1);
     }
     const total = peers.length;
@@ -190,8 +226,8 @@ export class GlobalNetworkService {
       active_epoch: this.epoch(peers, this.cache?.at ?? now),
       sensors_count: 1,
       total_reachable_nodes: total,
-      bip324_v2_adoption_percentage: pct(peers.filter(peer => peer.transport_protocol_type === 'v2').length),
-      addrv2_adoption_percentage: pct(peers.filter(peer => (peer.version ?? 0) >= 70016).length),
+      bip324_v2_adoption_percentage: total && peers.every(peer => ['v1','v2'].includes(peer.transport_protocol_type ?? '')) ? pct(peers.filter(peer => peer.transport_protocol_type === 'v2').length) : null,
+      addrv2_adoption_percentage: null,
       top_user_agents: [...agents.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10).map(([agent, count]) => ({ agent, count, percentage: pct(count) })),
       geographic_distribution: [],
       geo_source: null,
@@ -203,7 +239,7 @@ export class GlobalNetworkService {
 
   /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */
   public async getNodes(limit = 50, offset = 0, now = Date.now()): Promise<{ nodes: GlobalNetworkObservation[]; total: number }> {
-    const { peers } = await this.node(now);
+    const { peers } = await this.getOwnedNodeSnapshot(now);
     const epochId = this.epoch(peers, this.cache?.at ?? now).epoch_id;
     const bounded = Math.max(1, Math.min(500, limit));
     const start = Math.max(0, offset);
@@ -212,7 +248,7 @@ export class GlobalNetworkService {
 
   /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */
   public async getNodeByEndpoint(endpointId: string, now = Date.now()): Promise<GlobalNetworkObservation | null> {
-    const { peers } = await this.node(now);
+    const { peers } = await this.getOwnedNodeSnapshot(now);
     const peer = peers.find(entry => entry.addr === endpointId);
     return peer ? this.observation(peer, this.epoch(peers, this.cache?.at ?? now).epoch_id, this.cache?.at ?? now) : null;
   }
@@ -227,13 +263,13 @@ export class GlobalNetworkService {
         try {
           entry = { at: now, addresses: await this.seedResolver(seed.hostname), error: null };
         } catch (error) {
-          entry = { at: now, addresses: [], error: error instanceof Error ? error.message : String(error) };
+          entry = { at: now, addresses: [], error: 'DNS observation unavailable.' };
         }
         this.seedCache.set(seed.hostname, entry);
       }
       results.push({
-        seed_id: `seed-${seed.hostname}`, hostname: seed.hostname, maintainer: seed.maintainer, active: entry.addresses.length > 0,
-        last_query_at: new Date(entry.at).toISOString(), discovered_addrs_count: entry.addresses.length,
+        seed_id: `seed-${seed.hostname}`, hostname: seed.hostname, maintainer: seed.maintainer, active: entry.error ? null : entry.addresses.length > 0,
+        last_query_at: new Date(entry.at).toISOString(), discovered_addrs_count: entry.error ? null : entry.addresses.length,
         // Reachability of discovered addresses is not probed; that is a crawl this deployment does not run.
         reachable_ratio: null, error: entry.error,
       });
@@ -243,12 +279,12 @@ export class GlobalNetworkService {
 
   /** @asyncUnsafe A snapshot of the peer set, taken on the snapshot schedule. */
   public async takeSnapshot(blockHeight: number, now = Date.now()): Promise<GlobalNetworkSnapshot> {
-    const { peers } = await this.node(now);
+    const { peers } = await this.getOwnedNodeSnapshot(now);
     const clients = new Map<string, number>();
     for (const peer of peers) { clients.set(peer.subver, (clients.get(peer.subver) ?? 0) + 1); }
     const snapshot: GlobalNetworkSnapshot = {
-      snapshot_id: `snap-${config.MEMPOOL.NETWORK}-${now}`, network: config.MEMPOOL.NETWORK, block_height: blockHeight, timestamp_utc: new Date(now).toISOString(),
-      total_nodes: peers.length, v2_percentage: peers.length ? Math.round((peers.filter(peer => peer.transport_protocol_type === 'v2').length / peers.length) * 10000) / 100 : 0,
+      snapshot_id: `snap-${config.MEMPOOL.NETWORK}-${now}`, network: config.MEMPOOL.NETWORK, block_height: blockHeight, timestamp_utc: new Date(this.cache?.at ?? now).toISOString(),
+      total_nodes: peers.length, v2_percentage: peers.length && peers.every(peer => ['v1','v2'].includes(peer.transport_protocol_type ?? '')) ? Math.round((peers.filter(peer => peer.transport_protocol_type === 'v2').length / peers.length) * 10000) / 100 : null,
       top_asns: [], top_clients: [...clients.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10).map(([client, count]) => ({ client, count })), geo_distribution: [],
       scope: 'peers connected to the owned node',
     };
@@ -269,10 +305,10 @@ export class GlobalNetworkService {
 
   /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */
   public async getSensors(now = Date.now()): Promise<GlobalNetworkSensor[]> {
-    const { info } = await this.node(now);
+    const { peers, info } = await this.getOwnedNodeSnapshot(now);
     return [{
       sensor_id: 'sensor-owned-node', region: 'Universe infrastructure', asn: undefined, software_version: info.subversion,
-      status: 'active', v1_supported: true, v2_bip324_supported: info.version >= 260000, addrv2_bip155_supported: info.version >= 220000,
+      status: 'active', v1_supported: peers.some(peer => peer.transport_protocol_type === 'v1') ? true : null, v2_bip324_supported: peers.some(peer => peer.transport_protocol_type === 'v2') ? true : null, addrv2_bip155_supported: null,
       last_probe_utc: new Date(this.cache?.at ?? now).toISOString(), reachable_networks: info.networks.filter(n => n.reachable).map(n => n.name),
     }];
   }

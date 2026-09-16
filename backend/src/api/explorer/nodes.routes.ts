@@ -37,6 +37,10 @@ class NodesRoutes {
   }
 
   private async $getNodeGroup(req: Request, res: Response) {
+    if (req.params.name !== 'mempool.space' || !['mainnet', 'testnet', 'signet'].includes(config.MEMPOOL.NETWORK)) {
+      handleError(req, res, 404, 'Node group not configured for this name and network');
+      return;
+    }
     try {
       let nodesList;
       const nodes: any[] = [];
@@ -175,12 +179,11 @@ class NodesRoutes {
       }
 
       for (const pubKey of nodesList) {
-        try {
-          const node = await nodesApi.$getNode(pubKey);
-          if (node) {
-            nodes.push(node);
-          }
-        } catch (e) {}
+        const node = await nodesApi.$getNode(pubKey);
+        if (!node || node.public_key !== pubKey) {
+          throw new Error('Group member observation unavailable');
+        }
+        nodes.push(node);
       }
 
       res.header('Pragma', 'public');
@@ -188,7 +191,7 @@ class NodesRoutes {
       res.setHeader('Expires', new Date(Date.now() + 1000 * 60).toUTCString());
       res.json(nodes);
     } catch (e) {
-      handleError(req, res, 500, 'Failed to get node group');
+      handleError(req, res, 503, 'Complete node group observations unavailable');
     }
   }
 

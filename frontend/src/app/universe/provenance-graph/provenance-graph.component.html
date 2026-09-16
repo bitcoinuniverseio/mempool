@@ -4,6 +4,9 @@
     <h1 class="title" i18n="universe.provenance.title">Provenance of a transaction</h1>
     <p class="txid"><code>{{ result.txid }}</code></p>
 
+    <p *ngIf="result.state === 'loading'" role="status">Loading transaction connections…</p>
+    <p>Observed transaction and output connections. This graph does not identify owners or trace particular satoshis.</p>
+
     <div class="unavailable" *ngIf="result.state === 'invalid'" role="alert">
       <ng-container i18n="universe.provenance.invalid">
         That is not a transaction id. A transaction id is 64 hexadecimal
@@ -66,10 +69,10 @@
           </thead>
           <tbody>
             <tr *ngFor="let node of layout.nodes">
-              <td><a [href]="node.path" (click)="open(node.path); $event.preventDefault()"><code>{{ node.label }}</code></a></td>
+              <td><a [href]="networkPath(node.path)" (click)="open(node.path); $event.preventDefault()"><code>{{ node.label }}</code></a></td>
               <td>{{ node.kind }}</td>
               <td>{{ node.state }}</td>
-              <td>{{ node.valueSat === null ? '' : (node.valueSat | number) }}</td>
+              <td>{{ node.valueSat === null ? 'Unknown' : (node.valueSat | number) }}</td>
             </tr>
           </tbody>
         </table>
@@ -89,7 +92,7 @@
               <td><code>{{ edge.from }}</code></td>
               <td><code>{{ edge.to }}</code></td>
               <td>{{ edgeWord(edge.kind) }}</td>
-              <td>{{ edge.valueSat === null ? '' : (edge.valueSat | number) }}</td>
+              <td>{{ edge.valueSat === null ? 'Not stated' : (edge.valueSat | number) }}</td>
             </tr>
           </tbody>
         </table>

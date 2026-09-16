@@ -1,0 +1,6 @@
+{
+  "profile": "teleport-p2wsh-contracts-v1",
+  "repository": "https://github.com/bitcoin-teleport/teleport-transactions",
+  "path": "src/contracts.rs",
+  "revision": "a52b4d77ddb5599c28c6de9952789b9737b8899d"
+}

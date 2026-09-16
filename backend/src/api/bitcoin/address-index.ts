@@ -1,5 +1,6 @@
 import axios from 'axios';
 import http from 'http';
+import { bech32 } from 'bech32';
 import config from '../../config';
 import logger from '../../logger';
 import { addressSummaryProblems, utxoListProblems } from './esplora-contract';
@@ -140,6 +141,18 @@ export function addressIndexState(facts: AddressIndexFacts): AddressIndexVerdict
  */
 export const ADDRESS_PROBE = '1Q2TWHE3GMdB6BZKafqwxXtWAWgFt5Jvm3';
 
+/** A valid read-only probe for the configured chain; no balance is assumed. */
+export function addressProbeForNetwork(network: string): string {
+  if (network === 'mainnet') return ADDRESS_PROBE;
+  const prefixes: Record<string, string> = {
+    testnet: 'tb', testnet4: 'tb', signet: 'tb', regtest: 'bcrt',
+    liquid: 'ex', liquidtestnet: 'tex',
+  };
+  const prefix = prefixes[network];
+  if (!prefix) throw new Error(`Unsupported address probe network: ${network}`);
+  return bech32.encode(prefix, [0, ...bech32.toWords(Buffer.alloc(20))]);
+}
+
 export interface AddressIndexProbe extends AddressIndexVerdict {
   readonly backendKind: AddressBackendKind;
   readonly configured: boolean;
@@ -163,6 +176,8 @@ export interface AddressIndexProbe extends AddressIndexVerdict {
  */
 const probeConnection = axios.create({
   httpAgent: new http.Agent({ keepAlive: true, maxSockets: 2 }),
+  maxRedirects: 0,
+  proxy: false,
 });
 
 function esploraRequest(path: string, timeout: number): Promise<{ data: unknown; headers: Record<string, unknown> }> {
@@ -219,6 +234,8 @@ export async function $probeAddressIndex(chainTip: number | null): Promise<Addre
     return { ...base, ...addressIndexState(factsFor(backendKind, maxBehindTip, chainTip)) };
   }
 
+  const probeAddress = addressProbeForNetwork(config.MEMPOOL.NETWORK);
+
   // The Electrum path is served through the client this process already holds
   // open, so what there is to probe is that socket.
   //
@@ -268,13 +285,13 @@ export async function $probeAddressIndex(chainTip: number | null): Promise<Addre
 
     if (reachable) {
       try {
-        const summary = await client.$getAddress?.(ADDRESS_PROBE);
-        summaryAnswered = addressSummaryProblems(summary, ADDRESS_PROBE).length === 0;
+        const summary = await client.$getAddress?.(probeAddress);
+        summaryAnswered = addressSummaryProblems(summary, probeAddress).length === 0;
       } catch (e) {
         logger.debug('Address index probe could not read an address summary: ' + (e instanceof Error ? e.message : e));
       }
       try {
-        const utxos = await client.$getAddressUtxos?.(ADDRESS_PROBE);
+        const utxos = await client.$getAddressUtxos?.(probeAddress);
         utxoAnswered = utxoListProblems(utxos).length === 0;
       } catch (e) {
         logger.debug('Address index probe could not read a UTXO list: ' + (e instanceof Error ? e.message : e));
@@ -329,13 +346,13 @@ export async function $probeAddressIndex(chainTip: number | null): Promise<Addre
 
   if (reachable) {
     try {
-      const summary = await esploraRequest(`/address/${ADDRESS_PROBE}`, timeout);
-      summaryAnswered = addressSummaryProblems(summary.data, ADDRESS_PROBE).length === 0;
+      const summary = await esploraRequest(`/address/${probeAddress}`, timeout);
+      summaryAnswered = addressSummaryProblems(summary.data, probeAddress).length === 0;
     } catch (e) {
       logger.debug('Address index probe could not read an address summary: ' + (e instanceof Error ? e.message : e));
     }
     try {
-      const utxos = await esploraRequest(`/address/${ADDRESS_PROBE}/utxo`, timeout);
+      const utxos = await esploraRequest(`/address/${probeAddress}/utxo`, timeout);
       // 500 is the index's own default for the most unspent outputs it will
       // return for one address, and the same number the address page uses to
       // decide whether to ask at all. They are deliberately the same: a page

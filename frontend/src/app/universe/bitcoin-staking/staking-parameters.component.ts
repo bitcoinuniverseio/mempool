@@ -1,3 +1,4 @@
+import { observeStaking, slashingLabel, reconciliationLabel } from './staking-view';
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -64,7 +65,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
               <dd class="col-sm-6 font-monospace">{{ p.unbonding_time_blocks }} blocks</dd>
 
               <dt class="col-sm-6 text-muted">Min / Max Stake Satoshis</dt>
-              <dd class="col-sm-6 font-monospace">{{ (p.min_staking_amount_sat / 100000000).toFixed(4) }} &ndash; {{ (p.max_staking_amount_sat / 100000000).toFixed(2) }} BTC</dd>
+              <dd class="col-sm-6 font-monospace">{{ (p.min_staking_amount_sat / 100000000).toFixed(4) }} &ndash; {{ p.max_staking_amount_sat ?? 'Unknown' }} sats</dd>
 
               <dt class="col-sm-6 text-muted">Confirmation Depth</dt>
               <dd class="col-sm-6 font-monospace">{{ p.confirmation_depth }} blocks</dd>
@@ -74,7 +75,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
             </dl>
 
             <div class="mt-auto pt-3 border-top">
-              <div class="text-muted small mb-1">Slashing Burn Script (Provably Unspendable)</div>
+              <div class="text-muted small mb-1">Reported Slashing Script (spendability not verified)</div>
               <div class="font-monospace small p-2 border rounded bg-body text-break">
                 {{ p.slashing_burn_script }}
               </div>
@@ -100,19 +101,12 @@ export class StakingParametersComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef
   ) {}
 
+  readonly slashingLabel = slashingLabel;
+  readonly reconciliationLabel = reconciliationLabel;
   ngOnInit(): void {
-    this.sub = this.stakingApi.getParameters$().subscribe({
-      next: (data) => {
-        this.parameters = data;
-        this.loading = false;
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        this.error = loadFailureMessage(classifyLoadFailure(err));
-        this.loading = false;
-        this.cdr.markForCheck();
-      },
-    });
+    this.sub = observeStaking(this.stakingApi.networkChanges$, () => {this.parameters = [];this.loading=true;this.error=null;this.cdr.markForCheck();},
+      () => this.stakingApi.getParameters$(), data => {this.parameters=data;this.loading=false;this.cdr.markForCheck();},
+      err => {this.parameters=[];this.error=err?.error?.error || err?.message || loadFailureMessage(classifyLoadFailure(err));this.loading=false;this.cdr.markForCheck();});
   }
 
   ngOnDestroy(): void {

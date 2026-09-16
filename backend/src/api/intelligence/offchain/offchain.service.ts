@@ -1,4 +1,6 @@
+import config from '../../../config';
 import { createHash } from 'crypto';
+import { OffchainPackageVerifier } from './package-verifier';
 import * as fs from 'fs';
 import * as secp256k1 from 'tiny-secp256k1';
 import blocks from '../../blocks';
@@ -29,8 +31,12 @@ import {
  * registry is empty and says so. A manifest is verified only when its
  * Schnorr or ECDSA signature over the canonical manifest body checks out
  * against the operator key. Package checks remain checks on the supplied
- * data, with the chain height taken from this backend rather than assumed.
+ * data through an explicit signed-transaction profile and owned header checkpoint.
  */
+
+export class OffchainRegistryError extends Error {
+  constructor(public readonly code: string, message: string, public readonly status = 503) { super(message); }
+}
 
 export const REGISTRY_ENV = 'UNIVERSE_OFFCHAIN_REGISTRY_JSON';
 
@@ -59,17 +65,15 @@ export function verifyManifestSignature(manifest: Partial<StatechainPublicManife
   const digest = manifestDigest(manifest);
   const key = Buffer.from(pubkey, 'hex');
   const sig = Buffer.from(signature, 'hex');
+  if (manifest.signature_scheme !== 'schnorr' && manifest.signature_scheme !== 'ecdsa') return { valid: false, scheme: null, reason: 'Unsupported signature_scheme: explicitly select schnorr or ecdsa' };
   try {
-    if (secp256k1.verifySchnorr(digest, key.subarray(1), sig)) { return { valid: true, scheme: 'schnorr', reason: null }; }
-  } catch { /* fall through to ECDSA */ }
-  try {
-    if (secp256k1.verify(digest, key, sig)) { return { valid: true, scheme: 'ecdsa', reason: null }; }
-  } catch { /* invalid encoding */ }
-  return { valid: false, scheme: null, reason: 'signature does not verify against operator_public_key over the canonical manifest body' };
+    const valid = manifest.signature_scheme === 'schnorr' ? secp256k1.verifySchnorr(digest, key.subarray(1), sig) : secp256k1.verify(digest, key, sig, true);
+    if (valid) return { valid: true, scheme: manifest.signature_scheme, reason: null };
+  } catch { /* Invalid curve point or signature encoding. No algorithm fallback. */ }  return { valid: false, scheme: null, reason: 'signature does not verify against operator_public_key over the canonical manifest body' };
 }
 
 export class OffchainService {
-  private registryCache: { at: number; registry: OffchainRegistry } | null = null;
+  private registryCache: { at: number; path: string; network: string; registry: OffchainRegistry } | null = null;
   public registryPath: () => string | undefined = () => process.env[REGISTRY_ENV];
   public currentHeight: () => number = () => blocks.getCurrentBlockHeight();
   public recommendedFeeRate: () => number | null = () => { try { return feeApi.getRecommendedFee().halfHourFee; } catch { return null; } };
@@ -80,25 +84,40 @@ export class OffchainService {
   }
 
   private registry(now = Date.now()): OffchainRegistry {
-    if (this.registryCache && now - this.registryCache.at < 60_000) { return this.registryCache.registry; }
-    const path = this.registryPath();
-    let registry: OffchainRegistry = { source: path ?? null, operators: [], offers: [], history: {}, error: null };
-    if (path) {
-      try {
-        const parsed = JSON.parse(fs.readFileSync(path, 'utf8'));
-        registry = {
-          source: path,
-          operators: Array.isArray(parsed.operators) ? parsed.operators : [],
-          offers: Array.isArray(parsed.offers) ? parsed.offers : [],
-          history: parsed.history && typeof parsed.history === 'object' ? parsed.history : {},
-          error: null,
-        };
-      } catch (error) {
-        registry = { source: path, operators: [], offers: [], history: {}, error: error instanceof Error ? error.message : String(error) };
+    const path = this.registryPath(), network = config.MEMPOOL.NETWORK;
+    if (!path) throw new OffchainRegistryError('unavailable-registry', 'No offchain registry is configured.');
+    if (this.registryCache && this.registryCache.path === path && this.registryCache.network === network && now >= this.registryCache.at && now - this.registryCache.at < 60000) return this.registryCache.registry;
+    let descriptor: number | undefined;
+    try {
+      descriptor = fs.openSync(path, 'r');
+      const stat = fs.fstatSync(descriptor);
+      if (!stat.isFile() || stat.size > 1024 * 1024) throw Error('bounds');
+      const buffer = Buffer.alloc(1024 * 1024 + 1); let read = 0;
+      while (read < buffer.length) { const n = fs.readSync(descriptor, buffer, read, buffer.length-read, null); if (!n) break; read += n; }
+      if (read > 1024 * 1024) throw Error('bounds');
+      const bytes = buffer.subarray(0,read), parsed = JSON.parse(bytes.toString('utf8'));
+      const object = (v:any) => v && typeof v === 'object' && !Array.isArray(v);
+      const text = (v:any,n=256) => typeof v === 'string' && v.length > 0 && v.length <= n;
+      const array = (v:any) => Array.isArray(v) && v.length <= 64 && v.every((x:any)=>text(x));
+      const amount = (v:any) => Number.isSafeInteger(v) && v >= 0 && v <= 2100000000000000;
+      if (!object(parsed) || !Array.isArray(parsed.operators) || parsed.operators.length > 1000 || !Array.isArray(parsed.offers) || parsed.offers.length > 2000 || !object(parsed.history)) throw Error('schema');
+      const ids = new Set<string>();
+      for (const operator of parsed.operators) {
+        if (!object(operator) || !text(operator.operator_id) || ids.has(operator.operator_id) || !['mercury_statechain','teleport_coinswap'].includes(operator.protocol) || !text(operator.display_name) || typeof operator.operator_public_key !== 'string' || !/^(02|03)[a-f0-9]{64}$/i.test(operator.operator_public_key) || !array(operator.networks) || !array(operator.supported_versions) || !array(operator.transfer_capabilities) || !array(operator.recovery_capabilities) || !object(operator.endpoints) || !text(operator.endpoints.clearnet,2048)) throw Error('operator schema');
+        ids.add(operator.operator_id);
       }
-    }
-    this.registryCache = { at: now, registry };
-    return registry;
+      const offers = new Set<string>();
+      for (const offer of parsed.offers) {
+        if (!object(offer) || !text(offer.offer_id) || offers.has(offer.offer_id) || !ids.has(offer.maker_id) || !text(offer.network) || !text(offer.endpoint,2048) || !amount(offer.min_amount_sats) || !amount(offer.max_amount_sats) || offer.max_amount_sats < offer.min_amount_sats || !amount(offer.base_fee_sats) || !Number.isFinite(offer.fee_rate_bps) || offer.fee_rate_bps < 0 || offer.fee_rate_bps > 10000 || !Array.isArray(offer.supported_timelock_deltas) || offer.supported_timelock_deltas.length > 64 || !offer.supported_timelock_deltas.every((x:any)=>Number.isInteger(x)&&x>=0&&x<=0xffffffff)) throw Error('offer schema');
+        offers.add(offer.offer_id);
+      }
+      if (Object.entries(parsed.history).some(([id,events])=>!ids.has(id)||!Array.isArray(events)||events.length>1000)) throw Error('history schema');
+      const operators = parsed.operators.filter((operator:any)=>operator.networks.includes(network)).map((operator:any)=>({...operator,health:'unknown',provenance:{registered_in_knowledge_registry:null,verified_signature:null},operator_authenticated:null,evidence_scope:'Operator-configured reference entry; endpoint health, signatures and identity authority are not observed.'}));
+      const selected = new Set(operators.map((operator:any)=>operator.operator_id));
+      const registry: OffchainRegistry = { source:'sha256:'+createHash('sha256').update(bytes).digest('hex'), operators, offers:parsed.offers.filter((offer:any)=>offer.network===network&&selected.has(offer.maker_id)),history:Object.fromEntries(Object.entries(parsed.history).filter(([id])=>selected.has(id))) as Record<string, unknown[]>,error:null };
+      this.registryCache = {at:now,path,network,registry}; return registry;
+    } catch { throw new OffchainRegistryError('invalid-registry-source','The configured offchain registry is unreadable, malformed or exceeds its bounds.'); }
+    finally { if (descriptor !== undefined) fs.closeSync(descriptor); }
   }
 
   public getOverview(): OffchainOverviewResponse {
@@ -107,10 +126,11 @@ export class OffchainService {
       total_operators: registry.operators.length,
       // Statechain counts live with the operators; no operator on this deployment reports them.
       active_statechains_count: null,
-      active_coinswap_makers: registry.offers.length,
+      active_coinswap_makers: null,
+      configured_coinswap_makers: new Set(registry.offers.map(offer => offer.maker_id)).size,
       operators: registry.operators,
       public_offers: registry.offers,
-      registry: { configured: registry.source !== null, source: registry.source, error: registry.error },
+      registry: { configured: true, source: registry.source, error: registry.error, observed_at: new Date(this.registryCache!.at).toISOString(), scope: 'Configured reference catalog only; operator availability and offer acceptance are not observed.' },
     };
   }
 
@@ -139,100 +159,48 @@ export class OffchainService {
     return this.registry().offers;
   }
 
-  public verifyManifest(manifest: Partial<StatechainPublicManifest>): { verified: boolean; operator_id: string; scheme: 'schnorr' | 'ecdsa' | null; errors: string[] } {
+  public verifyManifest(manifest: Partial<StatechainPublicManifest>) {
+    if (!manifest || typeof manifest !== 'object' || Array.isArray(manifest) || Buffer.byteLength(JSON.stringify(manifest)) > 65536) throw new OffchainRegistryError('invalid-input', 'A bounded manifest object is required.', 400);
     const errors: string[] = [];
     if (!manifest.protocol) { errors.push('Protocol identifier is required'); }
     if (!manifest.signature) { errors.push('Cryptographic signature is required'); }
-    if (manifest.expires_at && Number.isFinite(Date.parse(manifest.expires_at)) && Date.parse(manifest.expires_at) < Date.now()) { errors.push('Manifest has expired'); }
+    if (!manifest.effective_from || !Number.isFinite(Date.parse(manifest.effective_from))) errors.push('Valid effective_from timestamp is required');
+    if (!manifest.expires_at || !Number.isFinite(Date.parse(manifest.expires_at))) errors.push('Valid expires_at timestamp is required');
+    if (Date.parse(manifest.effective_from || '') > Date.now()) errors.push('Manifest is not yet effective');
+    if (Date.parse(manifest.expires_at || '') <= Date.now()) errors.push('Manifest has expired');
+    if (Date.parse(manifest.expires_at || '') <= Date.parse(manifest.effective_from || '')) errors.push('Manifest validity interval is reversed');
     const signature = verifyManifestSignature(manifest);
     if (!signature.valid && signature.reason) { errors.push(signature.reason); }
     return {
       verified: errors.length === 0 && signature.valid,
+      signature_valid: signature.valid,
+      operator_authenticated: null,
+      verification_scope: 'Signature over the supplied canonical manifest and declared validity interval only. The supplied signing key is not authenticated as an operator identity or domain.',
       operator_id: `op-${createHash('sha256').update(manifest.operator_public_key || '').digest('hex').substring(0, 12)}`,
       scheme: signature.scheme,
+      declared_scheme: manifest.signature_scheme ?? null,
+      manifest_digest: manifestDigest(manifest).toString('hex'),
+      input_digest: createHash('sha256').update(JSON.stringify(Object.fromEntries(Object.keys(manifest).sort().map(key => [key, (manifest as any)[key]])))).digest('hex'),
       errors,
     };
   }
 
-  public verifyTransferPackage(data: {
-    statechain_id: string;
-    deposit_amount_sats: number;
-    backup_transactions: StatechainBackupTransaction[];
-    server_signature_count: number;
-    current_height?: number;
-  }): StatechainTransferVerification {
-    const errors: string[] = [];
-    const warnings: string[] = [];
-    const currentHeight = data.current_height || this.currentHeight();
-    if (!data.statechain_id) { errors.push('Statechain ID is required'); }
-    if (!data.backup_transactions || data.backup_transactions.length === 0) { errors.push('Backup transactions sequence cannot be empty'); }
-    let prevLocktime = Infinity;
-    let minLocktime = Infinity;
-    for (const tx of data.backup_transactions || []) {
-      if (tx.locktime >= prevLocktime) {
-        errors.push(`Locktime violation at iteration ${tx.iteration}: locktime ${tx.locktime} is not strictly less than previous ${prevLocktime}`);
-      }
-      if (!tx.server_signature) { errors.push(`Backup transaction at iteration ${tx.iteration} carries no server signature`); }
-      prevLocktime = tx.locktime;
-      if (tx.locktime < minLocktime) { minLocktime = tx.locktime; }
-    }
-    const txCount = (data.backup_transactions || []).length;
-    const signaturesReconciled = txCount === data.server_signature_count;
-    if (!signaturesReconciled) {
-      errors.push(`Server signature count (${data.server_signature_count}) does not match backup transactions count (${txCount})`);
-    }
-    if (currentHeight <= 0) { warnings.push('Current block height is not known to this backend yet; recoverability timing is not assessed.'); }
-    let recoverableState: StatechainTransferVerification['recoverable_state'] = 'unsafe_package';
-    if (errors.length === 0) {
-      recoverableState = currentHeight > 0 && currentHeight >= minLocktime ? 'recoverable_now' : 'recoverable_after_height';
-    }
-    return {
-      statechain_id: data.statechain_id, is_valid: errors.length === 0, deposit_amount_sats: data.deposit_amount_sats, backup_transactions_count: txCount,
-      server_signature_count: data.server_signature_count, signatures_reconciled: signaturesReconciled, earliest_unilateral_exit_height: minLocktime === Infinity ? 0 : minLocktime,
-      current_block_height: currentHeight, recoverable_state: recoverableState, errors, warnings,
-    };
+  public packageVerifier = new OffchainPackageVerifier();
+
+  public verifyTransferPackage(data: any) {
+    return this.packageVerifier.verify(data, 'statechain');
   }
 
-  public verifyCoinswapPackage(data: { package_id: string; maker_id: string; swap_amount_sats: number; contracts: any[] }): CoinswapPackageVerification {
-    const errors: string[] = [];
-    if (!data.package_id) { errors.push('Package ID is required'); }
-    if (!data.contracts || data.contracts.length < 2) { errors.push('CoinSwap package requires funding and refund contract transactions'); }
-    let forwardLocktime = 0;
-    let backwardLocktime = 0;
-    for (const c of data.contracts || []) {
-      if (c.role === 'forward_contract') { forwardLocktime = c.timelock; }
-      if (c.role === 'backward_contract') { backwardLocktime = c.timelock; }
-    }
-    if (forwardLocktime > 0 && backwardLocktime > 0 && forwardLocktime <= backwardLocktime) {
-      errors.push('Forward contract timelock must be strictly greater than backward contract timelock for safe recovery');
-    }
-    return {
-      package_id: data.package_id, is_valid: errors.length === 0, maker_id: data.maker_id, total_hops: Math.max(0, (data.contracts || []).length - 1),
-      swap_amount_sats: data.swap_amount_sats, contract_transactions: data.contracts || [],
-      // No watchtower reports to this deployment; coverage is not something it can vouch for.
-      watchtower_coverage_verified: false,
-      recovery_state: errors.length === 0 ? 'recoverable_after_height' : 'unsafe_package', errors,
-    };
+  public verifyCoinswapPackage(data: any) {
+    return this.packageVerifier.verify(data, 'coinswap');
   }
-
   public generateRecoveryPlan(params: { protocol: 'statechain' | 'coinswap'; entity_id: string; current_stage: string; target_locktime?: number; current_height?: number }): OffchainRecoveryPlan {
-    const currentHeight = params.current_height || this.currentHeight();
-    const targetLock = params.target_locktime ?? null;
-    let recoveryState: OffchainRecoveryPlan['recovery_state'] = 'unknown';
-    let guidance = 'Provide target_locktime from the latest backup transaction to assess when recovery can be broadcast.';
-    if (targetLock !== null && currentHeight > 0) {
-      if (targetLock > currentHeight) {
-        recoveryState = 'recoverable_after_height';
-        guidance = `Wait until block height ${targetLock} before broadcasting the recovery transaction (current height ${currentHeight}).`;
-      } else {
-        recoveryState = 'recoverable_now';
-        guidance = 'The backup transaction locktime has passed. Build the recovery PSBT from that backup transaction in the PSBT Workbench.';
-      }
-    }
-    const feeRate = this.recommendedFeeRate();
+    const targetLock = null;
+    const recoveryState: OffchainRecoveryPlan['recovery_state'] = 'insufficient_artifacts';
+    const guidance = 'An identifier, caller height or locktime cannot authorize recovery. Verify the signed public backup or CoinSwap contract package against the owned node first, then assess current spendability and policy using the exact recovery transaction. No recovery PSBT is generated here.';    const feeRate = this.recommendedFeeRate();
     return {
       plan_id: EventEnvelopeValidator.generateUuidV7(), protocol: params.protocol, entity_id: params.entity_id, current_stage: params.current_stage || 'latest_backup_ready',
-      earliest_broadcast_height: targetLock ?? 0, requires_fee_bump: feeRate !== null, suggested_fee_rate_sats_vb: feeRate, recovery_state: recoveryState,
+      earliest_broadcast_height: targetLock ?? 0, requires_fee_bump: false, suggested_fee_rate_sats_vb: feeRate, recovery_state: recoveryState,
       // A recovery PSBT needs the backup transaction and its input; nothing is constructed from an entity ID alone.
       unsigned_psbt_hex: null, action_guidance: guidance,
     };

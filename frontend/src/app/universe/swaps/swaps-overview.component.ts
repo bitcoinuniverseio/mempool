@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRe
 import { CommonModule } from '@angular/common';
 import { SharedModule } from '@app/shared/shared.module';
 import { RouterModule } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { Subscription, catchError, of, switchMap } from 'rxjs';
 import { SwapsApiService, SwapsOverview } from './swaps.service';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
@@ -51,7 +51,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           <div class="card p-3 bg-body-tertiary border h-100">
             <div class="text-muted small">Observed Swaps</div>
             <div class="fs-4 fw-bold mt-1">{{ overview.total_swaps_observed ?? 'Unknown' }}</div>
-            <div class="small text-success mt-1">Authenticated swap inventory unavailable</div>
+            <div class="small text-muted mt-1">Authenticated swap inventory unavailable</div>
           </div>
         </div>
         <div class="col-12 col-md-3">
@@ -138,14 +138,15 @@ export class SwapsOverviewComponent implements OnInit, OnDestroy {
   constructor(private api: SwapsApiService, private cdr: ChangeDetectorRef) {}
 
   public ngOnInit(): void {
-    this.sub = this.api.getOverview$().subscribe({
+    this.sub = this.api.network$.pipe(switchMap(network => {
+      this.overview = null; this.error = ''; this.loading = true; this.cdr.markForCheck();
+      return this.api.getOverview$(network).pipe(catchError(err => {
+        this.error = err.error?.error || 'Swap overview source is unavailable.';
+        return of(null);
+      }));
+    })).subscribe({
       next: (data) => {
         this.overview = data;
-        this.loading = false;
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        this.error = err.message || 'Failed to load swap overview';
         this.loading = false;
         this.cdr.markForCheck();
       },

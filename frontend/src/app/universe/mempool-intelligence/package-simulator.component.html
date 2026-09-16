@@ -14,12 +14,11 @@
     </label>
     <textarea id="package-input" name="package" rows="6" spellcheck="false"
       autocomplete="off" autocapitalize="off" autocorrect="off"
-      [(ngModel)]="input"
+      [(ngModel)]="input" (ngModelChange)="reset()" maxlength="4000000"
       aria-describedby="package-input-help"
       placeholder="0200000001..."></textarea>
     <p id="package-input-help" class="field-help" i18n="mempool.simulate.input-help">
-      Hexadecimal only, up to {{ maxPackageSize }} transactions, which is the
-      most a node relays as one package. A pasted JSON array works as it is.
+      Hexadecimal only, up to {{ maxPackageSize }} transactions and 2 MB of transaction data per simulation request. A pasted JSON array works as it is.
       Nothing here is broadcast.
     </p>
 

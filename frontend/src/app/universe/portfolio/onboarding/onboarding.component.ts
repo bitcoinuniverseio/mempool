@@ -34,13 +34,19 @@ type EntryChoice =
   | 'list'
   | 'manual';
 
-const ADDRESS_PATTERNS: readonly { chain: string; network: string; pattern: RegExp; label: string }[] = [
-  { chain: 'bitcoin', network: 'mainnet', pattern: /^bc1[02-9ac-hj-np-z]{11,71}$/, label: 'Bitcoin (native SegWit)' },
-  { chain: 'bitcoin', network: 'mainnet', pattern: /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$/, label: 'Bitcoin (legacy / SegWit)' },
-  { chain: 'dogecoin', network: 'mainnet', pattern: /^[DA9][1-9A-HJ-NP-Za-km-z]{20,60}$/, label: 'Dogecoin' },
-  { chain: 'zcash', network: 'mainnet', pattern: /^t[13][a-km-zA-HJ-NP-Z1-9]{25,60}$/, label: 'Zcash (transparent)' },
-];
 const addressBase58Check = createBase58check(sha256);
+
+/** Validate checksums, payload sizes and supported mainnet versions locally. */
+function addressContext(address: string): { chain: string; network: string } | null {
+  if (address.length > 90) return null;
+  try { Address(NETWORK).decode(address); return { chain: 'bitcoin', network: 'mainnet' }; } catch { /* Try other public formats. */ }
+  try {
+    const payload = addressBase58Check.decode(address);
+    if (payload.length === 21 && [0x1e, 0x16].includes(payload[0])) return { chain: 'dogecoin', network: 'mainnet' };
+    if (payload.length === 22 && payload[0] === 0x1c && [0xb8, 0xbd].includes(payload[1])) return { chain: 'zcash', network: 'mainnet' };
+  } catch { /* Invalid checksum or encoding. */ }
+  return null;
+}
 
 @Component({
   selector: 'app-onboarding',
@@ -116,7 +122,7 @@ const addressBase58Check = createBase58check(sha256);
         @case ('unlock') {
           <section class="panel">
             <h2 i18n="@@universe.portfolio.onboarding.unlock-title">Unlock your portfolio vault</h2>
-            <p class="soft" i18n="@@universe.portfolio.onboarding.unlock-manual-copy">Unlock the existing vault to save your manual portfolio and positions.</p>
+            <p class="soft" i18n="@@universe.portfolio.onboarding.unlock-existing-copy">Unlock the existing vault to save your portfolio.</p>
             <label>
               <span i18n="@@universe.portfolio.home.passphrase">Passphrase</span>
               <input #unlockInput type="password" autocomplete="current-password" required />
@@ -229,11 +235,7 @@ export class OnboardingComponent implements OnInit {
       this.step.set('input');
       return;
     }
-    if (choice === 'manual') {
-      void this.prepareManual();
-      return;
-    }
-    this.step.set(this.store.vaultKind() === 'unlocked' ? 'input' : 'vault');
+    void this.prepareEntry();
   }
 
   protected inputTitle(): string {
@@ -291,6 +293,7 @@ export class OnboardingComponent implements OnInit {
     this.rejection.set('');
     this.validation.set('');
     this.valid.set(false);
+    this.importedEntries = [];
     const text = value.trim();
     if (text.length === 0) return;
     const secret = looksSecretLike(text);
@@ -302,22 +305,8 @@ export class OnboardingComponent implements OnInit {
     }
     if (this.stepChoice() === 'ephemeral') {
       const [chain, network] = this.ephemeralContext().split(':');
-      // The Bitcoin decoder accepts valid upper/lowercase Bech32 and rejects mixed case.
-      let recognized = chain === 'bitcoin' && network === 'mainnet'
-        ? text.length <= 90
-        : ADDRESS_PATTERNS.some((entry) => entry.chain === chain && entry.network === network && entry.pattern.test(text));
-      if (recognized) {
-        try {
-          if (chain === 'bitcoin') {
-            Address(NETWORK).decode(text);
-          } else {
-            const payload = addressBase58Check.decode(text);
-            recognized = chain === 'dogecoin'
-              ? payload.length === 21 && [0x1e, 0x16].includes(payload[0])
-              : chain === 'zcash' && payload.length === 22 && payload[0] === 0x1c && [0xb8, 0xbd].includes(payload[1]);
-          }
-        } catch { recognized = false; }
-      }
+      const context = addressContext(text);
+      const recognized = context?.chain === chain && context.network === network;
       if (!recognized) {
         this.rejection.set($localize`:@@universe.portfolio.onboarding.single-address-bad:Enter one public address on the selected chain and network. Lists and private credentials are not accepted.`);
         return;
@@ -354,10 +343,11 @@ export class OnboardingComponent implements OnInit {
     }
     const imported = this.parseList(text);
     const addresses = imported.entries.map((entry) => entry.address);
-    const unknown = addresses.filter(
-      (candidate) => !ADDRESS_PATTERNS.some((entry) => entry.pattern.test(candidate)),
-    );
-    if (addresses.length === 0 || unknown.length > 0) {
+    const unknown = imported.entries.filter((entry) => {
+      const context = addressContext(entry.address);
+      return !context || (entry.chain && entry.chain !== context.chain) || (entry.network && entry.network !== context.network);
+    });
+    if (addresses.length === 0 || unknown.length > 0 || imported.rejected > 0) {
       this.rejection.set(
         $localize`:@@universe.portfolio.onboarding.addresses-bad:Some entries are not recognized public addresses on a supported chain.`,
       );
@@ -376,7 +366,8 @@ export class OnboardingComponent implements OnInit {
     this.unlockingVault.set(true);
     try {
       if (await this.store.unlock(passphrase)) {
-        await this.finishManual();
+        if (this.stepChoice() === 'manual') {await this.finishManual();}
+        else {this.step.set('input');}
       } else {
         this.error.set($localize`:@@universe.portfolio.home.unlock-failed:That passphrase did not unlock the portfolio.`);
       }
@@ -427,6 +418,8 @@ export class OnboardingComponent implements OnInit {
   }
 
   protected async save(): Promise<void> {
+    this.validateMaterial(this.material);
+    if (!this.valid()) return;
     if (this.stepChoice() === 'ephemeral') {
       this.validateMaterial(this.material);
       if (!this.valid()) {return;}
@@ -469,8 +462,8 @@ export class OnboardingComponent implements OnInit {
     } else {
       const imported = this.parseList(this.material);
       for (const entry of imported.entries) {
-        const match = ADDRESS_PATTERNS.find((candidate) => candidate.pattern.test(entry.address));
-        if (match === undefined) continue;
+        const match = addressContext(entry.address);
+        if (match === null) continue;
         accounts.push({
           id: crypto.randomUUID(),
           name: entry.label.length > 0 ? entry.label : entry.address.slice(0, 12) + '…',
@@ -488,12 +481,15 @@ export class OnboardingComponent implements OnInit {
     void this.router.navigate(['/portfolio/p', portfolio.id, 'overview']);
   }
 
-  private async prepareManual(): Promise<void> {
+  private async prepareEntry(): Promise<void> {
     this.preparingManual.set(true);
     try {
       // A direct /portfolio/new navigation has not visited the home probe.
       const kind = this.store.vaultKind() === 'absent' ? await this.store.initialize() : this.store.vaultKind();
-      if (kind === 'unlocked') {await this.finishManual();}
+      if (kind === 'unlocked') {
+        if (this.stepChoice() === 'manual') {await this.finishManual();}
+        else {this.step.set('input');}
+      }
       else {this.step.set(kind === 'locked' ? 'unlock' : 'vault');}
     } catch {
       this.error.set($localize`:@@universe.portfolio.onboarding.vault-probe-error:The encrypted vault could not be opened. Check browser storage availability and retry.`);

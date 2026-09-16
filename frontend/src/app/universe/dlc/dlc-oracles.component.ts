@@ -1,3 +1,4 @@
+import { DlcOracleVerifyComponent } from './dlc-oracle-verify.component';
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -9,7 +10,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
 @Component({
   selector: 'app-dlc-oracles',
   standalone: true,
-  imports: [RelativeUrlPipe, CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule, DlcOracleVerifyComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -32,6 +33,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           <a class="nav-link" [routerLink]="'/contracts/dlc/simulate' | relativeUrl">Regtest Simulator</a>
         </nav>
       </header>
+      <app-dlc-oracle-verify></app-dlc-oracle-verify>
 
       <div *ngIf="loading" class="text-center py-5 text-muted">
         <div class="spinner-border text-primary mb-2" role="status"></div>

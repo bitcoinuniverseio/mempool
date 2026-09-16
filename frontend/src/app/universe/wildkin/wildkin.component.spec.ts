@@ -1,6 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, convertToParamMap } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { of, throwError, Subject } from 'rxjs';
 import { describe, expect, it, vi } from 'vitest';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
@@ -42,5 +42,26 @@ describe('Wildkin pages on an absent source', () => {
     expect(vm.kind).toBe('error');
     expect(vm.message).toBeTruthy();
     expect(vm.braids).toBeUndefined();
+  });
+});
+
+
+describe('Wildkin source verdict and route transitions', () => {
+  it('distinguishes invalid and missing braid verdicts', () => {
+    const page = new WildkinBloodlinesComponent({} as never, seo);
+    expect(page.braidVerdict(true)).toBe('Source Reports Valid');
+    expect(page.braidVerdict(false)).toBe('Source Reports Invalid');
+    expect(page.braidVerdict(undefined)).toBe('Validity Not Reported');
+    expect(page.braidVerdict('true')).toBe('Validity Not Reported');
+  });
+  it('clears old creature immediately and cancels route reads on destroy', () => {
+    const paramMap = new Subject<any>(); const response = new Subject<any>();
+    const api = { getWildkinCreature$: (id: string) => id === 'first' ? of({ creatureId: 'first' }) : response };
+    const page = new WildkinCreaturesComponent(api as never, { paramMap } as never, seo);
+    let vm: any; page.vm$.subscribe(value => vm = value); page.ngOnInit();
+    paramMap.next(convertToParamMap({ id: 'first' })); expect(vm.kind).toBe('detail');
+    paramMap.next(convertToParamMap({ id: 'second' })); expect(vm.kind).toBe('loading'); expect(vm.selected).toBeUndefined();
+    expect(response.observed).toBe(true); page.ngOnDestroy(); expect(response.observed).toBe(false);
+    expect(paramMap.observed).toBe(false);
   });
 });

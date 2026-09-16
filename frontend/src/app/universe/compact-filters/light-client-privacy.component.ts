@@ -33,10 +33,10 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
       <div class="row g-4">
         <div class="col-12 col-lg-6">
           <div class="card p-4 bg-body-tertiary border h-100">
-            <h2 class="h5 mb-3">Privacy Guardrails</h2>
+            <h2 class="h5 mb-3">Privacy Guardrails</h2><p role="status">Tor, decoy block retrieval and split-peer routing are not connected. These controls cannot enable protection in this deployment.</p>
             <div class="mb-3">
               <label class="form-check form-switch mb-2 touch-check-label">
-                <input class="form-check-input" type="checkbox" id="torRoute" [(ngModel)]="torOnly" />
+                <input class="form-check-input" type="checkbox" disabled id="torRoute" [(ngModel)]="torOnly" />
                 <span class="form-check-label fw-bold">Route Block Queries over Tor / Onion</span>
               </label>
               <p class="small text-muted mb-3">
@@ -44,7 +44,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
               </p>
 
               <label class="form-check form-switch mb-2 touch-check-label">
-                <input class="form-check-input" type="checkbox" id="decoyReqs" [(ngModel)]="decoyRequests" />
+                <input class="form-check-input" type="checkbox" disabled id="decoyReqs" [(ngModel)]="decoyRequests" />
                 <span class="form-check-label fw-bold">Inject Decoy Block Requests</span>
               </label>
               <p class="small text-muted mb-3">
@@ -52,7 +52,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
               </p>
 
               <label class="form-check form-switch mb-2 touch-check-label">
-                <input class="form-check-input" type="checkbox" id="splitProviders" [(ngModel)]="splitPeers" />
+                <input class="form-check-input" type="checkbox" disabled id="splitProviders" [(ngModel)]="splitPeers" />
                 <span class="form-check-label fw-bold">Separate Filter Peer from Block Peer</span>
               </label>
               <p class="small text-muted mb-0">
@@ -83,7 +83,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                   <tr>
                     <td>Address Leakage</td>
                     <td class="text-danger">High (statistical intersection)</td>
-                    <td class="text-success">Zero (node never sees query)</td>
+                    <td class="text-success">Local script matching; public height requests remain observable</td>
                   </tr>
                   <tr>
                     <td>Bandwidth</td>
@@ -109,7 +109,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
   `],
 })
 export class LightClientPrivacyComponent {
-  torOnly = true;
-  decoyRequests = true;
-  splitPeers = true;
+  torOnly = false;
+  decoyRequests = false;
+  splitPeers = false;
 }

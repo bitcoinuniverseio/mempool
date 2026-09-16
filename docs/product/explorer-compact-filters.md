@@ -1,40 +1,21 @@
-# Compact Filter and Light-Client Verification Center
+# BIP157/158 owned filter reads and local matching
 
-## Overview
-The Compact Filter and Light-Client Verification Center provides a dedicated peer-to-peer filter observatory, header-chain verification engine, and privacy-preserving descriptor scanner based on BIP157 (Client-Side Block Filtering) and BIP158 (Compact Size Golomb-Coded Basic Filters).
+The block-filter, range and checkpoint endpoints now use an operator-configured Bitcoin Core basic block filter index. Set UNIVERSE_FILTER_RPC_ORIGIN and UNIVERSE_FILTER_RPC_COOKIE_FILE (or RPC USER/PASSWORD) in the backend runtime only. The node must already have blockfilterindex=1 and be synchronized. getblockfilter returns both filter and header; there is no getblockfilterheader RPC.
 
-## Privacy and Network Architecture
-1. **Local Descriptor Scanning**:
-   - The user's descriptors, xpubs, addresses, and scriptPubKeys NEVER leave the local browser worker.
-   - Filters and filter headers are fetched from peers or local cache; matching runs strictly client-side.
-2. **Multi-Peer Agreement Verification**:
-   - Compares filter checkpoints and filter headers across multiple independent peers.
-   - Detects divergent or malicious peers by comparing responses against reference full-block reconstructions.
-3. **Bandwidth and Privacy Controls**:
-   - Full blocks are downloaded only when a local filter match occurs.
-   - Transparent disclosure of query privacy, false-positive probability, and peer observation points.
-4. **No Duplicate Full-Chain Index**:
-   - Reuses self-hosted Bitcoin Core filter index (`-blockfilterindex`) for authoritative block filter service.
+GET blocks/:hash-or-height accepts network=main,test,testnet4,signet,regtest. GET ranges accepts the same network plus inclusive start/end, at most32 blocks (default latest16). GET checkpoints returns the latest up to five positive multiples of1000, not a complete cfcheckpt P2P response. Before height1000 an established source legitimately returns no positive checkpoint. Two requests maximum,15seconds overall,3seconds per RPC,2.1MB response and4MB encoded interval bounds.
 
-## Core Protocols and Data Flow
-- **Standards**: BIP157 peer messages (`getcfilters`, `cfilter`, `getcfheaders`, `cfheaders`, `getcfcheckpt`, `cfcheckpt`) and BIP158 basic filters (type 0x00).
-- **Filter Content**: Includes all spent previous output scripts and non-OP_RETURN output scripts for each block.
-- **Offline Rescanning**: Stores verified filter headers in browser IndexedDB for fast, offline rescan capabilities.
+Reads bind expected network/genesis, synchronized basic index, exact80-byte block-header hash, active-chain height, previous-block link and stable tip before/after retrieval. The codec checks canonical CompactSize, bounded Golomb-Rice decoding, mapped-value range and zero byte padding. SHA256d filter hashes and headers are checked using correct internal hash byte order. The preceding filter header remains trusted owned-node evidence. This does not reconstruct every served filter from its full block/prevouts, sync a proof-of-work header chain, or establish independent peer agreement.
 
-## Routes and Navigation
-- `/network/light-client`: Light-client metrics, peer counts, and tip synchronization status.
-- `/network/light-client/providers`: Catalog of active peer providers serving compact filters.
-- `/network/light-client/provider/:providerId`: Detailed peer provider reliability, latency, and correctness record.
-- `/network/light-client/filters`: Filter explorer displaying raw filter elements, element counts, and header hashes.
-- `/network/light-client/verify`: Multi-peer filter-header chain comparison and discrepancy detector.
-- `/network/light-client/scan`: Private in-browser descriptor and script scanner with background worker.
-- `/network/light-client/privacy`: Light-client privacy documentation and decoy query configuration.
+The Filter Explorer rechecks hash, element count and header linkage in the browser. The Local Scanner sends only public height/network selectors and matches scripts locally with SipHash2-4 and BIP158 mapping. It accepts addresses, addr(address), raw(scriptHex), or explicitly labeled offline public filter interval JSON. Other descriptors, xpub expansion, full-block confirmation and complete wallet history remain unsupported. Candidate matches are not confirmed transactions; false positives remain unconfirmed. Edited input, cancellation and destruction clear stale results. Offline input has no established chain provenance.
 
-## API Contracts
-- `GET /api/v1/intelligence/compact-filters/overview`: Network filter tip, active provider count, and status.
-- `GET /api/v1/intelligence/compact-filters/providers`: Directory of observed BIP157 peer nodes.
-- `GET /api/v1/intelligence/compact-filters/providers/:providerId`: Provider history, uptime, and validation accuracy.
-- `GET /api/v1/intelligence/compact-filters/checkpoints`: Precomputed filter-header checkpoints at standard intervals.
-- `GET /api/v1/intelligence/compact-filters/blocks/:blockHash`: Basic filter data and header for a specific block.
-- `GET /api/v1/intelligence/compact-filters/ranges`: Available filter index ranges and sync progress.
-- `POST /api/v1/intelligence/compact-filters/verifications`: Peer comparison verification and discrepancy analysis.
+The Header Verifier retains the cross-peer operation and adds an explicit owned-index linkage operation. Provider overview, directory/history and multi-peer verification still report the missing P2P prober. Tor/decoy/split-peer controls are retained but disabled and marked unavailable, not represented as active protection.
+
+Tests reconstruct every official BIP158 testnet vector's mapped values from raw blocks and supplied prevout scripts, independently compare expected filter headers, and reject malformed encoding/hash/link changes. Browser codec is byte-identical to backend codec and tested separately. Runtime success against an owned indexed Core is not established: new task node launch was rejected by automatic approval review with generic reason blocked by policy; existing owned Core19483 and Signet38335 expose txindex only. No existing node was restarted/reconfigured.
+
+Primary references: https://bitcoincore.org/en/doc/29.0.0/rpc/blockchain/getblockfilter/ ; https://github.com/bitcoin/bips/blob/master/bip-0157.mediawiki ; https://github.com/bitcoin/bips/blob/master/bip-0158.mediawiki .
+
+## Preserved operation catalog
+
+UI routes remain /network/light-client, /providers, /provider/:providerId, /filters, /verify, /scan and /privacy under that prefix. The overview and provider pages require P2P observations. The filter page reads the owned index; verifier exposes both owned linkage and unavailable independent peer comparison. The scanner performs bounded local matching and does not use a background worker or persist verified headers to IndexedDB in this implementation.
+
+The API prefix is /api/v1/intelligence/compact-filters. Existing GET overview, providers, providers/:providerId, providers/:providerId/history and verifications/:verificationId, plus POST verifications, remain unavailable until the owned P2P prober is connected. Existing GET blocks/:blockHash, checkpoints and ranges now use the bounded owned reader described above. No original operation was removed or silently reclassified as peer agreement.

@@ -1,69 +1,20 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy,Component,Inject,OnInit,OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { BehaviorSubject, Observable, catchError, combineLatest, map, of } from 'rxjs';
-import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
+import { BehaviorSubject,Observable,combineLatest,Subscription } from 'rxjs';
 import { SeoService } from '@app/services/seo.service';
-import { UniverseApiService } from '@app/universe/universe-api.service';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
-
-import {
-  ProtocolBearingUtxos,
-  ScriptTypeDistribution,
-  SupplyCohort,
-  UtreexoRootsView,
-  UtxoCheckpoint,
-} from '@app/universe/universe.types';
-
-interface UtxoViewModel {
-  readonly kind: 'loading' | 'ready' | 'error';
-  readonly checkpoints?: UtxoCheckpoint[];
-  readonly valueCohorts?: SupplyCohort[];
-  readonly scriptTypes?: ScriptTypeDistribution[];
-  readonly protocolUtxos?: ProtocolBearingUtxos;
-  readonly utreexo?: UtreexoRootsView;
-  readonly message?: string;
-}
-
-@Component({
-  selector: 'app-utxo-set',
-  templateUrl: './utxo-set.component.html',
-  styleUrls: ['../product-page.scss'],
-  standalone: true,
-  imports: [RelativeUrlPipe, CommonModule, RouterModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-})
-export class UtxoSetComponent implements OnInit {
-  // Templates format raw strings through the Number global; AOT needs it bound.
-  protected readonly Number = Number;
-  private readonly state = new BehaviorSubject<UtxoViewModel>({ kind: 'loading' });
-  readonly vm$: Observable<UtxoViewModel> = this.state.asObservable();
-
-  constructor(
-    private api: UniverseApiService,
-    private seo: SeoService,
-  ) {
-    this.seo.setTitle('UTXO-Set, Supply & Utreexo Observatory');
-  }
-
-  ngOnInit(): void {
-    // No per-read fallback: a checkpoint or cohort table the source could not
-    // answer is an error with its reason, not an empty table.
-    combineLatest([
-      this.api.getUtxoCheckpoints$(),
-      this.api.getUtxoDistribution$(),
-      this.api.getProtocolBearingUtxos$(),
-      this.api.getUtreexoRoots$(),
-    ]).pipe(
-      map(([checkpointsData, distData, protocolUtxos, utreexo]): UtxoViewModel => ({
-        kind: 'ready',
-        checkpoints: checkpointsData.checkpoints,
-        valueCohorts: distData.valueCohorts,
-        scriptTypes: distData.scriptTypes,
-        protocolUtxos,
-        utreexo,
-      })),
-      catchError((error) => of<UtxoViewModel>({ kind: 'error', message: loadFailureMessage(classifyLoadFailure(error)) })),
-    ).subscribe((vm) => this.state.next(vm));
-  }
+import { UtxoEvidenceService } from './utxo-evidence.service';
+interface UtxoViewModel {kind:'loading'|'ready'|'error';checkpoints?:any[];valueCohorts?:any[];scriptTypes?:any[];protocolUtxos?:any;utreexo?:any;message?:string;unavailable?:string[];}
+@Component({selector:'app-utxo-set',templateUrl:'./utxo-set.component.html',styleUrls:['../product-page.scss'],standalone:true,imports:[CommonModule,RouterModule,RelativeUrlPipe],changeDetection:ChangeDetectionStrategy.OnPush})
+export class UtxoSetComponent implements OnInit,OnDestroy {
+ protected readonly Number=Number;private state=new BehaviorSubject<UtxoViewModel>({kind:'loading'});readonly vm$:Observable<UtxoViewModel>=this.state.asObservable();private subscription?:Subscription;
+ constructor(@Inject(UtxoEvidenceService) private api:UtxoEvidenceService,@Inject(SeoService) private seo:SeoService){this.seo.setTitle('UTXO-Set, Supply & Utreexo Observatory');}
+ ngOnInit(){this.subscription=combineLatest([this.api.watch$('/api/v1/utxo-set/checkpoints'),this.api.watch$('/api/v1/utxo-set/distribution'),this.api.watch$('/api/v1/utxo-set/protocols'),this.api.watch$('/api/v1/utreexo/roots')]).subscribe(([checkpoints,distribution,protocol,utreexo])=>{
+  const parts=[checkpoints,distribution,protocol,utreexo],labels=['Core checkpoints','Complete cohort projection','Protocol-bearing indexes','Utreexo accumulator'];const unavailable=parts.flatMap((p,i)=>p.kind==='unavailable'?[labels[i]+': '+p.message]:[]);
+  if(parts.every(p=>p.kind==='unavailable')){this.state.next({kind:'error',message:unavailable.join(' '),unavailable});return;}
+  if(parts.every(p=>p.kind==='loading')){this.state.next({kind:'loading'});return;}
+  this.state.next({kind:'ready',checkpoints:checkpoints.value?.checkpoints,valueCohorts:distribution.value?.valueCohorts,scriptTypes:distribution.value?.scriptTypes,protocolUtxos:protocol.value??undefined,utreexo:utreexo.value??undefined,unavailable});
+ });}
+ ngOnDestroy(){this.subscription?.unsubscribe();}
 }

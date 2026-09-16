@@ -1,0 +1,7 @@
+{
+  "retrieved": "2026-09-15",
+  "sha256": "d9049756f744e561b882a8eff507582fb7cd74ed9cf5542bdac58257449ee2a2",
+  "source": "https://raw.githubusercontent.com/bitcoin/bips/master/bip-0158/testnet-19.json",
+  "scope": "Official independent expected filters and headers; no live provider claim",
+  "license": "CC0-1.0"
+}

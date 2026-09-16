@@ -1,0 +1,10 @@
+import { beforeAll, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { inspectLiquidOutput } from './liquid-proof.service';
+const fixture=JSON.parse(readFileSync('../tools/liquid-proof/regtest-output-fixture.json','utf8'));
+const transaction=JSON.parse(readFileSync('../tools/liquid-proof/regtest-transaction-fixture.json','utf8'));
+let module:WebAssembly.Module;
+beforeAll(async()=>{module=await WebAssembly.compile(readFileSync('src/resources/liquid-proof/universe_liquid_proof.wasm'));});
+it('unblinds an actual mined Elements23.3.4 issuance transfer output exactly',async()=>{const result=inspectLiquidOutput(await WebAssembly.instantiate(module),fixture);expect(result.assetId).toBe(transaction.expectedAsset);expect(result.valueSat).toBe(transaction.expectedValueSat);expect(result.rangeproofValid).toBe(true);expect(result.surjectionproofValid).toBe(true);});
+it('rejects a wrong private key for the actual transaction',async()=>{const instance=await WebAssembly.instantiate(module);expect(()=>inspectLiquidOutput(instance,{...fixture,blindingKey:'2a'.repeat(32)})).toThrow();});
+it.each(['rangeproofHex','surjectionproofHex'])('rejects actual transaction %s alteration',async field=>{const original=fixture[field];const input={...fixture,[field]:original.slice(0,-2)+(original.endsWith('00')?'01':'00')};const instance=await WebAssembly.instantiate(module);expect(()=>inspectLiquidOutput(instance,input)).toThrow();});

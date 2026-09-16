@@ -1,0 +1,20 @@
+[package]
+name = "universe-liquid-proof"
+version = "0.1.0"
+edition = "2021"
+publish = false
+[lib]
+crate-type = ["cdylib", "rlib"]
+[dependencies]
+elements = { version = "=0.26.2", default-features = false }
+serde_json = "1.0"
+hex = "0.4"
+[dev-dependencies]
+rand = "0.8"
+[profile.release]
+opt-level = "s"
+lto = true
+panic = "abort"
+strip = true
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom = { version = "0.2", features = ["custom"] }

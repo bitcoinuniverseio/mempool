@@ -1,56 +1,83 @@
-import { Injectable } from '@angular/core';
+import { Inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-
+import { StateService } from '@app/services/state.service';
+import { Observable, of } from 'rxjs';
+import { startWith, switchMap, map, catchError } from 'rxjs/operators';
 export interface ConformanceOverview {
-  total_conformance_tests: number;
-  passing_conformance_tests: number;
-  divergent_test_cases: number;
-  active_implementations_count: number;
-  formal_theorems_verified: number;
-  total_fuzz_executions_24h: number;
+  total_implementations_evaluated: number;
+  total_differential_cases: number;
+  divergences_classified_count: number;
+  machine_proved_formal_theorems_count: number;
   implementations: any[];
-  recent_divergences: any[];
+  recent_cases: any[];
+  targets: any[];
+  availability: string;
+  scope: string;
+  unsupported_acceptance: string[];
 }
-
-/**
- * Reads for this surface.
- *
- * Every call returns what the intelligence API returned, or it errors. There
- * is deliberately no fallback value: the revision this replaces answered a
- * failed request with an invented one, and on this surface that included a
- * verification reporting itself verified. A reader who cannot tell a checked
- * result from an unchecked one has nothing.
- */
-@Injectable({
-  providedIn: 'root',
-})
+export interface ConformanceLoad {
+  loading: boolean;
+  value: any;
+  error: string | null;
+}
+@Injectable({ providedIn: 'root' })
 export class ConsensusConformanceApiService {
-  private readonly baseUrl = '/api/v1/intelligence/consensus-conformance';
-
-  constructor(private http: HttpClient) {}
-
-  public getOverview$(): Observable<ConformanceOverview> {
-    return this.http.get<ConformanceOverview>(`${this.baseUrl}/overview`);
+  constructor(
+    @Inject(HttpClient) private http: HttpClient,
+    @Inject(StateService) private state: StateService
+  ) {}
+  private get base() {
+    const network = this.state.network ?? '';
+    const prefix = network && network !== (this.state.env.ROOT_NETWORK ?? 'mainnet') ? '/' + network : '';
+    return (
+      (this.state.isBrowser
+        ? ''
+        : `${this.state.env.NGINX_PROTOCOL}://${this.state.env.NGINX_HOSTNAME}:${this.state.env.NGINX_PORT}`) +
+      prefix +
+      '/api/v1/intelligence/consensus-conformance'
+    );
   }
-
-  public getImplementations$(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/implementations`);
+  watch$(path: string): Observable<ConformanceLoad> {
+    return this.state.networkChanged$.pipe(
+      startWith(null),
+      switchMap(() =>
+        this.http.get(this.base + path).pipe(
+          map((value) => ({ loading: false, value, error: null })),
+          catchError(() =>
+            of({ loading: false, value: null, error: 'Conformance evidence is unavailable for this selected backend.' })
+          ),
+          startWith({ loading: true, value: null, error: null })
+        )
+      )
+    );
   }
-
-  public getCases$(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/cases`);
+  getOverview$() {
+    return this.http.get<ConformanceOverview>(this.base + '/overview');
   }
-
-  public getCase$(caseId: string): Observable<any> {
-    return this.http.get<any>(`${this.baseUrl}/cases/${caseId}`);
+  getImplementations$() {
+    return this.http.get<any>(this.base + '/implementations').pipe(map((v) => v.implementations));
   }
-
-  public replayCase$(caseId: string): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/cases/${caseId}/replay`, {});
+  getCases$() {
+    return this.http.get<any>(this.base + '/cases').pipe(map((v) => v.cases));
   }
-
-  public getFormalArtifacts$(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/formal-artifacts`);
+  getCase$(id: string) {
+    return this.http.get<any>(this.base + '/cases/' + encodeURIComponent(id));
+  }
+  getFormalArtifacts$() {
+    return this.http.get<any>(this.base + '/formal-artifacts').pipe(map((v) => v.formal_artifacts));
+  }
+  startCampaign$(target: string, seed: number, token: string) {
+    return this.http.post<any>(
+      this.base + '/campaigns',
+      { target_id: target, seed },
+      { headers: { 'X-Conformance-Execution-Token': token } }
+    );
+  }
+  replayCase$(id: string, token: string) {
+    return this.http.post<any>(
+      this.base + '/cases/' + encodeURIComponent(id) + '/replay',
+      {},
+      { headers: { 'X-Conformance-Execution-Token': token } }
+    );
   }
 }

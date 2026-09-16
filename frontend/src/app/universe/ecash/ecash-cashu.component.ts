@@ -16,7 +16,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
         <div class="title-row d-flex flex-wrap align-items-center justify-content-between gap-2">
           <h1 class="m-0">Cashu Mint Directory</h1>
           <span class="badge bg-secondary" *ngIf="mints.length > 0">
-            {{ mints.length }} Active Mints
+            {{ mints.length }} Configured Mints
           </span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
@@ -49,11 +49,11 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                 <h2 class="h5 m-0">{{ m.name }}</h2>
                 <code class="small text-muted text-break">{{ m.mint_url }}</code>
               </div>
-              <span class="badge bg-success">Online</span>
+              <span class="badge" [ngClass]="m.reachable ? 'bg-success' : 'bg-secondary'">{{ m.reachable ? 'Info and keysets observed' : 'Observation incomplete' }}</span>
             </div>
 
             <div class="mb-3">
-              <div class="text-muted small mb-1">Supported Notation of Unit (NUT) Specs</div>
+              <div class="text-muted small mb-1">Reported NUT Specs</div><div *ngIf="m.nuts_supported === null" class="text-muted">Supported NUTs unknown</div>
               <div class="d-flex flex-wrap gap-1">
                 <span *ngFor="let nut of m.nuts_supported" class="badge bg-secondary">
                   NUT-{{ nut < 10 ? '0' + nut : nut }}
@@ -62,7 +62,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
             </div>
 
             <div class="mb-3">
-              <div class="text-muted small mb-1">Active Keysets</div>
+              <div class="text-muted small mb-1">Reported Keysets</div><div *ngIf="m.keysets === null" class="text-muted">Keysets unknown</div>
               <div class="d-flex flex-wrap gap-1">
                 <span *ngFor="let k of m.keysets" class="badge" [ngClass]="k.active ? 'bg-primary' : 'bg-body-secondary text-muted'">
                   {{ k.id }} ({{ k.unit }}) {{ k.active ? 'Active' : 'Retired' }}

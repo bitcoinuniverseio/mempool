@@ -1,8 +1,9 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, Optional } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { Subscription, Observable } from 'rxjs';
+import { StateService } from '@app/services/state.service';
 import { IntelligenceApiService } from './intelligence-api.service';
 import { OwnerKeyService } from './owner-key.service';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
@@ -25,11 +26,10 @@ export const CONDITION_TYPES = ['confirmation', 'value_transfer', 'rbf_replaceme
       <header class="page-header">
         <div class="title-row">
           <h1>Watchlists</h1>
-          <span class="badge badge-success">Blinded</span>
+          <span class="badge badge-secondary">Hashed identifiers</span>
         </div>
-        <p class="subtitle">
-          Addresses and transactions are stored as SHA-256 hashes and matched against confirmed blocks and mempool replacements.
-        </p>
+        <p class="subtitle">Identifiers are hashed before matching. Names and labels are stored as entered.</p>
+        <details class="small text-muted"><summary>Privacy details</summary>Hashing is not encryption and does not prevent identifier guessing.</details>
       </header>
 
       <div *ngIf="loadError" class="alert alert-danger mb-4">{{ loadError }}</div>
@@ -40,6 +40,7 @@ export const CONDITION_TYPES = ['confirmation', 'value_transfer', 'rbf_replaceme
       </div>
 
       <ng-container *ngIf="hasKey">
+        <p *ngIf="webhookError" role="alert">{{webhookError}}</p>
         <!-- Create -->
         <section class="card mb-4">
           <div class="card-body">
@@ -60,12 +61,13 @@ export const CONDITION_TYPES = ['confirmation', 'value_transfer', 'rbf_replaceme
         </div>
 
         <section class="card mb-4" *ngFor="let wl of watchlists">
+          <p class="small p-3 mb-0" *ngIf="wl.privacy_scope">{{ wl.privacy_scope }}</p>
           <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <h4 class="mb-0">{{ wl.name }} <span class="badge badge-primary ms-2">{{ wl.privacy_mode | uppercase }}</span><span class="badge badge-secondary ms-1">{{ wl.storage }}</span></h4>
+            <h4 class="mb-0">{{ wl.name }} <span class="badge badge-primary ms-2">{{ wl.privacy_mode | uppercase }}</span></h4>
             <button type="button" class="btn btn-sm btn-outline-danger" [disabled]="busy" (click)="remove(wl.watchlist_id)">Delete</button>
           </div>
           <div class="card-body">
-            <h6 class="text-uppercase small text-muted mb-2">Watched entities</h6>
+            <h6 class="text-uppercase small text-muted mb-2">Entities</h6>
             <div class="row g-2 align-items-end mb-2">
               <div class="col-md-2">
                 <select class="form-control form-control-sm" [(ngModel)]="entityType[wl.watchlist_id]">
@@ -91,7 +93,7 @@ export const CONDITION_TYPES = ['confirmation', 'value_transfer', 'rbf_replaceme
               </table>
             </div>
 
-            <h6 class="text-uppercase small text-muted mb-2">Rules</h6>
+            <h6 class="text-uppercase small text-muted mb-2">Alert rules</h6>
             <div class="row g-2 align-items-end mb-2">
               <div class="col-md-3">
                 <select class="form-control form-control-sm" [(ngModel)]="ruleCondition[wl.watchlist_id]">
@@ -132,7 +134,8 @@ export const CONDITION_TYPES = ['confirmation', 'value_transfer', 'rbf_replaceme
             <h4 class="mb-0">Notifications</h4>
             <button type="button" class="btn btn-sm btn-outline-secondary" (click)="loadNotifications()">Refresh</button>
           </div>
-          <div *ngIf="notifications.length === 0" class="p-4 text-center text-muted">No notifications yet.</div>
+          <p *ngIf="notificationError" role="alert">{{notificationError}}</p><p *ngIf="loadingNotifications">Loading notifications...</p>
+          <div *ngIf="!loadingNotifications && !notificationError && notifications.length === 0" class="p-4 text-center text-muted">No notifications yet.</div>
           <div class="table-responsive" *ngIf="notifications.length > 0" tabindex="0" role="region" aria-label="Notifications, scroll horizontally" i18n-aria-label>
             <table class="table table-hover mb-0">
               <thead><tr><th>Severity</th><th>Title</th><th>Message</th><th>Block</th><th>State</th><th>Time</th><th></th></tr></thead>
@@ -187,12 +190,22 @@ export class WatchlistsComponent implements OnInit, OnDestroy {
   ruleChannel: Record<string, string> = {};
   ruleWebhook: Record<string, string> = {};
 
-  private subs: Subscription[] = [];
+  private requests=new Map<string,Subscription>();private context=new Subscription();private revision=0;private destroyed=false;
+  webhookError:string|null=null;notificationError:string|null=null;loadingNotifications=false;
+  private reset():void {this.revision++;for(const s of this.requests.values())s.unsubscribe();this.requests.clear();this.watchlists=[];this.webhooks=[];this.notifications=[];this.entityType={};this.entityRaw={};this.entityLabel={};this.ruleCondition={};this.ruleThreshold={};this.ruleChannel={};this.ruleWebhook={};this.newName='';this.loading=false;this.loadingNotifications=false;this.busy=false;this.loadError=null;this.webhookError=null;this.notificationError=null;}
+  private track(slot:string,source:Observable<any>,observer:any):void {
+    if(this.destroyed||!this.hasKey)return;this.requests.get(slot)?.unsubscribe();const revision=this.revision,key=this.ownerKey.key,network=this.state?.network;
+    const current=()=>!this.destroyed&&revision===this.revision&&key===this.ownerKey.key&&network===this.state?.network;
+    const sub=source.subscribe({next:v=>{if(current())observer.next?.(v);},error:e=>{if(current())observer.error?.(e);}});
+    if(!sub.closed){this.requests.set(slot,sub);sub.add(()=>{if(this.requests.get(slot)===sub)this.requests.delete(slot);});}
+  }
+  private reload():void {if(this.hasKey&&!this.destroyed){this.load();this.loadWebhooks();this.loadNotifications();}}
 
   constructor(
     private api: IntelligenceApiService,
     private ownerKey: OwnerKeyService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    @Optional() private state:StateService=null
   ) {}
 
   get hasKey(): boolean {
@@ -200,7 +213,8 @@ export class WatchlistsComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    if (this.hasKey) { this.load(); this.loadWebhooks(); this.loadNotifications(); }
+    let key=this.ownerKey.key;this.context.add(this.ownerKey.key$?.subscribe(value=>{if(value!==key){key=value;this.reset();this.reload();this.cdr.markForCheck();}}));
+    this.context.add(this.state?.networkChanged$.subscribe(()=>{this.reset();this.reload();this.cdr.markForCheck();}));this.reload();
   }
 
   thresholdHint(condition: string): string {
@@ -215,14 +229,15 @@ export class WatchlistsComponent implements OnInit, OnDestroy {
   }
 
   loadWebhooks(): void {
-    this.subs.push(this.api.getWebhooks$().subscribe({
+    if(this.destroyed||!this.hasKey)return;this.webhooks=[];this.webhookError=null;
+    this.track('webhooks',this.api.getWebhooks$(), {
       next: (res) => {
-        this.webhooks = (res?.webhooks || []).filter((w: any) => w.active);
+        if(!Array.isArray(res?.webhooks)){this.webhookError='Invalid webhook response.';this.webhooks=[];}else this.webhooks=res.webhooks.filter((w:any)=>w.active===true);
         for (const wl of this.watchlists) { this.ruleWebhook[wl.watchlist_id] ||= this.webhooks[0]?.webhook_id || ''; }
         this.cdr.markForCheck();
       },
-      error: () => { this.webhooks = []; this.cdr.markForCheck(); },
-    }));
+      error: () => { this.webhookError='Webhook registry unavailable.';this.webhooks = []; this.cdr.markForCheck(); },
+    });
   }
 
   removeEntity(watchlistId: string, entityId: string): void {
@@ -239,10 +254,11 @@ export class WatchlistsComponent implements OnInit, OnDestroy {
   }
 
   load(): void {
+    if(this.destroyed||!this.hasKey)return;this.watchlists=[];this.loadError=null;
     this.loading = true;
-    this.subs.push(this.api.getWatchlists$().subscribe({
+    this.track('watchlists',this.api.getWatchlists$(), {
       next: (res) => {
-        this.watchlists = res?.watchlists || [];
+        if(!Array.isArray(res?.watchlists)){this.loading=false;this.loadError='Invalid watchlist response.';this.cdr.markForCheck();return;}this.watchlists=res.watchlists;
         for (const wl of this.watchlists) {
           this.entityType[wl.watchlist_id] ??= 'address';
           this.ruleCondition[wl.watchlist_id] ??= 'confirmation';
@@ -254,22 +270,23 @@ export class WatchlistsComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
       },
       error: (err) => { this.loadError = this.failure(err, 'Failed to fetch watchlists'); this.loading = false; this.cdr.markForCheck(); },
-    }));
+    });
   }
 
   loadNotifications(): void {
-    this.subs.push(this.api.getWatchlistNotifications$().subscribe({
-      next: (res) => { this.notifications = res?.notifications || []; this.cdr.markForCheck(); },
-      error: (err) => { this.loadError = this.failure(err, 'Failed to fetch notifications'); this.cdr.markForCheck(); },
-    }));
+    if(this.destroyed||!this.hasKey)return;this.notifications=[];this.notificationError=null;this.loadingNotifications=true;
+    this.track('notifications',this.api.getWatchlistNotifications$(), {
+      next: (res) => { this.loadingNotifications=false;if(!Array.isArray(res?.notifications)){this.notificationError='Invalid notification response.';this.notifications=[];}else this.notifications=res.notifications; this.cdr.markForCheck(); },
+      error: (err) => { this.loadingNotifications=false;this.notificationError = this.failure(err, 'Failed to fetch notifications'); this.cdr.markForCheck(); },
+    });
   }
 
-  private run(observable: { subscribe: Function }, after: () => void): void {
-    this.busy = true;
-    this.subs.push(observable.subscribe({
+  private run(observable: Observable<any>, after: () => void): void {
+    if(this.destroyed||!this.hasKey||this.busy)return;this.busy = true;
+    this.track('mutation',observable, {
       next: () => { this.busy = false; this.loadError = null; after(); },
       error: (err: any) => { this.busy = false; this.loadError = this.failure(err, 'The request failed'); this.cdr.markForCheck(); },
-    }));
+    });
   }
 
   create(): void {
@@ -302,6 +319,6 @@ export class WatchlistsComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    for (const sub of this.subs) { sub.unsubscribe(); }
+    this.destroyed=true;this.context.unsubscribe();this.reset();
   }
 }

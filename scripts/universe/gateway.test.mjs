@@ -244,6 +244,8 @@ test('the content policy follows the build behind the static root', async () => 
   writeFileSync(join(root, 'index.html'), `<html><script>${first}</script></html>`);
   const before = gateway.contentSecurityPolicy();
   assert.ok(before.includes(hashOf(first)), 'the first build is allowed by name');
+  assert.ok(before.includes("'wasm-unsafe-eval'"), 'local cryptographic WASM can instantiate');
+  assert.ok(!before.includes("'unsafe-eval'"), 'JavaScript string evaluation remains forbidden');
 
   // A longer script: the file changes size as well as time.
   const second = 'window.__b=2;window.__c=3;';

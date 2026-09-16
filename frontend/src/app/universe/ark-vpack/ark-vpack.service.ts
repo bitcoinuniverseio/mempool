@@ -1,3 +1,5 @@
+import { StateService } from '@app/services/state.service';
+import { distinctUntilChanged, startWith } from 'rxjs/operators';
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -15,6 +17,8 @@ export interface VpackImplementation {
 }
 
 export interface VpackOverview {
+  registry_status?: string;
+  observation_scope?: string;
   total_vpack_versions: number;
   active_providers_count: number;
   supported_implementations: VpackImplementation[];
@@ -52,9 +56,14 @@ export function isVpackOverview(value: unknown): value is VpackOverview {
   providedIn: 'root',
 })
 export class ArkVpackApiService {
-  private readonly baseUrl = '/api/v1/intelligence/ark/vpack';
-
-  constructor(private http: HttpClient) {}
+  readonly networkChanges$: Observable<string>;
+  private get baseUrl(): string {
+    const prefix = this.state.network && this.state.network !== this.state.env.ROOT_NETWORK ? '/' + this.state.network : '';
+    return prefix + '/api/v1/intelligence/ark/vpack';
+  }
+  constructor(private http: HttpClient, private state: StateService) {
+    this.networkChanges$ = state.networkChanged$.pipe(startWith(state.network), distinctUntilChanged());
+  }
 
   public getOverview$(): Observable<VpackOverview> {
     return this.http.get<VpackOverview>(`${this.baseUrl}/overview`);

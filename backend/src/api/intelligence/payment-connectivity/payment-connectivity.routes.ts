@@ -4,7 +4,7 @@ import paymentConnectivityService, { PaymentConnectivityEvidenceError } from './
 /** An absent source is a 503 that names the source, never a 500 and never an empty list. */
 function fail(res: Response, err: unknown, status = 500): Response {
   if (err instanceof PaymentConnectivityEvidenceError) return res.status(err.status).json({ stage: err.code, error: err.message });
-  return res.status(status).json({ error: err instanceof Error && err.message ? err.message : 'Internal error' });
+  return res.status(status).json({ error: 'Internal error' });
 }
 
 class PaymentConnectivityRoutes {
@@ -74,9 +74,9 @@ class PaymentConnectivityRoutes {
       }
     });
 
-    app.post('/api/v1/intelligence/payment-connectivity/public-endpoints/verify', (req: Request, res: Response) => {
+    app.post('/api/v1/intelligence/payment-connectivity/public-endpoints/verify', async (req: Request, res: Response) => {
       try {
-        const result = paymentConnectivityService.verifyPublicEndpoint(req.body.endpoint_url);
+        const result = await paymentConnectivityService.verifyPublicEndpoint(req.body?.endpoint_url);
         res.json(result);
       } catch (err: any) {
         fail(res, err, 400);

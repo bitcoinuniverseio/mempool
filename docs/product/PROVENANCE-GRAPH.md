@@ -2,6 +2,21 @@
 
 Where one transaction's value came from, and where it went.
 
+## Bounded graph API evidence
+
+The intelligence graph endpoints distinguish `404 not_found` from
+`503 index_unavailable`. An index outage, malformed transaction or incomplete
+outspend response never becomes an empty successful graph. A path from a txid
+to itself still requires an actual transaction read. Hop and satoshi filters
+must be safe integers; malformed numeric strings are rejected.
+
+`search_exhausted:true` in the existing path response means a hop/fetch/node
+limit stopped the search before all reachable nodes were examined. Despite the
+legacy field name, it means the search is **incomplete**, not proof that no path
+exists. Query responses separately expose `truncated` and its reason. These are
+observations over the configured index, not identity or beneficial-ownership
+inferences. Saved-case access remains owner-scoped.
+
 ## The promise
 
 **Draw only what the chain proves about a transaction, state what could not

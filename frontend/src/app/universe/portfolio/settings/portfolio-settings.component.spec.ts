@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import 'zone.js';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 import { PortfoliosStore } from '../stores/portfolios.store';
@@ -9,11 +10,11 @@ import { PortfolioSettingsComponent } from './portfolio-settings.component';
 
 describe('portfolio backup file selection', () => {
   beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
-  afterEach(() => TestBed.resetTestingModule());
+  afterEach(() => { TestBed.resetTestingModule(); vi.unstubAllGlobals(); });
 
   function setup() {
-    const vault = { importEncrypted: vi.fn().mockResolvedValue({ importedRecords: 1 }) };
-    const store = { vaultKind: () => 'unlocked', reload: vi.fn().mockResolvedValue(undefined) };
+    const vault = { exportEncrypted: vi.fn(async () => ({ encrypted: 'fixture-only' })), importEncrypted: vi.fn().mockResolvedValue({ importedRecords: 1 }) };
+    const store = { vaultKind: signal('unlocked'), reload: vi.fn().mockResolvedValue(undefined) };
     TestBed.configureTestingModule({ providers: [
       { provide: PortfoliosStore, useValue: store },
       { provide: PortfolioVaultService, useValue: vault },
@@ -27,7 +28,7 @@ describe('portfolio backup file selection', () => {
       Object.defineProperty(fileInput, 'files', { configurable: true, value: [{ text }] });
       fileInput.dispatchEvent(new Event('change'));
     };
-    return { vault, view, select, importButton };
+    return { vault, store, view, select, importButton };
   }
 
   it('cannot import a previously selected backup after malformed JSON is selected', async () => {
@@ -70,4 +71,28 @@ describe('portfolio backup file selection', () => {
     importButton.click();
     expect(vault.importEncrypted).not.toHaveBeenCalled();
   });
+  it('revokes replaced backups and the active object URL on destroy', async () => {
+    let count = 0;
+    const revoke = vi.fn();
+    vi.stubGlobal('URL', { createObjectURL: () => 'blob:' + (++count), revokeObjectURL: revoke });
+    const { view } = setup();
+    await (view.componentInstance as any).exportBackup();
+    await (view.componentInstance as any).exportBackup();
+    expect(revoke).toHaveBeenCalledWith('blob:1');
+    view.destroy();
+    expect(revoke).toHaveBeenCalledWith('blob:2');
+  });
+  it('locking invalidates an in-flight export and cannot publish a new URL', async () => {
+    const create = vi.fn(() => 'blob:private');
+    vi.stubGlobal('URL', { createObjectURL: create, revokeObjectURL: vi.fn() });
+    const { view, store, vault } = setup();
+    let finish!: (value: { encrypted: string }) => void;
+    vault.exportEncrypted.mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
+    const pending = (view.componentInstance as any).exportBackup();
+    store.vaultKind.set('locked'); view.detectChanges();
+    finish({ encrypted: 'fixture-only' }); await pending;
+    expect(create).not.toHaveBeenCalled();
+    expect(view.componentInstance.downloadUrl()).toBe('');
+  });
+
 });

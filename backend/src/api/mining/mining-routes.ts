@@ -181,12 +181,16 @@ class MiningRoutes {
   }
 
   private async $getHistoricalHashrate(req: Request, res: Response) {
-    let currentHashrate = 0, currentDifficulty = 0;
+    let currentHashrate: number, currentDifficulty: number;
     try {
       currentHashrate = await bitcoinClient.getNetworkHashPs(1008);
       currentDifficulty = await bitcoinClient.getDifficulty();
+      if (!Number.isFinite(currentHashrate) || currentHashrate < 0 || !Number.isFinite(currentDifficulty) || currentDifficulty <= 0) {
+        throw new Error('Invalid current mining observations');
+      }
     } catch (e) {
-      logger.debug('Bitcoin Core is not available, using zeroed value for current hashrate and difficulty');
+      handleError(req, res, 503, 'Current mining observations unavailable');
+      return;
     }
 
     try {

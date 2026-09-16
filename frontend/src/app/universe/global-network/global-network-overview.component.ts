@@ -60,14 +60,14 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           <div class="col-12 col-sm-6 col-lg-3">
             <div class="card p-3 h-100 bg-body-tertiary border">
               <div class="text-muted small">BIP324 v2 Encrypted Transport</div>
-              <div class="h4 my-1 text-success">{{ overview.bip324_v2_adoption_percentage }}%</div>
+              <div class="h4 my-1 text-success">{{ overview.bip324_v2_adoption_percentage === null ? 'Unknown' : overview.bip324_v2_adoption_percentage + '%' }}</div>
               <div class="small text-muted">{{ overview.active_epoch.v2_nodes | number }} verified v2 nodes</div>
             </div>
           </div>
           <div class="col-12 col-sm-6 col-lg-3">
             <div class="card p-3 h-100 bg-body-tertiary border">
               <div class="text-muted small">BIP155 addrv2 Adoption</div>
-              <div class="h4 my-1 text-info">{{ overview.addrv2_adoption_percentage }}%</div>
+              <div class="h4 my-1 text-info">{{ overview.addrv2_adoption_percentage === null ? 'Unknown' : overview.addrv2_adoption_percentage + '%' }}</div>
               <div class="small text-muted">Tor v3, I2P, CJDNS capable</div>
             </div>
           </div>

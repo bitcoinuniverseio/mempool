@@ -1,4 +1,5 @@
 import { Application, Request, Response } from 'express';
+import { IdentityError } from '../identity/developer-identity';
 import { watchlistsService } from './watchlists.service';
 import { ownerOf, requireOwner, sendIdentityError } from '../identity/owner-auth';
 
@@ -6,6 +7,13 @@ import { ownerOf, requireOwner, sendIdentityError } from '../identity/owner-auth
  * Every watchlist route needs an owner key with the watchlists scope. The
  * owner comes from the key; the routes never read a user_id.
  */
+export function notificationLimit(value: unknown): number {
+  if (value === undefined) return 100;
+  if (typeof value !== 'string' || !/^[1-9][0-9]{0,2}$/.test(value) || Number(value) > 500) {
+    throw new IdentityError('invalid_limit', 'limit must be an integer from 1 to 500', 400);
+  }
+  return Number(value);
+}
 class WatchlistsRoutes {
   public initRoutes(app: Application): void {
     const prefix = '/api/v1/intelligence/watchlists';
@@ -111,8 +119,8 @@ class WatchlistsRoutes {
 
   private async $getNotifications(req: Request, res: Response): Promise<void> {
     try {
-      const limit = req.query.limit !== undefined ? parseInt(String(req.query.limit), 10) : 100;
-      const notifications = await watchlistsService.getNotifications(ownerOf(res), req.params.id, Number.isFinite(limit) ? limit : 100);
+      const limit = notificationLimit(req.query.limit);
+      const notifications = await watchlistsService.getNotifications(ownerOf(res), req.params.id, limit);
       if (!notifications) { res.status(404).json({ error: `Watchlist '${req.params.id}' not found.` }); return; }
       res.json({ notifications, count: notifications.length });
     } catch (e) {
@@ -122,8 +130,8 @@ class WatchlistsRoutes {
 
   private async $getAllNotifications(req: Request, res: Response): Promise<void> {
     try {
-      const limit = req.query.limit !== undefined ? parseInt(String(req.query.limit), 10) : 100;
-      const notifications = await watchlistsService.getNotifications(ownerOf(res), null, Number.isFinite(limit) ? limit : 100);
+      const limit = notificationLimit(req.query.limit);
+      const notifications = await watchlistsService.getNotifications(ownerOf(res), null, limit);
       res.json({ notifications: notifications ?? [], count: notifications?.length ?? 0 });
     } catch (e) {
       sendIdentityError(res, e, 'Failed to fetch notifications');

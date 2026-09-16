@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subscription } from 'rxjs';
+import { Subscription, Observable } from 'rxjs';
 import { IntelligenceApiService } from './intelligence-api.service';
 import { OwnerKeyService } from './owner-key.service';
 
@@ -109,7 +109,7 @@ export const KEY_SCOPES = ['read', 'watchlists', 'webhooks', 'queries', 'cases',
               </div>
             </div>
           </div>
-          <div *ngIf="!loading && keys.length === 0" class="p-4 text-center text-muted">No keys listed for this owner.</div>
+          <div *ngIf="!loading && !loadError && keys.length === 0" class="p-4 text-center text-muted">No keys listed for this owner.</div>
           <div class="table-responsive" *ngIf="keys.length > 0" tabindex="0" role="region" aria-label="API keys, scroll horizontally" i18n-aria-label>
             <table class="table table-hover mb-0">
               <thead>
@@ -154,7 +154,8 @@ export const KEY_SCOPES = ['read', 'watchlists', 'webhooks', 'queries', 'cases',
               </div>
             </div>
           </div>
-          <div *ngIf="!loading && webhooks.length === 0" class="p-4 text-center text-muted">No webhooks registered for this owner.</div>
+          <p *ngIf="webhookError" role="alert">{{webhookError}}</p><p *ngIf="loadingWebhooks">Loading webhooks...</p>
+          <div *ngIf="!loadingWebhooks && !webhookError && webhooks.length === 0" class="p-4 text-center text-muted">No webhooks registered for this owner.</div>
           <div class="table-responsive" *ngIf="webhooks.length > 0" tabindex="0" role="region" aria-label="Webhooks, scroll horizontally" i18n-aria-label>
             <table class="table table-hover mb-0">
               <thead>
@@ -220,6 +221,24 @@ export class DeveloperPlatformComponent implements OnInit, OnDestroy {
   selectedScopes = new Set<string>(['read']);
 
   private subs: Subscription[] = [];
+  private reads: Subscription[] = [];
+  private keySubscription?:Subscription;
+  private revision=0;private readRevision=0;private destroyed=false;
+  webhookError:string|null=null;loadingWebhooks=false;
+  private resetOwner():void {
+    this.revision++;this.readRevision++;for(const sub of [...this.subs,...this.reads])sub.unsubscribe();this.subs=[];this.reads=[];
+    this.keys=[];this.webhooks=[];this.attempts={};this.usage=null;this.ownerId=null;
+    this.generatedKeySecret=null;this.generatedWebhookSecret=null;this.pastedKey='';
+    this.loading=false;this.loadingWebhooks=false;this.busy=false;this.loadError=null;this.webhookError=null;
+    this.showNewKeyForm=false;this.showNewWebhookForm=false;this.newKeyLabel='';this.newWebhookUrl='';
+  }
+  private track(source:Observable<any>,observer:any,read=false):void {
+    if(this.destroyed)return;const revision=this.revision,readRevision=this.readRevision,key=this.ownerKey.key;
+    const current=()=>!this.destroyed&&revision===this.revision&&key===this.ownerKey.key&&(!read||readRevision===this.readRevision);
+    const sub=source.subscribe({next:value=>{if(current())observer.next?.(value);},error:error=>{if(current())observer.error?.(error);}});
+    if(!sub.closed){const bucket=read?this.reads:this.subs;bucket.push(sub);sub.add(()=>{const index=bucket.indexOf(sub);if(index>=0)bucket.splice(index,1);});}
+  }
+  private read(source:Observable<any>,observer:any):void {this.track(source,observer,true);}
 
   constructor(
     private api: IntelligenceApiService,
@@ -232,6 +251,7 @@ export class DeveloperPlatformComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    let key=this.ownerKey.key;this.keySubscription=this.ownerKey.key$.subscribe(value=>{if(value!==key){key=value;this.resetOwner();this.cdr.markForCheck();}});
     if (this.hasKey) { this.refresh(); }
   }
 
@@ -241,53 +261,55 @@ export class DeveloperPlatformComponent implements OnInit, OnDestroy {
   }
 
   refresh(): void {
+    if(this.destroyed||!this.hasKey)return;this.readRevision++;for(const sub of [...this.reads])sub.unsubscribe();this.reads=[];this.keys=[];this.webhooks=[];this.usage=null;this.webhookError=null;this.loadingWebhooks=true;
     this.loading = true;
     this.loadError = null;
-    this.subs.push(this.api.getDeveloperKeys$().subscribe({
+    this.read(this.api.getDeveloperKeys$(), {
       next: (res) => {
-        this.keys = res?.keys || [];
+        if(!Array.isArray(res?.keys)){this.loadError="Invalid key registry response.";this.keys=[];}else this.keys=res.keys;
         this.ownerId = this.keys[0]?.owner_id ?? this.ownerId;
         this.loading = false;
         this.cdr.markForCheck();
       },
       error: (err) => { this.loadError = this.failure(err, 'Failed to fetch developer keys'); this.loading = false; this.cdr.markForCheck(); },
-    }));
-    this.subs.push(this.api.getWebhooks$().subscribe({
-      next: (res) => { this.webhooks = res?.webhooks || []; this.cdr.markForCheck(); },
-      error: () => { this.webhooks = []; this.cdr.markForCheck(); },
-    }));
+    });
+    this.read(this.api.getWebhooks$(), {
+      next: (res) => { if(!Array.isArray(res?.webhooks)){this.webhookError="Invalid webhook response.";this.webhooks=[];}else this.webhooks=res.webhooks;this.loadingWebhooks=false; this.cdr.markForCheck(); },
+      error: () => { this.webhookError="Webhook registry unavailable; no empty result established.";this.loadingWebhooks=false;this.webhooks = []; this.cdr.markForCheck(); },
+    });
     // Usage is shown only when the backend measures it; a 503 says it does not.
-    this.subs.push(this.api.getDeveloperUsage$().subscribe({
+    this.read(this.api.getDeveloperUsage$(), {
       next: (res) => { this.usage = res && typeof res.monthly_requests === 'number' ? res : null; this.cdr.markForCheck(); },
       error: () => { this.usage = null; this.cdr.markForCheck(); },
-    }));
+    });
   }
 
   createOwner(): void {
-    if (!this.ownerName.trim()) { return; }
+    if (this.destroyed || this.busy || !this.ownerName.trim()) { return; }
     this.busy = true;
-    this.subs.push(this.api.createOwner$(this.ownerName.trim()).subscribe({
+    this.track(this.api.createOwner$(this.ownerName.trim()), {
       next: (res) => {
         this.busy = false;
-        if (typeof res?.secret_key !== 'string') { this.loadError = 'The server did not return a key.'; this.cdr.markForCheck(); return; }
+        if (typeof res?.secret_key !== 'string'||!res.secret_key.startsWith('uip_live_')) { this.loadError = 'The server did not return a key.'; this.cdr.markForCheck(); return; }
+        this.ownerKey.set(res.secret_key);
         this.generatedKeySecret = res.secret_key;
         this.ownerId = res.owner_id ?? null;
-        this.ownerKey.set(res.secret_key);
         this.ownerName = '';
         this.refresh();
       },
       error: (err) => { this.busy = false; this.loadError = this.failure(err, 'Owner creation failed'); this.cdr.markForCheck(); },
-    }));
+    });
   }
 
   useKey(): void {
-    this.ownerKey.set(this.pastedKey.trim());
+    if(this.destroyed)return;const key=this.pastedKey.trim();if(!key.startsWith('uip_live_'))return;this.resetOwner();
+    this.ownerKey.set(key);
     this.pastedKey = '';
     this.refresh();
   }
 
   forgetKey(): void {
-    this.ownerKey.clear();
+    this.resetOwner();this.ownerKey.clear();
     this.keys = [];
     this.webhooks = [];
     this.usage = null;
@@ -302,32 +324,34 @@ export class DeveloperPlatformComponent implements OnInit, OnDestroy {
   }
 
   createKey(): void {
-    if (!this.newKeyLabel.trim() || this.selectedScopes.size === 0) { return; }
+    if (this.destroyed || this.busy || !this.hasKey || !this.newKeyLabel.trim() || this.selectedScopes.size === 0) { return; }
     this.busy = true;
-    this.subs.push(this.api.generateDeveloperKey$(this.newKeyLabel.trim(), [...this.selectedScopes]).subscribe({
+    this.track(this.api.generateDeveloperKey$(this.newKeyLabel.trim(), [...this.selectedScopes]), {
       next: (res) => {
         this.busy = false;
-        if (typeof res?.secret_key !== 'string') { this.loadError = 'The server did not return a key.'; this.cdr.markForCheck(); return; }
+        if (typeof res?.secret_key !== 'string'||!res.secret_key.startsWith('uip_live_')) { this.loadError = 'The server did not return a key.'; this.cdr.markForCheck(); return; }
         this.generatedKeySecret = res.secret_key;
         this.newKeyLabel = '';
         this.showNewKeyForm = false;
         this.refresh();
       },
       error: (err) => { this.busy = false; this.loadError = this.failure(err, 'Key creation failed'); this.cdr.markForCheck(); },
-    }));
+    });
   }
 
   revokeKey(keyId: string): void {
+    if(this.destroyed||this.busy||!this.hasKey)return;
     this.busy = true;
-    this.subs.push(this.api.revokeDeveloperKey$(keyId).subscribe({
+    this.track(this.api.revokeDeveloperKey$(keyId), {
       next: () => { this.busy = false; this.refresh(); },
       error: (err) => { this.busy = false; this.loadError = this.failure(err, 'Revocation failed'); this.cdr.markForCheck(); },
-    }));
+    });
   }
 
   registerWebhook(): void {
+    if(this.destroyed||this.busy||!this.hasKey||!this.newWebhookUrl.trim().startsWith('https://'))return;
     this.busy = true;
-    this.subs.push(this.api.registerWebhook$(this.newWebhookUrl.trim(), ['watchlist.notification']).subscribe({
+    this.track(this.api.registerWebhook$(this.newWebhookUrl.trim(), ['watchlist.notification']), {
       next: (res) => {
         this.busy = false;
         this.generatedWebhookSecret = typeof res?.signing_secret === 'string' ? res.signing_secret : null;
@@ -335,17 +359,18 @@ export class DeveloperPlatformComponent implements OnInit, OnDestroy {
         this.refresh();
       },
       error: (err) => { this.busy = false; this.loadError = this.failure(err, 'Webhook registration failed'); this.cdr.markForCheck(); },
-    }));
+    });
   }
 
   loadAttempts(webhookId: string): void {
-    this.subs.push(this.api.getWebhookAttempts$(webhookId).subscribe({
+    if(this.destroyed||!this.hasKey)return;
+    this.track(this.api.getWebhookAttempts$(webhookId), {
       next: (res) => { this.attempts = { ...this.attempts, [webhookId]: res?.attempts || [] }; this.cdr.markForCheck(); },
       error: (err) => { this.loadError = this.failure(err, 'Failed to fetch delivery attempts'); this.cdr.markForCheck(); },
-    }));
+    });
   }
 
   ngOnDestroy(): void {
-    for (const sub of this.subs) { sub.unsubscribe(); }
+    this.destroyed=true;this.keySubscription?.unsubscribe();this.resetOwner();
   }
 }

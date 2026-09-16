@@ -1,4 +1,5 @@
-import { Component, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -16,7 +17,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
       <header class="page-header mb-4">
         <div class="title-row d-flex flex-wrap align-items-center justify-content-between gap-2">
           <h1 class="m-0">Node Bootstrap Planner</h1>
-          <span class="badge bg-primary">Hardware Profile Benchmark</span>
+          <span class="badge bg-primary">Planning inputs</span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
           Simulates Initial Block Download (IBD) sync duration comparing traditional genesis-to-tip validation vs AssumeUTXO snapshot fast bootstrap.
@@ -38,7 +39,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
 
             <div class="mb-3">
               <label class="form-label small text-muted" for="bootstrap-planner-storage">Storage Medium</label>
-              <select class="form-select" id="bootstrap-planner-storage" [(ngModel)]="storageType">
+              <select class="form-select" id="bootstrap-planner-storage" [(ngModel)]="storageType" (ngModelChange)="clear()">
                 <option value="nvme_fast">High-End NVMe SSD (PCIe 4.0+)</option>
                 <option value="sata_ssd">Standard SATA SSD</option>
                 <option value="hdd_spinning">Spinning Hard Disk (HDD)</option>
@@ -47,17 +48,17 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
 
             <div class="mb-3">
               <label class="form-label small text-muted" for="bootstrap-planner-cpu">CPU Thread Count</label>
-              <input type="number" class="form-control" id="bootstrap-planner-cpu" [(ngModel)]="cpuThreads" />
+              <input type="number" class="form-control" id="bootstrap-planner-cpu" [(ngModel)]="cpuThreads" (ngModelChange)="clear()" />
             </div>
 
             <div class="mb-3">
               <label class="form-label small text-muted" for="bootstrap-planner-bandwidth">Network Download Bandwidth (Mbps)</label>
-              <input type="number" class="form-control" id="bootstrap-planner-bandwidth" [(ngModel)]="bandwidthMbps" />
+              <input type="number" class="form-control" id="bootstrap-planner-bandwidth" [(ngModel)]="bandwidthMbps" (ngModelChange)="clear()" />
             </div>
 
             <div class="mb-3">
               <label class="form-label small text-muted" for="bootstrap-planner-height">Snapshot Target Height</label>
-              <input type="number" class="form-control" id="bootstrap-planner-height" [(ngModel)]="targetHeight" />
+              <input type="number" class="form-control" id="bootstrap-planner-height" [(ngModel)]="targetHeight" (ngModelChange)="clear()" />
             </div>
 
             <button class="btn btn-primary w-100" (click)="calculatePlan()" [disabled]="calculating">
@@ -81,7 +82,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
 
             <div *ngIf="calculating" class="text-center py-5 text-muted">
               <div class="spinner-border text-primary mb-2"></div>
-              <div>Computing script verification throughput and disk IOPS bounds...</div>
+              <div>Requesting a measured bootstrap plan...</div>
             </div>
 
             <div *ngIf="plan">
@@ -115,7 +116,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
               </div>
 
               <div class="alert alert-info py-2 px-3 small m-0">
-                AssumeUTXO maintains the identical consensus security model as full IBD. Historical blocks are completely validated before background chainstate merges.
+                Snapshot activation relies on pinned commitments until background validation completes. This projection does not establish snapshot acceptance or node readiness.
               </div>
             </div>
           </div>
@@ -128,7 +129,9 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
     .nav-link.active { background-color: var(--bs-primary); color: #fff; }
   `],
 })
-export class BootstrapPlannerComponent {
+export class BootstrapPlannerComponent implements OnInit, OnDestroy {
+  private networkSub?: Subscription;
+  private request?: Subscription;
   storageType = 'nvme_fast';
   cpuThreads = 8;
   bandwidthMbps = 250;
@@ -140,16 +143,19 @@ export class BootstrapPlannerComponent {
   constructor(
     private bootstrapApi: BootstrapApiService,
     private cdr: ChangeDetectorRef
-  ) {
-    this.calculatePlan();
-  }
+  ) {}
+
+  ngOnInit(): void {this.networkSub=this.bootstrapApi.networkChanged$.subscribe(() => this.clear());}
+  clear(): void {this.request?.unsubscribe();this.plan=null;this.calculating=false;this.failure=null;this.cdr.markForCheck();}
+  ngOnDestroy(): void {this.clear();this.networkSub?.unsubscribe();}
 
   calculatePlan(): void {
+    this.clear();
     this.calculating = true;
     this.plan = null;
     this.failure = null;
 
-    this.bootstrapApi
+    this.request = this.bootstrapApi
       .generateBootstrapPlan$({
         storage: this.storageType,
         cpu_threads: this.cpuThreads,
@@ -158,14 +164,16 @@ export class BootstrapPlannerComponent {
       })
       .subscribe({
         next: (res) => {
-          this.plan = res;
+          if (!res || res.network !== this.bootstrapApi.network || res.target_height !== this.targetHeight || res.measurement_status !== 'measured' || ![res.assumeutxo_ready_hours,res.traditional_ibd_hours,res.background_validation_hours].every(n => Number.isFinite(n) && n > 0)) {
+            this.failure = 'No measured, network-bound bootstrap plan was returned.';this.plan=null;
+          } else {this.plan = res;}
           this.calculating = false;
           this.cdr.markForCheck();
         },
         error: (err) => {
           this.calculating = false;
           this.plan = null;
-          this.failure = loadFailureMessage(classifyLoadFailure(err));
+          this.failure = err?.error?.error || loadFailureMessage(classifyLoadFailure(err));
           this.cdr.markForCheck();
         },
       });

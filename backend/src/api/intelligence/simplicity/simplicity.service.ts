@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+import { verifyFormalArtifact, FormalVerdict } from './formal-checker';
 import {
   SimplicityProgram,
   SimplicityProgramOccurrence,
@@ -120,39 +120,8 @@ export class SimplicityService {
     throw new SimplicityEvidenceError('unavailable-runtime', runtimeUnavailable);
   }
 
-  public verifyFormalArtifact(artifact: SimplicityFormalArtifact): {
-    verified: boolean;
-    proof_state: string;
-    message: string;
-    errors: string[];
-  } {
-    const errors: string[] = [];
-    const allowlistedProofSystems = ['coq', 'lean4', 'isabelle', 'dafny'];
-
-    if (!allowlistedProofSystems.includes(artifact.proof_system)) {
-      errors.push(`Unsupported proof system '${artifact.proof_system}'`);
-    }
-    if (!artifact.program_cmr || artifact.program_cmr.length !== 64) {
-      errors.push('Valid 32-byte hexadecimal program CMR is required');
-    }
-    if (!artifact.statement || artifact.statement.trim().length === 0) {
-      errors.push('Formal statement theorem is required');
-    }
-    if (!artifact.proof_source_hash) {
-      errors.push('Proof source hash is required');
-    }
-
-    const verified = errors.length === 0;
-    const proof_state = verified ? 'proof_checked' : 'proof_failed';
-
-    return {
-      verified,
-      proof_state,
-      message: verified
-        ? `Theorem verified against program CMR ${artifact.program_cmr}`
-        : 'Formal verification check failed',
-      errors,
-    };
+  public verifyFormalArtifact(artifact: unknown): Promise<FormalVerdict> {
+    return verifyFormalArtifact(artifact);
   }
 }
 

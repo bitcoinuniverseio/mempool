@@ -14,6 +14,7 @@ const KEEP_RECENT_BLOCKS = 50;
 export class CacheService {
   loadedBlocks$ = new Subject<BlockExtended>();
   tip: number = 0;
+  private generation = 0;
 
   txCache: { [txid: string]: Transaction } = {};
 
@@ -61,6 +62,8 @@ export class CacheService {
 
   addBlockToCache(block: BlockExtended) {
     if (!this.blockHashCache[block.id]) {
+      const displaced = this.blockCache[block.height];
+      if (displaced) delete this.blockHashCache[displaced.id];
       this.blockHashCache[block.id] = block;
       this.blockCache[block.height] = block;
       this.bumpBlockPriority(block.height);
@@ -69,6 +72,7 @@ export class CacheService {
 
   async loadBlock(height) {
     if (!this.blockCache[height] && !this.blockLoading[height]) {
+      const generation = this.generation;
       const chunkSize = 10;
       const maxHeight = Math.ceil(height / chunkSize) * chunkSize;
       for (let i = 0; i < chunkSize; i++) {
@@ -80,6 +84,7 @@ export class CacheService {
       } catch (e) {
         console.log('failed to load blocks: ', e.message);
       }
+      if (generation !== this.generation) return;
       if (result && result.length) {
         result.forEach(block => {
           if (this.blockLoading[block.height]) {
@@ -99,20 +104,23 @@ export class CacheService {
 
   // increase the priority of a block, to delay removal
   bumpBlockPriority(height) {
+    if (!this.blockCache[height]) return;
+    this.blockPriorities = this.blockPriorities.filter(cachedHeight => cachedHeight !== height);
     this.blockPriorities.push(height);
-    this.copiesInBlockQueue[height] = (this.copiesInBlockQueue[height] || 0) + 1;
+    this.copiesInBlockQueue[height] = 1;
   }
 
   // remove lowest priority blocks from the cache
   clearBlocks() {
-    while (Object.keys(this.blockCache).length > (BLOCK_CACHE_SIZE + KEEP_RECENT_BLOCKS) && this.blockPriorities.length > KEEP_RECENT_BLOCKS) {
+    let remaining = this.blockPriorities.length;
+    while (Object.keys(this.blockCache).length > (BLOCK_CACHE_SIZE + KEEP_RECENT_BLOCKS) && remaining-- > 0) {
       const height = this.blockPriorities.shift();
-      if (this.copiesInBlockQueue[height] > 1) {
-        this.copiesInBlockQueue[height]--;
-      } else if ((this.tip - height) < KEEP_RECENT_BLOCKS) {
-        this.bumpBlockPriority(height);
+      const block = this.blockCache[height];
+      if (!block) {
+        delete this.copiesInBlockQueue[height];
+      } else if (height <= this.tip && (this.tip - height) < KEEP_RECENT_BLOCKS) {
+        this.blockPriorities.push(height);
       } else {
-        const block = this.blockCache[height];
         delete this.blockCache[height];
         delete this.blockHashCache[block.id];
         delete this.copiesInBlockQueue[height];
@@ -122,6 +130,7 @@ export class CacheService {
 
   // remove all blocks from the cache
   resetBlockCache() {
+    this.generation++;
     this.blockHashCache = {};
     this.blockCache = {};
     this.apiService.blockAuditLoaded = {};

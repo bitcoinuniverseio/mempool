@@ -1,94 +1,40 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
-import { BlockPropagationApiService } from './block-propagation.service';
+import { Subscription, of } from 'rxjs';
+import { BlockPropagationApiService, branchVerdict } from './block-propagation.service';
+import { BlockPropagationOverview, BlockPropagationObservation, CompactBlockDetail, ForkRaceRecord, FibreObservation } from './block-propagation.models';
+import { watchPropagation } from './propagation-load';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
-  selector: 'app-block-propagation-fibre',
-  standalone: true,
+  selector: 'app-block-propagation-fibre', standalone: true,
   imports: [RelativeUrlPipe, CommonModule, RouterModule],
   template: `
-    <div class="container-xl py-4">
-      <div class="alert alert-warning" role="alert" *ngIf="loadError">
-        {{ loadError }}
-      </div>
-      <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
-        <div>
-          <h1 class="h2 mb-1">FIBRE (Fast Internet Bitcoin Relay Engine) Relay Status</h1>
-          <p class="text-muted mb-0">High-speed UDP relay network telemetry with forward error correction (FEC).</p>
-        </div>
-        <a [routerLink]="'/network/blocks' | relativeUrl" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
-      </div>
-
-      <div class="row g-3 mb-4" *ngIf="fibre">
-        <div class="col-md-4">
-          <div class="card bg-dark border-secondary p-3 h-100">
-            <div class="text-muted small text-uppercase">Active Relay Nodes</div>
-            <div class="display-6 fw-bold text-primary my-1">{{ fibre.active_nodes }}</div>
-            <div class="small text-muted">Dedicated low-latency backbones</div>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="card bg-dark border-secondary p-3 h-100">
-            <div class="text-muted small text-uppercase">Mean Relay Latency</div>
-            <div class="display-6 fw-bold text-success my-1">{{ fibre.average_latency_ms }} ms</div>
-            <div class="small text-muted">Transcontinental optical paths</div>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="card bg-dark border-secondary p-3 h-100">
-            <div class="text-muted small text-uppercase">Bandwidth Compression</div>
-            <div class="display-6 fw-bold text-info my-1">{{ fibre.bandwidth_reduction_pct }}%</div>
-            <div class="small text-muted">FEC parity chunks active</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="card bg-dark border-secondary mb-4" *ngIf="fibre">
-        <div class="card-header border-secondary">
-          <h5 class="card-title mb-0">FIBRE Node Mesh Status</h5>
-        </div>
-        <div class="table-responsive" tabindex="0" role="region" aria-label="FIBRE Node Mesh Status, scroll horizontally" i18n-aria-label>
-          <table class="table table-dark table-hover mb-0">
-            <thead>
-              <tr>
-                <th>Location Hub</th>
-                <th>Ping Latency</th>
-                <th>Sync Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let n of fibre.nodes">
-                <td class="fw-bold">{{ n.location }}</td>
-                <td class="font-monospace text-success">{{ n.ping_ms }} ms</td>
-                <td><span class="badge bg-success">{{ n.status }}</span></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+  <div class="container-xl py-4"><h1 class="h2 mb-3">FIBRE Relay Observations</h1><nav class="nav nav-pills flex-wrap gap-2 mb-4">
+<a class="nav-link" [routerLink]="'/network/blocks' | relativeUrl">Overview</a>
+<a class="nav-link" [routerLink]="'/network/blocks/live' | relativeUrl">Live Propagation</a>
+<a class="nav-link" [routerLink]="'/network/compact-blocks' | relativeUrl">Compact Blocks</a>
+<a class="nav-link" [routerLink]="'/network/fork-races' | relativeUrl">Fork Races</a>
+<a class="nav-link" [routerLink]="'/network/stale-tips' | relativeUrl">Stale Tips</a>
+<a class="nav-link" [routerLink]="'/network/fibre' | relativeUrl">FIBRE</a></nav>
+  <p class="text-muted">Observations reported by the configured source; this page does not independently validate sensor coverage or chain consensus.</p>
+  <div *ngIf="loading" role="status" aria-busy="true">Loading propagation evidence...</div>
+  <div *ngIf="loadError" class="alert alert-warning" role="alert">{{ loadError }}</div>
+  <section *ngIf="fibre"><div class="table-responsive" tabindex="0"><table class="table table-hover"><thead><tr><th>Height</th><th>Block</th><th>FIBRE / BIP152 Delivery (ms)</th><th>Time Saved (ms)</th><th>Chunks</th><th>Chunk Loss</th><th>FEC Recovery</th></tr></thead><tbody><tr *ngFor="let f of fibre"><td>{{ f.height }}</td><td><code>{{ f.block_hash | slice:0:18 }}…</code></td><td>{{ f.fibre_delivery_time_ms }} / {{ f.bip152_delivery_time_ms }}</td><td>{{ f.time_saved_ms }}</td><td>{{ f.chunk_count }}</td><td>{{ f.chunk_loss_pct }}%</td><td>{{ f.fec_recovery_succeeded ? 'Source reports success' : 'Source reports failure' }}</td></tr></tbody></table></div><p *ngIf="!fibre.length">The source returned no FIBRE observations.</p></section><p>Relay node inventory, optical paths, ping health and bandwidth compression are not reported by this source contract.</p></div>
   `
 })
-export class BlockPropagationFibreComponent implements OnInit {
-  public fibre: any = null;
-
-  public loadError: string | null = null;
-
+export class BlockPropagationFibreComponent implements OnInit, OnDestroy {
+  fibre: FibreObservation[] | null = null;
+  loading = false;
+  loadError: string | null = null;
+  readonly verdict = branchVerdict;
+  private request?: Subscription;
   constructor(private api: BlockPropagationApiService) {}
-
-  public ngOnInit(): void {
-    this.api.getFibre$().subscribe({
-      next: res => {
-        this.fibre = res;
-        this.loadError = null;
-      },
-      error: err => {
-        this.fibre = null;
-        this.loadError = loadFailureMessage(classifyLoadFailure(err));
-      },
+  ngOnInit(): void {
+    this.request = watchPropagation(this.api.networkChanged$ ?? of(''), () => this.api.getFibre$(), state => {
+      this.fibre = state.value; this.loading = state.loading; this.loadError = state.error;
     });
   }
+  ngOnDestroy(): void { this.request?.unsubscribe(); }
 }
