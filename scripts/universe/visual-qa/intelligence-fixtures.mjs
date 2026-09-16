@@ -138,6 +138,14 @@ export const intelligenceFixtures = {
       { region: 'sa-east', status: 'healthy', latency_ms: 154, node_version: 'Bitcoin Core 28.0' },
     ],
   },
+  // The relay page opens a server-sent event stream; the fixture answers
+  // with the connected frame the backend writes first.
+  'GET /api/v1/intelligence/relay/stream': {
+    __entry: true,
+    status: 200,
+    contentType: 'text/event-stream',
+    response: 'event: relay.connected\ndata: {"network":"mainnet","scope":"Live local poll events only; no replay across disconnects. Clock calibration and per-transaction transport are unknown."}\n\n',
+  },
   'GET /api/v1/intelligence/relay/policy-differences': {
     divergences: [
       {
@@ -204,6 +212,45 @@ export const intelligenceFixtures = {
     checkpoint_height: 887400,
     checkpoint_block_hash: sampleIds.BLOCK_HASH,
     reconciliation_status: 'verified',
+  },
+  // Reconciliation carries the owned Core checkpoint beside the projection.
+  'GET /api/v1/intelligence/utxo/reconciliation': {
+    network: 'mainnet',
+    block_height: 887400,
+    block_hash: sampleIds.BLOCK_HASH,
+    total_utxos: 175420100,
+    total_amount_sats: 1978000000000000,
+    muhash: '9c5f3a1d0e7b2c4a6f8e1d3b5a7c9e0f2b4d6a8c0e1f3a5b7c9d1e3f5a7b9c1d',
+    bogo_size: '12840000000',
+    observed_at_utc: '2025-03-01T12:00:00.000Z',
+    block_time: 1740830400,
+    reconciled: true,
+    projection_available: true,
+    projection_muhash: '9c5f3a1d0e7b2c4a6f8e1d3b5a7c9e0f2b4d6a8c0e1f3a5b7c9d1e3f5a7b9c1d',
+    projection_total_utxos: 175420100,
+    projection_total_amount_sats: 1978000000000000,
+    projection_height: 887400,
+    hash_serialized_2: null,
+    rollback_floor_height: 887112,
+    reorg_safe_checkpoint_height: null,
+    scope: 'Owned Core coinstatsindex checkpoint compared with the owned projection.',
+  },
+  'GET /api/v1/intelligence/utxo/spend-transitions': {
+    transitions: [
+      {
+        height: 887400,
+        block_hash: sampleIds.BLOCK_HASH,
+        created_count: 8120,
+        created_sats: '412000000000',
+        spent_count: 7644,
+        spent_sats: '398500000000',
+        net_utxo_change: 476,
+        coin_days_destroyed: 1842.5,
+        coin_age_destroyed_sat_seconds: '15919200000000000',
+        scope: 'Projected spendable outputs, including coinbase; ages use non-negative block-time deltas.',
+      },
+    ],
+    count: 1,
   },
   'GET /api/v1/intelligence/utxo/cohorts': {
     cohorts: [
@@ -679,6 +726,14 @@ export const intelligenceFixtures = {
     filter_hash: '3f4b1a2c5d',
     filter_header: '4e2a9c8b7d',
   },
+  // The filter explorer also reads the genesis block filter by height.
+  'GET /api/v1/intelligence/compact-filters/blocks/0': {
+    block_hash: '000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f',
+    filter_type: 'basic',
+    element_count: 1,
+    filter_hash: '9f3c37f6f4e2',
+    filter_header: '50b781aed7',
+  },
   'GET /api/v1/intelligence/compact-filters/ranges': {
     ranges: [
       { start_height: 854000, end_height: 855000, status: 'fully_indexed' },
@@ -1108,6 +1163,18 @@ export const intelligenceFixtures = {
   'GET /api/v1/intelligence/ark/vpack/providers': [
     { asp_id: 'asp-covenant-ark', name: 'Covenant Ark ASP Alpha', pool_pubkey: '028b9c...5b', supported_lifetimes_blocks: 288, active_vtxos_count: 24100, status: 'online' },
   ],
+  // The VTXO page reads the Ark route; the shape is ArkVtxo.
+  'GET /api/v1/ark/vtxos/vtxo-864190-001': {
+    vtxoId: 'vtxo-864190-001',
+    batchId: 'batch-864190',
+    amountSats: '250000',
+    userPubkey: '02b1c3d5e7f9a1b3c5d7e9f1a3b5c7d9e1f3a5b7c9d1e3f5a7b9c1d3e5f7a9b1c3',
+    aspPubkey: '028b9c1d3e5f7a9b1c3d5e7f9a1b3c5d7e9f1a3b5c7d9e1f3a5b7c9d1e3f5a7b9c',
+    timelockExpiryBlocks: 864300,
+    treeDepth: 4,
+    treeIndex: 7,
+    status: 'spendable',
+  },
   'GET /api/v1/intelligence/ark/vpack/vtxos/vtxo-864190-001': {
     vtxo_id: 'vtxo-864190-001',
     asp_id: 'asp-covenant-ark',
