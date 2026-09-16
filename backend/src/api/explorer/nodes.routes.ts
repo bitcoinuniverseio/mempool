@@ -5,6 +5,9 @@ import DB from '../../database';
 import { INodesRanking } from '../../mempool.interfaces';
 import { handleError } from '../../utils/api';
 
+/** The one node group this explorer serves; the route answers 404 for any other name. */
+const NODE_GROUP_NAME = 'universe';
+
 class NodesRoutes {
   constructor() { }
 
@@ -37,7 +40,7 @@ class NodesRoutes {
   }
 
   private async $getNodeGroup(req: Request, res: Response) {
-    if (req.params.name !== 'mempool.space' || !['mainnet', 'testnet', 'signet'].includes(config.MEMPOOL.NETWORK)) {
+    if (req.params.name !== NODE_GROUP_NAME || !['mainnet', 'testnet', 'signet'].includes(config.MEMPOOL.NETWORK)) {
       handleError(req, res, 404, 'Node group not configured for this name and network');
       return;
     }

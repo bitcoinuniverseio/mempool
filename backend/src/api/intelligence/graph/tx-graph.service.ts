@@ -193,6 +193,7 @@ export class TxGraphService {
     };
     const room = (): boolean => { if (nodes.size >= GRAPH_LIMITS.maxNodes) { truncation = truncation ?? 'node_limit'; return false; } return true; };
     const cache = new Map<string, IEsploraApi.Transaction>();
+    /** @asyncUnsafe rejections propagate to the caller, which handles them. */
     const fetchTx = async (txid: string): Promise<IEsploraApi.Transaction | null> => {
       const cached = cache.get(txid);
       if (cached) { return cached; }

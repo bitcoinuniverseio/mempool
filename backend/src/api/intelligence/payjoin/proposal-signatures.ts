@@ -84,7 +84,7 @@ async function ownedPolicy(
 ): Promise<any> {
   if (policyRequests >= 2) throw new Error('Owned policy checker is busy.');
   policyRequests++;
-  const operation = (async () => {
+  const operation = (/** @asyncUnsafe rejections propagate to the caller, which handles them. */ async () => {
     const result = await ownedWorkbenchCore.call('testmempoolaccept', [
       [transactionHex],
     ]);
@@ -92,7 +92,7 @@ async function ownedPolicy(
       throw new Error('Owned checkpoint changed; repeat verification.');
     return result;
   })();
-  void operation.then(
+  operation.then(
     () => {
       policyRequests--;
     },
@@ -115,6 +115,7 @@ async function ownedPolicy(
     if (timer) clearTimeout(timer);
   }
 }
+/** @asyncUnsafe rejections propagate to the caller, which handles them. */
 export async function verifyFinalProposal(
   req: PayjoinProposalAnalysisRequest,
   expectedTip: string
@@ -193,6 +194,7 @@ export async function verifyFinalProposal(
       : 'Owned node rejected the final signed transaction under its current mempool policy.',
   };
 }
+/** @asyncUnsafe rejections propagate to the caller, which handles them. */
 export async function verifyProposalSignatures(
   req: PayjoinProposalAnalysisRequest
 ): Promise<{ verified: boolean; errors: string[]; engine: string }> {

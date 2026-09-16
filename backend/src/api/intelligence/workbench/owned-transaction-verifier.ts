@@ -16,6 +16,7 @@ export async function verifyOwnedTransactionInput(raw: unknown, inputIndex: unkn
     })]);
   } finally { if (timer) clearTimeout(timer); }
 }
+/** @asyncUnsafe rejections propagate to the caller, which handles them. */
 async function verifyInput(raw: unknown, inputIndex: unknown, core: WorkbenchCoreReader, deadline: number) {
   if (typeof raw !== 'string' || raw.length > 400000 || !/^(?:[0-9a-f]{2})+$/i.test(raw) || !Number.isSafeInteger(inputIndex) || Number(inputIndex) < 0) throw new CompilerError('invalid-transaction-context', 'Supply transaction hex and a nonnegative input index.', 400);
   let tx: Transaction; try { tx = Transaction.fromHex(raw); } catch { throw new CompilerError('invalid-transaction', 'Transaction bytes could not be decoded.', 400); }

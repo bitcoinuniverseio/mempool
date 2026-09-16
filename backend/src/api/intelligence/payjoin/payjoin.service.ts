@@ -349,6 +349,7 @@ export class PayjoinService {
     return result;
   }
 
+  /** @asyncUnsafe rejections propagate to the caller, which handles them. */
   public async analyzeProposalWithOwnedEvidence(
     req: PayjoinProposalAnalysisRequest
   ): Promise<PayjoinProposalAnalysisResult> {

@@ -57,10 +57,15 @@ export function readHealth(capability: ChainCapabilityEnvelope | null | undefine
   return health as unknown as UniverseExplorerHealthV2;
 }
 
-export function observationCurrent(row: HealthObservation & { observedAt: string | null }, now = Date.now()): boolean {
+/** The observation is recent enough to describe the present; says nothing about whether its latest refresh failed. */
+export function observationFresh(row: HealthObservation & { observedAt: string | null }, now = Date.now()): boolean {
   const age = row.observedAt ? now - Date.parse(row.observedAt) : NaN;
-  return Number.isFinite(age) && age >= 0 && age <= HEALTH_MAX_AGE_MS
-    && row.stale !== true && !row.lastFailureKind;
+  return Number.isFinite(age) && age >= 0 && age <= HEALTH_MAX_AGE_MS && row.stale !== true;
+}
+
+/** Fresh and not failed: the only basis for a green reading. */
+export function observationCurrent(row: HealthObservation & { observedAt: string | null }, now = Date.now()): boolean {
+  return observationFresh(row, now) && !row.lastFailureKind;
 }
 
 export function nodeHealthLabel(capability: ChainCapabilityEnvelope | null | undefined, now = Date.now()): string {

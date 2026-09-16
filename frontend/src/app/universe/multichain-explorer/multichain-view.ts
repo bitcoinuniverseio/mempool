@@ -1,4 +1,4 @@
-import { healthServiceSummary, nodeHealthLabel, observationCurrent, readHealth } from './chain-health';
+import { healthServiceSummary, nodeHealthLabel, observationCurrent, observationFresh, readHealth } from './chain-health';
 /**
  * Presentation model for the Dogecoin and Zcash explorer pages.
  *
@@ -555,6 +555,8 @@ function availabilityTone(state: string | null | undefined): EvidenceTone {
     case 'ready':
       return 'proven';
     case 'degraded':
+    case 'stale':
+    case 'unqualified':
       return 'partial';
     case 'unavailable':
       return 'unavailable';
@@ -614,6 +616,10 @@ export function availabilityLabel(state: string | null | undefined): string {
       return $localize`:@@universe.chain.state-degraded:Degraded`;
     case 'unavailable':
       return $localize`:@@universe.chain.state-unavailable:Unavailable`;
+    case 'stale':
+      return $localize`:@@universe.chain.state-stale:Stale`;
+    case 'unqualified':
+      return $localize`:@@universe.chain.state-unqualified:Unqualified`;
     default:
       return $localize`:@@universe.chain.state-unknown:Not stated`;
   }
@@ -916,17 +922,80 @@ export interface ProtocolReading {
   readonly reasons: readonly ChainReasonReading[];
 }
 
+/**
+ * A protocol row's rendered state from the three separate facts the health
+ * document carries: what the authority says about itself (availability),
+ * whether that observation is current (freshness, including a failed latest
+ * refresh), and whether the protocol's history is semantically qualified.
+ *
+ * Only a current, ready, qualified row reads Ready. Everything else keeps
+ * its own word: an explicit outage stays Unavailable or Degraded with the
+ * failure kind beside it; a ready row whose observation aged out reads
+ * Stale; a reachable but unqualified row reads Unqualified. Not stated is
+ * reserved for evidence that is genuinely absent or unreadable, and says why.
+ */
+export function protocolRowState(
+  row: {
+    availability: string;
+    qualification: string;
+    observedAt: string | null;
+    stale?: boolean;
+    lastFailureKind?: string | null;
+  },
+  now = Date.now()
+): { state: string; reasonIds: readonly string[] } {
+  const fresh = observationFresh(row, now);
+  const failed = !!row.lastFailureKind;
+  const extra: string[] = [];
+  if (failed) {
+    extra.push('latest-refresh-failed:' + row.lastFailureKind);
+  }
+  if (row.availability === 'unknown') {
+    return { state: 'unknown', reasonIds: [...extra, 'evidence-absent'] };
+  }
+  if (row.availability !== 'ready') {
+    return { state: row.availability, reasonIds: extra };
+  }
+  if (!fresh) {
+    return { state: 'stale', reasonIds: [...extra, 'authority-observation-stale'] };
+  }
+  if (failed) {
+    return { state: 'degraded', reasonIds: extra };
+  }
+  if (row.qualification === 'unqualified') {
+    return { state: 'unqualified', reasonIds: ['protocol-unqualified'] };
+  }
+  if (row.qualification !== 'qualified') {
+    return { state: 'degraded', reasonIds: ['protocol-qualification-pending'] };
+  }
+  return { state: 'ready', reasonIds: [] };
+}
+
 export function readProtocolCoverage(
   capability: ChainCapabilityEnvelope | null,
-  profile: ChainProfile
+  profile: ChainProfile,
+  now = Date.now()
 ): readonly ProtocolReading[] {
   const health = readHealth(capability);
-  const declared: readonly { protocolId: string; state: string; coverage: string; lagBlocksAtomic: string | null; degradedReasons: string[] }[] = health ? health.protocols.map(row => ({
-    ...row,
-    state: observationCurrent(row) && row.qualification === 'qualified' ? row.availability : 'unknown',
-  })) : capability?.health ? [] : capability?.protocols ?? [];
+  // A health document that is present but fails the contract is not used
+  // for any green reading, and it is not silently swapped for the legacy
+  // fields either. The rows say so, so the failure is actionable.
+  const contractInvalid = !health && !!capability?.health;
+  const declared: readonly { protocolId: string; state: string; coverage: string; lagBlocksAtomic: string | null; degradedReasons: string[] }[] = health ? health.protocols.map(row => {
+    const verdict = protocolRowState(row, now);
+    return {
+      ...row,
+      state: verdict.state,
+      degradedReasons: [...new Set([...verdict.reasonIds, ...row.degradedReasons])],
+    };
+  }) : contractInvalid ? [] : capability?.protocols?.map(row => row.state === 'ready'
+    // A legacy ready flag with no independent health document behind it is
+    // not evidence of readiness. Its non-ready states are kept as stated.
+    ? { ...row, state: 'unknown', degradedReasons: ['health-contract-absent', ...row.degradedReasons] }
+    : row) ?? [];
   const byId = new Map(declared.map((entry) => [entry.protocolId, entry]));
   const claimed = new Set<string>();
+  const absentReasons = contractInvalid ? ['health-contract-invalid'] : capability ? ['evidence-absent'] : ['status-unavailable'];
 
   // The tabs first, in the order the navigation offers them, each matched to
   // whichever id the envelope used for it. A tab the overlay stopped reporting
@@ -947,7 +1016,7 @@ export function readProtocolCoverage(
       coverageLabel: completenessLabel(entry?.coverage),
       historyLabel: historyLabel(entry?.coverage),
       lag: formatExactInteger(entry?.lagBlocksAtomic ?? null),
-      reasons: describeChainReasons(entry?.degradedReasons ?? []),
+      reasons: describeChainReasons(entry?.degradedReasons ?? absentReasons),
     };
   });
 

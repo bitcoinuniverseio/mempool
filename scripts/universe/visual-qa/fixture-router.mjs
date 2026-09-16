@@ -108,7 +108,11 @@ export class FixtureRouter {
       const parts = key.split(' ');
       const method = parts.length > 1 ? parts[0] : 'GET';
       const path = parts.length > 1 ? parts[1] : parts[0];
-      this.register({ method, path, response: data });
+      if (data && typeof data === 'object' && data.__entry === true) {
+        this.register({ method, path, status: data.status, contentType: data.contentType, response: data.response });
+      } else {
+        this.register({ method, path, response: data });
+      }
     }
 
     // 6. Batch endpoints

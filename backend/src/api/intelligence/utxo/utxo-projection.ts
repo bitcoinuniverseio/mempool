@@ -34,9 +34,11 @@ export class UtxoProjection {
   if(data.height===0&&(data.hash!==GENESIS[this.network]||coins.size!==0))throw new UtxoEvidenceError('invalid-utxo-checkpoint','Invalid genesis state.');
   this.coins=coins;this.muhash=muhash;this.height=data.height;this.hash=data.hash;this.time=data.time;this.undo=data.undo;
  }
+ /** @asyncUnsafe rejections propagate to the caller, which handles them. */
  private async persist(){if(this.store)await this.store.write({schema:'utxo-projection-v1',network:this.network,height:this.height,hash:this.hash,time:this.time,muhash:this.muhash.digest(),coins:[...this.coins.values()],undo:this.undo});}
  public close(){this.store?.close();}
  public async sync():Promise<void>{if(this.flight)return this.flight;const work=this.synchronize();this.flight=work;try{await work;}finally{if(this.flight===work)this.flight=null;}}
+ /** @asyncUnsafe rejections propagate to the caller, which handles them. */
  private async synchronize(){
   if(this.initError)throw new UtxoEvidenceError('utxo-checkpoint-invalid','Persisted UTXO projection is invalid or owned by another writer.');
   if(await this.reader.getBlockHash(0)!==GENESIS[this.network])throw new UtxoEvidenceError('utxo-network-mismatch','Owned UTXO node genesis does not match this network.');

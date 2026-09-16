@@ -1,6 +1,6 @@
 export interface Bolt12DecodedOffer {
   status: 'decoded'; syntax_valid: true; engine: 'lightning-0.2.6'; network: string;
-  input_sha256: string; offer_id: string; canonical_offer: string; tlv_hex: string;
+  input_sha256: string; offer_id: string; normalized_offer: string; tlv_hex: string;
   description: string | null; issuer: string | null; issuer_signing_pubkey: string | null;
   amount: null | {kind:'bitcoin';amount_msat:string} | {kind:'currency';currency:string;amount_minor_units:string};
   quantity: {kind:'one'|'unbounded'} | {kind:'bounded';maximum:string};
@@ -14,7 +14,7 @@ export function matchingOffer(value: Bolt12DecodedOffer, inputHash: string, netw
   const amount=(v:unknown):boolean=>typeof v==='string'&&/^(0|[1-9][0-9]{0,19})$/.test(v)&&BigInt(v)<=18446744073709551615n;
   return !!value && value.status==='decoded' && value.syntax_valid===true && value.engine==='lightning-0.2.6'
     && value.network===network && value.input_sha256===inputHash && hash(value.offer_id)
-    && typeof value.canonical_offer==='string' && value.canonical_offer.length<=16384 && value.canonical_offer.startsWith('lno1')
+    && typeof value.normalized_offer==='string' && value.normalized_offer.length<=16384 && value.normalized_offer.startsWith('lno1')
     && typeof value.tlv_hex==='string' && value.tlv_hex.length<=32768 && /^(?:[0-9a-f]{2})+$/.test(value.tlv_hex)
     && (value.amount===null || value.amount?.kind==='bitcoin'&&amount(value.amount.amount_msat)
       || value.amount?.kind==='currency'&&/^[A-Z]{3}$/.test(value.amount.currency)&&amount(value.amount.amount_minor_units))
