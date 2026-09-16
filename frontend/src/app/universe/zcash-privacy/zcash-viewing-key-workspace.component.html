@@ -4,7 +4,7 @@
  <section class="panel">
   <h2>Local Note Scanner</h2>
   <p>Public block requests contain only the network, height interval and prior block hash. No viewing key is uploaded or saved. This scanner reports received notes; it does not determine an unspent balance.</p>
-  <div class="form-group"><label for="zcash-key-type">Key Format</label><select id="zcash-key-type" [(ngModel)]="keyType" (ngModelChange)="clear()"><option value="unified-full">Unified Full Viewing Key (UFVK)</option><option value="unified-incoming">Unified Incoming Viewing Key (UIVK)</option><option value="sapling-extended-full">Sapling Extended Full Viewing Key</option><option value="sapling-incoming-hex">Sapling Incoming Key — 32-byte hex</option><option value="orchard-incoming-hex">Orchard Incoming Key — 64-byte hex</option></select></div>
+  <div class="form-group"><label for="zcash-key-type">Key Format</label><select id="zcash-key-type" [(ngModel)]="keyType" (ngModelChange)="clear()"><option value="unified-full">Unified Full Viewing Key (UFVK)</option><option value="unified-incoming">Unified Incoming Viewing Key (UIVK)</option><option value="sapling-extended-full">Sapling Extended Full Viewing Key</option><option value="sapling-incoming-hex">Sapling Incoming Key, 32-byte hex</option><option value="orchard-incoming-hex">Orchard Incoming Key, 64-byte hex</option></select></div>
   <div class="form-group"><label for="viewingKeyInput">Viewing Key</label><input id="viewingKeyInput" type="password" autocomplete="off" spellcheck="false" [(ngModel)]="viewingKey" (ngModelChange)="clear()" placeholder="Supported viewing key; addresses cannot decrypt notes" /></div>
   <div class="form-group"><label for="zcash-scan-network">Zcash Network</label><select id="zcash-scan-network" [(ngModel)]="network" (ngModelChange)="clear()"><option value="mainnet">Mainnet</option><option value="testnet">Testnet</option></select></div>
   <div class="form-group"><label for="zcash-scan-mode">Public Data</label><select id="zcash-scan-mode" [(ngModel)]="mode" (ngModelChange)="clear()"><option value="owned-blocks">Owned Node Block Interval</option><option value="compact-artifact">Offline Compact Artifact</option></select></div>
@@ -16,7 +16,7 @@
  <section class="panel" *ngIf="result$ | async as res">
   <h2>Interval Scan Results</h2>
   <p class="alert alert-warning">History incomplete. Spent notes are not tracked. Unspent balance is unknown.</p>
-  <p *ngIf="res.mode === 'compact-artifact'">Offline artifact result — no chain blocks scanned.</p>
+  <p *ngIf="res.mode === 'compact-artifact'">Offline artifact result: no chain blocks scanned.</p>
   <div class="metrics-grid"><div class="metric-card"><span class="metric-label">Key Family</span><span class="metric-value">{{ res.key_family }}</span></div><div class="metric-card"><span class="metric-label">Blocks Scanned</span><span class="metric-value">{{ res.scanned_blocks }}</span></div><div class="metric-card"><span class="metric-label">Notes Decrypted</span><span class="metric-value">{{ res.notes_found }}</span></div><div class="metric-card"><span class="metric-label">Received in This Interval</span><span class="metric-value">{{ res.received_zatoshis }} zat</span></div></div>
   <p>Supported pools: {{ res.sapling_supported ? 'Sapling ' : '' }}{{ res.orchard_supported ? 'Orchard' : '' }}. Transparent and Sprout scanning are unsupported.</p>
   <p *ngIf="res.last_hash" class="text-break">Last verified block: {{ res.last_hash }}. Next interval starts at {{ res.next_height }}.</p>

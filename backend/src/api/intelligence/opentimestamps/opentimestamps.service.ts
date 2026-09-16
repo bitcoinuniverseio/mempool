@@ -145,7 +145,7 @@ export class OpenTimestampsService {
       pendingCoverage: { record_limit: 500, records_examined: Math.min(pending.length, 500), complete: pending.length <= 500 } };
   }
 
-  /** Re-evaluate the complete saved proof, never the persisted status alone. */
+  /** Re-evaluate the complete saved proof, never the persisted status alone.  @asyncUnsafe rejections propagate to the caller, which handles them. */
   private async currentRecords(records: TimestampRecord[]): Promise<{ record: TimestampRecord; verification: TimestampVerificationResult }[]> {
     const deadline = Date.now() + 15000;
     const source = this.reader;
@@ -174,6 +174,7 @@ export class OpenTimestampsService {
     return results;
   }
 
+  /** @asyncUnsafe rejections propagate to the caller, which handles them. */
   private async readBatch(record: TimestampRecord): Promise<TimestampBatch> {
     const batch = toBatch(record);
     if (record.status !== 'anchored') { return batch; }

@@ -96,7 +96,7 @@ export class TaprootAssetsComponent implements OnInit, OnDestroy {
     const generation = this.generation, network = this.api.network;
     const selectedNetwork = network || 'mainnet';
     const binary = atob(proof);
-    if (btoa(binary) !== proof) { this.proofState.next({kind:'invalid',message:'The proof base64 encoding is not canonical.'}); return; }
+    if (btoa(binary) !== proof) { this.proofState.next({kind:'invalid',message:'The proof base64 encoding is not in its strict form.'}); return; }
     const proofHash = bytesToHex(sha256(Uint8Array.from(binary, character => character.charCodeAt(0))));
     this.proofState.next({kind:'loading'});
     this.proofRequest = this.api.verifyTaprootProof$(id, proof).subscribe({

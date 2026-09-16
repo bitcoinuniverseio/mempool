@@ -142,6 +142,7 @@ export function buildTarget(
   };
 }
 
+/** @asyncUnsafe rejections propagate to the caller, which handles them. */
 export async function $planBumpFor(
   txid: string,
   targetFeerate: number,

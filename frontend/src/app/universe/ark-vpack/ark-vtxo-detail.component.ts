@@ -36,7 +36,7 @@ export class ArkVtxoDetailComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.vm$ = combineLatest([this.route.paramMap.pipe(map(p => p.get('vtxoId') || '')), this.state.networkChanged$.pipe(startWith(this.state.network),map(n => n || 'mainnet'),distinctUntilChanged())]).pipe(
       switchMap(([id, network]) => {
-        if (!id || id.length > 256 || /[\s\x00-\x1f]/.test(id)) return of<View>({kind:'error',id,network,error:'Enter a bounded public VTXO identifier.'});
+        if (!id || id.length > 256 || /[\s\p{Cc}]/u.test(id)) return of<View>({kind:'error',id,network,error:'Enter a bounded public VTXO identifier.'});
         return this.api.getArkVtxo$(id).pipe(map(value => ({kind:'ready',id,network,value:checkedVtxo(value,id,network)} as View)),
           catchError(e => of<View>({kind:'error',id,network,error:e?.error?.error || e?.message || 'The owned Ark provider is unavailable.'})),
           startWith<View>({kind:'loading',id,network}));

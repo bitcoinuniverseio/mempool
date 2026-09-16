@@ -29,6 +29,7 @@ export class BitcoinCorePolicyAdapter {
     catch{throw new PolicyEvidenceError('unavailable-policy-source','Owned Bitcoin Core policy evidence is unavailable.');}
     finally{if(timer)clearTimeout(timer);}
   }
+  /** @asyncUnsafe rejections propagate to the caller, which handles them. */
   public async getEffectivePolicyProfile():Promise<NodePolicyProfile>{
     const chain=await this.call('getblockchaininfo',[]),network=this.core.network;
     const expectedChain=network==='mainnet'?'main':network==='testnet'?'test':network;
@@ -43,6 +44,7 @@ export class BitcoinCorePolicyAdapter {
       max_ancestor_count:null,max_ancestor_size_vbytes:null,max_descendant_count:null,max_descendant_size_vbytes:null,supports_truc_v3:null,supports_ephemeral_anchors:null,supports_package_relay:null,
       probed_at:new Date().toISOString(),genesis,checkpoint:{height:chain.blocks,hash:chain.bestblockhash},scope:'Owned Core reported settings at read time. Unreported limits and feature capabilities are unknown; no version-based support inference.'};
   }
+  /** @asyncUnsafe rejections propagate to the caller, which handles them. */
   public async evaluatePackage(rawTxs:string[],providedNetwork=this.core.network):Promise<PackageAnalysisReport>{
     if(providedNetwork!==this.core.network||!Array.isArray(rawTxs)||rawTxs.length<1||rawTxs.length>25||rawTxs.some(raw=>typeof raw!=='string'||!raw.length||raw.length%2!==0||!/^[0-9a-f]+$/i.test(raw))||rawTxs.reduce((n,raw)=>n+raw.length,0)>8000000)throw new PolicyEvidenceError('invalid-package','Supply 1 to 25 hexadecimal transactions within 4 MB for the selected network.',400);
     let transactions:Transaction[];

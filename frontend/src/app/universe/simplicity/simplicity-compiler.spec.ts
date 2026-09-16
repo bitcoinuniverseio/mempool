@@ -10,7 +10,7 @@ describe('actual pinned SimplicityHL compiler WASM',()=>{
   const instance=await WebAssembly.instantiate(module,compilerImports(module));
   expect(()=>(instance.exports.memory as WebAssembly.Memory).grow(2049)).toThrow();
  });
- it('matches canonical unit program encoding and independently specified CMR',async()=>{
+ it('matches the reference unit program encoding and independently specified CMR',async()=>{
   const result=await compile('fn main() {}');
   expect(result.program_base64).toBe('JA==');expect(result.cmr).toBe('c40a10263f7436b4160acbef1c36fba4be4d95df181a968afeab5eac247adff7');
   expect(result.static_cost).toBe('100');expect(result.cmr_redecoded).toBe(true);

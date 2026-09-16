@@ -40,6 +40,7 @@ export class BootstrapService {
       );
     }
   }
+  /** @asyncUnsafe rejections propagate to the caller, which handles them. */
   public async getOverview() {
     const { capability, observation } = await this.observation();
     return {
@@ -58,12 +59,15 @@ export class BootstrapService {
         'A trusted signed snapshot catalogue and independently pinned Core commitments are not configured.',
     };
   }
+  /** @asyncUnsafe rejections propagate to the caller, which handles them. */
   public async listNodes() {
     return [(await this.observation()).capability];
   }
+  /** @asyncUnsafe rejections propagate to the caller, which handles them. */
   public async listNodeChainstates() {
     return [(await this.observation()).observation];
   }
+  /** @asyncUnsafe rejections propagate to the caller, which handles them. */
   public async getNodeChainstates(nodeId: string) {
     const observation = (await this.observation()).observation;
     return observation.node_id === nodeId ? observation : undefined;

@@ -45,7 +45,7 @@ export class LightningResilienceService {
     });
     return this.cache={at,observation:{...observation,channels:[]},channels};
    });
-   this.flight=work;void work.finally(()=>{if(this.flight===work)this.flight=null;}).catch(()=>undefined);
+   this.flight=work;work.finally(()=>{if(this.flight===work)this.flight=null;}).catch(()=>undefined);
   }
   let timer:NodeJS.Timeout|undefined;
   try{return clone(await Promise.race([this.flight,new Promise<never>((_resolve,reject)=>{timer=setTimeout(()=>reject(new LightningEvidenceError('lightning-source-timeout','Owned Lightning telemetry timed out.')),LIGHTNING_LIMITS.timeoutMs);})]));}finally{if(timer)clearTimeout(timer);}
@@ -58,8 +58,11 @@ export class LightningResilienceService {
    onion_queue:{total_queue_depth:null,queue_utilization_pct:null,processing_rate_msgs_per_sec:null,dropped_msgs_rate_pct:null,rate_limit_active:null,status:'unknown'},recent_incidents:[],top_congested_channels:channels.filter(c=>c.htlc_slot_utilization_pct!==null).sort((a,b)=>b.htlc_slot_utilization_pct-a.htlc_slot_utilization_pct).slice(0,10),scope:LIGHTNING_SCOPE,
    source:{status:snapshot?'observed':'unavailable',method:'owned LND getinfo/ListChannels',observed_at_utc:snapshot?.observation.observed_at_utc??null,age_ms:snapshot?(this.options.now??Date.now)()-snapshot.at:null,freshness_limit_ms:LIGHTNING_LIMITS.freshMs,error:sourceError,hold_history_available:false,incident_detection_available:false}};
  }
+ /** @asyncUnsafe rejections propagate to the caller, which handles them. */
  public async listChannels(){return (await this.snapshot()).channels;}
+ /** @asyncUnsafe rejections propagate to the caller, which handles them. */
  public async getChannel(shortId:string){if(!/^\d{1,8}x\d{1,8}x\d{1,5}$/.test(shortId))throw new LightningEvidenceError('invalid-channel-id','Invalid short channel id.',400);const channel=(await this.listChannels()).find(c=>c.short_channel_id===shortId);if(!channel)throw new LightningEvidenceError('channel-not-observed','Channel is not in the current owned observation.',404);return channel;}
+ /** @asyncUnsafe rejections propagate to the caller, which handles them. */
  public async getNodeResilience(publicKey:string){if(!pub(publicKey))throw new LightningEvidenceError('invalid-node-key','Expected compressed node public key.',400);const snapshot=await this.snapshot();const channels=snapshot.channels.filter(c=>c.node1_pubkey===publicKey||c.node2_pubkey===publicKey);if(publicKey!==snapshot.observation.identity_pubkey&&!channels.length)throw new LightningEvidenceError('node-not-observed','Node is not in the current owned observation.',404);return {node_public_key:publicKey,total_channels:channels.length,resilience_status:'unknown',mitigation_coverage_pct:null,active_circuit_breaker:null,average_held_duration_seconds:null,onion_message_support:null,ptlc_readiness:'unknown',supported_mitigations:[],scope:LIGHTNING_SCOPE,observed_at_utc:snapshot.observation.observed_at_utc};}
  public listIncidents(){return [];}
  public listMitigations(){return [
