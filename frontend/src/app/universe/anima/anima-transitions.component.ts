@@ -2,7 +2,8 @@ import { ChangeDetectionStrategy, Component, DestroyRef, OnInit } from '@angular
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, EMPTY, Observable, Subscription, catchError, distinctUntilChanged, startWith, switchMap, take } from 'rxjs';
+import { StateService } from '@app/services/state.service';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import {
@@ -53,6 +54,7 @@ export class AnimaTransitionsComponent implements OnInit {
   private status: AnimaStatusDocument | null = null;
   private events: AnimaLoggedEvent[] = [];
   private total = 0;
+  private pageSubscription?: Subscription;
   private loadingMore = false;
   private pageFailure: AnimaFailure | null = null;
 
@@ -60,15 +62,24 @@ export class AnimaTransitionsComponent implements OnInit {
     private api: UniverseApiService,
     private seo: SeoService,
     private destroyRef: DestroyRef,
+    private network: StateService,
   ) {
     this.seo.setTitle($localize`ANIMA transitions`);
   }
 
   ngOnInit(): void {
-    this.api.getAnimaStatus$()
-      .pipe(takeUntilDestroyed(this.destroyRef))
+    this.network.networkChanged$.pipe(
+        startWith(this.network.network),
+        distinctUntilChanged(),
+        switchMap(() => {
+          this.reset();
+          return this.api.getAnimaStatus$().pipe(catchError((error) => {this.fail(animaFailureFrom(error));return EMPTY;}));
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe({
         next: (status) => {
+          this.reset();
           this.status = status;
           if (status.state !== 'served') {
             this.state.next({
@@ -82,8 +93,7 @@ export class AnimaTransitionsComponent implements OnInit {
           this.loadFirstPage();
         },
         error: (error: unknown) => {
-          const failure = animaFailureFrom(error);
-          this.state.next({ kind: failure.kind === 'transport' || failure.kind === 'malformed' ? 'error' : 'degraded', failure, degradedReason: animaFailureText(failure) });
+          this.fail(animaFailureFrom(error));
         },
       });
   }
@@ -98,8 +108,8 @@ export class AnimaTransitionsComponent implements OnInit {
     this.loadingMore = true;
     this.pageFailure = null;
     this.publish();
-    this.api.getAnimaEvents$(this.events.length, 50)
-      .pipe(takeUntilDestroyed(this.destroyRef))
+    this.pageSubscription = this.api.getAnimaEvents$(this.events.length, 50)
+      .pipe(take(1), takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (page) => {
           this.loadingMore = false;
@@ -115,9 +125,20 @@ export class AnimaTransitionsComponent implements OnInit {
       });
   }
 
+  private reset(): void {
+    this.pageSubscription?.unsubscribe();
+    this.pageSubscription = undefined;
+    this.events = [];
+    this.total = 0;
+    this.loadingMore = false;
+    this.pageFailure = null;
+    this.status = null;
+    this.state.next({kind: 'loading'});
+  }
+
   private loadFirstPage(): void {
-    this.api.getAnimaEvents$(0, 50)
-      .pipe(takeUntilDestroyed(this.destroyRef))
+    this.pageSubscription = this.api.getAnimaEvents$(0, 50)
+      .pipe(take(1), takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (page) => {
           this.events = [];
@@ -126,10 +147,14 @@ export class AnimaTransitionsComponent implements OnInit {
           this.publish();
         },
         error: (error: unknown) => {
-          const failure = animaFailureFrom(error);
-          this.state.next({ kind: failure.kind === 'transport' || failure.kind === 'malformed' ? 'error' : 'degraded', failure, degradedReason: animaFailureText(failure) });
+          this.fail(animaFailureFrom(error));
         },
       });
+  }
+
+  private fail(failure: AnimaFailure): void {
+    this.reset();
+    this.state.next({kind: failure.kind === 'transport' || failure.kind === 'malformed' ? 'error' : 'degraded', failure, degradedReason: animaFailureText(failure)});
   }
 
   private append(events: readonly AnimaLoggedEvent[]): void {

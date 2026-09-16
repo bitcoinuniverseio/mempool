@@ -1,0 +1,9 @@
+# Private submission and ordering evidence
+
+The twelve API operations remain available: overview, capabilities, transaction diagnosis, submit, submission status, abort, provider list/detail, receipt verification, transaction/block ordering and findings. The configured deployment currently lacks the owned relay, signed provider directory and ordering source; valid requests return the specific503 source error. This is not proof of working private relay.
+
+Diagnosis accepts exactly one transaction ID or complete bounded raw transaction. Submission accepts complete raw transaction plus an explicit method. Client responses are bound to the decoded transaction ID, requested method, selected network and submission token. Edits, network changes and navigation cancel pending UI requests and clear prior results. A server-reported completed status is labeled a report; independently observed relay acknowledgement remains required for positive completion evidence. Failed abort responses remain failures.
+
+Receipt signatures need an implemented provider trust contract and authenticated key source. This deployment has neither. A signature-shaped HTTP200 cannot establish trust, payment, mining coverage or acceleration. Receipt changes invalidate old work; no paid-amount assertion is inferred. Provider records with malformed fields or dates fail the entire directory read. Expired entries never receive a current healthy badge.
+
+Ordering pages show the actual evidence_state, confidence, block position and source fields. Missing sensor observations are not proof of private payment, miner revenue or exclusive transaction delivery. All reads target the selected network. The full operation acceptance denominator remains open until real configured authorities, acknowledgement, signed receipts and source completeness are independently demonstrated. No node transaction broadcast or relay configuration is performed by this repair.

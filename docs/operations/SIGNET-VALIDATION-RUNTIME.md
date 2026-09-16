@@ -32,6 +32,31 @@ D:\universe\mempool\.runtime\signet\
 The tunnels use the deploy key over the VPN or the host address; the
 backend only ever talks to loopback.
 
+### Address-index readiness and source boundaries
+
+The address readiness probe selects a checksum-valid address for the configured
+network. Mainnet retains the historical funded probe; Signet/testnet use a
+test-network witness address. An empty result for this readiness-only probe is
+valid when every response has the required shape and the index tip matches the
+owned node within the configured lag. It does not prove funded-address history
+or a complete wallet journey. The release history gate separately requires an
+actual funded address; set `UNIVERSE_RELEASE_ADDRESS_PROBE` for non-mainnet runs.
+
+Primary and fallback Esplora endpoints must be operated loopback HTTP(S) origins
+or absolute Unix socket paths. Both preflight and the data router enforce this.
+The sample Signet configuration has no public fallback. Esplora data, health and
+address-readiness clients do not follow redirects or use ambient HTTP proxies.
+Build metadata retains the configured origin/port or Unix socket; it never guesses
+a public hostname. A missing metadata endpoint leaves that version unknown.
+The gateway converts API 301/302/303/307/308 responses into
+`502 {"error":"upstream-redirect-refused"}` so redirects cannot move a client or
+POST body onto an unowned data source. Configure the final local endpoint directly.
+
+Regression checks are in `backend/src/__tests__/address-index-network.test.ts`,
+`backend/src/api/bitcoin/esplora-transport.test.ts` and the gateway tests. These
+use actual loopback listeners to exercise malformed responses, redirects and
+proxy bypass, separate from owned Signet runtime evidence.
+
 ## Credentials that survive a node restart
 
 Bitcoin Core rewrites `.cookie` on every restart. A copy taken once stops
@@ -89,12 +114,14 @@ The app is then at `http://127.0.0.1:8099/signet`.
 ## Proving the served state before testing
 
 ```bash
-node scripts/universe/acceptance-preflight.mjs --origin http://127.0.0.1:8099 --network signet audits/preflight-signet.json
+node scripts/universe/acceptance-preflight.mjs --origin http://127.0.0.1:8099 --network signet --out audits/preflight-signet.json
 curl -s http://127.0.0.1:8099/signet/api/v1/backend-info      # gitCommit, chainSync
 curl -s http://127.0.0.1:8099/signet/api/blocks/tip/height     # must equal the Esplora tip
 curl -s http://127.0.0.1:3022/blocks/tip/height
 curl -s http://127.0.0.1:8099/signet/api/v1/fees/recommended   # 200 once the mempool is in sync
 ```
+
+Preflight requires an explicit literal loopback HTTP origin and network. The output file must be new; existing evidence is never overwritten. It checks API genesis, block identity and a stable tip, and retains the eleven historical transport probes without interpreting their HTTP responses as operation passes. It does not evaluate prior prerequisite claims or establish full GO. Source hashes identify the local tooling, not the process serving the URL.
 
 `backend-info.gitCommit` is the served revision, `chainSync` is the node the
 backend reads, and the database namespace is `DATABASE.DATABASE` in the

@@ -178,9 +178,15 @@ describe('buildTarget', () => {
   it('falls back to weight over four when no adjusted size is recorded', () => {
     fakeMempool = {
       [id('a')]: {
-        txid: id('a'), fee: 500, weight: 800, vin: [], vout: [],
+        ...entry({ label: 'a', fee: 500, vsize: 200 }), adjustedVsize: undefined,
       } as unknown as MempoolTransactionExtended,
     };
     expect(buildTarget(id('a'), fakeMempool, new Map())?.vsize).toBe(200);
   });
+});
+test.each([{fee:NaN},{weight:0},{adjustedVsize:Infinity},{vout:[{}]},{vin:[{sequence:undefined}]}])('missing or invalid bump evidence %j is unavailable',patch=>{
+ fakeMempool={[id('a')]:{...entry({label:'a'}),...patch} as any};expect(()=>buildTarget(id('a'),fakeMempool,new Map())).toThrow('unavailable');
+});
+test('missing ancestor source never substitutes target-only totals',()=>{
+ fakeMempool={[id('a')]:entry({label:'a'})};const spy=jest.spyOn(intelligence,'getPackageFor').mockReturnValue(null);try{expect(()=>buildTarget(id('a'),fakeMempool,new Map())).toThrow('unavailable');}finally{spy.mockRestore();}
 });

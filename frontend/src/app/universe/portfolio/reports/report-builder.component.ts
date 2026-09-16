@@ -322,10 +322,10 @@ export class ReportBuilderComponent {
     ] : [
       ['asset', 'holding', 'share', 'value', 'source', 'kind', 'quantity', 'unit_price', 'quote_currency', 'effective_at'],
       ...this.reportRows().map(row => [row.asset, row.holding, row.share, row.value, 'Address-derived', '', '', '', '', '']),
-      ...manual.map(row => [row.name, '', 'Not combined', row.value, 'User-entered', row.kind, row.quantity, row.unitPrice, row.quoteCurrency, row.effectiveAt].map(manualCsvText)),
+      ...manual.map(row => [row.name, '', 'Not combined', row.value, 'User-entered', row.kind, row.quantity, row.unitPrice, row.quoteCurrency, row.effectiveAt]),
     ];
     const csv = rows
-      .map((row) => row.map((field) => `"${field.replace(/"/g, '""')}"`).join(','))
+      .map((row) => row.map((field) => `"${csvLiteralText(field).replace(/"/g, '""')}"`).join(','))
       .join('\n');
     const blob = new Blob([`${csv}\n`], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
@@ -338,7 +338,7 @@ export class ReportBuilderComponent {
 }
 
 /** Keep user-entered text literal when a downloaded CSV is opened in a spreadsheet. */
-function manualCsvText(value: string): string {
+function csvLiteralText(value: string): string {
   return /^\s*[=+@-]|^[\t\r\n]/.test(value) ? '\'' + value : value;
 }
 

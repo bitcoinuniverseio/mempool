@@ -1,3 +1,4 @@
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -18,7 +19,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           <span class="badge bg-primary">Standards Compliance</span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
-          Cross-hardware compatibility verification matrix for MuSig2, BSMS, Wallet Policies, Miniscript, and Labels.
+          Source-backed cross-hardware compatibility matrix for MuSig2, BSMS, Wallet Policies, Miniscript, and Labels.
         </p>
 
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
@@ -53,47 +54,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                 <th>Air-Gapped QR</th>
               </tr>
             </thead>
-            <tbody>
-              <tr>
-                <td class="fw-bold">Coldcard Mk4 / Q</td>
-                <td><span class="badge bg-success">Supported</span></td>
-                <td><span class="badge bg-success">Supported</span></td>
-                <td><span class="badge bg-success">Supported</span></td>
-                <td><span class="badge bg-success">Supported</span></td>
-                <td><span class="badge bg-success">BBQR / MicroSD</span></td>
-              </tr>
-              <tr>
-                <td class="fw-bold">BitBox02</td>
-                <td><span class="badge bg-warning text-dark">Beta</span></td>
-                <td><span class="badge bg-success">Supported</span></td>
-                <td><span class="badge bg-success">Supported</span></td>
-                <td><span class="badge bg-success">Supported</span></td>
-                <td><span class="badge bg-secondary">USB / MicroSD</span></td>
-              </tr>
-              <tr>
-                <td class="fw-bold">Ledger Nano S+ / X / Stax</td>
-                <td><span class="badge bg-secondary">Planned</span></td>
-                <td><span class="badge bg-success">Supported</span></td>
-                <td><span class="badge bg-success">Supported</span></td>
-                <td><span class="badge bg-success">Supported</span></td>
-                <td><span class="badge bg-secondary">USB / BLE</span></td>
-              </tr>
-              <tr>
-                <td class="fw-bold">Blockstream Jade</td>
-                <td><span class="badge bg-success">Supported</span></td>
-                <td><span class="badge bg-success">Supported</span></td>
-                <td><span class="badge bg-warning text-dark">Beta</span></td>
-                <td><span class="badge bg-success">Supported</span></td>
-                <td><span class="badge bg-success">Animated QR</span></td>
-              </tr>
-              <tr>
-                <td class="fw-bold">Krux DIY Signer</td>
-                <td><span class="badge bg-success">Supported</span></td>
-                <td><span class="badge bg-success">Supported</span></td>
-                <td><span class="badge bg-success">Supported</span></td>
-                <td><span class="badge bg-success">Supported</span></td>
-                <td><span class="badge bg-success">UR / BBQR</span></td>
-              </tr>
+            <tbody><tr><td colspan="6">No source-backed hardware compatibility records are available.</td></tr>
             </tbody>
           </table>
         </div>
@@ -108,7 +69,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
 export class MultipartyCompatibilityComponent implements OnInit, OnDestroy {
   loading = false;
   error: string | null = null;
-  matrix: any = null;
+
   private sub?: Subscription;
 
   constructor(
@@ -117,13 +78,16 @@ export class MultipartyCompatibilityComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    this.loading = true;
+    this.error = null;
     this.sub = this.multipartyApi.getCompatibility$().subscribe({
-      next: (data) => {
-        this.matrix = data;
+      next: () => {
+        this.error = 'The compatibility source response has no supported verification contract. Hardware support is unverified.';
         this.loading = false;
         this.cdr.markForCheck();
       },
-      error: () => {
+      error: (error) => {
+        this.error = loadFailureMessage(classifyLoadFailure(error));
         this.loading = false;
         this.cdr.markForCheck();
       },

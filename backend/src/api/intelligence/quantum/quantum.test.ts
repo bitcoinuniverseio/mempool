@@ -1,6 +1,9 @@
 import { Application, Request, Response } from 'express';
 import quantumRoutes from './quantum.routes';
 import { QuantumEvidenceError, quantumService } from './quantum.service';
+import config from '../../../config';
+import { payments } from 'bitcoinjs-lib';
+const publicAddress = payments.p2wpkh({hash:Buffer.alloc(20,1)}).address!;
 
 /**
  * These assertions replace a suite that asserted the constants the service used
@@ -12,6 +15,9 @@ import { QuantumEvidenceError, quantumService } from './quantum.service';
  * not that any output had been observed.
  */
 describe('QuantumService', () => {
+  const originalNetwork=config.MEMPOOL.NETWORK;
+  beforeAll(()=>{config.MEMPOOL.NETWORK='mainnet';});
+  afterAll(()=>{config.MEMPOOL.NETWORK=originalNetwork;});
   const unavailable = expect.objectContaining({ code: 'unavailable-exposure-index', status: 503 });
 
   it('reports the missing exposure index rather than invented cohorts and reveals', () => {
@@ -22,7 +28,7 @@ describe('QuantumService', () => {
 
   it('reports the missing exposure index for an audit instead of classifying by prefix', () => {
     expect(() => quantumService.auditAddressOrOutpoint('4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b:0')).toThrow(unavailable);
-    expect(() => quantumService.auditAddressOrOutpoint('bc1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vqzk5jj0')).toThrow(unavailable);
+    expect(() => quantumService.auditAddressOrOutpoint(publicAddress)).toThrow(unavailable);
     expect(() => quantumService.auditAddressOrOutpoint('')).toThrow(expect.objectContaining({ code: 'invalid-input', status: 400 }));
   });
 
@@ -50,9 +56,18 @@ describe('QuantumService', () => {
       throw new Error(`resolved with ${JSON.stringify(resolved)}`);
     }
   });
+  it.each(['not-a-public-identifier','a'.repeat(101),'a'.repeat(64)+':4294967296','a'.repeat(64)+':01',' a'.repeat(32)])('rejects malformed or oversized audit identifiers %s', identifier => {
+    expect(()=>quantumService.auditAddressOrOutpoint(identifier)).toThrow(expect.objectContaining({status:400}));
+  });
+  it.each([{exposed_outpoints:['x'],target_standard:'p2wpkh'},{exposed_outpoints:['a'.repeat(64)+':0','A'.repeat(64)+':0'],target_standard:'p2wpkh'},{exposed_outpoints:Array.from({length:101},(_,i)=>'a'.repeat(64)+':'+i),target_standard:'p2wpkh'},{exposed_outpoints:['a'.repeat(64)+':0'],target_standard:'invented'}])('rejects unbounded or unsupported migration requests', request => {
+    expect(()=>quantumService.generateMigrationPlan(request as any)).toThrow(expect.objectContaining({status:400}));
+  });
 });
 
 describe('Quantum HTTP responses', () => {
+  const originalNetwork=config.MEMPOOL.NETWORK;
+  beforeAll(()=>{config.MEMPOOL.NETWORK='mainnet';});
+  afterAll(()=>{config.MEMPOOL.NETWORK=originalNetwork;});
   type Handler = (req: Request, res: Response) => Promise<void>;
 
   function mount(): { gets: Map<string, Handler>; posts: Map<string, Handler> } {
@@ -70,7 +85,7 @@ describe('Quantum HTTP responses', () => {
     const { gets, posts } = mount();
     expect(gets.size).toBe(3);
     expect(posts.size).toBe(2);
-    const body = { identifier: 'bc1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vqzk5jj0', exposed_outpoints: ['ab'.repeat(32) + ':0'] };
+    const body = { identifier: publicAddress, exposed_outpoints: ['ab'.repeat(32) + ':0'], target_standard:'p2wpkh' };
     for (const handler of [...gets.values(), ...posts.values()]) {
       const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
       await handler({ body } as unknown as Request, res as unknown as Response);

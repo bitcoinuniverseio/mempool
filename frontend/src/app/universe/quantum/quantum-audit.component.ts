@@ -1,4 +1,7 @@
-import { Component, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
+import { Subscription } from 'rxjs';
+import { publicIdentifier, publicOutpoint, validExposure, validPlan } from './quantum-validation';
+import { Component, ChangeDetectionStrategy, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -14,11 +17,11 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
     <div class="intelligence-page container-xl">
       <header class="page-header mb-4">
         <div class="title-row d-flex flex-wrap align-items-center justify-content-between gap-2">
-          <h1 class="m-0">Local Public-Data Quantum Audit</h1>
+          <h1 class="m-0">Public-Data Quantum Audit</h1>
           <span class="badge bg-success">Noncustodial Public Key Audit</span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
-          Assess vulnerability to Shor's algorithm for public addresses and outpoints. Never input private keys or recovery phrases.
+          Assess vulnerability to Shor's algorithm for public addresses and outpoints. The public identifier is sent to the configured server. Never input private keys or recovery phrases.
         </p>
 
         <!-- Navigation Tabs -->
@@ -26,7 +29,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           <a class="nav-link" [routerLink]="'/intelligence/quantum' | relativeUrl">Overview</a>
           <a class="nav-link" [routerLink]="'/intelligence/quantum/exposure' | relativeUrl">Script Cohorts</a>
           <a class="nav-link" [routerLink]="'/intelligence/quantum/history' | relativeUrl">Reveal Timeline</a>
-          <a class="nav-link active" [routerLink]="'/intelligence/quantum/audit' | relativeUrl">Local Public Audit</a>
+          <a class="nav-link active" [routerLink]="'/intelligence/quantum/audit' | relativeUrl">Public Audit</a>
           <a class="nav-link" [routerLink]="'/intelligence/quantum/migration' | relativeUrl">Migration Planner</a>
         </nav>
       </header>
@@ -45,6 +48,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
               class="form-control font-monospace"
               placeholder="e.g. bc1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vqzk5jj0"
               [(ngModel)]="identifier"
+              (ngModelChange)="clear()"
               name="identifier"
               required
               [disabled]="auditing"
@@ -80,7 +84,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
       <div *ngIf="result" class="card p-4 bg-body-tertiary border">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 border-bottom pb-2">
           <h2 class="h5 m-0" [ngClass]="result.is_exposed ? 'text-danger' : 'text-success'">
-            {{ result.is_exposed ? '&cross; Quantum Exposed' : '&check; Hash-Protected' }}
+            {{ result.is_exposed ? 'Source Reports Public Key Exposure' : 'Source Reports No Public Key Exposure' }}
           </h2>
           <span class="badge bg-secondary">{{ result.script_type | uppercase }}</span>
         </div>
@@ -93,10 +97,10 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                 {{ result.exposure_reason | uppercase }}
               </div>
               <div class="small text-muted" *ngIf="result.is_exposed">
-                Direct public key revealed on-chain. An adversary with a cryptographically relevant quantum computer could compute the private key.
+                The source reports a public key revealed on-chain. An adversary with a cryptographically relevant quantum computer could compute the private key.
               </div>
               <div class="small text-muted" *ngIf="!result.is_exposed">
-                Public key hidden behind SHA256 and RIPEMD160 hashes until first spending transaction.
+                The source reports hash protection for this output. This does not establish future quantum safety or complete address history.
               </div>
             </div>
           </div>
@@ -132,7 +136,9 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
     }
   `],
 })
-export class QuantumAuditComponent {
+export class QuantumAuditComponent implements OnDestroy {
+  private request?: Subscription;
+  private networkSubscription?: Subscription;
   identifier = '';
   auditing = false;
   errorMessage: string | null = null;
@@ -141,27 +147,38 @@ export class QuantumAuditComponent {
   constructor(
     private api: QuantumApiService,
     private cd: ChangeDetectorRef
-  ) {}
+  ) {
+    this.networkSubscription = this.api.networkChanged$?.subscribe(() => { this.clear(); this.cd.markForCheck(); });
+  }
+
+  clear(): void {
+    this.request?.unsubscribe();
+    this.auditing = false;
+    this.result = null;
+    this.errorMessage = null;
+  }
+
+  ngOnDestroy(): void { this.networkSubscription?.unsubscribe(); this.clear(); }
 
   loadDemoIdentifier(): void {
-    this.identifier = 'bc1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vqzk5jj0';
-    this.audit();
+    this.clear();
+    this.identifier = '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa';
   }
 
   audit(): void {
-    if (!this.identifier) return;
+    this.clear();
+    const input = this.identifier.trim();
+    if (!publicIdentifier(input, this.api.network)) { this.errorMessage = 'Enter a valid public Bitcoin address or txid:vout. Nothing was sent.'; return; }
     this.auditing = true;
-    this.errorMessage = null;
-    this.result = null;
-
-    this.api.auditIdentifier$(this.identifier.trim()).subscribe({
+    this.request = this.api.auditIdentifier$(input).subscribe({
       next: res => {
-        this.result = res;
+        if (validExposure(res, input)) this.result = res;
+        else this.errorMessage = 'The source returned malformed or inconsistent evidence.';
         this.auditing = false;
         this.cd.markForCheck();
       },
       error: err => {
-        this.errorMessage = err?.error?.error || err?.message || 'Failed to audit identifier';
+        this.errorMessage = loadFailureMessage(classifyLoadFailure(err));
         this.auditing = false;
         this.cd.markForCheck();
       },

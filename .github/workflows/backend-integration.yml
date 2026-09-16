@@ -10,6 +10,7 @@ on:
 
 jobs:
   backend-integration:
+    timeout-minutes: 45
     if: "(github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'ops') && !contains(github.head_ref, 'ops/')) || github.event_name == 'push'"
     strategy:
       matrix:
@@ -93,57 +94,33 @@ jobs:
           MEMPOOL_CONFIG_FILE: ${{ env.MEMPOOL_TEST_RUNTIME_CONFIG_FILE }}
           SKIP_DB_TEARDOWN: '1'
 
-      - name: Start MariaDB for server test
-        run: docker compose -f docker-compose.test.yml up -d
+      # Jest retained this job's database and wrote its assigned port into the
+      # runtime config. Do not recreate it with the compose default port.
+      - name: Wait for an authenticated database query
         working-directory: ${{ matrix.node }}/integration/backend
-
-      - name: Wait for MariaDB
         run: |
-          echo "Waiting for MariaDB to be ready..."
+          ready=false
           for i in {1..30}; do
-            if docker compose -f docker-compose.test.yml exec -T db-test mysqladmin ping -h localhost -u mempool_test -pmempool_test --silent 2>/dev/null; then
-              echo "MariaDB is ready!"
+            if [ "$(timeout 5s docker compose -f docker-compose.test.yml exec -T db-test mariadb -h localhost -u mempool_test -pmempool_test mempool_test --batch --skip-column-names -e 'SELECT 1' 2>/dev/null)" = 1 ]; then
+              ready=true
               break
             fi
-            echo "Attempt $i/30..."
             sleep 2
           done
-          sleep 3
-        working-directory: ${{ matrix.node }}/integration/backend
+          [ "$ready" = true ] || { echo 'Database did not answer an authenticated query before the deadline'; exit 1; }
 
-      - name: Start backend server and verify connectivity
-        run: |
-          # Start server in background
-          node dist/index.js &
-          SERVER_PID=$!
-          
-          # Wait for server to start
-          echo "Waiting for server to start..."
-          sleep 10
-          
-          # Check if server is still running
-          if ps -p $SERVER_PID > /dev/null 2>&1; then
-            echo "Server started successfully and connected to database!"
-            kill $SERVER_PID 2>/dev/null || true
-            wait $SERVER_PID 2>/dev/null || true
-            exit 0
-          else
-            echo "Server failed to start or exited prematurely"
-            exit 1
-          fi
+      - name: Start backend and verify its database capability over HTTP
         working-directory: ${{ matrix.node }}/integration/backend
         env:
           MEMPOOL_CONFIG_FILE: ${{ env.MEMPOOL_TEST_RUNTIME_CONFIG_FILE }}
+        run: node ../scripts/universe/backend-startup-check.mjs
+
+      - name: Display logs on failure
+        if: failure()
+        run: docker compose -f docker-compose.test.yml logs db-test || true
+        working-directory: ${{ matrix.node }}/integration/backend
 
       - name: Cleanup containers
         if: always()
         run: docker compose -f docker-compose.test.yml down -v
         working-directory: ${{ matrix.node }}/integration/backend
-
-      - name: Display logs on failure
-        if: failure()
-        run: |
-          echo "=== MariaDB logs ==="
-          docker compose -f docker-compose.test.yml logs db-test || true
-        working-directory: ${{ matrix.node }}/integration/backend
-

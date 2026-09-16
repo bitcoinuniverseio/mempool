@@ -5,7 +5,7 @@ import {
 } from './bitcoin-core-policy-adapter';
 import { PolicyExplainer, PolicyExplanation } from './policy-explainer';
 import {
-  InclusionForecaster,
+  InclusionForecaster, PolicyEvidenceError,
   InclusionForecastProbabilities,
   ForecastModelCard,
 } from './inclusion-forecast';
@@ -53,11 +53,11 @@ export class PolicyLabService {
       }
     }
 
-    const forecast = InclusionForecaster.calculateForecast(
-      report.package_feerate_sats_vb,
-      report.package_feerate_sats_vb,
-      report.total_vsize
-    );
+    let forecast = InclusionForecaster.unavailable('Package fee evidence is unavailable.');
+    if (report.package_feerate_sats_vb !== null) {
+      try { forecast = InclusionForecaster.calculateForecast(report.package_feerate_sats_vb, report.package_feerate_sats_vb, report.total_vsize); }
+      catch (error) { forecast = InclusionForecaster.unavailable(error instanceof PolicyEvidenceError ? error.message : 'Mempool observation unavailable.'); }
+    }
 
     const response: FullPolicyEvaluationResponse = {
       evaluation_id: evaluationId,
@@ -106,19 +106,15 @@ export class PolicyLabService {
   }
 
   public getForecastForTxid(txid: string): InclusionForecastProbabilities {
-    const mempoolTx = mempool.getMempool()[txid];
-    if (mempoolTx) {
-      return InclusionForecaster.calculateForecast(
-        mempoolTx.feePerVsize,
-        mempoolTx.feePerVsize,
-        mempoolTx.vsize
-      );
-    }
-    return InclusionForecaster.empiricalFallback(10);
+    if (typeof txid !== 'string' || !/^[0-9a-f]{64}$/i.test(txid)) throw new PolicyEvidenceError('invalid-txid','A 32-byte hexadecimal transaction ID is required.',400);
+    const snapshot = InclusionForecaster.snapshot();
+    const mempoolTx = snapshot[txid.toLowerCase()];
+    if (!mempoolTx) throw new PolicyEvidenceError('not-in-observed-mempool','The transaction is absent from the synchronized local mempool snapshot; no confirmation forecast was computed.',404);
+    return InclusionForecaster.calculateForecast(mempoolTx.feePerVsize,mempoolTx.feePerVsize,mempoolTx.vsize,snapshot);
   }
 
-  public getCurrentForecastModelCard(): ForecastModelCard {
-    return InclusionForecaster.getModelCard();
+  public getCurrentForecastModelCard(version?: string): ForecastModelCard {
+    return InclusionForecaster.getModelCard(version);
   }
 }
 

@@ -1,3 +1,11 @@
+import { SpvProofReader } from './spv-proof';
+import { VerificationEvidenceError } from './verification-errors';
+import { verifyMessageSignature } from './message-signature';
+import { coreFilterSource } from '../compact-filters/core-filter-source';
+import { matchesBasicFilter } from '../compact-filters/bip158';
+import { CompactFiltersEvidenceError } from '../compact-filters/compact-filters.service';
+import config from '../../../config';
+export { VerificationEvidenceError } from './verification-errors';
 export interface SpvMerkleProof {
   txid: string;
   block_hash: string;
@@ -51,17 +59,6 @@ export interface ConsensusIncident {
  * 503, so an absent integration is reported as an absent integration rather
  * than as an answer.
  */
-export class VerificationEvidenceError extends Error {
-  constructor(public readonly code: string, message: string, public readonly status = 503) {
-    super(message);
-  }
-}
-
-const bitcoinReaderUnavailable =
-  'Proof observations are unavailable. SPV inclusion proofs, proof verification and BIP158 compact filter queries require the owned Bitcoin reader (bitcoind gettxoutproof, verifytxoutproof and getblockfilter), which is not connected on this deployment.';
-
-const signatureVerifierUnavailable =
-  'Signature verification is unavailable. BIP137 and BIP322 verdicts require the owned message signature verifier (UNIVERSE_SIGNATURE_VERIFIER_ORIGIN), which is not connected on this deployment. No signature was checked.';
 
 const incidentLedgerUnavailable =
   'Consensus incident observations are unavailable. Reorg, invalid block and stale tip incidents require the owned consensus incident ledger fed by the owned chain monitor (UNIVERSE_INCIDENT_LEDGER_ORIGIN), which is not connected on this deployment.';
@@ -73,8 +70,8 @@ const incidentLedgerUnavailable =
  * the hash of the txid, a compact filter that matched any nonempty script, a
  * signature that was valid because it was long enough with the secp256k1
  * generator point as its signer, and two incidents with invented block
- * hashes. No owned Bitcoin reader, signature verifier or incident ledger is
- * connected, so each read reports the source it would need.
+ * hashes. SPV inclusion uses owned Core and an independent Merkle decoder.
+ * Signature and incident capabilities retain explicit unavailable states.
  */
 export class VerificationService {
   private static instance: VerificationService;
@@ -88,29 +85,38 @@ export class VerificationService {
     return VerificationService.instance;
   }
 
-  public generateSpvProof(txid: string, blockHash: string, blockHeight?: number): SpvMerkleProof {
-    void txid; void blockHash; void blockHeight;
-    throw new VerificationEvidenceError('unavailable-bitcoin-reader', bitcoinReaderUnavailable);
+  public async generateSpvProof(txid: string, blockHash: string, blockHeight?: number, network?: string) {
+    return new SpvProofReader().generate({ txid, block_hash: blockHash, block_height: blockHeight, network });
   }
 
-  public verifySpvProof(proof: SpvMerkleProof): boolean {
-    void proof;
-    throw new VerificationEvidenceError('unavailable-bitcoin-reader', bitcoinReaderUnavailable);
+  public async verifySpvProof(proof: unknown) {
+    return new SpvProofReader().verify(proof);
   }
 
-  public queryCompactFilter(blockHash: string, scriptHexes: string[]): CompactFilterResult {
-    void blockHash; void scriptHexes;
-    throw new VerificationEvidenceError('unavailable-bitcoin-reader', bitcoinReaderUnavailable);
+  public async queryCompactFilter(blockHash: string, scriptHexes: string[], network: string = config.MEMPOOL.NETWORK) {
+    if (typeof blockHash !== 'string' || !/^[0-9a-f]{64}$/.test(blockHash) || !Array.isArray(scriptHexes) || !scriptHexes.length || scriptHexes.length > 1000
+      || scriptHexes.some(value => typeof value !== 'string' || !/^(?:[0-9a-f]{2}){1,10000}$/i.test(value)) || scriptHexes.join('').length > 2000000) {
+      throw new VerificationEvidenceError('invalid-filter-query', 'Provide a block hash and 1 to 1000 bounded hexadecimal scripts, at most 1 MB total.', 400);
+    }
+    try {
+      const filter = await coreFilterSource.getBlock(blockHash, network === 'mainnet' ? 'main' : network === 'testnet' ? 'test' : network);
+      return { block_hash: blockHash, block_height: filter.block_height, filter_type: 'bip158_basic', filter_hex: filter.filter_bytes_hex,
+        matched: matchesBasicFilter(filter.filter_bytes_hex, blockHash, scriptHexes.map(value => Buffer.from(value, 'hex'))), query_scripts: scriptHexes,
+        network, filter_header: filter.filter_header, source: filter.source, content_recomputed: false, peer_agreement: null,
+        verification_scope: 'Owned active-chain basic-filter index and header-link readback, with local BIP158 matching. Matches can be false positives; this does not establish a transaction or balance.' };
+    } catch (error) {
+      if (error instanceof CompactFiltersEvidenceError) throw new VerificationEvidenceError(error.code, error.message, error.status);
+      throw new VerificationEvidenceError('unavailable-filter-index', 'The owned basic filter source could not establish a matching verdict.');
+    }
   }
 
-  public verifySignature(
+  public async verifySignature(
     address: string,
     message: string,
     signature: string,
-    format: 'bip137' | 'bip322_simple' | 'bip322_full' = 'bip322_simple'
-  ): SignatureVerificationResult {
-    void address; void message; void signature; void format;
-    throw new VerificationEvidenceError('unavailable-signature-verifier', signatureVerifierUnavailable);
+    format: 'bip137' | 'bip322_simple' | 'bip322_full' = 'bip322_simple', network?: string
+  ) {
+    return verifyMessageSignature(address, message, signature, format, network);
   }
 
   public getIncidents(): ConsensusIncident[] {

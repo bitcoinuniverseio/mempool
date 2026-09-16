@@ -32,7 +32,7 @@
     </label>
     <textarea id="psbt-input" name="psbt" rows="5" spellcheck="false"
       autocomplete="off" autocapitalize="off" autocorrect="off"
-      [(ngModel)]="input"
+      [(ngModel)]="input" (ngModelChange)="inputChanged()"
       aria-describedby="psbt-input-help"
       i18n-placeholder="workbench.psbt.placeholder"
       placeholder="cHNidP8BA..."></textarea>
@@ -47,7 +47,7 @@
       </label>
       <textarea id="psbt-compare" name="compare" rows="4" spellcheck="false"
         autocomplete="off" autocapitalize="off" autocorrect="off"
-        [(ngModel)]="comparison"
+        [(ngModel)]="comparison" (ngModelChange)="inputChanged()"
         aria-describedby="psbt-compare-help"></textarea>
       <p id="psbt-compare-help" class="field-help" i18n="workbench.psbt.compare-help">
         Usually the same file after a signer has touched it. The comparison

@@ -17,7 +17,7 @@ import { NotificationRow, ownerStore, WatchlistEntityRow, WatchlistRow, Watchlis
 export const ENTITY_TYPES = ['address', 'txid', 'outpoint', 'descriptor', 'feerate_threshold'] as const;
 export const CONDITION_TYPES = ['confirmation', 'rbf_replacement', 'feerate_cross', 'value_transfer', 'reorg_displaced'] as const;
 export const DELIVERY_CHANNELS = ['in_app', 'webhook', 'websocket'] as const;
-export const PRIVACY_MODES = ['blinded', 'encrypted', 'standard'] as const;
+export const PRIVACY_MODES = ['blinded', 'standard'] as const;
 
 export const WATCHLIST_LIMITS = { perOwner: 50, entitiesPerList: 500, rulesPerList: 50, nameLength: 128, labelLength: 128, rawLength: 512 } as const;
 
@@ -67,6 +67,9 @@ export interface UserWatchlist {
   network: string;
   name: string;
   privacy_mode: string;
+  requested_privacy_mode: string;
+  privacy_scope: string;
+  encryption_verified: false;
   entities: WatchlistEntity[];
   rules: WatchlistRule[];
   created_at: string;
@@ -138,7 +141,10 @@ export class WatchlistsService {
     const store = ownerStore();
     const [entities, rules] = await Promise.all([store.listEntities(row.watchlist_id), store.listRules(row.watchlist_id)]);
     return {
-      watchlist_id: row.watchlist_id, owner_id: row.owner_id, network: row.network, name: row.name, privacy_mode: row.privacy_mode,
+      watchlist_id: row.watchlist_id, owner_id: row.owner_id, network: row.network, name: row.name,
+      privacy_mode: row.privacy_mode === 'encrypted' ? 'legacy-unverified' : row.privacy_mode,
+      requested_privacy_mode: row.privacy_mode, encryption_verified: false,
+      privacy_scope: 'Entity identifiers are SHA-256 hashes. Names and labels are stored as supplied. Hashes are not encryption or protection against identifier guessing. Client-supplied blinding does not authenticate an entity.',
       entities: entities.map(entity => this.toEntity(entity)), rules: rules.map(rule => this.toRule(rule)),
       created_at: row.created_at, updated_at: row.updated_at, version: row.version, storage: store.kind === 'mysql' ? 'durable' : 'memory',
     };
@@ -149,12 +155,11 @@ export class WatchlistsService {
     const store = ownerStore();
     const cleanName = WatchlistsService.requireText(name, 'name', WATCHLIST_LIMITS.nameLength);
     const mode = WatchlistsService.requireEnum(privacyMode, PRIVACY_MODES, 'privacy_mode');
-    if ((await store.countWatchlists(owner.owner_id, this.network)) >= WATCHLIST_LIMITS.perOwner) {
-      throw new IdentityError('quota', `an owner may keep at most ${WATCHLIST_LIMITS.perOwner} watchlists`, 409);
-    }
     const now = new Date().toISOString();
     const row: WatchlistRow = { watchlist_id: EventEnvelopeValidator.generateUuidV7(), owner_id: owner.owner_id, network: this.network, name: cleanName, privacy_mode: mode, created_at: now, updated_at: now, version: 1 };
-    await store.insertWatchlist(row);
+    if (!await store.insertWatchlistWithinQuota(row, WATCHLIST_LIMITS.perOwner)) {
+      throw new IdentityError('quota', `an owner may keep at most ${WATCHLIST_LIMITS.perOwner} watchlists`, 409);
+    }
     return this.hydrate(row);
   }
 
@@ -178,14 +183,14 @@ export class WatchlistsService {
     const type = WatchlistsService.requireEnum(entityType, ENTITY_TYPES, 'entity_type');
     const raw = WatchlistsService.requireText(entityRawOrBlinded, 'entity_raw_or_blinded', WATCHLIST_LIMITS.rawLength);
     const cleanLabel = label === undefined || label === null || label === '' ? 'Monitored Item' : WatchlistsService.requireText(label, 'label', WATCHLIST_LIMITS.labelLength);
-    if ((await store.countEntities(watchlistId)) >= WATCHLIST_LIMITS.entitiesPerList) {
-      throw new IdentityError('quota', `a watchlist may hold at most ${WATCHLIST_LIMITS.entitiesPerList} entities`, 409);
-    }
     const row: WatchlistEntityRow = {
       entity_id: EventEnvelopeValidator.generateUuidV7(), watchlist_id: watchlistId, owner_id: owner.owner_id, network: this.network,
       entity_type: type, blinded_hash: blind(raw, alreadyBlinded), label: cleanLabel, created_at: new Date().toISOString(),
     };
-    const outcome = await store.insertEntity(row);
+    const outcome = await store.insertEntityWithinQuota(row, WATCHLIST_LIMITS.entitiesPerList);
+    if (outcome === 'quota') {
+      throw new IdentityError('quota', `a watchlist may hold at most ${WATCHLIST_LIMITS.entitiesPerList} entities`, 409);
+    }
     if (outcome === 'duplicate') {
       throw new IdentityError('duplicate_entity', 'this entity is already on the watchlist', 409);
     }
@@ -202,6 +207,9 @@ export class WatchlistsService {
     const delivery = WatchlistsService.requireEnum(channel, DELIVERY_CHANNELS, 'delivery_channel');
     let threshold: number | null = null;
     if (thresholdValue !== undefined && thresholdValue !== null && thresholdValue !== '') {
+      if (typeof thresholdValue !== 'number' && (typeof thresholdValue !== 'string' || !/^(?:0|[1-9][0-9]*)(?:\.[0-9]+)?$/.test(thresholdValue))) {
+        throw new IdentityError('invalid_threshold_value', 'threshold_value must be a non-negative decimal number', 400);
+      }
       threshold = Number(thresholdValue);
       if (!Number.isFinite(threshold) || threshold < 0 || threshold > 1e15) {
         throw new IdentityError('invalid_threshold_value', 'threshold_value must be a finite non-negative number', 400);
@@ -221,15 +229,14 @@ export class WatchlistsService {
       }
       webhook = owned.webhook_id;
     }
-    if ((await store.countRules(watchlistId)) >= WATCHLIST_LIMITS.rulesPerList) {
-      throw new IdentityError('quota', `a watchlist may hold at most ${WATCHLIST_LIMITS.rulesPerList} rules`, 409);
-    }
     const row: WatchlistRuleRow = {
       rule_id: EventEnvelopeValidator.generateUuidV7(), watchlist_id: watchlistId, owner_id: owner.owner_id, network: this.network,
       condition_type: condition, threshold_value: threshold, delivery_channel: delivery, webhook_id: webhook, enabled: true, rate_limit_per_hour: 20,
       created_at: new Date().toISOString(), version: 1,
     };
-    await store.insertRule(row);
+    if (!await store.insertRuleWithinQuota(row, WATCHLIST_LIMITS.rulesPerList)) {
+      throw new IdentityError('quota', `a watchlist may hold at most ${WATCHLIST_LIMITS.rulesPerList} rules`, 409);
+    }
     await store.touchWatchlist(watchlistId, row.created_at);
     return this.toRule(row);
   }
@@ -244,6 +251,9 @@ export class WatchlistsService {
 
   /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */
   public async getNotifications(owner: AuthenticatedOwner, watchlistId: string | null, limit = 100): Promise<WatchlistNotification[] | null> {
+    if (!Number.isInteger(limit) || limit < 1 || limit > 500) {
+      throw new IdentityError('invalid_limit', 'limit must be an integer from 1 to 500', 400);
+    }
     const store = ownerStore();
     if (watchlistId !== null) {
       const parent = await store.getWatchlist(owner.owner_id, this.network, watchlistId);

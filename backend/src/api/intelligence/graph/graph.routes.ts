@@ -1,7 +1,15 @@
 import { Application, Request, Response } from 'express';
-import { GraphInputError, txGraphService } from './tx-graph.service';
+import { GraphInputError, GraphIndexError, txGraphService } from './tx-graph.service';
 import { ownerOf, requireOwner, sendIdentityError } from '../identity/owner-auth';
 import { handleError } from '../../../utils/api';
+
+function integerParameter(value: unknown, fallback: number): number {
+  if (value === undefined) return fallback;
+  if (typeof value !== 'number' && (typeof value !== 'string' || !/^\d+$/.test(value))) throw new GraphInputError('Expected an integer parameter');
+  const parsed = Number(value);
+  if (!Number.isSafeInteger(parsed)) throw new GraphInputError('Expected a safe integer parameter');
+  return parsed;
+}
 
 /**
  * Graph queries and paths are public reads over the owned index. Saved
@@ -25,6 +33,10 @@ class GraphRoutes {
   }
 
   private static fail(req: Request, res: Response, e: unknown, fallback: string): void {
+    if (e instanceof GraphIndexError) {
+      res.status(e.status).json({ error: e.message, code: e.status === 404 ? 'not_found' : 'index_unavailable' });
+      return;
+    }
     if (e instanceof GraphInputError) {
       res.status(400).json({ error: e.message, code: 'invalid_input' });
       return;
@@ -35,9 +47,9 @@ class GraphRoutes {
   private async $postQuery(req: Request, res: Response): Promise<void> {
     try {
       const root = String(req.body?.root_entity || '');
-      const hops = req.body?.hops !== undefined ? parseInt(req.body.hops, 10) : 2;
+      const hops = integerParameter(req.body?.hops, 2);
       const direction = req.body?.direction || 'both';
-      const minValue = req.body?.min_value_sats !== undefined ? parseInt(req.body.min_value_sats, 10) : 0;
+      const minValue = integerParameter(req.body?.min_value_sats, 0);
       if (!root) {
         res.status(400).json({ error: 'root_entity parameter required.' });
         return;
@@ -86,7 +98,7 @@ class GraphRoutes {
         res.status(400).json({ error: 'root_entity parameter required.' });
         return;
       }
-      const result = await txGraphService.queryGraph(root, req.body?.hops !== undefined ? parseInt(req.body.hops, 10) : 2, req.body?.direction || 'both', 0);
+      const result = await txGraphService.queryGraph(root, integerParameter(req.body?.hops, 2), req.body?.direction || 'both', 0);
       res.setHeader('content-disposition', `attachment; filename="graph-${root.slice(0, 16)}.json"`);
       res.json({ format, exported_at: new Date().toISOString(), graph: result });
     } catch (e) {

@@ -1,8 +1,8 @@
-import { Component, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { PaymentConnectivityApiService } from './payment-connectivity.service';
+import { inspectNwcUri, NwcInspection } from './nwc-uri';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
@@ -38,11 +38,15 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
             <h2 class="h5 mb-3">Connection URI Input</h2>
 
             <div class="mb-3">
-              <label class="form-label small text-muted">NWC Connection URI</label>
+              <label class="form-label small text-muted" for="nwc-uri-input">NWC Connection URI</label>
               <textarea
+                id="nwc-uri-input"
                 class="form-control font-monospace small"
                 rows="6"
                 [(ngModel)]="uriInput"
+                (ngModelChange)="clearResult()"
+                autocomplete="off"
+                spellcheck="false"
                 placeholder="nostr+walletconnect://<pubkey>?relay=wss%3A%2F%2F...&secret=..."
               ></textarea>
             </div>
@@ -76,6 +80,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
               <div class="alert" [ngClass]="report.valid ? 'alert-success' : 'alert-danger'">
                 <div class="fw-bold">{{ report.valid ? 'Valid NWC Connection String' : 'Invalid Connection URI' }}</div>
               </div>
+              <p class="small text-muted">Encryption and wallet capabilities are unknown until a signed NIP-47 info event is observed. Inspection makes no network request.</p>
 
               <div class="p-3 border rounded bg-body mb-3">
                 <div class="text-muted small">Masked Safe URI (Secret Redacted)</div>
@@ -113,41 +118,36 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
     .nav-link.active { background-color: var(--bs-primary); color: #fff; }
   `],
 })
-export class PaymentNwcInspectComponent {
+export class PaymentNwcInspectComponent implements OnDestroy {
   uriInput = '';
   inspecting = false;
-  report: any = null;
+  report: NwcInspection | null = null;
 
-  constructor(
-    private paymentApi: PaymentConnectivityApiService,
-    private cdr: ChangeDetectorRef
-  ) {
+  constructor() {
     this.loadSample();
   }
 
   loadSample(): void {
+    this.clearResult();
     this.uriInput =
-      'nostr+walletconnect://0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798?relay=wss%3A%2F%2Frelay.damus.io&secret=112233445566778899aabbccddeeff00112233445566778899aabbccddeeff00';
+      'nostr+walletconnect://79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798?relay=wss%3A%2F%2Frelay.example.invalid&secret=112233445566778899aabbccddeeff00112233445566778899aabbccddeeff00';
   }
 
   inspectUri(): void {
     this.inspecting = true;
     this.report = null;
 
-    this.paymentApi.inspectNwcUri$(this.uriInput).subscribe({
-      next: (res) => {
-        this.report = res;
-        this.inspecting = false;
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        this.inspecting = false;
-        this.report = {
-          valid: false,
-          errors: [err.message || 'Inspection error'],
-        };
-        this.cdr.markForCheck();
-      },
-    });
+    try { this.report = inspectNwcUri(this.uriInput); }
+    finally { this.uriInput = ''; this.inspecting = false; }
+  }
+
+  clearResult(): void {
+    this.report = null;
+    this.inspecting = false;
+  }
+
+  ngOnDestroy(): void {
+    this.uriInput = '';
+    this.clearResult();
   }
 }

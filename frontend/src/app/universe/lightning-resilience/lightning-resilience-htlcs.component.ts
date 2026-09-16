@@ -1,94 +1,14 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
-import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
+import { RouterModule, ActivatedRoute } from '@angular/router';
+import { Subscription, of } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 import { LightningResilienceApiService } from './lightning-resilience.service';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
-
-@Component({
-  selector: 'app-lightning-resilience-htlcs',
-  standalone: true,
-  imports: [RelativeUrlPipe, CommonModule, RouterModule],
-  template: `
-    <div class="container-xl py-4">
-      <div class="alert alert-warning" role="alert" *ngIf="loadError">
-        {{ loadError }}
-      </div>
-      <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
-        <div>
-          <h1 class="h2 mb-1">HTLC / PTLC Slot Pressure & Liquidity Locking</h1>
-          <p class="text-muted mb-0">Detailed breakdown of in-flight commitment transaction slots, pending holds, and slow forwarders.</p>
-        </div>
-        <a [routerLink]="'/lightning/resilience' | relativeUrl" class="btn btn-outline-secondary btn-sm">Back to Overview</a>
-      </div>
-
-      <div class="card bg-dark border-secondary mb-4">
-        <div class="card-header border-secondary">
-          <h5 class="card-title mb-0">Commitment Slot Allocations Across Monitored Channels</h5>
-        </div>
-        <div class="table-responsive" tabindex="0" role="region" aria-label="Commitment Slot Allocations Across Monitored Channels, scroll horizontally" i18n-aria-label>
-          <table class="table table-dark table-hover mb-0">
-            <thead>
-              <tr>
-                <th>Short Channel ID</th>
-                <th>Capacity</th>
-                <th>HTLC Max Slots</th>
-                <th>In-Flight Slots</th>
-                <th>Utilization</th>
-                <th>Resilience Tier</th>
-                <th>Details</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let ch of channels">
-                <td>
-                  <a [routerLink]="['/lightning/resilience/channel' | relativeUrl, ch.short_channel_id]" class="text-info font-monospace">
-                    {{ ch.short_channel_id }}
-                  </a>
-                </td>
-                <td>{{ ch.capacity_sats | number }} sats</td>
-                <td>{{ ch.htlc_slot_capacity }}</td>
-                <td>{{ ch.htlc_slots_in_use }}</td>
-                <td>
-                  <div class="progress" style="height: 14px;">
-                    <div class="progress-bar" [ngClass]="ch.htlc_slot_utilization_pct > 70 ? 'bg-danger' : 'bg-success'" [style.width.%]="ch.htlc_slot_utilization_pct">
-                      {{ ch.htlc_slot_utilization_pct }}%
-                    </div>
-                  </div>
-                </td>
-                <td>
-                  <span class="badge" [ngClass]="ch.resilience_band === 'high_congestion' ? 'bg-danger' : 'bg-success'">
-                    {{ ch.resilience_band }}
-                  </span>
-                </td>
-                <td>
-                  <a [routerLink]="['/lightning/resilience/channel' | relativeUrl, ch.short_channel_id]" class="btn btn-sm btn-outline-info">Inspect</a>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  `
-})
-export class LightningResilienceHtlcsComponent implements OnInit {
-  public channels: any[] = [];
-
-  public loadError: string | null = null;
-
-  constructor(private api: LightningResilienceApiService) {}
-
-  public ngOnInit(): void {
-    this.api.getChannels$().subscribe({
-      next: res => {
-        this.channels = res;
-        this.loadError = null;
-      },
-      error: err => {
-        this.channels = [];
-        this.loadError = loadFailureMessage(classifyLoadFailure(err));
-      },
-    });
-  }
+@Component({selector:'app-lightning-resilience-htlcs',standalone:true,imports:[CommonModule,RouterModule,RelativeUrlPipe],template:`<div class="container-xl py-4"><h1 class="h2">HTLC Slot Pressure</h1><nav class="d-flex flex-wrap gap-3 mb-4" aria-label="Lightning resilience"><a [routerLink]="'/lightning/resilience' | relativeUrl">Overview</a><a [routerLink]="'/lightning/resilience/htlcs' | relativeUrl">HTLC slots</a><a [routerLink]="'/lightning/resilience/onion-messages' | relativeUrl">Onion queues</a><a [routerLink]="'/lightning/resilience/simulate' | relativeUrl">Simulator</a><a [routerLink]="'/lightning/resilience/mitigations' | relativeUrl">Mitigations</a></nav><p *ngIf="loading" role="status">Loading owned evidence…</p><p *ngIf="loadError" role="alert" class="alert alert-warning">{{ loadError }}</p><p>Current owned channel snapshots. Incoming and outgoing limits are distinct. Occupancy does not establish jamming or payment failure.</p><div class="table-responsive"><table class="table"><thead><tr><th>Channel</th><th>Capacity (sats)</th><th>Slots used / capacity</th><th>Slot utilization</th><th>Assessment</th></tr></thead><tbody><tr *ngFor="let c of channels"><td><a [routerLink]="['/lightning/resilience/channel' | relativeUrl,c.short_channel_id]">{{ c.short_channel_id }}</a></td><td>{{ c.capacity_sats | number }}</td><td>{{ c.htlc_slots_in_use }} / {{ c.htlc_slot_capacity ?? 'Unknown' }}</td><td>{{ c.htlc_slot_utilization_pct === null ? 'Unknown' : (c.htlc_slot_utilization_pct | number:'1.0-2') + '%' }}</td><td>{{ c.resilience_band }}</td></tr></tbody></table></div><p *ngIf="!loading && !loadError && !channels.length">The current owned observation contains no channels.</p></div>`})
+export class LightningResilienceHtlcsComponent implements OnInit,OnDestroy {
+ channels:any=[];loadError:string|null=null;loading=false;private subscription?:Subscription;
+ constructor(@Inject(LightningResilienceApiService) private api:LightningResilienceApiService,@Inject(ChangeDetectorRef) private cdr:ChangeDetectorRef){}
+ ngOnInit(){this.subscription=this.api.watch$(()=>this.api.getChannels$(),[]).subscribe(s=>{this.channels=s.value;this.loadError=s.error;this.loading=s.loading;this.cdr.markForCheck();});}
+ ngOnDestroy(){this.subscription?.unsubscribe();}
 }

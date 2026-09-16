@@ -9,7 +9,8 @@ export type MismatchClassification =
   | 'crash'
   | 'timeout'
   | 'test_harness_difference'
-  | 'unknown';
+  | 'unknown'
+  | 'none';
 
 export type FormalProofStatus =
   | 'specified'
@@ -27,11 +28,11 @@ export interface ConsensusImplementation {
   name: string;
   language: string;
   version: string;
-  source_commit: string;
+  source_commit: string | null;
   build_hash: string;
   supported_targets: string[];
   is_reference_implementation: boolean;
-  health_status: 'online' | 'degraded' | 'offline';
+  health_status: 'configured';
 }
 
 export interface ConsensusTarget {
@@ -48,10 +49,10 @@ export interface ConsensusCase {
   target: string;
   title: string;
   mismatch_class: MismatchClassification;
-  severity: 'benign' | 'divergence_potential' | 'consensus_split_critical';
+  severity: 'unassessed';
   reproduction_command: string;
   input_hex_sample: string;
-  minimized_size_bytes: number;
+  minimized_size_bytes: number | null;
   original_size_bytes: number;
   implementation_outcomes: {
     implementation_id: string;
@@ -69,7 +70,7 @@ export interface FormalArtifact {
   title: string;
   scope: string;
   proof_status: FormalProofStatus;
-  source_commit: string;
+  source_commit: string | null;
   toolchain: string;
   theorem_statement: string;
   assumptions: string[];
@@ -82,9 +83,9 @@ export interface ConformanceCampaign {
   target_id: string;
   total_inputs_evaluated: number;
   divergences_found: number;
-  crashes_detected: number;
+  crashes_detected: number | null;
   seed: number;
-  status: 'running' | 'completed' | 'paused';
+  status: 'running' | 'completed' | 'failed' | 'interrupted';
   started_at_utc: string;
   completed_at_utc?: string;
 }

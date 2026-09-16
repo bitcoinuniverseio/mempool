@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of, shareReplay, catchError, map } from 'rxjs';
+import { Observable, defer, of, shareReplay, catchError, map } from 'rxjs';
 import { StateService } from '@app/services/state.service';
 
 /**
@@ -49,6 +49,7 @@ export class AddressCapabilityService {
   private apiBaseUrl: string;
   private inFlight: Observable<AddressLookupCapability> | null = null;
   private fetchedAt = 0;
+  private cachedNetwork: string | null = null;
 
   /**
    * How long an answer is reused.
@@ -78,18 +79,22 @@ export class AddressCapabilityService {
    * message with another.
    */
   getAddressLookup$(): Observable<AddressLookupCapability> {
-    const now = Date.now();
-    if (!this.inFlight || now - this.fetchedAt > AddressCapabilityService.TTL_MS) {
-      this.fetchedAt = now;
-      this.inFlight = this.httpClient
-        .get<CapabilitiesResponse>(this.apiBaseUrl + '/api/v1/capabilities')
-        .pipe(
-          map((report) => this.read(report)),
+    // Resolve cache identity at subscription time, when HttpClient's network
+    // interceptor resolves the request, rather than when an observable is made.
+    return defer(() => {
+      const now = Date.now();
+      const network = this.stateService.network;
+      if (!this.inFlight || this.cachedNetwork !== network || now - this.fetchedAt > AddressCapabilityService.TTL_MS) {
+        this.cachedNetwork = network;
+        this.fetchedAt = now;
+        this.inFlight = this.httpClient.get<CapabilitiesResponse>(this.apiBaseUrl + '/api/v1/capabilities').pipe(
+          map(report => this.read(report)),
           catchError(() => of(UNKNOWN)),
-          shareReplay(1),
+          shareReplay({ bufferSize: 1, refCount: true }),
         );
-    }
-    return this.inFlight;
+      }
+      return this.inFlight;
+    });
   }
 
   private read(report: CapabilitiesResponse): AddressLookupCapability {
@@ -100,14 +105,14 @@ export class AddressCapabilityService {
     return {
       enabled: feature.enabled === true,
       routesRegistered: feature.routesRegistered === true,
-      state: feature.state ?? 'unavailable',
+      state: ['ready', 'syncing', 'degraded', 'unavailable', 'disabled'].includes(feature.state ?? '') ? feature.state! : 'unavailable',
       // A height that is absent stays absent. Rendering a missing number as
       // zero would tell a reader the index has indexed nothing, which is a
       // different and much worse claim than not knowing.
-      indexedTip: typeof feature.indexedTip === 'number' ? feature.indexedTip : null,
-      bitcoinCoreTip: typeof feature.bitcoinCoreTip === 'number' ? feature.bitcoinCoreTip : null,
-      lagBlocks: typeof feature.lagBlocks === 'number' ? feature.lagBlocks : null,
-      degradedReason: feature.degradedReason ?? null,
+      indexedTip: Number.isSafeInteger(feature.indexedTip) && feature.indexedTip! >= 0 ? feature.indexedTip! : null,
+      bitcoinCoreTip: Number.isSafeInteger(feature.bitcoinCoreTip) && feature.bitcoinCoreTip! >= 0 ? feature.bitcoinCoreTip! : null,
+      lagBlocks: Number.isSafeInteger(feature.lagBlocks) && feature.lagBlocks! >= 0 ? feature.lagBlocks! : null,
+      degradedReason: typeof feature.degradedReason === 'string' ? feature.degradedReason : null,
     };
   }
 }

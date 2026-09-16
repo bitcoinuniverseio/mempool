@@ -2,6 +2,9 @@
   <ng-container [ngSwitch]="state.kind">
 
     <ng-container *ngSwitchCase="'skipped'"></ng-container>
+    <div *ngSwitchCase="'source-unavailable'" class="panel unavailable" role="status">
+      <h2>Universe assets</h2><p>{{ state.reason }}</p>
+    </div>
 
     <div *ngSwitchCase="'loading'" class="panel" aria-busy="true">
       <h2 i18n="universe.address.title">Universe assets</h2>
@@ -51,7 +54,7 @@
       </ul>
 
       <p class="asof" *ngIf="state.checkpointHeight">
-        <ng-container i18n="universe.address.proven">Proven at block {{ state.checkpointHeight }}.</ng-container>
+        <ng-container>Observed checkpoint: block {{ state.checkpointHeight }}.</ng-container>
       </p>
     </div>
 

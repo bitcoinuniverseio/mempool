@@ -22,7 +22,7 @@ import {
  */
 
 export class BlockspaceUnavailableError extends Error {
-  constructor(public readonly code: string, message: string) { super(message); }
+  constructor(public readonly code: string, message: string, public readonly status = 503) { super(message); }
 }
 
 export interface ClassDefinition {
@@ -87,13 +87,24 @@ interface BlockTally {
   height: number;
   hash: string;
   timestamp: number;
-  weight: number;
-  fees: number;
+  weight: number | null;
+  fees: number | null;
+  previousHash: string | null;
+  transactionsComplete: boolean | null;
   medianFee: number | null;
-  perClass: Record<string, { transactions: number; weight: number; fees: number }>;
+  observedAt: string;
+  perClass: Record<string, { transactions: number; weight: number | null; fees: number | null }>;
 }
 
 const DAY_SECONDS = 86_400;
+const amount = (v: unknown): number | null => Number.isSafeInteger(v) && Number(v) >= 0 ? Number(v) : null;
+const feeRate = (v: unknown): number | null => typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : null;
+const sumKnown = (values: Array<number | null>): number | null => {
+  if (values.some(v => v === null)) return null;
+  const sum = values.reduce<number>((total, v) => total + v!, 0);
+  return Number.isSafeInteger(sum) ? sum : null;
+};
+const hash = (v: unknown): v is string => typeof v === 'string' && /^[0-9a-f]{64}$/.test(v);
 
 export class BlockspaceService {
   private static instance: BlockspaceService;
@@ -117,10 +128,14 @@ export class BlockspaceService {
   }
 
   public observeBlock(block: BlockExtended, transactions: TransactionExtended[]): void {
+    if (!hash(block.id) || amount(block.height) === null || amount(block.timestamp) === null || !Array.isArray(transactions) || transactions.some(tx => !tx || !Array.isArray(tx.vin) || !Array.isArray(tx.vout))) return;
     const tally: BlockTally = {
-      height: block.height, hash: block.id, timestamp: block.timestamp, weight: block.weight,
-      fees: block.extras?.totalFees ?? transactions.reduce((sum, tx) => sum + (tx.fee ?? 0), 0),
-      medianFee: typeof block.extras?.medianFee === 'number' ? block.extras.medianFee : null,
+      height: block.height, hash: block.id, timestamp: block.timestamp, weight: amount(block.weight),
+      fees: amount(block.extras?.totalFees) ?? sumKnown(transactions.map(tx => amount(tx.fee))),
+      previousHash: hash(block.previousblockhash) ? block.previousblockhash : null,
+      transactionsComplete: amount(block.tx_count) === null ? null : block.tx_count === transactions.length,
+      medianFee: feeRate(block.extras?.medianFee),
+      observedAt: new Date().toISOString(),
       perClass: {},
     };
     for (const definition of CLASSES) { tally.perClass[definition.class_id] = { transactions: 0, weight: 0, fees: 0 }; }
@@ -128,13 +143,16 @@ export class BlockspaceService {
       const { class_id } = classifyBlockspace(tx);
       const entry = tally.perClass[class_id];
       entry.transactions += 1;
-      entry.weight += tx.weight ?? 0;
-      entry.fees += tx.fee ?? 0;
+      entry.weight = sumKnown([entry.weight, amount(tx.weight)]);
+      entry.fees = sumKnown([entry.fees, amount(tx.fee)]);
     }
     this.tallies = this.tallies.filter(existing => existing.height < block.height);
     this.tallies.push(tally);
     if (this.tallies.length > this.maxBlocks) { this.tallies = this.tallies.slice(-this.maxBlocks); }
-    this.updateRegimes(tally);
+    // Derive regimes from the same retained branch as composition. Replacement
+    // blocks must remove the fee regimes caused by the orphaned tallies too.
+    this.regimes = [];
+    for (const retained of this.tallies) this.updateRegimes(retained);
   }
 
   private regimeFor(medianFee: number): { type: BlockspaceRegimeEvent['regime_type']; driver: string } {
@@ -143,17 +161,22 @@ export class BlockspaceService {
 
   /** A regime is a run of consecutive observed blocks whose median fee rate falls in one band. */
   private updateRegimes(tally: BlockTally): void {
+    const previous = this.tallies.find(item => item.height === tally.height - 1);
+    if ((!previous || tally.medianFee === null) && this.regimes[0]?.end_height === undefined && this.regimes[0]) this.regimes[0].end_height = tally.height - 1;
     if (tally.medianFee === null) { return; }
     const regime = this.regimeFor(tally.medianFee);
     const current = this.regimes[0];
     if (current && current.end_height === undefined && current.regime_type === regime.type) {
-      current.median_feerate = Math.round(((current.median_feerate + tally.medianFee) / 2) * 100) / 100;
+      const fees = this.tallies.filter(item => item.height >= current.start_height && item.height <= tally.height)
+        .map(item => item.medianFee).filter((fee): fee is number => fee !== null).sort((a, b) => a - b);
+      const middle = Math.floor(fees.length / 2);
+      current.median_feerate = fees.length % 2 ? fees[middle] : (fees[middle - 1] + fees[middle]) / 2;
       return;
     }
     if (current && current.end_height === undefined) { current.end_height = tally.height - 1; }
     this.regimes.unshift({
       regime_id: `regime-${config.MEMPOOL.NETWORK}-${tally.height}`, network: config.MEMPOOL.NETWORK, start_height: tally.height,
-      regime_type: regime.type, median_feerate: tally.medianFee, primary_demand_driver: regime.driver, detected_at: new Date().toISOString(),
+      regime_type: regime.type, median_feerate: tally.medianFee, primary_demand_driver: regime.driver, detected_at: tally.observedAt,
     });
     if (this.regimes.length > 50) { this.regimes = this.regimes.slice(0, 50); }
   }
@@ -166,14 +189,15 @@ export class BlockspaceService {
 
   public getTaxonomy(): BlockspaceSemanticClass[] {
     const window = this.window();
-    const totalWeight = window.reduce((sum, tally) => sum + tally.weight, 0);
-    const totalFees = window.reduce((sum, tally) => sum + tally.fees, 0);
-    const share = (part: number, whole: number): number => whole > 0 ? Math.round((part / whole) * 10000) / 100 : 0;
+    const totalWeight = sumKnown(window.map(tally => tally.weight));
+    const totalFees = sumKnown(window.map(tally => tally.fees));
+    const complete = window.every(tally => tally.transactionsComplete === true);
+    const share = (part: number | null, whole: number | null): number | null => !complete || part === null || whole === null ? null : whole > 0 ? Math.round((part / whole) * 10000) / 100 : 0;
     return CLASSES.map(definition => {
       const totals = window.reduce((sum, tally) => {
         const entry = tally.perClass[definition.class_id];
-        return { transactions: sum.transactions + entry.transactions, weight: sum.weight + entry.weight, fees: sum.fees + entry.fees };
-      }, { transactions: 0, weight: 0, fees: 0 });
+        return { transactions: sum.transactions + entry.transactions, weight: sumKnown([sum.weight, entry.weight]), fees: sumKnown([sum.fees, entry.fees]) };
+      }, { transactions: 0, weight: 0 as number | null, fees: 0 as number | null });
       return {
         class_id: definition.class_id, name: definition.name, category: definition.category, description: definition.description,
         weight_share_percentage: share(totals.weight, totalWeight), fee_share_percentage: share(totals.fees, totalFees), tx_count_24h: totals.transactions,
@@ -183,12 +207,14 @@ export class BlockspaceService {
 
   public getComposition(limit = 24): BlockspaceCompositionPoint[] {
     const window = this.window();
-    const sum = (tally: BlockTally, category: BlockspaceSemanticClass['category']): number =>
-      CLASSES.filter(definition => definition.category === category).reduce((total, definition) => total + tally.perClass[definition.class_id].weight, 0);
+    const sum = (tally: BlockTally, category: BlockspaceSemanticClass['category']): number | null => {
+      const classes = CLASSES.filter(definition => definition.category === category);
+      return tally.transactionsComplete === true && classes.length ? sumKnown(classes.map(definition => tally.perClass[definition.class_id].weight)) : null;
+    };
     return window.slice(-Math.max(1, Math.min(288, limit))).reverse().map(tally => ({
       block_height: tally.height, timestamp_utc: new Date(tally.timestamp * 1000).toISOString(), total_weight: tally.weight, total_fee_sats: tally.fees,
       monetary_weight: sum(tally, 'monetary'), layer2_weight: sum(tally, 'layer2'), arbitrary_data_weight: sum(tally, 'arbitrary_data'),
-      consolidation_weight: tally.perClass['class-consolidation'].weight,
+      consolidation_weight: tally.transactionsComplete === true ? tally.perClass['class-consolidation'].weight : null,
     }));
   }
 
@@ -200,33 +226,52 @@ export class BlockspaceService {
   public getOverview(): BlockspaceOverview {
     const window = this.window();
     const medians = window.map(tally => tally.medianFee).filter((value): value is number => value !== null).sort((a, b) => a - b);
-    const median = medians.length ? medians[Math.floor(medians.length / 2)] : 0;
+    const middle = Math.floor(medians.length / 2);
+    const median = medians.length ? medians.length % 2 ? medians[middle] : (medians[middle - 1] + medians[middle]) / 2 : null;
     const tip = window[window.length - 1];
+    let contiguous: boolean | null = true;
+    for (let index = 1; index < this.tallies.length; index++) {
+      const current = this.tallies[index], prior = this.tallies[index - 1];
+      if (current.height !== prior.height + 1 || current.previousHash !== null && current.previousHash !== prior.hash) { contiguous = false; break; }
+      if (current.previousHash === null) contiguous = null;
+    }
+    const complete = this.tallies.some(t => t.transactionsComplete === false) ? false : this.tallies.every(t => t.transactionsComplete === true) ? true : null;
+    const spansDay = this.tallies[0].timestamp <= tip.timestamp - DAY_SECONDS;
     return {
       network: config.MEMPOOL.NETWORK,
-      current_regime: this.regimes[0] ?? null,
+      current_regime: tip.medianFee === null ? null : this.regimes[0] ?? null,
       median_feerate_24h: median,
+      fee_metric: 'median_of_observed_block_median_feerates',
       taxonomy_classes: this.getTaxonomy(),
       composition_timeseries: this.getComposition(24),
-      window: { blocks: window.length, from_height: window[0].height, to_height: tip.height, covers_24h: this.tallies[0].timestamp <= tip.timestamp - DAY_SECONDS },
+      window: { blocks: window.length, from_height: window[0].height, to_height: tip.height, covers_24h: !spansDay || contiguous === false || complete === false ? false : contiguous === true && complete === true ? true : null,
+        contiguous, transactions_complete: complete, median_fee_observations: medians.length, time_basis: 'block_timestamp_relative_to_observed_tip' },
       checkpoint: { height: tip.height, hash: tip.hash },
-      last_updated: new Date().toISOString(),
+      last_updated: tip.observedAt,
     };
   }
 
   /** Classifies one transaction fetched from the owned index; null when the index does not have it. */
   public async getTxSemantics(txid: string): Promise<BlockspaceTxEvidence | null> {
-    if (!/^[0-9a-fA-F]{64}$/.test(txid)) { return null; }
+    if (typeof txid !== 'string' || !/^[0-9a-fA-F]{64}$/.test(txid)) throw new BlockspaceUnavailableError('invalid-input', 'A 32-byte hexadecimal transaction ID is required.', 400);
+    txid = txid.toLowerCase();
     let tx: TransactionExtended;
-    try { tx = await bitcoinApi.$getRawTransaction(txid) as TransactionExtended; } catch { return null; }
+    try { tx = await bitcoinApi.$getRawTransaction(txid, false, true) as TransactionExtended; }
+    catch (error: any) {
+      if (error?.response?.status === 404 && error.response.data === 'Transaction not found') return null;
+      throw new BlockspaceUnavailableError('unavailable-bitcoin-reader', 'The owned Bitcoin reader could not establish transaction evidence.');
+    }
+    if (!tx || tx.txid !== txid || !Array.isArray(tx.vin) || !Array.isArray(tx.vout) || !tx.vin.length || !tx.vout.length) throw new BlockspaceUnavailableError('malformed-transaction-source', 'The owned reader returned incomplete or mismatched transaction evidence.');
     const { class_id, tags } = classifyBlockspace(tx);
     const definition = CLASSES.find(entry => entry.class_id === class_id) as ClassDefinition;
-    const vsize = Math.ceil((tx.weight ?? 0) / 4);
+    const weight = amount(tx.weight), fee = amount(tx.fee);
+    const vsize = weight === null || weight === 0 ? null : Math.ceil(weight / 4);
+    const confirmed = typeof tx.status?.confirmed === 'boolean' ? tx.status.confirmed : null;
     return {
-      txid, primary_class: definition.name, class_id, secondary_tags: tags, weight: tx.weight ?? 0, fee_sats: tx.fee ?? 0,
-      feerate_sats_vb: vsize > 0 ? Math.round(((tx.fee ?? 0) / vsize) * 100) / 100 : 0,
+      txid, primary_class: definition.name, class_id, secondary_tags: tags, weight, fee_sats: fee,
+      feerate_sats_vb: vsize !== null && fee !== null ? Math.round((fee / vsize) * 100) / 100 : null,
       evidence_summary: `${definition.description} Observed ${tx.vin?.length ?? 0} input(s) and ${tx.vout?.length ?? 0} output(s).`,
-      confirmed: Boolean(tx.status?.confirmed), block_height: tx.status?.confirmed ? (tx.status.block_height ?? null) : null,
+      confirmed, block_height: confirmed === true ? amount(tx.status.block_height) : null,
     };
   }
 }

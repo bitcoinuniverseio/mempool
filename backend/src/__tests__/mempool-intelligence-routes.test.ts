@@ -21,7 +21,7 @@ jest.mock('../api/mempool', () => ({
  * opens a connection that keeps the test runner alive after the assertions
  * finish. These tests are about request handling and never reach it.
  */
-jest.mock('../api/bitcoin/bitcoin-client', () => ({ __esModule: true, default: {} }));
+jest.mock('../api/bitcoin/bitcoin-client', () => ({ __esModule: true, default: { getMempoolInfo: jest.fn(async () => ({ incrementalrelayfee: 0.00001, fullrbf: false })) } }));
 jest.mock('../api/bitcoin/bitcoin-api-factory', () => ({ __esModule: true, default: {} }));
 
 // Imported after the mock so the routes module picks the stub up.
@@ -369,8 +369,8 @@ describe('GET mempool/bump/:txid', () => {
     expect(plan.txid).toBe(id('a'));
     expect(plan.rbf.requiredFeeSats).toBe(4000);
     expect(plan.cpfp.available).toBe(true);
-    // The node was not reached, so the fallback policy applies: one satoshi
-    // per virtual byte of relay, and no unsignalled replacement.
+    // The explicit source fixture supplies one satoshi
+    // per virtual byte of relay, and no unsignalled replacement. No policy fallback.
     expect(plan.rbf.available).toBe(true);
   });
 });

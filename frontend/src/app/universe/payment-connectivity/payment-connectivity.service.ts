@@ -95,13 +95,6 @@ export class PaymentConnectivityApiService {
     );
   }
 
-  inspectNwcUri$(uri: string): Observable<any> {
-    return this.httpClient.post<any>(
-      `${this.apiBaseUrl}/api/v1/intelligence/payment-connectivity/nwc/inspect`,
-      { uri }
-    );
-  }
-
   verifyZap$(req: any): Observable<any> {
     return this.httpClient.post<any>(
       `${this.apiBaseUrl}/api/v1/intelligence/payment-connectivity/zaps/verify`,

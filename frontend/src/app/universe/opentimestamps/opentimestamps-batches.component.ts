@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
-import { OpenTimestampsApiService, TimestampAnchor } from './opentimestamps.service';
+import { OpenTimestampsApiService, TimestampAnchor, TimestampCoverage } from './opentimestamps.service';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 /**
@@ -28,7 +29,8 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
       <p class="text-muted" *ngIf="loading" role="status">Loading</p>
 
       <div class="card" *ngIf="!loading && !loadError">
-        <p class="text-muted p-3 mb-0" *ngIf="!anchors.length">No proof stamped here has been anchored yet.</p>
+        <p class="p-3 small" *ngIf="coverage">Owned-chain readback: {{ coverage.records_examined }} stored records examined (limit {{ coverage.record_limit }}). {{ coverage.complete ? 'Complete stored anchor window.' : 'Partial coverage; counts are lower bounds.' }} Proofs may become orphaned after this read.</p>
+        <p class="text-muted p-3 mb-0" *ngIf="!anchors.length">No current anchor was verified in the observed record window.</p>
         <div class="table-responsive" tabindex="0" role="region" aria-label="Anchors, scroll horizontally" i18n-aria-label *ngIf="anchors.length">
           <table class="table table-hover mb-0">
             <thead>
@@ -37,7 +39,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                 <th>Block</th>
                 <th>Block hash</th>
                 <th>Proofs</th>
-                <th>Commitment</th>
+                <th>Bitcoin header Merkle root</th>
                 <th>Anchored</th>
               </tr>
             </thead>
@@ -57,7 +59,10 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
     </div>
   `,
 })
-export class OpenTimestampsBatchesComponent implements OnInit {
+export class OpenTimestampsBatchesComponent implements OnInit, OnDestroy {
+  private subscription?: Subscription;
+  public ngOnDestroy(): void { this.subscription?.unsubscribe(); }
+  public coverage: TimestampCoverage | null = null;
   public anchors: TimestampAnchor[] = [];
   public loadError: string | null = null;
   public loading = true;
@@ -65,17 +70,11 @@ export class OpenTimestampsBatchesComponent implements OnInit {
   constructor(private api: OpenTimestampsApiService) {}
 
   public ngOnInit(): void {
-    this.api.getBatches$().subscribe({
-      next: res => {
-        this.anchors = res ?? [];
-        this.loadError = null;
-        this.loading = false;
-      },
-      error: err => {
-        this.anchors = [];
-        this.loadError = loadFailureMessage(classifyLoadFailure(err));
-        this.loading = false;
-      },
+    this.subscription = this.api.watch(() => this.api.getAnchorPage$()).subscribe(state => {
+      this.loading = state.loading;
+      this.loadError = state.error ? loadFailureMessage(classifyLoadFailure(state.error)) : null;
+      this.anchors = state.value?.anchors ?? [];
+      this.coverage = state.value?.coverage ?? null;
     });
   }
 }

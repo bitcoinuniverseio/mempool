@@ -18,7 +18,7 @@ describe('developer identity: owners, keys and scopes', () => {
   });
 
   it('bootstraps an owner with a server-generated id and the fixed bootstrap scopes', async () => {
-    const key = await developerIdentity.bootstrapOwner('first key', '203.0.113.5');
+    const key = await developerIdentity.bootstrapOwner('first key', '93.184.216.5');
     expect(key.secret_key.startsWith('uip_live_')).toBe(true);
     expect(key.owner_id).toMatch(/^[0-9a-f-]{36}$/);
     expect(key.scopes).not.toContain('*');
@@ -40,7 +40,7 @@ describe('developer identity: owners, keys and scopes', () => {
   });
 
   it('a further key is a subset of the caller scopes and never a wildcard', async () => {
-    const first = await developerIdentity.bootstrapOwner('first', '203.0.113.1');
+    const first = await developerIdentity.bootstrapOwner('first', '93.184.216.1');
     const owner = (await developerIdentity.authenticateKey(first.secret_key))!;
     const narrow = await developerIdentity.generateApiKey(owner, 'read only', ['read']);
     expect(narrow.owner_id).toBe(first.owner_id);
@@ -54,8 +54,8 @@ describe('developer identity: owners, keys and scopes', () => {
   });
 
   it('lists only the owner keys, without hashes, and revokes only the owner keys', async () => {
-    const a = await developerIdentity.bootstrapOwner('a', '203.0.113.1');
-    const b = await developerIdentity.bootstrapOwner('b', '203.0.113.2');
+    const a = await developerIdentity.bootstrapOwner('a', '93.184.216.1');
+    const b = await developerIdentity.bootstrapOwner('b', '93.184.216.2');
     const ownerA = (await developerIdentity.authenticateKey(a.secret_key))!;
     const ownerB = (await developerIdentity.authenticateKey(b.secret_key))!;
     const listA = await developerIdentity.listKeys(ownerA);
@@ -68,7 +68,7 @@ describe('developer identity: owners, keys and scopes', () => {
   });
 
   it('an expired key stops authenticating', async () => {
-    const first = await developerIdentity.bootstrapOwner('first', '203.0.113.1');
+    const first = await developerIdentity.bootstrapOwner('first', '93.184.216.1');
     const owner = (await developerIdentity.authenticateKey(first.secret_key))!;
     const short = await developerIdentity.generateApiKey(owner, 'short', ['read'], 100, 1, 1_000_000);
     expect(await developerIdentity.authenticateKey(short.secret_key, undefined, 1_000_000 + 1000)).not.toBeNull();
@@ -76,7 +76,7 @@ describe('developer identity: owners, keys and scopes', () => {
   });
 
   it('keys survive a new service view over the same store (restart), with the stored pepper', async () => {
-    const first = await developerIdentity.bootstrapOwner('first', '203.0.113.1');
+    const first = await developerIdentity.bootstrapOwner('first', '93.184.216.1');
     developerIdentity.resetForTests();
     expect(await developerIdentity.authenticateKey(first.secret_key)).not.toBeNull();
   });
@@ -90,11 +90,18 @@ describe('developer identity: owners, keys and scopes', () => {
 });
 
 describe('webhook targets: scheme, private ranges and DNS answers', () => {
+  it('rejects equivalent IPv6 spellings and reserved destinations', () => {
+    for (const address of ['::ffff:7f00:1', '0:0:0:0:0:ffff:ac1f:ffff', '0:0:0:0:0:0:0:1', 'febf::1', 'fe90::1', '::10.1.2.3', '192.0.2.1', '198.51.100.1', '203.0.113.1', '3fff::1', '2002:a00:1::1']) {
+      expect({ address, blocked: isPrivateAddress(address) }).toEqual({ address, blocked: true });
+    }
+    for (const address of ['::ffff:808:808', '2606:4700:4700::1111', '8.8.8.8']) expect(isPrivateAddress(address)).toBe(false);
+    for (const url of ['https://localhost./', 'https://private.local./', 'https://[::ffff:7f00:1]/']) expect(() => validateWebhookUrl(url)).toThrow();
+  });
   it('classifies private, loopback, link-local, CGNAT, multicast and mapped addresses', () => {
     for (const address of ['127.0.0.1', '10.1.2.3', '172.16.0.1', '172.31.255.255', '192.168.0.1', '169.254.169.254', '100.64.0.1', '0.0.0.0', '224.0.0.1', '::1', 'fe80::1', 'fd00::1', '::ffff:10.0.0.1', '64:ff9b::a00:1']) {
       expect(isPrivateAddress(address)).toBe(true);
     }
-    for (const address of ['203.0.113.10', '8.8.8.8', '2606:4700::1111', '172.32.0.1']) {
+    for (const address of ['93.184.216.10', '8.8.8.8', '2606:4700::1111', '172.32.0.1']) {
       expect(isPrivateAddress(address)).toBe(false);
     }
   });
@@ -108,14 +115,14 @@ describe('webhook targets: scheme, private ranges and DNS answers', () => {
 
   it('refuses a hostname when any resolved answer is private (DNS rebinding)', async () => {
     const url = new URL('https://rebind.example.org/hook');
-    await expect(resolvePublicAddress(url, async () => [{ address: '203.0.113.7', family: 4 }, { address: '10.0.0.9', family: 4 }])).rejects.toMatchObject({ code: 'blocked_destination' });
+    await expect(resolvePublicAddress(url, async () => [{ address: '93.184.216.7', family: 4 }, { address: '10.0.0.9', family: 4 }])).rejects.toMatchObject({ code: 'blocked_destination' });
     await expect(resolvePublicAddress(url, async () => [])).rejects.toMatchObject({ code: 'unresolvable' });
-    await expect(resolvePublicAddress(url, async () => [{ address: '203.0.113.7', family: 4 }])).resolves.toEqual({ address: '203.0.113.7', family: 4 });
+    await expect(resolvePublicAddress(url, async () => [{ address: '93.184.216.7', family: 4 }])).resolves.toEqual({ address: '93.184.216.7', family: 4 });
   });
 });
 
 describe('webhooks: registration, secrecy and real delivery', () => {
-  const publicResolver = async () => [{ address: '203.0.113.7', family: 4 as const }];
+  const publicResolver = async () => [{ address: '93.184.216.7', family: 4 as const }];
   let sent: { url: string; address: string; headers: Record<string, string>; body: string }[];
   let answer: DeliveryOutcome;
 
@@ -129,7 +136,7 @@ describe('webhooks: registration, secrecy and real delivery', () => {
   });
 
   async function ownerWithWebhook() {
-    const key = await developerIdentity.bootstrapOwner('o', '203.0.113.1');
+    const key = await developerIdentity.bootstrapOwner('o', '93.184.216.1');
     const owner = (await developerIdentity.authenticateKey(key.secret_key))!;
     const webhook = await developerIdentity.registerWebhook(owner, 'https://hooks.example.org/receive', ['watchlist.notification']);
     return { owner, webhook };
@@ -151,14 +158,14 @@ describe('webhooks: registration, secrecy and real delivery', () => {
     const listed = await developerIdentity.listWebhooks(owner);
     expect(listed).toHaveLength(1);
     expect(JSON.stringify(listed)).not.toMatch(/secret/);
-    const other = await developerIdentity.bootstrapOwner('other', '203.0.113.2');
+    const other = await developerIdentity.bootstrapOwner('other', '93.184.216.2');
     const otherOwner = (await developerIdentity.authenticateKey(other.secret_key))!;
     expect(await developerIdentity.listWebhooks(otherOwner)).toEqual([]);
     expect(await developerIdentity.getWebhook(otherOwner, webhook.webhook_id)).toBeNull();
   });
 
   it('rejects private targets at registration, including through DNS', async () => {
-    const key = await developerIdentity.bootstrapOwner('o', '203.0.113.1');
+    const key = await developerIdentity.bootstrapOwner('o', '93.184.216.1');
     const owner = (await developerIdentity.authenticateKey(key.secret_key))!;
     await expect(developerIdentity.registerWebhook(owner, 'http://169.254.169.254/latest/meta-data/', ['x'])).rejects.toMatchObject({ code: 'invalid_url' });
     await expect(developerIdentity.registerWebhook(owner, 'https://localhost:8080/callback', ['x'])).rejects.toMatchObject({ code: 'invalid_url' });
@@ -175,7 +182,7 @@ describe('webhooks: registration, secrecy and real delivery', () => {
     expect(attempts).toHaveLength(1);
     expect(attempts[0]).toMatchObject({ success: true, status_code: 200, attempt_number: 1, event_id: 'evt-1' });
     expect(sent).toHaveLength(1);
-    expect(sent[0].address).toBe('203.0.113.7');
+    expect(sent[0].address).toBe('93.184.216.7');
     expect(sent[0].url).toBe('https://hooks.example.org/receive');
     const timestamp = Number(sent[0].headers['x-universe-timestamp']);
     const expected = 'v1=' + crypto.createHmac('sha256', webhook.signing_secret).update(`${timestamp}.${sent[0].body}`).digest('hex');

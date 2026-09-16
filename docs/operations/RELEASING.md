@@ -187,3 +187,28 @@ node --test scripts/universe/synthetic-check.test.mjs scripts/universe/synthetic
 Upstream tags are preserved in this repository because the complete upstream
 Git history is preserved. A tag like `v3.3.1` belongs to upstream's release
 line, not to this fork. Only `universe-*` tags are releases of this fork.
+
+## Alternate-network probes and isolated CI checks
+
+The release address gate selects the genesis hash from `MEMPOOL.NETWORK`.
+Mainnet retains its historical address probe. Signet, testnet, testnet4 and regtest
+require `UNIVERSE_RELEASE_ADDRESS_PROBE` to identify an address on that network
+with real indexed history; an empty readiness address does not satisfy release
+acceptance. `UNIVERSE_RELEASE_BACKEND` and `UNIVERSE_RELEASE_GATEWAY` override the
+loopback probe origins for an isolated release environment. The gate still checks
+address summary, transactions and UTXOs as well as network identity.
+
+The listener allowlist includes mainnet P2P 8333 and Signet P2P 38333. Adapter
+38385 and gateway 8099 are not globally public exceptions: keep them private
+unless their exact binding and peer restrictions have been separately proved.
+See the private-listener section in `DEPLOYMENT.md` for the other declared ports.
+
+Docker and backend integration jobs use run-scoped compose projects, temporary
+paths and dynamically assigned loopback ports. Backend startup must return actual
+database readiness within the bounded wait. Jobs no longer change host swap,
+restart the host Docker daemon, or uninstall the global Rust toolchain. Missing
+Rust prerequisites fail explicitly. Parameterized E2E runs use the selected
+workflow ref; they do not execute an arbitrary PR checkout with privileged
+credentials or shared privileged cache access. Local regression checks cover
+release gates and isolated startup failures; they do not substitute for the
+live cutover, rollback and public-origin evidence required above.

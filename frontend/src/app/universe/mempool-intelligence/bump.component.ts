@@ -2,7 +2,8 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnIni
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { Subscription, combineLatest, distinctUntilChanged, startWith } from 'rxjs';
+import { StateService } from '@app/services/state.service';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { BumpPlan } from './mempool-intelligence.types';
@@ -58,15 +59,16 @@ export class BumpComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private cd: ChangeDetectorRef,
+    private network: StateService,
   ) {}
 
   ngOnInit(): void {
     this.seo.setTitle($localize`:@@mempool.bump.title:Fee bump planner`);
-    this.routeSubscription = this.route.paramMap.subscribe((params) => {
+    this.routeSubscription = combineLatest([this.route.paramMap,this.route.queryParamMap,this.network.networkChanged$.pipe(startWith(this.network.network),distinctUntilChanged())]).subscribe(([params,query]) => {
+      this.clearPlan();
       this.txid = params.get('txid') ?? '';
-      this.readQueryTarget();
+      this.readQueryTarget(query.get('targetFeerate'));
     });
-    this.route.queryParamMap.subscribe(() => this.readQueryTarget());
   }
 
   ngOnDestroy(): void {
@@ -74,13 +76,13 @@ export class BumpComponent implements OnInit, OnDestroy {
     this.planSubscription?.unsubscribe();
   }
 
-  private readQueryTarget(): void {
-    const raw = this.route.snapshot.queryParamMap.get('targetFeerate');
+  private readQueryTarget(raw: string | null): void {
     const parsed = readTarget(raw);
     if (parsed === null) {
       // No rate is a real state, not an error: the page asks for one rather
       // than choosing a rate on somebody's behalf.
       this.target = null;
+      this.targetInput=raw||'';
       this.plan = null;
       this.recommendation = null;
       this.warnings = [];
@@ -95,6 +97,8 @@ export class BumpComponent implements OnInit, OnDestroy {
 
   /** Puts the rate in the address, which is what then triggers the load. */
   choose(rate: number): void {
+    this.clearPlan();
+    if(rate===this.target){this.targetInput=String(rate);this.load();return;}
     this.router.navigate([], {
       relativeTo: this.route,
       queryParams: { targetFeerate: rate },
@@ -103,6 +107,7 @@ export class BumpComponent implements OnInit, OnDestroy {
   }
 
   submitTyped(): void {
+    this.clearPlan();
     const parsed = readTarget(this.targetInput);
     if (parsed === null) {
       this.error = $localize`:@@mempool.bump.bad-typed:Enter a fee rate between 1 and ${this.maxTarget} satoshis per virtual byte.`;
@@ -112,12 +117,18 @@ export class BumpComponent implements OnInit, OnDestroy {
   }
 
   private load(): void {
+    this.clearPlan();
     if (!this.txid || this.target === null) { return; }
+    if(!/^[0-9a-f]{64}$/i.test(this.txid)){this.error='Enter a complete transaction ID.';return;}
     this.loading = true;
     this.error = null;
     this.planSubscription?.unsubscribe();
     this.planSubscription = this.api.getBumpPlan$(this.txid, this.target).subscribe({
       next: (plan) => {
+        if(!plan || plan.txid!==this.txid || plan.targetFeerate!==this.target || typeof plan.alreadyAtTarget!=='boolean' ||
+          typeof plan.rbf?.available!=='boolean' || typeof plan.cpfp?.available!=='boolean' || !Array.isArray(plan.rbf.evictedTxids)) {
+          this.loading=false;this.error='The node returned incomplete or mismatched fee-bump evidence.';this.cd.markForCheck();return;
+        }
         this.plan = plan;
         this.recommendation = recommend(plan);
         this.warnings = warningsFor(plan);
@@ -136,6 +147,8 @@ export class BumpComponent implements OnInit, OnDestroy {
       },
     });
   }
+
+  clearPlan(): void {this.planSubscription?.unsubscribe();this.planSubscription=null;this.plan=null;this.recommendation=null;this.warnings=[];this.error=null;this.loading=false;this.cd.markForCheck();}
 
   sats(value: number | null): string {
     return value === null ? $localize`:@@mempool.bump.unknown:unknown` : formatSats(value);

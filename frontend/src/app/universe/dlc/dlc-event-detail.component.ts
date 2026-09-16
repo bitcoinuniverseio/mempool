@@ -1,7 +1,9 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { DlcOracleVerifyComponent } from './dlc-oracle-verify.component';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, Optional } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { Subscription, combineLatest, of, startWith } from 'rxjs';
+import { StateService } from '@app/services/state.service';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { DlcApiService, DlcEvent } from './dlc.service';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
@@ -9,7 +11,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
 @Component({
   selector: 'app-dlc-event-detail',
   standalone: true,
-  imports: [RelativeUrlPipe, CommonModule, RouterModule],
+  imports: [RelativeUrlPipe, CommonModule, RouterModule, DlcOracleVerifyComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -24,11 +26,12 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
             <h1 class="m-0">{{ event.event_id }}</h1>
             <div class="text-muted small mt-1">Oracle: {{ event.oracle_id }}</div>
           </div>
-          <span class="badge" [ngClass]="event.verification_status === 'verified' ? 'bg-success' : 'bg-warning text-dark'">
-            {{ event.verification_status | uppercase }}
+          <span class="badge bg-secondary">
+            Registry status: {{ event.verification_status | uppercase }}
           </span>
         </div>
       </header>
+      <app-dlc-oracle-verify></app-dlc-oracle-verify>
 
       <div *ngIf="loading" class="text-center py-5 text-muted">
         <div class="spinner-border text-primary mb-2" role="status"></div>
@@ -73,7 +76,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           <div class="card p-4 bg-body-tertiary border">
             <h2 class="h5 mb-3">Committed Nonces ({{ event.nonces.length }})</h2>
             <p class="small text-muted mb-2">
-              Public nonces committed by the oracle for this event. These points are checked against all known oracle announcements to prevent nonce reuse attacks.
+              Public nonces committed for this event. Verification checks duplicates within the submitted announcement; registry-wide nonce reuse requires separate evidence.
             </p>
             <div *ngFor="let nonce of event.nonces; let i = index" class="p-2 border rounded bg-body font-monospace small text-break mb-1">
               <span class="text-muted me-2">#{{ i }}:</span> {{ nonce }}
@@ -85,8 +88,8 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           <div class="card p-4 bg-body-tertiary border h-100">
             <h2 class="h5 mb-3">Attestation Verification</h2>
             <div *ngIf="event.attestation">
-              <div class="alert alert-success py-2 px-3 small mb-3">
-                Attestation signature verified against announcement nonces.
+              <div class="alert alert-secondary py-2 px-3 small mb-3">
+                Registry-supplied attestation. Use the signature verifier above with the full signed announcement.
               </div>
 
               <div class="mb-3">
@@ -113,8 +116,8 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
             </div>
 
             <div *ngIf="!event.attestation" class="text-center py-4 text-muted">
-              <div class="badge bg-secondary mb-2">Awaiting Attestation</div>
-              <p class="small m-0">Event maturity has not been reached or oracle has not yet published signatures.</p>
+              <div class="badge bg-secondary mb-2">No attestation in this response</div>
+              <p class="small m-0">This response does not establish whether an attestation has been published elsewhere.</p>
             </div>
           </div>
         </div>
@@ -126,31 +129,28 @@ export class DlcEventDetailComponent implements OnInit, OnDestroy {
   loading = true;
   error: string | null = null;
   event: DlcEvent | null = null;
-  private sub?: Subscription;
+  private sub?: Subscription;private request?:Subscription;
 
   constructor(
     private route: ActivatedRoute,
     private dlcApi: DlcApiService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    @Optional() private state: StateService = null
   ) {}
 
   ngOnInit(): void {
-    const eventId = this.route.snapshot.paramMap.get('eventId') || 'event-btc-usd-2026-q4';
-    this.sub = this.dlcApi.getEventById$(eventId).subscribe({
-      next: (data) => {
-        this.event = data;
-        this.loading = false;
+    this.sub=combineLatest([this.route.paramMap,(this.state ? this.state.networkChanged$.pipe(startWith(null)) : of(null))]).subscribe(([params])=>{
+      this.request?.unsubscribe();this.event=null;this.error=null;this.loading=false;
+      const id=params.get('eventId');
+      if(!id){this.error='Missing requested identifier.';this.cdr.markForCheck();return;}
+      this.loading=true;this.cdr.markForCheck();
+      this.request=this.dlcApi.getEventById$(id).subscribe({next:data=>{
+        this.loading=false;
+        if(!data||data.event_id!==id){this.error='Response does not match the requested identifier.';}
+        else this.event=data;
         this.cdr.markForCheck();
-      },
-      error: (err) => {
-        this.error = err?.error?.error || loadFailureMessage(classifyLoadFailure(err));
-        this.loading = false;
-        this.cdr.markForCheck();
-      },
+      },error:err=>{this.loading=false;this.error=err?.error?.error||'Source unavailable; no observation established.';this.cdr.markForCheck();}});
     });
   }
-
-  ngOnDestroy(): void {
-    this.sub?.unsubscribe();
-  }
+  ngOnDestroy(): void {this.sub?.unsubscribe();this.request?.unsubscribe();this.event=null;this.loading=false;}
 }

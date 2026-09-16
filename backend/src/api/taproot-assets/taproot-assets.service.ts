@@ -1,3 +1,5 @@
+import { ownedWorkbenchCore } from '../intelligence/workbench/workbench-core';
+import { canonicalProof } from './taproot-proof';
 import config from '../../config';
 import {
   Bolt12Offer,
@@ -81,34 +83,35 @@ export class TaprootAssetsService {
       || typeof proofData !== 'string' || !proofData.trim() || proofData.length > 1024 * 1024) {
       return { valid: false, stage: 'invalid-input', error: 'A 32-byte hexadecimal asset ID and a nonempty proof payload of at most 1 MiB are required.' };
     }
-    const encoded = proofData.replace(/[ \t\r\n]/g, '');
-    if (!/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(encoded)) {
+    const encoded = canonicalProof(proofData);
+    if (!encoded) {
       return { valid: false, stage: 'invalid-input', error: 'The proof payload must be the base64 encoding of a Taproot Assets proof file.' };
     }
-    const authority = this.resolveAuthority();
-    if (!authority) {
-      return {
-        valid: false, stage: 'unavailable-verifier',
-        error: 'The Taproot Assets proof verifier (owned tapd) and Bitcoin anchor reader are not connected. No asset commitment or anchor was verified.',
-      };
-    }
     try {
+      const authority = this.resolveAuthority();
+      if (!authority) {
+        return {
+          valid: false, stage: 'unavailable-verifier',
+          error: 'The Taproot Assets proof verifier (owned tapd) and Bitcoin anchor reader are not connected. No asset commitment or anchor was verified.',
+        };
+      }
       return await authority.verifyProof(assetId, encoded);
     } catch (error) {
       if (error instanceof TapdError) {return { valid: false, stage: 'unavailable-verifier', error: error.message };}
-      throw error;
+      return { valid: false, stage: 'unavailable-verifier', error: 'The owned Taproot Assets verifier configuration or source is unavailable.' };
     }
   }
 
   /** @asyncSafe */
   private async read<T>(code: string, absent: string, operation: (authority: TapdAuthority) => Promise<T>): Promise<T> {
-    const authority = this.resolveAuthority();
-    if (!authority) {throw new TaprootAssetsEvidenceError(code, absent);}
     try {
+      const authority = this.resolveAuthority();
+      if (!authority) {throw new TaprootAssetsEvidenceError(code, absent);}
       return await operation(authority);
     } catch (error) {
+      if (error instanceof TaprootAssetsEvidenceError) throw error;
       if (error instanceof TapdError) {throw new TaprootAssetsEvidenceError(error.code, error.message);}
-      throw error;
+      throw new TaprootAssetsEvidenceError(code, 'The owned Taproot Assets source configuration or read is unavailable.');
     }
   }
 
@@ -120,9 +123,7 @@ export class TaprootAssetsService {
       return this.authority;
     }
     const tapd = tapdConfigFromEnvironment();
-    this.authority = tapd ? new TapdAuthority(config.MEMPOOL.NETWORK, axiosTapdHttp(tapd), {
-      $getBlockHash: (height: number) => import('../bitcoin/bitcoin-api-factory').then(module => module.default.$getBlockHash(height)),
-    }) : null;
+    this.authority = tapd ? new TapdAuthority(config.MEMPOOL.NETWORK, axiosTapdHttp(tapd), ownedWorkbenchCore) : null;
     return this.authority;
   }
 }

@@ -13,7 +13,10 @@ import {
  * than as an answer.
  */
 export class SubmissionEvidenceError extends Error {
-  constructor(public readonly code: string, message: string) {
+  constructor(
+    public readonly code: string,
+    message: string
+  ) {
     super(message);
   }
 }
@@ -61,27 +64,46 @@ export class PrivateSubmissionService {
   }
 
   public diagnoseTransaction(_rawTxOrTxid: string): SubmissionDiagnosisResult {
-    throw new SubmissionEvidenceError('unavailable-source', diagnosisUnavailable);
+    throw new SubmissionEvidenceError(
+      'unavailable-source',
+      diagnosisUnavailable
+    );
   }
 
-  public submitPrivate(_submission: { raw_tx: string; method: string }): PrivateBroadcastRecord {
+  public submitPrivate(_submission: {
+    raw_tx: string;
+    method: string;
+  }): PrivateBroadcastRecord {
     throw new SubmissionEvidenceError('unavailable-relay', relayUnavailable);
   }
 
-  public getPrivateSubmission(_token: string): PrivateBroadcastRecord | undefined {
+  public getPrivateSubmission(
+    _token: string
+  ): PrivateBroadcastRecord | undefined {
     throw new SubmissionEvidenceError('unavailable-relay', relayUnavailable);
   }
 
-  public abortPrivateSubmission(_token: string): { success: boolean; status: string } {
+  public abortPrivateSubmission(_token: string): {
+    success: boolean;
+    status: string;
+  } {
     throw new SubmissionEvidenceError('unavailable-relay', relayUnavailable);
   }
 
   public listAcceleratorProviders(): { providers: AcceleratorProvider[] } {
-    throw new SubmissionEvidenceError('unavailable-registry', registryUnavailable);
+    throw new SubmissionEvidenceError(
+      'unavailable-registry',
+      registryUnavailable
+    );
   }
 
-  public getAcceleratorProvider(_providerId: string): AcceleratorProvider | undefined {
-    throw new SubmissionEvidenceError('unavailable-registry', registryUnavailable);
+  public getAcceleratorProvider(
+    _providerId: string
+  ): AcceleratorProvider | undefined {
+    throw new SubmissionEvidenceError(
+      'unavailable-registry',
+      registryUnavailable
+    );
   }
 
   /**
@@ -99,27 +121,73 @@ export class PrivateSubmissionService {
     errors: string[];
   } {
     const errors: string[] = [];
-    if (typeof receipt?.provider_id !== 'string' || !receipt.provider_id.trim()) errors.push('provider_id is required');
-    if (typeof receipt?.receipt_id !== 'string' || !receipt.receipt_id.trim()) errors.push('receipt_id is required');
-    if (typeof receipt?.provider_signature !== 'string' || !receipt.provider_signature.trim()) errors.push('provider_signature is required');
-    if (typeof receipt?.txid !== 'string' || !/^[0-9a-f]{64}$/i.test(receipt.txid)) errors.push('Valid 32-byte txid is required');
+    if (
+      !receipt ||
+      typeof receipt !== 'object' ||
+      Array.isArray(receipt) ||
+      JSON.stringify(receipt).length > 16384
+    )
+      return {
+        verified: false,
+        stage: 'invalid',
+        errors: ['Receipt must be a JSON object no larger than16KiB.'],
+      };
+    for (const [key, max] of [
+      ['provider_id', 256],
+      ['receipt_id', 256],
+      ['provider_signature', 8192],
+    ] as const)
+      if (typeof receipt[key] === 'string' && receipt[key]!.length > max)
+        errors.push(key + ' is too long');
+    if (typeof receipt?.provider_id !== 'string' || !receipt.provider_id.trim())
+      errors.push('provider_id is required');
+    if (typeof receipt?.receipt_id !== 'string' || !receipt.receipt_id.trim())
+      errors.push('receipt_id is required');
+    if (
+      typeof receipt?.provider_signature !== 'string' ||
+      !receipt.provider_signature.trim()
+    )
+      errors.push('provider_signature is required');
+    if (
+      typeof receipt?.txid !== 'string' ||
+      !/^[0-9a-f]{64}$/i.test(receipt.txid)
+    )
+      errors.push('Valid 32-byte txid is required');
 
     if (errors.length > 0) {
       return { verified: false, stage: 'invalid', errors };
     }
-    return { verified: false, stage: 'unavailable-registry', errors: [registryUnavailable] };
+    return {
+      verified: false,
+      stage: 'unavailable-registry',
+      errors: [registryUnavailable],
+    };
   }
 
-  public getTransactionOrdering(_txid: string): TransactionOrderingEvidence | undefined {
-    throw new SubmissionEvidenceError('unavailable-source', orderingUnavailable);
+  public getTransactionOrdering(
+    _txid: string
+  ): TransactionOrderingEvidence | undefined {
+    throw new SubmissionEvidenceError(
+      'unavailable-source',
+      orderingUnavailable
+    );
   }
 
-  public getBlockOrdering(_blockHash: string): { block_hash: string; transactions: TransactionOrderingEvidence[] } {
-    throw new SubmissionEvidenceError('unavailable-source', orderingUnavailable);
+  public getBlockOrdering(_blockHash: string): {
+    block_hash: string;
+    transactions: TransactionOrderingEvidence[];
+  } {
+    throw new SubmissionEvidenceError(
+      'unavailable-source',
+      orderingUnavailable
+    );
   }
 
   public listOrderingFindings(): { findings: TransactionOrderingEvidence[] } {
-    throw new SubmissionEvidenceError('unavailable-source', orderingUnavailable);
+    throw new SubmissionEvidenceError(
+      'unavailable-source',
+      orderingUnavailable
+    );
   }
 }
 

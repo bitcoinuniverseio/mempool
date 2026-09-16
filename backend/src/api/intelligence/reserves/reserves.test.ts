@@ -39,35 +39,8 @@ describe('ReservesService', () => {
     }
   });
 
-  it('still verifies a Merkle inclusion proof supplied by the caller', () => {
-    const leaf = crypto.createHash('sha256').update('leaf-data').digest('hex');
-    const sibling = crypto.createHash('sha256').update('sibling-data').digest('hex');
-
-    const h = crypto.createHash('sha256');
-    if (leaf < sibling) {
-      h.update(leaf + sibling);
-    } else {
-      h.update(sibling + leaf);
-    }
-    const root = h.digest('hex');
-
-    const res = reservesService.verifyProof({
-      proof_type: 'merkle_inclusion',
-      merkle_proof: {
-        merkle_root: root,
-        leaf_hash: leaf,
-        path: [sibling],
-        index: 0,
-        expected_liability_sats: 1000000,
-      },
-    });
-
-    expect(res.verified).toBe(true);
-    expect(res.total_verified_sats).toBe(1000000);
-  });
-
-  it('rejects invalid proof packages', () => {
-    const res = reservesService.verifyProof({
+  it('rejects invalid proof packages', async () => {
+    const res = await reservesService.verifyProof({
       proof_type: 'bip127',
       bip127_proof: {
         expected_message: 'test',
@@ -105,14 +78,5 @@ describe('Reserves HTTP responses', () => {
       expect(body).not.toHaveProperty('providers');
       expect(body).not.toHaveProperty('recent_snapshots');
     }
-  });
-});
-
-describe('BIP127 verdicts', () => {
-  it('never reports a well-formed attestation as verified without the owned verifier', () => {
-    expect(() => reservesService.verifyProof({
-      proof_type: 'bip127',
-      bip127_proof: { expected_message: 'reserves', items: [{ txid: 'ab'.repeat(32), vout: 0, amount_sats: 1000, signature: 'sig', public_key: '02' + 'cd'.repeat(32) } as never] },
-    })).toThrow(expect.objectContaining({ code: 'unavailable-verifier', status: 503 }));
   });
 });

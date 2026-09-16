@@ -1,3 +1,4 @@
+import { observeStaking, slashingLabel, reconciliationLabel } from './staking-view';
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -59,7 +60,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
             <tbody>
               <tr *ngFor="let d of delegations">
                 <td class="font-monospace fw-bold">{{ d.delegation_id }}</td>
-                <td class="font-monospace">{{ (d.staking_amount_sat / 100000000).toFixed(4) }} BTC</td>
+                <td class="font-monospace">{{ d.staking_amount_sat ?? 'Unknown' }} sats</td>
                 <td class="font-monospace small">{{ d.staking_timelock_blocks }} blocks</td>
                 <td>
                   <span class="badge" [ngClass]="d.covenant_signatures_count >= d.covenant_signatures_required ? 'bg-success' : 'bg-warning text-dark'">
@@ -99,19 +100,12 @@ export class StakingDelegationsComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef
   ) {}
 
+  readonly slashingLabel = slashingLabel;
+  readonly reconciliationLabel = reconciliationLabel;
   ngOnInit(): void {
-    this.sub = this.stakingApi.getDelegations$().subscribe({
-      next: (data) => {
-        this.delegations = data;
-        this.loading = false;
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        this.error = loadFailureMessage(classifyLoadFailure(err));
-        this.loading = false;
-        this.cdr.markForCheck();
-      },
-    });
+    this.sub = observeStaking(this.stakingApi.networkChanges$, () => {this.delegations = [];this.loading=true;this.error=null;this.cdr.markForCheck();},
+      () => this.stakingApi.getDelegations$(), data => {this.delegations=data;this.loading=false;this.cdr.markForCheck();},
+      err => {this.delegations=[];this.error=err?.error?.error || err?.message || loadFailureMessage(classifyLoadFailure(err));this.loading=false;this.cdr.markForCheck();});
   }
 
   getStateBadgeClass(state: string): string {

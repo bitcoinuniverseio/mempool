@@ -5,8 +5,10 @@
  * on-chain lock.
  */
 
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, input, signal } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
+import { ChangeDetectionStrategy, Component, effect, computed, inject, input, signal } from '@angular/core';
+import { concatMap, from, of } from 'rxjs';
+import { accountReadScope } from '../data/account-read-scope';
+import { readUtxoPages } from '../data/read-utxo-pages';
 import { PortfolioV2ApiService } from '../data/portfolio-v2-api.service';
 import { PortfoliosStore } from '../stores/portfolios.store';
 import { PortfolioSessionService } from '../stores/session.service';
@@ -33,10 +35,12 @@ import type { PortfolioUtxo } from '@app/shared/universe-portfolio-v2.types';
         </label>
       </header>
 
+      @if (loading()) { <p role="status">Reading UTXO pages…</p> }
+      @for (warning of warnings(); track $index) { <p role="note">{{ warning }}</p> }
+      @for (read of reads(); track read.key) { <p>{{ read.scope }}: {{ read.status }}</p> }
       @if (utxos().length === 0) {
         <p class="soft" i18n="@@universe.portfolio.utxo.empty">
-          No UTXO composition is available for the current accounts yet. UTXO intelligence
-          serves Bitcoin mainnet addresses with outputs.
+          No UTXO rows are available in this read. Account coverage and read failures are shown above.
         </p>
       } @else {
         <div class="table-wrap">
@@ -73,9 +77,7 @@ import type { PortfolioUtxo } from '@app/shared/universe-portfolio-v2.types';
         <section class="note" aria-label="Local protection">
           <h2 i18n="@@universe.portfolio.utxo.protection-title">Local protection flags</h2>
           <p class="soft" i18n="@@universe.portfolio.utxo.protection-copy">
-            A protect flag is a local note in your encrypted vault. It is never presented as a
-            wallet lock or an on-chain condition, and it warns you if another Universe tool
-            tries to involve the output.
+            This read-only table does not set wallet locks or protection flags. Asset coverage and fee estimates do not authorize spending an output.
           </p>
         </section>
       }
@@ -100,7 +102,7 @@ import type { PortfolioUtxo } from '@app/shared/universe-portfolio-v2.types';
     `,
   ],
 })
-export class UtxoCenterComponent implements OnInit {
+export class UtxoCenterComponent {
   readonly store = inject(PortfoliosStore);
   readonly session = inject(PortfolioSessionService);
   private readonly api = inject(PortfolioV2ApiService);
@@ -110,40 +112,43 @@ export class UtxoCenterComponent implements OnInit {
   readonly dustThreshold = signal('1000');
   private readonly utxoSignal = signal<readonly PortfolioUtxo[]>([]);
   readonly utxos = this.utxoSignal.asReadonly();
-  private loaded = false;
+  readonly loading = signal(false);
+  readonly warnings = signal<readonly string[]>([]);
+  readonly reads = signal<readonly { key: string; scope: string; status: string }[]>([]);
 
-  ngOnInit(): void {
-    if (this.loaded) return;
-    this.loaded = true;
-    void this.load();
-  }
-
-  private async load(): Promise<void> {
-    const portfolio = this.store.activePortfolio();
-    if (portfolio === null) return;
-    const collected: PortfolioUtxo[] = [];
-    for (const account of portfolio.accounts) {
-      for (const address of account.addresses ?? []) {
-        try {
-          const page = await firstValueFrom(
-            this.api.getUtxos$(account.chain, account.network, address, undefined, 50),
-          );
-          collected.push(...page.utxos);
-        } catch {
-          // A failed account stays out of the inventory; the summary
-          // surfaces the failure rather than a fake empty set.
-        }
-      }
-    }
-    this.utxoSignal.set(collected);
+  constructor() {
+    effect(cleanup => {
+      const scope = accountReadScope(this.store.activePortfolio());
+      this.utxoSignal.set([]);
+      this.warnings.set(scope.warnings);
+      this.reads.set(scope.targets.map(t => ({ key: t.key, scope: `${t.accounts.join(', ')} · ${t.chain}/${t.network} · ${t.address}`, status: 'Pending' })));
+      this.loading.set(scope.targets.length > 0);
+      const all = new Map<string, PortfolioUtxo>();
+      const sub = from(scope.targets).pipe(concatMap(target => all.size >= 10000 ? of({ target, utxos: [], status: 'Not requested: total inventory read limit', warnings: ['Inventory limit reached; account coverage is partial.'] }) : readUtxoPages(this.api, target))).subscribe({
+        next: result => {
+          this.reads.update(rows => rows.map(row => row.key === result.target.key ? { ...row, status: result.status } : row));
+          this.warnings.update(rows => [...rows, ...result.warnings.map(warning => `${result.target.accounts.join(', ')}: ${warning}`)]);
+          for (const utxo of result.utxos) {
+            const key = `${utxo.chain}:${utxo.network}:${utxo.txid.toLowerCase()}:${utxo.vout}`;
+            const prior = all.get(key);
+            if (!prior && all.size < 10000) all.set(key, utxo);
+            else if (!prior) this.warnings.update(rows => rows.includes('Inventory limit reached; additional outputs omitted.') ? rows : [...rows, 'Inventory limit reached; additional outputs omitted.']);
+            else if (JSON.stringify(prior) !== JSON.stringify(utxo)) this.warnings.update(rows => [...rows, 'Conflicting duplicate outpoint across accounts; first observation retained. Coverage is partial.']);
+          }
+          this.utxoSignal.set([...all.values()]);
+        },
+        complete: () => this.loading.set(false),
+      });
+      cleanup(() => sub.unsubscribe());
+    });
   }
 
   readonly rows = computed(() => {
     const fee = this.feeRate();
     const dust = this.dustThreshold();
     return this.utxos().map((utxo) => {
-      const classification = classifyUtxo(utxo, { dustThresholdAtomic: /^\d+$/.test(dust) ? dust : undefined });
-      const economics = effectiveValue(utxo.valueAtomic, utxo.scriptType, /^\d+(\.\d+)?$/.test(fee) ? fee : '10');
+      const classification = classifyUtxo(utxo, { dustThresholdAtomic: /^\d{1,16}$/.test(dust) ? dust : undefined });
+      const economics = /^\d{1,7}(\.\d{1,3})?$/.test(fee) && Number(fee) > 0 ? effectiveValue(utxo.valueAtomic, utxo.scriptType, fee) : null;
       const effective =
         economics === null
           ? '-'
@@ -151,7 +156,7 @@ export class UtxoCenterComponent implements OnInit {
             ? `${formatExact(economics.effectiveValueAtomic, 'en')} sats`
             : $localize`:@@universe.portfolio.utxo.uneconomic:Uneconomic to spend`;
       return {
-        outpoint: `${utxo.txid}:${utxo.vout}`,
+        outpoint: `${utxo.chain}:${utxo.network}:${utxo.txid}:${utxo.vout}`,
         outpointShort: `${truncateIdentifier(utxo.txid, 10, 6)}:${utxo.vout}`,
         value: utxo.valueAtomic,
         confirmations: utxo.confirmationsAtomic,

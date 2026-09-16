@@ -1,7 +1,7 @@
 import { randomUUID } from 'crypto';
 import {
   TimestampOverview, TimestampCalendar, TimestampBatch, TimestampAnchorTransaction, TimestampVerificationResult,
-  TimestampStampResult, TimestampUpgradeResult,
+  TimestampStampResult, TimestampUpgradeResult, TimestampCoverage,
 } from './opentimestamps.models';
 import config from '../../../config';
 import logger from '../../../logger';
@@ -94,21 +94,23 @@ export class OpenTimestampsService {
     const [stats, calendars, anchors, recent] = await Promise.all([
       this.records(() => this.store.stats()), this.listCalendars(), this.listAnchors(), this.records(() => this.store.recent(10)),
     ]);
-    const active = calendars.calendars.filter(calendar => calendar.health_status !== 'offline');
+    const active = calendars.calendars.filter(calendar => calendar.health_status === 'online');
     return {
       total_active_calendars: active.length,
-      total_verified_anchors_count: stats.anchored,
+      total_verified_anchors_count: anchors.coverage.complete ? anchors.verified_records : null,
       total_digests_stamped_24h: stats.stamped_24h,
-      latest_bitcoin_anchor_height: stats.latest_anchor_height ?? 0,
+      latest_bitcoin_anchor_height: anchors.anchors[0]?.block_height ?? null,
       active_calendars: active,
-      recent_batches: recent.map(toBatch),
+      recent_batches: await Promise.all(recent.map(record => this.readBatch(record))),
       recent_anchors: anchors.anchors.slice(0, 10),
       total_proofs_tracked: stats.total,
-      bitcoin_confirmed_proofs: stats.anchored,
+      bitcoin_confirmed_proofs: anchors.coverage.complete ? anchors.verified_records : null,
+      stored_anchored_proofs: stats.anchored,
+      active_chain_coverage: anchors.coverage,
       pending_calendar_attestations: stats.pending,
       failed_submissions: stats.failed,
       active_calendar_servers: active.length,
-      latest_anchored_block_height: stats.latest_anchor_height,
+      latest_anchored_block_height: anchors.anchors[0]?.block_height ?? null,
       network: this.network,
       calendars_configured: this.calendars.configured,
       storage: this.store.kind,
@@ -119,8 +121,8 @@ export class OpenTimestampsService {
   /** @asyncUnsafe The route turns a rejection into an exact HTTP answer. */
   public async listCalendars(): Promise<{ calendars: TimestampCalendar[] }> {
     await this.probeHealth();
-    const [anchored, pending] = await this.recordsForCalendars();
-    return { calendars: this.calendars.list().map(entry => this.describeCalendar(entry, anchored, pending)) };
+    const evidence = await this.recordsForCalendars();
+    return { calendars: this.calendars.list().map(entry => this.describeCalendar(entry, evidence)) };
   }
 
   /** @asyncUnsafe The route turns a rejection into an exact HTTP answer. */
@@ -128,27 +130,73 @@ export class OpenTimestampsService {
     const entry = this.calendars.byId(calendarId);
     if (!entry) {return undefined;}
     await this.probeHealth();
-    const [anchored, pending] = await this.recordsForCalendars();
-    return this.describeCalendar(entry, anchored, pending);
+    return this.describeCalendar(entry, await this.recordsForCalendars());
   }
 
   /** @asyncUnsafe The route turns a rejection into an exact HTTP answer. */
-  private recordsForCalendars(): Promise<[TimestampRecord[], TimestampRecord[]]> {
-    return Promise.all([
-      this.records(() => this.store.anchored(200)),
-      this.records(() => this.store.pendingForUpgrade(this.now().toISOString(), 500)),
+  private async recordsForCalendars(): Promise<{ anchored: TimestampRecord[]; pending: TimestampRecord[]; anchoredCoverage: TimestampCoverage; pendingCoverage: TimestampCoverage }> {
+    const [rows, pending] = await Promise.all([
+      this.records(() => this.store.anchored(201)),
+      this.records(() => this.store.pendingForUpgrade(this.now().toISOString(), 501)),
     ]);
+    const checked = await this.currentRecords(rows.slice(0, 200));
+    return { anchored: checked.filter(row => row.verification.verified).map(row => ({ ...row.record, anchor_block_height: row.verification.earliest_proven_block_height, anchor_block_hash: row.verification.bitcoin_block_hash })), pending: pending.slice(0, 500),
+      anchoredCoverage: { record_limit: 200, records_examined: Math.min(rows.length, 200), complete: rows.length <= 200 },
+      pendingCoverage: { record_limit: 500, records_examined: Math.min(pending.length, 500), complete: pending.length <= 500 } };
+  }
+
+  /** Re-evaluate the complete saved proof, never the persisted status alone. */
+  private async currentRecords(records: TimestampRecord[]): Promise<{ record: TimestampRecord; verification: TimestampVerificationResult }[]> {
+    const deadline = Date.now() + 15000;
+    const source = this.reader;
+    const bounded = async <T>(call: () => Promise<T>): Promise<T> => {
+      if (Date.now() >= deadline) { throw new TimestampEvidenceError('unavailable-bitcoin-header', 'The bounded anchor readback deadline was reached.'); }
+      let timer: NodeJS.Timeout | undefined;
+      try { return await Promise.race([call(), new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new TimestampEvidenceError('unavailable-bitcoin-header', 'The bounded anchor readback deadline was reached.')), Math.max(1, deadline - Date.now())); timer.unref?.(); })]); }
+      finally { if (timer) { clearTimeout(timer); } }
+    };
+    const reader: TimestampBitcoinReader = { $getBlockHash: height => bounded(() => source.$getBlockHash(height)), $getBlockHeader: hash => bounded(() => source.$getBlockHeader(hash)) };
+    const results: { record: TimestampRecord; verification: TimestampVerificationResult }[] = [];
+    for (const record of records) {
+      let verification: TimestampVerificationResult;
+      try { verification = await verifyDetachedProof({ ots_proof: record.proof_base64, digest: record.digest_hex, network: record.network }, reader, this.network); }
+      catch (error) {
+        if (error instanceof TimestampEvidenceError && error.status === 400) { throw new TimestampEvidenceError('unavailable-record-store', 'A saved timestamp proof is malformed; current anchor evidence is unavailable.'); }
+        throw error;
+      }
+      results.push({ record, verification });
+    }
+    for (const row of results.filter(row => row.verification.verified)) {
+      if (await reader.$getBlockHash(row.verification.earliest_proven_block_height!) !== row.verification.bitcoin_block_hash) {
+        throw new TimestampEvidenceError('unavailable-bitcoin-header', 'The active chain changed during the bounded anchor readback. Retry.');
+      }
+    }
+    return results;
+  }
+
+  private async readBatch(record: TimestampRecord): Promise<TimestampBatch> {
+    const batch = toBatch(record);
+    if (record.status !== 'anchored') { return batch; }
+    const [{ verification }] = await this.currentRecords([record]);
+    batch.anchor_status = verification.verified ? 'active-chain' : verification.status === 'bitcoin_attestation_reorg' || verification.bitcoin_block_hash !== undefined && verification.bitcoin_block_hash !== record.anchor_block_hash ? 'reorged' : 'invalid';
+    batch.anchor_verified_at = this.now().toISOString();
+    if (verification.verified) { batch.anchor_block_height = verification.earliest_proven_block_height; batch.anchor_block_hash = verification.bitcoin_block_hash; }
+    if (!verification.verified) { batch.status = 'failed'; delete batch.anchor_block_hash; delete batch.anchor_block_height; }
+    return batch;
   }
 
   /**
    * Bitcoin blocks that anchored a proof made here, one row per calendar and
    * block. An OpenTimestamps proof commits to a block's Merkle root and does
    * not name the transaction, so no txid is reported. @asyncUnsafe */
-  public async listAnchors(): Promise<{ anchors: TimestampAnchorTransaction[] }> {
+  public async listAnchors(): Promise<{ anchors: TimestampAnchorTransaction[]; coverage: TimestampCoverage; verified_records: number }> {
     this.scheduleReconciliation();
-    const records = await this.records(() => this.store.anchored(500));
+    const records = await this.records(() => this.store.anchored(501));
+    const checked = await this.currentRecords(records.slice(0, 500));
     const byKey = new Map<string, TimestampAnchorTransaction>();
-    for (const record of records) {
+    for (const { record: saved, verification } of checked) {
+      if (!verification.verified) { continue; }
+      const record = { ...saved, anchor_block_height: verification.earliest_proven_block_height, anchor_block_hash: verification.bitcoin_block_hash, anchor_time_utc: verification.earliest_proven_time_utc };
       if (record.anchor_block_height === undefined || !record.anchor_block_hash) {continue;}
       for (const contact of record.calendars.filter(contact => contact.status === 'anchored')) {
         const key = `${contact.calendar_id}:${record.anchor_block_height}`;
@@ -167,18 +215,18 @@ export class OpenTimestampsService {
           calendar_id: contact.calendar_id,
           batch_count: 1,
           leaf_count: 1,
-          merkle_root: record.commitment_hex,
+          merkle_root: verification.bitcoin_merkle_root!,
         });
       }
     }
-    return { anchors: [...byKey.values()].sort((a, b) => b.block_height - a.block_height) };
+    return { anchors: [...byKey.values()].sort((a, b) => b.block_height - a.block_height), verified_records: checked.filter(row => row.verification.verified).length, coverage: { record_limit: 500, records_examined: checked.length, complete: records.length <= 500 } };
   }
 
   /** @asyncUnsafe The route turns a rejection into an exact HTTP answer. */
   public async getBatch(batchId: string): Promise<TimestampBatch | undefined> {
     if (typeof batchId !== 'string' || !/^[0-9a-f-]{36}$/i.test(batchId)) {return undefined;}
     const record = await this.records(() => this.store.get(batchId));
-    return record ? toBatch(record) : undefined;
+    return record ? this.readBatch(record) : undefined;
   }
 
   /** Submit a sha256 digest to every allowlisted calendar and keep the proof. @asyncUnsafe */
@@ -415,7 +463,8 @@ export class OpenTimestampsService {
     this.health.set(entry.calendar_id, { calendar_id: entry.calendar_id, health_status: health, observed_at: this.now().toISOString(), detail });
   }
 
-  private describeCalendar(entry: CalendarDirectoryEntry, anchored: TimestampRecord[], pending: TimestampRecord[]): TimestampCalendar {
+  private describeCalendar(entry: CalendarDirectoryEntry, evidence: { anchored: TimestampRecord[]; pending: TimestampRecord[]; anchoredCoverage: TimestampCoverage; pendingCoverage: TimestampCoverage }): TimestampCalendar {
+    const { anchored, pending } = evidence;
     const observation = this.health.get(entry.calendar_id);
     const mine = anchored.filter(record => record.calendars.some(contact => contact.calendar_id === entry.calendar_id && contact.status === 'anchored'));
     const promised = pending.filter(record => record.calendars.some(contact => contact.calendar_id === entry.calendar_id && contact.status === 'pending'));
@@ -429,6 +478,8 @@ export class OpenTimestampsService {
       health_observed_at: observation?.observed_at ?? null,
       health_detail: observation?.detail ?? 'not yet observed',
       pending_attestations_count: promised.length,
+      counts_scope: 'Observed records in the stated bounded windows; incomplete windows are lower bounds, not calendar-wide totals.',
+      anchored_coverage: evidence.anchoredCoverage, pending_coverage: evidence.pendingCoverage,
       anchored_proofs_count: mine.length,
       average_anchor_lag_blocks: null,
       last_anchor_block_height: latest?.anchor_block_height ?? null,
@@ -460,7 +511,8 @@ function toBatch(record: TimestampRecord): TimestampBatch {
   return {
     batch_id: record.record_id,
     calendar_id: record.calendars.filter(contact => contact.status !== 'unreachable').map(contact => contact.calendar_id).join(','),
-    merkle_root: record.commitment_hex,
+    merkle_root: null, commitment_hex: record.commitment_hex,
+    anchor_status: record.status === 'pending' ? 'pending' : 'unknown', anchor_verified_at: null,
     leaf_count: 1,
     created_at_utc: record.submitted_at,
     anchor_block_height: record.anchor_block_height,

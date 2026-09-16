@@ -25,11 +25,12 @@ import { handleError } from '../../utils/api';
 import { classifyAddressError, sendAddressError } from './address-errors';
 import poolsUpdater from '../../tasks/pools-updater';
 import chainTips from '../chain-tips';
+import { readUnsignedInteger, sourceNotFound } from './route-input';
 
 const TXID_REGEX = /^[a-f0-9]{64}$/i;
 const BLOCK_HASH_REGEX = /^[a-f0-9]{64}$/i;
 const ADDRESS_REGEX = /^[a-z0-9]{2,120}$/i;
-const SCRIPT_HASH_REGEX = /^([a-f0-9]{2})+$/i;
+const SCRIPT_HASH_REGEX = /^[a-f0-9]{64}$/i;
 
 class BitcoinRoutes {
   public initRoutes(app: Application) {
@@ -497,7 +498,8 @@ class BitcoinRoutes {
   private async getBlocks(req: Request, res: Response) {
     try {
       if (['mainnet', 'testnet', 'signet', 'testnet4', 'regtest'].includes(config.MEMPOOL.NETWORK)) { // Bitcoin
-        const height = req.params.height === undefined ? undefined : parseInt(req.params.height, 10);
+        const height = req.params.height === undefined ? undefined : readUnsignedInteger(req.params.height);
+        if (height === null) { handleError(req, res, 400, 'Invalid block height'); return; }
         res.setHeader('Expires', new Date(Date.now() + 1000 * 60).toUTCString());
         res.json(await blocks.$getBlocks(height, 15));
       } else { // Liquid
@@ -523,13 +525,13 @@ class BitcoinRoutes {
         return;
       }
 
-      const from = parseInt(req.params.from, 10);
-      if (!req.params.from || from < 0) {
+      const from = readUnsignedInteger(req.params.from);
+      if (from === null) {
         handleError(req, res, 400, `Parameter 'from' must be a block height (integer)`);
         return;
       }
-      const to = req.params.to === undefined ? await bitcoinApi.$getBlockHeightTip() : parseInt(req.params.to, 10);
-      if (to < 0) {
+      const to = req.params.to === undefined ? await bitcoinApi.$getBlockHeightTip() : readUnsignedInteger(req.params.to);
+      if (to === null || !Number.isSafeInteger(to) || to < 0) {
         handleError(req, res, 400, `Parameter 'to' must be a block height (integer)`);
         return;
       }
@@ -594,7 +596,9 @@ class BitcoinRoutes {
     try {
       const returnBlocks: IEsploraApi.Block[] = [];
       const tip = blocks.getCurrentBlockHeight();
-      const fromHeight = Math.min(parseInt(req.params.height, 10) || tip, tip);
+      const requested = req.params.height === undefined ? tip : readUnsignedInteger(req.params.height);
+      if (requested === null) { handleError(req, res, 400, 'Invalid block height'); return; }
+      const fromHeight = Math.min(requested, tip);
 
       // Check if block height exist in local cache to skip the hash lookup
       const blockByHeight = blocks.getBlocks().find((b) => b.height === fromHeight);
@@ -630,36 +634,36 @@ class BitcoinRoutes {
       handleError(req, res, 501, `Invalid block hash`);
       return;
     }
+    const startingIndex = req.params.index === undefined ? 0 : readUnsignedInteger(req.params.index);
+    if (startingIndex === null) { handleError(req, res, 400, 'Invalid transaction index'); return; }
     try {
       loadingIndicators.setProgress('blocktxs-' + req.params.hash, 0);
 
       const txIds = await bitcoinApi.$getTxIdsForBlock(req.params.hash);
       const transactions: TransactionExtended[] = [];
-      const startingIndex = Math.max(0, parseInt(req.params.index || '0', 10));
 
       const endIndex = Math.min(startingIndex + 10, txIds.length);
       for (let i = startingIndex; i < endIndex; i++) {
-        try {
           const transaction = await transactionUtils.$getTransactionExtended(txIds[i], true, true);
+          if (!transaction || transaction.txid !== txIds[i]) throw new Error('Incomplete block transaction source');
           transactions.push(transaction);
           loadingIndicators.setProgress('blocktxs-' + req.params.hash, (i - startingIndex + 1) / (endIndex - startingIndex) * 100);
-        } catch (e) {
-          logger.debug('getBlockTransactions error: ' + (e instanceof Error ? e.message : e));
-        }
       }
       res.json(transactions);
     } catch (e) {
       loadingIndicators.setProgress('blocktxs-' + req.params.hash, 100);
-      handleError(req, res, 500, 'Failed to get block transactions');
+      handleError(req, res, sourceNotFound(e) ? 404 : 503, sourceNotFound(e) ? 'Block transaction not found' : 'Complete block transactions are unavailable');
     }
   }
 
   private async getBlockHeight(req: Request, res: Response) {
+    const height = readUnsignedInteger(req.params.height);
+    if (height === null) { handleError(req, res, 400, 'Invalid block height'); return; }
     try {
-      const blockHash = await bitcoinApi.$getBlockHash(parseInt(req.params.height, 10));
+      const blockHash = await bitcoinApi.$getBlockHash(height);
       res.send(blockHash);
     } catch (e) {
-      handleError(req, res, 500, 'Failed to get block at height');
+      handleError(req, res, sourceNotFound(e) ? 404 : 503, 'Block at height is unavailable');
     }
   }
 
@@ -1111,7 +1115,7 @@ class BitcoinRoutes {
   private async $getPrevouts(req: Request, res: Response) {
     try {
       const outpoints = req.body;
-      if (!Array.isArray(outpoints) || outpoints.some((item) => !/^[a-fA-F0-9]{64}$/.test(item.txid) || typeof item.vout !== 'number')) {
+      if (!Array.isArray(outpoints) || outpoints.some((item) => !item || typeof item.txid !== 'string' || !/^[a-fA-F0-9]{64}$/.test(item.txid) || !Number.isSafeInteger(item.vout) || item.vout < 0 || item.vout > 0xffffffff)) {
         handleError(req, res, 400, 'Invalid outpoints format');
         return;
       }
@@ -1149,7 +1153,8 @@ class BitcoinRoutes {
               unconfirmed = false;
             }
           } catch (e) {
-            // Ignore bitcoin client errors, just leave prevout as null
+            handleError(req, res, 503, 'Prevout source is unavailable; no complete result was obtained');
+            return;
           }
         }
 

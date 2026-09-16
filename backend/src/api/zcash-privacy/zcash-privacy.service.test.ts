@@ -55,10 +55,10 @@ describe('Zcash privacy HTTP responses', () => {
 
   it('answers the observation reads with a 503 that names the missing node and the catalogue with a 200', async () => {
     const gets = mount();
-    expect(gets.size).toBe(3);
+    expect([...gets.keys()].map(path => path.split('/').pop()).sort()).toEqual(['blocks', 'pools', 'summary', 'upgrades']);
     for (const [path, handler] of gets) {
       const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
-      await handler({} as Request, res as unknown as Response);
+      await handler({query: {network:'mainnet',start:'415000',end:'415000'}} as unknown as Request, res as unknown as Response);
       if (path.endsWith('upgrades')) {
         expect(res.status).not.toHaveBeenCalled();
         expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ total: 6 }));

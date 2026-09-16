@@ -1,8 +1,8 @@
-import { Component, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectionStrategy, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { SimplicityApiService } from './simplicity.service';
+import { SimplicityCompilerService, SimplicityCompiledOutput } from './simplicity-compiler.service';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
@@ -15,7 +15,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
       <header class="page-header mb-4">
         <div class="title-row d-flex flex-wrap align-items-center justify-content-between gap-2">
           <h1 class="m-0">Simplicity Compiler Workbench</h1>
-          <span class="badge bg-info text-dark">SimplicityHL 0.2.0-preview</span>
+          <span class="badge bg-info text-dark">SimplicityHL 0.2.0 / rust-simplicity 0.5.0</span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
           Browser-side compiler workbench for Simplicity expressions, witness derivation, and commitment Merkle root calculation.
@@ -40,8 +40,16 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                 class="form-control font-monospace small"
                 rows="14"
                 [(ngModel)]="sourceCode"
+                (ngModelChange)="edited()"
               ></textarea>
             </div>
+
+            <label for="simplicity-arguments">Parameters JSON (name: value/type)</label>
+            <textarea id="simplicity-arguments" class="form-control font-monospace mb-2" [(ngModel)]="argumentsJson" (ngModelChange)="edited()" rows="2"></textarea>
+            <label for="simplicity-witness">Witness JSON (name: value/type; stays in browser)</label>
+            <textarea id="simplicity-witness" class="form-control font-monospace mb-2" [(ngModel)]="witnessJson" (ngModelChange)="edited()" rows="2" autocomplete="off"></textarea>
+            <p class="small text-muted">Example: {{ '{"VALUE":{"value":"42","type":"u32"}}' }}. Compilation and witness serialization do not execute the contract or prove its behavior.</p>
+            <p *ngIf="error" class="text-danger" role="alert">{{ error }}</p>
 
             <div class="d-flex gap-2">
               <button class="btn btn-primary" (click)="compile()" [disabled]="compiling">
@@ -82,16 +90,19 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                 <div class="col-6">
                   <div class="p-2 border rounded bg-body">
                     <div class="text-muted small">Static Cost</div>
-                    <div class="fw-bold">{{ compiledOutput.static_cost }} WU</div>
+                    <div class="fw-bold">{{ compiledOutput.static_cost }} milliweight units</div>
                   </div>
                 </div>
                 <div class="col-6">
                   <div class="p-2 border rounded bg-body">
                     <div class="text-muted small">Memory Bound</div>
-                    <div class="fw-bold">{{ compiledOutput.memory_bound }} Bytes</div>
+                    <div class="fw-bold">{{ compiledOutput.memory_bound }} bits, {{ compiledOutput.extra_frames }} extra frames</div>
                   </div>
                 </div>
               </div>
+
+              <div class="small text-muted mb-2">Program type: {{ compiledOutput.program_type }}. Encoded program re-decoded and CMR matched.</div>
+              <div class="small mb-3">Serialized witness (Base64): <span class="font-monospace text-break">{{ compiledOutput.witness_base64 || '(empty)' }}</span></div>
 
               <div class="mb-3">
                 <div class="text-muted small mb-1">Encoded Program (Base64)</div>
@@ -114,37 +125,33 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
     .nav-link.active { background-color: var(--bs-primary); color: #fff; }
   `],
 })
-export class SimplicityToolsComponent {
-  sourceCode = `fn main(witness: u32, locktime: u32) -> bool {
-    let check_sig = jet::bip_0340_verify(witness);
-    let check_time = jet::check_lock_time_verify(locktime);
-    check_sig && check_time
-}`;
+export class SimplicityToolsComponent implements OnDestroy {
+  sourceCode = 'fn main() {\n    let value: u32 = 42;\n    assert!(jet::eq_32(value, 42));\n}';
+  argumentsJson = '{}';
+  witnessJson = '{}';
   compiling = false;
-  compiledOutput: any = null;
-
-  constructor(private cdr: ChangeDetectorRef) {}
-
+  compiledOutput: SimplicityCompiledOutput | null = null;
+  error: string | null = null;
+  private generation = 0;
+  private cancel: (() => void) | null = null;
+  constructor(private cdr: ChangeDetectorRef, private compiler: SimplicityCompilerService) {}
+  edited(): void {
+    this.generation++; this.cancel?.(); this.cancel = null;
+    this.compiling = false; this.compiledOutput = null; this.error = null;
+  }
   loadSample(): void {
-    this.sourceCode = `fn 2_of_2_vault(sig_alice: Signature, sig_bob: Signature) -> bool {
-    jet::bip_0340_verify(sig_alice) && jet::bip_0340_verify(sig_bob)
-}`;
+    this.edited();
+    this.sourceCode = 'fn main() {\n    let value: u32 = witness::VALUE;\n    assert!(jet::eq_32(value, 42));\n}';
+    this.argumentsJson = '{}';
+    this.witnessJson = '{"VALUE":{"value":"42","type":"u32"}}';
     this.cdr.markForCheck();
   }
-
-  compile(): void {
-    this.compiling = true;
-    this.compiledOutput = null;
-
-    setTimeout(() => {
-      this.compiledOutput = {
-        cmr: 'a1b2c3d4e5f67890123456789abcdef0123456789abcdef0123456789abcdef0',
-        static_cost: 248,
-        memory_bound: 1024,
-        program_base64: 'AAD///8BAgMEBQYHCAkKCwwNDg8QERITFBUWFxgZGhscHR4fICEiIyQlJicoKSorLC0uLzAxMjM0NTY3ODk6Ozw9Pj9A',
-      };
-      this.compiling = false;
-      this.cdr.markForCheck();
-    }, 400);
+  async compile(): Promise<void> {
+    this.edited(); const generation = this.generation; this.compiling = true;
+    const task = this.compiler.compile(this.sourceCode, this.argumentsJson, this.witnessJson); this.cancel = task.cancel;
+    try { const result = await task.promise; if (generation === this.generation) this.compiledOutput = result; }
+    catch (error) { if (generation === this.generation) this.error = error instanceof Error ? error.message : 'Compilation failed.'; }
+    finally { if (generation === this.generation) { this.compiling = false; this.cancel = null; this.cdr.markForCheck(); } }
   }
+  ngOnDestroy(): void { this.edited(); this.witnessJson = '{}'; }
 }

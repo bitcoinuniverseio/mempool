@@ -6,7 +6,7 @@ import { BlockExtended, TransactionExtended } from '../../../mempool.interfaces'
 
 const gbt = (height: number, txs: { txid: string; fee: number; weight: number }[]) => ({ height, previousblockhash: 'p'.repeat(64), transactions: txs.map(tx => ({ ...tx, hash: tx.txid, sigops: 1 })), coinbasevalue: 5000 });
 const block = (height: number, id: string, fees: number, txids: string[]): [BlockExtended, TransactionExtended[]] => [
-  { height, id, timestamp: 2_000_000, weight: 4000, extras: { totalFees: fees } } as unknown as BlockExtended,
+  { height, id, previousblockhash: 'p'.repeat(64), timestamp: 2_000_000, weight: 4000, extras: { totalFees: fees } } as unknown as BlockExtended,
   [{ txid: 'coinbase', vin: [{ is_coinbase: true }], fee: 0 }, ...txids.map(txid => ({ txid, vin: [{}], fee: 10 }))] as unknown as TransactionExtended[],
 ];
 
@@ -14,6 +14,31 @@ describe('template collector: real sources only', () => {
   beforeEach(() => {
     templateCollectorService.resetForTests();
     templateCollectorService.readProjection = () => null;
+  });
+
+  it('updates projection parent on a block and refuses an in-flight response for the old tip', async () => {
+    templateCollectorService.fetchCoreTemplate = async () => gbt(100, []);
+    await templateCollectorService.collectCoreTemplate(1000);
+    let resolveTemplate!: (value: ReturnType<typeof gbt>) => void;
+    templateCollectorService.fetchCoreTemplate = () => new Promise(resolve => { resolveTemplate = resolve; });
+    const pending = templateCollectorService.collectCoreTemplate(1500);
+    templateCollectorService.observeBlock(...block(100, '1'.repeat(64), 0, []), 2000);
+    resolveTemplate(gbt(100, []));
+    expect(await pending).toBeNull();
+    templateCollectorService.readProjection = () => ({ transactionIds: [], totalFees: 0, blockVSize: 0, nTx: 0 });
+    expect(templateCollectorService.collectProjection(2100)).toMatchObject({ height: 101, prev_block_hash: '1'.repeat(64) });
+    expect(templateCollectorService.compareMinedBlock('1'.repeat(64))?.template_age_seconds).toBe(1);
+  });
+
+  it('excludes a higher-fee template from a competing parent and a future observation', async () => {
+    templateCollectorService.fetchCoreTemplate = async () => gbt(100, [{ txid: 'a'.repeat(64), fee: 100, weight: 400 }]);
+    const eligible = (await templateCollectorService.collectCoreTemplate(1000))!;
+    await templateCollectorService.collectCoreTemplate(5000);
+    templateCollectorService.fetchCoreTemplate = async () => ({ ...gbt(100, [{ txid: 'b'.repeat(64), fee: 1000, weight: 400 }]), previousblockhash: 'q'.repeat(64) });
+    await templateCollectorService.collectCoreTemplate(2000);
+    const [mined, txs] = block(100, '1'.repeat(64), 100, ['a'.repeat(64)]);
+    expect(templateCollectorService.observeBlock(mined, txs, 3000)?.best_template_id).toBe(eligible.template_id);
+    expect(templateCollectorService.observeBlock({ ...mined, previousblockhash: 'r'.repeat(64) }, txs, 3000)).toBeNull();
   });
 
   it('lists the two sources this deployment has, uncollected until something was fetched', () => {

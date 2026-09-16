@@ -1,3 +1,4 @@
+import { observeStaking, slashingLabel, reconciliationLabel } from './staking-view';
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -51,8 +52,8 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                 <h2 class="h5 mt-1 mb-1">{{ p.moniker }}</h2>
                 <div class="small font-monospace text-muted text-break">{{ p.btc_pk }}</div>
               </div>
-              <span class="badge" [ngClass]="p.is_slashed ? 'bg-danger' : 'bg-success'">
-                {{ p.is_slashed ? 'SLASHED' : 'ACTIVE' }}
+              <span class="badge" [ngClass]="p.is_slashed === true ? 'bg-danger' : 'bg-secondary'">
+                {{ slashingLabel(p.is_slashed) }}
               </span>
             </div>
 
@@ -60,7 +61,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
               <div class="col-4">
                 <div class="p-2 border rounded bg-body">
                   <div class="text-muted small">Active TVL</div>
-                  <div class="fw-bold font-monospace">{{ (p.active_tvl_sat / 100000000).toFixed(2) }} BTC</div>
+                  <div class="fw-bold font-monospace">{{ p.active_tvl_sat ?? 'Unknown' }} sats</div>
                 </div>
               </div>
               <div class="col-4">
@@ -104,19 +105,12 @@ export class StakingFinalityProvidersComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef
   ) {}
 
+  readonly slashingLabel = slashingLabel;
+  readonly reconciliationLabel = reconciliationLabel;
   ngOnInit(): void {
-    this.sub = this.stakingApi.getFinalityProviders$().subscribe({
-      next: (data) => {
-        this.providers = data;
-        this.loading = false;
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        this.error = loadFailureMessage(classifyLoadFailure(err));
-        this.loading = false;
-        this.cdr.markForCheck();
-      },
-    });
+    this.sub = observeStaking(this.stakingApi.networkChanges$, () => {this.providers = [];this.loading=true;this.error=null;this.cdr.markForCheck();},
+      () => this.stakingApi.getFinalityProviders$(), data => {this.providers=data;this.loading=false;this.cdr.markForCheck();},
+      err => {this.providers=[];this.error=err?.error?.error || err?.message || loadFailureMessage(classifyLoadFailure(err));this.loading=false;this.cdr.markForCheck();});
   }
 
   ngOnDestroy(): void {

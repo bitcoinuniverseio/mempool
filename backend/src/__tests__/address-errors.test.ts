@@ -18,6 +18,11 @@ import {
  */
 
 describe('address error classification', () => {
+  it('classifies the observed Esplora UTXO cap without labeling the node offline', () => {
+    const error = {response:{status:400,data:'Too many unspent transaction outputs (>500). Contact support to raise limits.'}};
+    expect(classifyAddressError(error)).toBe('address-history-too-large');
+    expect(classifyAddressError({response:{status:400,data:'Malformed request'}})).toBe('upstream-unavailable');
+  });
   it('names an oversized history as an oversized history', () => {
     // Electrum servers refuse a history past their limit with this wording,
     // and the confirmed-status variant is the same refusal on another call.

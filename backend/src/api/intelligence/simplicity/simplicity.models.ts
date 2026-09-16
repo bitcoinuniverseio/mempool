@@ -88,7 +88,12 @@ export interface SimplicityFormalArtifact {
   source_hash: string;
   compiler_revision: string;
   libSimplicity_revision: string;
-  proof_system: 'coq' | 'lean4' | 'isabelle' | 'dafny';
+  proof_system: 'coq' | 'lean4' | 'isabelle' | 'dafny' | 'simplicity-closed-program-v1';
+  proof_profile?: 'simplicity-u32-equality-v1';
+  kernel_revision?: string;
+  source_text?: string;
+  program_bytes_hex?: string;
+  proof_source?: string;
   proof_source_hash: string;
   proof_artifact_hash: string;
   statement: string;

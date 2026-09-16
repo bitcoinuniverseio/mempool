@@ -18,7 +18,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           <span class="badge bg-primary">Noncustodial Institutional Custody</span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
-          Explore on-chain vault state machines enforcing delayed withdrawals, emergency clawbacks, and anti-theft covenants.
+          Explore vault design templates for delayed withdrawals and recovery paths. A template does not establish consensus activation, script correctness or production readiness.
         </p>
 
         <!-- Navigation Tabs -->
@@ -48,7 +48,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                 <h2 class="h5 m-0">{{ t.name }}</h2>
                 <span class="badge bg-secondary">Target: {{ t.proposal_target | uppercase }}</span>
               </div>
-              <span class="badge bg-success">Verified Template</span>
+              <span class="badge bg-secondary">Design template</span>
             </div>
 
             <p class="small text-muted mb-3">{{ t.description }}</p>
@@ -69,8 +69,8 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
             </div>
 
             <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
-              <span class="small text-success" *ngIf="t.auto_cancel_available">&check; Emergency Clawback Active</span>
-              <a [routerLink]="'/labs/vaults/designer' | relativeUrl" class="btn btn-sm btn-outline-primary">
+              <span class="small text-muted">{{ t.execution_scope }}</span>
+              <a [routerLink]="'/labs/vaults/designer' | relativeUrl" [queryParams]="{proposal:t.proposal_target,delay:t.recovery_delay_blocks}" class="btn btn-sm btn-outline-primary">
                 Open in Designer
               </a>
             </div>

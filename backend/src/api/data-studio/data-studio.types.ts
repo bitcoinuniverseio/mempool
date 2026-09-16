@@ -1,64 +1,69 @@
-/**
- * Types for the Universe Data Studio and Developer Platform.
- */
-
-export interface DatasetManifest {
-  readonly id: string;
-  readonly name: string;
-  readonly category: 'blockchain' | 'mempool' | 'protocols' | 'network';
-  readonly description: string;
-  readonly updateFrequency: 'realtime' | 'per-block' | 'hourly' | 'daily';
-  readonly rowCountEstimate: string;
-  readonly sizeEstimateBytes: string;
-  readonly supportedFormats: readonly ('parquet' | 'ndjson' | 'csv' | 'json')[];
-  readonly fields: readonly DatasetField[];
-}
-
 export interface DatasetField {
   readonly name: string;
-  readonly type: 'string' | 'integer' | 'decimal' | 'boolean' | 'timestamp' | 'bytes';
+  readonly type: 'string' | 'integer';
   readonly description: string;
   readonly primaryKey?: boolean;
 }
-
+export interface DatasetManifest {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+  updateFrequency: string;
+  rowCountEstimate: string;
+  sizeEstimateBytes: string;
+  rowCount: number;
+  sizeBytes: number;
+  snapshotId: string;
+  network: string;
+  observedAt: string;
+  supportedFormats: readonly string[];
+  fields: readonly DatasetField[];
+  exports: Record<string, { bytes: number; sha256: string; endpoint: string }>;
+  coverage: unknown;
+}
 export interface StreamManifest {
-  readonly id: string;
-  readonly name: string;
-  readonly endpoint: string;
-  readonly transport: 'sse' | 'websocket';
-  readonly description: string;
-  readonly schemaRef: string;
-  readonly messageRatePerSec: number;
+  id: string;
+  name: string;
+  endpoint: string;
+  transport: 'sse';
+  description: string;
+  schemaRef: string;
+  messageRatePerSec: number | null;
+  resumeScope: string;
 }
-
 export interface QueryRequest {
-  readonly datasetId: string;
-  readonly fields?: readonly string[];
-  readonly limit?: number;
-  readonly offset?: number;
-  readonly filters?: readonly QueryFilter[];
-  readonly orderBy?: string;
-  readonly orderDirection?: 'asc' | 'desc';
+  datasetId: string;
+  snapshotId?: string;
+  fields?: readonly string[];
+  limit?: number;
+  offset?: number;
+  filters?: readonly QueryFilter[];
+  orderBy?: string;
+  orderDirection?: 'asc' | 'desc';
 }
-
 export interface QueryFilter {
-  readonly field: string;
-  readonly operator: 'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte' | 'in';
-  readonly value: unknown;
+  field: string;
+  operator: 'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte' | 'in';
+  value: unknown;
 }
-
 export interface QueryResult {
-  readonly datasetId: string;
-  readonly rowCount: number;
-  readonly totalAvailable: number;
-  readonly executionTimeMs: number;
-  readonly columns: readonly string[];
-  readonly rows: readonly (readonly unknown[])[];
+  datasetId: string;
+  snapshotId: string;
+  network: string;
+  observedAt: string;
+  rowCount: number;
+  totalAvailable: number;
+  executionTimeMs: number;
+  columns: readonly string[];
+  rows: readonly (readonly unknown[])[];
+  nextOffset: number | null;
+  source: unknown;
 }
-
 export interface McpToolDeclaration {
-  readonly name: string;
-  readonly description: string;
-  readonly parameters: Record<string, unknown>;
-  readonly sampleCall: string;
+  name: string;
+  description: string;
+  inputSchema: Record<string, unknown>;
+  parameters: Record<string, unknown>;
+  sampleCall: string;
 }

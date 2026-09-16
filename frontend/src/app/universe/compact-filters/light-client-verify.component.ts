@@ -1,3 +1,6 @@
+import { OnDestroy } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { scanFilterRange } from './local-filter-scan';
 import { Component, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -36,20 +39,24 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
         <div class="col-12 col-lg-5">
           <div class="card p-4 bg-body-tertiary border h-100">
             <h2 class="h5 mb-3">Verification Range & Peers</h2>
+<label for="filter-verify-network">Bitcoin network</label><select id="filter-verify-network" [(ngModel)]="network" (ngModelChange)="edited()"><option value="main">Mainnet</option><option value="test">Testnet</option><option value="testnet4">Testnet4</option><option value="signet">Signet</option><option value="regtest">Regtest</option></select>
+<p>Owned-index linkage supports1–32 blocks. Independent peer agreement requires the unavailable P2P prober.</p>
+<button class="btn btn-outline-primary" type="button" (click)="verifyOwned()" [disabled]="verifying">Verify Owned Index Linkage</button>
+<p *ngIf="localHeaders !== null" role="status">{{ localHeaders }} filter headers verified locally against the owned index. Peer agreement and independent content reconstruction are unestablished.</p>
 
             <div class="mb-3">
               <label class="form-label small text-muted" for="light-client-verify-start">Start Height</label>
-              <input type="number" class="form-control" id="light-client-verify-start" [(ngModel)]="startHeight" />
+              <input type="number" class="form-control" id="light-client-verify-start" [(ngModel)]="startHeight" (ngModelChange)="edited()" />
             </div>
 
             <div class="mb-3">
               <label class="form-label small text-muted" for="light-client-verify-stop">Stop Height</label>
-              <input type="number" class="form-control" id="light-client-verify-stop" [(ngModel)]="stopHeight" />
+              <input type="number" class="form-control" id="light-client-verify-stop" [(ngModel)]="stopHeight" (ngModelChange)="edited()" />
             </div>
 
             <div class="mb-3">
               <label class="form-label small text-muted" for="light-client-verify-peers">Sampled Peers Count</label>
-              <input type="number" class="form-control" id="light-client-verify-peers" [(ngModel)]="peerCount" />
+              <input type="number" class="form-control" id="light-client-verify-peers" [(ngModel)]="peerCount" (ngModelChange)="edited()" />
             </div>
 
             <button class="btn btn-primary w-100" (click)="runVerification()" [disabled]="verifying">
@@ -121,9 +128,13 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
     .nav-link.active { background-color: var(--bs-primary); color: #fff; }
   `],
 })
-export class LightClientVerifyComponent {
-  startHeight = 859000;
-  stopHeight = 860000;
+export class LightClientVerifyComponent implements OnDestroy {
+ network='main';localHeaders:number|null=null;private request?:Subscription;
+ edited():void{this.request?.unsubscribe();this.verifying=false;this.report=null;this.localHeaders=null;this.error=null;}
+ ngOnDestroy():void{this.edited();}
+ verifyOwned():void{this.edited();if(!Number.isSafeInteger(this.startHeight)||!Number.isSafeInteger(this.stopHeight)||this.startHeight<0||this.stopHeight<this.startHeight||this.stopHeight-this.startHeight>=32){this.error='Choose1–32 consecutive nonnegative block heights.';return;}this.verifying=true;this.request=this.cfApi.getRanges$(this.startHeight,this.stopHeight,this.network).subscribe({next:ranges=>{try{this.localHeaders=scanFilterRange(ranges,new Uint8Array(),this.startHeight,this.stopHeight,this.network).total_scanned;}catch(error){this.error=error instanceof Error?error.message:'Invalid filter headers';}this.verifying=false;this.cdr.markForCheck();},error:error=>{this.error=error?.error?.error||'Owned filter index unavailable.';this.verifying=false;this.cdr.markForCheck();}});}
+  startHeight = 0;
+  stopHeight = 15;
   peerCount = 4;
   verifying = false;
   report: any = null;
@@ -135,11 +146,11 @@ export class LightClientVerifyComponent {
   ) {}
 
   runVerification(): void {
-    this.verifying = true;
+    this.edited(); this.verifying = true;
     this.report = null;
     this.error = null;
 
-    this.cfApi
+    this.request=this.cfApi
       .executeVerification$({
         start_height: this.startHeight,
         stop_height: this.stopHeight,

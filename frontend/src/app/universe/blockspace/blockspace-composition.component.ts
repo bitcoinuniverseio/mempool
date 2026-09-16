@@ -1,3 +1,4 @@
+import { blockspaceValue, blockspaceShare, blockspaceBtc } from './blockspace-format';
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -60,12 +61,12 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                 <tr *ngFor="let point of composition">
                   <td class="fw-bold">{{ point.block_height }}</td>
                   <td class="text-muted small">{{ point.timestamp_utc | date:'medium' }}</td>
-                  <td class="text-end">{{ point.total_weight | number }} WU</td>
-                  <td class="text-end fw-semibold">{{ (point.total_fee_sats / 100000000).toFixed(4) }} BTC</td>
-                  <td class="text-end text-success">{{ ((point.monetary_weight / point.total_weight) * 100).toFixed(1) }}%</td>
-                  <td class="text-end text-warning">{{ ((point.arbitrary_data_weight / point.total_weight) * 100).toFixed(1) }}%</td>
-                  <td class="text-end text-secondary">{{ ((point.consolidation_weight / point.total_weight) * 100).toFixed(1) }}%</td>
-                  <td class="text-end text-info">{{ ((point.layer2_weight / point.total_weight) * 100).toFixed(1) }}%</td>
+                  <td class="text-end">{{ value(point.total_weight, 'WU') }}</td>
+                  <td class="text-end fw-semibold">{{ btc(point.total_fee_sats) }}</td>
+                  <td class="text-end text-success">{{ share(point.monetary_weight, point.total_weight) }}</td>
+                  <td class="text-end text-warning">{{ share(point.arbitrary_data_weight, point.total_weight) }}</td>
+                  <td class="text-end text-secondary">{{ share(point.consolidation_weight, point.total_weight) }}</td>
+                  <td class="text-end text-info">{{ share(point.layer2_weight, point.total_weight) }}</td>
                 </tr>
               </tbody>
             </table>
@@ -92,18 +93,17 @@ export class BlockspaceCompositionComponent implements OnInit, OnDestroy {
     private cd: ChangeDetectorRef,
   ) {}
 
+  readonly value = blockspaceValue;
+  readonly share = blockspaceShare;
+  readonly btc = blockspaceBtc;
+
   public ngOnInit(): void {
-    this.sub = this.blockspaceApi.getComposition(48).subscribe({
-      next: (data) => {
-        this.composition = data;
-        this.loading = false;
-        this.cd.markForCheck();
-      },
-      error: (err) => {
-        this.error = err?.error?.error || err?.message || 'Failed to load composition timeseries';
-        this.loading = false;
-        this.cd.markForCheck();
-      },
+    this.sub?.unsubscribe();
+    this.sub = this.blockspaceApi.watch(() => this.blockspaceApi.getComposition(48)).subscribe(state => {
+      this.composition = state.kind === 'ready' ? state.data : [];
+      this.loading = state.kind === 'loading';
+      this.error = state.kind === 'error' ? state.error : '';
+      this.cd.markForCheck();
     });
   }
 

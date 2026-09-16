@@ -6,11 +6,16 @@ import { StateService } from '@app/services/state.service';
 export interface CashuMint {
   mint_id: string;
   mint_url: string;
-  name: string;
-  nuts_supported: number[];
-  active_keysets_count: number;
-  keysets: { id: string; unit: string; active: boolean }[];
-  last_heartbeat: string;
+  /** From the mint's NUT-06 info; null when it did not answer. */
+  name: string | null;
+  nuts_supported: number[] | null;
+  active_keysets_count: number | null;
+  keysets: { id: string; unit: string; active: boolean }[] | null;
+  info_status: 'observed' | 'unavailable';
+  keysets_status: 'observed' | 'unavailable';
+  last_heartbeat: string | null;
+  reachable: boolean;
+  error: string | null;
 }
 
 export interface FedimintFederation {

@@ -1,6 +1,9 @@
 import axios from 'axios';
 import { readFileSync } from 'fs';
 import https from 'https';
+import { WorkbenchCoreReader } from '../intelligence/workbench/workbench-core';
+import { TaprootProofVerdict, verifyTaprootProof } from './taproot-proof';
+export { TaprootProofVerdict } from './taproot-proof';
 import { LightningRfqQuote, TaprootAssetGroup, TaprootAssetItem } from './taproot-assets.types';
 
 /**
@@ -39,11 +42,13 @@ export function tapdConfigFromEnvironment(env: NodeJS.ProcessEnv = process.env):
   const origin = env.UNIVERSE_TAPD_ORIGIN?.trim();
   if (!origin) {return null;}
   let url: URL;
-  try { url = new URL(origin); } catch { throw new Error(`UNIVERSE_TAPD_ORIGIN is not a URL: ${origin}`); }
+  try { url = new URL(origin); } catch { throw new Error('UNIVERSE_TAPD_ORIGIN is not a valid URL.'); }
   if (url.protocol !== 'https:' && url.protocol !== 'http:') {throw new Error('UNIVERSE_TAPD_ORIGIN must be http(s).');}
+  if (url.username || url.password || url.pathname !== '/' || url.search || url.hash) throw new Error('UNIVERSE_TAPD_ORIGIN must be an origin without credentials, path, query or fragment.');
+  if (url.protocol === 'http:' && !['localhost', '127.0.0.1', '[::1]'].includes(url.hostname)) throw new Error('Remote tapd connections require HTTPS.');
   const macaroonHex = env.UNIVERSE_TAPD_MACAROON_HEX?.trim()
     || (env.UNIVERSE_TAPD_MACAROON_PATH ? readFileSync(env.UNIVERSE_TAPD_MACAROON_PATH).toString('hex') : '');
-  if (!/^[0-9a-f]+$/i.test(macaroonHex)) {throw new Error('UNIVERSE_TAPD_MACAROON_HEX or UNIVERSE_TAPD_MACAROON_PATH must name the tapd macaroon.');}
+  if ((!/^(?:[0-9a-f]{2})+$/i.test(macaroonHex) || macaroonHex.length > 131072)) {throw new Error('UNIVERSE_TAPD_MACAROON_HEX or UNIVERSE_TAPD_MACAROON_PATH must name the tapd macaroon.');}
   return { origin: url.origin, macaroonHex, tlsCertPath: env.UNIVERSE_TAPD_TLS_CERT_PATH?.trim() || undefined };
 }
 
@@ -53,7 +58,7 @@ export function axiosTapdHttp(config: TapdConfig): TapdHttp {
     request(method, path, body) {
       return axios.request({
         method, url: config.origin + path, data: body, timeout: TIMEOUT_MS, httpsAgent: agent, maxRedirects: 0,
-        validateStatus: () => true, maxContentLength: 16 * 1024 * 1024,
+        validateStatus: () => true, maxContentLength: 16 * 1024 * 1024, maxBodyLength: 2 * 1024 * 1024, proxy: false,
         headers: { 'Grpc-Metadata-macaroon': config.macaroonHex, Accept: 'application/json', 'Content-Type': 'application/json' },
       }).then(response => ({ status: response.status, body: response.data }));
     },
@@ -70,25 +75,13 @@ interface TapdAsset {
   prev_witnesses?: unknown[];
 }
 
-interface TapdDecodedProof {
-  decoded_proof?: { number_of_proofs?: number; asset?: TapdAsset };
-}
-
-export type TaprootProofVerdict =
-  | { valid: true; stage: 'verified'; asset_id: string; genesis_point: string; proofs_in_file: number; anchor: { txid: string; outpoint: string; block_height: number; block_hash: string } }
-  | { valid: false; stage: 'invalid-input' | 'unavailable-verifier' | 'invalid-proof' | 'asset-mismatch' | 'anchor-mismatch'; error: string };
-
-export interface TaprootAnchorReader {
-  $getBlockHash(height: number): Promise<string>;
-}
-
 export class TapdAuthority {
-  private info: { network: string; version: string } | null = null;
+
 
   constructor(
     private readonly expectedNetwork: string,
     private readonly http: TapdHttp,
-    private readonly anchors: TaprootAnchorReader,
+    private readonly anchors: WorkbenchCoreReader,
   ) {}
 
   /** @asyncUnsafe The service maps a rejection to an exact HTTP answer. */
@@ -106,9 +99,10 @@ export class TapdAuthority {
   /** @asyncUnsafe The service maps a rejection to an exact HTTP answer. */
   public async listGroups(): Promise<TaprootAssetGroup[]> {
     const body = await this.get('/v1/taproot-assets/assets/groups') as { groups?: Record<string, { assets?: { id?: string; amount?: string; tag?: string }[] }> };
-    if (!body?.groups || typeof body.groups !== 'object') {throw new TapdError('unavailable-universe', 'tapd answered ListGroups without a groups map.');}
+    if (!body?.groups || typeof body.groups !== 'object' || Array.isArray(body.groups)) {throw new TapdError('unavailable-universe', 'tapd answered ListGroups without a groups map.');}
     return Object.entries(body.groups).map(([groupKey, group]) => {
-      const assets = group?.assets ?? [];
+      if (!/^(02|03)[0-9a-f]{64}$/.test(groupKey) || !Array.isArray(group?.assets)) throw new TapdError('unavailable-universe', 'tapd returned malformed group evidence.');
+      const assets = group.assets;
       return {
         groupKey,
         name: assets[0]?.tag ?? '',
@@ -125,7 +119,12 @@ export class TapdAuthority {
     const body = await this.get('/v1/taproot-assets/rfq/quotes/peeraccepted') as { buy_quotes?: Quote[]; sell_quotes?: Quote[] };
     if (!Array.isArray(body?.buy_quotes) || !Array.isArray(body?.sell_quotes)) {throw new TapdError('unavailable-universe', 'tapd answered the RFQ read without quote arrays.');}
     const rate = (value?: Rate): string | null => value?.coefficient === undefined ? null : fixedPoint(value.coefficient, value.scale ?? 0);
-    const quote = (entry: Quote, side: 'buy' | 'sell'): LightningRfqQuote => ({
+    const quote = (entry: Quote, side: 'buy' | 'sell'): LightningRfqQuote => {
+      if (!entry || typeof entry.id !== 'string' || !entry.id || !Number.isSafeInteger(Number(entry.expiry)) || Number(entry.expiry) < 0 ||
+          !/^[0-9a-f]{64}$/.test(entry.asset_spec?.id ?? '') && !/^(02|03)[0-9a-f]{64}$/.test(entry.asset_spec?.group_pub_key ?? '')) {
+        throw new TapdError('unavailable-universe', 'tapd returned incomplete RFQ identity or expiry evidence.');
+      }
+      return ({
       quoteId: String(entry.id ?? ''),
       baseAsset: entry.asset_spec?.id || entry.asset_spec?.group_pub_key || '',
       quoteAsset: 'BTC',
@@ -133,7 +132,8 @@ export class TapdAuthority {
       bidRate: side === 'sell' ? rate(entry.bid_asset_rate) : null,
       spreadBps: null,
       validUntil: Number(entry.expiry),
-    });
+      });
+    };
     return [...body.buy_quotes.map(entry => quote(entry, 'buy')), ...body.sell_quotes.map(entry => quote(entry, 'sell'))];
   }
 
@@ -142,45 +142,14 @@ export class TapdAuthority {
    * confirm the anchor block the proof names is the block the owned reader has
    * at that height. `valid` is true only when all three agree. @asyncUnsafe */
   public async verifyProof(assetId: string, proofBase64: string): Promise<TaprootProofVerdict> {
-    const decoded = await this.post('/v1/taproot-assets/proofs/decode', { raw_proof: proofBase64, proof_at_depth: 0 }, [400, 500]);
-    if (decoded.status !== 200) {return { valid: false, stage: 'invalid-proof', error: `tapd could not decode the proof: ${describeBody(decoded.body)}` };}
-    const asset = (decoded.body as TapdDecodedProof)?.decoded_proof?.asset;
-    const genesisPoint = asset?.asset_genesis?.genesis_point;
-    const claimedId = asset?.asset_genesis?.asset_id?.toLowerCase();
-    if (!genesisPoint || !claimedId) {return { valid: false, stage: 'invalid-proof', error: 'The decoded proof names no asset genesis.' };}
-    if (claimedId !== assetId.toLowerCase()) {return { valid: false, stage: 'asset-mismatch', error: `The proof is for asset ${claimedId}, not ${assetId.toLowerCase()}.` };}
-    const verified = await this.post('/v1/taproot-assets/proofs/verify', { raw_proof_file: proofBase64, genesis_point: genesisPoint }, [400, 500]);
-    if (verified.status !== 200) {return { valid: false, stage: 'invalid-proof', error: `tapd rejected the proof file: ${describeBody(verified.body)}` };}
-    const verdict = verified.body as { valid?: boolean; decoded_proof?: TapdDecodedProof['decoded_proof'] };
-    if (verdict.valid !== true) {return { valid: false, stage: 'invalid-proof', error: 'tapd verified the proof file and found it invalid.' };}
-    const anchor = verdict.decoded_proof?.asset?.chain_anchor ?? asset.chain_anchor;
-    const height = anchor?.block_height;
-    const blockHash = anchor?.anchor_block_hash?.toLowerCase();
-    const outpoint = anchor?.anchor_outpoint;
-    if (!Number.isInteger(height) || !blockHash || !outpoint) {return { valid: false, stage: 'invalid-proof', error: 'The verified proof names no confirmed chain anchor.' };}
-    let ownedHash: string;
-    try {
-      ownedHash = String(await this.anchors.$getBlockHash(height as number)).toLowerCase();
-    } catch (error) {
-      return { valid: false, stage: 'unavailable-verifier', error: `The owned Bitcoin reader could not provide block ${height}: ${describe(error)}` };
-    }
-    if (ownedHash !== blockHash) {return { valid: false, stage: 'anchor-mismatch', error: `The proof anchors in block ${blockHash} at height ${height}; the owned ${this.expectedNetwork} chain has ${ownedHash} there.` };}
-    return {
-      valid: true, stage: 'verified', asset_id: claimedId, genesis_point: genesisPoint,
-      proofs_in_file: verdict.decoded_proof?.number_of_proofs ?? (decoded.body as TapdDecodedProof).decoded_proof?.number_of_proofs ?? 1,
-      anchor: { txid: outpoint.split(':')[0], outpoint, block_height: height as number, block_hash: blockHash },
-    };
+    return verifyTaprootProof(this.expectedNetwork, this.http, this.anchors, assetId, proofBase64);
   }
 
-  /** The daemon must be on the backend's network; checked once and remembered. @asyncUnsafe */
+  /** Refresh the daemon network for every listing operation. @asyncUnsafe */
   private async requireNetwork(): Promise<void> {
-    if (this.info) {return;}
-    const body = await this.get('/v1/taproot-assets/getinfo', true) as { network?: string; version?: string };
-    const network = typeof body?.network === 'string' ? body.network : '';
-    if (network !== this.expectedNetwork) {
-      throw new TapdError('network-mismatch', `tapd reports network "${network}" while this backend serves ${this.expectedNetwork}.`);
-    }
-    this.info = { network, version: String(body.version ?? '') };
+    const body = await this.get('/v1/taproot-assets/getinfo', true) as { network?: string };
+    const network = body?.network === 'testnet3' ? 'testnet' : body?.network;
+    if (network !== this.expectedNetwork) throw new TapdError('network-mismatch', 'tapd network differs from the configured backend network.');
   }
 
   /** @asyncUnsafe */
@@ -190,27 +159,21 @@ export class TapdAuthority {
     try {
       response = await this.http.request('GET', path);
     } catch (error) {
-      throw new TapdError('unavailable-universe', `tapd did not answer ${path}: ${describe(error)}`);
+      throw new TapdError('unavailable-universe', `tapd did not answer ${path}.`);
     }
-    if (response.status !== 200) {throw new TapdError('unavailable-universe', `tapd answered HTTP ${response.status} to ${path}: ${describeBody(response.body)}`);}
+    if (response.status !== 200) {throw new TapdError('unavailable-universe', `tapd answered HTTP ${response.status} to ${path}.`);}
     return response.body;
   }
 
-  /** @asyncUnsafe */
-  private async post(path: string, body: unknown, tolerated: number[]): Promise<{ status: number; body: unknown }> {
-    await this.requireNetwork();
-    let response: { status: number; body: unknown };
-    try {
-      response = await this.http.request('POST', path, body);
-    } catch (error) {
-      throw new TapdError('unavailable-universe', `tapd did not answer ${path}: ${describe(error)}`);
-    }
-    if (response.status !== 200 && !tolerated.includes(response.status)) {throw new TapdError('unavailable-universe', `tapd answered HTTP ${response.status} to ${path}: ${describeBody(response.body)}`);}
-    return response;
-  }
+
 }
 
 function toItem(asset: TapdAsset): TaprootAssetItem {
+  if (!asset || !/^[0-9a-f]{64}$/.test(asset.asset_genesis?.asset_id ?? '') ||
+      !['NORMAL', 'COLLECTIBLE'].includes(asset.asset_genesis?.asset_type ?? '') ||
+      !/^[0-9a-f]{64}:(0|[1-9][0-9]{0,9})$/.test(asset.asset_genesis?.genesis_point ?? '') ||
+      !/^(02|03)[0-9a-f]{64}$/.test(asset.script_key ?? '') ||
+      typeof asset.asset_genesis?.name !== 'string') throw new TapdError('unavailable-universe', 'tapd returned malformed asset evidence.');
   const genesis = asset.asset_genesis ?? {};
   const anchor = asset.chain_anchor ?? {};
   const outpoint = anchor.anchor_outpoint ?? '';
@@ -227,29 +190,23 @@ function toItem(asset: TapdAsset): TaprootAssetItem {
     anchorTxid: outpoint.split(':')[0],
     anchorOutpoint: outpoint,
     scriptKey: asset.script_key ?? '',
-    hasProofFile: true,
+    // ListAssets does not prove that this particular proof file is available or valid.
+    hasProofFile: null,
     mintTime: Number(anchor.block_timestamp ?? 0),
   };
 }
 
 function toBigInt(value: unknown): bigint {
-  try { return typeof value === 'string' || typeof value === 'number' ? BigInt(value) : 0n; } catch { return 0n; }
+  if (typeof value !== 'string' || !/^(0|[1-9][0-9]{0,19})$/.test(value) || BigInt(value) > 18446744073709551615n) throw new TapdError('unavailable-universe', 'tapd returned an invalid uint64 asset amount.');
+  return BigInt(value);
 }
 
 /** A tapd fixed-point rate as a decimal string, exact. */
 function fixedPoint(coefficient: string, scale: number): string {
+  if (typeof coefficient !== 'string' || coefficient.length > 256 || !Number.isInteger(scale) || scale < 0 || scale > 256) throw new TapdError('unavailable-universe', 'tapd returned an invalid bounded fixed-point rate.');
   const digits = coefficient.replace(/^0+(?=\d)/, '');
-  if (!/^\d+$/.test(digits) || !Number.isInteger(scale) || scale < 0) {return coefficient;}
+  if (!/^\d+$/.test(digits)) throw new TapdError('unavailable-universe', 'tapd returned an invalid rate coefficient.');
   if (scale === 0) {return digits;}
   const padded = digits.padStart(scale + 1, '0');
   return `${padded.slice(0, -scale)}.${padded.slice(-scale)}`;
-}
-
-function describe(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
-}
-
-function describeBody(body: unknown): string {
-  if (body && typeof body === 'object' && typeof (body as { message?: unknown }).message === 'string') {return (body as { message: string }).message;}
-  return typeof body === 'string' ? body.slice(0, 200) : JSON.stringify(body)?.slice(0, 200) ?? '';
 }

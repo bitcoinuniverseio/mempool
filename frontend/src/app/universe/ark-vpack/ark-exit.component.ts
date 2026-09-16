@@ -1,3 +1,4 @@
+import { ArkPackageToolComponent } from './ark-package-tool.component';
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -6,7 +7,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
 @Component({
   selector: 'app-ark-exit',
   standalone: true,
-  imports: [RelativeUrlPipe, CommonModule, RouterModule],
+  imports: [ArkPackageToolComponent, RelativeUrlPipe, CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="intelligence-page container-xl">
@@ -25,39 +26,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
       </header>
 
       <div class="card p-4 bg-body-tertiary border">
-        <h5 class="mb-3">Exit Path Verification Matrix</h5>
-        <div class="alert alert-info">
-          Unilateral exit guarantees sovereign recovery even if the ASP vanishes or halts cooperative processing.
-        </div>
-        <div class="table-responsive" tabindex="0" role="region" aria-label="Exit Path Verification Matrix, scroll horizontally" i18n-aria-label>
-          <table class="table table-hover align-middle mb-0">
-            <thead>
-              <tr>
-                <th>Stage</th>
-                <th>Transaction</th>
-                <th>Delay Requirement</th>
-                <th>Fee Acceleration</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>1</td>
-                <td>Round Anchor Spend</td>
-                <td>0 Blocks</td>
-                <td>Package RBF / V3</td>
-                <td><span class="badge bg-success">Ready</span></td>
-              </tr>
-              <tr>
-                <td>2</td>
-                <td>VTXO Leaf Claim</td>
-                <td>512 Blocks (CSV)</td>
-                <td>CPFP via Ephemeral Anchor</td>
-                <td><span class="badge bg-warning text-dark">Timelocked</span></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <app-ark-package-tool operation="exit/plan" label="Build Exit Package Plan"></app-ark-package-tool>
       </div>
     </div>
   `,

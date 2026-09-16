@@ -16,6 +16,7 @@ import { PortfolioSessionService } from '../stores/session.service';
 import { PortfolioDataStateComponent } from '../shared/data-state.component';
 import { atomicToDisplay, formatExact, maskedValue, truncateIdentifier } from '../shared/exact';
 import { ManualPositionsComponent } from '../manual/manual-positions.component';
+import { exactPercentage } from '../shared/percentage';
 import { isLocalOnlyPortfolio } from '../shared/local-source-state';
 
 type RangeKey = '24h' | '7d' | '30d' | '90d' | '1y' | 'all';
@@ -244,8 +245,9 @@ export class OverviewComponent {
       const label = holding.displayName ?? holding.ticker ?? holding.assetKey.split(':').slice(-1)[0];
       const value = holding.pricedValue;
       let share = '-';
-      if (value !== null && total !== null && total !== '0') {
-        share = `${formatExact(percent(value, total), 'en', { maximumFractionDigits: 2 })}%`;
+      const percentage = exactPercentage(value, total);
+      if (percentage !== null) {
+        share = `${formatExact(percentage, 'en', { maximumFractionDigits: 2 })}%`;
       }
       return {
         assetKey: holding.assetKey,
@@ -324,15 +326,4 @@ export class OverviewComponent {
   protected masked(): string {
     return maskedValue();
   }
-}
-
-/** Exact-string percentage with BigInt, 2 fractional digits. */
-function percent(part: string, total: string): string {
-  const scale = (value: string): bigint => BigInt(value.replace('.', ''));
-  const partScale = part.split('.')[1]?.length ?? 0;
-  const totalScale = total.split('.')[1]?.length ?? 0;
-  const scaled = (scale(part) * 10n ** BigInt(Math.max(0, totalScale - partScale) + 8)) / scale(total);
-  const whole = scaled / 100_000_000n;
-  const fraction = (scaled % 100_000_000n).toString().padStart(8, '0').replace(/0+$/, '');
-  return fraction.length === 0 ? `${whole}` : `${whole}.${fraction}`;
 }

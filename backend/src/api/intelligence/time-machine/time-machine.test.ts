@@ -30,7 +30,7 @@ describe('time machine: observed history only', () => {
 
   it('a checkpoint is the real mempool at the block, with an exact fee distribution', () => {
     pool = { a: mem('a', 100, 100), b: mem('b', 1200, 100), c: mem('c', 6000, 100) };
-    const checkpoint = timeMachineService.observeBlock(block(100, 1_000_000), [confirmed('z')]);
+    const checkpoint = timeMachineService.observeBlock(block(100, 1_000_000), [confirmed('z')], 1_000_000_000);
     expect(checkpoint).toMatchObject({ block_height: 100, mempool_tx_count: 3, mempool_vsize: 300, mempool_weight: 1200, mempool_fees_sats: 7300, median_feerate_sats_vb: 12, block_tx_count: 1, block_fees_sats: 500 });
     expect(checkpoint.fee_distribution.map(b => [b.feerate_bucket, b.count])).toEqual([['1-5 sat/vB', 1], ['6-10 sat/vB', 0], ['11-20 sat/vB', 1], ['21-50 sat/vB', 0], ['50+ sat/vB', 1]]);
     const state = timeMachineService.getStateByHash(checkpoint.state_hash);
@@ -40,16 +40,18 @@ describe('time machine: observed history only', () => {
 
   it('replays to the nearest observed checkpoint and refuses targets before coverage', () => {
     pool = { a: mem('a', 100, 100) };
-    const first = timeMachineService.observeBlock(block(100, 1_000_000), []);
+    const first = timeMachineService.observeBlock(block(100, 1_000_000), [], 1_000_000_000);
     pool = { a: mem('a', 100, 100), b: mem('b', 100, 100) };
     timeMachineService.observeMempoolChange([mem('b', 100, 100)], [], 1_000_300_000);
-    const second = timeMachineService.observeBlock(block(101, 1_000_600), []);
+    const second = timeMachineService.observeBlock(block(101, 1_000_600), [], 1_000_600_000);
     expect(timeMachineService.replayToTimestampOrHeight(undefined, 100).state_hash).toBe(first.state_hash);
-    expect(timeMachineService.replayToTimestampOrHeight(undefined, 100_000).state_hash).toBe(second.state_hash);
+    expect(() => timeMachineService.replayToTimestampOrHeight(undefined, 100_000)).toThrow(/No retained checkpoint/);
     const between = timeMachineService.replayToTimestampOrHeight(new Date(1_000_400_000).toISOString());
-    expect(between.state_hash).toBe(first.state_hash);
+    expect(between.state_hash).not.toBe(first.state_hash);
+    expect(between.total_transactions).toBe(2);
+    expect(between.total_fees_sats).toBe(200);
     expect(between.applied_events_count).toBe(1);
-    expect(between.coverage_status).toBe('partial');
+    expect(between.coverage_status).toBe('complete');
     expect(() => timeMachineService.replayToTimestampOrHeight(undefined, 99)).toThrow(/before the earliest observed checkpoint/);
     expect(() => timeMachineService.replayToTimestampOrHeight('not a date')).toThrow(/ISO-8601/);
   });
@@ -71,5 +73,25 @@ describe('time machine: observed history only', () => {
     expect(timeMachineService.getTransactionLifecycle('t').map(e => e.event_type)).toEqual(['accepted', 'replaced', 'removed']);
     expect(timeMachineService.getTransactionLifecycle('t')[1].replaced_by_txid).toBe('r'.repeat(64));
     expect(timeMachineService.getCoverage().total_events).toBe(3);
+  });
+
+  it('applies same-millisecond events after the checkpoint and removes replacements', () => {
+    pool = { a: mem('a', 100, 100) };
+    timeMachineService.observeBlock(block(100, 1000), [], 1_000_000);
+    timeMachineService.observeMempoolChange([mem('b', 300, 100)], [], 1_000_000);
+    timeMachineService.observeReplacement(mem('a', 100, 100), 'b', 1_000_001);
+    const replay = timeMachineService.replayToTimestampOrHeight(new Date(1_000_002).toISOString());
+    expect(replay).toMatchObject({ total_transactions: 1, total_fees_sats: 300, total_weight: 400, applied_events_count: 2 });
+    expect(timeMachineService.exportState(replay.state_hash)?.txids).toEqual(['b']);
+  });
+
+  it('prunes cached snapshots on reorg and retention eviction', () => {
+    const first = timeMachineService.observeBlock(block(1, 1), [], 1000);
+    for (let height = 2; height <= 300; height++) timeMachineService.observeBlock(block(height, height), [], height * 1000);
+    expect(timeMachineService.getStateByHash(first.state_hash)).toBeNull();
+    const orphan = timeMachineService.replayToTimestampOrHeight(undefined, 300).state_hash;
+    timeMachineService.observeBlock({ ...block(299, 301), id: 'f'.repeat(64) }, [], 301000);
+    expect(timeMachineService.getStateByHash(orphan)).toBeNull();
+    expect(() => timeMachineService.replayToTimestampOrHeight(undefined, 300)).toThrow(/No retained checkpoint/);
   });
 });

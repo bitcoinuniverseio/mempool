@@ -1,0 +1,322 @@
+[
+  {
+    "network": "mainnet",
+    "mode": "compact-artifact",
+    "key_type": "sapling-incoming-hex",
+    "viewing_key": "b70b7cd0ed03cbdfd7ada9502ee245b13e569d54a5719d2daa0f5f1451479204",
+    "outputs": [
+      {
+        "pool": "sapling",
+        "ephemeral_key": "ded68f05c658fcae5ae218646ff844406f84426784040d0bef2b09cb3848c4dc",
+        "commitment": "635572f572a8a1a0b7acbc0afc6d66f14a02efacde7bdf03443ed4c3e551d470",
+        "ciphertext": "8d6b27e7eff59bfba01d6588badd366ce59b4d5b0ef93bebcbf211417c56ae700ae18244bac2fb6437db01f83dc149e2786ec4ec",
+        "zip212": "off"
+      }
+    ],
+    "expected_zatoshis": "100000000"
+  },
+  {
+    "network": "mainnet",
+    "mode": "compact-artifact",
+    "key_type": "sapling-incoming-hex",
+    "viewing_key": "c518384466b26988b5109067418d192d9d6bd0d9232205d77418c240fc68a406",
+    "outputs": [
+      {
+        "pool": "sapling",
+        "ephemeral_key": "f06cbaf8cb5c84823847a120104c85ad707228adba876c6d837efd414e1c1db4",
+        "commitment": "0c87417577480b6977ba92c55425d62b03b1e5f3c3829cac49bfe515ae722945",
+        "ciphertext": "8a3f60252f4df996392e55afee0722f124b1a134e8a1fb1eaa88889e6ad489cf1ba91255ee56fa1a09db7156c3551aed2969a6ff",
+        "zip212": "off"
+      }
+    ],
+    "expected_zatoshis": "200000000"
+  },
+  {
+    "network": "mainnet",
+    "mode": "compact-artifact",
+    "key_type": "sapling-incoming-hex",
+    "viewing_key": "471c24a3dc8730e75036c0a95f3e2f7dd1be6fb93ad29592203def3041954505",
+    "outputs": [
+      {
+        "pool": "sapling",
+        "ephemeral_key": "6a92026043fa930eeb2b28fd7bbdc5a70500beb84c671136238e5efdb017d99c",
+        "commitment": "b3b4e7ab080b9b0fe473cfc5a3105e9a062a4ee49edd7095a671637e0057242b",
+        "ciphertext": "4cace52f2da82a34e30de8fb2e256befd92dd30ef78685a508e4410c79336f0af1b264848233592478d22df791ab8d4c7d323cd8",
+        "zip212": "off"
+      }
+    ],
+    "expected_zatoshis": "300000000"
+  },
+  {
+    "network": "mainnet",
+    "mode": "compact-artifact",
+    "key_type": "sapling-incoming-hex",
+    "viewing_key": "636aa964bfc23ce4b1fcf7dfc99179ddc406ff55400c9295acfc14f031c72600",
+    "outputs": [
+      {
+        "pool": "sapling",
+        "ephemeral_key": "04a10a3ea0e4b1a1d13a67bcb27de634e194b2080162619fbca7662d42b8a55f",
+        "commitment": "51fddd708cd151d3ca4717e3c99eeb8f64f104495f26de057b681063b9c9782d",
+        "ciphertext": "9db8b24a056f996d392d4d963ea38976d0f35e85d8aa847a0896164e39d8697ae180c4dcc17061d5f399e0ac4ecb5f02d4d9a3ca",
+        "zip212": "off"
+      }
+    ],
+    "expected_zatoshis": "400000000"
+  },
+  {
+    "network": "mainnet",
+    "mode": "compact-artifact",
+    "key_type": "sapling-incoming-hex",
+    "viewing_key": "67fa2bf7c67d4658243c317c0cb41fd32064dfd3709fe0dcb724f14bb01a1d04",
+    "outputs": [
+      {
+        "pool": "sapling",
+        "ephemeral_key": "5b54e5d413a807df36426d5c8c09810ac24595b152cd8941a2343c96303d246b",
+        "commitment": "c2b5f357117a4003629e05ca6f56a623a3c48aa5eb797cdd322d4857a0fba44e",
+        "ciphertext": "d7e706317c7895062d89ab5f1052155ac3d2a1e343973e5aab1cce5359c6bc111b9a7bb668b6c7d021b1233577e82baf33005cd0",
+        "zip212": "off"
+      }
+    ],
+    "expected_zatoshis": "500000000"
+  },
+  {
+    "network": "mainnet",
+    "mode": "compact-artifact",
+    "key_type": "sapling-incoming-hex",
+    "viewing_key": "ea3f1d80e4307ca73b9f37801f91fba810cc41d279fc29f564235654a2178e03",
+    "outputs": [
+      {
+        "pool": "sapling",
+        "ephemeral_key": "e0c29b435daedbc98d465f389b1b60d7dfac0e459b1e628fa0184e92f26479ca",
+        "commitment": "382c7d688bdf34b94d401c41227952a2b931c57b005c82f2c36315f61c35024e",
+        "ciphertext": "3f926f4c93ff125bd1fa04c91ef59e071433f57c606ee1bc912d54628d140740a1ab8a34516adefbe648007f86f131f4993b99ae",
+        "zip212": "off"
+      }
+    ],
+    "expected_zatoshis": "600000000"
+  },
+  {
+    "network": "mainnet",
+    "mode": "compact-artifact",
+    "key_type": "sapling-incoming-hex",
+    "viewing_key": "b5c5894943956933c0e5c12d311fc12cba58354b5c389edc03da55084f74c205",
+    "outputs": [
+      {
+        "pool": "sapling",
+        "ephemeral_key": "a52f0b5ae4a94fa88aa7cb7e5f0f343ca2fa66b39441ba662820e46a9bbba3b5",
+        "commitment": "0dd42d63ff38ee4c46651e4d1dd5227dc597339f7d704c518ef402f8cd6f3744",
+        "ciphertext": "2077df432524614c076e7793024191aac9e493f5c8a98745ae65310cfcb575564a93f1272bce900777b850497e84540cb1920385",
+        "zip212": "off"
+      }
+    ],
+    "expected_zatoshis": "700000000"
+  },
+  {
+    "network": "mainnet",
+    "mode": "compact-artifact",
+    "key_type": "sapling-incoming-hex",
+    "viewing_key": "8716c82880e13683e1bb059dd06c80c90134a96d5afca8aac2bbf68bb05f8402",
+    "outputs": [
+      {
+        "pool": "sapling",
+        "ephemeral_key": "d004997c79d007a53bf2fd2f6a66c0afd9f879b55fecdc158a901232b7884809",
+        "commitment": "0990cdb9a52e5cd1ba54d9204c26691cb036b130122126eb14129cdf0fc5183c",
+        "ciphertext": "6d3eff728a288e3559d89606a450ce14864df90323cb2f41fba268843cec777548bcc425f5ed1e6e8c75e2dae356168456391b87",
+        "zip212": "off"
+      }
+    ],
+    "expected_zatoshis": "800000000"
+  },
+  {
+    "network": "mainnet",
+    "mode": "compact-artifact",
+    "key_type": "sapling-incoming-hex",
+    "viewing_key": "99c9b4b84f4b4e350f787d1cf7051d50ecc34b1a5b20d2d2139b4af1f160e001",
+    "outputs": [
+      {
+        "pool": "sapling",
+        "ephemeral_key": "4dfc8a70b210dfd44837aa52d63bd5d81a5e40d8b4c17a2dca25a5f75fe5202e",
+        "commitment": "5690cd51a45ce89a51acbe016060f0dfee0d2fc9b897585f974a402e537fe218",
+        "ciphertext": "84d36109bdd21c678e8447f889e560ef6d07a827aaab789b46c3f9eb322eea214c20f7e9fa7f7aa5e044a4ed4cb15da9c56c32f3",
+        "zip212": "off"
+      }
+    ],
+    "expected_zatoshis": "900000000"
+  },
+  {
+    "network": "mainnet",
+    "mode": "compact-artifact",
+    "key_type": "sapling-incoming-hex",
+    "viewing_key": "db95ea8bd9f93d41b5ab2bebc91a38edd527083e2a6ef9f3c29702d5ff89ed00",
+    "outputs": [
+      {
+        "pool": "sapling",
+        "ephemeral_key": "ea6b3c985f33b2a22d0dbf7cd93019fd9e57316c85b7674954629c77dfaec066",
+        "commitment": "f4ba4ef040f80d00080d29a6b399dc4032403361e0591ed61499bc068e41ed38",
+        "ciphertext": "149a52f8f5342b44848891f885d3cd099abe805aa5091fe1710eb73502de387df3f9646722e8b85c377c822a7103347c8101e9ae",
+        "zip212": "off"
+      }
+    ],
+    "expected_zatoshis": "1000000000"
+  },
+  {
+    "network": "mainnet",
+    "mode": "compact-artifact",
+    "key_type": "orchard-incoming-hex",
+    "viewing_key": "1039d8e64a80902e105947817df3bdfb7df7030e68739f9c533a36bf5a6a807243106de9a7ec54dd36dfa70bdbd9072dbddab5e066aaeffcf9bba320d4fff712",
+    "outputs": [
+      {
+        "pool": "orchard",
+        "ephemeral_key": "8a5e132c3a0704f2456fbd777a13d6ec57655671db072a7d276ad969f5ec4517",
+        "commitment": "23757c515821cbc1843c9a457b7e6ae601add2ea10b9c86d6b317ce2f17bd921",
+        "ciphertext": "93e04874b5837c261daf1a27b783ec4865d3bb728eb161daedb8446ab38f078ea8662e4d2e9d00a39527dcde517ac3dbf9d27e3c",
+        "nullifier": "ca1feb30ca111776c0417466bd69b3d213882eef55e60b6d9e2a98e705eef327"
+      }
+    ],
+    "expected_zatoshis": "8567075990963576717"
+  },
+  {
+    "network": "mainnet",
+    "mode": "compact-artifact",
+    "key_type": "orchard-incoming-hex",
+    "viewing_key": "fd9e9a1f381cbe75cd8d6ae12fca872e9400f00272b029652e656c8f3c4bf037eeef96421b2fab2fb3ad1e0ad8502d74e6f08f0dd518f8fa822a65be2740c021",
+    "outputs": [
+      {
+        "pool": "orchard",
+        "ephemeral_key": "d29e0d001ee71e0599086504d862c7f52b0860770d8a4b42a86811ac3169858c",
+        "commitment": "59b6f3d403223d6ce43dedaee235fca95cc8b249941ccdb66f3f611cc5e9f90f",
+        "ciphertext": "1b423480bf3767f5ebfc40b8c89cc534f165c35d19c8da6c3210e952cad823a7846021c3de4a8693b71e287f4686ac0addced94e",
+        "nullifier": "c1e1595b8de7559766e5a6725f5be5742f43bf40623b7149cae2675c4db2c731"
+      }
+    ],
+    "expected_zatoshis": "9072946746592546880"
+  },
+  {
+    "network": "mainnet",
+    "mode": "compact-artifact",
+    "key_type": "orchard-incoming-hex",
+    "viewing_key": "91ee205448c98b69a33ebf2935095d79c253029e5e5dc02df58a1003d1d85c27f2def5b110fd43d715e8d59ec4ad0f41020ec660cd9733e779b51a7ac2d5a631",
+    "outputs": [
+      {
+        "pool": "orchard",
+        "ephemeral_key": "0e04d8525dd68f7ae868ca811e8833a7f47d7aadd37603ace607ee6c866bce23",
+        "commitment": "0b7459616fc69395e64436cf4ae9441d374b29049e4c86223a0383f4e0246905",
+        "ciphertext": "81562dbef7bb353a62e7c81ebe68156cb75c5c7e3d96bbcd7daff50cb0957d33dd99779f7d3d72b18deb7a697510e0135b8df483",
+        "nullifier": "c88d008484c5d79820ab68c67d083672b07f727d44d0cd14738800f825b9ff16"
+      }
+    ],
+    "expected_zatoshis": "14400879385556610631"
+  },
+  {
+    "network": "mainnet",
+    "mode": "compact-artifact",
+    "key_type": "orchard-incoming-hex",
+    "viewing_key": "f19042b9d10cc480a08c04322db6ec4e412eaa84c971828cccd733a11f253eda8ac30ba31fbc895d60b983062a5f453390793226ffd921bd64ac390703856a0b",
+    "outputs": [
+      {
+        "pool": "orchard",
+        "ephemeral_key": "86ee66a6c7d9b5c4f0e2d2a0e1561e2afa5541a724ee027fc70bb7e80a2c6098",
+        "commitment": "05b5e32076dae0948335ac3d651c6dbea64ce911423e2f2c7c1bdfa6b1414130",
+        "ciphertext": "e76781ae63841fffea3021961594c22a8720c7d8aa808bc86e71a36ad7f86ff87c07d3c650a08e23e9b54f00b40ba0159169dfca",
+        "nullifier": "a90a9b8ab1359dc96bdae90e5274788cb0c426eff260436185398bfff50e9237"
+      }
+    ],
+    "expected_zatoshis": "17936016275122962426"
+  },
+  {
+    "network": "mainnet",
+    "mode": "compact-artifact",
+    "key_type": "orchard-incoming-hex",
+    "viewing_key": "0bb56c49c0632d4cc7e48551db46428f1b1a52661e07e0c3bcc23174ccbbbda1fa1924f416cd48390e2b11c6e78256d4c4c5641acad9a20c24fbe6cb4ee78125",
+    "outputs": [
+      {
+        "pool": "orchard",
+        "ephemeral_key": "89fd2cf37956baaf1127bb0e33400109db0350f4abb7d6d81fa5848e1bb16926",
+        "commitment": "ea7c13f7e1205e78c8ce4ee4fdcdb7ee76928ddf6dbe1b2d6f6981b7c9657910",
+        "ciphertext": "3f4e9b1856e7bfba7abbc94a72b4abb1d84626793077e837daf33fffa27c7a33978a5432510d993c7d9224c097acc525881c7608",
+        "nullifier": "8d67e3ba4dbc9da5e83823a12311639651a4ffa95f27c1830d91d8b73cfbf131"
+      }
+    ],
+    "expected_zatoshis": "12119135386131850622"
+  },
+  {
+    "network": "mainnet",
+    "mode": "compact-artifact",
+    "key_type": "orchard-incoming-hex",
+    "viewing_key": "ebd4806d81254989fadba8cd58967d6fd87383bc093863d5abfcddd38f1539fab7e5d4f0619167b8d482cb548cb55983496f77d3dcaff56e32410bfec1f26811",
+    "outputs": [
+      {
+        "pool": "orchard",
+        "ephemeral_key": "cfe03eb2d33676b773837da839172d33333188c9dfef05c832a25c86d3bf0e8f",
+        "commitment": "18fcbd40acf1a7f4d609879a5f5e3b3970094ff8be8418607016c6a697f89c20",
+        "ciphertext": "be1dffd3370c675669cc9ae1d0302d7f906d2523093c24f4257a83bc4f36623a082ce6eb4521957191d57e1411ede71d44b56c57",
+        "nullifier": "9a09e472e8e996fcc30ed5237208dbb00171320e6bea439186009dad2138ab29"
+      }
+    ],
+    "expected_zatoshis": "9624581763228770449"
+  },
+  {
+    "network": "mainnet",
+    "mode": "compact-artifact",
+    "key_type": "orchard-incoming-hex",
+    "viewing_key": "c37c7dbbe551d9d3b1a496887db2e842dc945201f40810df4d763932ed5c76398b3573fe23f1e8b7e79f1c1695c097c124ff1f7d6e61f2c58f1439a756969d19",
+    "outputs": [
+      {
+        "pool": "orchard",
+        "ephemeral_key": "8fbeb6b3038e6949916a2c060ef9a4b1fef13ace2fee0025da32c36d231a6134",
+        "commitment": "1d51ea92fa43550a0eddea236e17a01693c22d8dd81c9c9ec876a24e67d4930b",
+        "ciphertext": "77c6efc8b542a707c0a5cf5ce3f3b96de191957c9fa6e9bb4b8d899e1f19e020ba7bb3fef16781c88cc5d44a5ef8173147dc3d1b",
+        "nullifier": "543ea71156c9a6f8041fa77ec1c5af90288f2720f13ff093c686266b92d7a024"
+      }
+    ],
+    "expected_zatoshis": "11137853725062838288"
+  },
+  {
+    "network": "mainnet",
+    "mode": "compact-artifact",
+    "key_type": "orchard-incoming-hex",
+    "viewing_key": "74a8411a20bc3c53f7e7abb9316c442b4b09cf88bbed4a90b92f5a1ced93162bc337346720ec0cd0ea735d9e323f20db778ad18a84c79ee6287799ef02764107",
+    "outputs": [
+      {
+        "pool": "orchard",
+        "ephemeral_key": "fa19a1527b76048ff37fa4f82789fe80b0cdd35d5da9c2ec3fe3043805c06123",
+        "commitment": "be43ee84707075ac4808d0975407c02736d76664f4e7aece01d9cc68324ae904",
+        "ciphertext": "2d404a6881a6ee760cb53b9cc2715ca76a3a2fc9693b1abbcdc75cb6d6c36ecf84d693672c53ced8798cc8f1e53b8a9de7bbb5e8",
+        "nullifier": "bddae8dff1205e04968fae1fd9be51d825f5d8781d933d0f5bce9ca83ee8ed20"
+      }
+    ],
+    "expected_zatoshis": "7387862906040043846"
+  },
+  {
+    "network": "mainnet",
+    "mode": "compact-artifact",
+    "key_type": "orchard-incoming-hex",
+    "viewing_key": "73a25eba9bd7a8ed2b5b1b8d5a056bde8d05e6a28067b3845791bebfa7ae2acd36326fe627bee80e3292e0e5132de16ca4f81e5a6fc09c95ff13b52e96b7890f",
+    "outputs": [
+      {
+        "pool": "orchard",
+        "ephemeral_key": "e4769586304a6a9b3a2aef3af58b97dac2cc4aeb389f68c12887731e0e12bc1e",
+        "commitment": "6d2997d1ce0a949a63700f461b5712aeeb43d45504e35bda16529777c74d191b",
+        "ciphertext": "7229a0a56a144b042c1ead9180ac54dac6c55cf4c22fbe7cde99960bc620d4dd60e4bf18a0ea7ad9093bcd3ff6d1611c565f88e7",
+        "nullifier": "c279fa9d1c841193d332f8ccf4d0b1e45601a8af6676d762fba7313345893514"
+      }
+    ],
+    "expected_zatoshis": "17209482587585417762"
+  },
+  {
+    "network": "mainnet",
+    "mode": "compact-artifact",
+    "key_type": "orchard-incoming-hex",
+    "viewing_key": "a4d79c819a6c5e0167fca98ce2629815f9bac926b62718cfbe5045d92dd71cd33675d556e0771e40cc3d618d9bda132f13953d82432e81594a971e98b0714039",
+    "outputs": [
+      {
+        "pool": "orchard",
+        "ephemeral_key": "959bea8e11968b0f343c04cd6d5016fcd433907536a246ba1c5d3e8897f3231c",
+        "commitment": "6aba28105bc072c52ab8a314797ff86666dfb7cd8a2ae17c585fb7b6515b971c",
+        "ciphertext": "7b598778a7284d52a747774c54bd9257b3f17af13ecc72c0e3cd95ebfafaa37d16651553dd27f01c9cf24b62d7dcfd52fa4b2b3b",
+        "nullifier": "ea3844759a9a1cc528b295ce70137a85f9f08e41a5c7c1cac155a669a318533e"
+      }
+    ],
+    "expected_zatoshis": "7122345086698755501"
+  }
+]

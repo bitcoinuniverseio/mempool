@@ -1,13 +1,12 @@
 import config from '../../config';
 import axios, { isAxiosError } from 'axios';
 import http from 'http';
-import https from 'https';
 import { AbstractBitcoinApi, HealthCheckHost } from './bitcoin-api-abstract-factory';
 import { IEsploraApi } from './esplora-api.interface';
 import logger from '../../logger';
 import { Common } from '../common';
 import { SubmitPackageResult, TestMempoolAcceptResult } from './bitcoin-api.interface';
-import os from 'os';
+import { isFirstPartyEndpoint } from '../capabilities.preflight';
 import { bitcoinCoreApi } from './bitcoin-api-factory';
 interface FailoverHost {
   host: string,
@@ -35,7 +34,7 @@ interface FailoverHost {
   }
 }
 
-class FailoverRouter {
+export class FailoverRouter {
   activeHost: FailoverHost;
   fallbackHost: FailoverHost;
   maxSlippage: number = config.ESPLORA.MAX_BEHIND_TIP ?? (Common.isLiquid() ? 8 : 2);
@@ -45,27 +44,27 @@ class FailoverRouter {
   gitHashInterval: number = 60000; // 1 minute
   pollInterval: number = 60000; // 1 minute
   pollTimer: NodeJS.Timeout | null = null;
-  pollConnection = axios.create();
-  localHostname: string = 'localhost';
+  pollConnection = axios.create({ maxRedirects: 0, proxy: false, maxContentLength: 2 * 1024 * 1024 });
   requestConnection = axios.create({
-    httpAgent: new http.Agent({ keepAlive: true })
+    httpAgent: new http.Agent({ keepAlive: true }),
+    maxRedirects: 0,
+    proxy: false,
   });
 
   constructor() {
-    try {
-      this.localHostname = os.hostname();
-    } catch (e) {
-      logger.warn('Failed to set local hostname, using "localhost"');
+    for (const endpoint of [config.ESPLORA.UNIX_SOCKET_PATH || config.ESPLORA.REST_API_URL, ...(config.ESPLORA.FALLBACK || [])]) {
+      if (typeof endpoint !== 'string' || !isFirstPartyEndpoint(endpoint)) throw new Error('ESPLORA requires operated loopback endpoints or absolute Unix socket paths.');
     }
     // setup list of hosts
     this.hosts = (config.ESPLORA.FALLBACK || []).map(domain => {
       return {
         host: domain,
+        socket: domain.startsWith('/'),
         checked: false,
         rtts: [],
         rtt: Infinity,
         failures: 0,
-        publicDomain: 'https://' + this.extractPublicDomain(domain),
+        publicDomain: this.metadataOrigin(domain),
         hashes: {
           lastUpdated: 0,
         },
@@ -79,7 +78,7 @@ class FailoverRouter {
       socket: !!config.ESPLORA.UNIX_SOCKET_PATH,
       preferred: true,
       checked: false,
-      publicDomain: `http://${this.localHostname}`,
+      publicDomain: this.metadataOrigin(config.ESPLORA.UNIX_SOCKET_PATH || config.ESPLORA.REST_API_URL),
       hashes: {
         lastUpdated: 0,
       },
@@ -258,7 +257,7 @@ class FailoverRouter {
       const response = await this.pollConnection.get<string>(
         url, {
           timeout: config.ESPLORA.FALLBACK_TIMEOUT,
-          headers: Common.isLiquid() ? { 'Host': 'liquid.network' } : undefined
+          socketPath: host.socket ? host.host : undefined
         }
       );
       const match = response.data.match(/GIT_COMMIT_HASH\s*=\s*['"](.*?)['"]/);
@@ -276,33 +275,8 @@ class FailoverRouter {
 
   private async $updateHybridGitHash(host: FailoverHost): Promise<void> {
     try {
-      const response: string = await new Promise((resolve, reject) => {
-        const req = https.request({
-          hostname: host.publicDomain.replace('https://', '').replace('http://', ''),
-          port: 443,
-          path: '/en-US/resources/config.js',
-          method: 'GET',
-          headers: {
-            // The failover host answers for its own domain; upstream hardcoded
-            // its hosted domain here, which is not this deployment's.
-            'Host': host.publicDomain.replace('https://', '').replace('http://', '')
-          },
-          timeout: config.ESPLORA.FALLBACK_TIMEOUT,
-        }, (res) => {
-          let data = '';
-          res.on('data', chunk => data += chunk);
-          res.on('end', () => {
-            if (res.statusCode === 200) {
-              resolve(data);
-            } else {
-              reject(new Error(`Failed to get hybrid git hash: ${res.statusCode}`));
-            }
-          });
-        });
-        req.on('error', (e) => {
-          reject(e);
-        });
-        req.end();
+      const { data: response } = await this.pollConnection.get<string>(host.publicDomain + '/en-US/resources/config.js', {
+        timeout: config.ESPLORA.FALLBACK_TIMEOUT, socketPath: host.socket ? host.host : undefined,
       });
       const match = response.match(/GIT_COMMIT_HASH_MEMPOOL_SPACE\s*=\s*['"](.*?)['"]/);
       if (match && match[1]?.length) {
@@ -319,7 +293,7 @@ class FailoverRouter {
       const response = await this.pollConnection.get<any>(
         url, {
           timeout: config.ESPLORA.FALLBACK_TIMEOUT,
-          headers: Common.isLiquid() ? { 'Host': 'liquid.network' } : undefined
+          socketPath: host.socket ? host.host : undefined
         }
       );
       if (response.data?.gitCommit) {
@@ -342,7 +316,7 @@ class FailoverRouter {
       const response = await this.pollConnection.get<any>(
         url, {
           timeout: config.ESPLORA.FALLBACK_TIMEOUT,
-          headers: Common.isLiquid() ? { 'Host': 'liquid.network' } : undefined
+          socketPath: host.socket ? host.host : undefined
         }
       );
       if (response.data?.gitHash) {
@@ -353,19 +327,10 @@ class FailoverRouter {
     }
   }
 
-  // returns the public mempool domain corresponding to an esplora server url
-  // (a bit of a hack to avoid manually specifying frontend & backend URLs for each esplora server)
-  private extractPublicDomain(url: string): string {
-    // force the url to start with a valid protocol
-    const urlWithProtocol = url.startsWith('http') ? url : `https://${url}`;
-    // parse as URL and extract the hostname
-    try {
-      const parsed = new URL(urlWithProtocol);
-      return parsed.hostname;
-    } catch (e) {
-      // fallback to the original url
-      return url;
-    }
+  // Build metadata must come from the configured host too. Never derive a
+  // public domain or discard a tunnel's scheme/port to guess another service.
+  private metadataOrigin(endpoint: string): string {
+    return endpoint.startsWith('/') ? 'http://api' : new URL(endpoint).origin;
   }
 
   private async $query<T>(method: 'get'| 'post', path, data: any, responseType = 'json', host = this.activeHost, retry: boolean = true): Promise<T> {

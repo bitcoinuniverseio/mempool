@@ -11,7 +11,7 @@ import { formatFeerate } from './cluster-format';
  * "rejected" without saying by how much is a headline nobody can act on.
  */
 
-/** Most transactions a node will relay as one package. */
+/** Per-request transaction bound of this simulator and its Core RPC call. */
 export const MAX_PACKAGE_SIZE = 25;
 
 export interface SplitResult {
@@ -37,7 +37,7 @@ export function splitRawTransactions(text: string): SplitResult {
   if (parts.length > MAX_PACKAGE_SIZE) {
     return {
       rawTxs: [],
-      error: $localize`:@@mempool.simulate.too-many:That is ${parts.length} transactions. A node relays at most ${MAX_PACKAGE_SIZE} as one package.`,
+      error: $localize`:@@mempool.simulate.too-many:That is ${parts.length} transactions. This simulator accepts at most ${MAX_PACKAGE_SIZE} per request.`,
     };
   }
   for (const part of parts) {

@@ -100,12 +100,12 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                 </td>
                 <td>
                   <span class="badge bg-success" *ngIf="node.transport_v2">BIP324 v2</span>
-                  <span class="badge bg-secondary" *ngIf="!node.transport_v2">v1 Standard</span>
-                  <span class="badge bg-info ms-1" *ngIf="node.addrv2">addrv2</span>
+                  <span class="badge bg-secondary" *ngIf="node.transport_v2 === false">v1 Standard</span>
+                  <span class="badge bg-info ms-1" *ngIf="node.addrv2 === true">addrv2</span><span class="text-muted" *ngIf="node.transport_v2 === null">Transport unknown</span>
                 </td>
                 <td><code>{{ node.user_agent }}</code></td>
                 <td>{{ node.start_height | number }}</td>
-                <td>{{ node.latency_ms >= 0 ? node.latency_ms + ' ms' : 'n/a' }}</td>
+                <td>{{ node.latency_ms !== null && node.latency_ms >= 0 ? node.latency_ms + ' ms' : 'n/a' }}</td>
                 <td>
                   <span class="badge bg-secondary me-1" *ngIf="node.country_code">{{ node.country_code }}</span>
                   <span class="text-muted small" *ngIf="node.asn">AS{{ node.asn }}</span>
@@ -173,7 +173,7 @@ export class GlobalNetworkNodesComponent implements OnInit, OnDestroy {
     const q = this.searchQuery.toLowerCase().trim();
     this.filteredNodes = this.nodes.filter(node => {
       if (this.transportFilter === 'v2' && !node.transport_v2) return false;
-      if (this.transportFilter === 'v1' && node.transport_v2) return false;
+      if (this.transportFilter === 'v1' && node.transport_v2 !== false) return false;
       if (!q) return true;
       return (
         node.endpoint_id.toLowerCase().includes(q) ||

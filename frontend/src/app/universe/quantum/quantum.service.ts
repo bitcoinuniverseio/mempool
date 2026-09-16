@@ -59,6 +59,9 @@ export interface QuantumOverview {
 export class QuantumApiService {
   private apiBaseUrl = '';
 
+  get networkChanged$(): Observable<string> { return this.stateService.networkChanged$; }
+  get network(): string { return this.stateService.network; }
+
   constructor(
     private httpClient: HttpClient,
     private stateService: StateService

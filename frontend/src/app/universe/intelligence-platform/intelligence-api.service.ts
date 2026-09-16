@@ -197,6 +197,13 @@ export class IntelligenceApiService {
     });
   }
 
+  getSavedQueryPage$(cursor?: string): Observable<any> {
+    return this.httpClient.get<any>(this.apiBaseUrl + '/api/v1/intelligence/query/saved?limit=100' + (cursor ? '&cursor=' + encodeURIComponent(cursor) : ''), this.ownerHeaders);
+  }
+  saveQuery$(title: string, sql: string): Observable<any> {
+    return this.httpClient.post<any>(this.apiBaseUrl + '/api/v1/intelligence/query/saved', { title, sql }, this.ownerHeaders);
+  }
+
   getQuerySchema$(): Observable<any> {
     return this.httpClient.get<any>(`${this.apiBaseUrl}/api/v1/intelligence/query/schema`);
   }

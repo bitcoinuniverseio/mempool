@@ -3,6 +3,7 @@ import { tapLeafHash } from '@scure/btc-signer/payment.js';
 import { concatBytes, compareBytes, equalBytes, PubT, sha256x2, tagSchnorr, taprootTweakPubkey, validatePubkey } from '@scure/btc-signer/utils.js';
 import { decodePsbtInput } from '../workbench/psbt-inspect';
 import { SwapRecoveryPlan } from './swaps.service';
+import { ripemd160 } from '@noble/hashes/ripemd160';
 
 const allowed = new Set(['chain', 'network', 'swap_id', 'swap_type', 'protocol_id', 'protocol_revision',
   'schema_version', 'provider_id', 'created_at', 'expires_at', 'preimage_hash', 'timeout_height',
@@ -15,6 +16,10 @@ export function publicSwapPackage(raw: string, network: string): Record<string, 
   try { pkg = JSON.parse(raw); } catch { throw new Error('The package is not valid JSON.'); }
   if (!pkg || typeof pkg !== 'object' || Array.isArray(pkg)) throw new Error('The package must be a JSON object.');
   if (Object.keys(pkg).some(key => !allowed.has(key))) throw new Error('This form accepts public contract fields only. Remove private backup fields, invoices, preimages, keys used for spending and caller height.');
+  const numbers = new Set(['timeout_height','expected_amount_sats','lockup_vout','fee_sats']);
+  if (Object.entries(pkg).some(([key,value]) => numbers.has(key) ? !Number.isSafeInteger(value) || Number(value)<0 : typeof value!=='string')) {
+    throw new Error('Public contract fields must contain their documented scalar strings or integer amounts. Nested objects and arrays are not accepted.');
+  }
   if (pkg.chain !== 'bitcoin' || pkg.network !== network) throw new Error('Package chain/network must match the selected page.');
   return pkg;
 }
@@ -26,6 +31,7 @@ export function checkRecoveryArtifact(plan: SwapRecoveryPlan, pkg: Record<string
       source.chain !== 'bitcoin' || source.network !== network || !source.source_id ||
       !/^[0-9a-f]{64}$/.test(source.block_hash) || !Number.isSafeInteger(source.block_height) ||
       source.block_height < pkg.timeout_height || !Number.isFinite(Date.parse(source.observed_at))) throw new Error('Recovery artifact is missing its verified mature source context.');
+  if (plan.current_block_height !== source.block_height || plan.blocks_until_refund !== 0 || plan.timeout_height !== pkg.timeout_height) throw new Error('Displayed recovery maturity disagrees with the checked source context.');
   const tx = Transaction.fromPSBT(decodePsbtInput(plan.unsigned_recovery_psbt), { allowUnknownInputs: true, allowUnknownOutputs: true });
   const net = network === 'mainnet' ? NETWORK : network === 'regtest' ? { ...TEST_NETWORK, bech32: 'bcrt' } : TEST_NETWORK;
   if (tx.inputsLength !== 1 || tx.outputsLength !== 1 || tx.version !== 2 || tx.lockTime !== pkg.timeout_height) throw new Error('PSBT transaction structure does not match the requested refund.');
@@ -39,15 +45,22 @@ export function checkRecoveryArtifact(plan: SwapRecoveryPlan, pkg: Record<string
       output.amount !== BigInt(pkg.expected_amount_sats) - BigInt(pkg.fee_sats) || tx.getOutputAddress(0, net) !== pkg.destination_address) {
     throw new Error('Independent PSBT decode disagrees with the intended outpoint, destination, value, fee or unsigned script path.');
   }
+  if (plan.recoverable_value_sats !== Number(output.amount) || plan.estimated_miner_fee_sats !== Number(input.witnessUtxo.amount - output.amount!)) {
+    throw new Error('Displayed refund amount or fee disagrees with the independently decoded PSBT.');
+  }
   const publicKey = (value: unknown): Uint8Array => {
     if (typeof value !== 'string' || !/^[0-9a-fA-F]{64}$/.test(value)) throw new Error('Refund contract requires x-only public keys.');
     return validatePubkey(Uint8Array.from(value.match(/../g)!, byte => parseInt(byte, 16)), PubT.schnorr);
   };
   const refundKey = publicKey(pkg.refund_public_key), internalKey = publicKey(pkg.internal_key);
+  const claimKey = publicKey(pkg.claim_public_key);
+  if (pkg.protocol_id !== 'boltz_submarine_v2' || !['submarine', 'reverse'].includes(pkg.swap_type) || typeof pkg.preimage_hash !== 'string' || !/^[0-9a-fA-F]{64}$/.test(pkg.preimage_hash)) throw new Error('Unsupported or incomplete two-leaf contract.');
+  const preimageHash = Uint8Array.from(pkg.preimage_hash.match(/../g)!, (byte: string) => parseInt(byte, 16));
+  const claim = Script.encode([...(pkg.swap_type === 'reverse' ? ['SIZE' as const, 32, 'EQUALVERIFY' as const] : []), 'HASH160', ripemd160(preimageHash), 'EQUALVERIFY', claimKey, 'CHECKSIG']);
   const refund = Script.encode([refundKey, 'CHECKSIGVERIFY', pkg.timeout_height, 'CHECKLOCKTIMEVERIFY']);
   const [control, leaf] = input.tapLeafScript[0];
   if (!equalBytes(leaf, concatBytes(refund, Uint8Array.of(0xc0))) ||
-      !equalBytes(control.internalKey, internalKey) || (control.version & 0xfe) !== 0xc0 || control.merklePath.length !== 1) {
+      !equalBytes(control.internalKey, internalKey) || (control.version & 0xfe) !== 0xc0 || control.merklePath.length !== 1 || !equalBytes(control.merklePath[0], tapLeafHash(claim))) {
     throw new Error('PSBT refund script or control path does not match the supported two-leaf contract.');
   }
   const merkleRoot = tagSchnorr('TapBranch', ...[tapLeafHash(refund), control.merklePath[0]].sort(compareBytes));
@@ -56,9 +69,11 @@ export function checkRecoveryArtifact(plan: SwapRecoveryPlan, pkg: Record<string
   const actualScript = OutScript.encode({ type: 'tr', pubkey: outputKey });
   const prevout = Transaction.fromRaw(RawTx.encode(input.nonWitnessUtxo), { allowUnknownOutputs: true, allowUnknownInputs: true });
   const previousTxid = Array.from(sha256x2(prevout.toBytes(true, false)).reverse(), byte => byte.toString(16).padStart(2, '0')).join('');
+  const previousOutput = prevout.getOutput(pkg.lockup_vout);
   if ((control.version & 1) !== parity || !equalBytes(expectedScript, actualScript) ||
       !equalBytes(input.witnessUtxo.script, expectedScript) || !input.tapInternalKey || !equalBytes(input.tapInternalKey, internalKey) ||
-      !input.tapMerkleRoot || !equalBytes(input.tapMerkleRoot, merkleRoot) || previousTxid !== pkg.lockup_transaction) {
+      !input.tapMerkleRoot || !equalBytes(input.tapMerkleRoot, merkleRoot) || previousTxid !== pkg.lockup_transaction ||
+      previousOutput.amount !== input.witnessUtxo.amount || !previousOutput.script || !equalBytes(previousOutput.script, input.witnessUtxo.script)) {
     throw new Error('PSBT prevout, internal key or Taproot commitment does not match the intended lockup.');
   }
 }

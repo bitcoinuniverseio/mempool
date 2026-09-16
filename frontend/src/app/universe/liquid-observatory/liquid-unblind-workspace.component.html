@@ -21,22 +21,27 @@
   <section class="panel">
     <h2>Output Unblinding Form</h2>
     <p>
-      Provide your private blinding key or unblinding nonce to decrypt an output's value commitment and verify its rangeproof.
+      Provide a private blinding key, serialized Elements output, its witness proofs and ordered input asset generators. All cryptography runs locally. Proof validity is relative to the supplied input generators; this does not verify a transaction's chain history.
     </p>
 
     <div class="form-group">
       <label for="blindingKeyInput">Blinding Private Key (Hex)</label>
-      <input id="blindingKeyInput" type="password" [(ngModel)]="blindingKey" placeholder="64-character hex key..." />
+      <input id="blindingKeyInput" type="password" [(ngModel)]="blindingKey" (ngModelChange)="edited()" [disabled]="verifying" autocomplete="off" placeholder="64-character hex key..." />
     </div>
 
     <div class="form-group">
-      <label for="outputHexInput">Confidential Output / ScriptPubKey Hex</label>
-      <input id="outputHexInput" type="text" [(ngModel)]="outputHex" placeholder="Raw output hex or outpoint txid:vout..." />
+      <label for="outputHexInput">Serialized Output Hex (asset, value, nonce, compact-size script)</label>
+      <textarea id="outputHexInput" [(ngModel)]="outputHex" (ngModelChange)="edited()" [disabled]="verifying" spellcheck="false" rows="3"></textarea>
     </div>
+    <div class="form-group"><label for="rangeproofInput">Rangeproof Hex</label><textarea id="rangeproofInput" [(ngModel)]="rangeproofHex" (ngModelChange)="edited()" [disabled]="verifying" rows="3" spellcheck="false"></textarea></div>
+    <div class="form-group"><label for="surjectionproofInput">Surjection Proof Hex</label><textarea id="surjectionproofInput" [(ngModel)]="surjectionproofHex" (ngModelChange)="edited()" [disabled]="verifying" rows="3" spellcheck="false"></textarea></div>
+    <div class="form-group"><label for="generatorsInput">Ordered Input Asset Generators (33-byte hex, separated by whitespace; include issuance generators in Elements order)</label><textarea id="generatorsInput" [(ngModel)]="inputGenerators" (ngModelChange)="edited()" [disabled]="verifying" rows="3" spellcheck="false"></textarea></div>
+    <p *ngIf="error" role="alert" class="text-danger">{{ error }}</p>
 
-    <button type="button" class="btn-primary" (click)="unblind()" [disabled]="verifying || !blindingKey.trim()">
+    <button type="button" class="btn-primary" (click)="unblind()" [disabled]="verifying || !blindingKey.trim() || !outputHex.trim() || !rangeproofHex.trim() || !surjectionproofHex.trim() || !inputGenerators.trim()">
       {{ verifying ? 'Verifying Rangeproofs...' : 'Unblind Locally' }}
     </button>
+    <button type="button" (click)="clear()">Clear Workspace</button>
   </section>
 
   <ng-container *ngIf="result$ | async as res">
@@ -45,8 +50,8 @@
       <div class="metrics-grid">
         <div class="metric-card">
           <span class="metric-label">Decrypted Amount</span>
-          <span class="metric-value">{{ (Number(res.valueSat) / 1e8).toFixed(4) }} L-BTC</span>
-          <span class="metric-sub">{{ res.valueSat }} satoshis</span>
+          <span class="metric-value">{{ res.valueSat }}</span>
+          <span class="metric-sub">Exact asset base units</span>
         </div>
         <div class="metric-card">
           <span class="metric-label">Rangeproof</span>
@@ -56,7 +61,7 @@
         <div class="metric-card">
           <span class="metric-label">Surjectionproof</span>
           <span class="metric-value text-success">Valid</span>
-          <span class="metric-sub">Asset commitment verified</span>
+          <span class="metric-sub">Verified against supplied input generators</span>
         </div>
       </div>
 
