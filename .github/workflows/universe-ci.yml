@@ -181,9 +181,9 @@ jobs:
         working-directory: backend
         run: npm run lint
 
-      # Two unit suites drive native engines rather than mocks: the Go
-      # transaction script verifier (message signatures) and the Rust
-      # closed-program proof checker. A clean checkout carries their sources
+      # Three unit suites drive native engines rather than mocks: the Go
+      # transaction script verifier (message signatures), the Rust
+      # closed-program proof checker and the pinned BOLT12 offer decoder. A clean checkout carries their sources
       # only, so they are built here, bounded, before the tests that need them.
       - name: Setup Go
         uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
@@ -196,6 +196,7 @@ jobs:
           set -euo pipefail
           (cd rust/script-trace && go build -o script-trace .)
           (cd tools/simplicity-proof-checker && cargo build --release --locked)
+          (cd tools/bolt12-proof && cargo build --release --locked && cp target/release/universe-bolt12-proof bin/universe-bolt12-proof)
 
       - name: Unit tests
         working-directory: backend
