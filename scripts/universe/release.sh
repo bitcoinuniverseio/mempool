@@ -441,10 +441,11 @@ PY
 # left. A service that has to be reachable from another host is added to
 # PUBLIC_LISTENERS deliberately, with a reason, rather than discovered in
 # production.
-# Signet P2P is intentionally public, like mainnet P2P. The adapter on
-# 38385 and gateway ingress on 8099 are not globally public exceptions:
-# their binding and peer filtering must be proved before permitting them.
+# Signet P2P is intentionally public, like mainnet P2P. The adapter is
+# permitted only while its IPv4 INPUT firewall drop rule is present. Gateway
+# ingress is permitted only on the declared NetBird address, never wildcard.
 PUBLIC_LISTENERS="22 8333 38333 50001"
+NETBIRD_GATEWAY_INGRESS="100.124.130.242:8099"
 
 gate_private_listeners() {
   command -v ss >/dev/null 2>&1 || fail "ss is not available, so the listener gate cannot run"
@@ -462,23 +463,28 @@ gate_private_listeners() {
   local exposed
   exposed=$(ss -ltn 2>/dev/null     | awk 'NR > 1 { print $4 }'     | grep -vE '^(127\.|\[::1\]|172\.17\.0\.1:|100\.124\.130\.242:53$)'     | sed -E 's/.*:([0-9]+)$/\1/'     | sort -u)
 
+  local endpoints
+  endpoints=$(ss -ltnH 2>/dev/null | awk '$1 == "LISTEN" { print $4 }' | grep -vE '^(127\.|\[::1\]|172\.17\.0\.1:|100\.124\.130\.242:53$)' || true)
   local unexpected=""
-  local port
-  for port in $exposed; do
-    printf '%s
-' "$allowed" | grep -qx "$port" || unexpected="$unexpected $port"
+  local endpoint port
+  for endpoint in $endpoints; do
+    port=${endpoint##*:}
+    if printf '%s\n' "$allowed" | grep -qx "$port"; then continue; fi
+    if [ "$endpoint" = "$NETBIRD_GATEWAY_INGRESS" ]; then continue; fi
+    if [ "$endpoint" = "0.0.0.0:38385" \
+      && iptables -C INPUT ! -i lo -p tcp --dport 38385 -j DROP >/dev/null 2>&1; then continue; fi
+    unexpected="$unexpected $endpoint"
   done
 
   if [ -n "$unexpected" ]; then
     printf 'These ports answer on a public interface and are not declared:%s
 ' "$unexpected" >&2
-    printf 'Bind the service to 127.0.0.1, or add the port to PUBLIC_LISTENERS with a reason.
-' >&2
+    printf 'Bind it to loopback, use the declared NetBird ingress binding, or add a verified listener exception.\n' >&2
     ss -ltnp 2>/dev/null | grep -vE '127\.|\[::1\]' >&2 || true
     fail "a service is listening on a public interface"
   fi
 
-  log "no unexpected public listener; public ports$(printf ' %s' $PUBLIC_LISTENERS), declared Docker bridge and NetBird DNS bindings"
+  log "no unexpected public listener; public ports$(printf ' %s' $PUBLIC_LISTENERS), firewall-protected adapter and declared NetBird ingress"
 }
 
 cmd_preflight() {
