@@ -25,7 +25,7 @@
         <h2>Dataset query workspace</h2>
         <label for="datasetSelect">Dataset</label
         ><select id="datasetSelect" [ngModel]="selectedDatasetId" (ngModelChange)="onDatasetChange($event)">
-          <option *ngFor="let d of vm.datasets" [value]="d.id">{{ d.name }} — {{ d.rowCount }} exact rows</option>
+          <option *ngFor="let d of vm.datasets" [value]="d.id">{{ d.name }}, {{ d.rowCount }} exact rows</option>
         </select>
         <p *ngIf="vm.selectedDataset">
           {{ vm.selectedDataset.sizeBytes }} exact NDJSON bytes. Coverage: {{ vm.selectedDataset.coverage | json }}
@@ -129,7 +129,7 @@
             [attr.data-format]="format"
             >Download {{ format | uppercase }}</a
           >
-          — {{ vm.selectedDataset.exports[format].bytes }} bytes
+          , {{ vm.selectedDataset.exports[format].bytes }} bytes
           <span class="mono text-break">SHA256 {{ vm.selectedDataset.exports[format].sha256 }}</span>
         </p>
       </section>

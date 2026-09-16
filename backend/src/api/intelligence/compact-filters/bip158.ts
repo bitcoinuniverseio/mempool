@@ -2,14 +2,14 @@
 export function decodeBasicFilter(hex: string): bigint[] {
  if (!/^(?:[0-9a-f]{2}){1,1000000}$/i.test(hex)) throw Error('Malformed or oversized basic filter');
  const bytes=Uint8Array.from(hex.match(/../g)!,x=>parseInt(x,16)); let cursor=1; let n=bytes[0];
- if(n===253){if(bytes.length<3)throw Error('Truncated CompactSize');n=bytes[1]+bytes[2]*256;cursor=3;if(n<253)throw Error('Noncanonical CompactSize');}
- else if(n===254){if(bytes.length<5)throw Error('Truncated CompactSize');n=bytes[1]+bytes[2]*256+bytes[3]*65536+bytes[4]*16777216;cursor=5;if(n<65536)throw Error('Noncanonical CompactSize');}
+ if(n===253){if(bytes.length<3)throw Error('Truncated CompactSize');n=bytes[1]+bytes[2]*256;cursor=3;if(n<253)throw Error('Non-minimal CompactSize');}
+ else if(n===254){if(bytes.length<5)throw Error('Truncated CompactSize');n=bytes[1]+bytes[2]*256+bytes[3]*65536+bytes[4]*16777216;cursor=5;if(n<65536)throw Error('Non-minimal CompactSize');}
  else if(n===255)throw Error('Filter element count exceeds bounded decoder');
  if(n>100000)throw Error('Filter element count exceeds bounded decoder');
  let bit=cursor*8;const read=()=>{if(bit>=bytes.length*8)throw Error('Truncated Golomb-Rice stream');return(bytes[bit>>3]>>(7-(bit++&7)))&1;};
  const values:bigint[]=[];let value=0n;const limit=BigInt(n)*784931n;
  for(let i=0;i<n;i++){let q=0n;while(read()){q++;if((q<<19n)>=limit)throw Error('Golomb-Rice quotient exceeds filter range');}let remainder=0n;for(let j=0;j<19;j++)remainder=(remainder<<1n)|BigInt(read());value+=(q<<19n)|remainder;if(value>=limit)throw Error('Filter value exceeds mapped range');values.push(value);}
- if(bytes.length*8-bit>=8)throw Error('Noncanonical trailing filter bytes');while(bit<bytes.length*8)if(read())throw Error('Nonzero filter padding');return values;
+ if(bytes.length*8-bit>=8)throw Error('Trailing filter bytes');while(bit<bytes.length*8)if(read())throw Error('Nonzero filter padding');return values;
 }
 const mask=(1n<<64n)-1n;
 /** SipHash-2-4, keyed by the first16 bytes of the internal block hash. */

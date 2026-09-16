@@ -2,7 +2,7 @@ import { address, networks, Psbt, Transaction } from 'bitcoinjs-lib';
 import { AnchorReader, AnchorReadError } from './anchor-reader';
 import { WorkbenchCoreReader } from '../workbench/workbench-core';
 
-/** Native DefaultVtxo CSV path only. No caller supplied delay or witness is trusted. */
+/** Native DefaultVtxo CSV path only. No caller supplied delay or witness is trusted.  @asyncUnsafe rejections propagate to the caller, which handles them. */
 export async function planLeafExit(evidence: any, destination: unknown, rate: number, core: WorkbenchCoreReader) {
   if (evidence.engine !== '@arkade-os/sdk 0.4.72' || !evidence.exit_path) return null;
   const path = evidence.exit_path;

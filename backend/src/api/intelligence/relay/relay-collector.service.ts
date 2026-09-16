@@ -99,7 +99,7 @@ export class RelayCollectorService {
     if(!this.policyFlight){
       const promise=Promise.resolve().then(()=>this.policyReader()).then(value=>({at:now,value,available:true}),()=>({at:now,value:{},available:false}));
       this.policyFlight=promise;
-      void promise.then(value=>{this.policyCache=value;if(this.policyFlight===promise)this.policyFlight=null;});
+      promise.then(value=>{this.policyCache=value;if(this.policyFlight===promise)this.policyFlight=null;},()=>{if(this.policyFlight===promise)this.policyFlight=null;});
     }
     let timer:NodeJS.Timeout|undefined;
     try{return await Promise.race([this.policyFlight,new Promise<{at:number;value:{fullrbf?:boolean};available:boolean}>(resolve=>{timer=setTimeout(()=>resolve({at:now,value:{},available:false}),10000);})]);}
@@ -112,9 +112,13 @@ export class RelayCollectorService {
   private sensor(snapshot:OwnedSnapshot,policy:{value:{fullrbf?:boolean};available:boolean}){
     return{id:this.sourceId,network:this.network,name:'Owned Bitcoin Core node',region:null,client_version:snapshot.info.subversion,protocol_version:snapshot.info.protocolversion??null,full_rbf:typeof policy.value.fullrbf==='boolean'?policy.value.fullrbf:null,min_relay_feerate:typeof snapshot.info.relayfee==='number'&&Number.isFinite(snapshot.info.relayfee)&&snapshot.info.relayfee>=0?snapshot.info.relayfee*100000:null,clock_offset_ms:null,clock_uncertainty_ms:null,connected_peers_count:snapshot.peers.length,bip324_peers_count:this.transport(snapshot).bip324_peers,erlay_supported:null,status:'online',last_heartbeat:snapshot.observed_at_utc,policy_source_available:policy.available,scope:SCOPE};
   }
+  /** @asyncUnsafe rejections propagate to the caller, which handles them. */
   public async getSensors(){const now=this.now();const [snapshot,policy]=await Promise.all([this.snapshot(now),this.policy(now)]);return[this.sensor(snapshot,policy)];}
+  /** @asyncUnsafe rejections propagate to the caller, which handles them. */
   public async getTransportMetrics(){return this.transport(await this.snapshot());}
+  /** @asyncUnsafe rejections propagate to the caller, which handles them. */
   public async getPolicyDifferences(){const sensors=await this.getSensors();return{network:this.network,differences:[],total:0,comparison_available:false,observed_local_policy:{full_rbf:sensors[0].full_rbf,min_relay_feerate_sats_vb:sensors[0].min_relay_feerate},observed_at_utc:sensors[0].last_heartbeat,scope:'One owned node; multi-sensor policy divergence cannot be calculated.'};}
+  /** @asyncUnsafe rejections propagate to the caller, which handles them. */
   public async getOverview(){
     const now=this.now();const [snapshot,policy]=await Promise.all([this.snapshot(now),this.policy(now)]);this.prune(now);
     return{network:this.network,fleet_size:1,online_sensors:1,median_network_latency_ms:null,bip324_adoption_percent:this.transport(snapshot).bip324_percent,erlay_adoption_percent:null,active_policy_divergences_count:null,multisensor_comparison_available:false,recent_propagation_sample:[...this.records.values()].slice(-10).reverse().map(record=>JSON.parse(JSON.stringify(record))),sensors:[this.sensor(snapshot,policy)],transport:this.transport(snapshot),scope:SCOPE,

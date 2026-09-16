@@ -33,6 +33,7 @@ export class SpvProofReader {
     catch { throw new VerificationEvidenceError('unavailable-bitcoin-reader', 'The owned Bitcoin reader could not complete this proof read. No verdict is available.'); }
   }
 
+  /** @asyncUnsafe rejections propagate to the caller, which handles them. */
   private async checkpoint() {
     const chain = await this.call('getblockchaininfo', []);
     const expected = this.core.network === 'mainnet' ? 'main' : this.core.network === 'testnet' ? 'test' : this.core.network;
@@ -56,6 +57,7 @@ export class SpvProofReader {
     try { return await read(); } finally { activeReads--; }
   }
 
+  /** @asyncUnsafe rejections propagate to the caller, which handles them. */
   private async generateProof(request: any) {
     this.input(request);
     if (!hash(request.block_hash)) throw new VerificationEvidenceError('invalid-proof-request', 'A concrete block hash is required to generate this proof.', 400);
@@ -69,6 +71,7 @@ export class SpvProofReader {
     return this.verifyProof({ ...request, proof_hex: proofHex }, before);
   }
 
+  /** @asyncUnsafe rejections propagate to the caller, which handles them. */
   private async verifyProof(request: any, checkpoint?: Awaited<ReturnType<SpvProofReader['checkpoint']>>) {
     this.input(request);
     let decoded: ReturnType<typeof decodeMerkleProof>;

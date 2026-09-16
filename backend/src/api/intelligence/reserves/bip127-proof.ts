@@ -4,7 +4,7 @@ import { createHash } from 'crypto';
 import bitcoinClient from '../../bitcoin/bitcoin-client';
 import config from '../../../config';
 const GENESIS:Record<string,string>={mainnet:'000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f',signet:'00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6',testnet:'000000000933ea01ad0ee984209779baaec3ced90fa3f408719526f8d77f4943',testnet4:'00000000da84f2bafbbc53dee25a72ae507ff4914b867c565be350b0da8bf043',regtest:'0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206'};
-/** No transaction is submitted: read current confirmed UTXOs and check native P2WPKH signatures. */
+/** No transaction is submitted: read current confirmed UTXOs and check native P2WPKH signatures.  @asyncUnsafe rejections propagate to the caller, which handles them. */
 export async function verifyBip127(proof:any, reader=bitcoinClient, network=config.MEMPOOL.NETWORK) {
   const fail=(message:string):never=>{throw new Error(message);};
   const deadline=Date.now()+15000;

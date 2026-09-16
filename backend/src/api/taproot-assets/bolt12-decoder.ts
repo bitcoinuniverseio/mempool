@@ -6,7 +6,7 @@ import { TaprootAssetsEvidenceError } from './taproot-assets.service';
 
 export interface Bolt12DecodedOffer {
   status: 'decoded'; syntax_valid: true; engine: 'lightning-0.2.6'; network: string;
-  input_sha256: string; offer_id: string; canonical_offer: string; tlv_hex: string;
+  input_sha256: string; offer_id: string; normalized_offer: string; tlv_hex: string;
   description: string | null; issuer: string | null; issuer_signing_pubkey: string | null;
   amount: null | { kind: 'bitcoin'; amount_msat: string } | { kind: 'currency'; currency: string; amount_minor_units: string };
   quantity: { kind: 'one' | 'unbounded' } | { kind: 'bounded'; maximum: string };
@@ -55,6 +55,9 @@ export async function decodeBolt12Offer(request: any, network = config.MEMPOOL.N
         result.signature_status !== 'not-applicable-unsigned-offer' || result.payment_verified !== false || typeof result.scope !== 'string') {
       throw new TaprootAssetsEvidenceError('unavailable-offer-decoder', 'The native offer decoder returned inconsistent evidence.');
     }
-    return { ...result, input_sha256: createHash('sha256').update(request.offer, 'utf8').digest('hex') };
+    // The pinned engine names the re-encoded offer canonical_offer; the public
+    // contract carries it as normalized_offer.
+    const { canonical_offer: normalizedOffer, ...decoded } = result;
+    return { ...decoded, normalized_offer: normalizedOffer, input_sha256: createHash('sha256').update(request.offer, 'utf8').digest('hex') };
   } finally { active--; }
 }

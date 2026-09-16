@@ -20,13 +20,13 @@ test('mining RPC failure is unavailable, never zero current observations',async(
  const r=response();await api.$getHistoricalHashrate({params:{}},r);expect(r.statusCode).toBe(503);expect(r.body).not.toHaveProperty('currentHashrate');
 });
 test.each(['regtest','testnet4'])('no mainnet group fallback on %s',async network=>{
- config.MEMPOOL.NETWORK=network;const get=jest.fn();const r=response();await nodes({$getNode:get}).$getNodeGroup({params:{name:'mempool.space'}},r);expect(r.statusCode).toBe(404);expect(get).not.toHaveBeenCalled();
+ config.MEMPOOL.NETWORK=network;const get=jest.fn();const r=response();await nodes({$getNode:get}).$getNodeGroup({params:{name:'universe'}},r);expect(r.statusCode).toBe(404);expect(get).not.toHaveBeenCalled();
 });
 test('unknown group name is rejected before reading nodes',async()=>{
  config.MEMPOOL.NETWORK='mainnet';const get=jest.fn();const r=response();await nodes({$getNode:get}).$getNodeGroup({params:{name:'invented'}},r);expect(r.statusCode).toBe(404);expect(get).not.toHaveBeenCalled();
 });
 test('partial group read never becomes complete success',async()=>{
- config.MEMPOOL.NETWORK='mainnet';const get=jest.fn().mockImplementationOnce(async(public_key)=>({public_key})).mockRejectedValue(Error('database offline'));const r=response();await nodes({$getNode:get}).$getNodeGroup({params:{name:'mempool.space'}},r);expect(r.statusCode).toBe(503);
+ config.MEMPOOL.NETWORK='mainnet';const get=jest.fn().mockImplementationOnce(async(public_key)=>({public_key})).mockRejectedValue(Error('database offline'));const r=response();await nodes({$getNode:get}).$getNodeGroup({params:{name:'universe'}},r);expect(r.statusCode).toBe(503);
 });
 test('channel close maps every actual funding input instead of input zero',async()=>{
  const first={transaction_id:funding,transaction_vout:2,closing_transaction_id:txid},second={transaction_id:funding,transaction_vout:3,closing_transaction_id:txid};
@@ -48,10 +48,10 @@ test('real zero hashrate with valid difficulty remains a valid response',async()
  const api=load('api/mining/mining-routes.ts',{...errors,'../../config':config,'../bitcoin/bitcoin-client':{getNetworkHashPs:async()=>0,getDifficulty:async()=>2},'../../repositories/HashratesRepository':{$getNetworkDailyHashrate:async()=>[{timestamp:1}]},'../../repositories/DifficultyAdjustmentsRepository':{$getAdjustments:async()=>[]},'../../repositories/BlocksRepository':{$blockCount:async()=>1}});const r=response();await api.$getHistoricalHashrate({params:{}},r);expect(r.statusCode).toBe(200);expect(r.body.currentHashrate).toBe(0);expect(r.body.currentDifficulty).toBe(2);
 });
 test.each(['mainnet','testnet','signet'])('complete configured group observations retain array contract on %s',async network=>{
- config.MEMPOOL.NETWORK=network;const get=jest.fn(async(public_key)=>({public_key}));const r=response();await nodes({$getNode:get}).$getNodeGroup({params:{name:'mempool.space'}},r);expect(r.statusCode).toBe(200);expect(r.body.length).toBeGreaterThan(0);expect(r.body.length).toBe(get.mock.calls.length);
+ config.MEMPOOL.NETWORK=network;const get=jest.fn(async(public_key)=>({public_key}));const r=response();await nodes({$getNode:get}).$getNodeGroup({params:{name:'universe'}},r);expect(r.statusCode).toBe(200);expect(r.body.length).toBeGreaterThan(0);expect(r.body.length).toBe(get.mock.calls.length);
 });
 test('mismatched group identity is unavailable',async()=>{
- config.MEMPOOL.NETWORK='signet';const r=response();await nodes({$getNode:async()=>({public_key:'wrong'})}).$getNodeGroup({params:{name:'mempool.space'}},r);expect(r.statusCode).toBe(503);
+ config.MEMPOOL.NETWORK='signet';const r=response();await nodes({$getNode:async()=>({public_key:'wrong'})}).$getNodeGroup({params:{name:'universe'}},r);expect(r.statusCode).toBe(503);
 });
 test('unmatched closing outpoint is unavailable and cannot become input0',async()=>{
  const r=response();await channels({$getChannelsByTransactionId:async()=>[{transaction_id:funding,transaction_vout:2,closing_transaction_id:txid}]},{$getRawTransaction:async()=>({txid,vin:[{txid:funding,vout:3}]})}).$getChannelsByTransactionIds({query:{txId:[txid]}},r);expect(r.statusCode).toBe(503);

@@ -112,7 +112,7 @@ export class PaymentConnectivityService {
       warnings: ['URI syntax and key validation only. Wallet authorization, relay reachability and encryption capabilities have not been observed.'],
       verification_scope: 'local-uri-inspection',
     };
-    if (typeof uri !== 'string' || uri.length > 8192 || /[\s\x00-\x1f\x7f]/.test(uri)) {
+    if (typeof uri !== 'string' || uri.length > 8192 || /[\s\p{Cc}]/u.test(uri)) {
       result.errors.push('Connection URI must be a bounded string without whitespace or control characters.');
       return result;
     }

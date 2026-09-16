@@ -7,6 +7,7 @@ import { WorkbenchCoreReader, ownedWorkbenchCore } from '../workbench/workbench-
 import { verifyTransactionScripts } from '../workbench/transaction-script-verifier';
 
 let active = 0;
+/** @asyncUnsafe rejections propagate to the caller, which handles them. */
 export async function reconstructVpack(request: any, core: WorkbenchCoreReader = ownedWorkbenchCore) {
   if (!request || request.network !== core.network) throw new AnchorReadError('wrong-network', 'Supply the currently configured network for this package.', 400);
   const input = JSON.stringify({ state: request.state, vpack_hex: request.vpack_hex, bark_hex: request.bark_hex, arkade: request.arkade });

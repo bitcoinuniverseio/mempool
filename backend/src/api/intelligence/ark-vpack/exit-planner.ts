@@ -4,7 +4,7 @@ import { Psbt, Transaction } from 'bitcoinjs-lib';
 import { AnchorReadError } from './anchor-reader';
 import { reconstructVpack } from './vpack-reconstruction';
 
-/** Read-only planning from reconstructed bytes; never creates signatures or broadcasts. */
+/** Read-only planning from reconstructed bytes; never creates signatures or broadcasts.  @asyncUnsafe rejections propagate to the caller, which handles them. */
 export async function planVpackExit(request: any, core: WorkbenchCoreReader = ownedWorkbenchCore) {
   const target = request?.target_feerate_sat_vb;
   if (typeof target !== 'number' || !Number.isFinite(target) || target <= 0 || target > 1000000) throw new AnchorReadError('invalid-feerate', 'Target fee rate must be greater than zero and at most 1000000 sat/vB.', 400);

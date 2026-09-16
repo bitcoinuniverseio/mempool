@@ -21,7 +21,7 @@ export async function verifyProposalUtxos(
       'Owned UTXO verification count or concurrency bound exceeded.'
     );
   active++;
-  const operation = (async () => {
+  const operation = (/** @asyncUnsafe rejections propagate to the caller, which handles them. */ async () => {
     if (
       !GENESIS[core.network] ||
       (await core.call('getblockhash', [0])) !== GENESIS[core.network]
@@ -95,7 +95,7 @@ export async function verifyProposalUtxos(
   })();
   // Capacity is released when the underlying RPC work actually settles, even
   // if the caller's bounded wait has already expired.
-  void operation.then(
+  operation.then(
     () => {
       active--;
     },
