@@ -661,10 +661,16 @@ class Server {
     }
     this.server?.close();
     this.serverUnixSocket?.close();
-    void boundedHistoryFlush(() => timeMachineService.closeHistory()).then(flushed => {
-      if (!flushed) logger.warn('Time Machine shutdown flush failed or exceeded 5 seconds; the next start will expose a history gap.');
-      process.exit(code ?? (flushed ? 0 : 1));
-    });
+    boundedHistoryFlush(() => timeMachineService.closeHistory()).then(
+      flushed => {
+        if (!flushed) logger.warn('Time Machine shutdown flush failed or exceeded 5 seconds; the next start will expose a history gap.');
+        process.exit(code ?? (flushed ? 0 : 1));
+      },
+      (error: unknown) => {
+        logger.warn('Time Machine shutdown flush threw: ' + (error instanceof Error ? error.message : String(error)));
+        process.exit(code ?? 1);
+      },
+    );
   }
   exitCleanup(): void {
     if (config.DATABASE.ENABLED) {

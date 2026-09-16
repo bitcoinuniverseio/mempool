@@ -62,7 +62,7 @@ export function tokenInput(value: unknown): string {
     typeof value !== 'string' ||
     !value.trim() ||
     value.length > 256 ||
-    /[\x00-\x1f\x7f]/.test(value)
+    /\p{Cc}/u.test(value)
   )
     throw new SubmissionInputError('Provide a bounded nonempty identity.');
   return value;

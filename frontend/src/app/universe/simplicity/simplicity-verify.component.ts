@@ -21,7 +21,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           <span class="badge bg-success">Bounded Program &amp; Kernel Checks</span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
-          Check a bound closed-program claim using independent compiler/C semantics, or a canonical u32 equality with the pinned Lean 4 kernel. General Lean, Coq, Isabelle and Dafny theorem scopes remain unsupported.
+          Check a bound closed-program claim using independent compiler/C semantics, or a normalized u32 equality with the pinned Lean 4 kernel. General Lean, Coq, Isabelle and Dafny theorem scopes remain unsupported.
         </p>
 
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">

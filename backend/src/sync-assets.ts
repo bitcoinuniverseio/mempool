@@ -13,12 +13,22 @@ import { SocksProxyAgent } from 'socks-proxy-agent';
 export class SyncAssets {
   constructor(private directory = '.', private timeoutMs = 30000, private maximumBytes = 128 * 1024 * 1024) {}
 
-  /** @asyncSafe */
+  /**
+   * External assets are optional: a transfer that fails is logged and the
+   * existing file, if any, is kept. Startup never fails on one.
+   * @asyncSafe
+   */
   public async syncAssets$(): Promise<void> {
-    for (const url of config.MEMPOOL.EXTERNAL_ASSETS) await this.downloadFile$(url);
+    for (const url of config.MEMPOOL.EXTERNAL_ASSETS) {
+      try {
+        await this.downloadFile$(url);
+      } catch (e) {
+        logger.warn(`External asset ${url} was not refreshed: ${e instanceof Error ? e.message : String(e)}`);
+      }
+    }
   }
 
-  /** A failed transfer never replaces an existing asset. */
+  /** A failed transfer never replaces an existing asset.  @asyncUnsafe rejections propagate to the caller, which handles them. */
   public async downloadFile$(rawUrl: string): Promise<void> {
     const url = new URL(rawUrl);
     const filename = decodeURIComponent(url.pathname.split('/').pop() || '');

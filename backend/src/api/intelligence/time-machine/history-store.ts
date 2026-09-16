@@ -79,6 +79,7 @@ export class HistoryStore {
     return JSON.parse(envelope.body);
   }
 
+  /** @asyncUnsafe rejections propagate to the caller, which handles them. */
   async write(value: unknown): Promise<void> {
     this.acquire();
     const body = JSON.stringify(value);

@@ -212,6 +212,7 @@ export class ConsensusConformanceService {
       ],
     };
   }
+  /** @asyncUnsafe rejections propagate to the caller, which handles them. */
   async startCampaign(target: string, seed: number) {
     if (!TARGETS.includes(target) || !Number.isSafeInteger(seed) || seed < 0)
       throw new ConformanceEvidenceError(

@@ -49,6 +49,7 @@ export class ConformanceStore {
       );
     return JSON.parse(value.body);
   }
+  /** @asyncUnsafe rejections propagate to the caller, which handles them. */
   async write(value: any) {
     const body = JSON.stringify(value);
     if (Buffer.byteLength(body) > 16 * 1024 * 1024)

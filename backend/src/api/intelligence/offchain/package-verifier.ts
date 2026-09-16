@@ -50,6 +50,7 @@ export class OffchainPackageVerifier {
     } catch { throw new OffchainVerificationError('unavailable-source', 'The owned Bitcoin node could not provide verification evidence.', 503); }
     finally { clearTimeout(timer!); }
   }
+  /** @asyncUnsafe rejections propagate to the caller, which handles them. */
   private async checkpoint() {
     const info: any = await this.call('getblockchaininfo', []);
     const expected = { mainnet: 'main', testnet: 'test', testnet4: 'testnet4', signet: 'signet', regtest: 'regtest' }[this.core.network];
