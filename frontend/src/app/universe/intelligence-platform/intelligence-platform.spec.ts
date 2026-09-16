@@ -235,7 +235,7 @@ describe('Unified Intelligence Platform Frontend Services', () => {
     });
 
     it('QueryStudioComponent: does not execute query on ngOnInit', () => {
-      const cmp = new QueryStudioComponent(service, mockCdr);
+      const cmp = new QueryStudioComponent(service, mockCdr, mockStateService, ownerKey);
       cmp.ngOnInit();
       expect(cmp.queryResult).toBeNull();
       expect(cmp.loading).toBe(false);

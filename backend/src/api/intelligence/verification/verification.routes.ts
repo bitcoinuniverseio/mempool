@@ -8,7 +8,7 @@ function fail(req: Request, res: Response, e: unknown, fallback: string): void {
     res.status(e.status).json({ stage: e.code, error: e.message });
     return;
   }
-  handleError(req, res, 500, e instanceof Error ? e.message : fallback);
+  handleError(req, res, 500, fallback);
 }
 
 class VerificationRoutes {
@@ -51,12 +51,12 @@ class VerificationRoutes {
 
   private async $postCompactFilter(req: Request, res: Response): Promise<void> {
     try {
-      const { block_hash, scripts } = req.body;
+      const { block_hash, scripts, network } = req.body ?? {};
       if (!block_hash || !Array.isArray(scripts)) {
         res.status(400).json({ error: 'block_hash and array of scripts required.' });
         return;
       }
-      const filterResult = verificationService.queryCompactFilter(block_hash, scripts);
+      const filterResult = await verificationService.queryCompactFilter(block_hash, scripts, network);
       res.json(filterResult);
     } catch (e) {
       fail(req, res, e, 'Compact filter query failed');
@@ -65,12 +65,12 @@ class VerificationRoutes {
 
   private async $postVerifySignature(req: Request, res: Response): Promise<void> {
     try {
-      const { address, message, signature, format } = req.body;
+      const { address, message, signature, format, network } = req.body ?? {};
       if (typeof address !== 'string' || !address || address.length > 200 || typeof message !== 'string' || Buffer.byteLength(message, 'utf8') > 65536 || typeof signature !== 'string' || !signature || signature.length > 100000) {
         res.status(400).json({ error: 'Supply an address, a message (empty is allowed, at most 65536 UTF-8 bytes), and a bounded signature.' });
         return;
       }
-      const result = verificationService.verifySignature(address, message, signature, format);
+      const result = await verificationService.verifySignature(address, message, signature, format, network);
       res.json(result);
     } catch (e) {
       fail(req, res, e, 'Signature verification failed');

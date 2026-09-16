@@ -97,7 +97,9 @@ export class PortfolioVaultService implements OnDestroy {
     if (document.visibilityState === 'hidden') this.scheduleImmediateLockIfConfigured();
   }) as unknown as EventListener;
 
-  constructor(private readonly zone: NgZone) {}
+  constructor(private readonly zone: NgZone) {
+    if (typeof document !== 'undefined') document.addEventListener('visibilitychange', this.visibilityListener);
+  }
 
   // ------------------------------------------------------------- lifecycle
 
