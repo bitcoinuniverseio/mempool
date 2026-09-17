@@ -38,6 +38,22 @@ import bitcoinSecondClient from './bitcoin/bitcoin-second-client';
 import { calculateMempoolTxCpfp } from './cpfp';
 import stratumApi, { StratumJob } from './services/stratum';
 
+/** Most transaction ids one connection may track at once. */
+const MAX_TRACKED_TXS = 100;
+/** Authoritative status lookups in flight for one track-txs request. */
+const TRACKED_TX_LOOKUP_CONCURRENCY = 4;
+/** Upper bound on one authoritative status lookup. */
+const TRACKED_TX_LOOKUP_DEADLINE_MS = 10_000;
+
+function isTransactionNotFound(e: unknown): boolean {
+  const error = e as { response?: { status?: number }; message?: string } | null;
+  if (error?.response?.status === 404) {
+    return true;
+  }
+  const message = typeof error?.message === 'string' ? error.message : '';
+  return message.indexOf('No such mempool or blockchain transaction') > -1;
+}
+
 // valid 'want' subscriptions
 const wantable = [
   'blocks',
@@ -99,7 +115,7 @@ class WebsocketHandler {
       'mempoolInfo': memPool.getMempoolInfo(),
       'vBytesPerSecond': memPool.getVBytesPerSecond(),
       'blocks': _blocks,
-      'conversions': priceUpdater.getLatestPrices(),
+      'conversions': priceUpdater.getAdvertisedPrices(),
       'mempool-blocks': mempoolBlocks.getMempoolBlocks(),
       'transactions': memPool.getLatestTransactions(),
       'backendInfo': backendInfo.getBackendInfo(),
@@ -229,45 +245,27 @@ class WebsocketHandler {
             const txids: string[] = [];
             if (Array.isArray(parsedMessage['track-txs'])) {
               for (const txid of parsedMessage['track-txs']) {
-                if (/^[a-fA-F0-9]{64}$/.test(txid)) {
+                if (typeof txid === 'string' && /^[a-fA-F0-9]{64}$/.test(txid) && !txids.includes(txid)) {
                   txids.push(txid);
                 }
               }
             }
 
-            const txs: { [txid: string]: TxTrackingInfo } = {};
-            for (const txid of txids) {
-              const txInfo: TxTrackingInfo = {
-                confirmed: true,
-              };
-              const rbfCacheTxid = rbfCache.getReplacedBy(txid);
-              if (rbfCacheTxid) {
-                txInfo.replacedBy = rbfCacheTxid;
-                txInfo.confirmed = false;
-              }
-              const tx = memPool.getMempool()[txid];
-              if (tx && tx.position) {
-                txInfo.position = {
-                  ...tx.position
-                };
-                if (tx.acceleration) {
-                  txInfo.accelerated = tx.acceleration;
-                }
-              }
-              if (tx) {
-                txInfo.confirmed = false;
-              }
-              txs[txid] = txInfo;
-            }
-
-            if (txids.length) {
-              client['track-txs'] = txids;
-            } else {
+            if (txids.length > MAX_TRACKED_TXS) {
+              response['track-txs-error'] = `"too many transactions requested, this connection supports tracking a maximum of ${MAX_TRACKED_TXS} transactions"`;
               client['track-txs'] = null;
-            }
+            } else {
+              const txs = await this.$resolveTrackedTxs(txids);
 
-            if (Object.keys(txs).length) {
-              response['tracked-txs'] = JSON.stringify(txs);
+              if (txids.length) {
+                client['track-txs'] = txids;
+              } else {
+                client['track-txs'] = null;
+              }
+
+              if (Object.keys(txs).length) {
+                response['tracked-txs'] = JSON.stringify(txs);
+              }
             }
           }
 
@@ -466,14 +464,99 @@ class WebsocketHandler {
     }
   }
 
+  /**
+   * The initial status of every tracked transaction, resolved with bounded
+   * concurrency. Absence from this process's mempool is never treated as
+   * confirmation: a transaction that is neither here nor replaced is looked
+   * up at the node, and only a real block height and hash may confirm it.
+   *
+   * @asyncSafe Every lookup failure becomes an unavailable status.
+   */
+  private async $resolveTrackedTxs(txids: string[]): Promise<{ [txid: string]: TxTrackingInfo }> {
+    const txs: { [txid: string]: TxTrackingInfo } = {};
+    const queue = txids.slice();
+    const worker = async (): Promise<void> => {
+      while (queue.length) {
+        const txid = queue.shift();
+        if (!txid) {
+          return;
+        }
+        try {
+          txs[txid] = await this.$trackedTxStatus(txid);
+        } catch (e) {
+          logger.debug(`Could not resolve tracked transaction ${txid}: ` + (e instanceof Error ? e.message : e));
+          txs[txid] = { status: 'unavailable' };
+        }
+      }
+    };
+    try {
+      await Promise.all(Array.from({ length: Math.min(TRACKED_TX_LOOKUP_CONCURRENCY, txids.length) }, worker));
+    } catch (e) {
+      // Each worker answers its own failures; this only guards the join.
+      logger.debug('Tracked transaction lookups did not complete: ' + (e instanceof Error ? e.message : e));
+    }
+    return txs;
+  }
+
+  /** @asyncSafe */
+  private async $trackedTxStatus(txid: string): Promise<TxTrackingInfo> {
+    const rbfCacheTxid = rbfCache.getReplacedBy(txid);
+    if (rbfCacheTxid) {
+      return { replacedBy: rbfCacheTxid, confirmed: false, status: 'replaced' };
+    }
+    const tx = memPool.getMempool()[txid];
+    if (tx) {
+      const txInfo: TxTrackingInfo = { confirmed: false, status: 'mempool' };
+      if (tx.position) {
+        txInfo.position = { ...tx.position };
+        if (tx.acceleration) {
+          txInfo.accelerated = tx.acceleration;
+        }
+      }
+      return txInfo;
+    }
+    let deadline: NodeJS.Timeout | undefined;
+    try {
+      const lookup = bitcoinApi.$getRawTransaction(txid, true, false);
+      // A lookup that outlives the deadline must not surface as an unhandled rejection.
+      lookup.catch(() => undefined);
+      const expired = new Promise<never>((_resolve, reject) => {
+        deadline = setTimeout(() => reject(new Error('transaction status lookup timed out')), TRACKED_TX_LOOKUP_DEADLINE_MS);
+      });
+      const found = await Promise.race([lookup, expired]);
+      const status = found?.status;
+      if (
+        status?.confirmed === true
+        && typeof status.block_height === 'number' && Number.isInteger(status.block_height) && status.block_height >= 0
+        && typeof status.block_hash === 'string' && /^[a-fA-F0-9]{64}$/.test(status.block_hash)
+      ) {
+        return { confirmed: true, status: 'confirmed', blockHeight: status.block_height, blockHash: status.block_hash };
+      }
+      // Known to the node but not yet in a block, or in a block the node
+      // could not identify: either way it is not confirmed.
+      return { confirmed: false, status: 'mempool' };
+    } catch (e) {
+      if (isTransactionNotFound(e)) {
+        return { confirmed: false, status: 'unknown' };
+      }
+      logger.debug(`Could not resolve tracked transaction ${txid}: ` + (e instanceof Error ? e.message : e));
+      return { status: 'unavailable' };
+    } finally {
+      if (deadline !== undefined) {
+        clearTimeout(deadline);
+      }
+    }
+  }
+
   handleNewConversionRates(conversionRates: ApiPrice) {
     if (!this.webSocketServers.length) {
       throw new Error('No WebSocket.Server have been set');
     }
 
-    this.updateSocketDataFields({ 'conversions': conversionRates });
+    const advertised = { ...conversionRates, ...priceUpdater.getPriceObservation() };
+    this.updateSocketDataFields({ 'conversions': advertised });
 
-    const response = JSON.stringify({ conversions: conversionRates });
+    const response = JSON.stringify({ conversions: advertised });
     // TODO - Fix indentation after PR is merged
     for (const server of this.webSocketServers) {
     server.clients.forEach((client) => {

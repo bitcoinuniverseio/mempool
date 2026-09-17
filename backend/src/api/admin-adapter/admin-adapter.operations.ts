@@ -26,6 +26,36 @@ import { explorerEnvironment, releaseShaOrNull } from './admin-adapter.identity'
 import runStore from './admin-adapter.runs';
 
 /**
+ * Reads back what an indexing task is supposed to have persisted, so a run
+ * is only called complete when the rows say so. Every query error is returned,
+ * never swallowed, because an unreadable checkpoint proves nothing.
+ *
+ * @asyncUnsafe The caller wraps the readback in try/catch.
+ */
+async function readIndexerCheckpoint(task: AllowedIndexerTask): Promise<{ remaining: number; indexedTip: number | null }> {
+  if (task === 'blocksPrices') {
+    const [remainingRows]: any[] = await DB.query(
+      'SELECT COUNT(*) AS remaining FROM blocks LEFT JOIN blocks_prices ON blocks.height = blocks_prices.height LEFT JOIN prices ON blocks_prices.price_id = prices.id WHERE blocks_prices.height IS NULL OR prices.id IS NULL',
+    );
+    const [tipRows]: any[] = await DB.query('SELECT MAX(height) AS tip FROM blocks_prices');
+    return {
+      remaining: Number(remainingRows[0]?.remaining ?? 0),
+      indexedTip: tipRows[0]?.tip === null || tipRows[0]?.tip === undefined ? null : Number(tipRows[0].tip),
+    };
+  }
+  const [remainingRows]: any[] = await DB.query(
+    'SELECT COUNT(*) AS remaining FROM blocks WHERE (utxoset_size IS NULL OR total_input_amt IS NULL) AND stale = 0',
+  );
+  const [tipRows]: any[] = await DB.query(
+    'SELECT MAX(height) AS tip FROM blocks WHERE utxoset_size IS NOT NULL AND total_input_amt IS NOT NULL AND stale = 0',
+  );
+  return {
+    remaining: Number(remainingRows[0]?.remaining ?? 0),
+    indexedTip: tipRows[0]?.tip === null || tipRows[0]?.tip === undefined ? null : Number(tipRows[0].tip),
+  };
+}
+
+/**
  * The handlers behind the catalog.
  *
  * Each one calls exactly one internal path that already exists in this
@@ -375,16 +405,28 @@ const HANDLERS: Record<string, Handler> = {
       });
     },
     async execute() {
-      const reconciled = await runStore.reconcileAbandonedRuns();
+      const outcome = await runStore.reconcileAbandonedRuns();
+      const verified = outcome.verified && outcome.error === undefined && outcome.remaining === 0;
       return {
-        summary:
-          reconciled === 0
-            ? 'No abandoned runs were found.'
-            : `${reconciled} abandoned runs were moved to NEEDS_REVIEW.`,
-        result: { reconciled },
+        summary: outcome.error !== undefined
+          ? `Reconciliation stopped on a storage error after ${outcome.reconciled} runs.`
+          : (outcome.remaining ?? 0) > 0
+            ? `${outcome.reconciled} abandoned runs were moved to NEEDS_REVIEW; ${outcome.remaining} remain.`
+            : outcome.reconciled === 0
+              ? 'No abandoned runs were found.'
+              : `${outcome.reconciled} abandoned runs were moved to NEEDS_REVIEW.`,
+        result: {
+          reconciled: outcome.reconciled,
+          remaining: outcome.remaining,
+          storageError: outcome.error ?? null,
+        },
         verification: {
-          verified: true,
-          evidence: ['Every run with an expired lease now carries a terminal state.'],
+          verified,
+          evidence: verified
+            ? ['The expired-lease query answered and no run with an expired lease remains.']
+            : outcome.error !== undefined
+              ? [`The run store answered with an error: ${outcome.error}`]
+              : [`${outcome.remaining} runs with an expired lease still remain.`],
         },
       };
     },
@@ -484,18 +526,62 @@ const HANDLERS: Record<string, Handler> = {
         redactedInput: { task },
       });
     },
-    async execute(context) {
+    async execute(context): Promise<ExplorerHandlerResult> {
       const task = String(context.input.task ?? '');
       if (!(ALLOWED_INDEXER_TASKS as readonly string[]).includes(task)) {
         throw new Error(`Only ${ALLOWED_INDEXER_TASKS.join(' and ')} can be run this way.`);
       }
-      await indexer.runSingleTask(task as AllowedIndexerTask);
+      const outcome = await indexer.runSingleTask(task as AllowedIndexerTask);
+      if (outcome.status === 'failed') {
+        throw new Error(`The ${task} task failed: ${outcome.error ?? 'unknown error'}`);
+      }
+      if (outcome.status !== 'completed') {
+        return {
+          summary: `The ${task} task did not run: ${outcome.reason ?? outcome.status}.`,
+          result: { task, status: outcome.status, reason: outcome.reason ?? null },
+          verification: {
+            verified: false,
+            evidence: [`The indexer answered ${outcome.status}: ${outcome.reason ?? 'no reason given'}.`],
+          },
+        };
+      }
+      let checkpoint: Awaited<ReturnType<typeof readIndexerCheckpoint>>;
+      try {
+        checkpoint = await readIndexerCheckpoint(task as AllowedIndexerTask);
+      } catch (e) {
+        return {
+          summary: `The ${task} task returned, but its persisted checkpoint could not be read.`,
+          result: {
+            task,
+            status: outcome.status,
+            startedAt: outcome.checkpoint?.startedAt ?? null,
+            finishedAt: outcome.checkpoint?.finishedAt ?? null,
+            checkpointError: e instanceof Error ? e.message : String(e),
+          },
+          verification: {
+            verified: false,
+            evidence: ['The checkpoint readback failed, so completion is unproven.'],
+          },
+        };
+      }
+      const verified = checkpoint.remaining === 0;
       return {
-        summary: `The ${task} task ran to completion.`,
-        result: { task },
+        summary: verified
+          ? `The ${task} task completed and no block is left without its ${task} data.`
+          : `The ${task} task returned but ${checkpoint.remaining} blocks are still missing ${task} data.`,
+        result: {
+          task,
+          status: outcome.status,
+          startedAt: outcome.checkpoint?.startedAt ?? null,
+          finishedAt: outcome.checkpoint?.finishedAt ?? null,
+          remaining: checkpoint.remaining,
+          indexedTip: checkpoint.indexedTip,
+        },
         verification: {
-          verified: true,
-          evidence: [`The indexer returned from ${task} without throwing.`],
+          verified,
+          evidence: verified
+            ? [`The database reports 0 blocks missing ${task} data; the newest indexed height is ${checkpoint.indexedTip ?? 'unknown'}.`]
+            : [`The database still reports ${checkpoint.remaining} blocks missing ${task} data.`],
         },
       };
     },
@@ -530,13 +616,16 @@ const HANDLERS: Record<string, Handler> = {
       if (String(context.input.confirmation ?? '') !== 'REINDEX EXPLORER BLOCKS') {
         throw new Error('This operation requires the exact typed confirmation.');
       }
-      indexer.reindex();
+      const scheduled = indexer.reindex();
+      if (!scheduled) {
+        throw new Error('The indexer refused the request because indexing is disabled in this deployment.');
+      }
       return {
-        summary: 'The indexing loop was released to run again.',
-        result: { scheduled: true },
+        summary: 'The indexing loop was released to run again. Indexing itself runs in the background and is not complete.',
+        result: { scheduled, indexingCompleted: false },
         verification: {
           verified: true,
-          evidence: ['The indexer accepted the request to run again.'],
+          evidence: ['The indexer accepted the request to run again; this proves scheduling, not completion.'],
         },
       };
     },
