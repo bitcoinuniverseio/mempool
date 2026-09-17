@@ -5,13 +5,16 @@ import { join } from 'path';
 import { Readable } from 'stream';
 import adminControl from '@bitcoinuniverse/ecosystem-contracts/admin-control';
 import {
+  ADMIN_NONCE_RETENTION_MS,
   AdminAdapterNonceStore,
   adminAdapterGuard,
   adminAdapterJsonParser,
   hasSignedAdminElevation,
   isPrivateRemoteAddress,
   parseAdminAdapterKeys,
+  UnavailableAdminReplayStore,
   verifyAdminAdapterRequest,
+  verifyAdminAdapterRequestWithStore,
 } from '../api/admin-adapter/admin-adapter.security';
 import {
   ALLOWED_INDEXER_TASKS,
@@ -107,7 +110,8 @@ describe('Admin parser and signed elevation through actual middleware', () => {
     else process.env.EXPLORER_ADMIN_ADAPTER_KEYS = previousKeys;
   });
 
-  function invoke(signedRequest: ReturnType<typeof signed>, captureBeforeGeneralParser = true): Promise<{ request: any; response: any; reached: boolean }> {
+  const guardStore = new AdminAdapterNonceStore();
+  function invoke(signedRequest: ReturnType<typeof signed>, captureBeforeGeneralParser = true, store: AdminAdapterNonceStore | UnavailableAdminReplayStore = guardStore): Promise<{ request: any; response: any; reached: boolean }> {
     return new Promise((resolve, reject) => {
       const request = Object.assign(Readable.from([signedRequest.rawBody]), {
         method: signedRequest.method, originalUrl: signedRequest.originalUrl, url: signedRequest.originalUrl,
@@ -120,7 +124,7 @@ describe('Admin parser and signed elevation through actual middleware', () => {
       const middleware: RequestHandler[] = [
         ...(captureBeforeGeneralParser ? [adminAdapterJsonParser()] : []),
         express.urlencoded({ extended: true, limit: '10mb' }), express.text({ type: ['text/plain', 'application/base64'], limit: '10mb' }),
-        express.json({ limit: '10mb' }), adminAdapterJsonParser(), adminAdapterGuard(),
+        express.json({ limit: '10mb' }), adminAdapterJsonParser(), adminAdapterGuard(store),
       ];
       const next = (index: number): void => {
         if (index === middleware.length) { resolve({ request, response, reached: true }); return; }
@@ -169,6 +173,58 @@ describe('Admin parser and signed elevation through actual middleware', () => {
   it('requires literal true rather than a truthy signed elevation value', /** @asyncUnsafe Jest owns the test promise. */ async () => {
     const result = await invoke(signed({ rawBody: Buffer.from(JSON.stringify({ input: {}, adminAuthorization: { elevated: 'true' } })) }));
     expect(result.reached).toBe(true); expect(hasSignedAdminElevation(result.response)).toBe(false);
+  });
+  it('refuses a replay through the guard store shared by every request', /** @asyncUnsafe Jest owns the test promise. */ async () => {
+    const request = signed();
+    expect((await invoke(request)).reached).toBe(true);
+    const replay = await invoke(request);
+    expect(replay.reached).toBe(false); expect(replay.response.status).toHaveBeenCalledWith(401);
+  });
+  it('fails closed when no shared replay store is available', /** @asyncUnsafe Jest owns the test promise. */ async () => {
+    const result = await invoke(signed(), true, new UnavailableAdminReplayStore('isolated fixture'));
+    expect(result.reached).toBe(false); expect(result.response.status).toHaveBeenCalledWith(503);
+    expect(result.response.json).toHaveBeenCalledWith(expect.objectContaining({ code: 'REPLAY_STORE_UNAVAILABLE' }));
+  });
+  it('fails closed by default when the guard is mounted without a store', /** @asyncUnsafe Jest owns the test promise. */ async () => {
+    const request = signed();
+    const response: any = { locals: {}, setHeader: jest.fn(), removeHeader: jest.fn(), status: jest.fn() };
+    response.status.mockReturnValue(response);
+    const refused = new Promise<void>((resolve) => { response.json = jest.fn(() => { resolve(); return response; }); });
+    adminAdapterGuard()({ ...request, socket: { remoteAddress: '127.0.0.1' }, rawBody: request.rawBody } as any, response, () => { throw new Error('must not reach the handler'); });
+    await refused;
+    expect(response.status).toHaveBeenCalledWith(503);
+  });
+});
+
+describe('AdminAdapterNonceStore', () => {
+  it('accepts a nonce exactly once and never evicts a live one under capacity pressure', () => {
+    const store = new AdminAdapterNonceStore(2);
+    expect(store.accept('nonce-a', 100_000)).toBe(true);
+    expect(store.accept('nonce-b', 100_001)).toBe(true);
+    // Capacity is reached: a new nonce is refused rather than forgetting an old one.
+    expect(store.accept('nonce-c', 100_002)).toBe(false);
+    expect(store.accept('nonce-a', 100_003)).toBe(false);
+    expect(store.accept('nonce-b', 100_003)).toBe(false);
+    // Only once retention has passed may the slots be reused.
+    expect(store.accept('nonce-c', 100_003 + ADMIN_NONCE_RETENTION_MS)).toBe(true);
+  });
+
+  it('keeps nonces apart per key scope', () => {
+    const store = new AdminAdapterNonceStore();
+    expect(store.accept('shared', 1, 'key-a@1.0.0')).toBe(true);
+    expect(store.accept('shared', 1, 'key-b@1.0.0')).toBe(true);
+    expect(store.accept('shared', 1, 'key-a@1.0.0')).toBe(false);
+  });
+
+  it('verifies with the shared-store path exactly as with the synchronous one', /** @asyncUnsafe Jest owns the test promise. */ async () => {
+    const store = new AdminAdapterNonceStore();
+    const request = signed();
+    expect((await verifyAdminAdapterRequestWithStore(request, store)).ok).toBe(true);
+    expect((await verifyAdminAdapterRequestWithStore(request, store)).ok).toBe(false);
+    const unavailable = await verifyAdminAdapterRequestWithStore(signed(), new UnavailableAdminReplayStore('fixture'));
+    expect(unavailable.ok).toBe(false);
+    expect(unavailable.ok === false && unavailable.status).toBe(503);
+    expect(unavailable.ok === false && unavailable.code).toBe('REPLAY_STORE_UNAVAILABLE');
   });
 });
 
@@ -332,15 +388,18 @@ describe('Explorer operation catalog', () => {
     }
   });
 
-  it('enables the deployment-controlled operations only on the exact configured value', () => {
+  it('treats the adapter configuration as configured, never as enabled', () => {
     expect(deploymentControlConfigured({})).toBe(false);
-    expect(deploymentControlConfigured({ EXPLORER_DEPLOYMENT_CONTROL: 'true' })).toBe(false);
-    expect(deploymentControlConfigured({ EXPLORER_DEPLOYMENT_CONTROL: 'enabled' })).toBe(true);
-    const enabled = findExplorerOperationDefinition('explorer.service.restart', {
-      EXPLORER_DEPLOYMENT_CONTROL: 'enabled',
-    });
-    expect(enabled.availability).toBe('enabled');
-    expect(enabled.availabilityReason).toBeNull();
+    expect(deploymentControlConfigured({ EXPLORER_DEPLOYMENT_CONTROL: 'enabled' })).toBe(false);
+    const configured = {
+      EXPLORER_DEPLOYMENT_CONTROL_ENDPOINT: 'http://127.0.0.1:8790',
+      EXPLORER_DEPLOYMENT_CONTROL_KEY: 'deployment-control-shared-key-with-enough-length',
+    };
+    expect(deploymentControlConfigured(configured)).toBe(true);
+    // Configured is not ready: only the adapter's capability document enables an operation.
+    const restart = findExplorerOperationDefinition('explorer.service.restart', configured);
+    expect(restart.availability).toBe('unavailable');
+    expect(restart.availabilityReason).toMatch(/capability route/);
   });
 
   it('covers the Explorer subsystems the Control Center has to reach', () => {

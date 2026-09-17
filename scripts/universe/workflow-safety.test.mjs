@@ -78,6 +78,38 @@ test('actual Docker compose preparation assigns database tmpfs to the database a
   } finally { rmSync(directory, { recursive: true, force: true }); }
 });
 
+test('container gate: develop and main pull requests touching the templates build without publishing', () => {
+  const source = workflow('docker');
+  const [before, after] = source.split('\njobs:\n');
+  // Triggers: pull requests to the fork's integration branches, scoped to the
+  // container templates and the runtime configuration they render, plus an
+  // explicit dispatch. No tag push, no upstream master, no label shortcut.
+  assert.match(before, /pull_request:\n    branches: \[develop, main\]/);
+  assert.doesNotMatch(before, /^\s+push:\n\s+tags:/m);
+  assert.doesNotMatch(source, /master|docker-push|labeled/);
+  for (const path of ["'docker/**'", "'backend/mempool-config.sample.json'", "'frontend/mempool-frontend-config.sample.json'", "'production/mempool-config.*.json'", "'rust/gbt/rust-toolchain'"]) {
+    assert.ok(before.includes(`      - ${path}`), path);
+  }
+  assert.match(before, /workflow_dispatch:\n    inputs:\n      tag:/);
+  assert.match(before, /publish:\n[\s\S]*?type: boolean\n\s+default: false/);
+  // The gate job builds locally and never pushes; only the dispatched
+  // publication job does, and only when asked.
+  const gate = after.split('\n  build:\n')[0];
+  const publish = after.split('\n  build:\n')[1].split('\n  tag-latest:\n')[0];
+  const latest = after.split('\n  tag-latest:\n')[1];
+  assert.match(gate, /--load/);
+  assert.doesNotMatch(gate, /push=true|login-action|DOCKER_PASSWORD/);
+  assert.match(publish, /if: \|\n\s+needs\.test-images\.result == 'success' &&\n\s+github\.event_name == 'workflow_dispatch' &&\n\s+github\.event\.inputs\.publish == 'true'/);
+  assert.match(latest, /github\.event\.inputs\.publish == 'true' && github\.event\.inputs\.latest == 'true'/);
+  assert.doesNotMatch(source, /github\.ref_name|GITHUB_REF\//);
+  // Every job keeps the shared runner labels used elsewhere.
+  assert.equal((source.match(/runs-on: \[self-hosted, linux, x64, universe-super\]/g) ?? []).length, 3);
+  // The dispatched tag is validated before it reaches a shell or a registry.
+  for (const block of [gate, publish, latest]) {
+    assert.match(block, /case "\$DISPATCH_TAG" in\n\s+''\|\*\[!A-Za-z0-9\._-\]\*\)/);
+  }
+});
+
 test('Docker build cannot mutate global swap or restart the shared daemon', () => {
   const source = workflow('docker');
   assert.doesNotMatch(source, /sudo\s+(?:swapoff|swapon|mkswap|mount)|sudo\s+systemctl\s+restart\s+docker|\/mnt\/swapfile/);

@@ -64,8 +64,11 @@ import {
   ChainDashboardView,
   ChainSubsystemHealth,
   ExplorerChain,
+  ExplorerNetwork,
   FeeRecommendationsView,
 } from '@app/universe/universe.types';
+import { chainNetwork } from '@app/universe/chain-network';
+import { StateService } from '@app/services/state.service';
 
 interface FeeLevelReading {
   readonly label: string;
@@ -117,6 +120,8 @@ interface DashboardViewModel {
   readonly viewStale: boolean;
   /** When the dashboard document was produced by the overlay. */
   readonly viewObserved: string | null;
+  /** The same, as an elapsed phrase; null when the time cannot be read. */
+  readonly viewObservedAge: string | null;
 }
 
 /**
@@ -169,18 +174,22 @@ const FEE_BASIS_LABELS: Record<string, string> = {
 export class ChainDashboardComponent implements OnInit {
   readonly chain: Exclude<ExplorerChain, 'bitcoin'>;
   readonly profile: ChainProfile;
+  /** The configured network of this chain, named in the not-offered notice. */
+  readonly networkLabel: string;
   vm$: Observable<DashboardViewModel>;
 
   constructor(
     private readonly router: Router,
     private readonly data: ChainDashboardService,
-    private readonly seo: SeoService
+    private readonly seo: SeoService,
+    private readonly state: StateService
   ) {
     this.chain =
       router.url.split(/[?#]/, 1)[0].split('/').filter(Boolean)[0] === 'dogecoin'
         ? 'dogecoin'
         : 'zcash';
     this.profile = chainProfile(this.chain);
+    this.networkLabel = chainNetwork(this.chain, (this.state.network || 'mainnet') as ExplorerNetwork, this.state.env);
   }
 
   ngOnInit(): void {
@@ -304,6 +313,7 @@ export class ChainDashboardComponent implements OnInit {
       subsystems: (view?.subsystems ?? []).map((row) => this.subsystemReading(row, now)),
       viewStale,
       viewObserved: view?.observedAt ?? null,
+      viewObservedAge: formatElapsed(view?.observedAt ?? null, now),
     };
   }
 

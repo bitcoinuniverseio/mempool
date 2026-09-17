@@ -35,21 +35,32 @@ export function validCapabilities(c: any): c is SubmissionCapabilities {
     c.current_queue_count <= c.queue_limit
   );
 }
+/**
+ * A provider view from the owned directory. The directory file is the trust
+ * root: entries carry no separate signature and name no health endpoint, so
+ * both are null; health is 'unmeasured' because nothing is probed; a key with
+ * no end of validity gives a null expires_at.
+ */
 export function validProvider(p: any): p is AcceleratorProvider {
+  const text = (v: unknown): boolean =>
+    typeof v === 'string' && v.trim().length > 0 && v.length <= 8192;
+  const optionalText = (v: unknown): boolean => v === null || text(v);
   return (
     !!p &&
-    [
-      'provider_id',
-      'identity_key',
-      'name',
-      'provider_signature',
-      'status_endpoint',
-    ].every(
-      (k) =>
-        typeof p[k] === 'string' &&
-        p[k].trim().length > 0 &&
-        p[k].length <= 8192
-    ) &&
+    ['provider_id', 'identity_key', 'name'].every((k) => text(p[k])) &&
+    optionalText(p.provider_signature) &&
+    optionalText(p.status_endpoint) &&
+    (p.keys === undefined ||
+      (Array.isArray(p.keys) &&
+        p.keys.every(
+          (k: any) =>
+            !!k &&
+            text(k.kid) &&
+            ['ed25519', 'secp256k1-schnorr'].includes(k.algorithm) &&
+            text(k.publicKey) &&
+            Number.isFinite(Date.parse(k.validFrom)) &&
+            (k.validUntil === null || Number.isFinite(Date.parse(k.validUntil)))
+        ))) &&
     [
       'supported_networks',
       'submission_modes',
@@ -63,9 +74,10 @@ export function validProvider(p: any): p is AcceleratorProvider {
     p.minimum_fee_sats >= 0 &&
     Number.isSafeInteger(p.maximum_tx_vsize) &&
     p.maximum_tx_vsize > 0 &&
-    ['online', 'degraded', 'offline'].includes(p.health_status) &&
+    ['online', 'degraded', 'offline', 'unmeasured'].includes(p.health_status) &&
     Number.isFinite(Date.parse(p.effective_from)) &&
-    Number.isFinite(Date.parse(p.expires_at)) &&
-    Date.parse(p.effective_from) < Date.parse(p.expires_at)
+    (p.expires_at === null ||
+      (Number.isFinite(Date.parse(p.expires_at)) &&
+        Date.parse(p.effective_from) < Date.parse(p.expires_at)))
   );
 }

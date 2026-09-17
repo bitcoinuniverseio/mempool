@@ -1,4 +1,4 @@
-FROM node:24.13-bookworm-slim AS builder
+FROM node:24.19.0-bookworm-slim AS builder
 
 ARG commitHash
 ENV DOCKER_COMMIT_HASH=${commitHash}
@@ -8,10 +8,16 @@ WORKDIR /build
 COPY . .
 RUN apt-get update
 RUN apt-get install -y build-essential rsync
+# The pinned runtime pair; a base image that drifts fails here, not later.
+RUN node --version | grep -x v24.19.0 && npm --version | grep -x 11.17.0
 RUN cp mempool-frontend-config.sample.json mempool-frontend-config.json
-RUN npm install --omit=dev --omit=optional
+# Locked install; the build tools are dev dependencies and nothing from this
+# stage but dist/ reaches the nginx image.
+RUN npm ci
 
-RUN npm run build
+# The fork's production build: English only, and no asset synchronization
+# from third parties at build time.
+RUN npm run build:universe
 
 FROM nginx:1.27.0-alpine
 

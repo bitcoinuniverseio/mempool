@@ -45,10 +45,17 @@
     ></app-chain-timeline>
     <p
       class="notice empty"
-      *ngIf="!vm.timeline && vm.viewError"
+      *ngIf="!vm.timeline && vm.viewError && vm.viewError !== 'network-not-offered'"
       i18n="universe.dash.timeline-empty"
     >
       No timeline can be drawn until the block and pending sources answer.
+    </p>
+    <p
+      class="notice empty"
+      *ngIf="!vm.timeline && vm.viewError === 'network-not-offered'"
+      i18n="universe.dash.timeline-not-offered"
+    >
+      Not offered on {{ profile.name }} {{ networkLabel }}.
     </p>
   </section>
 
@@ -71,12 +78,24 @@
   <p
     class="notice failure"
     role="alert"
-    *ngIf="vm.viewError && !vm.timeline"
+    *ngIf="vm.viewError && vm.viewError !== 'network-not-offered' && !vm.timeline"
     i18n="universe.dash.view-error"
   >
     The {{ profile.name }} dashboard data cannot be read right now. Each panel
     below says what it is missing; nothing here is stale data presented as
     current.
+  </p>
+  <p
+    class="notice empty"
+    role="status"
+    *ngIf="vm.viewError === 'network-not-offered' && !vm.timeline"
+    i18n="universe.dash.network-not-offered"
+  >
+    Dashboard, fee and mining statistics are offered for {{ profile.name }}
+    mainnet only. This explorer is bound to {{ profile.name }}
+    {{ networkLabel }}, where the block collector does not run. Blocks,
+    transactions, addresses, the pending set and the protocol pages of this
+    network are still read from its own node and indexes.
   </p>
 
   <!-- A failed refresh keeps the last document and says so; the reading is
@@ -164,9 +183,12 @@
         </ng-container>
       </ng-container>
       <ng-template #feesUnavailable>
-        <p class="notice empty" i18n="universe.dash.fees-unavailable">
+        <p class="notice empty" *ngIf="vm.viewError !== 'network-not-offered'" i18n="universe.dash.fees-unavailable">
           No fee guidance can be given right now: the sources that would back it
           are not answering.
+        </p>
+        <p class="notice empty" *ngIf="vm.viewError === 'network-not-offered'" i18n="universe.dash.fees-not-offered">
+          Not offered on {{ profile.name }} {{ networkLabel }}.
         </p>
       </ng-template>
     </section>
@@ -500,20 +522,21 @@
     <h2 id="dash-subsystems-heading" i18n="universe.dash.subsystems-title">
       Subsystem health
     </h2>
-    <p class="subsystem-observed" *ngIf="vm.viewObserved">
+    <p class="subsystem-observed" *ngIf="vm.viewObservedAge">
       <ng-container i18n="universe.dash.subsystems-observed">Observed</ng-container>
-      {{ vm.viewObserved | date: 'mediumTime' }}<ng-container *ngIf="vm.viewStale" i18n="universe.dash.subsystems-stale"> (last known; the latest refresh failed)</ng-container>
+      {{ vm.viewObservedAge }}<ng-container *ngIf="vm.viewStale" i18n="universe.dash.subsystems-stale">, last known: the latest refresh failed</ng-container>
     </p>
     <ul class="subsystem-list">
       <li *ngFor="let subsystem of vm.subsystems; trackBy: trackById">
-        <div class="subsystem-row">
-          <span class="subsystem-label">{{ subsystem.label }}</span>
-          <span class="universe-chip" [ngClass]="'state-' + subsystem.tone">{{ subsystem.stateLabel }}</span>
-          <span class="subsystem-age" *ngIf="subsystem.observed">{{ subsystem.observed }}</span>
-        </div>
+        <span class="subsystem-label">{{ subsystem.label }}</span>
+        <span class="universe-chip" [ngClass]="'state-' + subsystem.tone">{{ subsystem.stateLabel }}</span>
         <details class="reasons" *ngIf="subsystem.reasons.length">
           <summary i18n="universe.dash.subsystem-reasons">Why</summary>
           <ul>
+            <li *ngIf="subsystem.observed">
+              <ng-container i18n="universe.dash.subsystem-observed">Last observed</ng-container>
+              {{ subsystem.observed }}
+            </li>
             <li *ngFor="let reason of subsystem.reasons; trackBy: trackByCode">{{ reason.text }}</li>
           </ul>
         </details>

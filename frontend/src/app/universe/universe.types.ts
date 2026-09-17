@@ -1020,36 +1020,115 @@ export interface McpToolDeclaration {
   readonly sampleCall: string;
 }
 
+// Network observatory contracts mirror backend/src/api/network-observatory/network-observatory.types.ts.
+// This deployment has one observer, its own mempool poll of the owned Core node;
+// dimensions one local observer cannot measure are null or 'unknown', never estimated.
+
+/** Who observed, and how far its clock can be trusted. */
+export interface ObserverIdentity {
+  readonly observerId: string;
+  readonly observers: 1;
+  readonly clockOffsetMs: number | null;
+  readonly clockUncertaintyMs: number | null;
+  readonly method: string;
+}
+
+/** Freshness and bound of what is retained. */
+export interface ObservationWindow {
+  readonly observedAtUtc: string;
+  readonly ageMs: number;
+  readonly freshnessLimitMs: number;
+  readonly retentionMs: number;
+  readonly retainedTransactions: number;
+  readonly lastPollUtc: string | null;
+  readonly lastCompletePollUtc: string | null;
+  readonly collection: 'not_started' | 'observing' | 'interrupted' | 'stale';
+}
+
 export interface ObserverNode {
   readonly id: string;
   readonly name: string;
+  /** 'unknown': a single local observer does not measure regions. */
   readonly region: string;
   readonly clientVersion: string;
-  readonly protocolVersion: number;
-  readonly fullRbf: boolean;
-  readonly minRelayFeeRate: number;
-  readonly clockOffsetMs: number;
+  readonly protocolVersion: number | null;
+  readonly fullRbf: boolean | null;
+  readonly minRelayFeeRate: number | null;
+  readonly clockOffsetMs: number | null;
   readonly connectedPeers: number;
-  readonly mempoolTxCount: number;
+  readonly mempoolTxCount: number | null;
   readonly status: 'online' | 'syncing' | 'degraded';
+  readonly network: string;
+  readonly observedAtUtc: string;
+  readonly policySourceAvailable: boolean;
+  readonly scope: string;
+}
+
+export interface NodeArrival {
+  readonly nodeId: string;
+  readonly nodeName: string;
+  readonly arrivedAt: number;
+  readonly deltaFromFirstMs: number;
+  readonly accepted: boolean;
+  readonly rejectionReason?: string;
+  readonly presence: 'present' | 'left_mempool';
+  readonly completePoll: boolean;
+  readonly previousCompletePollUtc: string | null;
 }
 
 export interface PropagationObservation {
-  readonly txid: string;
-  readonly firstSeenTimestamp: number;
-  readonly nodeObservations: readonly { readonly nodeId: string; readonly nodeName: string; readonly arrivedAt: number; readonly deltaFromFirstMs: number; readonly accepted: boolean }[];
-  readonly medianLatencyMs: number;
-  readonly p95LatencyMs: number;
-  readonly spreadDeltaMs: number;
+  readonly txid: string | null;
+  readonly network: string;
+  /** observed: a retained lifecycle; not-observed: the txid was never retained; no-observations: the observer has not polled yet. */
+  readonly state: 'observed' | 'not-observed' | 'no-observations';
+  readonly firstSeenTimestamp: number | null;
+  readonly lastSeenTimestamp: number | null;
+  readonly nodeObservations: readonly NodeArrival[];
+  readonly medianLatencyMs: number | null;
+  readonly p95LatencyMs: number | null;
+  readonly spreadDeltaMs: number | null;
+  readonly observer: ObserverIdentity;
+  readonly window: ObservationWindow;
+  readonly expiresAtUtc: string | null;
+  readonly scope: string;
+}
+
+export interface TemplateSourceStatus {
+  readonly sourceId: string;
+  readonly name: string;
+  readonly status: 'active' | 'degraded' | 'offline' | 'not_collected';
+  readonly lastTemplateAt: string | null;
+  readonly lastError: string | null;
+}
+
+export interface CandidateTemplate {
+  readonly poolName: string;
+  readonly templateId: string;
+  readonly sourceId: string;
+  readonly sourceType: 'core_gbt' | 'mempool_projection';
+  readonly observedAtUtc: string;
+  readonly prevBlockHash: string;
+  readonly txCount: number;
+  readonly totalWeight: number;
+  readonly totalFeesSats: string;
+  readonly expectedMedianFeeRate: number | null;
+  readonly uniqueTxids: readonly string[];
+  readonly missingFromLocalMempool: number | null;
 }
 
 export interface BlockTemplateComparison {
-  readonly blockHeight: number;
-  readonly generatedAt: number;
-  readonly candidateTemplates: readonly { readonly poolName: string; readonly txCount: number; readonly totalWeight: number; readonly totalFeesSats: string; readonly expectedMedianFeeRate: number }[];
-  readonly consensusMempoolTxCount: number;
-  readonly missingFromLocalCount: number;
-  readonly feeRateSpreadSatVb: number;
+  readonly network: string;
+  readonly state: 'observed' | 'no-templates-observed';
+  readonly blockHeight: number | null;
+  readonly generatedAt: number | null;
+  readonly candidateTemplates: readonly CandidateTemplate[];
+  readonly consensusMempoolTxCount: number | null;
+  readonly missingFromLocalCount: number | null;
+  readonly feeRateSpreadSatVb: number | null;
+  readonly sources: readonly TemplateSourceStatus[];
+  readonly observer: ObserverIdentity;
+  readonly retention: { readonly templates: number; readonly txidsPerTemplate: number };
+  readonly scope: string;
 }
 
 export interface TaprootAssetItem {

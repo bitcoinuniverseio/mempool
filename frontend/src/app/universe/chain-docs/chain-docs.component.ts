@@ -15,7 +15,9 @@ import {
   DocsSection,
   docsSectionsFor,
 } from '@app/universe/chain-docs/chain-docs-content';
-import { ExplorerChain } from '@app/universe/universe.types';
+import { ExplorerChain, ExplorerNetwork } from '@app/universe/universe.types';
+import { chainNetwork } from '@app/universe/chain-network';
+import { StateService } from '@app/services/state.service';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 /**
@@ -34,6 +36,8 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
 export class ChainDocsComponent implements OnInit {
   readonly chain: Exclude<ExplorerChain, 'bitcoin'>;
   readonly profile: ChainProfile;
+  /** The network this deployment reads the chain from; the examples below name it. */
+  readonly network: ExplorerNetwork;
   readonly sections: readonly DocsSection[];
 
   /** The section the URL names, or null on the plain /docs route. */
@@ -44,13 +48,15 @@ export class ChainDocsComponent implements OnInit {
   constructor(
     router: Router,
     private readonly route: ActivatedRoute,
-    private readonly seo: SeoService
+    private readonly seo: SeoService,
+    state: StateService
   ) {
     this.chain =
       router.url.split(/[?#]/, 1)[0].split('/').filter(Boolean)[0] === 'dogecoin'
         ? 'dogecoin'
         : 'zcash';
     this.profile = chainProfile(this.chain);
+    this.network = chainNetwork(this.chain, 'mainnet', state.env);
     this.sections = docsSectionsFor(this.chain);
   }
 

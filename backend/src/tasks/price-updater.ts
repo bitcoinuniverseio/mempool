@@ -34,6 +34,35 @@ export interface ConversionRates {
   [currency: string]: number
 }
 
+/** Networks whose coins have no fiat value; nothing prices them. */
+const UNPRICED_NETWORKS = ['testnet', 'signet', 'testnet4', 'regtest'];
+
+/**
+ * How old a stored observation may be and still be advertised as the
+ * current price. Matches the staleness bound the capability report and the
+ * admin snapshot already apply to the newest price.
+ */
+export const PRICE_MAX_AGE_SECONDS = 3 * 60 * 60;
+
+export type PriceObservationState = 'live' | 'stale' | 'disabled' | 'network-inapplicable' | 'unavailable';
+
+/**
+ * The provenance of whatever price is being served. Additive to the price
+ * object so an old consumer keeps reading currency fields while a new one can
+ * tell a live quote from a retained observation.
+ */
+export interface PriceObservation {
+  state: PriceObservationState;
+  source: 'feed' | 'database' | null;
+  /** Unix seconds of the observation being reported, live or retained. */
+  observedAt: number | null;
+  ageSeconds: number | null;
+  stale: boolean;
+  disabled: boolean;
+  /** The newest retained observation when it is not being served as live. */
+  storedObservation: ApiPrice | null;
+}
+
 function getMedian(arr: number[]): number {
   const sortedArr = arr.slice().sort((a, b) => a - b);
   const mid = Math.floor(sortedArr.length / 2);
@@ -57,6 +86,9 @@ class PriceUpdater {
   private currencies: string[] = ['USD', 'EUR', 'GBP', 'CAD', 'CHF', 'AUD', 'JPY'];
   private latestPrices: ApiPrice;
   private latestGoodPrices: ApiPrice;
+  /** The newest observation read from the database, kept with its timestamp even when it is not served. */
+  private storedPrices: ApiPrice | null = null;
+  private liveSource: 'feed' | 'database' | null = null;
   private currencyConversionFeed: ConversionFeed | undefined;
   private newCurrencies: string[] = ['BGN', 'BRL', 'CNY', 'CZK', 'DKK', 'HKD', 'HRK', 'HUF', 'IDR', 'ILS', 'INR', 'ISK', 'KRW', 'MXN', 'MYR', 'NOK', 'NZD', 'PHP', 'PLN', 'RON', 'RUB', 'SEK', 'SGD', 'THB', 'TRY', 'ZAR'];
   private lastTimeConversionsRatesFetched: number = 0;
@@ -77,8 +109,67 @@ class PriceUpdater {
     this.setCyclePosition();
   }
 
+  /** Only a price this deployment may serve as current; every field is -1 otherwise. */
   public getLatestPrices(): ApiPrice {
     return this.latestGoodPrices;
+  }
+
+  /** Whether this deployment prices its coin at all. */
+  public pricingApplies(): boolean {
+    return config.FIAT_PRICE.ENABLED === true && !UNPRICED_NETWORKS.includes(config.MEMPOOL.NETWORK);
+  }
+
+  private ageSeconds(observation: ApiPrice | null, nowMs: number): number | null {
+    if (!observation || typeof observation.time !== 'number' || observation.time <= 0) {
+      return null;
+    }
+    return Math.max(0, Math.round(nowMs / 1000 - observation.time));
+  }
+
+  /** The state of the served price, computed from what is actually held. */
+  public getPriceObservation(nowMs: number = Date.now()): PriceObservation {
+    const disabled = config.FIAT_PRICE.ENABLED !== true;
+    const networkInapplicable = UNPRICED_NETWORKS.includes(config.MEMPOOL.NETWORK);
+    const live = this.latestGoodPrices.USD > 0;
+    const liveAge = this.ageSeconds(this.latestGoodPrices, nowMs);
+    const stored = this.storedPrices && this.storedPrices.USD > 0 ? this.storedPrices : null;
+    if (disabled || networkInapplicable) {
+      return {
+        state: networkInapplicable ? 'network-inapplicable' : 'disabled',
+        source: stored ? 'database' : null,
+        observedAt: stored?.time ?? null,
+        ageSeconds: this.ageSeconds(stored, nowMs),
+        stale: stored !== null,
+        disabled: true,
+        storedObservation: stored,
+      };
+    }
+    if (live) {
+      const stale = liveAge !== null && liveAge > PRICE_MAX_AGE_SECONDS;
+      return {
+        state: stale ? 'stale' : 'live',
+        source: this.liveSource,
+        observedAt: this.latestGoodPrices.time ?? null,
+        ageSeconds: liveAge,
+        stale,
+        disabled: false,
+        storedObservation: null,
+      };
+    }
+    return {
+      state: stored ? 'stale' : 'unavailable',
+      source: stored ? 'database' : null,
+      observedAt: stored?.time ?? null,
+      ageSeconds: this.ageSeconds(stored, nowMs),
+      stale: stored !== null,
+      disabled: false,
+      storedObservation: stored,
+    };
+  }
+
+  /** What the prices route and the websocket advertise: the served price plus its provenance. */
+  public getAdvertisedPrices(nowMs: number = Date.now()): ApiPrice & PriceObservation {
+    return { ...this.getLatestPrices(), ...this.getPriceObservation(nowMs) };
   }
 
   public getEmptyPricesObj(): ApiPrice {
@@ -130,9 +221,25 @@ class PriceUpdater {
    *
    * @asyncUnsafe
    */
-  public async $initializeLatestPriceWithDb(): Promise<void> {
-    this.latestPrices = await PricesRepository.$getLatestConversionRates();
-    this.latestGoodPrices = JSON.parse(JSON.stringify(this.latestPrices));
+  public async $initializeLatestPriceWithDb(nowMs: number = Date.now()): Promise<void> {
+    const stored = await PricesRepository.$getLatestConversionRates();
+    this.storedPrices = stored.USD > 0 ? stored : null;
+    if (!this.pricingApplies()) {
+      if (this.storedPrices) {
+        logger.info(`Fiat prices are not served on this deployment; the stored observation from ${new Date((this.storedPrices.time ?? 0) * 1000).toISOString()} is retained but not advertised as current.`);
+      }
+      return;
+    }
+    const age = this.ageSeconds(this.storedPrices, nowMs);
+    if (!this.storedPrices || age === null || age > PRICE_MAX_AGE_SECONDS) {
+      if (this.storedPrices) {
+        logger.warn(`The stored fiat price is ${Math.round((age ?? 0) / 3600)} hours old and is not served as current until the feed answers.`);
+      }
+      return;
+    }
+    this.latestPrices = JSON.parse(JSON.stringify(stored));
+    this.latestGoodPrices = JSON.parse(JSON.stringify(stored));
+    this.liveSource = 'database';
   }
 
   /** @asyncSafe */
@@ -190,6 +297,7 @@ class PriceUpdater {
     if (price > 0) {
       this.latestGoodPrices[currency] = price;
       this.latestGoodPrices.time = Math.round(new Date().getTime() / 1000);
+      this.liveSource = 'feed';
     }
   }
 

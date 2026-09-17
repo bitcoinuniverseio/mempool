@@ -1296,7 +1296,7 @@ export const wsApiDocsData = [
     fragment: 'track-txs',
     title: 'Track Transactions',
     description: {
-      default: 'Subscribe to multiple transactions to receive live updates on their status and position in the mempool. Limits on the maximum number of tracked addresses apply.'
+      default: 'Subscribe to multiple transactions to receive live updates on their status and position in the mempool. Limits on the maximum number of tracked transactions apply. The initial <code>tracked-txs</code> response carries a <code>status</code> per transaction: <code>mempool</code> (with its projected <code>position</code>), <code>replaced</code> (with <code>replacedBy</code>), <code>confirmed</code> (only together with <code>blockHeight</code> and <code>blockHash</code>), <code>unknown</code> (the node does not know the transaction) or <code>unavailable</code> (the status lookup failed). <code>confirmed</code> is true only for the <code>confirmed</code> status; a missing or false flag is never a confirmation. Later delta frames carry no <code>status</code>.'
     },
     payload: `{
       "track-txs": [
@@ -1316,6 +1316,8 @@ export const wsApiDocsData = [
           response: `{
   "tracked-txs": {
     "8a4666c6d22ce74fa47e1c4fdb09af556a234cc6a606539a75caf66ba44a2d07": {
+      "confirmed": false,
+      "status": "mempool",
       "position": {
         "block": 0,
         "vsize": 434494
@@ -1342,10 +1344,22 @@ export const wsApiDocsData = [
       }
     },
     "941df06064c290b4627e92bdbf3bff7c0e97aab33e273c2a20404f9cfd21b607": {
+      "confirmed": false,
+      "status": "mempool",
       "position": {
         "block": 2,
         "vsize": 932479.5
       }
+    },
+    "e6a1b3d6c0e4b6b72f7a8b0b3c2a5d7e0f1c3b5a7d9e1f3a5c7e9b1d3f5a7c9e": {
+      "confirmed": true,
+      "status": "confirmed",
+      "blockHeight": 840000,
+      "blockHash": "0000000000000000000320283a032748cef8227873ff4872689bf23f1cda83a5"
+    },
+    "b7c9d1e3f5a7c9e1b3d5f7a9c1e3b5d7f9a1c3e5b7d9f1a3c5e7b9d1f3a5c7e9": {
+      "confirmed": false,
+      "status": "unknown"
     }
   }
 }`
@@ -1357,6 +1371,8 @@ export const wsApiDocsData = [
           response: `{
   "tracked-txs": {
     "8a4666c6d22ce74fa47e1c4fdb09af556a234cc6a606539a75caf66ba44a2d07": {
+      "confirmed": false,
+      "status": "mempool",
       "position": {
         "block": 0,
         "vsize": 434494
@@ -1383,10 +1399,22 @@ export const wsApiDocsData = [
       }
     },
     "941df06064c290b4627e92bdbf3bff7c0e97aab33e273c2a20404f9cfd21b607": {
+      "confirmed": false,
+      "status": "mempool",
       "position": {
         "block": 2,
         "vsize": 932479.5
       }
+    },
+    "e6a1b3d6c0e4b6b72f7a8b0b3c2a5d7e0f1c3b5a7d9e1f3a5c7e9b1d3f5a7c9e": {
+      "confirmed": true,
+      "status": "confirmed",
+      "blockHeight": 840000,
+      "blockHash": "0000000000000000000320283a032748cef8227873ff4872689bf23f1cda83a5"
+    },
+    "b7c9d1e3f5a7c9e1b3d5f7a9c1e3b5d7f9a1c3e5b7d9f1a3c5e7b9d1f3a5c7e9": {
+      "confirmed": false,
+      "status": "unknown"
     }
   }
 }`
@@ -1398,6 +1426,8 @@ export const wsApiDocsData = [
           response: `{
   "tracked-txs": {
     "8a4666c6d22ce74fa47e1c4fdb09af556a234cc6a606539a75caf66ba44a2d07": {
+      "confirmed": false,
+      "status": "mempool",
       "position": {
         "block": 0,
         "vsize": 434494
@@ -1424,10 +1454,22 @@ export const wsApiDocsData = [
       }
     },
     "941df06064c290b4627e92bdbf3bff7c0e97aab33e273c2a20404f9cfd21b607": {
+      "confirmed": false,
+      "status": "mempool",
       "position": {
         "block": 2,
         "vsize": 932479.5
       }
+    },
+    "e6a1b3d6c0e4b6b72f7a8b0b3c2a5d7e0f1c3b5a7d9e1f3a5c7e9b1d3f5a7c9e": {
+      "confirmed": true,
+      "status": "confirmed",
+      "blockHeight": 840000,
+      "blockHash": "0000000000000000000320283a032748cef8227873ff4872689bf23f1cda83a5"
+    },
+    "b7c9d1e3f5a7c9e1b3d5f7a9c1e3b5d7f9a1c3e5b7d9f1a3c5e7b9d1f3a5c7e9": {
+      "confirmed": false,
+      "status": "unknown"
     }
   }
 }`
@@ -1439,6 +1481,8 @@ export const wsApiDocsData = [
           response: `{
   "tracked-txs": {
     "8a4666c6d22ce74fa47e1c4fdb09af556a234cc6a606539a75caf66ba44a2d07": {
+      "confirmed": false,
+      "status": "mempool",
       "position": {
         "block": 0,
         "vsize": 434494
@@ -1465,10 +1509,22 @@ export const wsApiDocsData = [
       }
     },
     "941df06064c290b4627e92bdbf3bff7c0e97aab33e273c2a20404f9cfd21b607": {
+      "confirmed": false,
+      "status": "mempool",
       "position": {
         "block": 2,
         "vsize": 932479.5
       }
+    },
+    "e6a1b3d6c0e4b6b72f7a8b0b3c2a5d7e0f1c3b5a7d9e1f3a5c7e9b1d3f5a7c9e": {
+      "confirmed": true,
+      "status": "confirmed",
+      "blockHeight": 840000,
+      "blockHash": "0000000000000000000320283a032748cef8227873ff4872689bf23f1cda83a5"
+    },
+    "b7c9d1e3f5a7c9e1b3d5f7a9c1e3b5d7f9a1c3e5b7d9f1a3c5e7b9d1f3a5c7e9": {
+      "confirmed": false,
+      "status": "unknown"
     }
   }
 }`

@@ -7,11 +7,12 @@ import { EnterpriseService } from '@app/services/enterprise.service';
 import { NavigationService } from '@app/services/navigation.service';
 import { StorageService } from '@app/services/storage.service';
 import { ChainHealthService, ChainHealthState } from '@app/universe/chain-health.service';
+import { chainNetwork } from '@app/universe/chain-network';
 import { healthServiceSummary, nodeHealthLabel, readHealth } from '@app/universe/multichain-explorer/chain-health';
 import { UniverseLocalService } from '@app/universe/universe-local.service';
 import { mainReady } from '@app/universe/main-ready';
 import { UniverseViewportService } from '@app/universe/universe-viewport.service';
-import { ChainCapabilityEnvelope, ExplorerChain } from '@app/universe/universe.types';
+import { ChainCapabilityEnvelope, ExplorerChain, ExplorerNetwork } from '@app/universe/universe.types';
 import {
   formatExactInteger,
 } from '@app/universe/multichain-explorer/multichain-view';
@@ -243,7 +244,7 @@ export class MasterPageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   chainCapability(capabilities: ChainCapabilityEnvelope[], chain: ExplorerChain): ChainCapabilityEnvelope | undefined {
-    return capabilities.find((capability) => capability.chain === chain && capability.network === (chain === 'bitcoin' ? (this.stateService.network || 'mainnet') : 'mainnet'));
+    return capabilities.find((capability) => capability.chain === chain && capability.network === this.resolvedNetwork(chain));
   }
 
   chainState(capability: ChainCapabilityEnvelope | undefined): string {
@@ -251,7 +252,12 @@ export class MasterPageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   chainNetwork(chain: ExplorerChain): string {
-    return this.networkLabel(chain === 'bitcoin' ? (this.stateService.network || 'mainnet') : 'mainnet');
+    return this.networkLabel(this.resolvedNetwork(chain));
+  }
+
+  /** Bitcoin follows the selector; every other chain reads its configured network. */
+  private resolvedNetwork(chain: ExplorerChain): string {
+    return chainNetwork(chain, (this.stateService.network || 'mainnet') as ExplorerNetwork, this.stateService.env);
   }
 
   chainDetail(capability: ChainCapabilityEnvelope | undefined): string {
