@@ -388,15 +388,18 @@ describe('Explorer operation catalog', () => {
     }
   });
 
-  it('enables the deployment-controlled operations only on the exact configured value', () => {
+  it('treats the adapter configuration as configured, never as enabled', () => {
     expect(deploymentControlConfigured({})).toBe(false);
-    expect(deploymentControlConfigured({ EXPLORER_DEPLOYMENT_CONTROL: 'true' })).toBe(false);
-    expect(deploymentControlConfigured({ EXPLORER_DEPLOYMENT_CONTROL: 'enabled' })).toBe(true);
-    const enabled = findExplorerOperationDefinition('explorer.service.restart', {
-      EXPLORER_DEPLOYMENT_CONTROL: 'enabled',
-    });
-    expect(enabled.availability).toBe('enabled');
-    expect(enabled.availabilityReason).toBeNull();
+    expect(deploymentControlConfigured({ EXPLORER_DEPLOYMENT_CONTROL: 'enabled' })).toBe(false);
+    const configured = {
+      EXPLORER_DEPLOYMENT_CONTROL_ENDPOINT: 'http://127.0.0.1:8790',
+      EXPLORER_DEPLOYMENT_CONTROL_KEY: 'deployment-control-shared-key-with-enough-length',
+    };
+    expect(deploymentControlConfigured(configured)).toBe(true);
+    // Configured is not ready: only the adapter's capability document enables an operation.
+    const restart = findExplorerOperationDefinition('explorer.service.restart', configured);
+    expect(restart.availability).toBe('unavailable');
+    expect(restart.availabilityReason).toMatch(/capability route/);
   });
 
   it('covers the Explorer subsystems the Control Center has to reach', () => {

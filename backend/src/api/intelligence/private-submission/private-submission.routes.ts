@@ -25,7 +25,7 @@ function fail(res: Response, err: unknown): Response {
   if (err instanceof SubmissionInputError)
     return res.status(400).json({ stage: 'invalid-input', error: err.message });
   if (err instanceof SubmissionEvidenceError) {
-    return res.status(503).json({ stage: err.code, error: err.message });
+    return res.status(err.status).json({ stage: err.code, error: err.message });
   }
   return res
     .status(500)
@@ -167,9 +167,8 @@ class PrivateSubmissionRoutes {
       }
     );
 
-    // The one route here that can still answer, because it reads the caller's
-    // own payload. A malformed receipt is the caller's 400; a complete one
-    // cannot be verified without the registry, which is a 503.
+    // A malformed, altered, expired or wrong-network receipt is the caller's
+    // 400; a replay is a 409; an absent directory or unknown key is a 503.
     app.post(
       '/api/v1/intelligence/accelerators/receipts/verify',
       (req: Request, res: Response) => {
@@ -177,7 +176,8 @@ class PrivateSubmissionRoutes {
           const result = privateSubmissionService.verifyAcceleratorReceipt(
             req.body || {}
           );
-          res.status(result.stage === 'invalid' ? 400 : 503).json(result);
+          const status = result.verified ? 200 : result.stage === 'duplicate' ? 409 : result.stage === 'unavailable-trust' ? 503 : 400;
+          res.status(status).json(result);
         } catch (err) {
           fail(res, err);
         }

@@ -3,6 +3,7 @@ import { AddressInfo } from 'net';
 import { Transaction } from 'bitcoinjs-lib';
 import routes from './private-submission.routes';
 import { setPrivateRelayRuntime } from './private-relay.runtime';
+import privateSubmissionService from './private-submission.service';
 import {
   diagnosisInput,
   submissionInput,
@@ -44,9 +45,8 @@ describe('Private submission bounded inputs and real HTTP boundary', () => {
     'bounds submission tokens',
     (token) => expect(() => tokenInput(token)).toThrow()
   );
-  it('serves all12 actual HTTP operations as unavailable authorities and malformed diagnosis as400', async () => {
-    // No database in this process: the private relay routes report the
-    // missing durable store, which is the unavailable authority for them.
+  it('serves all12 actual HTTP operations with their exact source states and malformed diagnosis as400', async () => {
+    privateSubmissionService.diagnosisReaders = { mempoolEntry: () => undefined, mempoolInfo: () => null, replaces: () => undefined, replacedBy: () => undefined };
     setPrivateRelayRuntime({ network: 'signet', endpoints: { endpoints: [], issues: [], unconfigured: true }, store: null, worker: null, coreVersion: () => '?' });
     const app = express();
     app.use(express.json());
@@ -57,18 +57,24 @@ describe('Private submission bounded inputs and real HTTP boundary', () => {
       'http://127.0.0.1:' +
       (server.address() as AddressInfo).port +
       '/api/v1/intelligence';
-    const requests: [string, string, any?][] = [
-      ['GET', '/submission/overview'],
-      ['GET', '/submission/capabilities'],
-      ['POST', '/submission/diagnose', { txid: tx.getId() }],
-      ['POST', '/submission/private', { raw_tx: raw, method: 'public_p2p' }],
-      ['GET', '/submission/private/token'],
-      ['POST', '/submission/private/token/abort', {}],
-      ['GET', '/accelerators/providers'],
-      ['GET', '/accelerators/providers/provider'],
+    // Relay-backed routes: absent integration, 503. Owned-source routes:
+    // an unknown transaction or block is a 404, an empty observer answers
+    // its state, an unconfigured directory is a 503, an unsupported
+    // receipt encoding is a 400. Nothing answers success.
+    const requests: [string, string, number, string, any?][] = [
+      ['GET', '/submission/overview', 503, 'durable-store-unavailable'],
+      ['GET', '/submission/capabilities', 503, 'durable-store-unavailable'],
+      ['POST', '/submission/diagnose', 404, 'transaction-not-in-mempool', { txid: tx.getId() }],
+      ['POST', '/submission/private', 503, 'durable-store-unavailable', { raw_tx: raw, method: 'privatebroadcast_tor' }],
+      ['GET', '/submission/private/token', 503, 'durable-store-unavailable'],
+      ['POST', '/submission/private/token/abort', 503, 'durable-store-unavailable', {}],
+      ['GET', '/accelerators/providers', 503, 'unavailable-registry'],
+      ['GET', '/accelerators/providers/provider', 503, 'unavailable-registry'],
       [
         'POST',
         '/accelerators/receipts/verify',
+        400,
+        'unsupported',
         {
           provider_id: 'p',
           receipt_id: 'r',
@@ -76,12 +82,12 @@ describe('Private submission bounded inputs and real HTTP boundary', () => {
           provider_signature: 'untrusted',
         },
       ],
-      ['GET', '/ordering/transactions/' + tx.getId()],
-      ['GET', '/ordering/blocks/' + 'ab'.repeat(32)],
-      ['GET', '/ordering/findings'],
+      ['GET', '/ordering/transactions/' + tx.getId(), 404, 'transaction-not-observed'],
+      ['GET', '/ordering/blocks/' + 'ab'.repeat(32), 404, 'block-not-observed'],
+      ['GET', '/ordering/findings', 200, 'no-blocks-observed'],
     ];
     try {
-      for (const [method, url, body] of requests) {
+      for (const [method, url, status, stage, body] of requests) {
         const res = await fetch(base + url, {
           method,
           ...(body
@@ -91,10 +97,11 @@ describe('Private submission bounded inputs and real HTTP boundary', () => {
               }
             : {}),
         });
-        expect(res.status).toBe(503);
+        expect([url, res.status]).toEqual([url, status]);
         const v: any = await res.json();
-        expect(v.stage).toContain('unavailable');
+        expect(v.stage ?? v.state).toBe(stage);
         expect(v.verified).not.toBe(true);
+        expect(v.findings ?? []).toEqual([]);
       }
       const bad = await fetch(base + '/submission/diagnose', {
         method: 'POST',
