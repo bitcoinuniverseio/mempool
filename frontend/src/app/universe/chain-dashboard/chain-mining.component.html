@@ -24,7 +24,10 @@
     ></app-chain-timeline>
   </section>
 
-  <p class="notice failure" role="alert" *ngIf="vm.viewError" i18n="universe.mining.view-error">
+  <p class="notice empty" role="status" *ngIf="vm.viewError === 'network-not-offered'" i18n="universe.mining.network-not-offered">
+    Mining statistics are offered for {{ profile.name }} mainnet only. This explorer is bound to {{ profile.name }} {{ networkLabel }}, where the block collector does not run, so no reading below is available; nothing is invented in its place.
+  </p>
+  <p class="notice failure" role="alert" *ngIf="vm.viewError && vm.viewError !== 'network-not-offered'" i18n="universe.mining.view-error">
     Some mining readings cannot be fetched right now. Panels below say what they are missing.
   </p>
 
@@ -51,8 +54,11 @@
           <span class="figure-value" [attr.title]="vm.observed.exact + ' seconds'">{{ vm.observed.display }}</span>
         </div>
       </div>
-      <p class="notice empty" *ngIf="!vm.difficulty && !vm.networkRate" i18n="universe.mining.network-unavailable">
+      <p class="notice empty" *ngIf="!vm.difficulty && !vm.networkRate && vm.viewError !== 'network-not-offered'" i18n="universe.mining.network-unavailable">
         The node that reports difficulty and network rate is not answering right now.
+      </p>
+      <p class="notice empty" *ngIf="!vm.difficulty && !vm.networkRate && vm.viewError === 'network-not-offered'" i18n="universe.mining.network-not-offered-panel">
+        Not offered on {{ profile.name }} {{ networkLabel }}.
       </p>
     </section>
 
