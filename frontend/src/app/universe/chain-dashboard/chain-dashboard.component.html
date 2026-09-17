@@ -45,10 +45,17 @@
     ></app-chain-timeline>
     <p
       class="notice empty"
-      *ngIf="!vm.timeline && vm.viewError"
+      *ngIf="!vm.timeline && vm.viewError && vm.viewError !== 'network-not-offered'"
       i18n="universe.dash.timeline-empty"
     >
       No timeline can be drawn until the block and pending sources answer.
+    </p>
+    <p
+      class="notice empty"
+      *ngIf="!vm.timeline && vm.viewError === 'network-not-offered'"
+      i18n="universe.dash.timeline-not-offered"
+    >
+      Not offered on {{ profile.name }} {{ networkLabel }}.
     </p>
   </section>
 
@@ -176,9 +183,12 @@
         </ng-container>
       </ng-container>
       <ng-template #feesUnavailable>
-        <p class="notice empty" i18n="universe.dash.fees-unavailable">
+        <p class="notice empty" *ngIf="vm.viewError !== 'network-not-offered'" i18n="universe.dash.fees-unavailable">
           No fee guidance can be given right now: the sources that would back it
           are not answering.
+        </p>
+        <p class="notice empty" *ngIf="vm.viewError === 'network-not-offered'" i18n="universe.dash.fees-not-offered">
+          Not offered on {{ profile.name }} {{ networkLabel }}.
         </p>
       </ng-template>
     </section>
