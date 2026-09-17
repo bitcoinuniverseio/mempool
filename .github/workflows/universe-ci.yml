@@ -162,8 +162,23 @@ jobs:
         run: |
           # Runner provisioning owns the toolchain. A job must not uninstall
           # or replace Rust while another runner on this host is compiling.
+          #
+          # The self-hosted runners share one RUSTUP_HOME, and other
+          # repositories' jobs run "rustup toolchain install stable" on it.
+          # When upstream ships a new stable that call rewrites the shared
+          # "stable" directory while this job may be compiling with it
+          # (measured 2026-09-17 on universe-linux-super-100: rustc vanished
+          # under a running cargo build). A versioned toolchain is never
+          # rewritten by a same-version install, so this job pins one and
+          # only falls back to the shared alias when the pin is absent.
           export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
+          if RUSTUP_TOOLCHAIN=1.89.0 cargo metadata --format-version 1 --manifest-path rust/gbt/Cargo.toml >/dev/null 2>&1; then
+            echo "RUSTUP_TOOLCHAIN=1.89.0" >> "$GITHUB_ENV"
+            echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> "$GITHUB_PATH"
+            exit 0
+          fi
           if cargo metadata --format-version 1 --manifest-path rust/gbt/Cargo.toml >/dev/null 2>&1; then
+            echo '::warning::The pinned 1.89.0 toolchain is absent on this runner; using the shared default toolchain.'
             echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> "$GITHUB_PATH"
             exit 0
           fi
