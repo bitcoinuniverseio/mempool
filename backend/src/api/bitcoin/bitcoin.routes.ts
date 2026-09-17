@@ -147,7 +147,7 @@ class BitcoinRoutes {
 
   private getTransactionTimes(req: Request, res: Response) {
     if (!req.query.txId || typeof req.query.txId !== 'object') {
-      handleError(req, res, 500, 'invalid txId format');
+      handleError(req, res, 400, 'invalid txId format');
       return;
     }
     const txIds: string[] = [];
